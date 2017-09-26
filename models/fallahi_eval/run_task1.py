@@ -1,13 +1,42 @@
-import pickle
 import itertools
-from copy import deepcopy
-import indra.tools.assemble_corpus as ac
 from indra.assemblers import EnglishAssembler
 from indra.explanation.reporting import stmts_from_path
 from indra.explanation.model_checker import ModelChecker
 from util import pkldump, pklload
-from assemble_pysb import contextualize_model, prefixed_pkl
-from process_data import read_rppa_data, get_task_1, get_antibody_agents
+from process_data import *
+
+
+def get_task_1(data, inverse=False):
+    """Return the test cases to be explained for Task 1."""
+    # TASK 1
+    # We observe a dose-dependent decrease of p-S6(S235/236)
+    # across five cell lines (C32, LOXIMVI, MMACSF, MZ7MEL, RVH421) and all
+    # drugs. Feel free to use any or all of the time points in your
+    # explanation.
+    antibody_agents = get_antibody_agents()
+    obs_agents = antibody_agents['p-S6(S235/236)']
+    # We fix the time point to 10 hours
+    time = 10
+    # Structure: cell line / drug / dose / time
+    stmts_to_check = {}
+    for cell_line  in ('C32', 'LOXIMVI', 'MMACSF', 'MZ7MEL', 'RVH421'):
+        stmts_to_check[cell_line] = {}
+        for drug in drug_names.keys():
+            stmts_to_check[cell_line][drug] = {}
+            target_agents = [agent_phos(target, []) for
+                             target in drug_targets[drug]]
+            for dose in drug_doses:
+                values = get_agent_values_for_condition(data, cell_line,
+                                                        drug, time, dose)
+                stmts_to_check[cell_line][drug][dose] = [[], values]
+                for target, obs in itertools.product(target_agents, obs_agents):
+                    if not inverse:
+                        st = Phosphorylation(target, obs)
+                    else:
+                        st = Dephosphorylation(target, obs)
+                    stmts_to_check[cell_line][drug][dose][0].append(st)
+    return stmts_to_check
+
 
 def get_agent_values(antibody_agents, values):
     agent_values = {}
@@ -95,7 +124,8 @@ def report_paths(scored_paths, model, stmts, cell_line):
     print(references)
 #################
 
-flatten = lambda x: list(itertools.chain.from_iterable(x))
+
+def flatten(x): return list(itertools.chain.from_iterable(x))
 
 
 if __name__ == '__main__':
@@ -136,7 +166,6 @@ if __name__ == '__main__':
             for stmt in stmts_condition:
                 pr = global_mc.check_statement(stmt, 1000, 10)
                 path_results.append(pr)
-            #path_results = mc.check_model(2, 5)
             # Get a dict of measured values by INDRA Agents for this condition
             agent_values = get_agent_values(antibody_agents, values_condition)
             # Get a single list of paths for this condition

@@ -344,36 +344,6 @@ def get_agent_values_for_condition(data, cell_line, drug, time, dose):
     return values
 
 
-def get_task_1(data, inverse=False):
-    """Return the test cases to be explained for Task 1."""
-    # TASK 1
-    # We observe a dose-dependent decrease of p-S6(S235/236)
-    # across five cell lines (C32, LOXIMVI, MMACSF, MZ7MEL, RVH421) and all
-    # drugs. Feel free to use any or all of the time points in your
-    # explanation.
-    antibody_agents = get_antibody_agents()
-    obs_agents = antibody_agents['p-S6(S235/236)']
-    # We fix the time point to 10 hours
-    time = 10
-    # Structure: cell line / drug / dose / time
-    stmts_to_check = {}
-    for cell_line  in ('C32', 'LOXIMVI', 'MMACSF', 'MZ7MEL', 'RVH421'):
-        stmts_to_check[cell_line] = {}
-        for drug in drug_names.keys():
-            stmts_to_check[cell_line][drug] = {}
-            target_agents = [agent_phos(target, []) for
-                             target in drug_targets[drug]]
-            for dose in drug_doses:
-                values = get_agent_values_for_condition(data, cell_line,
-                                                        drug, time, dose)
-                stmts_to_check[cell_line][drug][dose] = [[], values]
-                for target, obs in itertools.product(target_agents, obs_agents):
-                    if not inverse:
-                        st = Phosphorylation(target, obs)
-                    else:
-                        st = Dephosphorylation(target, obs)
-                    stmts_to_check[cell_line][drug][dose][0].append(st)
-    return stmts_to_check
 
 
 def get_task_5(data, inverse=False):
