@@ -1,4 +1,3 @@
-import os
 from util import *
 from process_data import *
 from assemble_pysb import print_initial_conditions

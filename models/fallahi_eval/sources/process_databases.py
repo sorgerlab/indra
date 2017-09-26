@@ -1,10 +1,9 @@
-import pickle
-import itertools
 from indra.util import _require_python3
+import itertools
 from indra.sources import biopax
 from indra.tools.gene_network import GeneNetwork
 import indra.tools.assemble_corpus as ac
-from assemble_models import prefixed_pkl, based
+from util import prefixed_pkl, based
 
 
 phosphosite_owl_file = 'sources/Kinase_substrates.owl'
@@ -29,10 +28,10 @@ def grouped_biopax_query(gene_names, database_filter, block_size=60):
     for genes1, genes2 in itertools.product(gene_blocks, repeat=2):
         if genes1 == genes2:
             bp = biopax.process_pc_pathsbetween(genes1,
-                                            database_filter=database_filter)
+                                                database_filter=database_filter)
         else:
             bp = biopax.process_pc_pathsfromto(genes1, genes2,
-                                           database_filter=database_filter)
+                                               database_filter=database_filter)
         stmts += bp.statements
     # Filter out blacklist
     final_stmts = []
@@ -49,7 +48,6 @@ def build_prior(gene_names):
     gn = GeneNetwork(gene_names, basen)
     bel_stmts = gn.get_bel_stmts(filter=False)
     ac.dump_statements(bel_stmts, prefixed_pkl('bel'))
-    # This call results in 504 error currently
     database_filter = ['reactome', 'kegg', 'pid']
     biopax_stmts = grouped_biopax_query(gene_names, database_filter)
     ac.dump_statements(biopax_stmts, prefixed_pkl('biopax'))

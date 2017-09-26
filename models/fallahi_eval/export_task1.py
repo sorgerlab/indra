@@ -1,6 +1,5 @@
 from util import *
-import indra.tools.assemble_corpus as ac
-from run_task1 import export_paths, report_paths
+from run_task1 import report_paths
 import group_paths as gp
 
 stmts = pklload('pysb_stmts')

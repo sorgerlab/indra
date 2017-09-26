@@ -1,4 +1,3 @@
-import os
 from util import *
 from indra.statements import *
 from indra.assemblers import IndexCardAssembler

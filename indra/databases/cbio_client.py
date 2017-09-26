@@ -373,8 +373,6 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
 def get_ccle_cna(gene_list, cell_lines):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
-    This is a specialized call to get_mutations tailored to CCLE cell lines.
-
     CNA values correspond to the following alterations
     -2 = homozygous deletion
     -1 = hemizygous deletion

@@ -1,9 +1,9 @@
 import pickle
 from indra.databases import hgnc_client
-from util import prefixed_pkl
 from indra.explanation.model_checker import stmt_from_rule
-from process_data import cell_lines
 from indra.databases.context_client import get_protein_expression
+from util import prefixed_pkl
+from process_data import cell_lines
 
 
 def group_scored_paths(scored_paths, model, stmts):

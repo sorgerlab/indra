@@ -1,7 +1,3 @@
-import os
-import json
-import pickle
-import itertools
 from indra.util import _require_python3
 import indra.tools.assemble_corpus as ac
 from indra.tools.reading.submit_reading_pipeline_aws import \
@@ -21,7 +17,7 @@ def run_reading(pmid_fname):
     job_list = submit_run_reach(basen, pmid_fname)
     # Wait for reading to complete
     reading_res = wait_for_complete(job_list)
-    # Submid pickle combine job
+    # Submit pickle combine job
     combine_res = submit_combine(basen, job_list)
     # Download the file and save
 

@@ -20,7 +20,7 @@ mutation_effect_file = 'data/mutation_effects.tsv'
 
 
 def read_rppa_data(fname=rppa_pkl):
-    """Return RPPA data as a dict median/std DataFrames."""
+    """Return RPPA data as a dict of median/std DataFrames."""
     # If the filename passed is a pickle, just load it and return
     if fname.endswith('pkl'):
         print('Loading data from %s' % fname)
@@ -49,6 +49,7 @@ def read_rppa_data(fname=rppa_pkl):
 
 
 def read_variants(gene_names):
+    """Return genetic variants reported by Sanger (provided locally)"""
     def read_aa_change(aa_change):
         match = re.match('p.([A-Z])(\d+)([A-Z])', aa_change)
         if not match:
@@ -90,6 +91,7 @@ def read_variants(gene_names):
 
 
 def read_ccle_variants(gene_names):
+    """Return genetic variants reported by CCLE (via web service)"""
     cell_lines_db = [cl + '_SKIN' for cl in cell_lines]
     nons = cbio_client.get_ccle_mutations(gene_names, cell_lines_db, 'nonsense')
     miss = cbio_client.get_ccle_mutations(gene_names, cell_lines_db, 'missense')
@@ -341,6 +343,7 @@ def get_agent_values_for_condition(data, cell_line, drug, time, dose):
             values[ab] = value
     return values
 
+
 def get_task_1(data, inverse=False):
     """Return the test cases to be explained for Task 1."""
     # TASK 1
@@ -380,7 +383,6 @@ def get_task_5(data, inverse=False):
     # c-Jun in the cell line C32.
     antibody_agents = get_antibody_agents()
     obs_agents = antibody_agents['Total c-Jun']
-    #obs_agents = [Agent('RB1', activity=ActivityCondition('activity', False), db_refs={'HGNC': '9884'})]
     # We fix the time point to 24 hours
     time = 24
     # We look at doses at least 0.1 since the effect is only observed there
@@ -433,7 +435,6 @@ def build_context_json(data, cell_lines, filename="fallahi"):
     ab_dict = {'antibody': [], 'gene': [], 'site': []}
     for ab, d in antibody_map.items():
         for hgnc, sites in d.items():
-            residue = None
             if len(sites) > 0:
                 for s in sites:
                     residue = s[0] + s[1]
@@ -473,7 +474,6 @@ def build_context_json(data, cell_lines, filename="fallahi"):
     select_array = select_df.values.tolist()
     with open(filename + '_select.json', 'w') as outfile:
         json.dump(select_array, outfile, indent=None, sort_keys=False)
-
 
 
 cell_lines = ['C32', 'LOXIMVI', 'RVH421', 'SKMEL28', 'WM115',

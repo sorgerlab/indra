@@ -136,6 +136,7 @@ def contextualize_model(model, cell_line, genes):
     pa.model = model
     pa.set_context(cell_line_ccle)
 
+    # Set initial conditions for missense mutations
     variants = read_ccle_variants(genes)
     mutations = variants['missense'][cell_line_ccle]
     for gene, mut_list in mutations.items():
@@ -164,14 +165,21 @@ def get_mod_whitelist():
 
 
 def print_initial_conditions(cell_lines, gene_names, fname):
+    """Print a table with initial states/conditions for each cell line."""
     fh = open(fname, 'wt')
     genes_per_model = {}
+    # First we collect the state and initial value of proteins
+    # in each cell line into a dict
     for cell_line in cell_lines:
         genes_per_model[cell_line] = {}
         model = pklload('pysb_model_%s' % cell_line)
         inits = sorted(model.initial_conditions,
             key=lambda x: x[0].monomer_patterns[0].monomer.name)
+        # A list of "basic" states, deviation from which indicates
+        # a "special" state like a mutated form
         basic_states = ['n', 'u', 'WT', 'inactive', None]
+        # Iterate over all the initial conditions to collect them
+        # in the genes_per_model datastructure
         for cplx, initial in inits:
             name = cplx.monomer_patterns[0].monomer.name
             extra_states = []
@@ -185,6 +193,8 @@ def print_initial_conditions(cell_lines, gene_names, fname):
             if extra_states:
                 val_str += ' (%s)' % ', '.join(extra_states)
             genes_per_model[cell_line][name] = val_str
+    # Print the file while skipping proteins that aren't in any of
+    # the cell line specific models.
     header = 'Protein\t' + '\t'.join(cell_lines) + '\n'
     fh.write(header)
     for gene in gene_names:
