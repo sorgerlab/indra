@@ -27,6 +27,27 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
                  "in NFkappaB-mediated cell survival.",
         SIGNOR_ID='SIGNOR-241929')
 
+test_row_binding = SignorRow(ENTITYA='SERPINA1', TYPEA='protein', IDA='P01009', 
+        DATABASEA='UNIPROT', ENTITYB='LRP1', TYPEB='protein', IDB='Q07954',
+        DATABASEB='UNIPROT', EFFECT='up-regulates', MECHANISM='binding',
+        RESIDUE='', SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
+        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
+        MODIFICATIONB='', MODBSEQ='', PMID='8626456', DIRECT='YES', NOTES='',
+        ANNOTATOR='gcesareni', SENTENCE='In vitro binding studies revealed '\
+                'that antithrombin iii (atiii)thrombin, heparin cofactor ii '\
+                '(hcii)thrombin, and ?1-antitrypsin (?1AT)trypsin bound to '\
+                'purified lrp',
+        SIGNOR_ID='SIGNOR-41180')
+
+test_row_dup1 = SignorRow(ENTITYA='722544-51-6', TYPEA='chemical',
+        IDA='CID:16007391', DATABASEA='PUBCHEM', ENTITYB='AURKB',
+        TYPEB='protein', IDB='Q96GD4', DATABASEB='UNIPROT',
+        EFFECT='down-regulates', MECHANISM='chemical inhibition', RESIDUE='',
+        SEQUENCE='', TAX_ID='9606', CELL_DATA='', TISSUE_DATA='',
+        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
+        MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
+        NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
+        SIGNOR_ID='SIGNOR-190245')
 
 def test_parse_csv():
     sp = SignorProcessor(signor_test_path)
@@ -97,6 +118,23 @@ def test_process_row():
     assert isinstance(mech_stmts[0], IncreaseAmount)
 
 
+def test_process_row_binding():
+    (effect_stmt, mech_stmts, af_stmt) = \
+                    SignorProcessor._process_row(test_row_binding)
+    assert isinstance(effect_stmt, Activation)
+    assert isinstance(mech_stmts, list)
+    assert len(mech_stmts) == 1
+    assert isinstance(mech_stmts[0], Complex)
+
+
+def test_process_row_dup1():
+    (effect_stmt, mech_stmts, af_stmt) = \
+                    SignorProcessor._process_row(test_row_dup1)
+    assert isinstance(effect_stmt, Inhibition)
+    assert isinstance(mech_stmts, list)
+    assert len(mech_stmts) == 0
+
+
 def test_parse_residue_positions():
     residues = _parse_residue_positions('TYR304')
     assert len(residues) == 1
@@ -128,16 +166,21 @@ def test_parse_residue_positions():
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
 
+
 def test_get_mechanism():
     sp = SignorProcessor(signor_test_path)
     assert sp.statements
     globals().update(locals())
 
 if __name__ == '__main__':
+    test_process_row_dup1()
+    """
     test_parse_csv()
     test_get_agent()
     test_get_agent_keyerror()
     test_get_evidence()
     test_process_row()
+    test_process_row_binding()
     test_parse_residue_positions()
     test_get_mechanism()
+    """

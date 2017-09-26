@@ -134,6 +134,14 @@ class SignorProcessor(object):
         Path to SIGNOR CSV file.
     delimiter : str
         Field delimiter for CSV file. Defaults to semicolon ';'.
+
+    Attributes
+    ----------
+    skipped_rows : list of SignorRow namedtuples
+        List of rows where no mechanism statements were generated.
+    skip_ctr : collections.Counter
+        Counter listing the frequency of different MECHANISM types in the
+        list of skipped rows.
     """
     def __init__(self, signor_csv, delimiter=';'):
         # Get generator over the CSV file
@@ -225,12 +233,9 @@ class SignorProcessor(object):
         else:
             effect_stmt = effect_stmt_type(agent_a, agent_b, evidence=evidence)
 
-        # Next, get mechanism statement
-        if row.MECHANISM == 'binding':
-            mech_stmt_type = None
         # If the mechanism is transcriptional regulation, we need to check
         # the effect to know whether it is an increase or decrease
-        elif row.MECHANISM == 'transcriptional regulation' and \
+        if row.MECHANISM == 'transcriptional regulation' and \
              not row.EFFECT == 'unknown':
             assert row.EFFECT and (row.EFFECT.startswith('up') or \
                                    row.EFFECT.startswith('down'))
@@ -252,10 +257,18 @@ class SignorProcessor(object):
                 residues = _parse_residue_positions(row.RESIDUE)
                 mech_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
                                         evidence=evidence) for res in residues]
+        # Don't make a new complex statement if 
+        elif mech_stmt_type == Complex:
+            mech_stmts = [mech_stmt_type([agent_a, agent_b], evidence=evidence)]
         elif mech_stmt_type:
             mech_stmts = [mech_stmt_type(agent_a, agent_b, evidence=evidence)]
         else:
             mech_stmts = []
+
+        if effect_stmt is not None and \
+           effect_stmt.matches_key() in [s.matches_key() for s in mech_stmts]:
+            logger.warning("Duplicate statement!")
+            #print(repr(row))
 
         return (effect_stmt, mech_stmts, None)
 
@@ -286,3 +299,10 @@ def _parse_residue_positions(residue_field):
             return (None, None)
         return (res, pos)
     return [_parse_respos(rp) for rp in res_strs]
+
+"""
+Known issues:
+* The generic "up-regulates" effect type should be mapped to a generic up
+  regulation rather than Activation/Inhibition, as it is currently.
+*
+"""
