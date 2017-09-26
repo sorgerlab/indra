@@ -193,6 +193,47 @@ def test_process_row_binding_complex():
     assert len(stmts[0].agent_list()) == 2
 
 
+def test_process_row_phos_up():
+    test_row = SignorRow(ENTITYA='CHEK2', TYPEA='protein', IDA='O96017',
+            DATABASEA='UNIPROT', ENTITYB='CHEK2', TYPEB='protein', IDB='O96017',
+            DATABASEB='UNIPROT', EFFECT='up-regulates activity',
+            MECHANISM='phosphorylation', RESIDUE='Thr387',
+            SEQUENCE='LMRTLCGtPTYLAPE', TAX_ID='9606', CELL_DATA='BTO:0000007',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
+            SENTENCE='', SIGNOR_ID='SIGNOR-116131')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Phosphorylation)
+    assert stmts[1].residue == 'T'
+    assert stmts[1].position == '387'
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = ag.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue == 'T'
+    assert mc.position == '387'
+
+
+def test_process_row_phos_down():
+    # TODO
+    pass
+
+
+def test_process_row_complex_up():
+    # TODO
+    pass
+
+
+def test_process_row_complex_down():
+    # TODO
+    pass
+
+
 def test_parse_residue_positions():
     residues = _parse_residue_positions('TYR304')
     assert len(residues) == 1
@@ -225,13 +266,15 @@ def test_parse_residue_positions():
     assert residues[1][1] == '171'
 
 
+
+
 def test_get_mechanism():
     sp = SignorProcessor(signor_test_path)
     assert sp.statements
     globals().update(locals())
 
 if __name__ == '__main__':
-    test_process_row_destab()
+    #test_process_row_destab()
     #test_parse_csv()
     #test_get_agent()
     #test_get_agent_keyerror()
@@ -240,4 +283,4 @@ if __name__ == '__main__':
     #test_process_row_binding()
     #test_process_row_chem_inh()
     #test_parse_residue_positions()
-    #test_get_mechanism()
+    test_get_mechanism()

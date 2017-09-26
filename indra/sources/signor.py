@@ -294,7 +294,6 @@ class SignorProcessor(object):
 
         return stmts
 
-# TODO: Mappings for SIGNOR families, complexes, etc.
 
 def _parse_residue_positions(residue_field):
     # First see if this string contains two positions
@@ -326,5 +325,5 @@ def _parse_residue_positions(residue_field):
 Known issues:
 * The generic "up-regulates" effect type should be mapped to a generic up
   regulation rather than Activation/Inhibition, as it is currently.
-*
+* Mappings for SIGNOR families, complexes, etc.
 """
