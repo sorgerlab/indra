@@ -417,15 +417,17 @@ def build_context_json(data, cell_lines, filename="fallahi"):
     long_df = pandas.DataFrame(columns=['id', 'variable', 'value'])
     for cl in cell_lines:
         df = deepcopy(data[cl]['median'])
+        df['cell_line'] = cl
         select_df = select_df.append(df[['Drug',
                                          'Concentration (uM)',
-                                         'Time (hr)']])
-        select_df['cell_line'] = cl
+                                         'Time (hr)',
+                                         'cell_line']])
         df['id'] = df.apply(lambda x: '%s_%s_%s_%s' %
                             (x['Drug'], x['Concentration (uM)'],
-                             x['Time (hr)'], cl),
+                             x['Time (hr)'], x['cell_line']),
                             axis=1)
-        df = df.drop(['Drug', 'Time (hr)', 'Concentration (uM)'], axis=1)
+        df = df.drop(['Drug', 'Time (hr)',
+                      'Concentration (uM)', 'cell_line'], axis=1)
         df = df.melt(id_vars=['id'])
         long_df = long_df.append(df)
     ab_dict = {'antibody': [], 'gene': [], 'site': []}
@@ -446,7 +448,7 @@ def build_context_json(data, cell_lines, filename="fallahi"):
     ab_df = pandas.DataFrame(ab_dict)
     long_data = pandas.merge(long_df, ab_df,
                              left_on='variable', right_on='antibody')
-    long_data = long_data.dropna()
+    long_data = long_data[~long_data['value'].isin([None])]
     recursivedict = lambda: collections.defaultdict(recursivedict)
     j = recursivedict()
     df1 = long_data
