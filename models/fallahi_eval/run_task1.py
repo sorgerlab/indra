@@ -3,8 +3,8 @@ import itertools
 from copy import deepcopy
 import indra.tools.assemble_corpus as ac
 from indra.assemblers import EnglishAssembler
-from indra.explanation.reporting import stmts_for_path
-from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
+from indra.explanation.reporting import stmts_from_path
+from indra.explanation.model_checker import ModelChecker
 from util import pkldump, pklload
 from assemble_pysb import contextualize_model, prefixed_pkl
 from process_data import read_rppa_data, get_task_1, get_antibody_agents
@@ -40,7 +40,7 @@ def export_paths(scored_paths, model, stmts):
             path, score = scpaths[0]
             label = '%s_%s_%s_%s' % (drug, time, conc, cell_line)
             paths[label] = {'meta': [], 'path': []}
-            path_stmts = stmts_for_path(path, model, stmts)
+            path_stmts = stmts_from_path(path, model, stmts)
             uuids = [stmt.uuid for stmt in path_stmts]
             paths[label]['path'] = uuids
     return paths
@@ -58,7 +58,7 @@ def report_paths(scored_paths, model, stmts, cell_line):
             title += ' in %s cells?' % cell_line
             print(title)
             print('=' * len(title))
-            path_stmts = stmts_for_path(path, model, stmts)
+            path_stmts = stmts_from_path(path, model, stmts)
             sentences = []
             for i, stmt in enumerate(path_stmts):
                 if i == 0:

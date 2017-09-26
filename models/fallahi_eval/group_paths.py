@@ -1,14 +1,14 @@
 import pickle
 from indra.databases import hgnc_client
 from util import prefixed_pkl
-from indra.explanation.model_checker import _stmt_from_rule
+from indra.explanation.model_checker import stmt_from_rule
 from process_data import cell_lines
 from indra.databases.context_client import get_protein_expression
 
 
 def group_scored_paths(scored_paths, model, stmts):
     def gene_from_rule(rule_name, agent_ix):
-        rule_stmt = _stmt_from_rule(model, rule_name, stmts)
+        rule_stmt = stmt_from_rule(model, rule_name, stmts)
         if not rule_stmt:
             print("Could not get stmt for rule %s" % rule_name)
             return None

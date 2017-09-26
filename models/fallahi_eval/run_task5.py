@@ -3,7 +3,7 @@ from copy import deepcopy
 import itertools
 from indra.assemblers import EnglishAssembler
 from indra.explanation.reporting import stmts_for_path
-from indra.explanation.model_checker import ModelChecker, _stmt_from_rule
+from indra.explanation.model_checker import ModelChecker
 from util import pklload, pkldump
 from process_data import read_rppa_data, get_task_5, get_antibody_agents
 from assemble_pysb import contextualize_model, prefixed_pkl
