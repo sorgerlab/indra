@@ -3,9 +3,10 @@ import json
 import pickle
 from indra.databases import uniprot_client, hgnc_client
 from indra.statements import stmts_from_json, Evidence
-from assemble_models import prefixed_pkl
+from util import prefixed_pkl
 
 active_forms_files = ['cure-active-forms-2017-03-30.txt']
+
 
 def read_jsons(fname):
     all_json = []
@@ -16,6 +17,7 @@ def read_jsons(fname):
         lin_json = json.loads(l)
         all_json.append(lin_json)
     return all_json
+
 
 def read_stmts(fname):
     jsons = read_jsons(fname)
@@ -51,12 +53,14 @@ def read_stmts(fname):
     stmts = eliminate_duplicates(stmts)
     return stmts
 
+
 def fix_mod_conditions(agent):
     for mc in agent.mods:
         if mc.mod_type == 'glucosylation':
             mc.mod_type = 'glycosylation'
         if mc.mod_type == 'fucosylation':
             mc.mod_type = 'glycosylation'
+
 
 def fix_protein_grounding(agent):
     for k, v in agent.db_refs.items():
@@ -73,6 +77,7 @@ def fix_protein_grounding(agent):
         if hgnc_id:
             agent.name = hgnc_symbol
             agent.db_refs['HGNC'] = hgnc_id
+
 
 def eliminate_duplicates(stmts):
     stmts_by_ag = {}
