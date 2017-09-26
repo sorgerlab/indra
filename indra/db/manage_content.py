@@ -14,7 +14,6 @@ import multiprocessing as mp
 from os import path
 from ftplib import FTP
 from io import BytesIO
-import psycopg2
 import pickle
 from threading import Thread
 from sympy.printing.pretty.tests.test_pretty import th
@@ -61,6 +60,14 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 from indra.db import get_primary_db, texttypes, formats
+
+
+try:
+    from psycopg2 import IntegrityError
+except ImportError:
+    class IntegrityError(object):
+        "Using this in a try-except will catch nothing. (That's the point.)"
+        pass
 
 
 ftp_blocksize = 33554432  # Chunk size recommended by NCBI
@@ -185,7 +192,7 @@ class Manager(object):
         "Wrapper around the db.copy feature, pickels args upon exception."
         try:
             db.copy(*args, **kwargs)
-        except psycopg2.IntegrityError as e:
+        except IntegrityError as e:
             pkl_file_fmt = "copy_failure_%d.pkl"
             i = 0
             while os.path.exists(pkl_file_fmt % i):
