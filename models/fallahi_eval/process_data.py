@@ -344,43 +344,6 @@ def get_agent_values_for_condition(data, cell_line, drug, time, dose):
     return values
 
 
-
-
-def get_task_5(data, inverse=False):
-    """Return the test cases to be explained for Task 5."""
-    # TASK 5: We observe a dose-dependent increase in total c-Jun
-    # in the cell line RVH421 but a dose-dependent decrease in total
-    # c-Jun in the cell line C32.
-    antibody_agents = get_antibody_agents()
-    obs_agents = antibody_agents['Total c-Jun']
-    # We fix the time point to 24 hours
-    time = 24
-    # We look at doses at least 0.1 since the effect is only observed there
-    dose_lower_bound = 0.1
-    # Structure: cell line / drug / dose / time
-    stmts_to_check = {}
-    for cell_line  in ('C32', 'RVH421'):
-        stmts_to_check[cell_line] = {}
-        for drug in drug_names.keys():
-            stmts_to_check[cell_line][drug] = {}
-            target_agents = [agent_phos(target, []) for
-                             target in drug_targets[drug]]
-            for dose in drug_doses:
-                if dose < dose_lower_bound:
-                    continue
-                values = get_agent_values_for_condition(data, cell_line,
-                                                        drug, time, dose)
-                stmts_to_check[cell_line][drug][dose] = [[], values]
-                for target, obs in itertools.product(target_agents, obs_agents):
-                    if (cell_line == 'C32' and not inverse) or \
-                        (cell_line == 'RVH421' and inverse):
-                        st = IncreaseAmount(target, obs)
-                    else:
-                        st = DecreaseAmount(target, obs)
-                    stmts_to_check[cell_line][drug][dose][0].append(st)
-    return stmts_to_check
-
-
 def build_context_json(data, cell_lines, filename="fallahi"):
     """Save context in a format readable by the pathway map"""
     select_df = pandas.DataFrame(columns=['Drug',
