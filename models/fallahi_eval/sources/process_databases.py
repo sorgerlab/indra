@@ -1,9 +1,8 @@
 from indra.util import _require_python3
-import itertools
 from indra.sources import biopax
 from indra.tools.gene_network import GeneNetwork
 import indra.tools.assemble_corpus as ac
-from util import prefixed_pkl, based
+from util import prefixed_pkl, based, basen
 
 
 phosphosite_owl_file = 'sources/Kinase_substrates.owl'
@@ -18,39 +17,25 @@ def read_phosphosite_owl(fname=phosphosite_owl_file):
     return bp.statements
 
 
-def grouped_biopax_query(gene_names, database_filter, block_size=60):
-    gene_blocks = [gene_names[i:i+block_size] for i in
-                   range(0, len(gene_names), block_size)]
-    stmts = []
-    # Run pathsfromto between pairs of blocks and pathsbetween
-    # within each block. This breaks up a single call with N genes into
-    # (N/block_size)*(N/blocksize) calls with block_size genes
-    for genes1, genes2 in itertools.product(gene_blocks, repeat=2):
-        if genes1 == genes2:
-            bp = biopax.process_pc_pathsbetween(genes1,
-                                                database_filter=database_filter)
-        else:
-            bp = biopax.process_pc_pathsfromto(genes1, genes2,
-                                               database_filter=database_filter)
-        stmts += bp.statements
-    # Filter out blacklist
-    final_stmts = []
-    for stmt in stmts:
-        source_ids = [ev.source_id for ev in stmt.evidence]
-        if set(source_ids) & set(biopax_blacklist):
-            continue
-        final_stmts.append(stmt)
-    return final_stmts
-
-
 def build_prior(gene_names):
     """Build a corpus of prior Statements from PC and BEL."""
     gn = GeneNetwork(gene_names, basen)
+    # Read BEL Statements
     bel_stmts = gn.get_bel_stmts(filter=False)
     ac.dump_statements(bel_stmts, prefixed_pkl('bel'))
+    # Read Pathway Commons Statements
     database_filter = ['reactome', 'kegg', 'pid']
-    biopax_stmts = grouped_biopax_query(gene_names, database_filter)
+    biopax_stmts = gn.get_biopax_stmts(database_filter=database_filter)
+    # Eliminate blacklisted interactions
+    tmp_stmts = []
+    for stmt in biopax_stmts:
+        source_ids = [ev.source_id for ev in stmt.evidence]
+        if set(source_ids) & set(biopax_blacklist):
+            continue
+        tmp_stmts.append(stmt)
+    biopax_stmts = tmp_stmts
     ac.dump_statements(biopax_stmts, prefixed_pkl('biopax'))
+    # Read Phosphosite Statements
     phosphosite_stmts = read_phosphosite_owl(phosphosite_owl_file)
     ac.dump_statements(phosphosite_stmts, prefixed_pkl('phosphosite'))
 
