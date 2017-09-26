@@ -14,6 +14,11 @@ import multiprocessing as mp
 from os import path
 from ftplib import FTP
 from io import BytesIO
+import psycopg2
+import pickle
+from threading import Thread
+from sympy.printing.pretty.tests.test_pretty import th
+from time import sleep
 logger = logging.getLogger('content_manager')
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
@@ -176,6 +181,21 @@ class Manager(object):
     """
     my_source = NotImplemented
 
+    def copy_into_db(self, db, *args, **kwargs):
+        "Wrapper around the db.copy feature, pickels args upon exception."
+        try:
+            db.copy(*args, **kwargs)
+        except psycopg2.IntegrityError as e:
+            pkl_file_fmt = "copy_failure_%d.pkl"
+            i = 0
+            while os.path.exists(pkl_file_fmt % i):
+                i += 1
+            with open(pkl_file_fmt % i, 'wb') as f:
+                pickle.dump((e, args, kwargs), f, protocol=3)
+            logger.error('Failed in a copy. Pickling args and kwargs.')
+            logger.exception(e)
+            logger.info('Continuing...')
+
     def populate(self, db):
         "A stub for the method used to initially populate the database."
         raise NotImplementedError(
@@ -274,7 +294,8 @@ class Medline(NihManager):
                 text_content_info[pmid] = \
                     (self.my_source, 'text', texttypes.ABSTRACT, abstract_gz)
 
-        db.copy(
+        self.copy_into_db(
+            db,
             'text_ref',
             text_ref_records,
             ('pmid', 'pmcid', 'doi', 'pii',)
@@ -297,7 +318,8 @@ class Medline(NihManager):
             tr_id = pmid_tr_dict[pmid]
             text_content_records.append((tr_id,) + tc_data)
 
-        db.copy(
+        self.copy_into_db(
+            db,
             'text_content',
             text_content_records,
             cols=('text_ref_id', 'source', 'format', 'text_type', 'content',)
@@ -376,22 +398,62 @@ class PmcManager(NihManager):
         self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
                         'content',)
 
+    def get_missing_pmids(self, tr_data):
+        "Try to get missing pmids."
+
+        def lookup_pmid(tr_entry):
+            ret = id_lookup(tr_entry['pmcid'])
+            if 'pmid' in ret.keys():
+                tr_entry['pmid'] = ret['pmid']
+
+        thread_list = []
+        for tr_entry in tr_data:
+            if tr_entry['pmid'] is None:
+                th = Thread(target=lookup_pmid, args=[tr_entry])
+                thread_list.append(th)
+
+        N = min(10, len(thread_list))
+        active_threads = []
+        for _ in range(N):
+            th = thread_list.pop()
+            th.start()
+            active_threads.append(th)
+
+        while len(thread_list):
+            for th in active_threads[:]:
+                if not th.is_alive():
+                    th.join()
+                    active_threads.remove(th)
+                    if len(thread_list):
+                        new_th = thread_list.pop()
+                        new_th.start()
+                        active_threads.append(th)
+            sleep(0.0001)
+
+        for th in active_threads:
+            th.join()
+
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
         logger.info("Beginning to filter text refs...")
-        if len(tr_data):
-            tr_list = db.select_all(
-                'text_ref',
-                db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
-                db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
-                )
-            db_conts = {
-                'pmid': [tr.pmid for tr in tr_list],
-                'pmcid': [tr.pmcid for tr in tr_list]
-                }
-        else:
-            tr_list = []
-            db_conts = {'pmid': [], 'pmcid': []}
+        if not len(tr_data):
+            return [], []
+
+        self.get_missing_pmids(tr_data)
+
+        tr_list = db.select_all(
+            'text_ref',
+            db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
+            db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
+            )
+        db_conts = {
+            'pmid': [tr.pmid for tr in tr_list],
+            'pmcid': [tr.pmcid for tr in tr_list]
+            }
+        paired_list = [
+            (tr.pmid, tr.pmcid) for tr in tr_list
+            ]
+        del tr_list
         logger.debug("Got db contents...")
 
         # Define some helpful functions.
@@ -416,27 +478,26 @@ class PmcManager(NihManager):
 
         def update_record_with_pmid(tr_entry, pmid=None):
             logger.debug("Updating a record with a new pmid %s..." % pmid)
-            tr = db.select_one('text_ref', db.TextRef.pmcid == tr_entry['pmcid'])
+            tr = db.select_one(
+                'text_ref',
+                db.TextRef.pmcid == tr_entry['pmcid']
+                )
             tr.pmid = tr_entry['pmid'] if pmid is None else pmid
             db.commit('Failed to update pmid %s.' % tr.pmid)
             logger.debug("Done updating...")
 
-        def lookup_pmid(pmcid):
-            logger.debug("Looking for a missing pmid...")
-            ret = id_lookup(pmcid)
-            logger.debug("Done looking...")
-            return None if 'pmid' not in ret.keys() else ret['pmid']
-
+        '''
         def db_has_pmid(pmid):
             logger.debug("Looking for pmid in db...")
             ret = db.has_entry('text_ref', db.TextRef.pmid == pmid)
             logger.debug("Determined pmid status...")
             return ret
+        '''
 
-        def get_tr_from_pmid(pmid):
-            for tr in tr_list:
-                if tr.pmid == pmid:
-                    return tr
+        def pmid_to_pmcid(pmid):
+            for a_pmid, a_pmcid in paired_list:
+                if a_pmid == pmid:
+                    return a_pmcid
             return None
 
         # Process the text ref data.
@@ -447,25 +508,15 @@ class PmcManager(NihManager):
             if N >= 10 and i % int(N/10) is 0:
                 logger.debug('%d%% done filtering text_refs...' % (100*i/N))
             if tr_entry['pmcid'] in db_conts['pmcid']:
-                if tr_entry['pmid'] is None:
-                    pmid = lookup_pmid(tr_entry['pmcid'])
-                    if pmid is not None and not db_has_pmid(pmid):
-                            update_record_with_pmid(tr_entry, pmid)
-                elif tr_entry['pmid'] not in db_conts['pmid']:
+                if tr_entry['pmid'] not in db_conts['pmid']:
                     update_record_with_pmid(tr_entry)
             else:
                 if tr_entry['pmid'] is None:
-                    pmid = lookup_pmid(tr_entry['pmcid'])
-                    if pmid is not None and db_has_pmid(pmid):
-                            tr_entry['pmid'] = pmid
-                            update_record_with_pmcid(tr_entry)
-                    else:
-                        tr_entry['pmid'] = pmid
-                        add_record(tr_entry)
+                    add_record(tr_entry)
                 elif tr_entry['pmid'] in db_conts['pmid']:
-                    if get_tr_from_pmid(tr_entry['pmid']).pmcid is None:
+                    if pmid_to_pmcid(tr_entry['pmid']) is None:
                         update_record_with_pmcid(tr_entry)
-                    else:
+                    elif pmid_to_pmcid(tr_entry['pmid']) != tr_entry['pmcid']:
                         with open('review.txt', 'a') as f:
                             f.write(
                                 'Skipped record from %s with pmcid %s due to '
@@ -482,6 +533,8 @@ class PmcManager(NihManager):
         'Filter the text content to identify pre-existing records.'
         logger.info("Beginning to filter text content...")
         arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
+        if not len(tc_data):
+            return []
         tref_list = db.select_all(
             'text_ref',
             db.TextRef.pmcid.in_(arc_pmcid_list)
@@ -516,7 +569,7 @@ class PmcManager(NihManager):
             rec for rec in tc_records if rec[:-1] not in existing_tc_records
             ]
         logger.info("Finished filtering the text content...")
-        return filtered_tc_records
+        return list(set(filtered_tc_records))
 
     def upload_batch(self, db, tr_data, tc_data):
         "Add a batch of text refs and text content to the database."
@@ -531,7 +584,12 @@ class PmcManager(NihManager):
 
         # Upload the text content data.
         logger.info('Adding %d new text refs...' % len(filtered_tr_records))
-        db.copy('text_ref', filtered_tr_records, self.tr_cols)
+        self.copy_into_db(
+            db,
+            'text_ref',
+            filtered_tr_records,
+            self.tr_cols
+            )
 
         # Process the text content data
         filtered_tc_records = self.filter_text_content(db, mod_tc_data)
@@ -539,7 +597,12 @@ class PmcManager(NihManager):
         # Upload the text content data.
         logger.info('Adding %d more text content entries...' %
                     len(filtered_tc_records))
-        db.copy('text_content', filtered_tc_records, self.tc_cols)
+        self.copy_into_db(
+            db,
+            'text_content',
+            filtered_tc_records,
+            self.tc_cols
+            )
 
     def get_data_from_xml_str(self, xml_str, filename):
         "Get the data out of the xml string."

@@ -88,6 +88,7 @@ class DatabaseManager(object):
     """
     def __init__(self, host, sqltype=sqltypes.POSTGRESQL):
         self.host = host
+        self.session = None
         self.Base = declarative_base()
         self.sqltype = sqltype
 
@@ -187,17 +188,13 @@ class DatabaseManager(object):
             self.tables[tbl.__tablename__] = tbl
             self.__setattr__(tbl.__name__, tbl)
         self.engine = create_engine(host)
-        self.session = None
 
     def __del__(self, *args, **kwargs):
         self.grab_session()
         try:
             self.session.rollback()
         except Exception as e:
-            logger.error(
-                "Failed to execute rollback of database upon deletion."
-                )
-            logger.exception(e)
+            print("Failed to execute rollback of database upon deletion.")
             raise e
 
     def create_tables(self):
@@ -504,7 +501,10 @@ class IndraDatabaseError(Exception):
 
 def get_defaults():
     "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
-    default_default_file = os.path.join(os.path.dirname(__file__), 'defaults.txt')
+    default_default_file = os.path.join(
+        os.path.dirname(__file__),
+        'defaults.txt'
+        )
     env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
     env = os.environ
     available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}
