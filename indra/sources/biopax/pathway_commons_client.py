@@ -79,7 +79,9 @@ def graph_query(kind, source, target=None, neighbor_limit=1,
         else:
             target_str = ','.join(target)
         params['target'] = target_str
-    print(params)
+    logger.info('Sending Pathway Commons query with parameters: ')
+    for k, v in params.items():
+        logger.info(' %s: %s' % (k, v))
 
     logger.info('Sending Pathway Commons query...')
     res = requests.get(pc2_url + 'graph', params=params)

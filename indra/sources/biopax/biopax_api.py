@@ -94,7 +94,7 @@ def process_pc_pathsbetween(gene_names, neighbor_limit=1,
             if genes1 == genes2:
                 bp = process_pc_pathsbetween(genes1,
                                              database_filter=database_filter,
-                                             blocksize=None)
+                                             block_size=None)
             else:
                 bp = process_pc_pathsfromto(genes1, genes2,
                                             database_filter=database_filter)
