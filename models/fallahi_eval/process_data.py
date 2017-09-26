@@ -198,9 +198,9 @@ def get_gene_names(data):
         antibody_gene_list += list(antibody_map[ab].keys())
     ras_gene_list = _read_gene_list('../../data/ras_pathway_proteins.csv')
     msb2015_gene_list = \
-            _read_gene_list('../../data/MohammadFS_MSB_2015_gene_list.csv')
+            _read_gene_list('../../data/MFS_MSB_2015_gene_list.csv')
     msb2017_gene_list = \
-            _read_gene_list('../../data/MohammadFS_MSB_2017_gene_list.csv')
+            _read_gene_list('../../data/MFS_MSB_2017_gene_list.csv')
     gene_names = (ras_gene_list + msb2015_gene_list +
                   msb2017_gene_list + antibody_gene_list)
     gene_names = sorted(list(set(gene_names)))
