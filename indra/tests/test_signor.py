@@ -114,8 +114,7 @@ def test_process_row():
     (effect_stmt, mech_stmts, af_stmt) = SignorProcessor._process_row(test_row)
     assert isinstance(effect_stmt, IncreaseAmount)
     assert isinstance(mech_stmts, list)
-    assert len(mech_stmts) == 1
-    assert isinstance(mech_stmts[0], IncreaseAmount)
+    assert len(mech_stmts) == 0
 
 
 def test_process_row_binding():

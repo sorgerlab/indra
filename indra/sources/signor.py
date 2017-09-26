@@ -265,10 +265,8 @@ class SignorProcessor(object):
         else:
             mech_stmts = []
 
-        if effect_stmt is not None and \
-           effect_stmt.matches_key() in [s.matches_key() for s in mech_stmts]:
-            logger.warning("Duplicate statement!")
-            #print(repr(row))
+        if effect_stmt is not None:
+            mech_stmts = [m for m in mech_stmts if not m.matches(effect_stmt)]
 
         return (effect_stmt, mech_stmts, None)
 
