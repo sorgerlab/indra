@@ -111,27 +111,26 @@ def test_get_evidence():
 
 
 def test_process_row():
-    (effect_stmt, mech_stmts, af_stmt) = SignorProcessor._process_row(test_row)
-    assert isinstance(effect_stmt, IncreaseAmount)
-    assert isinstance(mech_stmts, list)
-    assert len(mech_stmts) == 0
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], IncreaseAmount)
+    assert stmts[0].agent_list()[0].activity.activity_type == 'transcription'
 
 
 def test_process_row_binding():
-    (effect_stmt, mech_stmts, af_stmt) = \
-                    SignorProcessor._process_row(test_row_binding)
-    assert isinstance(effect_stmt, Activation)
-    assert isinstance(mech_stmts, list)
-    assert len(mech_stmts) == 1
-    assert isinstance(mech_stmts[0], Complex)
+    stmts = SignorProcessor._process_row(test_row_binding)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 2
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Complex)
 
 
 def test_process_row_dup1():
-    (effect_stmt, mech_stmts, af_stmt) = \
-                    SignorProcessor._process_row(test_row_dup1)
-    assert isinstance(effect_stmt, Inhibition)
-    assert isinstance(mech_stmts, list)
-    assert len(mech_stmts) == 0
+    stmts = SignorProcessor._process_row(test_row_dup1)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], Inhibition)
 
 
 def test_parse_residue_positions():
@@ -172,14 +171,12 @@ def test_get_mechanism():
     globals().update(locals())
 
 if __name__ == '__main__':
-    test_process_row_dup1()
-    """
-    test_parse_csv()
-    test_get_agent()
-    test_get_agent_keyerror()
-    test_get_evidence()
-    test_process_row()
+    #test_parse_csv()
+    #test_get_agent()
+    #test_get_agent_keyerror()
+    #test_get_evidence()
+    #test_process_row()
     test_process_row_binding()
-    test_parse_residue_positions()
-    test_get_mechanism()
-    """
+    #test_process_row_dup1()
+    #test_parse_residue_positions()
+    #test_get_mechanism()

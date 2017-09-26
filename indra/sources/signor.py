@@ -86,7 +86,7 @@ _mechanism_map = {
     'relocalization': None, # Translocation,
     'small molecule catalysis': None,
     's-nitrosylation': None,
-    'transcriptional regulation': RegulateAmount, # Subject has tscript activity
+    'transcriptional regulation': None, # Need to know if up or down
     'translation regulation': None,
     'tyrosination': None,
     'lipidation': None,
@@ -155,15 +155,8 @@ class SignorProcessor(object):
         self.statements = []
         self.skipped_rows = []
         for row in self._data:
-            (effect_stmt, mech_stmts, af_stmt) = self._process_row(row)
-            if effect_stmt:
-                self.statements.append(effect_stmt)
-            if not mech_stmts:
-                self.skipped_rows.append(row)
-            else:
-                self.statements += mech_stmts
-            if af_stmt:
-                self.statements.append(af_stmt)
+            row_stmts = self._process_row(row)
+            self.statements.extend(row_stmts)
         # Skipped statements by type
         skip_ctr = Counter([row.MECHANISM for row in self.skipped_rows])
         self.skip_ctr = sorted([(k, v) for k, v in skip_ctr.items()],
@@ -222,53 +215,84 @@ class SignorProcessor(object):
         agent_b = SignorProcessor._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
                                              row.DATABASEB)
         evidence = SignorProcessor._get_evidence(row)
-        effect_stmt_type = _effect_map[row.EFFECT]
-        if not effect_stmt_type:
-            effect_stmt = None
-        # FIXME: The effect statement may be missing activity conditions on the
-        # subject and object!
-        elif effect_stmt_type == Complex:
-            effect_stmt = effect_stmt_type([agent_a, agent_b],
-                                           evidence=evidence)
-        else:
-            effect_stmt = effect_stmt_type(agent_a, agent_b, evidence=evidence)
+        stmts = []
+        # First, check for EFFECT/MECHANISM pairs giving rise to a single
+        # mechanism
+        if row.MECHANISM == 'transcriptional regulation' and \
+           row.EFFECT in ('up-regulates', 'up-regulates quantity',
+                          'up-regulates quantity by expression',
+                          'down-regulates', 'down-regulates quantity',
+                          'down-regulates quantity by repression'):
+            stmt_type = IncreaseAmount if row.EFFECT.startswith('up') \
+                                       else DecreaseAmount
+            # Since this is a transcriptional regulation, apply a
+            # transcriptional activity condition to the subject
+            ac = ActivityCondition('transcription', True)
+            agent_a.activity = ac
+            # Create the statement
+            stmts.append(stmt_type(agent_a, agent_b, evidence=evidence))
+        elif row.MECHANISM == 'stabilization' and \
+             row.EFFECT in ('up-regulates', 'up-regulates quantity',
+                            'up-regulates quantity by stabilization'):
+            stmts.append(IncreaseAmount(agent_a, agent_b, evidence=evidence))
+        elif row.MECHANISM == 'destabilization' and \
+             row.EFFECT in ('down-regulates', 'down-regulates quantity',
+                            'down-regulates quantity by stabilization'):
+            stmts.append(DecreaseAmount(agent_a, agent_b, evidence=evidence))
+        elif row.MECHANISM == 'chemical activation' and \
+             row.EFFECT in ('up-regulates', 'up-regulates activity'):
+            stmts.append(Activation(agent_a, agent_b, evidence=evidence))
+        elif row.MECHANISM == 'chemical inhibition' and \
+             row.EFFECT in ('down-regulates', 'down-regulates activity'):
+            stmts.append(Inhibition(agent_a, agent_b, evidence=evidence))
+        elif row.MECHANISM == 'binding' and row.EFFECT == 'form complex':
+            stmts.append(Complex([agent_a, agent_b], evidence=evidence))
+        # The above mechanism/effect combinations should be the only types
+        # giving rise to statements of the same type with same args.
+        # They also can't give rise to any active form statements; therefore
+        # we have gotten all the statements we will get and can return.
+        if stmts:
+            return stmts
 
+        # If we have a different effect/mechanism combination, we can now get
+        # them separately.
+        # Get the effect statement type:
+        effect_stmt_type = _effect_map[row.EFFECT]
+        # Get the mechanism statement type.
         # If the mechanism is transcriptional regulation, we need to check
         # the effect to know whether it is an increase or decrease
-        if row.MECHANISM == 'transcriptional regulation' and \
-             not row.EFFECT == 'unknown':
-            assert row.EFFECT and (row.EFFECT.startswith('up') or \
-                                   row.EFFECT.startswith('down'))
-            mech_stmt_type = IncreaseAmount if row.EFFECT.startswith('up') \
-                                            else DecreaseAmount
-        elif row.MECHANISM:
+        if row.MECHANISM:
             mech_stmt_type = _mechanism_map[row.MECHANISM]
         else:
             mech_stmt_type = None
+        # Either or both effect/mech stmt types may be None at this point.
+        # First, create the effect statement:
+        if effect_stmt_type == Complex:
+            stmts.append(effect_stmt_type([agent_a, agent_b],
+                                          evidence=evidence))
+        elif effect_stmt_type:
+            stmts.append(effect_stmt_type(agent_a, agent_b, evidence=evidence))
 
         # Now check if we were able to successfully get a mechanism type;
         # if not, don't make a mechanism statement
         if mech_stmt_type and issubclass(mech_stmt_type, Modification):
             if not row.RESIDUE:
-                mech_stmts = [mech_stmt_type(agent_a, agent_b, None, None,
-                                             evidence=evidence)]
+                stmts.append(mech_stmt_type(agent_a, agent_b, None, None,
+                                             evidence=evidence))
             else:
                 # Because this is a modification, check for a residue
                 residues = _parse_residue_positions(row.RESIDUE)
-                mech_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
-                                        evidence=evidence) for res in residues]
+                stmts.extend([mech_stmt_type(agent_a, agent_b, res[0], res[1],
+                                        evidence=evidence) for res in residues])
+            # TODO: Add ActiveForm statements here
         # Don't make a new complex statement if 
         elif mech_stmt_type == Complex:
-            mech_stmts = [mech_stmt_type([agent_a, agent_b], evidence=evidence)]
+            stmts.append(mech_stmt_type([agent_a, agent_b], evidence=evidence))
+            # TODO Add ActiveForm statements here
         elif mech_stmt_type:
-            mech_stmts = [mech_stmt_type(agent_a, agent_b, evidence=evidence)]
-        else:
-            mech_stmts = []
+            stmts.append(mech_stmt_type(agent_a, agent_b, evidence=evidence))
 
-        if effect_stmt is not None:
-            mech_stmts = [m for m in mech_stmts if not m.matches(effect_stmt)]
-
-        return (effect_stmt, mech_stmts, None)
+        return stmts
 
 # TODO: Mappings for SIGNOR families, complexes, etc.
 
