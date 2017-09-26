@@ -1,3 +1,5 @@
+from .model_checker import stmt_from_rule
+
 def stmts_from_path(path, model, stmts):
     """Return source Statements corresponding to a path in a model.
 
@@ -21,7 +23,7 @@ def stmts_from_path(path, model, stmts):
     for path_rule, sign in path:
         for rule in model.rules:
             if rule.name == path_rule:
-                stmt = _stmt_from_rule(path_rule, model, stmts)
+                stmt = stmt_from_rule(path_rule, model, stmts)
                 assert stmt is not None
                 path_stmts.append(stmt)
     return path_stmts
