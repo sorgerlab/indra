@@ -752,7 +752,14 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         if verbose:
             for line in iter(p.stdout.readline, b''):
                 logger.info(line)
-        (p_out, p_err) = p.communicate(timeout=10*num_found)
+        ret = p.communicate(timeout=10*num_found/num_cores)
+        if ret is not None:
+            (p_out, p_err) = ret
+        else:
+            p.terminate()
+            p_out = b''
+            p_err = b''
+            logger.error('Reach timed out. Terminated.')
         if p.returncode:
             logger.error('Problem running REACH:')
             logger.error('Stdout: %s' % p_out.decode('utf-8'))
