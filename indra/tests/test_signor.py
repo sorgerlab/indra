@@ -8,12 +8,6 @@ from indra.databases import hgnc_client
 from indra.sources.signor import SignorProcessor, SignorRow, \
                                  _parse_residue_positions
 
-def _id(gene):
-    return hgnc_client.get_hgnc_id(gene)
-
-signor_test_path = join(dirname(__file__), '..', '..', 'data',
-                        'all_data_23_09_17.csv')
-
 
 test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         DATABASEA='UNIPROT', ENTITYB='MET', TYPEB='protein', IDB='P08581',
@@ -30,14 +24,17 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
 
 
 def test_parse_csv():
-    sp = SignorProcessor(signor_test_path)
+    sp = SignorProcessor()
     assert isinstance(sp._data, list)
     assert isinstance(sp._data[0], SignorRow)
+    assert isinstance(sp.statements, list)
+    assert isinstance(sp.statements[0], Statement)
 
 
 def test_get_agent():
     # Protein/gene
-    test_ag = Agent('RELA', db_refs={'HGNC': _id('RELA'), 'UP': 'Q04206'})
+    test_ag = Agent('RELA', db_refs={'HGNC': hgnc_client.get_hgnc_id('RELA'),
+                                     'UP': 'Q04206'})
     sp_ag = SignorProcessor._get_agent(test_row.ENTITYA, test_row.TYPEA,
                                        test_row.IDA, test_row.DATABASEA)
     assert test_ag.matches(sp_ag)
@@ -416,11 +413,4 @@ def test_parse_residue_positions():
     assert residues[0][1] == '169'
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
-
-
-def test_download_data():
-    sp = SignorProcessor()
-    assert isinstance(sp._data[0], SignorRow)
-    assert sp.statements
-    assert isinstance(sp.statements[0], Statement)
 
