@@ -63,30 +63,53 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
         # Open the file in text mode with given encoding
         # Set newline arg to '' (see https://docs.python.org/3/library/csv.html)
         with open(filename, 'r', newline='', encoding=encoding) as f:
-            # Next, get the csv reader, with unicode delimiter and quotechar
-            csv_reader = csv.reader(f, delimiter=delimiter, quotechar=quotechar,
-                                 quoting=quoting, lineterminator=lineterminator)
-            # Now, return the (already decoded) unicode csv_reader generator
-            # Skip rows if necessary
-            for skip_ix in range(skiprows):
-                next(csv_reader)
-            for row in csv_reader:
+            generator = read_unicode_csv_fileobj(f, delimiter=delimiter,
+                                            quotechar=quotechar,
+                                            quoting=quoting,
+                                            lineterminator=lineterminator)
+            for row in generator:
                 yield row
     # Python 2 version
     else:
-        # Open the file, no encoding specified
+        # Open the file in binary mode
         with open(filename, 'rb') as f:
-            # Next, get the csv reader, passing delimiter and quotechar as
-            # bytestrings rather than unicode
-            csv_reader = csv.reader(f, delimiter=delimiter.encode(encoding),
-                                 quotechar=quotechar.encode(encoding),
-                                 quoting=quoting, lineterminator=lineterminator)
-            # Iterate over the file and decode each string into unicode
-            # Skip rows if necessary
-            for skip_ix in range(skiprows):
-                next(csv_reader)
-            for row in csv_reader:
-                yield [cell.decode(encoding) for cell in row]
+            generator = read_unicode_csv_fileobj(f, delimiter=delimiter,
+                                            quotechar=quotechar,
+                                            quoting=quoting,
+                                            lineterminator=lineterminator)
+            for row in generator:
+                yield row
+
+
+def read_unicode_csv_fileobj(fileobj, delimiter=',', quotechar='"',
+                             quoting=csv.QUOTE_MINIMAL, lineterminator='\n',
+                             encoding='utf-8', skiprows=0):
+    """fileobj can be a StringIO in Py3, but should be a BytesIO in Py2."""
+    # Python 3 version
+    if sys.version_info[0] >= 3:
+        # Next, get the csv reader, with unicode delimiter and quotechar
+        csv_reader = csv.reader(fileobj, delimiter=delimiter,
+                                quotechar=quotechar, quoting=quoting,
+                                lineterminator=lineterminator)
+        # Now, return the (already decoded) unicode csv_reader generator
+        # Skip rows if necessary
+        for skip_ix in range(skiprows):
+            next(csv_reader)
+        for row in csv_reader:
+            yield row
+    # Python 2 version
+    else:
+        # Next, get the csv reader, passing delimiter and quotechar as
+        # bytestrings rather than unicode
+        csv_reader = csv.reader(fileobj, delimiter=delimiter.encode(encoding),
+                             quotechar=quotechar.encode(encoding),
+                             quoting=quoting, lineterminator=lineterminator)
+        # Iterate over the file and decode each string into unicode
+        # Skip rows if necessary
+        for skip_ix in range(skiprows):
+            next(csv_reader)
+        for row in csv_reader:
+            yield [cell.decode(encoding) for cell in row]
 
 
 def write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
