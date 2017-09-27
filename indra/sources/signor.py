@@ -10,7 +10,8 @@ January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from io import StringIO
+import sys
+from io import StringIO, BytesIO
 from copy import deepcopy
 from os.path import join, dirname
 import csv
@@ -18,7 +19,7 @@ import logging
 import requests
 from collections import namedtuple, Counter, defaultdict
 from indra.statements import *
-from indra.util import read_unicode_csv
+from indra.util import read_unicode_csv, read_unicode_csv_fileobj
 from indra.databases import hgnc_client, uniprot_client
 
 
@@ -152,23 +153,28 @@ class SignorProcessor(object):
     def __init__(self, signor_csv=None, delimiter=';'):
         # Get generator over the CSV file
         if signor_csv:
-            data_iter = read_unicode_csv(signor_csv, delimiter=';', skiprows=1)
-            # Process into a list of SignorRow namedtuples
-            # Strip off any funky \xa0 whitespace characters
-            self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
+            data_iter = read_unicode_csv(signor_csv, delimiter=delimiter,
+                                         skiprows=1)
         # If no CSV given, download directly from web
         else:
             res = requests.post('http://signor.uniroma2.it/download_entity.php',
                                 data={'organism':'human', 'format':'csv',
                                       'submit':'Download'})
             if res.status_code == 200:
-                csv_reader = csv.reader(StringIO(res.text), delimiter=delimiter,
-                                        quoting=csv.QUOTE_MINIMAL)
-                next(csv_reader) # Skip the header row
-                self._data = [SignorRow(*[f.strip() for f in r])
-                              for r in csv_reader]
+                # Python 2 -- csv.reader will need bytes
+                if sys.version_info[0] < 3:
+                    csv_io = BytesIO(res.content)
+                # Python 3 -- csv.reader needs str
+                else:
+                    csv_io = StringIO(res.text)
+                data_iter = read_unicode_csv_fileobj(csv_io,
+                                                     delimiter=delimiter,
+                                                     skiprows=1)
             else:
                 raise Exception('Could not download Signor data.')
+        # Process into a list of SignorRow namedtuples
+        # Strip off any funky \xa0 whitespace characters
+        self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
         # Process into statements
         self.statements = []
         self.no_mech_rows = []

@@ -66,7 +66,9 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
             generator = read_unicode_csv_fileobj(f, delimiter=delimiter,
                                             quotechar=quotechar,
                                             quoting=quoting,
-                                            lineterminator=lineterminator)
+                                            lineterminator=lineterminator,
+                                            encoding=encoding,
+                                            skiprows=skiprows)
             for row in generator:
                 yield row
     # Python 2 version
@@ -76,7 +78,9 @@ def read_unicode_csv(filename, delimiter=',', quotechar='"',
             generator = read_unicode_csv_fileobj(f, delimiter=delimiter,
                                             quotechar=quotechar,
                                             quoting=quoting,
-                                            lineterminator=lineterminator)
+                                            lineterminator=lineterminator,
+                                            encoding=encoding,
+                                            skiprows=skiprows)
             for row in generator:
                 yield row
 
