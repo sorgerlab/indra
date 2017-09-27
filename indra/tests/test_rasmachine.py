@@ -1,8 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from os.path import join, abspath, dirname
-from indra.tools.machine.machine import make_status_message, get_email_pmids
-from indra.tools.machine import gmail_client
+from indra.tools.machine.machine import make_status_message
 
 stats = {}
 stats['new_abstracts'] = 0
@@ -13,24 +11,6 @@ stats['orig_top'] = 10
 stats['orig_likely'] = 10
 stats['new_top'] = 10
 stats['new_likely'] = 10
-
-def test_gmail_client():
-    cred_file = join(dirname(abspath(__file__)), 'ras_test', 'gmail.txt')
-    with open(cred_file, 'rt') as fh:
-        un, pw = [l.strip() for l in fh.readlines()]
-    config = {}
-    config['user'] = un
-    config['password'] = pw
-    pmids = get_email_pmids(config)
-
-def test_gmail_get_message():
-    cred_file = join(dirname(abspath(__file__)), 'ras_test', 'gmail.txt')
-    with open(cred_file, 'rb') as fh:
-        uname, passwd = [l.strip().decode('utf-8') for l in fh.readlines()]
-    M = gmail_client.gmail_login(uname, passwd)
-    # Get the mailbox ID of the INBOX
-    mbox = gmail_client.select_mailbox(M, 'INBOX')
-    pmids = gmail_client.get_message_pmids(M, day_limit=10)
 
 def test_noabs_nopaper():
     s = stats.copy()
