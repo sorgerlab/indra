@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
+from copy import deepcopy
 from os.path import join, dirname
 from collections import namedtuple, Counter, defaultdict
 
@@ -218,6 +219,7 @@ class SignorProcessor(object):
         stmts = []
         # First, check for EFFECT/MECHANISM pairs giving rise to a single
         # mechanism
+        # Transcriptional regulation + (up or down)
         if row.MECHANISM == 'transcriptional regulation' and \
            row.EFFECT in ('up-regulates', 'up-regulates quantity',
                           'up-regulates quantity by expression',
@@ -231,20 +233,25 @@ class SignorProcessor(object):
             agent_a.activity = ac
             # Create the statement
             stmts.append(stmt_type(agent_a, agent_b, evidence=evidence))
+        # Stabilization + up
         elif row.MECHANISM == 'stabilization' and \
              row.EFFECT in ('up-regulates', 'up-regulates quantity',
                             'up-regulates quantity by stabilization'):
             stmts.append(IncreaseAmount(agent_a, agent_b, evidence=evidence))
+        # Destabilization + down
         elif row.MECHANISM == 'destabilization' and \
              row.EFFECT in ('down-regulates', 'down-regulates quantity',
                             'down-regulates quantity by destabilization'):
             stmts.append(DecreaseAmount(agent_a, agent_b, evidence=evidence))
+        # Chemical activation + up
         elif row.MECHANISM == 'chemical activation' and \
              row.EFFECT in ('up-regulates', 'up-regulates activity'):
             stmts.append(Activation(agent_a, agent_b, evidence=evidence))
+        # Chemical inhibition + down
         elif row.MECHANISM == 'chemical inhibition' and \
              row.EFFECT in ('down-regulates', 'down-regulates activity'):
             stmts.append(Inhibition(agent_a, agent_b, evidence=evidence))
+        # Binding + Form complex
         elif row.MECHANISM == 'binding' and row.EFFECT == 'form complex':
             stmts.append(Complex([agent_a, agent_b], evidence=evidence))
         # The above mechanism/effect combinations should be the only types
@@ -254,18 +261,17 @@ class SignorProcessor(object):
         if stmts:
             return stmts
 
-        # If we have a different effect/mechanism combination, we can now get
-        # them separately.
+        # If we have a different effect/mechanism combination, we can now make
+        # them separately without risk of redundancy.
         # Get the effect statement type:
         effect_stmt_type = _effect_map[row.EFFECT]
         # Get the mechanism statement type.
-        # If the mechanism is transcriptional regulation, we need to check
-        # the effect to know whether it is an increase or decrease
         if row.MECHANISM:
             mech_stmt_type = _mechanism_map[row.MECHANISM]
         else:
             mech_stmt_type = None
-        # Either or both effect/mech stmt types may be None at this point.
+        # (Note that either or both effect/mech stmt types may be None at this
+        # point.)
         # First, create the effect statement:
         if effect_stmt_type == Complex:
             stmts.append(effect_stmt_type([agent_a, agent_b],
@@ -273,18 +279,38 @@ class SignorProcessor(object):
         elif effect_stmt_type:
             stmts.append(effect_stmt_type(agent_a, agent_b, evidence=evidence))
 
-        # Now check if we were able to successfully get a mechanism type;
-        # if not, don't make a mechanism statement
+        # For modifications, we create the modification statement as well as
+        # the appropriate active form.
         if mech_stmt_type and issubclass(mech_stmt_type, Modification):
             if not row.RESIDUE:
-                stmts.append(mech_stmt_type(agent_a, agent_b, None, None,
-                                             evidence=evidence))
+                # Modification
+                mod_stmt = mech_stmt_type(agent_a, agent_b, None, None,
+                                          evidence=evidence)
+                stmts.append(mod_stmt)
+                # ActiveForm
+                af_agent = deepcopy(agent_b)
+                af_agent.mods = mod_stmt._get_mod_condition()
+                # TODO: Currently this turns any upregulation associated with
+                # the modification into an ActiveForm (even up-regulations
+                # associated with increased amounts). This should be updated
+                # once we have a statement type relating Agent states to
+                # effects on amounts.
+                if row.EFFECT.startswith('up'):
+                    stmts.append(ActiveForm(af_agent, 'activity', True))
             else:
-                # Because this is a modification, check for a residue
+                # Modification
                 residues = _parse_residue_positions(row.RESIDUE)
-                stmts.extend([mech_stmt_type(agent_a, agent_b, res[0], res[1],
-                                        evidence=evidence) for res in residues])
-            # TODO: Add ActiveForm statements here
+                mod_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
+                                            evidence=evidence)
+                             for res in residues]
+                stmts.extend(mod_stmts)
+                # Active Form
+                mcs = [ms._get_mod_condition() for ms in mod_stmts]
+                af_agent = deepcopy(agent_b)
+                af_agent.mods = mcs
+                # TODO: See above.
+                if row.EFFECT.startswith('up'):
+                    stmts.append(ActiveForm(af_agent, 'activity', True))
         # Don't make a new complex statement if 
         elif mech_stmt_type == Complex:
             stmts.append(mech_stmt_type([agent_a, agent_b], evidence=evidence))
@@ -326,4 +352,6 @@ Known issues:
 * The generic "up-regulates" effect type should be mapped to a generic up
   regulation rather than Activation/Inhibition, as it is currently.
 * Mappings for SIGNOR families, complexes, etc.
+* Whether Gef/Gap should produce additional statements to Act/Inh.
+* ActiveForms representing effects on amounts (StateEffect)
 """

@@ -213,7 +213,7 @@ def test_process_row_phos_up():
     af = stmts[2]
     assert isinstance(af, ActiveForm)
     assert len(af.agent.mods) == 1
-    mc = ag.agent.mods[0]
+    mc = af.agent.mods[0]
     assert mc.mod_type == 'phosphorylation'
     assert mc.residue == 'T'
     assert mc.position == '387'
