@@ -1,3 +1,13 @@
+"""
+An input processor for the SIGNOR database: a database of causal relationships
+between biological entities.
+
+See publication:
+
+Perfetto et al., "SIGNOR: a database of causal relationships between
+biological entities," Nucleic Acids Research, Volume 44, Issue D1, 4
+January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
+"""
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from io import StringIO
@@ -122,12 +132,6 @@ _effect_map = {
 class SignorProcessor(object):
     """Processor for Signor dataset, available at http://signor.uniroma2.it.
 
-    See publication:
-
-    Perfetto et al., "SIGNOR: a database of causal relationships between
-    biological entities," Nucleic Acids Research, Volume 44, Issue D1, 4
-    January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
-
     Parameters
     ----------
     signor_csv : str
@@ -137,13 +141,13 @@ class SignorProcessor(object):
     delimiter : str
         Field delimiter for CSV file. Defaults to semicolon ';'.
 
-   Attributes
-   ----------
-   no_mech_rows: list of SignorRow namedtuples
-       List of rows where no mechanism statements were generated.
-   no_mech_ctr : collections.Counter
-       Counter listing the frequency of different MECHANISM types in the
-       list of no-mechanism rows.
+    Attributes
+    ----------
+    no_mech_rows: list of SignorRow namedtuples
+        List of rows where no mechanism statements were generated.
+    no_mech_ctr : collections.Counter
+        Counter listing the frequency of different MECHANISM types in the
+        list of no-mechanism rows.
     """
     def __init__(self, signor_csv=None, delimiter=';'):
         # Get generator over the CSV file
