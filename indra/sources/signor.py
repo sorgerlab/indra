@@ -224,7 +224,7 @@ class SignorProcessor(object):
                 'MODBSEQ': _n(row.MODBSEQ),
                 'NOTES': _n(row.NOTES),
                 'ANNOTATOR': _n(row.ANNOTATOR)}
-        return Evidence(source_api='SIGNOR', source_id=row.SIGNOR_ID,
+        return Evidence(source_api='signor', source_id=row.SIGNOR_ID,
                         pmid=row.PMID, text=row.SENTENCE,
                         epistemics=epistemics, annotations=annotations)
 
