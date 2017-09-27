@@ -85,13 +85,16 @@ parser.add_argument(
           'samples to take.')
     )
 parser.add_argument(
-    dest='basename',
-    help='The name of this job.'
+    '-o', '--outdir',
+    dest='out_dir',
+    default=None,
+    help=('The output directory where stuff is written. This is only a '
+          'temporary directory when reading. By default this will be the'
+          '"<basename>_out".')
     )
 parser.add_argument(
-    dest='out_dir',
-    help=('The output directory where stuff is written. This is only a '
-          'temporary directory when reading.')
+    dest='basename',
+    help='The name of this job.'
     )
 parser.add_argument(
     dest='pmid_list_file',
@@ -861,12 +864,16 @@ def main(args):
         else:
             readers = args.readers[:]
 
+        out_dir = args.out_dir
+        if out_dir is None:
+            out_dir = args.basename + '_out'
+
         stmts = {}
         for reader in readers:
             run_reader = READER_DICT[reader]
             some_stmts, _ = run_reader(
                 pmid_list,
-                args.out_dir,
+                out_dir,
                 args.num_cores,
                 args.start_index,
                 args.end_index,
