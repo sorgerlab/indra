@@ -9,3 +9,4 @@ Processors for model input (:py:mod:`indra.sources`)
    reach/index
    trips/index
    ndex_cx/index
+   signor/index
