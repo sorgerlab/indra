@@ -53,11 +53,18 @@ if __name__ == '__main__':
     for node_start_ix in node_start_pts:
         node_end_ix = node_start_ix + node_chunk_size
 
-        cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-N', REACH_JOB_NAME,
-                    '-pe', 'orte', str(num_cores), 'python', '-m',
-                    'indra.tools.reading.read_pmids', pmid_list,
-                    tmp_dir, str(num_cores), str(node_start_ix),
-                    str(node_end_ix)]
+        cmd_list = [
+            'qsub',
+            '-b', 'y', '-V', '-cwd', '-N', REACH_JOB_NAME, '-pe', 'orte',
+            str(num_cores),
+            'python',
+            '-m', 'indra.tools.reading.read_pmids',
+            '-n', str(num_cores),
+            '-s', str(node_start_ix),
+            '-e', str(node_end_ix),
+            tmp_dir,
+            pmid_list
+            ]
         print(' '.join(cmd_list))
         subprocess.call(cmd_list)
 
