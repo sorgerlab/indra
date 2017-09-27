@@ -3,23 +3,13 @@ use_setuptools()
 from setuptools import setup
 import sys
 
-EXTRAS_REQUIRE = {
-    'machine': [
-        'pytz',
-        'tzlocal',
-        'tweepy',
-        'ndex',
-        'pyyaml',
-    ],
-}
-
 
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx==1.11', 'pandas', 'click']
+                    'networkx==1.11', 'pandas']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
@@ -64,7 +54,12 @@ def main():
                 'indra = indra.cli:main',
                 ]
             },
-          extras_require=EXTRAS_REQUIRE,
+          extras_require={'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex',
+                                      'pyyaml', 'click']}
+    ],
+}
+
+
           )
 if __name__ == '__main__':
     main()

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Starting a New Model
 --------------------
@@ -15,8 +13,6 @@ This script generates the following folders and files
 - ``model_name/log.txt``
 - ``model_name/config.yaml``
 - ``model_name/jsons/``
-- ``model_name/jsons/abstract``
-- ``model_name/jsons/full``
 
 You should the edit model\_name/config.yaml to set up the search terms
 and optionally the credentials to use Twitter, Gmail or NDEx bindings.
@@ -29,7 +25,8 @@ is available in  model\_name/config.yaml after having created the machine.
 Two important fields in config.yml are ``search_terms`` and ``search_genes``
 both of which are YAML lists. The entries of ``search_terms`` are used
 _directly_ as queries in PubMed search (for more information on PubMed
-search strings, read https://www.ncbi.nlm.nih.gov/books/NBK3827/#pubmedhelp.Searching\_PubMed).
+search strings,
+read https://www.ncbi.nlm.nih.gov/books/NBK3827/#pubmedhelp.Searching\_PubMed).
 
 Example:
 
@@ -62,7 +59,7 @@ Example:
 
 Extending a Model
 -----------------
-First, install the machine-specific dependencies::
+First, install the machine-specific dependencies:
 
 .. code-block:: sh
 

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Module that contains the command line app
 
@@ -14,10 +12,11 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
-import sys
 
-import click
 import os
+import sys
+import click
+from .config import copy_default_config
 
 
 @click.group()
@@ -25,16 +24,15 @@ def main():
     """INDRA"""
 
 
-@main.group()
-def machine():
-    """RAS Machine"""
+#@main.group()
+#def machine():
+#    """RAS Machine"""
 
 
-@machine.command()
+@main.command()
 @click.argument('directory')
 def make(directory):
     """Makes a RAS Machine directory"""
-    from indra.tools.machine.config import copy_default_config
 
     if os.path.exists(directory):
         if os.path.isdir(directory):
@@ -45,12 +43,10 @@ def make(directory):
 
     os.makedirs(directory)
     os.mkdir(os.path.join(directory, 'json'))
-    os.mkdir(os.path.join(directory, 'json', 'abstract'))
-    os.mkdir(os.path.join(directory, 'json', 'full'))
     copy_default_config(os.path.join(directory, 'config.yaml'))
 
 
-@machine.command()
+@main.command()
 @click.argument('model_path')
 @click.option('--config', help='Specify configuration file path, otherwise '
                                'looks for config.yaml in model path')
@@ -60,7 +56,7 @@ def run_with_search(model_path, config):
     run_with_search_helper(model_path, config)
 
 
-@machine.command()
+@main.command()
 @click.argument('model_path')
 def summarize(model_path):
     """Print model summary."""
@@ -68,7 +64,7 @@ def summarize(model_path):
     summarize_helper(model_path)
 
 
-@machine.command()
+@main.command()
 @click.argument('model_path')
 @click.option('--pmids', type=click.File(), default=sys.stdin,
               help="A file with a PMID on each line")
