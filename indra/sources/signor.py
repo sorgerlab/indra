@@ -289,7 +289,7 @@ class SignorProcessor(object):
                 stmts.append(mod_stmt)
                 # ActiveForm
                 af_agent = deepcopy(agent_b)
-                af_agent.mods = mod_stmt._get_mod_condition()
+                af_agent.mods = [mod_stmt._get_mod_condition()]
                 # TODO: Currently this turns any upregulation associated with
                 # the modification into an ActiveForm (even up/down-regulations
                 # associated with amounts). This should be updated once we have

@@ -248,15 +248,89 @@ def test_process_row_phos_down():
 
 
 def test_process_row_phos_nores_up():
-    pass
+    test_row = SignorRow(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
+            DATABASEA='UNIPROT', ENTITYB='AMPK', TYPEB='complex',
+            IDB='SIGNOR-C15', DATABASEB='SIGNOR',
+            EFFECT='up-regulates activity', MECHANISM='phosphorylation',
+            RESIDUE='', SEQUENCE='', TAX_ID='-1', CELL_DATA='', TISSUE_DATA='', 
+            MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
+            MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
+            DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
+            SENTENCE='', SIGNOR_ID='SIGNOR-242602')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Phosphorylation)
+    assert stmts[1].residue is None
+    assert stmts[1].position is None
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue is None
+    assert mc.position is None
+    assert af.is_active == True
 
 
 def test_process_row_phos_nores_down():
-    pass
+    test_row = SignorRow(ENTITYA='CSNK1D', TYPEA='protein', IDA='P48730',
+            DATABASEA='UNIPROT', ENTITYB='LEF1', TYPEB='protein', IDB='Q9UJU2',
+            DATABASEB='UNIPROT', EFFECT='down-regulates',
+            MECHANISM='phosphorylation', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
+            ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Inhibition)
+    assert isinstance(stmts[1], Phosphorylation)
+    assert stmts[1].residue is None
+    assert stmts[1].position is None
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue is None
+    assert mc.position is None
+    assert af.is_active == False
 
 
 def test_process_row_phos_multi_res():
-    pass
+    test_row = SignorRow(ENTITYA='RAF1', TYPEA='protein', IDA='P04049',
+            DATABASEA='UNIPROT', ENTITYB='MAP2K2', TYPEB='protein',
+            IDB='P36507', DATABASEB='UNIPROT', EFFECT='up-regulates',
+            MECHANISM='phosphorylation', RESIDUE='Ser218;Ser222',
+            SEQUENCE='VSGQLIDsMANSFVG;LIDSMANsFVGTRSY', TAX_ID='9606',
+            CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='8157000', DIRECT='YES',
+            NOTES='', ANNOTATOR='gcesareni', SENTENCE='',
+            SIGNOR_ID='SIGNOR-36553')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 4
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Phosphorylation)
+    assert stmts[1].position == '218'
+    assert isinstance(stmts[2], Phosphorylation)
+    assert stmts[2].position == '222'
+    af = stmts[3]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 2
+    mc0 = af.agent.mods[0]
+    assert mc0.mod_type == 'phosphorylation'
+    assert mc0.residue == 'S'
+    assert mc0.position == '218'
+    mc1 = af.agent.mods[1]
+    assert mc1.mod_type == 'phosphorylation'
+    assert mc1.residue == 'S'
+    assert mc1.position == '222'
+    assert af.is_active == True
 
 
 def test_process_row_complex_up():
@@ -319,3 +393,5 @@ if __name__ == '__main__':
     #test_process_row_chem_inh()
     #test_parse_residue_positions()
     test_get_mechanism()
+    test_process_row_phos_multi_res()
+
