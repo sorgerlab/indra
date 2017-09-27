@@ -334,13 +334,53 @@ def test_process_row_phos_multi_res():
 
 
 def test_process_row_complex_up():
-    # TODO
-    pass
+    test_row = SignorRow(ENTITYA='NONO', TYPEA='protein', IDA='Q15233',
+            DATABASEA='UNIPROT', ENTITYB='TOP1', TYPEB='protein', IDB='P11387',
+            DATABASEB='UNIPROT', EFFECT='up-regulates', MECHANISM='binding',
+            RESIDUE='', SEQUENCE='', TAX_ID='9606', CELL_DATA='BTO:0000017',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='9756848', DIRECT='YES', NOTES='', ANNOTATOR='miannu',
+            SENTENCE='', SIGNOR_ID='SIGNOR-60557')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Complex)
+    cplx_agent_b = stmts[1].agent_list()[1]
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.bound_conditions) == 1
+    bc = af.agent.bound_conditions[0]
+    assert bc.agent.matches(cplx_agent_b)
+    assert bc.is_bound
+    assert af.activity == 'activity'
+    assert af.is_active
 
 
 def test_process_row_complex_down():
-    # TODO
-    pass
+    test_row = SignorRow(ENTITYA='XIAP', TYPEA='protein', IDA='P98170',
+            DATABASEA='UNIPROT', ENTITYB='CASP3', TYPEB='protein',
+            IDB='P42574', DATABASEB='UNIPROT', EFFECT='down-regulates activity',
+            MECHANISM='binding', RESIDUE='', SEQUENCE='', TAX_ID='9606',
+            CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='10548111', DIRECT='YES', NOTES='',
+            ANNOTATOR='amattioni', SENTENCE='', SIGNOR_ID='SIGNOR-71954')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Inhibition)
+    assert isinstance(stmts[1], Complex)
+    cplx_agent_b = stmts[1].agent_list()[1]
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.bound_conditions) == 1
+    bc = af.agent.bound_conditions[0]
+    assert bc.agent.matches(cplx_agent_b)
+    assert bc.is_bound
+    assert af.activity == 'activity'
+    assert not af.is_active
 
 
 def test_parse_residue_positions():
