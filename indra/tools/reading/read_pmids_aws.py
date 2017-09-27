@@ -1,11 +1,12 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
+
 DOC = \
 """
 This script is intended to be run on an Amazon ECS container, so information 
 for the job either needs to be provided in environment variables (e.g., the
 REACH version and path) or loaded from S3 (e.g., the list of PMIDs).
 """
-from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
