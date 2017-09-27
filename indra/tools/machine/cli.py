@@ -12,11 +12,12 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
-
-import os
 import sys
+
 import click
-from .config import copy_default_config
+import os
+
+from indra.tools.machine.config import copy_default_config
 
 
 @click.group()
