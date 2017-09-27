@@ -52,7 +52,7 @@ def make(directory):
                                'looks for config.yaml in model path')
 def run_with_search(model_path, config):
     """Run with PubMed search for new papers."""
-    from indra.tools.machine.utils import run_with_search_helper
+    from indra.tools.machine.machine import run_with_search_helper
     run_with_search_helper(model_path, config)
 
 
@@ -60,7 +60,7 @@ def run_with_search(model_path, config):
 @click.argument('model_path')
 def summarize(model_path):
     """Print model summary."""
-    from indra.tools.machine.utils import summarize_helper
+    from indra.tools.machine.machine import summarize_helper
     summarize_helper(model_path)
 
 
@@ -70,7 +70,7 @@ def summarize(model_path):
               help="A file with a PMID on each line")
 def run_with_pmids(model_path, pmids):
     """Run with given list of PMIDs."""
-    from indra.tools.machine.utils import run_with_pmids_helper
+    from indra.tools.machine.machine import run_with_pmids_helper
     run_with_pmids_helper(model_path, pmids)
 
 

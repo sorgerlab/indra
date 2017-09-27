@@ -1,11 +1,21 @@
 """
+Prerequisites
+-------------
+First, install the machine-specific dependencies:
+
+.. code-block:: sh
+
+    pip install indra[machine]
+
 Starting a New Model
 --------------------
 To start a new model, run
 
 .. code-block:: sh
 
-    indra machine make model_name
+    python -m indra.tools.machine make model_name
+
+where model_name corresponds to the name of the model to initialize.
 
 This script generates the following folders and files
 
@@ -59,17 +69,11 @@ Example:
 
 Extending a Model
 -----------------
-First, install the machine-specific dependencies:
-
-.. code-block:: sh
-
-    pip install indra[machine]
-
 To extend a model, run
 
 .. code-block:: sh
 
-    indra machine run_with_search model_name
+    python -m indra.tools.machine run_with_search model_name
 
 Extending a model involves extracting PMIDs from emails (if Gmail credentials
 are given), and searching using INDRA's PubMed client with each entry
