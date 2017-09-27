@@ -75,9 +75,16 @@ script:
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
-  - nosetests indra
-     -v --with-doctest --with-doctest-ignore-unicode
-     --with-coverage --cover-inclusive --cover-package=indra
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      nosetests indra
+        -v --with-doctest --with-doctest-ignore-unicode
+        --with-coverage --cover-inclusive --cover-package=indra
+        -I manage_content.py
+    else
+      nosetests indra
+        -v --with-doctest --with-doctest-ignore-unicode
+        --with-coverage --cover-inclusive --cover-package=indra
+    fi    
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
