@@ -315,9 +315,11 @@ class SignorProcessor(object):
                 # associated with amounts). This should be updated once we have
                 # a statement type relating Agent states to effects on amounts.
                 if row.EFFECT.startswith('up'):
-                    stmts.append(ActiveForm(af_agent, 'activity', True))
+                    stmts.append(ActiveForm(af_agent, 'activity', True,
+                                            evidence=evidence))
                 elif row.EFFECT.startswith('down'):
-                    stmts.append(ActiveForm(af_agent, 'activity', False))
+                    stmts.append(ActiveForm(af_agent, 'activity', False,
+                                            evidence=evidence))
             else:
                 # Modification
                 residues = _parse_residue_positions(row.RESIDUE)
@@ -331,9 +333,11 @@ class SignorProcessor(object):
                 af_agent.mods = mcs
                 # TODO: See above.
                 if row.EFFECT.startswith('up'):
-                    stmts.append(ActiveForm(af_agent, 'activity', True))
+                    stmts.append(ActiveForm(af_agent, 'activity', True,
+                                            evidence=evidence))
                 elif row.EFFECT.startswith('down'):
-                    stmts.append(ActiveForm(af_agent, 'activity', False))
+                    stmts.append(ActiveForm(af_agent, 'activity', False,
+                                            evidence=evidence))
         # For Complex statements, we create an ActiveForm with a BoundCondition.
         elif mech_stmt_type == Complex:
             # Complex
@@ -343,9 +347,11 @@ class SignorProcessor(object):
             af_bc_agent = deepcopy(agent_a)
             af_agent.bound_conditions = [BoundCondition(af_bc_agent, True)]
             if row.EFFECT.startswith('up'):
-                stmts.append(ActiveForm(af_agent, 'activity', True))
+                stmts.append(ActiveForm(af_agent, 'activity', True,
+                                        evidence=evidence))
             elif row.EFFECT.startswith('down'):
-                stmts.append(ActiveForm(af_agent, 'activity', False))
+                stmts.append(ActiveForm(af_agent, 'activity', False,
+                                        evidence=evidence))
         # Other mechanism statement types
         elif mech_stmt_type:
             stmts.append(mech_stmt_type(agent_a, agent_b, evidence=evidence))
