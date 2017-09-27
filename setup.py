@@ -3,6 +3,7 @@ use_setuptools()
 from setuptools import setup
 import sys
 
+
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
@@ -48,6 +49,11 @@ def main():
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Mathematics',
             ],
-          )
+          extras_require={'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex',
+                                      'pyyaml', 'click']},
+          entry_points={'console_scripts': ['indra-machine = indra.tools.machine.cli:main']}
+        )
+
+
 if __name__ == '__main__':
     main()

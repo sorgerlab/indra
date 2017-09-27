@@ -1,7 +1,0 @@
-model_name="$1"
-mkdir "$model_name"
-mkdir "$model_name/jsons"
-mkdir "$model_name/jsons/abstract"
-mkdir "$model_name/jsons/full"
-cp "default-config.yaml" "$model_name/config.yaml"
-touch "$model_name/log.txt"

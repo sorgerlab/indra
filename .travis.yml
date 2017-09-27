@@ -58,7 +58,7 @@ install:
   # Download a number of useful resource files for testing purposes
   #- wget http://geneontology.org/ontology/go.owl -P data/
   - git submodule update --remote
-  - pip install .
+  - pip install .[machine]
   - cd indra/benchmarks/assembly_eval/batch4
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz -nv
   - tar -xf trips_reach_batch4.gz

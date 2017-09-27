@@ -1,27 +1,25 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import io
 import sys
 import yaml
 import time
-import json
-import pytz
 import click
 import shutil
 import tzlocal
 import logging
 import datetime
-import argparse
-import gmail_client
-import twitter_client
+import itertools as itt
 from indra.sources import reach
+from collections import defaultdict
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
-from indra.tools.gene_network import GeneNetwork
-from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra.assemblers import CxAssembler
+from indra.tools.machine import gmail_client
+from indra.tools.machine import twitter_client
+from indra.tools.gene_network import GeneNetwork
 from indra.tools.incremental_model import IncrementalModel
+from indra.literature import pubmed_client, get_full_text, elsevier_client
 
 try:
     import boto3
@@ -180,42 +178,44 @@ def extend_model(model_name, model, pmids, start_time_local):
     npapers = 0
     nabstracts = 0
     nexisting = 0
-    id_used = set()
+
+    # Preprocess PMID search results
+    pmids_inv = defaultdict(list)
     for search_term, pmid_list in pmids.items():
         for pmid in pmid_list:
-            # If the paper has not been included in the model yet
-            if pmid in id_used:
+            if pmid in model.stmts:
                 continue
-            id_used.add(pmid)
-            if model.stmts.get(pmid) is not None:
-                continue
+            pmids_inv[pmid].append(search_term)
 
-            logger.info('Processing %s for search term %s' % \
-                        (pmid, search_term))
+    logger.info('Found %d unique and novel PMIDS', len(pmids_inv))
 
-            if not aws_available:
-                rp, txt_format = process_paper(model_name, pmid)
-            else:
-                rp, txt_format = process_paper_aws(pmid, start_time_local)
+    for counter, (pmid, search_terms) in enumerate(pmids_inv.items(), start=1):
+        logger.info('[%d/%d] Processing %s for search terms: %s',
+                    counter, len(pmids_inv), pmid, search_terms)
 
-            if rp is None:
-                logger.info('Reach processing failed for PMID%s', pmid)
-                continue
+        if not aws_available:
+            rp, txt_format = process_paper(model_name, pmid)
+        else:
+            rp, txt_format = process_paper_aws(pmid, start_time_local)
 
-            if txt_format == 'abstract':
-                nabstracts += 1
-            elif txt_format in ['pmc_oa_xml', 'elsevier_xml']:
-                npapers += 1
-            else:
-                nexisting += 1
+        if rp is None:
+            logger.info('Reach processing failed for PMID%s', pmid)
+            continue
 
-            if not rp.statements:
-                logger.info('No statement from PMID%s (%s)' % \
-                            (pmid, txt_format))
-            else:
-                logger.info('%d statements from PMID%s (%s)' % \
-                            (len(rp.statements), pmid, txt_format))
-            model.add_statements(pmid, rp.statements)
+        if txt_format == 'abstract':
+            nabstracts += 1
+        elif txt_format in ['pmc_oa_xml', 'elsevier_xml']:
+            npapers += 1
+        else:
+            nexisting += 1
+
+        if not rp.statements:
+            logger.info('No statement from PMID%s (%s)' % \
+                        (pmid, txt_format))
+        else:
+            logger.info('%d statements from PMID%s (%s)' % \
+                        (len(rp.statements), pmid, txt_format))
+        model.add_statements(pmid, rp.statements)
 
     return npapers, nabstracts, nexisting
 
@@ -443,17 +443,7 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
             twitter_client.update_status(msg_str, twitter_cred)
 
 
-@click.group()
-def main():
-    """The RAS Machine and utilities"""
-
-
-@main.command()
-@click.argument('model_path')
-@click.option('--config', help='Specify configuration file path, otherwise '
-                                'looks for config.yaml in model path')
-def run_with_search(model_path, config):
-    """Run with PubMed search for new papers."""
+def run_with_search_helper(model_path, config):
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
 
@@ -526,7 +516,7 @@ def run_with_search(model_path, config):
         num_days = int(config.get('search_terms_num_days', 5))
         logger.info('Searching the last %d days', num_days)
         pmids_term = get_searchterm_pmids(search_terms, num_days=num_days)
-        num_pmids = sum([len(pm) for pm in pmids_term.values()])
+        num_pmids = len(set(itt.chain.from_iterable(pmids_term.values())))
         logger.info('Collected %d PMIDs from PubMed search_terms.', num_pmids)
         pmids = _extend_dict(pmids, pmids_term)
 
@@ -553,10 +543,7 @@ def run_with_search(model_path, config):
     )
 
 
-@main.command()
-@click.argument('model_path')
-def summarize(model_path):
-    """Print model summary."""
+def summarize_helper(model_path):
     logger.info(time.strftime('%c'))
     logger.info('Loading original model.')
     inc_model_file = os.path.join(model_path, 'model.pkl')
@@ -567,12 +554,7 @@ def summarize(model_path):
     click.echo('Number of agents: {}'.format(len(agents)))
 
 
-@main.command()
-@click.argument('model_path')
-@click.option('--pmids', type=click.File(), default=sys.stdin,
-              help="A file with a PMID on each line")
-def run_with_pmids(model_path, pmids):
-    """Run with given list of PMIDs."""
+def run_with_pmids_helper(model_path, pmids):
     default_config_fname = os.path.join(model_path, 'config.yaml')
     config = get_config(default_config_fname)
 
@@ -587,6 +569,3 @@ def run_with_pmids(model_path, pmids):
         ndex_cred=ndex_cred,
         twitter_cred=twitter_cred
     )
-
-if __name__ == '__main__':
-    main()
