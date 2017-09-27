@@ -50,7 +50,8 @@ def main():
             'Topic :: Scientific/Engineering :: Mathematics',
             ],
           extras_require={'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex',
-                                      'pyyaml', 'click']}
+                                      'pyyaml', 'click']},
+          entry_points={'console_scripts': ['indra-machine = indra.tools.machine.cli:main']}
         )
 
 
