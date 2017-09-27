@@ -829,9 +829,12 @@ def main(args):
     if args.upload_json:
         args.readers = 'none'
     force_read = True
+    out_dir = args.out_dir
+    if out_dir is None:
+        out_dir = args.basename + '_out'
     made_outdir = False
-    if not os.path.exists(args.out_dir):
-        os.mkdir(args.out_dir)
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
         made_outdir = True
     ret = None
     try:
@@ -863,10 +866,6 @@ def main(args):
             readers = ['reach', 'sparser']
         else:
             readers = args.readers[:]
-
-        out_dir = args.out_dir
-        if out_dir is None:
-            out_dir = args.basename + '_out'
 
         stmts = {}
         for reader in readers:
@@ -914,7 +913,7 @@ def main(args):
             f.write('Started run at %s with args %s lasting %s.\n' %
                     (now, str(args), time_taken))
         if made_outdir and args.cleanup:
-            shutil.rmtree(args.out_dir)
+            shutil.rmtree(out_dir)
     return ret
 
 
