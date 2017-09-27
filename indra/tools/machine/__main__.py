@@ -1,5 +1,5 @@
 """
-Entrypoint module, in case you use `python -m indra`
+Entrypoint module, in case you use `python -m indra.tools.machine`
 
 Why does this file exist, and why __main__? For more info, read:
 
