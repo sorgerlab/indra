@@ -190,8 +190,8 @@ class DatabaseManager(object):
         self.engine = create_engine(host)
 
     def __del__(self, *args, **kwargs):
-        self.grab_session()
         try:
+            self.grab_session()
             self.session.rollback()
         except Exception as e:
             print("Failed to execute rollback of database upon deletion.")
@@ -243,6 +243,8 @@ class DatabaseManager(object):
         try:
             self.session.commit()
         except Exception as e:
+            if self.session is not None:
+                self.session.rollback()
             print(e)
             print(err_msg)
             raise

@@ -5,14 +5,20 @@ import re
 from os import remove, path
 from sys import version_info
 from nose import SkipTest
-from nose.tools import assert_equal, assert_list_equal
+from nose.tools import assert_equal
+from functools import wraps
 from sqlalchemy.exc import IntegrityError
-from indra.db.manage_content import Medline, PmcOA, Manuscripts
 from indra.db import DatabaseManager, texttypes, get_defaults
+IS_PY3 = True
+if version_info.major is not 3:
+    IS_PY3 = False
+if IS_PY3:
+    from indra.db.manage_content import Medline, PmcOA, Manuscripts
 
 defaults = get_defaults()
 test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
+# Get host for the test database from system defaults.
 # TODO: implement setup-teardown system.
 TEST_HOST = None
 TEST_HOST_TYPE = ''
@@ -65,6 +71,15 @@ def get_db():
     db.grab_session()
     db._clear()
     return db
+
+
+def needs_py3(func):
+    @wraps(func)
+    def test_with_py3_func(*args, **kwargs):
+        if not IS_PY3:
+            raise SkipTest("This tests feautures only supported in Python 3.x")
+        return func(*args, **kwargs)
+    return test_with_py3_func
 
 
 #==============================================================================
@@ -192,24 +207,20 @@ def test_get_all_pmids():
 # includes uploading data from Medline, PMC, Springer, and Elsevier. These
 # tend to make greater use of the database, and are likely to be slower.
 #==============================================================================
-TEST_POPULATE = True
-if version_info.major is not 3:
-    TEST_POPULATE = False
-
 TEST_FTP = path.abspath(path.join(path.dirname(__file__), 'test_ftp'))
-if TEST_POPULATE and not path.exists(TEST_FTP):
+if IS_PY3 and not path.exists(TEST_FTP):
     print("Creating test directory. This could take a while...")
     from indra.db.build_sample_set import build_set
     build_set(2, TEST_FTP)
 
 
+@needs_py3
 def test_full_local_upload():
-    "Test whether we can perform a targeted upload to a local db."
-    # This uses a specially curated sample directory designed to access all code
-    # paths that the real system might experience, but on a much smaller (thus
-    # faster) scale. Errors in the ftp service will not be caught by this test.
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
+    "Test whether we can perform a targeted upload to a test db."
+    # This uses a specially curated sample directory designed to access most
+    # code paths that the real system might experience, but on a much smaller
+    # (thus faster) scale. Errors in the ftp service will not be caught by
+    # this test.
     db = get_db()
     Medline(ftp_url=TEST_FTP, local=True).populate(db)
     tr_list = db.select_all('text_ref')
@@ -229,10 +240,9 @@ def test_full_local_upload():
     assert len(tc_list), "No manuscripts uploaded."
 
 
+@needs_py3
 def test_multiple_pmids():
     "Test that pre-existing pmids are correctly handled."
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
     db = get_db()
     med = Medline(ftp_url=TEST_FTP, local=True)
     med.populate(db)
@@ -243,10 +253,9 @@ def test_multiple_pmids():
     return
 
 
+@needs_py3
 def test_multible_pmc_oa_content():
     "Test to make sure repeated content is handled correctly."
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
     pmc.populate(db)
@@ -257,10 +266,9 @@ def test_multible_pmc_oa_content():
     return
 
 
+@needs_py3
 def test_multiple_text_ref_pmc_oa():
     "Test whether a duplicate text ref in pmc oa is handled correctly."
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
     inp = dict.fromkeys(pmc.tr_cols)
@@ -273,15 +281,9 @@ def test_multiple_text_ref_pmc_oa():
     return
 
 
-def test_continuing_upload():
-    "Test whether we correcly pick up where we left off when continuing."
-    raise SkipTest("Not sure how to actually test this....")
-
-
+@needs_py3
 def test_id_handling_pmc_oa():
     "Test every conceivable combination pmid/pmcid presense."
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
 
@@ -345,10 +347,9 @@ def test_id_handling_pmc_oa():
     return
 
 
+@needs_py3
 def test_ftp_service():
     "Test the NIH FTP access client on the content managers."
-    if not TEST_POPULATE:
-        raise SkipTest("These feautures are only supported in Python 3.x")
     cases = [
         ('.csv', 'csv_as_dict'),
         ('.txt', 'file')
@@ -360,8 +361,8 @@ def test_ftp_service():
             rel_files = [f for f in files if f.endswith(end)]
             # TODO: check metadata to choose small files.
             if len(rel_files) > 0:
-                file = rel_files[0]
-                ret = getattr(c.ftp, 'get_' + meth)(file)
+                fname = rel_files[0]
+                ret = getattr(c.ftp, 'get_' + meth)(fname)
                 assert ret is not None,\
-                    "Failed to load %s from %s." % (file, Child.__name__)
+                    "Failed to load %s from %s." % (fname, Child.__name__)
         # TODO: test the download.

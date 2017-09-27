@@ -1,6 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, int
 
+from sys import version_info, exit
+if version_info.major is not 3:
+    msg = "Python 3.x is required to use this module."
+    if __name__ ==  '__main__':
+        print(msg)
+        exit()
+    else:
+        raise ImportError(msg)
 
 import csv
 import time
@@ -15,9 +23,7 @@ from os import path
 from ftplib import FTP
 from io import BytesIO
 import pickle
-from threading import Thread
-from sympy.printing.pretty.tests.test_pretty import th
-from time import sleep
+
 logger = logging.getLogger('content_manager')
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
@@ -55,6 +61,22 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
+    if not args.continuing and args.task == 'upload':
+        print("#"*63)
+        print(
+            "# You are about to wipe the database completely clean and     #\n"
+            "# load it from scratch, which could take hours, and eliminate #\n"
+            "# any updates, and potentially interfere with other users.    #\n"
+            "#                                                             #\n"
+            "# If you wish to continue an earlier upload, add the -c       #\n"
+            "# option, and if you wish to update the database, specify     #\n"
+            "# `update` in your command. For mor details, use --help.      #"
+            )
+        print("#"*63)
+        resp = input("Are you sure you want to continue? [yes/no]: ")
+        if resp == 'no':
+            print ("Aborting...")
+            exit()
 from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
@@ -407,12 +429,21 @@ class PmcManager(NihManager):
 
     def get_missing_pmids(self, tr_data):
         "Try to get missing pmids."
+        num_missing = 0
+        num_found = 0
 
-        def lookup_pmid(tr_entry):
-            ret = id_lookup(tr_entry['pmcid'])
-            if 'pmid' in ret.keys():
-                tr_entry['pmid'] = ret['pmid']
+        logger.debug("Getting missing pmids.")
 
+        # TODO: This is very slow...should find a way to speed it up.
+        for tr_entry in tr_data:
+            if tr_entry['pmid'] is None:
+                num_missing += 1
+                ret = id_lookup(tr_entry['pmcid'])
+                if 'pmid' in ret.keys():
+                    tr_entry['pmid'] = ret['pmid']
+                    num_found += 1
+
+        ''' # The web api does not support this much access, sadly.
         thread_list = []
         for tr_entry in tr_data:
             if tr_entry['pmid'] is None:
@@ -420,6 +451,7 @@ class PmcManager(NihManager):
                 thread_list.append(th)
 
         N = min(10, len(thread_list))
+        logger.debug("Starting %d threading pool." % N)
         active_threads = []
         for _ in range(N):
             th = thread_list.pop()
@@ -435,10 +467,13 @@ class PmcManager(NihManager):
                         new_th = thread_list.pop()
                         new_th.start()
                         active_threads.append(th)
-            sleep(0.0001)
+            sleep(0.1)
 
         for th in active_threads:
             th.join()
+        '''
+        logger.debug("Found %d/%d new pmids." % (num_found, num_missing))
+        return
 
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
@@ -509,11 +544,8 @@ class PmcManager(NihManager):
 
         # Process the text ref data.
         pmcids_to_skip = []
-        N = len(tr_data)
-        logger.debug("Beginning to filter %d text refs..." % N)
-        for i, tr_entry in enumerate(tr_data):
-            if N >= 10 and i % int(N/10) is 0:
-                logger.debug('%d%% done filtering text_refs...' % (100*i/N))
+        logger.debug("Beginning to filter %d text refs..." % len(tr_data))
+        for tr_entry in tr_data:
             if tr_entry['pmcid'] in db_conts['pmcid']:
                 if tr_entry['pmid'] not in db_conts['pmid']:
                     update_record_with_pmid(tr_entry)
