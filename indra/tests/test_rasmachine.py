@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, abspath, dirname
-from indra.tools.machine.utils import make_status_message, get_email_pmids
+from indra.tools.machine.machine import make_status_message, get_email_pmids
 from indra.tools.machine import gmail_client
 
 stats = {}
