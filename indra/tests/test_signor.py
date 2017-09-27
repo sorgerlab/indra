@@ -91,7 +91,8 @@ def test_get_evidence():
 
 
 def test_process_row():
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], IncreaseAmount)
@@ -108,7 +109,8 @@ def test_process_row_chem_inh():
         MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
         NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
         SIGNOR_ID='SIGNOR-190245')
-    stmts = SignorProcessor._process_row(test_row_chem_inh)
+    stmts, no_mech = SignorProcessor._process_row(test_row_chem_inh)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], Inhibition)
@@ -123,7 +125,8 @@ def test_process_row_chem_act():
         MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
         MODIFICATIONB='', MODBSEQ='', PMID='16293724', DIRECT='YES', NOTES='',
         ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-141820')
-    stmts = SignorProcessor._process_row(test_row_chem_act)
+    stmts, no_mech = SignorProcessor._process_row(test_row_chem_act)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], Activation)
@@ -138,7 +141,8 @@ def test_process_row_stab():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='17052192', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-150135')
-    stmts = SignorProcessor._process_row(test_row_stab)
+    stmts, no_mech = SignorProcessor._process_row(test_row_stab)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], IncreaseAmount)
@@ -155,7 +159,8 @@ def test_process_row_destab():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='23721961',
             DIRECT='NO', NOTES='', ANNOTATOR='miannu',
             SENTENCE='', SIGNOR_ID='SIGNOR-252114')
-    stmts = SignorProcessor._process_row(test_row_destab)
+    stmts, no_mech = SignorProcessor._process_row(test_row_destab)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], DecreaseAmount)
@@ -170,7 +175,8 @@ def test_process_row_binding_complex():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='18321988', DIRECT='YES', NOTES='',
             ANNOTATOR='lperfetto', SENTENCE='', SIGNOR_ID='SIGNOR-226693')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
     assert isinstance(stmts[0], Complex)
@@ -187,7 +193,8 @@ def test_process_row_phos_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
             SENTENCE='', SIGNOR_ID='SIGNOR-116131')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
     assert isinstance(stmts[0], Activation)
@@ -214,7 +221,8 @@ def test_process_row_phos_down():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
             SENTENCE='', SIGNOR_ID='SIGNOR-159591')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
     assert isinstance(stmts[0], Inhibition)
@@ -241,7 +249,8 @@ def test_process_row_phos_nores_up():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
             SENTENCE='', SIGNOR_ID='SIGNOR-242602')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
     assert isinstance(stmts[0], Activation)
@@ -267,7 +276,8 @@ def test_process_row_phos_nores_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
     assert isinstance(stmts[0], Inhibition)
@@ -295,7 +305,8 @@ def test_process_row_phos_multi_res():
             MODBSEQ='', PMID='8157000', DIRECT='YES',
             NOTES='', ANNOTATOR='gcesareni', SENTENCE='',
             SIGNOR_ID='SIGNOR-36553')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 4
     assert isinstance(stmts[0], Activation)
@@ -326,7 +337,8 @@ def test_process_row_complex_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='9756848', DIRECT='YES', NOTES='', ANNOTATOR='miannu',
             SENTENCE='', SIGNOR_ID='SIGNOR-60557')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
     assert isinstance(stmts[0], Activation)
@@ -354,7 +366,8 @@ def test_process_row_complex_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='10548111', DIRECT='YES', NOTES='',
             ANNOTATOR='amattioni', SENTENCE='', SIGNOR_ID='SIGNOR-71954')
-    stmts = SignorProcessor._process_row(test_row)
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
     assert isinstance(stmts[0], Inhibition)

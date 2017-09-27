@@ -7,10 +7,10 @@ import csv
 import logging
 import requests
 from collections import namedtuple, Counter, defaultdict
-
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client, uniprot_client
+
 
 logger = logging.getLogger('signor')
 
@@ -63,10 +63,10 @@ _type_db_map = {
 
 
 _mechanism_map = {
-    'catalytic activity': None, # Conversion
+    'catalytic activity': None,
     'oxidoreductase activity': None,
-    'transcriptional activation': None, # IncreaseAmount by tscript
-    'transcriptional repression': None, # DecreaseAmount by tscript
+    'transcriptional activation': None,
+    'transcriptional repression': None,
     'Farnesylation': Farnesylation,
     'gtpase-activating protein': Gap,
     'deacetylation': Deacetylation,
@@ -76,21 +76,21 @@ _mechanism_map = {
     'guanine nucleotide exchange factor': Gef,
     'acetylation': Acetylation,
     'binding': Complex,
-    'cleavage': None, # Important!
+    'cleavage': None,
     'desumoylation': Desumoylation,
     'deubiquitination': Deubiquitination,
     'glycosylation': Glycosylation,
     'hydroxylation': Hydroxylation,
-    'neddylation': None, # Neddylation,
+    'neddylation': None,
     'chemical activation': Activation,
     'chemical inhibition': Inhibition,
     'trimethylation': Methylation,
     'ubiquitination': Ubiquitination,
     'post transcriptional regulation': None,
-    'relocalization': None, # Translocation,
+    'relocalization': None, # TODO: Translocation,
     'small molecule catalysis': None,
     's-nitrosylation': None,
-    'transcriptional regulation': None, # Need to know if up or down
+    'transcriptional regulation': None,
     'translation regulation': None,
     'tyrosination': None,
     'lipidation': None,
@@ -104,23 +104,19 @@ _mechanism_map = {
 
 
 _effect_map = {
-    'down-regulates': Inhibition, # FIXME
+    'down-regulates': Inhibition, # TODO: Need generic downregulation
     'down-regulates activity': Inhibition,
     'down-regulates quantity': DecreaseAmount,
     'down-regulates quantity by destabilization': DecreaseAmount,
     'down-regulates quantity by repression': DecreaseAmount,
     'form complex': Complex,
     'unknown': None,
-    'up-regulates': Activation, # FIXME
+    'up-regulates': Activation, # TODO: Need generic upregulation
     'up-regulates activity': Activation,
     'up-regulates quantity': IncreaseAmount,
     'up-regulates quantity by expression': IncreaseAmount,
     'up-regulates quantity by stabilization': IncreaseAmount
 }
-
-
-signor_default_path = join(dirname(__file__), '..', '..', 'data',
-                          'all_data_23_09_17.csv')
 
 
 class SignorProcessor(object):
@@ -141,13 +137,13 @@ class SignorProcessor(object):
     delimiter : str
         Field delimiter for CSV file. Defaults to semicolon ';'.
 
-    Attributes
-    ----------
-    skipped_rows : list of SignorRow namedtuples
-        List of rows where no mechanism statements were generated.
-    skip_ctr : collections.Counter
-        Counter listing the frequency of different MECHANISM types in the
-        list of skipped rows.
+   Attributes
+   ----------
+   no_mech_rows: list of SignorRow namedtuples
+       List of rows where no mechanism statements were generated.
+   no_mech_ctr : collections.Counter
+       Counter listing the frequency of different MECHANISM types in the
+       list of no-mechanism rows.
     """
     def __init__(self, signor_csv=None, delimiter=';'):
         # Get generator over the CSV file
@@ -171,14 +167,16 @@ class SignorProcessor(object):
                 raise Exception('Could not download Signor data.')
         # Process into statements
         self.statements = []
-        self.skipped_rows = []
+        self.no_mech_rows = []
         for row in self._data:
-            row_stmts = self._process_row(row)
+            row_stmts, no_mech = self._process_row(row)
+            if no_mech:
+                self.no_mech_rows.append(row)
             self.statements.extend(row_stmts)
-        # Skipped statements by type
-        skip_ctr = Counter([row.MECHANISM for row in self.skipped_rows])
-        self.skip_ctr = sorted([(k, v) for k, v in skip_ctr.items()],
-                               key=lambda x: x[1], reverse=True)
+        # No-mechanism rows by mechanism type
+        no_mech_ctr = Counter([row.MECHANISM for row in self.no_mech_rows])
+        self.no_mech_ctr = sorted([(k, v) for k, v in no_mech_ctr.items()],
+                                  key=lambda x: x[1], reverse=True)
 
     @staticmethod
     def _get_agent(ent_name, ent_type, id, database):
@@ -276,7 +274,7 @@ class SignorProcessor(object):
         # They also can't give rise to any active form statements; therefore
         # we have gotten all the statements we will get and can return.
         if stmts:
-            return stmts
+            return (stmts, False)
 
         # If we have a different effect/mechanism combination, we can now make
         # them separately without risk of redundancy.
@@ -298,6 +296,7 @@ class SignorProcessor(object):
 
         # For modifications, we create the modification statement as well as
         # the appropriate active form.
+        no_mech = False
         if mech_stmt_type and issubclass(mech_stmt_type, Modification):
             if not row.RESIDUE:
                 # Modification
@@ -346,8 +345,10 @@ class SignorProcessor(object):
         # Other mechanism statement types
         elif mech_stmt_type:
             stmts.append(mech_stmt_type(agent_a, agent_b, evidence=evidence))
-
-        return stmts
+        # Mechanism statement type is None--marked as skipped
+        else:
+            no_mech = True
+        return stmts, no_mech
 
 
 def _parse_residue_positions(residue_field):
@@ -376,11 +377,3 @@ def _parse_residue_positions(residue_field):
         return (res, pos)
     return [_parse_respos(rp) for rp in res_strs]
 
-"""
-Known issues:
-* The generic "up-regulates" effect type should be mapped to a generic up
-  regulation rather than Activation/Inhibition, as it is currently.
-* Mappings for SIGNOR families, complexes, etc.
-* Whether Gef/Gap should produce additional statements to Act/Inh.
-* ActiveForms representing effects on amounts (StateEffect)
-"""
