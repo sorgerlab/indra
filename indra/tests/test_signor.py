@@ -80,7 +80,7 @@ def test_get_evidence():
             'ANNOTATOR': 'gcesareni',
         }
     assert ev.epistemics['direct']
-    assert ev.source_api == 'SIGNOR'
+    assert ev.source_api == 'signor'
     assert ev.source_id == 'SIGNOR-241929'
     assert ev.text == "Together, these results indicate that the Met gene " \
                       "is a direct target of NFkappaB and that Met " \
