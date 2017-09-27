@@ -5,6 +5,7 @@ import argparse
 import stat
 import random
 import sys
+import re
 import tempfile
 import shutil
 import subprocess
@@ -715,18 +716,34 @@ ReadPapers.serializedPapers = mentions.ser
 def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index, 
               force_read, force_fulltext, cleanup=False, verbose=True):
     "Run reach on a list of pmids."
-    # path_to_reach = '/pmc/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    # path_to_reach = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/reach/target/scala-2.11/reach-gordo-1.3.3-SNAPSHOT.jar'
-    path_to_reach = '/home/patrick/Workspace/reach/target/scala-2.11/reach-1.3.5-SNAPSHOT-FAT.jar'
-    reader_version = '1.3.5-794f6ff'
-    if not os.path.exists(path_to_reach):
-        logger.warning("Reach path invalid. Reach can not be performed.")
+    # Get the path to the reach directory.
+    path_to_reach = os.environ.get('REACHPATH', None)
+    if path_to_reach is None or not os.path.exists(path_to_reach):
+        logger.warning(
+            'Reach path not set or invalid. Check REACHPATH environment var.'
+            )
         return {}, {}
+    patt = re.compile('reach-(.*?)\.jar')
+
+    # Find the jar file.
+    for fname in os.listdir(path_to_reach):
+        m = patt.match(fname)
+        if m is not None:
+            reach_ex = os.path.join(path_to_reach, fname)
+            break
+    else:
+        logger.warning("Could not find reach jar in reach dir.")
+        return {}, {}
+
+    # Get the reach version.
+    reach_version = os.environ.get('REACH_VERSION', None)
+    if reach_version is None:
+        reach_version = re.sub('-SNAP.*?$', '', m.groups()[0])
 
     base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
         get_content_to_read(
             pmid_list, start_index, end_index, tmp_dir, num_cores,
-            force_fulltext, force_read, 'reach', reader_version
+            force_fulltext, force_read, 'reach', reach_version
             )
 
     # Create the REACH configuration file
@@ -746,20 +763,13 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
         # Run REACH!
         logger.info("Beginning reach.")
-        args = ['java', '-Dconfig.file=%s' % conf_file_path, '-jar', path_to_reach]
+        args = ['java', '-Dconfig.file=%s' % conf_file_path, '-jar', reach_ex]
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         if verbose:
             for line in iter(p.stdout.readline, b''):
                 logger.info(line)
-        ret = p.communicate(timeout=10*num_found/num_cores)
-        if ret is not None:
-            (p_out, p_err) = ret
-        else:
-            p.terminate()
-            p_out = b''
-            p_err = b''
-            logger.error('Reach timed out. Terminated.')
+        p_out, p_err = p.communicate()
         if p.returncode:
             logger.error('Problem running REACH:')
             logger.error('Stdout: %s' % p_out.decode('utf-8'))
@@ -770,7 +780,7 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         some_stmts = upload_process_reach_files(
             output_dir,
             pmids_unread,
-            reader_version,
+            reach_version,
             num_cores
             )
         stmts.update(some_stmts)
@@ -867,11 +877,16 @@ def main(args):
                 )
             stmts[reader] = some_stmts
 
-            N = sum([
-                len(stmts[reader][pmid]) for reader in readers
-                for pmid in stmts[reader].keys()
-                ])
-            logger.info('Accumulated %d statements.' % N)
+        N_tot = sum([
+            len(stmts[reader][pmid]) for reader in readers
+            for pmid in stmts[reader].keys()
+            ])
+        logger.info('Collected a total of %s statements.' % N_tot)
+        for reader in readers:
+            N = sum([len(l) for l in stmts[reader].values()])
+            logger.info(
+                '%s accumulated %d statements.' % (reader.capitalize(), N)
+                )
 
         # Pickle the statements
         if args.end_index is None:
