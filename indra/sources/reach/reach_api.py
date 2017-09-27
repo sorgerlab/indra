@@ -137,7 +137,11 @@ def process_text(text, citation=None, offline=False):
             logger.error('Could not process text.')
             logger.error(e)
             return None
+        # REACH version < 1.3.3
         json_str = result_map.get('resultJson')
+        if not json_str:
+            # REACH version >= 1.3.3
+            json_str = result_map.get('result')
         if not isinstance(json_str, bytes):
             json_str = json_str.encode('utf-8')
     else:
