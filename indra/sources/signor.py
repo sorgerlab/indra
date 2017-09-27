@@ -316,8 +316,17 @@ class SignorProcessor(object):
                     stmts.append(ActiveForm(af_agent, 'activity', False))
         # For Complex statements, we create an ActiveForm with a BoundCondition.
         elif mech_stmt_type == Complex:
+            # Complex
             stmts.append(mech_stmt_type([agent_a, agent_b], evidence=evidence))
-            # TODO Add ActiveForm statements here
+            # ActiveForm
+            af_agent = deepcopy(agent_b)
+            af_bc_agent = deepcopy(agent_a)
+            af_agent.bound_conditions = [BoundCondition(af_bc_agent, True)]
+            if row.EFFECT.startswith('up'):
+                stmts.append(ActiveForm(af_agent, 'activity', True))
+            elif row.EFFECT.startswith('down'):
+                stmts.append(ActiveForm(af_agent, 'activity', False))
+        # Other mechanism statement types
         elif mech_stmt_type:
             stmts.append(mech_stmt_type(agent_a, agent_b, evidence=evidence))
 

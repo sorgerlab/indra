@@ -98,22 +98,6 @@ def test_process_row():
     assert stmts[0].agent_list()[0].activity.activity_type == 'transcription'
 
 
-def test_process_row_binding():
-    test_row_binding = SignorRow(ENTITYA='SERPINA1', TYPEA='protein',
-        IDA='P01009', DATABASEA='UNIPROT', ENTITYB='LRP1', TYPEB='protein',
-        IDB='Q07954', DATABASEB='UNIPROT', EFFECT='up-regulates',
-        MECHANISM='binding', RESIDUE='', SEQUENCE='', TAX_ID='9606',
-        CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
-        MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
-        PMID='8626456', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
-        SENTENCE='', SIGNOR_ID='SIGNOR-41180')
-    stmts = SignorProcessor._process_row(test_row_binding)
-    assert isinstance(stmts, list)
-    assert len(stmts) == 2
-    assert isinstance(stmts[0], Activation)
-    assert isinstance(stmts[1], Complex)
-
-
 def test_process_row_chem_inh():
     test_row_chem_inh = SignorRow(ENTITYA='722544-51-6', TYPEA='chemical',
         IDA='CID:16007391', DATABASEA='PUBCHEM', ENTITYB='AURKB',
@@ -347,12 +331,15 @@ def test_process_row_complex_up():
     assert len(stmts) == 3
     assert isinstance(stmts[0], Activation)
     assert isinstance(stmts[1], Complex)
+    cplx_agent_a = stmts[1].agent_list()[0]
     cplx_agent_b = stmts[1].agent_list()[1]
     af = stmts[2]
     assert isinstance(af, ActiveForm)
+    # Won't fully match because of bound condition, so we check name
+    assert af.agent.name == cplx_agent_b.name
     assert len(af.agent.bound_conditions) == 1
     bc = af.agent.bound_conditions[0]
-    assert bc.agent.matches(cplx_agent_b)
+    assert bc.agent.matches(cplx_agent_a)
     assert bc.is_bound
     assert af.activity == 'activity'
     assert af.is_active
@@ -372,12 +359,15 @@ def test_process_row_complex_down():
     assert len(stmts) == 3
     assert isinstance(stmts[0], Inhibition)
     assert isinstance(stmts[1], Complex)
+    cplx_agent_a = stmts[1].agent_list()[0]
     cplx_agent_b = stmts[1].agent_list()[1]
     af = stmts[2]
     assert isinstance(af, ActiveForm)
+    # Won't fully match because of bound condition, so we check name
+    assert af.agent.name == cplx_agent_b.name
     assert len(af.agent.bound_conditions) == 1
     bc = af.agent.bound_conditions[0]
-    assert bc.agent.matches(cplx_agent_b)
+    assert bc.agent.matches(cplx_agent_a)
     assert bc.is_bound
     assert af.activity == 'activity'
     assert not af.is_active
@@ -413,25 +403,4 @@ def test_parse_residue_positions():
     assert residues[0][1] == '169'
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
-
-
-
-
-def test_get_mechanism():
-    sp = SignorProcessor(signor_test_path)
-    assert sp.statements
-    globals().update(locals())
-
-if __name__ == '__main__':
-    #test_process_row_destab()
-    #test_parse_csv()
-    #test_get_agent()
-    #test_get_agent_keyerror()
-    #test_get_evidence()
-    #test_process_row()
-    #test_process_row_binding()
-    #test_process_row_chem_inh()
-    #test_parse_residue_positions()
-    test_get_mechanism()
-    test_process_row_phos_multi_res()
 
