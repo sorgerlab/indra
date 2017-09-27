@@ -1,8 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import logging
+from io import StringIO
 from copy import deepcopy
 from os.path import join, dirname
+import csv
+import logging
+import requests
 from collections import namedtuple, Counter, defaultdict
 
 from indra.statements import *
@@ -132,7 +135,9 @@ class SignorProcessor(object):
     Parameters
     ----------
     signor_csv : str
-        Path to SIGNOR CSV file.
+        Path to SIGNOR CSV file. If None is given (default), the
+        SignorProcessor will attempt to download the full data file
+        from http://signor.uniroma2.it/downloads.php.
     delimiter : str
         Field delimiter for CSV file. Defaults to semicolon ';'.
 
@@ -144,14 +149,26 @@ class SignorProcessor(object):
         Counter listing the frequency of different MECHANISM types in the
         list of skipped rows.
     """
-    def __init__(self, signor_csv, delimiter=';'):
+    def __init__(self, signor_csv=None, delimiter=';'):
         # Get generator over the CSV file
-        data_iter = read_unicode_csv(signor_csv, delimiter=';')
-        # Skip the header row
-        next(data_iter)
-        # Process into a list of SignorRow namedtuples
-        # Strip off any funky \xa0 whitespace characters
-        self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
+        if signor_csv:
+            data_iter = read_unicode_csv(signor_csv, delimiter=';', skiprows=1)
+            # Process into a list of SignorRow namedtuples
+            # Strip off any funky \xa0 whitespace characters
+            self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
+        # If no CSV given, download directly from web
+        else:
+            res = requests.post('http://signor.uniroma2.it/download_entity.php',
+                                data={'organism':'human', 'format':'csv',
+                                      'submit':'Download'})
+            if res.status_code == 200:
+                csv_reader = csv.reader(StringIO(res.text), delimiter=delimiter,
+                                        quoting=csv.QUOTE_MINIMAL)
+                next(csv_reader) # Skip the header row
+                self._data = [SignorRow(*[f.strip() for f in r])
+                              for r in csv_reader]
+            else:
+                raise Exception('Could not download Signor data.')
         # Process into statements
         self.statements = []
         self.skipped_rows = []

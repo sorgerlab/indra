@@ -404,3 +404,10 @@ def test_parse_residue_positions():
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
 
+
+def test_download_data():
+    sp = SignorProcessor()
+    assert isinstance(sp._data[0], SignorRow)
+    assert sp.statements
+    assert isinstance(sp.statements[0], Statement)
+
