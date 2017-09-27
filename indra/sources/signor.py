@@ -291,12 +291,13 @@ class SignorProcessor(object):
                 af_agent = deepcopy(agent_b)
                 af_agent.mods = mod_stmt._get_mod_condition()
                 # TODO: Currently this turns any upregulation associated with
-                # the modification into an ActiveForm (even up-regulations
-                # associated with increased amounts). This should be updated
-                # once we have a statement type relating Agent states to
-                # effects on amounts.
+                # the modification into an ActiveForm (even up/down-regulations
+                # associated with amounts). This should be updated once we have
+                # a statement type relating Agent states to effects on amounts.
                 if row.EFFECT.startswith('up'):
                     stmts.append(ActiveForm(af_agent, 'activity', True))
+                elif row.EFFECT.startswith('down'):
+                    stmts.append(ActiveForm(af_agent, 'activity', False))
             else:
                 # Modification
                 residues = _parse_residue_positions(row.RESIDUE)
@@ -311,7 +312,9 @@ class SignorProcessor(object):
                 # TODO: See above.
                 if row.EFFECT.startswith('up'):
                     stmts.append(ActiveForm(af_agent, 'activity', True))
-        # Don't make a new complex statement if 
+                elif row.EFFECT.startswith('down'):
+                    stmts.append(ActiveForm(af_agent, 'activity', False))
+        # For Complex statements, we create an ActiveForm with a BoundCondition.
         elif mech_stmt_type == Complex:
             stmts.append(mech_stmt_type([agent_a, agent_b], evidence=evidence))
             # TODO Add ActiveForm statements here

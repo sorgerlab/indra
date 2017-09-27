@@ -217,10 +217,45 @@ def test_process_row_phos_up():
     assert mc.mod_type == 'phosphorylation'
     assert mc.residue == 'T'
     assert mc.position == '387'
+    assert af.is_active == True
 
 
 def test_process_row_phos_down():
-    # TODO
+    test_row = SignorRow(ENTITYA='PRKCD', TYPEA='protein', IDA='Q05655',
+            DATABASEA='UNIPROT', ENTITYB='PTPN22', TYPEB='protein',
+            IDB='Q9Y2R2', DATABASEB='UNIPROT', EFFECT='down-regulates',
+            MECHANISM='phosphorylation', RESIDUE='Ser35',
+            SEQUENCE='FLKLKRQsTKYKADK', TAX_ID='9606', CELL_DATA='BTO:0000782',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
+            SENTENCE='', SIGNOR_ID='SIGNOR-159591')
+    stmts = SignorProcessor._process_row(test_row)
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Inhibition)
+    assert isinstance(stmts[1], Phosphorylation)
+    assert stmts[1].residue == 'S'
+    assert stmts[1].position == '35'
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue == 'S'
+    assert mc.position == '35'
+    assert af.is_active == False
+
+
+def test_process_row_phos_nores_up():
+    pass
+
+
+def test_process_row_phos_nores_down():
+    pass
+
+
+def test_process_row_phos_multi_res():
     pass
 
 
