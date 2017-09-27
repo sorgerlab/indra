@@ -7,7 +7,7 @@ from pysb.core import SelfExporter
 from pysb.tools import render_reactions
 from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
-                                      _stmt_from_rule, PathResult, \
+                                      stmt_from_rule, PathResult, \
                                       remove_im_params
 from indra.assemblers.pysb_assembler import PysbAssembler
 from pysb.tools import species_graph
@@ -930,7 +930,7 @@ def test_stmt_from_rule():
     pa.add_statements([st])
     pa.make_model()
     rule_name = pa.model.rules[0].name
-    stmt = _stmt_from_rule(pa.model, rule_name, [st])
+    stmt = stmt_from_rule(rule_name, pa.model, [st])
     assert(stmt == st)
 
 

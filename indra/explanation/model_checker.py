@@ -3,7 +3,7 @@ from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import logging
 import numbers
-import networkx
+import networkx as nx
 import itertools
 import numpy as np
 import scipy.stats
@@ -464,6 +464,23 @@ class ModelChecker(object):
 
     def score_paths(self, paths, agents_values, loss_of_function=False,
                     sigma=0.15):
+        """Return scores associated with a given set of paths.
+
+        Parameters
+        ----------
+        paths : list[list[tuple[str, int]]]
+            A list of paths obtained from path finding. Each path is a list
+            of tuples (which are edges in the path), with the first element
+            of the tuple the name of a rule, and the second element its
+            polarity in the path.
+        agents_values : dict[indra.statements.Agent, float]
+            A dictionary of INDRA Agents and their corresponding measured
+            value in a given experimental condition.
+        loss_of_function : boolean
+            If True, flip the polarity of the path. For instance, if the effect
+            of an inhibitory drug is explained, set this to True.
+            Default: False
+        """
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
@@ -519,19 +536,52 @@ class ModelChecker(object):
                               reverse=True)
         return scored_paths
 
-    def prune_influence_map(self):
+    def _extreme_prune(self, node_list, filename='im.pdf'):
         im = self.get_im()
-        remove_im_params(self.model, im)
-        # For every rule in the influence map
-        predecessors = im.predecessors_iter
         for node in im.nodes():
-            # ...get the parents of the node
-            parents = list(predecessors(node))
-            # Check for edges among the immediate parents of the node...
-            for p1, p2 in itertools.permutations(parents, 2):
-                # If there is an edge, remove it
-                if im.has_edge((p1, p2)):
-                    im.remove_edge((p1, p2))
+            if not node in node_list:
+                im.remove_node(node)
+        im.draw(filename, prog='dot')
+
+    def prune_influence_map(self):
+        """Remove edges between rules causing problematic non-transitivity.
+
+        First, all self-loops are removed. After this initial step, edges are
+        removed between rules when they share *all* child nodes except for each
+        other; that is, they have a mutual relationship with each other and
+        share all of the same children.
+
+        Note that edges must be removed in batch at the end to prevent edge
+        removal from affecting the lists of rule children during the comparison
+        process.
+        """
+        im = self.get_im()
+        # First, remove all self-loops
+        for e in im.edges():
+            if e[0] == e[1]:
+                logger.info('Removing self loop: %s', e)
+                im.remove_edge(e)
+        # Now compare nodes pairwise and look for overlap between child nodes
+        edges_to_remove = []
+        remove_im_params(self.model, im)
+        predecessors = im.predecessors_iter
+        successors = im.successors_iter
+        combos = list(itertools.combinations(im.nodes(), 2))
+        for ix, (p1, p2) in enumerate(combos):
+            p1_children = set(successors(p1))
+            p2_children = set(successors(p2))
+            # Children are identical except for mutual relationship
+            if p1_children.difference(p2_children) == set([p2]) and \
+               p2_children.difference(p1_children) == set([p1]):
+                for u, v in ((p1, p2), (p2, p1)):
+                    edge = im.get_edge(u, v)
+                    edges_to_remove.append(edge)
+                    edge_sign = _get_edge_sign(edge)
+                    logger.debug('Will remove edge (%s, %s) with polarity %s',
+                                 u, v, edge_sign)
+        for edge in im.edges():
+            if edge in edges_to_remove:
+                im.remove_edge(edge)
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
@@ -913,8 +963,23 @@ def _path_with_polarities(im, path):
     #return path_polarity
 
 
-def _stmt_from_rule(model, rule_name, stmts):
-    """Return the INDRA Statement corresponding to a given rule by name."""
+def stmt_from_rule(rule_name, model, stmts):
+    """Return the source INDRA Statement corresponding to a rule in a model.
+
+    Parameters
+    ----------
+    rule_name : str
+        The name of a rule in the given PySB model.
+    model : pysb.core.Model
+        A PySB model which contains the given rule.
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements from which the model was assembled.
+
+    Returns
+    -------
+    stmt : indra.statements.Statement
+        The Statement from which the given rule in the model was obtained.
+    """
     stmt_uuid = None
     for ann in model.annotations:
         if ann.subject == rule_name:
@@ -943,6 +1008,14 @@ def _monomer_pattern_label(mp):
             site_str = '%s_%s' % (site, cond)
         site_strs.append(site_str)
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
+
+
+def _agraph_to_multidigraph(agraph):
+    edges = [(e[0], e[1], dict([('polarity', _get_edge_sign(e))]))
+             for e in agraph.edges()]
+    mdg = nx.MultiDiGraph()
+    mdg.add_edges_from(edges)
+    return mdg
 
 
 def _is_obs_node(node):

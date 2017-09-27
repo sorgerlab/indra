@@ -73,8 +73,8 @@ def test_get_profile_data():
 def test_get_ccle_cna():
     profile_data = cbio_client.get_ccle_cna(['BRAF', 'AKT1'],
                                             ['LOXIMVI_SKIN', 'SKMEL30_SKIN'])
-    assert profile_data['SKMEL30_SKIN']['BRAF'] == -1
-    assert profile_data['SKMEL30_SKIN']['AKT1'] == 1
+    assert profile_data['SKMEL30_SKIN']['BRAF'] == 1
+    assert profile_data['SKMEL30_SKIN']['AKT1'] == -1
     assert profile_data['LOXIMVI_SKIN']['BRAF'] == 0
     assert profile_data['LOXIMVI_SKIN']['AKT1'] == 0
     assert len(profile_data) == 2
@@ -124,7 +124,7 @@ def test_get_ccle_cna_big():
             values.append(val)
     values = list(set(values))
     assert len(values) == 6
-    assert cna['COLO679_SKIN']['BRAF'] == 0
+    assert cna['COLO679_SKIN']['BRAF'] == 2
     assert cna['A2058_SKIN']['BRAF'] == 1
-    assert cna['IGR39_SKIN']['BRAF'] == -1
-    assert cna['HS294T_SKIN']['BRAF'] == 0
+    assert cna['IGR39_SKIN']['BRAF'] == 1
+    assert cna['HS294T_SKIN']['BRAF'] == 1

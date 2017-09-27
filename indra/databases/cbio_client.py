@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import pandas
 import logging
 import requests
@@ -180,7 +181,8 @@ def get_profile_data(study_id, gene_list,
                     for case in case_list_df}
     for case in case_list_df:
         profile_values = df[case].tolist()
-        for g, cv in zip(gene_list, profile_values):
+        df_gene_list = df['COMMON'].tolist()
+        for g, cv in zip(df_gene_list, profile_values):
             if not pandas.isnull(cv):
                 profile_data[case][g] = cv
     return profile_data
@@ -218,13 +220,6 @@ def get_genetic_profiles(study_id, profile_filter=None):
     instance the study 'cellline_ccle_broad' has profiles such as
     'cellline_ccle_broad_mutations' for mutations, 'cellline_ccle_broad_CNA'
     for copy number alterations, etc.
-
-    CNA values correspond to the following alterations
-    -2 = homozygous deletion
-    -1 = hemizygous deletion
-     0 = neutral / no change
-     1 = gain
-     2 = high level amplification
 
     Parameters
     ----------
@@ -378,7 +373,12 @@ def get_ccle_lines_for_mutation(gene, amino_acid_change):
 def get_ccle_cna(gene_list, cell_lines):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
-    This is a specialized call to get_mutations tailored to CCLE cell lines.
+    CNA values correspond to the following alterations
+    -2 = homozygous deletion
+    -1 = hemizygous deletion
+     0 = neutral / no change
+     1 = gain
+     2 = high level amplification
 
     Parameters
     ----------
@@ -450,3 +450,44 @@ def _filter_data_frame(df, data_col, filter_col, filter_str=None):
     else:
         data_list = df[data_col].to_dict()
     return data_list
+
+
+# Deactivate this section for the time being, can be reinstated
+# once these are fully integrated
+'''
+
+def _read_ccle_cna():
+    fname = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../../data/ccle_CNA.txt'
+    try:
+        df = pandas.read_csv(fname, sep='\t')
+    except Exception:
+        df = None
+    return df
+
+ccle_cna_df = _read_ccle_cna()
+
+
+def _read_ccle_mrna():
+    fname = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../../data/ccle_expression_median.txt'
+    try:
+        df = pandas.read_csv(fname, sep='\t')
+    except Exception:
+        df = None
+    return df
+
+ccle_mrna_df = _read_ccle_mrna()
+
+
+def _read_ccle_mutations():
+    fname = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../../data/ccle_mutations_extended.txt'
+    try:
+        df = pandas.read_csv(fname, sep='\t', skiprows=2)
+    except Exception:
+        df = None
+    return df
+
+ccle_mutations_df = _read_ccle_mutations()
+'''

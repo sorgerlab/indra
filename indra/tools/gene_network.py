@@ -5,7 +5,7 @@ import pickle
 import logging
 from indra.sources import bel, biopax
 import indra.tools.assemble_corpus as ac
-from indra.preassembler import Preassembler, render_stmt_graph
+from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.sitemapper import default_mapper as sm
 
@@ -90,7 +90,8 @@ class GeneNetwork(object):
                                                      self.gene_list, 'all')
         return bel_statements
 
-    def get_biopax_stmts(self, filter=False, query='pathsbetween'):
+    def get_biopax_stmts(self, filter=False, query='pathsbetween',
+                         database_filter=None):
         """Get relevant statements from Pathway Commons.
 
         Performs a "paths between" query for the genes in :py:attr:`gene_list`
@@ -103,14 +104,18 @@ class GeneNetwork(object):
 
         Parameters
         ----------
-        filter : bool
+        filter : Optional[bool]
             If True, includes only those statements that exclusively mention
             genes in :py:attr:`gene_list`. Default is False.
-        query : str
+        query : Optional[str]
             Defined what type of query is executed. The two options are
             'pathsbetween' which finds paths between the given list of genes
             and only works if more than 1 gene is given, and 'neighborhood'
             which searches the immediate neighborhood of each given gene.
+            Note that for pathsbetween queries with more thatn 60 genes, the
+            query will be executed in multiple blocks for scalability.
+        database_filter: Optional[list[str]]
+            A list of PathwayCommons databases to include in the query.
 
         Returns
         -------
@@ -138,9 +143,16 @@ class GeneNetwork(object):
                 logger.warning('Using neighborhood query for one gene.')
                 query = 'neighborhood'
             if query == 'pathsbetween':
-                bp = biopax.process_pc_pathsbetween(self.gene_list)
+                if len(self.gene_list) > 60:
+                    block_size = 60
+                else:
+                    block_size = None
+                bp = biopax.process_pc_pathsbetween(self.gene_list,
+                                                database_filter=database_filter,
+                                                block_size=block_size)
             elif query == 'neighborhood':
-                bp = biopax.process_pc_neighborhood(self.gene_list)
+                bp = biopax.process_pc_neighborhood(self.gene_list,
+                                                database_filter=database_filter)
             else:
                 logger.error('Invalid query type: %s' % query)
                 return []
