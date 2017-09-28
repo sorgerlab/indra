@@ -16,3 +16,4 @@ INDRA modules reference
    assemblers/index
    explanation/index
    tools/index
+   db/index

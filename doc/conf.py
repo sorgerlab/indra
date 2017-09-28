@@ -306,7 +306,10 @@ MOCK_MODULES = [
     'rdflib', 'rdflib.namespace', 'rdflib.plugins',
     'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples',
     'objectpath', 'lxml', 'lxml.etree',
-    'lxml.builder', 'networkx', 'functools32', 'ndex', 'ndex.client'
+    'lxml.builder', 'networkx', 'functools32', 'ndex', 'ndex.client',
+    'sqlalchemy', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
+    'sqlalchemy.orm', 'sqlalchemy.dialects', 'sqlalchemy.dialects.postgresql',
+    'sqlalchemy.schema', 'sqlalchemy.ext.compiler'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()

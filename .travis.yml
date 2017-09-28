@@ -13,14 +13,14 @@ before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh -nv;
+      wget https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -O miniconda.sh -nv;
     else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh -nv;
+      wget https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -O miniconda.sh -nv;
     fi
   - chmod +x miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
-  - conda update --yes conda
+    #- conda update --yes conda
   - conda install --yes python="$TRAVIS_PYTHON_VERSION" qt=4 numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx
 install:
   # INDRA dependencies
@@ -29,7 +29,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas
+  - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas sqlalchemy psycopg2 pgcopy
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
@@ -75,9 +75,11 @@ script:
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
-  - nosetests indra
-     -v --with-doctest --with-doctest-ignore-unicode
-     --with-coverage --cover-inclusive --cover-package=indra
+  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
+      export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py,_require_python3.py";
+    fi
+  - nosetests indra -v --with-doctest --with-doctest-ignore-unicode
+        --with-coverage --cover-inclusive --cover-package=indra
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
