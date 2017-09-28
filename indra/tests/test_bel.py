@@ -53,20 +53,20 @@ def test_get_agent_hgnc_up_from_egid():
     assert ag.db_refs.get('UP') == 'P28482'
     assert unicode_strs((concept, entity, ag))
 
-#rdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-#                        '..', '..', 'data')
 
 def test_get_transcription():
-    #with open(os.path.join(rdf_path, 'myc_neighborhood.rdf')) as f:
-    #    myc_str = f.read()
-    #    myc_bp = bel.process_belrdf(myc_str)
-    #with open(test_rdf_myc, 'rt') as fh:
-    #    rdf_str_myc = fh.read()
-    #bp = bel.process_belrdf(rdf_str_myc)
-    #transcription_stmts = []
-    #for stmt in bp.statements + bp.indirect_stmts:
-    #   if isinstance(stmt, RegulateAmount):
-    #        transcription_stmts.append(stmt)
-    #assert len(transcription_stmts) == 8
+    print("Opening file")
+    with open(test_rdf_myc, 'rt') as fh:
+        rdf_str_myc = fh.read()
+    print("Process BEL RDF")
+    bp = bel.process_belrdf(rdf_str_myc)
+    transcription_stmts = []
+    for stmt in bp.statements + bp.indirect_stmts:
+       if isinstance(stmt, RegulateAmount):
+            transcription_stmts.append(stmt)
+    assert len(transcription_stmts) == 8
     pass
 
+
+if __name__ == '__main__':
+    test_get_transcription()
