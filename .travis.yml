@@ -76,7 +76,7 @@ script:
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py";
+      export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py,_require_python3.py";
     fi
   - nosetests indra -v --with-doctest --with-doctest-ignore-unicode
         --with-coverage --cover-inclusive --cover-package=indra
