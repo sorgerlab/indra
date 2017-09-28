@@ -76,9 +76,9 @@ script:
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-     export NOSE_SKIP="manage_content.py"
+     export NOSE_SKIP="manage_content.py";
     else
-     export NOSE_SKIP="dummy"
+     export NOSE_SKIP="dummy";
     fi
   - nosetests indra -v --with-doctest --with-doctest-ignore-unicode --with-coverage --cover-inclusive --cover-package=indra -I $NOSE_SKIP
   # Run NL model examples only when the environmental variable
