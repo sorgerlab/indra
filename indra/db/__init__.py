@@ -61,14 +61,6 @@ except ImportError:
 DEFAULTS_FILE = path.join(__path__[0], 'defaults.txt')
 
 
-def _get_timestamp():
-    "Get the timestamp. Needed for python 2-3 compatibility."
-    try:  # Python 3
-        ret = datetime.utcnow().timestamp()
-    except AttributeError:  # Python 2
-        now = datetime.utcnow()
-        ret = time.mktime(now.timetuple())+now.microsecond/1000000.0
-    return ret
 
 
 def _isiterable(obj):
@@ -475,7 +467,7 @@ class DatabaseManager(object):
         db_ref_id = self.insert(
             'db_info',
             db_name=db_name,
-            timestamp=_get_timestamp()
+            timestamp=self._get_timestamp()
             )
 
         # Insert the statements
@@ -486,7 +478,7 @@ class DatabaseManager(object):
                 uuid=stmt.uuid,
                 db_ref=db_ref_id,
                 type=stmt.__class__.__name__,
-                json=json.dumps(stmt.to_json())
+                json=json.dumps(stmt.to_json()).encode('utf8')
                 )
 
             # Collect the agents and add them.
@@ -553,6 +545,18 @@ class DatabaseManager(object):
             self.TextRef.pmid.in_(pmid_list)
             )
         return self.get_values(text_refs, 'pmid')
+
+    def _get_timestamp(self):
+        "Get the timestamp. Needed for python 2-3 compatibility."
+        try:  # Python 3
+            ret = datetime.utcnow()
+            if self.sqltype != sqltypes.SQLITE:
+                ret = ret.timestamp()
+        except AttributeError:  # Python 2
+            ret = datetime.utcnow()
+            if self.sqltype != sqltypes.SQLITE:
+                ret = time.mktime(ret.timetuple())+ret.microsecond/1000000.0
+        return ret
 
 
 class IndraDatabaseError(Exception):
