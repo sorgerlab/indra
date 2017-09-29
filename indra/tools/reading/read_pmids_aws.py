@@ -33,6 +33,14 @@ if __name__ == '__main__':
         dest='end_index',
         help='Select the index of the last pmid in the list to read.'
         )
+    parser.add_arguement(
+        '-r', '--readers',
+        dest='readers',
+        default='reach',
+        choices=['reach'],
+        nargs=1,
+        help='Choose which reader(s) to use.'
+        )
     args = parser.parse_args()
     from indra.tools.reading import read_pmids as read
     import boto3

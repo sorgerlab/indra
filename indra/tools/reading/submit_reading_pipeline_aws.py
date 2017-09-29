@@ -10,6 +10,7 @@ bucket_name = 'bigmech'
 
 logger = logging.getLogger('aws_reading')
 
+
 def wait_for_complete(job_list, poll_interval=10):
     """Return when all jobs in the given list finished.
 
@@ -45,8 +46,10 @@ def wait_for_complete(job_list, poll_interval=10):
         failed = get_jobs_by_status('FAILED', job_list)
         done = get_jobs_by_status('SUCCEEDED', job_list)
 
-        logger.info('(%d s)=(not done: %d, failed: %d, done: %d)' %
-              (total_time, len(not_done), len(failed), len(done)))
+        logger.info(
+            '(%d s)=(not done: %d, failed: %d, done: %d)' %
+            (total_time, len(not_done), len(failed), len(done))
+            )
 
         if job_list:
             if (len(failed) + len(done)) == len(job_list):
@@ -58,6 +61,7 @@ def wait_for_complete(job_list, poll_interval=10):
         sleep(poll_interval)
         total_time += poll_interval
 
+
 def get_environment():
     # Get AWS credentials
     # http://stackoverflow.com/questions/36287720/boto3-get-credentials-dynamically
@@ -67,14 +71,15 @@ def get_environment():
 
     # Get the Elsevier keys from the Elsevier client
     environment_vars = [
-            {'name': ec.api_key_env_name,
-             'value': ec.elsevier_keys.get('X-ELS-APIKey')},
-            {'name': ec.inst_key_env_name,
-             'value': ec.elsevier_keys.get('X-ELS-Insttoken')},
-            {'name': 'AWS_ACCESS_KEY_ID',
-             'value': access_key},
-            {'name': 'AWS_SECRET_ACCESS_KEY',
-             'value': secret_key}]
+        {'name': ec.api_key_env_name,
+         'value': ec.elsevier_keys.get('X-ELS-APIKey')},
+        {'name': ec.inst_key_env_name,
+         'value': ec.elsevier_keys.get('X-ELS-Insttoken')},
+        {'name': 'AWS_ACCESS_KEY_ID',
+         'value': access_key},
+        {'name': 'AWS_SECRET_ACCESS_KEY',
+         'value': secret_key}
+        ]
     return environment_vars
 
 
@@ -106,16 +111,19 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
             job_end_ix = end_ix
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
         command_list = ['python', '-m',
-                        'indra.tools.reading.read_pmids_aws.py',
+                        'indra.tools.reading.read_pmids_aws',
                         basename, '/tmp', '16', str(job_start_ix),
                         str(job_end_ix)]
         print(command_list)
-        job_info = batch_client.submit_job(jobName=job_name,
-                       jobQueue='run_reach_queue',
-                       jobDefinition='run_reach_jobdef',
-                       containerOverrides={'environment': environment_vars,
-                                           'command': command_list},
-                       retryStrategy={'attempts': num_tries})
+        job_info = batch_client.submit_job(
+            jobName=job_name,
+            jobQueue='run_reach_queue',
+            jobDefinition='run_reach_jobdef',
+            containerOverrides={
+                'environment': environment_vars,
+                'command': command_list},
+            retryStrategy={'attempts': num_tries}
+            )
         job_list.append({'jobId': job_info['jobId']})
     return job_list
 
@@ -145,43 +153,80 @@ if __name__ == '__main__':
     import argparse
 
     # Create the top-level parser
-    parser = argparse.ArgumentParser('submit_reading_pipeline_aws.py',
-            description='Run machine reading with REACH using AWS Batch.')
-    subparsers = parser.add_subparsers(title='Job Type',
-            help='Type of jobs to submit.')
+    parser = argparse.ArgumentParser(
+        'submit_reading_pipeline_aws.py',
+        description='Run machine reading with REACH using AWS Batch.'
+        )
+    subparsers = parser.add_subparsers(
+        title='Job Type',
+        help='Type of jobs to submit.'
+        )
     subparsers.required = True
     subparsers.dest = 'job_type'
     parent_read_parser = argparse.ArgumentParser(add_help=False)
-    parent_read_parser.add_argument('basename',
-        help='Defines job names and S3 keys')
-    parent_read_parser.add_argument('pmid_file',
-        help='Path to file containing PMIDs to read')
-    parent_read_parser.add_argument('--start_ix', type=int,
-        help='Start index of PMIDs to read.')
-    parent_read_parser.add_argument('--end_ix', type=int,
-        help='End index of PMIDs to read (default: read all PMIDs)')
-    parent_read_parser.add_argument('--force_read', action='store_true',
-        help='Read papers even if previously read by current REACH.')
-    parent_read_parser.add_argument('--force_fulltext', action='store_true',
-        help='Get full text content even if content already on S3.')
-    parent_read_parser.add_argument('--pmids_per_job', default=3000, type=int,
-        help='Number of PMIDs to read for each AWS Batch job.')
-    parent_read_parser.add_argument('--num_tries', default=2, type=int,
-        help='Maximum number of times to try running job.')
-    read_parser = subparsers.add_parser('read', parents=[parent_read_parser],
+    parent_read_parser.add_argument(
+        'basename',
+        help='Defines job names and S3 keys'
+        )
+    parent_read_parser.add_argument(
+        'pmid_file',
+        help='Path to file containing PMIDs to read'
+        )
+    parent_read_parser.add_argument(
+        '--start_ix',
+        type=int,
+        help='Start index of PMIDs to read.'
+        )
+    parent_read_parser.add_argument(
+        '--end_ix',
+        type=int,
+        help='End index of PMIDs to read (default: read all PMIDs)'
+        )
+    parent_read_parser.add_argument(
+        '--force_read',
+        action='store_true',
+        help='Read papers even if previously read by current REACH.'
+        )
+    parent_read_parser.add_argument(
+        '--force_fulltext',
+        action='store_true',
+        help='Get full text content even if content already on S3.'
+        )
+    parent_read_parser.add_argument(
+        '--pmids_per_job',
+        default=3000,
+        type=int,
+        help='Number of PMIDs to read for each AWS Batch job.'
+        )
+    parent_read_parser.add_argument(
+        '--num_tries',
+        default=2,
+        type=int,
+        help='Maximum number of times to try running job.'
+        )
+    read_parser = subparsers.add_parser(
+        'read',
+        parents=[parent_read_parser],
         help='Run REACH and cache INDRA Statements on S3.',
         description='Run REACH and cache INDRA Statements on S3.',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    combine_parser = subparsers.add_parser('combine',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    combine_parser = subparsers.add_parser(
+        'combine',
         help='Combine INDRA Statement subsets into a single file.',
-        description='Combine INDRA Statement subsets into a single file.')
-    combine_parser.add_argument('basename',
-        help='Defines job name and S3 keys')
-    full_parser = subparsers.add_parser('full',
+        description='Combine INDRA Statement subsets into a single file.'
+        )
+    combine_parser.add_argument(
+        'basename',
+        help='Defines job name and S3 keys'
+        )
+    full_parser = subparsers.add_parser(
+        'full',
         parents=[parent_read_parser],
         help='Run REACH and combine INDRA Statements when done.',
         description='Run REACH and combine INDRA Statements when done.',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
     args = parser.parse_args()
 
     if args.job_type == 'read':
@@ -198,5 +243,3 @@ if __name__ == '__main__':
     else:
         print('job_type must be one of ("read", "combine", "full")')
         sys.exit(1)
-
-
