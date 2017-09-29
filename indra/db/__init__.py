@@ -36,6 +36,7 @@ except ImportError:
 DEFAULTS_FILE = path.join(__path__[0], 'defaults.txt')
 
 
+<<<<<<< Updated upstream
 def _get_timestamp():
     "Get the timestamp. Needed for python 2-3 compatibility."
     try:  # Python 3
@@ -46,6 +47,8 @@ def _get_timestamp():
     return ret
 
 
+=======
+>>>>>>> Stashed changes
 def _isiterable(obj):
     "Bool determines if an object is an iterable (not a string)"
     return hasattr(obj, '__iter__') and not isinstance(obj, str)
@@ -86,11 +89,12 @@ class DatabaseManager(object):
         The type of sql library used. Use one of the sql types provided by
         `sqltypes`. Default is `sqltypes.POSTGRESQL`
     """
-    def __init__(self, host, sqltype=sqltypes.POSTGRESQL):
+    def __init__(self, host, sqltype=sqltypes.POSTGRESQL, label=None):
         self.host = host
         self.session = None
         self.Base = declarative_base()
         self.sqltype = sqltype
+        self.label = label
 
         if sqltype is sqltypes.POSTGRESQL:
             Bytea = BYTEA
@@ -209,10 +213,20 @@ class DatabaseManager(object):
         "Brutal clearing of all tables."
         # This is intended for testing purposes, not general use.
         # Use with care.
+        if self.label == 'primary':
+            msg = "Do you really want to clear the primary database? [y/N]: "
+            try:
+                resp = raw_input(msg)
+            except NameError:
+                resp = input(msg)
+            if resp != 'y' and resp != 'yes':
+                logger.info('Aborting clearing of database.')
+                return
         self.grab_session()
         self.session.rollback()
         self.drop_tables()
         self.create_tables()
+        return
 
     def grab_session(self):
         "Get an active session with the database."
@@ -537,6 +551,6 @@ def get_primary_db():
     else:
         raise IndraDatabaseError("No primary host available in defaults file.")
 
-    db = DatabaseManager(primary_host)
+    db = DatabaseManager(primary_host, label='primary')
     db.grab_session()
     return db
