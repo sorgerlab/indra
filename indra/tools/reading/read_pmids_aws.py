@@ -17,7 +17,7 @@ if __name__ == '__main__':
         dest='basename',
         help='The name of this run.'
         )
-    parser.add_arguement(
+    parser.add_argument(
         dest='out_dir',
         help='The name of the temporary output directory'
         )
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         dest='num_cores',
         help='Select the number of cores on which to run.'
         )
-    parser.add_arguement(
+    parser.add_argument(
         dest='start_index',
         help='Select the index of the first pmid in the list to read.'
         )
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         dest='end_index',
         help='Select the index of the last pmid in the list to read.'
         )
-    parser.add_arguement(
+    parser.add_argument(
         '-r', '--readers',
         dest='readers',
         default='reach',
