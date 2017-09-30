@@ -383,7 +383,7 @@ class DatabaseManager(object):
             conn.commit()
         else:
             # TODO: use bulk insert mappings?
-            print("WARNING: You are not using postresql or do not have pgcopy,"
+            print("WARNING: You are not using postgresql or do not have pgcopy,"
                   " so this will likely be very slow.")
             self.insert_many(tbl_name, [dict(zip(cols, ro)) for ro in data])
 
@@ -470,19 +470,30 @@ class DatabaseManager(object):
             timestamp=self._get_timestamp()
             )
 
-        # Insert the statements
+        # Preparing the statements for copying
+        stmt_data = []
+        cols = ('uuid', 'db_ref', 'type', 'json')
         for i_stmt, stmt in enumerate(stmts):
-            print("Inserting stmt %s (%d/%d)" % (stmt, i_stmt+1, len(stmts)))
-            stmt_id = self.insert(
-                'statements',
-                uuid=stmt.uuid,
-                db_ref=db_ref_id,
-                type=stmt.__class__.__name__,
-                json=json.dumps(stmt.to_json()).encode('utf8')
-                )
-
-            # Collect the agents and add them.
-            for i_ag, ag in enumerate(stmt.agent_list()):
+            #print("Inserting stmt %s (%d/%d)" % (stmt, i_stmt+1, len(stmts)))
+            stmt_rec = (
+                stmt.uuid,
+                db_ref_id,
+                stmt.__class__.__name__,
+                json.dumps(stmt.to_json()).encode('utf8')
+            )
+            stmt_data.append(stmt_rec)
+        self.copy('statements', stmt_data, cols)
+        # Build a dict mapping stmt UUIDs to statement IDs
+        uuid_list = [s.uuid for s in stmts]
+        stmt_rec_list = self.select_all('statements',
+                                  self.Statements.uuid.in_(uuid_list))
+        stmt_uuid_dict = {uuid: sid for uuid, sid in
+                          self.get_values(stmt_rec_list, ['uuid', 'id'])}
+        # Now assemble agent records
+        agent_data = []
+        for stmt in stmts:
+            stmt_id = stmt_uuid_dict[stmt.uuid]
+            for ag_ix, ag in enumerate(stmt.agent_list()):
                 # If no agent, or no db_refs for the agent, skip the insert
                 # that follows.
                 if ag is None or ag.db_refs is None:
@@ -490,25 +501,17 @@ class DatabaseManager(object):
                 if any([isinstance(stmt, tp) for tp in
                         [Complex, SelfModification, ActiveForm]]):
                     role = 'OTHER'
-                elif i_ag == 0:
+                elif ag_ix == 0:
                     role = 'SUBJECT'
-                elif i_ag == 1:
+                elif ag_ix == 1:
                     role = 'OBJECT'
                 else:
                     raise IndraDatabaseError("Unhandled agent role.")
-
-                input_list = []
-                for db_name, db_id in ag.db_refs.items():
-                    input_list.append(
-                        dict(
-                            stmt_id=stmt_id,
-                            role=role,
-                            db_name=db_name,
-                            db_id=db_id
-                            )
-                        )
-                self.insert_many('agents', input_list)
-        return
+                for ns, id in ag.db_refs.items():
+                    ag_rec = (stmt_id, ns, id, role)
+                    agent_data.append(ag_rec)
+        cols = ('stmt_id', 'db_name', 'db_id', 'role')
+        self.copy('agents', agent_data, cols)
 
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
         "Get abstracts using the pmids in pmid_list."
