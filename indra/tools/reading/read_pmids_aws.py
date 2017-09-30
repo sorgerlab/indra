@@ -84,7 +84,7 @@ if __name__ == '__main__':
     # Run the reading pipelines
     stmts = {}
     content_types = {}
-    for reader, run_reader in read.READER_DICT:
+    for reader, run_reader in read.READER_DICT.items():
         some_stmts, some_content_types = run_reader(
             pmid_list,
             tmp_dir,
