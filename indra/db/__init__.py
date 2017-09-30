@@ -203,7 +203,7 @@ class DatabaseManager(object):
         class Statements(self.Base):
             __tablename__ = 'statements'
             id = Column(Integer, primary_key=True)
-            uuid = Column(String(20), unique=True, nullable=False)
+            uuid = Column(String(40), unique=True, nullable=False)
             db_ref = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
             reader_ref = Column(Integer, ForeignKey('readings.id'))
@@ -553,12 +553,12 @@ class DatabaseManager(object):
         "Get the timestamp. Needed for python 2-3 compatibility."
         try:  # Python 3
             ret = datetime.utcnow()
-            if self.sqltype != sqltypes.SQLITE:
-                ret = ret.timestamp()
+            #if self.sqltype != sqltypes.SQLITE:
+            #    ret = ret.timestamp()
         except AttributeError:  # Python 2
             ret = datetime.utcnow()
-            if self.sqltype != sqltypes.SQLITE:
-                ret = time.mktime(ret.timetuple())+ret.microsecond/1000000.0
+            #if self.sqltype != sqltypes.SQLITE:
+            #    ret = time.mktime(ret.timetuple())+ret.microsecond/1000000.0
         return ret
 
 
