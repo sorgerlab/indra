@@ -86,17 +86,16 @@ if __name__ == '__main__':
     content_types = {}
     for reader, run_reader in read.READER_DICT.items():
         some_stmts, some_content_types = run_reader(
-            pmid_list,
-            tmp_dir,
-            num_cores,
-            start_index,
-            end_index,
-            False,
-            False,
-            path_to_reach,
-            reach_version,
-            cleanup=False,
-            verbose=True)
+                pmid_list,
+                tmp_dir,
+                num_cores,
+                start_index,
+                end_index,
+                True,
+                False,
+                cleanup=False,
+                verbose=True
+                )
         stmts[reader] = some_stmts
         content_types[reader] = some_content_types
 
