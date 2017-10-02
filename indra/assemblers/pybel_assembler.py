@@ -64,15 +64,15 @@ class PybelAssembler(object):
             self.statements = stmts
 
         # Create the model and assign metadata
-        self.model = pybel.BELGraph(**kwargs)
-        self.model.graph[pc.GRAPH_METADATA] = {
-                pc.METADATA_NAME: name,
-                pc.METADATA_DESCRIPTION: description,
-                pc.METADATA_VERSION: version
-            }
+        self.model = pybel.BELGraph(
+            name=name,
+            version=version,
+            description=description,
+            **kwargs
+        )
 
     def add_statements(self, stmts_to_add):
-        self.stmts += stmts_to_add
+        self.statements += stmts_to_add
 
     def make_model(self):
         for stmt in self.statements:
@@ -104,7 +104,30 @@ class PybelAssembler(object):
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
+    
+    def save_model(self, path, output_format=None):
+        """Saves the :class:`pybel.BELGraph` using one of the outputs from 
+        :py:mod:`pybel`
 
+
+        Parameters
+        ----------
+        path : str
+            The path to output to
+        output_format : Optional[str]
+            Output format as ``cx``, ``pickle``, ``json`` or defaults to ``bel``
+        """
+        if output_format == 'pickle':
+            pybel.to_pickle(self.model, path)
+        else:
+            with open(path, 'w') as fh:
+                if output_format == 'json':
+                    pybel.to_json_file(self.model, fh)
+                elif output_format == 'cx':
+                    pybel.to_cx_file(self.model, fh)
+                else: # output_format == 'bel':
+                    pybel.to_bel(self.model, fh)
+    
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
@@ -171,6 +194,9 @@ class PybelAssembler(object):
     def _assemble_complex(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1))"""
         complex_data, _ = _get_complex_node(stmt.members)
+        if complex_data is None:
+            logger.info('skip adding complex with no members: %s', stmt.members)
+            return
         self.model.add_node_from_data(complex_data)
 
     def _assemble_conversion(self, stmt):
