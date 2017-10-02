@@ -460,17 +460,9 @@ class DatabaseManager(object):
         q = self.filter_query(tbls, *args)
         return self.session.query(q.exists()).first()[0]
 
-    def insert_db_stmts(self, stmts, db_name):
+    def insert_db_stmts(self, stmts, db_ref_id):
         "Insert statement, their database, and any affiliated agents."
-        # Insert the db info
-        print("Adding db %s." % db_name)
-        db_ref_id = self.insert(
-            'db_info',
-            db_name=db_name,
-            timestamp=self._get_timestamp()
-            )
-
-        # Preparing the statements for copying
+        # Prepare the statements for copying
         stmt_data = []
         cols = ('uuid', 'db_ref', 'type', 'json')
         for i_stmt, stmt in enumerate(stmts):
