@@ -2450,7 +2450,11 @@ def stmts_from_json(json_in):
         stmts = []
         uuid_dict = {}
         for json_stmt in json_in:
-            st = Statement._from_json(json_stmt)
+            try:
+                st = Statement._from_json(json_stmt)
+            except Exception as e:
+                logger.warning("Error creating statement: %s" % e)
+                continue
             stmts.append(st)
             uuid_dict[st.uuid] = st
         for st in stmts:
