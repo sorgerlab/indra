@@ -78,6 +78,10 @@ class DatabaseManager(object):
     package for its use. It also optionally makes use of the pgcopy package for
     large data transfers.
 
+    If you wish to access the primary database, you can simply use the
+    `get_primary_db` to get an instance of this object using the default
+    settings.
+
     Parameters
     ----------
     host : str
@@ -85,12 +89,31 @@ class DatabaseManager(object):
     sqltype : OPTIONAL[str]
         The type of sql library used. Use one of the sql types provided by
         `sqltypes`. Default is `sqltypes.POSTGRESQL`
+    label : OPTIONAL[str]
+        A short string to indicate the purpose of the db instance. Set as
+        primary when initialized be `get_primary_db`.
+
+    Example
+    -------
+    If you wish to acces the primary database and find the the metadata for a
+    particular pmid, 1234567:
+
+    >> from indra.db import get_primary_db()
+    >> db = get_primary_db()
+    >> res = db.select_all(db.TextRef, db.TextRef.pmid == '1234567')
+
+    You will get a list of objects whose attributes give the metadata contained
+    in the columns of the table.
+
+    For more sophisticated examples, several use cases can be found in
+    `indra.tests.test_db`.
     """
-    def __init__(self, host, sqltype=sqltypes.POSTGRESQL):
+    def __init__(self, host, sqltype=sqltypes.POSTGRESQL, label=None):
         self.host = host
         self.session = None
         self.Base = declarative_base()
         self.sqltype = sqltype
+        self.label = label
 
         if sqltype is sqltypes.POSTGRESQL:
             Bytea = BYTEA
@@ -203,6 +226,15 @@ class DatabaseManager(object):
 
     def drop_tables(self):
         "Drop all the tables for INDRA database"
+        if self.label == 'primary':
+            msg = "Do you really want to clear the primary database? [y/N]: "
+            try:
+                resp = raw_input(msg)
+            except NameError:
+                resp = input(msg)
+            if resp != 'y' and resp != 'yes':
+                logger.info('Aborting clearing of database.')
+                return
         self.Base.metadata.drop_all(self.engine)
 
     def _clear(self):
@@ -213,6 +245,7 @@ class DatabaseManager(object):
         self.session.rollback()
         self.drop_tables()
         self.create_tables()
+        return
 
     def grab_session(self):
         "Get an active session with the database."
@@ -537,6 +570,6 @@ def get_primary_db():
     else:
         raise IndraDatabaseError("No primary host available in defaults file.")
 
-    db = DatabaseManager(primary_host)
+    db = DatabaseManager(primary_host, label='primary')
     db.grab_session()
     return db

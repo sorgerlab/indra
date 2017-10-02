@@ -77,7 +77,7 @@ if __name__ == '__main__':
         if resp == 'no':
             print ("Aborting...")
             exit()
-from indra.util import zip_string, unzip_string
+from indra.util import zip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
@@ -145,15 +145,13 @@ class NihFtpClient(object):
     def get_xml_file(self, xml_file):
         "Get the content from an xml file as an ElementTree."
         logger.info("Downloading %s" % (xml_file))
-        ret = self.get_file(xml_file)
-        logger.info("Unzipping")
-        xml_bytes = zlib.decompress(ret, 16+zlib.MAX_WBITS)
+        xml_bytes = self.get_uncompressed_bytes(xml_file, force_str=False)
         logger.info("Parsing XML metadata")
         return ET.XML(xml_bytes, parser=UTB())
 
     def get_csv_as_dict(self, csv_file):
         "Get the content from a csv file as a list of dicts."
-        csv_str = self.get_file(csv_file).decode('utf8')
+        csv_str = self.get_file(csv_file)
         lst = []
         reader = csv.reader(csv_str.splitlines())
         for row in reader:
@@ -182,11 +180,24 @@ class NihFtpClient(object):
             self.ret_file(f_path, gzf)
         return name
 
-    def get_file(self, f_path):
+    def get_file(self, f_path, force_str=True):
         "Get the contents of a file as a string."
         gzf_bytes = BytesIO()
         self.ret_file(f_path, gzf_bytes)
-        return gzf_bytes.getvalue()
+        ret = gzf_bytes.getvalue()
+        if force_str and isinstance(ret, bytes):
+            ret = ret.decode('utf8')
+        return ret
+
+    def get_uncompressed_bytes(self, f_path, force_str=True):
+        "Get a file that is gzipped, and return the unzipped string."
+        zipped_str = self.get_file(f_path, force_str=False)
+        str_bytes = zlib.decompress(zipped_str, 16+zlib.MAX_WBITS)
+        if force_str:
+            ret = str_bytes.decode('utf8')
+        else:
+            ret = str_bytes
+        return ret
 
     def ftp_ls(self, ftp_path=None):
         "Get a list of the contents in the ftp directory."
@@ -255,9 +266,11 @@ class Medline(NihManager):
     my_source = 'pubmed'
 
     def get_deleted_pmids(self):
-        del_pmid_str = self.ftp.get_file('../deleted.pmids.gz')
+        del_pmid_str = self.ftp.get_uncompressed_bytes(
+            '../deleted.pmids.gz'
+            )
         pmid_list = [
-            line.strip() for line in unzip_string(del_pmid_str).split('\n')
+            line.strip() for line in del_pmid_str.split('\n')
             ]
         return pmid_list
 
