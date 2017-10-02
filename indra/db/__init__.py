@@ -3,6 +3,7 @@ from builtins import dict, str
 
 import json
 import time
+import re
 from io import BytesIO
 from os import path
 from docutils.io import InputError
@@ -14,14 +15,38 @@ from sqlalchemy.dialects.postgresql import BYTEA
 from datetime import datetime
 from numbers import Number
 from sqlalchemy.schema import DropTable
+from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
 
 
+# Solution to fix postgres drop tables
+# See: https://stackoverflow.com/questions/38678336/sqlalchemy-how-to-implement-drop-table-cascade
 @compiles(DropTable, "postgresql")
 def _compile_drop_table(element, compiler, **kwargs):
     return compiler.visit_drop_table(element) + " CASCADE"
+
+
+# Solution to fix deletes with constraints from multiple tables.
+# See: https://groups.google.com/forum/#!topic/sqlalchemy/cIvgH2y01_o
+@compiles(Delete)
+def compile_delete(element, compiler, **kw):
+    text = compiler.visit_delete(element, **kw)
+    extra_froms = Update._extra_froms.__get__(element)
+    if extra_froms:
+        text = re.sub(
+                    r"(FROM \S+)",
+                    lambda m: "%s USING %s" % (
+                        m.group(1),
+                        ", ".join(
+                            compiler.process(fr, asfrom=True, **kw)
+                            for fr in extra_froms
+                        )
+                    ),
+                    text
+                )
+    return text
 
 
 try:
