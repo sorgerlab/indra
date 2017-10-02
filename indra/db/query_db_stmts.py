@@ -1,14 +1,13 @@
 import json
 from indra.statements import *
 from indra.sources.signor import SignorProcessor, _default_csv_file
-from indra.db import DatabaseManager
+from indra.db import DatabaseManager, get_primary_db
 from indra.databases import hgnc_client
 
 
-db = DatabaseManager('sqlite:///indra_test.db', 'sqlite')
+db = get_primary_db()
 
-
-#db._clear()
+#db = DatabaseManager('sqlite:///indra_test.db', 'sqlite')
 #sp = SignorProcessor(_default_csv_file)
 #db.insert_db_stmts(sp.statements, 'signor')
 
@@ -33,9 +32,29 @@ def by_gene_role_type(gene_name=None, role=None, stmt_type=None):
     return load_stmts(db_stmts)
 
 
-def load_stmts(db_stmt_objs):
+def stmts_from_db_list(db_stmt_objs):
     stmt_json_list = []
     for st_obj in db_stmt_objs:
         stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
     return stmts_from_json(stmt_json_list)
 
+
+def load_all_statements(count=1000):
+    stmts = []
+    q = db.filter_query('statements')
+    print("Counting statements...")
+    num_stmts = q.count()
+    print("Total of %d statements" % num_stmts)
+    db_stmts = q.yield_per(count)
+    subset = []
+    total_counter = 0
+    for stmt in db_stmts:
+        subset.append(stmt)
+        if len(subset) == count:
+            stmts.extend(stmts_from_db_list(subset))
+            subset = []
+        total_counter += 1
+        if total_counter % count == 0:
+            print("%d of %d" % (total_counter, num_stmts))
+    stmts.extend(stmts_from_db_list(subset))
+    return stmts
