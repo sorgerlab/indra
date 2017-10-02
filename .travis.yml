@@ -64,6 +64,7 @@ install:
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
+  - export REACHPATH=$TRAVIS_BUILD_DIR
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
