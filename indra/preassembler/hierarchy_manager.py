@@ -41,13 +41,20 @@ class HierarchyManager(object):
 
     def __init__(self, rdf_file, build_closure=True, uri_as_name=True):
         """Initialize with the path to an RDF file"""
+        self.build_closure = build_closure
+        self.uri_as_name = uri_as_name
         self.graph = rdflib.Graph()
         self.graph.parse(rdf_file, format='nt')
+        self.relations_prefix = \
+            'http://sorger.med.harvard.edu/indra/relations/'
+        self.initialize()
+
+
+    def initialize(self):
         self.isa_closure = {}
         self.partof_closure = {}
         self.components = {}
-        self.uri_as_name = uri_as_name
-        if build_closure:
+        if self.build_closure:
             self.build_transitive_closures()
         # Build reverse lookup dict from the entity hierarchy
         self._children = {}
@@ -70,7 +77,7 @@ class HierarchyManager(object):
         self.component_counter = 0
         for rel, tc_dict in (('isa', self.isa_closure),
                              ('partof', self.partof_closure)):
-            rel_uri = 'http://sorger.med.harvard.edu/indra/relations/%s' % rel
+            rel_uri = self.relations_prefix + rel
             rel_ref = rdflib.term.URIRef(rel_uri)
             for x in self.graph.all_nodes():
                 rel_closure = self.graph.transitive_objects(x, rel_ref)
@@ -191,7 +198,7 @@ class HierarchyManager(object):
                 t1 = rdflib.term.URIRef(u1)
                 t2 = rdflib.term.URIRef(u2)
 
-            rel_uri = 'http://sorger.med.harvard.edu/indra/relations/isa'
+            rel_uri = self.relations_prefix + 'isa'
             rel_ref = rdflib.term.URIRef(rel_uri)
             to = self.graph.transitive_objects(t1, rel_ref)
             if t2 in to:
@@ -248,7 +255,7 @@ class HierarchyManager(object):
                 t1 = rdflib.term.URIRef(u1)
                 t2 = rdflib.term.URIRef(u2)
 
-            rel_uri = 'http://sorger.med.harvard.edu/indra/relations/partof'
+            rel_uri = self.relations_prefix + 'partof'
             rel_ref = rdflib.term.URIRef(rel_uri)
             to = self.graph.transitive_objects(t1, rel_ref)
             if t2 in to:
@@ -325,7 +332,7 @@ class HierarchyManager(object):
         elif ns == 'BE' or ns == 'INDRA':
             return 'http://sorger.med.harvard.edu/indra/entities/' + id
         else:
-            raise ValueError('Unknown namespace %s' % ns)
+            return ns + id
 
     @staticmethod
     def ns_id_from_uri(uri):
