@@ -323,5 +323,21 @@
    }
   },
   "nl": "RAF1 that is phosphorylated"
+ },
+ "Smad2/3-T220/T179": {
+  "nl": "SMAD2/3 that is phosphorylated on threonine",
+  "agent" :{
+    "name": "SMAD2_3",
+    "mods": [
+     {
+      "mod_type": "phosphorylation",
+      "residue": "T",
+      "is_modified": true
+     }
+    ],
+    "db_refs": {
+     "BE": "SMAD2_3"
+    }
+   }
  }
 }
