@@ -1,0 +1,343 @@
+{
+ "p-Akt": {
+  "agent": {
+   "name": "AKT",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "AKT",
+    "NCIT": "C41625"
+   }
+  },
+  "nl": "AKT that is phosphorylated"
+ },
+ "p-ERK": {
+  "agent": {
+   "name": "ERK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "ERK",
+    "NCIT": "C26360"
+   }
+  },
+  "nl": "ERK that is phosphorylated"
+ },
+ "p-mTOR": {
+  "agent": {
+   "name": "MTOR",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "UP": "P42345",
+    "NCIT": "C38929",
+    "HGNC": "3942"
+   }
+  },
+  "nl": "MTOR that is phosphorylated"
+ },
+ "pTyr176-AKT": {
+  "agent": {
+   "name": "AKT",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "residue": "Y",
+     "position": "176",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "AKT",
+    "NCIT": "C41625"
+   }
+  },
+  "nl": "AKT phosphorylated at Y176"
+ },
+ "AKT-Ser473": {
+  "agent": {
+   "name": "AKT",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "residue": "S",
+     "position": "473",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "AKT",
+    "NCIT": "C41625"
+   }
+  },
+  "nl": "AKT phosphorylated on serine 473"
+ },
+ "p53S15": {
+  "agent": {
+   "name": "TP53",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "residue": "S",
+     "position": "15",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "UP": "P04637",
+    "NCIT": "C17387",
+    "HGNC": "11998"
+   }
+  },
+  "nl": "TP53 phosphorylated on S15"
+ },
+ "GST-p85": {
+  "agent": {
+   "name": "PI3K",
+   "db_refs": {
+    "BE": "PI3K",
+    "NCIT": "C17270"
+   }
+  },
+  "nl": "PI3K-p85"
+ },
+ "PI": {
+  "agent": {
+   "name": "PI3K",
+   "db_refs": {
+    "BE": "PI3K",
+    "NCIT": "C17270"
+   }
+  },
+  "nl": "PI3K"
+ },
+ "pTpYERK": {
+  "agent": {
+   "name": "ERK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "residue": "Y",
+     "is_modified": true
+    },
+    {
+     "mod_type": "phosphorylation",
+     "residue": "T",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "ERK",
+    "NCIT": "C26360"
+   }
+  },
+  "nl": "ERK phosphorylated on tyrosine and threonine"
+ },
+ "PTEN-Ser380/Thr382/Thr383": {
+  "agent": {
+   "name": "PTEN",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "residue": "T",
+     "position": "383",
+     "is_modified": true
+    },
+    {
+     "mod_type": "phosphorylation",
+     "residue": "S",
+     "position": "380",
+     "is_modified": true
+    },
+    {
+     "mod_type": "phosphorylation",
+     "residue": "T",
+     "position": "382",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "UP": "P60484",
+    "NCIT": "C18181",
+    "HGNC": "9588"
+   }
+  },
+  "nl": "PTEN phosphorylated at S380, T382 and T383"
+ },
+ "p-PI3K": {
+  "agent": {
+   "name": "PI3K",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "PI3K",
+    "NCIT": "C17270"
+   }
+  },
+  "nl": "PI3K that is phosphorylated"
+ },
+ "p-MEK": {
+  "agent": {
+   "name": "MEK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "MEK"
+   }
+  },
+  "nl": "MEK that is phosphorylated"
+ },
+ "p-MEK1/2": {
+  "agent": {
+   "name": "MEK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "MEK"
+   }
+  },
+  "nl": "MEK that is phosphorylated"
+ },
+ "pERK": {
+  "agent": {
+   "name": "ERK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "ERK",
+    "NCIT": "C26360"
+   }
+  },
+  "nl": "ERK that is phosphorylated"
+ },
+ "RAS-GTP": {
+  "agent": {
+   "name": "RAS",
+   "bound_conditions": [
+    {
+     "is_bound": true,
+     "agent": {
+      "name": "GTP",
+      "db_refs": {
+       "TEXT": "GTP",
+       "CHEBI": "CHEBI:15996"
+      }
+     }
+    }
+   ],
+   "db_refs": {
+    "BE": "RAS",
+    "NCIT": "C17061",
+    "NXPFA": "03663"
+   }
+  },
+  "nl": "RAS that is bound to GTP"
+ },
+ "p-AKT": {
+  "agent": {
+   "name": "AKT",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "AKT",
+    "NCIT": "C41625"
+   }
+  },
+  "nl": "AKT that is phosphorylated"
+ },
+ "p-ERK1/2": {
+  "agent": {
+   "name": "ERK",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "BE": "ERK",
+    "NCIT": "C26360"
+   }
+  },
+  "nl": "ERK that is phosphorylated"
+ },
+ "RasV12": {
+  "agent": {
+   "name": "RAS",
+   "mutations": [{
+     "residue_to": null,
+     "residue_from": "V",
+     "position": "12"
+   }],
+   "db_refs": {
+    "BE": "RAS"
+   }
+  },
+  "nl": "RAS-V12"
+ },
+ "p-C-Raf": {
+  "agent": {
+   "name": "RAF1",
+   "mods": [
+    {
+     "mod_type": "phosphorylation",
+     "is_modified": true
+    }
+   ],
+   "db_refs": {
+    "UP": "P04049",
+    "NCIT": "C17484",
+    "HGNC": "9829"
+   }
+  },
+  "nl": "RAF1 that is phosphorylated"
+ },
+ "Smad2/3-T220/T179": {
+  "nl": "SMAD2/3 that is phosphorylated on threonine",
+  "agent" :{
+    "name": "SMAD2_3",
+    "mods": [
+     {
+      "mod_type": "phosphorylation",
+      "residue": "T",
+      "is_modified": true
+     }
+    ],
+    "db_refs": {
+     "BE": "SMAD2_3"
+    }
+   }
+ }
+}

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.preassembler.grounding_mapper import *
-from indra.statements import Agent, Phosphorylation, Evidence
+from indra.statements import Agent, Phosphorylation, Complex, Evidence
 from indra.util import unicode_strs
 from nose.tools import raises
 
@@ -182,3 +182,12 @@ def test_in_place_overwrite_of_gm():
     gmap_after_mapping = gm.gm
     assert set(gmap_after_mapping['ERK1'].keys()) == set(['TEXT', 'UP'])
 
+def test_map_agent():
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    p_erk = Agent('P-ERK', db_refs={'TEXT': 'p-ERK'})
+    stmt = Complex([erk, p_erk])
+    gm = GroundingMapper(default_grounding_map, default_agent_map)
+    mapped_stmts = gm.map_agents([stmt])
+    mapped_ag = mapped_stmts[0].members[1]
+    assert mapped_ag.name == 'ERK'
+    assert mapped_ag.db_refs.get('BE') == 'ERK'
