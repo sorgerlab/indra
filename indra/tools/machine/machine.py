@@ -24,7 +24,7 @@ from indra.literature import pubmed_client, get_full_text, elsevier_client
 try:
     import boto3
     from indra.tools.reading.submit_reading_pipeline_aws import \
-        submit_run_reach, wait_for_complete
+        submit_reading, wait_for_complete
     # Try to make a client
     client = boto3.client('batch')
     from indra.literature.s3_client import get_reach_json_str, get_full_text
@@ -367,7 +367,7 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
             for pmid in all_pmids:
                 fh.write('%s\n' % pmid)
         # Submit reading
-        job_list = submit_run_reach('rasmachine', pmid_fname)
+        job_list = submit_reading('rasmachine', pmid_fname)
 
         # Wait for reading to complete
         reading_res = wait_for_complete(job_list)

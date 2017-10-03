@@ -5,6 +5,7 @@ import logging
 import botocore.session
 from time import sleep
 from indra.literature import elsevier_client as ec
+from indra.tools.reading.read_pmids import READER_DICT
 
 bucket_name = 'bigmech'
 
@@ -83,8 +84,8 @@ def get_environment():
     return environment_vars
 
 
-def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
-                     pmids_per_job=3000, num_tries=2):
+def submit_reading(basename, pmid_list_filename, start_ix=None, end_ix=None,
+                   readers, pmids_per_job=3000, num_tries=2):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -113,7 +114,7 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
         command_list = ['python', '-m',
                         'indra.tools.reading.read_pmids_aws',
                         basename, '/tmp', '16', str(job_start_ix),
-                        str(job_end_ix)]
+                        str(job_end_ix), 'r', readers]
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -128,14 +129,14 @@ def submit_run_reach(basename, pmid_list_filename, start_ix=None, end_ix=None,
     return job_list
 
 
-def submit_combine(basename, job_ids=None):
+def submit_combine(basename, readers, job_ids=None):
     # Get environment variables
     environment_vars = get_environment()
 
     job_name = '%s_combine_reach' % basename
     command_list = ['python', '-m',
-                    'indra.tools.reading.assemble_reach_stmts_aws',
-                    basename]
+                    'indra.tools.reading.assemble_reading_stmts_aws',
+                    basename, '-r'] + readers
     print(command_list)
     kwargs = {'jobName': job_name, 'jobQueue': 'run_reach_queue',
               'jobDefinition': 'run_reach_jobdef',
@@ -181,6 +182,14 @@ if __name__ == '__main__':
         '--end_ix',
         type=int,
         help='End index of PMIDs to read (default: read all PMIDs)'
+        )
+    parent_read_parser.add_argument(
+        '-r', '--readers',
+        dest='readers',
+        choices=list(READER_DICT.keys()) + ['all'],
+        default='all',
+        nargs='+',
+        help='Choose which reader(s) to use.'
         )
     parent_read_parser.add_argument(
         '--force_read',
@@ -229,17 +238,13 @@ if __name__ == '__main__':
         )
     args = parser.parse_args()
 
-    if args.job_type == 'read':
-        job_ids = submit_run_reach(args.basename, args.pmid_file,
-                                   args.start_ix, args.end_ix,
-                                   args.pmids_per_job)
-    elif args.job_type == 'combine':
-        submit_combine(args.basename)
-    elif args.job_type == 'full':
-        job_ids = submit_run_reach(args.basename, args.pmid_file,
-                                   args.start_ix, args.end_ix,
-                                   args.pmids_per_job)
-        submit_combine(args.basename, job_ids)
+    job_ids = None
+    if args.job_type in ['read', 'full']:
+        job_ids = submit_reading(args.basename, args.pmid_file,
+                                 args.start_ix, args.end_ix, args.readers,
+                                 args.pmids_per_job)
+    elif args.job_type in ['combine', 'full']:
+        submit_combine(args.basename, args.readers, job_ids)
     else:
         print('job_type must be one of ("read", "combine", "full")')
         sys.exit(1)

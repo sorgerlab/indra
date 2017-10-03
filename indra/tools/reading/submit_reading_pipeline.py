@@ -93,7 +93,7 @@ if __name__ == '__main__':
     cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', '-hold_jid', PROCESS_JOB_NAME,
                 '-N', ASSEMBLE_JOB_NAME, '-m', 'aes', '-M',
                 'bachmanjohn@gmail.com', 'python', '-m',
-                'indra.tools.reading.assemble_reach_stmts',
+                'indra.tools.reading.assemble_reading_stmts',
                 'reach_stmts_*.pkl']
     print(' '.join(cmd_list))
     subprocess.call(cmd_list)

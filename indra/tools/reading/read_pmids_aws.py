@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from indra.tools.reading.read_pmids import READER_DICT
 
 DOC = \
 """
@@ -36,9 +37,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '-r', '--readers',
         dest='readers',
-        default='reach',
-        choices=['reach'],
-        nargs=1,
+        default='all',
+        choices=list(READER_DICT.keys()) + ['all'],
+        nargs='+',
         help='Choose which reader(s) to use.'
         )
     args = parser.parse_args()
@@ -85,6 +86,9 @@ if __name__ == '__main__':
     stmts = {}
     content_types = {}
     for reader, run_reader in read.READER_DICT.items():
+        if reader not in args.readers:
+            continue
+
         some_stmts, some_content_types = run_reader(
                 pmid_list,
                 tmp_dir,
@@ -100,17 +104,19 @@ if __name__ == '__main__':
         content_types[reader] = some_content_types
 
     # Pickle the content types to S3
-    ct_key_name = 'reading_results/%s/content_types/%d_%d.pkl' % \
-                  (basename, start_index, end_index)
-    logger.info("Saving content types for %d papers to %s" %
-                (len(stmts), ct_key_name))
-    ct_bytes = pickle.dumps(content_types)
-    client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
-    # Pickle the statements to a bytestring
-    pickle_key_name = 'reading_results/%s/stmts/%d_%d.pkl' % \
-                      (basename, start_index, end_index)
-    logger.info("Saving stmts for %d papers to %s" %
-                (len(stmts), pickle_key_name))
-    stmts_bytes = pickle.dumps(stmts)
-    client.put_object(Key=pickle_key_name, Body=stmts_bytes,
-                      Bucket=bucket_name)
+    for reader, some_stmts in stmts.itemts():
+        N_papers = len(stmts[reader])
+        ct_key_name = 'reading_results/%s/%s/content_types/%d_%d.pkl' % \
+                      (basename, reader, start_index, end_index)
+        logger.info("Saving content types for %d papers to %s" %
+                    (N_papers, ct_key_name))
+        ct_bytes = pickle.dumps(content_types)
+        client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
+        # Pickle the statements to a bytestring
+        pickle_key_name = 'reading_results/%s/%s/stmts/%d_%d.pkl' % \
+                          (basename, reader, start_index, end_index)
+        logger.info("Saving stmts from %d papers to %s" %
+                    (N_papers, pickle_key_name))
+        stmts_bytes = pickle.dumps(stmts)
+        client.put_object(Key=pickle_key_name, Body=stmts_bytes,
+                          Bucket=bucket_name)

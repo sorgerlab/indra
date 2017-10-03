@@ -1,11 +1,11 @@
-
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from argparse import ArgumentParser
 
 
-def assemble_batch_results(result_type):
+def assemble_batch_results(result_type, reader):
     # The trailing slash here is important
-    prefix = 'reading_results/%s/%s/' % (basename, result_type)
+    prefix = 'reading_results/%s/%s/%s' % (args.basename, reader, result_type)
     # Get all keys associated with reading results
     result_file_keys = []
     marker = ''
@@ -28,7 +28,7 @@ def assemble_batch_results(result_type):
             logger.info('Downloading and unpickling %s' % key)
             result_obj = client.get_object(Bucket=bucket_name, Key=key)
         except botocore.exceptions.ClientError as e:
-            if e.response['Error']['Code'] =='NoSuchKey':
+            if e.response['Error']['Code'] == 'NoSuchKey':
                 logger.debug('Key %s not found on S3' % key)
                 continue
             # If there was some other kind of problem, re-raise the exception
@@ -42,7 +42,11 @@ def assemble_batch_results(result_type):
     # Write out the final statement set
     # Pickle the statements to a bytestring
     if results:
-        pickle_key_name = 'reading_results/%s/%s.pkl' % (basename, result_type)
+        pickle_key_name = 'reading_results/%s/%s/%s.pkl' % (
+            args.basename,
+            reader,
+            result_type
+            )
         logger.info('Pickling combined file %s' % pickle_key_name)
         results_bytes = pickle.dumps(results)
         logger.info('Uploading combined file %s' % pickle_key_name)
@@ -53,7 +57,6 @@ def assemble_batch_results(result_type):
 if __name__ == '__main__':
     import boto3
     import botocore
-    import sys
     import pickle
     import logging
 
@@ -61,8 +64,23 @@ if __name__ == '__main__':
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
-    basename = sys.argv[1]
+
+    parser = ArgumentParser(
+        description='Function to put many pickles in one file on aws.'
+        )
+    parser.add_argument(
+        '-r', '--readers',
+        dest='readers',
+        nargs='+',
+        help='Choose which reader(s) to use.'
+        )
+    parser.add_argument(
+        dest='basename',
+        help='The name of the job.'
+        )
+    args = parser.parse_args()
 
     result_types = ('content_types', 'stmts')
     for rt in result_types:
-        assemble_batch_results(rt)
+        for reader in args.readers:
+            assemble_batch_results(rt, reader)
