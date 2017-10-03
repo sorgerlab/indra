@@ -27,21 +27,15 @@ def by_gene_role_type(gene_name=None, role=None, stmt_type=None):
         clauses.append(db.Agents.stmt_id == db.Statements.id)
     if stmt_type:
         clauses.append(db.Statements.type == stmt_type)
-    results = db.select_all([db.Statements, db.Agents], *clauses)
-    db_stmts = [t[0] for t in results]
-    return load_stmts(db_stmts)
+    stmts = get_statements(*clauses)
+    #results = db.select_all([db.Statements, db.Agents], *clauses)
+    #db_stmts = [t[0] for t in results]
+    return stmts
 
 
-def stmts_from_db_list(db_stmt_objs):
-    stmt_json_list = []
-    for st_obj in db_stmt_objs:
-        stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
-    return stmts_from_json(stmt_json_list)
-
-
-def load_all_statements(count=1000):
+def get_statements(*clauses, count=1000):
     stmts = []
-    q = db.filter_query('statements')
+    q = db.filter_query('statements', *clauses)
     print("Counting statements...")
     num_stmts = q.count()
     print("Total of %d statements" % num_stmts)
@@ -58,3 +52,11 @@ def load_all_statements(count=1000):
             print("%d of %d" % (total_counter, num_stmts))
     stmts.extend(stmts_from_db_list(subset))
     return stmts
+
+
+def stmts_from_db_list(db_stmt_objs):
+    stmt_json_list = []
+    for st_obj in db_stmt_objs:
+        stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
+    return stmts_from_json(stmt_json_list)
+
