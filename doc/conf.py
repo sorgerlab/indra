@@ -309,7 +309,8 @@ MOCK_MODULES = [
     'lxml.builder', 'networkx', 'functools32', 'ndex', 'ndex.client',
     'sqlalchemy', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
     'sqlalchemy.orm', 'sqlalchemy.dialects', 'sqlalchemy.dialects.postgresql',
-    'sqlalchemy.schema', 'sqlalchemy.ext.compiler'
+    'sqlalchemy.schema', 'sqlalchemy.ext.compiler', 'sqlalchemy.sql',
+    'sqlalchemy.sql.expression'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
