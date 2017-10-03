@@ -3,19 +3,32 @@ from builtins import dict, str
 import os
 import csv
 import sys
+import json
 import pickle
-from copy import deepcopy
-from indra.databases import uniprot_client, hgnc_client
-from itertools import groupby, chain
-from collections import Counter
 import logging
+from copy import deepcopy
+from collections import Counter
+from itertools import groupby, chain
+from indra.statements import Agent
+from indra.databases import uniprot_client, hgnc_client
 from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger('grounding_mapper')
 
 class GroundingMapper(object):
-    def __init__(self, gm):
+    """Maps grounding of INDRA Agents based on a given grounding map.
+
+    Attributes
+    ----------
+    gm : dict
+        The grounding map, a dictionary mapping strings (entity names) to
+        a dictionary of database identifiers.
+    agent_map : Optional[dict]
+        A dictionary mapping strings to grounded INDRA Agents with given state.
+    """
+    def __init__(self, gm, agent_map=None):
         self.gm = gm
+        self.agent_map = agent_map if agent_map is not None else {}
 
     def map_agents(self, stmts, do_rename=True):
         # Make a copy of the stmts
@@ -26,10 +39,17 @@ class GroundingMapper(object):
             mapped_stmt = deepcopy(stmt)
             # Iterate over the agents
             skip_stmt = False
-            for agent in mapped_stmt.agent_list():
+            mapped_agent_list = mapped_stmt.agent_list()
+            for idx, agent in enumerate(mapped_agent_list):
                 if agent is None or agent.db_refs.get('TEXT') is None:
                     continue
                 agent_text = agent.db_refs.get('TEXT')
+                mapped_to_agent_json = self.agent_map.get(agent_text)
+                if mapped_to_agent_json:
+                    mapped_to_agent = \
+                        Agent._from_json(mapped_to_agent_json['agent'])
+                    mapped_agent_list[idx] = mapped_to_agent
+                    mapped_stmt.set_agent_list(mapped_agent_list)
                 # Look this string up in the grounding map
                 # If not in the map, leave agent alone and continue
                 try:
@@ -350,11 +370,17 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 default_grounding_map_path = os.path.join(os.path.dirname(__file__),
-                                  '../../bioentities/grounding_map.csv')
+                                   '../../bioentities/grounding_map.csv')
 default_ignore_path = os.path.join(os.path.dirname(__file__),
-                                  '../../bioentities/ignore.csv')
-default_grounding_map = load_grounding_map(default_grounding_map_path, default_ignore_path)
+                                   '../../bioentities/ignore.csv')
+default_agent_grounding_path = os.path.join(os.path.dirname(__file__),
+                                   '../resources/grounding_agents.json')
+default_grounding_map = \
+    load_grounding_map(default_grounding_map_path, default_ignore_path)
+
 gm = default_grounding_map
+with open(default_agent_grounding_path, 'r') as fh:
+    default_agent_map = json.load(fh)
 
 if __name__ == '__main__':
 

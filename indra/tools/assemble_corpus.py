@@ -20,6 +20,7 @@ from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper import gm as grounding_map
+from indra.preassembler.grounding_mapper import default_agent_map as agent_map
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 
 logger = logging.getLogger('assemble_corpus')
@@ -101,7 +102,7 @@ def map_grounding(stmts_in, **kwargs):
     do_rename = kwargs.get('do_rename')
     if do_rename is None:
         do_rename = True
-    gm = GroundingMapper(grounding_map)
+    gm = GroundingMapper(grounding_map, agent_map)
     stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
