@@ -71,6 +71,10 @@ curated_site_map.tsv
 transcription_factors.tsv
 - manually downloaded from http://fantom.gsc.riken.jp/5/sstar/Browse_Transcription_Factors_hg19
 
+grounding_agents.json
+- manually curated list of grounding mappings to INDRA Agents with states 
+(phosphorylation, mutation, etc.)
+
 Files that don't need periodical updates
 ========================================
 amino_acids.tsv
