@@ -855,6 +855,29 @@ class TripsProcessor(object):
             _stmt_location_to_agents(st, location)
             self.statements.append(st)
 
+    def get_agents(self):
+        """Return list of INDRA Agents corresponding to TERMs in the EKB.
+
+        This is meant to be used when entities e.g. "phosphorylated ERK",
+        rather than events need to be extracted from processed natural
+        language. These entities with their respective states are represented
+        as INDRA Agents.
+
+        Returns
+        -------
+        agents : list[indra.statements.Agent]
+            List of INDRA Agents extracted from EKB.
+        """
+        terms = self.tree.findall('TERM')
+        agents = []
+        for term in terms:
+            term_id = term.attrib.get('id')
+            if term_id:
+                agent = self._get_agent_by_id(term_id, None)
+                if agent:
+                    agents.append(agent)
+        return agents
+
     def _get_cell_loc_by_id(self, term_id):
         term = self.tree.find("TERM/[@id='%s']" % term_id)
         if term is None:
