@@ -84,8 +84,8 @@ def get_environment():
     return environment_vars
 
 
-def submit_reading(basename, pmid_list_filename, start_ix=None, end_ix=None,
-                   readers, pmids_per_job=3000, num_tries=2):
+def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
+                   end_ix=None, pmids_per_job=3000, num_tries=2):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -114,7 +114,7 @@ def submit_reading(basename, pmid_list_filename, start_ix=None, end_ix=None,
         command_list = ['python', '-m',
                         'indra.tools.reading.read_pmids_aws',
                         basename, '/tmp', '16', str(job_start_ix),
-                        str(job_end_ix), 'r', readers]
+                        str(job_end_ix), '-r'] + readers
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -150,7 +150,6 @@ def submit_combine(basename, readers, job_ids=None):
 
 
 if __name__ == '__main__':
-    import sys
     import argparse
 
     # Create the top-level parser
@@ -187,7 +186,7 @@ if __name__ == '__main__':
         '-r', '--readers',
         dest='readers',
         choices=list(READER_DICT.keys()) + ['all'],
-        default='all',
+        default=['all'],
         nargs='+',
         help='Choose which reader(s) to use.'
         )
@@ -240,11 +239,13 @@ if __name__ == '__main__':
 
     job_ids = None
     if args.job_type in ['read', 'full']:
-        job_ids = submit_reading(args.basename, args.pmid_file,
-                                 args.start_ix, args.end_ix, args.readers,
-                                 args.pmids_per_job)
-    elif args.job_type in ['combine', 'full']:
+        job_ids = submit_reading(
+            args.basename,
+            args.pmid_file,
+            args.readers,
+            args.start_ix,
+            args.end_ix,
+            args.pmids_per_job
+            )
+    if args.job_type in ['combine', 'full']:
         submit_combine(args.basename, args.readers, job_ids)
-    else:
-        print('job_type must be one of ("read", "combine", "full")')
-        sys.exit(1)
