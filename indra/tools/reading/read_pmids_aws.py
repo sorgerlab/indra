@@ -68,7 +68,10 @@ if __name__ == '__main__':
         sys.exit(1)
 
     try:
-        pmid_list_obj = client.get_object(Bucket=bucket_name, Key=pmid_list_key)
+        pmid_list_obj = client.get_object(
+            Bucket=bucket_name,
+            Key=pmid_list_key
+            )
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == 'NoSuchKey':
@@ -82,11 +85,17 @@ if __name__ == '__main__':
     pmid_list_str = pmid_list_obj['Body'].read().decode('utf8').strip()
     pmid_list = [line.strip() for line in pmid_list_str.split('\n')]
 
+    # Handle the all option.
+    if 'all' in args.readers:
+        readers = list(READER_DICT.keys())
+    else:
+        readers = args.readers[:]
+
     # Run the reading pipelines
     stmts = {}
     content_types = {}
     for reader, run_reader in read.READER_DICT.items():
-        if reader not in args.readers:
+        if reader not in readers:
             continue
 
         some_stmts, some_content_types = run_reader(
@@ -104,7 +113,7 @@ if __name__ == '__main__':
         content_types[reader] = some_content_types
 
     # Pickle the content types to S3
-    for reader, some_stmts in stmts.itemts():
+    for reader, some_stmts in stmts.items():
         N_papers = len(stmts[reader])
         ct_key_name = 'reading_results/%s/%s/content_types/%d_%d.pkl' % \
                       (basename, reader, start_index, end_index)

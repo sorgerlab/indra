@@ -25,9 +25,9 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     '-r', '--reader',
     choices=['reach', 'sparser', 'all'],
-    default='all',
+    default=['all'],
     dest='readers',
-    nargs=1,
+    nargs='+',
     help='Choose which reader(s) to use.'
     )
 parser.add_argument(
