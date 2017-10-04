@@ -45,7 +45,11 @@ def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
         return None
     sparser_exec_path = os.path.join(sparser_path, 'save-semantics.sh')
     output_fname = fname.split('.')[0] + '-semantics' + suffix
-    
+
+    for fpath in [sparser_exec_path, fname]:
+        if not os.path.exists(fpath):
+            raise Exception("'%s' is not a valid path." % fpath)
+
     ret = None
     try:
         subprocess.call(
