@@ -3,9 +3,9 @@ from builtins import dict, str
 from argparse import ArgumentParser
 
 
-def assemble_batch_results(result_type, reader):
+def assemble_batch_results(basename, result_type, reader):
     # The trailing slash here is important
-    prefix = 'reading_results/%s/%s/%s' % (args.basename, reader, result_type)
+    prefix = 'reading_results/%s/%s/%s' % (basename, reader, result_type)
     # Get all keys associated with reading results
     result_file_keys = []
     marker = ''
@@ -43,7 +43,7 @@ def assemble_batch_results(result_type, reader):
     # Pickle the statements to a bytestring
     if results:
         pickle_key_name = 'reading_results/%s/%s/%s.pkl' % (
-            args.basename,
+            basename,
             reader,
             result_type
             )
@@ -52,6 +52,8 @@ def assemble_batch_results(result_type, reader):
         logger.info('Uploading combined file %s' % pickle_key_name)
         client.put_object(Key=pickle_key_name, Body=results_bytes,
                           Bucket=bucket_name)
+    else:
+        raise Exception("No results found for prefix %s." % prefix)
 
 
 if __name__ == '__main__':
@@ -69,18 +71,18 @@ if __name__ == '__main__':
         description='Function to put many pickles in one file on aws.'
         )
     parser.add_argument(
+        dest='basename',
+        help='The name of the job.'
+        )
+    parser.add_argument(
         '-r', '--readers',
         dest='readers',
         nargs='+',
         help='Choose which reader(s) to use.'
         )
-    parser.add_argument(
-        dest='basename',
-        help='The name of the job.'
-        )
     args = parser.parse_args()
 
     result_types = ('content_types', 'stmts')
-    for rt in result_types:
+    for res_type in result_types:
         for reader in args.readers:
-            assemble_batch_results(rt, reader)
+            assemble_batch_results(args.basename, res_type, reader)
