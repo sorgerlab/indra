@@ -413,7 +413,9 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
             force_fulltext, force_read, 'sparser', reader_version
             )
 
+    logger.info('Adjusting num cores to length of pmid_list.')
     num_cores = min(len(pmid_list), num_cores)
+    logger.info('Adjusted...')
     if num_cores is 1:
         stmts = get_stmts(pmids_unread, cleanup=cleanup)
     elif num_cores > 1:
