@@ -119,13 +119,13 @@ if __name__ == '__main__':
                       (basename, reader, start_index, end_index)
         logger.info("Saving content types for %d papers to %s" %
                     (N_papers, ct_key_name))
-        ct_bytes = pickle.dumps(content_types)
+        ct_bytes = pickle.dumps(content_types[reader])
         client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
         # Pickle the statements to a bytestring
         pickle_key_name = 'reading_results/%s/%s/stmts/%d_%d.pkl' % \
                           (basename, reader, start_index, end_index)
         logger.info("Saving stmts from %d papers to %s" %
                     (N_papers, pickle_key_name))
-        stmts_bytes = pickle.dumps(stmts)
+        stmts_bytes = pickle.dumps(stmts[reader])
         client.put_object(Key=pickle_key_name, Body=stmts_bytes,
                           Bucket=bucket_name)
