@@ -125,15 +125,22 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
                 'command': command_list},
             retryStrategy={'attempts': num_tries}
             )
+        print("submitted...")
         job_list.append({'jobId': job_info['jobId']})
     return job_list
 
 
 def submit_combine(basename, readers, job_ids=None):
+    if job_ids is not None and len(job_ids) > 20:
+        print("WARNING: boto3 cannot support waiting for more than 20 jobs.")
+        print("Please wait for the reading to finish, then run again with the")
+        print("`combine` option.")
+        return
+
     # Get environment variables
     environment_vars = get_environment()
 
-    job_name = '%s_combine_reach' % basename
+    job_name = '%s_combine_reading_results' % basename
     command_list = ['python', '-m',
                     'indra.tools.reading.assemble_reading_stmts_aws',
                     basename, '-r'] + readers
@@ -147,6 +154,7 @@ def submit_combine(basename, readers, job_ids=None):
         kwargs['dependsOn'] = job_ids
     batch_client = boto3.client('batch')
     batch_client.submit_job(**kwargs)
+    print("submitted...")
 
 
 if __name__ == '__main__':
@@ -163,11 +171,20 @@ if __name__ == '__main__':
         )
     subparsers.required = True
     subparsers.dest = 'job_type'
-    parent_read_parser = argparse.ArgumentParser(add_help=False)
-    parent_read_parser.add_argument(
+    parent_submit_parser = argparse.ArgumentParser(add_help=False)
+    parent_submit_parser.add_argument(
         'basename',
         help='Defines job names and S3 keys'
         )
+    parent_submit_parser.add_argument(
+        '-r', '--readers',
+        dest='readers',
+        choices=list(READER_DICT.keys()) + ['all'],
+        default=['all'],
+        nargs='+',
+        help='Choose which reader(s) to use.'
+        )
+    parent_read_parser = argparse.ArgumentParser(add_help=False)
     parent_read_parser.add_argument(
         'pmid_file',
         help='Path to file containing PMIDs to read'
@@ -181,14 +198,6 @@ if __name__ == '__main__':
         '--end_ix',
         type=int,
         help='End index of PMIDs to read (default: read all PMIDs)'
-        )
-    parent_read_parser.add_argument(
-        '-r', '--readers',
-        dest='readers',
-        choices=list(READER_DICT.keys()) + ['all'],
-        default=['all'],
-        nargs='+',
-        help='Choose which reader(s) to use.'
         )
     parent_read_parser.add_argument(
         '--force_read',
@@ -206,31 +215,30 @@ if __name__ == '__main__':
         type=int,
         help='Number of PMIDs to read for each AWS Batch job.'
         )
+    ''' Not currently supported.
     parent_read_parser.add_argument(
         '--num_tries',
         default=2,
         type=int,
         help='Maximum number of times to try running job.'
         )
+    '''
     read_parser = subparsers.add_parser(
         'read',
-        parents=[parent_read_parser],
+        parents=[parent_read_parser, parent_submit_parser],
         help='Run REACH and cache INDRA Statements on S3.',
         description='Run REACH and cache INDRA Statements on S3.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
     combine_parser = subparsers.add_parser(
         'combine',
+        parents=[parent_submit_parser],
         help='Combine INDRA Statement subsets into a single file.',
         description='Combine INDRA Statement subsets into a single file.'
         )
-    combine_parser.add_argument(
-        'basename',
-        help='Defines job name and S3 keys'
-        )
     full_parser = subparsers.add_parser(
         'full',
-        parents=[parent_read_parser],
+        parents=[parent_read_parser, parent_submit_parser],
         help='Run REACH and combine INDRA Statements when done.',
         description='Run REACH and combine INDRA Statements when done.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
