@@ -53,6 +53,10 @@ def assemble_batch_results(basename, result_type, reader):
         client.put_object(Key=pickle_key_name, Body=results_bytes,
                           Bucket=bucket_name)
     else:
+        err_pkl_bytes = pickle.dumps(res)
+        client.put_object(Key=prefix + "_err.pkl", Body=err_pkl_bytes,
+                          Bucket=bucket_name)
+        logger.error("Search in s3 failed. Pickling contents.")
         raise Exception("No results found for prefix %s." % prefix)
 
 
