@@ -317,6 +317,7 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
     text_source_file = os.path.join(base_dir, 'content_types.pkl')
     with open(text_source_file, 'wb') as f:
         pickle.dump(pmids_unread, f, protocol=2)
+    logger.info('Text sources saved.')
 
     return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
 
@@ -862,6 +863,10 @@ def main(args):
         # Load the list of PMIDs from the given file
         with open(args.pmid_list_file) as f:
             pmid_list = [line.strip('\n') for line in f.readlines()]
+
+        if args.end_index is None:
+            args.end_index = len(pmid_list)
+
         if args.shuffle:
             pmid_list = random.sample(pmid_list, args.end_index)
 
