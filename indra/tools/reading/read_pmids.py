@@ -416,10 +416,12 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
     if num_cores is 1:
         stmts = get_stmts(pmids_unread, cleanup=cleanup)
     elif num_cores > 1:
+        logger.info("Starting a pool with %d cores." % num_cores)
         pool = mp.Pool(num_cores)
         pmids_to_read = list(pmids_unread.keys())
         N = len(pmids_unread)
         dn = int(N/num_cores)
+        logger.info("Breaking pmids into batches.")
         batches = []
         for i in range(num_cores):
             batches.append({
@@ -430,8 +432,10 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
             get_stmts,
             cleanup=cleanup
             )
+        logger.info("Mapping get_stmts onto pool.")
         res = pool.map(get_stmts_func, batches)
         pool.close()
+        logger.info("Pool closed.")
         stmts = {
             pmid: stmt_list for res_dict in res
             for pmid, stmt_list in res_dict.items()
