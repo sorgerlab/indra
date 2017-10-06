@@ -31,6 +31,7 @@ TEST_HOST = None
 TEST_HOST_TYPE = ''
 key_list = list(test_defaults.keys())
 key_list.sort()
+report = ''
 for k in key_list:
     v = test_defaults[k]
     m = re.match('(\w+)://.*?/([\w.]+)', v)
@@ -45,7 +46,7 @@ for k in key_list:
         db = DatabaseManager(v, sqltype=sqltype)
         db._clear(force=True)
     except Exception as e:
-        print("Tried to use %s, but failed due to:\n%s" % (k, e))
+        report += "Tried to use %s, but failed due to:\n%s\n" % (k, e)
         continue  # Clearly this test table won't work.
     if db_name.endswith('.db'):
         TEST_FILE = db_name
@@ -58,7 +59,8 @@ for k in key_list:
     print("Using test database %s." % k)
     break
 else:
-    raise SkipTest("Not able to start up any of the available test hosts.")
+    raise SkipTest("Not able to start up any of the available test hosts:\n"
+                   + report)
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
