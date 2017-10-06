@@ -1,14 +1,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from copy import copy
 import logging
 import collections
+from copy import copy
 from indra.util import read_unicode_csv
 from indra.literature import id_lookup
 from indra.statements import *
 from indra.databases import uniprot_client, hgnc_client
 
 logger = logging.getLogger('sparser')
+
 
 class SparserJSONProcessor(object):
     def __init__(self, json_dict):
@@ -41,7 +42,7 @@ class SparserJSONProcessor(object):
                         json_stmt['obj_activity'] = obj_activity[0]
                 obj = json_stmt.get('obj')
                 if isinstance(obj, (list, str)):
-                  continue
+                    continue
             elif json_stmt.get('type') == 'Translocation':
                 # Fix locations if possible
                 for loc_param in ('from_location', 'to_location'):
@@ -54,9 +55,11 @@ class SparserJSONProcessor(object):
                             loc = None
                         json_stmt[loc_param] = loc
                 # Skip Translocation with both locations None
-                if json_stmt.get('from_location') is None and \
-                    json_stmt.get('to_location') is None:
+                if (json_stmt.get('from_location') is None
+                   and json_stmt.get('to_location') is None):
                     continue
+            elif json_stmt.get('type') == 'GeneTranscriptExpress':
+                continue
 
             # Step 2: Deserialize into INDRA Statement
             stmt = Statement._from_json(json_stmt)
@@ -377,7 +380,6 @@ class SparserXMLProcessor(object):
         return ev
 
 
-
 def _read_ncit_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '../../resources/ncit_map.tsv')
@@ -391,7 +393,9 @@ def _read_ncit_map():
         ncit_map[ncit_id] = (target_ns, target_id)
     return ncit_map
 
+
 ncit_map = _read_ncit_map()
+
 
 def _read_bioentities_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -407,5 +411,6 @@ def _read_bioentities_map():
             source_id = source_id.split(':')[1]
         bioentities_map[(source_ns, source_id)] = be_id
     return bioentities_map
+
 
 bioentities_map = _read_bioentities_map()

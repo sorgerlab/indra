@@ -45,8 +45,10 @@ if __name__ == '__main__':
 
     for core_start_ix in core_start_pts:
         core_end_ix = core_start_ix + core_chunk_size
-        cmd_list = ['qsub', '-b', 'y', '-V', '-cwd',
-                    '-N', PROCESS_JOB_NAME, 'python', 'process_reach_from_s3.py',
-                    pmid_list, str(core_start_ix), str(core_end_ix)]
+        cmd_list = [
+            'qsub', '-b', 'y', '-V', '-cwd', '-N', 
+            PROCESS_JOB_NAME, 'python', 'process_reach_from_s3.py',
+            pmid_list, str(core_start_ix), str(core_end_ix)
+            ]
         print(' '.join(cmd_list))
         subprocess.call(cmd_list)
