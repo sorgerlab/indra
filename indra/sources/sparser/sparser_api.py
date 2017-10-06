@@ -57,19 +57,30 @@ def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
             stdout=outbuf,
             stdin=subprocess.PIPE
             )
-        with open(output_fname, 'rt') as fh:
-            if output_fmt == 'json':
-                json_dict = json.load(fh)
-                ret = process_json_dict(json_dict)
-            else:
-                xml_str = fh.read()
-                ret = process_xml(xml_str)
+        ret = convert_sparser_output(output_fname, output_fmt)
     except Exception as e:
         logger.error("Sparser failed to run on %s." % fname)
         logger.exception(e)
     finally:
         if os.path.exists(output_fname) and cleanup:
             os.remove(output_fname)
+
+    return ret
+
+
+def convert_sparser_output(output_fname, output_fmt='json'):
+    if output_fmt not in ['json', 'xml']:
+        logger.error("Unrecognized output format '%s'." % output_fmt)
+        return None
+
+    ret = None
+    with open(output_fname, 'rt') as fh:
+        if output_fmt == 'json':
+            json_dict = json.load(fh)
+            ret = process_json_dict(json_dict)
+        else:
+            xml_str = fh.read()
+            ret = process_xml(xml_str)
     return ret
 
 
