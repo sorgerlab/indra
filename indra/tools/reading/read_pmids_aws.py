@@ -47,20 +47,15 @@ if __name__ == '__main__':
     import boto3
     import botocore
     import os
-    import sys
     import pickle
     import logging
+    import sys
 
     logger = logging.getLogger('read_pmids_aws')
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
-    basename = sys.argv[1]
-    pmid_list_key = 'reading_results/%s/pmids' % sys.argv[1]
-    tmp_dir = sys.argv[2]
-    num_cores = int(sys.argv[3])
-    start_index = int(sys.argv[4])
-    end_index = int(sys.argv[5])
+    pmid_list_key = 'reading_results/%s/pmids' % args.basename
     path_to_reach = os.environ.get('REACH_JAR_PATH')
     reach_version = os.environ.get('REACH_VERSION')
     if path_to_reach is None or reach_version is None:
@@ -100,10 +95,10 @@ if __name__ == '__main__':
 
         some_stmts, some_content_types = run_reader(
                 pmid_list,
-                tmp_dir,
-                num_cores,
-                start_index,
-                end_index,
+                args.out_dir,
+                args.num_cores,
+                args.start_index,
+                args.end_index,
                 True,
                 False,
                 cleanup=False,
@@ -116,14 +111,14 @@ if __name__ == '__main__':
     for reader, some_stmts in stmts.items():
         N_papers = len(stmts[reader])
         ct_key_name = 'reading_results/%s/%s/content_types/%d_%d.pkl' % \
-                      (basename, reader, start_index, end_index)
+                      (args.basename, reader, args.start_index, args.end_index)
         logger.info("Saving content types for %d papers to %s" %
                     (N_papers, ct_key_name))
         ct_bytes = pickle.dumps(content_types[reader])
         client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
         # Pickle the statements to a bytestring
         pickle_key_name = 'reading_results/%s/%s/stmts/%d_%d.pkl' % \
-                          (basename, reader, start_index, end_index)
+                          (args.basename, reader, args.start_index, args.end_index)
         logger.info("Saving stmts from %d papers to %s" %
                     (N_papers, pickle_key_name))
         stmts_bytes = pickle.dumps(stmts[reader])
