@@ -367,10 +367,10 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
             for pmid in all_pmids:
                 fh.write('%s\n' % pmid)
         # Submit reading
-        job_list = submit_reading('rasmachine', pmid_fname)
+        job_list = submit_reading('rasmachine', pmid_fname, ['reach'])
 
         # Wait for reading to complete
-        reading_res = wait_for_complete(job_list)
+        wait_for_complete(job_list)
 
     # Load the model
     logger.info(time.strftime('%c'))
