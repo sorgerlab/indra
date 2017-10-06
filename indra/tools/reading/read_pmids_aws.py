@@ -28,11 +28,13 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         dest='start_index',
-        help='Select the index of the first pmid in the list to read.'
+        help='Select the index of the first pmid in the list to read.',
+        type=int
         )
     parser.add_argument(
         dest='end_index',
-        help='Select the index of the last pmid in the list to read.'
+        help='Select the index of the last pmid in the list to read.',
+        type=int
         )
     parser.add_argument(
         '-r', '--readers',
