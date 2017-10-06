@@ -724,7 +724,7 @@ ReadPapers.serializedPapers = mentions.ser
 """
 
 
-def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index, 
+def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
               force_read, force_fulltext, cleanup=False, verbose=True):
     "Run reach on a list of pmids."
     # Get the path to the reach directory.
@@ -875,7 +875,7 @@ def main(args):
         # Do the reading
         readers = []
         if 'all' in args.readers:
-            readers = ['reach', 'sparser']
+            readers = list(READER_DICT.keys())
         else:
             readers = args.readers[:]
 
@@ -930,10 +930,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # Old usages:
-    # usage = "Usage: %s readers basename pmid_list tmp_dir num_cores start_index " \
-    #         "end_index [force_fulltext]\n" % sys.argv[0]
-    # usage += "Alternative usage: %s upload_json basename output_dir " \
-    #                     "content_types_file num_cores" % sys.argv[0]
     main(args)
-
