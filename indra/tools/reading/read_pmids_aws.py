@@ -4,7 +4,7 @@ from indra.tools.reading.read_pmids import READER_DICT
 
 DOC = \
 """
-This script is intended to be run on an Amazon ECS container, so information 
+This script is intended to be run on an Amazon ECS container, so information
 for the job either needs to be provided in environment variables (e.g., the
 REACH version and path) or loaded from S3 (e.g., the list of PMIDs).
 """
@@ -24,7 +24,8 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         dest='num_cores',
-        help='Select the number of cores on which to run.'
+        help='Select the number of cores on which to run.',
+        type=int
         )
     parser.add_argument(
         dest='start_index',
