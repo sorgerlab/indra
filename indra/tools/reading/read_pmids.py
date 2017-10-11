@@ -16,6 +16,7 @@ import functools
 import multiprocessing as mp
 from datetime import datetime
 from collections import Counter
+from platform import system
 import logging
 logger = logging.getLogger('runreader')
 parser = argparse.ArgumentParser(
@@ -729,10 +730,14 @@ ReadPapers.papersDir = src/test/resources/inputs/nxml/
 ReadPapers.serializedPapers = mentions.ser
 """
 
+REACH_MEM = 5  # GB
+MEM_BUFFER = 2  # GB
+
 
 def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
               force_read, force_fulltext, cleanup=False, verbose=True):
     "Run reach on a list of pmids."
+
     # Get the path to the reach directory.
     path_to_reach = os.environ.get('REACHPATH', None)
     if path_to_reach is None or not os.path.exists(path_to_reach):
@@ -772,8 +777,14 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         )
 
     stmts = {}
-    # Write the configuration file to the temp directory
-    if num_found > 0:
+    mem_tot = get_mem_total()
+    if mem_tot is not None and mem_tot <= REACH_MEM + MEM_BUFFER:
+        logger.error(
+            "Too little memory to run reach. At least %s required." % 
+            REACH_MEM + MEM_BUFFER
+            )
+        logger.info("REACH not run.")
+    elif num_found > 0:
         conf_file_path = os.path.join(base_dir, 'indra.conf')
         with open(conf_file_path, 'w') as f:
             f.write(conf_file_text)
@@ -839,17 +850,24 @@ READER_DICT = {'reach': run_reach, 'sparser': run_sparser}
 
 
 def get_mem_total():
-    with open('/proc/meminfo', 'r') as f:
-        lines = f.readlines()
-    tot_entry = [line for line in lines if line.startswith('MemTotal')][0]
-    return int(tot_entry.split(':')[1].replace('kB', '').strip())/10**6
+    if system() == 'Linux':
+        with open('/proc/meminfo', 'r') as f:
+            lines = f.readlines()
+        tot_entry = [line for line in lines if line.startswith('MemTotal')][0]
+        ret = int(tot_entry.split(':')[1].replace('kB', '').strip())/10**6
+    else:
+        ret = None
+    return ret
 
 
 def get_proc_num():
-    with open('/proc/cpuinfo', 'r') as f:
-        ret = len([
-            line for line in f.readlines() if line.startswith('processor')
-            ])
+    if system() == 'Linux':
+        with open('/proc/cpuinfo', 'r') as f:
+            ret = len([
+                line for line in f.readlines() if line.startswith('processor')
+                ])
+    else:
+        ret = None
     return ret
 
 
@@ -865,6 +883,19 @@ def main(args):
         os.mkdir(out_dir)
         made_outdir = True
     ret = None
+
+    available_cores = get_proc_num()
+    if args.num_cores >= available_cores:
+        msg = ("You requested %d cores, but only %d available.\n" %
+               (args.num_cores, available_cores) +
+               "Are you sure you want to proceed? [y/N] > ")
+        if sys.version_info.major > 2:
+            resp = input(msg)
+        else:
+            resp = raw_input(msg)
+        if resp.lower() not in ['y', 'yes']:
+            logger.info("Aborting...")
+            return
     try:
         # Option -u: just upload previously read JSON files
         if args.upload_json:

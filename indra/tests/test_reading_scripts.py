@@ -5,6 +5,7 @@ from os import path, mkdir
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
 import pickle
+from nose import SkipTest
 
 PMID_LIST = [
     '27085964',
@@ -56,21 +57,23 @@ def _check_result(stmts):
 
 
 def test_get_proc_num():
-    n = get_proc_num()
-    assert n <= 2, "Unexpected number of procs %d." % n
+    get_proc_num()
 
 
 def test_get_mem_total():
-    n = get_mem_total()
-    assert n <= 3, "Unexpected amount of memory %d." % n
+    get_mem_total()
 
 
 def test_reach_one_core():
+    if get_mem_total() <= 7:
+        raise SkipTest("Not enough memory.")
     stmts = _call_reader('reach', 1)
     _check_result(stmts)
 
 
 def test_reach_two_core():
+    if get_mem_total() <= 7:
+        raise SkipTest("Not enough memory.")
     stmts = _call_reader('reach', 2)
     _check_result(stmts)
 
@@ -81,5 +84,7 @@ def test_sparser_one_core():
 
 
 def test_sparser_two_core():
+    if get_proc_num() <= 2:
+        raise SkipTest("Not enough processes.")
     stmts = _call_reader('sparser', 2)
     _check_result(stmts)
