@@ -56,11 +56,13 @@ def _check_result(stmts):
 
 
 def test_get_proc_num():
-    get_proc_num()
+    n = get_proc_num()
+    assert n <= 2, "Unexpected number of procs %d." % n
 
 
 def test_get_mem_total():
-    get_mem_total()
+    n = get_mem_total()
+    assert n <= 3, "Unexpected amount of memory %d." % n
 
 
 def test_reach_one_core():
