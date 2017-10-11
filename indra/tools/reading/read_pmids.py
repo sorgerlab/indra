@@ -838,6 +838,21 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
 READER_DICT = {'reach': run_reach, 'sparser': run_sparser}
 
 
+def get_mem_total():
+    with open('/proc/meminfo', 'r') as f:
+        lines = f.readlines()
+    tot_entry = [line for line in lines if line.startswith('MemTotal')][0]
+    return int(tot_entry.split(':')[1].replace('kB', '').strip())/10**6
+
+
+def get_proc_num():
+    with open('/proc/cpuinfo', 'r') as f:
+        ret = len([
+            line for line in f.readlines() if line.startswith('processor')
+            ])
+    return ret
+
+
 def main(args):
     now = datetime.now()    # Set some variables
     if args.upload_json:

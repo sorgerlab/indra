@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from os import path, mkdir
-from indra.tools.reading.read_pmids import READER_DICT
+from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
+    get_mem_total
 import pickle
 
 PMID_LIST = [
@@ -52,6 +53,14 @@ def _check_blind_result(reader):
 
 def _check_result(stmts):
     assert len(stmts), "No statements found."
+
+
+def test_get_proc_num():
+    get_proc_num()
+
+
+def test_get_mem_total():
+    get_mem_total()
 
 
 def test_reach_one_core():
