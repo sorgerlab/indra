@@ -38,10 +38,16 @@ parser.add_argument(
           'option, so no reading will be done.')
     )
 parser.add_argument(
-    '-f', '--force_fulltext',
+    '--force_fulltext',
     dest='force_fulltext',
     action='store_true',
     help='Option to force reading of the full text.'
+    )
+parser.add_argument(
+    '--force_read',
+    dest='force_read',
+    action='store_true',
+    help='Option to force the reader to reread everything.'
     )
 parser.add_argument(
     '-n', '--num_cores',
@@ -836,7 +842,6 @@ def main(args):
     now = datetime.now()    # Set some variables
     if args.upload_json:
         args.readers = 'none'
-    force_read = True
     out_dir = args.out_dir
     if out_dir is None:
         out_dir = args.basename + '_out'
@@ -888,7 +893,7 @@ def main(args):
                 args.num_cores,
                 args.start_index,
                 args.end_index,
-                force_read,
+                args.force_read,
                 args.force_fulltext,
                 cleanup=args.cleanup,
                 verbose=args.verbose
