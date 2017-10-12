@@ -65,15 +65,17 @@ def test_get_mem_total():
 
 
 def test_reach_one_core():
-    if get_mem_total() <= 7:
+    if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
     stmts = _call_reader('reach', 1)
     _check_result(stmts)
 
 
 def test_reach_two_core():
-    if get_mem_total() <= 7:
+    if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
+    if get_proc_num() <= 2:
+        raise SkipTest("Not enough processes.")
     stmts = _call_reader('reach', 2)
     _check_result(stmts)
 
