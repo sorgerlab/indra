@@ -293,7 +293,33 @@ def upload_new_ndex(model_path, new_stmts, ndex_cred):
     with open(cx_name, 'wb') as fh:
         fh.write(cx_str.encode('utf-8'))
     network_id = ndex_cred['network']
+    provenance = make_ndex_provenance(network_id)
+    ndex_client.set_provenance(provenance, network_id, ndex_cred)
     ndex_client.update_network(cx_str, network_id, ndex_cred)
+
+
+def make_ndex_provenance(network_id):
+    ts = int(time.time())
+    uri = 'http://public.ndexbio.org/v2/network/%s/summary' % network_id
+    inputs = [{'creationEvent':
+                {'eventType': 'Create Network',
+                 'inputs': []},
+               'uri': uri,
+               'properties': []
+              }]
+    properties = [{
+        'name': 'update_count',
+        'value': '400'
+        }]
+    creation_event = {
+        'eventType': 'Update Network',
+        'eventAtTime': ts,
+        'startedAtTime': 1464633540,
+        'inputs': inputs,
+        'uri': uri,
+        'properties': properties
+        }
+    return creation_event
 
 
 def make_date_str():
