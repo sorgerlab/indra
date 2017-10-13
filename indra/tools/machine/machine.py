@@ -295,7 +295,11 @@ def upload_new_ndex(model_path, new_stmts, ndex_cred):
     network_id = ndex_cred['network']
     provenance = make_ndex_provenance(network_id)
     ndex_client.set_provenance(provenance, network_id, ndex_cred)
-    ndex_client.update_network(cx_str, network_id, ndex_cred)
+    try:
+        ndex_client.update_network(cx_str, network_id, ndex_cred)
+    except Exception as e:
+        logger.error('NDEx network update failed')
+        logger.exception(e)
 
 
 def make_ndex_provenance(network_id):
