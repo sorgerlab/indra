@@ -182,6 +182,19 @@ def update_network(cx_str, network_id, ndex_cred):
                              password=password)
 
 
+def set_provenance(provenance, network_id, ndex_cred):
+    server = 'http://public.ndexbio.org'
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
+    nd = ndex.client.Ndex(server, username, password)
+    try:
+        logger.info('Setting network provenance...')
+        nd.set_provenance(network_id, provenance)
+    except Exception as e:
+        logger.error('Could not set network provenance')
+        logger.exception(e)
+
+
 def _increment_ndex_ver(ver_str):
     if not ver_str:
         new_ver = '1.0'
