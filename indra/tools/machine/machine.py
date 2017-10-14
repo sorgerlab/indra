@@ -292,6 +292,10 @@ def upload_new_ndex(model_path, new_stmts, ndex_cred):
     cx_name = os.path.join(model_path, 'model.cx')
     with open(cx_name, 'wb') as fh:
         fh.write(cx_str.encode('utf-8'))
+    upload_cx_to_ndex(cx_str, ndex_cred)
+
+
+def upload_cx_to_ndex(cx_str, ndex_cred):
     network_id = ndex_cred['network']
     provenance = make_ndex_provenance(network_id)
     ndex_client.set_provenance(provenance, network_id, ndex_cred)
