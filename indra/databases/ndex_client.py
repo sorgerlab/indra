@@ -167,9 +167,17 @@ def update_network(cx_str, network_id, ndex_cred):
             logger.error('Could not update NDEx network profile.')
             logger.error(e)
 
+    set_style(network_id, ndex_cred)
+
+
+def set_style(network_id, ndex_cred):
     # Update network style
     import ndex.beta.toolbox as toolbox
     template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
+
+    server = 'http://public.ndexbio.org'
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
 
     source_network = ndex.networkn.NdexGraph(server=server, username=username,
                                              password=password,
@@ -180,6 +188,19 @@ def update_network(cx_str, network_id, ndex_cred):
 
     source_network.update_to(network_id, server=server, username=username,
                              password=password)
+
+
+def set_provenance(provenance, network_id, ndex_cred):
+    server = 'http://public.ndexbio.org'
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
+    nd = ndex.client.Ndex(server, username, password)
+    try:
+        logger.info('Setting network provenance...')
+        nd.set_provenance(network_id, provenance)
+    except Exception as e:
+        logger.error('Could not set network provenance')
+        logger.exception(e)
 
 
 def _increment_ndex_ver(ver_str):
