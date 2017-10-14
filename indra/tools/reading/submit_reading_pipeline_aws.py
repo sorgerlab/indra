@@ -59,8 +59,39 @@ def wait_for_complete(job_list, poll_interval=10):
             if (len(failed) + len(done) > 0) and (len(not_done) == 0):
                 return 0
 
+        tag_instances()
         sleep(poll_interval)
         total_time += poll_interval
+
+
+def tag_instances(project='bigmechanism'):
+    """Adds project tag to untagged fleet instances."""
+    # First, get all the instances
+    ec2_client = boto3.client('ec2')
+    resp = response = ec2_client.describe_instances()
+    instances = []
+    for res in resp.get('Reservations', []):
+        instances += res.get('Instances', [])
+    instances_to_tag = []
+    # Check each instance to see if it's tagged and if it's a spot fleet
+    # instance
+    for instance in instances:
+        tagged = False
+        need_tag = False
+        for tag in instance.get('Tags', []):
+            if tag.get('Key') == 'project':
+                tagged = True
+            elif tag.get('Key') == 'aws:ec2spot:fleet-request-id':
+                need_tag = True
+        if not tagged and need_tag:
+            instances_to_tag.append(instance['InstanceId'])
+    # Instantiate each instance to tag as a resource and create project tag
+    ec2 = boto3.resource('ec2')
+    for instance_id in instances_to_tag:
+        logger.info('Adding project tag to instance %s' % instance_id)
+        instance = ec2.Instance(instance_id)
+        instance.create_tags(Tags=[{'Key': 'project',
+                                    'Value': project}])
 
 
 def get_environment():
