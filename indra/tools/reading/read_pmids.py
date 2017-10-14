@@ -757,10 +757,15 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         logger.warning("Could not find reach jar in reach dir.")
         return {}, {}
 
+    logger.info('Using REACH jar at: %s' % reach_ex)
+
     # Get the reach version.
     reach_version = os.environ.get('REACH_VERSION', None)
     if reach_version is None:
+        logger.info('REACH version not set in REACH_VERSION')
         reach_version = re.sub('-SNAP.*?$', '', m.groups()[0])
+
+    logger.info('Using REACH version: %s' % reach_version)
 
     base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
         get_content_to_read(
