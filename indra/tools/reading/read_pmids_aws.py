@@ -56,6 +56,10 @@ if __name__ == '__main__':
 
     logger = logging.getLogger('read_pmids_aws')
 
+    # Setting default force read/fulltext parameters
+    force_read = False
+    force_fulltext = False
+
     client = boto3.client('s3')
     bucket_name = 'bigmech'
     pmid_list_key = 'reading_results/%s/pmids' % args.basename
@@ -102,8 +106,8 @@ if __name__ == '__main__':
                 args.num_cores,
                 args.start_index,
                 args.end_index,
-                True,
-                False,
+                force_read,
+                force_fulltext,
                 cleanup=False,
                 verbose=True
                 )
