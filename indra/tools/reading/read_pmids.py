@@ -132,6 +132,9 @@ from indra.sources.sparser import sparser_api as sparser
 
 def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
                      force_read=False, force_fulltext=False):
+    logger.info(('Downloading %s from S3, force_read=%s, force_fulltext=%s '
+                 'reader_version=%s') % (pmid, force_read, force_fulltext,
+                                         reader_version))
     if input_dir is None:
         raise ValueError('input_dir must be defined')
 
@@ -736,7 +739,9 @@ MEM_BUFFER = 2  # GB
 
 def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
               force_read, force_fulltext, cleanup=False, verbose=True):
-    "Run reach on a list of pmids."
+    """Run reach on a list of pmids."""
+    logger.info('Running REACH with force_read=%s' % force_read)
+    logger.info('Running REACH with force_fulltext=%s' % force_fulltext)
 
     # Get the path to the reach directory.
     path_to_reach = os.environ.get('REACHPATH', None)
