@@ -467,29 +467,11 @@ def process_reach_from_s3(pmid):
         return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
-def join_parts(prefix):
-    """Join different REACH output JSON files into a single JSON."""
-    try:
-        with open(prefix + '.uaz.entities.json', 'rt') as f:
-            entities = json.load(f)
-        with open(prefix + '.uaz.events.json', 'rt') as f:
-            events = json.load(f)
-        with open(prefix + '.uaz.sentences.json', 'rt') as f:
-            sentences = json.load(f)
-    except IOError as e:
-        logger.error(
-            'Failed to open JSON files for %s; REACH error?' % prefix
-            )
-        logger.exception(e)
-        return None
-    return {'events': events, 'entities': entities, 'sentences': sentences}
-
-
 def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
     # The prefixes should be PMIDs
     pmid, source_text = pmid_info
     prefix_with_path = os.path.join(output_dir, pmid)
-    full_json = join_parts(prefix_with_path)
+    full_json = reach.join_json_files(prefix_with_path)
     # Check that all parts of the JSON could be assembled
     if full_json is None:
         logger.error('REACH output missing JSON for %s' % pmid)

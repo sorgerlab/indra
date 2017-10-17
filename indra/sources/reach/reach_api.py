@@ -1,19 +1,22 @@
+"""Methods for obtaining a reach processor containing indra statements.
+
+Many file formats are supported. Many will run reach.
+"""
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, bytes
-import os
+
 import json
 import logging
-import tempfile
 import requests
+
 from indra.literature import id_lookup
 import indra.literature.pmc_client as pmc_client
 import indra.literature.pubmed_client as pubmed_client
 from .processor import ReachProcessor
-# Python 2
-try:
+
+try:  # Python 2
     basestring
-# Python 3
-except:
+except NameError:  # Python 3
     basestring = str
 
 logger = logging.getLogger('reach')
@@ -128,8 +131,8 @@ def process_text(text, citation=None, offline=False):
             return None
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
-            logger.error('Cannot read offline because the REACH ApiRuler ' + \
-                         'could not be instantiated.')
+            logger.error('Cannot read offline because the REACH ApiRuler '
+                         + 'could not be instantiated.')
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
@@ -152,7 +155,7 @@ def process_text(text, citation=None, offline=False):
             logger.error('Could not connect to REACH service:')
             logger.error(e)
             return None
-        # TODO: we could use res.json() here to get a dict 
+        # TODO: we could use res.json() here to get a dict
         # directly
         # This is a byte string
         json_str = res.content
@@ -192,8 +195,8 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             return None
         api_ruler = reach_reader.get_api_ruler()
         if api_ruler is None:
-            logger.error('Cannot read offline because the REACH ApiRuler' +\
-                         'could not be instantiated.')
+            logger.error('Cannot read offline because the REACH ApiRuler'
+                         + 'could not be instantiated.')
             return None
         try:
             result_map = api_ruler.annotateNxml(nxml_str, 'fries')
@@ -221,8 +224,8 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             logger.error(e)
             return None
         if res.status_code != 200:
-            logger.error('Could not process NXML via REACH service.' + \
-                         'Status code: %d' % res.status_code)
+            logger.error('Could not process NXML via REACH service.'
+                         + 'Status code: %d' % res.status_code)
             return None
         json_str = res.text
         with open('reach_output.json', 'wb') as fh:
@@ -287,6 +290,39 @@ def process_json_file(file_name, citation=None):
         logger.error('Could not read file %s.' % file_name)
 
 
+def join_json_files(prefix):
+    """Join different REACH output JSON files into a single JSON object.
+
+    The output of REACH is broken into three files that need to be joined
+    before processing. Specifically, there will be three files of the form:
+    `<prefix>.uaz.<subcategory>.json`.
+
+    Parameters
+    ----------
+    prefix : str
+        The absolute path up to the extensions that reach will add.
+
+    Returns
+    -------
+    json_obj : dict
+        The result of joining the files, keyed by the three subcategories.
+    """
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error(
+            'Failed to open JSON files for %s; REACH error?' % prefix
+            )
+        logger.exception(e)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
 def process_json_str(json_str, citation=None):
     """Return a ReachProcessor by processing the given REACH json string.
 
@@ -308,16 +344,18 @@ def process_json_str(json_str, citation=None):
         in rp.statements.
     """
     if not isinstance(json_str, basestring):
-        raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, basestring))
+        raise TypeError('{} is {} instead of {}'.format(json_str,
+                                                        json_str.__class__,
+                                                        basestring))
 
-    json_str = json_str.replace('frame-id','frame_id')
-    json_str = json_str.replace('argument-label','argument_label')
-    json_str = json_str.replace('object-meta','object_meta')
-    json_str = json_str.replace('doc-id','doc_id')
-    json_str = json_str.replace('is-hypothesis','is_hypothesis')
-    json_str = json_str.replace('is-negated','is_negated')
-    json_str = json_str.replace('is-direct','is_direct')
-    json_str = json_str.replace('found-by','found_by')
+    json_str = json_str.replace('frame-id', 'frame_id')
+    json_str = json_str.replace('argument-label', 'argument_label')
+    json_str = json_str.replace('object-meta', 'object_meta')
+    json_str = json_str.replace('doc-id', 'doc_id')
+    json_str = json_str.replace('is-hypothesis', 'is_hypothesis')
+    json_str = json_str.replace('is-negated', 'is_negated')
+    json_str = json_str.replace('is-direct', 'is_direct')
+    json_str = json_str.replace('found-by', 'found_by')
     try:
         json_dict = json.loads(json_str)
     except ValueError:
