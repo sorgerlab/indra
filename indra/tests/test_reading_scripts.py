@@ -1,12 +1,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+import pickle
 from os import path, mkdir
 from nose import SkipTest
+
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
-from indra.tools.reading.read_pmids_db import _convert_id_entry
-import pickle
+from indra.tools.reading.read_pmids_db import _convert_id_entry, get_content,\
+    get_clauses
+
+from indra.tests.test_db import get_db as get_test_db
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.
@@ -106,3 +110,16 @@ def test_convert_id_entry():
     id_entry = 'pmid\t: 12345\n'
     res = _convert_id_entry(id_entry)
     assert len(res) == 2 and res[0] == 'pmid' and res[1] == '12345'
+
+
+def test_get_clauses():
+    db = get_test_db()
+    id_str_list = ['pmid:17399955']
+    clauses = get_clauses(id_str_list, db.TextRef)
+    assert len(clauses)
+
+
+def test_get_content():
+    id_str_list = ['pmid:17399955']
+    content = get_content(id_str_list)
+    assert len(list(content)) == 1, "Failed to get correct content."
