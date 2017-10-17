@@ -287,6 +287,8 @@ class DatabaseManager(object):
 
     def get_columns(self, tbl_name):
         "Get a list of the column labels for a table."
+        if isinstance(tbl_name, type(self.Base)):
+            tbl_name = tbl_name.__tablename__
         return self.Base.metadata.tables[tbl_name].columns.keys()
 
     def commit(self, err_msg):
