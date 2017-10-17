@@ -216,28 +216,6 @@ def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
     return result
 
 
-def process_reach_str(reach_json_str, pmid):
-    if reach_json_str is None:
-        raise ValueError('reach_json_str cannot be None')
-    # Run the REACH processor on the JSON
-    try:
-        reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
-    # If there's a problem, skip it
-    except Exception as e:
-        print("Exception processing %s" % pmid)
-        print(e)
-        return []
-    return reach_proc.statements
-
-
-def process_reach_from_s3(pmid):
-    reach_json_str = s3_client.get_reach_json_str(pmid)
-    if reach_json_str is None:
-        return []
-    else:
-        return {pmid: process_reach_str(reach_json_str, pmid)}
-
-
 def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
                         force_fulltext, force_read, reader, reader_version):
     if end_index is None or end_index > len(pmid_list):
@@ -461,170 +439,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
 #==============================================================================
 
 
-def join_parts(prefix):
-    """Join different REACH output JSON files into a single JSON."""
-    try:
-        with open(prefix + '.uaz.entities.json', 'rt') as f:
-            entities = json.load(f)
-        with open(prefix + '.uaz.events.json', 'rt') as f:
-            events = json.load(f)
-        with open(prefix + '.uaz.sentences.json', 'rt') as f:
-            sentences = json.load(f)
-    except IOError as e:
-        logger.error(
-            'Failed to open JSON files for %s; REACH error?' % prefix
-            )
-        logger.exception(e)
-        return None
-    return {'events': events, 'entities': entities, 'sentences': sentences}
-
-
-def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
-    # The prefixes should be PMIDs
-    pmid, source_text = pmid_info
-    prefix_with_path = os.path.join(output_dir, pmid)
-    full_json = join_parts(prefix_with_path)
-    # Check that all parts of the JSON could be assembled
-    if full_json is None:
-        logger.error('REACH output missing JSON for %s' % pmid)
-        return {pmid: []}
-    # Upload the REACH output to S3
-    s3_client.put_reach_output(full_json, pmid, reader_version, source_text)
-    # Process the REACH output with INDRA
-    # Convert the JSON object into a string first so that a series of string
-    # replacements can happen in the REACH processor
-    reach_json_str = json.dumps(full_json)
-    return {pmid: process_reach_str(reach_json_str, pmid)}
-
-
-def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
-                               num_cores):
-    # At this point, we have a directory full of JSON files
-    # Collect all the prefixes into a set, then iterate over the prefixes
-
-    # Collect prefixes
-    json_files = glob.glob(os.path.join(output_dir, '*.json'))
-    json_prefixes = set([])
-    for json_file in json_files:
-        filename = os.path.basename(json_file)
-        prefix = filename.split('.')[0]
-        json_prefixes.add(prefix)
-    # Make a list with PMID and source_text info
-    pmid_info = [
-        (json_prefix, pmid_info_dict[json_prefix].get('content_source'))
-        for json_prefix in json_prefixes
-        ]
-    # Create a multiprocessing pool
-    logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
-    # Get a multiprocessing pool.
-    pool = mp.Pool(num_cores)
-    logger.info('Uploading and processing local REACH JSON files')
-    upload_process_pmid_func = functools.partial(
-        upload_process_pmid,
-        output_dir=output_dir,
-        reader_version=reader_version
-        )
-    res = pool.map(upload_process_pmid_func, pmid_info)
-    stmts_by_pmid = {
-        pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
-        }
-    pool.close()
-    """
-    logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
-        (num_uploaded, num_failures))
-    failures_file = os.path.join(output_dir, 'failures.txt')
-    with open(failures_file, 'wt') as f:
-        for fail in failures:
-            f.write('%s\n' % fail)
-    """
-    return stmts_by_pmid
-
-
-REACH_CONF_FMT =\
-"""
-#
-# Configuration file for reach
-#
-
-# This is the directory that stores the raw nxml, .csv, and/or .tsv files.
-# This directory *must* exist.
-papersDir = {input_dir}
-
-# This is where the output files containing the extracted mentions will be
-# stored if this directory doesn't exist it will be created.
-outDir = {output_dir}
-
-# The output format for mentions: text, fries, indexcard, or assembly-csv
-# (default is 'fries').
-outputTypes = ["fries"]
-
-# whether or not assembly should be run
-withAssembly = false
-
-# this is where the context files will be stored
-# if this directory doesn't exist it will be created
-contextDir = {output_dir}
-
-# this is where the brat standoff and text files are dumped
-bratDir = {output_dir}
-
-# verbose logging
-verbose = true
-
-# the encoding of input and output files
-encoding = "utf-8"
-
-
-# this is a list of sections that we should ignore
-ignoreSections = ["references", "materials", "materials|methods", "methods", "supplementary-material"]
-
-# context engine config
-contextEngine {{
-    type = Policy4
-    params = {{
-        bound = 3
-    }}
-}}
-
-logging {{
-  # defines project-wide logging level
-  loglevel = INFO
-  logfile = {base_dir}/reach.log
-}}
-
-# restart configuration
-restart {{
-  # restart allows batch jobs to skip over input files already successfully
-  # processed
-  useRestart = false
-  # restart log is one filename per line list of input files already
-  # successfully processed
-  logfile = {base_dir}/restart.log
-}}
-
-# grounding configuration
-grounding: {{
-  # List of AdHoc grounding files to insert, in order, into the grounding search sequence.
-  # Each element of the list is a map of KB filename and optional meta info (not yet used):
-  #   example: {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
-  adHocFiles: [
-    {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
-  ]
-
-  # flag to turn off the influence of species on grounding
-  overrideSpecies = true
-}}
-
-# number of simultaneous threads to use for parallelization
-threadLimit = {num_cores}
-
-# ReadPapers
-ReadPapers.papersDir = src/test/resources/inputs/nxml/
-ReadPapers.serializedPapers = mentions.ser
-"""
-
-
-NEW_REACH_CONF_FMT = \
+REACH_CONF_FMT = \
 """
 #
 # Configuration file for reach
@@ -737,7 +552,108 @@ REACH_MEM = 5  # GB
 MEM_BUFFER = 2  # GB
 
 
-def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
+def process_reach_str(reach_json_str, pmid):
+    if reach_json_str is None:
+        raise ValueError('reach_json_str cannot be None')
+    # Run the REACH processor on the JSON
+    try:
+        reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
+    # If there's a problem, skip it
+    except Exception as e:
+        print("Exception processing %s" % pmid)
+        print(e)
+        return []
+    return reach_proc.statements
+
+
+def process_reach_from_s3(pmid):
+    reach_json_str = s3_client.get_reach_json_str(pmid)
+    if reach_json_str is None:
+        return []
+    else:
+        return {pmid: process_reach_str(reach_json_str, pmid)}
+
+
+def join_parts(prefix):
+    """Join different REACH output JSON files into a single JSON."""
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error(
+            'Failed to open JSON files for %s; REACH error?' % prefix
+            )
+        logger.exception(e)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
+def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
+    # The prefixes should be PMIDs
+    pmid, source_text = pmid_info
+    prefix_with_path = os.path.join(output_dir, pmid)
+    full_json = join_parts(prefix_with_path)
+    # Check that all parts of the JSON could be assembled
+    if full_json is None:
+        logger.error('REACH output missing JSON for %s' % pmid)
+        return {pmid: []}
+    # Upload the REACH output to S3
+    s3_client.put_reach_output(full_json, pmid, reader_version, source_text)
+    # Process the REACH output with INDRA
+    # Convert the JSON object into a string first so that a series of string
+    # replacements can happen in the REACH processor
+    reach_json_str = json.dumps(full_json)
+    return {pmid: process_reach_str(reach_json_str, pmid)}
+
+
+def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
+                               num_cores):
+    # At this point, we have a directory full of JSON files
+    # Collect all the prefixes into a set, then iterate over the prefixes
+
+    # Collect prefixes
+    json_files = glob.glob(os.path.join(output_dir, '*.json'))
+    json_prefixes = set([])
+    for json_file in json_files:
+        filename = os.path.basename(json_file)
+        prefix = filename.split('.')[0]
+        json_prefixes.add(prefix)
+    # Make a list with PMID and source_text info
+    pmid_info = [
+        (json_prefix, pmid_info_dict[json_prefix].get('content_source'))
+        for json_prefix in json_prefixes
+        ]
+    # Create a multiprocessing pool
+    logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
+    # Get a multiprocessing pool.
+    pool = mp.Pool(num_cores)
+    logger.info('Uploading and processing local REACH JSON files')
+    upload_process_pmid_func = functools.partial(
+        upload_process_pmid,
+        output_dir=output_dir,
+        reader_version=reader_version
+        )
+    res = pool.map(upload_process_pmid_func, pmid_info)
+    stmts_by_pmid = {
+        pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
+        }
+    pool.close()
+    """
+    logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
+        (num_uploaded, num_failures))
+    failures_file = os.path.join(output_dir, 'failures.txt')
+    with open(failures_file, 'wt') as f:
+        for fail in failures:
+            f.write('%s\n' % fail)
+    """
+    return stmts_by_pmid
+
+
+def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
               force_read, force_fulltext, cleanup=False, verbose=True):
     """Run reach on a list of pmids."""
     logger.info('Running REACH with force_read=%s' % force_read)
@@ -772,17 +688,15 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
     logger.info('Using REACH version: %s' % reach_version)
 
-    base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
+    tmp_dir, _, output_dir, pmids_read, pmids_unread, _ =\
         get_content_to_read(
-            pmid_list, start_index, end_index, tmp_dir, num_cores,
+            pmid_list, start_index, end_index, base_dir, num_cores,
             force_fulltext, force_read, 'reach', reach_version
             )
 
     # Create the REACH configuration file
-    conf_file_text = NEW_REACH_CONF_FMT.format(
-        base_dir=os.path.abspath(base_dir),
-        input_dir=input_dir,
-        output_dir=output_dir,
+    conf_file_text = REACH_CONF_FMT.format(
+        tmp_dir=os.path.abspath(tmp_dir),
         num_cores=num_cores
         )
 
@@ -790,12 +704,12 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
     mem_tot = get_mem_total()
     if mem_tot is not None and mem_tot <= REACH_MEM + MEM_BUFFER:
         logger.error(
-            "Too little memory to run reach. At least %s required." % 
+            "Too little memory to run reach. At least %s required." %
             REACH_MEM + MEM_BUFFER
             )
         logger.info("REACH not run.")
-    elif num_found > 0:
-        conf_file_path = os.path.join(base_dir, 'indra.conf')
+    elif len(pmids_unread) > 0:
+        conf_file_path = os.path.join(tmp_dir, 'indra.conf')
         with open(conf_file_path, 'w') as f:
             f.write(conf_file_text)
 
@@ -824,7 +738,7 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         stmts.update(some_stmts)
         # Delete the tmp directory if desired
         if cleanup:
-            shutil.rmtree(base_dir)
+            shutil.rmtree(tmp_dir)
 
     # Create a new multiprocessing pool for processing the REACH JSON
     # files previously cached on S3
@@ -843,7 +757,7 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
     # Save the list of PMIDs with no content found on S3/literature client
     '''
-    content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
+    content_not_found_file = os.path.join(tmp_dir, 'content_not_found.txt')
     with open(content_not_found_file, 'wt') as f:
         for c in content_not_found:
             f.write('%s\n' % c)
