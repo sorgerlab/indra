@@ -439,114 +439,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
 #==============================================================================
 
 
-REACH_CONF_FMT = \
-"""
-#
-# Configuration file for reach
-#
-
-# Default top-level root directory for input and output files and subdirectories.
-# All other paths are based on this path but any or all can be changed individually:
-rootDir = {base_dir}
-
-# this is the directory that stores the raw nxml, .csv, and/or .tsv files
-# this directory *must* exist
-papersDir = {base_dir}/input
-
-# this is where the output files containing the extracted mentions will be stored
-# if this directory doesn't exist it will be created
-outDir = {base_dir}/output
-
-# the output formats for mentions:
-# "arizona" (column-based, one file per paper)
-# "cmu" (column-based, one file per paper)
-# "fries" (multiple JSON files per paper)
-# "serial-json" (JSON serialization of mentions data structures. LARGE output!)
-# "text" (non-JSON textual format)
-outputTypes = ["fries"]
-
-# which processor to use:
-# bionlp: the classic BioNLPProcessor, with the Stanford constituent parser; slower but better
-# fastbionlp: FastBioNLPProcessor, which uses the new NN Stanford dependency parser; faster but slightly worse performance
-proc = "bionlp"
-
-# whether or not assembly should be run
-withAssembly = false
-
-# this is where the context files will be stored
-# if this directory doesn't exist it will be created
-contextDir = {base_dir}/context
-
-# this is where the brat standoff and text files are dumped
-bratDir = {base_dir}/brat
-
-# verbose logging
-verbose = true
-
-# the encoding of input and output files
-encoding = "utf-8"
-
-# this is a list of sections that we should ignore
-ignoreSections = ["references", "materials", "materials|methods", "methods", "supplementary-material"]
-
-# context engine config
-contextEngine {{
-  type = Policy4
-  params = {{
-    bound = 3
-  }}
-}}
-
-# logging configuration
-logging {{
-  # defines project-wide logging level
-  loglevel = INFO
-  logfile = {base_dir}/reach.log
-}}
-
-# restart configuration
-restart {{
-  # restart allows batch jobs to skip over input files already successfully processed
-  useRestart = false
-  # restart log is one filename per line list of input files already successfully processed
-  logfile = {base_dir}/restart.log
-}}
-
-# grounding configuration
-grounding: {{
-  # List of AdHoc grounding files to insert, in order, into the grounding search sequence.
-  # Each element of the list is a map of KB filename and optional meta info (not yet used):
-  #   example: {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
-  adHocFiles: [
-    {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
-  ]
-
-  # flag to turn off the influence of species on grounding
-  overrideSpecies = true
-}}
-
-# Akka-based Processor Client configuration:
-ProcessorCoreClient {{
-  server {{
-    // path to the processor core server
-    // path = "akka.tcp://proc-core-server@192.168.1.12:2552/user/proc-actor-pool"
-    path = "akka://procCoreServer/user/procActorPool"
-
-    // the actor system name string
-    systemName = "procCoreServer"
-  }}
-
-  // request timeout in seconds. default: 3 min because BioNLP is slow to start
-  askTimeout = 180
-}}
-
-# number of simultaneous threads to use for parallelization
-threadLimit = {num_cores}
-
-# ReadPapers
-ReadPapers.papersDir = src/test/resources/inputs/nxml/
-ReadPapers.serializedPapers = mentions.ser
-"""
+REACH_CONF_FMT_FNAME = 'reach_conf_fmt.txt'
 
 REACH_MEM = 5  # GB
 MEM_BUFFER = 2  # GB
@@ -694,12 +587,6 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
             force_fulltext, force_read, 'reach', reach_version
             )
 
-    # Create the REACH configuration file
-    conf_file_text = REACH_CONF_FMT.format(
-        tmp_dir=os.path.abspath(tmp_dir),
-        num_cores=num_cores
-        )
-
     stmts = {}
     mem_tot = get_mem_total()
     if mem_tot is not None and mem_tot <= REACH_MEM + MEM_BUFFER:
@@ -709,9 +596,14 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
             )
         logger.info("REACH not run.")
     elif len(pmids_unread) > 0:
-        conf_file_path = os.path.join(tmp_dir, 'indra.conf')
-        with open(conf_file_path, 'w') as f:
-            f.write(conf_file_text)
+        # Create the REACH configuration file
+        with open(REACH_CONF_FMT_FNAME, 'r') as fmt_file:
+            conf_file_path = os.path.join(tmp_dir, 'indra.conf')
+            with open(conf_file_path, 'w') as conf_file:
+                conf_file.write(
+                    fmt_file.read().format(tmp_dir=os.path.abspath(tmp_dir),
+                                           num_cores=num_cores)
+                    )
 
         # Run REACH!
         logger.info("Beginning reach.")
