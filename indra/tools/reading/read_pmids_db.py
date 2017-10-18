@@ -15,6 +15,7 @@ from argparse import ArgumentParser
 from docutils.io import InputError
 from datetime import datetime
 from indra.sources import reach
+import json
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -156,19 +157,25 @@ class ReachReader(object):
 
     def get_output(self):
         """Get the output of a reading job as a list of filenames."""
+        # Get the set of prefixes (each will correspond to three json files.)
         json_files = glob.glob(os.path.join(self.tmp_dir, 'output/*.json'))
         json_prefixes = set()
-        tc_id_fname_dict = {}
         for json_file in json_files:
             prefix = os.path.basename(json_file).split('.')[0]
             json_prefixes.add(prefix)
 
+        # Join each set of json files and store the json dict.
+        tc_id_fname_dict = {}
         for prefix in json_prefixes:
             tc_id_fname_dict[prefix] = reach.join_json_files(prefix)
         return tc_id_fname_dict
 
-    def convert_output_to_stmts(self):
-        pass
+    def convert_output_to_stmts(self, json_dict):
+        """Process the REACH output with INDRA"""
+        # Convert the JSON object into a string first so that a series of
+        # string replacements can happen in the REACH processor
+        reach_proc = reach.process_json_str(json.dumps(json_dict))
+        return reach_proc.statements
 
     def read(self, tc_list, verbose=False):
         """Read the content.
