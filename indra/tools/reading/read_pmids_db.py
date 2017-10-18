@@ -11,11 +11,12 @@ import tempfile
 import logging
 import subprocess
 import glob
+import json
+import random
+import zlib
 from argparse import ArgumentParser
 from docutils.io import InputError
 from datetime import datetime
-from indra.sources import reach
-import json
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -28,8 +29,9 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         '-r', '--readers',
-        choice=['reach', 'sparser'],
-        help='List of readers to be used.'
+        choices=['reach', 'sparser'],
+        help='List of readers to be used.',
+        nargs='+'
         )
     parser.add_argument(
         '-b', '--batch',
@@ -37,11 +39,38 @@ if __name__ == '__main__':
         default=1000,
         type=int
         )
+    parser.add_argument(
+        '-s', '--sample',
+        help='To read just a sample of the pmids in the file.',
+        type=int
+        )
+    parser.add_argument(
+        '-i', '--in_range',
+        help='A range of pmids to be read in the form <start>:<end>.'
+        )
     args = parser.parse_args()
 
 from indra.util import unzip_string
-from indra.db import get_primary_db, formats
+from indra.db import get_primary_db, formats, texttypes
 from indra.tools.reading.read_pmids import get_mem_total
+from indra.sources import reach
+
+
+def _get_dir(*args):
+    dirname = os.path.join(*args)
+    if os.path.isabs(dirname):
+        dirpath = dirname
+    elif os.path.exists(dirname):
+        dirpath = os.path.abspath(dirname)
+    else:
+        dirpath = os.path.join(os.path.dirname(__file__), dirname)
+    if not os.path.exists(dirpath):
+        os.mkdir(dirpath)
+    return dirpath
+
+
+def _time_stamp():
+    return datetime.now().strftime("%Y%m%d%H%M%S")
 
 
 def _convert_id_entry(id_entry, allowed_types=None):
@@ -74,6 +103,14 @@ def get_content(id_str_list, batch_size=1000):
         db.TextContent.text_ref_id == db.TextRef.id,
         *clauses
         )
+    logger.info('Found %d content entries.' % q.count())
+    for _, texttype in texttypes.iterattrs():
+        logger.info(
+            '%d were %ss' % (
+                q.filter(db.TextContent.text_type == texttype).count(),
+                texttype
+                )
+            )
     return q.yield_per(batch_size)
 
 
@@ -94,10 +131,10 @@ class ReachReader(object):
             'force_fulltext=%s' % force_fulltext
             ])
         logger.info(init_msg)
-        self.base_dir = base_dir
+        self.base_dir = _get_dir(base_dir)
         self.exec_path, self.version = self._check_reach_env()
         tmp_dir = tempfile.mkdtemp(
-            prefix='read_job_%s' % datetime.now().strftime("%Y%m%d%H%M%S"),
+            prefix='read_job_%s' % _time_stamp(),
             dir=base_dir
             )
         self.tmp_dir = tmp_dir
@@ -110,6 +147,8 @@ class ReachReader(object):
                 f.write(
                     fmt.format(tmp_dir=tmp_dir, num_cores=n_proc)
                     )
+        self.input_dir = _get_dir(tmp_dir, 'input')
+        self.output_dir = _get_dir(tmp_dir, 'output')
         return
 
     def _check_reach_env(self):
@@ -142,32 +181,47 @@ class ReachReader(object):
         logger.info('Using REACH version: %s' % reach_version)
         return reach_ex, reach_version
 
-    def prep_input(self, text_content):
-        """Apply the readers to the content."""
+    def write_content(self, text_content):
         def write_content_file(ext):
-            with open('%s.%s' % (text_content.id, ext), 'w') as f:
-                f.write(unzip_string(text_content.content))
-
-        if text_content.text_type == formats.XML:
+            fname = '%s.%s' % (text_content.id, ext)
+            with open(os.path.join(self.input_dir, fname), 'w') as f:
+                f.write(
+                    zlib.decompress(
+                        text_content.content, 16+zlib.MAX_WBITS
+                        ).decode('utf8')
+                    )
+            logger.info('%s saved for reading by reach.' % fname)
+        if text_content.format == formats.XML:
             write_content_file('nxml')
-        if text_content.text_type == formats.TEXT:
+        elif text_content.format == formats.TEXT:
             write_content_file('txt')
-        if text_content.text_type == formats.JSON:
+        elif text_content.format == formats.JSON:
             raise ReachError("I do not know how to handle JSON.")
+        else:
+            raise ReachError("Unrecognized format %s." % text_content.format)
+
+    def prep_input(self, tc_list):
+        """Apply the readers to the content."""
+        logger.info("Prepping input.")
+        for text_content in tc_list:
+            self.write_content(text_content)
+        return
 
     def get_output(self):
         """Get the output of a reading job as a list of filenames."""
+        logger.info("Getting outputs.")
         # Get the set of prefixes (each will correspond to three json files.)
-        json_files = glob.glob(os.path.join(self.tmp_dir, 'output/*.json'))
+        json_files = glob.glob(os.path.join(self.output_dir, '*.json'))
         json_prefixes = set()
         for json_file in json_files:
             prefix = os.path.basename(json_file).split('.')[0]
-            json_prefixes.add(prefix)
+            json_prefixes.add(os.path.join(self.output_dir, prefix))
 
         # Join each set of json files and store the json dict.
         tc_id_fname_dict = {}
         for prefix in json_prefixes:
             tc_id_fname_dict[prefix] = reach.join_json_files(prefix)
+            logger.info('Joined files for prefix %s.' % prefix)
         return tc_id_fname_dict
 
     def convert_output_to_stmts(self, json_dict):
@@ -182,6 +236,7 @@ class ReachReader(object):
 
         This should take in a list of text_content objects, and return nothing.
         """
+        ret = None
         mem_tot = get_mem_total()
         if mem_tot is not None and mem_tot <= self.REACH_MEM + self.MEM_BUFFER:
             logger.error(
@@ -190,6 +245,8 @@ class ReachReader(object):
                 )
             logger.info("REACH not run.")
         elif len(tc_list) > 0:
+            # Prep the content
+            self.prep_input(tc_list)
             # Run REACH!
             logger.info("Beginning reach.")
             args = [
@@ -208,7 +265,24 @@ class ReachReader(object):
                 logger.error('Stdout: %s' % p_out.decode('utf-8'))
                 logger.error('Stderr: %s' % p_err.decode('utf-8'))
                 raise ReachError("Problem running REACH")
-        return
+            logger.info("Reach finished.")
+            ret = self.get_output()
+        return ret
+
+
+def read(tc_list, readers, *args, **kwargs):
+    """Perform the reading, returning dicts of jsons."""
+    output_dict = {}
+    if 'reach' in readers:
+        r = ReachReader(*args, **kwargs)
+        output_dict.update(r.read(tc_list))
+        logger.info("Read %d text content entries with reach."
+                    % len(output_dict))
+    return output_dict
+
+
+def post_reading_output():
+    """Put the reading output on the database."""
 
 
 def make_statements():
@@ -216,7 +290,25 @@ def make_statements():
 
 
 if __name__ == "__main__":
+    base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
+
+    # Process the arguments.
     with open(args.id_file, 'r') as f:
         lines = f.readlines()
-    for text_content in get_content(lines):
-        pass
+
+    if args.sample is not None:
+        lines = random.sample(lines, args.sample)
+
+    if args.in_range is not None:
+        start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
+        lines = lines[start_idx:end_idx]
+
+    # Start reading in batches.
+    batch_list = []
+    for i, text_content in enumerate(get_content(lines, args.batch)):
+        batch_list.append(text_content)
+        if (i+1) % args.batch is 0:
+            read(batch_list, base_dir, 1, True, False)
+            batch_list = []
+    if len(batch_list) > 0:
+        read(batch_list, base_dir, 1, True, False)
