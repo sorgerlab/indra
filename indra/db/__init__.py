@@ -71,17 +71,25 @@ def _isiterable(obj):
     return hasattr(obj, '__iter__') and not isinstance(obj, str)
 
 
-class sqltypes:
+class _map_class(object):
+    @classmethod
+    def iterattrs(self):
+        return {
+            k: v for k, v in self.__dict__.items() if not k.startswith('_')
+            }.items()
+
+
+class sqltypes(_map_class):
     POSTGRESQL = 'postgresql'
     SQLITE = 'sqlite'
 
 
-class texttypes:
+class texttypes(_map_class):
     FULLTEXT = 'fulltext'
     ABSTRACT = 'abstract'
 
 
-class formats:
+class formats(_map_class):
     XML = 'xml'
     TEXT = 'text'
     JSON = 'json'
