@@ -17,6 +17,8 @@ import zlib
 from argparse import ArgumentParser
 from docutils.io import InputError
 from datetime import datetime
+from math import log10, floor
+import pickle
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -48,7 +50,24 @@ if __name__ == '__main__':
         '-i', '--in_range',
         help='A range of pmids to be read in the form <start>:<end>.'
         )
+    parser.add_argument(
+        '-v', '--verbose',
+        help='Include output from the readers.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '-q', '--quiet',
+        help='Suppress most output. Overrides -v and -d options.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '-d', '--debug',
+        help='Set the logging to debug level.',
+        action='store_true'
+        )
     args = parser.parse_args()
+    if args.debug and not args.quiet:
+        logger.setLevel(logging.DEBUG)
 
 from indra.util import unzip_string
 from indra.db import get_primary_db, formats, texttypes
@@ -94,6 +113,37 @@ def get_clauses(id_str_list, table):
             for id_type, id_list in id_dict.items() if len(id_list)]
 
 
+def get_table_string(q, db):
+    """Create a table with some summary data for a query."""
+    N_tot = q.count()
+    log_n = floor(log10(N_tot))
+    cols = list(formats.values()) + ['tot']
+    col_fmt = ' %%%ds' % max(4, log_n)
+    cols_strs = [col_fmt % fmt for fmt in cols]
+    ret_str = 'Summary Statisitics:\n' + ' '*10 + ''.join(cols_strs) + '\n'
+    col_counts = dict.fromkeys(formats.values())
+    col_counts['tot'] = []
+    for texttype in texttypes.values():
+        line = '%8s: ' % texttype
+        counts = []
+        for text_format in cols[:-1]:
+            if col_counts[text_format] is None:
+                col_counts[text_format] = []
+            c = q.filter(
+                db.TextContent.text_type == texttype,
+                db.TextContent.format == text_format
+                ).count()
+            line += col_fmt % c
+            counts.append(c)
+            col_counts[text_format].append(c)
+        line += col_fmt % sum(counts)
+        ret_str += line + '\n'
+        col_counts['tot'].append(sum(counts))
+    ret_str += '%8s: ' % 'total' + ''.join([col_fmt % sum(col_counts[col])
+                                            for col in cols])
+    return ret_str
+
+
 def get_content(id_str_list, batch_size=1000):
     """Load all the content that will be read."""
     db = get_primary_db()
@@ -103,14 +153,7 @@ def get_content(id_str_list, batch_size=1000):
         db.TextContent.text_ref_id == db.TextRef.id,
         *clauses
         )
-    logger.info('Found %d content entries.' % q.count())
-    for _, texttype in texttypes.iterattrs():
-        logger.info(
-            '%d were %ss' % (
-                q.filter(db.TextContent.text_type == texttype).count(),
-                texttype
-                )
-            )
+    logger.info(get_table_string(q, db))
     return q.yield_per(batch_size)
 
 
@@ -170,15 +213,15 @@ class ReachReader(object):
         else:
             raise ReachError("Could not find reach jar in reach dir.")
 
-        logger.info('Using REACH jar at: %s' % reach_ex)
+        logger.debug('Using REACH jar at: %s' % reach_ex)
 
         # Get the reach version.
         reach_version = os.environ.get('REACH_VERSION', None)
         if reach_version is None:
-            logger.info('REACH version not set in REACH_VERSION')
+            logger.debug('REACH version not set in REACH_VERSION')
             reach_version = re.sub('-SNAP.*?$', '', m.groups()[0])
 
-        logger.info('Using REACH version: %s' % reach_version)
+        logger.debug('Using REACH version: %s' % reach_version)
         return reach_ex, reach_version
 
     def write_content(self, text_content):
@@ -190,7 +233,7 @@ class ReachReader(object):
                         text_content.content, 16+zlib.MAX_WBITS
                         ).decode('utf8')
                     )
-            logger.info('%s saved for reading by reach.' % fname)
+            logger.debug('%s saved for reading by reach.' % fname)
         if text_content.format == formats.XML:
             write_content_file('nxml')
         elif text_content.format == formats.TEXT:
@@ -220,8 +263,9 @@ class ReachReader(object):
         # Join each set of json files and store the json dict.
         tc_id_fname_dict = {}
         for prefix in json_prefixes:
-            tc_id_fname_dict[prefix] = reach.join_json_files(prefix)
-            logger.info('Joined files for prefix %s.' % prefix)
+            base_prefix = os.path.basename(prefix)
+            tc_id_fname_dict[base_prefix] = reach.join_json_files(prefix)
+            logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict
 
     def convert_output_to_stmts(self, json_dict):
@@ -274,8 +318,9 @@ def read(tc_list, readers, *args, **kwargs):
     """Perform the reading, returning dicts of jsons."""
     output_dict = {}
     if 'reach' in readers:
+        verbose = kwargs.pop('verbose') if 'verbose' in kwargs.keys() else False
         r = ReachReader(*args, **kwargs)
-        output_dict.update(r.read(tc_list))
+        output_dict.update(r.read(tc_list, verbose=verbose))
         logger.info("Read %d text content entries with reach."
                     % len(output_dict))
     return output_dict
@@ -305,10 +350,15 @@ if __name__ == "__main__":
 
     # Start reading in batches.
     batch_list = []
+    outputs = {}
+    read_args = [args.readers, base_dir, 1, True, False]
+    read_kwargs = dict(verbose=args.verbose and not args.quiet)
     for i, text_content in enumerate(get_content(lines, args.batch)):
         batch_list.append(text_content)
         if (i+1) % args.batch is 0:
-            read(batch_list, base_dir, 1, True, False)
+            outputs.update(read(batch_list, *read_args, **read_kwargs))
             batch_list = []
     if len(batch_list) > 0:
-        read(batch_list, base_dir, 1, True, False)
+        outputs.update(read(batch_list, *read_args, **read_kwargs))
+    with open(os.path.basename(base_dir) + '_outputs.pkl', 'wb') as f:
+        pickle.dump(outputs, f)
