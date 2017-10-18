@@ -73,10 +73,22 @@ def _isiterable(obj):
 
 class _map_class(object):
     @classmethod
-    def iterattrs(self):
+    def _getattrs(self):
         return {
             k: v for k, v in self.__dict__.items() if not k.startswith('_')
-            }.items()
+            }
+
+    @classmethod
+    def items(self):
+        return self._getattrs().items()
+
+    @classmethod
+    def values(self):
+        return self._getattrs().values()
+
+    @classmethod
+    def keys(self):
+        return self._getattrs().keys()
 
 
 class sqltypes(_map_class):
