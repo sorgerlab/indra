@@ -186,9 +186,11 @@ class ReachReader(object):
         self.conf_file_path = os.path.join(self.tmp_dir, 'indra.conf')
         with open(conf_fmt_fname, 'r') as fmt_file:
             fmt = fmt_file.read()
+            loglevel = 'INFO' # 'DEBUG' if logger.level == logging.DEBUG else 'INFO'
             with open(self.conf_file_path, 'w') as f:
                 f.write(
-                    fmt.format(tmp_dir=tmp_dir, num_cores=n_proc)
+                    fmt.format(tmp_dir=tmp_dir, num_cores=n_proc,
+                               loglevel=loglevel)
                     )
         self.input_dir = _get_dir(tmp_dir, 'input')
         self.output_dir = _get_dir(tmp_dir, 'output')
@@ -227,11 +229,11 @@ class ReachReader(object):
     def write_content(self, text_content):
         def write_content_file(ext):
             fname = '%s.%s' % (text_content.id, ext)
-            with open(os.path.join(self.input_dir, fname), 'w') as f:
+            with open(os.path.join(self.input_dir, fname), 'wb') as f:
                 f.write(
                     zlib.decompress(
                         text_content.content, 16+zlib.MAX_WBITS
-                        ).decode('utf8')
+                        )
                     )
             logger.debug('%s saved for reading by reach.' % fname)
         if text_content.format == formats.XML:
@@ -302,7 +304,7 @@ class ReachReader(object):
                                  stderr=subprocess.PIPE)
             if verbose:
                 for line in iter(p.stdout.readline, b''):
-                    logger.info(line)
+                    logger.info('REACH: ' + line.strip().decode('utf8'))
             p_out, p_err = p.communicate()
             if p.returncode:
                 logger.error('Problem running REACH:')

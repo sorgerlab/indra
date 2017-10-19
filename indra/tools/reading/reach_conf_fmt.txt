@@ -57,7 +57,7 @@ contextEngine {{
 # logging configuration
 logging {{
   # defines project-wide logging level
-  loglevel = INFO
+  loglevel = {loglevel}
   logfile = {tmp_dir}/reach.log
 }}
 
