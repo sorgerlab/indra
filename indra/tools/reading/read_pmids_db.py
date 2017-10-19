@@ -403,5 +403,5 @@ if __name__ == "__main__":
     if len(batch_list) > 0:
         logger.debug("Reading remaining files.")
         outputs.update(read(batch_list, *read_args, **read_kwargs))
-    with open(path.basename(base_dir) + '_outputs.pkl', 'wb') as f:
+    with open(os.getcwd() + '_outputs.pkl', 'wb') as f:
         pickle.dump(outputs, f)
