@@ -342,11 +342,12 @@ class ReachReader(object):
 
 def read(read_list, readers, *args, **kwargs):
     """Perform the reading, returning dicts of jsons."""
+    base_dir = _get_dir('run_%s' % ('_and_'.join(readers)))
     output_dict = {}
     if 'reach' in readers:
         n_proc = kwargs.pop('n_proc', 1)
-        r = ReachReader(n_proc=n_proc)
-        output_dict.update(r.read(read_list, **kwargs))
+        r = ReachReader(n_proc=n_proc, base_dir=base_dir)
+        output_dict.update(r.read(read_list, *args, **kwargs))
         logger.info("Read %d text content entries with reach."
                     % len(output_dict))
     return output_dict
@@ -361,8 +362,6 @@ def make_statements():
 
 
 if __name__ == "__main__":
-    base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
-
     # Process the arguments.
     id_lines = []
     if args.id_file is not None:
