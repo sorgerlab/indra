@@ -135,7 +135,7 @@ def build_set(n, parent_dir):
         k for k, v in double_doi_info.items()
         if v['doi'] is not None and len(v['doi']) > 100
         ]
-    examples.append((random.choice(pmids_w_double_doi), '','',))
+    examples.append((random.choice(pmids_w_double_doi), '', '',))
 
     # Create the test medline file.
     print("Creating medline test file...")
@@ -186,7 +186,11 @@ def build_set(n, parent_dir):
         with open(path, 'wb') as f:
             f.write(f_str)
     with tarfile.open(art_dirname + '.tar.gz', 'w:gz') as tar:
-        tar.add(art_dirname)
+        for dirname in os.listdir(art_dirname):
+            tar.add(
+                os.path.join(art_dirname, dirname),
+                arcname=dirname
+                )
     shutil.rmtree(art_dirname)
 
     # Create deleted pmids file (just make an empty file,for now.
@@ -229,7 +233,11 @@ def build_set(n, parent_dir):
         os.rename(d['File'], test_fname)
     for dirname in dirnames:
         with tarfile.open(dirname + '.tar.gz', 'w:gz') as tar:
-            tar.add(dirname)
+            for sub_dirname in os.listdir(dirname):
+                tar.add(
+                    os.path.join(dirname, sub_dirname),
+                    arcname=sub_dirname
+                    )
         shutil.rmtree(dirname)
 
     return examples
