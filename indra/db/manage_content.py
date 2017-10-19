@@ -333,8 +333,8 @@ class Medline(NihManager):
             # Make sure it's not an empty or whitespace-only string
             if abstract and abstract.strip():
                 abstract_gz = zip_string(abstract)
-                text_content_info[pmid] = \
-                    (self.my_source, 'text', texttypes.ABSTRACT, abstract_gz)
+                text_content_info[pmid] = (self.my_source, formats.TEXT,
+                                           texttypes.ABSTRACT, abstract_gz)
 
         self.copy_into_db(
             db,
