@@ -65,11 +65,12 @@ def assert_contents_equal(list1, list2, msg=None):
     assert res, err_msg
 
 
-def get_db():
+def get_db(clear=True):
     "Set up the database for testing."
     db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
     db.grab_session()
-    db._clear()
+    if clear:
+        db._clear()
     return db
 
 
@@ -215,7 +216,7 @@ if IS_PY3 and not path.exists(TEST_FTP):
 
 
 @needs_py3
-def test_full_local_upload():
+def test_full_upload():
     "Test whether we can perform a targeted upload to a test db."
     # This uses a specially curated sample directory designed to access most
     # code paths that the real system might experience, but on a much smaller
@@ -238,6 +239,13 @@ def test_full_local_upload():
         db.TextContent.source == Manuscripts.my_source
         )
     assert len(tc_list), "No manuscripts uploaded."
+    tc_list = db.select_all('text_content')
+    set_exp = {('manuscripts', 'xml', 'fulltext'),
+               ('pmc_oa', 'xml', 'fulltext'),
+               ('pubmed', 'text', 'abstract')}
+    set_got = set([(tc.source, tc.format, tc.text_type) for tc in tc_list])
+    assert set_exp == set_got,\
+        "Expected %s, got %s for content layout." % (set_exp, set_got)
 
 
 @needs_py3
