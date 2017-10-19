@@ -22,7 +22,6 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
-from indra.tools.reading.read_pmids_aws import force_fulltext
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -107,7 +106,7 @@ if __name__ == '__main__':
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
 
-from indra.util import unzip_string
+from indra.util import unzip_string, zip_string
 from indra.db import get_primary_db, formats, texttypes
 from indra.tools.reading.read_pmids import get_mem_total
 from indra.sources import reach
@@ -201,6 +200,27 @@ def get_content(id_str_list, batch_size=1000, db=None):
         logger.info("Did not retreive content from database.")
         ret = []
     return ret
+
+
+class ReadingData(object):
+    """Object to contain the data produced by a reading."""
+
+    def __init__(self, reader, reader_version, output_format, content):
+        self.reader = reader
+        self.reader_version = reader_version
+        self.format = output_format
+        self.content = content
+        return
+
+    def zip_content(self):
+        """Compress the content, returning bytes."""
+        if self.format == formats.JSON:
+            ret = zip_string(json.dumps(self.content))
+        elif self.format == formats.TEXT:
+            ret = zip_string(self.content)
+        else:
+            raise Exception('Do not know how to zip format %s.' % self.format)
+        return ret
 
 
 class ReachError(Exception):
@@ -315,7 +335,12 @@ class ReachReader(object):
         tc_id_fname_dict = {}
         for prefix in json_prefixes:
             base_prefix = path.basename(prefix)
-            tc_id_fname_dict[base_prefix] = reach.join_json_files(prefix)
+            tc_id_fname_dict[base_prefix] = ReadingData(
+                self.name,
+                self.version,
+                formats.JSON,
+                reach.join_json_files(prefix)
+                )
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict
 
