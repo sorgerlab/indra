@@ -22,6 +22,7 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
+from indra.tools.reading.read_pmids_aws import force_fulltext
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -406,6 +407,11 @@ def read_db(id_str_list, readers, **kwargs):
     return outputs
 
 
+def read_files(file_str_list, readers, **kwargs):
+    """Read the files provided by the list of files."""
+    return read_content(file_str_list, readers, **kwargs)
+
+
 def post_reading_output(output_dict, db=None):
     """Put the reading output on the database."""
     if db is None:
@@ -443,16 +449,17 @@ if __name__ == "__main__":
             logger.debug('%d are %s' % (
                 len([f for f in file_lines if f.endswith(ftype)]), ftype
                 ))
+        mode = 'files'
     else:
         raise Exception('No inputs provided.')
 
     # Select only a sample of the lines, if sample is chosen.
-    if args.sample is not None:
+    if args.sample is not None and mode == 'ids':
         id_lines = random.sample(id_lines, args.sample)
         # TODO: Figure out how to handle this in conjunction nwith a file list.
 
     # If a range is specified, only use that range.
-    if args.in_range is not None:
+    if args.in_range is not None and mode == 'ids':
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
         id_lines = id_lines[start_idx:end_idx]
 
@@ -461,17 +468,23 @@ if __name__ == "__main__":
         outputs = read_db(id_lines, args.readers,
                           verbose=args.verbose and not args.quiet,
                           force_read=True, force_fulltext=False,
-                          n_proc=args.num_procs)
+                          batch=args.batch, n_proc=args.num_procs)
+    else:
+        outputs = read_files(file_lines, args.readers,
+                             verbose=args.verbose and not args.quiet,
+                             n_proc=args.num_procs)
 
     if args.pickle:
-        with open(os.getcwd() + '_outputs.pkl', 'wb') as f:
+        with open(os.getcwd() + 'reading_outputs.pkl', 'wb') as f:
             pickle.dump(outputs, f)
 
-    # Upload any new reading outputs =========================================
-    if not args.no_reading_upload:
+    if not args.no_reading_upload and mode == 'ids':
         post_reading_output(outputs)
 
     # Convert the outputs to statements ======================================
     stmts = make_statements(outputs)
-    if not args._no_statement_upload:
+    if not args._no_statement_upload and mode == 'ids':
         upload_statements(stmts)
+    if args.pickle:
+        with open(os.getcwd() + 'statements.pkl', 'wb') as f:
+            pickle.dump(stmts, f)
