@@ -22,21 +22,23 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
-import itertools
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
     parser = ArgumentParser(
-        description='A tool to read content from the database.'
+        description='A tool to read and process content from the database.'
         )
     parser.add_argument(
         '-i', '--id_file',
-        help='A file containt a list of ids of the form <id_type>:<id>.'
+        help=('A file containing a list of ids of the form <id_type>:<id>.'
+              'Cannot be used in conjunction with -f/--file_file.')
         )
     parser.add_argument(
         '-f', '--file_file',
         help=('A file containing a list of files to be input into reach. These'
-              'should be nxml or txt files.')
+              'should be nxml or txt files. Cannot be used in conjunction with'
+              '-i/--id_file. For safesed use, files should be given by'
+              'absolute paths.')
         )
     parser.add_argument(
         '-r', '--readers',
@@ -49,6 +51,12 @@ if __name__ == '__main__':
         help='Select the number of content entries to be read in each batch.',
         default=1000,
         type=int
+        )
+    parser.add_argument(
+        '-n', '--num_procs',
+        help='Select the number of processes to use.',
+        type=int,
+        default=1
         )
     parser.add_argument(
         '-s', '--sample',
@@ -72,6 +80,26 @@ if __name__ == '__main__':
     parser.add_argument(
         '-d', '--debug',
         help='Set the logging to debug level.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '-m', '--messy',
+        help='Do not clean up directories created while reading.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '-p', '--pickle',
+        help='Pickle all results and save in .pkl files.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '--no_reading_upload',
+        help='Choose not to upload the reading output to the database.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '--no_statement_upload',
+        help='Choose not to upload the statements to the databse.',
         action='store_true'
         )
     args = parser.parse_args()
@@ -153,9 +181,10 @@ def get_table_string(q, db):
     return ret_str
 
 
-def get_content(id_str_list, batch_size=1000):
+def get_content(id_str_list, batch_size=1000, db=None):
     """Load all the content that will be read."""
-    db = get_primary_db()
+    if db is None:
+        db = get_primary_db()
     logger.debug("Got db handle.")
     clauses = get_clauses(id_str_list, db.TextRef)
     logger.debug("Generated %d clauses." % len(clauses))
@@ -340,7 +369,7 @@ class ReachReader(object):
         return ret
 
 
-def read(read_list, readers, *args, **kwargs):
+def read_content(read_list, readers, *args, **kwargs):
     """Perform the reading, returning dicts of jsons."""
     base_dir = _get_dir('run_%s' % ('_and_'.join(readers)))
     output_dict = {}
@@ -353,55 +382,96 @@ def read(read_list, readers, *args, **kwargs):
     return output_dict
 
 
-def post_reading_output():
+def read_db(id_str_list, readers, **kwargs):
+    """Read contents retrieved from the database."""
+    batch_size = kwargs.pop('batch', 1000)
+    logger.debug("Getting iterator.")
+    input_iter = get_content(id_str_list, batch_size)
+    logger.debug("Begginning to iterate.")
+    batch_list = []
+    outputs = {}
+    for i, text_content in enumerate(input_iter):
+        # The get_content function returns an iterator which yields results in
+        # batches, so as not to overwhelm RAM. We need to read in batches for
+        # much the same reaason.
+        batch_list.append(text_content)
+        if (i+1) % args.batch is 0:
+            outputs.update(read_content(batch_list, readers, **kwargs))
+            batch_list = []
+    logger.debug("Finished iteration.")
+    # Pick up any stragglers.
+    if len(batch_list) > 0:
+        logger.debug("Reading remaining files.")
+        outputs.update(read_content(batch_list, readers, **kwargs))
+    return outputs
+
+
+def post_reading_output(output_dict, db=None):
     """Put the reading output on the database."""
+    if db is None:
+        db = get_primary_db()
+
+    for tcid, json_dict in output_dict.items():
+        pass
 
 
 def make_statements():
     """Convert the reader output into statements."""
 
 
+def upload_statements(db=None):
+    """Upload the statements to the database."""
+    if db is None:
+        db = get_primary_db()
+
+
 if __name__ == "__main__":
-    # Process the arguments.
-    id_lines = []
+    # Process the arguments. =================================================
+    assert not (args.id_file and args.file_file), \
+        "Cannot process both files and ids."
+    # Get the ids.
     if args.id_file is not None:
         with open(args.id_file, 'r') as f:
             id_lines = f.readlines()
-
-    file_lines = []
-    if args.file_file is not None:
+        logger.info("Found %d ids to read." % len(id_lines))
+        mode = 'ids'
+    elif args.file_file is not None:
         with open(args.file_file, 'r') as f:
             file_lines = f.readlines()
-    assert id_lines or file_lines, 'No inputs provided.'
+        logger.info("Found %d files to read." % len(file_lines))
+        for ftype in ['nxml', 'txt']:
+            logger.debug('%d are %s' % (
+                len([f for f in file_lines if f.endswith(ftype)]), ftype
+                ))
+    else:
+        raise Exception('No inputs provided.')
 
+    # Select only a sample of the lines, if sample is chosen.
     if args.sample is not None:
         id_lines = random.sample(id_lines, args.sample)
+        # TODO: Figure out how to handle this in conjunction nwith a file list.
 
+    # If a range is specified, only use that range.
     if args.in_range is not None:
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
         id_lines = id_lines[start_idx:end_idx]
 
-    # Start reading in batches.
-    batch_list = []
-    outputs = {}
-    read_args = [args.readers]
-    read_kwargs = dict(
-        verbose=args.verbose and not args.quiet,
-        force_read=True,
-        force_fulltext=False,
-        n_proc=1
-        )
-    logger.debug("Getting iterator.")
-    input_iter = itertools.chain(file_lines, get_content(id_lines, args.batch))
-    logger.debug("Begginning to iterate.")
-    for i, text_content in enumerate(input_iter):
-        batch_list.append(text_content)
-        if (i+1) % args.batch is 0:
-            outputs.update(read(batch_list, *read_args, **read_kwargs))
-            batch_list = []
-    logger.debug("Finished iteration.")
-    if len(batch_list) > 0:
-        logger.debug("Reading remaining files.")
-        outputs.update(read(batch_list, *read_args, **read_kwargs))
-    with open(os.getcwd() + '_outputs.pkl', 'wb') as f:
-        pickle.dump(outputs, f)
+    # Read everything ========================================================
+    if len(id_lines):
+        outputs = read_db(id_lines, args.readers,
+                          verbose=args.verbose and not args.quiet,
+                          force_read=True, force_fulltext=False,
+                          n_proc=args.num_procs)
+
+    if args.pickle:
+        with open(os.getcwd() + '_outputs.pkl', 'wb') as f:
+            pickle.dump(outputs, f)
+
+    # Upload any new reading outputs =========================================
+    if not args.no_reading_upload:
+        post_reading_output(outputs)
+
+    # Convert the outputs to statements ======================================
+    stmts = make_statements(outputs)
+    if not args._no_statement_upload:
+        upload_statements(stmts)
