@@ -222,6 +222,11 @@ class ReadingData(object):
             raise Exception('Do not know how to zip format %s.' % self.format)
         return ret
 
+    def make_tuple(self):
+        """Make the tuple expected by the database."""
+        return (self.reader, self.reader_version, self.format,
+                self.zip_content())
+
 
 class ReachError(Exception):
     pass
@@ -442,8 +447,13 @@ def post_reading_output(output_dict, db=None):
     if db is None:
         db = get_primary_db()
 
-    for tcid, json_dict in output_dict.items():
-        pass
+    upload_list = []
+    for tcid, reading_data in output_dict.items():
+        upload_list.append((tcid,) + reading_data.make_tuple())
+
+    db.copy(db.Readings, upload_list,
+            ('text_content_id', 'reader', 'reader_version', 'format', 'bytes'))
+    return
 
 
 def make_statements():
