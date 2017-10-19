@@ -14,11 +14,15 @@ import glob
 import json
 import random
 import zlib
+import pickle
+import shutil
 from argparse import ArgumentParser
 from docutils.io import InputError
 from datetime import datetime
 from math import log10, floor
-import pickle
+from os.path import join as pjoin
+from os import path
+import itertools
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -26,8 +30,13 @@ if __name__ == '__main__':
         description='A tool to read content from the database.'
         )
     parser.add_argument(
-        'id_file',
+        '-i', '--id_file',
         help='A file containt a list of ids of the form <id_type>:<id>.'
+        )
+    parser.add_argument(
+        '-f', '--file_file',
+        help=('A file containing a list of files to be input into reach. These'
+              'should be nxml or txt files.')
         )
     parser.add_argument(
         '-r', '--readers',
@@ -47,7 +56,7 @@ if __name__ == '__main__':
         type=int
         )
     parser.add_argument(
-        '-i', '--in_range',
+        '-I', '--in_range',
         help='A range of pmids to be read in the form <start>:<end>.'
         )
     parser.add_argument(
@@ -76,14 +85,14 @@ from indra.sources import reach
 
 
 def _get_dir(*args):
-    dirname = os.path.join(*args)
-    if os.path.isabs(dirname):
+    dirname = pjoin(*args)
+    if path.isabs(dirname):
         dirpath = dirname
-    elif os.path.exists(dirname):
-        dirpath = os.path.abspath(dirname)
+    elif path.exists(dirname):
+        dirpath = path.abspath(dirname)
     else:
-        dirpath = os.path.join(os.path.dirname(__file__), dirname)
-    if not os.path.exists(dirpath):
+        dirpath = pjoin(path.dirname(__file__), dirname)
+    if not path.exists(dirpath):
         os.mkdir(dirpath)
     return dirpath
 
@@ -147,14 +156,21 @@ def get_table_string(q, db):
 def get_content(id_str_list, batch_size=1000):
     """Load all the content that will be read."""
     db = get_primary_db()
+    logger.debug("Got db handle.")
     clauses = get_clauses(id_str_list, db.TextRef)
-    q = db.filter_query(
-        db.TextContent,
-        db.TextContent.text_ref_id == db.TextRef.id,
-        *clauses
-        )
-    logger.info(get_table_string(q, db))
-    return q.yield_per(batch_size)
+    logger.debug("Generated %d clauses." % len(clauses))
+    if len(clauses):
+        q = db.filter_query(
+            db.TextContent,
+            db.TextContent.text_ref_id == db.TextRef.id,
+            *clauses
+            )
+        logger.info(get_table_string(q, db))
+        ret = q.yield_per(batch_size)
+    else:
+        logger.info("Did not retreive content from database.")
+        ret = []
+    return ret
 
 
 class ReachError(Exception):
@@ -166,14 +182,10 @@ class ReachReader(object):
     MEM_BUFFER = 2  # GB
     name = 'REACH'
 
-    def __init__(self, base_dir, n_proc, force_read, force_fulltext):
-        init_msg = 'Running %s with:\n' % self.name
-        init_msg += '\n'.join([
-            'n_proc=%s' % n_proc,
-            'force_read=%s' % force_read,
-            'force_fulltext=%s' % force_fulltext
-            ])
-        logger.info(init_msg)
+    def __init__(self, base_dir=None, n_proc=1):
+        if base_dir is None:
+            base_dir = 'run_reach'
+        self.n_proc = n_proc
         self.base_dir = _get_dir(base_dir)
         self.exec_path, self.version = self._check_reach_env()
         tmp_dir = tempfile.mkdtemp(
@@ -181,12 +193,12 @@ class ReachReader(object):
             dir=base_dir
             )
         self.tmp_dir = tmp_dir
-        conf_fmt_fname = os.path.join(os.path.dirname(__file__),
-                                      'reach_conf_fmt.txt')
-        self.conf_file_path = os.path.join(self.tmp_dir, 'indra.conf')
+        conf_fmt_fname = pjoin(path.dirname(__file__),
+                               'reach_conf_fmt.txt')
+        self.conf_file_path = pjoin(self.tmp_dir, 'indra.conf')
         with open(conf_fmt_fname, 'r') as fmt_file:
             fmt = fmt_file.read()
-            loglevel = 'INFO' # 'DEBUG' if logger.level == logging.DEBUG else 'INFO'
+            loglevel = 'INFO'  # 'DEBUG' if logger.level == logging.DEBUG else 'INFO'
             with open(self.conf_file_path, 'w') as f:
                 f.write(
                     fmt.format(tmp_dir=tmp_dir, num_cores=n_proc,
@@ -200,7 +212,7 @@ class ReachReader(object):
         """Check that the environment supports runnig reach."""
         # Get the path to the reach directory.
         path_to_reach = os.environ.get('REACHPATH', None)
-        if path_to_reach is None or not os.path.exists(path_to_reach):
+        if path_to_reach is None or not path.exists(path_to_reach):
             raise ReachError(
                 'Reach path unset or invalid. Check REACHPATH environment var.'
                 )
@@ -210,7 +222,7 @@ class ReachReader(object):
         for fname in os.listdir(path_to_reach):
             m = patt.match(fname)
             if m is not None:
-                reach_ex = os.path.join(path_to_reach, fname)
+                reach_ex = pjoin(path_to_reach, fname)
                 break
         else:
             raise ReachError("Could not find reach jar in reach dir.")
@@ -229,7 +241,7 @@ class ReachReader(object):
     def write_content(self, text_content):
         def write_content_file(ext):
             fname = '%s.%s' % (text_content.id, ext)
-            with open(os.path.join(self.input_dir, fname), 'wb') as f:
+            with open(pjoin(self.input_dir, fname), 'wb') as f:
                 f.write(
                     zlib.decompress(
                         text_content.content, 16+zlib.MAX_WBITS
@@ -245,27 +257,34 @@ class ReachReader(object):
         else:
             raise ReachError("Unrecognized format %s." % text_content.format)
 
-    def prep_input(self, tc_list):
+    def prep_input(self, read_list):
         """Apply the readers to the content."""
         logger.info("Prepping input.")
-        for text_content in tc_list:
-            self.write_content(text_content)
+        for text_content in read_list:
+            if isinstance(text_content, str):
+                fname = text_content.strip()
+                shutil.copy(
+                    fname,
+                    pjoin(self.input_dir, path.basename(fname))
+                    )
+            else:
+                self.write_content(text_content)
         return
 
     def get_output(self):
         """Get the output of a reading job as a list of filenames."""
         logger.info("Getting outputs.")
         # Get the set of prefixes (each will correspond to three json files.)
-        json_files = glob.glob(os.path.join(self.output_dir, '*.json'))
+        json_files = glob.glob(pjoin(self.output_dir, '*.json'))
         json_prefixes = set()
         for json_file in json_files:
-            prefix = os.path.basename(json_file).split('.')[0]
-            json_prefixes.add(os.path.join(self.output_dir, prefix))
+            prefix = path.basename(json_file).split('.')[0]
+            json_prefixes.add(pjoin(self.output_dir, prefix))
 
         # Join each set of json files and store the json dict.
         tc_id_fname_dict = {}
         for prefix in json_prefixes:
-            base_prefix = os.path.basename(prefix)
+            base_prefix = path.basename(prefix)
             tc_id_fname_dict[base_prefix] = reach.join_json_files(prefix)
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict
@@ -277,11 +296,16 @@ class ReachReader(object):
         reach_proc = reach.process_json_str(json.dumps(json_dict))
         return reach_proc.statements
 
-    def read(self, tc_list, verbose=False):
-        """Read the content.
-
-        This should take in a list of text_content objects, and return nothing.
-        """
+    def read(self, read_list, verbose=False, force_read=True,
+             force_fulltext=False):
+        """Read the content."""
+        init_msg = 'Running %s with:\n' % self.name
+        init_msg += '\n'.join([
+            'n_proc=%s' % self.n_proc,
+            'force_read=%s' % force_read,
+            'force_fulltext=%s' % force_fulltext
+            ])
+        logger.info(init_msg)
         ret = None
         mem_tot = get_mem_total()
         if mem_tot is not None and mem_tot <= self.REACH_MEM + self.MEM_BUFFER:
@@ -290,9 +314,9 @@ class ReachReader(object):
                 self.REACH_MEM + self.MEM_BUFFER
                 )
             logger.info("REACH not run.")
-        elif len(tc_list) > 0:
+        elif len(read_list) > 0:
             # Prep the content
-            self.prep_input(tc_list)
+            self.prep_input(read_list)
             # Run REACH!
             logger.info("Beginning reach.")
             args = [
@@ -316,13 +340,13 @@ class ReachReader(object):
         return ret
 
 
-def read(tc_list, readers, *args, **kwargs):
+def read(read_list, readers, *args, **kwargs):
     """Perform the reading, returning dicts of jsons."""
     output_dict = {}
     if 'reach' in readers:
-        verbose = kwargs.pop('verbose') if 'verbose' in kwargs.keys() else False
-        r = ReachReader(*args, **kwargs)
-        output_dict.update(r.read(tc_list, verbose=verbose))
+        n_proc = kwargs.pop('n_proc', 1)
+        r = ReachReader(n_proc=n_proc)
+        output_dict.update(r.read(read_list, **kwargs))
         logger.info("Read %d text content entries with reach."
                     % len(output_dict))
     return output_dict
@@ -340,27 +364,45 @@ if __name__ == "__main__":
     base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
 
     # Process the arguments.
-    with open(args.id_file, 'r') as f:
-        lines = f.readlines()
+    id_lines = []
+    if args.id_file is not None:
+        with open(args.id_file, 'r') as f:
+            id_lines = f.readlines()
+
+    file_lines = []
+    if args.file_file is not None:
+        with open(args.file_file, 'r') as f:
+            file_lines = f.readlines()
+    assert id_lines or file_lines, 'No inputs provided.'
 
     if args.sample is not None:
-        lines = random.sample(lines, args.sample)
+        id_lines = random.sample(id_lines, args.sample)
 
     if args.in_range is not None:
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
-        lines = lines[start_idx:end_idx]
+        id_lines = id_lines[start_idx:end_idx]
 
     # Start reading in batches.
     batch_list = []
     outputs = {}
-    read_args = [args.readers, base_dir, 1, True, False]
-    read_kwargs = dict(verbose=args.verbose and not args.quiet)
-    for i, text_content in enumerate(get_content(lines, args.batch)):
+    read_args = [args.readers]
+    read_kwargs = dict(
+        verbose=args.verbose and not args.quiet,
+        force_read=True,
+        force_fulltext=False,
+        n_proc=1
+        )
+    logger.debug("Getting iterator.")
+    input_iter = itertools.chain(file_lines, get_content(id_lines, args.batch))
+    logger.debug("Begginning to iterate.")
+    for i, text_content in enumerate(input_iter):
         batch_list.append(text_content)
         if (i+1) % args.batch is 0:
             outputs.update(read(batch_list, *read_args, **read_kwargs))
             batch_list = []
+    logger.debug("Finished iteration.")
     if len(batch_list) > 0:
+        logger.debug("Reading remaining files.")
         outputs.update(read(batch_list, *read_args, **read_kwargs))
-    with open(os.path.basename(base_dir) + '_outputs.pkl', 'wb') as f:
+    with open(path.basename(base_dir) + '_outputs.pkl', 'wb') as f:
         pickle.dump(outputs, f)
