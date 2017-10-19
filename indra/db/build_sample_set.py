@@ -1,31 +1,8 @@
+"""This is a tool which allows you to create a small sample of the NIH FTP
+services on your local machine to test your database managers.
+"""
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
-if __name__ == '__main__':
-    # NOTE: PEP8 will complain about this, however having the args parsed up
-    # here prevents a long wait just to fined out you entered a command wrong.
-    from argparse import ArgumentParser
-    parser = ArgumentParser(
-        description="This tool allows you to create a small sample of the NIH "
-                    "FTP service on your local machine for testing your "
-                    "database managers."
-        )
-    parser.add_argument(
-        dest='n',
-        help=('Select the number of examples of each case to produce. '
-              'A larger number will generally take longer, but will also '
-              'help protect you from being attacked by special cases.')
-        )
-    parser.add_argument(
-        dest='parent_dir',
-        help=('Select the name/path of the top level directory containing '
-              'your sample.')
-        )
-    args = parser.parse_args()
-
-from io import BytesIO
-from indra.literature import pubmed_client as pub
-from indra.db.manage_content import PmcOA, Medline, Manuscripts
 
 import xml.etree.ElementTree as ET
 import tarfile
@@ -35,13 +12,37 @@ import random
 import os
 import re
 import shutil
+from io import BytesIO
+
+if __name__ == '__main__':
+    # NOTE: PEP8 will complain about this, however having the args parsed up
+    # here prevents a long wait just to fined out you entered a command wrong.
+    from argparse import ArgumentParser
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        dest='n',
+        help=('Select the number of examples of each case to produce. '
+              'A larger number will generally take longer, but will also '
+              'help protect you from being attacked by special cases.'),
+        type=int,
+        default=2
+        )
+    parser.add_argument(
+        dest='parent_dir',
+        help=('Select the name/path of the top level directory containing '
+              'your sample.')
+        )
+    args = parser.parse_args()
+
+from indra.literature import pubmed_client as pub
+from indra.db.manage_content import PmcOA, Medline, Manuscripts
 
 
 def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
     if case == (1, 0, 0):
         pmid = random.choice(med_pmid_list)
         pmc_pmid_list = [d['PMID'] for d in pmc_dicts if d['PMID'] != '']
-        # pmc has only a tiny fraction of all pmid's, so this will be very fast.
+        # pmc has only a tiny fraction of all pmid's, so this will be very fast
         while pmid in pmc_pmid_list:
             pmid = random.choice(med_pmid_list)
         ret = (pmid, '', '')
@@ -104,7 +105,7 @@ def build_set(n, parent_dir):
     print("Getting medline lists...")
     med_pmid_list = []
     med = Medline()
-    for i in range(1,7):
+    for i in range(1, 7):
         buf = BytesIO()
         med.ftp.ret_file("../MuId-PmId-%d.zip" % i, buf)
         zf = zipfile.ZipFile(buf)
@@ -141,7 +142,7 @@ def build_set(n, parent_dir):
     pmid_list = [pmid for pmid, _, _ in examples if pmid != '']
     tree = None
     for pmid in pmid_list:
-        params = {'db':'pubmed', 'retmode':'xml','id':pmid}
+        params = {'db': 'pubmed', 'retmode': 'xml', 'id': pmid}
         if tree is None:
             tree = pub.send_request(pub.pubmed_fetch, params)
         else:
@@ -151,7 +152,7 @@ def build_set(n, parent_dir):
         f_bts = b''
         f_bts += b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
         f_bts += ET.tostring(tree)
-        f_path = get_path('pubmed/baseline/medline17nTEST.xml.gz') 
+        f_path = get_path('pubmed/baseline/medline17nTEST.xml.gz')
         with open(f_path, 'wb') as gzf:
             gzf.write(gzip.compress(f_bts))
 
@@ -170,9 +171,13 @@ def build_set(n, parent_dir):
             mem = [mem for mem in mems if mem.name.endswith('.nxml')][0]
             f_str = tar.extractfile(mem).read()
         fname = d['Accession ID'] + '.nxml'
-        re_ret = re.findall('<journal-title>(.*?)</journal-title>', f_str.decode('utf8'))
+        re_ret = re.findall('<journal-title>(.*?)</journal-title>',
+                            f_str.decode('utf8'))
         if len(re_ret):
-            sub_dir = os.path.join(art_dirname, re_ret[0].replace(' ', '_').replace('&', ''))
+            sub_dir = os.path.join(
+                art_dirname,
+                re_ret[0].replace(' ', '_').replace('&', '')
+                )
         else:
             sub_dir = os.path.join(art_dirname, 'unknown')
         if not os.path.exists(sub_dir):
