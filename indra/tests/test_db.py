@@ -9,6 +9,7 @@ from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db import DatabaseManager, texttypes, get_defaults
+from indra.tools.reading.read_pmids_db import read
 IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
@@ -374,3 +375,16 @@ def test_ftp_service():
                 assert ret is not None,\
                     "Failed to load %s from %s." % (fname, Child.__name__)
         # TODO: test the download.
+
+
+#==============================================================================
+# The following tests the full pipeline.
+#==============================================================================
+def test_pipeline():
+    "Test the full pipeline, including reading and posting statements."
+    test_full_upload()
+    db = get_db(clear=False)
+    tc_list = db.select_all(db.TextContent)
+    res = read(tc_list, ['reach'], verbose=True, force_read=True,
+               force_fulltext=False)
+    assert len(res) == len(tc_list), "Not all text content successfully read."
