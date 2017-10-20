@@ -358,6 +358,15 @@ class SBGNAssembler(object):
         for site, value in pattern.site_conditions.items():
             if value is None or isinstance(value, int):
                 continue
+            # Make some common abbreviations
+            if site == 'phospho':
+                site = 'p'
+            elif site == 'activity':
+                site = 'act'
+                if value == 'active':
+                    value = 'a'
+                elif value == 'inactive':
+                    value = 'i'
             state = emaker.state(variable=site, value=value)
             state_glyph = \
                 emaker.glyph(state, emaker.bbox(**self.entity_state_style),
