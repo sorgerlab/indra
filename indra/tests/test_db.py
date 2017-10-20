@@ -38,7 +38,7 @@ for k in key_list:
     db_name = m.groups()[1]
     try:
         db = DatabaseManager(v, sqltype=sqltype)
-        db._clear()
+        db._clear(force=True)
     except Exception as e:
         print("Tried to use %s, but failed due to:\n%s" % (k, e))
         continue  # Clearly this test table won't work.
@@ -72,7 +72,7 @@ def get_db(clear=True):
     db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
     db.grab_session()
     if clear:
-        db._clear()
+        db._clear(force=True)
     return db
 
 
@@ -124,7 +124,7 @@ def test_uniqueness_text_ref_doi_pmid():
     except IntegrityError:
         return  # PASS
     finally:
-        db._clear()
+        db._clear(force=True)
     assert False, "Uniqueness was not enforced."
 
 

@@ -261,31 +261,55 @@ class DatabaseManager(object):
             print("Failed to execute rollback of database upon deletion.")
             raise e
 
-    def create_tables(self):
+    def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
-        self.Base.metadata.create_all(self.engine)
+        if tbl_list is None:
+            self.Base.metadata.create_all(self.engine)
+        else:
+            for tbl in tbl_list:
+                if isinstance(tbl, str):
+                    tbl = self.tables[tbl]
+                tbl.__table__.create(bind=self.engine)
+        return
 
-    def drop_tables(self):
-        "Drop all the tables for INDRA database"
-        if self.label == 'primary':
-            msg = "Do you really want to clear the primary database? [y/N]: "
-            try:
-                resp = raw_input(msg)
-            except NameError:
-                resp = input(msg)
-            if resp != 'y' and resp != 'yes':
-                logger.info('Aborting clearing of database.')
-                return
-        self.Base.metadata.drop_all(self.engine)
+    def drop_tables(self, tbl_list=None, force=False):
+        """Drop the tables for INDRA database given in tbl_list.
 
-    def _clear(self):
-        "Brutal clearing of all tables."
+        If tbl_list is None, all tables will be dropped. Note that if `force`
+        is False, a warning prompt will be raised to asking for confirmation,
+        as this action will remove all data from that table.
+        """
+        if not force:
+            if tbl_list is None:
+                msg = "Do you really want to clear the primary database? [y/N]: "
+                try:
+                    resp = raw_input(msg)
+                except NameError:
+                    resp = input(msg)
+                if resp != 'y' and resp != 'yes':
+                    logger.info('Aborting clearing of database.')
+                    return
+            else:
+                msg = "You are going to clear the following tables:\n"
+                msg += str(tbl_list) + '\n'
+                msg += "Do you really want to clear these tables? [y/N]: "
+        if tbl_list is None:
+            self.Base.metadata.drop_all(self.engine)
+        else:
+            for tbl in tbl_list:
+                if isinstance(tbl, str):
+                    tbl = self.tables[tbl]
+                tbl.__table__.drop()
+        return
+
+    def _clear(self, tbl_list=None, force=False):
+        "Brutal clearing of all tables in tbl_list, or all tables."
         # This is intended for testing purposes, not general use.
         # Use with care.
         self.grab_session()
         self.session.rollback()
-        self.drop_tables()
-        self.create_tables()
+        self.drop_tables(tbl_list, force=force)
+        self.create_tables(tbl_list)
         return
 
     def grab_session(self):

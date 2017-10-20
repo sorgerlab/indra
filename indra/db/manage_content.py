@@ -841,8 +841,8 @@ if __name__ == '__main__':
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
         if not args.continuing:
-            logger.info("Clearing database.")
-            db._clear()
+            logger.info("Clearing TextContent and TextRef tables.")
+            db._clear([db.TextContent, db.TextRef])
         Medline().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
