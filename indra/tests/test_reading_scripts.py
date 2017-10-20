@@ -7,7 +7,7 @@ from nose import SkipTest
 
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
-from indra.tools.reading.read_pmids_db import _convert_id_entry, get_content,\
+from indra.tools.reading.read_db import _convert_id_entry, get_content,\
     get_clauses
 
 from indra.tests.test_db import get_db as get_test_db
@@ -80,7 +80,7 @@ def test_reach_one_core():
     stmts = _call_reader('reach', 1)
     _check_result(stmts)
 
-'''
+
 def test_reach_two_core():
     if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
@@ -88,7 +88,7 @@ def test_reach_two_core():
         raise SkipTest("Not enough processes.")
     stmts = _call_reader('reach', 2)
     _check_result(stmts)
-'''
+
 
 def test_sparser_one_core():
     stmts = _call_reader('sparser', 1)
