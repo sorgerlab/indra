@@ -280,26 +280,32 @@ class DatabaseManager(object):
         as this action will remove all data from that table.
         """
         if not force:
+            # Build the message
             if tbl_list is None:
                 msg = "Do you really want to clear the primary database? [y/N]: "
-                try:
-                    resp = raw_input(msg)
-                except NameError:
-                    resp = input(msg)
-                if resp != 'y' and resp != 'yes':
-                    logger.info('Aborting clearing of database.')
-                    return
             else:
                 msg = "You are going to clear the following tables:\n"
                 msg += str(tbl_list) + '\n'
                 msg += "Do you really want to clear these tables? [y/N]: "
+            # Check to make sure.
+            try:
+                resp = raw_input(msg)
+            except NameError:
+                resp = input(msg)
+            if resp != 'y' and resp != 'yes':
+                logger.info('Aborting clearing of database.')
+                return
         if tbl_list is None:
+            logger.info("Removing all tables...")
             self.Base.metadata.drop_all(self.engine)
+            logger.debug("All tables removed.")
         else:
             for tbl in tbl_list:
                 if isinstance(tbl, str):
                     tbl = self.tables[tbl]
+                logger.info("Removing %s..." % tbl.__tablename__)
                 tbl.__table__.drop(self.engine)
+                logger.debug("Table removed.")
         return
 
     def _clear(self, tbl_list=None, force=False):
@@ -307,7 +313,9 @@ class DatabaseManager(object):
         # This is intended for testing purposes, not general use.
         # Use with care.
         self.grab_session()
+        logger.debug("Rolling back before clear...")
         self.session.rollback()
+        logger.debug("Rolled back.")
         self.drop_tables(tbl_list, force=force)
         self.create_tables(tbl_list)
         return

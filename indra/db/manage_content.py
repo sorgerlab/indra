@@ -61,6 +61,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
+        from indra.db import logger as db_logger
+        db_logger.setLevel(logging.DEBUG)
+
     if not args.continuing and args.task == 'upload':
         print("#"*63)
         print(
@@ -842,7 +845,7 @@ if __name__ == '__main__':
     if args.task == 'upload':
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
-            db._clear([db.TextContent, db.TextRef, db.SourceFiles])
+            db._clear([db.TextContent, db.TextRef, db.SourceFile])
         Medline().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
