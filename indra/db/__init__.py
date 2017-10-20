@@ -299,7 +299,7 @@ class DatabaseManager(object):
             for tbl in tbl_list:
                 if isinstance(tbl, str):
                     tbl = self.tables[tbl]
-                tbl.__table__.drop()
+                tbl.__table__.drop(self.engine)
         return
 
     def _clear(self, tbl_list=None, force=False):
