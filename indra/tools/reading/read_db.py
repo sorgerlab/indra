@@ -22,6 +22,7 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
+from indra.tools.reading.read_pmids_aws import force_fulltext
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -100,6 +101,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--no_statement_upload',
         help='Choose not to upload the statements to the databse.',
+        action='store_true'
+        )
+    parser.add_argument(
+        '--force_read',
+        help='Make the reader read all the content. (Not yet implemented.)',
+        action='store_true'
+        )
+    parser.add_argument(
+        '--force_fulltext',
+        help='Make the reader only read full text from the database.',
         action='store_true'
         )
     args = parser.parse_args()
@@ -181,12 +192,14 @@ def get_table_string(q, db):
     return ret_str
 
 
-def get_content(id_str_list, batch_size=1000, db=None):
+def get_content(id_str_list, batch_size=1000, db=None, force_fulltext=False):
     """Load all the content that will be read."""
     if db is None:
         db = get_primary_db()
     logger.debug("Got db handle.")
     clauses = get_clauses(id_str_list, db.TextRef)
+    if force_fulltext:
+        clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
     logger.debug("Generated %d clauses." % len(clauses))
     if len(clauses):
         q = db.filter_query(
@@ -233,6 +246,7 @@ class ReachError(Exception):
 
 
 class ReachReader(object):
+    """This object encodes an interface to the reach reading script."""
     REACH_MEM = 5  # GB
     MEM_BUFFER = 2  # GB
     name = 'REACH'
@@ -349,16 +363,9 @@ class ReachReader(object):
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict
 
-    def convert_output_to_stmts(self, json_dict):
-        """Process the REACH output with INDRA"""
-        # Convert the JSON object into a string first so that a series of
-        # string replacements can happen in the REACH processor
-        reach_proc = reach.process_json_str(json.dumps(json_dict))
-        return reach_proc.statements
-
     def read(self, read_list, verbose=False, force_read=True,
              force_fulltext=False):
-        """Read the content."""
+        """Read the content, returning a dict of ReadingData."""
         init_msg = 'Running %s with:\n' % self.name
         init_msg += '\n'.join([
             'n_proc=%s' % self.n_proc,
@@ -414,10 +421,36 @@ def read_content(read_list, readers, *args, **kwargs):
 
 
 def read_db(id_str_list, readers, **kwargs):
-    """Read contents retrieved from the database."""
+    """Read contents retrieved from the database.
+
+    The content will be retrieved in batchs, given by the `batch` argument.
+    This prevents the system RAM from being overloaded.
+
+    Parameters
+    ----------
+    id_str_list : list of stings
+        A list of id strings, as would retrieved from a file, each of the form
+        '<id type>:<id value>', for example 'pmid:12345'
+    readers : list of strings
+        A list of the readers that will be use, for example ['reach'] if you
+        wanted to use the reach reader.
+    batch : int
+        The number of content entries read for each batch. Default 1000.
+    force_fulltext : bool
+        If True, only get fulltext content from the database. Default False.
+
+    Other keyword arguments are passed to the `read_content` function.
+
+    Returns
+    -------
+    outputs : dict of ReadingData instances
+        The results of the readings with relevant metadata.
+    """
     batch_size = kwargs.pop('batch', 1000)
+    force_fulltext = kwargs.pop('force_fulltext', False)
     logger.debug("Getting iterator.")
-    input_iter = get_content(id_str_list, batch_size)
+    input_iter = get_content(id_str_list, batch_size=batch_size,
+                             force_fulltext=force_fulltext)
     logger.debug("Begginning to iterate.")
     batch_list = []
     outputs = {}
@@ -510,7 +543,8 @@ if __name__ == "__main__":
     if len(id_lines):
         outputs = read_db(id_lines, args.readers,
                           verbose=args.verbose and not args.quiet,
-                          force_read=True, force_fulltext=False,
+                          force_read=args.force_read,
+                          force_fulltext=args.force_fulltext,
                           batch=args.batch, n_proc=args.num_procs)
     else:
         outputs = read_files(file_lines, args.readers,
