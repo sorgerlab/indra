@@ -8,9 +8,10 @@ from nose import SkipTest
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
 from indra.tools.reading.read_db import _convert_id_entry, get_content,\
-    get_clauses
+    get_clauses, post_reading_output, read_content
 
 from indra.tests.test_db import get_db as get_test_db
+from indra.tests.test_db import get_db_with_content
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.
@@ -123,3 +124,22 @@ def test_get_content():
     id_str_list = ['pmid:17399955']
     content = get_content(id_str_list)
     assert len(list(content)) == 1, "Failed to get correct content."
+
+
+def test_reading():
+    "Test that the contents of the database can be read."
+    db = get_db_with_content()
+    tc_list = db.select_all(db.TextContent)
+    res = read_content(tc_list, ['reach'], verbose=True, force_read=True,
+                       force_fulltext=False)
+    assert len(res) == len(tc_list), "Not all text content successfully read."
+
+
+def test_reading_content_insert():
+    "Test the content copying functionality of read_db."
+    db = get_test_db()
+    with open('sample_reach_outputs.pkl') as f:
+        reading_output = pickle.load(f)
+    post_reading_output(reading_output, db=db)
+    r_list = db.select_all(db.Readings)
+    assert len(r_list) == len(reading_output), "Not all reading output posted."

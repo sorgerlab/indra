@@ -9,7 +9,8 @@ from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db import DatabaseManager, texttypes, get_defaults
-from indra.tools.reading.read_db import read_content
+from indra.tools.reading.read_db import read_content, post_reading_output
+import pickle
 IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
@@ -82,6 +83,13 @@ def needs_py3(func):
             raise SkipTest("This tests feautures only supported in Python 3.x")
         return func(*args, **kwargs)
     return test_with_py3_func
+
+
+def get_db_with_content():
+    "Populate the database."
+    db = get_db()
+    Medline(ftp_url=TEST_FTP, local=True).populate(db)
+    return db
 
 
 #==============================================================================
@@ -223,8 +231,7 @@ def test_full_upload():
     # code paths that the real system might experience, but on a much smaller
     # (thus faster) scale. Errors in the ftp service will not be caught by
     # this test.
-    db = get_db()
-    Medline(ftp_url=TEST_FTP, local=True).populate(db)
+    db = get_db_with_content()
     tr_list = db.select_all('text_ref')
     assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
@@ -375,16 +382,3 @@ def test_ftp_service():
                 assert ret is not None,\
                     "Failed to load %s from %s." % (fname, Child.__name__)
         # TODO: test the download.
-
-
-#==============================================================================
-# The following tests the full pipeline.
-#==============================================================================
-def test_reading():
-    "Test that the contents of the database can be read."
-    test_full_upload()
-    db = get_db(clear=False)
-    tc_list = db.select_all(db.TextContent)
-    res = read_content(tc_list, ['reach'], verbose=True, force_read=True,
-                       force_fulltext=False)
-    assert len(res) == len(tc_list), "Not all text content successfully read."
