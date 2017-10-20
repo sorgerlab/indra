@@ -315,7 +315,9 @@ class DatabaseManager(object):
     def grab_session(self):
         "Get an active session with the database."
         if self.session is None or not self.session.is_active:
+            logger.debug('Attempting to get session...')
             DBSession = sessionmaker(bind=self.engine)
+            logger.debug('Got session.')
             self.session = DBSession()
             if self.session is None:
                 raise IndraDatabaseError("Failed to grab session.")
@@ -341,12 +343,16 @@ class DatabaseManager(object):
     def commit(self, err_msg):
         "Commit, and give useful info if there is an exception."
         try:
+            logger.debug('Attempting to commit...')
             self.session.commit()
+            logger.debug('Message committed.')
         except Exception as e:
             if self.session is not None:
+                logger.error('Got exception in commit, rolling back...')
                 self.session.rollback()
-            print(e)
-            print(err_msg)
+                logger.debug('Rolled back.')
+            logger.exception(e)
+            logger.error(err_msg)
             raise
 
     def get_values(self, entry_list, col_names=None, keyed=False):

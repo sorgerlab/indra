@@ -842,7 +842,7 @@ if __name__ == '__main__':
     if args.task == 'upload':
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
-            db._clear([db.TextContent, db.TextRef])
+            db._clear([db.TextContent, db.TextRef, db.SourceFiles])
         Medline().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
