@@ -456,14 +456,22 @@ def post_reading_output(output_dict, db=None):
     return
 
 
-def make_statements():
+def make_statements(output_dict, readers):
     """Convert the reader output into statements."""
+    stmts = {}
+    if 'reach' in readers:
+        # Convert the JSON object into a string first so that a series of
+        # string replacements can happen in the REACH processor
+        reach_proc = reach.process_json_str(json.dumps(output_dict))
+        stmts['reach'] = reach_proc.statements
+    return stmts
 
 
-def upload_statements(db=None):
+def upload_statements(stmts, db=None):
     """Upload the statements to the database."""
     if db is None:
         db = get_primary_db()
+    db.insert_db_stmts(stmts)
 
 
 if __name__ == "__main__":
