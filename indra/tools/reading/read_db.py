@@ -22,7 +22,6 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
-from indra.tools.reading.read_pmids_aws import force_fulltext
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
