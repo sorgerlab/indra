@@ -149,6 +149,39 @@ def _convert_id_entry(id_entry, allowed_types=None):
     return ret
 
 
+def join_json_files(prefix):
+    """Join different REACH output JSON files into a single JSON object.
+
+    The output of REACH is broken into three files that need to be joined
+    before processing. Specifically, there will be three files of the form:
+    `<prefix>.uaz.<subcategory>.json`.
+
+    Parameters
+    ----------
+    prefix : str
+        The absolute path up to the extensions that reach will add.
+
+    Returns
+    -------
+    json_obj : dict
+        The result of joining the files, keyed by the three subcategories.
+    """
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error(
+            'Failed to open JSON files for %s; REACH error?' % prefix
+            )
+        logger.exception(e)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
 def get_clauses(id_str_list, table):
     """Get a list of clauses to be passed to a db query."""
     id_types = table.__table__.columns.keys()
@@ -377,7 +410,7 @@ class ReachReader(object):
                 self.name,
                 self.version,
                 formats.JSON,
-                reach.join_json_files(prefix)
+                join_json_files(prefix)
                 )
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict

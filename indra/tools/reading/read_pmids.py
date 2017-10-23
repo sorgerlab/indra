@@ -130,6 +130,39 @@ from indra.sources.sparser import sparser_api as sparser
 #==============================================================================
 
 
+def join_json_files(prefix):
+    """Join different REACH output JSON files into a single JSON object.
+
+    The output of REACH is broken into three files that need to be joined
+    before processing. Specifically, there will be three files of the form:
+    `<prefix>.uaz.<subcategory>.json`.
+
+    Parameters
+    ----------
+    prefix : str
+        The absolute path up to the extensions that reach will add.
+
+    Returns
+    -------
+    json_obj : dict
+        The result of joining the files, keyed by the three subcategories.
+    """
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error(
+            'Failed to open JSON files for %s; REACH error?' % prefix
+            )
+        logger.exception(e)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
 def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
                      force_read=False, force_fulltext=False):
     logger.info(('Downloading %s from S3, force_read=%s, force_fulltext=%s '
@@ -472,7 +505,7 @@ def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
     # The prefixes should be PMIDs
     pmid, source_text = pmid_info
     prefix_with_path = os.path.join(output_dir, pmid)
-    full_json = reach.join_json_files(prefix_with_path)
+    full_json = join_json_files(prefix_with_path)
     # Check that all parts of the JSON could be assembled
     if full_json is None:
         logger.error('REACH output missing JSON for %s' % pmid)
