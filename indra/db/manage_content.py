@@ -19,10 +19,11 @@ import xml.etree.ElementTree as ET
 import re
 import os
 import multiprocessing as mp
+import pickle
+import sys
 from os import path
 from ftplib import FTP
 from io import BytesIO
-import pickle
 
 logger = logging.getLogger('content_manager')
 if __name__ == '__main__':
@@ -76,7 +77,7 @@ if __name__ == '__main__':
             "# `update` in your command. For mor details, use --help.      #"
             )
         print("#"*63)
-        resp = input("Are you sure you want to continue? [yes/no]: ")
+        resp = input("Are you sure you want to continue? [yes/NO]: ")
         if resp == 'no':
             print ("Aborting...")
             exit()
@@ -845,7 +846,9 @@ if __name__ == '__main__':
     if args.task == 'upload':
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
-            db._clear([db.TextContent, db.TextRef, db.SourceFile])
+            clear_succeeded = db._clear([db.TextContent, db.TextRef, db.SourceFile])
+            if not clear_succeeded:
+                sys.exit()
         Medline().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)

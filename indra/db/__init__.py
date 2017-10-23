@@ -7,23 +7,28 @@ __all__ = ['sqltypes', 'texttypes', 'formats', 'DatabaseManager',
 import json
 import time
 import re
+import os
+import logging
 from io import BytesIO
 from os import path
 from docutils.io import InputError
+from datetime import datetime
+from numbers import Number
+
+from sqlalchemy.schema import DropTable
+from sqlalchemy.sql.expression import Delete, Update
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
     TIMESTAMP, create_engine, inspect, LargeBinary
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
-from datetime import datetime
-from numbers import Number
-from sqlalchemy.schema import DropTable
-from sqlalchemy.sql.expression import Delete, Update
-from sqlalchemy.ext.compiler import compiles
-from indra.statements import *
+
+from indra.statements import ActiveForm, SelfModification, Complex
 from indra.util import unzip_string
 from indra.util.get_version import get_version
 
+logger = logging.getLogger('indra_db')
 
 # Solution to fix postgres drop tables
 # See: https://stackoverflow.com/questions/38678336/sqlalchemy-how-to-implement-drop-table-cascade
@@ -264,12 +269,31 @@ class DatabaseManager(object):
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
         if tbl_list is None:
+            logger.debug("Creating all tables...")
             self.Base.metadata.create_all(self.engine)
+            logger.debug("Created all tables.")
         else:
+            tbl_name_list = []
             for tbl in tbl_list:
                 if isinstance(tbl, str):
-                    tbl = self.tables[tbl]
-                tbl.__table__.create(bind=self.engine)
+                    tbl_name_list.append(tbl)
+                else:
+                    tbl_name_list.append(tbl.__tablename__)
+            # These tables must be created in this order.
+            for tbl_name in ['text_ref', 'text_content', 'readings', 'db_info', 'statements', 'agents']:
+                if tbl_name in tbl_name_list:
+                    tbl_name_list.remove(tbl_name)
+                    logger.debug("Creating %s..." % tbl_name)
+                    if not self.tables[tbl_name].__table__.exists(self.engine):
+                        self.tables[tbl_name].__table__.create(bind=self.engine)
+                        logger.debug("Table created.")
+                    else:
+                        logger.debug("Table already existed.")
+            # The rest can be started any time.
+            for tbl_name in tbl_name_list:
+                logger.debug("Creating %s..." % tbl_name)
+                self.tables[tbl_name].__table__.create(bind=self.engine)
+                logger.debug("Table created.")
         return
 
     def drop_tables(self, tbl_list=None, force=False):
@@ -279,13 +303,20 @@ class DatabaseManager(object):
         is False, a warning prompt will be raised to asking for confirmation,
         as this action will remove all data from that table.
         """
+        if tbl_list is not None:
+            tbl_objs = []
+            for tbl in tbl_list:
+                if isinstance(tbl, str):
+                    tbl_objs.append(self.tables[tbl])
+                else:
+                    tbl_objs.append(tbl)
         if not force:
             # Build the message
             if tbl_list is None:
                 msg = "Do you really want to clear the primary database? [y/N]: "
             else:
                 msg = "You are going to clear the following tables:\n"
-                msg += str(tbl_list) + '\n'
+                msg += str([tbl.__tablename__ for tbl in tbl_objs]) + '\n'
                 msg += "Do you really want to clear these tables? [y/N]: "
             # Check to make sure.
             try:
@@ -293,20 +324,21 @@ class DatabaseManager(object):
             except NameError:
                 resp = input(msg)
             if resp != 'y' and resp != 'yes':
-                logger.info('Aborting clearing of database.')
-                return
+                logger.info('Aborting clear.')
+                return False
         if tbl_list is None:
             logger.info("Removing all tables...")
             self.Base.metadata.drop_all(self.engine)
             logger.debug("All tables removed.")
         else:
             for tbl in tbl_list:
-                if isinstance(tbl, str):
-                    tbl = self.tables[tbl]
                 logger.info("Removing %s..." % tbl.__tablename__)
-                tbl.__table__.drop(self.engine)
-                logger.debug("Table removed.")
-        return
+                if tbl.__table__.exists(self.engine):
+                    tbl.__table__.drop(self.engine)
+                    logger.debug("Table removed.")
+                else:
+                    logger.debug("Table doesn't exist.")
+        return True
 
     def _clear(self, tbl_list=None, force=False):
         "Brutal clearing of all tables in tbl_list, or all tables."
@@ -316,9 +348,11 @@ class DatabaseManager(object):
         logger.debug("Rolling back before clear...")
         self.session.rollback()
         logger.debug("Rolled back.")
-        self.drop_tables(tbl_list, force=force)
-        self.create_tables(tbl_list)
-        return
+        if self.drop_tables(tbl_list, force=force):
+            self.create_tables(tbl_list)
+            return True
+        else:
+            return False
 
     def grab_session(self):
         "Get an active session with the database."
