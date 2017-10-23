@@ -9,8 +9,6 @@ from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db import DatabaseManager, texttypes, get_defaults
-from indra.tools.reading.read_db import read_content, post_reading_output
-import pickle
 IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
@@ -85,6 +83,7 @@ def needs_py3(func):
     return test_with_py3_func
 
 
+@needs_py3
 def get_db_with_content():
     "Populate the database."
     db = get_db()
