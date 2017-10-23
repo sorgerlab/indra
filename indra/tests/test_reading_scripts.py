@@ -8,7 +8,7 @@ from nose import SkipTest
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
 from indra.tools.reading.read_db import _convert_id_entry, get_content,\
-    get_clauses, post_reading_output, read_content
+    get_clauses, post_reading_output, read_content, make_statements
 
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
@@ -33,6 +33,7 @@ PMID_LIST = [
 BASENAME = 'test_tmp'
 TMP_DIR_FMT = '%s_%%s' % BASENAME
 OUTPUT_FILE_FMT = '%s_stmts_0-10.pkl' % TMP_DIR_FMT
+READINGS_PKL = 'sample_reach_outputs.pkl'
 
 
 def _call_reader(reader, num_cores):
@@ -133,13 +134,34 @@ def test_reading():
     res = read_content(tc_list, ['reach'], verbose=True, force_read=True,
                        force_fulltext=False)
     assert len(res) == len(tc_list), "Not all text content successfully read."
+    if not path.exists(READINGS_PKL):
+        with open(READINGS_PKL, 'wb') as f:
+            pickle.dump(res, f, protocol=2)
+            print("Created a new pickle file for future tests.")
 
 
 def test_reading_content_insert():
     "Test the content copying functionality of read_db."
-    db = get_test_db()
-    with open('sample_reach_outputs.pkl') as f:
+    db = get_db_with_content()
+    with open(READINGS_PKL, 'rb') as f:
         reading_output = pickle.load(f)
     post_reading_output(reading_output, db=db)
     r_list = db.select_all(db.Readings)
-    assert len(r_list) == len(reading_output), "Not all reading output posted."
+
+    def is_complete_match(r_list, reading_output):
+        return all([any([rd.matches(r) for r in r_list])
+                    for rd in reading_output.values()])
+
+    assert is_complete_match(r_list, reading_output), \
+        "Not all reading output posted."
+    post_reading_output(reading_output, db=db)
+    assert is_complete_match(r_list, reading_output), \
+        "Uniqueness constraints failed."
+
+
+def test_make_statements():
+    "Test that statements can be created from reading output."
+    with open(READINGS_PKL, 'rb') as f:
+        reading_output = pickle.load(f)
+    make_statements(reading_output)
+
