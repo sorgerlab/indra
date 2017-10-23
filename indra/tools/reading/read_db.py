@@ -217,7 +217,10 @@ def get_content(id_str_list, batch_size=1000, db=None, force_fulltext=False):
 class ReadingData(object):
     """Object to contain the data produced by a reading."""
 
-    def __init__(self, reader, reader_version, output_format, content):
+    def __init__(self, tcid, reader, reader_version, output_format, content,
+                 reading_id=None):
+        self.reading_id = reading_id
+        self.tcid = tcid
         self.reader = reader
         self.reader_version = reader_version
         self.format = output_format
@@ -234,10 +237,26 @@ class ReadingData(object):
             raise Exception('Do not know how to zip format %s.' % self.format)
         return ret
 
+    @classmethod
+    def get_cols(self):
+        """Get the columns for the tuple returned by `make_tuple`."""
+        return ('text_content_id', 'reader', 'reader_version', 'format',
+                'bytes')
+
     def make_tuple(self):
         """Make the tuple expected by the database."""
-        return (self.reader, self.reader_version, self.format,
+        return (self.tcid, self.reader, self.reader_version, self.format,
                 self.zip_content())
+
+    def matches(self, r_entry):
+        """Determine if reading data matches the a reading entry from the db.
+
+        Returns True if tcid, reader, reader_version match the corresponding
+        elements of a db.Reading instance, else False.
+        """
+        return (r_entry.text_content_id == self.tcid
+                and r_entry.reader == self.reader
+                and r_entry.reader_version == self.reader_version)
 
 
 class ReachError(Exception):
@@ -353,7 +372,8 @@ class ReachReader(object):
         tc_id_fname_dict = {}
         for prefix in json_prefixes:
             base_prefix = path.basename(prefix)
-            tc_id_fname_dict[base_prefix] = ReadingData(
+            tc_id_fname_dict[int(base_prefix)] = ReadingData(
+                int(base_prefix),
                 self.name,
                 self.version,
                 formats.JSON,
@@ -364,7 +384,7 @@ class ReachReader(object):
 
     def read(self, read_list, verbose=False, force_read=True,
              force_fulltext=False):
-        """Read the content, returning a dict of ReadingData."""
+        """Read the content, returning a dict of ReadingData objects."""
         init_msg = 'Running %s with:\n' % self.name
         init_msg += '\n'.join([
             'n_proc=%s' % self.n_proc,
@@ -474,28 +494,88 @@ def read_files(file_str_list, readers, **kwargs):
     return read_content(file_str_list, readers, **kwargs)
 
 
+def enrich_reading_data(reading_data_iter, db=None):
+    """Get db ids for all ReadingData objects that correspond to a db ref.
+
+    Note that the objects are modified IN PLACE, so nothing is returned, and if
+    a copy of the objects is passed as an argument, this function will have no
+    effect.
+    """
+    if db is None:
+        db = get_primary_db()
+    possible_matches = db.select_all(
+        'readings',
+        db.Readings.text_content_id.in_([rd.tcid for rd in reading_data_iter])
+        )
+    for rdata in reading_data_iter:
+        for reading in possible_matches:
+            if rdata.matches(reading):
+                rdata.reading_id = reading.id
+                break
+    return
+
+
 def post_reading_output(output_dict, db=None):
     """Put the reading output on the database."""
     if db is None:
         db = get_primary_db()
 
+    # Create the list of records to be copied, ensuring no uniqueness conflicts
+    r_list = db.select_all(
+        db.Readings,
+        db.Readings.text_content_id.in_(list(output_dict.keys()))
+        )
+    exisiting_tcid_set = set([r.text_content_id for r in r_list])
     upload_list = []
     for tcid, reading_data in output_dict.items():
-        upload_list.append((tcid,) + reading_data.make_tuple())
+        # First check if this tcid is even in the set of existing tcids in the
+        # readings table.
+        if tcid in exisiting_tcid_set:
+            r_tcid_list = [r for r in r_list if r.text_content_id == tcid]
+            # Now check for any exact matches:
+            if any([reading_data.matches(r) for r in r_tcid_list]):
+                continue
 
-    db.copy(db.Readings, upload_list,
-            ('text_content_id', 'reader', 'reader_version', 'format', 'bytes'))
+        # If there were no conflicts, we can add this to the copy list.
+        upload_list.append(reading_data.make_tuple())
+
+    # Copy into the database.
+    db.copy('readings', upload_list, ReadingData.get_cols())
     return
 
 
-def make_statements(output_dict, readers):
-    """Convert the reader output into statements."""
-    stmts = {}
-    if 'reach' in readers:
-        # Convert the JSON object into a string first so that a series of
-        # string replacements can happen in the REACH processor
-        reach_proc = reach.process_json_str(json.dumps(output_dict))
-        stmts['reach'] = reach_proc.statements
+class StatementData(object):
+    """Contains metadata for statements, as well as the statment itself."""
+    def __init__(self, statement, reading_data):
+        self.reading_data = reading_data
+        self.statement = statement
+        return
+
+    @classmethod
+    def get_cols(self):
+        """Get the columns for the tuple returned by `make_tuple`."""
+        return ('reader_ref', 'uuid', 'type', 'json')
+
+    def make_tuple(self):
+        """Make a tuple for copying into the database."""
+        assert self.reading_data.reading_id is not None, \
+            "Reading data must be loaded into the database first."
+        return (self.reading_data.reading_id, self.statement.uuid,
+                self.statment.__class__.__name__,
+                json.dumps(self.statement.to_json()))
+
+
+def make_statements(output_dict):
+    """Convert the reader output into a list of StatementData instances."""
+    stmts = []
+    enrich_reading_data(output_dict.values())
+    for output in output_dict.values():
+        if output.reader == ReachReader.name:
+            # Convert the JSON object into a string first so that a series of
+            # string replacements can happen in the REACH processor
+            reach_proc = reach.process_json_str(json.dumps(output.content))
+            stmts += [StatementData(stmt, output)
+                      for stmt in reach_proc.statements]
     return stmts
 
 
@@ -503,7 +583,9 @@ def upload_statements(stmts, db=None):
     """Upload the statements to the database."""
     if db is None:
         db = get_primary_db()
-    db.insert_db_stmts(stmts)
+    db.copy('statements', [s.make_tuple for s in stmts],
+            StatementData.get_cols())
+    return
 
 
 if __name__ == "__main__":
