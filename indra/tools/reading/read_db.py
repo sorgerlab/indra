@@ -119,7 +119,7 @@ if __name__ == '__main__':
 from indra.util import unzip_string, zip_string
 from indra.db import get_primary_db, formats, texttypes
 from indra.tools.reading.read_pmids import get_mem_total
-from indra.sources import reach
+from indra.sources import reach, sparser
 
 
 def _get_dir(*args):
@@ -309,7 +309,7 @@ class ReachReader(object):
         self.base_dir = _get_dir(base_dir)
         self.exec_path, self.version = self._check_reach_env()
         tmp_dir = tempfile.mkdtemp(
-            prefix='read_job_%s' % _time_stamp(),
+            prefix='reach_job_%s' % _time_stamp(),
             dir=base_dir
             )
         self.tmp_dir = tmp_dir
@@ -457,6 +457,74 @@ class ReachReader(object):
             logger.info("Reach finished.")
             ret = self.get_output()
         return ret
+
+
+class SparserError(Exception):
+    pass
+
+
+class SparserReader(object):
+    """This object provides methods to interface with the commandline tool."""
+
+    name = 'SPARSER'
+
+    def __init__(self, base_dir=None, n_proc=1):
+        if base_dir is None:
+            base_dir = 'run_' + self.name
+        self.n_proc = n_proc
+        self.base_dir = _get_dir(base_dir)
+        self.version = sparser.get_version()
+        tmp_dir = tempfile.mkdtemp(
+            prefix='sparser_job_%s' % _time_stamp(),
+            dir=base_dir
+            )
+        self.tmp_dir = tmp_dir
+        self.input_dir = _get_dir(tmp_dir, 'input')
+        return
+
+    def prep_input(self, read_list):
+        "Prepare the list of files or text content objects to be read."
+        logger.info('Prepping input for sparser.')
+
+        file_list = []
+
+        def add_nxml_file(tcid, nxml_bts):
+            fpath = pjoin(self.input_dir, 'PMC%d.nxml' % tcid)
+            with open(fpath, 'wb') as f:
+                f.write(nxml_bts)
+            file_list.append(fpath)
+
+        for item in read_list:
+            if isinstance(item, str):
+                raise SparserError(
+                    "This feature not yet implemented for sparser."
+                    )  # TODO: Implement this use-case.
+            elif all([hasattr(item, a) for a in ['format', 'content', 'id']]):
+                if item.format == formats.XML:
+                    add_nxml_file(
+                        item.id,
+                        zlib.decompress(item.content, 16+zlib.MAX_WBITS)
+                        )
+                elif item.format == formats.TEXT:
+                    txt_bts = zlib.decompress(item.content, 16+zlib.MAX_WBITS)
+                    nxml_str = sparser.make_sparser_nxml_from_text(
+                        txt_bts.decode('utf8')
+                        )
+                    add_nxml_file(item.id, nxml_str.encode('utf8'))
+                elif item.format == formats.JSON:
+                    raise SparserError("I don't know how to handle JSON.")
+                else:
+                    raise SparserError("Unrecognized format %s." % item.format)
+            else:
+                raise SparserError("Unknown type of item for reading %s." % 
+                                   type(item))
+        return file_list
+
+    def get_output(self):
+        "Get the output files."
+
+    def read(self):
+        "Perform the actual reading."
 
 
 def read_content(read_list, readers, *args, **kwargs):
