@@ -1,12 +1,21 @@
+"""Provide an api used to run and get statements from the sparser reading tool.
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
+__all__ = ['get_version', 'process_text', 'process_xml', 'process_nxml_file',
+           'process_nxml_str', 'make_sparser_nxml_from_text', 'run_sparser']
+
 import os
 import json
 import logging
 import subprocess
 import xml.etree.ElementTree as ET
 import multiprocessing as mp
+
 from indra.util import UnicodeXMLTreeBuilder as UTB
+
 from .processor import SparserXMLProcessor, SparserJSONProcessor
 
 logger = logging.getLogger('sparser')

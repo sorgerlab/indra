@@ -136,8 +136,7 @@ def test_reading():
     "Test that the contents of the database can be read."
     db = get_db_with_content()
     tc_list = db.select_all(db.TextContent)
-    res = read_content(tc_list, ['reach'], verbose=True, force_read=True,
-                       force_fulltext=False)
+    res = read_content(tc_list, ['reach'], verbose=True, force_read=True)
     assert len(res) == len(tc_list), "Not all text content successfully read."
     if not path.exists(READINGS_PKL):
         with open(READINGS_PKL, 'wb') as f:

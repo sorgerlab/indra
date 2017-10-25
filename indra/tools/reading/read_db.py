@@ -415,14 +415,12 @@ class ReachReader(object):
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict
 
-    def read(self, read_list, verbose=False, force_read=True,
-             force_fulltext=False):
+    def read(self, read_list, verbose=False, force_read=True):
         """Read the content, returning a dict of ReadingData objects."""
         init_msg = 'Running %s with:\n' % self.name
         init_msg += '\n'.join([
             'n_proc=%s' % self.n_proc,
-            'force_read=%s' % force_read,
-            'force_fulltext=%s' % force_fulltext
+            'force_read=%s' % force_read
             ])
         logger.info(init_msg)
         ret = None
@@ -516,15 +514,48 @@ class SparserReader(object):
                 else:
                     raise SparserError("Unrecognized format %s." % item.format)
             else:
-                raise SparserError("Unknown type of item for reading %s." % 
+                raise SparserError("Unknown type of item for reading %s." %
                                    type(item))
         return file_list
 
     def get_output(self):
         "Get the output files."
 
-    def read(self):
+    def read(self, read_list, verbose=False, force_read=True, log=False):
         "Perform the actual reading."
+        ret = None
+        file_list = self.prep_input(read_list)
+        if len(read_list) > 1:
+            logger.info("Beginning to run sparser.")
+            output_file_list = []
+            if log:
+                log_name = 'sparser_run.log'
+                outbuf = open(log_name, 'w')
+            try:
+                for fpath in file_list:
+                    if log:
+                        outbuf.write('\nReading %s.\n' % fpath)
+                        outbuf.flush()
+                    if verbose:
+                        logger.info('Reading %s.' % fpath)
+                    try:
+                        outpath = sparser.run_sparser(fpath, 'json', outbuf)
+                        output_file_list.append(outpath)
+                    except Exception as e:
+                        if verbose:
+                            logger.error('Failed to run sparser on %s.' %
+                                         fpath)
+                            logger.exception(e)
+                        if log:
+                            outbuf.write('Reading failed.\n')
+            finally:
+                if log:
+                    outbuf.close()
+                    if verbose:
+                        logger.info("Sparser logs may be found at %s." %
+                                    log_name)
+            ret = self.get_output(output_file_list)
+        return ret
 
 
 def read_content(read_list, readers, *args, **kwargs):
