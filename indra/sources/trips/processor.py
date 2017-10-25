@@ -759,6 +759,40 @@ class TripsProcessor(object):
         self._add_extracted(event_type, event.attrib['id'])
         return stmts
 
+    def get_modifications_indirect(self):
+        """Extract indirect Modification INDRA Statements."""
+        # Get all the specific mod types
+        mod_event_types = list(ont_to_mod_type.keys())
+        # Add ONT::PTMs as a special case
+        mod_event_types += ['ONT::PTM']
+        mod_events = []
+        for mod_event_type in mod_event_types:
+            pattern = "EVENT/[type='%s']/arg2/[type='%s']/.." % \
+                ('ONT::INCREASE', mod_event_type)
+            events = self.tree.findall(pattern)
+            mod_events += events
+
+        # Iterate over all modification events
+        import ipdb; ipdb.set_trace()
+        for event in mod_events:
+            event_id = event.attrib['id']
+            if event_id in self._static_events:
+                continue
+            event_type = _get_type(event)
+
+            # Get enzyme Agent
+            enzyme = event.find(".//*[@role=':AGENT']")
+            if enzyme is None:
+                enzyme_agent = None
+            else:
+                enzyme_id = enzyme.attrib.get('id')
+                if enzyme_id is None:
+                    continue
+                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
+
+
+            #self._add_extracted(event_type, event.attrib['id'])
+
     def get_translocation(self):
         translocation_events = \
             self.tree.findall("EVENT/[type='ONT::TRANSLOCATE']")
