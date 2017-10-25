@@ -671,3 +671,15 @@ def test_52():
     assert(pip3.name.startswith('PIP'))
     assert(pip3.name.endswith('3'))
 
+def test_53():
+    sentence = 'MEK increases the phosphorylation of ERK.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Phosphorylation))
+    mek = st.enz
+    erk = st.sub
+    assert(mek.name == 'MEK')
+    assert(erk.name == 'ERK')
+    for ev in st.evidence:
+        assert ev.epistemics.get('direct') == False

@@ -1,0 +1,118 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT10812_IO-17230317" id="paragraph10811">MEK increases the phosphorylation of ERK
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="11296" pid="paragraph10811">MEK increases the phosphorylation of ERK</sentence>
+		</sentences>
+	</input>
+	<EVENT end="40" id="V17230332" lisp="(ONT::EVENT ONT::V17230332 ONT::INCREASE :AGENT ONT::V17230320 :AFFECTED ONT::V17230348 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph10811" rule="-RULE20_1_AGENT_AFFECTED" start="0" uttnum="11296">
+		<type>ONT::INCREASE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="40" id="V17230332" start="0">
+			<type>ONT::INCREASE</type>
+			<text>MEK increases the phosphorylation of ERK</text>
+		</predicate>
+		<arg1 end="4" id="V17230320" role=":AGENT" start="0">
+			<type>ONT::PROTEIN-FAMILY</type>
+			<text normalization="">MEK</text>
+		</arg1>
+		<arg2 end="40" id="V17230348" role=":AFFECTED" start="14">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text normalization="">the phosphorylation of ERK</text>
+		</arg2>
+		<text>MEK increases the phosphorylation of ERK</text>
+	</EVENT>
+	<TERM dbid="BE:MEK|NCIT:C105947" end="4" id="V17230320" lisp="(ONT::TERM ONT::V17230320 ONT::PROTEIN-FAMILY :NAME W::MEK :DRUM ((:DRUM (TERM :ID BE::MEK :NAME &quot;MEK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MEK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C105947 :NAME &quot;mitogen-activated protein kinase kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;MEK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)))))" paragraph="paragraph10811" rule="-SIMPLE-REF" start="0" uttnum="11296">
+		<type>ONT::PROTEIN-FAMILY</type>
+		<name>MEK</name>
+		<drum-terms>
+			<drum-term dbid="BE:MEK" match-score="1.0" matched-name="MEK" name="MEK">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C105947" match-score="0.70732" matched-name="MEK" name="mitogen-activated protein kinase kinase">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>MEK</text>
+	</TERM>
+	<EVENT end="40" id="V17230348" lisp="(ONT::EVENT ONT::V17230348 ONT::PHOSPHORYLATION :AFFECTED ONT::V17230361 :DRUM ((:DRUM (TERM :ID GO::|0006468| :NAME &quot;protein phosphorylation&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;protein phosphorylation&quot; :STATUS &quot;name&quot; :EXACT 2)) :ONT-TYPES (ONT::POST-TRANSLATIONAL-MODIFICATION)))))" paragraph="paragraph10811" rule="-RULE60_4_AGENT_AFFECTED-AFFECTED" start="14" uttnum="11296">
+		<type>ONT::PHOSPHORYLATION</type>
+		<predicate end="40" id="V17230348" start="14">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>the phosphorylation of ERK</text>
+		</predicate>
+		<arg2 end="40" id="V17230361" role=":AFFECTED" start="34">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">of ERK</text>
+		</arg2>
+		<drum-terms>
+			<drum-term dbid="GO:0006468" match-score="0.85366" matched-name="protein phosphorylation" name="protein phosphorylation">
+				<types>
+					<type>ONT::POST-TRANSLATIONAL-MODIFICATION</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>the phosphorylation of ERK</text>
+	</EVENT>
+	<TERM dbid="BE:ERK|NCIT:C26166|NCIT:C16376|NCIT:C52872|UP:P29323|NCIT:C52164|NCIT:C26360|HGNC:3393|UP:P28482|HGNC:6871" end="40" id="V17230361" lisp="(ONT::TERM ONT::V17230361 ONT::GENE-PROTEIN :NAME W::ERK :DRUM ((:DRUM (TERM :ID BE::ERK :NAME &quot;ERK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26166 :NAME &quot;ephrin receptor-ephB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52164 :NAME &quot;EPHB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.56098 :MATCHES ((MATCH :SCORE 0.56098 :MATCHED &quot;ERK&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3393| :NAME &quot;EPH receptor B2&quot; :SCORE 0.26829 :MATCHES ((MATCH :SCORE 0.26829 :MATCHED &quot;ERK&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1)) :DBXREFS (UP::P29323) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph10811" rule="-SIMPLE-REF" start="34" uttnum="11296">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK</name>
+		<drum-terms>
+			<drum-term dbid="BE:ERK" match-score="1.0" matched-name="ERK" name="ERK">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C16376" match-score="0.70732" matched-name="ERK" name="mitogen-activated protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26166" match-score="0.70732" matched-name="ERK" name="ephrin receptor-ephB2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26360" match-score="0.70732" matched-name="ERK" name="MAP kinase gene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52164" match-score="0.70732" matched-name="ERK" name="EPHB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.70732" matched-name="ERK" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.56098" matched-name="ERK" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="HGNC:3393" match-score="0.26829" matched-name="ERK" name="EPH receptor B2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P29323"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>of ERK</text>
+	</TERM>
+</ekb>

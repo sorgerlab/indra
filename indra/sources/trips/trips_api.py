@@ -97,6 +97,7 @@ def process_xml(xml_string):
     tp = TripsProcessor(xml_string)
     if tp.tree is None:
         return None
+    tp.get_modifications_indirect()
     tp.get_activations_causal()
     tp.get_activations_stimulate()
     tp.get_complexes()
