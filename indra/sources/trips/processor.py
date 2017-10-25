@@ -633,10 +633,11 @@ class TripsProcessor(object):
         mod_events = []
         for mod_event_type in mod_event_types:
             events = self.tree.findall("EVENT/[type='%s']" % mod_event_type)
+            mod_extracted = self.extracted_events.get(mod_event_type, [])
             for event in events:
-                if event in self.extracted_events[mod_event_type]:
-                    continue
-                mod_events.append(event)
+                event_id = event.attrib.get('id')
+                if event_id not in mod_extracted:
+                    mod_events.append(event)
 
         # Iterate over all modification events
         for event in mod_events:
@@ -659,7 +660,6 @@ class TripsProcessor(object):
             mod_events += events
 
         # Iterate over all modification events
-        import ipdb; ipdb.set_trace()
         for event in mod_events:
             event_id = event.attrib['id']
             if event_id in self._static_events:
@@ -697,6 +697,8 @@ class TripsProcessor(object):
 
             for stmt in stmts_to_make:
                 stmt.enz = enzyme_agent
+                for ev in stmt.evidence:
+                    ev.epistemics['direct'] = False
                 self.statements.append(stmt)
 
             self._add_extracted(event_type, event.attrib['id'])
