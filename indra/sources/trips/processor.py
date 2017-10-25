@@ -633,7 +633,10 @@ class TripsProcessor(object):
         mod_events = []
         for mod_event_type in mod_event_types:
             events = self.tree.findall("EVENT/[type='%s']" % mod_event_type)
-            mod_events += events
+            for event in events:
+                if event in self.extracted_events[mod_event_type]:
+                    continue
+                mod_events.append(event)
 
         # Iterate over all modification events
         for event in mod_events:
@@ -642,6 +645,62 @@ class TripsProcessor(object):
                 for stmt in stmts:
                     self.statements.append(stmt)
 
+    def get_modifications_indirect(self):
+        """Extract indirect Modification INDRA Statements."""
+        # Get all the specific mod types
+        mod_event_types = list(ont_to_mod_type.keys())
+        # Add ONT::PTMs as a special case
+        mod_event_types += ['ONT::PTM']
+        mod_events = []
+        for mod_event_type in mod_event_types:
+            pattern = "EVENT/[type='%s']/arg2/[type='%s']/.." % \
+                ('ONT::INCREASE', mod_event_type)
+            events = self.tree.findall(pattern)
+            mod_events += events
+
+        # Iterate over all modification events
+        import ipdb; ipdb.set_trace()
+        for event in mod_events:
+            event_id = event.attrib['id']
+            if event_id in self._static_events:
+                continue
+            event_type = _get_type(event)
+
+            # Get enzyme Agent
+            enzyme = event.find(".//*[@role=':AGENT']")
+            if enzyme is None:
+                enzyme_agent = None
+            else:
+                enzyme_id = enzyme.attrib.get('id')
+                if enzyme_id is None:
+                    continue
+                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
+
+            affected_event_tag = event.find(".//*[@role=':AFFECTED']")
+            if affected_event_tag is None:
+                return
+            affected_id = affected_event_tag.attrib.get('id')
+            if not affected_id:
+                return
+            affected_event = self.tree.find("EVENT/[@id='%s']" % affected_id)
+            if affected_event is None:
+                return
+
+            stmts = self._get_modification_event(affected_event)
+            stmts_to_make = []
+            if stmts:
+                for stmt in stmts:
+                    # The affected event should have no enzyme but should
+                    # have a substrate
+                    if stmt.enz is None and stmt.sub is not None:
+                        stmts_to_make.append(stmt)
+
+            for stmt in stmts_to_make:
+                stmt.enz = enzyme_agent
+                self.statements.append(stmt)
+
+            self._add_extracted(event_type, event.attrib['id'])
+            self._add_extracted(affected_event.find('type').text, affected_id)
 
     def _get_modification_event(self, event):
         stmts = []
@@ -758,40 +817,6 @@ class TripsProcessor(object):
                 stmts.append(st)
         self._add_extracted(event_type, event.attrib['id'])
         return stmts
-
-    def get_modifications_indirect(self):
-        """Extract indirect Modification INDRA Statements."""
-        # Get all the specific mod types
-        mod_event_types = list(ont_to_mod_type.keys())
-        # Add ONT::PTMs as a special case
-        mod_event_types += ['ONT::PTM']
-        mod_events = []
-        for mod_event_type in mod_event_types:
-            pattern = "EVENT/[type='%s']/arg2/[type='%s']/.." % \
-                ('ONT::INCREASE', mod_event_type)
-            events = self.tree.findall(pattern)
-            mod_events += events
-
-        # Iterate over all modification events
-        import ipdb; ipdb.set_trace()
-        for event in mod_events:
-            event_id = event.attrib['id']
-            if event_id in self._static_events:
-                continue
-            event_type = _get_type(event)
-
-            # Get enzyme Agent
-            enzyme = event.find(".//*[@role=':AGENT']")
-            if enzyme is None:
-                enzyme_agent = None
-            else:
-                enzyme_id = enzyme.attrib.get('id')
-                if enzyme_id is None:
-                    continue
-                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
-
-
-            #self._add_extracted(event_type, event.attrib['id'])
 
     def get_translocation(self):
         translocation_events = \
