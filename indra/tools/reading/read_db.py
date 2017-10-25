@@ -518,8 +518,18 @@ class SparserReader(object):
                                    type(item))
         return file_list
 
-    def get_output(self):
-        "Get the output files."
+    def get_output(self, output_files):
+        "Get the output files as an id indexed dict."
+        tcid_fpath_dict = {}
+        patt = re.compile(r'PMC(\w+)-semantics.*?')
+        for outpath in output_files:
+            re_out = patt.match(path.basename('outpath'))
+            if re_out is None:
+                raise SparserError("Could not get id from output path %s." %
+                                   outpath)
+            tcid = re_out.groups()[0]
+            tcid_fpath_dict[tcid] = outpath
+        return tcid_fpath_dict
 
     def read(self, read_list, verbose=False, force_read=True, log=False):
         "Perform the actual reading."
