@@ -1,0 +1,139 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT10939_IO-17290656" id="paragraph10938">EGF leads to the phosphorylation of ERK.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="11423" pid="paragraph10938">EGF leads to the phosphorylation of ERK.</sentence>
+		</sentences>
+	</input>
+	<CC end="39" id="V17290668" lisp="(ONT::CC ONT::V17290668 ONT::CAUSE :FACTOR ONT::V17290659 :OUTCOME ONT::V17290717 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph10938" rule="-RULE5_3_AGENT_RESULT" start="0" uttnum="11423">
+		<type>ONT::CAUSE</type>
+		<force>ONT::TRUE</force>
+		<arg end="4" id="V17290659" role=":FACTOR" start="0"/>
+		<arg end="39" id="V17290717" role=":OUTCOME" start="10"/>
+		<text>EGF leads to the phosphorylation of ERK</text>
+	</CC>
+	<TERM dbid="UP:P01133|UP:P01132|NCIT:C20425|NCIT:C51421|XFAM:PF00058|XFAM:PF07645|HGNC:3229|XFAM:PF00008" end="4" id="V17290659" lisp="(ONT::TERM ONT::V17290659 ONT::GENE-PROTEIN :NAME W::EGF :DRUM ((:DRUM (TERM :ID HGNC::|3229| :NAME &quot;epidermal growth factor&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;EGF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P01133) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P01133 :NAME &quot;Pro-epidermal growth factor&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;EGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|3229| XFAM::PF00008 XFAM::PF07645 XFAM::PF00058) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P01132 :NAME &quot;Pro-epidermal growth factor&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;EGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00008 XFAM::PF07645 XFAM::PF00058) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C51421 :NAME &quot;EGF&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;EGF&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C20425 :NAME &quot;epidermal growth factor&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;EGF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph10938" rule="-SIMPLE-REF" start="0" uttnum="11423">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>EGF</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3229" match-score="0.85366" matched-name="EGF" name="epidermal growth factor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01133"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P01133" match-score="0.85366" matched-name="EGF" name="Pro-epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:3229"/>
+					<xref dbid="XFAM:PF00008"/>
+					<xref dbid="XFAM:PF07645"/>
+					<xref dbid="XFAM:PF00058"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P01132" match-score="0.85366" matched-name="EGF" name="Pro-epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00008"/>
+					<xref dbid="XFAM:PF07645"/>
+					<xref dbid="XFAM:PF00058"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="NCIT:C51421" match-score="0.85366" matched-name="EGF" name="EGF">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C20425" match-score="0.70732" matched-name="EGF" name="epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>EGF</text>
+	</TERM>
+	<EVENT end="39" id="V17290717" lisp="(ONT::EVENT ONT::V17290717 ONT::PHOSPHORYLATION :AFFECTED ONT::V17290730 :DRUM ((:DRUM (TERM :ID GO::|0006468| :NAME &quot;protein phosphorylation&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;protein phosphorylation&quot; :STATUS &quot;name&quot; :EXACT 2)) :ONT-TYPES (ONT::POST-TRANSLATIONAL-MODIFICATION)))))" paragraph="paragraph10938" rule="-RULE60_4_AGENT_AFFECTED-AFFECTED" start="10" uttnum="11423">
+		<type>ONT::PHOSPHORYLATION</type>
+		<predicate end="39" id="V17290717" start="10">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>to the phosphorylation of ERK</text>
+		</predicate>
+		<arg2 end="39" id="V17290730" role=":AFFECTED" start="33">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">of ERK</text>
+		</arg2>
+		<drum-terms>
+			<drum-term dbid="GO:0006468" match-score="0.85366" matched-name="protein phosphorylation" name="protein phosphorylation">
+				<types>
+					<type>ONT::POST-TRANSLATIONAL-MODIFICATION</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>to the phosphorylation of ERK</text>
+	</EVENT>
+	<TERM dbid="BE:ERK|NCIT:C26166|NCIT:C16376|NCIT:C52872|UP:P29323|NCIT:C52164|NCIT:C26360|HGNC:3393|UP:P28482|HGNC:6871" end="39" id="V17290730" lisp="(ONT::TERM ONT::V17290730 ONT::GENE-PROTEIN :NAME W::ERK :DRUM ((:DRUM (TERM :ID BE::ERK :NAME &quot;ERK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26166 :NAME &quot;ephrin receptor-ephB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52164 :NAME &quot;EPHB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.56098 :MATCHES ((MATCH :SCORE 0.56098 :MATCHED &quot;ERK&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3393| :NAME &quot;EPH receptor B2&quot; :SCORE 0.26829 :MATCHES ((MATCH :SCORE 0.26829 :MATCHED &quot;ERK&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1)) :DBXREFS (UP::P29323) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph10938" rule="-SIMPLE-REF" start="33" uttnum="11423">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK</name>
+		<drum-terms>
+			<drum-term dbid="BE:ERK" match-score="1.0" matched-name="ERK" name="ERK">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C16376" match-score="0.70732" matched-name="ERK" name="mitogen-activated protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26166" match-score="0.70732" matched-name="ERK" name="ephrin receptor-ephB2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26360" match-score="0.70732" matched-name="ERK" name="MAP kinase gene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52164" match-score="0.70732" matched-name="ERK" name="EPHB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.70732" matched-name="ERK" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.56098" matched-name="ERK" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="HGNC:3393" match-score="0.26829" matched-name="ERK" name="EPH receptor B2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P29323"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>of ERK</text>
+	</TERM>
+</ekb>
