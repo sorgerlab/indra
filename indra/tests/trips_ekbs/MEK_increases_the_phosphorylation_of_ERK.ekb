@@ -16,14 +16,14 @@
 			<type>ONT::INCREASE</type>
 			<text>MEK increases the phosphorylation of ERK</text>
 		</predicate>
-		<arg1 end="4" id="V17230320" role=":AGENT" start="0">
+		<arg end="4" id="V17230320" role=":AGENT" start="0">
 			<type>ONT::PROTEIN-FAMILY</type>
 			<text normalization="">MEK</text>
-		</arg1>
-		<arg2 end="40" id="V17230348" role=":AFFECTED" start="14">
+		</arg>
+		<arg end="40" id="V17230348" role=":AFFECTED" start="14">
 			<type>ONT::PHOSPHORYLATION</type>
 			<text normalization="">the phosphorylation of ERK</text>
-		</arg2>
+		</arg>
 		<text>MEK increases the phosphorylation of ERK</text>
 	</EVENT>
 	<TERM dbid="BE:MEK|NCIT:C105947" end="4" id="V17230320" lisp="(ONT::TERM ONT::V17230320 ONT::PROTEIN-FAMILY :NAME W::MEK :DRUM ((:DRUM (TERM :ID BE::MEK :NAME &quot;MEK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MEK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C105947 :NAME &quot;mitogen-activated protein kinase kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;MEK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)))))" paragraph="paragraph10811" rule="-SIMPLE-REF" start="0" uttnum="11296">
