@@ -656,11 +656,21 @@ class TripsProcessor(object):
 
         def get_increase_events(mod_event_types):
             mod_events = []
-            for mod_event_type in mod_event_types:
-                pattern = ("EVENT/[type='%s']//*[@role=':AFFECTED']" +
-                    "/[type='%s']/..") % ('ONT::INCREASE', mod_event_type)
-                events = self.tree.findall(pattern)
-                mod_events += events
+            events = self.tree.findall("EVENT/[type='ONT::INCREASE']")
+            for event in events:
+                affected = event.find(".//*[@role=':AFFECTED']")
+                if affected is None:
+                    continue
+                affected_id = affected.attrib.get('id')
+                if not affected_id:
+                    continue
+                pattern = "EVENT/[@id='%s']" % affected_id
+                affected_event = self.tree.find(pattern)
+                if affected_event is not None:
+                    affected_type = affected_event.find('type')
+                    if affected_type is not None and \
+                        affected_type.text in mod_event_types:
+                        mod_events.append(event)
             return mod_events
 
         def get_cause_events(mod_event_types):
