@@ -30,8 +30,8 @@ try:
     with open(api_key_file, 'rt') as fh:
         api_key = fh.read().strip()
 except IOError:
-    logger.warning('CrossRef Clickthrough API key could not be found at:')
-    logger.warning(api_key_file)
+    logger.debug('CrossRef Clickthrough API key could not be found at:')
+    logger.debug(api_key_file)
     api_key = None
 
 @lru_cache(maxsize=100)

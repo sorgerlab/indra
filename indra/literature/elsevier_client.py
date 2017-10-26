@@ -57,9 +57,9 @@ try:
         logger.error('API key X-ELS-APIKey not found in elsevier key file.')
         elsevier_keys = None
 except IOError:
-    logger.warning('Elsevier API keys file could not be read, trying '
-                   'environment variables $%s and $%s.' %
-                   (api_key_env_name, inst_key_env_name))
+    logger.debug('Elsevier API keys file could not be read, trying '
+                  'environment variables $%s and $%s.' %
+                  (api_key_env_name, inst_key_env_name))
     logger.debug('Tried key file: %s' % api_key_file)
     # Try the environment variable for the api key. This one is optional,
     # so if it is not found then we just leave it out of the keys dict
@@ -67,14 +67,14 @@ except IOError:
     if inst_key_env_name in os.environ:
         elsevier_keys['X-ELS-Insttoken'] = os.environ.get(inst_key_env_name)
     else:
-        logger.info('No Elsevier institution key found in environment '
-                    'variable %s.' % inst_key_env_name)
+        logger.debug('No Elsevier institution key found in environment '
+                     'variable %s.' % inst_key_env_name)
     # Try the environment variable for the api key. This one is required, so
     # if it is not found then we set the keys dict to None
     if api_key_env_name in os.environ:
         elsevier_keys['X-ELS-APIKey'] = os.environ.get(api_key_env_name)
     else:
-        logger.warning('No Elsevier API key found in environment variable '
+        logger.debug('No Elsevier API key found in environment variable '
                      '%s.' % api_key_env_name)
         elsevier_keys = None
 
