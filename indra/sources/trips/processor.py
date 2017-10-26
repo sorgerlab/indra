@@ -652,12 +652,40 @@ class TripsProcessor(object):
         mod_event_types = list(ont_to_mod_type.keys())
         # Add ONT::PTMs as a special case
         mod_event_types += ['ONT::PTM']
-        mod_events = []
-        for mod_event_type in mod_event_types:
-            pattern = "EVENT/[type='%s']/arg2/[type='%s']/.." % \
-                ('ONT::INCREASE', mod_event_type)
-            events = self.tree.findall(pattern)
-            mod_events += events
+
+        def get_increase_events(mod_event_types):
+            mod_events = []
+            for mod_event_type in mod_event_types:
+                pattern = ("EVENT/[type='%s']//*[@role=':AFFECTED']" +
+                    "/[type='%s']/..") % ('ONT::INCREASE', mod_event_type)
+                events = self.tree.findall(pattern)
+                mod_events += events
+            return mod_events
+
+        def get_cause_events(mod_event_types):
+            mod_events = []
+            ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
+            for cc in ccs:
+                import ipdb; ipdb.set_trace()
+                outcome = cc.find(".//*[@role=':OUTCOME']")
+                if outcome is None:
+                    continue
+                outcome_id = outcome.attrib.get('id')
+                if not outcome_id:
+                    continue
+                for mod_event_type in mod_event_types:
+                    print(mod_event_type)
+                    if mod_event_type == 'ONT::PHOSPHORYLATION':
+                        import ipdb; ipdb.set_trace()
+                    pattern = "EVENT/[@id='%s'][type='%s']" % \
+                        (outcome_id, mod_event_type)
+                    outcome_event = self.tree.find(pattern)
+                    if outcome_event is not None:
+                        mod_events.append(cc)
+            return mod_events
+
+        mod_events = get_increase_events(mod_event_types)
+        mod_events += get_cause_events(mod_event_types)
 
         # Iterate over all modification events
         for event in mod_events:
@@ -669,16 +697,20 @@ class TripsProcessor(object):
             # Get enzyme Agent
             enzyme = event.find(".//*[@role=':AGENT']")
             if enzyme is None:
-                enzyme_agent = None
-            else:
-                enzyme_id = enzyme.attrib.get('id')
-                if enzyme_id is None:
-                    continue
-                enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
+                enzyme = event.find(".//*[@role=':FACTOR']")
+                if enzyme is None:
+                    return
+
+            enzyme_id = enzyme.attrib.get('id')
+            if enzyme_id is None:
+                continue
+            enzyme_agent = self._get_agent_by_id(enzyme_id, event_id)
 
             affected_event_tag = event.find(".//*[@role=':AFFECTED']")
             if affected_event_tag is None:
-                return
+                affected_event_tag = event.find(".//*[@role=':OUTCOME']")
+                if affected_event_tag is None:
+                    return
             affected_id = affected_event_tag.attrib.get('id')
             if not affected_id:
                 return
