@@ -102,6 +102,7 @@ class TripsProcessor(object):
         """
         self.all_events = {}
         events = self.tree.findall('EVENT')
+        events += self.tree.findall('CC')
         for e in events:
             event_id = e.attrib['id']
             if event_id in self._static_events:
@@ -666,21 +667,18 @@ class TripsProcessor(object):
             mod_events = []
             ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
             for cc in ccs:
-                import ipdb; ipdb.set_trace()
                 outcome = cc.find(".//*[@role=':OUTCOME']")
                 if outcome is None:
                     continue
                 outcome_id = outcome.attrib.get('id')
                 if not outcome_id:
                     continue
-                for mod_event_type in mod_event_types:
-                    print(mod_event_type)
-                    if mod_event_type == 'ONT::PHOSPHORYLATION':
-                        import ipdb; ipdb.set_trace()
-                    pattern = "EVENT/[@id='%s'][type='%s']" % \
-                        (outcome_id, mod_event_type)
-                    outcome_event = self.tree.find(pattern)
-                    if outcome_event is not None:
+                pattern = "EVENT/[@id='%s']" % outcome_id
+                outcome_event = self.tree.find(pattern)
+                if outcome_event is not None:
+                    outcome_type = outcome_event.find('type')
+                    if outcome_type is not None and \
+                        outcome_type.text in mod_event_types:
                         mod_events.append(cc)
             return mod_events
 
