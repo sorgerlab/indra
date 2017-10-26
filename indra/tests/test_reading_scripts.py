@@ -9,7 +9,7 @@ from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
 from indra.tools.reading.read_db import _convert_id_entry, get_content,\
     get_clauses, post_reading_output, read_content, make_statements,\
-    enrich_reading_data
+    _enrich_reading_data, Reader
 
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
@@ -136,7 +136,8 @@ def test_reading():
     "Test that the contents of the database can be read."
     db = get_db_with_content()
     tc_list = db.select_all(db.TextContent)
-    res = read_content(tc_list, ['reach'], verbose=True, force_read=True)
+    readers = [reader_class() for reader_class in Reader.__subclasses__()]
+    res = read_content(tc_list, readers, verbose=True, force_read=True)
     assert len(res) == len(tc_list), "Not all text content successfully read."
     if not path.exists(READINGS_PKL):
         with open(READINGS_PKL, 'wb') as f:
@@ -183,6 +184,6 @@ def test_enrichment():
         rid_list.append(reading_id)
     assert all([rd.reading_id is None for rd in reading_output.values()]), \
         "No readings should have reading_ids already."
-    enrich_reading_data(reading_output.values(), db=db)
+    _enrich_reading_data(reading_output.values(), db=db)
     assert all([rd.reading_id in rid_list for rd in reading_output.values()]),\
         "Some reading data objects didn't have reading_ids after enrichment."

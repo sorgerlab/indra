@@ -122,6 +122,23 @@ from indra.tools.reading.read_pmids import get_mem_total
 from indra.sources import reach, sparser
 
 
+class ReadingError(Exception):
+    pass
+
+
+class ReachError(ReadingError):
+    pass
+
+
+class SparserError(ReadingError):
+    pass
+
+
+# =============================================================================
+# Useful functions
+# =============================================================================
+
+
 def _get_dir(*args):
     dirname = pjoin(*args)
     if path.isabs(dirname):
@@ -149,7 +166,7 @@ def _convert_id_entry(id_entry, allowed_types=None):
     return ret
 
 
-def join_json_files(prefix):
+def _join_json_files(prefix):
     """Join different REACH output JSON files into a single JSON object.
 
     The output of REACH is broken into three files that need to be joined
@@ -180,6 +197,33 @@ def join_json_files(prefix):
         logger.exception(e)
         return None
     return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
+def _enrich_reading_data(reading_data_iter, db=None):
+    """Get db ids for all ReadingData objects that correspond to a db ref.
+
+    Note that the objects are modified IN PLACE, so nothing is returned, and if
+    a copy of the objects is passed as an argument, this function will have no
+    effect.
+    """
+    logging.debug("Enriching the reading data with database refs.")
+    if db is None:
+        db = get_primary_db()
+    possible_matches = db.select_all(
+        'readings',
+        db.Readings.text_content_id.in_([rd.tcid for rd in reading_data_iter])
+        )
+    for rdata in reading_data_iter:
+        for reading in possible_matches:
+            if rdata.matches(reading):
+                rdata.reading_id = reading.id
+                break
+    return
+
+
+# =============================================================================
+# Content Retrieval
+# =============================================================================
 
 
 def get_clauses(id_str_list, table):
@@ -247,72 +291,42 @@ def get_content(id_str_list, batch_size=1000, db=None, force_fulltext=False):
     return ret
 
 
-class ReadingData(object):
-    """Object to contain the data produced by a reading."""
-
-    def __init__(self, tcid, reader, reader_version, output_format, content,
-                 reading_id=None):
-        self.reading_id = reading_id
-        self.tcid = tcid
-        self.reader = reader
-        self.reader_version = reader_version
-        self.format = output_format
-        self.content = content
-        return
-
-    def zip_content(self):
-        """Compress the content, returning bytes."""
-        if self.format == formats.JSON:
-            ret = zip_string(json.dumps(self.content))
-        elif self.format == formats.TEXT:
-            ret = zip_string(self.content)
-        else:
-            raise Exception('Do not know how to zip format %s.' % self.format)
-        return ret
-
-    @classmethod
-    def get_cols(self):
-        """Get the columns for the tuple returned by `make_tuple`."""
-        return ('text_content_id', 'reader', 'reader_version', 'format',
-                'bytes')
-
-    def make_tuple(self):
-        """Make the tuple expected by the database."""
-        return (self.tcid, self.reader, self.reader_version, self.format,
-                self.zip_content())
-
-    def matches(self, r_entry):
-        """Determine if reading data matches the a reading entry from the db.
-
-        Returns True if tcid, reader, reader_version match the corresponding
-        elements of a db.Reading instance, else False.
-        """
-        return (r_entry.text_content_id == self.tcid
-                and r_entry.reader == self.reader
-                and r_entry.reader_version == self.reader_version)
+# =============================================================================
+# Reader Classes
+# =============================================================================
 
 
-class ReachError(Exception):
-    pass
-
-
-class ReachReader(object):
-    """This object encodes an interface to the reach reading script."""
-    REACH_MEM = 5  # GB
-    MEM_BUFFER = 2  # GB
-    name = 'REACH'
+class Reader(object):
+    """This abstract object defines and some general methods for readers."""
+    name = NotImplemented
 
     def __init__(self, base_dir=None, n_proc=1):
         if base_dir is None:
-            base_dir = 'run_reach'
+            base_dir = _get_dir('run_' + self.name)
         self.n_proc = n_proc
         self.base_dir = _get_dir(base_dir)
-        self.exec_path, self.version = self._check_reach_env()
         tmp_dir = tempfile.mkdtemp(
             prefix='reach_job_%s' % _time_stamp(),
             dir=base_dir
             )
         self.tmp_dir = tmp_dir
+        self.input_dir = _get_dir(tmp_dir, 'input')
+        return
+
+    def read(self, read_list, verbose=False, force_read=True):
+        "Read a list of items and return a dict of output files."
+        raise NotImplementedError()
+
+
+class ReachReader(Reader):
+    """This object encodes an interface to the reach reading script."""
+    REACH_MEM = 5  # GB
+    MEM_BUFFER = 2  # GB
+    name = 'REACH'
+
+    def __init__(self, *args, **kwargs):
+        self.exec_path, self.version = self._check_reach_env()
+        super(ReachReader, self).__init__(*args, **kwargs)
         conf_fmt_fname = pjoin(path.dirname(__file__),
                                'reach_conf_fmt.txt')
         self.conf_file_path = pjoin(self.tmp_dir, 'indra.conf')
@@ -321,11 +335,10 @@ class ReachReader(object):
             loglevel = 'INFO'  # 'DEBUG' if logger.level == logging.DEBUG else 'INFO'
             with open(self.conf_file_path, 'w') as f:
                 f.write(
-                    fmt.format(tmp_dir=tmp_dir, num_cores=n_proc,
+                    fmt.format(tmp_dir=self.tmp_dir, num_cores=self.n_proc,
                                loglevel=loglevel)
                     )
-        self.input_dir = _get_dir(tmp_dir, 'input')
-        self.output_dir = _get_dir(tmp_dir, 'output')
+        self.output_dir = _get_dir(self.tmp_dir, 'output')
         return
 
     def _check_reach_env(self):
@@ -410,7 +423,8 @@ class ReachReader(object):
                 self.name,
                 self.version,
                 formats.JSON,
-                join_json_files(prefix)
+                _join_json_files(prefix),
+                statement_maker=lambda x: reach.process_json_str(json.dumps(x))
                 )
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return tc_id_fname_dict
@@ -457,27 +471,14 @@ class ReachReader(object):
         return ret
 
 
-class SparserError(Exception):
-    pass
-
-
-class SparserReader(object):
+class SparserReader(Reader):
     """This object provides methods to interface with the commandline tool."""
 
     name = 'SPARSER'
 
-    def __init__(self, base_dir=None, n_proc=1):
-        if base_dir is None:
-            base_dir = 'run_' + self.name
-        self.n_proc = n_proc
-        self.base_dir = _get_dir(base_dir)
+    def __init__(self, *args, **kwargs):
         self.version = sparser.get_version()
-        tmp_dir = tempfile.mkdtemp(
-            prefix='sparser_job_%s' % _time_stamp(),
-            dir=base_dir
-            )
-        self.tmp_dir = tmp_dir
-        self.input_dir = _get_dir(tmp_dir, 'input')
+        super(SparserReader, self).__init__(*args, **kwargs)
         return
 
     def prep_input(self, read_list):
@@ -523,12 +524,21 @@ class SparserReader(object):
         tcid_fpath_dict = {}
         patt = re.compile(r'PMC(\w+)-semantics.*?')
         for outpath in output_files:
-            re_out = patt.match(path.basename('outpath'))
+            re_out = patt.match(path.basename(outpath))
             if re_out is None:
                 raise SparserError("Could not get id from output path %s." %
                                    outpath)
+            with open(outpath, 'r') as f:
+                content = json.load(f)
             tcid = re_out.groups()[0]
-            tcid_fpath_dict[tcid] = outpath
+            tcid_fpath_dict[tcid] = ReadingData(
+                int(tcid),
+                self.name,
+                self.version,
+                formats.JSON,
+                content,
+                statement_maker=sparser.process_json_dict
+                )
         return tcid_fpath_dict
 
     def read(self, read_list, verbose=False, force_read=True, log=False):
@@ -541,6 +551,8 @@ class SparserReader(object):
             if log:
                 log_name = 'sparser_run.log'
                 outbuf = open(log_name, 'w')
+            else:
+                outbuf = None
             try:
                 for fpath in file_list:
                     if log:
@@ -568,16 +580,20 @@ class SparserReader(object):
         return ret
 
 
+# =============================================================================
+# Core Reading Functions
+# =============================================================================
+
+
 def read_content(read_list, readers, *args, **kwargs):
     """Perform the reading, returning dicts of jsons."""
-    base_dir = _get_dir('run_%s' % ('_and_'.join(readers)))
     output_dict = {}
-    if 'reach' in readers:
-        n_proc = kwargs.pop('n_proc', 1)
-        r = ReachReader(n_proc=n_proc, base_dir=base_dir)
-        output_dict.update(r.read(read_list, *args, **kwargs))
-        logger.info("Read %d text content entries with reach."
-                    % len(output_dict))
+    for reader in readers:
+        res_dict = reader.read(read_list, *args, **kwargs)
+        logger.info("Read %d text content entries with %s."
+                    % (len(res_dict), reader.name))
+        output_dict.update(res_dict)
+    logger.info("Read %s text content entries in all." % len(output_dict))
     return output_dict
 
 
@@ -592,7 +608,7 @@ def read_db(id_str_list, readers, **kwargs):
     id_str_list : list of stings
         A list of id strings, as would retrieved from a file, each of the form
         '<id type>:<id value>', for example 'pmid:12345'
-    readers : list of strings
+    readers : list of reader objects
         A list of the readers that will be use, for example ['reach'] if you
         wanted to use the reach reader.
     batch : int
@@ -607,8 +623,11 @@ def read_db(id_str_list, readers, **kwargs):
     outputs : dict of ReadingData instances
         The results of the readings with relevant metadata.
     """
+    # Retrieve the kwargs needed in this function.
     batch_size = kwargs.pop('batch', 1000)
     force_fulltext = kwargs.pop('force_fulltext', False)
+
+    # Get the iterator.
     logger.debug("Getting iterator.")
     input_iter = get_content(id_str_list, batch_size=batch_size,
                              force_fulltext=force_fulltext)
@@ -631,31 +650,66 @@ def read_db(id_str_list, readers, **kwargs):
     return outputs
 
 
-def read_files(file_str_list, readers, **kwargs):
-    """Read the files provided by the list of files."""
-    return read_content(file_str_list, readers, **kwargs)
+def read_files(files, readers, **kwargs):
+    """Read the files in `files` with the reader objects in `readers`."""
+    return read_content(files, readers, **kwargs)
 
 
-def enrich_reading_data(reading_data_iter, db=None):
-    """Get db ids for all ReadingData objects that correspond to a db ref.
+# =============================================================================
+# Reading Processing
+# =============================================================================
 
-    Note that the objects are modified IN PLACE, so nothing is returned, and if
-    a copy of the objects is passed as an argument, this function will have no
-    effect.
-    """
-    logging.debug("Enriching the reading data with database refs.")
-    if db is None:
-        db = get_primary_db()
-    possible_matches = db.select_all(
-        'readings',
-        db.Readings.text_content_id.in_([rd.tcid for rd in reading_data_iter])
-        )
-    for rdata in reading_data_iter:
-        for reading in possible_matches:
-            if rdata.matches(reading):
-                rdata.reading_id = reading.id
-                break
-    return
+
+class ReadingData(object):
+    """Object to contain the data produced by a reading."""
+
+    def __init__(self, tcid, reader, reader_version, output_format, content,
+                 reading_id=None, statement_maker=None):
+        self.reading_id = reading_id
+        self.tcid = tcid
+        self.reader = reader
+        self.reader_version = reader_version
+        self.format = output_format
+        self.content = content
+        self.statement_maker = statement_maker
+        return
+
+    def zip_content(self):
+        """Compress the content, returning bytes."""
+        if self.format == formats.JSON:
+            ret = zip_string(json.dumps(self.content))
+        elif self.format == formats.TEXT:
+            ret = zip_string(self.content)
+        else:
+            raise Exception('Do not know how to zip format %s.' % self.format)
+        return ret
+
+    @classmethod
+    def get_cols(self):
+        """Get the columns for the tuple returned by `make_tuple`."""
+        return ('text_content_id', 'reader', 'reader_version', 'format',
+                'bytes')
+
+    def make_tuple(self):
+        """Make the tuple expected by the database."""
+        return (self.tcid, self.reader, self.reader_version, self.format,
+                self.zip_content())
+
+    def matches(self, r_entry):
+        """Determine if reading data matches the a reading entry from the db.
+
+        Returns True if tcid, reader, reader_version match the corresponding
+        elements of a db.Reading instance, else False.
+        """
+        return (r_entry.text_content_id == self.tcid
+                and r_entry.reader == self.reader
+                and r_entry.reader_version == self.reader_version)
+
+    def get_statements(self):
+        "Get statements from the reading content."
+        if self.statement_maker is None:
+            return None
+        return self.statement_maker(self.content).statements
 
 
 def post_reading_output(output_dict, db=None):
@@ -683,10 +737,15 @@ def post_reading_output(output_dict, db=None):
         upload_list.append(reading_data.make_tuple())
 
     # Copy into the database.
-    logging.info("Adding %d/%d reading entries to the database." %
+    logger.info("Adding %d/%d reading entries to the database." %
                  (len(upload_list), len(output_dict)))
     db.copy('readings', upload_list, ReadingData.get_cols())
     return
+
+
+# =============================================================================
+# Statement Processing
+# =============================================================================
 
 
 class StatementData(object):
@@ -712,15 +771,10 @@ class StatementData(object):
 
 def make_statements(output_dict):
     """Convert the reader output into a list of StatementData instances."""
-    stmts = []
-    enrich_reading_data(output_dict.values())
-    for output in output_dict.values():
-        if output.reader == ReachReader.name:
-            # Convert the JSON object into a string first so that a series of
-            # string replacements can happen in the REACH processor
-            reach_proc = reach.process_json_str(json.dumps(output.content))
-            stmts += [StatementData(stmt, output)
-                      for stmt in reach_proc.statements]
+    _enrich_reading_data(output_dict.values())
+    stmts = [StatementData(stmt, output)
+             for output in output_dict.values()
+             for stmt in output.get_statements()]
     logger.info("Found %d statements from %d readings." %
                 (len(stmts), len(output_dict)))
     return stmts
@@ -730,33 +784,39 @@ def upload_statements(stmts, db=None):
     """Upload the statements to the database."""
     if db is None:
         db = get_primary_db()
-    logging.info("Uploading %d statements to the database." % len(stmts))
+    logger.info("Uploading %d statements to the database." % len(stmts))
     db.copy('statements', [s.make_tuple() for s in stmts],
             StatementData.get_cols())
     return
 
 
+# =============================================================================
+# Main for script use
+# =============================================================================
+
+
 if __name__ == "__main__":
     # Process the arguments. =================================================
-    assert not (args.id_file and args.file_file), \
-        "Cannot process both files and ids."
-    # Get the ids.
+    if args.id_file and args.file_file:
+        raise ReadingError("Cannot process both files and ids.")
+
+    # Get the ids or files.
     if args.id_file is not None:
         with open(args.id_file, 'r') as f:
             id_lines = f.readlines()
-        logger.info("Found %d ids to read." % len(id_lines))
+        logger.info("Found %d ids." % len(id_lines))
         mode = 'ids'
     elif args.file_file is not None:
         with open(args.file_file, 'r') as f:
             file_lines = f.readlines()
-        logger.info("Found %d files to read." % len(file_lines))
+        logger.info("Found %d files." % len(file_lines))
         for ftype in ['nxml', 'txt']:
             logger.debug('%d are %s' % (
                 len([f for f in file_lines if f.endswith(ftype)]), ftype
                 ))
         mode = 'files'
     else:
-        raise Exception('No inputs provided.')
+        raise ReadingError('No inputs provided.')
 
     # Select only a sample of the lines, if sample is chosen.
     if args.sample is not None and mode == 'ids':
@@ -768,17 +828,27 @@ if __name__ == "__main__":
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
         id_lines = id_lines[start_idx:end_idx]
 
+    # Create a single base directory
+    base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
+
+    # Get the readers objects.
+    readers = [reader_class(base_dir=base_dir, n_proc=args.num_procs)
+               for reader_class in Reader.__subclasses__()
+               if reader_class.name.lower() in args.readers]
+
+    # set the verbosity
+    verbose = args.verbose and not args.quiet
+
     # Read everything ========================================================
-    if len(id_lines):
-        outputs = read_db(id_lines, args.readers,
-                          verbose=args.verbose and not args.quiet,
+    if mode is 'ids':
+        outputs = read_db(id_lines, readers, verbose=verbose,
                           force_read=args.force_read,
                           force_fulltext=args.force_fulltext,
-                          batch=args.batch, n_proc=args.num_procs)
+                          batch=args.batch)
+    elif mode is 'files':
+        outputs = read_files(file_lines, readers, verbose=verbose)
     else:
-        outputs = read_files(file_lines, args.readers,
-                             verbose=args.verbose and not args.quiet,
-                             n_proc=args.num_procs)
+        raise ReadingError("Unknown mode: %s." % mode)
 
     if args.pickle:
         with open(os.getcwd() + 'reading_outputs.pkl', 'wb') as f:
