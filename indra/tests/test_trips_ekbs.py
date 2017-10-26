@@ -683,3 +683,16 @@ def test_53():
     assert(erk.name == 'ERK')
     for ev in st.evidence:
         assert ev.epistemics.get('direct') == False
+
+def test_54():
+    sentence = 'EGF leads to the phosphorylation of ERK.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Phosphorylation))
+    mek = st.enz
+    erk = st.sub
+    assert(mek.name == 'EGF')
+    assert(erk.name == 'ERK')
+    for ev in st.evidence:
+        assert ev.epistemics.get('direct') == False
