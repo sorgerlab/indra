@@ -22,6 +22,7 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
+from indra.statements import Complex, SelfModification, ActiveForm
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -738,7 +739,7 @@ def post_reading_output(output_dict, db=None):
 
     # Copy into the database.
     logger.info("Adding %d/%d reading entries to the database." %
-                 (len(upload_list), len(output_dict)))
+                (len(upload_list), len(output_dict)))
     db.copy('readings', upload_list, ReadingData.get_cols())
     return
 
@@ -772,21 +773,25 @@ class StatementData(object):
 def make_statements(output_dict):
     """Convert the reader output into a list of StatementData instances."""
     _enrich_reading_data(output_dict.values())
-    stmts = [StatementData(stmt, output)
-             for output in output_dict.values()
-             for stmt in output.get_statements()]
+    stmt_data_list = [StatementData(stmt, output)
+                      for output in output_dict.values()
+                      for stmt in output.get_statements()]
     logger.info("Found %d statements from %d readings." %
-                (len(stmts), len(output_dict)))
-    return stmts
+                (len(stmt_data_list), len(output_dict)))
+    return stmt_data_list
 
 
-def upload_statements(stmts, db=None):
+def upload_statements(stmt_data_list, db=None):
     """Upload the statements to the database."""
     if db is None:
         db = get_primary_db()
-    logger.info("Uploading %d statements to the database." % len(stmts))
-    db.copy('statements', [s.make_tuple() for s in stmts],
+
+    logger.info("Uploading %d statements to the database." %
+                len(stmt_data_list))
+    db.copy('statements', [s.make_tuple() for s in stmt_data_list],
             StatementData.get_cols())
+
+    db.insert_agents([sd.statement for sd in stmt_data_list])
     return
 
 
@@ -858,9 +863,9 @@ if __name__ == "__main__":
         post_reading_output(outputs)
 
     # Convert the outputs to statements ======================================
-    stmts = make_statements(outputs)
+    stmt_data_list = make_statements(outputs)
     if not args.no_statement_upload and mode == 'ids':
-        upload_statements(stmts)
+        upload_statements(stmt_data_list)
     if args.pickle:
         with open(os.getcwd() + 'statements.pkl', 'wb') as f:
-            pickle.dump(stmts, f)
+            pickle.dump(stmt_data_list, f)
