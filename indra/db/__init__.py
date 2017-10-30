@@ -558,26 +558,13 @@ class DatabaseManager(object):
         q = self.filter_query(tbls, *args)
         return self.session.query(q.exists()).first()[0]
 
-    def insert_db_stmts(self, stmts, db_ref_id):
-        "Insert statement, their database, and any affiliated agents."
-        # Prepare the statements for copying
-        stmt_data = []
-        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
-        for stmt in stmts:
-            stmt_rec = (
-                stmt.uuid,
-                db_ref_id,
-                stmt.__class__.__name__,
-                json.dumps(stmt.to_json()).encode('utf8'),
-                get_version()
-            )
-            stmt_data.append(stmt_rec)
-        self.copy('statements', stmt_data, cols)
-
+    def insert_agents(self, stmts, *other_clauses):
+        "Insert the agents associated with the list of statements."
         # Build a dict mapping stmt UUIDs to statement IDs
         uuid_list = [s.uuid for s in stmts]
         stmt_rec_list = self.select_all('statements',
-                                        self.Statements.uuid.in_(uuid_list))
+                                        self.Statements.uuid.in_(uuid_list),
+                                        *other_clauses)
         stmt_uuid_dict = {uuid: sid for uuid, sid in
                           self.get_values(stmt_rec_list, ['uuid', 'id'])}
 
@@ -604,6 +591,24 @@ class DatabaseManager(object):
                     agent_data.append(ag_rec)
         cols = ('stmt_id', 'db_name', 'db_id', 'role')
         self.copy('agents', agent_data, cols)
+        return
+
+    def insert_db_stmts(self, stmts, db_ref_id):
+        "Insert statement, their database, and any affiliated agents."
+        # Preparing the statements for copying
+        stmt_data = []
+        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
+        for stmt in stmts:
+            stmt_rec = (
+                stmt.uuid,
+                db_ref_id,
+                stmt.__class__.__name__,
+                json.dumps(stmt.to_json()).encode('utf8'),
+                get_version()
+            )
+            stmt_data.append(stmt_rec)
+        self.copy('statements', stmt_data, cols)
+        self.insert_agents(stmts, self.Statements.db_ref == db_ref_id)
         return
 
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
