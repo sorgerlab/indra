@@ -496,9 +496,21 @@ class SparserReader(Reader):
 
         for item in read_list:
             if isinstance(item, str):
-                raise SparserError(
-                    "This feature not yet implemented for sparser."
-                    )  # TODO: Implement this use-case.
+                fpath = item.strip()
+                if fpath.endswith('.nxml'):
+                    if fpath.startswith('PMC'):
+                        file_list.append(fpath)
+                    else:
+                        new_fpath = pjoin(self.tmp_dir, path.basename(fpath))
+                        shutil.copy(fpath, new_fpath)
+                else:
+                    new_fname = path.basename(fpath).split('.')[0] + '.nxml'
+                    new_fpath = pjoin(self.tmp_dir, new_fname)
+                    with open(fpath, 'r') as f_old:
+                        content = f_old.read()
+                    nxml_str = sparser.make_sparser_nxml_from_text(content)
+                    with open(new_fpath, 'w') as f_new:
+                        f_new.write(nxml_str)
             elif all([hasattr(item, a) for a in ['format', 'content', 'id']]):
                 if item.format == formats.XML:
                     add_nxml_file(
@@ -791,6 +803,7 @@ def upload_statements(stmt_data_list, db=None):
     db.copy('statements', [s.make_tuple() for s in stmt_data_list],
             StatementData.get_cols())
 
+    logger.info("Uploading agents to the database.")
     reading_id_set = set([sd.reading_data.reading_id for sd in stmt_data_list])
     db.insert_agents([sd.statement for sd in stmt_data_list],
                      db.Statements.reader_ref.in_(reading_id_set))
