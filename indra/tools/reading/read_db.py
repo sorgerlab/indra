@@ -791,7 +791,9 @@ def upload_statements(stmt_data_list, db=None):
     db.copy('statements', [s.make_tuple() for s in stmt_data_list],
             StatementData.get_cols())
 
-    db.insert_agents([sd.statement for sd in stmt_data_list])
+    reading_id_set = set([sd.reading_data.reading_id for sd in stmt_data_list])
+    db.insert_agents([sd.statement for sd in stmt_data_list],
+                     db.Statements.reader_ref.in_(reading_id_set))
     return
 
 
