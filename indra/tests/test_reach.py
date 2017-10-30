@@ -3,7 +3,7 @@ from builtins import dict, str
 from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor
 from indra.util import unicode_strs
-from indra.statements import IncreaseAmount, DecreaseAmount
+from indra.statements import IncreaseAmount, DecreaseAmount, Dephosphorylation
 
 # Change this list to control what modes of
 # reading are enabled in tests
@@ -72,6 +72,19 @@ def test_phosphorylate():
         assert (s.enz.name == 'MAP2K1')
         assert (s.sub.name == 'MAPK1')
         assert unicode_strs(rp.statements)
+
+
+def test_indirect_phosphorylate():
+    txt = 'DUSP decreases the phosphorylation of ERK.'
+    for offline in offline_modes:
+        rp = reach.process_text(txt, offline=offline)
+        assert len(rp.statements) == 1
+        s = rp.statements[0]
+        assert isinstance(s, Dephosphorylation)
+        assert s.enz.name == 'DUSP'
+        assert s.sub.name == 'ERK'
+        assert s.evidence[0].epistemics.get('direct') == False
+
 
 def test_regulate_amount():
     for offline in offline_modes:
