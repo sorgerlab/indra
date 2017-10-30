@@ -161,25 +161,20 @@ def test_reading_content_insert():
     assert is_complete_match(r_list, reading_output), \
         "Uniqueness constraints failed."
 
+    print("Test enrichement")
+    assert all([rd.reading_id is None for rd in reading_output.values()]), \
+        "No readings should have reading_ids already."
+    _enrich_reading_data(reading_output.values(), db=db)
+    assert all([rd.reading_id is not None for rd in reading_output.values()]),\
+        "Some reading data objects didn't have reading_ids after enrichment."
+
     print("Test making statements")
     stmts = make_statements(reading_output)
     assert len(stmts), 'No statements created.'
 
-    print("Test enrichement")
-    with open(READINGS_PKL, 'rb') as f:
-        reading_output = pickle.load(f)
-    rid_list = []
-    for rd in reading_output.values():
-        reading_id = db.insert('readings',
-                               **dict(zip(rd.get_cols(), rd.make_tuple())))
-        rid_list.append(reading_id)
-    assert all([rd.reading_id is None for rd in reading_output.values()]), \
-        "No readings should have reading_ids already."
-    _enrich_reading_data(reading_output.values(), db=db)
-    assert all([rd.reading_id in rid_list for rd in reading_output.values()]),\
-        "Some reading data objects didn't have reading_ids after enrichment."
-
     print("Test statement upload")
     upload_statements(stmts, db=db)
-    assert len(db.select_all(db.Statements)), "No statements added."
+    db_stmts = db.select_all(db.Statements)
+    assert len(db_stmts) == len(stmts), \
+        "Only %d/%d statements added." % (len(db_stmts), len(stmts))
     assert len(db.select_all(db.Agents)), "No agents added."
