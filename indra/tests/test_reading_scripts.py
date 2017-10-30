@@ -9,7 +9,7 @@ from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
 from indra.tools.reading.read_db import _convert_id_entry, get_content,\
     get_clauses, post_reading_output, read_content, make_statements,\
-    _enrich_reading_data, Reader
+    _enrich_reading_data, Reader, upload_statements
 
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
@@ -132,24 +132,22 @@ def test_get_content():
     assert len(list(content)) == 1, "Failed to get correct content."
 
 
-def test_reading():
-    "Test that the contents of the database can be read."
+def test_reading_content_insert():
+    "Test the content primary through-put of read_db."
     db = get_db_with_content()
+
+    print("Test reading")
     tc_list = db.select_all(db.TextContent)
     readers = [reader_class() for reader_class in Reader.__subclasses__()]
-    res = read_content(tc_list, readers, verbose=True, force_read=True)
-    assert len(res) == len(tc_list), "Not all text content successfully read."
-    if not path.exists(READINGS_PKL):
-        with open(READINGS_PKL, 'wb') as f:
-            pickle.dump(res, f, protocol=2)
-            print("Created a new pickle file for future tests.")
+    reading_output = read_content(tc_list, readers, verbose=True,
+                                  force_read=True)
+    expected_output_len = len(tc_list)*len(readers)
+    assert len(reading_output) == expected_output_len, \
+        ("Not all text content successfully read."
+         "Expected %d outputs, but got %d.") % (expected_output_len,
+                                                len(reading_output))
 
-
-def test_reading_content_insert():
-    "Test the content copying functionality of read_db."
-    db = get_db_with_content()
-    with open(READINGS_PKL, 'rb') as f:
-        reading_output = pickle.load(f)
+    print("Test reading insert")
     post_reading_output(reading_output, db=db)
     r_list = db.select_all(db.Readings)
 
@@ -163,18 +161,11 @@ def test_reading_content_insert():
     assert is_complete_match(r_list, reading_output), \
         "Uniqueness constraints failed."
 
-
-def test_make_statements():
-    "Test that statements can be created from reading output."
-    with open(READINGS_PKL, 'rb') as f:
-        reading_output = pickle.load(f)
+    print("Test making statements")
     stmts = make_statements(reading_output)
     assert len(stmts), 'No statements created.'
 
-
-def test_enrichment():
-    "Test that reading data can be enriched with ids from the database."
-    db = get_db_with_content()
+    print("Test enrichement")
     with open(READINGS_PKL, 'rb') as f:
         reading_output = pickle.load(f)
     rid_list = []
@@ -187,3 +178,8 @@ def test_enrichment():
     _enrich_reading_data(reading_output.values(), db=db)
     assert all([rd.reading_id in rid_list for rd in reading_output.values()]),\
         "Some reading data objects didn't have reading_ids after enrichment."
+
+    print("Test statement upload")
+    upload_statements(stmts, db=db)
+    assert len(db.select_all(db.Statements)), "No statements added."
+    assert len(db.select_all(db.Agents)), "No agents added."
