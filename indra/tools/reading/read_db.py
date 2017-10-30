@@ -207,12 +207,13 @@ def _enrich_reading_data(reading_data_iter, db=None):
     a copy of the objects is passed as an argument, this function will have no
     effect.
     """
-    logging.debug("Enriching the reading data with database refs.")
+    logger.debug("Enriching the reading data with database refs.")
     if db is None:
         db = get_primary_db()
     possible_matches = db.select_all(
         'readings',
-        db.Readings.text_content_id.in_([rd.tcid for rd in reading_data_iter])
+        db.Readings.text_content_id.in_([rd.tcid for rd in reading_data_iter
+                                         if rd.reading_id is None])
         )
     for rdata in reading_data_iter:
         for reading in possible_matches:
@@ -839,14 +840,19 @@ if __name__ == "__main__":
         raise ReadingError('No inputs provided.')
 
     # Select only a sample of the lines, if sample is chosen.
-    if args.sample is not None and mode == 'ids':
-        id_lines = random.sample(id_lines, args.sample)
-        # TODO: Figure out how to handle this in conjunction nwith a file list.
+    if args.sample is not None:
+        if mode == 'ids':
+            id_lines = random.sample(id_lines, args.sample)
+        elif mode == 'files':
+            file_lines = random.sample(id_lines, args.sample)
 
     # If a range is specified, only use that range.
-    if args.in_range is not None and mode == 'ids':
+    if args.in_range is not None:
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
-        id_lines = id_lines[start_idx:end_idx]
+        if mode == 'ids':
+            id_lines = id_lines[start_idx:end_idx]
+        elif mode == 'files':
+            file_lines = file_lines[start_idx:end_idx]
 
     # Create a single base directory
     base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
@@ -856,7 +862,7 @@ if __name__ == "__main__":
                for reader_class in Reader.__subclasses__()
                if reader_class.name.lower() in args.readers]
 
-    # set the verbosity
+    # Set the verbosity. The quiet argument overrides the verbose argument.
     verbose = args.verbose and not args.quiet
 
     # Read everything ========================================================
