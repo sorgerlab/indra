@@ -1,3 +1,4 @@
+import re
 import boto3
 
 def kill_all(job_queue, reason='None given'):
@@ -95,3 +96,31 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     for job in jobs:
         get_job_log(job, write_file=True)
 
+
+def analyze_reach_log(log):
+    """Return unifinished PMIDs given a log file name."""
+    def get_content_nums(txt):
+        pat = 'Retrieved content for ([\d]+) / ([\d]+) papers to be read'
+        res = re.match(pat, txt)
+        has_content, total = res.groups() if res else None, None
+        return has_content, total
+
+    def get_started(txt):
+        pat = 'Starting ([\d]+)'
+        pmids = re.findall(pat, txt)
+        return pmids
+
+    def get_finished(txt):
+        # TODO: it might be interesting to get the time it took to read
+        # each paper here
+        pat = 'Finished ([\d]+)'
+        pmids = re.findall(pat, txt)
+        return pmids
+
+    with open(log, 'r') as fh:
+        log = fh.read()
+    has_content, total = get_content_nums(log)
+    pmids_started = get_started(log)
+    pmids_finished = get_finished(log)
+    pmids_not_done = set(pmids_started) - set(pmids_finished)
+    return pmids_not_done
