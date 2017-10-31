@@ -22,7 +22,7 @@ from datetime import datetime
 from math import log10, floor
 from os.path import join as pjoin
 from os import path
-from indra.statements import Complex, SelfModification, ActiveForm
+from sqlalchemy.sql.expression import or_, and_, intersect
 
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
@@ -105,7 +105,8 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         '--force_read',
-        help='Make the reader read all the content. (Not yet implemented.)',
+        help=('Make the reader read all the content. Otherwise, the system '
+              'will simply process existing readings where possible.'),
         action='store_true'
         )
     parser.add_argument(
@@ -120,6 +121,7 @@ if __name__ == '__main__':
 from indra.util import unzip_string, zip_string
 from indra.db import get_primary_db, formats, texttypes
 from indra.tools.reading.read_pmids import get_mem_total
+from indra.tools.get_version import get_version as get_indra_version
 from indra.sources import reach, sparser
 
 
@@ -205,7 +207,7 @@ def _enrich_reading_data(reading_data_iter, db=None):
 
     Note that the objects are modified IN PLACE, so nothing is returned, and if
     a copy of the objects is passed as an argument, this function will have no
-    effect.
+    effect. This does nothing if the readings are not in the database.
     """
     logger.debug("Enriching the reading data with database refs.")
     if db is None:
@@ -239,7 +241,7 @@ def get_clauses(id_str_list, table):
             for id_type, id_list in id_dict.items() if len(id_list)]
 
 
-def get_table_string(q, db):
+def get_text_content_summary_string(q, db):
     """Create a table with some summary data for a query."""
     N_tot = q.count()
     log_n = floor(log10(N_tot))
@@ -270,27 +272,57 @@ def get_table_string(q, db):
     return ret_str
 
 
-def get_content(id_str_list, batch_size=1000, db=None, force_fulltext=False):
+def get_content_and_readings(id_str_list, readers, db=None,
+                             force_fulltext=False, force_read=False):
     """Load all the content that will be read."""
     if db is None:
         db = get_primary_db()
     logger.debug("Got db handle.")
-    clauses = get_clauses(id_str_list, db.TextRef)
+
+    tc_tr_binding = db.TextContent.text_ref_id == db.TextRef.id
+    rd_tc_binding = db.Readings.text_content_id == db.TextContent.id
+    clauses = [tc_tr_binding]
+    clauses += get_clauses(id_str_list, db.TextRef)
     if force_fulltext:
         clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
     logger.debug("Generated %d clauses." % len(clauses))
     if len(clauses):
-        q = db.filter_query(
+        # Get the readings query object, if applicable.
+        if not force_read:
+            r_q = db.filter_query(
+                db.Readings,
+                rd_tc_binding,
+                or_(*[r.matches_clause(db) for r in readers]),
+                *clauses
+                )
+            r_done_q = intersect(*[r_q.filter(r.matches_clause(db))
+                                   for r in readers])
+        else:
+            r_q = None
+            r_done_q = None
+
+        # Get the text content query object
+        tc_q = db.filter_query(
             db.TextContent,
-            db.TextContent.text_ref_id == db.TextRef.id,
             *clauses
             )
-        logger.info(get_table_string(q, db))
-        ret = q.yield_per(batch_size)
+        logger.info(get_text_content_summary_string(tc_q, db))
+
+        if not force_read:
+            tc_q_subs = [tc_q.filter(rd_tc_binding, r.matches_clause(db))
+                         for r in readers]
+            tc_read_q = tc_q.except_(intersect(*tc_q_subs))
+        else:
+            tc_q_subs = {r.name: None for r in readers}
+            tc_read_q = tc_q
     else:
-        logger.info("Did not retreive content from database.")
-        ret = []
-    return ret
+        logger.info("Did not retreive content or readings from database.")
+        tc_q = None
+        tc_read_q = None
+        r_q = None
+        r_done_q = None
+
+    return tc_q, tc_read_q, r_q, r_done_q
 
 
 # =============================================================================
@@ -318,6 +350,11 @@ class Reader(object):
     def read(self, read_list, verbose=False, force_read=True):
         "Read a list of items and return a dict of output files."
         raise NotImplementedError()
+
+    def matches_clause(self, db):
+        "Make the clauses to get content that match Reader version and name."
+        return and_(db.Readings.reader == self.name,
+                    db.Readings.reader_version == self.version)
 
 
 class ReachReader(Reader):
@@ -417,19 +454,19 @@ class ReachReader(Reader):
             json_prefixes.add(pjoin(self.output_dir, prefix))
 
         # Join each set of json files and store the json dict.
-        tc_id_fname_dict = {}
+        reading_data_list = []
         for prefix in json_prefixes:
             base_prefix = path.basename(prefix)
-            tc_id_fname_dict[int(base_prefix)] = ReadingData(
+            reading_data_list.append(ReadingData(
                 int(base_prefix),
                 self.name,
                 self.version,
                 formats.JSON,
                 _join_json_files(prefix),
                 statement_maker=lambda x: reach.process_json_str(json.dumps(x))
-                )
+                ))
             logger.debug('Joined files for prefix %s.' % base_prefix)
-        return tc_id_fname_dict
+        return reading_data_list
 
     def read(self, read_list, verbose=False, force_read=True):
         """Read the content, returning a dict of ReadingData objects."""
@@ -535,7 +572,7 @@ class SparserReader(Reader):
 
     def get_output(self, output_files):
         "Get the output files as an id indexed dict."
-        tcid_fpath_dict = {}
+        reading_data_list = []
         patt = re.compile(r'PMC(\w+)-semantics.*?')
         for outpath in output_files:
             re_out = patt.match(path.basename(outpath))
@@ -545,21 +582,22 @@ class SparserReader(Reader):
             with open(outpath, 'r') as f:
                 content = json.load(f)
             tcid = re_out.groups()[0]
-            tcid_fpath_dict[tcid] = ReadingData(
+            reading_data_list.append(ReadingData(
                 int(tcid),
                 self.name,
                 self.version,
                 formats.JSON,
                 content,
                 statement_maker=sparser.process_json_dict
-                )
-        return tcid_fpath_dict
+                ))
+        return reading_data_list
 
     def read(self, read_list, verbose=False, force_read=True, log=False):
         "Perform the actual reading."
         ret = None
-        file_list = self.prep_input(read_list)
-        if len(read_list) > 1:
+        pruned_read_list = self.prune(read_list, force_read)
+        file_list = self.prep_input(pruned_read_list)
+        if len(pruned_read_list) > 1:
             logger.info("Beginning to run sparser.")
             output_file_list = []
             if log:
@@ -601,17 +639,17 @@ class SparserReader(Reader):
 
 def read_content(read_list, readers, *args, **kwargs):
     """Perform the reading, returning dicts of jsons."""
-    output_dict = {}
+    output_list = []
     for reader in readers:
-        res_dict = reader.read(read_list, *args, **kwargs)
+        res_list = reader.read(read_list, *args, **kwargs)
         logger.info("Read %d text content entries with %s."
-                    % (len(res_dict), reader.name))
-        output_dict.update(res_dict)
-    logger.info("Read %s text content entries in all." % len(output_dict))
-    return output_dict
+                    % (len(res_list), reader.name))
+        output_list += res_list
+    logger.info("Read %s text content entries in all." % len(output_list))
+    return output_list
 
 
-def read_db(id_str_list, readers, **kwargs):
+def read_db(id_str_list, readers, db=None, **kwargs):
     """Read contents retrieved from the database.
 
     The content will be retrieved in batchs, given by the `batch` argument.
@@ -634,34 +672,53 @@ def read_db(id_str_list, readers, **kwargs):
 
     Returns
     -------
-    outputs : dict of ReadingData instances
+    outputs : list of ReadingData instances
         The results of the readings with relevant metadata.
     """
+    if db is None:
+        db = get_primary_db()
+
     # Retrieve the kwargs needed in this function.
     batch_size = kwargs.pop('batch', 1000)
     force_fulltext = kwargs.pop('force_fulltext', False)
+    force_read = kwargs.pop('force_read', False)
 
     # Get the iterator.
     logger.debug("Getting iterator.")
-    input_iter = get_content(id_str_list, batch_size=batch_size,
-                             force_fulltext=force_fulltext)
+    tc_q, tc_read_q, r_q, r_done_q = get_content_and_readings(
+        id_str_list,
+        readers,
+        db=db,
+        force_fulltext=force_fulltext,
+        force_read=force_read
+        )
     logger.debug("Begginning to iterate.")
-    batch_list = []
-    outputs = {}
-    for i, text_content in enumerate(input_iter):
+    batch_list_dict = {r.name: [] for r in readers}
+    outputs = []
+    for text_content in tc_read_q.yield_per(batch_size):
         # The get_content function returns an iterator which yields results in
         # batches, so as not to overwhelm RAM. We need to read in batches for
         # much the same reaason.
-        batch_list.append(text_content)
-        if (i+1) % args.batch is 0:
-            outputs.update(read_content(batch_list, readers, **kwargs))
-            batch_list = []
+        for r in readers:
+            num_read_by_this_exact_reader = r_q.filter(
+                db.Readings.text_content_id == text_content.id,
+                r.matches_clause(db)
+                ).count()
+            if num_read_by_this_exact_reader is 0:
+                batch_list_dict[r.name].append(text_content)
+            if (len(batch_list_dict[r.name])+1) % args.batch is 0:
+                # TODO: this is a bit cludgy...maybe do this better?
+                # Perhaps refactor read_content.
+                logger.debug("Reading batch of files for %s." % r.name)
+                outputs += read_content(batch_list_dict[r.name], [r], **kwargs)
+                batch_list_dict[r.name] = []
     logger.debug("Finished iteration.")
     # Pick up any stragglers.
-    if len(batch_list) > 0:
-        logger.debug("Reading remaining files.")
-        outputs.update(read_content(batch_list, readers, **kwargs))
-    return outputs
+    for r in readers:
+        if len(batch_list_dict[r.name]) > 0:
+            logger.debug("Reading remaining files for %s." % r.name)
+            outputs += read_content(batch_list_dict[r.name], [r], **kwargs)
+    return outputs, r_done_q.all()
 
 
 def read_files(files, readers, **kwargs):
@@ -726,7 +783,7 @@ class ReadingData(object):
         return self.statement_maker(self.content).statements
 
 
-def post_reading_output(output_dict, db=None):
+def post_reading_output(output_list, db=None):
     """Put the reading output on the database."""
     if db is None:
         db = get_primary_db()
@@ -734,15 +791,16 @@ def post_reading_output(output_dict, db=None):
     # Create the list of records to be copied, ensuring no uniqueness conflicts
     r_list = db.select_all(
         db.Readings,
-        db.Readings.text_content_id.in_(list(output_dict.keys()))
+        db.Readings.text_content_id.in_([rd.tcid for rd in output_list])
         )
     exisiting_tcid_set = set([r.text_content_id for r in r_list])
     upload_list = []
-    for tcid, reading_data in output_dict.items():
+    for reading_data in output_list:
         # First check if this tcid is even in the set of existing tcids in the
         # readings table.
-        if tcid in exisiting_tcid_set:
-            r_tcid_list = [r for r in r_list if r.text_content_id == tcid]
+        if reading_data.tcid in exisiting_tcid_set:
+            r_tcid_list = [r for r in r_list
+                           if r.text_content_id == reading_data.tcid]
             # Now check for any exact matches:
             if any([reading_data.matches(r) for r in r_tcid_list]):
                 continue
@@ -752,7 +810,7 @@ def post_reading_output(output_dict, db=None):
 
     # Copy into the database.
     logger.info("Adding %d/%d reading entries to the database." %
-                (len(upload_list), len(output_dict)))
+                (len(upload_list), len(output_list)))
     db.copy('readings', upload_list, ReadingData.get_cols())
     return
 
@@ -764,33 +822,35 @@ def post_reading_output(output_dict, db=None):
 
 class StatementData(object):
     """Contains metadata for statements, as well as the statement itself."""
-    def __init__(self, statement, reading_data):
-        self.reading_data = reading_data
+    def __init__(self, statement, reading_id):
+        self.reading_id = reading_id
         self.statement = statement
+        self.indra_version = get_indra_version()
         return
 
     @classmethod
     def get_cols(self):
         """Get the columns for the tuple returned by `make_tuple`."""
-        return ('reader_ref', 'uuid', 'type', 'json')
+        return ('reader_ref', 'uuid', 'type', 'json', 'indra_version')
 
     def make_tuple(self):
         """Make a tuple for copying into the database."""
-        assert self.reading_data.reading_id is not None, \
+        assert self.reading_id is not None, \
             "Reading data must be loaded into the database first."
-        return (self.reading_data.reading_id, self.statement.uuid,
-                self.statement.__class__.__name__,
-                json.dumps(self.statement.to_json()))
+        return (self.reading_id, self.statement.uuid,
+                self.statement.__class__.__name__, self.statement.to_json(),
+                self.indra_version)
 
 
-def make_statements(output_dict):
+def make_statements(output_list, enrich=True):
     """Convert the reader output into a list of StatementData instances."""
-    _enrich_reading_data(output_dict.values())
-    stmt_data_list = [StatementData(stmt, output)
-                      for output in output_dict.values()
+    if enrich:
+        _enrich_reading_data(output_list)
+    stmt_data_list = [StatementData(stmt, output.reading_id)
+                      for output in output_list
                       for stmt in output.get_statements()]
     logger.info("Found %d statements from %d readings." %
-                (len(stmt_data_list), len(output_dict)))
+                (len(stmt_data_list), len(output_list)))
     return stmt_data_list
 
 
@@ -867,10 +927,10 @@ if __name__ == "__main__":
 
     # Read everything ========================================================
     if mode is 'ids':
-        outputs = read_db(id_lines, readers, verbose=verbose,
-                          force_read=args.force_read,
-                          force_fulltext=args.force_fulltext,
-                          batch=args.batch)
+        outputs, old_readings = read_db(id_lines, readers, verbose=verbose,
+                                        force_read=args.force_read,
+                                        force_fulltext=args.force_fulltext,
+                                        batch=args.batch)
     elif mode is 'files':
         outputs = read_files(file_lines, readers, verbose=verbose)
     else:
@@ -884,7 +944,7 @@ if __name__ == "__main__":
         post_reading_output(outputs)
 
     # Convert the outputs to statements ======================================
-    stmt_data_list = make_statements(outputs)
+    stmt_data_list = make_statements(outputs, enrich=(mode is 'ids'))
     if not args.no_statement_upload and mode == 'ids':
         upload_statements(stmt_data_list)
     if args.pickle:
