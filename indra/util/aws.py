@@ -51,9 +51,12 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
     job_name = job_info['jobName']
     job_id = job_info['jobId']
     logs = boto3.client('logs')
+    batch = boto3.client('batch')
+    job_description = batch.describe_jobs(jobs=[job_id])
+    log_stream_name = job_description['jobs'][0]['container']['logStreamName']
     stream_resp = logs.describe_log_streams(
                             logGroupName=log_group_name,
-                            logStreamNamePrefix='%s/%s' % (job_name, job_id))
+                            logStreamNamePrefix=log_stream_name)
     streams = stream_resp.get('logStreams')
     if not streams:
         print('No streams for job')
