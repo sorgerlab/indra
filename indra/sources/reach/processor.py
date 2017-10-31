@@ -79,21 +79,29 @@ class ReachProcessor(object):
 
     def get_modifications(self):
         """Extract Modification INDRA Statements."""
+        # Find all event frames that are a type of protein modification
         qstr = "$.events.frames[(@.type is 'protein-modification')]"
         res = self.tree.execute(qstr)
         if res is None:
             return
+        # Extract each of the results when possible
         for r in res:
+            # The subtype of the modification
             modification_type = r.get('subtype')
+
+            # Skip negated events (i.e. something doesn't happen)
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
                 continue
+
             context = self._get_context(r)
             frame_id = r['frame_id']
             args = r['arguments']
             site = None
             theme = None
 
+            # Find the substrate (the "theme" agent here) and the
+            # site and position it is modified on
             for a in args:
                 if self._get_arg_type(a) == 'theme':
                     theme = a['arg']
@@ -105,6 +113,9 @@ class ReachProcessor(object):
             else:
                 residue = None
                 pos = None
+
+            # Now we need to look for all regulation event to get to the
+            # enzymes (the "controller" here)
             qstr = "$.events.frames[(@.type is 'regulation') and " + \
                    "(@.arguments[0].arg is '%s')]" % frame_id
             reg_res = self.tree.execute(qstr)
@@ -118,6 +129,13 @@ class ReachProcessor(object):
                             controller_agent = \
                                 self._get_agent_from_entity(controller)
                             break
+                # Check the polarity of the regulation and if negative,
+                # flip the modification type.
+                # For instance, negative-regulation of a phosphorylation
+                # will become an (indirect) dephosphorylation
+                reg_subtype = reg.get('subtype')
+                if reg_subtype == 'negative-regulation':
+                    modification_type = modtype_to_inverse[modification_type]
 
                 sentence = reg['verbose-text']
                 ev = Evidence(source_api='reach', text=sentence,
