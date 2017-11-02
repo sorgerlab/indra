@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import os
+import sys
 import re
 import tempfile
 import logging
@@ -169,39 +170,6 @@ def _convert_id_entry(id_entry, allowed_types=None):
     return ret
 
 
-def _join_json_files(prefix):
-    """Join different REACH output JSON files into a single JSON object.
-
-    The output of REACH is broken into three files that need to be joined
-    before processing. Specifically, there will be three files of the form:
-    `<prefix>.uaz.<subcategory>.json`.
-
-    Parameters
-    ----------
-    prefix : str
-        The absolute path up to the extensions that reach will add.
-
-    Returns
-    -------
-    json_obj : dict
-        The result of joining the files, keyed by the three subcategories.
-    """
-    try:
-        with open(prefix + '.uaz.entities.json', 'rt') as f:
-            entities = json.load(f)
-        with open(prefix + '.uaz.events.json', 'rt') as f:
-            events = json.load(f)
-        with open(prefix + '.uaz.sentences.json', 'rt') as f:
-            sentences = json.load(f)
-    except IOError as e:
-        logger.error(
-            'Failed to open JSON files for %s; REACH error?' % prefix
-            )
-        logger.exception(e)
-        return None
-    return {'events': events, 'entities': entities, 'sentences': sentences}
-
-
 def _enrich_reading_data(reading_data_iter, db=None):
     """Get db ids for all ReadingData objects that correspond to a db ref.
 
@@ -244,7 +212,10 @@ def get_clauses(id_str_list, table):
 def get_text_content_summary_string(q, db):
     """Create a table with some summary data for a query."""
     N_tot = q.count()
-    log_n = floor(log10(N_tot))
+    if N_tot > 0:
+        log_n = floor(log10(N_tot))
+    else:
+        log_n = 1
     cols = list(formats.values()) + ['tot']
     col_fmt = ' %%%ds' % max(4, log_n)
     cols_strs = [col_fmt % fmt for fmt in cols]
@@ -282,11 +253,14 @@ def get_content_and_readings(id_str_list, readers, db=None,
     tc_tr_binding = db.TextContent.text_ref_id == db.TextRef.id
     rd_tc_binding = db.Readings.text_content_id == db.TextContent.id
     clauses = [tc_tr_binding]
-    clauses += get_clauses(id_str_list, db.TextRef)
+    clauses.append(or_(*get_clauses(id_str_list, db.TextRef)))
     if force_fulltext:
         clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
     logger.debug("Generated %d clauses." % len(clauses))
-    if len(clauses):
+
+    # TODO: Make sure we don't get repeat refences due to duplicate ids.
+    # Probably as simple as adding some kind of 'unique' onto sql query.
+    if len(clauses) > 1:
         # Get the readings query object, if applicable.
         if not force_read:
             r_q = db.filter_query(
@@ -295,26 +269,30 @@ def get_content_and_readings(id_str_list, readers, db=None,
                 or_(*[r.matches_clause(db) for r in readers]),
                 *clauses
                 )
-            r_done_q = intersect(*[r_q.filter(r.matches_clause(db))
-                                   for r in readers])
         else:
             r_q = None
-            r_done_q = None
 
         # Get the text content query object
         tc_q = db.filter_query(
             db.TextContent,
             *clauses
             )
-        logger.info(get_text_content_summary_string(tc_q, db))
+        try:
+            logger.info(get_text_content_summary_string(tc_q, db))
+        except Exception:
+            logger.info("Could not print summary of results.")
 
         if not force_read:
             tc_q_subs = [tc_q.filter(rd_tc_binding, r.matches_clause(db))
                          for r in readers]
             tc_read_q = tc_q.except_(intersect(*tc_q_subs))
+            r_done_q = r_q.filter(~db.Readings.text_content_id.in_(
+                [tc.id for tc in tc_read_q.all()]
+                ))
         else:
             tc_q_subs = {r.name: None for r in readers}
             tc_read_q = tc_q
+            r_done_q = None
     else:
         logger.info("Did not retreive content or readings from database.")
         tc_q = None
@@ -357,6 +335,18 @@ class Reader(object):
                     db.Readings.reader_version == self.version)
 
 
+def get_reader_children():
+    """Get all children of the Reader objcet."""
+    try:
+        children = Reader.__subclasses_()
+    except AttributeError:
+        module = sys.modules[__name__]
+        children = [cls for cls_name, cls in module.__dict__.items()
+                    if isinstance(cls, type) and issubclass(cls, Reader)
+                    and cls_name is not 'Reader']
+    return children
+
+
 class ReachReader(Reader):
     """This object encodes an interface to the reach reading script."""
     REACH_MEM = 5  # GB
@@ -379,6 +369,39 @@ class ReachReader(Reader):
                     )
         self.output_dir = _get_dir(self.tmp_dir, 'output')
         return
+
+    @classmethod
+    def _join_json_files(cls, prefix):
+        """Join different REACH output JSON files into a single JSON object.
+
+        The output of REACH is broken into three files that need to be joined
+        before processing. Specifically, there will be three files of the form:
+        `<prefix>.uaz.<subcategory>.json`.
+
+        Parameters
+        ----------
+        prefix : str
+            The absolute path up to the extensions that reach will add.
+
+        Returns
+        -------
+        json_obj : dict
+            The result of joining the files, keyed by the three subcategories.
+        """
+        try:
+            with open(prefix + '.uaz.entities.json', 'rt') as f:
+                entities = json.load(f)
+            with open(prefix + '.uaz.events.json', 'rt') as f:
+                events = json.load(f)
+            with open(prefix + '.uaz.sentences.json', 'rt') as f:
+                sentences = json.load(f)
+        except IOError as e:
+            logger.error(
+                'Failed to open JSON files for %s; REACH error?' % prefix
+                )
+            logger.exception(e)
+            return None
+        return {'events': events, 'entities': entities, 'sentences': sentences}
 
     def _check_reach_env(self):
         """Check that the environment supports runnig reach."""
@@ -462,8 +485,7 @@ class ReachReader(Reader):
                 self.name,
                 self.version,
                 formats.JSON,
-                _join_json_files(prefix),
-                statement_maker=lambda x: reach.process_json_str(json.dumps(x))
+                self._join_json_files(prefix)
                 ))
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return reading_data_list
@@ -587,17 +609,15 @@ class SparserReader(Reader):
                 self.name,
                 self.version,
                 formats.JSON,
-                content,
-                statement_maker=sparser.process_json_dict
+                content
                 ))
         return reading_data_list
 
     def read(self, read_list, verbose=False, force_read=True, log=False):
         "Perform the actual reading."
         ret = None
-        pruned_read_list = self.prune(read_list, force_read)
-        file_list = self.prep_input(pruned_read_list)
-        if len(pruned_read_list) > 1:
+        file_list = self.prep_input(read_list)
+        if len(file_list) > 1:
             logger.info("Beginning to run sparser.")
             output_file_list = []
             if log:
@@ -694,31 +714,50 @@ def read_db(id_str_list, readers, db=None, **kwargs):
         )
     logger.debug("Begginning to iterate.")
     batch_list_dict = {r.name: [] for r in readers}
-    outputs = []
-    for text_content in tc_read_q.yield_per(batch_size):
-        # The get_content function returns an iterator which yields results in
-        # batches, so as not to overwhelm RAM. We need to read in batches for
-        # much the same reaason.
+    new_outputs = []
+    if tc_read_q is not None:
+        for text_content in tc_read_q.yield_per(batch_size):
+            # The get_content function returns an iterator which yields
+            # results in batches, so as not to overwhelm RAM. We need to read 
+            # in batches for much the same reaason.
+            for r in readers:
+                if r_q is not None:
+                    num_read_by_this_exact_reader = r_q.filter(
+                        db.Readings.text_content_id == text_content.id,
+                        r.matches_clause(db)
+                        ).count()
+                else:
+                    num_read_by_this_exact_reader = 0
+                if num_read_by_this_exact_reader is 0:
+                    batch_list_dict[r.name].append(text_content)
+                if (len(batch_list_dict[r.name])+1) % batch_size is 0:
+                    # TODO: this is a bit cludgy...maybe do this better?
+                    # Perhaps refactor read_content.
+                    logger.debug("Reading batch of files for %s." % r.name)
+                    new_outputs += read_content(batch_list_dict[r.name], [r],
+                                                **kwargs)
+                    batch_list_dict[r.name] = []
+        logger.debug("Finished iteration.")
+        # Pick up any stragglers.
         for r in readers:
-            num_read_by_this_exact_reader = r_q.filter(
-                db.Readings.text_content_id == text_content.id,
-                r.matches_clause(db)
-                ).count()
-            if num_read_by_this_exact_reader is 0:
-                batch_list_dict[r.name].append(text_content)
-            if (len(batch_list_dict[r.name])+1) % args.batch is 0:
-                # TODO: this is a bit cludgy...maybe do this better?
-                # Perhaps refactor read_content.
-                logger.debug("Reading batch of files for %s." % r.name)
-                outputs += read_content(batch_list_dict[r.name], [r], **kwargs)
-                batch_list_dict[r.name] = []
-    logger.debug("Finished iteration.")
-    # Pick up any stragglers.
-    for r in readers:
-        if len(batch_list_dict[r.name]) > 0:
-            logger.debug("Reading remaining files for %s." % r.name)
-            outputs += read_content(batch_list_dict[r.name], [r], **kwargs)
-    return outputs, r_done_q.all()
+            if len(batch_list_dict[r.name]) > 0:
+                logger.debug("Reading remaining files for %s." % r.name)
+                new_outputs += read_content(batch_list_dict[r.name], [r],
+                                            **kwargs)
+    prev_read = []
+    if r_done_q is not None:
+        prev_read = [
+            ReadingData(
+                r.text_content_id,
+                r.reader,
+                r.reader_version,
+                r.format,
+                zlib.decompress(r.bytes, 16+zlib.MAX_WBITS).decode('utf8'),
+                r.id
+                )
+            for r in r_done_q.yield_per(batch_size)
+            ]
+    return new_outputs, prev_read
 
 
 def read_files(files, readers, **kwargs):
@@ -735,15 +774,44 @@ class ReadingData(object):
     """Object to contain the data produced by a reading."""
 
     def __init__(self, tcid, reader, reader_version, output_format, content,
-                 reading_id=None, statement_maker=None):
+                 reading_id=None):
         self.reading_id = reading_id
         self.tcid = tcid
         self.reader = reader
         self.reader_version = reader_version
         self.format = output_format
         self.content = content
-        self.statement_maker = statement_maker
         return
+
+    @classmethod
+    def get_cols(self):
+        """Get the columns for the tuple returned by `make_tuple`."""
+        return ('text_content_id', 'reader', 'reader_version', 'format',
+                'bytes')
+
+    def get_statements(self):
+        """General method to create statements."""
+        if self.reader == ReachReader.name:
+            if self.format == formats.JSON:
+                # Process the reach json into statements.
+                json_str = json.dumps(self.content)
+                stmts = reach.process_json_str(json_str).statements
+            elif self.romat == formats.XML:
+                # Process the reach xml into statements (untested)
+                stmts = reach.process_nxml_str(self.content.to_string())
+            else:
+                logger.error("Unknown format for creating reach statments: %s."
+                             % self.format)
+                stmts = []
+        elif self.reader == SparserReader.name:
+            if self.format == formats.JSON:
+                # Process the sparser content into statements
+                stmts = sparser.process_json_dict(self.content).statements
+            else:
+                logger.error("Sparser should only ever be JSON, not %s."
+                             % self.format)
+                stmts = []
+        return stmts
 
     def zip_content(self):
         """Compress the content, returning bytes."""
@@ -754,12 +822,6 @@ class ReadingData(object):
         else:
             raise Exception('Do not know how to zip format %s.' % self.format)
         return ret
-
-    @classmethod
-    def get_cols(self):
-        """Get the columns for the tuple returned by `make_tuple`."""
-        return ('text_content_id', 'reader', 'reader_version', 'format',
-                'bytes')
 
     def make_tuple(self):
         """Make the tuple expected by the database."""
@@ -775,12 +837,6 @@ class ReadingData(object):
         return (r_entry.text_content_id == self.tcid
                 and r_entry.reader == self.reader
                 and r_entry.reader_version == self.reader_version)
-
-    def get_statements(self):
-        "Get statements from the reading content."
-        if self.statement_maker is None:
-            return None
-        return self.statement_maker(self.content).statements
 
 
 def post_reading_output(output_list, db=None):
@@ -838,7 +894,8 @@ class StatementData(object):
         assert self.reading_id is not None, \
             "Reading data must be loaded into the database first."
         return (self.reading_id, self.statement.uuid,
-                self.statement.__class__.__name__, self.statement.to_json(),
+                self.statement.__class__.__name__,
+                json.dumps(self.statement.to_json()),
                 self.indra_version)
 
 
@@ -865,7 +922,7 @@ def upload_statements(stmt_data_list, db=None):
             StatementData.get_cols())
 
     logger.info("Uploading agents to the database.")
-    reading_id_set = set([sd.reading_data.reading_id for sd in stmt_data_list])
+    reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     db.insert_agents([sd.statement for sd in stmt_data_list],
                      db.Statements.reader_ref.in_(reading_id_set))
     return
@@ -919,7 +976,7 @@ if __name__ == "__main__":
 
     # Get the readers objects.
     readers = [reader_class(base_dir=base_dir, n_proc=args.num_procs)
-               for reader_class in Reader.__subclasses__()
+               for reader_class in get_reader_children()
                if reader_class.name.lower() in args.readers]
 
     # Set the verbosity. The quiet argument overrides the verbose argument.
@@ -944,6 +1001,9 @@ if __name__ == "__main__":
         post_reading_output(outputs)
 
     # Convert the outputs to statements ======================================
+    if mode is 'ids':
+        outputs += old_readings
+
     stmt_data_list = make_statements(outputs, enrich=(mode is 'ids'))
     if not args.no_statement_upload and mode == 'ids':
         upload_statements(stmt_data_list)
