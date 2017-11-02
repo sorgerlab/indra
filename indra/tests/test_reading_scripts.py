@@ -7,12 +7,14 @@ from nose import SkipTest
 
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
-from indra.tools.reading.read_db import _convert_id_entry, get_content,\
-    get_clauses, post_reading_output, read_content, make_statements,\
-    _enrich_reading_data, Reader, upload_statements
+from indra.tools.reading.read_db import _convert_id_entry, \
+    get_content_and_readings, get_clauses, post_reading_output, \
+    read_content, make_statements, _enrich_reading_data, \
+    upload_statements, get_reader_children, read_db
 
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
+import random
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.
@@ -110,6 +112,20 @@ def test_sparser_two_core():
 # ==============================================================================
 
 
+def get_id_str_list(tr_list):
+    id_str_list = []
+    idtype_list = ['pmid', 'pmcid', 'doi']
+    for tr in tr_list:
+        random.shuffle(idtype_list)
+        for idtype in idtype_list:
+            if getattr(tr, idtype) is not None:
+                break
+        else:
+            raise Exception("No id types found for text ref.")
+        id_str_list.append('%s:%s' % (idtype, getattr(tr, idtype)))
+    return id_str_list
+
+
 def test_convert_id_entry():
     "Test that we correctly conver the id's given us."
     id_entry = 'pmid\t: 12345\n'
@@ -120,25 +136,33 @@ def test_convert_id_entry():
 def test_get_clauses():
     "Test that the clauses are correctly created."
     db = get_test_db()
-    id_str_list = ['pmid:17399955']
+    id_str_list = ['pmid:17399955', 'pmcid:PMC3199586']
     clauses = get_clauses(id_str_list, db.TextRef)
-    assert len(clauses)
+    assert len(clauses) == 2
+    assert all(['IN' in str(c) for c in clauses])
 
 
 def test_get_content():
     "Test that we get content from the database successfully."
-    id_str_list = ['pmid:17399955']
-    content = get_content(id_str_list)
-    assert len(list(content)) == 1, "Failed to get correct content."
+    db = get_db_with_content()
+    tr_list = db.select_all(db.TextRef)
+    id_str_list = get_id_str_list(tr_list)
+    readers = [reader_class() for reader_class in get_reader_children()]
+    query_list = get_content_and_readings(id_str_list, readers, db=db,
+                                          force_read=False)
+    assert len(query_list) == 4,\
+        "Expected 4 queries, got %d." % len(query_list)
+    assert any([q.count() > 0 for q in query_list]), "No content retrieved."
 
 
+'''
 def test_reading_content_insert():
     "Test the content primary through-put of read_db."
     db = get_db_with_content()
 
     print("Test reading")
     tc_list = db.select_all(db.TextContent)
-    readers = [reader_class() for reader_class in Reader.__subclasses__()]
+    readers = [reader_class() for reader_class in get_reader_children()]
     reading_output = read_content(tc_list, readers, verbose=True,
                                   force_read=True)
     expected_output_len = len(tc_list)*len(readers)
@@ -153,7 +177,7 @@ def test_reading_content_insert():
 
     def is_complete_match(r_list, reading_output):
         return all([any([rd.matches(r) for r in r_list])
-                    for rd in reading_output.values()])
+                    for rd in reading_output])
 
     assert is_complete_match(r_list, reading_output), \
         "Not all reading output posted."
@@ -162,10 +186,10 @@ def test_reading_content_insert():
         "Uniqueness constraints failed."
 
     print("Test enrichement")
-    assert all([rd.reading_id is None for rd in reading_output.values()]), \
+    assert all([rd.reading_id is None for rd in reading_output]), \
         "No readings should have reading_ids already."
-    _enrich_reading_data(reading_output.values(), db=db)
-    assert all([rd.reading_id is not None for rd in reading_output.values()]),\
+    _enrich_reading_data(reading_output, db=db)
+    assert all([rd.reading_id is not None for rd in reading_output]),\
         "Some reading data objects didn't have reading_ids after enrichment."
 
     print("Test making statements")
@@ -178,3 +202,32 @@ def test_reading_content_insert():
     assert len(db_stmts) == len(stmts), \
         "Only %d/%d statements added." % (len(db_stmts), len(stmts))
     assert len(db.select_all(db.Agents)), "No agents added."
+'''
+
+
+def test_read_db():
+    "Test the read_db function with various settings."
+    # Prep the inputs.
+    db = get_db_with_content()
+    complete_tr_list = db.select_all(db.TextRef)
+    id_str_list = get_id_str_list(complete_tr_list)
+    readers = [reader_class() for reader_class in get_reader_children()]
+
+    # Run the reading with default batch size, no force_fulltext, and
+    # no force_read
+    reading_output, _ = read_db(id_str_list, readers, db=db)
+    assert len(reading_output), 'Nothing was read.'
+    post_reading_output(reading_output, db=db)  # setup for later test.
+    assert len(db.select_all(db.Readings)), 'None of the readings added to db.'
+
+    # Run the reading with default batch size, no force_fulltext, but with
+    # force_read = True (this hould produce new readings.)
+    reading_output, old_readings = read_db(id_str_list, readers, db=db,
+                                           force_read=True)
+    assert not len(old_readings), "Got old readings on force_read."
+
+    # Run the reading with default batch size, no force_fulltext, but without
+    # force_read = True (this should NOT produce new readings.)
+    reading_output, old_readings = read_db(id_str_list, readers, db=db)
+    assert len(reading_output) == 0, "Got new readings when force_read=False."
+    assert len(old_readings), "Did not get old readings when force_read=False."
