@@ -115,6 +115,25 @@ def activities_by_target(activities):
     return targ_act_dict
 
 
+def get_protein_targets_only(target_chembl_ids):
+    """Given list of ChEMBL target ids, return dict of only SINGLE PROTEIN targ
+    Parameters
+    ----------
+    target_chembl_ids : list
+        list of chembl_ids as strings
+    Returns
+    -------
+    protein_targets : dict
+        dictionary keyed to ChEMBL target ids with lists of activity ids
+    """
+    protein_targets = {}
+    for target_chembl_id in target_chembl_ids:
+        target = query_target(target_chembl_id)
+        if 'SINGLE PROTEIN' in target['target_type']:
+            protein_targets[target_chembl_id] = target
+    return protein_targets
+
+
 def get_evidence(assay):
     kin = get_kinetics(assay)
     source_id = assay.get('assay_chembl_id')
