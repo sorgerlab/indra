@@ -73,6 +73,26 @@ def send_query(query_dict):
     return js
 
 
+def query_target(target_chembl_id):
+    """Query ChEMBL API target by id
+
+    Parameters
+    ----------
+    target_chembl_id : str
+    Returns
+    -------
+    target : dict
+        dict parsed from json that is unique for the target
+    """
+    query_dict = {'query': 'target',
+                  'params': {'target_chembl_id': target_chembl_id,
+                             'limit': 1}}
+    res = send_query(query_dict)
+    assert(res['page_meta']['total_count'] == 1)
+    target = res['targets'][0]
+    return target
+
+
 def activities_by_target(activities):
     """Get back lists of activities in a dict keyed by ChEMBL target id
     Parameters
