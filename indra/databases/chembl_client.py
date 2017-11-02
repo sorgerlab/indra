@@ -221,8 +221,9 @@ def get_kinetics(assay):
         logger.warning('Unhandled unit: %s' % unit)
         return None
     param_type = assay.get('standard_type')
-    if param_type not in ['IC50', 'Kd']:
+    if param_type not in ['IC50', 'EC50', 'INH', 'Potency', 'Kd']:
         logger.warning('Unhandled parameter type: %s' % param_type)
+        logger.info(str(assay))
         return None
     kin = {param_type: val * unit_sym}
     return kin
