@@ -45,6 +45,25 @@ def get_inhibition(drug, target):
 
 
 def send_query(query_dict):
+    """Query ChEMBL API
+
+    Parameters
+    ----------
+    query_dict : dict
+        'query' : string of the endpoint to query
+        'params' : dict of params for the query
+    Returns
+    -------
+    js : dict
+        dict parsed from json that is unique to the submitted query
+
+    Example
+    -------
+    >>> query_dict = {'query': 'target',
+    >>>               'params': {'target_chembl_id': 'CHEMBL5145',
+    >>>               'limit': 1}}
+    >>> send_query(query_dict)
+    """
     query = query_dict['query']
     params = query_dict['params']
     url = 'https://www.ebi.ac.uk/chembl/api/data/' + query + '.json'
