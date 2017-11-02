@@ -119,8 +119,8 @@ def send_query(query_dict):
     Example
     -------
     >>> query_dict = {'query': 'target',
-    >>>               'params': {'target_chembl_id': 'CHEMBL5145',
-    >>>               'limit': 1}}
+    ...               'params': {'target_chembl_id': 'CHEMBL5145',
+    ...               'limit': 1}}
     >>> send_query(query_dict)
     """
     query = query_dict['query']
