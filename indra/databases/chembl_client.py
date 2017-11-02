@@ -94,11 +94,12 @@ def get_all_protein_activities(drug):
             if not ev:
                 continue
             evidence.append(ev)
-        for target_upid in target_upids:
-            agent_name = uniprot_client.get_gene_name(target_upid)
-            target_agent = Agent(agent_name, db_refs={'UP': target_upid})
-            st = Inhibition(drug, target_agent, evidence=evidence)
-            stmts.append(st)
+        if len(evidence) > 0:
+            for target_upid in target_upids:
+                agent_name = uniprot_client.get_gene_name(target_upid)
+                target_agent = Agent(agent_name, db_refs={'UP': target_upid})
+                st = Inhibition(drug, target_agent, evidence=evidence)
+                stmts.append(st)
     return stmts
 
 
