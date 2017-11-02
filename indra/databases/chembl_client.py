@@ -32,8 +32,7 @@ def get_inhibition(drug, target):
     query_dict = {'query': 'activity',
                   'params': {'molecule_chembl_id': drug_chembl_id,
                              'target_chembl_id': target_chembl_id,
-                             'limit': 10000}
-                  }
+                             'limit': 10000}}
     res = send_query(query_dict)
     evidence = []
     for assay in res['activities']:
