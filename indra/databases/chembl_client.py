@@ -73,6 +73,28 @@ def send_query(query_dict):
     return js
 
 
+def activities_by_target(activities):
+    """Get back lists of activities in a dict keyed by ChEMBL target id
+    Parameters
+    ----------
+    activities : dict
+        response from a query returning activities for a drug
+    Returns
+    -------
+    targ_act_dict : dict
+        dictionary keyed to ChEMBL target ids with lists of activity ids
+    """
+    targ_act_dict = defaultdict(lambda: [])
+    for activity in activities:
+        target_chembl_id = activity['target_chembl_id']
+        activity_id = activity['activity_id']
+        targ_act_dict[target_chembl_id].append(activity_id)
+    for target_chembl_id in targ_act_dict:
+        targ_act_dict[target_chembl_id] = \
+            list(set(targ_act_dict[target_chembl_id]))
+    return targ_act_dict
+
+
 def get_evidence(assay):
     kin = get_kinetics(assay)
     source_id = assay.get('assay_chembl_id')
