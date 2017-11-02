@@ -9,6 +9,7 @@ from indra.statements import Inhibition, Agent, Evidence
 
 logger = logging.getLogger('chembl')
 
+
 def get_inhibition(drug, target):
     chebi_id = drug.db_refs.get('CHEBI')
     mesh_id = drug.db_refs.get('MESH')
@@ -52,6 +53,7 @@ def send_query(query_dict):
     js = r.json()
     return js
 
+
 def get_evidence(assay):
     kin = get_kinetics(assay)
     source_id = assay.get('assay_chembl_id')
@@ -63,6 +65,7 @@ def get_evidence(assay):
     ev = Evidence(source_api='chembl', pmid=pmid, source_id=source_id,
                   annotations=annotations)
     return ev
+
 
 def get_kinetics(assay):
     try:
@@ -85,6 +88,7 @@ def get_kinetics(assay):
     kin = {param_type: val * unit_sym}
     return kin
 
+
 def get_pmid(doc_id):
     url_pmid = 'https://www.ebi.ac.uk/chembl/api/data/document.json'
     params = {'document_chembl_id': doc_id}
@@ -92,6 +96,7 @@ def get_pmid(doc_id):
     js = res.json()
     pmid = str(js['documents'][0]['pubmed_id'])
     return pmid
+
 
 def get_target_chemblid(target_upid):
     url = 'https://www.ebi.ac.uk/chembl/api/data/target.json'
@@ -130,6 +135,6 @@ def get_chembl_id(nlm_mesh):
     r = requests.get(url_mesh2pcid)
     res = r.json()
     synonyms = res['InformationList']['Information'][0]['Synonym']
-    chembl_id = [syn for syn in synonyms if 'CHEMBL' in syn
-                 and 'SCHEMBL' not in syn][0]
+    chembl_id = [syn for syn in synonyms
+                 if 'CHEMBL' in syn and 'SCHEMBL' not in syn][0]
     return chembl_id
