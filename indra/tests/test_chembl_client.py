@@ -18,3 +18,18 @@ def test_get_inhibitions():
         assert(ev.annotations)
         assert(ev.source_api == 'chembl')
         assert(ev.source_id)
+
+
+def test_get_all_protein_activities_vem():
+    stmts = chembl_client.get_all_protein_activities(vem)
+    assert(stmts is not None)
+    for st in stmts:
+        assert(unicode_strs(st))
+        assert(len(st.evidence) >= 1)
+        for ev in st.evidence:
+            assert(ev.pmid)
+            assert(ev.annotations)
+            assert(ev.source_api == 'chembl')
+            assert(ev.source_id)
+
+
