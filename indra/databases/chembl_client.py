@@ -27,7 +27,12 @@ def get_inhibition(drug, target):
     target_chembl_id = get_target_chemblid(target_upid)
 
     logger.info('Drug: %s, Target: %s' % (drug_chembl_id, target_chembl_id))
-    res = send_query(drug_chembl_id, target_chembl_id)
+    query_dict = {'query': 'activity',
+                  'params': {'molecule_chembl_id': drug_chembl_id,
+                             'target_chembl_id': target_chembl_id,
+                             'limit': 10000}
+                  }
+    res = send_query(query_dict)
     evidence = []
     for assay in res['activities']:
         ev = get_evidence(assay)
@@ -37,10 +42,11 @@ def get_inhibition(drug, target):
     st = Inhibition(drug, target, evidence=evidence)
     return st
 
-def send_query(drug_chemblid, target_chemblid):
-    url = 'https://www.ebi.ac.uk/chembl/api/data/activity.json'
-    params = {'molecule_chembl_id': drug_chemblid,
-              'target_chembl_id': target_chemblid}
+
+def send_query(query_dict):
+    query = query_dict['query']
+    params = query_dict['params']
+    url = 'https://www.ebi.ac.uk/chembl/api/data/' + query + '.json'
     r = requests.get(url, params=params)
     r.raise_for_status()
     js = r.json()
