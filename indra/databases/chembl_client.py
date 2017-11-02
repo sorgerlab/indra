@@ -4,8 +4,9 @@ import json
 import logging
 import requests
 from sympy.physics import units
-from indra.databases import chebi_client
+from indra.databases import chebi_client, uniprot_client
 from indra.statements import Inhibition, Agent, Evidence
+from collections import defaultdict
 
 logger = logging.getLogger('chembl')
 
