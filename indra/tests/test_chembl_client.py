@@ -12,6 +12,10 @@ braf_chembl_id = 'CHEMBL1229517'
 query_dict_BRAF_activity = {'query': 'activity',
                             'params': {'molecule_chembl_id': braf_chembl_id,
                                        'limit': 10000}}
+query_dict_BRAF_target = {'query': 'target',
+                          'params': {'target_chembl_id': braf_chembl_id,
+                          'limit': 1}}
+
 
 def test_get_inhibitions():
     stmt = chembl_client.get_inhibition(vem, braf)
@@ -32,6 +36,11 @@ def test_activity_query():
     expected_types = ['IC50', 'EC50', 'INH', 'Potency', 'Kd']
     for e_t in expected_types:
         assert(e_t in assay_types)
+
+
+def test_target_query():
+    target = query_target(braf_chembl_id)
+    assert(target['target_type'] == 'SINGLE PROTEIN')
 
 
 def test_get_drug_inhibition_stmts_vem():
