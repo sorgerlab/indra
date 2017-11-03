@@ -218,8 +218,8 @@ class DatabaseManager(object):
                              ForeignKey('statements.id'),
                              nullable=False)
             statements = relationship(Statements)
-            db_name = Column(String(20), nullable=False)
-            db_id = Column(String(20), nullable=False)
+            db_name = Column(String(40), nullable=False)
+            db_id = Column(String(40), nullable=False)
             role = Column(String(20), nullable=False)
 
         self.tables = {}
