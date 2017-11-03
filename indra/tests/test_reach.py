@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import unittest
 from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor
 from indra.util import unicode_strs
@@ -169,6 +170,7 @@ def test_process_unicode():
         rp = reach.process_text('MEK1 binds ERK2\U0001F4A9.', offline=offline)
         assert unicode_strs(rp.statements)
 
+@unittest.skip('Taking too long on Travis')
 def test_process_pmc():
     for offline in offline_modes:
         rp = reach.process_pmc('PMC4338247', offline=offline)
