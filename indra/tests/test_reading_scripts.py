@@ -155,6 +155,13 @@ def test_get_content():
     assert any([q.count() > 0 for q in query_list]), "No content retrieved."
 
 
+def test_get_reader_children():
+    "Test method for getting reader objects."
+    readers = get_reader_children()
+    assert len(readers) == 2, \
+        "Expected only 2 readers, but got %s." % str(readers)
+
+
 '''
 def test_reading_content_insert():
     "Test the content primary through-put of read_db."
