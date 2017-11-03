@@ -157,6 +157,7 @@ def test_get_entity_mods():
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
     assert_pmids(bp.statements)
+    assert_source_sub_id(bp.statements)
     assert(unicode_strs(bp.statements))
 
 def test_all_uniprot_ids():
@@ -199,3 +200,9 @@ def assert_pmids(stmts):
             if ev.pmid is not None:
                 assert(ev.pmid.isdigit())
 
+
+def assert_source_sub_id(stmts):
+    for stmt in stmts:
+        for ev in stmt.evidence:
+            assert 'source_sub_id' in ev.annotations
+            assert ev.annotations['source_sub_id']
