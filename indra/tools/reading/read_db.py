@@ -256,7 +256,7 @@ def get_content_and_readings(id_str_list, readers, db=None,
     clauses.append(or_(*get_clauses(id_str_list, db.TextRef)))
     if force_fulltext:
         clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
-    logger.debug("Generated %d clauses." % len(clauses))
+    logger.debug("Generated %d clauses." % (len(clauses) - 1))
 
     # TODO: Make sure we don't get repeat refences due to duplicate ids.
     # Probably as simple as adding some kind of 'unique' onto sql query.
@@ -289,6 +289,7 @@ def get_content_and_readings(id_str_list, readers, db=None,
             r_done_q = r_q.filter(~db.Readings.text_content_id.in_(
                 [tc.id for tc in tc_read_q.all()]
                 ))
+            logger.info("%d readings already done." % r_done_q.count())
         else:
             tc_q_subs = {r.name: None for r in readers}
             tc_read_q = tc_q
@@ -343,7 +344,7 @@ def get_reader_children():
         module = sys.modules[__name__]
         children = [cls for cls_name, cls in module.__dict__.items()
                     if isinstance(cls, type) and issubclass(cls, Reader)
-                    and cls_name is not 'Reader']
+                    and cls_name != 'Reader']
     return children
 
 
@@ -718,17 +719,17 @@ def read_db(id_str_list, readers, db=None, **kwargs):
     if tc_read_q is not None:
         for text_content in tc_read_q.yield_per(batch_size):
             # The get_content function returns an iterator which yields
-            # results in batches, so as not to overwhelm RAM. We need to read 
+            # results in batches, so as not to overwhelm RAM. We need to read
             # in batches for much the same reaason.
             for r in readers:
-                if r_q is not None:
+                if r_q.count() > 0:
                     num_read_by_this_exact_reader = r_q.filter(
                         db.Readings.text_content_id == text_content.id,
                         r.matches_clause(db)
                         ).count()
                 else:
                     num_read_by_this_exact_reader = 0
-                if num_read_by_this_exact_reader is 0:
+                if num_read_by_this_exact_reader == 0:
                     batch_list_dict[r.name].append(text_content)
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
                     # TODO: this is a bit cludgy...maybe do this better?
