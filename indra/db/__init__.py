@@ -209,6 +209,7 @@ class DatabaseManager(object):
             reader_ref = Column(Integer, ForeignKey('readings.id'))
             readings = relationship(Readings)
             type = Column(String(100), nullable=False)
+            indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
 
         class Agents(self.Base):
