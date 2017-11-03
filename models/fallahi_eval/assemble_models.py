@@ -35,7 +35,7 @@ if __name__ == '__main__':
     pre_stmts_file = prefixed_pkl('preassembled')
     if reassemble:
         # Load various files that were previously produced
-        sources = ['reach', 'trips', 'bel', 'biopax', 'phosphosite', 'r3',
+        sources = ['indradb', 'trips', 'bel', 'biopax', 'phosphosite', 'r3',
                    'sparser']
         stmts = []
         for source in sources:
