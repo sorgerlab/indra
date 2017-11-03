@@ -209,7 +209,7 @@ class NihFtpClient(object):
             ret = str_bytes
         return ret
 
-    def ftp_ls(self, ftp_path=None):
+    def ftp_ls(self, ftp_path=None, after_date=None):
         "Get a list of the contents in the ftp directory."
         if ftp_path is None:
             ftp_path = self.my_path
@@ -217,7 +217,13 @@ class NihFtpClient(object):
             ftp_path = self._path_join(self.my_path, ftp_path)
         if not self.is_local:
             with self.get_ftp_connection() as ftp:
-                contents = ftp.nlst()
+                if after_date is None:
+                    contents = ftp.nlst()
+                else:
+                    after_timestamp = after_date.timestamp()
+                    all_contents = ftp.mlsd()
+                    contents = [k for k, meta in all_contents
+                                if meta['modify'] > str(after_timestamp)]
         else:
             contents = os.listdir(self._path_join(self.ftp_url, ftp_path))
         return contents
@@ -271,13 +277,13 @@ class NihManager(ContentManager):
 
 
 class Medline(NihManager):
-    "ContentManager for the medline content."
-    my_path = 'pubmed/baseline'
+    "Manager for the medline content."
+    my_path = 'pubmed'
     my_source = 'pubmed'
 
     def get_deleted_pmids(self):
         del_pmid_str = self.ftp.get_uncompressed_bytes(
-            '../deleted.pmids.gz'
+            'deleted.pmids.gz'
             )
         pmid_list = [
             line.strip() for line in del_pmid_str.split('\n')
@@ -285,11 +291,11 @@ class Medline(NihManager):
         return pmid_list
 
     def get_file_list(self):
-        all_files = self.ftp.ftp_ls()
+        all_files = self.ftp.ftp_ls('baseline')
         return [k for k in all_files if k.endswith('.xml.gz')]
 
     def get_article_info(self, xml_file, q=None):
-        tree = self.ftp.get_xml_file(xml_file)
+        tree = self.ftp.get_xml_file('baseline/' + xml_file)
         article_info = pubmed_client.get_metadata_from_xml_tree(
             tree,
             get_abstracts=True,
@@ -437,6 +443,19 @@ class Medline(NihManager):
             self.upload_article(db, article_info)
             n_tot -= 1
 
+        return
+
+    def update(self, db, n_procs=1, continuing=False):
+        """Update the contents of the database with the latest articles."""
+        # Get the date latest date of the last update. That's our earliest date
+        my_updates = db.select_all(db.Updates,
+                                   db.Updates.source == self.my_source)
+        update_end_times = [u.latest_time for u in my_updates]
+        earliest_date = max(update_end_times)
+
+        # Get a list of content from the server with more recent than the
+        # earliest date.
+        self.ftp.ftp_ls('updatefiles', earliest_date)
         return
 
 
