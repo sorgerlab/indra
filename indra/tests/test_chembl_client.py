@@ -21,8 +21,8 @@ def test_get_inhibitions():
         assert(ev.source_id)
 
 
-def test_get_all_protein_activities_vem():
-    stmts = chembl_client.get_all_protein_activities(vem)
+def test_get_drug_inhibition_stmts_vem():
+    stmts = chembl_client.get_drug_inhibition_stmts(vem)
     assert(stmts is not None)
     for st in stmts:
         assert(unicode_strs(st))
@@ -34,8 +34,8 @@ def test_get_all_protein_activities_vem():
             assert(ev.source_id)
 
 
-def test_get_all_protein_activities_az628():
-    stmts = chembl_client.get_all_protein_activities(az628)
+def test_get_drug_inhibition_stmts_az628():
+    stmts = chembl_client.get_drug_inhibition_stmts(az628)
     assert(stmts is not None)
     for st in stmts:
         assert(unicode_strs(st))

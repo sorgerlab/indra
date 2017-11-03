@@ -44,7 +44,7 @@ def get_inhibition(drug, target):
     return st
 
 
-def get_all_protein_activities(drug):
+def get_drug_inhibition_stmts(drug):
     """Query ChEMBL for kinetics data given drug as Agent get back statements
 
     Parameters
