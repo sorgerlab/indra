@@ -39,7 +39,7 @@ def test_activity_query():
 
 
 def test_target_query():
-    target = query_target(braf_chembl_id)
+    target = chembl_client.query_target(braf_chembl_id)
     assert(target['target_type'] == 'SINGLE PROTEIN')
 
 

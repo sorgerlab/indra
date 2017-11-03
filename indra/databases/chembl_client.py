@@ -145,7 +145,6 @@ def query_target(target_chembl_id):
                   'params': {'target_chembl_id': target_chembl_id,
                              'limit': 1}}
     res = send_query(query_dict)
-    assert(res['page_meta']['total_count'] == 1)
     target = res['targets'][0]
     return target
 
