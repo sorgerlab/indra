@@ -7,7 +7,7 @@ from indra.statements import IncreaseAmount, DecreaseAmount, Dephosphorylation
 
 # Change this list to control what modes of
 # reading are enabled in tests
-offline_modes = [False, True]
+offline_modes = [True]
 
 def test_parse_site_text():
     text = ['threonine 185', 'thr 185', 'thr-185',
