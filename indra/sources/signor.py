@@ -26,6 +26,10 @@ from indra.databases import hgnc_client, uniprot_client
 logger = logging.getLogger('signor')
 
 
+_default_csv_file = join(dirname(__file__), '..', '..', 'data',
+                         'all_data_23_09_17.csv')
+
+
 _signor_fields = [
     'ENTITYA',
     'TYPEA',

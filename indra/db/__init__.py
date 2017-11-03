@@ -61,14 +61,6 @@ except ImportError:
 DEFAULTS_FILE = path.join(__path__[0], 'defaults.txt')
 
 
-def _get_timestamp():
-    "Get the timestamp. Needed for python 2-3 compatibility."
-    try:  # Python 3
-        ret = datetime.utcnow().timestamp()
-    except AttributeError:  # Python 2
-        now = datetime.utcnow()
-        ret = time.mktime(now.timetuple())+now.microsecond/1000000.0
-    return ret
 
 
 def _isiterable(obj):
@@ -211,7 +203,7 @@ class DatabaseManager(object):
         class Statements(self.Base):
             __tablename__ = 'statements'
             id = Column(Integer, primary_key=True)
-            uuid = Column(String(20), unique=True, nullable=False)
+            uuid = Column(String(40), unique=True, nullable=False)
             db_ref = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
             reader_ref = Column(Integer, ForeignKey('readings.id'))
@@ -391,7 +383,7 @@ class DatabaseManager(object):
             conn.commit()
         else:
             # TODO: use bulk insert mappings?
-            print("WARNING: You are not using postresql or do not have pgcopy,"
+            print("WARNING: You are not using postgresql or do not have pgcopy,"
                   " so this will likely be very slow.")
             self.insert_many(tbl_name, [dict(zip(cols, ro)) for ro in data])
 
@@ -468,29 +460,32 @@ class DatabaseManager(object):
         q = self.filter_query(tbls, *args)
         return self.session.query(q.exists()).first()[0]
 
-    def insert_db_stmts(self, stmts, db_name):
+    def insert_db_stmts(self, stmts, db_ref_id):
         "Insert statement, their database, and any affiliated agents."
-        # Insert the db info
-        print("Adding db %s." % db_name)
-        db_ref_id = self.insert(
-            'db_info',
-            db_name=db_name,
-            timestamp=_get_timestamp()
-            )
-
-        # Insert the statements
+        # Prepare the statements for copying
+        stmt_data = []
+        cols = ('uuid', 'db_ref', 'type', 'json')
         for i_stmt, stmt in enumerate(stmts):
-            print("Inserting stmt %s (%d/%d)" % (stmt, i_stmt+1, len(stmts)))
-            stmt_id = self.insert(
-                'statements',
-                uuid=stmt.uuid,
-                db_ref=db_ref_id,
-                type=stmt.__class__.__name__,
-                json=json.dumps(stmt.to_json())
-                )
-
-            # Collect the agents and add them.
-            for i_ag, ag in enumerate(stmt.agent_list()):
+            #print("Inserting stmt %s (%d/%d)" % (stmt, i_stmt+1, len(stmts)))
+            stmt_rec = (
+                stmt.uuid,
+                db_ref_id,
+                stmt.__class__.__name__,
+                json.dumps(stmt.to_json()).encode('utf8')
+            )
+            stmt_data.append(stmt_rec)
+        self.copy('statements', stmt_data, cols)
+        # Build a dict mapping stmt UUIDs to statement IDs
+        uuid_list = [s.uuid for s in stmts]
+        stmt_rec_list = self.select_all('statements',
+                                  self.Statements.uuid.in_(uuid_list))
+        stmt_uuid_dict = {uuid: sid for uuid, sid in
+                          self.get_values(stmt_rec_list, ['uuid', 'id'])}
+        # Now assemble agent records
+        agent_data = []
+        for stmt in stmts:
+            stmt_id = stmt_uuid_dict[stmt.uuid]
+            for ag_ix, ag in enumerate(stmt.agent_list()):
                 # If no agent, or no db_refs for the agent, skip the insert
                 # that follows.
                 if ag is None or ag.db_refs is None:
@@ -498,25 +493,17 @@ class DatabaseManager(object):
                 if any([isinstance(stmt, tp) for tp in
                         [Complex, SelfModification, ActiveForm]]):
                     role = 'OTHER'
-                elif i_ag == 0:
+                elif ag_ix == 0:
                     role = 'SUBJECT'
-                elif i_ag == 1:
+                elif ag_ix == 1:
                     role = 'OBJECT'
                 else:
                     raise IndraDatabaseError("Unhandled agent role.")
-
-                input_list = []
-                for db_name, db_id in ag.db_refs.items():
-                    input_list.append(
-                        dict(
-                            stmt_id=stmt_id,
-                            role=role,
-                            db_name=db_name,
-                            db_id=db_id
-                            )
-                        )
-                self.insert_many('agents', input_list)
-        return
+                for ns, id in ag.db_refs.items():
+                    ag_rec = (stmt_id, ns, id, role)
+                    agent_data.append(ag_rec)
+        cols = ('stmt_id', 'db_name', 'db_id', 'role')
+        self.copy('agents', agent_data, cols)
 
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
         "Get abstracts using the pmids in pmid_list."
@@ -553,6 +540,18 @@ class DatabaseManager(object):
             self.TextRef.pmid.in_(pmid_list)
             )
         return self.get_values(text_refs, 'pmid')
+
+    def _get_timestamp(self):
+        "Get the timestamp. Needed for python 2-3 compatibility."
+        try:  # Python 3
+            ret = datetime.utcnow()
+            #if self.sqltype != sqltypes.SQLITE:
+            #    ret = ret.timestamp()
+        except AttributeError:  # Python 2
+            ret = datetime.utcnow()
+            #if self.sqltype != sqltypes.SQLITE:
+            #    ret = time.mktime(ret.timetuple())+ret.microsecond/1000000.0
+        return ret
 
 
 class IndraDatabaseError(Exception):
