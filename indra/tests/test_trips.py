@@ -37,6 +37,7 @@ def test_phosphorylation():
     assert(st.evidence)
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
+    assert st.sub.db_refs['TEXT'] == 'MEK1'
     assert unicode_strs((tp, st))
 
 def test_mod_cond():

@@ -1597,6 +1597,14 @@ def _get_db_refs(term):
     agent_text_tag = term.find('name')
     if agent_text_tag is not None:
         db_refs['TEXT'] = agent_text_tag.text
+        # If we have some drum-terms, the matched-name of the first
+        # drum-term (e.g. "MAP2K1") is a better value for TEXT than
+        # the name of the TERM (e.g. "MAP-2-K-1") so we put that in there
+        drum_terms = term.findall('drum-terms/drum-term')
+        if drum_terms:
+            matched_name = drum_terms[0].attrib.get('matched-name')
+            if matched_name:
+                db_refs['TEXT'] = matched_name
 
     # We make a list of scored grounding terms from the DRUM terms
     grounding_terms = _get_grounding_terms(term)
