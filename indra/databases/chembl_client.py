@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import json
 import logging
 import requests
 from sympy.physics import units
@@ -51,7 +50,6 @@ def get_drug_inhibition_stmts(drug):
     ----------
     drug : Agent
         Agent representing drug with MESH or CHEBI grounding
-
     Returns
     -------
     stmts : list of INDRA statements
@@ -154,6 +152,7 @@ def query_target(target_chembl_id):
 
 def activities_by_target(activities):
     """Get back lists of activities in a dict keyed by ChEMBL target id
+
     Parameters
     ----------
     activities : dict
@@ -176,6 +175,7 @@ def activities_by_target(activities):
 
 def get_protein_targets_only(target_chembl_ids):
     """Given list of ChEMBL target ids, return dict of only SINGLE PROTEIN targ
+
     Parameters
     ----------
     target_chembl_ids : list
