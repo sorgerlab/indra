@@ -15,6 +15,8 @@ from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
+from indra.explanation import cycle_free_paths as cfp
+
 
 logger = logging.getLogger('model_checker')
 
@@ -442,6 +444,7 @@ class ModelChecker(object):
                 pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
+                """
                 path_iter = enumerate(_find_sources_with_paths(
                                            self.get_im(), obs_name,
                                            input_rule_set, target_polarity))
@@ -450,6 +453,15 @@ class ModelChecker(object):
                     pr.add_path(flipped)
                     if len(pr.paths) >= max_paths:
                         break
+                return pr
+                """
+                cfp_polarity = 0 if target_polarity > 0 else 1
+                nx_graph = _agraph_to_multidigraph(self.get_im())
+                for rule in input_rule_set:
+                    sample_paths = cfp.sample_paths(nx_graph, rule,
+                                    obs_name, max_path_length, cfp_polarity,
+                                    num_paths=1000)
+                    pr.paths.extend(sample_paths)
                 return pr
             # There are no paths shorter than the max path length, so we
             # don't bother trying to get them
@@ -1026,9 +1038,12 @@ def _monomer_pattern_label(mp):
 
 
 def _agraph_to_multidigraph(agraph):
-    edges = [(e[0], e[1], dict([('polarity', _get_edge_sign(e))]))
-             for e in agraph.edges()]
-    mdg = nx.MultiDiGraph()
+    edges = []
+    for e in agraph.edges():
+        edge_sign = _get_edge_sign(e)
+        polarity = 0 if edge_sign > 0 else 1
+        edges.append((e[0].name, e[1].name, dict([('sign', polarity)])))
+    mdg = nx.DiGraph()
     mdg.add_edges_from(edges)
     return mdg
 
