@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import json
 from indra.statements import *
 from indra.sources.signor import SignorProcessor, _default_csv_file
@@ -9,7 +11,7 @@ db = get_primary_db()
 
 
 def by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
-                      stmt_type=None, do_stmt_count=True):
+                      stmt_type=None, count=1000, do_stmt_count=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -27,6 +29,9 @@ def by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         `SelfModification`, and `ActiveForm` Statements).
     stmt_type : str
         Name of the Statement class.
+    count : int
+        Number of statements to retrieve in each batch (passed to
+        :py:func:`get_statements`).
     do_stmt_count : bool
         Whether or not to perform an initial statement counting step to give
         more meaningful progress messages.
@@ -35,39 +40,42 @@ def by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
     -------
     list of Statements from the database corresponding to the query.
     """
-    if not (gene_name or role or stmt_type):
+    if not (agent_id or role or stmt_type):
         raise ValueError('At least one of agent_id, role, or stmt_type '
                          'must be specified.')
     clauses = []
     if agent_id and agent_ns == 'HGNC':
         hgnc_id = hgnc_client.get_hgnc_id(agent_id)
         if not hgnc_id:
-            logger.warning('Invalid gene name: %s' % agent_id
+            logger.warning('Invalid gene name: %s' % agent_id)
             return []
         clauses.extend([db.Agents.db_name == 'HGNC',
-                        db.Agents.db_id == gene_id])
+                        db.Agents.db_id == hgnc_id])
     elif agent_id:
         clauses.extend([db.Agents.db_name == agent_ns,
-                        db.Agents.db_id == gene_id])
+                        db.Agents.db_id == agent_id])
     if role:
         clauses.append(db.Agents.role == role)
     if agent_id or role:
         clauses.append(db.Agents.stmt_id == db.Statements.id)
     if stmt_type:
         clauses.append(db.Statements.type == stmt_type)
-    stmts = get_statements(*clauses)
+    stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count)
     return stmts
 
 
-def get_statements(*clauses, count=1000):
+def get_statements(clauses, count=1000, do_stmt_count=True):
     """Select statements according to a given set of clauses.
 
     Parameters
     ----------
-    arg1, ..., argn
-        sqlalchemy WHERE clauses to pass to the filter query.
+    clauses : list
+        list of sqlalchemy WHERE clauses to pass to the filter query.
     count : int
         Number of statements to retrieve and process in each batch.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
 
     Returns
     -------
@@ -75,9 +83,10 @@ def get_statements(*clauses, count=1000):
     """
     stmts = []
     q = db.filter_query('statements', *clauses)
-    print("Counting statements...")
-    num_stmts = q.count()
-    print("Total of %d statements" % num_stmts)
+    if do_stmt_count:
+        print("Counting statements...")
+        num_stmts = q.count()
+        print("Total of %d statements" % num_stmts)
     db_stmts = q.yield_per(count)
     subset = []
     total_counter = 0
@@ -88,7 +97,11 @@ def get_statements(*clauses, count=1000):
             subset = []
         total_counter += 1
         if total_counter % count == 0:
-            print("%d of %d" % (total_counter, num_stmts))
+            if do_stmt_count:
+                print("%d of %d statements" % (total_counter, num_stmts))
+            else:
+                print("%d statements" % total_counter)
+
     stmts.extend(_stmts_from_db_list(subset))
     return stmts
 
