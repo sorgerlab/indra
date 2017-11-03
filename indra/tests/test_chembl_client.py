@@ -8,6 +8,10 @@ vem = Agent('VEMURAFENIB', db_refs={'CHEBI': '63637', 'TEXT': 'VEMURAFENIB'})
 az628 = Agent('AZ628', db_refs={'CHEBI': '91354'})
 braf = Agent('BRAF', db_refs={'HGNC': '1097', 'NCIT': 'C51194',
                               'TEXT': 'BRAF', 'UP': 'P15056'})
+braf_chembl_id = 'CHEMBL1229517'
+query_dict_BRAF_activity = {'query': 'activity',
+                            'params': {'molecule_chembl_id': braf_chembl_id,
+                                       'limit': 10000}}
 
 def test_get_inhibitions():
     stmt = chembl_client.get_inhibition(vem, braf)
@@ -19,6 +23,15 @@ def test_get_inhibitions():
         assert(ev.annotations)
         assert(ev.source_api == 'chembl')
         assert(ev.source_id)
+
+
+def test_activity_query():
+    res = chembl_client.send_query(query_dict_BRAF_activity)
+    assert(res['page_meta']['total_count'] == len(res['activities']))
+    assay_types = list(set([x['standard_type'] for x in res['activities']]))
+    expected_types = ['IC50', 'EC50', 'INH', 'Potency', 'Kd']
+    for e_t in expected_types:
+        assert(e_t in assay_types)
 
 
 def test_get_drug_inhibition_stmts_vem():
