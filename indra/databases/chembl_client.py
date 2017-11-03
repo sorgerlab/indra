@@ -155,7 +155,7 @@ def activities_by_target(activities):
 
     Parameters
     ----------
-    activities : dict
+    activities : list
         response from a query returning activities for a drug
     Returns
     -------
@@ -174,7 +174,7 @@ def activities_by_target(activities):
 
 
 def get_protein_targets_only(target_chembl_ids):
-    """Given list of ChEMBL target ids, return dict of only SINGLE PROTEIN targ
+    """Given list of ChEMBL target ids, return dict of SINGLE PROTEIN targets
 
     Parameters
     ----------
@@ -194,6 +194,17 @@ def get_protein_targets_only(target_chembl_ids):
 
 
 def get_evidence(assay):
+    """Given an activity, return an INDRA Evidence object.
+
+    Parameters
+    ----------
+    assay : dict
+        an activity from the activities list returned by a query to the API
+    Returns
+    -------
+    ev : :py:class:`Evidence`
+        an :py:class:`Evidence` object containing the kinetics of the
+    """
     kin = get_kinetics(assay)
     source_id = assay.get('assay_chembl_id')
     if not kin:
@@ -207,6 +218,18 @@ def get_evidence(assay):
 
 
 def get_kinetics(assay):
+    """Given an activity, return its kinetics values.
+
+    Parameters
+    ----------
+    assay : dict
+        an activity from the activities list returned by a query to the API
+    Returns
+    -------
+    kin : dict
+        dictionary of values with units keyed to value types 'IC50', 'EC50',
+        'INH', 'Potency', 'Kd'
+    """
     try:
         val = float(assay.get('standard_value'))
     except TypeError:
@@ -230,6 +253,15 @@ def get_kinetics(assay):
 
 
 def get_pmid(doc_id):
+    """Get PMID from document_chembl_id
+
+    Parameters
+    ----------
+    doc_id : str
+    Returns
+    -------
+    pmid : str
+    """
     url_pmid = 'https://www.ebi.ac.uk/chembl/api/data/document.json'
     params = {'document_chembl_id': doc_id}
     res = requests.get(url_pmid, params=params)
@@ -239,6 +271,15 @@ def get_pmid(doc_id):
 
 
 def get_target_chemblid(target_upid):
+    """Get ChEMBL ID from UniProt upid
+
+    Parameters
+    ----------
+    target_upid : str
+    Returns
+    -------
+    target_chembl_id : str
+    """
     url = 'https://www.ebi.ac.uk/chembl/api/data/target.json'
     params = {'target_components__accession': target_upid}
     r = requests.get(url, params=params)
@@ -249,6 +290,15 @@ def get_target_chemblid(target_upid):
 
 
 def get_mesh_id(nlm_mesh):
+    """Get MESH ID from NLM MESH
+
+    Parameters
+    ----------
+    nlm_mesh : str
+    Returns
+    -------
+    mesh_id : str
+    """
     url_nlm2mesh = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
     params = {'db': 'mesh', 'term': nlm_mesh, 'retmode': 'JSON'}
     r = requests.get(url_nlm2mesh, params=params)
@@ -258,6 +308,15 @@ def get_mesh_id(nlm_mesh):
 
 
 def get_pcid(mesh_id):
+    """Get PC ID from MESH ID
+
+    Parameters
+    ----------
+    mesh : str
+    Returns
+    -------
+    pcid : str
+    """
     url_mesh2pcid = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi'
     params = {'dbfrom': 'mesh', 'id': mesh_id,
               'db': 'pccompound', 'retmode': 'JSON'}
@@ -268,6 +327,15 @@ def get_pcid(mesh_id):
 
 
 def get_chembl_id(nlm_mesh):
+    """Get ChEMBL ID from NLM MESH
+
+    Parameters
+    ----------
+    nlm_mesh : str
+    Returns
+    -------
+    chembl_id : str
+    """
     mesh_id = get_mesh_id(nlm_mesh)
     pcid = get_pcid(mesh_id)
     url_mesh2pcid = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/' + \
