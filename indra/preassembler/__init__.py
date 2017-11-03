@@ -1,17 +1,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import sys
 import time
 import logging
+import tempfile
 import itertools
 import functools
 import collections
 import multiprocessing as mp
-from copy import copy, deepcopy
 try:
     import pygraphviz as pgv
 except ImportError:
     pass
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 from indra.statements import *
 from indra.databases import uniprot_client
 
@@ -48,7 +53,7 @@ class Preassembler(object):
         self.hierarchies = hierarchies
         if stmts:
             logger.debug("Deepcopying stmts in __init__")
-            self.stmts = deepcopy(stmts)
+            self.stmts = _pickled_deepcopy(stmts)
         else:
             self.stmts = []
         self.unique_stmts = None
@@ -62,7 +67,7 @@ class Preassembler(object):
         stmts : list of :py:class:`indra.statements.Statement`
             Statements to add to the current list.
         """
-        self.stmts += deepcopy(stmts)
+        self.stmts += _pickled_deepcopy(stmts)
 
     def combine_duplicates(self):
         """Combine duplicates among `stmts` and save result in `unique_stmts`.
@@ -644,6 +649,17 @@ def _flatten_evidence_for_stmt(stmt):
     return list(total_evidence)
 
 
+def _pickled_deepcopy(stmts):
+    """This is a faster implementation of deepcopy via pickle."""
+    fh = tempfile.NamedTemporaryFile(mode='wb', delete=False)
+    pickle.dump(stmts, fh)
+    fh.close()
+    with open(fh.name, 'rb') as f:
+        stmts_new = pickle.load(f)
+    os.unlink(fh.name)
+    return stmts_new
+
+
 def flatten_evidence(stmts):
     """Add evidence from *supporting* stmts to evidence for *supported* stmts.
 
@@ -684,7 +700,7 @@ def flatten_evidence(stmts):
     """
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
-    copied_stmts = deepcopy(stmts)
+    copied_stmts = _pickled_deepcopy(stmts)
     for stmt in stmts:
         total_evidence = _flatten_evidence_for_stmt(stmt)
         stmt.evidence = total_evidence
