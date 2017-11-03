@@ -23,7 +23,7 @@ def test_get_inhibitions():
 
 def test_get_drug_inhibition_stmts_vem():
     stmts = chembl_client.get_drug_inhibition_stmts(vem)
-    assert(stmts is not None)
+    assert(len(stmts) > 0)
     for st in stmts:
         assert(unicode_strs(st))
         assert(len(st.evidence) >= 1)
@@ -36,7 +36,7 @@ def test_get_drug_inhibition_stmts_vem():
 
 def test_get_drug_inhibition_stmts_az628():
     stmts = chembl_client.get_drug_inhibition_stmts(az628)
-    assert(stmts is not None)
+    assert(len(stmts) > 0)
     for st in stmts:
         assert(unicode_strs(st))
         assert(len(st.evidence) >= 1)
