@@ -488,6 +488,7 @@ class ModelChecker(object):
             Determines whether the final node of the path is included in the
             score. Default: False
         """
+        obs_model = lambda x: scipy.stats.norm(x, sigma)
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
@@ -504,7 +505,7 @@ class ModelChecker(object):
             # Look at every node in the path, excluding the final
             # observable...
             path_score = 0
-            last_path_node_index = -2 if include_final_node else -1
+            last_path_node_index = -1 if include_final_node else -2
             for node, sign in path[:last_path_node_index]:
                 # ...and for each node check the sign to see if it matches the
                 # data. So the first thing is to look at what's downstream
@@ -518,7 +519,6 @@ class ModelChecker(object):
                                 (node, sign, affected_obs, pred_sign))
                     measured_val = obs_dict.get(affected_obs)
                     if measured_val:
-                        obs_model = lambda x: scipy.stats.norm(x, sigma)
                         # For negative predictions use CDF (prob that given
                         # measured value, true value lies below 0)
                         if pred_sign <= 0:
@@ -531,11 +531,12 @@ class ModelChecker(object):
                         logger.info('Actual: %s, Log Probability: %s' %
                                     (measured_val, prob_correct))
                         path_score += prob_correct
-                    else:
-                        prob_correct = obs_model(0).logcdf(0)
-                        logger.info('Unmeasured node, Log Probability: %s' %
-                                    (prob_correct))
-                        path_score += prob_correct
+                if not self.rule_obs_dict[node]:
+                    logger.info('%s %s' % (node, sign))
+                    prob_correct = obs_model(0).logcdf(0)
+                    logger.info('Unmeasured node, Log Probability: %s' %
+                                (prob_correct))
+                    path_score += prob_correct
             # Normalized path
             #path_score = path_score / len(path)
             logger.info("Path score: %s" % path_score)
