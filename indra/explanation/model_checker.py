@@ -463,7 +463,7 @@ class ModelChecker(object):
                               max_paths, max_path_length)
 
     def score_paths(self, paths, agents_values, loss_of_function=False,
-                    sigma=0.15):
+                    sigma=0.15, include_final_node=False):
         """Return scores associated with a given set of paths.
 
         Parameters
@@ -476,10 +476,17 @@ class ModelChecker(object):
         agents_values : dict[indra.statements.Agent, float]
             A dictionary of INDRA Agents and their corresponding measured
             value in a given experimental condition.
-        loss_of_function : boolean
+        loss_of_function : Optional[boolean]
             If True, flip the polarity of the path. For instance, if the effect
             of an inhibitory drug is explained, set this to True.
             Default: False
+        sigma : Optional[float]
+            The estimated standard deviation for the normally distributed
+            measurement error in the observation model used to score paths
+            with respect to data. Default: 0.15
+        include_final_node : Optional[boolean]
+            Determines whether the final node of the path is included in the
+            score. Default: False
         """
         # Build up dict mapping observables to values
         obs_dict = {}
@@ -497,7 +504,8 @@ class ModelChecker(object):
             # Look at every node in the path, excluding the final
             # observable...
             path_score = 0
-            for node, sign in path[:-1]:
+            last_path_node_index = -2 if include_final_node else -1
+            for node, sign in path[:last_path_node_index]:
                 # ...and for each node check the sign to see if it matches the
                 # data. So the first thing is to look at what's downstream
                 # of the rule
@@ -519,9 +527,14 @@ class ModelChecker(object):
                         # (SF = 1 - CDF, i.e., prob that true value is
                         # above 0)
                         else:
-                            prob_correct = obs_model(measured_val).logsf(0) 
+                            prob_correct = obs_model(measured_val).logsf(0)
                         logger.info('Actual: %s, Log Probability: %s' %
                                     (measured_val, prob_correct))
+                        path_score += prob_correct
+                    else:
+                        prob_correct = obs_model(0).logcdf(0)
+                        logger.info('Unmeasured node, Log Probability: %s' %
+                                    (prob_correct))
                         path_score += prob_correct
             # Normalized path
             #path_score = path_score / len(path)
@@ -600,7 +613,8 @@ def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
             obs_dict[obs] = val
 
     sigma = 0.2
-    obs_model = lambda x: scipy.stats.norm(x, sigma)
+    def obs_model(x):
+        return scipy.stats.norm(x, sigma)
 
     def _sample_pred(im, target, rule_obs_dict, obs_model):
         preds = list(_get_signed_predecessors(im, target, 1))
