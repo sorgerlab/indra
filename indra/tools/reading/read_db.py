@@ -115,6 +115,11 @@ if __name__ == '__main__':
         help='Make the reader only read full text from the database.',
         action='store_true'
         )
+    parser.add_argument(
+        '--no_read',
+        help='Only create statements using existing reading results.',
+        action='store_true'
+        )
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
