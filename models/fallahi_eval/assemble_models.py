@@ -22,6 +22,16 @@ def run_reading(pmid_fname):
     # Download the file and save
 
 
+def get_stmt_sif(stmts, fname):
+    with open(fname, 'wt') as fh:
+        for stmt in stmts:
+            agents = [a for a in stmt.agent_list() if a is not None]
+            if len(agents) != 2:
+                continue
+            fh.write('%s,%s,%s\n' %
+                     (agents[0].name, stmt.uuid, agents[1].name))
+
+
 if __name__ == '__main__':
     # Load the data and get the gene names
     data = process_data.read_rppa_data()
