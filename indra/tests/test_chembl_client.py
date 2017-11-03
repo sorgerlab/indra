@@ -8,9 +8,10 @@ vem = Agent('VEMURAFENIB', db_refs={'CHEBI': '63637', 'TEXT': 'VEMURAFENIB'})
 az628 = Agent('AZ628', db_refs={'CHEBI': '91354'})
 braf = Agent('BRAF', db_refs={'HGNC': '1097', 'NCIT': 'C51194',
                               'TEXT': 'BRAF', 'UP': 'P15056'})
-braf_chembl_id = 'CHEMBL1229517'
-query_dict_BRAF_activity = {'query': 'activity',
-                            'params': {'molecule_chembl_id': braf_chembl_id,
+vem_chembl_id = 'CHEMBL1229517'
+braf_chembl_id = 'CHEMBL5145'
+query_dict_vem_activity = {'query': 'activity',
+                            'params': {'molecule_chembl_id': vem_chembl_id,
                                        'limit': 10000}}
 query_dict_BRAF_target = {'query': 'target',
                           'params': {'target_chembl_id': braf_chembl_id,
@@ -30,10 +31,10 @@ def test_get_inhibitions():
 
 
 def test_activity_query():
-    res = chembl_client.send_query(query_dict_BRAF_activity)
+    res = chembl_client.send_query(query_dict_vem_activity)
     assert(res['page_meta']['total_count'] == len(res['activities']))
     assay_types = list(set([x['standard_type'] for x in res['activities']]))
-    expected_types = ['IC50', 'EC50', 'INH', 'Potency', 'Kd']
+    expected_types = ['IC50', 'EC50', 'INH', 'Potency']
     for e_t in expected_types:
         assert(e_t in assay_types)
 
