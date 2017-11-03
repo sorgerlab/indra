@@ -21,7 +21,7 @@ before_install:
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
     #- conda update --yes conda
-  - conda install --yes python="$TRAVIS_PYTHON_VERSION" qt=4 numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx
+  - conda install --yes python="$TRAVIS_PYTHON_VERSION" qt=4 numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx pandas
 install:
   # INDRA dependencies
   - sudo apt-get install graphviz
@@ -29,7 +29,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz jsonschema coverage python-coveralls boto3 pandas sqlalchemy psycopg2 pgcopy
+  - pip install pygraphviz jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
