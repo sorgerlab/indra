@@ -9,8 +9,10 @@ import xml.etree.ElementTree as ET
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes
+    import pickle
 else:
     non_unicode = str
+    import cPickle as pickle
 
 def unicode_strs(obj, attr_filter=None):
     if isinstance(obj, non_unicode):
@@ -170,4 +172,17 @@ else:
         # http://www.gossamer-threads.com/lists/python/python/728903
         def _fixtext(self, text):
             return text
+
+
+def fast_deepcopy(obj):
+    """This is a faster implementation of deepcopy via pickle.
+
+    It is meant primarily for sets of Statements with complex hierarchies
+    but can be used for any object.
+    """
+    with BytesIO() as buf:
+        pickle.dump(obj, buf)
+        buf.seek(0)
+        obj_new = pickle.load(buf)
+    return obj_new
 
