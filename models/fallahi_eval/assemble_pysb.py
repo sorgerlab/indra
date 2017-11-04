@@ -46,12 +46,13 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
             break
         num_stmts = len(ml.statements)
     stmts = ml.statements
+    # Save the Statements here
+    ac.dump_statements(stmts, prefixed_pkl('pysb_stmts'))
 
     # Just generate the generic model
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    ac.dump_statements(stmts, prefixed_pkl('pysb_stmts'))
     with open(prefixed_pkl('pysb_model'), 'wb') as f:
         pickle.dump(model, f)
 
