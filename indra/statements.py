@@ -177,6 +177,13 @@ class BoundCondition(object):
         self.agent = agent
         self.is_bound = is_bound
 
+    def matches(self, other):
+        return (self.matches_key() == other.matches_key())
+
+    def matches_key(self):
+        key = (self.agent.matches_key, self.is_bound)
+        return str(key)
+
     def to_json(self):
         json_dict = _o({'agent': self.agent.to_json(),
                         'is_bound': self.is_bound})
