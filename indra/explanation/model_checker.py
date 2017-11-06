@@ -581,6 +581,7 @@ class ModelChecker(object):
         removal from affecting the lists of rule children during the comparison
         process.
         """
+        logger.info('Removing self loops')
         im = self.get_im()
         # First, remove all self-loops
         for e in im.edges():
@@ -590,15 +591,17 @@ class ModelChecker(object):
         # Now compare nodes pairwise and look for overlap between child nodes
         edges_to_remove = []
         remove_im_params(self.model, im)
-        predecessors = im.predecessors_iter
         successors = im.successors_iter
+        succ_dict = {}
+        logger.info('Get successorts of each node')
+        for node in im.nodes():
+            succ_dict[node] = set(successors(node))
+        logger.info('Compare combinations of successors')
         combos = list(itertools.combinations(im.nodes(), 2))
         for ix, (p1, p2) in enumerate(combos):
-            p1_children = set(successors(p1))
-            p2_children = set(successors(p2))
             # Children are identical except for mutual relationship
-            if p1_children.difference(p2_children) == set([p2]) and \
-               p2_children.difference(p1_children) == set([p1]):
+            if succ_dict[p1].difference(succ_dict[p2]) == set([p2]) and \
+               succ_dict[p2].difference(succ_dict[p1]) == set([p1]):
                 for u, v in ((p1, p2), (p2, p1)):
                     edge = im.get_edge(u, v)
                     edges_to_remove.append(edge)
