@@ -23,6 +23,8 @@ def pkldump(suffix, content):
 
 def pklload(suffix):
     fname = prefixed_pkl(suffix)
+    print('Loading %s' % fname)
     with open(fname, 'rb') as fh:
         content = pickle.load(fh)
+    print('Loaded %s' % fname)
     return content
