@@ -5,10 +5,12 @@ from pysb.integrate import Solver
 from indra.statements import *
 from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
-from indra.databases import context_client, cbio_client
+from indra.databases import context_client, cbio_client, hgnc_client, \
+                            uniprot_client
 from indra.assemblers import PysbAssembler, IndexCardAssembler
 from util import prefixed_pkl, pklload
-from process_data import antibody_map, cell_lines, read_ccle_variants
+from process_data import antibody_map, cell_lines, read_ccle_variants, \
+                         drug_targets, drug_grounding, agent_from_gene_name
 
 def assemble_pysb(stmts, data_genes, contextualize=False):
     # Filter the INDRA Statements to be put into the model
@@ -50,6 +52,11 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
     # Save the Statements here
     ac.dump_statements(stmts, prefixed_pkl('pysb_stmts'))
 
+
+    # Add drug target Statements
+    drug_target_stmts = get_drug_target_statements()
+    stmts += drug_target_stmts
+
     # Just generate the generic model
     pa = PysbAssembler()
     pa.add_statements(stmts)
@@ -75,6 +82,18 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
         ac.dump_statements(stmtsc, prefixed_pkl('pysb_stmts_%s' % cell_line))
         with open(prefixed_pkl('pysb_model_%s' % cell_line), 'wb') as f:
             pickle.dump(model, f)
+
+
+def get_drug_target_statements():
+    stmts = []
+    for drug, targets in drug_targets.items():
+        for target in targets:
+            target_agent = agent_from_gene_name(target)
+            drug_agent = Agent(drug, db_refs=drug_grounding[drug])
+            st = DecreaseAmount(drug_agent, target_agent)
+            stmts.append(st)
+    return stmts
+
 
 
 def contextualize_stmts(stmts, cell_line, genes):
