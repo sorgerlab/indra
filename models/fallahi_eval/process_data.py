@@ -428,6 +428,13 @@ drug_targets = {'AZ628': ['BRAF'],
                 'Vemurafenib': ['BRAF'],
                 'PLX4720': ['BRAF']}
 
+drug_grounding = {
+        'AZ628': {'CHEBI': '1'},
+        'Selumetinib': {'CHEBI': '2'},
+        'SB590885': {'CHEBI': '3'},
+        'Vemurafenib': {'CHEBI': '4'},
+        'PLX4720': {'CHEBI': '5'},
+        }
 
 drug_doses = [0.0032, 0.01, 0.0316, 0.1, 0.316, 1.0, 3.16]
 
