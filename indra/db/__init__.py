@@ -19,7 +19,7 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
-from indra.tools.get_version import get_version
+from indra.util.get_version import get_version
 
 
 # Solution to fix postgres drop tables
