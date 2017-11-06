@@ -190,28 +190,32 @@ def paths_graph(g, source, target, length, f_level, b_level,
     # Finally we add edges between these nodes if they are found in the original
     # graph. Note that we have to check for an edge of the appropriate polarity.
     pg_edges = set()
+    g_edges = [(u, v) for u, v in g.edges()]
     for i in range(0, length):
-        edges_at_this_level = set()
-        for u, v in itertools.product(pg_nodes[i], pg_nodes[i+1]):
-            # Signed graphs
-            if signed:
+        actual_edges = set()
+        logger.info("paths_graph: computing intersections at level %d" % i)
+        if signed:
+            possible_edges = set()
+            for u, v in itertools.product(pg_nodes[i], pg_nodes[i+1]):
                 u_name, u_pol = u[1]
                 v_name, v_pol = v[1]
-                if (u_name, v_name) in g.edges():
+                if (u_name, v_name) in g_edges:
                     edge_polarity = g.get_edge_data(u_name, v_name)['sign']
                     # Look for an edge that flips or doesn't flip the polarity
                     # of the path depending on what we see in the cumulative
                     # polarities
                     if (u_pol == v_pol and edge_polarity == 0) or \
                        (u_pol != v_pol and edge_polarity == 1):
-                        edges_at_this_level.add((u, v))
-            # Unsigned graphs
-            else:
-                u_name = u[1]
-                v_name = v[1]
-                if (u_name, v_name) in g.edges():
-                    edges_at_this_level.add((u, v))
-        pg_edges |= edges_at_this_level
+                        actual_edges.add((u, v))
+        else:
+            # Build a set representing possible edges between adjacent levels
+            possible_edges = set([(u[1], v[1]) for u, v in
+                               itertools.product(pg_nodes[i], pg_nodes[i+1])])
+            # Actual edges are the ones contained in the original graph; add
+            # to list with prepended depths
+            for u, v in possible_edges.intersection(g_edges):
+                actual_edges.add(((i, u), (i+1, v)))
+        pg_edges |= actual_edges
     path_graph = nx.DiGraph()
     path_graph.add_edges_from(pg_edges)
     return path_graph
