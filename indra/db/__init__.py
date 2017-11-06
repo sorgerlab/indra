@@ -19,6 +19,7 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
+from indra.tools.get_version import get_version
 
 
 # Solution to fix postgres drop tables
@@ -463,13 +464,14 @@ class DatabaseManager(object):
         "Insert statement, their database, and any affiliated agents."
         # Prepare the statements for copying
         stmt_data = []
-        cols = ('uuid', 'db_ref', 'type', 'json')
+        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
         for stmt in stmts:
             stmt_rec = (
                 stmt.uuid,
                 db_ref_id,
                 stmt.__class__.__name__,
-                json.dumps(stmt.to_json()).encode('utf8')
+                json.dumps(stmt.to_json()).encode('utf8'),
+                get_version()
             )
             stmt_data.append(stmt_rec)
         self.copy('statements', stmt_data, cols)
