@@ -369,6 +369,29 @@ class ModelChecker(object):
         return PathResult(False, 'NO_PATHS_FOUND',
                           max_paths, max_path_length)
 
+    def _get_input_rules(self, subj_mp):
+        if subj_mp is None:
+            raise ValueError("Cannot take None as an argument for subj_mp.")
+        input_rules = _match_lhs(subj_mp, self.model.rules)
+        logger.debug('Found %s input rules matching %s' %
+                     (len(input_rules), str(subj_mp)))
+        # Filter to include only rules where the subj_mp is actually the
+        # subject (i.e., don't pick up upstream rules where the subject
+        # is itself a substrate/object)
+        # FIXME: Note that this will eliminate rules where the subject
+        # being checked is included on the left hand side as 
+        # a bound condition rather than as an enzyme.
+        subj_rules = pa.rules_with_annotation(self.model,
+                                              subj_mp.monomer.name,
+                                              'rule_has_subject')
+        logger.debug('%d rules with %s as subject' %
+                     (len(subj_rules), subj_mp.monomer.name))
+        input_rule_set = set([r.name for r in input_rules]).intersection(
+                             set([r.name for r in subj_rules]))
+        logger.debug('Final input rule set contains %d rules' %
+                     len(input_rule_set))
+        return input_rule_set
+
     def _find_im_paths(self, subj_mp, obs_name, target_polarity,
                        max_paths=1, max_path_length=5):
         """Check for a source/target path in the influence map.
@@ -393,37 +416,17 @@ class ModelChecker(object):
             polarity.
         """
         # Find rules in the model corresponding to the input
-        obs_mp = self.model.all_components()[obs_name].reaction_pattern
-        logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj_mp, obs_mp, target_polarity))
         if subj_mp is None:
             input_rule_set = None
         else:
-            input_rules = _match_lhs(subj_mp, self.model.rules)
-            logger.debug('Found %s input rules matching %s' %
-                         (len(input_rules), str(subj_mp)))
-            # Filter to include only rules where the subj_mp is actually the
-            # subject (i.e., don't pick up upstream rules where the subject
-            # is itself a substrate/object)
-            # FIXME: Note that this will eliminate rules where the subject
-            # being checked is included on the left hand side as 
-            # a bound condition rather than as an enzyme.
-            subj_rules = pa.rules_with_annotation(self.model,
-                                                  subj_mp.monomer.name,
-                                                  'rule_has_subject')
-            logger.debug('%d rules with %s as subject' %
-                         (len(subj_rules), subj_mp.monomer.name))
-            input_rule_set = set([r.name for r in input_rules]).intersection(
-                                 set([r.name for r in subj_rules]))
-            logger.debug('Final input rule set contains %d rules' %
-                         len(input_rule_set))
-            # If we have enzyme information but there are no input rules
-            # matching the enzyme, then there is no path
+            input_rule_set = self._get_input_rules(subj_mp)
             if not input_rule_set:
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
+        obs_mp = self.model.all_components()[obs_name].reaction_pattern
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj_mp, obs_mp, target_polarity))
         # Generate the predecessors to our observable and count the paths
-        # TODO: Make it optionally possible to return on the first path?
         path_lengths = []
         path_metrics = []
         for source, polarity, path_length in \
@@ -444,7 +447,6 @@ class ModelChecker(object):
                 pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
                 pr.path_metrics = path_metrics
                 # Get the first path
-                """
                 path_iter = enumerate(_find_sources_with_paths(
                                            self.get_im(), obs_name,
                                            input_rule_set, target_polarity))
@@ -463,6 +465,7 @@ class ModelChecker(object):
                                     num_paths=1000)
                     pr.paths.extend(sample_paths)
                 return pr
+                """
             # There are no paths shorter than the max path length, so we
             # don't bother trying to get them
             else:
