@@ -23,20 +23,19 @@ def get_task_5(data, inverse=False):
         stmts_to_check[cell_line] = {}
         for drug in drug_names.keys():
             stmts_to_check[cell_line][drug] = {}
-            target_agents = [agent_phos(target, []) for
-                             target in drug_targets[drug]]
+            drug_agent = Agent(drug, db_refs=drug_grounding[drug])
             for dose in drug_doses:
                 if dose < dose_lower_bound:
                     continue
                 values = get_agent_values_for_condition(data, cell_line,
                                                         drug, time, dose)
                 stmts_to_check[cell_line][drug][dose] = [[], values]
-                for target, obs in itertools.product(target_agents, obs_agents):
+                for obs in obs_agents:
                     if (cell_line == 'C32' and not inverse) or \
                         (cell_line == 'RVH421' and inverse):
-                        st = IncreaseAmount(target, obs)
+                        st = DecreaseAmount(drug_agent, obs)
                     else:
-                        st = DecreaseAmount(target, obs)
+                        st = IncreaseAmount(drug_agent, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
