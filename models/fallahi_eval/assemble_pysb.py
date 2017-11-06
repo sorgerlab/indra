@@ -1,3 +1,4 @@
+import re
 import numpy
 import pickle
 from pysb.integrate import Solver
@@ -212,3 +213,13 @@ def print_initial_conditions(cell_lines, gene_names, fname):
         if not no_val:
             fh.write(line + '\n')
     fh.close()
+
+
+def process_kappa_dead_rules(txt):
+    dead_rules = []
+    for line in txt.split('\n'):
+        match = re.match('rule ([\d]+): ([a-zA-Z0-9_]+) will never be applied.',
+                         line.strip())
+        if match:
+            dead_rules.append(match.groups()[1])
+    return dead_rules
