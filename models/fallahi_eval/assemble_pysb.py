@@ -215,11 +215,30 @@ def print_initial_conditions(cell_lines, gene_names, fname):
     fh.close()
 
 
-def process_kappa_dead_rules(txt):
+def process_kappa_dead_rules(kasa_output):
     dead_rules = []
-    for line in txt.split('\n'):
+    for line in kasa_output.split('\n'):
         match = re.match('rule ([\d]+): ([a-zA-Z0-9_]+) will never be applied.',
                          line.strip())
         if match:
             dead_rules.append(match.groups()[1])
     return dead_rules
+
+
+def remove_kappa_dead_rules(stmts, model, dead_rules):
+    # FIXME: we should probably check that a statement we remove has all its
+    # generated rules recognized as dead. If it has at least one live rule
+    # coming from it, we shouldn't remove it. But the dead rules should still
+    # be removed somehow from the final model.
+    dead_uuids  = set()
+    for rule in dead_rules:
+        for ann in model.annotations:
+            if ann.subject == rule and ann.predicate == 'from_indra_statement':
+                dead_uuids.add(ann.object)
+    all_uuids = {stmt.uuid for stmt in stmts}
+    live_uuids = all_uuids - dead_uuids
+    stmts = ac.filter_uuid_list(stmts, live_uuids)
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    model = pa.make_model()
+    return stmts, model
