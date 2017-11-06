@@ -19,6 +19,7 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from indra.statements import *
 from indra.util import unzip_string
+from indra.util.get_version import get_version
 
 
 # Solution to fix postgres drop tables
@@ -59,8 +60,6 @@ except ImportError:
 
 
 DEFAULTS_FILE = path.join(__path__[0], 'defaults.txt')
-
-
 
 
 def _isiterable(obj):
@@ -209,6 +208,7 @@ class DatabaseManager(object):
             reader_ref = Column(Integer, ForeignKey('readings.id'))
             readings = relationship(Readings)
             type = Column(String(100), nullable=False)
+            indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
 
         class Agents(self.Base):
@@ -218,8 +218,8 @@ class DatabaseManager(object):
                              ForeignKey('statements.id'),
                              nullable=False)
             statements = relationship(Statements)
-            db_name = Column(String(20), nullable=False)
-            db_id = Column(String(20), nullable=False)
+            db_name = Column(String(40), nullable=False)
+            db_id = Column(String(40), nullable=False)
             role = Column(String(20), nullable=False)
 
         self.tables = {}
@@ -383,8 +383,8 @@ class DatabaseManager(object):
             conn.commit()
         else:
             # TODO: use bulk insert mappings?
-            print("WARNING: You are not using postgresql or do not have pgcopy,"
-                  " so this will likely be very slow.")
+            logger.warning("You are not using postgresql or do not have "
+                           "pgcopy, so this will likely be very slow.")
             self.insert_many(tbl_name, [dict(zip(cols, ro)) for ro in data])
 
     def filter_query(self, tbls, *args):
@@ -464,23 +464,25 @@ class DatabaseManager(object):
         "Insert statement, their database, and any affiliated agents."
         # Prepare the statements for copying
         stmt_data = []
-        cols = ('uuid', 'db_ref', 'type', 'json')
-        for i_stmt, stmt in enumerate(stmts):
-            #print("Inserting stmt %s (%d/%d)" % (stmt, i_stmt+1, len(stmts)))
+        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
+        for stmt in stmts:
             stmt_rec = (
                 stmt.uuid,
                 db_ref_id,
                 stmt.__class__.__name__,
-                json.dumps(stmt.to_json()).encode('utf8')
+                json.dumps(stmt.to_json()).encode('utf8'),
+                get_version()
             )
             stmt_data.append(stmt_rec)
         self.copy('statements', stmt_data, cols)
+
         # Build a dict mapping stmt UUIDs to statement IDs
         uuid_list = [s.uuid for s in stmts]
         stmt_rec_list = self.select_all('statements',
-                                  self.Statements.uuid.in_(uuid_list))
+                                        self.Statements.uuid.in_(uuid_list))
         stmt_uuid_dict = {uuid: sid for uuid, sid in
                           self.get_values(stmt_rec_list, ['uuid', 'id'])}
+
         # Now assemble agent records
         agent_data = []
         for stmt in stmts:
@@ -499,11 +501,12 @@ class DatabaseManager(object):
                     role = 'OBJECT'
                 else:
                     raise IndraDatabaseError("Unhandled agent role.")
-                for ns, id in ag.db_refs.items():
-                    ag_rec = (stmt_id, ns, id, role)
+                for ns, ag_id in ag.db_refs.items():
+                    ag_rec = (stmt_id, ns, ag_id, role)
                     agent_data.append(ag_rec)
         cols = ('stmt_id', 'db_name', 'db_id', 'role')
         self.copy('agents', agent_data, cols)
+        return
 
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
         "Get abstracts using the pmids in pmid_list."
