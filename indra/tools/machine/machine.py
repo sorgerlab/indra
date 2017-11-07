@@ -456,8 +456,14 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
     logger.info(time.strftime('%c'))
 
     # Save a time stamped version of the pickle for backup/diagnostic purposes
-    inc_model_bkp_file = os.path.join(model_path, 'model-%s.pkl' % date_str)
-    model.save(inc_model_bkp_file)
+    if not aws_available:
+        inc_model_bkp_file = os.path.join(model_path,
+                                          'model-%s.pkl' % date_str)
+        model.save(inc_model_bkp_file)
+    else:
+        key = 'rasmachine/%s/model-%s.pkl' % (model_path.replace('/', '_'), date_str)
+        s3 = boto3.client('s3')
+        s3.upload_file(inc_model_file, 'bigmech', key)
 
     # Upload the new, final statements to NDEx
     if ndex_cred:
