@@ -28,10 +28,7 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
     ml.reduce_activities()
     ml.gather_modifications()
     ml.reduce_modifications()
-    af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
-    non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
-    af_stmts = ac.run_preassembly(af_stmts)
-    stmts = af_stmts + non_af_stmts
+    stmts = normalize_active_forms(ml.statements)
     # Replace activations when possible
     ml = MechLinker(stmts)
     ml.gather_explicit_activities()
@@ -94,6 +91,19 @@ def get_drug_target_statements():
             stmts.append(st)
     return stmts
 
+
+def normalize_active_forms(stmts):
+    af_stmts = ac.filter_by_type(stmts, ActiveForm)
+    relevant_af_stmts = []
+    for stmt in af_stmts:
+        if (not stmt.agent.mods) and (not stmt.agent.mutations):
+            continue
+        relevant_af_stmts.append(stmt)
+    print('%d relevant ActiveForms' % len(relevant_af_stmts))
+    non_af_stmts = ac.filter_by_type(stmts, ActiveForm, invert=True)
+    af_stmts = ac.run_preassembly(relevant_af_stmts)
+    stmts = af_stmts + non_af_stmts
+    return stmts
 
 
 def contextualize_stmts(stmts, cell_line, genes):
