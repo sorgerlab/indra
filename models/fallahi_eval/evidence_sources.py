@@ -34,6 +34,7 @@ if __name__ == '__main__':
         if r and not d:
             reading_only += v
 
-    for k, v in sorted(sources_count.items(), key=lambda x: (len(x[1]), x[1])):
+    for k, v in sorted(sources_count.items(), key=lambda x: (len(x[0]), ','.join(sorted(x[0])))):
         sources_str = ','.join(k)
-        line_str = sources_str + ',' + str(v)
+        line_str = sources_str + '\t' + str(v)
+        print(line_str)
