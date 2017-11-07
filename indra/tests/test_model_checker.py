@@ -1139,11 +1139,20 @@ def test_weighted_sampling1():
     # behavior
     mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=False)
     mc.prune_influence_map()
-    # Check model
     results = mc.check_model(max_paths=5)
     path_result = results[0][1]
     assert len(path_result.paths) == 2
     # Now, try sampling
+    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True)
+    mc.prune_influence_map()
+    results = mc.check_model(max_path_length=5, max_paths=100)
+    assert type(results) == list
+    assert len(results) == 1
+    stmt_tuple = results[0]
+    assert len(stmt_tuple) == 2
+    assert stmt_tuple[0] == stmt_to_check
+    path_result = stmt_tuple[1]
+    assert type(path_result) == PathResult
     # TODO
     globals().update(locals())
 
