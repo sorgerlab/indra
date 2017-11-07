@@ -125,9 +125,13 @@ class ModelChecker(object):
         A list of INDRA Statements to check the model against.
     agent_obs: Optional[list[indra.statements.Agent]]
         A list of INDRA Agents in a given state to be observed.
+    do_sampling : bool
+        Whether to use breadth-first search or weighted sampling to
+        generate paths. Default is False (breadth-first search).
     """
 
-    def __init__(self, model, statements=None, agent_obs=None):
+    def __init__(self, model, statements=None, agent_obs=None,
+                 do_sampling=False):
         self.model = model
         if statements:
             self.statements = statements
@@ -137,6 +141,8 @@ class ModelChecker(object):
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
+        # Whether to do sampling
+        self.do_sampling = do_sampling
         # Influence map
         self._im = None
         # Map from statements to associated observables
@@ -404,7 +410,6 @@ class ModelChecker(object):
             if not input_rule_set:
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
-        obs_mp = self.model.all_components()[obs_name].reaction_pattern
         # Create the superset paths_graph
         for length in max_path_length:
 
@@ -452,9 +457,15 @@ class ModelChecker(object):
             if not input_rule_set:
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
-        obs_mp = self.model.all_components()[obs_name].reaction_pattern
-        logger.info('Finding path metrics between %s and %s with polarity %s' %
-                    (subj_mp, obs_mp, target_polarity))
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj_mp, obs_name, target_polarity))
+
+        # -- Route to the path sampling function --
+        if self.do_sampling:
+            return self._sample_paths(input_rule_set, obs_name, target_polarity,
+                               max_paths, max_path_length)
+
+        # -- Do Breadth-First Enumeration --
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
         path_metrics = []

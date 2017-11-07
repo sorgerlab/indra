@@ -1135,12 +1135,15 @@ def test_weighted_sampling1():
     set_base_initial_condition(pa.model, mapk1_monomer, 75)
     set_base_initial_condition(pa.model, mapk3_monomer, 25)
     # Make the model checker and prune the influence map
-    mc = ModelChecker(pa.model, [stmt_to_check])
+    # Setting do_sampling to False should yield the default enumeration
+    # behavior
+    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=False)
     mc.prune_influence_map()
     # Check model
     results = mc.check_model(max_paths=5)
     path_result = results[0][1]
-    assert len(path_result) == 2
+    assert len(path_result.paths) == 2
+    # Now, try sampling
     # TODO
     globals().update(locals())
 
