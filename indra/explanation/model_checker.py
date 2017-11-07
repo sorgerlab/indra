@@ -16,6 +16,7 @@ from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
 from indra.explanation import cycle_free_paths as cfp
+from indra.explanation import paths_graph as pg
 
 
 logger = logging.getLogger('model_checker')
@@ -408,15 +409,39 @@ class ModelChecker(object):
                           for n in path)
                           for path in path_list]
 
-        cfp_polarity = 0 if target_polarity > 0 else 1
+        pg_polarity = 0 if target_polarity > 0 else 1
         nx_graph = _agraph_to_digraph(self.get_im())
         # Add edges from dummy node to input rules
+        source_node = 'SOURCE_NODE'
         for rule in input_rule_set:
-            nx_graph.add_edge('SOURCE_NODE', rule, attr_dict={'sign': 0})
-        # Do the sampling!
-        paths = cfp.sample_paths(nx_graph, 'SOURCE_NODE',
-                        obs_name, max_path_length+1, cfp_polarity,
-                        num_paths=max_paths)
+            nx_graph.add_edge(source_node, rule, attr_dict={'sign': 0})
+        # -------------------------------------------------
+        # Create combined paths_graph
+        f_level, b_level = pg.get_reachable_sets(nx_graph, source_node,
+                                                 obs_name, max_path_length+1,
+                                                 signed=True)
+        pg_dict = {}
+        for path_length in range(1, max_path_length+2):
+            pg_dict[path_length] = \
+                    pg.paths_graph(nx_graph, source_node, obs_name, path_length,
+                                   f_level, b_level, signed=True,
+                                   target_polarity=pg_polarity)
+        combined_pg = pg.combine_path_graphs(pg_dict)
+        # Make sure the combined paths graph is not empty
+        if not combined_pg:
+            pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
+            pr.path_metrics = None
+            pr.paths = []
+            return pr
+        # Sample from the combined paths graph (eliminates cycles)
+        paths = []
+        for i in range(max_paths):
+            path = pg.sample_single_path(combined_pg, source_node, obs_name,
+                                         signed=True,
+                                         target_polarity=pg_polarity)
+            paths.append(path)
+        # Next, preprocess the combined paths graph to set weights
+        # -------------------------------------------------
         if paths:
             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
@@ -425,6 +450,7 @@ class ModelChecker(object):
             # Strip off the SOURCE_NODE prefix
             pr.paths = [p[1:] for p in pr.paths]
         else:
+            assert False
             pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
             pr.paths = []

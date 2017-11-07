@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
+import random
 from indra.statements import *
 from collections import Counter
 from pysb import *
@@ -1112,6 +1113,56 @@ def test_prune_influence_map():
 
 
 def test_weighted_sampling1():
+    """Test sampling with different path lengths but no data."""
+    mc = ModCondition('phosphorylation')
+    braf = Agent('BRAF', db_refs={'HGNC': '1097'})
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    map2k1_phos = Agent('MAP2K1', mods=[mc], db_refs={'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    mapk1_phos = Agent('MAPK1', mods=[mc], db_refs={'HGNC': '6871'})
+    jun = Agent('JUN', db_refs={'HGNC': '6204'})
+    stmt_to_check = Phosphorylation(braf, jun)
+    stmts = [stmt_to_check,
+             Phosphorylation(braf, map2k1),
+             Phosphorylation(map2k1_phos, jun),
+             Phosphorylation(map2k1_phos, mapk1),
+             Phosphorylation(mapk1_phos, jun)]
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    pa.make_model(policies='one_step')
+    # Make the model checker and prune the influence map
+    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True)
+    mc.prune_influence_map()
+    # Seed the random number generator
+    random.seed(1)
+    results = mc.check_model(max_path_length=5, max_paths=100)
+    im = mc.get_im()
+    mc.get_im().draw('im.pdf', prog='dot')
+    assert type(results) == list
+    assert len(results) == 1
+    stmt_tuple = results[0]
+    assert len(stmt_tuple) == 2
+    assert stmt_tuple[0] == stmt_to_check
+    path_result = stmt_tuple[1]
+    assert type(path_result) == PathResult
+    path_lengths = [len(p) for p in path_result.paths]
+    assert max(path_lengths) <= 5
+    # There are two distinct paths
+    assert len(set(path_result.paths)) == 3
+    path_ctr = Counter(path_result.paths)
+    assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 49
+    assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
+                     ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 31
+    assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
+                     ('MAP2K1_phospho_phosphorylation_MAPK1_phospho', 1),
+                     ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 20
+
+
+def test_weighted_sampling2():
     """Test sampling with abundances but no tail probabilities from data."""
     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
@@ -1154,9 +1205,6 @@ def test_weighted_sampling1():
     assert stmt_tuple[0] == stmt_to_check
     path_result = stmt_tuple[1]
     assert type(path_result) == PathResult
-    # NOTE: number of paths is 200 because there are two input rules, so
-    # there are 100 * 2 samples
-    assert len(path_result.paths) == 200
     path_lengths = [len(p) for p in path_result.paths]
     assert max(path_lengths) <= 5
     # There are two distinct paths
@@ -1169,7 +1217,6 @@ def test_weighted_sampling1():
                             ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
     assert mapk1_count > mapk3_count
-    globals().update(locals())
 
 
 if __name__ == '__main__':
