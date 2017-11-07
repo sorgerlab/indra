@@ -442,6 +442,8 @@ class ModelChecker(object):
             MonomerPattern to the object Observable with the appropriate
             polarity.
         """
+        logger.info(('Running path finding with max_paths=%d,'
+                     ' max_path_length=%d') % (max_paths, max_path_length))
         # Find rules in the model corresponding to the input
         if subj_mp is None:
             input_rule_set = None
@@ -451,7 +453,7 @@ class ModelChecker(object):
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
         obs_mp = self.model.all_components()[obs_name].reaction_pattern
-        logger.info('Finding paths between %s and %s with polarity %s' %
+        logger.info('Finding path metrics between %s and %s with polarity %s' %
                     (subj_mp, obs_mp, target_polarity))
         # Generate the predecessors to our observable and count the paths
         path_lengths = []
@@ -459,9 +461,12 @@ class ModelChecker(object):
         for source, polarity, path_length in \
                     _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
+
             pm = PathMetric(source, obs_name, polarity, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj_mp, obs_mp, target_polarity))
         # Now, look for paths
         paths = []
         if path_metrics and max_paths == 0:
