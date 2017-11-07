@@ -1,6 +1,7 @@
 from indra.util import _require_python3
 import os
 import json
+import time
 import pickle
 
 # CREATE A JSON FILE WITH THIS INFORMATION, E.G., a file consisting of:
@@ -24,7 +25,9 @@ def pkldump(suffix, content):
 def pklload(suffix):
     fname = prefixed_pkl(suffix)
     print('Loading %s' % fname)
+    ts = time.time()
     with open(fname, 'rb') as fh:
         content = pickle.load(fh)
-    print('Loaded %s' % fname)
+    te = time.time()
+    print('Loaded %s in %.1f seconds' % (fname, te-ts))
     return content
