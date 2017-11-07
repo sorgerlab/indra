@@ -392,6 +392,33 @@ class ModelChecker(object):
                      len(input_rule_set))
         return input_rule_set
 
+
+    """
+    def _find_weighted_paths(self, subj_mp, obs_name, target_polarity,
+                             max_paths=1, max_path_length=5):
+        # Find rules in the model corresponding to the input
+        if subj_mp is None:
+            input_rule_set = None
+        else:
+            input_rule_set = self._get_input_rules(subj_mp)
+            if not input_rule_set:
+                return PathResult(False, 'INPUT_RULES_NOT_FOUND',
+                                  max_paths, max_path_length)
+        obs_mp = self.model.all_components()[obs_name].reaction_pattern
+        # Create the superset paths_graph
+        for length in max_path_length:
+
+        cfp_polarity = 0 if target_polarity > 0 else 1
+        nx_graph = _agraph_to_multidigraph(self.get_im())
+        for rule in input_rule_set:
+            sample_paths = cfp.sample_paths(nx_graph, rule,
+                            obs_name, max_path_length, cfp_polarity,
+                            num_paths=1000)
+            pr.paths.extend(sample_paths)
+        return pr
+    """
+
+
     def _find_im_paths(self, subj_mp, obs_name, target_polarity,
                        max_paths=1, max_path_length=5):
         """Check for a source/target path in the influence map.
