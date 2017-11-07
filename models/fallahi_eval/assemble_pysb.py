@@ -19,7 +19,7 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
     # Strip the extraneous supports/supported by here
-    stmts = strip_supports(stmts)
+    strip_supports(stmts)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
     stmts = ac.filter_enzyme_kinase(stmts)
     stmts = ac.filter_mod_nokinase(stmts)
