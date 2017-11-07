@@ -400,9 +400,31 @@ class ModelChecker(object):
 
     def _sample_paths(self, input_rule_set, obs_name, target_polarity,
                       max_paths=1, max_path_length=5):
-        return PathResult(False, 'INPUT_RULES_NOT_FOUND',
-                          max_paths, max_path_length)
+        if max_paths == 0:
+            raise ValueError("max_paths cannot be 0 for path sampling.")
+        # Convert path polarity representation from 0/1 to 1/-1
+        def convert_polarities(path_list):
+            return [tuple((n[0], 0 if n[1] > 0 else 1)
+                          for n in path)
+                          for path in path_list]
 
+        cfp_polarity = 0 if target_polarity > 0 else 1
+        nx_graph = _agraph_to_multidigraph(self.get_im())
+        paths = []
+        for rule in input_rule_set:
+            sample_paths = cfp.sample_paths(nx_graph, rule,
+                            obs_name, max_path_length, cfp_polarity,
+                            num_paths=max_paths)
+            paths.extend(sample_paths)
+        if paths:
+            pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
+            pr.path_metrics = None
+            pr.paths = convert_polarities(paths)
+        else:
+            pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
+            pr.path_metrics = None
+            pr.paths = []
+        return pr
 
     def _find_im_paths(self, subj_mp, obs_name, target_polarity,
                        max_paths=1, max_path_length=5):
@@ -479,16 +501,6 @@ class ModelChecker(object):
                     if len(pr.paths) >= max_paths:
                         break
                 return pr
-                """
-                cfp_polarity = 0 if target_polarity > 0 else 1
-                nx_graph = _agraph_to_multidigraph(self.get_im())
-                for rule in input_rule_set:
-                    sample_paths = cfp.sample_paths(nx_graph, rule,
-                                    obs_name, max_path_length, cfp_polarity,
-                                    num_paths=1000)
-                    pr.paths.extend(sample_paths)
-                return pr
-                """
             # There are no paths shorter than the max path length, so we
             # don't bother trying to get them
             else:
@@ -737,8 +749,8 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # Don't allow trivial paths consisting only of the target observable
         if (sources is None or node in sources) and node_sign == polarity \
            and len(path) > 1:
-            logger.debug('Found path: %s' % _flip(im, path))
-            yield path
+            logger.debug('Found path: %s' % str(_flip(im, path)))
+            yield tuple(path)
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
             # path--prevents loops
@@ -991,7 +1003,7 @@ def find_consumption_rules(cp, rules):
 
 def _flip(im, path):
     # Reverse the path and the polarities associated with each node
-    rev = list(reversed(path))
+    rev = tuple(reversed(path))
     return _path_with_polarities(im, rev)
 
 
@@ -1013,7 +1025,7 @@ def _path_with_polarities(im, path):
     for ep_ix, ep in enumerate(edge_polarities):
         polarities_lprod.append(polarities_lprod[-1] * ep)
     assert len(path) == len(polarities_lprod)
-    return list(zip([node for node, sign in path], polarities_lprod))
+    return tuple(zip([node for node, sign in path], polarities_lprod))
     #assert path_polarity == 1 or path_polarity == -1
     #return True if path_polarity == 1 else False
     #return path_polarity

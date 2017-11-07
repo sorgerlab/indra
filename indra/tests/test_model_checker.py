@@ -1142,6 +1142,7 @@ def test_weighted_sampling1():
     results = mc.check_model(max_paths=5)
     path_result = results[0][1]
     assert len(path_result.paths) == 2
+    enum_paths = path_result.paths
     # Now, try sampling
     mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True)
     mc.prune_influence_map()
@@ -1153,7 +1154,13 @@ def test_weighted_sampling1():
     assert stmt_tuple[0] == stmt_to_check
     path_result = stmt_tuple[1]
     assert type(path_result) == PathResult
-    # TODO
+    # NOTE: number of paths is 200 because there are two input rules, so
+    # there are 100 * 2 samples
+    assert len(path_result.paths) == 200
+    path_lengths = [len(p) for p in path_result.paths]
+    assert max(path_lengths) <= 5
+    # There are two distinct paths
+    assert set(enum_paths) == set(path_result.paths)
     globals().update(locals())
 
 
