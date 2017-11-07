@@ -18,6 +18,8 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
     stmts = ac.filter_direct(stmts)
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
+    # Strip the extraneous supports/supported by here
+    stmts = strip_supports(stmts)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
     stmts = ac.filter_enzyme_kinase(stmts)
     stmts = ac.filter_mod_nokinase(stmts)
@@ -79,6 +81,12 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
         ac.dump_statements(stmtsc, prefixed_pkl('pysb_stmts_%s' % cell_line))
         with open(prefixed_pkl('pysb_model_%s' % cell_line), 'wb') as f:
             pickle.dump(model, f)
+
+
+def strip_supports(stmts):
+    for stmt in stmts:
+        stmt.supports = []
+        stmt.supported_by = []
 
 
 def get_drug_target_statements():
