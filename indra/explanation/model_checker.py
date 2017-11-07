@@ -409,17 +409,21 @@ class ModelChecker(object):
                           for path in path_list]
 
         cfp_polarity = 0 if target_polarity > 0 else 1
-        nx_graph = _agraph_to_multidigraph(self.get_im())
-        paths = []
+        nx_graph = _agraph_to_digraph(self.get_im())
+        # Add edges from dummy node to input rules
         for rule in input_rule_set:
-            sample_paths = cfp.sample_paths(nx_graph, rule,
-                            obs_name, max_path_length, cfp_polarity,
-                            num_paths=max_paths)
-            paths.extend(sample_paths)
+            nx_graph.add_edge('SOURCE_NODE', rule, attr_dict={'sign': 0})
+        # Do the sampling!
+        paths = cfp.sample_paths(nx_graph, 'SOURCE_NODE',
+                        obs_name, max_path_length+1, cfp_polarity,
+                        num_paths=max_paths)
         if paths:
             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
+            # Convert path polarity representation from 0/1 to 1/-1
             pr.paths = convert_polarities(paths)
+            # Strip off the SOURCE_NODE prefix
+            pr.paths = [p[1:] for p in pr.paths]
         else:
             pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
@@ -1078,7 +1082,7 @@ def _monomer_pattern_label(mp):
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
 
 
-def _agraph_to_multidigraph(agraph):
+def _agraph_to_digraph(agraph):
     edges = []
     for e in agraph.edges():
         edge_sign = _get_edge_sign(e)

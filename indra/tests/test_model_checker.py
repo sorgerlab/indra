@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
 from indra.statements import *
+from collections import Counter
 from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
@@ -1160,6 +1161,14 @@ def test_weighted_sampling1():
     assert max(path_lengths) <= 5
     # There are two distinct paths
     assert set(enum_paths) == set(path_result.paths)
+    path_ctr = Counter(path_result.paths)
+    mapk1_count = path_ctr[(('MAP2K1_phosphorylation_MAPK1_phospho', 1),
+                            ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
+                            ('JUN_phospho_p_obs', 1))]
+    mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK1_phospho', 1),
+                            ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
+                            ('JUN_phospho_p_obs', 1))]
+    assert mapk1_count > mapk3_count
     globals().update(locals())
 
 
