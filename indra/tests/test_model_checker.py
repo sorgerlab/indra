@@ -9,7 +9,8 @@ from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
                                       stmt_from_rule, PathResult, \
                                       remove_im_params
-from indra.assemblers.pysb_assembler import PysbAssembler
+from indra.assemblers.pysb_assembler import PysbAssembler, \
+                                            set_base_initial_condition
 from pysb.tools import species_graph
 from pysb.bng import generate_equations
 from pysb import kappa
@@ -1109,6 +1110,43 @@ def test_prune_influence_map():
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
 
+
+def test_weighted_sampling1():
+    """Test sampling with abundances but no tail probabilities from data."""
+    map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+    mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
+    mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
+    mc = ModCondition('phosphorylation')
+    mapk1_phos = Agent('MAPK1', mods=[mc], db_refs={'HGNC': '6871'})
+    mapk3_phos = Agent('MAPK3', mods=[mc], db_refs={'HGNC': '6877'})
+    jun = Agent('JUN', db_refs={'HGNC': '6204'})
+    st1 = Phosphorylation(map2k1, mapk1)
+    st2 = Phosphorylation(map2k1, mapk3)
+    st3 = Phosphorylation(mapk1_phos, jun)
+    st4 = Phosphorylation(mapk3_phos, jun)
+    stmt_to_check = Phosphorylation(map2k1, jun)
+    # Make model
+    pa = PysbAssembler()
+    pa.add_statements([st1, st2, st3, st4])
+    pa.make_model(policies='one_step')
+    # Set the initial conditions
+    mapk1_monomer = pa.model.all_components()['MAPK1']
+    mapk3_monomer = pa.model.all_components()['MAPK3']
+    set_base_initial_condition(pa.model, mapk1_monomer, 75)
+    set_base_initial_condition(pa.model, mapk3_monomer, 25)
+    # Make the model checker and prune the influence map
+    mc = ModelChecker(pa.model, [stmt_to_check])
+    mc.prune_influence_map()
+    # Check model
+    results = mc.check_model(max_paths=5)
+    path_result = results[0][1]
+    assert len(path_result) == 2
+    # TODO
+    globals().update(locals())
+
+
+if __name__ == '__main__':
+    test_weighted_sampling1()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
