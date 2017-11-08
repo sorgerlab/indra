@@ -433,6 +433,46 @@ class ModelChecker(object):
             pr.path_metrics = None
             pr.paths = []
             return pr
+
+        # Get a dict of rule objects
+        rule_obj_dict = {}
+        for ann in self.model.annotations:
+            if ann.predicate == 'rule_has_object':
+                rule_obj_dict[ann.subject] = ann.object
+
+        # Get monomer initial conditions
+        ic_dict = {}
+        for mon in self.model.monomers:
+            # FIXME: A hack that depends on the _0 convention
+            ic_name = '%s_0' % mon.name
+            # TODO: Wrap this in try/except?
+            ic_param = self.model.parameters[ic_name]
+            ic_value = ic_param.value
+            ic_dict[mon.name] = ic_value
+
+        # Set weights in PG based on model initial conditions
+        for cur_node in combined_pg.nodes():
+            edge_weights = {}
+            edge_weight_sum = 0
+            for u, v in combined_pg.out_edges(cur_node):
+                v_rule = v[1][0]
+                # Get the object of the rule
+                rule_obj = rule_obj_dict.get(v_rule)
+                if not rule_obj:
+                    continue
+                # Get the abundance of rule object from the initial conditions
+                # TODO: Wrap in try/except?
+                ic_value = ic_dict[rule_obj]
+                # Look for an initial condition
+                edge_weights[(u, v)] = ic_value
+                edge_weight_sum += ic_value
+            # Sum of edge weights
+            edge_weights_norm = {e: v / float(edge_weight_sum)
+                                 for e, v in edge_weights.items()}
+            # Iterate again, edding dge weights to paths graph
+            nx.set_edge_attributes(combined_pg, 'weight', edge_weights_norm)
+            # Update weights in paths graph
+
         # Sample from the combined paths graph (eliminates cycles)
         paths = []
         for i in range(max_paths):
@@ -440,7 +480,6 @@ class ModelChecker(object):
                                          signed=True,
                                          target_polarity=pg_polarity)
             paths.append(path)
-        # Next, preprocess the combined paths graph to set weights
         # -------------------------------------------------
         if paths:
             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)

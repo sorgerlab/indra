@@ -1220,7 +1220,7 @@ def test_weighted_sampling2():
 
 
 if __name__ == '__main__':
-    test_weighted_sampling1()
+    test_weighted_sampling2()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
