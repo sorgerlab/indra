@@ -549,7 +549,7 @@ class ModelChecker(object):
             path_metrics.append(pm)
             path_lengths.append(path_length)
         logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj_mp, obs_mp, target_polarity))
+                    (subj_mp, obs_name, target_polarity))
         # Now, look for paths
         paths = []
         if path_metrics and max_paths == 0:
