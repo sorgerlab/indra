@@ -458,12 +458,13 @@ class ModelChecker(object):
                 v_rule = v[1][0]
                 # Get the object of the rule
                 rule_obj = rule_obj_dict.get(v_rule)
-                if not rule_obj:
-                    continue
-                # Get the abundance of rule object from the initial conditions
-                # TODO: Wrap in try/except?
-                ic_value = ic_dict[rule_obj]
-                # Look for an initial condition
+                if rule_obj:
+                    # Get the abundance of rule object from the initial
+                    # conditions
+                    # TODO: Wrap in try/except?
+                    ic_value = ic_dict[rule_obj]
+                else:
+                    ic_vaue = 1.0
                 edge_weights[(u, v)] = ic_value
                 edge_weight_sum += ic_value
             # Sum of edge weights
@@ -477,7 +478,7 @@ class ModelChecker(object):
         paths = []
         for i in range(max_paths):
             path = pg.sample_single_path(combined_pg, source_node, obs_name,
-                                         signed=True,
+                                         signed=True, weighted=True,
                                          target_polarity=pg_polarity)
             paths.append(path)
         # -------------------------------------------------

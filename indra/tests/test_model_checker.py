@@ -1213,11 +1213,11 @@ def test_weighted_sampling2():
     mapk1_count = path_ctr[(('MAP2K1_phosphorylation_MAPK1_phospho', 1),
                             ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
-    mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK1_phospho', 1),
-                            ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
+    mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
+                            ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
     assert mapk1_count > mapk3_count
-
+    globals().update(locals())
 
 if __name__ == '__main__':
     test_weighted_sampling2()

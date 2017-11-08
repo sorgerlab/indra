@@ -1,7 +1,8 @@
 import random
 import itertools
-from indra import logging
+import numpy as np
 import networkx as nx
+from indra import logging
 
 logger = logging.getLogger('paths_graph')
 
@@ -221,7 +222,8 @@ def paths_graph(g, source, target, length, f_level, b_level,
     return path_graph
 
 
-def sample_single_path(pg, source, target, signed=False, target_polarity=0):
+def sample_single_path(pg, source, target, signed=False, target_polarity=0,
+                       weighted=False):
     """Sample a path from the paths graph."""
     # If the path graph is empty, there are no paths
     if not pg:
@@ -238,9 +240,18 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0):
         path = [source_node[1]]
         current_node = source_node
         while True:
-            succs = pg.successors(current_node)
-            if succs:
-                v = random.choice(succs)
+            if weighted:
+                out_edges = pg.out_edges(current_node, data=True)
+            else:
+                out_edges = pg.out_edges(current_node)
+            if out_edges:
+                if weighted:
+                    weights = [t[2]['weight'] for t in out_edges]
+                    pred_idx = np.random.choice(range(len(out_edges)),
+                                                p=weights)
+                    v = out_edges[pred_idx][1]
+                else:
+                    v = random.choice(out_edges)[1]
                 # If we've already hit this node, it's a cycle; skip
                 if v[1] in path:
                     break
