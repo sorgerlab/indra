@@ -205,8 +205,6 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
         if isinstance(json_str, bytes):
             json_str = json_str.decode('utf-8')
         return process_json_str(json_str, citation)
-        rp = process_nxml_file(fname, citation, True)
-        return rp
     else:
         data = {'nxml': nxml_str}
         try:
