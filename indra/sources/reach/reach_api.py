@@ -201,12 +201,14 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             logger.error('Could not process NXML.')
             logger.error(e)
             return None
+        # REACH version < 1.3.3
         json_str = result_map.get('resultJson')
-
+        if not json_str:
+            # REACH version >= 1.3.3
+            json_str = result_map.get('result')
         if json_str is None:
             logger.warning('No results retrieved')
             return None
-
         if isinstance(json_str, bytes):
             json_str = json_str.decode('utf-8')
         return process_json_str(json_str, citation)
