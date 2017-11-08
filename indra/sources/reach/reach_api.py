@@ -202,6 +202,11 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             logger.error(e)
             return None
         json_str = result_map.get('resultJson')
+
+        if json_str is None:
+            logger.warning('No results retrieved')
+            return None
+
         if isinstance(json_str, bytes):
             json_str = json_str.decode('utf-8')
         return process_json_str(json_str, citation)
