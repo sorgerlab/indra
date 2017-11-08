@@ -303,7 +303,7 @@ def process_json_str(json_str, citation=None):
         in rp.statements.
     """
     if not isinstance(json_str, basestring):
-        raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, basestr))
+        raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, basestring))
 
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
