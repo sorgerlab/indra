@@ -249,3 +249,13 @@ def test_filter_mutation_status():
     deletions = ['a']
     st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
     assert(len(st_out) == 0)
+
+def test_get_unreachable_mods():
+    st1 = Phosphorylation(Agent('X'), Agent('Y'), 'S', '222')
+    mcs = [ModCondition('phosphorylation', 'S', '218', True),
+           ModCondition('phosphorylation', 'S', '222', True)]
+    st2 = ActiveForm(Agent('Y', mods=mcs), 'activity', True)
+    res = ac.get_unreachable_mods([st1, st2])
+    assert 'Y' in res, res
+    assert res['Y'] == set([('phosphorylation', 'S', '218')])
+

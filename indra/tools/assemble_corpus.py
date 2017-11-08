@@ -818,6 +818,36 @@ def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+def get_unreachable_mods(stmts_in):
+    mods_set = {}
+    for stmt in stmts_in:
+        if isinstance(stmt, Modification):
+            mod_type = modclass_to_modtype[stmt.__class__]
+            if isinstance(stmt, RemoveModification):
+                mod_type = modtype_to_inverse[mod_type]
+            mod = (mod_type, stmt.residue, stmt.position)
+            if stmt.sub.name not in mods_set:
+                mods_set[stmt.sub.name] = set([mod])
+            else:
+                mods_set[stmt.sub.name].add(mod)
+    unreachable_mods = {}
+    for stmt in stmts_in:
+        for agent in stmt.agent_list():
+            if agent is None or not agent.mods:
+                continue
+            for mc in agent.mods:
+                mod = (mc.mod_type, mc.residue, mc.position)
+                if mod not in mods_set.get(agent.name, []):
+                    msg = '%s not reachable for %s' % (mod, agent.name)
+                    logger.warning(msg)
+                    if agent.name not in unreachable_mods:
+                        unreachable_mods[agent.name] = set([mod])
+                    else:
+                        unreachable_mods[agent.name].add(mod)
+
+    return unreachable_mods
+
+
 def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     """Filter statements based on existing mutations/deletions
 
