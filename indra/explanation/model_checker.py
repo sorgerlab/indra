@@ -17,7 +17,7 @@ from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
 from indra.explanation import cycle_free_paths as cfp
 from indra.explanation import paths_graph as pg
-
+from collections import Counter
 
 logger = logging.getLogger('model_checker')
 
@@ -129,10 +129,12 @@ class ModelChecker(object):
     do_sampling : bool
         Whether to use breadth-first search or weighted sampling to
         generate paths. Default is False (breadth-first search).
+    seed : int
+        Random seed for sampling (optional, default is None).
     """
 
     def __init__(self, model, statements=None, agent_obs=None,
-                 do_sampling=False):
+                 do_sampling=False, seed=None):
         self.model = model
         if statements:
             self.statements = statements
@@ -142,6 +144,8 @@ class ModelChecker(object):
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
+        if seed is not None:
+            np.random.seed(seed)
         # Whether to do sampling
         self.do_sampling = do_sampling
         # Influence map
@@ -453,24 +457,38 @@ class ModelChecker(object):
         # Set weights in PG based on model initial conditions
         for cur_node in combined_pg.nodes():
             edge_weights = {}
-            edge_weight_sum = 0
+            rule_obj_list = []
+            edge_weights_by_gene = {}
             for u, v in combined_pg.out_edges(cur_node):
                 v_rule = v[1][0]
-                # Get the object of the rule
+                # Get the object of the rule (a monomer name)
                 rule_obj = rule_obj_dict.get(v_rule)
                 if rule_obj:
+                    # Add to list so we can count instances by gene
+                    rule_obj_list.append(rule_obj)
                     # Get the abundance of rule object from the initial
                     # conditions
                     # TODO: Wrap in try/except?
                     ic_value = ic_dict[rule_obj]
                 else:
-                    ic_vaue = 1.0
+                    ic_value = 1.0
                 edge_weights[(u, v)] = ic_value
-                edge_weight_sum += ic_value
-            # Sum of edge weights
-            edge_weights_norm = {e: v / float(edge_weight_sum)
-                                 for e, v in edge_weights.items()}
-            # Iterate again, edding dge weights to paths graph
+                edge_weights_by_gene[rule_obj] = ic_value
+            # Get frequency of different rule objects
+            rule_obj_ctr = Counter(rule_obj_list)
+            # Normalize results by weight sum and gene frequency at this level
+            edge_weight_sum = sum(edge_weights_by_gene.values())
+            edge_weights_norm = {}
+            for e, v in edge_weights.items():
+                v_rule = e[1][1][0]
+                rule_obj = rule_obj_dict.get(v_rule)
+                if rule_obj:
+                    rule_obj_count = rule_obj_ctr[rule_obj]
+                else:
+                    rule_obj_count = 1
+                edge_weights_norm[e] = ((v / float(edge_weight_sum)) /
+                                        float(rule_obj_count))
+            # Iterate again, adding edge weights to paths graph
             nx.set_edge_attributes(combined_pg, 'weight', edge_weights_norm)
             # Update weights in paths graph
 

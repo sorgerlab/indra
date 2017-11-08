@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
 import random
+import numpy as np
 from indra.statements import *
 from collections import Counter
 from pysb import *
@@ -1132,10 +1133,10 @@ def test_weighted_sampling1():
     pa.add_statements(stmts)
     pa.make_model(policies='one_step')
     # Make the model checker and prune the influence map
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True)
+    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
     # Seed the random number generator
-    random.seed(1)
+    np.random.seed(1)
     results = mc.check_model(max_path_length=5, max_paths=100)
     im = mc.get_im()
     mc.get_im().draw('im.pdf', prog='dot')
@@ -1152,14 +1153,14 @@ def test_weighted_sampling1():
     assert len(set(path_result.paths)) == 3
     path_ctr = Counter(path_result.paths)
     assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 49
+                     ('JUN_phospho_p_obs', 1))] == 46
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
                      ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 31
+                     ('JUN_phospho_p_obs', 1))] == 22
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
                      ('MAP2K1_phospho_phosphorylation_MAPK1_phospho', 1),
                      ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 20
+                     ('JUN_phospho_p_obs', 1))] == 32
 
 
 def test_weighted_sampling2():
@@ -1195,7 +1196,7 @@ def test_weighted_sampling2():
     assert len(path_result.paths) == 2
     enum_paths = path_result.paths
     # Now, try sampling
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True)
+    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
     results = mc.check_model(max_path_length=5, max_paths=100)
     assert type(results) == list
@@ -1216,8 +1217,8 @@ def test_weighted_sampling2():
     mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
                             ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
-    assert mapk1_count > mapk3_count
-
+    assert mapk1_count == 78
+    assert mapk3_count == 22
 
 def test_weighted_sampling3():
     """Test sampling with abundances but no tail probabilities from data,
@@ -1253,7 +1254,7 @@ def test_weighted_sampling3():
     set_base_initial_condition(pa.model, mapk1_monomer, 50)
     set_base_initial_condition(pa.model, mapk3_monomer, 50)
     # Do sampling
-    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True)
+    mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
     results = mc.check_model(max_path_length=5, max_paths=100)
     assert type(results) == list
@@ -1268,9 +1269,19 @@ def test_weighted_sampling3():
     # There are two distinct paths
     path_ctr = Counter(path_result.paths)
     assert len(path_ctr) == 3
-    print(list(path_ctr.values()))
+    assert path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
+                     ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 49
+    assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S218', 1),
+                     ('MAPK1_phosphoS218_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 20
+    assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S222', 1),
+                     ('MAPK1_phosphoS222_phosphorylation_JUN_phospho', 1),
+                     ('JUN_phospho_p_obs', 1))] == 31
 
 if __name__ == '__main__':
+    test_weighted_sampling1()
+    test_weighted_sampling2()
     test_weighted_sampling3()
 
 # TODO Add tests for autophosphorylation
