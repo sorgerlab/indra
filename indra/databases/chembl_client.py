@@ -113,13 +113,6 @@ def send_query(query_dict):
     -------
     js : dict
         dict parsed from json that is unique to the submitted query
-
-    Example
-    -------
-    >>> query_dict = {'query': 'target',
-    ...               'params': {'target_chembl_id': 'CHEMBL5145',
-    ...               'limit': 1}}
-    >>> send_query(query_dict)
     """
     query = query_dict['query']
     params = query_dict['params']
