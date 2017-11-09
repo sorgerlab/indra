@@ -8,7 +8,7 @@ from process_data import cell_lines
 
 def group_scored_paths(scored_paths, model, stmts):
     def gene_from_rule(rule_name, agent_ix):
-        rule_stmt = stmt_from_rule(model, rule_name, stmts)
+        rule_stmt = stmt_from_rule(rule_name, model, stmts)
         if not rule_stmt:
             print("Could not get stmt for rule %s" % rule_name)
             return None
