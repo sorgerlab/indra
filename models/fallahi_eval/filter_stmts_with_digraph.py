@@ -48,10 +48,9 @@ def filter_stmts(g, source, target, max_depth=6):
         stmt_nodes |= nodes_this_length
         # Get counts for this depth
         # Terminate the loop if we've saturated the number of edges
-
-        #if stmt_uuid_nums and stmt_uuid_nums[-1] != 0 and \
-        #        len(stmt_uuids) == stmt_uuid_nums[-1]:
-        #    break
+        if stmt_uuid_nums and stmt_uuid_nums[-1] != 0 and \
+                len(stmt_uuids) == stmt_uuid_nums[-1]:
+            break
 
         stmt_uuid_nums.append(len(stmt_uuids))
         stmt_node_nums.append(len(stmt_nodes))
@@ -83,11 +82,14 @@ if __name__ == '__main__':
     stmts = ac.load_statements(sys.argv[1])
     # Run
     g = stmts_to_digraph(stmts)
+    scc_lens = [len(s) for s in nx.strongly_connected_components(g)]
+    scc_lens.sort(reverse=True)
+    print("Largest strongly connected components: %s" % str(scc_lens[0:3]))
     for i in range(10):
         source = random.choice(g.nodes())
         target = random.choice(g.nodes())
         results = filter_stmts(g, source, target, max_depth=max_depth)
-        plot_results(g, *results)
+        #plot_results(g, *results)
         print(source)
         print(target)
         print("Final number of nodes: %d" % len(results[1]))
