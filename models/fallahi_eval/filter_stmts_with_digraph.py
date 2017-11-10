@@ -1,50 +1,42 @@
-from indra.util import read_unicode_csv, write_unicode_csv
-from indra.util import plot_formatting as pf
-import networkx as nx
-from indra.explanation import paths_graph as pg
-from matplotlib import pyplot as plt
-from indra.util import _require_python3
-import numpy as np
 import random
 import pickle
+import numpy as np
+import networkx as nx
+from matplotlib import pyplot as plt
+from indra.util import _require_python3
+from indra.util import read_unicode_csv, write_unicode_csv
+from indra.util import plot_formatting as pf
+from indra.explanation import paths_graph as pg
 
-sif_filename = 'output/fallahi_eval_preassembled_uuid_filtered.sif'
 
-# Load directed and undirected versions of the SIF
-ug = nx.Graph()
-g = nx.MultiDiGraph()
-for row in read_unicode_csv(sif_filename, delimiter=','):
-    if len(row) != 3:
-        continue
-    source, uuid, target = row
-    g.add_edge(source, target, attr_dict={'uuid': uuid})
-    ug.add_edge(source, target)
+def stmts_to_digraph(stmts):
+    digraph = nx.MultiDiGraph()
+    for stmt in stmts:
+        agent_names = [a.name for a in stmt.agent_list() if a is not None]
+        if len(agent_names) != 2:
+            continue
+        digraph.add_edge(agent_names[0], agent_names[1],
+                         attr_dict={'uuid': stmt.uuid})
+    return digraph
 
-scc_sizes = [len(scc) for scc in nx.strongly_connected_components(g)]
 
-for i in range(1):
-    #source = random.choice(ug.nodes())
-    #target = random.choice(ug.nodes())
+def filtered_stmts(stmts, max_depth=3, source, target):
+    g = stmts_to_digraph(stmts)
+
+    #scc_sizes = [len(scc) for scc in nx.strongly_connected_components(g)]
     source = 'BRAF'
     target = 'JUN'
-
-    max_depth = 8
-    total_uuids = len(g.edges())
-    total_nodes = len(g)
-
     f_level, b_level = pg.get_reachable_sets(g, source, target,
                                              max_depth=max_depth, signed=False)
-
     stmt_uuids = set()
     stmt_nodes = set()
     stmt_uuid_nums = []
     stmt_node_nums = []
-
+    # Iterate over various path lengths
     for length in range(1, max_depth+1):
         print("Generating paths_graph for length %d" % length)
         this_pg = pg.paths_graph(g, source, target, length, f_level, b_level,
                                  signed=False)
-
         # Get nodes for this length PG
         nodes_this_length = set([n[1] for n in this_pg])
         # Get stmt UUIDs for this length PG
@@ -57,6 +49,7 @@ for i in range(1):
         stmt_uuids |= stmt_uuids_this_length
         stmt_nodes |= nodes_this_length
         # Get counts for this depth
+        # Terminate the loop if we've saturated the number of edges
         if stmt_uuid_nums and stmt_uuid_nums[-1] != 0 and \
                 len(stmt_uuids) == stmt_uuid_nums[-1]:
             break
@@ -65,14 +58,14 @@ for i in range(1):
         print("Paths of length %d: %d uuids" %
               (length, len(stmt_uuids_this_length)))
 
-    write_unicode_csv('fallahi_eval_paths_graph_BRAF_JUN_max%d' % max_depth,
-                      list(stmt_uuids))
+    return (g, stmt_uuids, stmt_nodes, stmt_node_nums, stmt_uuid_nums)
 
-    norm_node_counts = np.array(stmt_node_nums) / total_nodes
-    norm_uuid_counts = np.array(stmt_uuid_nums) / total_uuids
+
+def plot_results(g, stmt_uuids, stmt_nodes, stmt_node_nums, stmt_uuid_nums):
+    norm_node_counts = np.array(stmt_node_nums) / len(g)
+    norm_uuid_counts = np.array(stmt_uuid_nums) / len(g.edges())
 
     pf.set_fig_params()
-
     plt.ion()
     lengths = range(len(norm_uuid_counts))
     plt.figure(figsize=(2, 2), dpi=150)
@@ -82,5 +75,3 @@ for i in range(1):
     plt.legend(loc='upper left', fontsize=pf.fontsize, frameon=False)
     ax = plt.gca()
     pf.format_axis(ax)
-
-
