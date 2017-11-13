@@ -61,6 +61,11 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     directions = (
       ('forward', f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
       ('backward', b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
+    # Utility function to make code below more compact
+    def _add_signed_edge(reachable_set, node_polarity, edge_polarity):
+        cum_polarity = (node_polarity + edge_polarity) % 2
+        reachable_set.add((reachable_node, cum_polarity))
+    # Iterate over levels
     for direction, level, edge_func in directions:
         visited = set([source]) if direction == 'forward' else set([target])
         for i in range(1, max_depth+1):
@@ -69,9 +74,17 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
             if signed:
                 for node, node_polarity in level[i-1]:
                     for (u, v), reachable_node in edge_func(node):
-                        edge_polarity = g.get_edge_data(u, v)['sign']
-                        cum_polarity = (node_polarity + edge_polarity) % 2
-                        reachable_set.add((reachable_node, cum_polarity))
+                        edge_dict = g.get_edge_data(u, v)
+                        edge_polarity = edge_dict.get('sign')
+                        # If this is a multidigraph, get_edge_data will return
+                        # a dict keyed by integers
+                        if edge_polarity is None:
+                            for edge_key, edge_data in edge_dict.items():
+                                _add_signed_edge(reachable_set, node_polarity,
+                                                 edge_data['sign'])
+                        else:
+                            _add_signed_edge(reachable_set, node_polarity,
+                                             edge_polarity)
             # Unsigned graph
             else:
                 for node in level[i-1]:
