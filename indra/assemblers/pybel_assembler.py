@@ -1,12 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.statements import *
-from indra.databases import hgnc_client
 import logging
+import networkx as nx
+from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
-from copy import deepcopy, copy
 from pybel.parser.language import pmod_namespace
+from indra.statements import *
+from indra.databases import hgnc_client
 from indra.assemblers.pysb_assembler import mod_acttype_map
 
 
@@ -104,7 +105,7 @@ class PybelAssembler(object):
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
-    
+ 
     def save_model(self, path, output_format=None):
         """Saves the :class:`pybel.BELGraph` using one of the outputs from 
         :py:mod:`pybel`
@@ -127,6 +128,24 @@ class PybelAssembler(object):
                     pybel.to_cx_file(self.model, fh)
                 else: # output_format == 'bel':
                     pybel.to_bel(self.model, fh)
+
+
+    def to_signed_graph(self):
+        edge_set = set()
+        for u, v, edge_data in self.model.edges(data=True):
+            rel = edge_data.get('relation')
+            if rel in (pc.INCREASES, pc.DIRECTLY_INCREASES):
+                edge_set.add((u, v, 0))
+            elif rel in (pc.DECREASES, pc.DIRECTLY_DECREASES):
+                edge_set.add((u, v, 1))
+            else:
+                continue
+        # Turn the tuples into dicts
+        edge_data = [(u, v, dict([('sign', sign)])) for u, v, sign in edge_set]
+        graph = nx.MultiDiGraph()
+        graph.add_edges_from(edge_data)
+        return graph
+
 
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
