@@ -204,23 +204,52 @@ def paths_graph(g, source, target, length, f_level, b_level,
     # Finally we add edges between these nodes if they are found in the original
     # graph. Note that we have to check for an edge of the appropriate polarity.
     pg_edges = set()
-    g_edges = [(u, v) for u, v in g.edges()]
+    if signed:
+        g_edges = [(u, v, data['sign']) for u, v, data in g.edges(data=True)]
+    else:
+        g_edges = [(u, v) for u, v in g.edges()]
     for i in range(0, length):
         actual_edges = set()
         logger.info("paths_graph: computing intersections at level %d" % i)
         if signed:
             possible_edges = set()
-            for u, v in itertools.product(pg_nodes[i], pg_nodes[i+1]):
-                u_name, u_pol = u[1]
-                v_name, v_pol = v[1]
+            edge_lookup = {}
+            for edge in itertools.product(pg_nodes[i], pg_nodes[i+1]):
+                u_name, u_pol = edge[0][1]
+                v_name, v_pol = edge[1][1]
+                # If the polarity between neighboring nodes is the same, then
+                # we need a positive edge
+                required_sign = 0 if u_pol == v_pol else 1
+                edge_key = (u_name, v_name, required_sign)
+                possible_edges.add(edge_key)
+                edge_lookup[edge_key] = edge
+            for edge_key in possible_edges.intersection(g_edges):
+                actual_edges.add(edge_lookup[edge_key])
+
+            """
+            actual_
                 if (u_name, v_name) in g_edges:
+                    edge_dict = g.get_edge_data(u, v)
+                    edge_polarity = edge_dict.get('sign')
+                    # If this is a multidigraph, get_edge_data will return
+                    # a dict keyed by integers
+                    if edge_polarity is None:
+                        for edge_key, edge_data in edge_dict.items():
+                            _add_signed_edge(reachable_set, node_polarity,
+                                             edge_data['sign'])
+                    else:
+                        _add_signed_edge(reachable_set, node_polarity,
+                                         edge_polarity)
+
                     edge_polarity = g.get_edge_data(u_name, v_name)['sign']
+
                     # Look for an edge that flips or doesn't flip the polarity
                     # of the path depending on what we see in the cumulative
                     # polarities
                     if (u_pol == v_pol and edge_polarity == 0) or \
                        (u_pol != v_pol and edge_polarity == 1):
                         actual_edges.add((u, v))
+            """
         else:
             # Build a set representing possible edges between adjacent levels
             possible_edges = set([(u[1], v[1]) for u, v in
