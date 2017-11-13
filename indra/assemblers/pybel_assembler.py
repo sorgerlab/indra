@@ -127,7 +127,7 @@ class PybelAssembler(object):
                     pybel.to_cx_file(self.model, fh)
                 else: # output_format == 'bel':
                     pybel.to_bel(self.model, fh)
-    
+
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
@@ -342,15 +342,20 @@ def _get_agent_node_no_bcs(agent):
 
 
 def _get_agent_grounding(agent):
-    hgnc_id = agent.db_refs.get('HGNC')
-    uniprot_id = agent.db_refs.get('UP')
-    be_id = agent.db_refs.get('BE')
-    pfam_id = agent.db_refs.get('PF')
-    fa_id = agent.db_refs.get('FA')
-    chebi_id = agent.db_refs.get('CHEBI')
-    pubchem_id = agent.db_refs.get('PUBCHEM')
-    go_id = agent.db_refs.get('GO')
-    mesh_id = agent.db_refs.get('MESH')
+    def _get_id(agent, key):
+        id = agent.db_refs.get(key)
+        if isinstance(id, list):
+            id = id[0]
+        return id
+    hgnc_id = _get_id(agent, 'HGNC')
+    uniprot_id = _get_id(agent, 'UP')
+    be_id = _get_id(agent, 'BE')
+    pfam_id = _get_id(agent, 'PF')
+    fa_id = _get_id(agent, 'FA')
+    chebi_id = _get_id(agent, 'CHEBI')
+    pubchem_id = _get_id(agent, 'PUBCHEM')
+    go_id = _get_id(agent, 'GO')
+    mesh_id = _get_id(agent, 'MESH')
     if hgnc_id:
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         if not hgnc_name:
