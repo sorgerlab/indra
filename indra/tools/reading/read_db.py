@@ -127,7 +127,7 @@ if __name__ == '__main__':
 from indra.util import unzip_string, zip_string
 from indra.db import get_primary_db, formats, texttypes
 from indra.tools.reading.read_pmids import get_mem_total
-from indra.tools.get_version import get_version as get_indra_version
+from indra.util.get_version import get_version as get_indra_version
 from indra.sources import reach, sparser
 
 
