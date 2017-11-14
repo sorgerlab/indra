@@ -1377,6 +1377,14 @@ class TripsProcessor(object):
         else:
             is_modified = True
 
+        #Check if we have an undo mod
+        event_mods = event.findall('mods/mod')
+        for event_mod in event_mods:
+            event_mod_type = event_mod.find('type')
+            if event_mod_type is not None and \
+                event_mod_type.text == 'ONT::MANNER-UNDO':
+                is_modified = False
+
         # Find the site of the modification
         site_tag = event.find("site")
         # If there is not site specified

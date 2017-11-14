@@ -696,3 +696,14 @@ def test_54():
     assert(erk.name == 'ERK')
     for ev in st.evidence:
         assert ev.epistemics.get('direct') == False
+
+def test_55():
+    sentence = 'Unphosphorylated ERK is degraded.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, DecreaseAmount))
+    erk = st.obj
+    assert(erk.name == 'ERK')
+    assert len(erk.mods) == 1
+    assert erk.mods[0].is_modified == False
