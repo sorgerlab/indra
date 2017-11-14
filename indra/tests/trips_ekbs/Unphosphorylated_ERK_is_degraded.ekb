@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01140_IO-698261" id="paragraph1139">Unphosphorylated ERK is degraded.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1209" pid="paragraph1139">Unphosphorylated ERK is degraded.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="32" id="V698306" lisp="(ONT::EVENT ONT::V698306 ONT::CONSUME :AFFECTED ONT::V698281 :FORCE ONT::TRUE :TENSE W::PRES :PASSIVE +)" paragraph="paragraph1139" rule="-RULE40_4_AGENT_AFFECTED-AFFECTED" start="0" uttnum="1209">
+		<type>ONT::CONSUME</type>
+		<force>ONT::TRUE</force>
+		<predicate end="32" id="V698306" start="0">
+			<type>ONT::CONSUME</type>
+			<text>Unphosphorylated ERK is degraded</text>
+		</predicate>
+		<arg2 end="21" id="V698281" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Unphosphorylated ERK</text>
+		</arg2>
+		<text>Unphosphorylated ERK is degraded</text>
+	</EVENT>
+	<TERM dbid="BE:ERK|NCIT:C26166|NCIT:C16376|NCIT:C52872|UP:P29323|NCIT:C52164|NCIT:C26360|HGNC:3393|UP:P28482|HGNC:6871" end="21" id="V698281" lisp="(ONT::TERM ONT::V698281 ONT::GENE-PROTEIN :INEVENT ONT::V698271 :NAME W::ERK :DRUM ((:DRUM (TERM :ID BE::ERK :NAME &quot;ERK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26166 :NAME &quot;ephrin receptor-ephB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52164 :NAME &quot;EPHB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.56098 :MATCHES ((MATCH :SCORE 0.56098 :MATCHED &quot;ERK&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3393| :NAME &quot;EPH receptor B2&quot; :SCORE 0.26829 :MATCHES ((MATCH :SCORE 0.26829 :MATCHED &quot;ERK&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1)) :DBXREFS (UP::P29323) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph1139" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="1209">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>ERK</name>
+		<features>
+			<inevent id="V698271"/>
+		</features>
+		<drum-terms>
+			<drum-term dbid="BE:ERK" match-score="1.0" matched-name="ERK" name="ERK">
+				<types>
+					<type>ONT::PROTEIN-FAMILY</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C16376" match-score="0.70732" matched-name="ERK" name="mitogen-activated protein kinase">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26166" match-score="0.70732" matched-name="ERK" name="ephrin receptor-ephB2">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C26360" match-score="0.70732" matched-name="ERK" name="MAP kinase gene">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52164" match-score="0.70732" matched-name="ERK" name="EPHB2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52872" match-score="0.70732" matched-name="ERK" name="MAPK1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="HGNC:6871" match-score="0.56098" matched-name="ERK" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="HGNC:3393" match-score="0.26829" matched-name="ERK" name="EPH receptor B2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P29323"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>Unphosphorylated ERK</text>
+	</TERM>
+	<EVENT end="21" id="V698271" lisp="(ONT::EVENT ONT::V698271 ONT::PHOSPHORYLATION :AFFECTED ONT::V698281 :MODN (ONT::MANNER-UNDO W::UN-) :FORCE ONT::TRUE)" paragraph="paragraph1139" rule="-RULE60_4_AGENT_AFFECTED-MODN1_2-AFFECTED" start="0" uttnum="1209">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<mods>
+			<mod>
+				<type>ONT::MANNER-UNDO</type>
+				<value>UN-</value>
+			</mod>
+		</mods>
+		<predicate end="21" id="V698271" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>Unphosphorylated ERK</text>
+		</predicate>
+		<arg2 end="21" id="V698281" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Unphosphorylated ERK</text>
+		</arg2>
+		<text>Unphosphorylated ERK</text>
+	</EVENT>
+</ekb>
