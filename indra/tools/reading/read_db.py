@@ -39,7 +39,7 @@ if __name__ == '__main__':
         '-f', '--file_file',
         help=('A file containing a list of files to be input into reach. These'
               'should be nxml or txt files. Cannot be used in conjunction with'
-              '-i/--id_file. For safesed use, files should be given by'
+              ' -i/--id_file. For safest use, files should be given by '
               'absolute paths.')
         )
     parser.add_argument(
@@ -203,15 +203,17 @@ def _enrich_reading_data(reading_data_iter, db=None):
 # =============================================================================
 
 
-def get_clauses(id_str_list, table):
+def get_clauses(id_str_list, db):
     """Get a list of clauses to be passed to a db query."""
-    id_types = table.__table__.columns.keys()
+    id_types = db.TextRef.__table__.columns.keys()
     id_dict = {id_type: [] for id_type in id_types}
     for id_entry in id_str_list:
         id_type, id_val = _convert_id_entry(id_entry, id_types)
         id_dict[id_type].append(id_val)
-    return [getattr(table, id_type).in_(id_list)
-            for id_type, id_list in id_dict.items() if len(id_list)]
+    id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
+                         for id_type, id_list in id_dict.items()
+                         if len(id_list)]
+    return [or_(*id_condition_list)]
 
 
 def get_text_content_summary_string(q, db):
@@ -248,8 +250,8 @@ def get_text_content_summary_string(q, db):
     return ret_str
 
 
-def get_content_and_readings(id_str_list, readers, db=None,
-                             force_fulltext=False, force_read=False):
+def get_content_query(id_str_list, readers, db=None, force_fulltext=False,
+                      force_read=False):
     """Load all the content that will be read."""
     if db is None:
         db = get_primary_db()
@@ -257,56 +259,78 @@ def get_content_and_readings(id_str_list, readers, db=None,
 
     tc_tr_binding = db.TextContent.text_ref_id == db.TextRef.id
     rd_tc_binding = db.Readings.text_content_id == db.TextContent.id
-    clauses = [tc_tr_binding]
-    clauses.append(or_(*get_clauses(id_str_list, db.TextRef)))
+    general_clauses = [tc_tr_binding]
     if force_fulltext:
-        clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
-    logger.debug("Generated %d clauses." % (len(clauses) - 1))
+        general_clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
+    id_clauses = get_clauses(id_str_list, db)
+    logger.debug("Generated %d id clauses." % len(id_clauses))
 
-    # TODO: Make sure we don't get repeat refences due to duplicate ids.
-    # Probably as simple as adding some kind of 'unique' onto sql query.
-    if len(clauses) > 1:
-        # Get the readings query object, if applicable.
-        if not force_read:
-            r_q = db.filter_query(
-                db.Readings,
-                rd_tc_binding,
-                or_(*[r.matches_clause(db) for r in readers]),
-                *clauses
-                )
-        else:
-            r_q = None
-
+    if id_clauses:
         # Get the text content query object
-        tc_q = db.filter_query(
+        tc_query = db.filter_query(
             db.TextContent,
-            *clauses
+            *(general_clauses + id_clauses)
             )
         try:
-            logger.info(get_text_content_summary_string(tc_q, db))
+            logger.debug("Going to try to make a nice summary...")
+            logger.info(get_text_content_summary_string(tc_query, db))
         except Exception:
             logger.info("Could not print summary of results.")
 
         if not force_read:
-            tc_q_subs = [tc_q.filter(rd_tc_binding, r.matches_clause(db))
+            logger.debug("Getting content to be read.")
+            # Each sub query is a set of content that has been read by one of
+            # the readers.
+            tc_q_subs = [tc_query.filter(rd_tc_binding, r.matches_clause(db))
                          for r in readers]
-            tc_read_q = tc_q.except_(intersect(*tc_q_subs))
-            r_done_q = r_q.filter(~db.Readings.text_content_id.in_(
-                [tc.id for tc in tc_read_q.all()]
-                ))
-            logger.info("%d readings already done." % r_done_q.count())
+            tc_tbr_query = tc_query.except_(intersect(*tc_q_subs))
         else:
-            tc_q_subs = {r.name: None for r in readers}
-            tc_read_q = tc_q
-            r_done_q = None
+            logger.debug('All content will be read (force_read).')
+            tc_tbr_query = tc_query
     else:
         logger.info("Did not retreive content or readings from database.")
-        tc_q = None
-        tc_read_q = None
-        r_q = None
-        r_done_q = None
+        tc_tbr_query = None
 
-    return tc_q, tc_read_q, r_q, r_done_q
+    return tc_tbr_query.distinct()
+
+
+def get_readings_query(id_str_list, readers, db=None, force_fulltext=False):
+    """Get all the readings available for the id's in id_str_list."""
+    if db is None:
+        db = get_primary_db()
+    general_clauses = [
+        # Bind conditions on readings to conditions on content.
+        db.Readings.text_content_id == db.TextContent.id,
+
+        # Bind text content to text refs
+        db.TextContent.text_ref_id == db.TextRef.id,
+
+        # Check if at least one of the readers has read the content
+        or_(*[reader.matches_clause(db) for reader in readers])
+        ]
+    if force_fulltext:
+        general_clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
+    id_clauses = get_clauses(id_str_list, db)
+    if id_clauses:
+        readings_query = db.filter_query(
+            db.Readings,
+
+            # Bind conditions on readings to conditions on content.
+            db.Readings.text_content_id == db.TextContent.id,
+
+            # Bind text content to text refs
+            db.TextContent.text_ref_id == db.TextRef.id,
+
+            # Check if at least one of the readers has read the content
+            or_(*[reader.matches_clause(db) for reader in readers]),
+
+            # Conditions generated from the list of ids. These include a
+            # text-ref text-content binding to connect with id data.
+            *get_clauses(id_str_list, db)
+            )
+    else:
+        readings_query = None
+    return readings_query.distinct()
 
 
 # =============================================================================
@@ -479,15 +503,18 @@ class ReachReader(Reader):
         json_files = glob.glob(pjoin(self.output_dir, '*.json'))
         json_prefixes = set()
         for json_file in json_files:
-            prefix = path.basename(json_file).split('.')[0]
+            # Remove .uaz.<subfile type>.json
+            prefix = '.'.join(path.basename(json_file).split('.')[:-3])
             json_prefixes.add(pjoin(self.output_dir, prefix))
 
         # Join each set of json files and store the json dict.
         reading_data_list = []
         for prefix in json_prefixes:
             base_prefix = path.basename(prefix)
+            if base_prefix.isdecimal():
+                base_prefix = int(base_prefix)
             reading_data_list.append(ReadingData(
-                int(base_prefix),
+                base_prefix,
                 self.name,
                 self.version,
                 formats.JSON,
@@ -668,9 +695,12 @@ def read_content(read_list, readers, *args, **kwargs):
     output_list = []
     for reader in readers:
         res_list = reader.read(read_list, *args, **kwargs)
-        logger.info("Read %d text content entries with %s."
-                    % (len(res_list), reader.name))
-        output_list += res_list
+        if res_list is None:
+            logger.info("Nothing read by %s." % reader.name)
+        else:
+            logger.info("Read %d text content entries with %s."
+                        % (len(res_list), reader.name))
+            output_list += res_list
     logger.info("Read %s text content entries in all." % len(output_list))
     return output_list
 
@@ -711,7 +741,7 @@ def read_db(id_str_list, readers, db=None, **kwargs):
 
     # Get the iterator.
     logger.debug("Getting iterator.")
-    tc_q, tc_read_q, r_q, r_done_q = get_content_and_readings(
+    tc_read_q = get_content_query(
         id_str_list,
         readers,
         db=db,
@@ -727,15 +757,16 @@ def read_db(id_str_list, readers, db=None, **kwargs):
             # results in batches, so as not to overwhelm RAM. We need to read
             # in batches for much the same reaason.
             for r in readers:
-                if r_q.count() > 0:
-                    num_read_by_this_exact_reader = r_q.filter(
-                        db.Readings.text_content_id == text_content.id,
-                        r.matches_clause(db)
-                        ).count()
-                else:
-                    num_read_by_this_exact_reader = 0
-                if num_read_by_this_exact_reader == 0:
-                    batch_list_dict[r.name].append(text_content)
+                # Try to get a previous reading from this reader.
+                reading = db.select_one(
+                    db.Readings,
+                    db.Readings.text_content_id == text_content,
+                    r.matches_clause(db)
+                    )
+                if reading is not None:
+                    continue
+
+                batch_list_dict[r.name].append(text_content)
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
                     # TODO: this is a bit cludgy...maybe do this better?
                     # Perhaps refactor read_content.
@@ -750,20 +781,7 @@ def read_db(id_str_list, readers, db=None, **kwargs):
                 logger.debug("Reading remaining files for %s." % r.name)
                 new_outputs += read_content(batch_list_dict[r.name], [r],
                                             **kwargs)
-    prev_read = []
-    if r_done_q is not None:
-        prev_read = [
-            ReadingData(
-                r.text_content_id,
-                r.reader,
-                r.reader_version,
-                r.format,
-                zlib.decompress(r.bytes, 16+zlib.MAX_WBITS).decode('utf8'),
-                r.id
-                )
-            for r in r_done_q.yield_per(batch_size)
-            ]
-    return new_outputs, prev_read
+    return new_outputs
 
 
 def read_files(files, readers, **kwargs):
@@ -897,8 +915,6 @@ class StatementData(object):
 
     def make_tuple(self):
         """Make a tuple for copying into the database."""
-        assert self.reading_id is not None, \
-            "Reading data must be loaded into the database first."
         return (self.reading_id, self.statement.uuid,
                 self.statement.__class__.__name__,
                 json.dumps(self.statement.to_json()),
@@ -989,30 +1005,57 @@ if __name__ == "__main__":
     verbose = args.verbose and not args.quiet
 
     # Read everything ========================================================
-    if mode is 'ids':
-        outputs, old_readings = read_db(id_lines, readers, verbose=verbose,
-                                        force_read=args.force_read,
-                                        force_fulltext=args.force_fulltext,
-                                        batch=args.batch)
+    if args.no_read:
+        pass
+    elif mode is 'ids':
+        outputs = read_db(id_lines, readers, verbose=verbose,
+                          force_read=args.force_read,
+                          force_fulltext=args.force_fulltext, batch=args.batch)
+
+        # Get any previous readings. Note that we do this BEFORE posting the new
+        # readings. Otherwise we would have duplicates.
+        previous_readings_query = get_readings_query(
+            id_lines,
+            readers,
+            force_fulltext=args.force_fulltext
+            )
+        if previous_readings_query is not None:
+            previous_readings = [
+                ReadingData(
+                    r.text_content_id,
+                    r.reader,
+                    r.reader_version,
+                    r.format,
+                    zlib.decompress(r.bytes, 16+zlib.MAX_WBITS).decode('utf8'),
+                    r.id
+                    )
+                for r in previous_readings_query.yield_per(args.batch)
+                ]
+        else:
+            previous_readings = []
     elif mode is 'files':
         outputs = read_files(file_lines, readers, verbose=verbose)
     else:
         raise ReadingError("Unknown mode: %s." % mode)
 
     if args.pickle:
-        with open(os.getcwd() + 'reading_outputs.pkl', 'wb') as f:
-            pickle.dump(outputs, f)
+        reading_out_path = pjoin(os.getcwd(), 'reading_outputs.pkl')
+        with open(reading_out_path, 'wb') as f:
+            pickle.dump([output.make_tuple() for output in outputs], f)
+        print("Reading outputs stored in %s." % reading_out_path)
 
     if not args.no_reading_upload and mode == 'ids':
         post_reading_output(outputs)
 
     # Convert the outputs to statements ======================================
     if mode is 'ids':
-        outputs += old_readings
+        outputs += previous_readings
 
     stmt_data_list = make_statements(outputs, enrich=(mode is 'ids'))
     if not args.no_statement_upload and mode == 'ids':
         upload_statements(stmt_data_list)
     if args.pickle:
-        with open(os.getcwd() + 'statements.pkl', 'wb') as f:
-            pickle.dump(stmt_data_list, f)
+        stmts_path = pjoin(os.getcwd(), 'statements.pkl')
+        with open(stmts_path, 'wb') as f:
+            pickle.dump([sd.statement for sd in stmt_data_list], f)
+        print("Statements pickled in %s." % stmts_path)
