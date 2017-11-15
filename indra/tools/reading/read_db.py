@@ -524,12 +524,11 @@ class ReachReader(Reader):
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return reading_data_list
 
-    def read(self, read_list, verbose=False, force_read=True):
+    def read(self, read_list, verbose=False):
         """Read the content, returning a dict of ReadingData objects."""
         init_msg = 'Running %s with:\n' % self.name
         init_msg += '\n'.join([
-            'n_proc=%s' % self.n_proc,
-            'force_read=%s' % force_read
+            'n_proc=%s' % self.n_proc
             ])
         logger.info(init_msg)
         ret = None
@@ -647,7 +646,7 @@ class SparserReader(Reader):
                 ))
         return reading_data_list
 
-    def read(self, read_list, verbose=False, force_read=True, log=False):
+    def read(self, read_list, verbose=False, log=False):
         "Perform the actual reading."
         ret = None
         file_list = self.prep_input(read_list)
@@ -922,6 +921,39 @@ def post_reading_output(output_list, db=None):
     return
 
 
+def produce_readings(input_list, reader_list, input_mode, verbose=False,
+                     force_read=False, force_fulltext=False, batch_size=1000,
+                     no_read=False, no_upload=False, pickle_result=False):
+    """Produce the reading output for the given ids."""
+    if no_read:
+        return []
+
+    if input_mode is 'ids':
+        outputs = read_db(input_list, reader_list, verbose=verbose,
+                          force_read=force_read,
+                          force_fulltext=force_fulltext, batch=batch_size)
+        prev_readings = get_readings(input_list, reader_list, force_fulltext,
+                                     batch_size)
+    elif input_mode is 'files':
+        outputs = read_files(input_list, readers, verbose=verbose)
+    else:
+        raise ReadingError("Unknown input_mode: %s." % input_mode)
+
+    if pickle_result:
+        reading_out_path = pjoin(os.getcwd(), 'reading_outputs.pkl')
+        with open(reading_out_path, 'wb') as f:
+            pickle.dump([output.make_tuple() for output in outputs], f)
+        print("Reading outputs stored in %s." % reading_out_path)
+
+    if not no_upload and input_mode == 'ids':
+        post_reading_output(outputs)
+
+    if input_mode is 'ids':
+        outputs += prev_readings
+
+    return outputs
+
+
 # =============================================================================
 # Statement Processing
 # =============================================================================
@@ -929,6 +961,7 @@ def post_reading_output(output_list, db=None):
 
 class StatementData(object):
     """Contains metadata for statements, as well as the statement itself."""
+
     def __init__(self, statement, reading_id):
         self.reading_id = reading_id
         self.statement = statement
@@ -948,15 +981,26 @@ class StatementData(object):
                 self.indra_version)
 
 
-def make_statements(output_list, enrich=True):
+def produce_statements(output_list, enrich=True, no_upload=False,
+                       pickle_result=False):
     """Convert the reader output into a list of StatementData instances."""
     if enrich:
         _enrich_reading_data(output_list)
+
     stmt_data_list = [StatementData(stmt, output.reading_id)
                       for output in output_list
                       for stmt in output.get_statements()]
     logger.info("Found %d statements from %d readings." %
                 (len(stmt_data_list), len(output_list)))
+
+    if not no_upload and mode == 'ids':
+        upload_statements(stmt_data_list)
+    if pickle_result:
+        stmts_path = pjoin(os.getcwd(), 'statements.pkl')
+        with open(stmts_path, 'wb') as f:
+            pickle.dump([sd.statement for sd in stmt_data_list], f)
+        print("Statements pickled in %s." % stmts_path)
+
     return stmt_data_list
 
 
@@ -990,16 +1034,16 @@ if __name__ == "__main__":
     # Get the ids or files.
     if args.id_file is not None:
         with open(args.id_file, 'r') as f:
-            id_lines = f.readlines()
-        logger.info("Found %d ids." % len(id_lines))
+            input_lines = f.readlines()
+        logger.info("Found %d ids." % len(input_lines))
         mode = 'ids'
     elif args.file_file is not None:
         with open(args.file_file, 'r') as f:
-            file_lines = f.readlines()
-        logger.info("Found %d files." % len(file_lines))
+            input_lines = f.readlines()
+        logger.info("Found %d files." % len(input_lines))
         for ftype in ['nxml', 'txt']:
             logger.debug('%d are %s' % (
-                len([f for f in file_lines if f.endswith(ftype)]), ftype
+                len([f for f in input_lines if f.endswith(ftype)]), ftype
                 ))
         mode = 'files'
     else:
@@ -1007,18 +1051,12 @@ if __name__ == "__main__":
 
     # Select only a sample of the lines, if sample is chosen.
     if args.sample is not None:
-        if mode == 'ids':
-            id_lines = random.sample(id_lines, args.sample)
-        elif mode == 'files':
-            file_lines = random.sample(id_lines, args.sample)
+        input_lines = random.sample(input_lines, args.sample)
 
     # If a range is specified, only use that range.
     if args.in_range is not None:
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
-        if mode == 'ids':
-            id_lines = id_lines[start_idx:end_idx]
-        elif mode == 'files':
-            file_lines = file_lines[start_idx:end_idx]
+        input_lines = input_lines[start_idx:end_idx]
 
     # Create a single base directory
     base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
@@ -1032,37 +1070,14 @@ if __name__ == "__main__":
     verbose = args.verbose and not args.quiet
 
     # Read everything ========================================================
-    if args.no_read:
-        pass
-    elif mode is 'ids':
-        outputs = read_db(id_lines, readers, verbose=verbose,
-                          force_read=args.force_read,
-                          force_fulltext=args.force_fulltext, batch=args.batch)
-        prev_readings = get_readings(id_lines, readers, args.force_fulltext,
-                                     args.batch)
-    elif mode is 'files':
-        outputs = read_files(file_lines, readers, verbose=verbose)
-    else:
-        raise ReadingError("Unknown mode: %s." % mode)
-
-    if args.pickle:
-        reading_out_path = pjoin(os.getcwd(), 'reading_outputs.pkl')
-        with open(reading_out_path, 'wb') as f:
-            pickle.dump([output.make_tuple() for output in outputs], f)
-        print("Reading outputs stored in %s." % reading_out_path)
-
-    if not args.no_reading_upload and mode == 'ids':
-        post_reading_output(outputs)
+    outputs = produce_readings(input_lines, readers, mode, verbose=verbose,
+                               force_read=args.force_read,
+                               force_fulltext=args.force_fulltext,
+                               batch_size=args.batch, no_read=args.no_read,
+                               no_upload=args.no_reading_upload,
+                               pickle_result=args.pickle)
 
     # Convert the outputs to statements ======================================
-    if mode is 'ids':
-        outputs += prev_readings
-
-    stmt_data_list = make_statements(outputs, enrich=(mode is 'ids'))
-    if not args.no_statement_upload and mode == 'ids':
-        upload_statements(stmt_data_list)
-    if args.pickle:
-        stmts_path = pjoin(os.getcwd(), 'statements.pkl')
-        with open(stmts_path, 'wb') as f:
-            pickle.dump([sd.statement for sd in stmt_data_list], f)
-        print("Statements pickled in %s." % stmts_path)
+    produce_statements(outputs, enrich=(mode == 'ids'),
+                       no_upload=args.no_statement_upload,
+                       pickle_result=args.pickle)
