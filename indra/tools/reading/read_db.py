@@ -589,22 +589,31 @@ class SparserReader(Reader):
 
         for item in read_list:
             if isinstance(item, str):
+                # This implies that it is a file path
                 fpath = item.strip()
                 if fpath.endswith('.nxml'):
+                    # If it is already an nxml, we just need to adjust the
+                    # name a bit, if anything.
                     if fpath.startswith('PMC'):
                         file_list.append(fpath)
                     else:
                         new_fpath = pjoin(self.tmp_dir, path.basename(fpath))
                         shutil.copy(fpath, new_fpath)
                 else:
-                    new_fname = path.basename(fpath).split('.')[0] + '.nxml'
+                    # Otherwise we need to frame the content in xml and put it
+                    # in a new file with the appropriat name.
+                    old_name = path.basename(fpath)
+                    new_fname = '.'.join(old_name.split('.')[:-1] + ['nxml'])
                     new_fpath = pjoin(self.tmp_dir, new_fname)
                     with open(fpath, 'r') as f_old:
                         content = f_old.read()
                     nxml_str = sparser.make_sparser_nxml_from_text(content)
                     with open(new_fpath, 'w') as f_new:
                         f_new.write(nxml_str)
+                    file_list.append(new_fpath)
             elif all([hasattr(item, a) for a in ['format', 'content', 'id']]):
+                # This implies that it is a text content object, or something
+                # with a matching API.
                 if item.format == formats.XML:
                     add_nxml_file(
                         item.id,
@@ -628,17 +637,24 @@ class SparserReader(Reader):
     def get_output(self, output_files):
         "Get the output files as an id indexed dict."
         reading_data_list = []
-        patt = re.compile(r'PMC(\w+)-semantics.*?')
+        patt = re.compile(r'(.*?)-semantics.*?')
         for outpath in output_files:
             re_out = patt.match(path.basename(outpath))
             if re_out is None:
-                raise SparserError("Could not get id from output path %s." %
-                                   outpath)
+                raise SparserError("Could not get prefix from output path %s."
+                                   % outpath)
+            prefix = re_out.groups()[0]
+            if prefix.startswith('PMC'):
+                prefix = prefix[3:]
+            if prefix.isdecimal():
+                # In this case we assume the prefix is a tcid.
+                prefix = int(prefix)
+
             with open(outpath, 'r') as f:
                 content = json.load(f)
-            tcid = re_out.groups()[0]
+
             reading_data_list.append(ReadingData(
-                int(tcid),
+                prefix,
                 self.name,
                 self.version,
                 formats.JSON,
@@ -650,7 +666,7 @@ class SparserReader(Reader):
         "Perform the actual reading."
         ret = None
         file_list = self.prep_input(read_list)
-        if len(file_list) > 1:
+        if len(file_list) > 0:
             logger.info("Beginning to run sparser.")
             output_file_list = []
             if log:
@@ -698,7 +714,7 @@ def read_content(read_list, readers, *args, **kwargs):
         if res_list is None:
             logger.info("Nothing read by %s." % reader.name)
         else:
-            logger.info("Read %d text content entries with %s."
+            logger.info("Successfully read %d content entries with %s."
                         % (len(res_list), reader.name))
             output_list += res_list
     logger.info("Read %s text content entries in all." % len(output_list))
@@ -993,7 +1009,7 @@ def produce_statements(output_list, enrich=True, no_upload=False,
     logger.info("Found %d statements from %d readings." %
                 (len(stmt_data_list), len(output_list)))
 
-    if not no_upload and mode == 'ids':
+    if not no_upload:
         upload_statements(stmt_data_list)
     if pickle_result:
         stmts_path = pjoin(os.getcwd(), 'statements.pkl')
@@ -1079,5 +1095,5 @@ if __name__ == "__main__":
 
     # Convert the outputs to statements ======================================
     produce_statements(outputs, enrich=(mode == 'ids'),
-                       no_upload=args.no_statement_upload,
+                       no_upload=(args.no_statement_upload or mode != 'ids'),
                        pickle_result=args.pickle)
