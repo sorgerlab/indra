@@ -1206,6 +1206,11 @@ class TripsProcessor(object):
             agent.mods = mods
             return
 
+        # Activated precondition
+        if precond_event_type == 'ONT::ACTIVATE':
+            agent.activity = ActivityCondition('activity', True)
+            return
+
         # Binding precondition
         if precond_event_type == 'ONT::BIND':
             arg1 = precond_event.find('arg1')
