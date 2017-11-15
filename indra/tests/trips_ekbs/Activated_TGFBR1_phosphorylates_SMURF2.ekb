@@ -1,0 +1,92 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="text">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT01158_IO-705015" id="paragraph1157">Activated TGFBR1 phosphorylates SMURF2.
+</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="1227" pid="paragraph1157">Activated TGFBR1 phosphorylates SMURF2.</sentence>
+		</sentences>
+	</input>
+	<EVENT end="38" id="V705034" lisp="(ONT::EVENT ONT::V705034 ONT::PHOSPHORYLATION :AGENT ONT::V705030 :AFFECTED ONT::V705044 :FORCE ONT::TRUE :DRUM ((:DRUM (TERM :ID GO::|0006468| :NAME &quot;protein phosphorylation&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;protein phosphorylation&quot; :STATUS &quot;name&quot; :EXACT 2)) :ONT-TYPES (ONT::POST-TRANSLATIONAL-MODIFICATION)))) :TENSE W::PRES)" paragraph="paragraph1157" rule="-RULE60_4_AGENT_AFFECTED" start="0" uttnum="1227">
+		<type>ONT::PHOSPHORYLATION</type>
+		<force>ONT::TRUE</force>
+		<predicate end="38" id="V705034" start="0">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>Activated TGFBR1 phosphorylates SMURF2</text>
+		</predicate>
+		<arg1 end="17" id="V705030" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Activated TGFBR1</text>
+		</arg1>
+		<arg2 end="38" id="V705044" role=":AFFECTED" start="32">
+			<type>ONT::GENE</type>
+			<text normalization="">SMURF2</text>
+		</arg2>
+		<drum-terms>
+			<drum-term dbid="GO:0006468" match-score="0.85366" matched-name="protein phosphorylation" name="protein phosphorylation">
+				<types>
+					<type>ONT::POST-TRANSLATIONAL-MODIFICATION</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Activated TGFBR1 phosphorylates SMURF2</text>
+	</EVENT>
+	<TERM dbid="NCIT:C51730|NCIT:C30098|HGNC:11772|UP:P36897" end="17" id="V705030" lisp="(ONT::TERM ONT::V705030 ONT::GENE-PROTEIN :INEVENT ONT::V705018 :NAME W::TGFBR-1 :DRUM ((:DRUM (TERM :ID HGNC::|11772| :NAME &quot;transforming growth factor beta receptor 1&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;TGFBR1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P36897) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C51730 :NAME &quot;TGFBR1&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;TGFBR1&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C30098 :NAME &quot;transforming growth factor beta receptor-I&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;TGFBR1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph1157" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="1227">
+		<type>ONT::GENE-PROTEIN</type>
+		<name>TGFBR-1</name>
+		<features>
+			<inevent id="V705018"/>
+		</features>
+		<drum-terms>
+			<drum-term dbid="HGNC:11772" match-score="0.85366" matched-name="TGFBR1" name="transforming growth factor beta receptor 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P36897"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C51730" match-score="0.85366" matched-name="TGFBR1" name="TGFBR1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C30098" match-score="0.70732" matched-name="TGFBR1" name="transforming growth factor beta receptor-I">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+		<text>Activated TGFBR1</text>
+	</TERM>
+	<TERM dbid="HGNC:16809|UP:Q9HAU4" end="38" id="V705044" lisp="(ONT::TERM ONT::V705044 ONT::GENE :NAME W::SMURF-2 :DRUM ((:DRUM (TERM :ID HGNC::|16809| :NAME &quot;SMAD specific E3 ubiquitin protein ligase 2&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;SMURF2&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::Q9HAU4) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph1157" rule="-SIMPLE-REF" start="32" uttnum="1227">
+		<type>ONT::GENE</type>
+		<name>SMURF-2</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:16809" match-score="0.85366" matched-name="SMURF2" name="SMAD specific E3 ubiquitin protein ligase 2">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:Q9HAU4"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+		<text>SMURF2</text>
+	</TERM>
+	<EVENT end="17" id="V705018" lisp="(ONT::EVENT ONT::V705018 ONT::ACTIVATE :AFFECTED ONT::V705030 :FORCE ONT::TRUE)" paragraph="paragraph1157" rule="-RULE40_2_AGENT_AFFECTED-AFFECTED" start="0" uttnum="1227">
+		<type>ONT::ACTIVATE</type>
+		<force>ONT::TRUE</force>
+		<predicate end="17" id="V705018" start="0">
+			<type>ONT::ACTIVATE</type>
+			<text>Activated TGFBR1</text>
+		</predicate>
+		<arg2 end="17" id="V705030" role=":AFFECTED" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">Activated TGFBR1</text>
+		</arg2>
+		<text>Activated TGFBR1</text>
+	</EVENT>
+</ekb>

@@ -707,3 +707,15 @@ def test_55():
     assert(erk.name == 'ERK')
     assert len(erk.mods) == 1
     assert erk.mods[0].is_modified == False
+
+def test_56():
+    sentence = 'Activated TGFBR1 phosphorylates SMURF2.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Phosphorylation))
+    tgfbr1 = st.enz
+    assert(tgfbr1.name == 'TGFBR1')
+    assert tgfbr1.activity is not None
+    assert tgfbr1.activity.activity_type == 'activity'
+    assert tgfbr1.activity.is_active == True
