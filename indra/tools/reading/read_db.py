@@ -25,6 +25,7 @@ from os.path import join as pjoin
 from os import path
 from sqlalchemy.sql.expression import or_, and_, intersect
 
+
 logger = logging.getLogger('read_db')
 if __name__ == '__main__':
     parser = ArgumentParser(
@@ -760,10 +761,10 @@ def read_db(id_str_list, readers, db=None, **kwargs):
                 # Try to get a previous reading from this reader.
                 reading = db.select_one(
                     db.Readings,
-                    db.Readings.text_content_id == text_content,
+                    db.Readings.text_content_id == text_content.id,
                     r.matches_clause(db)
                     )
-                if reading is not None:
+                if reading is not None and not force_read:
                     continue
 
                 batch_list_dict[r.name].append(text_content)
@@ -782,6 +783,32 @@ def read_db(id_str_list, readers, db=None, **kwargs):
                 new_outputs += read_content(batch_list_dict[r.name], [r],
                                             **kwargs)
     return new_outputs
+
+
+def get_readings(id_lines, readers, force_fulltext=False, batch_size=1000):
+    """Get readings from the database."""
+    # Get any previous readings. Note that we do this BEFORE posting the new
+    # readings. Otherwise we would have duplicates.
+    previous_readings_query = get_readings_query(
+        id_lines,
+        readers,
+        force_fulltext=force_fulltext
+        )
+    if previous_readings_query is not None:
+        prev_readings = [
+            ReadingData(
+                r.text_content_id,
+                r.reader,
+                r.reader_version,
+                r.format,
+                zlib.decompress(r.bytes, 16+zlib.MAX_WBITS).decode('utf8'),
+                r.id
+                )
+            for r in previous_readings_query.yield_per(batch_size)
+            ]
+    else:
+        prev_readings = []
+    return prev_readings
 
 
 def read_files(files, readers, **kwargs):
@@ -1011,28 +1038,8 @@ if __name__ == "__main__":
         outputs = read_db(id_lines, readers, verbose=verbose,
                           force_read=args.force_read,
                           force_fulltext=args.force_fulltext, batch=args.batch)
-
-        # Get any previous readings. Note that we do this BEFORE posting the new
-        # readings. Otherwise we would have duplicates.
-        previous_readings_query = get_readings_query(
-            id_lines,
-            readers,
-            force_fulltext=args.force_fulltext
-            )
-        if previous_readings_query is not None:
-            previous_readings = [
-                ReadingData(
-                    r.text_content_id,
-                    r.reader,
-                    r.reader_version,
-                    r.format,
-                    zlib.decompress(r.bytes, 16+zlib.MAX_WBITS).decode('utf8'),
-                    r.id
-                    )
-                for r in previous_readings_query.yield_per(args.batch)
-                ]
-        else:
-            previous_readings = []
+        prev_readings = get_readings(id_lines, readers, args.force_fulltext,
+                                     args.batch)
     elif mode is 'files':
         outputs = read_files(file_lines, readers, verbose=verbose)
     else:
@@ -1049,7 +1056,7 @@ if __name__ == "__main__":
 
     # Convert the outputs to statements ======================================
     if mode is 'ids':
-        outputs += previous_readings
+        outputs += prev_readings
 
     stmt_data_list = make_statements(outputs, enrich=(mode is 'ids'))
     if not args.no_statement_upload and mode == 'ids':

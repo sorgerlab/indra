@@ -8,9 +8,9 @@ from nose import SkipTest
 from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
     get_mem_total
 from indra.tools.reading.read_db import _convert_id_entry, \
-    get_content_and_readings, get_clauses, post_reading_output, \
+    get_content_query, get_clauses, post_reading_output, \
     read_content, make_statements, _enrich_reading_data, \
-    upload_statements, get_reader_children, read_db
+    upload_statements, get_reader_children, read_db, get_readings
 
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
@@ -137,9 +137,10 @@ def test_get_clauses():
     "Test that the clauses are correctly created."
     db = get_test_db()
     id_str_list = ['pmid:17399955', 'pmcid:PMC3199586']
-    clauses = get_clauses(id_str_list, db.TextRef)
-    assert len(clauses) == 2
-    assert all(['IN' in str(c) for c in clauses])
+    clauses = get_clauses(id_str_list, db)
+    assert len(clauses) == 1
+    clause = clauses[0]
+    assert 'IN' in str(clause) and 'OR' in str(clause)
 
 
 def test_get_content():
@@ -148,11 +149,9 @@ def test_get_content():
     tr_list = db.select_all(db.TextRef)
     id_str_list = get_id_str_list(tr_list)
     readers = [reader_class() for reader_class in get_reader_children()]
-    query_list = get_content_and_readings(id_str_list, readers, db=db,
-                                          force_read=False)
-    assert len(query_list) == 4,\
-        "Expected 4 queries, got %d." % len(query_list)
-    assert any([q.count() > 0 for q in query_list]), "No content retrieved."
+    tc_query = get_content_query(id_str_list, readers, db=db, force_read=False)
+    assert tc_query.count(),\
+        "Expected some results from our query, got %d." % tc_query.count()
 
 
 def test_get_reader_children():
@@ -222,19 +221,23 @@ def test_read_db():
 
     # Run the reading with default batch size, no force_fulltext, and
     # no force_read
-    reading_output, _ = read_db(id_str_list, readers, db=db)
-    assert len(reading_output), 'Nothing was read.'
-    post_reading_output(reading_output, db=db)  # setup for later test.
+    reading_output_1 = read_db(id_str_list, readers, db=db)
+    assert len(reading_output_1), 'Nothing was read.'
+    post_reading_output(reading_output_1, db=db)  # setup for later test.
     assert len(db.select_all(db.Readings)), 'None of the readings added to db.'
 
     # Run the reading with default batch size, no force_fulltext, but with
     # force_read = True (this hould produce new readings.)
-    reading_output, old_readings = read_db(id_str_list, readers, db=db,
-                                           force_read=True)
-    assert not len(old_readings), "Got old readings on force_read."
+    reading_output_2 = read_db(id_str_list, readers, db=db,
+                               force_read=True)
+    old_readings = get_readings(id_str_list, readers)
+    N1, N2 = len(reading_output_1), len(reading_output_2)
+    N2_old = len(old_readings)
+    assert N1 == N2, "Got %d readings from run 1 but %d from run 2." % (N1, N2)
 
     # Run the reading with default batch size, no force_fulltext, but without
     # force_read = True (this should NOT produce new readings.)
-    reading_output, old_readings = read_db(id_str_list, readers, db=db)
+    reading_output = read_db(id_str_list, readers, db=db)
+    old_readings = get_readings(id_str_list, readers)
     assert len(reading_output) == 0, "Got new readings when force_read=False."
     assert len(old_readings), "Did not get old readings when force_read=False."
