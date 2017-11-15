@@ -5,12 +5,10 @@ import pickle
 from os import path, mkdir
 from nose import SkipTest
 
-from indra.tools.reading.read_pmids import READER_DICT, get_proc_num,\
-    get_mem_total
 from indra.tools.reading.read_db import _convert_id_entry, \
     get_content_query, get_clauses, post_reading_output, \
-    read_content, make_statements, _enrich_reading_data, \
-    upload_statements, get_reader_children, read_db, get_readings
+    get_reader_children, read_db, get_readings, _enrich_reading_data,\
+    produce_statements, read_content
 
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
@@ -161,7 +159,6 @@ def test_get_reader_children():
         "Expected only 2 readers, but got %s." % str(readers)
 
 
-'''
 def test_reading_content_insert():
     "Test the content primary through-put of read_db."
     db = get_db_with_content()
@@ -169,8 +166,7 @@ def test_reading_content_insert():
     print("Test reading")
     tc_list = db.select_all(db.TextContent)
     readers = [reader_class() for reader_class in get_reader_children()]
-    reading_output = read_content(tc_list, readers, verbose=True,
-                                  force_read=True)
+    reading_output = read_content(tc_list, readers, verbose=True)
     expected_output_len = len(tc_list)*len(readers)
     assert len(reading_output) == expected_output_len, \
         ("Not all text content successfully read."
@@ -199,16 +195,12 @@ def test_reading_content_insert():
         "Some reading data objects didn't have reading_ids after enrichment."
 
     print("Test making statements")
-    stmts = make_statements(reading_output)
+    stmts = produce_statements(reading_output, enrich=True)
     assert len(stmts), 'No statements created.'
-
-    print("Test statement upload")
-    upload_statements(stmts, db=db)
     db_stmts = db.select_all(db.Statements)
     assert len(db_stmts) == len(stmts), \
         "Only %d/%d statements added." % (len(db_stmts), len(stmts))
     assert len(db.select_all(db.Agents)), "No agents added."
-'''
 
 
 def test_read_db():
