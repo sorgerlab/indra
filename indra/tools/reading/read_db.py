@@ -665,6 +665,23 @@ class SparserReader(Reader):
                 ))
         return reading_data_list
 
+    def read_one(self, fpath, outbuf, log=False):
+        if log:
+            outbuf.write('\nReading %s.\n' % fpath)
+            outbuf.flush()
+        if verbose:
+            logger.info('Reading %s.' % fpath)
+        try:
+            outpath = sparser.run_sparser(fpath, 'json', outbuf)
+        except Exception as e:
+            if verbose:
+                logger.error('Failed to run sparser on %s.' %
+                             fpath)
+                logger.exception(e)
+            if log:
+                outbuf.write('Reading failed.\n')
+        return outpath
+
     def read(self, read_list, verbose=False, log=False):
         "Perform the actual reading."
         ret = None
@@ -679,21 +696,8 @@ class SparserReader(Reader):
                 outbuf = None
             try:
                 for fpath in file_list:
-                    if log:
-                        outbuf.write('\nReading %s.\n' % fpath)
-                        outbuf.flush()
-                    if verbose:
-                        logger.info('Reading %s.' % fpath)
-                    try:
-                        outpath = sparser.run_sparser(fpath, 'json', outbuf)
-                        output_file_list.append(outpath)
-                    except Exception as e:
-                        if verbose:
-                            logger.error('Failed to run sparser on %s.' %
-                                         fpath)
-                            logger.exception(e)
-                        if log:
-                            outbuf.write('Reading failed.\n')
+                    outpath = self.read_one(fpath, outbuf, log=log)
+                    output_file_list.append(outpath)
             finally:
                 if log:
                     outbuf.close()
