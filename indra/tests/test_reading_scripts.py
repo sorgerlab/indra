@@ -195,7 +195,7 @@ def test_reading_content_insert():
         "Some reading data objects didn't have reading_ids after enrichment."
 
     print("Test making statements")
-    stmts = produce_statements(reading_output, enrich=True)
+    stmts = produce_statements(reading_output, db=db)
     assert len(stmts), 'No statements created.'
     db_stmts = db.select_all(db.Statements)
     assert len(db_stmts) == len(stmts), \
@@ -209,27 +209,32 @@ def test_read_db():
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
     id_str_list = get_id_str_list(complete_tr_list)
-    readers = [reader_class() for reader_class in get_reader_children()]
+    readers = [reader_class() for reader_class in get_reader_children()
+               if reader_class.name == 'SPARSER']
 
     # Run the reading with default batch size, no force_fulltext, and
     # no force_read
     reading_output_1 = read_db(id_str_list, readers, db=db)
-    assert len(reading_output_1), 'Nothing was read.'
+    N1 = len(reading_output_1)
+    N1_exp = len(readers)*db.filter_query(db.TextContent).count()
+    assert N1 == N1_exp, \
+        'Expected %d readings, but got %d.' % (N1_exp, N1)
     post_reading_output(reading_output_1, db=db)  # setup for later test.
-    assert len(db.select_all(db.Readings)), 'None of the readings added to db.'
+    N1_db = len(db.select_all(db.Readings))
+    assert N1_db == N1, \
+        'Expected %d readings to be copied to db, only %d found.' % (N1, N1_db)
 
     # Run the reading with default batch size, no force_fulltext, but with
     # force_read = True (this hould produce new readings.)
     reading_output_2 = read_db(id_str_list, readers, db=db,
                                force_read=True)
-    old_readings = get_readings(id_str_list, readers)
-    N1, N2 = len(reading_output_1), len(reading_output_2)
-    N2_old = len(old_readings)
+    N2 = len(reading_output_2)
     assert N1 == N2, "Got %d readings from run 1 but %d from run 2." % (N1, N2)
 
     # Run the reading with default batch size, no force_fulltext, but without
     # force_read = True (this should NOT produce new readings.)
+    old_readings = get_readings(id_str_list, readers, db=db)
     reading_output = read_db(id_str_list, readers, db=db)
-    old_readings = get_readings(id_str_list, readers)
     assert len(reading_output) == 0, "Got new readings when force_read=False."
-    assert len(old_readings), "Did not get old readings when force_read=False."
+    assert len(old_readings) == N1, \
+        "Did not get old readings when force_read=False."

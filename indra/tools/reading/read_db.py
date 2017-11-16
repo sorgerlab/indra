@@ -217,9 +217,12 @@ def get_clauses(id_str_list, db):
     return [or_(*id_condition_list)]
 
 
-def get_text_content_summary_string(q, db):
+def get_text_content_summary_string(q, db, num_ids=None):
     """Create a table with some summary data for a query."""
     N_tot = q.count()
+    if num_ids is not None:
+        logger.info("Found %d text content entires out of %d ids."
+                    % (N_tot, num_ids))
     if N_tot > 0:
         log_n = floor(log10(N_tot))
     else:
@@ -271,7 +274,7 @@ def get_content_query(id_str_list, readers, db=None, force_fulltext=False,
         tc_query = db.filter_query(
             db.TextContent,
             *(general_clauses + id_clauses)
-            )
+            ).distinct()
         try:
             logger.debug("Going to try to make a nice summary...")
             logger.info(get_text_content_summary_string(tc_query, db))
@@ -800,13 +803,18 @@ def read_db(id_str_list, readers, db=None, **kwargs):
     return new_outputs
 
 
-def get_readings(id_lines, readers, force_fulltext=False, batch_size=1000):
+def get_readings(id_lines, readers, force_fulltext=False, batch_size=1000,
+                 db=None):
     """Get readings from the database."""
+    if db is None:
+        db = get_primary_db()
+
     # Get any previous readings. Note that we do this BEFORE posting the new
     # readings. Otherwise we would have duplicates.
     previous_readings_query = get_readings_query(
         id_lines,
         readers,
+        db=db,
         force_fulltext=force_fulltext
         )
     if previous_readings_query is not None:
@@ -998,10 +1006,13 @@ class StatementData(object):
 
 
 def produce_statements(output_list, enrich=True, no_upload=False,
-                       pickle_result=False):
+                       pickle_result=False, db=None):
     """Convert the reader output into a list of StatementData instances."""
+    if db is None:
+        db = get_primary_db()
+
     if enrich:
-        _enrich_reading_data(output_list)
+        _enrich_reading_data(output_list, db=db)
 
     stmt_data_list = [StatementData(stmt, output.reading_id)
                       for output in output_list
@@ -1010,7 +1021,7 @@ def produce_statements(output_list, enrich=True, no_upload=False,
                 (len(stmt_data_list), len(output_list)))
 
     if not no_upload:
-        upload_statements(stmt_data_list)
+        upload_statements(stmt_data_list, db=db)
     if pickle_result:
         stmts_path = pjoin(os.getcwd(), 'statements.pkl')
         with open(stmts_path, 'wb') as f:
