@@ -2,17 +2,19 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import pickle
+import random
+import zlib
 from os import path, mkdir
 from nose import SkipTest
 
 from indra.tools.reading.read_db import _convert_id_entry, \
     get_content_query, get_clauses, post_reading_output, \
     get_reader_children, read_db, get_readings, _enrich_reading_data,\
-    produce_statements, read_content
+    produce_statements, read_content, produce_readings
 
+from indra.db import formats
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_content
-import random
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.
@@ -238,3 +240,24 @@ def test_read_db():
     assert len(reading_output) == 0, "Got new readings when force_read=False."
     assert len(old_readings) == N1, \
         "Did not get old readings when force_read=False."
+
+
+def test_read_files():
+    "Test that the system can read files."
+    db = get_db_with_content()
+
+    # Create the test files.
+    test_file_fmt = 'test_reading_input.%s'
+    example_files = []
+    for fmt in [formats.TEXT, formats.XML]:
+        tc = db.select_one(db.TextContent, db.TextContent.format == fmt)
+        with open(test_file_fmt % fmt, 'wb') as f:
+            f.write(zlib.decompress(tc.content, 16+zlib.MAX_WBITS))
+        example_files.append(test_file_fmt % fmt)
+
+    # Now read them.
+    readers = [reader_class() for reader_class in get_reader_children()]
+    outputs = produce_readings(example_files, readers, 'files')
+    N_out = len(outputs)
+    N_exp = 2
+    assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
