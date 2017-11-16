@@ -24,6 +24,8 @@ from math import log10, floor
 from os.path import join as pjoin
 from os import path
 from sqlalchemy.sql.expression import or_, and_, intersect
+from _io import StringIO, BytesIO
+from multiprocessing import Pool
 
 
 logger = logging.getLogger('read_db')
@@ -665,12 +667,14 @@ class SparserReader(Reader):
                 ))
         return reading_data_list
 
-    def read_one(self, fpath, outbuf, log=False):
-        if log:
-            outbuf.write('\nReading %s.\n' % fpath)
-            outbuf.flush()
+    def read_one(self, fpath, outbuf=None, verbose=False):
+        if outbuf is None:
+            outbuf = BytesIO()
+        outbuf.write(b'\nReading %s.\n' % fpath.encode())
+        outbuf.flush()
         if verbose:
             logger.info('Reading %s.' % fpath)
+        outpath = None
         try:
             outpath = sparser.run_sparser(fpath, 'json', outbuf)
         except Exception as e:
@@ -678,9 +682,8 @@ class SparserReader(Reader):
                 logger.error('Failed to run sparser on %s.' %
                              fpath)
                 logger.exception(e)
-            if log:
-                outbuf.write('Reading failed.\n')
-        return outpath
+            outbuf.write(b'Reading failed.\n')
+        return outpath, outbuf
 
     def read(self, read_list, verbose=False, log=False):
         "Perform the actual reading."
@@ -695,9 +698,24 @@ class SparserReader(Reader):
             else:
                 outbuf = None
             try:
-                for fpath in file_list:
-                    outpath = self.read_one(fpath, outbuf, log=log)
-                    output_file_list.append(outpath)
+                if self.n_proc == 1:
+                    for fpath in file_list:
+                        outpath, _ = self.read_one(fpath, outbuf, verbose)
+                        if outpath is not None:
+                            output_file_list.append(outpath)
+                else:
+                    pool = Pool(self.n_proc)
+                    output_files_and_buffers = pool.map(self.read_one,
+                                                        file_list)
+                    for output_file, buff in output_files_and_buffers:
+                        if output_file is not None:
+                            output_file_list.append(output_file)
+                        if log:
+                            outbuf.write('Log for producing %s.\n'
+                                         % output_file)
+                            buff.seek(0)
+                            outbuf.write(buff.read() + '\n')
+                            outbuf.flush()
             finally:
                 if log:
                     outbuf.close()

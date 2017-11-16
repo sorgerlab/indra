@@ -10,7 +10,7 @@ from nose import SkipTest
 from indra.tools.reading.read_db import _convert_id_entry, \
     get_content_query, get_clauses, post_reading_output, \
     get_reader_children, read_db, get_readings, _enrich_reading_data,\
-    produce_statements, read_content, produce_readings
+    produce_statements, read_content, produce_readings, SparserReader
 
 from indra.db import formats
 from indra.tests.test_db import get_db as get_test_db
@@ -126,6 +126,11 @@ def get_id_str_list(tr_list):
     return id_str_list
 
 
+def get_readers(*names, **kwargs):
+    return [reader_class(**kwargs) for reader_class in get_reader_children()
+            if (not names or reader_class.name in names)]
+
+
 def test_convert_id_entry():
     "Test that we correctly conver the id's given us."
     id_entry = 'pmid\t: 12345\n'
@@ -148,7 +153,7 @@ def test_get_content():
     db = get_db_with_content()
     tr_list = db.select_all(db.TextRef)
     id_str_list = get_id_str_list(tr_list)
-    readers = [reader_class() for reader_class in get_reader_children()]
+    readers = get_readers()
     tc_query = get_content_query(id_str_list, readers, db=db, force_read=False)
     assert tc_query.count(),\
         "Expected some results from our query, got %d." % tc_query.count()
@@ -167,7 +172,7 @@ def test_reading_content_insert():
 
     print("Test reading")
     tc_list = db.select_all(db.TextContent)
-    readers = [reader_class() for reader_class in get_reader_children()]
+    readers = get_readers()
     reading_output = read_content(tc_list, readers, verbose=True)
     expected_output_len = len(tc_list)*len(readers)
     assert len(reading_output) == expected_output_len, \
@@ -211,8 +216,7 @@ def test_read_db():
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
     id_str_list = get_id_str_list(complete_tr_list)
-    readers = [reader_class() for reader_class in get_reader_children()
-               if reader_class.name == 'SPARSER']
+    readers = get_readers('SPARSER')
 
     # Run the reading with default batch size, no force_fulltext, and
     # no force_read
@@ -262,8 +266,20 @@ def test_read_files():
         example_files.append(test_file_fmt % suffix)
 
     # Now read them.
-    readers = [reader_class() for reader_class in get_reader_children()]
+    readers = get_readers()
     outputs = produce_readings(example_files, readers, 'files')
     N_out = len(outputs)
     N_exp = len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
+
+
+def test_parallell():
+    "Test running sparser in parallel."
+    db = get_db_with_content()
+    sparser_reader = SparserReader(n_proc=2)
+    tc_list = db.select_all(db.TextContent)
+    result = sparser_reader.read(tc_list, verbose=True)
+    N_exp = len(tc_list)
+    N_res = len(result)
+    assert N_exp == N_res, \
+        "Expected to get %d results, but got %d." % (N_exp, N_res)
