@@ -947,19 +947,23 @@ def post_reading_output(output_list, db=None):
 
 def produce_readings(input_list, reader_list, input_mode, verbose=False,
                      force_read=False, force_fulltext=False, batch_size=1000,
-                     no_read=False, no_upload=False, pickle_result=False):
+                     no_read=False, no_upload=False, pickle_result=False,
+                     db=None):
     """Produce the reading output for the given ids."""
+    if db is None:
+        db = get_primary_db()
+
     if no_read:
         return []
 
     if input_mode is 'ids':
         outputs = read_db(input_list, reader_list, verbose=verbose,
-                          force_read=force_read,
+                          force_read=force_read, db=db,
                           force_fulltext=force_fulltext, batch=batch_size)
         prev_readings = get_readings(input_list, reader_list, force_fulltext,
-                                     batch_size)
+                                     batch_size, db=db)
     elif input_mode is 'files':
-        outputs = read_files(input_list, readers, verbose=verbose)
+        outputs = read_files(input_list, reader_list, verbose=verbose)
     else:
         raise ReadingError("Unknown input_mode: %s." % input_mode)
 
