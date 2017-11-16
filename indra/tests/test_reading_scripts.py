@@ -251,13 +251,19 @@ def test_read_files():
     example_files = []
     for fmt in [formats.TEXT, formats.XML]:
         tc = db.select_one(db.TextContent, db.TextContent.format == fmt)
-        with open(test_file_fmt % fmt, 'wb') as f:
+        if tc is None:
+            print("Could not find %s content for testing." % fmt)
+            continue
+        suffix = fmt
+        if fmt is formats.XML:
+            suffix = 'n' + fmt
+        with open(test_file_fmt % suffix, 'wb') as f:
             f.write(zlib.decompress(tc.content, 16+zlib.MAX_WBITS))
-        example_files.append(test_file_fmt % fmt)
+        example_files.append(test_file_fmt % suffix)
 
     # Now read them.
     readers = [reader_class() for reader_class in get_reader_children()]
     outputs = produce_readings(example_files, readers, 'files')
     N_out = len(outputs)
-    N_exp = 2
+    N_exp = len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
