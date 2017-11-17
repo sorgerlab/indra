@@ -83,7 +83,7 @@ class Reader(object):
         self.input_dir = _get_dir(tmp_dir, 'input')
         return
 
-    def read(self, read_list, verbose=False, force_read=True):
+    def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
         raise NotImplementedError()
 
@@ -239,7 +239,7 @@ class ReachReader(Reader):
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return reading_data_list
 
-    def read(self, read_list, verbose=False):
+    def read(self, read_list, verbose=False, log=False):
         """Read the content, returning a dict of ReadingData objects."""
         init_msg = 'Running %s with:\n' % self.name
         init_msg += '\n'.join([
@@ -266,9 +266,16 @@ class ReachReader(Reader):
                 ]
             p = subprocess.Popen(args, stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
-            if verbose:
-                for line in iter(p.stdout.readline, b''):
-                    logger.info('REACH: ' + line.strip().decode('utf8'))
+            log_file_str = ''
+            for line in iter(p.stdout.readline, b''):
+                log_line = 'REACH: ' + line.strip().decode('utf8')
+                if verbose:
+                    logger.info(log_line)
+                if log:
+                    log_file_str += log_line + '\n'
+            if log:
+                with open('reach_run.log', 'w') as f:
+                    f.write(log_file_str)
             p_out, p_err = p.communicate()
             if p.returncode:
                 logger.error('Problem running REACH:')
