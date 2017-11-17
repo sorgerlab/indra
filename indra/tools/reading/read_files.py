@@ -14,7 +14,23 @@ logger = logging.getLogger('file_reader')
 
 
 def read_files(files, readers, **kwargs):
-    """Read the files in `files` with the reader objects in `readers`."""
+    """Read the files in `files` with the reader objects in `readers`.
+
+    Parameters
+    ----------
+    files : list [str]
+        A list of file paths to be read by the readers. Supported files are
+        limited to text and nxml files.
+    readers : list [Reader instances]
+        A list of Reader objects to be used reading the files.
+    **kwargs :
+        Other keyword arguments are passed to the `read` method of the readers.
+
+    Returns
+    -------
+    output_list : list [ReadingData]
+        A list of ReadingData objects with the contents of the readings.
+    """
     output_list = []
     for reader in readers:
         res_list = reader.read(files, **kwargs)
@@ -32,9 +48,7 @@ if __name__ == '__main__':
     parser = get_parser(
         __doc__,
         ('A file containing a list of files to be input into reach. These'
-         'should be nxml or txt files. Cannot be used in conjunction with'
-         ' -i/--id_file. For safest use, files should be given by '
-         'absolute paths.')
+         'should be nxml or txt files.')
         )
     args = parser.parse_args()
     if args.debug and not args.quiet:

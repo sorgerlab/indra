@@ -11,10 +11,24 @@ logger = logging.getLogger('script_tools')
 
 
 def get_parser(description, input_desc):
-    """Get a parser that is generic to reading scripts."""
+    """Get a parser that is generic to reading scripts.
+
+    Parameters
+    ----------
+    description : str
+        A description of the tool, usually about one line long.
+    input_desc: str
+        A string describing the nature of the input file used by the reading
+        tool.
+
+    Returns
+    -------
+    parser : argparse.ArgumentParser instance
+        An argument parser object, to which further arguments can be added.
+    """
     parser = ArgumentParser(description=description)
     parser.add_argument(
-        '-i', '--input_file',
+        dest='input_file',
         help=input_desc
         )
     parser.add_argument(
@@ -31,12 +45,12 @@ def get_parser(description, input_desc):
         )
     parser.add_argument(
         '-s', '--sample',
-        help='To read just a sample of the pmids in the file.',
+        help='Read a random sample of size SAMPLE of the inputs.',
         type=int
         )
     parser.add_argument(
         '-I', '--in_range',
-        help='A range of pmids to be read in the form <start>:<end>.'
+        help='Only read input lines in the range given as <start>:<end>.'
         )
     parser.add_argument(
         '-v', '--verbose',
@@ -53,16 +67,27 @@ def get_parser(description, input_desc):
         help='Set the logging to debug level.',
         action='store_true'
         )
-    parser.add_argument(
-        '-m', '--messy',
-        help='Do not clean up directories created while reading.',
-        action='store_true'
-        )
+    # parser.add_argument(
+    #     '-m', '--messy',
+    #     help='Do not clean up directories created while reading.',
+    #     action='store_true'
+    #     )
     return parser
 
 
 class StatementData(object):
-    """Contains metadata for statements, as well as the statement itself."""
+    """Contains metadata for statements, as well as the statement itself.
+
+    This, like ReadingData, is primarily designed for use with the database,
+    carrying valuable information and methods for such.
+
+    Init Paremeters
+    ---------------
+    statement : an indra Statement instance
+        The statement whose extra meta data this object encapsulates.
+    reading_id : int or None
+        The id number of the database reading. None if no such id is available.
+    """
 
     def __init__(self, statement, reading_id):
         self.reading_id = reading_id
@@ -84,6 +109,7 @@ class StatementData(object):
 
 
 def make_statements(reading_data_list):
+    """Convert a list of ReadingData instances into StatementData instances."""
     stmt_data_list = [StatementData(stmt, output.reading_id)
                       for output in reading_data_list
                       for stmt in output.get_statements()]

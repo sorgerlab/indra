@@ -25,8 +25,7 @@ logger = logging.getLogger('make_db_readings')
 if __name__ == '__main__':
     parser = get_parser(
         'A tool to read and process content from the database.',
-        ('A file containing a list of ids of the form <id_type>:<id>.'
-         'Cannot be used in conjunction with -f/--file_file.')
+        'A file containing a list of ids of the form <id_type>:<id>.'
         )
     parser.add_argument(
         '-p', '--pickle',
@@ -392,7 +391,47 @@ def upload_readings(output_list, db=None):
 def produce_readings(input_list, reader_list, verbose=False, force_read=False,
                      force_fulltext=False, batch_size=1000, no_read=False,
                      no_upload=False, pickle_result=False, db=None):
-    """Produce the reading output for the given ids."""
+    """Produce the reading output for the given ids, and upload them to db.
+
+    This function will also retrieve pre-existing readings from the database,
+    thus improving performance.
+
+    Parameters
+    ----------
+    input_list : list [str]
+        A list of input strings.
+    reader_list : list [Reader]
+        A list of Reader descendents to be used in reading.
+    verbose : bool
+        Optional, default False - If True, log and print the output of the
+        commandline reader utilities, if False, don't.
+    force_read : bool
+        Optional, default False - If True, read content even if a there is an
+        existing reading in the database.
+    force_fulltext : bool
+        Optional, default False - If True, only read fulltext article, ignoring
+        abstracts.
+    batch_size : int
+        Optional, default 1000 - The number of text content entries to be
+        yielded by the database at a given time.
+    no_read : bool
+        Optional, default False - If True, do not perform any new readings, and
+        only retrieve existing readings from the database.
+    no_upload : bool
+        Optional, default False - If True, do not upload content to the
+        database.
+    pickle_result : bool
+        Optional, default False - If True, make a pickle file of the results.
+    db : indra.db.DatabaseManager instance
+        Optional, default the primary database provided by `get_primary_db`
+        function. Used to interface with a different databse.
+
+    Returns
+    -------
+    outputs : list [ReadingData]
+        A list of the outputs of the readings in the form of ReadingData
+        instances.
+    """
     if db is None:
         db = get_primary_db()
 

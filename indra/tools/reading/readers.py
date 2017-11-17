@@ -450,15 +450,36 @@ def get_readers():
 
 
 class ReadingData(object):
-    """Object to contain the data produced by a reading."""
+    """Object to contain the data produced by a reading.
 
-    def __init__(self, tcid, reader, reader_version, output_format, content,
+    This is primarily designed for use with the database.
+
+    Init Parameters
+    ---------------
+    tcid : int or str
+        An identifier of the text content that produced the reading. Must
+        be an int for use with the database.
+    reader : str
+        The name of the reader, consistent with it's `name` attribute, for
+        example: 'REACH'
+    reader_version : str
+        A string identifying the version of the underlying nlp reader.
+    content_format : str
+        The format of the content. Options are in indra.db.formats.
+    content : str
+        The content of the reading result. A string in the format given by
+        `content_format`.
+    reading_id : int or None
+        Optional. The id corresponding to the Readings entry in the db.
+    """
+
+    def __init__(self, tcid, reader, reader_version, content_format, content,
                  reading_id=None):
         self.reading_id = reading_id
         self.tcid = tcid
         self.reader = reader
         self.reader_version = reader_version
-        self.format = output_format
+        self.format = content_format
         self.content = content
         return
 
