@@ -216,7 +216,7 @@ def test_reading_content_insert():
 
 
 def test_read_db():
-    "Test the make_db_readings function with various settings."
+    "Test the low level make_db_readings functionality with various settings."
     # Prep the inputs.
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
@@ -252,17 +252,58 @@ def test_read_db():
 
 
 def test_produce_readings():
-    "Test the high level production of readings."
+    "Comprehensive test of the high level production of readings."
     # Prep the inputs.
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
     id_str_list = get_id_str_list(complete_tr_list)
 
-    reader_list = get_readers()
+    # Test with just sparser for tollerable speeds.
+    reader_list = get_readers('SPARSER')
+
+    # Test the no_read option (should yield nothing, because there aren't any
+    # readings yet.
+    outputs_0 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+                                 no_read=True)
+    assert len(outputs_0) == 0
+
+    # Test just getting a pickle file (Nothing should be posted to the db.).
+    pkl_file = 'test_db_res.pkl'
+    outputs_1 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+                                 no_upload=True, pickle_file=pkl_file)
+    N_out = len(outputs_1)
+    N_exp = len(reader_list)*db.filter_query(db.TextContent).count()
+    assert N_out == N_exp, "Expected %d readings, got %d." % (N_exp, N_out)
+    assert path.exists(pkl_file), "Pickle file not created."
+    with open(pkl_file, 'rb') as f:
+        N_pkl = len(pickle.load(f))
+    assert N_pkl == N_exp, \
+        "Expected %d readings in pickle, got %d." % (N_exp, N_out)
+    N_readings = db.filter_query(db.Readings).count()
+    assert N_readings == 0, \
+        "There shouldn't be any readings yet, but found %d." % N_readings
+
+    # Test reading and insert to the database.
     produce_readings(id_str_list, reader_list, verbose=True, db=db)
-    N_exp = db.filter_query(db.TextContent).count()*len(reader_list)
-    N_read = db.filter_query(db.Readings).count()
-    assert N_read == N_exp, "Excpected %d readings, got %d." % (N_exp, N_read)
+    N_db = db.filter_query(db.Readings).count()
+    assert N_db == N_exp, "Excpected %d readings, got %d." % (N_exp, N_db)
+
+    # Test reading again, without force_read
+    outputs_2 = produce_readings(id_str_list, reader_list, verbose=True, db=db)
+    assert len(outputs_2) == N_exp
+    assert all([rd.reading_id is not None for rd in outputs_2])
+
+    # Test with no_read again.
+    outputs_3 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+                                 no_read=True)
+    assert len(outputs_3) == N_exp
+    assert all([rd.reading_id is not None for rd in outputs_3])
+
+    # Test the force_read option.
+    outputs_4 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+                                 force_read=True)
+    assert len(outputs_4) == N_exp
+    assert all([rd.reading_id is None for rd in outputs_4])
 
 
 def test_read_files():
