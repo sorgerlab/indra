@@ -107,13 +107,18 @@ def _enrich_reading_data(reading_data_iter, db=None):
 # =============================================================================
 
 
-def get_clauses(id_str_list, db):
-    """Get a list of clauses to be passed to a db query."""
-    id_types = db.TextRef.__table__.columns.keys()
+def get_id_dict(id_str_list):
+    """Parse the list of id string into a dict."""
+    id_types = get_primary_db().TextRef.__table__.columns.keys()
     id_dict = {id_type: [] for id_type in id_types}
     for id_entry in id_str_list:
         id_type, id_val = _convert_id_entry(id_entry, id_types)
         id_dict[id_type].append(id_val)
+    return id_dict
+
+
+def get_clauses(id_dict, db):
+    """Get a list of clauses to be passed to a db query."""
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
                          if len(id_list)]
@@ -157,7 +162,7 @@ def get_text_content_summary_string(q, db, num_ids=None):
     return ret_str
 
 
-def get_content_query(id_str_list, readers, db=None, force_fulltext=False,
+def get_content_query(id_dict, readers, db=None, force_fulltext=False,
                       force_read=False):
     """Load all the content that will be read."""
     if db is None:
@@ -169,7 +174,7 @@ def get_content_query(id_str_list, readers, db=None, force_fulltext=False,
     general_clauses = [tc_tr_binding]
     if force_fulltext:
         general_clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
-    id_clauses = get_clauses(id_str_list, db)
+    id_clauses = get_clauses(id_dict, db)
     logger.debug("Generated %d id clauses." % len(id_clauses))
 
     if id_clauses:
@@ -201,7 +206,7 @@ def get_content_query(id_str_list, readers, db=None, force_fulltext=False,
     return tc_tbr_query.distinct()
 
 
-def get_readings_query(id_str_list, readers, db=None, force_fulltext=False):
+def get_readings_query(id_dict, readers, db=None, force_fulltext=False):
     """Get all the readings available for the id's in id_str_list."""
     if db is None:
         db = get_primary_db()
@@ -217,7 +222,7 @@ def get_readings_query(id_str_list, readers, db=None, force_fulltext=False):
         ]
     if force_fulltext:
         general_clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
-    id_clauses = get_clauses(id_str_list, db)
+    id_clauses = get_clauses(id_dict, db)
     if id_clauses:
         readings_query = db.filter_query(
             db.Readings,
@@ -233,7 +238,7 @@ def get_readings_query(id_str_list, readers, db=None, force_fulltext=False):
 
             # Conditions generated from the list of ids. These include a
             # text-ref text-content binding to connect with id data.
-            *get_clauses(id_str_list, db)
+            *id_clauses
             )
     else:
         readings_query = None
@@ -245,7 +250,7 @@ def get_readings_query(id_str_list, readers, db=None, force_fulltext=False):
 # =============================================================================
 
 
-def make_db_readings(id_str_list, readers, db=None, **kwargs):
+def make_db_readings(id_dict, readers, db=None, **kwargs):
     """Read contents retrieved from the database.
 
     The content will be retrieved in batchs, given by the `batch` argument.
@@ -264,7 +269,7 @@ def make_db_readings(id_str_list, readers, db=None, **kwargs):
     force_fulltext : bool
         If True, only get fulltext content from the database. Default False.
 
-    Other keyword arguments are passed to the `read_content` function.
+    Other keyword arguments are passed to the `read` methods of the readers.
 
     Returns
     -------
@@ -282,7 +287,7 @@ def make_db_readings(id_str_list, readers, db=None, **kwargs):
     # Get the iterator.
     logger.debug("Getting iterator.")
     tc_read_q = get_content_query(
-        id_str_list,
+        id_dict,
         readers,
         db=db,
         force_fulltext=force_fulltext,
@@ -326,7 +331,7 @@ def make_db_readings(id_str_list, readers, db=None, **kwargs):
     return new_outputs
 
 
-def get_db_readings(id_lines, readers, force_fulltext=False, batch_size=1000,
+def get_db_readings(id_dict, readers, force_fulltext=False, batch_size=1000,
                     db=None):
     """Get readings from the database."""
     if db is None:
@@ -335,7 +340,7 @@ def get_db_readings(id_lines, readers, force_fulltext=False, batch_size=1000,
     # Get any previous readings. Note that we do this BEFORE posting the new
     # readings. Otherwise we would have duplicates.
     previous_readings_query = get_readings_query(
-        id_lines,
+        id_dict,
         readers,
         db=db,
         force_fulltext=force_fulltext
@@ -389,7 +394,7 @@ def upload_readings(output_list, db=None):
     return
 
 
-def produce_readings(input_list, reader_list, verbose=False, force_read=False,
+def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
                      force_fulltext=False, batch_size=1000, no_read=False,
                      no_upload=False, pickle_file=None, db=None):
     """Produce the reading output for the given ids, and upload them to db.
@@ -399,8 +404,8 @@ def produce_readings(input_list, reader_list, verbose=False, force_read=False,
 
     Parameters
     ----------
-    input_list : list [str]
-        A list of input strings.
+    id_dict : dict {<id_type>:<id value>}
+        A dict of the id's to be read.
     reader_list : list [Reader]
         A list of Reader descendents to be used in reading.
     verbose : bool
@@ -439,11 +444,11 @@ def produce_readings(input_list, reader_list, verbose=False, force_read=False,
 
     prev_readings = []
     if not force_read:
-        prev_readings = get_db_readings(input_list, reader_list,
-                                        force_fulltext, batch_size, db=db)
+        prev_readings = get_db_readings(id_dict, reader_list, force_fulltext,
+                                        batch_size, db=db)
     outputs = []
     if not no_read:
-        outputs = make_db_readings(input_list, reader_list, verbose=verbose,
+        outputs = make_db_readings(id_dict, reader_list, verbose=verbose,
                                    force_read=force_read, db=db,
                                    force_fulltext=force_fulltext,
                                    batch=batch_size)
@@ -551,8 +556,11 @@ if __name__ == "__main__":
         reading_pickle = None
         stmts_pickle = None
 
+    # Get the dict of ids.
+    id_dict = get_id_dict(input_lines)
+
     # Read everything ========================================================
-    outputs = produce_readings(input_lines, readers, verbose=verbose,
+    outputs = produce_readings(id_dict, readers, verbose=verbose,
                                force_read=args.force_read,
                                force_fulltext=args.force_fulltext,
                                batch_size=args.batch, no_read=args.no_read,
