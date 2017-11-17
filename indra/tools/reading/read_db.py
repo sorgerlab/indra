@@ -28,9 +28,10 @@ if __name__ == '__main__':
         'A file containing a list of ids of the form <id_type>:<id>.'
         )
     parser.add_argument(
-        '-p', '--pickle',
-        help='Pickle all results and save in .pkl files.',
-        action='store_true'
+        '-o', '--output_name',
+        help=('Pickle all results and save in files labelled as '
+              '<OUTPUT_NAME>_<output_type>.pkl.'),
+        default=None
         )
     parser.add_argument(
         '--no_reading_upload',
@@ -390,7 +391,7 @@ def upload_readings(output_list, db=None):
 
 def produce_readings(input_list, reader_list, verbose=False, force_read=False,
                      force_fulltext=False, batch_size=1000, no_read=False,
-                     no_upload=False, pickle_result=False, db=None):
+                     no_upload=False, pickle_file=None, db=None):
     """Produce the reading output for the given ids, and upload them to db.
 
     This function will also retrieve pre-existing readings from the database,
@@ -420,8 +421,9 @@ def produce_readings(input_list, reader_list, verbose=False, force_read=False,
     no_upload : bool
         Optional, default False - If True, do not upload content to the
         database.
-    pickle_result : bool
-        Optional, default False - If True, make a pickle file of the results.
+    pickle_file : str or None
+        Optional, default None - otherwise the path to a file in which the
+        reading data will be saved.
     db : indra.db.DatabaseManager instance
         Optional, default the primary database provided by `get_primary_db`
         function. Used to interface with a different databse.
@@ -446,11 +448,10 @@ def produce_readings(input_list, reader_list, verbose=False, force_read=False,
                                    force_fulltext=force_fulltext,
                                    batch=batch_size)
 
-    if pickle_result:
-        reading_out_path = pjoin(os.getcwd(), 'reading_outputs.pkl')
-        with open(reading_out_path, 'wb') as f:
+    if pickle_file is not None:
+        with open(pickle_file, 'wb') as f:
             pickle.dump([output.make_tuple() for output in outputs], f)
-        print("Reading outputs stored in %s." % reading_out_path)
+        print("Reading outputs stored in %s." % pickle_file)
 
     if not no_upload:
         upload_readings(outputs, db=db)
@@ -483,7 +484,7 @@ def upload_statements(stmt_data_list, db=None):
 
 
 def produce_statements(output_list, enrich=True, no_upload=False,
-                       pickle_result=False, db=None):
+                       pickle_file=None, db=None):
     """Convert the reader output into a list of StatementData instances."""
     if db is None:
         db = get_primary_db()
@@ -495,11 +496,10 @@ def produce_statements(output_list, enrich=True, no_upload=False,
 
     if not no_upload:
         upload_statements(stmt_data_list, db=db)
-    if pickle_result:
-        stmts_path = pjoin(os.getcwd(), 'statements.pkl')
-        with open(stmts_path, 'wb') as f:
+    if pickle_file is not None:
+        with open(pickle_file, 'wb') as f:
             pickle.dump([sd.statement for sd in stmt_data_list], f)
-        print("Statements pickled in %s." % stmts_path)
+        print("Statements pickled in %s." % pickle_file)
 
     return stmt_data_list
 
@@ -543,14 +543,22 @@ if __name__ == "__main__":
     # Set the verbosity. The quiet argument overrides the verbose argument.
     verbose = args.verbose and not args.quiet
 
+    # Get the pickle file names.
+    if args.out_name is not None:
+        reading_pickle = args.out_name + '_readings.pkl'
+        stmts_pickle = args.out_name + '_stmts.pkl'
+    else:
+        reading_pickle = None
+        stmts_pickle = None
+
     # Read everything ========================================================
     outputs = produce_readings(input_lines, readers, verbose=verbose,
                                force_read=args.force_read,
                                force_fulltext=args.force_fulltext,
                                batch_size=args.batch, no_read=args.no_read,
                                no_upload=args.no_reading_upload,
-                               pickle_result=args.pickle)
+                               pickle_file=reading_pickle)
 
     # Convert the outputs to statements ======================================
     produce_statements(outputs, no_upload=args.no_statement_upload,
-                       pickle_result=args.pickle)
+                       pickle_file=stmts_pickle)

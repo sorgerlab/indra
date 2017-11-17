@@ -5,7 +5,6 @@ from builtins import dict, str
 import logging
 import pickle
 import random
-from os import path, getcwd
 
 from indra.tools.reading.readers import _get_dir, get_readers
 from indra.tools.reading.script_tools import get_parser, make_statements
@@ -50,6 +49,11 @@ if __name__ == '__main__':
         ('A file containing a list of files to be input into reach. These'
          'should be nxml or txt files.')
         )
+    parser.add_argument(
+        dest='output_name',
+        help=('All pickled results will be saved in files labelled by '
+              '<output_name>_<output_type>.pkl.')
+        )
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
@@ -84,13 +88,13 @@ if __name__ == '__main__':
 
     # Read the files.
     outputs = read_files(input_lines, readers, verboes=verbose)
-    reading_out_path = path.join(getcwd(), 'file_reading_outputs.pkl')
+    reading_out_path = args.output_name + '_readings.pkl'
     with open(reading_out_path, 'wb') as f:
         pickle.dump([output.make_tuple() for output in outputs], f)
     print("Reading outputs stored in %s." % reading_out_path)
 
     stmt_data_list = make_statements(outputs)
-    stmts_pkl_path = path.join(getcwd(), 'file_reading_stmts.pkl')
+    stmts_pkl_path = args.output_name + '_stmts.pkl'
     with open(stmts_pkl_path, 'wb') as f:
         pickle.dump([sd.statement for sd in stmt_data_list], f)
         print("Statements pickled in %s." % stmts_pkl_path)
