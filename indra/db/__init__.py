@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 __all__ = ['sqltypes', 'texttypes', 'formats', 'DatabaseManager',
-           'IndraDatabaseError', 'get_defaults', 'get_primary_db']
+           'IndraDatabaseError', 'get_defaults', 'get_primary_db',
+           'sql_expressions']
 
 import json
 import time
@@ -15,6 +16,7 @@ from docutils.io import InputError
 from datetime import datetime
 from numbers import Number
 
+from sqlalchemy.sql import expression as sql_expressions
 from sqlalchemy.schema import DropTable
 from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles

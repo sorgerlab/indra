@@ -8,9 +8,12 @@ from os import path, mkdir
 from nose import SkipTest
 
 from indra.tools.reading.read_db import _convert_id_entry, \
-    get_content_query, get_clauses, post_reading_output, \
-    get_reader_children, read_db, get_readings, _enrich_reading_data,\
-    produce_statements, read_content, produce_readings, SparserReader
+    get_content_query, get_clauses, upload_readings, \
+    make_db_readings, get_db_readings, _enrich_reading_data,\
+    produce_statements, produce_readings
+from indra.tools.reading.read_files import read_files
+from indra.tools.reading.readers import SparserReader
+from indra.tools.reading.readers import get_readers as get_all_readers
 
 from indra.db import formats
 from indra.tests.test_db import get_db as get_test_db
@@ -127,7 +130,7 @@ def get_id_str_list(tr_list):
 
 
 def get_readers(*names, **kwargs):
-    return [reader_class(**kwargs) for reader_class in get_reader_children()
+    return [reader_class(**kwargs) for reader_class in get_all_readers()
             if (not names or reader_class.name in names)]
 
 
@@ -161,19 +164,21 @@ def test_get_content():
 
 def test_get_reader_children():
     "Test method for getting reader objects."
-    readers = get_reader_children()
+    readers = get_readers()
     assert len(readers) == 2, \
         "Expected only 2 readers, but got %s." % str(readers)
 
 
 def test_reading_content_insert():
-    "Test the content primary through-put of read_db."
+    "Test the content primary through-put of make_db_readings."
     db = get_db_with_content()
 
     print("Test reading")
     tc_list = db.select_all(db.TextContent)
     readers = get_readers()
-    reading_output = read_content(tc_list, readers, verbose=True)
+    reading_output = []
+    for reader in readers:
+        reading_output += reader.read(tc_list, verbose=True)
     expected_output_len = len(tc_list)*len(readers)
     assert len(reading_output) == expected_output_len, \
         ("Not all text content successfully read."
@@ -181,7 +186,7 @@ def test_reading_content_insert():
                                                 len(reading_output))
 
     print("Test reading insert")
-    post_reading_output(reading_output, db=db)
+    upload_readings(reading_output, db=db)
     r_list = db.select_all(db.Readings)
 
     def is_complete_match(r_list, reading_output):
@@ -190,7 +195,7 @@ def test_reading_content_insert():
 
     assert is_complete_match(r_list, reading_output), \
         "Not all reading output posted."
-    post_reading_output(reading_output, db=db)
+    upload_readings(reading_output, db=db)
     assert is_complete_match(r_list, reading_output), \
         "Uniqueness constraints failed."
 
@@ -211,7 +216,7 @@ def test_reading_content_insert():
 
 
 def test_read_db():
-    "Test the read_db function with various settings."
+    "Test the make_db_readings function with various settings."
     # Prep the inputs.
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
@@ -220,30 +225,44 @@ def test_read_db():
 
     # Run the reading with default batch size, no force_fulltext, and
     # no force_read
-    reading_output_1 = read_db(id_str_list, readers, db=db)
+    reading_output_1 = make_db_readings(id_str_list, readers, db=db)
     N1 = len(reading_output_1)
     N1_exp = len(readers)*db.filter_query(db.TextContent).count()
     assert N1 == N1_exp, \
         'Expected %d readings, but got %d.' % (N1_exp, N1)
-    post_reading_output(reading_output_1, db=db)  # setup for later test.
+    upload_readings(reading_output_1, db=db)  # setup for later test.
     N1_db = len(db.select_all(db.Readings))
     assert N1_db == N1, \
         'Expected %d readings to be copied to db, only %d found.' % (N1, N1_db)
 
     # Run the reading with default batch size, no force_fulltext, but with
     # force_read = True (this hould produce new readings.)
-    reading_output_2 = read_db(id_str_list, readers, db=db,
-                               force_read=True)
+    reading_output_2 = make_db_readings(id_str_list, readers, db=db,
+                                        force_read=True)
     N2 = len(reading_output_2)
     assert N1 == N2, "Got %d readings from run 1 but %d from run 2." % (N1, N2)
 
     # Run the reading with default batch size, no force_fulltext, but without
     # force_read = True (this should NOT produce new readings.)
-    old_readings = get_readings(id_str_list, readers, db=db)
-    reading_output = read_db(id_str_list, readers, db=db)
+    old_readings = get_db_readings(id_str_list, readers, db=db)
+    reading_output = make_db_readings(id_str_list, readers, db=db)
     assert len(reading_output) == 0, "Got new readings when force_read=False."
     assert len(old_readings) == N1, \
         "Did not get old readings when force_read=False."
+
+
+def test_produce_readings():
+    "Test the high level production of readings."
+    # Prep the inputs.
+    db = get_db_with_content()
+    complete_tr_list = db.select_all(db.TextRef)
+    id_str_list = get_id_str_list(complete_tr_list)
+
+    reader_list = get_readers()
+    produce_readings(id_str_list, reader_list, verbose=True, db=db)
+    N_exp = db.filter_query(db.TextContent).count()*len(reader_list)
+    N_read = db.filter_query(db.Readings).count()
+    assert N_read == N_exp, "Excpected %d readings, got %d." % (N_exp, N_read)
 
 
 def test_read_files():
@@ -267,13 +286,13 @@ def test_read_files():
 
     # Now read them.
     readers = get_readers()
-    outputs = produce_readings(example_files, readers, 'files')
+    outputs = read_files(example_files, readers)
     N_out = len(outputs)
     N_exp = len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
 
 
-def test_parallell():
+def test_sparser_parallell():
     "Test running sparser in parallel."
     db = get_db_with_content()
     sparser_reader = SparserReader(n_proc=2)
