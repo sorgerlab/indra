@@ -435,16 +435,16 @@ def produce_readings(input_list, reader_list, verbose=False, force_read=False,
     if db is None:
         db = get_primary_db()
 
-    if no_read:
-        return []
-
     prev_readings = []
     if not force_read:
         prev_readings = get_db_readings(input_list, reader_list,
                                         force_fulltext, batch_size, db=db)
-    outputs = make_db_readings(input_list, reader_list, verbose=verbose,
-                               force_read=force_read, db=db,
-                               force_fulltext=force_fulltext, batch=batch_size)
+    outputs = []
+    if not no_read:
+        outputs = make_db_readings(input_list, reader_list, verbose=verbose,
+                                   force_read=force_read, db=db,
+                                   force_fulltext=force_fulltext,
+                                   batch=batch_size)
 
     if pickle_result:
         reading_out_path = pjoin(os.getcwd(), 'reading_outputs.pkl')
