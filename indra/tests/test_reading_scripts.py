@@ -115,9 +115,9 @@ def test_sparser_two_core():
 # ==============================================================================
 
 
-def get_id_str_list(tr_list):
-    id_str_list = []
+def get_id_dict(tr_list):
     idtype_list = ['pmid', 'pmcid', 'doi']
+    id_dict = {id_type: [] for id_type in idtype_list}
     for tr in tr_list:
         random.shuffle(idtype_list)
         for idtype in idtype_list:
@@ -125,8 +125,8 @@ def get_id_str_list(tr_list):
                 break
         else:
             raise Exception("No id types found for text ref.")
-        id_str_list.append('%s:%s' % (idtype, getattr(tr, idtype)))
-    return id_str_list
+        id_dict[idtype].append(getattr(tr, idtype))
+    return id_dict
 
 
 def get_readers(*names, **kwargs):
@@ -144,8 +144,8 @@ def test_convert_id_entry():
 def test_get_clauses():
     "Test that the clauses are correctly created."
     db = get_test_db()
-    id_str_list = ['pmid:17399955', 'pmcid:PMC3199586']
-    clauses = get_clauses(id_str_list, db)
+    id_dict = {'pmid': '17399955', 'pmcid': 'PMC3199586'}
+    clauses = get_clauses(id_dict, db)
     assert len(clauses) == 1
     clause = clauses[0]
     assert 'IN' in str(clause) and 'OR' in str(clause)
@@ -155,9 +155,9 @@ def test_get_content():
     "Test that we get content from the database successfully."
     db = get_db_with_content()
     tr_list = db.select_all(db.TextRef)
-    id_str_list = get_id_str_list(tr_list)
+    id_dict = get_id_dict(tr_list)
     readers = get_readers()
-    tc_query = get_content_query(id_str_list, readers, db=db, force_read=False)
+    tc_query = get_content_query(id_dict, readers, db=db, force_read=False)
     assert tc_query.count(),\
         "Expected some results from our query, got %d." % tc_query.count()
 
@@ -220,12 +220,12 @@ def test_read_db():
     # Prep the inputs.
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
-    id_str_list = get_id_str_list(complete_tr_list)
+    id_dict = get_id_dict(complete_tr_list)
     readers = get_readers('SPARSER')
 
     # Run the reading with default batch size, no force_fulltext, and
     # no force_read
-    reading_output_1 = make_db_readings(id_str_list, readers, db=db)
+    reading_output_1 = make_db_readings(id_dict, readers, db=db)
     N1 = len(reading_output_1)
     N1_exp = len(readers)*db.filter_query(db.TextContent).count()
     assert N1 == N1_exp, \
@@ -237,15 +237,15 @@ def test_read_db():
 
     # Run the reading with default batch size, no force_fulltext, but with
     # force_read = True (this hould produce new readings.)
-    reading_output_2 = make_db_readings(id_str_list, readers, db=db,
+    reading_output_2 = make_db_readings(id_dict, readers, db=db,
                                         force_read=True)
     N2 = len(reading_output_2)
     assert N1 == N2, "Got %d readings from run 1 but %d from run 2." % (N1, N2)
 
     # Run the reading with default batch size, no force_fulltext, but without
     # force_read = True (this should NOT produce new readings.)
-    old_readings = get_db_readings(id_str_list, readers, db=db)
-    reading_output = make_db_readings(id_str_list, readers, db=db)
+    old_readings = get_db_readings(id_dict, readers, db=db)
+    reading_output = make_db_readings(id_dict, readers, db=db)
     assert len(reading_output) == 0, "Got new readings when force_read=False."
     assert len(old_readings) == N1, \
         "Did not get old readings when force_read=False."
@@ -256,20 +256,20 @@ def test_produce_readings():
     # Prep the inputs.
     db = get_db_with_content()
     complete_tr_list = db.select_all(db.TextRef)
-    id_str_list = get_id_str_list(complete_tr_list)
+    id_dict = get_id_dict(complete_tr_list)
 
     # Test with just sparser for tollerable speeds.
     reader_list = get_readers('SPARSER')
 
     # Test the no_read option (should yield nothing, because there aren't any
     # readings yet.
-    outputs_0 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+    outputs_0 = produce_readings(id_dict, reader_list, verbose=True, db=db,
                                  no_read=True)
     assert len(outputs_0) == 0
 
     # Test just getting a pickle file (Nothing should be posted to the db.).
     pkl_file = 'test_db_res.pkl'
-    outputs_1 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+    outputs_1 = produce_readings(id_dict, reader_list, verbose=True, db=db,
                                  no_upload=True, pickle_file=pkl_file)
     N_out = len(outputs_1)
     N_exp = len(reader_list)*db.filter_query(db.TextContent).count()
@@ -284,23 +284,23 @@ def test_produce_readings():
         "There shouldn't be any readings yet, but found %d." % N_readings
 
     # Test reading and insert to the database.
-    produce_readings(id_str_list, reader_list, verbose=True, db=db)
+    produce_readings(id_dict, reader_list, verbose=True, db=db)
     N_db = db.filter_query(db.Readings).count()
     assert N_db == N_exp, "Excpected %d readings, got %d." % (N_exp, N_db)
 
     # Test reading again, without force_read
-    outputs_2 = produce_readings(id_str_list, reader_list, verbose=True, db=db)
+    outputs_2 = produce_readings(id_dict, reader_list, verbose=True, db=db)
     assert len(outputs_2) == N_exp
     assert all([rd.reading_id is not None for rd in outputs_2])
 
     # Test with no_read again.
-    outputs_3 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+    outputs_3 = produce_readings(id_dict, reader_list, verbose=True, db=db,
                                  no_read=True)
     assert len(outputs_3) == N_exp
     assert all([rd.reading_id is not None for rd in outputs_3])
 
     # Test the force_read option.
-    outputs_4 = produce_readings(id_str_list, reader_list, verbose=True, db=db,
+    outputs_4 = produce_readings(id_dict, reader_list, verbose=True, db=db,
                                  force_read=True)
     assert len(outputs_4) == N_exp
     assert all([rd.reading_id is None for rd in outputs_4])
