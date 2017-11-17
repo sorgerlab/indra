@@ -135,7 +135,12 @@ class ReachProcessor(object):
                 # will become an (indirect) dephosphorylation
                 reg_subtype = reg.get('subtype')
                 if reg_subtype == 'negative-regulation':
-                    modification_type = modtype_to_inverse[modification_type]
+                    modification_type = \
+                        modtype_to_inverse.get(modification_type)
+                    if not modification_type:
+                        logger.warning('Unhandled modification type: %s' %
+                                       modification_type)
+                        continue
 
                 sentence = reg['verbose-text']
                 ev = Evidence(source_api='reach', text=sentence,
@@ -626,7 +631,7 @@ _site_pattern7 = '.*(' + '|'.join([v['indra_name'].upper() for
                                  v in amino_acids.values()]) + ').*'
 _site_pattern8 = '([0-9]+)$'
 
-# Subtypes that exist but we don't handle: methylation, hydrolysis
+# Subtypes that exist but we don't handle: hydrolysis
 agent_mod_map = {
     'phosphorylation': ('phosphorylation', True),
     'phosphorylated': ('phosphorylation', True),
