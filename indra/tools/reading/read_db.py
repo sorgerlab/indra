@@ -250,7 +250,7 @@ def get_readings_query(id_dict, readers, db=None, force_fulltext=False):
 # =============================================================================
 
 
-def make_db_readings(id_dict, readers, db=None, **kwargs):
+def make_db_readings(id_dict, readers, db=None, skip_dict=None, **kwargs):
     """Read contents retrieved from the database.
 
     The content will be retrieved in batchs, given by the `batch` argument.
@@ -268,6 +268,10 @@ def make_db_readings(id_dict, readers, db=None, **kwargs):
         The number of content entries read for each batch. Default 1000.
     force_fulltext : bool
         If True, only get fulltext content from the database. Default False.
+    force_read : bool
+        If True, read even if text_content id is found in skip_dict.
+    skip_dict : dict {<reader> : list [int]}
+        A dict containing text content id's to be skipped.
 
     Other keyword arguments are passed to the `read` methods of the readers.
 
@@ -302,14 +306,19 @@ def make_db_readings(id_dict, readers, db=None, **kwargs):
             # results in batches, so as not to overwhelm RAM. We need to read
             # in batches for much the same reaason.
             for r in readers:
-                # Try to get a previous reading from this reader.
-                reading = db.select_one(
-                    db.Readings,
-                    db.Readings.text_content_id == text_content.id,
-                    r.matches_clause(db)
-                    )
-                if reading is not None and not force_read:
-                    continue
+                if not force_read:
+                    if skip_dict is not None:
+                        if text_content.id in skip_dict[r.name]:
+                            continue
+                    else:
+                        # Try to get a previous reading from this reader.
+                        reading = db.select_one(
+                            db.Readings,
+                            db.Readings.text_content_id == text_content.id,
+                            r.matches_clause(db)
+                            )
+                        if reading is not None:
+                            continue
                 batch_list_dict[r.name].append(text_content)
 
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
@@ -443,14 +452,19 @@ def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
         db = get_primary_db()
 
     prev_readings = []
+    skip_reader_tcid_dict = None
     if not force_read:
         prev_readings = get_db_readings(id_dict, reader_list, force_fulltext,
                                         batch_size, db=db)
+        skip_reader_tcid_dict = {r.name: [] for r in reader_list}
+        for rd in prev_readings:
+            skip_reader_tcid_dict[rd.reader].append(rd.tcid)
     outputs = []
     if not no_read:
         outputs = make_db_readings(id_dict, reader_list, verbose=verbose,
-                                   force_read=force_read, db=db,
+                                   skip_dict=skip_reader_tcid_dict, db=db,
                                    force_fulltext=force_fulltext,
+                                   force_read=force_read,
                                    batch=batch_size)
 
     if pickle_file is not None:
