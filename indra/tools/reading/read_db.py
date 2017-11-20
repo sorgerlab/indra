@@ -476,15 +476,15 @@ def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
                                    force_read=force_read,
                                    batch=batch_size)
 
-    if pickle_file is not None:
-        with open(pickle_file, 'wb') as f:
-            pickle.dump([output.make_tuple() for output in outputs], f)
-        print("Reading outputs stored in %s." % pickle_file)
-
     if not no_upload:
         upload_readings(outputs, db=db)
 
     outputs += prev_readings
+
+    if pickle_file is not None:
+        with open(pickle_file, 'wb') as f:
+            pickle.dump([output.make_tuple() for output in outputs], f)
+        print("Reading outputs stored in %s." % pickle_file)
 
     return outputs
 
