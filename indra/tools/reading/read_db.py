@@ -34,6 +34,12 @@ if __name__ == '__main__':
         default=None
         )
     parser.add_argument(
+        '-b', '--batch',
+        help='Choose the size of the batches.',
+        default=1000,
+        type=int
+        )
+    parser.add_argument(
         '--no_reading_upload',
         help='Choose not to upload the reading output to the database.',
         action='store_true'
@@ -534,11 +540,9 @@ class ReadDBError(Exception):
 
 if __name__ == "__main__":
     # Process the arguments. =================================================
-    if args.id_file and args.file_file:
-        raise ReadDBError("Cannot process both files and ids.")
 
-    # Get the ids or files.
-    with open(args.id_file, 'r') as f:
+    # Get the ids.
+    with open(args.input_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d ids." % len(input_lines))
 
@@ -563,9 +567,9 @@ if __name__ == "__main__":
     verbose = args.verbose and not args.quiet
 
     # Get the pickle file names.
-    if args.out_name is not None:
-        reading_pickle = args.out_name + '_readings.pkl'
-        stmts_pickle = args.out_name + '_stmts.pkl'
+    if args.output_name is not None:
+        reading_pickle = args.output_name + '_readings.pkl'
+        stmts_pickle = args.output_name + '_stmts.pkl'
     else:
         reading_pickle = None
         stmts_pickle = None
