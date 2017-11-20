@@ -14,13 +14,6 @@ from docutils.io import InputError
 from math import log10, floor
 from os.path import join as pjoin
 
-from indra.db import get_primary_db, formats, texttypes
-from indra.db import sql_expressions as sql
-
-from indra.tools.reading.readers import get_readers, ReadingData, _get_dir
-from indra.tools.reading.script_tools import get_parser, make_statements, \
-                                             StatementData
-
 logger = logging.getLogger('make_db_readings')
 if __name__ == '__main__':
     parser = get_parser(
@@ -68,6 +61,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
+
+from indra.db import get_primary_db, formats, texttypes
+from indra.db import sql_expressions as sql
+
+from indra.tools.reading.readers import get_readers, ReadingData, _get_dir
+from indra.tools.reading.script_tools import get_parser, make_statements, \
+                                             StatementData
 
 
 # =============================================================================

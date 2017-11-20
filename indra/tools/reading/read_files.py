@@ -6,10 +6,25 @@ import logging
 import pickle
 import random
 
+logger = logging.getLogger('file_reader')
+if __name__ == '__main__':
+    parser = get_parser(
+        __doc__,
+        ('A file containing a list of files to be input into reach. These'
+         'should be nxml or txt files.')
+        )
+    parser.add_argument(
+        dest='output_name',
+        help=('All pickled results will be saved in files labelled by '
+              '<output_name>_<output_type>.pkl.')
+        )
+    args = parser.parse_args()
+    if args.debug and not args.quiet:
+        logger.setLevel(logging.DEBUG)
+ 
+
 from indra.tools.reading.readers import _get_dir, get_readers
 from indra.tools.reading.script_tools import get_parser, make_statements
-
-logger = logging.getLogger('file_reader')
 
 
 def read_files(files, readers, **kwargs):
@@ -44,21 +59,7 @@ def read_files(files, readers, **kwargs):
 
 
 if __name__ == '__main__':
-    parser = get_parser(
-        __doc__,
-        ('A file containing a list of files to be input into reach. These'
-         'should be nxml or txt files.')
-        )
-    parser.add_argument(
-        dest='output_name',
-        help=('All pickled results will be saved in files labelled by '
-              '<output_name>_<output_type>.pkl.')
-        )
-    args = parser.parse_args()
-    if args.debug and not args.quiet:
-        logger.setLevel(logging.DEBUG)
-
-    with open(args.file_file, 'r') as f:
+   with open(args.file_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d files." % len(input_lines))
     for ftype in ['nxml', 'txt']:
