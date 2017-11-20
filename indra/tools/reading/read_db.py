@@ -10,7 +10,6 @@ import logging
 import random
 import zlib
 import pickle
-from docutils.io import InputError
 from math import log10, floor
 from os.path import join as pjoin
 
@@ -70,6 +69,10 @@ from indra.tools.reading.script_tools import get_parser, make_statements, \
                                              StatementData
 
 
+class ReadDBError(Exception):
+    pass
+
+
 # =============================================================================
 # Useful functions
 # =============================================================================
@@ -78,10 +81,10 @@ from indra.tools.reading.script_tools import get_parser, make_statements, \
 def _convert_id_entry(id_entry, allowed_types=None):
     ret = [s.strip() for s in id_entry.split(':')]
     if len(ret) != 2:
-        raise InputError('Improperly formatted id entry: \"%s\"' % id_entry)
+        raise ReadDBError('Improperly formatted id entry: \"%s\"' % id_entry)
     ret[0] = ret[0].lower()
     if allowed_types is not None and ret[0] not in allowed_types:
-        raise InputError('Invalid id type: \"%s\"' % ret[0])
+        raise ReadDBError('Invalid id type: \"%s\"' % ret[0])
     return ret
 
 
@@ -532,10 +535,6 @@ def produce_statements(output_list, enrich=True, no_upload=False,
 # =============================================================================
 # Main for script use
 # =============================================================================
-
-
-class ReadDBError(Exception):
-    pass
 
 
 if __name__ == "__main__":
