@@ -62,8 +62,9 @@ def run_sparser(fname, output_fmt, outbuf=None):
             raise Exception("'%s' is not a valid path." % fpath)
 
     out_bts = subprocess.check_output([sparser_exec_path, format_flag, fname])
-    outbuf.write(out_bts)
-    outbuf.flush()
+    if outbuf is not None:
+        outbuf.write(out_bts)
+        outbuf.flush()
     assert os.path.exists(output_path), 'No output file created by sparser.'
     return output_path
 
