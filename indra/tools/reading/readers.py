@@ -193,8 +193,6 @@ class ReachReader(Reader):
             write_content_file('nxml')
         elif text_content.format == formats.TEXT:
             write_content_file('txt')
-        elif text_content.format == formats.JSON:
-            raise ReachError("I do not know how to handle JSON.")
         else:
             raise ReachError("Unrecognized format %s." % text_content.format)
 
@@ -348,8 +346,6 @@ class SparserReader(Reader):
                         txt_bts.decode('utf8')
                         )
                     add_nxml_file(item.id, nxml_str.encode('utf8'))
-                elif item.format == formats.JSON:
-                    raise SparserError("I don't know how to handle JSON.")
                 else:
                     raise SparserError("Unrecognized format %s." % item.format)
             else:
