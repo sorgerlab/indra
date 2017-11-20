@@ -238,13 +238,8 @@ class ReachReader(Reader):
         return reading_data_list
 
     def read(self, read_list, verbose=False, log=False):
-        """Read the content, returning a dict of ReadingData objects."""
-        init_msg = 'Running %s with:\n' % self.name
-        init_msg += '\n'.join([
-            'n_proc=%s' % self.n_proc
-            ])
-        logger.info(init_msg)
-        ret = None
+        """Read the content, returning a list of ReadingData objects."""
+        ret = []
         mem_tot = _get_mem_total()
         if mem_tot is not None and mem_tot <= self.REACH_MEM + self.MEM_BUFFER:
             logger.error(
@@ -318,8 +313,9 @@ class SparserReader(Reader):
                         file_list.append(fpath)
                     else:
                         new_fpath = path.join(self.tmp_dir,
-                                              path.basename(fpath))
+                                              'PMC' + path.basename(fpath))
                         shutil.copy(fpath, new_fpath)
+                        file_list.append(new_fpath)
                 else:
                     # Otherwise we need to frame the content in xml and put it
                     # in a new file with the appropriat name.
@@ -401,7 +397,7 @@ class SparserReader(Reader):
 
     def read(self, read_list, verbose=False, log=False):
         "Perform the actual reading."
-        ret = None
+        ret = []
         file_list = self.prep_input(read_list)
         if len(file_list) > 0:
             logger.info("Beginning to run sparser.")
@@ -443,7 +439,7 @@ class SparserReader(Reader):
 def get_readers():
     """Get all children of the Reader objcet."""
     try:
-        children = Reader.__subclasses_()
+        children = Reader.__subclasses__()
     except AttributeError:
         module = sys.modules[__name__]
         children = [cls for cls_name, cls in module.__dict__.items()
