@@ -272,8 +272,8 @@ class ReachReader(Reader):
                 if log:
                     log_file_str += log_line + '\n'
             if log:
-                with open('reach_run.log', 'w') as f:
-                    f.write(log_file_str)
+                with open('reach_run.log', 'ab') as f:
+                    f.write(log_file_str.encode('utf8'))
             p_out, p_err = p.communicate()
             if p.returncode:
                 logger.error('Problem running REACH:')
@@ -369,7 +369,7 @@ class SparserReader(Reader):
                 # In this case we assume the prefix is a tcid.
                 prefix = int(prefix)
 
-            with open(outpath, 'r') as f:
+            with open(outpath, 'rb') as f:
                 content = json.load(f)
 
             reading_data_list.append(ReadingData(
@@ -384,7 +384,7 @@ class SparserReader(Reader):
     def read_one(self, fpath, outbuf=None, verbose=False):
         if outbuf is None:
             outbuf = BytesIO()
-        outbuf.write(b'\nReading %s.\n' % fpath.encode())
+        outbuf.write(b'\nReading %s.\n' % fpath.encode('utf8'))
         outbuf.flush()
         if verbose:
             logger.info('Reading %s.' % fpath)
