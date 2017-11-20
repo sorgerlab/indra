@@ -498,22 +498,23 @@ class ReadingData(object):
             if self.format == formats.JSON:
                 # Process the reach json into statements.
                 json_str = json.dumps(self.content)
-                stmts = reach.process_json_str(json_str).statements
-            elif self.romat == formats.XML:
-                # Process the reach xml into statements (untested)
-                stmts = reach.process_nxml_str(self.content.to_string())
+                processor = reach.process_json_str(json_str)
             else:
-                logger.error("Unknown format for creating reach statments: %s."
-                             % self.format)
-                stmts = []
+                raise ReaderError("Incorrect format for Reach output: %s."
+                                  % self.format) 
         elif self.reader == SparserReader.name:
             if self.format == formats.JSON:
                 # Process the sparser content into statements
-                stmts = sparser.process_json_dict(self.content).statements
+                processor = sparser.process_json_dict(self.content)
             else:
-                logger.error("Sparser should only ever be JSON, not %s."
-                             % self.format)
-                stmts = []
+                raise ReaderError("Sparser should only ever be JSON, not %s."
+                                  % self.format)
+        if processor is None:
+            logger.error("Production of statements from %s failed for %s."
+                         % (self.reader, self.tcid))
+            stmts = []
+        else:
+            stmts = processor.statements
         return stmts
 
     def zip_content(self):
