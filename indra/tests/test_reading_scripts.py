@@ -16,8 +16,8 @@ from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 
 from indra.db import formats
-from indra.tests.test_db import get_db as get_test_db
-from indra.tests.test_db import get_db_with_content
+from test_db import get_db as get_test_db
+from test_db import get_db_with_content
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.
@@ -333,7 +333,7 @@ def test_read_files():
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
 
 
-def test_sparser_parallell():
+def test_sparser_parallel():
     "Test running sparser in parallel."
     db = get_db_with_content()
     sparser_reader = SparserReader(n_proc=2)
