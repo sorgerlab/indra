@@ -21,7 +21,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
- 
+
 
 from indra.tools.reading.readers import _get_dir, get_readers
 from indra.tools.reading.script_tools import get_parser, make_statements
@@ -59,7 +59,7 @@ def read_files(files, readers, **kwargs):
 
 
 if __name__ == '__main__':
-   with open(args.file_file, 'r') as f:
+    with open(args.file_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d files." % len(input_lines))
     for ftype in ['nxml', 'txt']:
