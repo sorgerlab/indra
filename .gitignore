@@ -107,3 +107,7 @@ indra/benchmarks/assembly_eval/batch4/reach
 *.png
 *.eps
 *.gz
+
+# For the cool cats using PyCharm
+.idea
+.idea/*

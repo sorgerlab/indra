@@ -43,7 +43,7 @@ def make(directory):
         sys.exit()
 
     os.makedirs(directory)
-    os.mkdir(os.path.join(directory, 'json'))
+    os.mkdir(os.path.join(directory, 'jsons'))
     copy_default_config(os.path.join(directory, 'config.yaml'))
 
 

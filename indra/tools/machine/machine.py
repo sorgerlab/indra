@@ -174,6 +174,21 @@ def make_status_message(stats):
     return msg_str
 
 
+def process_paper_helper(model_name, pmid, start_time_local):
+    """Wraps processing a paper by either a local or remote service
+    and caches any uncaught exceptions"""
+    try:
+        if not aws_available:
+            rp, txt_format = process_paper(model_name, pmid)
+        else:
+            rp, txt_format = process_paper_aws(pmid, start_time_local)
+    except:
+        logger.exception('uncaught exception while processing %s', pmid)
+        return None, None
+
+    return rp, txt_format
+
+
 def extend_model(model_name, model, pmids, start_time_local):
     npapers = 0
     nabstracts = 0
@@ -193,10 +208,8 @@ def extend_model(model_name, model, pmids, start_time_local):
         logger.info('[%d/%d] Processing %s for search terms: %s',
                     counter, len(pmids_inv), pmid, search_terms)
 
-        if not aws_available:
-            rp, txt_format = process_paper(model_name, pmid)
-        else:
-            rp, txt_format = process_paper_aws(pmid, start_time_local)
+        rp, txt_format = process_paper_helper(model_name, pmid,
+                                              start_time_local)
 
         if rp is None:
             logger.info('Reach processing failed for PMID%s', pmid)

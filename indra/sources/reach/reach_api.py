@@ -156,7 +156,8 @@ def process_text(text, citation=None, offline=False):
         # directly
         # This is a byte string
         json_str = res.content
-    assert isinstance(json_str, bytes)
+    if not isinstance(json_str, bytes):
+        raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, bytes))
     with open('reach_output.json', 'wb') as fh:
         fh.write(json_str)
     return process_json_str(json_str.decode('utf-8'), citation)
@@ -200,12 +201,17 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
             logger.error('Could not process NXML.')
             logger.error(e)
             return None
+        # REACH version < 1.3.3
         json_str = result_map.get('resultJson')
+        if not json_str:
+            # REACH version >= 1.3.3
+            json_str = result_map.get('result')
+        if json_str is None:
+            logger.warning('No results retrieved')
+            return None
         if isinstance(json_str, bytes):
             json_str = json_str.decode('utf-8')
         return process_json_str(json_str, citation)
-        rp = process_nxml_file(fname, citation, True)
-        return rp
     else:
         data = {'nxml': nxml_str}
         try:
@@ -301,7 +307,9 @@ def process_json_str(json_str, citation=None):
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
     """
-    assert isinstance(json_str, basestring)
+    if not isinstance(json_str, basestring):
+        raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, basestring))
+
     json_str = json_str.replace('frame-id','frame_id')
     json_str = json_str.replace('argument-label','argument_label')
     json_str = json_str.replace('object-meta','object_meta')
