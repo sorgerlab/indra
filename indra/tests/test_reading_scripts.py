@@ -261,10 +261,10 @@ def test_produce_readings():
     # Test with just sparser for tollerable speeds.
     reader_list = get_readers('SPARSER')
 
-    # Test the no_read option (should yield nothing, because there aren't any
-    # readings yet.
+    # Test the read_mode='none' option (should yield nothing, because there
+    # aren't any readings yet.)
     outputs_0 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 no_read=True)
+                                 read_mode='none')
     assert len(outputs_0) == 0
 
     # Test just getting a pickle file (Nothing should be posted to the db.).
@@ -288,20 +288,20 @@ def test_produce_readings():
     N_db = db.filter_query(db.Readings).count()
     assert N_db == N_exp, "Excpected %d readings, got %d." % (N_exp, N_db)
 
-    # Test reading again, without force_read
+    # Test reading again, without read_mode='all'
     outputs_2 = produce_readings(id_dict, reader_list, verbose=True, db=db)
     assert len(outputs_2) == N_exp
     assert all([rd.reading_id is not None for rd in outputs_2])
 
-    # Test with no_read again.
+    # Test with read_mode='none' again.
     outputs_3 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 no_read=True)
+                                 read_mode='none')
     assert len(outputs_3) == N_exp
     assert all([rd.reading_id is not None for rd in outputs_3])
 
-    # Test the force_read option.
+    # Test the read_mode='all'.
     outputs_4 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 force_read=True)
+                                 read_mode='all')
     assert len(outputs_4) == N_exp
     assert all([rd.reading_id is None for rd in outputs_4])
 

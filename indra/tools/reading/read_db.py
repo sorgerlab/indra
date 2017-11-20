@@ -11,7 +11,9 @@ import random
 import zlib
 import pickle
 from math import log10, floor
-from os.path import join as pjoin
+
+from indra.tools.reading.script_tools import get_parser, make_statements, \
+                                             StatementData
 
 logger = logging.getLogger('make_db_readings')
 if __name__ == '__main__':
@@ -32,6 +34,15 @@ if __name__ == '__main__':
         type=int
         )
     parser.add_argument(
+        '-m', '--mode',
+        choices=['all', 'unread', 'none'],
+        default='unread',
+        help=('Set the reading mode. If \'all\', read everything, if '
+              '\'unread\', only read content that does not have pre-existing '
+              'readings of the same reader and version, if \'none\', only '
+              'use pre-existing readings.')
+        )
+    parser.add_argument(
         '--no_reading_upload',
         help='Choose not to upload the reading output to the database.',
         action='store_true'
@@ -42,19 +53,8 @@ if __name__ == '__main__':
         action='store_true'
         )
     parser.add_argument(
-        '--force_read',
-        help=('Make the reader read all the content. Otherwise, the system '
-              'will simply process existing readings where possible.'),
-        action='store_true'
-        )
-    parser.add_argument(
         '--force_fulltext',
         help='Make the reader only read full text from the database.',
-        action='store_true'
-        )
-    parser.add_argument(
-        '--no_read',
-        help='Only create statements using existing reading results.',
         action='store_true'
         )
     args = parser.parse_args()
@@ -63,10 +63,7 @@ if __name__ == '__main__':
 
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
-
 from indra.tools.reading.readers import get_readers, ReadingData, _get_dir
-from indra.tools.reading.script_tools import get_parser, make_statements, \
-                                             StatementData
 
 
 class ReadDBError(Exception):
@@ -259,7 +256,8 @@ def get_readings_query(id_dict, readers, db=None, force_fulltext=False):
 # =============================================================================
 
 
-def make_db_readings(id_dict, readers, db=None, skip_dict=None, **kwargs):
+def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
+                     force_read=False, skip_dict=None, db=None, **kwargs):
     """Read contents retrieved from the database.
 
     The content will be retrieved in batchs, given by the `batch` argument.
@@ -273,7 +271,7 @@ def make_db_readings(id_dict, readers, db=None, skip_dict=None, **kwargs):
     readers : list of reader objects
         A list of the readers that will be use, for example ['reach'] if you
         wanted to use the reach reader.
-    batch : int
+    batch_size : int
         The number of content entries read for each batch. Default 1000.
     force_fulltext : bool
         If True, only get fulltext content from the database. Default False.
@@ -281,6 +279,9 @@ def make_db_readings(id_dict, readers, db=None, skip_dict=None, **kwargs):
         If True, read even if text_content id is found in skip_dict.
     skip_dict : dict {<reader> : list [int]}
         A dict containing text content id's to be skipped.
+    db : indra.db.DatabaseManager instance
+        A handle to a database. Default None; if None, a handle to the primary
+        database (see indra.db) is retrieved.
 
     Other keyword arguments are passed to the `read` methods of the readers.
 
@@ -291,11 +292,6 @@ def make_db_readings(id_dict, readers, db=None, skip_dict=None, **kwargs):
     """
     if db is None:
         db = get_primary_db()
-
-    # Retrieve the kwargs needed in this function.
-    batch_size = kwargs.pop('batch', 1000)
-    force_fulltext = kwargs.pop('force_fulltext', False)
-    force_read = kwargs.pop('force_read', False)
 
     # Get the iterator.
     logger.debug("Getting iterator.")
@@ -412,9 +408,9 @@ def upload_readings(output_list, db=None):
     return
 
 
-def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
-                     force_fulltext=False, batch_size=1000, no_read=False,
-                     no_upload=False, pickle_file=None, db=None):
+def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
+                     force_fulltext=False, batch_size=1000, no_upload=False,
+                     pickle_file=None, db=None):
     """Produce the reading output for the given ids, and upload them to db.
 
     This function will also retrieve pre-existing readings from the database,
@@ -429,9 +425,11 @@ def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
     verbose : bool
         Optional, default False - If True, log and print the output of the
         commandline reader utilities, if False, don't.
-    force_read : bool
-        Optional, default False - If True, read content even if a there is an
-        existing reading in the database.
+    read_mode : str : 'all', 'unread', or 'none'
+        Optional, default 'undread' - If 'all', read everything (generally
+        slow); if 'unread', only read things that were undread (as fast as you
+        can be while still getting everything); if 'none', don't read, and only
+        get existing readings.
     force_fulltext : bool
         Optional, default False - If True, only read fulltext article, ignoring
         abstracts.
@@ -448,8 +446,9 @@ def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
         Optional, default None - otherwise the path to a file in which the
         reading data will be saved.
     db : indra.db.DatabaseManager instance
-        Optional, default the primary database provided by `get_primary_db`
-        function. Used to interface with a different databse.
+        Optional, default is None, in which case the primary database provided
+        by `get_primary_db` function is used. Used to interface with a
+        different databse.
 
     Returns
     -------
@@ -462,19 +461,20 @@ def produce_readings(id_dict, reader_list, verbose=False, force_read=False,
 
     prev_readings = []
     skip_reader_tcid_dict = None
-    if not force_read:
+    if read_mode != 'all':
         prev_readings = get_db_readings(id_dict, reader_list, force_fulltext,
                                         batch_size, db=db)
         skip_reader_tcid_dict = {r.name: [] for r in reader_list}
-        for rd in prev_readings:
-            skip_reader_tcid_dict[rd.reader].append(rd.tcid)
+        if read_mode != 'none':
+            for rd in prev_readings:
+                skip_reader_tcid_dict[rd.reader].append(rd.tcid)
     outputs = []
-    if not no_read:
+    if read_mode != 'none':
         outputs = make_db_readings(id_dict, reader_list, verbose=verbose,
                                    skip_dict=skip_reader_tcid_dict, db=db,
                                    force_fulltext=force_fulltext,
-                                   force_read=force_read,
-                                   batch=batch_size)
+                                   force_read=(read_mode == 'all'),
+                                   batch_size=batch_size)
 
     if not no_upload:
         upload_readings(outputs, db=db)
@@ -578,9 +578,8 @@ if __name__ == "__main__":
 
     # Read everything ========================================================
     outputs = produce_readings(id_dict, readers, verbose=verbose,
-                               force_read=args.force_read,
+                               read_mode=args.mode, batch_size=args.batch,
                                force_fulltext=args.force_fulltext,
-                               batch_size=args.batch, no_read=args.no_read,
                                no_upload=args.no_reading_upload,
                                pickle_file=reading_pickle)
 
