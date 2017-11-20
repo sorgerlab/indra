@@ -365,7 +365,7 @@ class SparserReader(Reader):
                 # In this case we assume the prefix is a tcid.
                 prefix = int(prefix)
 
-            with open(outpath, 'rb') as f:
+            with open(outpath, 'rt') as f:
                 content = json.load(f)
 
             reading_data_list.append(ReadingData(
