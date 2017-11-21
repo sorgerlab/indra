@@ -134,7 +134,25 @@ def get_id_dict(id_str_list):
 
 
 def get_clauses(id_dict, db):
-    """Get a list of clauses to be passed to a db query."""
+    """Get a list of clauses to be passed to a db query.
+
+    Parameters
+    ----------
+    id_dict : dict {id_type: [int or str]}
+        A dictionary indexed by the type of id, containing lists of id's of
+        that the respective type.
+    db : indra.db.DatabaseManager instance
+        This instance is only used for forming the query, and will not be
+        accessed or queried.
+
+    Returns
+    -------
+    clause_list : list [sqlalchemy clauses]
+        A list of sqlalchemy clauses to be used in query in the form:
+        `db.filter_query(<table>, <other clauses>, *clause_list)`
+    """
+    if all([not id_list for id_list in id_dict.values()]):
+        return [db.TextRef.id is None]  # This can never be true for any entry.
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
                          if len(id_list)]
