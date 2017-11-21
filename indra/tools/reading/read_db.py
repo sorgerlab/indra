@@ -137,10 +137,15 @@ def _enrich_reading_data(reading_data_iter, db=None):
 def get_id_dict(id_str_list):
     """Parse the list of id string into a dict."""
     id_types = get_primary_db().TextRef.__table__.columns.keys()
+    id_types.remove('id')
+    id_types += ['trid', 'tcid']
     id_dict = {id_type: [] for id_type in id_types}
     for id_entry in id_str_list:
         id_type, id_val = _convert_id_entry(id_entry, id_types)
-        id_dict[id_type].append(id_val)
+        if id_type in ['trid', 'tcid']:
+            id_dict[id_type].append(int(id_val))
+        else:
+            id_dict[id_type].append(id_val)
     return id_dict
 
 
@@ -174,10 +179,10 @@ def get_clauses(id_dict, db):
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
                          if len(id_list) and id_type not in ['tcid', 'trid']]
-    if 'trid' in id_dict.keys() and len(id_dict['trid']):
-        id_condition_list.append(db.TextRef.id.in_(id_dict['trid']))
-    if 'tcid' in id_dict.keys() and len(id_dict['tcid']):
-        id_condition_list.append(db.TextContent.id.in_(id_dict['tcid']))
+    for id_type, table in [('trid', db.TextRef), ('tcid', db.TextContent)]:
+        if id_type in id_dict.keys() and len(id_dict[id_type]):
+            int_id_list = [int(i) for i in id_dict[id_type]]
+            id_condition_list.append(table.id.in_(int_id_list))
     return [sql.or_(*id_condition_list)]
 
 
@@ -219,7 +224,7 @@ def get_text_content_summary_string(q, db, num_ids=None):
 
 
 def get_content_query(ids, readers, db=None, force_fulltext=False,
-                      force_read=False):
+                      force_read=False, debug=False, print_summary=False):
     """Construct a query to access all the content that will be read.
 
     If ids is not 'all', and does not contain any ids, None is returned.
@@ -250,6 +255,8 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
         The query of the text content to be read (tc_tbr). If there are no ids
         contained in ids, or it is not 'all', return None.
     """
+    if debug:
+        logger.setLevel(logging.DEBUG)
     if db is None:
         db = get_primary_db()
     logger.debug("Got db handle.")
@@ -268,7 +275,7 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
         clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
 
     # If we are actually getting anything, else we return None.
-    if ids == 'all' or any([id_list for id_list in ids.values()]):
+    if ids == 'all' or any([len(id_list) > 0 for id_list in ids.values()]):
         if ids is not 'all':
             clauses += get_clauses(ids, db)
 
@@ -289,11 +296,12 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
             logger.debug('All content will be read (force_read).')
             tc_tbr_query = tc_query
 
-        try:
-            logger.debug("Going to try to make a nice summary...")
-            logger.debug(get_text_content_summary_string(tc_tbr_query, db))
-        except Exception:
-            logger.debug("Could not print summary of results.")
+        if print_summary:
+            try:
+                logger.debug("Going to try to make a nice summary...")
+                logger.info(get_text_content_summary_string(tc_tbr_query, db))
+            except Exception:
+                logger.debug("Could not print summary of results.")
     else:
         logger.debug("No ids in id_dict, so no query formed.")
         return None
