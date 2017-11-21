@@ -7,6 +7,9 @@ import pickle
 import random
 
 logger = logging.getLogger('file_reader')
+
+from indra.tools.reading.script_tools import get_parser, make_statements
+
 if __name__ == '__main__':
     parser = get_parser(
         __doc__,
@@ -22,9 +25,7 @@ if __name__ == '__main__':
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
 
-
 from indra.tools.reading.readers import _get_dir, get_readers
-from indra.tools.reading.script_tools import get_parser, make_statements
 
 
 def read_files(files, readers, **kwargs):
@@ -59,7 +60,7 @@ def read_files(files, readers, **kwargs):
 
 
 if __name__ == '__main__':
-    with open(args.file_file, 'r') as f:
+    with open(args.input_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d files." % len(input_lines))
     for ftype in ['nxml', 'txt']:
@@ -68,12 +69,12 @@ if __name__ == '__main__':
             ))
 
     # Select only a sample of the lines, if sample is chosen.
-    if args.sample is not None:
-        input_lines = random.sample(input_lines, args.sample)
+    if args.n_samp is not None:
+        input_lines = random.sample(input_lines, args.n_samp)
 
     # If a range is specified, only use that range.
-    if args.in_range is not None:
-        start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
+    if args.range_str is not None:
+        start_idx, end_idx = [int(n) for n in args.range_str.split(':')]
         input_lines = input_lines[start_idx:end_idx]
 
     # Create a single base directory
@@ -83,19 +84,19 @@ if __name__ == '__main__':
     verbose = args.verbose and not args.quiet
 
     # Get the readers objects.
-    readers = [reader_class(base_dir=base_dir, n_proc=args.num_procs)
+    readers = [reader_class(base_dir=base_dir, n_proc=args.n_proc)
                for reader_class in get_readers()
                if reader_class.name.lower() in args.readers]
 
     # Read the files.
     outputs = read_files(input_lines, readers, verboes=verbose)
-    reading_out_path = args.output_name + '_readings.pkl'
+    reading_out_path = args.name + '_readings.pkl'
     with open(reading_out_path, 'wb') as f:
         pickle.dump([output.make_tuple() for output in outputs], f)
     print("Reading outputs stored in %s." % reading_out_path)
 
     stmt_data_list = make_statements(outputs)
-    stmts_pkl_path = args.output_name + '_stmts.pkl'
+    stmts_pkl_path = args.name + '_stmts.pkl'
     with open(stmts_pkl_path, 'wb') as f:
         pickle.dump([sd.statement for sd in stmt_data_list], f)
         print("Statements pickled in %s." % stmts_pkl_path)

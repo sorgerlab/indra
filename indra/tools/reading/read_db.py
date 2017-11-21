@@ -27,25 +27,41 @@ if __name__ == '__main__':
          'and should thus be used with care.')
         )
     parser.add_argument(
-        '-o', '--output_name',
-        help=('Pickle all results and save in files labelled as '
-              '<OUTPUT_NAME>_<output_type>.pkl.'),
-        default=None
-        )
-    parser.add_argument(
-        '-b', '--batch',
-        help='Choose the size of the batches. The default is 1,000.',
-        default=1000,
-        type=int
-        )
-    parser.add_argument(
         '-m', '--mode',
         choices=['all', 'unread', 'none'],
         default='unread',
         help=('Set the reading mode. If \'all\', read everything, if '
               '\'unread\', only read content that does not have pre-existing '
               'readings of the same reader and version, if \'none\', only '
-              'use pre-existing readings.')
+              'use pre-existing readings. Default is \'unread\'.')
+        )
+    parser.add_argument(
+        '-o', '--output',
+        dest='name',
+        help=('Pickle all results and save in files labelled as '
+              '<NAME>_<output_type>.pkl.'),
+        default=None
+        )
+    parser.add_argument(
+        '-b', '--inner_batch',
+        dest='b_in',
+        help=('Choose the size of the inner batches, which is the number of '
+              'text content entires loaded at a given time, and the number of '
+              'entries that are read at a time by a reader. The default is '
+              '1,000.'),
+        default=1000,
+        type=int
+        )
+    parser.add_argument(
+        '-B', '--outer_batch',
+        dest='b_out',
+        default=10000,
+        type=int,
+        help=('Select the number of ids to read per outer level batch. This '
+              'determines the number of readings/statements uploaded/pickled '
+              'at a time, and thus also limits the amount of RAM that will be '
+              'used. A larger outer batch means more RAM. The default is '
+              '10,000.')
         )
     parser.add_argument(
         '--no_reading_upload',
@@ -61,16 +77,6 @@ if __name__ == '__main__':
         '--force_fulltext',
         help='Make the reader only read full text from the database.',
         action='store_true'
-        )
-    parser.add_argument(
-        '-B', '--outer_batch',
-        default=10000,
-        type=int,
-        help=('Select the number of ids to read per outer level batch. This '
-              'determines the number of readings/statements uploaded/pickled '
-              'at a time, and thus also limits the amount of RAM that will be '
-              'used. A larger outer batch means more RAM. The default is '
-              '10,000.')
         )
     args = parser.parse_args()
     if args.debug and not args.quiet:
@@ -667,23 +673,23 @@ if __name__ == "__main__":
     logger.info("Found %d ids." % len(input_lines))
 
     # Select only a sample of the lines, if sample is chosen.
-    if args.sample is not None:
-        input_lines = random.sample(input_lines, args.sample)
+    if args.n_samp is not None:
+        input_lines = random.sample(input_lines, args.n_samp)
 
     # If a range is specified, only use that range.
-    if args.in_range is not None:
-        start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
+    if args.range_str is not None:
+        start_idx, end_idx = [int(n) for n in args.range_str.split(':')]
         input_lines = input_lines[start_idx:end_idx]
 
     # Get the outer batch.
-    B = args.outer_batch
+    B = args.b_out
     n_max = int(ceil(float(len(input_lines))/B))
 
     # Create a single base directory
     base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
 
     # Get the readers objects.
-    readers = [reader_class(base_dir=base_dir, n_proc=args.num_procs)
+    readers = [reader_class(base_dir=base_dir, n_proc=args.n_proc)
                for reader_class in get_readers()
                if reader_class.name.lower() in args.readers]
 
@@ -694,9 +700,9 @@ if __name__ == "__main__":
         logger.info("Beginning outer batch %d/%d. ------------" % (n+1, n_max))
 
         # Get the pickle file names.
-        if args.output_name is not None:
-            reading_pickle = args.output_name + '_readings_%d.pkl' % n
-            stmts_pickle = args.output_name + '_stmts_%d.pkl' % n
+        if args.name is not None:
+            reading_pickle = args.name + '_readings_%d.pkl' % n
+            stmts_pickle = args.name + '_stmts_%d.pkl' % n
         else:
             reading_pickle = None
             stmts_pickle = None
@@ -706,7 +712,7 @@ if __name__ == "__main__":
 
         # Read everything ====================================================
         outputs = produce_readings(id_dict, readers, verbose=verbose,
-                                   read_mode=args.mode, batch_size=args.batch,
+                                   read_mode=args.mode, batch_size=args.b_in,
                                    force_fulltext=args.force_fulltext,
                                    no_upload=args.no_reading_upload,
                                    pickle_file=reading_pickle)

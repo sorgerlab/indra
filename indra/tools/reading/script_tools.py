@@ -39,17 +39,20 @@ def get_parser(description, input_desc):
         )
     parser.add_argument(
         '-n', '--num_procs',
+        dest='n_proc',
         help='Select the number of processes to use.',
         type=int,
         default=1
         )
     parser.add_argument(
         '-s', '--sample',
-        help='Read a random sample of size SAMPLE of the inputs.',
+        dest='n_samp',
+        help='Read a random sample of size N_SAMP of the inputs.',
         type=int
         )
     parser.add_argument(
         '-I', '--in_range',
+        dest='range_str',
         help='Only read input lines in the range given as <start>:<end>.'
         )
     parser.add_argument(
