@@ -176,6 +176,10 @@ def test_get_content():
     assert N_3 == N_1, \
         "Expected to get %d items in query, but got %d." % (N_1, N_3)
 
+    # Test response to empyt dict.
+    assert rdb.get_content_query({}, readers, db=db) is None, \
+        "Expected None when passing no ids."
+
 
 def test_get_reader_children():
     "Test method for getting reader objects."
