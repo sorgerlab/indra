@@ -7,10 +7,7 @@ import zlib
 from os import path, mkdir
 from nose import SkipTest
 
-from indra.tools.reading.read_db import _convert_id_entry, \
-    get_content_query, get_clauses, upload_readings, \
-    make_db_readings, get_db_readings, _enrich_reading_data,\
-    produce_statements, produce_readings
+from indra.tools.reading import read_db as rdb
 from indra.tools.reading.read_files import read_files
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
@@ -137,7 +134,7 @@ def get_readers(*names, **kwargs):
 def test_convert_id_entry():
     "Test that we correctly conver the id's given us."
     id_entry = 'pmid\t: 12345\n'
-    res = _convert_id_entry(id_entry)
+    res = rdb._convert_id_entry(id_entry)
     assert len(res) == 2 and res[0] == 'pmid' and res[1] == '12345'
 
 
@@ -145,7 +142,7 @@ def test_get_clauses():
     "Test that the clauses are correctly created."
     db = get_test_db()
     id_dict = {'pmid': '17399955', 'pmcid': 'PMC3199586'}
-    clauses = get_clauses(id_dict, db)
+    clauses = rdb.get_clauses(id_dict, db)
     assert len(clauses) == 1
     clause = clauses[0]
     assert 'IN' in str(clause) and 'OR' in str(clause)
@@ -157,7 +154,7 @@ def test_get_content():
     tr_list = db.select_all(db.TextRef)
     id_dict = get_id_dict(tr_list)
     readers = get_readers()
-    tc_query = get_content_query(id_dict, readers, db=db, force_read=False)
+    tc_query = rdb.get_content_query(id_dict, readers, db=db, force_read=False)
     assert tc_query.count(),\
         "Expected some results from our query, got %d." % tc_query.count()
 
@@ -186,7 +183,7 @@ def test_reading_content_insert():
                                                 len(reading_output))
 
     print("Test reading insert")
-    upload_readings(reading_output, db=db)
+    rdb.upload_readings(reading_output, db=db)
     r_list = db.select_all(db.Readings)
 
     def is_complete_match(r_list, reading_output):
@@ -195,19 +192,19 @@ def test_reading_content_insert():
 
     assert is_complete_match(r_list, reading_output), \
         "Not all reading output posted."
-    upload_readings(reading_output, db=db)
+    rdb.upload_readings(reading_output, db=db)
     assert is_complete_match(r_list, reading_output), \
         "Uniqueness constraints failed."
 
     print("Test enrichement")
     assert all([rd.reading_id is None for rd in reading_output]), \
         "No readings should have reading_ids already."
-    _enrich_reading_data(reading_output, db=db)
+    rdb._enrich_reading_data(reading_output, db=db)
     assert all([rd.reading_id is not None for rd in reading_output]),\
         "Some reading data objects didn't have reading_ids after enrichment."
 
     print("Test making statements")
-    stmts = produce_statements(reading_output, db=db)
+    stmts = rdb.produce_statements(reading_output, db=db)
     assert len(stmts), 'No statements created.'
     db_stmts = db.select_all(db.Statements)
     assert len(db_stmts) == len(stmts), \
@@ -225,27 +222,27 @@ def test_read_db():
 
     # Run the reading with default batch size, no force_fulltext, and
     # no force_read
-    reading_output_1 = make_db_readings(id_dict, readers, db=db)
+    reading_output_1 = rdb.make_db_readings(id_dict, readers, db=db)
     N1 = len(reading_output_1)
     N1_exp = len(readers)*db.filter_query(db.TextContent).count()
     assert N1 == N1_exp, \
         'Expected %d readings, but got %d.' % (N1_exp, N1)
-    upload_readings(reading_output_1, db=db)  # setup for later test.
+    rdb.upload_readings(reading_output_1, db=db)  # setup for later test.
     N1_db = len(db.select_all(db.Readings))
     assert N1_db == N1, \
         'Expected %d readings to be copied to db, only %d found.' % (N1, N1_db)
 
     # Run the reading with default batch size, no force_fulltext, but with
     # force_read = True (this hould produce new readings.)
-    reading_output_2 = make_db_readings(id_dict, readers, db=db,
-                                        force_read=True)
+    reading_output_2 = rdb.make_db_readings(id_dict, readers, db=db,
+                                            force_read=True)
     N2 = len(reading_output_2)
     assert N1 == N2, "Got %d readings from run 1 but %d from run 2." % (N1, N2)
 
     # Run the reading with default batch size, no force_fulltext, but without
     # force_read = True (this should NOT produce new readings.)
-    old_readings = get_db_readings(id_dict, readers, db=db)
-    reading_output = make_db_readings(id_dict, readers, db=db)
+    old_readings = rdb.get_db_readings(id_dict, readers, db=db)
+    reading_output = rdb.make_db_readings(id_dict, readers, db=db)
     assert len(reading_output) == 0, "Got new readings when force_read=False."
     assert len(old_readings) == N1, \
         "Did not get old readings when force_read=False."
@@ -263,14 +260,14 @@ def test_produce_readings():
 
     # Test the read_mode='none' option (should yield nothing, because there
     # aren't any readings yet.)
-    outputs_0 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 read_mode='none')
+    outputs_0 = rdb.produce_readings(id_dict, reader_list, verbose=True, db=db,
+                                     read_mode='none')
     assert len(outputs_0) == 0
 
     # Test just getting a pickle file (Nothing should be posted to the db.).
     pkl_file = 'test_db_res.pkl'
-    outputs_1 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 no_upload=True, pickle_file=pkl_file)
+    outputs_1 = rdb.produce_readings(id_dict, reader_list, verbose=True, db=db,
+                                     no_upload=True, pickle_file=pkl_file)
     N_out = len(outputs_1)
     N_exp = len(reader_list)*db.filter_query(db.TextContent).count()
     assert N_out == N_exp, "Expected %d readings, got %d." % (N_exp, N_out)
@@ -284,24 +281,24 @@ def test_produce_readings():
         "There shouldn't be any readings yet, but found %d." % N_readings
 
     # Test reading and insert to the database.
-    produce_readings(id_dict, reader_list, verbose=True, db=db)
+    rdb.produce_readings(id_dict, reader_list, verbose=True, db=db)
     N_db = db.filter_query(db.Readings).count()
     assert N_db == N_exp, "Excpected %d readings, got %d." % (N_exp, N_db)
 
     # Test reading again, without read_mode='all'
-    outputs_2 = produce_readings(id_dict, reader_list, verbose=True, db=db)
+    outputs_2 = rdb.produce_readings(id_dict, reader_list, verbose=True, db=db)
     assert len(outputs_2) == N_exp
     assert all([rd.reading_id is not None for rd in outputs_2])
 
     # Test with read_mode='none' again.
-    outputs_3 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 read_mode='none')
+    outputs_3 = rdb.produce_readings(id_dict, reader_list, verbose=True, db=db,
+                                     read_mode='none')
     assert len(outputs_3) == N_exp
     assert all([rd.reading_id is not None for rd in outputs_3])
 
     # Test the read_mode='all'.
-    outputs_4 = produce_readings(id_dict, reader_list, verbose=True, db=db,
-                                 read_mode='all')
+    outputs_4 = rdb.produce_readings(id_dict, reader_list, verbose=True, db=db,
+                                     read_mode='all')
     assert len(outputs_4) == N_exp
     assert all([rd.reading_id is None for rd in outputs_4])
 
