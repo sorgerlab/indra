@@ -20,7 +20,11 @@ logger = logging.getLogger('make_db_readings')
 if __name__ == '__main__':
     parser = get_parser(
         'A tool to read and process content from the database.',
-        'A file containing a list of ids of the form <id_type>:<id>.'
+        ('A file containing a list of ids of the form <id_type>:<id>. '
+         'Note that besided the obvious id types (pmid, pmcid, doi, etc.), '
+         'you may use trid and tcid to indicate text ref and text content '
+         'ids, respectively. Note that these are specific to the database, '
+         'and should thus be used with care.')
         )
     parser.add_argument(
         '-o', '--output_name',
@@ -147,7 +151,9 @@ def get_clauses(id_dict, db):
     id_dict : dict {id_type: [int or str]}
         A dictionary indexed by the type of id, containing lists of id's of
         that the respective type. If all the lists are empty, or the dict is
-        empty, returns an empty condition.
+        empty, returns an empty condition. Note that id types of 'trid' and
+        'tcid' will be mapped to text ref ids and text content ids,
+        respectively.
     db : indra.db.DatabaseManager instance
         This instance is only used for forming the query, and will not be
         accessed or queried.
@@ -161,7 +167,11 @@ def get_clauses(id_dict, db):
     """
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
-                         if len(id_list)]
+                         if len(id_list) and id_type not in ['tcid', 'trid']]
+    if 'trid' in id_dict.keys() and len(id_dict['trid']):
+        id_condition_list.append(db.TextRef.id.in_(id_dict['trid']))
+    if 'tcid' in id_dict.keys() and len(id_dict['tcid']):
+        id_condition_list.append(db.TextContent.id.in_(id_dict['tcid']))
     return [sql.or_(*id_condition_list)]
 
 
