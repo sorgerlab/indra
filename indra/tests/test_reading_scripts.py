@@ -149,14 +149,32 @@ def test_get_clauses():
 
 
 def test_get_content():
-    "Test that we get content from the database successfully."
+    "Test that content querries are correctly formed."
     db = get_db_with_content()
     tr_list = db.select_all(db.TextRef)
     id_dict = get_id_dict(tr_list)
     readers = get_readers()
-    tc_query = rdb.get_content_query(id_dict, readers, db=db, force_read=False)
-    assert tc_query.count(),\
-        "Expected some results from our query, got %d." % tc_query.count()
+    tc_query_1 = rdb.get_content_query(id_dict, readers, db=db,
+                                       force_read=False)
+    N_exp = db.filter_query(db.TextContent).count()
+    N_1 = tc_query_1.count()
+    assert N_1 == N_exp,\
+        "Expected %d results in our query, got %d." % (N_exp, N_1)
+
+    # This tests both that tcid and trid are recognized, and that we really
+    # are getting just a subset of the content.
+    test_tcs_2 = tc_query_1.limit(2).all()
+    small_id_dict = {'tcid': [test_tcs_2[0].id],
+                     'trid': [test_tcs_2[1].text_ref_id]}
+    tc_query_2 = rdb.get_content_query(small_id_dict, readers, db=db)
+    N_2 = tc_query_2.count()
+    assert N_2 == 2, "Expected 2 items in query, but got %d." % N_2
+
+    # Now test the 'all' feature.
+    tc_query_3 = rdb.get_content_query('all', readers, db=db)
+    N_3 = tc_query_3.count()
+    assert N_3 == N_1, \
+        "Expected to get %d items in query, but got %d." % (N_1, N_3)
 
 
 def test_get_reader_children():
