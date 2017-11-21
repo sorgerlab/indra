@@ -10,7 +10,7 @@ import logging
 import random
 import zlib
 import pickle
-from math import log10, floor
+from math import log10, floor, ceil
 
 from indra.tools.reading.script_tools import get_parser, make_statements, \
                                              StatementData
@@ -29,7 +29,7 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         '-b', '--batch',
-        help='Choose the size of the batches.',
+        help='Choose the size of the batches. The default is 1,000.',
         default=1000,
         type=int
         )
@@ -56,6 +56,16 @@ if __name__ == '__main__':
         '--force_fulltext',
         help='Make the reader only read full text from the database.',
         action='store_true'
+        )
+    parser.add_argument(
+        '-B', '--outer_batch',
+        default=10000,
+        type=int,
+        help=('Select the number of ids to read per outer level batch. This '
+              'determines the number of readings/statements uploaded/pickled '
+              'at a time, and thus also limits the amount of RAM that will be '
+              'used. A larger outer batch means more RAM. The default is '
+              '10,000.')
         )
     args = parser.parse_args()
     if args.debug and not args.quiet:
@@ -554,6 +564,10 @@ if __name__ == "__main__":
         start_idx, end_idx = [int(n) for n in args.in_range.split(':')]
         input_lines = input_lines[start_idx:end_idx]
 
+    # Get the outer batch.
+    B = args.outer_batch
+    n_max = int(ceil(float(len(input_lines))/B))
+
     # Create a single base directory
     base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
 
@@ -565,24 +579,27 @@ if __name__ == "__main__":
     # Set the verbosity. The quiet argument overrides the verbose argument.
     verbose = args.verbose and not args.quiet
 
-    # Get the pickle file names.
-    if args.output_name is not None:
-        reading_pickle = args.output_name + '_readings.pkl'
-        stmts_pickle = args.output_name + '_stmts.pkl'
-    else:
-        reading_pickle = None
-        stmts_pickle = None
+    for n in range(n_max):
+        logger.info("Beginning outer batch %d/%d." % (n+1, n_max))
 
-    # Get the dict of ids.
-    id_dict = get_id_dict(input_lines)
+        # Get the pickle file names.
+        if args.output_name is not None:
+            reading_pickle = args.output_name + '_readings_%d.pkl' % n
+            stmts_pickle = args.output_name + '_stmts_%d.pkl' % n
+        else:
+            reading_pickle = None
+            stmts_pickle = None
 
-    # Read everything ========================================================
-    outputs = produce_readings(id_dict, readers, verbose=verbose,
-                               read_mode=args.mode, batch_size=args.batch,
-                               force_fulltext=args.force_fulltext,
-                               no_upload=args.no_reading_upload,
-                               pickle_file=reading_pickle)
+        # Get the dict of ids.
+        id_dict = get_id_dict(input_lines[B*n:B*(n+1)])
 
-    # Convert the outputs to statements ======================================
-    produce_statements(outputs, no_upload=args.no_statement_upload,
-                       pickle_file=stmts_pickle)
+        # Read everything ====================================================
+        outputs = produce_readings(id_dict, readers, verbose=verbose,
+                                   read_mode=args.mode, batch_size=args.batch,
+                                   force_fulltext=args.force_fulltext,
+                                   no_upload=args.no_reading_upload,
+                                   pickle_file=reading_pickle)
+
+        # Convert the outputs to statements ==================================
+        produce_statements(outputs, no_upload=args.no_statement_upload,
+                           pickle_file=stmts_pickle)
