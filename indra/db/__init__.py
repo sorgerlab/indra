@@ -218,7 +218,7 @@ class DatabaseManager(object):
             reader_version = Column(String(20), nullable=False)
             format = Column(String(20), nullable=False)  # xml, json, etc.
             bytes = Column(Bytea, nullable=False)
-            ___table_args__ = (
+            __table_args__ = (
                 UniqueConstraint(
                     'text_content_id', 'reader', 'reader_version'
                     ),
