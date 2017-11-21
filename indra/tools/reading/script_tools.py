@@ -110,9 +110,17 @@ class StatementData(object):
 
 def make_statements(reading_data_list):
     """Convert a list of ReadingData instances into StatementData instances."""
-    stmt_data_list = [StatementData(stmt, output.reading_id)
-                      for output in reading_data_list
-                      for stmt in output.get_statements()]
+    stmt_data_list = []
+    for reading_data in reading_data_list:
+        try:
+            stmts = reading_data.get_statements()
+        except Exception as e:
+            logger.error("Got exception creating statements for %d."
+                         % reading_data.reading_id)
+            logger.exception(e)
+            continue
+        for stmt in stmts:
+            stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
     logger.info("Found %d statements from %d readings." %
                 (len(stmt_data_list), len(reading_data_list)))
     return stmt_data_list

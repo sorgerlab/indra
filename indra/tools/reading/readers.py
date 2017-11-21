@@ -490,21 +490,22 @@ class ReadingData(object):
 
     def get_statements(self):
         """General method to create statements."""
+        logger.debug("Making statements from %s." % self.reading_id)
         if self.reader == ReachReader.name:
             if self.format == formats.JSON:
                 # Process the reach json into statements.
                 json_str = json.dumps(self.content)
                 processor = reach.process_json_str(json_str)
             else:
-                raise ReaderError("Incorrect format for Reach output: %s."
-                                  % self.format) 
+                raise ReadingError("Incorrect format for Reach output: %s."
+                                   % self.format)
         elif self.reader == SparserReader.name:
             if self.format == formats.JSON:
                 # Process the sparser content into statements
                 processor = sparser.process_json_dict(self.content)
             else:
-                raise ReaderError("Sparser should only ever be JSON, not %s."
-                                  % self.format)
+                raise ReadingError("Sparser should only ever be JSON, not %s."
+                                   % self.format)
         if processor is None:
             logger.error("Production of statements from %s failed for %s."
                          % (self.reader, self.tcid))

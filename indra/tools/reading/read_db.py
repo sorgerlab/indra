@@ -10,6 +10,7 @@ import logging
 import random
 import zlib
 import pickle
+import json
 from math import log10, floor, ceil
 
 from indra.tools.reading.script_tools import get_parser, make_statements, \
@@ -136,11 +137,17 @@ def get_id_dict(id_str_list):
 def get_clauses(id_dict, db):
     """Get a list of clauses to be passed to a db query.
 
+    Note that an empty condition will be returned if id_dict has no ids in it
+    (either the dict is empty or all the lists within the dict are empty),
+    which will in general have the unexpected effect of selecting everything,
+    rather than nothing.
+
     Parameters
     ----------
     id_dict : dict {id_type: [int or str]}
         A dictionary indexed by the type of id, containing lists of id's of
-        that the respective type.
+        that the respective type. If all the lists are empty, or the dict is
+        empty, returns an empty condition.
     db : indra.db.DatabaseManager instance
         This instance is only used for forming the query, and will not be
         accessed or queried.
@@ -149,10 +156,9 @@ def get_clauses(id_dict, db):
     -------
     clause_list : list [sqlalchemy clauses]
         A list of sqlalchemy clauses to be used in query in the form:
-        `db.filter_query(<table>, <other clauses>, *clause_list)`
+        `db.filter_query(<table>, <other clauses>, *clause_list)`.
+        If the id_dict has no ids, an effectively empty condition is returned.
     """
-    if all([not id_list for id_list in id_dict.values()]):
-        return [db.TextRef.id is None]  # This can never be true for any entry.
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
                          if len(id_list)]
@@ -196,32 +202,65 @@ def get_text_content_summary_string(q, db, num_ids=None):
     return ret_str
 
 
-def get_content_query(id_dict, readers, db=None, force_fulltext=False,
+def get_content_query(ids, readers, db=None, force_fulltext=False,
                       force_read=False):
-    """Load all the content that will be read."""
+    """Construct a query to access all the content that will be read.
+
+    If ids is not 'all', and does not contain any ids, None is returned.
+
+    Parameters
+    ----------
+    ids : 'all' or dict {<id type> : [str/int]}
+        If 'all', then all the content will be included in the query. Otherwise
+        a the content will be constrained to that corresponding to the ids in
+        id_dict, which are matched using text refs.
+    readers : list [Reader child instances]
+        A list of the reader objects, which contain the required metadata (name
+        and version of the reader) used to find content that needs to be read.
+    db : indra.db.DatabaseManager instance
+        Optional, default None, in which case the primary database is used. If
+        specified, the alternative database will be used. This function should
+        not alter the database.
+    force_fulltext : bool
+        Optional, default False - If True, only fulltext content will be read,
+        as opposed to including abstracts.
+    force_read : bool
+        Optional, default False - If True, all content will be returned,
+        whether it has been read or not.
+
+    Returns
+    -------
+    tc_tbr_query : sqlalchemy query object or None
+        The query of the text content to be read (tc_tbr). If there are no ids
+        contained in ids, or it is not 'all', return None.
+    """
     if db is None:
         db = get_primary_db()
     logger.debug("Got db handle.")
 
+    # These allow conditions on different tables to equal conditions on the
+    # dependent tables.
     tc_tr_binding = db.TextContent.text_ref_id == db.TextRef.id
     rd_tc_binding = db.Readings.text_content_id == db.TextContent.id
-    general_clauses = [tc_tr_binding]
-    if force_fulltext:
-        general_clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
-    id_clauses = get_clauses(id_dict, db)
-    logger.debug("Generated %d id clauses." % len(id_clauses))
 
-    if id_clauses:
+    # Begin the list of clauses with the binding between text content and
+    # text refs.
+    clauses = [tc_tr_binding]
+
+    # Add a fulltext requirement, if applicable.
+    if force_fulltext:
+        clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
+
+    # If we are actually getting anything, else we return None.
+    if ids == 'all' or any([id_list for id_list in ids.values()]):
+        if ids is not 'all':
+            clauses += get_clauses(ids, db)
+
         # Get the text content query object
         tc_query = db.filter_query(
             db.TextContent,
-            *(general_clauses + id_clauses)
+            *clauses
             ).distinct()
-        try:
-            logger.debug("Going to try to make a nice summary...")
-            logger.info(get_text_content_summary_string(tc_query, db))
-        except Exception:
-            logger.info("Could not print summary of results.")
 
         if not force_read:
             logger.debug("Getting content to be read.")
@@ -233,18 +272,53 @@ def get_content_query(id_dict, readers, db=None, force_fulltext=False,
         else:
             logger.debug('All content will be read (force_read).')
             tc_tbr_query = tc_query
+
+        try:
+            logger.debug("Going to try to make a nice summary...")
+            logger.debug(get_text_content_summary_string(tc_tbr_query, db))
+        except Exception:
+            logger.debug("Could not print summary of results.")
     else:
-        logger.info("Did not retreive content or readings from database.")
-        tc_tbr_query = None
+        logger.debug("No ids in id_dict, so no query formed.")
+        return None
 
     return tc_tbr_query.distinct()
 
 
-def get_readings_query(id_dict, readers, db=None, force_fulltext=False):
-    """Get all the readings available for the id's in id_str_list."""
+def get_readings_query(ids, readers, db=None, force_fulltext=False):
+    """Create a query to access all the relevant existing readings.
+
+    Note that if ids is not 'all' and ids is a dict with no ids in it,
+    this function returns None.
+
+    Parameters
+    ----------
+    ids : 'all' or dict {<id_type> : [str/int]}
+        If 'all', then all possible readings in the database matching the given
+        readers and other conditions will be returned. Otherwise, only those
+        that correspond to one of the ids in ids dict will be contained. If an
+        ids dict has no ids in it, None is returned.
+    readers : list [Reader child instances]
+        A list of the readers whose names and versions you wish to match in the
+        readings queried from the database.
+    db : indra.db.DatabaseManager instance
+        Optional, default None, in which case the primary database is used. If
+        specified, the alternative database will be used. This function should
+        not alter the database.
+    force_fulltext : bool
+        Optional, default False - If True, only readings corresponding to
+        fulltext content will be read, as opposed to including readings created
+        from abstracts.
+
+    Returns
+    -------
+    readings_query : sql query instance or None
+        Returns a query that can be used to access the specified content, or
+        else None if no content was specified.
+    """
     if db is None:
         db = get_primary_db()
-    general_clauses = [
+    clauses = [
         # Bind conditions on readings to conditions on content.
         db.Readings.text_content_id == db.TextContent.id,
 
@@ -255,9 +329,12 @@ def get_readings_query(id_dict, readers, db=None, force_fulltext=False):
         sql.or_(*[reader.matches_clause(db) for reader in readers])
         ]
     if force_fulltext:
-        general_clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
-    id_clauses = get_clauses(id_dict, db)
-    if id_clauses:
+        clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
+
+    if ids == 'all' or any([id_list for id_list in ids.values()]):
+        if ids != 'all':
+            clauses += get_clauses(ids, db)
+
         readings_query = db.filter_query(
             db.Readings,
 
@@ -272,10 +349,11 @@ def get_readings_query(id_dict, readers, db=None, force_fulltext=False):
 
             # Conditions generated from the list of ids. These include a
             # text-ref text-content binding to connect with id data.
-            *id_clauses
+            *clauses
             )
     else:
-        readings_query = None
+        return None
+
     return readings_query.distinct()
 
 
@@ -394,7 +472,8 @@ def get_db_readings(id_dict, readers, force_fulltext=False, batch_size=1000,
                 r.reader,
                 r.reader_version,
                 r.format,
-                zlib.decompress(r.bytes, 16+zlib.MAX_WBITS).decode('utf8'),
+                json.loads(zlib.decompress(r.bytes, 16+zlib.MAX_WBITS)
+                           .decode('utf8')),
                 r.id
                 )
             for r in previous_readings_query.yield_per(batch_size)
@@ -484,6 +563,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
         A list of the outputs of the readings in the form of ReadingData
         instances.
     """
+    logger.debug("Producing readings in %s mode." % read_mode)
     if db is None:
         db = get_primary_db()
 
@@ -493,6 +573,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
         prev_readings = get_db_readings(id_dict, reader_list, force_fulltext,
                                         batch_size, db=db)
         skip_reader_tcid_dict = {r.name: [] for r in reader_list}
+        logger.info("Found %d pre-existing readings." % len(prev_readings))
         if read_mode != 'none':
             for rd in prev_readings:
                 skip_reader_tcid_dict[rd.reader].append(rd.tcid)
@@ -503,6 +584,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
                                    force_fulltext=force_fulltext,
                                    force_read=(read_mode == 'all'),
                                    batch_size=batch_size)
+        logger.info("Made %d new readings." % len(outputs))
 
     if not no_upload:
         upload_readings(outputs, db=db)
@@ -534,8 +616,9 @@ def upload_statements(stmt_data_list, db=None):
 
     logger.info("Uploading agents to the database.")
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
-    db.insert_agents([sd.statement for sd in stmt_data_list],
-                     db.Statements.reader_ref.in_(reading_id_set))
+    if len(reading_id_set):
+        db.insert_agents([sd.statement for sd in stmt_data_list],
+                         db.Statements.reader_ref.in_(reading_id_set))
     return
 
 
@@ -598,7 +681,7 @@ if __name__ == "__main__":
     verbose = args.verbose and not args.quiet
 
     for n in range(n_max):
-        logger.info("Beginning outer batch %d/%d." % (n+1, n_max))
+        logger.info("Beginning outer batch %d/%d. ------------" % (n+1, n_max))
 
         # Get the pickle file names.
         if args.output_name is not None:
