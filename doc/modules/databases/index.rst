@@ -48,3 +48,9 @@ cBio portal client (:py:mod:`indra.databases.cbio_client`)
 
 .. automodule:: indra.databases.cbio_client
     :members:
+
+ChEMBL client (:py:mod:`indra.databases.chembl_client`)
+----------------------------------------------------------
+
+.. automodule:: indra.databases.chembl_client
+    :members:
