@@ -50,6 +50,7 @@ def get_drug_inhibition_stmts(drug):
     ----------
     drug : Agent
         Agent representing drug with MESH or CHEBI grounding
+
     Returns
     -------
     stmts : list of INDRA statements
@@ -109,6 +110,7 @@ def send_query(query_dict):
     query_dict : dict
         'query' : string of the endpoint to query
         'params' : dict of params for the query
+
     Returns
     -------
     js : dict
@@ -129,6 +131,7 @@ def query_target(target_chembl_id):
     Parameters
     ----------
     target_chembl_id : str
+
     Returns
     -------
     target : dict
@@ -149,6 +152,7 @@ def activities_by_target(activities):
     ----------
     activities : list
         response from a query returning activities for a drug
+
     Returns
     -------
     targ_act_dict : dict
@@ -172,6 +176,7 @@ def get_protein_targets_only(target_chembl_ids):
     ----------
     target_chembl_ids : list
         list of chembl_ids as strings
+
     Returns
     -------
     protein_targets : dict
@@ -192,6 +197,7 @@ def get_evidence(assay):
     ----------
     assay : dict
         an activity from the activities list returned by a query to the API
+
     Returns
     -------
     ev : :py:class:`Evidence`
@@ -216,6 +222,7 @@ def get_kinetics(assay):
     ----------
     assay : dict
         an activity from the activities list returned by a query to the API
+
     Returns
     -------
     kin : dict
@@ -250,6 +257,7 @@ def get_pmid(doc_id):
     Parameters
     ----------
     doc_id : str
+
     Returns
     -------
     pmid : str
@@ -268,6 +276,7 @@ def get_target_chemblid(target_upid):
     Parameters
     ----------
     target_upid : str
+
     Returns
     -------
     target_chembl_id : str
@@ -287,6 +296,7 @@ def get_mesh_id(nlm_mesh):
     Parameters
     ----------
     nlm_mesh : str
+
     Returns
     -------
     mesh_id : str
@@ -305,6 +315,7 @@ def get_pcid(mesh_id):
     Parameters
     ----------
     mesh : str
+
     Returns
     -------
     pcid : str
@@ -324,6 +335,7 @@ def get_chembl_id(nlm_mesh):
     Parameters
     ----------
     nlm_mesh : str
+
     Returns
     -------
     chembl_id : str
