@@ -1,7 +1,7 @@
-from indra.util import _require_python3
+from indra.util import _require_python3, write_unicode_csv
 import indra.tools.assemble_corpus as ac
-from indra.tools.reading.submit_reading_pipeline_aws import \
-    submit_run_reach, submit_combine, wait_for_complete
+#from indra.tools.reading.submit_reading_pipeline_aws import \
+#    submit_run_reach, submit_combine, wait_for_complete
 import assemble_pysb
 import process_data
 from util import *
@@ -22,6 +22,16 @@ def run_reading(pmid_fname):
     # Download the file and save
 
 
+def get_stmt_sif(stmts, fname):
+    rows = []
+    for stmt in stmts:
+        agent_names = [a.name for a in stmt.agent_list() if a is not None]
+        if len(agent_names) != 2:
+            continue
+        rows.append((agent_names[0], stmt.uuid, agent_names[1]))
+    write_unicode_csv(fname, rows)
+
+
 if __name__ == '__main__':
     # Load the data and get the gene names
     data = process_data.read_rppa_data()
@@ -35,7 +45,7 @@ if __name__ == '__main__':
     pre_stmts_file = prefixed_pkl('preassembled')
     if reassemble:
         # Load various files that were previously produced
-        sources = ['reach', 'trips', 'bel', 'biopax', 'phosphosite', 'r3',
+        sources = ['indradb', 'trips', 'bel', 'biopax', 'phosphosite', 'r3',
                    'sparser']
         stmts = []
         for source in sources:

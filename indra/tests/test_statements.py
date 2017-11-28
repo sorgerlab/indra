@@ -1466,3 +1466,11 @@ def test_get_act_condition():
     assert ac.activity_type == 'kinase'
     assert not ac.is_active
 
+def test_bound_condition_matches():
+    bcs = [BoundCondition(Agent('a'), True),
+           BoundCondition(Agent('b'), True),
+           BoundCondition(Agent('a'), False),
+           BoundCondition(Agent('a'), True)]
+    assert not bcs[0].matches(bcs[1])
+    assert not bcs[0].matches(bcs[2])
+    assert bcs[0].matches(bcs[3])

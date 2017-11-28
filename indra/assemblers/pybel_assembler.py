@@ -1,12 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.statements import *
-from indra.databases import hgnc_client
 import logging
+import networkx as nx
+from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
-from copy import deepcopy, copy
 from pybel.parser.language import pmod_namespace
+from indra.statements import *
+from indra.databases import hgnc_client
 from indra.assemblers.pysb_assembler import mod_acttype_map
 
 
@@ -104,7 +105,7 @@ class PybelAssembler(object):
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
-    
+ 
     def save_model(self, path, output_format=None):
         """Saves the :class:`pybel.BELGraph` using one of the outputs from 
         :py:mod:`pybel`
@@ -127,7 +128,29 @@ class PybelAssembler(object):
                     pybel.to_cx_file(self.model, fh)
                 else: # output_format == 'bel':
                     pybel.to_bel(self.model, fh)
-    
+
+
+    def to_signed_graph(self, symmetric_variant_links=False):
+        edge_set = set()
+        for u, v, edge_data in self.model.edges(data=True):
+            rel = edge_data.get('relation')
+            if rel in (pc.INCREASES, pc.DIRECTLY_INCREASES):
+                edge_set.add((u, v, 0))
+            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
+                edge_set.add((u, v, 0))
+                if symmetric_variant_links:
+                    edge_set.add((v, u, 0))
+            elif rel in (pc.DECREASES, pc.DIRECTLY_DECREASES):
+                edge_set.add((u, v, 1))
+            else:
+                continue
+        # Turn the tuples into dicts
+        edge_data = [(u, v, dict([('sign', sign)])) for u, v, sign in edge_set]
+        graph = nx.MultiDiGraph()
+        graph.add_edges_from(edge_data)
+        return graph
+
+
     def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
@@ -342,15 +365,20 @@ def _get_agent_node_no_bcs(agent):
 
 
 def _get_agent_grounding(agent):
-    hgnc_id = agent.db_refs.get('HGNC')
-    uniprot_id = agent.db_refs.get('UP')
-    be_id = agent.db_refs.get('BE')
-    pfam_id = agent.db_refs.get('PF')
-    fa_id = agent.db_refs.get('FA')
-    chebi_id = agent.db_refs.get('CHEBI')
-    pubchem_id = agent.db_refs.get('PUBCHEM')
-    go_id = agent.db_refs.get('GO')
-    mesh_id = agent.db_refs.get('MESH')
+    def _get_id(agent, key):
+        id = agent.db_refs.get(key)
+        if isinstance(id, list):
+            id = id[0]
+        return id
+    hgnc_id = _get_id(agent, 'HGNC')
+    uniprot_id = _get_id(agent, 'UP')
+    be_id = _get_id(agent, 'BE')
+    pfam_id = _get_id(agent, 'PF')
+    fa_id = _get_id(agent, 'FA')
+    chebi_id = _get_id(agent, 'CHEBI')
+    pubchem_id = _get_id(agent, 'PUBCHEM')
+    go_id = _get_id(agent, 'GO')
+    mesh_id = _get_id(agent, 'MESH')
     if hgnc_id:
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         if not hgnc_name:

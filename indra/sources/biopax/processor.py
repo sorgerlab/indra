@@ -1080,25 +1080,30 @@ class BiopaxProcessor(object):
         xrefs = bp_entref.getXref().toArray()
         chebi_ids = []
         for xr in xrefs:
-            if xr.getDb().upper() == 'CHEBI':
-                chebi_ids.append(xr.getId().replace('CHEBI:', ''))
-            elif xr.getDb().upper() == 'CAS':
+            dbname = xr.getDb()
+            dbid = xr.getId()
+            if dbname is None:
+                continue
+            dbname = dbname.upper()
+            if dbname == 'CHEBI':
+                chebi_ids.append(dbid.replace('CHEBI:', ''))
+            elif dbname == 'CAS':
                 # Special handling of common entities
-                if xr.getId() == '86-01-1':
+                if dbid == '86-01-1':
                     chebi_ids.append('15996')
-                elif xr.getId() == '86527-72-2':
+                elif dbid == '86527-72-2':
                     chebi_ids.append('15996')
-                elif xr.getId() == '24696-26-2':
+                elif dbid == '24696-26-2':
                     chebi_ids.append('17761')
-                elif xr.getId() == '23261-20-3':
+                elif dbid == '23261-20-3':
                     chebi_ids.append('18035')
-                elif xr.getId() == '146-91-8':
+                elif dbid == '146-91-8':
                     chebi_ids.append('17552')
-                elif xr.getId() == '165689-82-7':
+                elif dbid == '165689-82-7':
                     chebi_ids.append('16618')
                 else:
                     logger.info('Unknown cas id: %s (%s)' %
-                                 (xr.getId(), bpe.getDisplayName()))
+                                 (dbid, bpe.getDisplayName()))
         if not chebi_ids:
             return None
         elif len(chebi_ids) == 1:

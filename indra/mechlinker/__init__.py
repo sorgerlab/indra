@@ -5,7 +5,7 @@ import uuid
 import logging
 import networkx
 import itertools
-from copy import deepcopy
+from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import hierarchies
 
@@ -194,7 +194,7 @@ class MechLinker(object):
                     new_stmts.append(stmt)
                 else:
                     for af in active_forms:
-                        new_stmt = deepcopy(stmt)
+                        new_stmt = fast_deepcopy(stmt)
                         new_stmt.uuid = str(uuid.uuid4())
                         evs = af.apply_to(new_stmt.enz)
                         new_stmt.partial_evidence = evs
@@ -210,7 +210,7 @@ class MechLinker(object):
                     new_stmts.append(stmt)
                 else:
                     for af in active_forms:
-                        new_stmt = deepcopy(stmt)
+                        new_stmt = fast_deepcopy(stmt)
                         new_stmt.uuid = str(uuid.uuid4())
                         evs = af.apply_to(new_stmt.subj)
                         new_stmt.partial_evidence = evs

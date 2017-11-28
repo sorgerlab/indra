@@ -134,8 +134,19 @@ def test_pg_check_unreachable_unsigned():
     assert not pg
 
 
+def test_multidigraph_signed():
+    graph = networkx.MultiDiGraph()
+    graph.add_edges_from([('A', 'B', {'sign': 0}), ('A', 'B', {'sign': 1})])
+    f_level, b_level = paths_graph.get_reachable_sets(graph, 'A', 'B',
+                                                      max_depth=3, signed=True)
+    assert f_level[0] == {('A', 0)}
+    assert f_level[1] == {('B', 0), ('B', 1)}
+    assert b_level[0] == {('B', 0)}
+    assert b_level[1] == {('A', 0), ('A', 1)}
+
+
 if __name__ == '__main__':
-    pass
+    test_multidigraph_signed()
     #test_regression_on_er_graph()
     #test_get_reachable_sets_unsigned()
     #test_paths_graph_unsigned()

@@ -3,7 +3,7 @@ from builtins import dict, str
 import re
 import logging
 import itertools
-from copy import deepcopy
+from indra.util import fast_deepcopy
 
 from pysb import (Model, Monomer, Parameter, Expression, Observable, Rule,
         Annotation, ComponentDuplicateNameError, ComplexPattern,
@@ -2430,7 +2430,7 @@ class PysbPreassembler(object):
                 # Handle the case where an activity flag is set
                 agent_to_add = stmt.agent
                 if stmt.agent.activity:
-                    new_agent = deepcopy(stmt.agent)
+                    new_agent = fast_deepcopy(stmt.agent)
                     new_agent.activity = None
                     agent_to_add = new_agent
                 base_agent.add_activity_form(agent_to_add, stmt.is_active)
@@ -2470,7 +2470,7 @@ class PysbPreassembler(object):
                     # We now iterate over the active agent forms and create
                     # new agents
                     for af in active_forms:
-                        new_agent = deepcopy(agent)
+                        new_agent = fast_deepcopy(agent)
                         self._set_agent_context(af, new_agent)
                         agent_forms[i].append(new_agent)
                 # Otherwise we just copy over the agent as is
@@ -2480,7 +2480,7 @@ class PysbPreassembler(object):
             # statements as needed
             agent_combs = itertools.product(*agent_forms)
             for agent_comb in agent_combs:
-                new_stmt = deepcopy(stmt)
+                new_stmt = fast_deepcopy(stmt)
                 new_stmt.set_agent_list(agent_comb)
                 new_stmts.append(new_stmt)
         self.statements = new_stmts

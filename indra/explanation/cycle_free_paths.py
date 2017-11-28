@@ -384,6 +384,32 @@ def sample_many_paths(source, target, H, t, n):
     return P
 
 
+def sample_paths(g, source, target, max_depth, target_polarity=None,
+                 num_paths=1000):
+    print('Source: %s' % source)
+    signed = True if target_polarity is not None else False
+
+    (f_level, b_level)  = paths_graph.get_reachable_sets(
+                                g, source, target, max_depth=10, signed=signed)
+    all_paths = []
+    for length in range(1, max_depth):
+        print("Path length: %d" % length)
+        pg_raw = paths_graph.paths_graph(g, source, target, length, f_level,
+                             b_level, signed=signed,
+                             target_polarity=target_polarity)
+        # Append depths to our source and target nodes
+        src = (0, (source, 0))
+        tgt = (length, (target, target_polarity))
+        dic_PG = cycle_free_paths_graph(pg_raw, src, tgt, length)
+        G_cf, T = dic_PG[length-1]
+        try:
+            P = sample_many_paths(src, tgt, G_cf, T, num_paths)
+            all_paths.extend(P)
+        except IndexError:
+            pass
+    return all_paths
+
+
 if __name__ == '__main__':
     G_0 = paths_graph.get_edges('korkut_im.sif')
     source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'

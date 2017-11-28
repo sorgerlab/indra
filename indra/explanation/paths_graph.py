@@ -1,7 +1,8 @@
 import random
 import itertools
-from indra import logging
+import numpy as np
 import networkx as nx
+from indra import logging
 
 logger = logging.getLogger('paths_graph')
 
@@ -60,6 +61,11 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     directions = (
       ('forward', f_level, lambda u: [((u, v), v) for v in g.successors(u)]),
       ('backward', b_level, lambda v: [((u, v), u) for u in g.predecessors(v)]))
+    # Utility function to make code below more compact
+    def _add_signed_edge(reachable_set, node_polarity, edge_polarity):
+        cum_polarity = (node_polarity + edge_polarity) % 2
+        reachable_set.add((reachable_node, cum_polarity))
+    # Iterate over levels
     for direction, level, edge_func in directions:
         visited = set([source]) if direction == 'forward' else set([target])
         for i in range(1, max_depth+1):
@@ -68,9 +74,17 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
             if signed:
                 for node, node_polarity in level[i-1]:
                     for (u, v), reachable_node in edge_func(node):
-                        edge_polarity = g.get_edge_data(u, v)['sign']
-                        cum_polarity = (node_polarity + edge_polarity) % 2
-                        reachable_set.add((reachable_node, cum_polarity))
+                        edge_dict = g.get_edge_data(u, v)
+                        edge_polarity = edge_dict.get('sign')
+                        # If this is a multidigraph, get_edge_data will return
+                        # a dict keyed by integers
+                        if edge_polarity is None:
+                            for edge_key, edge_data in edge_dict.items():
+                                _add_signed_edge(reachable_set, node_polarity,
+                                                 edge_data['sign'])
+                        else:
+                            _add_signed_edge(reachable_set, node_polarity,
+                                             edge_polarity)
             # Unsigned graph
             else:
                 for node in level[i-1]:
@@ -190,34 +204,69 @@ def paths_graph(g, source, target, length, f_level, b_level,
     # Finally we add edges between these nodes if they are found in the original
     # graph. Note that we have to check for an edge of the appropriate polarity.
     pg_edges = set()
+    if signed:
+        g_edges_raw = g.edges(data=True)
+        g_edges = [(u, v, data['sign']) for u, v, data in g_edges_raw]
+    else:
+        g_edges = [(u, v) for u, v in g.edges()]
     for i in range(0, length):
-        edges_at_this_level = set()
-        for u, v in itertools.product(pg_nodes[i], pg_nodes[i+1]):
-            # Signed graphs
-            if signed:
-                u_name, u_pol = u[1]
-                v_name, v_pol = v[1]
-                if (u_name, v_name) in g.edges():
+        actual_edges = set()
+        logger.info("paths_graph: identifying edges at level %d" % i)
+        if signed:
+            possible_edges = set()
+            edge_lookup = {}
+            for edge in itertools.product(pg_nodes[i], pg_nodes[i+1]):
+                u_name, u_pol = edge[0][1]
+                v_name, v_pol = edge[1][1]
+                # If the polarity between neighboring nodes is the same, then
+                # we need a positive edge
+                required_sign = 0 if u_pol == v_pol else 1
+                edge_key = (u_name, v_name, required_sign)
+                possible_edges.add(edge_key)
+                edge_lookup[edge_key] = edge
+            for edge_key in possible_edges.intersection(g_edges):
+                actual_edges.add(edge_lookup[edge_key])
+
+            """
+            actual_
+                if (u_name, v_name) in g_edges:
+                    edge_dict = g.get_edge_data(u, v)
+                    edge_polarity = edge_dict.get('sign')
+                    # If this is a multidigraph, get_edge_data will return
+                    # a dict keyed by integers
+                    if edge_polarity is None:
+                        for edge_key, edge_data in edge_dict.items():
+                            _add_signed_edge(reachable_set, node_polarity,
+                                             edge_data['sign'])
+                    else:
+                        _add_signed_edge(reachable_set, node_polarity,
+                                         edge_polarity)
+
                     edge_polarity = g.get_edge_data(u_name, v_name)['sign']
+
                     # Look for an edge that flips or doesn't flip the polarity
                     # of the path depending on what we see in the cumulative
                     # polarities
                     if (u_pol == v_pol and edge_polarity == 0) or \
                        (u_pol != v_pol and edge_polarity == 1):
-                        edges_at_this_level.add((u, v))
-            # Unsigned graphs
-            else:
-                u_name = u[1]
-                v_name = v[1]
-                if (u_name, v_name) in g.edges():
-                    edges_at_this_level.add((u, v))
-        pg_edges |= edges_at_this_level
+                        actual_edges.add((u, v))
+            """
+        else:
+            # Build a set representing possible edges between adjacent levels
+            possible_edges = set([(u[1], v[1]) for u, v in
+                               itertools.product(pg_nodes[i], pg_nodes[i+1])])
+            # Actual edges are the ones contained in the original graph; add
+            # to list with prepended depths
+            for u, v in possible_edges.intersection(g_edges):
+                actual_edges.add(((i, u), (i+1, v)))
+        pg_edges |= actual_edges
     path_graph = nx.DiGraph()
     path_graph.add_edges_from(pg_edges)
     return path_graph
 
 
-def sample_single_path(pg, source, target, signed=False, target_polarity=0):
+def sample_single_path(pg, source, target, signed=False, target_polarity=0,
+                       weighted=False):
     """Sample a path from the paths graph."""
     # If the path graph is empty, there are no paths
     if not pg:
@@ -234,9 +283,18 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0):
         path = [source_node[1]]
         current_node = source_node
         while True:
-            succs = pg.successors(current_node)
-            if succs:
-                v = random.choice(succs)
+            if weighted:
+                out_edges = pg.out_edges(current_node, data=True)
+            else:
+                out_edges = pg.out_edges(current_node)
+            if out_edges:
+                if weighted:
+                    weights = [t[2]['weight'] for t in out_edges]
+                    pred_idx = np.random.choice(range(len(out_edges)),
+                                                p=weights)
+                    v = out_edges[pred_idx][1]
+                else:
+                    v = random.choice(out_edges)[1]
                 # If we've already hit this node, it's a cycle; skip
                 if v[1] in path:
                     break

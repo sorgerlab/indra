@@ -1,13 +1,16 @@
+import re
 import numpy
 import pickle
 from pysb.integrate import Solver
 from indra.statements import *
 from indra.mechlinker import MechLinker
 import indra.tools.assemble_corpus as ac
-from indra.databases import context_client, cbio_client
+from indra.databases import context_client, cbio_client, hgnc_client, \
+                            uniprot_client
 from indra.assemblers import PysbAssembler, IndexCardAssembler
 from util import prefixed_pkl, pklload
-from process_data import antibody_map, cell_lines, read_ccle_variants
+from process_data import antibody_map, cell_lines, read_ccle_variants, \
+                         drug_targets, drug_grounding, agent_from_gene_name
 
 def assemble_pysb(stmts, data_genes, contextualize=False):
     # Filter the INDRA Statements to be put into the model
@@ -15,6 +18,8 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
     stmts = ac.filter_direct(stmts)
     stmts = ac.filter_belief(stmts, 0.95)
     stmts = ac.filter_top_level(stmts)
+    # Strip the extraneous supports/supported by here
+    strip_supports(stmts)
     stmts = ac.filter_gene_list(stmts, data_genes, 'all')
     stmts = ac.filter_enzyme_kinase(stmts)
     stmts = ac.filter_mod_nokinase(stmts)
@@ -25,10 +30,7 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
     ml.reduce_activities()
     ml.gather_modifications()
     ml.reduce_modifications()
-    af_stmts = ac.filter_by_type(ml.statements, ActiveForm)
-    non_af_stmts = ac.filter_by_type(ml.statements, ActiveForm, invert=True)
-    af_stmts = ac.run_preassembly(af_stmts)
-    stmts = af_stmts + non_af_stmts
+    stmts = normalize_active_forms(ml.statements)
     # Replace activations when possible
     ml = MechLinker(stmts)
     ml.gather_explicit_activities()
@@ -46,12 +48,18 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
             break
         num_stmts = len(ml.statements)
     stmts = ml.statements
+    # Save the Statements here
+    ac.dump_statements(stmts, prefixed_pkl('pysb_stmts'))
+
+
+    # Add drug target Statements
+    drug_target_stmts = get_drug_target_statements()
+    stmts += drug_target_stmts
 
     # Just generate the generic model
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    ac.dump_statements(stmts, prefixed_pkl('pysb_stmts'))
     with open(prefixed_pkl('pysb_model'), 'wb') as f:
         pickle.dump(model, f)
 
@@ -73,6 +81,37 @@ def assemble_pysb(stmts, data_genes, contextualize=False):
         ac.dump_statements(stmtsc, prefixed_pkl('pysb_stmts_%s' % cell_line))
         with open(prefixed_pkl('pysb_model_%s' % cell_line), 'wb') as f:
             pickle.dump(model, f)
+
+
+def strip_supports(stmts):
+    for stmt in stmts:
+        stmt.supports = []
+        stmt.supported_by = []
+
+
+def get_drug_target_statements():
+    stmts = []
+    for drug, targets in drug_targets.items():
+        for target in targets:
+            target_agent = agent_from_gene_name(target)
+            drug_agent = Agent(drug, db_refs=drug_grounding[drug])
+            st = DecreaseAmount(drug_agent, target_agent)
+            stmts.append(st)
+    return stmts
+
+
+def normalize_active_forms(stmts):
+    af_stmts = ac.filter_by_type(stmts, ActiveForm)
+    relevant_af_stmts = []
+    for stmt in af_stmts:
+        if (not stmt.agent.mods) and (not stmt.agent.mutations):
+            continue
+        relevant_af_stmts.append(stmt)
+    print('%d relevant ActiveForms' % len(relevant_af_stmts))
+    non_af_stmts = ac.filter_by_type(stmts, ActiveForm, invert=True)
+    af_stmts = ac.run_preassembly(relevant_af_stmts)
+    stmts = af_stmts + non_af_stmts
+    return stmts
 
 
 def contextualize_stmts(stmts, cell_line, genes):
@@ -211,3 +250,32 @@ def print_initial_conditions(cell_lines, gene_names, fname):
         if not no_val:
             fh.write(line + '\n')
     fh.close()
+
+
+def process_kappa_dead_rules(kasa_output):
+    dead_rules = []
+    for line in kasa_output.split('\n'):
+        match = re.match('rule ([\d]+): ([a-zA-Z0-9_]+) will never be applied.',
+                         line.strip())
+        if match:
+            dead_rules.append(match.groups()[1])
+    return dead_rules
+
+
+def remove_kappa_dead_rules(stmts, model, dead_rules):
+    # FIXME: we should probably check that a statement we remove has all its
+    # generated rules recognized as dead. If it has at least one live rule
+    # coming from it, we shouldn't remove it. But the dead rules should still
+    # be removed somehow from the final model.
+    dead_uuids  = set()
+    for rule in dead_rules:
+        for ann in model.annotations:
+            if ann.subject == rule and ann.predicate == 'from_indra_statement':
+                dead_uuids.add(ann.object)
+    all_uuids = {stmt.uuid for stmt in stmts}
+    live_uuids = all_uuids - dead_uuids
+    stmts = ac.filter_uuid_list(stmts, live_uuids)
+    pa = PysbAssembler()
+    pa.add_statements(stmts)
+    model = pa.make_model()
+    return stmts, model

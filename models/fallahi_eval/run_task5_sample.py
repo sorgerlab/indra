@@ -2,64 +2,49 @@ import itertools
 from indra.assemblers import EnglishAssembler
 from indra.explanation.reporting import stmts_from_path
 from indra.explanation.model_checker import ModelChecker
-from util import pkldump, pklload
+from util import pklload, pkldump
 from process_data import *
 
 
-def get_task_1(data, inverse=False):
-    """Return the test cases to be explained for Task 1."""
-    # TASK 1
-    # We observe a dose-dependent decrease of p-S6(S235/236)
-    # across five cell lines (C32, LOXIMVI, MMACSF, MZ7MEL, RVH421) and all
-    # drugs. Feel free to use any or all of the time points in your
-    # explanation.
+def get_task_5(data, inverse=False):
+    """Return the test cases to be explained for Task 5."""
+    # TASK 5: We observe a dose-dependent increase in total c-Jun
+    # in the cell line RVH421 but a dose-dependent decrease in total
+    # c-Jun in the cell line C32.
     antibody_agents = get_antibody_agents()
-    obs_agents = antibody_agents['p-S6(S235/236)']
-    # We fix the time point to 10 hours
-    time = 10
+    obs_agents = antibody_agents['Total c-Jun']
+    # We fix the time point to 24 hours
+    time = 24
+    # We look at doses at least 0.1 since the effect is only observed there
+    dose_lower_bound = 0.1
     # Structure: cell line / drug / dose / time
     stmts_to_check = {}
-    for cell_line  in ('C32', 'LOXIMVI', 'MMACSF', 'MZ7MEL', 'RVH421'):
+    for cell_line  in ('C32', 'RVH421'):
         stmts_to_check[cell_line] = {}
         for drug in drug_names.keys():
             stmts_to_check[cell_line][drug] = {}
-            target_agent = [agent_phos(target, []) for target in drug_targets[drug]][0]
+            drug_agent = Agent(drug, db_refs=drug_grounding[drug])
             for dose in drug_doses:
+                if dose < dose_lower_bound:
+                    continue
                 values = get_agent_values_for_condition(data, cell_line,
                                                         drug, time, dose)
                 stmts_to_check[cell_line][drug][dose] = [[], values]
                 for obs in obs_agents:
-                    if not inverse:
-                        st = Phosphorylation(target_agent, obs)
+                    if (cell_line == 'C32' and not inverse) or \
+                        (cell_line == 'RVH421' and inverse):
+                        st = DecreaseAmount(drug_agent, obs)
                     else:
-                        st = Dephosphorylation(target_agent, obs)
+                        st = IncreaseAmount(drug_agent, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
-
-def get_agent_values(antibody_agents, values):
-    agent_values = {}
-    for ab, value in values.items():
-        for agent in antibody_agents[ab]:
-            agent_values[agent] = value
-    return agent_values
-
-
-def get_global_mc(model, stmts_to_check, agents_to_observe):
-    all_stmts_condition = []
-    for cell_line in stmts_to_check.keys():
-        for drug in stmts_to_check[cell_line].keys():
-            stmts_condition, _ = stmts_to_check[cell_line][drug][1.0]
-            all_stmts_condition += stmts_condition
-    mc = ModelChecker(model, all_stmts_condition, agents_to_observe)
-    mc.prune_influence_map()
-    return mc
 
 ##################
 # Refactor these in reusable chunks into explanations/reporting
 def export_paths(scored_paths, model, stmts):
     """Export paths for pathway map in JSON-like format."""
-    conc = 0.1
+    conc = 1.0
     time = 10
     paths = {}
     for cell_line in scored_paths.keys():
@@ -75,14 +60,19 @@ def export_paths(scored_paths, model, stmts):
 
 
 def report_paths(scored_paths, model, stmts, cell_line):
+    """Report paths for a specific cell line."""
     citations = {}
     citation_count = 1
-    ab_name = 'p-S6(S235/236)'
+    ab_name = 'Total c-Jun'
+    if cell_line == 'C32':
+        pol = 'decreased'
+    else:
+        pol = 'increased'
     for drug in scored_paths.keys():
         paths = scored_paths[drug]
         for path, score in paths[:1]:
-            title = 'How does %s treatment result in decreased %s' % \
-                (drug, ab_name)
+            title = 'How does %s treatment result in %s %s' % \
+                (drug, pol, ab_name)
             title += ' in %s cells?' % cell_line
             print(title)
             print('=' * len(title))
@@ -123,6 +113,24 @@ def report_paths(scored_paths, model, stmts, cell_line):
     print(references)
 #################
 
+def get_agent_values(antibody_agents, values):
+    agent_values = {}
+    for ab, value in values.items():
+        for agent in antibody_agents[ab]:
+            agent_values[agent] = value
+    return agent_values
+
+
+def get_global_mc(model, stmts_to_check, agents_to_observe):
+    all_stmts_condition = []
+    for cell_line in stmts_to_check.keys():
+        for drug in stmts_to_check[cell_line].keys():
+            stmts_condition, _ = stmts_to_check[cell_line][drug][1.0]
+            all_stmts_condition += stmts_condition
+    mc = ModelChecker(model, all_stmts_condition, agents_to_observe, do_sampling=True)
+    mc.prune_influence_map()
+    return mc
+
 
 def flatten(x): return list(itertools.chain.from_iterable(x))
 
@@ -130,21 +138,20 @@ def flatten(x): return list(itertools.chain.from_iterable(x))
 if __name__ == '__main__':
     INVERSE = False
     if INVERSE:
-        print('Running Task 1 in INVERSE mode as control')
+        print('Running Task 5 in INVERSE mode as control')
         print('=========================================')
-    # Some basic setup
     data = read_rppa_data()
     antibody_agents = get_antibody_agents()
     agents_to_observe = []
     for agents in antibody_agents.values():
         agents_to_observe += agents
 
-    # Get all the data for Task 1
-    stmts_to_check = get_task_1(data, INVERSE)
-    global_mc = None
+    # Get all the data for Task 5
+    stmts_to_check = get_task_5(data, INVERSE)
     dose = 1.0
     scored_paths = {}
     models = {}
+    global_mc = None
     # Run model checking per cell line
     for cell_line in stmts_to_check.keys():
         print('Cell line: %s\n=============' % cell_line)
@@ -154,8 +161,7 @@ if __name__ == '__main__':
         # - model contextualized to the cell line
         # - the statements for the given condition
         # - agents for which observables need to be made
-        global_mc = get_global_mc(model, stmts_to_check,
-                                  agents_to_observe)
+        global_mc = get_global_mc(model, stmts_to_check, agents_to_observe)
         for drug in stmts_to_check[cell_line].keys():
             print('Drug: %s\n=============' % drug)
             # Get all the statements and values for the condition
@@ -163,7 +169,7 @@ if __name__ == '__main__':
                 stmts_to_check[cell_line][drug][dose]
             path_results = []
             for stmt in stmts_condition:
-                pr = global_mc.check_statement(stmt, 1000, 8)
+                pr = global_mc.check_statement(stmt, 100, 7)
                 path_results.append(pr)
             # Get a dict of measured values by INDRA Agents for this condition
             agent_values = get_agent_values(antibody_agents, values_condition)
@@ -183,7 +189,7 @@ if __name__ == '__main__':
         models[cell_line] = global_mc.model
 
     # Dump results in standard folder
-    fname = 'task1_scored_paths'
+    fname = 'task5_scored_paths'
     if INVERSE:
         fname += '_inverse'
     pkldump(fname, (scored_paths, models))

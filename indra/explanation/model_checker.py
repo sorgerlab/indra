@@ -15,6 +15,9 @@ from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
+from indra.explanation import cycle_free_paths as cfp
+from indra.explanation import paths_graph as pg
+from collections import Counter
 
 logger = logging.getLogger('model_checker')
 
@@ -123,9 +126,15 @@ class ModelChecker(object):
         A list of INDRA Statements to check the model against.
     agent_obs: Optional[list[indra.statements.Agent]]
         A list of INDRA Agents in a given state to be observed.
+    do_sampling : bool
+        Whether to use breadth-first search or weighted sampling to
+        generate paths. Default is False (breadth-first search).
+    seed : int
+        Random seed for sampling (optional, default is None).
     """
 
-    def __init__(self, model, statements=None, agent_obs=None):
+    def __init__(self, model, statements=None, agent_obs=None,
+                 do_sampling=False, seed=None):
         self.model = model
         if statements:
             self.statements = statements
@@ -135,6 +144,10 @@ class ModelChecker(object):
             self.agent_obs = agent_obs
         else:
             self.agent_obs = []
+        if seed is not None:
+            np.random.seed(seed)
+        # Whether to do sampling
+        self.do_sampling = do_sampling
         # Influence map
         self._im = None
         # Map from statements to associated observables
@@ -367,6 +380,140 @@ class ModelChecker(object):
         return PathResult(False, 'NO_PATHS_FOUND',
                           max_paths, max_path_length)
 
+    def _get_input_rules(self, subj_mp):
+        if subj_mp is None:
+            raise ValueError("Cannot take None as an argument for subj_mp.")
+        input_rules = _match_lhs(subj_mp, self.model.rules)
+        logger.debug('Found %s input rules matching %s' %
+                     (len(input_rules), str(subj_mp)))
+        # Filter to include only rules where the subj_mp is actually the
+        # subject (i.e., don't pick up upstream rules where the subject
+        # is itself a substrate/object)
+        # FIXME: Note that this will eliminate rules where the subject
+        # being checked is included on the left hand side as 
+        # a bound condition rather than as an enzyme.
+        subj_rules = pa.rules_with_annotation(self.model,
+                                              subj_mp.monomer.name,
+                                              'rule_has_subject')
+        logger.debug('%d rules with %s as subject' %
+                     (len(subj_rules), subj_mp.monomer.name))
+        input_rule_set = set([r.name for r in input_rules]).intersection(
+                             set([r.name for r in subj_rules]))
+        logger.debug('Final input rule set contains %d rules' %
+                     len(input_rule_set))
+        return input_rule_set
+
+    def _sample_paths(self, input_rule_set, obs_name, target_polarity,
+                      max_paths=1, max_path_length=5):
+        if max_paths == 0:
+            raise ValueError("max_paths cannot be 0 for path sampling.")
+        # Convert path polarity representation from 0/1 to 1/-1
+        def convert_polarities(path_list):
+            return [tuple((n[0], 0 if n[1] > 0 else 1)
+                          for n in path)
+                          for path in path_list]
+
+        pg_polarity = 0 if target_polarity > 0 else 1
+        nx_graph = _agraph_to_digraph(self.get_im())
+        # Add edges from dummy node to input rules
+        source_node = 'SOURCE_NODE'
+        for rule in input_rule_set:
+            nx_graph.add_edge(source_node, rule, attr_dict={'sign': 0})
+        # -------------------------------------------------
+        # Create combined paths_graph
+        f_level, b_level = pg.get_reachable_sets(nx_graph, source_node,
+                                                 obs_name, max_path_length+1,
+                                                 signed=True)
+        pg_dict = {}
+        for path_length in range(1, max_path_length+2):
+            pg_dict[path_length] = \
+                    pg.paths_graph(nx_graph, source_node, obs_name, path_length,
+                                   f_level, b_level, signed=True,
+                                   target_polarity=pg_polarity)
+        combined_pg = pg.combine_path_graphs(pg_dict)
+        # Make sure the combined paths graph is not empty
+        if not combined_pg:
+            pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
+            pr.path_metrics = None
+            pr.paths = []
+            return pr
+
+        # Get a dict of rule objects
+        rule_obj_dict = {}
+        for ann in self.model.annotations:
+            if ann.predicate == 'rule_has_object':
+                rule_obj_dict[ann.subject] = ann.object
+
+        # Get monomer initial conditions
+        ic_dict = {}
+        for mon in self.model.monomers:
+            # FIXME: A hack that depends on the _0 convention
+            ic_name = '%s_0' % mon.name
+            # TODO: Wrap this in try/except?
+            ic_param = self.model.parameters[ic_name]
+            ic_value = ic_param.value
+            ic_dict[mon.name] = ic_value
+
+        # Set weights in PG based on model initial conditions
+        for cur_node in combined_pg.nodes():
+            edge_weights = {}
+            rule_obj_list = []
+            edge_weights_by_gene = {}
+            for u, v in combined_pg.out_edges(cur_node):
+                v_rule = v[1][0]
+                # Get the object of the rule (a monomer name)
+                rule_obj = rule_obj_dict.get(v_rule)
+                if rule_obj:
+                    # Add to list so we can count instances by gene
+                    rule_obj_list.append(rule_obj)
+                    # Get the abundance of rule object from the initial
+                    # conditions
+                    # TODO: Wrap in try/except?
+                    ic_value = ic_dict[rule_obj]
+                else:
+                    ic_value = 1.0
+                edge_weights[(u, v)] = ic_value
+                edge_weights_by_gene[rule_obj] = ic_value
+            # Get frequency of different rule objects
+            rule_obj_ctr = Counter(rule_obj_list)
+            # Normalize results by weight sum and gene frequency at this level
+            edge_weight_sum = sum(edge_weights_by_gene.values())
+            edge_weights_norm = {}
+            for e, v in edge_weights.items():
+                v_rule = e[1][1][0]
+                rule_obj = rule_obj_dict.get(v_rule)
+                if rule_obj:
+                    rule_obj_count = rule_obj_ctr[rule_obj]
+                else:
+                    rule_obj_count = 1
+                edge_weights_norm[e] = ((v / float(edge_weight_sum)) /
+                                        float(rule_obj_count))
+            # Iterate again, adding edge weights to paths graph
+            nx.set_edge_attributes(combined_pg, 'weight', edge_weights_norm)
+            # Update weights in paths graph
+
+        # Sample from the combined paths graph (eliminates cycles)
+        paths = []
+        for i in range(max_paths):
+            path = pg.sample_single_path(combined_pg, source_node, obs_name,
+                                         signed=True, weighted=True,
+                                         target_polarity=pg_polarity)
+            paths.append(path)
+        # -------------------------------------------------
+        if paths:
+            pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
+            pr.path_metrics = None
+            # Convert path polarity representation from 0/1 to 1/-1
+            pr.paths = convert_polarities(paths)
+            # Strip off the SOURCE_NODE prefix
+            pr.paths = [p[1:] for p in pr.paths]
+        else:
+            assert False
+            pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
+            pr.path_metrics = None
+            pr.paths = []
+        return pr
+
     def _find_im_paths(self, subj_mp, obs_name, target_polarity,
                        max_paths=1, max_path_length=5):
         """Check for a source/target path in the influence map.
@@ -390,46 +537,37 @@ class ModelChecker(object):
             MonomerPattern to the object Observable with the appropriate
             polarity.
         """
+        logger.info(('Running path finding with max_paths=%d,'
+                     ' max_path_length=%d') % (max_paths, max_path_length))
         # Find rules in the model corresponding to the input
-        obs_mp = self.model.all_components()[obs_name].reaction_pattern
-        logger.info('Finding paths between %s and %s with polarity %s' %
-                    (subj_mp, obs_mp, target_polarity))
         if subj_mp is None:
             input_rule_set = None
         else:
-            input_rules = _match_lhs(subj_mp, self.model.rules)
-            logger.debug('Found %s input rules matching %s' %
-                         (len(input_rules), str(subj_mp)))
-            # Filter to include only rules where the subj_mp is actually the
-            # subject (i.e., don't pick up upstream rules where the subject
-            # is itself a substrate/object)
-            # FIXME: Note that this will eliminate rules where the subject
-            # being checked is included on the left hand side as 
-            # a bound condition rather than as an enzyme.
-            subj_rules = pa.rules_with_annotation(self.model,
-                                                  subj_mp.monomer.name,
-                                                  'rule_has_subject')
-            logger.debug('%d rules with %s as subject' %
-                         (len(subj_rules), subj_mp.monomer.name))
-            input_rule_set = set([r.name for r in input_rules]).intersection(
-                                 set([r.name for r in subj_rules]))
-            logger.debug('Final input rule set contains %d rules' %
-                         len(input_rule_set))
-            # If we have enzyme information but there are no input rules
-            # matching the enzyme, then there is no path
+            input_rule_set = self._get_input_rules(subj_mp)
             if not input_rule_set:
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj_mp, obs_name, target_polarity))
+
+        # -- Route to the path sampling function --
+        if self.do_sampling:
+            return self._sample_paths(input_rule_set, obs_name, target_polarity,
+                               max_paths, max_path_length)
+
+        # -- Do Breadth-First Enumeration --
         # Generate the predecessors to our observable and count the paths
-        # TODO: Make it optionally possible to return on the first path?
         path_lengths = []
         path_metrics = []
         for source, polarity, path_length in \
                     _find_sources(self.get_im(), obs_name, input_rule_set,
                                   target_polarity):
+
             pm = PathMetric(source, obs_name, polarity, path_length)
             path_metrics.append(pm)
             path_lengths.append(path_length)
+        logger.info('Finding paths between %s and %s with polarity %s' %
+                    (subj_mp, obs_name, target_polarity))
         # Now, look for paths
         paths = []
         if path_metrics and max_paths == 0:
@@ -463,7 +601,7 @@ class ModelChecker(object):
                               max_paths, max_path_length)
 
     def score_paths(self, paths, agents_values, loss_of_function=False,
-                    sigma=0.15):
+                    sigma=0.15, include_final_node=False):
         """Return scores associated with a given set of paths.
 
         Parameters
@@ -476,11 +614,19 @@ class ModelChecker(object):
         agents_values : dict[indra.statements.Agent, float]
             A dictionary of INDRA Agents and their corresponding measured
             value in a given experimental condition.
-        loss_of_function : boolean
+        loss_of_function : Optional[boolean]
             If True, flip the polarity of the path. For instance, if the effect
             of an inhibitory drug is explained, set this to True.
             Default: False
+        sigma : Optional[float]
+            The estimated standard deviation for the normally distributed
+            measurement error in the observation model used to score paths
+            with respect to data. Default: 0.15
+        include_final_node : Optional[boolean]
+            Determines whether the final node of the path is included in the
+            score. Default: False
         """
+        obs_model = lambda x: scipy.stats.norm(x, sigma)
         # Build up dict mapping observables to values
         obs_dict = {}
         for ag, val in agents_values.items():
@@ -497,7 +643,8 @@ class ModelChecker(object):
             # Look at every node in the path, excluding the final
             # observable...
             path_score = 0
-            for node, sign in path[:-1]:
+            last_path_node_index = -1 if include_final_node else -2
+            for node, sign in path[:last_path_node_index]:
                 # ...and for each node check the sign to see if it matches the
                 # data. So the first thing is to look at what's downstream
                 # of the rule
@@ -510,7 +657,6 @@ class ModelChecker(object):
                                 (node, sign, affected_obs, pred_sign))
                     measured_val = obs_dict.get(affected_obs)
                     if measured_val:
-                        obs_model = lambda x: scipy.stats.norm(x, sigma)
                         # For negative predictions use CDF (prob that given
                         # measured value, true value lies below 0)
                         if pred_sign <= 0:
@@ -519,10 +665,16 @@ class ModelChecker(object):
                         # (SF = 1 - CDF, i.e., prob that true value is
                         # above 0)
                         else:
-                            prob_correct = obs_model(measured_val).logsf(0) 
+                            prob_correct = obs_model(measured_val).logsf(0)
                         logger.info('Actual: %s, Log Probability: %s' %
                                     (measured_val, prob_correct))
                         path_score += prob_correct
+                if not self.rule_obs_dict[node]:
+                    logger.info('%s %s' % (node, sign))
+                    prob_correct = obs_model(0).logcdf(0)
+                    logger.info('Unmeasured node, Log Probability: %s' %
+                                (prob_correct))
+                    path_score += prob_correct
             # Normalized path
             #path_score = path_score / len(path)
             logger.info("Path score: %s" % path_score)
@@ -555,6 +707,7 @@ class ModelChecker(object):
         removal from affecting the lists of rule children during the comparison
         process.
         """
+        logger.info('Removing self loops')
         im = self.get_im()
         # First, remove all self-loops
         for e in im.edges():
@@ -564,15 +717,17 @@ class ModelChecker(object):
         # Now compare nodes pairwise and look for overlap between child nodes
         edges_to_remove = []
         remove_im_params(self.model, im)
-        predecessors = im.predecessors_iter
         successors = im.successors_iter
+        succ_dict = {}
+        logger.info('Get successorts of each node')
+        for node in im.nodes():
+            succ_dict[node] = set(successors(node))
+        logger.info('Compare combinations of successors')
         combos = list(itertools.combinations(im.nodes(), 2))
         for ix, (p1, p2) in enumerate(combos):
-            p1_children = set(successors(p1))
-            p2_children = set(successors(p2))
             # Children are identical except for mutual relationship
-            if p1_children.difference(p2_children) == set([p2]) and \
-               p2_children.difference(p1_children) == set([p1]):
+            if succ_dict[p1].difference(succ_dict[p2]) == set([p2]) and \
+               succ_dict[p2].difference(succ_dict[p1]) == set([p1]):
                 for u, v in ((p1, p2), (p2, p1)):
                     edge = im.get_edge(u, v)
                     edges_to_remove.append(edge)
@@ -600,7 +755,8 @@ def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
             obs_dict[obs] = val
 
     sigma = 0.2
-    obs_model = lambda x: scipy.stats.norm(x, sigma)
+    def obs_model(x):
+        return scipy.stats.norm(x, sigma)
 
     def _sample_pred(im, target, rule_obs_dict, obs_model):
         preds = list(_get_signed_predecessors(im, target, 1))
@@ -681,8 +837,8 @@ def _find_sources_with_paths(im, target, sources, polarity):
         # Don't allow trivial paths consisting only of the target observable
         if (sources is None or node in sources) and node_sign == polarity \
            and len(path) > 1:
-            logger.debug('Found path: %s' % _flip(im, path))
-            yield path
+            logger.debug('Found path: %s' % str(_flip(im, path)))
+            yield tuple(path)
         for predecessor, sign in _get_signed_predecessors(im, node, node_sign):
             # Only add predecessors to the path if it's not already in the
             # path--prevents loops
@@ -935,7 +1091,7 @@ def find_consumption_rules(cp, rules):
 
 def _flip(im, path):
     # Reverse the path and the polarities associated with each node
-    rev = list(reversed(path))
+    rev = tuple(reversed(path))
     return _path_with_polarities(im, rev)
 
 
@@ -957,7 +1113,7 @@ def _path_with_polarities(im, path):
     for ep_ix, ep in enumerate(edge_polarities):
         polarities_lprod.append(polarities_lprod[-1] * ep)
     assert len(path) == len(polarities_lprod)
-    return list(zip([node for node, sign in path], polarities_lprod))
+    return tuple(zip([node for node, sign in path], polarities_lprod))
     #assert path_polarity == 1 or path_polarity == -1
     #return True if path_polarity == 1 else False
     #return path_polarity
@@ -1010,10 +1166,13 @@ def _monomer_pattern_label(mp):
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
 
 
-def _agraph_to_multidigraph(agraph):
-    edges = [(e[0], e[1], dict([('polarity', _get_edge_sign(e))]))
-             for e in agraph.edges()]
-    mdg = nx.MultiDiGraph()
+def _agraph_to_digraph(agraph):
+    edges = []
+    for e in agraph.edges():
+        edge_sign = _get_edge_sign(e)
+        polarity = 0 if edge_sign > 0 else 1
+        edges.append((e[0].name, e[1].name, dict([('sign', polarity)])))
+    mdg = nx.DiGraph()
     mdg.add_edges_from(edges)
     return mdg
 
