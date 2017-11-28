@@ -130,12 +130,16 @@ class PybelAssembler(object):
                     pybel.to_bel(self.model, fh)
 
 
-    def to_signed_graph(self):
+    def to_signed_graph(self, symmetric_variant_links=False):
         edge_set = set()
         for u, v, edge_data in self.model.edges(data=True):
             rel = edge_data.get('relation')
             if rel in (pc.INCREASES, pc.DIRECTLY_INCREASES):
                 edge_set.add((u, v, 0))
+            elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
+                edge_set.add((u, v, 0))
+                if symmetric_variant_links:
+                    edge_set.add((v, u, 0))
             elif rel in (pc.DECREASES, pc.DIRECTLY_DECREASES):
                 edge_set.add((u, v, 1))
             else:
