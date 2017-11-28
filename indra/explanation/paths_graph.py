@@ -205,12 +205,13 @@ def paths_graph(g, source, target, length, f_level, b_level,
     # graph. Note that we have to check for an edge of the appropriate polarity.
     pg_edges = set()
     if signed:
-        g_edges = [(u, v, data['sign']) for u, v, data in g.edges(data=True)]
+        g_edges_raw = g.edges(data=True)
+        g_edges = [(u, v, data['sign']) for u, v, data in g_edges_raw]
     else:
         g_edges = [(u, v) for u, v in g.edges()]
     for i in range(0, length):
         actual_edges = set()
-        logger.info("paths_graph: computing intersections at level %d" % i)
+        logger.info("paths_graph: identifying edges at level %d" % i)
         if signed:
             possible_edges = set()
             edge_lookup = {}
