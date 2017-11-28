@@ -23,7 +23,8 @@ def get_task_5(data, inverse=False):
         stmts_to_check[cell_line] = {}
         for drug in drug_names.keys():
             stmts_to_check[cell_line][drug] = {}
-            drug_agent = Agent(drug, db_refs=drug_grounding[drug])
+            target_agent = [agent_phos(target, [])
+                            for target in drug_targets[drug]][0]
             for dose in drug_doses:
                 if dose < dose_lower_bound:
                     continue
@@ -33,9 +34,9 @@ def get_task_5(data, inverse=False):
                 for obs in obs_agents:
                     if (cell_line == 'C32' and not inverse) or \
                         (cell_line == 'RVH421' and inverse):
-                        st = DecreaseAmount(drug_agent, obs)
+                        st = IncreaseAmount(target_agent, obs)
                     else:
-                        st = IncreaseAmount(drug_agent, obs)
+                        st = DecreaseAmount(target_agent, obs)
                     stmts_to_check[cell_line][drug][dose][0].append(st)
     return stmts_to_check
 
@@ -169,7 +170,7 @@ if __name__ == '__main__':
                 stmts_to_check[cell_line][drug][dose]
             path_results = []
             for stmt in stmts_condition:
-                pr = global_mc.check_statement(stmt, 100, 10)
+                pr = global_mc.check_statement(stmt, 1000, 8)
                 path_results.append(pr)
             # Get a dict of measured values by INDRA Agents for this condition
             agent_values = get_agent_values(antibody_agents, values_condition)
