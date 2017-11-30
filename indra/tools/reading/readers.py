@@ -11,7 +11,7 @@ import json
 import logging
 import subprocess
 import zlib
-from os import path, mkdir, environ, listdir
+from os import path, mkdir, environ, listdir, remove
 from io import BytesIO
 from datetime import datetime
 from multiprocessing import Pool
@@ -117,7 +117,7 @@ class ReachReader(Reader):
         return
 
     @classmethod
-    def _join_json_files(cls, prefix):
+    def _join_json_files(cls, prefix, clear=False):
         """Join different REACH output JSON files into a single JSON object.
 
         The output of REACH is broken into three files that need to be joined
@@ -128,26 +128,31 @@ class ReachReader(Reader):
         ----------
         prefix : str
             The absolute path up to the extensions that reach will add.
+        clear : bool
+            Default False - if True, delete the files as soon as they are
+            loaded.
 
         Returns
         -------
         json_obj : dict
             The result of joining the files, keyed by the three subcategories.
         """
+        filetype_list = ['entities', 'events', 'sentences']
+        json_dict = {}
         try:
-            with open(prefix + '.uaz.entities.json', 'rt') as f:
-                entities = json.load(f)
-            with open(prefix + '.uaz.events.json', 'rt') as f:
-                events = json.load(f)
-            with open(prefix + '.uaz.sentences.json', 'rt') as f:
-                sentences = json.load(f)
+            for filetype in filetype_list:
+                fname = prefix + '.uaz.' + filetype + '.json'
+                with open(fname, 'rt') as f:
+                    json_dict[filetype] = json.load(f)
+                if clear:
+                    remove(fname)
         except IOError as e:
             logger.error(
                 'Failed to open JSON files for %s; REACH error?' % prefix
                 )
             logger.exception(e)
             return None
-        return {'events': events, 'entities': entities, 'sentences': sentences}
+        return json_dict
 
     def _check_reach_env(self):
         """Check that the environment supports runnig reach."""
@@ -232,7 +237,7 @@ class ReachReader(Reader):
                 self.name,
                 self.version,
                 formats.JSON,
-                self._join_json_files(prefix)
+                self._join_json_files(prefix, clear=True)
                 ))
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return reading_data_list
