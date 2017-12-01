@@ -395,9 +395,8 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
 
     Parameters
     ----------
-    id_str_list : list of stings
-        A list of id strings, as would retrieved from a file, each of the form
-        '<id type>:<id value>', for example 'pmid:12345'
+    id_dict : dict {<id_type>:[<id value>, ...]}
+        A dict of lists of the id's to be read, keyed by id_type.
     readers : list of reader objects
         A list of the readers that will be use, for example ['reach'] if you
         wanted to use the reach reader.
@@ -549,8 +548,8 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
 
     Parameters
     ----------
-    id_dict : dict {<id_type>:<id value>}
-        A dict of the id's to be read.
+    id_dict : dict {<id_type>:[<id value>, ...]}
+        A dict of lists of the id's to be read, keyed by id_type.
     reader_list : list [Reader]
         A list of Reader descendents to be used in reading.
     verbose : bool
