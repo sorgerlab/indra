@@ -146,6 +146,7 @@ class ReachReader(Reader):
                     json_dict[filetype] = json.load(f)
                 if clear:
                     remove(fname)
+                    logger.debug("Removed %s." % fname)
         except IOError as e:
             logger.error(
                 'Failed to open JSON files for %s; REACH error?' % prefix
@@ -242,6 +243,15 @@ class ReachReader(Reader):
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return reading_data_list
 
+    def clear_input(self):
+        """Remove all the input files (at the end of a reading)."""
+        for item in listdir(self.input_dir):
+            item_path = path.join(self.input_dir, item)
+            if path.isfile(item_path):
+                remove(item_path)
+                logger.debug('Removed input %s.' % item_path)
+        return
+
     def read(self, read_list, verbose=False, log=False):
         """Read the content, returning a list of ReadingData objects."""
         ret = []
@@ -282,6 +292,7 @@ class ReachReader(Reader):
                 raise ReachError("Problem running REACH")
             logger.info("Reach finished.")
             ret = self.get_output()
+            self.clear_input()
         return ret
 
 
