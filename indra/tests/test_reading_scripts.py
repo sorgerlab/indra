@@ -362,3 +362,13 @@ def test_sparser_parallel():
     N_res = len(result)
     assert N_exp == N_res, \
         "Expected to get %d results, but got %d." % (N_exp, N_res)
+
+def test_multi_batch_run():
+    "Test that reading works properly with multiple batches run."
+    db = get_db_with_content()
+    readers = get_readers()
+    tc_list = db.select_all(db.TextContent)
+    id_dict = {'tcid':[tc.id for tc in tc_list]}
+    outputs = rdb.make_db_readings(id_dict, readers, batch_size=int(len(tc_list)/2), db=db)
+    # This should catch any repeated readings.
+    rdb.upload_readings(outputs)
