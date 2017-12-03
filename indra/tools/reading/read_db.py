@@ -36,6 +36,11 @@ if __name__ == '__main__':
               'use pre-existing readings. Default is \'unread\'.')
         )
     parser.add_argument(
+        '-t', '--temp',
+        default='.',
+        help='Select the location of the temp file.'
+        )
+    parser.add_argument(
         '-o', '--output',
         dest='name',
         help=('Pickle all results and save in files labelled as '
@@ -693,7 +698,7 @@ if __name__ == "__main__":
     n_max = int(ceil(float(len(input_lines))/B))
 
     # Create a single base directory
-    base_dir = _get_dir('run_%s' % ('_and_'.join(args.readers)))
+    base_dir = _get_dir(args.temp, 'run_%s' % ('_and_'.join(args.readers)))
 
     # Get the readers objects.
     readers = [reader_class(base_dir=base_dir, n_proc=args.n_proc)
