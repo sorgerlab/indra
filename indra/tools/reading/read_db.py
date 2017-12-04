@@ -660,7 +660,7 @@ def upload_statements(stmt_data_list, db=None):
 
 
 def produce_statements(output_list, enrich=True, no_upload=False,
-                       pickle_file=None, db=None):
+                       pickle_file=None, n_proc=1, db=None):
     """Convert the reader output into a list of StatementData instances."""
     if db is None:
         db = get_primary_db()
@@ -668,7 +668,7 @@ def produce_statements(output_list, enrich=True, no_upload=False,
     if enrich:
         _enrich_reading_data(output_list, db=db)
 
-    stmt_data_list = make_statements(output_list)
+    stmt_data_list = make_statements(output_list, n_proc)
 
     if not no_upload:
         try:
@@ -748,4 +748,4 @@ if __name__ == "__main__":
 
         # Convert the outputs to statements ==================================
         produce_statements(outputs, no_upload=args.no_statement_upload,
-                           pickle_file=stmts_pickle)
+                           pickle_file=stmts_pickle, n_proc=args.n_proc)
