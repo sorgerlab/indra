@@ -12,7 +12,6 @@ import os
 import logging
 from io import BytesIO
 from os import path
-from docutils.io import InputError
 from datetime import datetime
 from numbers import Number
 
