@@ -12,6 +12,7 @@ import zlib
 import pickle
 import json
 from math import log10, floor, ceil
+from datetime import datetime
 
 from indra.tools.reading.script_tools import get_parser, make_statements, \
                                              StatementData
@@ -615,7 +616,15 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
         logger.info("Made %d new readings." % len(outputs))
 
     if not no_upload:
-        upload_readings(outputs, db=db)
+        try:
+            upload_readings(outputs, db=db)
+        except Exception as e:
+            logger.exception(e)
+            if pickle_file is None:
+                pickle_file = ("failure_reading_dump_%s.pkl" 
+                               % datetime.now().strftime('%Y%m%d_%H%M%S'))
+            logger.error("Cound not upload readings. Results are pickled in: "
+                         + pickle_file)
 
     outputs += prev_readings
 
@@ -662,7 +671,15 @@ def produce_statements(output_list, enrich=True, no_upload=False,
     stmt_data_list = make_statements(output_list)
 
     if not no_upload:
-        upload_statements(stmt_data_list, db=db)
+        try:
+            upload_statements(stmt_data_list, db=db)
+        except Exception as e:
+            logger.exception(e)
+            if pickle_file is None:
+                pickle_file = ("failure_stmt_dump_%s.pkl"
+                              % datetime.now().strftime('%Y%m%d_%H%M%S'))
+            logger.error("Could not upload statements. Results pickled in: %s."
+                         % pickle_file)
     if pickle_file is not None:
         with open(pickle_file, 'wb') as f:
             pickle.dump([sd.statement for sd in stmt_data_list], f)
