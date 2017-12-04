@@ -9,6 +9,7 @@ from nose import SkipTest
 
 from indra.tools.reading import read_db as rdb
 from indra.tools.reading.read_files import read_files
+from indra.tools.reading.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 
@@ -372,3 +373,14 @@ def test_multi_batch_run():
     outputs = rdb.make_db_readings(id_dict, readers, batch_size=int(len(tc_list)/2), db=db)
     # This should catch any repeated readings.
     rdb.upload_readings(outputs)
+
+
+def test_multiproc_statements():
+    "Test the multiprocessing creation of statements."
+    db = get_db_with_content()
+    readers = get_readers()
+    tc_list = db.select_all(db.TextContent)
+    id_dict = {'tcid':[tc.id for tc in tc_list]}
+    outputs = rdb.make_db_readings(id_dict, readers, db=db)
+    stmts = make_statements(outputs, 2)
+    assert len(stmts)
