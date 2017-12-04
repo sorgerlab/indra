@@ -6,6 +6,7 @@ import logging
 import json
 from argparse import ArgumentParser
 from indra.util.get_version import get_version as get_indra_version
+from multiprocessing import Pool
 
 logger = logging.getLogger('script_tools')
 
@@ -111,19 +112,34 @@ class StatementData(object):
                 self.indra_version)
 
 
-def make_statements(reading_data_list):
+def get_stmts_safely(reading_data):
+    stmt_data_list = []
+    try:
+        stmts = reading_data.get_statements()
+    except Exception as e:
+        logger.error("Got exception creating statements for %d."
+                     % reading_data.reading_id)
+        logger.exception(e)
+        return
+    for stmt in stmts:
+        stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
+    return stmt_data_list
+
+
+def make_statements(reading_data_list, num_proc=1):
     """Convert a list of ReadingData instances into StatementData instances."""
     stmt_data_list = []
-    for reading_data in reading_data_list:
-        try:
-            stmts = reading_data.get_statements()
-        except Exception as e:
-            logger.error("Got exception creating statements for %d."
-                         % reading_data.reading_id)
-            logger.exception(e)
-            continue
-        for stmt in stmts:
-            stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
+
+    if num_proc is 1:  # Don't use pool if not needed.
+        for reading_data in reading_data_list:
+            stmt_data_list += get_stmts_safely(reading_data)
+    else:
+        pool = Pool(num_proc)
+        stmt_data_list_list = pool.map(get_stmts_safely, reading_data_list)
+        for stmt_data_sublist in stmt_data_list_list:
+            if stmt_data_sublist is not None:
+                stmt_data_list += stmt_data_sublist
+
     logger.info("Found %d statements from %d readings." %
                 (len(stmt_data_list), len(reading_data_list)))
     return stmt_data_list
