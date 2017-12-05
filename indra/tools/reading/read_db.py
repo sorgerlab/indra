@@ -705,7 +705,7 @@ if __name__ == "__main__":
     if args.n_samp is not None:
         input_lines = random.sample(input_lines, args.n_samp)
     else:
-        input_lines = random.shuffle(input_lines)
+        random.shuffle(input_lines)
 
     # If a range is specified, only use that range.
     if args.range_str is not None:
