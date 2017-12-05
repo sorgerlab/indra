@@ -430,9 +430,13 @@ class SparserReader(Reader):
                         if outpath is not None:
                             output_file_list.append(outpath)
                 else:
-                    pool = Pool(self.n_proc)
-                    output_files_and_buffers = pool.map(self.read_one,
-                                                        file_list)
+                    try:
+                        pool = Pool(self.n_proc)
+                        output_files_and_buffers = pool.map(self.read_one,
+                                                            file_list)
+                    finally:
+                        pool.close()
+                        pool.join()
                     for output_file, buff in output_files_and_buffers:
                         if output_file is not None:
                             output_file_list.append(output_file)

@@ -134,11 +134,15 @@ def make_statements(reading_data_list, num_proc=1):
         for reading_data in reading_data_list:
             stmt_data_list += get_stmts_safely(reading_data)
     else:
-        pool = Pool(num_proc)
-        stmt_data_list_list = pool.map(get_stmts_safely, reading_data_list)
-        for stmt_data_sublist in stmt_data_list_list:
-            if stmt_data_sublist is not None:
-                stmt_data_list += stmt_data_sublist
+        try:
+            pool = Pool(num_proc)
+            stmt_data_list_list = pool.map(get_stmts_safely, reading_data_list)
+            for stmt_data_sublist in stmt_data_list_list:
+                if stmt_data_sublist is not None:
+                    stmt_data_list += stmt_data_sublist
+        finally:
+            pool.close()
+            pool.join()
 
     logger.info("Found %d statements from %d readings." %
                 (len(stmt_data_list), len(reading_data_list)))
