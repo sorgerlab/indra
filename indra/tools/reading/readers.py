@@ -409,9 +409,18 @@ class SparserReader(Reader):
                              fpath)
                 logger.exception(e)
             outbuf.write(b'Reading failed.\n')
-        return outpath, outbuf
+        return outpath
 
-    def read(self, read_list, verbose=False, log=False):
+    def read_some(self, fpath_list, outbuf=None, verbose=False):
+        "Perform a few readings."
+        outpath_list = []
+        for fpath in fpath_list:
+            output = self.read_one(fpath, outbuf, verbose)
+            if output is not None:
+                outpath_list.append(output)
+        return outpath_list, outbuf
+
+    def read(self, read_list, verbose=False, log=False, n_per_proc=None):
         "Perform the actual reading."
         ret = []
         file_list = self.prep_input(read_list)
@@ -430,10 +439,20 @@ class SparserReader(Reader):
                         if outpath is not None:
                             output_file_list.append(outpath)
                 else:
+                    if n_per_proc is None:
+                        L = len(read_list)
+                        n_per_proc = max(1, min(1000, L//self.n_proc//2))
+
                     try:
                         pool = Pool(self.n_proc)
-                        output_files_and_buffers = pool.map(self.read_one,
-                                                            file_list)
+                        if n_per_proc is not 1:
+                            batches = [read_list[n*n_per_proc:(n+1)*n_per_proc]
+                                       for n in range(L//n_per_proc + 1)]
+                            output_files_and_buffers = pool.map(self.read_some,
+                                                                batches)
+                        else:
+                            output_files_and_buffers = pool.map(self.read_one,
+                                                                read_list)
                     finally:
                         pool.close()
                         pool.join()
