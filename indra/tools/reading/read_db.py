@@ -704,6 +704,8 @@ if __name__ == "__main__":
     # Select only a sample of the lines, if sample is chosen.
     if args.n_samp is not None:
         input_lines = random.sample(input_lines, args.n_samp)
+    else:
+        input_lines = random.shuffle(input_lines)
 
     # If a range is specified, only use that range.
     if args.range_str is not None:
