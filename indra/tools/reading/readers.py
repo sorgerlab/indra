@@ -233,12 +233,18 @@ class ReachReader(Reader):
             base_prefix = path.basename(prefix)
             if base_prefix.isdecimal():
                 base_prefix = int(base_prefix)
+            try:
+                content = self._join_json_files(prefix, clear=True)
+            except Exception as e:
+                logger.exception(e)
+                logger.error("Coule not load result for prefix %s." % prefix)
+                continue
             reading_data_list.append(ReadingData(
                 base_prefix,
                 self.name,
                 self.version,
                 formats.JSON,
-                self._join_json_files(prefix, clear=True)
+                content
                 ))
             logger.debug('Joined files for prefix %s.' % base_prefix)
         return reading_data_list
