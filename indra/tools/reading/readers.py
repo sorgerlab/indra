@@ -371,7 +371,7 @@ class SparserReader(Reader):
                                    type(item))
         return file_list
 
-    def get_output(self, output_files):
+    def get_output(self, output_files, clear=True):
         "Get the output files as an id indexed dict."
         reading_data_list = []
         patt = re.compile(r'(.*?)-semantics.*?')
@@ -397,6 +397,15 @@ class SparserReader(Reader):
                 formats.JSON,
                 content
                 ))
+            if clear:
+                try:
+                    remove(outpath)
+                    input_path = outpath.replace('-semantics.json', '.nxml')
+                    remove(input_path)
+                except Exception as e:
+                    logger.exception(e)
+                    logger.error("Could not remove sparser files %s and %s."
+                                 % (outpath, input_path))
         return reading_data_list
 
     def read_one(self, fpath, outbuf=None, verbose=False):
