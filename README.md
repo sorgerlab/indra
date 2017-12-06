@@ -11,6 +11,10 @@ BEL sources
 (including the [Pathway Commons database](http://pathwaycommons.org/) and
 [NDEx](http://ndexbio.org)).
 
+Reference: [From word models to executable models of signal transduction
+using automated assembly](http://msb.embopress.org/content/13/11/954),
+Molecular Systems Biology (2017)
+
 Documentation
 -------------
 
