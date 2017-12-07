@@ -387,8 +387,14 @@ class SparserReader(Reader):
                 # In this case we assume the prefix is a tcid.
                 prefix = int(prefix)
 
-            with open(outpath, 'rt') as f:
-                content = json.load(f)
+            try:
+                with open(outpath, 'rt') as f:
+                    content = json.load(f)
+            except Exception as e:
+                logger.exception(e)
+                logger.error("Could not load reading content from %s."
+                             % outpath)
+                continue
 
             reading_data_list.append(ReadingData(
                 prefix,
