@@ -162,6 +162,52 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
     return job_list
 
 
+def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
+                      end_ix=None, pmids_per_job=3000, num_tries=2):
+    # Upload the pmid_list to Amazon S3
+    pmid_list_key = 'reading_inputs/%s/id_list' % basename
+    s3_client = boto3.client('s3')
+    s3_client.upload_file(id_list_filename, 'bigmech', pmid_list_key)
+
+    # If no end index is specified, read all the PMIDs
+    if end_ix is None:
+        with open(id_list_filename, 'rt') as f:
+            lines = f.readlines()
+            end_ix = len(lines)
+
+    if start_ix is None:
+        start_ix = 0
+
+    # Get environment variables
+    environment_vars = get_environment()
+
+    # Iterate over the list of PMIDs and submit the job in chunks
+    batch_client = boto3.client('batch')
+    job_list = []
+    for job_start_ix in range(start_ix, end_ix, pmids_per_job):
+        job_end_ix = job_start_ix + pmids_per_job
+        if job_end_ix > end_ix:
+            job_end_ix = end_ix
+        job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
+        command_list = ['python', '-m',
+                        'indra.tools.reading.read_db_aws',
+                        basename, '/tmp', 'unread', '32', str(job_start_ix),
+                        str(job_end_ix), '-r'] + readers
+        print(command_list)
+        job_info = batch_client.submit_job(
+            jobName=job_name,
+            jobQueue='run_db_reading_queue',
+            jobDefinition='run_db_reading_jobdef',
+            containerOverrides={
+                'environment': environment_vars,
+                'command': command_list},
+            retryStrategy={'attempts': num_tries}
+            )
+        print("submitted...")
+        job_list.append({'jobId': job_info['jobId']})
+    return job_list
+
+
 def submit_combine(basename, readers, job_ids=None):
     if job_ids is not None and len(job_ids) > 20:
         print("WARNING: boto3 cannot support waiting for more than 20 jobs.")
@@ -249,7 +295,7 @@ if __name__ == '__main__':
         help='Get full text content even if content already on S3.'
         )
     parent_read_parser.add_argument(
-        '--pmids_per_job',
+        '--ids_per_job',
         default=3000,
         type=int,
         help='Number of PMIDs to read for each AWS Batch job.'
@@ -323,14 +369,24 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     job_ids = None
-    if args.job_type in ['read', 'full']:
-        job_ids = submit_reading(
+    if args.method == 'no-db':
+        if args.job_type in ['read', 'full']:
+            job_ids = submit_reading(
+                args.basename,
+                args.input_file,
+                args.readers,
+                args.start_ix,
+                args.end_ix,
+                args.ids_per_job
+                )
+        if args.job_type in ['combine', 'full']:
+            submit_combine(args.basename, args.readers, job_ids)
+    elif args.method == 'with-db':
+        job_ids = submit_db_reading(
             args.basename,
-            args.pmid_file,
+            args.input_file,
             args.readers,
             args.start_ix,
             args.end_ix,
-            args.pmids_per_job
+            args.ids_per_job
             )
-    if args.job_type in ['combine', 'full']:
-        submit_combine(args.basename, args.readers, job_ids)
