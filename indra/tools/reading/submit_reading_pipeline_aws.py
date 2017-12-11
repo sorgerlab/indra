@@ -181,6 +181,10 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     # Get environment variables
     environment_vars = get_environment()
 
+    # Fix reader options
+    if 'all' in readers:
+        readers = ['reach', 'sparser']
+
     # Iterate over the list of PMIDs and submit the job in chunks
     batch_client = boto3.client('batch')
     job_list = []
