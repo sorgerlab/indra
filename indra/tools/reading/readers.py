@@ -469,20 +469,20 @@ class SparserReader(Reader):
                         if n_per_proc is not 1:
                             batches = [file_list[n*n_per_proc:(n+1)*n_per_proc]
                                        for n in range(L//n_per_proc + 1)]
-                            output_files_and_buffers = pool.map(self.read_some,
-                                                                batches)
+                            out_lists_and_buffs = pool.map(self.read_some,
+                                                           batches)
                         else:
-                            output_files_and_buffers = pool.map(self.read_one,
-                                                                read_list)
+                            out_lists_and_buffs = pool.map(self.read_one,
+                                                           read_list)
                     finally:
                         pool.close()
                         pool.join()
-                    for output_list, buff in output_files_and_buffers:
-                        if output_list is not None:
-                            output_file_list += output_list
+                    for i, (out_list, buff) in enumerate(out_lists_and_buffs):
+                        if out_list is not None:
+                            output_file_list += out_list
                         if log:
-                            outbuf.write('Log for producing %s.\n'
-                                         % output_file)
+                            outbuf.write('Log for producing output %d/%d.\n'
+                                         % (i, len(out_lists_and_buffs)))
                             buff.seek(0)
                             outbuf.write(buff.read() + '\n')
                             outbuf.flush()
