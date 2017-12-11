@@ -68,7 +68,7 @@ def tag_instances(project='bigmechanism'):
     """Adds project tag to untagged fleet instances."""
     # First, get all the instances
     ec2_client = boto3.client('ec2')
-    resp = response = ec2_client.describe_instances()
+    resp = ec2_client.describe_instances()
     instances = []
     for res in resp.get('Reservations', []):
         instances += res.get('Instances', [])
