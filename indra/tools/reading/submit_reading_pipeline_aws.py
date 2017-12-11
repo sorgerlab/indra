@@ -6,6 +6,7 @@ import botocore.session
 from time import sleep
 from indra.literature import elsevier_client as ec
 from indra.tools.reading.read_pmids import READER_DICT
+from docutils.nodes import description
 
 bucket_name = 'bigmech'
 
@@ -194,14 +195,19 @@ if __name__ == '__main__':
     # Create the top-level parser
     parser = argparse.ArgumentParser(
         'submit_reading_pipeline_aws.py',
-        description='Run machine reading with REACH using AWS Batch.'
+        description='Run reading with either the db or remote resources.'
         )
-    subparsers = parser.add_subparsers(
-        title='Job Type',
-        help='Type of jobs to submit.'
-        )
+    subparsers = parser.add_subparsers(title='Method')
     subparsers.required = True
-    subparsers.dest = 'job_type'
+    subparsers.dest = 'method'
+
+    # Create parser class for first layer of options
+    grandparent_reading_parser = argparse.ArgumentParser(
+        description='Run machine reading using AWS Batch.',
+        add_help=False
+        )
+
+    # Create parent parser classes for second layer of options
     parent_submit_parser = argparse.ArgumentParser(add_help=False)
     parent_submit_parser.add_argument(
         'basename',
@@ -210,25 +216,27 @@ if __name__ == '__main__':
     parent_submit_parser.add_argument(
         '-r', '--readers',
         dest='readers',
-        choices=list(READER_DICT.keys()) + ['all'],
+        choices=['sparser', 'reach', 'all'],
         default=['all'],
-        nargs='+',
         help='Choose which reader(s) to use.'
         )
     parent_read_parser = argparse.ArgumentParser(add_help=False)
     parent_read_parser.add_argument(
-        'pmid_file',
-        help='Path to file containing PMIDs to read'
+        'input_file',
+        help=('Path to file containing input ids of content to read. For the '
+              'no-db options, this is simply a file with each line being a '
+              'pmid. For the with-db options, this is a file where each line '
+              'is of the form \'<id type>:<id>\', for example \'pmid:12345\'')
         )
     parent_read_parser.add_argument(
         '--start_ix',
         type=int,
-        help='Start index of PMIDs to read.'
+        help='Start index of ids to read.'
         )
     parent_read_parser.add_argument(
         '--end_ix',
         type=int,
-        help='End index of PMIDs to read (default: read all PMIDs)'
+        help='End index of ids to read. If `None`, read content from all ids.'
         )
     parent_read_parser.add_argument(
         '--force_read',
@@ -254,26 +262,64 @@ if __name__ == '__main__':
         help='Maximum number of times to try running job.'
         )
     '''
-    read_parser = subparsers.add_parser(
+    parent_db_parser = argparse.ArgumentParser(add_help=False)
+    parent_db_parser.add_argument(
+        '--no_upload',
+        action='store_true',
+        help='Don\'t upload results to the database.'
+        )
+
+    # Make non_db_parser and get subparsers
+    non_db_parser = subparsers.add_parser(
+        'no-db',
+        parents=[grandparent_reading_parser],
+        description=('Run reading by collecting content, and save as pickles. '
+                     'This option requires that ids are given as a list of '
+                     'pmids, one line per pmid.'),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    non_db_subparsers = non_db_parser.add_subparsers(
+        title='Job Type',
+        help='Type of jobs to submit.'
+        )
+    non_db_subparsers.required = True
+    non_db_subparsers.dest = 'job_type'
+
+    # Create subparsers for the no-db option.
+    read_parser = non_db_subparsers.add_parser(
         'read',
         parents=[parent_read_parser, parent_submit_parser],
         help='Run REACH and cache INDRA Statements on S3.',
         description='Run REACH and cache INDRA Statements on S3.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
-    combine_parser = subparsers.add_parser(
+    combine_parser = non_db_subparsers.add_parser(
         'combine',
         parents=[parent_submit_parser],
         help='Combine INDRA Statement subsets into a single file.',
         description='Combine INDRA Statement subsets into a single file.'
         )
-    full_parser = subparsers.add_parser(
+    full_parser = non_db_subparsers.add_parser(
         'full',
         parents=[parent_read_parser, parent_submit_parser],
         help='Run REACH and combine INDRA Statements when done.',
         description='Run REACH and combine INDRA Statements when done.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
+
+    # Make db parser and get subparsers.
+    db_parser = subparsers.add_parser(
+        'with-db',
+        parents=[grandparent_reading_parser, parent_submit_parser,
+                 parent_read_parser, parent_db_parser],
+        description=('Run reading with content on the db and submit results. '
+                     'In this option, ids in \'input_file\' are given in the '
+                     'format \'<id type>:<id>\'. Unlike no-db, there is no '
+                     'need to combine pickles, and therefore no need to '
+                     'specify your task further.'),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+
     args = parser.parse_args()
 
     job_ids = None
