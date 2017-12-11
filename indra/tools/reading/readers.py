@@ -33,7 +33,7 @@ def _get_dir(*args):
     elif path.exists(dirname):
         dirpath = path.abspath(dirname)
     else:
-        dirpath = path.join(path.dirname(__file__), dirname)
+        dirpath = path.join(path.dirname(path.abspath(__file__)), dirname)
     if not path.exists(dirpath):
         mkdir(dirpath)
     return dirpath
@@ -72,7 +72,7 @@ class Reader(object):
 
     def __init__(self, base_dir=None, n_proc=1):
         if base_dir is None:
-            base_dir = _get_dir('run_' + self.name)
+            base_dir = 'run_' + self.name
         self.n_proc = n_proc
         self.base_dir = _get_dir(base_dir)
         tmp_dir = tempfile.mkdtemp(
