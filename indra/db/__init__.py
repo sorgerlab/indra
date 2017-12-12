@@ -60,6 +60,7 @@ except ImportError:
 
 
 DEFAULTS_FILE = path.join(__path__[0], 'defaults.txt')
+__PRIMARY_DB = None
 
 
 def _isiterable(obj):
@@ -597,6 +598,8 @@ def get_primary_db():
     else:
         raise IndraDatabaseError("No primary host available in defaults file.")
 
-    db = DatabaseManager(primary_host, label='primary')
-    db.grab_session()
-    return db
+    global __PRIMARY_DB
+    if __PRIMARY_DB is None:
+        __PRIMARY_DB = DatabaseManager(primary_host, label='primary')
+        __PRIMARY_DB.grab_session()
+    return __PRIMARY_DB
