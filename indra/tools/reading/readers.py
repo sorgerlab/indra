@@ -77,7 +77,7 @@ class Reader(object):
         self.base_dir = _get_dir(base_dir)
         tmp_dir = tempfile.mkdtemp(
             prefix='reach_job_%s' % _time_stamp(),
-            dir=base_dir
+            dir=self.base_dir
             )
         self.tmp_dir = tmp_dir
         self.input_dir = _get_dir(tmp_dir, 'input')
