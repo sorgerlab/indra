@@ -612,7 +612,9 @@ def get_primary_db(force_new=False):
     It is still recommended that when creating a script or function, or other
     general application, you should not rely on this feature to get your access
     to the database, as it can make substituting a different database host both
-    complicated and messy.
+    complicated and messy. Rather, a database instance should be explicitly
+    passed between different users as is done in the `by_gene_role_type`
+    function's call to `get_statements` in `indra.db.query_db_stmts`.
 
     Paramters
     ---------
