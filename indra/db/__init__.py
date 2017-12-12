@@ -591,15 +591,15 @@ def get_defaults():
 
 
 def get_primary_db(force_new=False):
-    """Get an instance to the primary database host.
+    """Get a DatabaseManager instance for the primary database host.
 
     The primary database host is defined in the defaults.txt file, or in a file
     given by the environment variable DEFAULTS_FILE. Alternatively, it may be
     defined by the INDRADBPRIMARY environment variable. If none of the above
     are specified, this function will raise an exception.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     force_new : bool
         If true, a new instance will be created and returned, regardless of
         whether there is an existing instance or not. Default is False, so that
