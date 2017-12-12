@@ -63,7 +63,8 @@ def by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         clauses.append(db.Agents.stmt_id == db.Statements.id)
     if stmt_type:
         clauses.append(db.Statements.type == stmt_type)
-    stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count)
+    stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
+                           db=db)
     return stmts
 
 
