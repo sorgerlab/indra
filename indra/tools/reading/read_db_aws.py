@@ -93,4 +93,4 @@ if __name__ == '__main__':
                                read_mode=args.mode)
 
     # Convert the outputs to statements ==================================
-    produce_statements(outputs, n_proc=args.n_proc)
+    produce_statements(outputs, n_proc=args.num_cores)
