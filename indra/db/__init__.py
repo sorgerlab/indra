@@ -590,7 +590,7 @@ def get_defaults():
     return defaults_dict
 
 
-def get_primary_db():
+def get_primary_db(force_new=False):
     "Get an instance to the primary database host."
     defaults = get_defaults()
     if 'primary' in defaults.keys():
@@ -599,7 +599,7 @@ def get_primary_db():
         raise IndraDatabaseError("No primary host available in defaults file.")
 
     global __PRIMARY_DB
-    if __PRIMARY_DB is None:
+    if __PRIMARY_DB is None or force_new:
         __PRIMARY_DB = DatabaseManager(primary_host, label='primary')
         __PRIMARY_DB.grab_session()
     return __PRIMARY_DB
