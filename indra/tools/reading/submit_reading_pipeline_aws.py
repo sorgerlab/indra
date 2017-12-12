@@ -313,11 +313,13 @@ if __name__ == '__main__':
         )
     '''
     parent_db_parser = argparse.ArgumentParser(add_help=False)
+    '''Not currently supported
     parent_db_parser.add_argument(
         '--no_upload',
         action='store_true',
         help='Don\'t upload results to the database.'
         )
+    '''
 
     # Make non_db_parser and get subparsers
     non_db_parser = subparsers.add_parser(
