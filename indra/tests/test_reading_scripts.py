@@ -364,13 +364,27 @@ def test_sparser_parallel():
     assert N_exp == N_res, \
         "Expected to get %d results, but got %d." % (N_exp, N_res)
 
+
+def test_sparser_parallel_one_batch():
+    "Test that sparser runs with multiple procs with batches of 1."
+    db = get_db_with_content()
+    sparser_reader = SparserReader(n_proc=2)
+    tc_list = db.select_all(db.TextContent)
+    result = sparser_reader.read(tc_list, verbose=True, n_per_proc=1)
+    N_exp = len(tc_list)
+    N_res = len(result)
+    assert N_exp == N_res, \
+        "Expected to get %d results, but got %d." % (N_exp, N_res)
+
+
 def test_multi_batch_run():
     "Test that reading works properly with multiple batches run."
     db = get_db_with_content()
     readers = get_readers()
     tc_list = db.select_all(db.TextContent)
-    id_dict = {'tcid':[tc.id for tc in tc_list]}
-    outputs = rdb.make_db_readings(id_dict, readers, batch_size=int(len(tc_list)/2), db=db)
+    id_dict = {'tcid': [tc.id for tc in tc_list]}
+    outputs = rdb.make_db_readings(id_dict, readers,
+                                   batch_size=int(len(tc_list)/2), db=db)
     # This should catch any repeated readings.
     rdb.upload_readings(outputs)
 
@@ -380,7 +394,7 @@ def test_multiproc_statements():
     db = get_db_with_content()
     readers = get_readers()
     tc_list = db.select_all(db.TextContent)
-    id_dict = {'tcid':[tc.id for tc in tc_list]}
+    id_dict = {'tcid': [tc.id for tc in tc_list]}
     outputs = rdb.make_db_readings(id_dict, readers, db=db)
     stmts = make_statements(outputs, 2)
     assert len(stmts)
