@@ -595,6 +595,8 @@ class ReadingData(object):
         Returns True if tcid, reader, reader_version match the corresponding
         elements of a db.Reading instance, else False.
         """
+        # Note the temporary fix in clipping the reader version length. This is
+        # because the version is for some reason clipped in the database.
         return (r_entry.text_content_id == self.tcid
                 and r_entry.reader == self.reader
-                and r_entry.reader_version == self.reader_version)
+                and r_entry.reader_version == self.reader_version[:20])
