@@ -461,7 +461,7 @@ class SparserReader(Reader):
                             output_file_list.append(outpath)
                 else:
                     if n_per_proc is None:
-                        L = len(read_list)
+                        L = len(file_list)
                         n_per_proc = max(1, min(1000, L//self.n_proc//2))
 
                     try:
@@ -473,7 +473,7 @@ class SparserReader(Reader):
                                                            batches)
                         else:
                             out_lists_and_buffs = pool.map(self.read_one,
-                                                           read_list)
+                                                           file_list)
                     finally:
                         pool.close()
                         pool.join()
