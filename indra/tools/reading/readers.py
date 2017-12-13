@@ -472,8 +472,11 @@ class SparserReader(Reader):
                             out_lists_and_buffs = pool.map(self.read_some,
                                                            batches)
                         else:
-                            out_lists_and_buffs = pool.map(self.read_one,
+                            out_files_and_buffs = pool.map(self.read_one,
                                                            file_list)
+                            out_lists_and_buffs = [([out_files], buffs)
+                                                   for out_files, buffs
+                                                   in out_files_and_buffs]
                     finally:
                         pool.close()
                         pool.join()
