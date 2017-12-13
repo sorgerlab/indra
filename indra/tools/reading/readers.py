@@ -90,7 +90,7 @@ class Reader(object):
     def matches_clause(self, db):
         "Make the clauses to get content that match Reader version and name."
         return sql.and_(db.Readings.reader == self.name,
-                        db.Readings.reader_version == self.version)
+                        db.Readings.reader_version == self.version[:20])
 
 
 class ReachReader(Reader):
