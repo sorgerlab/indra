@@ -76,8 +76,37 @@ def _get_agent(node_data):
     if db_refs is None:
         raise ValueError('Unable to get identifier information for node: %s'
                          % node_data)
-    ag = Agent(name, db_refs=db_refs)
+    # Get modification conditions
+    mods = []
+    muts = []
+    if pc.VARIANTS in node_data:
+        variants = node_data[pc.VARIANTS]
+        for var in variants:
+            if var[pc.KIND] == pc.HGVS:
+                pass
+            elif var[pc.KIND] == pc.PMOD:
+                var_id_dict = var[pc.IDENTIFIER]
+                var_ns = var_id_dict[pc.NAMESPACE]
+                if var_ns == pc.BEL_DEFAULT_NAMESPACE:
+                    var_id = var_id_dict[pc.NAME]
+                    mod_type = _pybel_indra_pmod_map.get(var_id)
+                    if mod_type is None:
+                        logger.info("Unhandled modification type %s (%s)" %
+                                    (var_id, node_data))
+                        continue
+                    mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
+                                      var.get(pc.PMOD_POSITION))
+                    mods.append(mc)
+            elif var[pc.KIND] == pc.GMOD:
+                logger.debug('Unhandled node variant GMOD: %s' % node_data)
+            elif var[pc.KIND] == pc.FRAG:
+                logger.debug('Unhandled node variant FRAG: %s' % node_data)
+            else:
+                logger.debug('Unknown node variant type: %s' % node_data)
+    ag = Agent(name, db_refs=db_refs, mods=mods)
     return ag
+
+
 
     # name
     # namespace
@@ -98,3 +127,18 @@ def _get_up_id(hgnc_id):
         raise ValueError("No Uniprot ID for HGNC ID %s" % hgnc_id)
     return up_id
 
+
+_pybel_indra_pmod_map = {
+    'Ph': 'phosphorylation',
+    'Hy': 'hydroxylation',
+    'Sumo': 'sumoylation',
+    'Ac': 'acetylation',
+    'Glyco': 'glycosylation',
+    'ADPRib': 'ribosylation',
+    'Ub': 'ubiquitination',
+    'Farn': 'farnesylation',
+    'Gerger': 'geranylgeranylation',
+    'Palm': 'palmitoylation',
+    'Myr': 'myristoylation',
+    'Me': 'methylation',
+}
