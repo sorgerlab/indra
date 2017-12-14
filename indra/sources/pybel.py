@@ -1,4 +1,6 @@
+from copy import copy
 import pybel.constants as pc
+from pybel.struct import node_has_pmod
 from indra.statements import *
 from indra.databases import hgnc_client, uniprot_client
 
@@ -23,7 +25,7 @@ class PybelProcessor(object):
     """
     def __init__(self, graph):
         self.graph = graph
-
+        self.statements = []
 
     def get_statements(self):
         for u, v, d in self.graph.edges_iter(data=True):
@@ -31,17 +33,24 @@ class PybelProcessor(object):
             v_data = self.graph.node[v]
 
             if v_data[pc.FUNCTION] == pc.PROTEIN and \
-               d[pc.RELATION] in pc.CAUSAL_RELATIONS:
-                stmt = self._get_regulate_amount(u_data, v_data, d)
-
-        st = Phosphorylation(Agent('A'), Agent('B'))
-        self.statements = [st]
+               d[pc.RELATION] in pc.CAUSAL_RELATIONS and \
+               node_has_pmod(self.graph, v):
+                self._get_modification(u_data, v_data, d)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
         is_direct = _rel_is_direct(d)
         subj = _get_agent(u_data)
-        #stmt = IncreaseAmount(
 
+    def _get_modification(self, u_data, v_data, edge_data):
+        is_direct = _rel_is_direct(edge_data)
+        subj_agent = _get_agent(u_data)
+        mods, muts = _get_all_pmods(v_data)
+        v_data_no_mods = _remove_pmods(v_data)
+        obj_agent = _get_agent(v_data_no_mods)
+        for mod in mods:
+            modclass = modtype_to_modclass[mod.mod_type]
+            stmt = modclass(subj_agent, obj_agent, mod.residue, mod.position)
+            self.statements.append(stmt)
 
 def _get_agent(node_data):
     name = node_data.get(pc.NAME)
@@ -77,32 +86,7 @@ def _get_agent(node_data):
         raise ValueError('Unable to get identifier information for node: %s'
                          % node_data)
     # Get modification conditions
-    mods = []
-    muts = []
-    if pc.VARIANTS in node_data:
-        variants = node_data[pc.VARIANTS]
-        for var in variants:
-            if var[pc.KIND] == pc.HGVS:
-                pass
-            elif var[pc.KIND] == pc.PMOD:
-                var_id_dict = var[pc.IDENTIFIER]
-                var_ns = var_id_dict[pc.NAMESPACE]
-                if var_ns == pc.BEL_DEFAULT_NAMESPACE:
-                    var_id = var_id_dict[pc.NAME]
-                    mod_type = _pybel_indra_pmod_map.get(var_id)
-                    if mod_type is None:
-                        logger.info("Unhandled modification type %s (%s)" %
-                                    (var_id, node_data))
-                        continue
-                    mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
-                                      var.get(pc.PMOD_POSITION))
-                    mods.append(mc)
-            elif var[pc.KIND] == pc.GMOD:
-                logger.debug('Unhandled node variant GMOD: %s' % node_data)
-            elif var[pc.KIND] == pc.FRAG:
-                logger.debug('Unhandled node variant FRAG: %s' % node_data)
-            else:
-                logger.debug('Unknown node variant type: %s' % node_data)
+    mods, muts = _get_all_pmods(node_data)
     ag = Agent(name, db_refs=db_refs, mods=mods)
     return ag
 
@@ -142,3 +126,46 @@ _pybel_indra_pmod_map = {
     'Myr': 'myristoylation',
     'Me': 'methylation',
 }
+
+
+def _remove_pmods(node_data):
+    node_data_no_pmods = copy(node_data)
+    variants = node_data.get(pc.VARIANTS)
+    if variants:
+        node_data_no_pmods[pc.VARIANTS] = [var for var in variants
+                                               if var[pc.KIND] != pc.PMOD]
+    return node_data_no_pmods
+
+
+def _get_all_pmods(node_data, remove_pmods=False):
+    mods = []
+    muts = []
+    variants = node_data.get(pc.VARIANTS)
+    if not variants:
+        return mods, muts
+
+    for var in variants:
+        if var[pc.KIND] == pc.HGVS:
+            pass
+        elif var[pc.KIND] == pc.PMOD:
+            var_id_dict = var[pc.IDENTIFIER]
+            var_ns = var_id_dict[pc.NAMESPACE]
+            if var_ns == pc.BEL_DEFAULT_NAMESPACE:
+                var_id = var_id_dict[pc.NAME]
+                mod_type = _pybel_indra_pmod_map.get(var_id)
+                if mod_type is None:
+                    logger.info("Unhandled modification type %s (%s)" %
+                                (var_id, node_data))
+                    continue
+                mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
+                                  str(var.get(pc.PMOD_POSITION)))
+                mods.append(mc)
+        # FIXME These unhandled mod types should result in throwing out
+        # the node (raise, or return None)
+        elif var[pc.KIND] == pc.GMOD:
+            logger.debug('Unhandled node variant GMOD: %s' % node_data)
+        elif var[pc.KIND] == pc.FRAG:
+            logger.debug('Unhandled node variant FRAG: %s' % node_data)
+        else:
+            logger.debug('Unknown node variant type: %s' % node_data)
+    return (mods, muts)
