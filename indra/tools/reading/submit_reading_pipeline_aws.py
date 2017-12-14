@@ -13,13 +13,15 @@ bucket_name = 'bigmech'
 logger = logging.getLogger('aws_reading')
 
 
-def wait_for_complete(job_list, poll_interval=10):
+def wait_for_complete(queue_name, job_list=None, poll_interval=10):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
 
     Parameters
     ----------
+    queue_name : str
+        The name of the queue to wait for completion.
     job_list : Optional[list(dict)]
         A list of jobID-s in a dict, as returned by the submit function.
         Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
@@ -27,8 +29,11 @@ def wait_for_complete(job_list, poll_interval=10):
     poll_interval : Optional[int]
         The time delay between API calls to check the job statuses.
     """
+    if job_list is None:
+        job_list = []
+
     def get_jobs_by_status(status, job_filter=None):
-        res = batch_client.list_jobs(jobQueue='run_reach_queue',
+        res = batch_client.list_jobs(jobQueue=queue_name,
                                      jobStatus=status)
         ids = [job['jobId'] for job in res['jobSummaryList']]
         if job_filter:
