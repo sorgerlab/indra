@@ -1,6 +1,6 @@
 import pybel.constants as pc
 from indra.statements import *
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, uniprot_client
 
 def process_pybel_graph(graph):
     proc = PybelProcessor(graph)
@@ -48,6 +48,7 @@ def _get_agent(node_data):
     ns = node_data[pc.NAMESPACE]
     ident = node_data.get(pc.IDENTIFIER)
     # No ID present, get identifier using the name, namespace
+    db_refs = None
     if not ident:
         assert name, "Node must have a name if lacking an identifier."
         if ns == 'HGNC':
@@ -55,13 +56,26 @@ def _get_agent(node_data):
             if not hgnc_id:
                 raise ValueError("Invalid HGNC name: %s" % name)
             db_refs = {'HGNC': hgnc_id, 'UP': _get_up_id(hgnc_id)}
-            # Now get the uniprot ID
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
         if ns == 'HGNC':
             name = hgnc_client.get_hgnc_name(ident)
             db_refs = {'HGNC': ident, 'UP': _get_up_id(ident)}
+        elif ns == 'UP':
+            db_refs = {'UP': ident}
+            name = uniprot_client.get_gene_name(ident)
+            assert name
+            if uniprot_client.is_human(ident):
+                hgnc_id = hgnc_client.get_hgnc_id(name)
+                if not hgnc_id:
+                    logger.info('Uniprot ID linked to invalid human gene '
+                                'name %s' % name)
+                else:
+                    db_refs['HGNC'] = hgnc_id
+    if db_refs is None:
+        raise ValueError('Unable to get identifier information for node: %s'
+                         % node_data)
     ag = Agent(name, db_refs=db_refs)
     return ag
 
