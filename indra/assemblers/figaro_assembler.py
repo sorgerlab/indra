@@ -4,7 +4,7 @@ from indra.statements import *
 class FigaroAssembler(object):
     def __init__(self, stmts, strengths=None, readout=None):
         self.statements = stmts
-        self.strengths = strengths if strengths else []
+        self.strengths = strengths if strengths else {}
         self.BN = None
         self.magnitudes = {'small': 0.2, 'moderate': 0.5, 'huge': 2}
         self.readout = readout
@@ -19,7 +19,7 @@ class FigaroAssembler(object):
                 else:
                     coeff = self.magnitudes[strength[1]] / \
                         self.magnitudes[strength[0]]
-                self.BN.add_edge(stmt.subj.name, stmt.obj.name,
+                self.BN.add_edge(_n(stmt.subj.name), _n(stmt.obj.name),
                     pol=('+' if isinstance(stmt, Activation) else '-'),
                     coeff=coeff)
 
@@ -63,3 +63,5 @@ class FigaroAssembler(object):
                 fh.write(txt)
         return txt
 
+def _n(name):
+    return name.replace(' ', '_')
