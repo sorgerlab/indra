@@ -376,6 +376,10 @@ class SparserReader(Reader):
         reading_data_list = []
         patt = re.compile(r'(.*?)-semantics.*?')
         for outpath in output_files:
+            if outpath is None:
+                logger.warning("Found outpath with value None. Skipping.")
+                continue
+
             re_out = patt.match(path.basename(outpath))
             if re_out is None:
                 raise SparserError("Could not get prefix from output path %s."
