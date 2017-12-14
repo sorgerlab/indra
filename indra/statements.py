@@ -133,9 +133,7 @@ import sys
 import uuid
 import rdflib
 import logging
-import textwrap
 import networkx
-from collections import namedtuple
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
@@ -1034,7 +1032,7 @@ class Statement(object):
             while not sbo_term:
                 cls = cls.__bases__[0]
                 sbo_term = stmt_sbo_map.get(cls.__name__.lower())
-            return get_sbo_term
+            return sbo_term
 
         sbo_term = get_sbo_term(self.__class__)
         json_dict['sbo'] = \
