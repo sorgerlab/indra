@@ -58,8 +58,10 @@ def _get_agent(node_data):
             # Now get the uniprot ID
     # We've already got an identifier, look up other identifiers if necessary
     else:
-        pass
-
+        # Get the name, overwriting existing name if necessary
+        if ns == 'HGNC':
+            name = hgnc_client.get_hgnc_name(ident)
+            db_refs = {'HGNC': ident, 'UP': _get_up_id(ident)}
     ag = Agent(name, db_refs=db_refs)
     return ag
 
