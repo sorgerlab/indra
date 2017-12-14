@@ -26,12 +26,20 @@ def test_increase_amount():
 def test_get_agent():
     mek = protein(name='MAP2K1', namespace='HGNC')
     agent = pb._get_agent(mek)
-    assert isinstance(agent, Agent)
-    assert agent.name == 'MAP2K1'
     hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
     up_id = hgnc_client.get_uniprot_id(hgnc_id)
-    assert agent.db_refs('HGNC') == hgnc_id
-    assert agent.db_refs('UP') == up_id
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAP2K1'
+    assert agent.db_refs.get('HGNC') == hgnc_id
+    assert agent.db_refs.get('UP') == up_id
+
+    # Now create an agent with an identifier
+    mek = protein(name='Foo', namespace='HGNC', identifier='6840')
+    agent = pb._get_agent(mek)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAP2K1'
+    assert agent.db_refs.get('HGNC') == hgnc_id
+    assert agent.db_refs.get('UP') == up_id
 
 
 if __name__ == '__main__':
