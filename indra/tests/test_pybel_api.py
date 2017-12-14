@@ -59,7 +59,49 @@ def test_get_agent_up_no_id():
     agent = pb._get_agent(mek)
 
 
+def test_get_agent_with_mods():
+    mek = protein(name='MAP2K1', namespace='HGNC',
+                  variants=[pmod('Ph')])
+    agent = pb._get_agent(mek)
+    assert isinstance(agent, Agent)
+    assert len(agent.mods) == 1
+    mod = agent.mods[0]
+    assert mod.mod_type == 'phosphorylation'
+    assert not mod.residue
+    assert not mod.position
+
+    mek = protein(name='MAP2K1', namespace='HGNC',
+                  variants=[pmod('Ph', code='Ser')])
+    agent = pb._get_agent(mek)
+    assert isinstance(agent, Agent)
+    assert len(agent.mods) == 1
+    mod = agent.mods[0]
+    assert mod.mod_type == 'phosphorylation'
+    assert mod.residue == 'S'
+    assert not mod.position
+
+    mek = protein(name='MAP2K1', namespace='HGNC',
+                  variants=[pmod('Ph', position=218)])
+    agent = pb._get_agent(mek)
+    assert isinstance(agent, Agent)
+    assert len(agent.mods) == 1
+    mod = agent.mods[0]
+    assert mod.mod_type == 'phosphorylation'
+    assert not mod.residue
+    assert mod.position == '218'
+
+    mek = protein(name='MAP2K1', namespace='HGNC',
+                  variants=[pmod('Ph', position=218, code='Ser')])
+    agent = pb._get_agent(mek)
+    assert isinstance(agent, Agent)
+    assert len(agent.mods) == 1
+    mod = agent.mods[0]
+    assert mod.mod_type == 'phosphorylation'
+    assert mod.residue == 'S'
+    assert mod.position == '218'
+
+
 if __name__ == '__main__':
-    test_get_agent_hgnc()
-    test_get_agent_up()
-    test_get_agent_up_no_id()
+    test_get_agent_with_mods()
+
+
