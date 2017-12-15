@@ -78,7 +78,7 @@ def needs_py3(func):
     @wraps(func)
     def test_with_py3_func(*args, **kwargs):
         if not IS_PY3:
-            raise SkipTest("This tests feautures only supported in Python 3.x")
+            raise SkipTest("This tests features only supported in Python 3.x")
         return func(*args, **kwargs)
     return test_with_py3_func
 

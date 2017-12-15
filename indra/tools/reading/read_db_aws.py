@@ -88,7 +88,7 @@ if __name__ == '__main__':
     random.shuffle(id_str_list)
     id_dict = get_id_dict([line.strip() for line in id_str_list])
 
-    # Run the re# Read everything ========================================
+    # Read everything ========================================
     outputs = produce_readings(id_dict, readers, verbose=True,
                                read_mode=args.mode)
 
