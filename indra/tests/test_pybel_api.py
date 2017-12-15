@@ -18,7 +18,7 @@ def test_process_pybel():
 
 def test_get_agent_hgnc():
     mek = protein(name='MAP2K1', namespace='HGNC')
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
@@ -26,7 +26,7 @@ def test_get_agent_hgnc():
 
     # Now create an agent with an identifier
     mek = protein(name='Foo', namespace='HGNC', identifier='6840')
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
@@ -35,7 +35,7 @@ def test_get_agent_hgnc():
 
 def test_get_agent_up():
     mek = protein(namespace='UP', identifier='Q02750')
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
@@ -44,14 +44,14 @@ def test_get_agent_up():
 
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert agent is None
 
 
 def test_get_agent_with_mods():
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph')])
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -61,7 +61,7 @@ def test_get_agent_with_mods():
 
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', code='Ser')])
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -71,7 +71,7 @@ def test_get_agent_with_mods():
 
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', position=218)])
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -81,7 +81,7 @@ def test_get_agent_with_mods():
 
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', position=218, code='Ser')])
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -93,7 +93,7 @@ def test_get_agent_with_mods():
 def test_get_agent_with_muts():
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[hgvs('p.Val600Glu')])
-    agent = pb._get_agent(mek)
+    agent = pb._get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mutations) == 1
     mut = agent.mutations[0]

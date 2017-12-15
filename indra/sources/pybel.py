@@ -86,8 +86,8 @@ class PybelProcessor(object):
             #   complex(x(Foo), x(Bar), ...)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
-        subj_agent = _get_agent(u_data)
-        obj_agent = _get_agent(v_data)
+        subj_agent = _get_agent(u_data, edge_data)
+        obj_agent = _get_agent(v_data, edge_data)
         # FIXME: If an RNA agent type, create a transcription-specific
         # Statement
         if subj_agent is None or obj_agent is None:
@@ -109,10 +109,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, edge_data):
-        subj_agent = _get_agent(u_data)
-        mods, muts = _get_all_pmods(v_data)
+        subj_agent = _get_agent(u_data, edge_data)
+        mods, muts = _get_all_pmods(v_data, edge_data)
         v_data_no_mods = _remove_pmods(v_data)
-        obj_agent = _get_agent(v_data_no_mods)
+        obj_agent = _get_agent(v_data_no_mods, edge_data)
         if subj_agent is None or obj_agent is None:
             return
         for mod in mods:
@@ -123,7 +123,7 @@ class PybelProcessor(object):
             self.statements.append(stmt)
 
 
-def _get_agent(node_data):
+def _get_agent(node_data, edge_data):
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA):
