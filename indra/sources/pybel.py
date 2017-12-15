@@ -88,9 +88,20 @@ class PybelProcessor(object):
     def _get_regulate_amount(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data)
         obj_agent = _get_agent(v_data)
+        # FIXME: If an RNA agent type, create a transcription-specific
+        # Statement
         if subj_agent is None or obj_agent is None:
             return
-        if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+        # FIXME: If object is a degradation, create a stability-specific
+        # Statement
+        obj_mod = edge_data.get(pc.OBJECT)
+        deg_polarity = (-1 if obj_mod and obj_mod[pc.MODIFIER] == pc.DEGRADATION
+                           else 1)
+        rel_polarity = (1 if edge_data[pc.RELATION] in
+                                    pc.CAUSAL_INCREASE_RELATIONS else -1)
+        # Set polarity accordingly based on the relation type and whether
+        # the object is a degradation node
+        if deg_polarity * rel_polarity > 0:
             stmt_class = IncreaseAmount
         else:
             stmt_class = DecreaseAmount

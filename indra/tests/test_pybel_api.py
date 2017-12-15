@@ -5,7 +5,7 @@ from pybel.examples import egf_graph, sialic_acid_graph
 from indra.statements import *
 from indra.sources import pybel as pb
 from indra.databases import hgnc_client
-from nose.tools import raises
+from nose.tools import raises, ok_
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
@@ -155,7 +155,7 @@ def test_phosphorylation_two_sites():
     assert stmt2.sub.mods == []
 
 
-def test_increase_amount1_prot_obj():
+def test_regulate_amount1_prot_obj():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
     g = pybel.BELGraph()
@@ -165,6 +165,61 @@ def test_increase_amount1_prot_obj():
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
+
+
+def test_regulate_amount2_rna_obj():
+    # FIXME: Create a transcription-specific statement for p->rna
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = rna(name='MAPK1', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert isinstance(pbp.statements[0], IncreaseAmount)
+
+
+def test_regulate_amount3_deg():
+    # FIXME: Create a stability-specific statement for p->deg(p(Foo))
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
+                         object_modifier=degradation(),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert isinstance(pbp.statements[0], DecreaseAmount)
+
+
+def test_regulate_amount4_subj_act():
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
+                         subject_modifier=activity(name='tscript'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert isinstance(pbp.statements[0], IncreaseAmount)
+    subj = pbp.statements[0].subj
+    assert subj.name == 'MAP2K1'
+    assert subj.activity == 'transcription'
+
+    g = pybel.BELGraph()
+    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
+                         subject_modifier=activity(name='act'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert isinstance(pbp.statements[0], IncreaseAmount)
+    subj = pbp.statements[0].subj
+    assert subj.name == 'MAP2K1'
+    assert subj.activity == 'activity'
 
 
 if __name__ == '__main__':
