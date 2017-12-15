@@ -234,6 +234,7 @@ def test_regulate_amount4_subj_act():
     assert subj.activity.activity_type == 'activity'
     assert subj.activity.is_active == True
 
+
 def test_regulate_activity():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
@@ -255,6 +256,31 @@ def test_regulate_activity():
     assert obj.name == 'MAPK1'
     assert obj.activity is None
     assert pbp.statements[0].obj_activity == 'kinase'
+
+
+def test_active_form():
+    p53_pmod = protein(name='TP53', namespace='HGNC',
+                       variants=[pmod('Ph', position=33, code='Ser')])
+    p53_obj = protein(name='TP53', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(p53_pmod, p53_obj, relation=pc.INCREASES,
+                         object_modifier=activity(name='tscript'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, ActiveForm)
+    assert stmt.activity == 'transcription'
+    assert stmt.is_active is True
+    ag = stmt.agent
+    assert ag.name == 'TP53'
+    assert len(ag.mods) == 1
+    mc = ag.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue == 'S'
+    assert mc.position == '33'
+
 
 if __name__ == '__main__':
     test_get_agent_with_mods()

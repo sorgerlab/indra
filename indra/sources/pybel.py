@@ -51,11 +51,22 @@ class PybelProcessor(object):
             if v_data[pc.FUNCTION] == pc.PROTEIN and \
                node_has_pmod(self.graph, v):
                 self._get_modification(u_data, v_data, d)
-            # Activation/Inhibition
-            #   x(Foo) -> act(x(Foo))
-            #   act(x(Foo)) -> act(x(Foo))
             elif obj_activity:
-                self._get_regulate_activity(u_data, v_data, d)
+                # If the agents on the left and right hand sides are the same,
+                # then get an active form:
+                # ActiveForm
+                #   p(Foo, {variants}) ->/-| act(p(Foo))
+                # Also Composite active forms:
+                #   compositeAbundance(p(Foo, pmod('Ph', 'T')),
+                #                       p(Foo, pmod('Ph', 'Y'))) ->/-|
+                #                            act(p(Foo))
+                if not subj_activity and _proteins_match(u_data, v_data):
+                    self._get_active_form(u_data, v_data, d)
+                # Activation/Inhibition
+                #   x(Foo) -> act(x(Foo))
+                #   act(x(Foo)) -> act(x(Foo))
+                else:
+                    self._get_regulate_activity(u_data, v_data, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
             #   x(Foo) -> r(Bar)
@@ -82,12 +93,6 @@ class PybelProcessor(object):
             # p(A, pmod('ph')) -> Complex(A, B)
             #            Complex(A-Ph, B) 
 
-            # ActiveForm
-            #   p(Foo, {variants}) ->/-| act(p(Foo))
-            # Also Composite active forms:
-            #   compositeAbundance(p(Foo, pmod('Ph', 'T')),
-            #                       p(Foo, pmod('Ph', 'Y'))) ->/-|
-            #                            act(p(Foo))
 
             # Complexes
             #   complex(x(Foo), x(Bar), ...)
@@ -145,6 +150,19 @@ class PybelProcessor(object):
         stmt = stmt_class(subj_agent, obj_agent, activity_type)
         self.statements.append(stmt)
 
+    def _get_active_form(self, u_data, v_data, edge_data):
+        subj_agent = _get_agent(u_data)
+        obj_agent = _get_agent(v_data)
+        if subj_agent is None or obj_agent is None:
+            return
+        obj_activity_condition = \
+                            _get_activity_condition(edge_data.get(pc.OBJECT))
+        activity_type = obj_activity_condition.activity_type
+        # If the relation is DECREASES, this means that this agent state
+        # is inactivating
+        is_active = edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS
+        stmt = ActiveForm(subj_agent, activity_type, is_active)
+        self.statements.append(stmt)
 
 def _get_agent(node_data, node_modifier_data=None):
     # Check the node type/function
@@ -301,7 +319,7 @@ def _get_activity_condition(node_modifier_data):
     effect = node_modifier_data.get(pc.EFFECT)
     # No specific effect, just return generic activity
     if not effect:
-        return ActivityCodition('activity', True)
+        return ActivityCondition('activity', True)
 
     activity_ns = effect[pc.NAMESPACE]
     if activity_ns == pc.BEL_DEFAULT_NAMESPACE:
@@ -315,3 +333,13 @@ def _get_activity_condition(node_modifier_data):
     # If an unsupported namespace, simply return generic activity
     return ActivityCondition('activity', True)
 
+
+def _proteins_match(u_data, v_data):
+    return (
+        u_data[pc.FUNCTION] == pc.PROTEIN and
+        v_data[pc.FUNCTION] == pc.PROTEIN and
+        pc.NAMESPACE in u_data and pc.NAMESPACE in v_data and
+        pc.NAME in u_data and pc.NAME in v_data and
+        u_data[pc.NAMESPACE] == v_data[pc.NAMESPACE] and
+        u_data[pc.NAME] == v_data[pc.NAME]
+    )
