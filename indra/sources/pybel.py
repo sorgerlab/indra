@@ -36,27 +36,34 @@ class PybelProcessor(object):
     def get_statements(self):
         graph_nodes = set()
         for u, v, d in self.graph.edges_iter(data=True):
+            if d[pc.RELATION] not in pc.CAUSAL_RELATIONS:
+                continue
             # Add nodes to the node set
             graph_nodes.add(u)
             graph_nodes.add(v)
             u_data = self.graph.node[u]
             v_data = self.graph.node[v]
-
+            subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
+            obj_activity = _get_activity_condition(d.get(pc.OBJECT))
             # Modification, e.g.
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if v_data[pc.FUNCTION] == pc.PROTEIN and \
-               d[pc.RELATION] in pc.CAUSAL_RELATIONS and \
                node_has_pmod(self.graph, v):
                 self._get_modification(u_data, v_data, d)
+            # Activation/Inhibition
+            #   x(Foo) -> act(x(Foo))
+            #   act(x(Foo)) -> act(x(Foo))
+            #elif obj_activity:
+            #    self._get_regulate_activity(u_data, v_data, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
             #   x(Foo) -> r(Bar)
             #   act(x(Foo)) -> p(Bar):
             #   x(Foo) -> deg(p(Bar))
             #   act(x(Foo)) ->/-| deg(p(Bar))
-            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
-              d[pc.RELATION] in pc.CAUSAL_RELATIONS:
+            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA):
+            # and \ not obj_activity:
                 self._get_regulate_amount(u_data, v_data, d)
             # Gef
             #   act(p(Foo)) => gtp(p(Foo))
@@ -65,9 +72,6 @@ class PybelProcessor(object):
             # GtpActivation
             #   gtp(p(Foo)) => act(p(Foo))
 
-            # Activation/Inhibition
-            #   x(Foo) -> act(x(Foo))
-            #   act(x(Foo)) -> act(x(Foo))
 
             # Conversion
             #   rxn(reactants(r1,...,rn), products(p1,...pn))
@@ -154,7 +158,7 @@ def _get_agent(node_data, node_modifier_data):
         # Get the name, overwriting existing name if necessary
         if ns == 'HGNC':
             name = hgnc_client.get_hgnc_name(ident)
-            db_refs = {'HGNC': hgnc_id}
+            db_refs = {'HGNC': ident}
             up_id = _get_up_id(ident)
             if up_id:
                 db_refs['UP'] = up_id

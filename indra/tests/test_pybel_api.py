@@ -234,7 +234,29 @@ def test_regulate_amount4_subj_act():
     assert subj.activity.activity_type == 'activity'
     assert subj.activity.is_active == True
 
-
+def test_regulate_activity():
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
+                         subject_modifier=activity(name='kin'),
+                         object_modifier=activity(name='kin'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert isinstance(pbp.statements[0], Activation)
+    subj = pbp.statements[0].subj
+    assert subj.name == 'MAP2K1'
+    assert isinstance(subj.activity, ActivityCondition)
+    assert subj.activity.activity_type == 'kinase'
+    assert subj.activity.is_active == True
+    obj = pbp.statements[0].obj
+    assert obj.name == 'MAPK1'
+    assert isinstance(obj.activity, ActivityCondition)
+    assert obj.activity.activity_type == 'kinase'
+    assert obj.activity.is_active == True
+    
 if __name__ == '__main__':
     test_get_agent_with_mods()
 
