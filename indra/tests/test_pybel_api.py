@@ -42,10 +42,10 @@ def test_get_agent_up():
     assert agent.db_refs.get('UP') == mek_up_id
 
 
-@raises(ValueError)
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek)
+    assert agent is None
 
 
 def test_get_agent_with_mods():
@@ -168,5 +168,5 @@ def test_increase_amount():
 
 
 if __name__ == '__main__':
-    test_phosphorylation_one_site_with_evidence()
+    test_get_agent_with_mods()
 

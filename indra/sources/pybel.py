@@ -1,8 +1,11 @@
+import logging
 from copy import copy
 import pybel.constants as pc
 from pybel.struct import node_has_pmod
 from indra.statements import *
 from indra.databases import hgnc_client, uniprot_client
+
+logger = logging.getLogger('pybel_processor')
 
 def process_pybel_graph(graph):
     proc = PybelProcessor(graph)
@@ -47,6 +50,8 @@ class PybelProcessor(object):
         mods, muts = _get_all_pmods(v_data)
         v_data_no_mods = _remove_pmods(v_data)
         obj_agent = _get_agent(v_data_no_mods)
+        if subj_agent is None or obj_agent is None:
+            return
         for mod in mods:
             modclass = modtype_to_modclass[mod.mod_type]
             ev = _get_evidence(edge_data)
@@ -54,7 +59,14 @@ class PybelProcessor(object):
                             evidence=[ev])
             self.statements.append(stmt)
 
+
 def _get_agent(node_data):
+    # Check the node type/function
+    node_func = node_data[pc.FUNCTION]
+    if node_func not in (pc.PROTEIN, pc.RNA):
+        logger.info("Nodes of type %s not handled", node_func)
+        return None
+    # Get node identifier information
     name = node_data.get(pc.NAME)
     ns = node_data[pc.NAMESPACE]
     ident = node_data.get(pc.IDENTIFIER)
@@ -65,7 +77,8 @@ def _get_agent(node_data):
         if ns == 'HGNC':
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if not hgnc_id:
-                raise ValueError("Invalid HGNC name: %s" % name)
+                logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
+                return None
             db_refs = {'HGNC': hgnc_id, 'UP': _get_up_id(hgnc_id)}
     # We've already got an identifier, look up other identifiers if necessary
     else:
@@ -85,8 +98,9 @@ def _get_agent(node_data):
                 else:
                     db_refs['HGNC'] = hgnc_id
     if db_refs is None:
-        raise ValueError('Unable to get identifier information for node: %s'
-                         % node_data)
+        logger.info('Unable to get identifier information for node: %s'
+                     % node_data)
+        return None
     # Get modification conditions
     mods, muts = _get_all_pmods(node_data)
     ag = Agent(name, db_refs=db_refs, mods=mods)
@@ -172,7 +186,7 @@ def _get_all_pmods(node_data, remove_pmods=False):
                                 (var_id, node_data))
                     continue
                 mc = ModCondition(mod_type, var.get(pc.PMOD_CODE),
-                                  str(var.get(pc.PMOD_POSITION)))
+                                  var.get(pc.PMOD_POSITION))
                 mods.append(mc)
         # FIXME These unhandled mod types should result in throwing out
         # the node (raise, or return None)
