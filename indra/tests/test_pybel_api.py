@@ -155,7 +155,7 @@ def test_phosphorylation_two_sites():
     assert stmt2.sub.mods == []
 
 
-def test_increase_amount():
+def test_increase_amount1_prot_obj():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
     g = pybel.BELGraph()

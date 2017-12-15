@@ -54,7 +54,7 @@ class PybelProcessor(object):
             #   act(x(Foo)) ->/-| deg(p(Bar))
             elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
               d[pc.RELATION] in pc.CAUSAL_RELATIONS:
-                pass
+                self._get_regulate_amount(u_data, v_data, d)
             # Gef
             #   act(p(Foo)) => gtp(p(Foo))
             # Gap
@@ -86,11 +86,18 @@ class PybelProcessor(object):
             #   complex(x(Foo), x(Bar), ...)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
-        is_direct = _rel_is_direct(d)
-        subj = _get_agent(u_data)
+        subj_agent = _get_agent(u_data)
+        obj_agent = _get_agent(v_data)
+        if subj_agent is None or obj_agent is None:
+            return
+        if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+            stmt_class = IncreaseAmount
+        else:
+            stmt_class = DecreaseAmount
+        stmt = stmt_class(subj_agent, obj_agent)
+        self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, edge_data):
-        is_direct = _rel_is_direct(edge_data)
         subj_agent = _get_agent(u_data)
         mods, muts = _get_all_pmods(v_data)
         v_data_no_mods = _remove_pmods(v_data)
