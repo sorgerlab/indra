@@ -2,12 +2,29 @@ import logging
 from copy import copy
 import pybel.constants as pc
 from pybel.struct import node_has_pmod
+from pybel.canonicalize import edge_to_bel
 from indra.statements import *
 from indra.databases import hgnc_client, uniprot_client
 from indra.assemblers.pybel_assembler import _pybel_indra_act_map
 
 
 logger = logging.getLogger('pybel_processor')
+
+
+_pybel_indra_pmod_map = {
+    'Ph': 'phosphorylation',
+    'Hy': 'hydroxylation',
+    'Sumo': 'sumoylation',
+    'Ac': 'acetylation',
+    'Glyco': 'glycosylation',
+    'ADPRib': 'ribosylation',
+    'Ub': 'ubiquitination',
+    'Farn': 'farnesylation',
+    'Gerger': 'geranylgeranylation',
+    'Palm': 'palmitoylation',
+    'Myr': 'myristoylation',
+    'Me': 'methylation',
+}
 
 
 def process_pybel_graph(graph):
@@ -117,7 +134,8 @@ class PybelProcessor(object):
             stmt_class = IncreaseAmount
         else:
             stmt_class = DecreaseAmount
-        stmt = stmt_class(subj_agent, obj_agent)
+        ev = _get_evidence(u_data, v_data, edge_data)
+        stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, edge_data):
@@ -129,7 +147,7 @@ class PybelProcessor(object):
             return
         for mod in mods:
             modclass = modtype_to_modclass[mod.mod_type]
-            ev = _get_evidence(edge_data)
+            ev = _get_evidence(u_data, v_data, edge_data)
             stmt = modclass(subj_agent, obj_agent, mod.residue, mod.position,
                             evidence=[ev])
             self.statements.append(stmt)
@@ -147,7 +165,8 @@ class PybelProcessor(object):
             stmt_class = Activation
         else:
             stmt_class = Inhibition
-        stmt = stmt_class(subj_agent, obj_agent, activity_type)
+        ev = _get_evidence(u_data, v_data, edge_data)
+        stmt = stmt_class(subj_agent, obj_agent, activity_type, evidence=[ev])
         self.statements.append(stmt)
 
     def _get_active_form(self, u_data, v_data, edge_data):
@@ -161,8 +180,10 @@ class PybelProcessor(object):
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
         is_active = edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS
-        stmt = ActiveForm(subj_agent, activity_type, is_active)
+        ev = _get_evidence(u_data, v_data, edge_data)
+        stmt = ActiveForm(subj_agent, activity_type, is_active, evidence=[ev])
         self.statements.append(stmt)
+
 
 def _get_agent(node_data, node_modifier_data=None):
     # Check the node type/function
@@ -219,7 +240,7 @@ def _get_agent(node_data, node_modifier_data=None):
     return ag
 
 
-def _get_evidence(edge_data):
+def _get_evidence(u_data, v_data, edge_data):
     # TODO: @cthoyt put in some additional epistemics info from pybel
     # TODO: Also add additional provenance information from the bel/pybel
     # source document into annotations
@@ -252,20 +273,6 @@ def _get_up_id(hgnc_id):
     return up_id
 
 
-_pybel_indra_pmod_map = {
-    'Ph': 'phosphorylation',
-    'Hy': 'hydroxylation',
-    'Sumo': 'sumoylation',
-    'Ac': 'acetylation',
-    'Glyco': 'glycosylation',
-    'ADPRib': 'ribosylation',
-    'Ub': 'ubiquitination',
-    'Farn': 'farnesylation',
-    'Gerger': 'geranylgeranylation',
-    'Palm': 'palmitoylation',
-    'Myr': 'myristoylation',
-    'Me': 'methylation',
-}
 
 
 def _remove_pmods(node_data):
