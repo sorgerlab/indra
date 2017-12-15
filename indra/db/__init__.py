@@ -701,20 +701,6 @@ def get_primary_db(force_new=False):
     defined by the INDRADBPRIMARY environment variable. If none of the above
     are specified, this function will raise an exception.
 
-    Parameters
-    ----------
-    force_new : bool
-        If true, a new instance will be created and returned, regardless of
-        whether there is an existing instance or not. Default is False, so that
-        if this function has been called before within the global scope, a the
-        instance that was first created will be returned.
-
-    Returns
-    -------
-    primary_db : DatabaseManager instance
-        An instance of the database manager that is attached to the primary
-        database.
-
     Note: by default, calling this function twice will return the same
     `DatabaseManager` instance. In other words:
 
@@ -732,6 +718,20 @@ def get_primary_db(force_new=False):
     complicated and messy. Rather, a database instance should be explicitly
     passed between different users as is done in the `by_gene_role_type`
     function's call to `get_statements` in `indra.db.query_db_stmts`.
+
+    Parameters
+    ----------
+    force_new : bool
+        If true, a new instance will be created and returned, regardless of
+        whether there is an existing instance or not. Default is False, so that
+        if this function has been called before within the global scope, a the
+        instance that was first created will be returned.
+
+    Returns
+    -------
+    primary_db : DatabaseManager instance
+        An instance of the database manager that is attached to the primary
+        database.
     """
     defaults = get_defaults()
     if 'primary' in defaults.keys():
