@@ -253,10 +253,9 @@ def test_regulate_activity():
     assert subj.activity.is_active == True
     obj = pbp.statements[0].obj
     assert obj.name == 'MAPK1'
-    assert isinstance(obj.activity, ActivityCondition)
-    assert obj.activity.activity_type == 'kinase'
-    assert obj.activity.is_active == True
-    
+    assert obj.activity is None
+    assert pbp.statements[0].obj_activity == 'kinase'
+
 if __name__ == '__main__':
     test_get_agent_with_mods()
 

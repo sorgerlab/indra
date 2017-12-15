@@ -54,16 +54,16 @@ class PybelProcessor(object):
             # Activation/Inhibition
             #   x(Foo) -> act(x(Foo))
             #   act(x(Foo)) -> act(x(Foo))
-            #elif obj_activity:
-            #    self._get_regulate_activity(u_data, v_data, d)
+            elif obj_activity:
+                self._get_regulate_activity(u_data, v_data, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
             #   x(Foo) -> r(Bar)
             #   act(x(Foo)) -> p(Bar):
             #   x(Foo) -> deg(p(Bar))
             #   act(x(Foo)) ->/-| deg(p(Bar))
-            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA):
-            # and \ not obj_activity:
+            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
+                 not obj_activity:
                 self._get_regulate_amount(u_data, v_data, d)
             # Gef
             #   act(p(Foo)) => gtp(p(Foo))
@@ -129,8 +129,24 @@ class PybelProcessor(object):
                             evidence=[ev])
             self.statements.append(stmt)
 
+    def _get_regulate_activity(self, u_data, v_data, edge_data):
+        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        obj_agent = _get_agent(v_data)
+        obj_activity_condition = \
+                            _get_activity_condition(edge_data.get(pc.OBJECT))
+        activity_type = obj_activity_condition.activity_type
+        assert obj_activity_condition.is_active is True
+        if subj_agent is None or obj_agent is None:
+            return
+        if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+            stmt_class = Activation
+        else:
+            stmt_class = Inhibition
+        stmt = stmt_class(subj_agent, obj_agent, activity_type)
+        self.statements.append(stmt)
 
-def _get_agent(node_data, node_modifier_data):
+
+def _get_agent(node_data, node_modifier_data=None):
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA):
