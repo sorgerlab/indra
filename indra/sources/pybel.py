@@ -31,14 +31,59 @@ class PybelProcessor(object):
         self.statements = []
 
     def get_statements(self):
+        graph_nodes = set()
         for u, v, d in self.graph.edges_iter(data=True):
+            # Add nodes to the node set
+            graph_nodes.add(u)
+            graph_nodes.add(v)
             u_data = self.graph.node[u]
             v_data = self.graph.node[v]
 
+            # Modification, e.g.
+            #   x(Foo) -> p(Bar, pmod(Ph))
+            #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if v_data[pc.FUNCTION] == pc.PROTEIN and \
                d[pc.RELATION] in pc.CAUSAL_RELATIONS and \
                node_has_pmod(self.graph, v):
                 self._get_modification(u_data, v_data, d)
+            # Regulate amount
+            #   x(Foo) -> p(Bar)
+            #   x(Foo) -> r(Bar)
+            #   act(x(Foo)) -> p(Bar):
+            #   x(Foo) -> deg(p(Bar))
+            #   act(x(Foo)) ->/-| deg(p(Bar))
+            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
+              d[pc.RELATION] in pc.CAUSAL_RELATIONS:
+                pass
+            # Gef
+            #   act(p(Foo)) => gtp(p(Foo))
+            # Gap
+            #   act(p(Foo)) =| gtp(p(Foo))
+            # GtpActivation
+            #   gtp(p(Foo)) => act(p(Foo))
+
+            # Activation/Inhibition
+            #   x(Foo) -> act(x(Foo))
+            #   act(x(Foo)) -> act(x(Foo))
+
+            # Conversion
+            #   rxn(reactants(r1,...,rn), products(p1,...pn))
+            #   x(Foo) -> rxn(reactants(r1,...,rn), products(p1,...pn))
+            #   act(x(Foo)) -> rxn(reactants(r1,...,rn), products(p1,...pn))
+
+            # Complex(a,b) -> asdfasdf
+            # p(A, pmod('ph')) -> Complex(A, B)
+            #            Complex(A-Ph, B) 
+
+            # ActiveForm
+            #   p(Foo, {variants}) ->/-| act(p(Foo))
+            # Also Composite active forms:
+            #   compositeAbundance(p(Foo, pmod('Ph', 'T')),
+            #                       p(Foo, pmod('Ph', 'Y'))) ->/-|
+            #                            act(p(Foo))
+
+            # Complexes
+            #   complex(x(Foo), x(Bar), ...)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
         is_direct = _rel_is_direct(d)
