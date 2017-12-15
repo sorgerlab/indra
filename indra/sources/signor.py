@@ -154,7 +154,7 @@ class SignorProcessor(object):
         Counter listing the frequency of different MECHANISM types in the
         list of no-mechanism rows.
     """
-    def __init__(self, signor_csv=None, delimiter=';'):
+    def __init__(self, signor_csv=None, delimiter='\t'):
         # Get generator over the CSV file
         if signor_csv:
             data_iter = read_unicode_csv(signor_csv, delimiter=delimiter,
