@@ -145,13 +145,19 @@ def _get_agent(node_data, node_modifier_data):
             if not hgnc_id:
                 logger.info("Invalid HGNC name: %s (%s)" % (name, node_data))
                 return None
-            db_refs = {'HGNC': hgnc_id, 'UP': _get_up_id(hgnc_id)}
+            db_refs = {'HGNC': hgnc_id}
+            up_id = _get_up_id(hgnc_id)
+            if up_id:
+                db_refs['UP'] = up_id
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
         if ns == 'HGNC':
             name = hgnc_client.get_hgnc_name(ident)
-            db_refs = {'HGNC': ident, 'UP': _get_up_id(ident)}
+            db_refs = {'HGNC': hgnc_id}
+            up_id = _get_up_id(ident)
+            if up_id:
+                db_refs['UP'] = up_id
         elif ns == 'UP':
             db_refs = {'UP': ident}
             name = uniprot_client.get_gene_name(ident)
@@ -204,7 +210,7 @@ def _rel_is_direct(d):
 def _get_up_id(hgnc_id):
     up_id = hgnc_client.get_uniprot_id(hgnc_id)
     if not up_id:
-        raise ValueError("No Uniprot ID for HGNC ID %s" % hgnc_id)
+        logger.info("No Uniprot ID for HGNC ID %s" % hgnc_id)
     return up_id
 
 
