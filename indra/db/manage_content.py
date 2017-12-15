@@ -19,10 +19,11 @@ import xml.etree.ElementTree as ET
 import re
 import os
 import multiprocessing as mp
+import pickle
+import sys
 from os import path
 from ftplib import FTP
 from io import BytesIO
-import pickle
 
 logger = logging.getLogger('content_manager')
 if __name__ == '__main__':
@@ -61,6 +62,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
+        from indra.db import logger as db_logger
+        db_logger.setLevel(logging.DEBUG)
+
     if not args.continuing and args.task == 'upload':
         print("#"*63)
         print(
@@ -73,7 +77,7 @@ if __name__ == '__main__':
             "# `update` in your command. For mor details, use --help.      #"
             )
         print("#"*63)
-        resp = input("Are you sure you want to continue? [yes/no]: ")
+        resp = input("Are you sure you want to continue? [yes/NO]: ")
         if resp == 'no':
             print ("Aborting...")
             exit()
@@ -333,8 +337,8 @@ class Medline(NihManager):
             # Make sure it's not an empty or whitespace-only string
             if abstract and abstract.strip():
                 abstract_gz = zip_string(abstract)
-                text_content_info[pmid] = \
-                    (self.my_source, 'text', texttypes.ABSTRACT, abstract_gz)
+                text_content_info[pmid] = (self.my_source, formats.TEXT,
+                                           texttypes.ABSTRACT, abstract_gz)
 
         self.copy_into_db(
             db,
@@ -659,7 +663,7 @@ class PmcManager(NihManager):
     def get_data_from_xml_str(self, xml_str, filename):
         "Get the data out of the xml string."
         try:
-            tree = ET.XML(xml_str)
+            tree = ET.XML(xml_str.encode('utf8'))
         except ET.ParseError:
             logger.info("Could not parse %s. Skipping." % filename)
             return None
@@ -672,26 +676,14 @@ class PmcManager(NihManager):
             return None
         if 'pmcid' not in id_data.keys():
             id_data['pmcid'] = 'PMC' + id_data['pmc']
-        rec_dict = dict.fromkeys(self.tr_cols)
-        rec_dict.update(id_data)
-        tr_data_entries = [rec_dict]
-        tc_data_entries = []
-        typ_lbl_list = [
-            (texttypes.ABSTRACT, 'abstract'),
-            (texttypes.FULLTEXT, 'body')
-            ]
-        for typ, lbl in typ_lbl_list:
-            cont_xml = tree.find('.//'+lbl)
-            if cont_xml is not None:
-                content = ET.tostring(cont_xml).decode('utf8')
-                tc_data_entries.append(
-                    {
-                        'pmcid': id_data['pmcid'],
-                        'text_type': typ,
-                        'content': zip_string(content)
-                        }
-                    )
-        return tr_data_entries, tc_data_entries
+        tr_datum = dict.fromkeys(self.tr_cols)
+        tr_datum.update(id_data)
+        tc_datum = {
+            'pmcid': id_data['pmcid'],
+            'text_type': texttypes.FULLTEXT,
+            'content': zip_string(xml_str)
+            }
+        return tr_datum, tc_datum
 
     def upload_archive(self, archive, q=None, db=None):
         "Process a single tar gzipped article archive."
@@ -719,12 +711,14 @@ class PmcManager(NihManager):
             logger.info('Loading %s...' % archive)
             xml_files = [m for m in tar.getmembers() if m.isfile()]
             for i, xml_file in enumerate(xml_files):
-                xml_str = tar.extractfile(xml_file).read()
+                xml_str = tar.extractfile(xml_file).read().decode('utf8')
                 res = self.get_data_from_xml_str(xml_str, xml_file.name)
                 if res is None:
                     continue
-                tr_data += res[0]
-                tc_data += res[1]
+                else:
+                    tr, tc = res
+                tr_data.append(tr)
+                tc_data.append(tc)
                 if (i+1) % BATCH_SIZE is 0:
                     submit((i+1)/BATCH_SIZE, tr_data, tc_data)
             else:
@@ -851,8 +845,10 @@ if __name__ == '__main__':
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
         if not args.continuing:
-            logger.info("Clearing database.")
-            db._clear()
+            logger.info("Clearing TextContent and TextRef tables.")
+            clear_succeeded = db._clear([db.TextContent, db.TextRef, db.SourceFile])
+            if not clear_succeeded:
+                sys.exit()
         Medline().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)

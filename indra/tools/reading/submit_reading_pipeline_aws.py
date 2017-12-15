@@ -6,19 +6,22 @@ import botocore.session
 from time import sleep
 from indra.literature import elsevier_client as ec
 from indra.tools.reading.read_pmids import READER_DICT
+from docutils.nodes import description
 
 bucket_name = 'bigmech'
 
 logger = logging.getLogger('aws_reading')
 
 
-def wait_for_complete(job_list, poll_interval=10):
+def wait_for_complete(queue_name, job_list=None, poll_interval=10):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
 
     Parameters
     ----------
+    queue_name : str
+        The name of the queue to wait for completion.
     job_list : Optional[list(dict)]
         A list of jobID-s in a dict, as returned by the submit function.
         Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
@@ -26,8 +29,11 @@ def wait_for_complete(job_list, poll_interval=10):
     poll_interval : Optional[int]
         The time delay between API calls to check the job statuses.
     """
+    if job_list is None:
+        job_list = []
+
     def get_jobs_by_status(status, job_filter=None):
-        res = batch_client.list_jobs(jobQueue='run_reach_queue',
+        res = batch_client.list_jobs(jobQueue=queue_name,
                                      jobStatus=status)
         ids = [job['jobId'] for job in res['jobSummaryList']]
         if job_filter:
@@ -68,7 +74,7 @@ def tag_instances(project='bigmechanism'):
     """Adds project tag to untagged fleet instances."""
     # First, get all the instances
     ec2_client = boto3.client('ec2')
-    resp = response = ec2_client.describe_instances()
+    resp = ec2_client.describe_instances()
     instances = []
     for res in resp.get('Reservations', []):
         instances += res.get('Instances', [])
@@ -161,6 +167,56 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
     return job_list
 
 
+def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
+                      end_ix=None, pmids_per_job=3000, num_tries=2):
+    # Upload the pmid_list to Amazon S3
+    pmid_list_key = 'reading_inputs/%s/id_list' % basename
+    s3_client = boto3.client('s3')
+    s3_client.upload_file(id_list_filename, 'bigmech', pmid_list_key)
+
+    # If no end index is specified, read all the PMIDs
+    if end_ix is None:
+        with open(id_list_filename, 'rt') as f:
+            lines = f.readlines()
+            end_ix = len(lines)
+
+    if start_ix is None:
+        start_ix = 0
+
+    # Get environment variables
+    environment_vars = get_environment()
+
+    # Fix reader options
+    if 'all' in readers:
+        readers = ['reach', 'sparser']
+
+    # Iterate over the list of PMIDs and submit the job in chunks
+    batch_client = boto3.client('batch')
+    job_list = []
+    for job_start_ix in range(start_ix, end_ix, pmids_per_job):
+        job_end_ix = job_start_ix + pmids_per_job
+        if job_end_ix > end_ix:
+            job_end_ix = end_ix
+        job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
+        command_list = ['python', '-m',
+                        'indra.tools.reading.read_db_aws',
+                        basename, '/tmp', 'unread', '32', str(job_start_ix),
+                        str(job_end_ix), '-r'] + readers
+        print(command_list)
+        job_info = batch_client.submit_job(
+            jobName=job_name,
+            jobQueue='run_db_reading_queue',
+            jobDefinition='run_db_reading_jobdef',
+            containerOverrides={
+                'environment': environment_vars,
+                'command': command_list},
+            retryStrategy={'attempts': num_tries}
+            )
+        print("submitted...")
+        job_list.append({'jobId': job_info['jobId']})
+    return job_list
+
+
 def submit_combine(basename, readers, job_ids=None):
     if job_ids is not None and len(job_ids) > 20:
         print("WARNING: boto3 cannot support waiting for more than 20 jobs.")
@@ -194,14 +250,19 @@ if __name__ == '__main__':
     # Create the top-level parser
     parser = argparse.ArgumentParser(
         'submit_reading_pipeline_aws.py',
-        description='Run machine reading with REACH using AWS Batch.'
+        description='Run reading with either the db or remote resources.'
         )
-    subparsers = parser.add_subparsers(
-        title='Job Type',
-        help='Type of jobs to submit.'
-        )
+    subparsers = parser.add_subparsers(title='Method')
     subparsers.required = True
-    subparsers.dest = 'job_type'
+    subparsers.dest = 'method'
+
+    # Create parser class for first layer of options
+    grandparent_reading_parser = argparse.ArgumentParser(
+        description='Run machine reading using AWS Batch.',
+        add_help=False
+        )
+
+    # Create parent parser classes for second layer of options
     parent_submit_parser = argparse.ArgumentParser(add_help=False)
     parent_submit_parser.add_argument(
         'basename',
@@ -210,25 +271,27 @@ if __name__ == '__main__':
     parent_submit_parser.add_argument(
         '-r', '--readers',
         dest='readers',
-        choices=list(READER_DICT.keys()) + ['all'],
+        choices=['sparser', 'reach', 'all'],
         default=['all'],
-        nargs='+',
         help='Choose which reader(s) to use.'
         )
     parent_read_parser = argparse.ArgumentParser(add_help=False)
     parent_read_parser.add_argument(
-        'pmid_file',
-        help='Path to file containing PMIDs to read'
+        'input_file',
+        help=('Path to file containing input ids of content to read. For the '
+              'no-db options, this is simply a file with each line being a '
+              'pmid. For the with-db options, this is a file where each line '
+              'is of the form \'<id type>:<id>\', for example \'pmid:12345\'')
         )
     parent_read_parser.add_argument(
         '--start_ix',
         type=int,
-        help='Start index of PMIDs to read.'
+        help='Start index of ids to read.'
         )
     parent_read_parser.add_argument(
         '--end_ix',
         type=int,
-        help='End index of PMIDs to read (default: read all PMIDs)'
+        help='End index of ids to read. If `None`, read content from all ids.'
         )
     parent_read_parser.add_argument(
         '--force_read',
@@ -241,7 +304,7 @@ if __name__ == '__main__':
         help='Get full text content even if content already on S3.'
         )
     parent_read_parser.add_argument(
-        '--pmids_per_job',
+        '--ids_per_job',
         default=3000,
         type=int,
         help='Number of PMIDs to read for each AWS Batch job.'
@@ -254,37 +317,87 @@ if __name__ == '__main__':
         help='Maximum number of times to try running job.'
         )
     '''
-    read_parser = subparsers.add_parser(
+    parent_db_parser = argparse.ArgumentParser(add_help=False)
+    '''Not currently supported
+    parent_db_parser.add_argument(
+        '--no_upload',
+        action='store_true',
+        help='Don\'t upload results to the database.'
+        )
+    '''
+
+    # Make non_db_parser and get subparsers
+    non_db_parser = subparsers.add_parser(
+        'no-db',
+        parents=[grandparent_reading_parser],
+        description=('Run reading by collecting content, and save as pickles. '
+                     'This option requires that ids are given as a list of '
+                     'pmids, one line per pmid.'),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+    non_db_subparsers = non_db_parser.add_subparsers(
+        title='Job Type',
+        help='Type of jobs to submit.'
+        )
+    non_db_subparsers.required = True
+    non_db_subparsers.dest = 'job_type'
+
+    # Create subparsers for the no-db option.
+    read_parser = non_db_subparsers.add_parser(
         'read',
         parents=[parent_read_parser, parent_submit_parser],
         help='Run REACH and cache INDRA Statements on S3.',
         description='Run REACH and cache INDRA Statements on S3.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
-    combine_parser = subparsers.add_parser(
+    combine_parser = non_db_subparsers.add_parser(
         'combine',
         parents=[parent_submit_parser],
         help='Combine INDRA Statement subsets into a single file.',
         description='Combine INDRA Statement subsets into a single file.'
         )
-    full_parser = subparsers.add_parser(
+    full_parser = non_db_subparsers.add_parser(
         'full',
         parents=[parent_read_parser, parent_submit_parser],
         help='Run REACH and combine INDRA Statements when done.',
         description='Run REACH and combine INDRA Statements when done.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
+
+    # Make db parser and get subparsers.
+    db_parser = subparsers.add_parser(
+        'with-db',
+        parents=[grandparent_reading_parser, parent_submit_parser,
+                 parent_read_parser, parent_db_parser],
+        description=('Run reading with content on the db and submit results. '
+                     'In this option, ids in \'input_file\' are given in the '
+                     'format \'<id type>:<id>\'. Unlike no-db, there is no '
+                     'need to combine pickles, and therefore no need to '
+                     'specify your task further.'),
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        )
+
     args = parser.parse_args()
 
     job_ids = None
-    if args.job_type in ['read', 'full']:
-        job_ids = submit_reading(
+    if args.method == 'no-db':
+        if args.job_type in ['read', 'full']:
+            job_ids = submit_reading(
+                args.basename,
+                args.input_file,
+                args.readers,
+                args.start_ix,
+                args.end_ix,
+                args.ids_per_job
+                )
+        if args.job_type in ['combine', 'full']:
+            submit_combine(args.basename, args.readers, job_ids)
+    elif args.method == 'with-db':
+        job_ids = submit_db_reading(
             args.basename,
-            args.pmid_file,
+            args.input_file,
             args.readers,
             args.start_ix,
             args.end_ix,
-            args.pmids_per_job
+            args.ids_per_job
             )
-    if args.job_type in ['combine', 'full']:
-        submit_combine(args.basename, args.readers, job_ids)

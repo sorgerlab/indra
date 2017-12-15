@@ -36,7 +36,7 @@ for k in key_list:
     db_name = m.groups()[1]
     try:
         db = DatabaseManager(v, sqltype=sqltype)
-        db._clear()
+        db._clear(force=True)
     except Exception as e:
         print("Tried to use %s, but failed due to:\n%s" % (k, e))
         continue  # Clearly this test table won't work.
@@ -65,11 +65,12 @@ def assert_contents_equal(list1, list2, msg=None):
     assert res, err_msg
 
 
-def get_db():
+def get_db(clear=True):
     "Set up the database for testing."
     db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
     db.grab_session()
-    db._clear()
+    if clear:
+        db._clear(force=True)
     return db
 
 
@@ -77,9 +78,17 @@ def needs_py3(func):
     @wraps(func)
     def test_with_py3_func(*args, **kwargs):
         if not IS_PY3:
-            raise SkipTest("This tests feautures only supported in Python 3.x")
+            raise SkipTest("This tests features only supported in Python 3.x")
         return func(*args, **kwargs)
     return test_with_py3_func
+
+
+@needs_py3
+def get_db_with_content():
+    "Populate the database."
+    db = get_db()
+    Medline(ftp_url=TEST_FTP, local=True).populate(db)
+    return db
 
 
 #==============================================================================
@@ -114,7 +123,7 @@ def test_uniqueness_text_ref_doi_pmid():
     except IntegrityError:
         return  # PASS
     finally:
-        db._clear()
+        db._clear(force=True)
     assert False, "Uniqueness was not enforced."
 
 
@@ -215,14 +224,13 @@ if IS_PY3 and not path.exists(TEST_FTP):
 
 
 @needs_py3
-def test_full_local_upload():
+def test_full_upload():
     "Test whether we can perform a targeted upload to a test db."
     # This uses a specially curated sample directory designed to access most
     # code paths that the real system might experience, but on a much smaller
     # (thus faster) scale. Errors in the ftp service will not be caught by
     # this test.
-    db = get_db()
-    Medline(ftp_url=TEST_FTP, local=True).populate(db)
+    db = get_db_with_content()
     tr_list = db.select_all('text_ref')
     assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
@@ -238,6 +246,13 @@ def test_full_local_upload():
         db.TextContent.source == Manuscripts.my_source
         )
     assert len(tc_list), "No manuscripts uploaded."
+    tc_list = db.select_all('text_content')
+    set_exp = {('manuscripts', 'xml', 'fulltext'),
+               ('pmc_oa', 'xml', 'fulltext'),
+               ('pubmed', 'text', 'abstract')}
+    set_got = set([(tc.source, tc.format, tc.text_type) for tc in tc_list])
+    assert set_exp == set_got,\
+        "Expected %s, got %s for content layout." % (set_exp, set_got)
 
 
 @needs_py3

@@ -4,4 +4,4 @@ from .reach_api import (process_pmc,
                         process_nxml_str,
                         process_nxml_file,
                         process_json_str,
-                        process_json_file,)
+                        process_json_file)

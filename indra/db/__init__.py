@@ -1,26 +1,35 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+__all__ = ['sqltypes', 'texttypes', 'formats', 'DatabaseManager',
+           'IndraDatabaseError', 'get_defaults', 'get_primary_db',
+           'sql_expressions']
+
 import json
 import time
 import re
+import os
+import logging
 from io import BytesIO
 from os import path
-from docutils.io import InputError
+from datetime import datetime
+from numbers import Number
+
+from sqlalchemy.sql import expression as sql_expressions
+from sqlalchemy.schema import DropTable
+from sqlalchemy.sql.expression import Delete, Update
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
     TIMESTAMP, create_engine, inspect, LargeBinary
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
-from datetime import datetime
-from numbers import Number
-from sqlalchemy.schema import DropTable
-from sqlalchemy.sql.expression import Delete, Update
-from sqlalchemy.ext.compiler import compiles
-from indra.statements import *
+
+from indra.statements import ActiveForm, SelfModification, Complex
 from indra.util import unzip_string
 from indra.util.get_version import get_version
 
+logger = logging.getLogger('indra_db')
 
 # Solution to fix postgres drop tables
 # See: https://stackoverflow.com/questions/38678336/sqlalchemy-how-to-implement-drop-table-cascade
@@ -68,17 +77,37 @@ def _isiterable(obj):
     return hasattr(obj, '__iter__') and not isinstance(obj, str)
 
 
-class sqltypes:
+class _map_class(object):
+    @classmethod
+    def _getattrs(self):
+        return {
+            k: v for k, v in self.__dict__.items() if not k.startswith('_')
+            }
+
+    @classmethod
+    def items(self):
+        return self._getattrs().items()
+
+    @classmethod
+    def values(self):
+        return self._getattrs().values()
+
+    @classmethod
+    def keys(self):
+        return self._getattrs().keys()
+
+
+class sqltypes(_map_class):
     POSTGRESQL = 'postgresql'
     SQLITE = 'sqlite'
 
 
-class texttypes:
+class texttypes(_map_class):
     FULLTEXT = 'fulltext'
     ABSTRACT = 'abstract'
 
 
-class formats:
+class formats(_map_class):
     XML = 'xml'
     TEXT = 'text'
     JSON = 'json'
@@ -188,7 +217,7 @@ class DatabaseManager(object):
             reader_version = Column(String(20), nullable=False)
             format = Column(String(20), nullable=False)  # xml, json, etc.
             bytes = Column(Bytea, nullable=False)
-            ___table_args__ = (
+            __table_args__ = (
                 UniqueConstraint(
                     'text_content_id', 'reader', 'reader_version'
                     ),
@@ -220,7 +249,7 @@ class DatabaseManager(object):
                              nullable=False)
             statements = relationship(Statements)
             db_name = Column(String(40), nullable=False)
-            db_id = Column(String(40), nullable=False)
+            db_id = Column(String, nullable=False)
             role = Column(String(20), nullable=False)
 
         self.tables = {}
@@ -238,37 +267,100 @@ class DatabaseManager(object):
             print("Failed to execute rollback of database upon deletion.")
             raise e
 
-    def create_tables(self):
+    def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
-        self.Base.metadata.create_all(self.engine)
+        if tbl_list is None:
+            logger.debug("Creating all tables...")
+            self.Base.metadata.create_all(self.engine)
+            logger.debug("Created all tables.")
+        else:
+            tbl_name_list = []
+            for tbl in tbl_list:
+                if isinstance(tbl, str):
+                    tbl_name_list.append(tbl)
+                else:
+                    tbl_name_list.append(tbl.__tablename__)
+            # These tables must be created in this order.
+            for tbl_name in ['text_ref', 'text_content', 'readings', 'db_info', 'statements', 'agents']:
+                if tbl_name in tbl_name_list:
+                    tbl_name_list.remove(tbl_name)
+                    logger.debug("Creating %s..." % tbl_name)
+                    if not self.tables[tbl_name].__table__.exists(self.engine):
+                        self.tables[tbl_name].__table__.create(bind=self.engine)
+                        logger.debug("Table created.")
+                    else:
+                        logger.debug("Table already existed.")
+            # The rest can be started any time.
+            for tbl_name in tbl_name_list:
+                logger.debug("Creating %s..." % tbl_name)
+                self.tables[tbl_name].__table__.create(bind=self.engine)
+                logger.debug("Table created.")
+        return
 
-    def drop_tables(self):
-        "Drop all the tables for INDRA database"
-        if self.label == 'primary':
-            msg = "Do you really want to clear the primary database? [y/N]: "
+    def drop_tables(self, tbl_list=None, force=False):
+        """Drop the tables for INDRA database given in tbl_list.
+
+        If tbl_list is None, all tables will be dropped. Note that if `force`
+        is False, a warning prompt will be raised to asking for confirmation,
+        as this action will remove all data from that table.
+        """
+        if tbl_list is not None:
+            tbl_objs = []
+            for tbl in tbl_list:
+                if isinstance(tbl, str):
+                    tbl_objs.append(self.tables[tbl])
+                else:
+                    tbl_objs.append(tbl)
+        if not force:
+            # Build the message
+            if tbl_list is None:
+                msg = "Do you really want to clear the primary database? [y/N]: "
+            else:
+                msg = "You are going to clear the following tables:\n"
+                msg += str([tbl.__tablename__ for tbl in tbl_objs]) + '\n'
+                msg += "Do you really want to clear these tables? [y/N]: "
+            # Check to make sure.
             try:
                 resp = raw_input(msg)
             except NameError:
                 resp = input(msg)
             if resp != 'y' and resp != 'yes':
-                logger.info('Aborting clearing of database.')
-                return
-        self.Base.metadata.drop_all(self.engine)
+                logger.info('Aborting clear.')
+                return False
+        if tbl_list is None:
+            logger.info("Removing all tables...")
+            self.Base.metadata.drop_all(self.engine)
+            logger.debug("All tables removed.")
+        else:
+            for tbl in tbl_list:
+                logger.info("Removing %s..." % tbl.__tablename__)
+                if tbl.__table__.exists(self.engine):
+                    tbl.__table__.drop(self.engine)
+                    logger.debug("Table removed.")
+                else:
+                    logger.debug("Table doesn't exist.")
+        return True
 
-    def _clear(self):
-        "Brutal clearing of all tables."
+    def _clear(self, tbl_list=None, force=False):
+        "Brutal clearing of all tables in tbl_list, or all tables."
         # This is intended for testing purposes, not general use.
         # Use with care.
         self.grab_session()
+        logger.debug("Rolling back before clear...")
         self.session.rollback()
-        self.drop_tables()
-        self.create_tables()
-        return
+        logger.debug("Rolled back.")
+        if self.drop_tables(tbl_list, force=force):
+            self.create_tables(tbl_list)
+            return True
+        else:
+            return False
 
     def grab_session(self):
         "Get an active session with the database."
         if self.session is None or not self.session.is_active:
+            logger.debug('Attempting to get session...')
             DBSession = sessionmaker(bind=self.engine)
+            logger.debug('Got session.')
             self.session = DBSession()
             if self.session is None:
                 raise IndraDatabaseError("Failed to grab session.")
@@ -287,17 +379,23 @@ class DatabaseManager(object):
 
     def get_columns(self, tbl_name):
         "Get a list of the column labels for a table."
+        if isinstance(tbl_name, type(self.Base)):
+            tbl_name = tbl_name.__tablename__
         return self.Base.metadata.tables[tbl_name].columns.keys()
 
     def commit(self, err_msg):
         "Commit, and give useful info if there is an exception."
         try:
+            logger.debug('Attempting to commit...')
             self.session.commit()
+            logger.debug('Message committed.')
         except Exception as e:
             if self.session is not None:
+                logger.error('Got exception in commit, rolling back...')
                 self.session.rollback()
-            print(e)
-            print(err_msg)
+                logger.debug('Rolled back.')
+            logger.exception(e)
+            logger.error(err_msg)
             raise
 
     def get_values(self, entry_list, col_names=None, keyed=False):
@@ -461,26 +559,13 @@ class DatabaseManager(object):
         q = self.filter_query(tbls, *args)
         return self.session.query(q.exists()).first()[0]
 
-    def insert_db_stmts(self, stmts, db_ref_id):
-        "Insert statement, their database, and any affiliated agents."
-        # Prepare the statements for copying
-        stmt_data = []
-        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
-        for stmt in stmts:
-            stmt_rec = (
-                stmt.uuid,
-                db_ref_id,
-                stmt.__class__.__name__,
-                json.dumps(stmt.to_json()).encode('utf8'),
-                get_version()
-            )
-            stmt_data.append(stmt_rec)
-        self.copy('statements', stmt_data, cols)
-
+    def insert_agents(self, stmts, *other_clauses):
+        "Insert the agents associated with the list of statements."
         # Build a dict mapping stmt UUIDs to statement IDs
         uuid_list = [s.uuid for s in stmts]
         stmt_rec_list = self.select_all('statements',
-                                        self.Statements.uuid.in_(uuid_list))
+                                        self.Statements.uuid.in_(uuid_list),
+                                        *other_clauses)
         stmt_uuid_dict = {uuid: sid for uuid, sid in
                           self.get_values(stmt_rec_list, ['uuid', 'id'])}
 
@@ -507,6 +592,24 @@ class DatabaseManager(object):
                     agent_data.append(ag_rec)
         cols = ('stmt_id', 'db_name', 'db_id', 'role')
         self.copy('agents', agent_data, cols)
+        return
+
+    def insert_db_stmts(self, stmts, db_ref_id):
+        "Insert statement, their database, and any affiliated agents."
+        # Preparing the statements for copying
+        stmt_data = []
+        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
+        for stmt in stmts:
+            stmt_rec = (
+                stmt.uuid,
+                db_ref_id,
+                stmt.__class__.__name__,
+                json.dumps(stmt.to_json()).encode('utf8'),
+                get_version()
+            )
+            stmt_data.append(stmt_rec)
+        self.copy('statements', stmt_data, cols)
+        self.insert_agents(stmts, self.Statements.db_ref == db_ref_id)
         return
 
     def get_abstracts_by_pmids(self, pmid_list, unzip=True):
@@ -598,20 +701,6 @@ def get_primary_db(force_new=False):
     defined by the INDRADBPRIMARY environment variable. If none of the above
     are specified, this function will raise an exception.
 
-    Parameters
-    ----------
-    force_new : bool
-        If true, a new instance will be created and returned, regardless of
-        whether there is an existing instance or not. Default is False, so that
-        if this function has been called before within the global scope, a the
-        instance that was first created will be returned.
-
-    Returns
-    -------
-    primary_db : DatabaseManager instance
-        An instance of the database manager that is attached to the primary
-        database.
-
     Note: by default, calling this function twice will return the same
     `DatabaseManager` instance. In other words:
 
@@ -629,6 +718,20 @@ def get_primary_db(force_new=False):
     complicated and messy. Rather, a database instance should be explicitly
     passed between different users as is done in the `by_gene_role_type`
     function's call to `get_statements` in `indra.db.query_db_stmts`.
+
+    Parameters
+    ----------
+    force_new : bool
+        If true, a new instance will be created and returned, regardless of
+        whether there is an existing instance or not. Default is False, so that
+        if this function has been called before within the global scope, a the
+        instance that was first created will be returned.
+
+    Returns
+    -------
+    primary_db : DatabaseManager instance
+        An instance of the database manager that is attached to the primary
+        database.
     """
     defaults = get_defaults()
     if 'primary' in defaults.keys():

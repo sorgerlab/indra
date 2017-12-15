@@ -130,6 +130,39 @@ from indra.sources.sparser import sparser_api as sparser
 #==============================================================================
 
 
+def join_json_files(prefix):
+    """Join different REACH output JSON files into a single JSON object.
+
+    The output of REACH is broken into three files that need to be joined
+    before processing. Specifically, there will be three files of the form:
+    `<prefix>.uaz.<subcategory>.json`.
+
+    Parameters
+    ----------
+    prefix : str
+        The absolute path up to the extensions that reach will add.
+
+    Returns
+    -------
+    json_obj : dict
+        The result of joining the files, keyed by the three subcategories.
+    """
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error(
+            'Failed to open JSON files for %s; REACH error?' % prefix
+            )
+        logger.exception(e)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
 def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
                      force_read=False, force_fulltext=False):
     logger.info(('Downloading %s from S3, force_read=%s, force_fulltext=%s '
@@ -214,28 +247,6 @@ def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
         result[pmid].update({'reader_version': read_reach_version,
                              'reach_source_text': read_source_text})
     return result
-
-
-def process_reach_str(reach_json_str, pmid):
-    if reach_json_str is None:
-        raise ValueError('reach_json_str cannot be None')
-    # Run the REACH processor on the JSON
-    try:
-        reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
-    # If there's a problem, skip it
-    except Exception as e:
-        print("Exception processing %s" % pmid)
-        print(e)
-        return []
-    return reach_proc.statements
-
-
-def process_reach_from_s3(pmid):
-    reach_json_str = s3_client.get_reach_json_str(pmid)
-    if reach_json_str is None:
-        return []
-    else:
-        return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
 def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
@@ -461,29 +472,40 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
 #==============================================================================
 
 
-def join_parts(prefix):
-    """Join different REACH output JSON files into a single JSON."""
+REACH_CONF_FMT_FNAME = os.path.join(os.path.dirname(__file__),
+                                    'reach_conf_fmt.txt')
+
+REACH_MEM = 5  # GB
+MEM_BUFFER = 2  # GB
+
+
+def process_reach_str(reach_json_str, pmid):
+    if reach_json_str is None:
+        raise ValueError('reach_json_str cannot be None')
+    # Run the REACH processor on the JSON
     try:
-        with open(prefix + '.uaz.entities.json', 'rt') as f:
-            entities = json.load(f)
-        with open(prefix + '.uaz.events.json', 'rt') as f:
-            events = json.load(f)
-        with open(prefix + '.uaz.sentences.json', 'rt') as f:
-            sentences = json.load(f)
-    except IOError as e:
-        logger.error(
-            'Failed to open JSON files for %s; REACH error?' % prefix
-            )
-        logger.exception(e)
-        return None
-    return {'events': events, 'entities': entities, 'sentences': sentences}
+        reach_proc = reach.process_json_str(reach_json_str, citation=pmid)
+    # If there's a problem, skip it
+    except Exception as e:
+        print("Exception processing %s" % pmid)
+        print(e)
+        return []
+    return reach_proc.statements
+
+
+def process_reach_from_s3(pmid):
+    reach_json_str = s3_client.get_reach_json_str(pmid)
+    if reach_json_str is None:
+        return []
+    else:
+        return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
 def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
     # The prefixes should be PMIDs
     pmid, source_text = pmid_info
     prefix_with_path = os.path.join(output_dir, pmid)
-    full_json = join_parts(prefix_with_path)
+    full_json = join_json_files(prefix_with_path)
     # Check that all parts of the JSON could be assembled
     if full_json is None:
         logger.error('REACH output missing JSON for %s' % pmid)
@@ -540,204 +562,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
     return stmts_by_pmid
 
 
-REACH_CONF_FMT =\
-"""
-#
-# Configuration file for reach
-#
-
-# This is the directory that stores the raw nxml, .csv, and/or .tsv files.
-# This directory *must* exist.
-papersDir = {input_dir}
-
-# This is where the output files containing the extracted mentions will be
-# stored if this directory doesn't exist it will be created.
-outDir = {output_dir}
-
-# The output format for mentions: text, fries, indexcard, or assembly-csv
-# (default is 'fries').
-outputTypes = ["fries"]
-
-# whether or not assembly should be run
-withAssembly = false
-
-# this is where the context files will be stored
-# if this directory doesn't exist it will be created
-contextDir = {output_dir}
-
-# this is where the brat standoff and text files are dumped
-bratDir = {output_dir}
-
-# verbose logging
-verbose = true
-
-# the encoding of input and output files
-encoding = "utf-8"
-
-
-# this is a list of sections that we should ignore
-ignoreSections = ["references", "materials", "materials|methods", "methods", "supplementary-material"]
-
-# context engine config
-contextEngine {{
-    type = Policy4
-    params = {{
-        bound = 3
-    }}
-}}
-
-logging {{
-  # defines project-wide logging level
-  loglevel = INFO
-  logfile = {base_dir}/reach.log
-}}
-
-# restart configuration
-restart {{
-  # restart allows batch jobs to skip over input files already successfully
-  # processed
-  useRestart = false
-  # restart log is one filename per line list of input files already
-  # successfully processed
-  logfile = {base_dir}/restart.log
-}}
-
-# grounding configuration
-grounding: {{
-  # List of AdHoc grounding files to insert, in order, into the grounding search sequence.
-  # Each element of the list is a map of KB filename and optional meta info (not yet used):
-  #   example: {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
-  adHocFiles: [
-    {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
-  ]
-
-  # flag to turn off the influence of species on grounding
-  overrideSpecies = true
-}}
-
-# number of simultaneous threads to use for parallelization
-threadLimit = {num_cores}
-
-# ReadPapers
-ReadPapers.papersDir = src/test/resources/inputs/nxml/
-ReadPapers.serializedPapers = mentions.ser
-"""
-
-
-NEW_REACH_CONF_FMT = \
-"""
-#
-# Configuration file for reach
-#
-
-# Default top-level root directory for input and output files and subdirectories.
-# All other paths are based on this path but any or all can be changed individually:
-rootDir = {base_dir}
-
-# this is the directory that stores the raw nxml, .csv, and/or .tsv files
-# this directory *must* exist
-papersDir = {base_dir}/input
-
-# this is where the output files containing the extracted mentions will be stored
-# if this directory doesn't exist it will be created
-outDir = {base_dir}/output
-
-# the output formats for mentions:
-# "arizona" (column-based, one file per paper)
-# "cmu" (column-based, one file per paper)
-# "fries" (multiple JSON files per paper)
-# "serial-json" (JSON serialization of mentions data structures. LARGE output!)
-# "text" (non-JSON textual format)
-outputTypes = ["fries"]
-
-# which processor to use:
-# bionlp: the classic BioNLPProcessor, with the Stanford constituent parser; slower but better
-# fastbionlp: FastBioNLPProcessor, which uses the new NN Stanford dependency parser; faster but slightly worse performance
-proc = "bionlp"
-
-# whether or not assembly should be run
-withAssembly = false
-
-# this is where the context files will be stored
-# if this directory doesn't exist it will be created
-contextDir = {base_dir}/context
-
-# this is where the brat standoff and text files are dumped
-bratDir = {base_dir}/brat
-
-# verbose logging
-verbose = true
-
-# the encoding of input and output files
-encoding = "utf-8"
-
-# this is a list of sections that we should ignore
-ignoreSections = ["references", "materials", "materials|methods", "methods", "supplementary-material"]
-
-# context engine config
-contextEngine {{
-  type = Policy4
-  params = {{
-    bound = 3
-  }}
-}}
-
-# logging configuration
-logging {{
-  # defines project-wide logging level
-  loglevel = INFO
-  logfile = {base_dir}/reach.log
-}}
-
-# restart configuration
-restart {{
-  # restart allows batch jobs to skip over input files already successfully processed
-  useRestart = false
-  # restart log is one filename per line list of input files already successfully processed
-  logfile = {base_dir}/restart.log
-}}
-
-# grounding configuration
-grounding: {{
-  # List of AdHoc grounding files to insert, in order, into the grounding search sequence.
-  # Each element of the list is a map of KB filename and optional meta info (not yet used):
-  #   example: {{ kb: "adhoc.tsv", source: "NMZ at CMU" }}
-  adHocFiles: [
-    {{ kb: "NER-Grounding-Override.tsv.gz", source: "MITRE/NMZ/BG feedback overrides" }}
-  ]
-
-  # flag to turn off the influence of species on grounding
-  overrideSpecies = true
-}}
-
-# Akka-based Processor Client configuration:
-ProcessorCoreClient {{
-  server {{
-    // path to the processor core server
-    // path = "akka.tcp://proc-core-server@192.168.1.12:2552/user/proc-actor-pool"
-    path = "akka://procCoreServer/user/procActorPool"
-
-    // the actor system name string
-    systemName = "procCoreServer"
-  }}
-
-  // request timeout in seconds. default: 3 min because BioNLP is slow to start
-  askTimeout = 180
-}}
-
-# number of simultaneous threads to use for parallelization
-threadLimit = {num_cores}
-
-# ReadPapers
-ReadPapers.papersDir = src/test/resources/inputs/nxml/
-ReadPapers.serializedPapers = mentions.ser
-"""
-
-REACH_MEM = 5  # GB
-MEM_BUFFER = 2  # GB
-
-
-def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
+def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
               force_read, force_fulltext, cleanup=False, verbose=True):
     """Run reach on a list of pmids."""
     logger.info('Running REACH with force_read=%s' % force_read)
@@ -772,32 +597,30 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
     logger.info('Using REACH version: %s' % reach_version)
 
-    base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found =\
+    tmp_dir, _, output_dir, pmids_read, pmids_unread, _ =\
         get_content_to_read(
-            pmid_list, start_index, end_index, tmp_dir, num_cores,
+            pmid_list, start_index, end_index, base_dir, num_cores,
             force_fulltext, force_read, 'reach', reach_version
             )
-
-    # Create the REACH configuration file
-    conf_file_text = NEW_REACH_CONF_FMT.format(
-        base_dir=os.path.abspath(base_dir),
-        input_dir=input_dir,
-        output_dir=output_dir,
-        num_cores=num_cores
-        )
 
     stmts = {}
     mem_tot = get_mem_total()
     if mem_tot is not None and mem_tot <= REACH_MEM + MEM_BUFFER:
         logger.error(
-            "Too little memory to run reach. At least %s required." % 
+            "Too little memory to run reach. At least %s required." %
             REACH_MEM + MEM_BUFFER
             )
         logger.info("REACH not run.")
-    elif num_found > 0:
-        conf_file_path = os.path.join(base_dir, 'indra.conf')
-        with open(conf_file_path, 'w') as f:
-            f.write(conf_file_text)
+    elif len(pmids_unread) > 0:
+        # Create the REACH configuration file
+        with open(REACH_CONF_FMT_FNAME, 'r') as fmt_file:
+            conf_file_path = os.path.join(tmp_dir, 'indra.conf')
+            with open(conf_file_path, 'w') as conf_file:
+                conf_file.write(
+                    fmt_file.read().format(tmp_dir=os.path.abspath(tmp_dir),
+                                           num_cores=num_cores,
+                                           loglevel='INFO')
+                    )
 
         # Run REACH!
         logger.info("Beginning reach.")
@@ -824,7 +647,7 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
         stmts.update(some_stmts)
         # Delete the tmp directory if desired
         if cleanup:
-            shutil.rmtree(base_dir)
+            shutil.rmtree(tmp_dir)
 
     # Create a new multiprocessing pool for processing the REACH JSON
     # files previously cached on S3
@@ -843,7 +666,7 @@ def run_reach(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
     # Save the list of PMIDs with no content found on S3/literature client
     '''
-    content_not_found_file = os.path.join(base_dir, 'content_not_found.txt')
+    content_not_found_file = os.path.join(tmp_dir, 'content_not_found.txt')
     with open(content_not_found_file, 'wt') as f:
         for c in content_not_found:
             f.write('%s\n' % c)
@@ -921,7 +744,7 @@ def main(args):
                 pickle.dump(stmts, f, protocol=2)
             sys.exit()
 
-        # Option -r <reader>: acturally read the content.
+        # Option -r <reader>: actually read the content.
 
         # Load the list of PMIDs from the given file
         with open(args.pmid_list_file) as f:
