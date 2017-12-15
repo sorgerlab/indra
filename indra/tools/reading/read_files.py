@@ -13,13 +13,13 @@ from indra.tools.reading.script_tools import get_parser, make_statements
 if __name__ == '__main__':
     parser = get_parser(
         __doc__,
-        ('A file containing a list of files to be input into reach. These'
+        ('A file containing a list of files/file paths to be read. These '
          'should be nxml or txt files.')
         )
     parser.add_argument(
         dest='output_name',
-        help=('All pickled results will be saved in files labelled by '
-              '<output_name>_<output_type>.pkl.')
+        help=('Results will be pickled in files '
+              '<output_name>_stmts.pkl and <output_name>_readings.pkl.')
         )
     args = parser.parse_args()
     if args.debug and not args.quiet:
@@ -60,7 +60,7 @@ def read_files(files, readers, **kwargs):
 
 
 if __name__ == '__main__':
-    with open(args.input_file, 'r') as f:
+    taith open(args.input_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d files." % len(input_lines))
     for ftype in ['nxml', 'txt']:

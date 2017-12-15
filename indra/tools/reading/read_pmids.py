@@ -744,7 +744,7 @@ def main(args):
                 pickle.dump(stmts, f, protocol=2)
             sys.exit()
 
-        # Option -r <reader>: acturally read the content.
+        # Option -r <reader>: actually read the content.
 
         # Load the list of PMIDs from the given file
         with open(args.pmid_list_file) as f:

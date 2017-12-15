@@ -85,14 +85,14 @@ class StatementData(object):
     This, like ReadingData, is primarily designed for use with the database,
     carrying valuable information and methods for such.
 
-    Init Paremeters
-    ---------------
+    Parameters
+    ----------
     statement : an indra Statement instance
         The statement whose extra meta data this object encapsulates.
     reading_id : int or None
-        The id number of the database reading. None if no such id is available.
+        The id number of the entry in the `readings` table of the database.
+        None if no such id is available.
     """
-
     def __init__(self, statement, reading_id):
         self.reading_id = reading_id
         self.statement = statement
