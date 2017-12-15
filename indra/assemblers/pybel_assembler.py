@@ -25,6 +25,9 @@ _indra_pybel_act_map = {
 }
 
 
+_pybel_indra_act_map = {v: k for k, v in _indra_pybel_act_map.items()}
+
+
 class PybelAssembler(object):
     """Assembles a PyBEL graph from a set of INDRA Statements.
 

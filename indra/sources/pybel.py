@@ -4,8 +4,11 @@ import pybel.constants as pc
 from pybel.struct import node_has_pmod
 from indra.statements import *
 from indra.databases import hgnc_client, uniprot_client
+from indra.assemblers.pybel_assembler import _pybel_indra_act_map
+
 
 logger = logging.getLogger('pybel_processor')
+
 
 def process_pybel_graph(graph):
     proc = PybelProcessor(graph)
@@ -86,8 +89,8 @@ class PybelProcessor(object):
             #   complex(x(Foo), x(Bar), ...)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
-        subj_agent = _get_agent(u_data, edge_data)
-        obj_agent = _get_agent(v_data, edge_data)
+        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        obj_agent = _get_agent(v_data, edge_data.get(pc.OBJECT))
         # FIXME: If an RNA agent type, create a transcription-specific
         # Statement
         if subj_agent is None or obj_agent is None:
@@ -109,10 +112,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, edge_data):
-        subj_agent = _get_agent(u_data, edge_data)
+        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         mods, muts = _get_all_pmods(v_data, edge_data)
         v_data_no_mods = _remove_pmods(v_data)
-        obj_agent = _get_agent(v_data_no_mods, edge_data)
+        obj_agent = _get_agent(v_data_no_mods,edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
             return
         for mod in mods:
@@ -123,7 +126,7 @@ class PybelProcessor(object):
             self.statements.append(stmt)
 
 
-def _get_agent(node_data, edge_data):
+def _get_agent(node_data, node_modifier_data):
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA):
@@ -166,7 +169,9 @@ def _get_agent(node_data, edge_data):
         return None
     # Get modification conditions
     mods, muts = _get_all_pmods(node_data)
-    ag = Agent(name, db_refs=db_refs, mods=mods)
+    # Get activity condition
+    ac = _get_activity_condition(node_modifier_data)
+    ag = Agent(name, db_refs=db_refs, mods=mods, activity=ac)
     return ag
 
 
@@ -260,3 +265,27 @@ def _get_all_pmods(node_data, remove_pmods=False):
         else:
             logger.debug('Unknown node variant type: %s' % node_data)
     return (mods, muts)
+
+
+def _get_activity_condition(node_modifier_data):
+    if node_modifier_data is None or node_modifier_data == {}:
+        return None
+    if node_modifier_data[pc.MODIFIER] != pc.ACTIVITY:
+        return None
+    effect = node_modifier_data.get(pc.EFFECT)
+    # No specific effect, just return generic activity
+    if not effect:
+        return ActivityCodition('activity', True)
+
+    activity_ns = effect[pc.NAMESPACE]
+    if activity_ns == pc.BEL_DEFAULT_NAMESPACE:
+        activity_name = effect[pc.NAME]
+        activity_type = _pybel_indra_act_map.get(activity_name)
+        # If an activity type in Bel/PyBel that is not implemented in INDRA,
+        # return generic activity
+        if activity_type is None:
+            return ActivityCondition('activity', True)
+        return ActivityCondition(activity_type, True)
+    # If an unsupported namespace, simply return generic activity
+    return ActivityCondition('activity', True)
+

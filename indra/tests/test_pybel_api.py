@@ -102,6 +102,15 @@ def test_get_agent_with_muts():
     assert mut.residue_to == 'E'
 
 
+def test_get_agent_with_activity():
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    agent = pb._get_agent(mek, activity('act'))
+    assert isinstance(agent, Agent)
+    assert isinstance(agent.activity, ActivityCondition)
+    assert agent.activity.activity_type == 'activity'
+    assert agent.activity.is_active
+
+
 def test_phosphorylation_one_site_with_evidence():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC',
@@ -207,7 +216,9 @@ def test_regulate_amount4_subj_act():
     assert isinstance(pbp.statements[0], IncreaseAmount)
     subj = pbp.statements[0].subj
     assert subj.name == 'MAP2K1'
-    assert subj.activity == 'transcription'
+    assert isinstance(subj.activity, ActivityCondition)
+    assert subj.activity.activity_type == 'transcription'
+    assert subj.activity.is_active == True
 
     g = pybel.BELGraph()
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
@@ -219,7 +230,9 @@ def test_regulate_amount4_subj_act():
     assert isinstance(pbp.statements[0], IncreaseAmount)
     subj = pbp.statements[0].subj
     assert subj.name == 'MAP2K1'
-    assert subj.activity == 'activity'
+    assert isinstance(subj.activity, ActivityCondition)
+    assert subj.activity.activity_type == 'activity'
+    assert subj.activity.is_active == True
 
 
 if __name__ == '__main__':
