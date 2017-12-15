@@ -1,5 +1,12 @@
-"""This is a tool which allows you to create a small sample of the NIH FTP
-services on your local machine to test your database managers.
+"""
+Create a small sample of the NIH FTP services on your local machine to test
+your database managers with representative cases involving different
+combinations of IDs (PMID, PMCID, Author's Manuscript IDs) and also articles
+that yield/don't yield Statements when read.
+
+Collections of articles covering these cases are downloaded from the NIH
+FTP services and repackaged locally in file structure mirroring that of the
+FTP services themselves.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
@@ -39,6 +46,7 @@ from indra.db.manage_content import PmcOA, Medline, Manuscripts
 
 
 def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
+    # PMID, no PMCID, no MS ID
     if case == (1, 0, 0):
         pmid = random.choice(med_pmid_list)
         pmc_pmid_list = [d['PMID'] for d in pmc_dicts if d['PMID'] != '']
@@ -46,6 +54,7 @@ def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
         while pmid in pmc_pmid_list:
             pmid = random.choice(med_pmid_list)
         ret = (pmid, '', '')
+    # PMID, PMCID, no MS ID
     elif case == (1, 1, 0):
         pmc_pmid_dict_list = [d for d in pmc_dicts if d['PMID'] != '']
         man_pmid_list = [d['PMID'] for d in man_dicts]
@@ -53,15 +62,18 @@ def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
         while d['PMID'] in man_pmid_list:
             d = random.choice(pmc_pmid_dict_list)
         ret = (d['PMID'], d['Accession ID'], '')
+    # no PMID, PMCID, no MS ID
     elif case == (0, 1, 0):
         pmcid_list = [d['Accession ID'] for d in pmc_dicts if d['PMID'] == '']
         ret = ('', random.choice(pmcid_list), '')
+    # PMID, PMCID, MS ID
     elif case == (1, 1, 1):
         pmcid_list = [d['Accession ID'] for d in pmc_dicts]
         d = random.choice(man_dicts)
         while d['PMCID'] not in pmcid_list:
             d = random.choice(man_dicts)
         ret = (d['PMID'], d['PMCID'], d['MID'])
+    # PMID, no PMCID, MS ID
     elif case == (1, 0, 1):
         pmcid_list = [d['Accession ID'] for d in pmc_dicts]
         d = random.choice(man_dicts)
@@ -76,16 +88,16 @@ def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
 def build_set(n, parent_dir):
     """Create the nastiest set of content we're willing/able to handle.
 
-    We create a small local representation of the entirety of the nih
+    We create a small local representation of the entirety of the NLM
     repositories we use, including all the nasty corner cases we can manage.
     This allows for rapid development and testing.
 
     Parameters
     ----------
     n : int
-        The number of copies of each test case to be included. Examples are
-        chosen as randomly as possible. Multiple samples could increase the
-        reliability of the test.
+        The number of instances (distinct articles) of each test case to be
+        included. Examples are chosen as randomly as possible. Multiple samples
+        generally increase the reliability of the test.
     parent_dir : str
         The head of the tree that stands in place of the url to the nih ftp
         directory.
