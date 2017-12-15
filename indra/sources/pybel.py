@@ -49,7 +49,9 @@ class PybelProcessor(object):
         obj_agent = _get_agent(v_data_no_mods)
         for mod in mods:
             modclass = modtype_to_modclass[mod.mod_type]
-            stmt = modclass(subj_agent, obj_agent, mod.residue, mod.position)
+            ev = _get_evidence(edge_data)
+            stmt = modclass(subj_agent, obj_agent, mod.residue, mod.position,
+                            evidence=[ev])
             self.statements.append(stmt)
 
 def _get_agent(node_data):
@@ -91,15 +93,27 @@ def _get_agent(node_data):
     return ag
 
 
+def _get_evidence(edge_data):
+    # TODO: @cthoyt put in some additional epistemics info from pybel
+    # TODO: Also add additional provenance information from the bel/pybel
+    # source document into annotations
+    ev_text = edge_data.get(pc.EVIDENCE)
+    ev_citation = edge_data.get(pc.CITATION)
+    ev_pmid = None
+    if ev_citation:
+        cit_type = ev_citation[pc.CITATION_TYPE]
+        cit_ref = ev_citation[pc.CITATION_REFERENCE]
+        if cit_type == pc.CITATION_TYPE_PUBMED:
+            ev_pmid = cit_ref
+        else:
+            ev_pmid = '%s: %s' % (cit_type, cit_ref)
+    epistemics = {'direct': _rel_is_direct(edge_data)}
+    annotations = edge_data.get(pc.ANNOTATIONS, {})
+    ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='pybel',
+                  source_id=edge_data.get(pc.HASH), epistemics=epistemics,
+                  annotations=annotations)
+    return ev
 
-    # name
-    # namespace
-    # identifier
-
-    # INDRA:
-    # name
-    # db_refs
-    # conditions: muts, mods, bound_conds, loc_conds, activity
 
 def _rel_is_direct(d):
     return d[pc.RELATION] in (pc.DIRECTLY_INCREASES, pc.DIRECTLY_DECREASES)

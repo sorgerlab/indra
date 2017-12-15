@@ -102,26 +102,15 @@ def test_get_agent_with_muts():
     assert mut.residue_to == 'E'
 
 
-"""
-def test_increase_amount():
-    mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
-    assert pbp.statements
-    assert len(pbp.statements) == 1
-    assert isinstance(pbp.statements[0], IncreaseAmount)
-"""
-
-def test_phosphorylation_one_site():
+def test_phosphorylation_one_site_with_evidence():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
     g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
-                         evidence="Some evidence.", citation='123456')
+    ev_text = 'Some evidence.'
+    ev_pmid = '123456'
+    edge_hash = g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
+                                     evidence=ev_text, citation=ev_pmid)
     pbp = pb.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -134,6 +123,16 @@ def test_phosphorylation_one_site():
     assert enz.mods == []
     assert sub.name == 'MAPK1'
     assert sub.mods == []
+    # Check evidence
+    assert len(pbp.statements[0].evidence) == 1
+    ev = pbp.statements[0].evidence[0]
+    assert ev.source_api == 'pybel'
+    assert ev.source_id == edge_hash
+    assert ev.pmid == ev_pmid
+    assert ev.text == ev_text
+    assert ev.annotations == {}
+    assert ev.epistemics == {'direct': True}
+
 
 def test_phosphorylation_two_sites():
     mek = protein(name='MAP2K1', namespace='HGNC')
@@ -155,7 +154,19 @@ def test_phosphorylation_two_sites():
     assert stmt1.sub.mods == []
     assert stmt2.sub.mods == []
 
+
+def test_increase_amount():
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    assert isinstance(pbp.statements[0], IncreaseAmount)
+
+
 if __name__ == '__main__':
-    test_phosphorylation_one_site()
-    test_phosphorylation_two_sites()
+    test_phosphorylation_one_site_with_evidence()
 
