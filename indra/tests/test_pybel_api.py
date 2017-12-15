@@ -162,6 +162,7 @@ def test_phosphorylation_two_sites():
     assert stmt2.position == '187'
     assert stmt1.sub.mods == []
     assert stmt2.sub.mods == []
+    assert len(pbp.statements[0].evidence) == 1
 
 
 def test_regulate_amount1_prot_obj():
@@ -174,6 +175,7 @@ def test_regulate_amount1_prot_obj():
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
+    assert len(pbp.statements[0].evidence) == 1
 
 
 def test_regulate_amount2_rna_obj():
@@ -187,6 +189,7 @@ def test_regulate_amount2_rna_obj():
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
+    assert len(pbp.statements[0].evidence) == 1
 
 
 def test_regulate_amount3_deg():
@@ -201,6 +204,7 @@ def test_regulate_amount3_deg():
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], DecreaseAmount)
+    assert len(pbp.statements[0].evidence) == 1
 
 
 def test_regulate_amount4_subj_act():
@@ -219,6 +223,7 @@ def test_regulate_amount4_subj_act():
     assert isinstance(subj.activity, ActivityCondition)
     assert subj.activity.activity_type == 'transcription'
     assert subj.activity.is_active == True
+    assert len(pbp.statements[0].evidence) == 1
 
     g = pybel.BELGraph()
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
@@ -233,6 +238,7 @@ def test_regulate_amount4_subj_act():
     assert isinstance(subj.activity, ActivityCondition)
     assert subj.activity.activity_type == 'activity'
     assert subj.activity.is_active == True
+    assert len(pbp.statements[0].evidence) == 1
 
 
 def test_regulate_activity():
@@ -256,6 +262,7 @@ def test_regulate_activity():
     assert obj.name == 'MAPK1'
     assert obj.activity is None
     assert pbp.statements[0].obj_activity == 'kinase'
+    assert len(pbp.statements[0].evidence) == 1
 
 
 def test_active_form():
@@ -280,6 +287,7 @@ def test_active_form():
     assert mc.mod_type == 'phosphorylation'
     assert mc.residue == 'S'
     assert mc.position == '33'
+    assert len(pbp.statements[0].evidence) == 1
 
 
 if __name__ == '__main__':

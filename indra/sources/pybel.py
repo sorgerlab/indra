@@ -1,3 +1,4 @@
+import re
 import logging
 from copy import copy
 import pybel.constants as pc
@@ -6,6 +7,9 @@ from pybel.canonicalize import edge_to_bel
 from indra.statements import *
 from indra.databases import hgnc_client, uniprot_client
 from indra.assemblers.pybel_assembler import _pybel_indra_act_map
+
+
+
 
 
 logger = logging.getLogger('pybel_processor')
@@ -236,7 +240,7 @@ def _get_agent(node_data, node_modifier_data=None):
     mods, muts = _get_all_pmods(node_data)
     # Get activity condition
     ac = _get_activity_condition(node_modifier_data)
-    ag = Agent(name, db_refs=db_refs, mods=mods, activity=ac)
+    ag = Agent(name, db_refs=db_refs, mods=mods, mutations=muts, activity=ac)
     return ag
 
 
@@ -293,7 +297,13 @@ def _get_all_pmods(node_data, remove_pmods=False):
 
     for var in variants:
         if var[pc.KIND] == pc.HGVS:
-            pass
+            hgvs_str = var[pc.IDENTIFIER]
+            position, res_from, res_to = _parse_mutation(hgvs_str)
+            if position is None and res_from is None and res_to is None:
+                logger.info("Could not parse HGVS string %s" % hgvs_str)
+            else:
+                mut_cond = MutCondition(position, res_from, res_to)
+                muts.append(mut_cond)
         elif var[pc.KIND] == pc.PMOD:
             var_id_dict = var[pc.IDENTIFIER]
             var_ns = var_id_dict[pc.NAMESPACE]
@@ -350,3 +360,13 @@ def _proteins_match(u_data, v_data):
         u_data[pc.NAMESPACE] == v_data[pc.NAMESPACE] and
         u_data[pc.NAME] == v_data[pc.NAME]
     )
+
+_hgvs_protein_mutation = re.compile('^p.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})')
+
+def _parse_mutation(s):
+    m = _hgvs_protein_mutation.match(s)
+    if not m:
+        return (None, None, None)
+    from_aa, position, to_aa = m.groups()
+    return position, from_aa, to_aa
+
