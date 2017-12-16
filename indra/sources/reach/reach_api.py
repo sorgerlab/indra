@@ -289,6 +289,31 @@ def process_json_file(file_name, citation=None):
     except IOError:
         logger.error('Could not read file %s.' % file_name)
 
+def process_mentions_json(file_name):
+    from indra.statements import Activation, Agent
+    with open(file_name, 'r') as fh:
+        jd = json.load(fh)
+        mentions = jd['mentions']
+
+    # Just extract event mentions
+    events = [m for m in mentions if m['type'] == 'EventMention']
+    # Skip events that only have one argument
+    events = [e for e in events if len(e['arguments']) == 2]
+
+    stmts = []
+    for event in events:
+        if 'Causal' in event['labels']:
+            cause = event['arguments']['cause'][0]['text']
+            effect = event['arguments']['effect'][0]['text']
+            st = Activation(Agent(cause), Agent(effect))
+            stmts.append(st)
+        if 'Origin' in event['labels']:
+            origin = event['arguments']['origin'][0]['text']
+            theme = event['arguments']['theme'][0]['text']
+            st = Activation(Agent(origin), Agent(theme))
+            stmts.append(st)
+    return stmts
+
 
 def process_json_str(json_str, citation=None):
     """Return a ReachProcessor by processing the given REACH json string.
