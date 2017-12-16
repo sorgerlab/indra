@@ -320,7 +320,7 @@ def _get_evidence(u_data, v_data, edge_data):
     epistemics = {'direct': _rel_is_direct(edge_data)}
     text_location = edge_data.get('TextLocation')
     if text_location is not None:
-        epistemics['section_type'] = _pybel_text_location_map[edge_data[text_location]]
+        epistemics['section_type'] = _pybel_text_location_map.get(text_location)
     annotations = edge_data.get(pc.ANNOTATIONS, {})
     annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
     ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='pybel',
