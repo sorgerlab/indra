@@ -371,5 +371,26 @@ def test_activation_bioprocess():
     assert len(pbp.statements[0].evidence) == 1
 
 
+def test_gtpactivation():
+    kras = protein(name='KRAS', namespace='HGNC')
+    braf = protein(name='BRAF', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(kras, braf, relation=pc.DIRECTLY_INCREASES,
+                         subject_modifier=activity(name='gtp'),
+                         object_modifier=activity(name='kin'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, GtpActivation)
+    assert stmt.subj.name == 'KRAS'
+    assert stmt.subj.activity.activity_type == 'gtpbound'
+    assert stmt.subj.activity.is_active is True
+    assert stmt.obj.name == 'BRAF'
+    assert stmt.obj.activity is None
+    assert stmt.obj_activity == 'kinase'
+    assert len(stmt.evidence) == 1
+
 if __name__ == '__main__':
-    test_activation_bioprocess()
+    test_gtpactivation()

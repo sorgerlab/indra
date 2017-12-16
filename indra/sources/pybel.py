@@ -55,13 +55,15 @@ class PybelProcessor(object):
     def get_statements(self):
         graph_nodes = set()
         for u, v, d in self.graph.edges_iter(data=True):
+            u_data = self.graph.node[u]
+            v_data = self.graph.node[v]
+            # We only interpret causal relations, not correlations
             if d[pc.RELATION] not in pc.CAUSAL_RELATIONS:
+                self.unhandled.append((u_data, v_data, d))
                 continue
             # Add nodes to the node set
             graph_nodes.add(u)
             graph_nodes.add(v)
-            u_data = self.graph.node[u]
-            v_data = self.graph.node[v]
             subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
             obj_activity = _get_activity_condition(d.get(pc.OBJECT))
             # Modification, e.g.
@@ -88,16 +90,15 @@ class PybelProcessor(object):
                 elif subj_activity and _rel_is_direct(d) and \
                      obj_activity.activity_type == 'gtpbound':
                     self._get_gef_gap(u_data, v_data, d)
-                # GtpActivation
-                #   gtp(p(Foo)) => act(p(Foo))
-                elif subj_activity and \
-                     subj_activity.activity_type == 'gtpbound':
-                    pass
                 # Activation/Inhibition
                 #   x(Foo) -> act(x(Foo))
                 #   act(x(Foo)) -> act(x(Foo))
+                # GtpActivation
+                #   gtp(p(Foo)) => act(p(Foo))
                 else:
                     self._get_regulate_activity(u_data, v_data, d)
+            # Activations involving biological processes
+            #   x(Foo) -> bp(Bar)
             elif v_data[pc.FUNCTION] == pc.BIOPROCESS:
                 self._get_regulate_activity(u_data, v_data, d)
             # Regulate amount
@@ -127,6 +128,7 @@ class PybelProcessor(object):
         # FIXME: If an RNA agent type, create a transcription-specific
         # Statement
         if subj_agent is None or obj_agent is None:
+            self.unhandled.append((u_data, v_data, edge_data))
             return
         # FIXME: If object is a degradation, create a stability-specific
         # Statement
@@ -151,6 +153,7 @@ class PybelProcessor(object):
         v_data_no_mods = _remove_pmods(v_data)
         obj_agent = _get_agent(v_data_no_mods,edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
+            self.unhandled.append((u_data, v_data, edge_data))
             return
         for mod in mods:
             modclass = modtype_to_modclass[mod.mod_type]
@@ -160,7 +163,11 @@ class PybelProcessor(object):
             self.statements.append(stmt)
 
     def _get_regulate_activity(self, u_data, v_data, edge_data):
+        # Subject info
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
+        subj_function = u_data.get(pc.FUNCTION)
+        # Object info
         obj_agent = _get_agent(v_data)
         obj_function = v_data.get(pc.FUNCTION)
         # If it's a bioprocess object, we won't have an activity in the edge
@@ -171,9 +178,17 @@ class PybelProcessor(object):
                             _get_activity_condition(edge_data.get(pc.OBJECT))
             activity_type = obj_activity_condition.activity_type
             assert obj_activity_condition.is_active is True
+        # Check for valid subject/object
         if subj_agent is None or obj_agent is None:
+            self.unhandled.append((u_data, v_data, edge_data))
             return
-        if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+        # Check which kind of statement we need to make
+        # GtpActivation
+        if subj_activity and subj_activity.activity_type == 'gtpbound' and \
+           subj_function == pc.PROTEIN and obj_function == pc.PROTEIN and \
+           edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES:
+            stmt_class = GtpActivation
+        elif edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
             stmt_class = Activation
         else:
             stmt_class = Inhibition
@@ -181,10 +196,13 @@ class PybelProcessor(object):
         stmt = stmt_class(subj_agent, obj_agent, activity_type, evidence=[ev])
         self.statements.append(stmt)
 
+
+
     def _get_active_form(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data)
         obj_agent = _get_agent(v_data)
         if subj_agent is None or obj_agent is None:
+            self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_activity_condition = \
                             _get_activity_condition(edge_data.get(pc.OBJECT))
@@ -200,6 +218,7 @@ class PybelProcessor(object):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         obj_agent = _get_agent(v_data)
         if subj_agent is None or obj_agent is None:
+            self.unhandled.append((u_data, v_data, edge_data))
             return
         ev = _get_evidence(u_data, v_data, edge_data)
         if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
@@ -388,7 +407,9 @@ def _proteins_match(u_data, v_data):
         u_data[pc.NAME] == v_data[pc.NAME]
     )
 
+
 _hgvs_protein_mutation = re.compile('^p.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})')
+
 
 def _parse_mutation(s):
     m = _hgvs_protein_mutation.match(s)
