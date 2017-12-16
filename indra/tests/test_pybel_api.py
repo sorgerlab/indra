@@ -119,7 +119,8 @@ def test_phosphorylation_one_site_with_evidence():
     ev_text = 'Some evidence.'
     ev_pmid = '123456'
     edge_hash = g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
-                                     evidence=ev_text, citation=ev_pmid)
+                                     evidence=ev_text, citation=ev_pmid,
+                                     annotations={"TextLocation": 'Abstract'})
     pbp = pb.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -139,8 +140,8 @@ def test_phosphorylation_one_site_with_evidence():
     assert ev.source_id == edge_hash
     assert ev.pmid == ev_pmid
     assert ev.text == ev_text
-    assert ev.annotations == {}
-    assert ev.epistemics == {'direct': True}
+    assert ev.annotations == {'bel': 'p(HGNC:MAP2K1) directlyIncreases p(HGNC:MAPK1, pmod(Ph, Thr, 185))'}
+    assert ev.epistemics == {'direct': True, 'section_type': 'abstract'}
 
 
 def test_phosphorylation_two_sites():

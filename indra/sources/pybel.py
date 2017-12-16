@@ -318,11 +318,13 @@ def _get_evidence(u_data, v_data, edge_data):
         else:
             ev_pmid = '%s: %s' % (cit_type, cit_ref)
     epistemics = {'direct': _rel_is_direct(edge_data)}
-    text_location = edge_data.get('TextLocation')
-    if text_location is not None:
-        epistemics['section_type'] = _pybel_text_location_map.get(text_location)
     annotations = edge_data.get(pc.ANNOTATIONS, {})
     annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
+
+    text_location = annotations.pop('TextLocation', None)
+    if text_location is not None:
+        epistemics['section_type'] = _pybel_text_location_map.get(text_location)
+
     ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='pybel',
                   source_id=edge_data.get(pc.HASH), epistemics=epistemics,
                   annotations=annotations)
