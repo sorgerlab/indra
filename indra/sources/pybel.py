@@ -98,8 +98,8 @@ class PybelProcessor(object):
                 #   act(x(Foo)) -> act(x(Foo))
                 else:
                     self._get_regulate_activity(u_data, v_data, d)
-            elif v_data[pc.FUNCTION] == pc.BIOLOGICAL_PROCESS:
-                print("Bioprocess")
+            elif v_data[pc.FUNCTION] == pc.BIOPROCESS:
+                self._get_regulate_activity(u_data, v_data, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
             #   x(Foo) -> r(Bar)
@@ -162,10 +162,15 @@ class PybelProcessor(object):
     def _get_regulate_activity(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         obj_agent = _get_agent(v_data)
-        obj_activity_condition = \
+        obj_function = v_data.get(pc.FUNCTION)
+        # If it's a bioprocess object, we won't have an activity in the edge
+        if obj_function == pc.BIOPROCESS:
+            activity_type = 'activity'
+        else:
+            obj_activity_condition = \
                             _get_activity_condition(edge_data.get(pc.OBJECT))
-        activity_type = obj_activity_condition.activity_type
-        assert obj_activity_condition.is_active is True
+            activity_type = obj_activity_condition.activity_type
+            assert obj_activity_condition.is_active is True
         if subj_agent is None or obj_agent is None:
             return
         if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
@@ -210,7 +215,7 @@ def _get_agent(node_data, node_modifier_data=None):
     # location conditions
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
-    if node_func not in (pc.PROTEIN, pc.RNA):
+    if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS):
         logger.info("Nodes of type %s not handled", node_func)
         return None
     # Get node identifier information
@@ -230,6 +235,10 @@ def _get_agent(node_data, node_modifier_data=None):
             up_id = _get_up_id(hgnc_id)
             if up_id:
                 db_refs['UP'] = up_id
+        elif ns == 'GOBP':
+            # FIXME: Look up go ID in ontology lookup service
+            # FIXME: For now, just use node name
+            db_refs = {}
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary

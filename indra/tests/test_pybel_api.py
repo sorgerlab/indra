@@ -354,8 +354,22 @@ def test_gap():
     assert len(pbp.statements[0].evidence) == 1
 
 
+def test_activation_bioprocess():
+    bax = protein(name='BAX', namespace='HGNC')
+    apoptosis = bioprocess(name='apoptosis', namespace='GOBP')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(bax, apoptosis, relation=pc.INCREASES,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, Activation)
+    assert stmt.subj.name == 'BAX'
+    assert stmt.obj.name == 'apoptosis'
+    assert stmt.obj.db_refs == {} # FIXME: Update when GO lookup is implemented
+    assert len(pbp.statements[0].evidence) == 1
+
 
 if __name__ == '__main__':
-    test_gef()
-    test_indirect_gef_is_activation()
-    test_gap()
+    test_activation_bioprocess()
