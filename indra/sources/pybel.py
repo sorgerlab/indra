@@ -50,6 +50,7 @@ class PybelProcessor(object):
     def __init__(self, graph):
         self.graph = graph
         self.statements = []
+        self.unhandled = []
 
     def get_statements(self):
         graph_nodes = set()
@@ -84,13 +85,21 @@ class PybelProcessor(object):
                 #   act(p(Foo)) => gtp(p(Foo))
                 # Gap
                 #   act(p(Foo)) =| gtp(p(Foo))
-                elif subj_activity and obj_activity.activity_type == 'gtpbound':
+                elif subj_activity and _rel_is_direct(d) and \
+                     obj_activity.activity_type == 'gtpbound':
                     self._get_gef_gap(u_data, v_data, d)
+                # GtpActivation
+                #   gtp(p(Foo)) => act(p(Foo))
+                elif subj_activity and \
+                     subj_activity.activity_type == 'gtpbound':
+                    pass
                 # Activation/Inhibition
                 #   x(Foo) -> act(x(Foo))
                 #   act(x(Foo)) -> act(x(Foo))
                 else:
                     self._get_regulate_activity(u_data, v_data, d)
+            elif v_data[pc.FUNCTION] == pc.BIOLOGICAL_PROCESS:
+                print("Bioprocess")
             # Regulate amount
             #   x(Foo) -> p(Bar)
             #   x(Foo) -> r(Bar)
@@ -100,22 +109,17 @@ class PybelProcessor(object):
             elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
                  not obj_activity:
                 self._get_regulate_amount(u_data, v_data, d)
-            # GtpActivation
-            #   gtp(p(Foo)) => act(p(Foo))
-            elif subj_activity.activity_type == 'gtpbound' and obj_activity:
-                pass
             # Conversion
             #   rxn(reactants(r1,...,rn), products(p1,...pn))
             #   x(Foo) -> rxn(reactants(r1,...,rn), products(p1,...pn))
             #   act(x(Foo)) -> rxn(reactants(r1,...,rn), products(p1,...pn))
-
             # Complex(a,b) -> asdfasdf
             # p(A, pmod('ph')) -> Complex(A, B)
             #            Complex(A-Ph, B) 
-
-
             # Complexes
             #   complex(x(Foo), x(Bar), ...)
+            else:
+                self.unhandled.append((u_data, v_data, d))
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))

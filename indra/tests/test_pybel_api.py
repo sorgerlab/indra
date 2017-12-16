@@ -294,7 +294,7 @@ def test_gef():
     sos = protein(name='SOS1', namespace='HGNC')
     kras = protein(name='KRAS', namespace='HGNC')
     g = pybel.BELGraph()
-    g.add_qualified_edge(sos, kras, relation=pc.INCREASES,
+    g.add_qualified_edge(sos, kras, relation=pc.DIRECTLY_INCREASES,
                          subject_modifier=activity(name='activity'),
                          object_modifier=activity(name='gtp'),
                          evidence="Some evidence.", citation='123456')
@@ -311,11 +311,33 @@ def test_gef():
     assert len(pbp.statements[0].evidence) == 1
 
 
+def test_indirect_gef_is_activation():
+    sos = protein(name='SOS1', namespace='HGNC')
+    kras = protein(name='KRAS', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(sos, kras, relation=pc.INCREASES,
+                         subject_modifier=activity(name='activity'),
+                         object_modifier=activity(name='gtp'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, Activation)
+    assert stmt.subj.name == 'SOS1'
+    assert stmt.obj.name == 'KRAS'
+    assert stmt.subj.activity.activity_type == 'activity'
+    assert stmt.subj.activity.is_active is True
+    assert stmt.obj.activity is None
+    assert stmt.obj_activity == 'gtpbound'
+    assert len(pbp.statements[0].evidence) == 1
+
+
 def test_gap():
     sos = protein(name='RASA1', namespace='HGNC')
     kras = protein(name='KRAS', namespace='HGNC')
     g = pybel.BELGraph()
-    g.add_qualified_edge(sos, kras, relation=pc.DECREASES,
+    g.add_qualified_edge(sos, kras, relation=pc.DIRECTLY_DECREASES,
                          subject_modifier=activity(name='activity'),
                          object_modifier=activity(name='gtp'),
                          evidence="Some evidence.", citation='123456')
@@ -331,5 +353,9 @@ def test_gap():
     assert stmt.ras.activity is None
     assert len(pbp.statements[0].evidence) == 1
 
+
+
 if __name__ == '__main__':
+    test_gef()
+    test_indirect_gef_is_activation()
     test_gap()
