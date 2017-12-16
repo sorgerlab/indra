@@ -1944,7 +1944,6 @@ class Gef(Statement):
     def _from_json(cls, json_dict):
         gef = json_dict.get('gef')
         ras = json_dict.get('ras')
-        evidence = json_dict.get('evidence')
         if gef:
             gef = Agent._from_json(gef)
         if ras:
@@ -2031,7 +2030,6 @@ class Gap(Statement):
     def _from_json(cls, json_dict):
         gap = json_dict.get('gap')
         ras = json_dict.get('ras')
-        evidence = json_dict.get('evidence')
         if gap:
             gap = Agent._from_json(gap)
         if ras:
@@ -2120,7 +2118,6 @@ class Complex(Statement):
     @classmethod
     def _from_json(cls, json_dict):
         members = json_dict.get('members')
-        evidence = json_dict.get('evidence', [])
         members = [Agent._from_json(m) for m in members]
         stmt = cls(members)
         return stmt
@@ -2270,7 +2267,6 @@ class RegulateAmount(Statement):
     def _from_json(cls, json_dict):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
-        evidence = json_dict.get('evidence')
         if subj:
             subj = Agent._from_json(subj)
         if obj:
@@ -2404,7 +2400,6 @@ class Conversion(Statement):
         subj = json_dict.get('subj')
         obj_from = json_dict.get('obj_from')
         obj_to = json_dict.get('obj_to')
-        evidence = json_dict.get('evidence')
         if subj:
             subj = Agent._from_json(subj)
         if obj_from:
