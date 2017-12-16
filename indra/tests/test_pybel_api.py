@@ -290,6 +290,26 @@ def test_active_form():
     assert len(pbp.statements[0].evidence) == 1
 
 
-if __name__ == '__main__':
-    test_get_agent_with_mods()
+def test_gef():
+    sos = protein(name='SOS1', namespace='HGNC')
+    kras = protein(name='KRAS', namespace='HGNC')
+    g = pybel.BELGraph()
+    g.add_qualified_edge(sos, kras, relation=pc.INCREASES,
+                         subject_modifier=activity(name='activity'),
+                         object_modifier=activity(name='gtp'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, Gef)
+    assert stmt.gef.name == 'SOS1'
+    assert stmt.ras.name == 'KRAS'
+    assert stmt.gef.activity.activity_type == 'activity'
+    assert stmt.gef.activity.is_active is True
+    assert stmt.ras.activity is None
+    assert len(pbp.statements[0].evidence) == 1
 
+
+if __name__ == '__main__':
+    test_gef()

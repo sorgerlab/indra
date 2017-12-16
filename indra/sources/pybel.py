@@ -9,9 +9,6 @@ from indra.databases import hgnc_client, uniprot_client
 from indra.assemblers.pybel_assembler import _pybel_indra_act_map
 
 
-
-
-
 logger = logging.getLogger('pybel_processor')
 
 
@@ -83,6 +80,12 @@ class PybelProcessor(object):
                 #                            act(p(Foo))
                 if not subj_activity and _proteins_match(u_data, v_data):
                     self._get_active_form(u_data, v_data, d)
+                # Gef
+                #   act(p(Foo)) => gtp(p(Foo))
+                # Gap
+                #   act(p(Foo)) =| gtp(p(Foo))
+                elif subj_activity and obj_activity.activity_type == 'gtpbound':
+                    self._get_gef_gap(u_data, v_data, d)
                 # Activation/Inhibition
                 #   x(Foo) -> act(x(Foo))
                 #   act(x(Foo)) -> act(x(Foo))
@@ -97,14 +100,10 @@ class PybelProcessor(object):
             elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
                  not obj_activity:
                 self._get_regulate_amount(u_data, v_data, d)
-            # Gef
-            #   act(p(Foo)) => gtp(p(Foo))
-            # Gap
-            #   act(p(Foo)) =| gtp(p(Foo))
             # GtpActivation
             #   gtp(p(Foo)) => act(p(Foo))
-
-
+            elif subj_activity.activity_type == 'gtpbound' and obj_activity:
+                pass
             # Conversion
             #   rxn(reactants(r1,...,rn), products(p1,...pn))
             #   x(Foo) -> rxn(reactants(r1,...,rn), products(p1,...pn))
@@ -188,8 +187,23 @@ class PybelProcessor(object):
         stmt = ActiveForm(subj_agent, activity_type, is_active, evidence=[ev])
         self.statements.append(stmt)
 
+    def _get_gef_gap(self, u_data, v_data, edge_data):
+        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        obj_agent = _get_agent(v_data)
+        if subj_agent is None or obj_agent is None:
+            return
+        ev = _get_evidence(u_data, v_data, edge_data)
+        if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+            stmt_class = Gef
+        else:
+            stmt_class = Gap
+        stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
+        self.statements.append(stmt)
+
 
 def _get_agent(node_data, node_modifier_data=None):
+    # FIXME: Handle translocations on the agent for ActiveForms, turn into
+    # location conditions
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA):
