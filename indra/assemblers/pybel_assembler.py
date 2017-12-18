@@ -8,7 +8,6 @@ import pybel.constants as pc
 from pybel.language import pmod_namespace
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.assemblers.pysb_assembler import mod_acttype_map
 
 
 logger = logging.getLogger('pybel_assembler')
