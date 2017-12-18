@@ -2,7 +2,7 @@ import re
 import logging
 from copy import copy
 import pybel.constants as pc
-from pybel.struct import node_has_pmod
+from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
 from indra.statements import *
 from indra.databases import hgnc_client, uniprot_client
@@ -83,7 +83,7 @@ class PybelProcessor(object):
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if v_data[pc.FUNCTION] == pc.PROTEIN and \
-               node_has_pmod(self.graph, v):
+               has_protein_modification(self.graph, v):
                 self._get_modification(u_data, v_data, d)
             elif obj_activity:
                 # If the agents on the left and right hand sides are the same,
@@ -208,8 +208,6 @@ class PybelProcessor(object):
         ev = _get_evidence(u_data, v_data, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, activity_type, evidence=[ev])
         self.statements.append(stmt)
-
-
 
     def _get_active_form(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data)
@@ -340,8 +338,6 @@ def _get_up_id(hgnc_id):
     if not up_id:
         logger.info("No Uniprot ID for HGNC ID %s" % hgnc_id)
     return up_id
-
-
 
 
 def _remove_pmods(node_data):
