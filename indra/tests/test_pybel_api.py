@@ -104,11 +104,19 @@ def test_get_agent_up_no_id():
     assert agent is None
 
 
-def test_get_agent_mesh():
+def test_get_agent_meshpp():
     apoptosis = bioprocess(name='Apoptosis', namespace='MESHPP')
     agent = pb._get_agent(apoptosis)
     assert isinstance(agent, Agent)
     assert agent.name == 'Apoptosis'
+    assert agent.db_refs == {}
+
+
+def test_get_agent_meshd():
+    hyperoxia = bioprocess(name='Hyperoxia', namespace='MESHD')
+    agent = pb._get_agent(hyperoxia)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'Hyperoxia'
     assert agent.db_refs == {}
 
 
@@ -509,7 +517,4 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 if __name__ == '__main__':
-    test_get_agent_egid()
-    #test_get_agent_sfam()
-    #test_get_agent_mgi()
-    #test_get_agent_complex()
+    test_get_agent_meshd()

@@ -297,7 +297,7 @@ def _get_agent(node_data, node_modifier_data=None):
         # FIXME: Look up go ID in ontology lookup service
         # FIXME: Look up MESH IDs from name
         # FIXME: For now, just use node name
-        elif ns in ('GOBP', 'MESHPP'):
+        elif ns in ('GOBP', 'MESHPP', 'MESHD'):
             db_refs = {}
         # For now, handle MGI/RGD but putting the name into the db_refs so
         # it's clear what namespace the name belongs to
