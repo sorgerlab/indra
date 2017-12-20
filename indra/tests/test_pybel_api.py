@@ -42,6 +42,24 @@ def test_get_agent_up():
     assert agent.db_refs.get('UP') == mek_up_id
 
 
+def test_get_agent_mgi():
+    node = protein(namespace='MGI', name='Nr1h3')
+    agent = pb._get_agent(node, {})
+    assert isinstance(agent, Agent)
+    assert agent.name == 'Nr1h3'
+    assert len(agent.db_refs) == 1
+    assert agent.db_refs.get('MGI') == 'Nr1h3'
+
+
+def test_get_agent_rgd():
+    node = protein(namespace='RGD', name='Tp53')
+    agent = pb._get_agent(node, {})
+    assert isinstance(agent, Agent)
+    assert agent.name == 'Tp53'
+    assert len(agent.db_refs) == 1
+    assert agent.db_refs.get('RGD') == 'Tp53'
+
+
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})
@@ -129,6 +147,26 @@ def test_get_agent_complex():
     assert bc_agent.mods[0].mod_type == 'phosphorylation'
     assert bc_agent.mods[0].residue == 'T'
     assert bc_agent.mods[0].position == '185'
+
+
+def test_get_agent_complex_none_agent():
+    """If one of the agents in the complex can't be obtained (e.g., an
+    unhandled namespace), then the complex itself should be None."""
+    # Prime agent is None
+    mek = protein(name='MAP2K1', namespace='FOO')
+    erk = protein(name='MAPK1', namespace='HGNC',
+                  variants=[pmod('Ph', position=185, code='Thr')])
+    cplx = complex_abundance([mek, erk])
+    agent = pb._get_agent(cplx)
+    assert agent is None
+
+    # Bound agent is None
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='FOO',
+                  variants=[pmod('Ph', position=185, code='Thr')])
+    cplx = complex_abundance([mek, erk])
+    agent = pb._get_agent(cplx)
+    assert agent is None
 
 
 def test_phosphorylation_one_site_with_evidence():
@@ -414,4 +452,6 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 if __name__ == '__main__':
-    test_get_agent_complex()
+    test_get_agent_complex_none_agent()
+    #test_get_agent_mgi()
+    #test_get_agent_complex()
