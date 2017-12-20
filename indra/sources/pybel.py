@@ -66,6 +66,7 @@ class PybelProcessor(object):
         self.statements = []
         self.unhandled = []
 
+    # FIXME: Handle reactions, composite nodes
     def get_statements(self):
         graph_nodes = set()
         for u, v, d in self.graph.edges_iter(data=True):
@@ -121,8 +122,8 @@ class PybelProcessor(object):
             #   act(x(Foo)) -> p(Bar):
             #   x(Foo) -> deg(p(Bar))
             #   act(x(Foo)) ->/-| deg(p(Bar))
-            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA) and \
-                 not obj_activity:
+            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA, pc.ABUNDANCE,
+                 pc.COMPLEX, pc.MIRNA) and not obj_activity:
                 self._get_regulate_amount(u_data, v_data, d)
             # Conversion
             #   rxn(reactants(r1,...,rn), products(p1,...pn))
