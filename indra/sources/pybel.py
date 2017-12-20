@@ -5,7 +5,7 @@ import pybel.constants as pc
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
 from indra.statements import *
-from indra.sources.bel.processor import bel_to_indra
+from indra.sources.bel.processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client
 from indra.assemblers.pybel_assembler import _pybel_indra_act_map
 
@@ -111,9 +111,9 @@ class PybelProcessor(object):
                 #   gtp(p(Foo)) => act(p(Foo))
                 else:
                     self._get_regulate_activity(u_data, v_data, d)
-            # Activations involving biological processes
+            # Activations involving biological processes or pathologies
             #   x(Foo) -> bp(Bar)
-            elif v_data[pc.FUNCTION] == pc.BIOPROCESS:
+            elif v_data[pc.FUNCTION] in (pc.BIOPROCESS, pc.PATHOLOGY):
                 self._get_regulate_activity(u_data, v_data, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
@@ -185,7 +185,7 @@ class PybelProcessor(object):
         obj_agent = _get_agent(v_data)
         obj_function = v_data.get(pc.FUNCTION)
         # If it's a bioprocess object, we won't have an activity in the edge
-        if obj_function == pc.BIOPROCESS:
+        if obj_function in (pc.BIOPROCESS, pc.PATHOLOGY):
             activity_type = 'activity'
         else:
             obj_activity_condition = \
@@ -247,9 +247,11 @@ def _get_agent(node_data, node_modifier_data=None):
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     # FIXME: Handle PATHOLOGY nodes
+    # FIXME: Handle MIRNA, ABUNDANCE nodes
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
-                         pc.PATHOLOGY):
-        logger.info("Nodes of type %s not handled", node_func)
+                         pc.PATHOLOGY, pc.ABUNDANCE):
+        logger.warning("Nodes of type %s not handled: %s" %
+                        (node_func, node_data))
         return None
 
     # COMPLEXES ------------
@@ -332,7 +334,14 @@ def _get_agent(node_data, node_modifier_data=None):
             else:
                 logger.warning('Could not map EGID%s to HGNC.' % name)
                 name = 'E%s' % name
-        # FIXME Handle SDIS
+        # CHEBI
+        elif ns == 'CHEBI':
+            chebi_id = chebi_name_id.get(name)
+            if chebi_id:
+                db_refs = {'CHEBI': chebi_id}
+            else:
+                logger.warning('CHEBI name %s not found in map.' % name)
+        # SDIS
         elif ns == 'SDIS':
             db_refs = {'SDIS': name}
         else:

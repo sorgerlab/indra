@@ -98,6 +98,19 @@ def test_get_agent_sdis():
     assert agent.db_refs['SDIS'] == 'metastasis'
 
 
+def test_get_agent_chebi():
+    node_data = {
+            'cname': 'nitric oxide',
+            'function': 'Abundance',
+            'name': 'nitric oxide',
+            'namespace': 'CHEBI'}
+    agent = pb._get_agent(node_data)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'nitric oxide'
+    assert len(agent.db_refs) == 1
+    assert agent.db_refs['CHEBI'] == 'CHEBI:16480'
+
+
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})
@@ -517,4 +530,4 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 if __name__ == '__main__':
-    test_get_agent_meshd()
+    test_get_agent_chebi()
