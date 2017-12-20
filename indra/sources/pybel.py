@@ -255,8 +255,14 @@ def _get_agent(node_data, node_modifier_data=None):
         # as bound conditions
         members = node_data[pc.MEMBERS]
         main_agent = _get_agent(members[0])
+        # If we can't get the main agent, return None
+        if main_agent is None:
+            return None
         bound_conditions = [BoundCondition(_get_agent(m), True)
                             for m in members[1:]]
+        # Check the bound_conditions for any None agents
+        if any([bc.agent is None for bc in bound_conditions]):
+            return None
         main_agent.bound_conditions = bound_conditions
         # Get activity of main agent
         ac = _get_activity_condition(node_modifier_data)
