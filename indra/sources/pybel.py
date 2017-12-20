@@ -130,13 +130,20 @@ class PybelProcessor(object):
             elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA, pc.ABUNDANCE,
                  pc.COMPLEX, pc.MIRNA) and not obj_activity:
                 self._get_regulate_amount(u_data, v_data, d)
-            # Conversion
-            #   rxn(reactants(r1,...,rn), products(p1,...pn))
+            # Controlled conversions
             #   x(Foo) -> rxn(reactants(r1,...,rn), products(p1,...pn))
             #   act(x(Foo)) -> rxn(reactants(r1,...,rn), products(p1,...pn))
-            # Complex(a,b) -> asdfasdf
+            # Note that we can't really handle statements where the relation
+            # is decreases, as inhibition of a reaction match the semantics
+            # of a controlled conversion
+            elif v_data[pc.FUNCTION] == pc.REACTION and \
+                 d[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
+                self._get_conversion(u_data, v_data, d)
+            # UNHANDLED
+            # rxn(reactants(r1,...,rn), products(p1,...pn))
+            # Complex(a,b)
             # p(A, pmod('ph')) -> Complex(A, B)
-            #            Complex(A-Ph, B) 
+            # Complex(A-Ph, B) 
             # Complexes
             #   complex(x(Foo), x(Bar), ...)
             else:
@@ -244,6 +251,21 @@ class PybelProcessor(object):
         else:
             stmt_class = Gap
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
+        self.statements.append(stmt)
+
+    def _get_conversion(self, u_data, v_data, edge_data):
+        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        # Get the nodes for the reactants and products
+        reactant_agents = [_get_agent(r) for r in v_data[pc.REACTANTS]]
+        product_agents = [_get_agent(p) for p in v_data[pc.PRODUCTS]]
+        if subj_agent is None or \
+           any([r is None for r in reactant_agents]) or \
+           any([p is None for p in product_agents]):
+            self.unhandled.append((u_data, v_data, edge_data))
+            return
+        ev = _get_evidence(u_data, v_data, edge_data)
+        stmt = Conversion(subj_agent, obj_from=reactant_agents,
+                          obj_to=product_agents, evidence = ev)
         self.statements.append(stmt)
 
 
@@ -376,7 +398,8 @@ def _get_agent(node_data, node_modifier_data=None):
             raise ValueError('Identifiers for MGI and RGD databases are not '
                              'currently handled: %s' % node_data)
         else:
-            print("Unhandled namespace with identifier: %s: %s (%s)" % (ns, name, node_data))
+            print("Unhandled namespace with identifier: %s: %s (%s)" %
+                  (ns, name, node_data))
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s'
                      % node_data)
