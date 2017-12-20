@@ -111,6 +111,26 @@ def test_get_agent_with_activity():
     assert agent.activity.is_active
 
 
+def test_get_agent_complex():
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='HGNC',
+                  variants=[pmod('Ph', position=185, code='Thr')])
+    cplx = complex_abundance([mek, erk])
+    agent = pb._get_agent(cplx)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAP2K1'
+    assert len(agent.bound_conditions) == 1
+    bc = agent.bound_conditions[0]
+    assert isinstance(bc, BoundCondition)
+    assert bc.is_bound is True
+    bc_agent = bc.agent
+    assert bc_agent.name == 'MAPK1'
+    assert len(bc_agent.mods) == 1
+    assert bc_agent.mods[0].mod_type == 'phosphorylation'
+    assert bc_agent.mods[0].residue == 'T'
+    assert bc_agent.mods[0].position == '185'
+
+
 def test_phosphorylation_one_site_with_evidence():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC',
@@ -394,4 +414,4 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 if __name__ == '__main__':
-    test_gtpactivation()
+    test_get_agent_complex()

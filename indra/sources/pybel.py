@@ -245,9 +245,23 @@ def _get_agent(node_data, node_modifier_data=None):
     # location conditions
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
-    if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS):
+    if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX):
         logger.info("Nodes of type %s not handled", node_func)
         return None
+
+    # First, handle complexes, which will consist recursively of other agents
+    if node_func == pc.COMPLEX:
+        # Get the "main" agent, to which the other members will be attached
+        # as bound conditions
+        members = node_data[pc.MEMBERS]
+        main_agent = _get_agent(members[0])
+        bound_conditions = [BoundCondition(_get_agent(m), True)
+                            for m in members[1:]]
+        main_agent.bound_conditions = bound_conditions
+        # Get activity of main agent
+        ac = _get_activity_condition(node_modifier_data)
+        main_agent.activity = ac
+        return main_agent
     # Get node identifier information
     name = node_data.get(pc.NAME)
     ns = node_data[pc.NAMESPACE]
