@@ -51,6 +51,11 @@ def process_pybel_graph(graph):
 class PybelProcessor(object):
     """Extract INDRA Statements from a PyBEL Graph.
 
+    Unhandled statements:
+        * Most statements involving composite nodes
+        * Statements involving non-causal relationships (positiveCorrelation,
+          (negativeCorrelation, hasVariant, etc.)
+
     Parameters
     ----------
     graph : pybel.BELGraph

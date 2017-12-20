@@ -556,6 +556,46 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 
+def test_conversion():
+    enz = protein(name='PLCG1', namespace='HGNC')
+    rxn = {
+            'function': 'Reaction',
+            'reactants': [
+                {'function': 'Abundance',
+                 'name': '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate',
+                 'namespace': 'SCHEM'}
+            ],
+            'products': [
+                {'function': 'Abundance',
+                 'name': 'Diacylglycerol',
+                 'namespace': 'SCHEM'},
+                {'cname': 'Inositol 1,4,5-trisphosphate',
+                 'function': 'Abundance',
+                 'name': 'Inositol 1,4,5-trisphosphate',
+                 'namespace': 'SCHEM'}
+            ]
+          }
+    g = pybel.BELGraph()
+    g.add_qualified_edge(enz, rxn, relation=pc.DIRECTLY_INCREASES,
+                         subject_modifier=activity(name='activity'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, Conversion)
+    assert stmt.subj.name == 'PLCG1'
+    assert stmt.subj.activity.activity_type == 'activity'
+    assert stmt.subj.activity.is_active is True
+    assert len(stmt.obj_from) == 1
+    assert isinstance(stmt.obj_from[0], Agent)
+    assert stmt.obj_from[0].name == '1-Phosphatidyl-D-myo-inositol ' \
+                                    '4,5-bisphosphate'
+    assert len(stmt.obj_to) == 2
+    assert stmt.obj_to[0].name == 'Diacylglycerol'
+    assert stmt.obj_to[1].name == 'Inositol 1,4,5-trisphosphate'
+    assert len(stmt.evidence) == 1
+
 
 if __name__ == '__main__':
-    test_get_agent_mirna()
+    test_conversion()
