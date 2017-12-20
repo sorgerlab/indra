@@ -223,7 +223,7 @@ class MutCondition(object):
     --------
     Represent EGFR with a L858R mutation:
 
-    >>> egfr_mutant = Agent('EGFR', mutations=(MutCondition('858', 'L', 'R')))
+    >>> egfr_mutant = Agent('EGFR', mutations=[MutCondition('858', 'L', 'R')])
     """
     def __init__(self, position, residue_from, residue_to=None):
         self.position = position
@@ -316,9 +316,9 @@ class ModCondition(object):
     --------
     Doubly-phosphorylated MEK (MAP2K1):
 
-    >>> phospho_mek = Agent('MAP2K1', mods=(
+    >>> phospho_mek = Agent('MAP2K1', mods=[
     ... ModCondition('phosphorylation', 'S', '202'),
-    ... ModCondition('phosphorylation', 'S', '204')))
+    ... ModCondition('phosphorylation', 'S', '204')])
 
     ERK (MAPK1) unphosphorylated at tyrosine 187:
 
@@ -456,7 +456,7 @@ class ActivityCondition(object):
         return (type_match and is_act_match)
 
     def matches(self, other):
-        return (self.matches_key() == other.matches_key())
+        return self.matches_key() == other.matches_key()
 
     def matches_key(self):
         key = (str(self.activity_type), str(self.is_active))
@@ -916,7 +916,6 @@ class Evidence(object):
             return str(self)
         else:
             return str(self).encode('utf-8')
-        return str(self)
 
 
 class Statement(object):
@@ -1165,11 +1164,11 @@ class Modification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        residue_matches = (other.residue is None
-                           or (self.residue == other.residue))
-        position_matches = (other.position is None
-                            or (self.position == other.position))
-        return (residue_matches and position_matches)
+        residue_matches = (other.residue is None or
+                           (self.residue == other.residue))
+        position_matches = (other.position is None or
+                            (self.position == other.position))
+        return residue_matches and position_matches
 
     def equals(self, other):
         matches = super(Modification, self).equals(other)
@@ -1221,7 +1220,7 @@ class Modification(Statement):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
         pos_str = (', %s' % self.position) if self.position is not None else ''
         s = ("%s(%s, %s%s%s)" %
-             (type(self).__name__, self.enz, self.sub, res_str, pos_str))
+                 (type(self).__name__, self.enz, self.sub, res_str, pos_str))
         return s
 
 
@@ -1291,11 +1290,11 @@ class SelfModification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        residue_matches = (other.residue is None
-                           or self.residue == other.residue)
-        position_matches = (other.position is None
-                            or self.position == other.position)
-        return (residue_matches and position_matches)
+        residue_matches = (other.residue is None or
+                           (self.residue == other.residue))
+        position_matches = (other.position is None or
+                            (self.position == other.position))
+        return residue_matches and position_matches
 
     def equals(self, other):
         matches = super(SelfModification, self).equals(other)
