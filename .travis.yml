@@ -12,16 +12,7 @@ addons:
 before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-4.3.21-Linux-x86_64.sh -O miniconda.sh -nv;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-4.3.21-Linux-x86_64.sh -O miniconda.sh -nv;
-    fi
-  - chmod +x miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="/home/travis/miniconda/bin:$PATH"
-  - conda update --yes conda
-  - conda install --yes python="$TRAVIS_PYTHON_VERSION" qt=4 numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx pandas
+  - pip install numpy scipy sympy cython==0.23.5 nose lxml matplotlib==1.5.0 pandas
 install:
   # INDRA dependencies
   - sudo apt-get install graphviz
