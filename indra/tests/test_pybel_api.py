@@ -60,6 +60,20 @@ def test_get_agent_rgd():
     assert agent.db_refs.get('RGD') == 'Tp53'
 
 
+def test_get_agent_sfam():
+    node_data = {
+            'cname': 'PRKC Family',
+            'function': 'Protein',
+            'name': 'PRKC Family',
+            'namespace': 'SFAM'}
+    agent = pb._get_agent(node_data)
+    assert isinstance(agent, Agent)
+    assert len(agent.db_refs) == 2
+    assert agent.db_refs['SFAM'] == 'PRKC Family'
+    assert agent.db_refs['BE'] == 'PKC'
+    assert agent.name == 'PKC'
+
+
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})
@@ -169,7 +183,7 @@ def test_get_agent_complex_none_agent():
     assert agent is None
 
 
-def test_get_agent_named_complex():
+def test_get_agent_named_complex_go():
     # TODO: Handle named complexes and map to Bioentities where possible
     node_data = {
             'cname': '0043509',
@@ -463,6 +477,6 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 if __name__ == '__main__':
-    test_get_agent_complex_none_agent()
+    test_get_agent_sfam()
     #test_get_agent_mgi()
     #test_get_agent_complex()

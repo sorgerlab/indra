@@ -5,6 +5,7 @@ import pybel.constants as pc
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
 from indra.statements import *
+from indra.sources.bel.processor import bel_to_indra
 from indra.databases import hgnc_client, uniprot_client
 from indra.assemblers.pybel_assembler import _pybel_indra_act_map
 
@@ -245,6 +246,7 @@ def _get_agent(node_data, node_modifier_data=None):
     # location conditions
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
+    # FIXME: Handle PATHOLOGY nodes
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX):
         logger.info("Nodes of type %s not handled", node_func)
         return None
@@ -299,6 +301,19 @@ def _get_agent(node_data, node_modifier_data=None):
         # the names, and obtain corresponding Uniprot IDs
         elif ns in ('MGI', 'RGD'):
             db_refs = {ns: name}
+        # Map Selventa families to Bioentities
+        elif ns == 'SFAM':
+            db_refs = {'SFAM': name}
+            indra_name = bel_to_indra.get(name)
+            if indra_name is None:
+                logger.info('Could not find mapping for BEL/SFAM family: '
+                            '%s (%s)', (name, node_data))
+            else:
+                db_refs['BE'] = indra_name
+                name = indra_name
+        # FIXME: Handle EGID, SFAM, MESHPP, SDIS
+        else:
+            print("Unhandled namespace: %s: %s" % (ns, name))
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
