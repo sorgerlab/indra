@@ -42,6 +42,17 @@ def test_get_agent_up():
     assert agent.db_refs.get('UP') == mek_up_id
 
 
+def test_get_agent_egid():
+    node_data = {'function': 'Protein', 'name': '5008', 'namespace': 'EGID'}
+    agent = pb._get_agent(node_data)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'OSM'
+    assert len(agent.db_refs) == 3
+    assert agent.db_refs['EGID'] == '5008'
+    assert agent.db_refs['HGNC'] == '8506'
+    assert agent.db_refs['UP'] == 'P13725'
+
+
 def test_get_agent_mgi():
     node = protein(namespace='MGI', name='Nr1h3')
     agent = pb._get_agent(node, {})
@@ -78,6 +89,14 @@ def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})
     assert agent is None
+
+
+def test_get_agent_mesh():
+    apoptosis = bioprocess(name='Apoptosis', namespace='MESHPP')
+    agent = pb._get_agent(apoptosis)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'Apoptosis'
+    assert agent.db_refs == {}
 
 
 def test_get_agent_with_mods():
@@ -477,6 +496,7 @@ def test_gtpactivation():
     assert len(stmt.evidence) == 1
 
 if __name__ == '__main__':
-    test_get_agent_sfam()
+    test_get_agent_egid()
+    #test_get_agent_sfam()
     #test_get_agent_mgi()
     #test_get_agent_complex()

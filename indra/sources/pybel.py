@@ -251,6 +251,7 @@ def _get_agent(node_data, node_modifier_data=None):
         logger.info("Nodes of type %s not handled", node_func)
         return None
 
+    # COMPLEXES ------------
     # First, handle complexes, which will consist recursively of other agents
     if node_func == pc.COMPLEX:
         # First, check for members: if there are no members, we assume this
@@ -274,6 +275,7 @@ def _get_agent(node_data, node_modifier_data=None):
         ac = _get_activity_condition(node_modifier_data)
         main_agent.activity = ac
         return main_agent
+    # OTHER NODE TYPES -----
     # Get node identifier information
     name = node_data.get(pc.NAME)
     ns = node_data[pc.NAMESPACE]
@@ -291,9 +293,10 @@ def _get_agent(node_data, node_modifier_data=None):
             up_id = _get_up_id(hgnc_id)
             if up_id:
                 db_refs['UP'] = up_id
-        elif ns == 'GOBP':
-            # FIXME: Look up go ID in ontology lookup service
-            # FIXME: For now, just use node name
+        # FIXME: Look up go ID in ontology lookup service
+        # FIXME: Look up MESH IDs from name
+        # FIXME: For now, just use node name
+        elif ns in ('GOBP', 'MESHPP'):
             db_refs = {}
         # For now, handle MGI/RGD but putting the name into the db_refs so
         # it's clear what namespace the name belongs to
@@ -311,9 +314,26 @@ def _get_agent(node_data, node_modifier_data=None):
             else:
                 db_refs['BE'] = indra_name
                 name = indra_name
-        # FIXME: Handle EGID, SFAM, MESHPP, SDIS
+        # Map Entrez genes to HGNC/UP
+        elif ns == 'EGID':
+            hgnc_id = hgnc_client.get_hgnc_from_entrez(name)
+            db_refs = {'EGID': name}
+            if hgnc_id is not None:
+                db_refs['HGNC'] = hgnc_id
+                name = hgnc_client.get_hgnc_name(hgnc_id)
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if up_id:
+                    db_refs['UP'] = up_id
+                else:
+                    logger.warning('HGNC entity %s with HGNC ID %s has no '
+                                   'corresponding Uniprot ID.' %
+                                   (name, hgnc_id))
+            else:
+                logger.warning('Could not map EGID%s to HGNC.' % name)
+                name = 'E%s' % name
+        # FIXME Handle SDIS
         else:
-            print("Unhandled namespace: %s: %s" % (ns, name))
+            print("Unhandled namespace: %s: %s (%s)" % (ns, name, node_data))
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
@@ -337,6 +357,8 @@ def _get_agent(node_data, node_modifier_data=None):
         elif ns in ('MGI', 'RGD'):
             raise ValueError('Identifiers for MGI and RGD databases are not '
                              'currently handled: %s' % node_data)
+        else:
+            print("Unhandled namespace with identifier: %s: %s (%s)" % (ns, name, node_data))
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s'
                      % node_data)
