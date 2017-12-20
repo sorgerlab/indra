@@ -493,7 +493,7 @@ def _get_all_pmods(node_data, remove_pmods=False):
         # the node (raise, or return None)
         elif var[pc.KIND] == pc.GMOD:
             logger.debug('Unhandled node variant GMOD: %s' % node_data)
-        elif var[pc.KIND] == pc.FRAG:
+        elif var[pc.KIND] == pc.FRAGMENT:
             logger.debug('Unhandled node variant FRAG: %s' % node_data)
         else:
             logger.debug('Unknown node variant type: %s' % node_data)
