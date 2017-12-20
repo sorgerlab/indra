@@ -85,6 +85,19 @@ def test_get_agent_sfam():
     assert agent.name == 'PKC'
 
 
+def test_get_agent_sdis():
+    node_data = {
+            'cname': 'metastasis',
+            'function': 'Pathology',
+            'name': 'metastasis',
+            'namespace': 'SDIS'}
+    agent = pb._get_agent(node_data)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'metastasis'
+    assert len(agent.db_refs) == 1
+    assert agent.db_refs['SDIS'] == 'metastasis'
+
+
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})

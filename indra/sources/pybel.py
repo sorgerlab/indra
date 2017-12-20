@@ -247,7 +247,8 @@ def _get_agent(node_data, node_modifier_data=None):
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
     # FIXME: Handle PATHOLOGY nodes
-    if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX):
+    if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
+                         pc.PATHOLOGY):
         logger.info("Nodes of type %s not handled", node_func)
         return None
 
@@ -332,6 +333,8 @@ def _get_agent(node_data, node_modifier_data=None):
                 logger.warning('Could not map EGID%s to HGNC.' % name)
                 name = 'E%s' % name
         # FIXME Handle SDIS
+        elif ns == 'SDIS':
+            db_refs = {'SDIS': name}
         else:
             print("Unhandled namespace: %s: %s (%s)" % (ns, name, node_data))
     # We've already got an identifier, look up other identifiers if necessary
