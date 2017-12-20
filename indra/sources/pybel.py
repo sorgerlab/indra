@@ -251,9 +251,13 @@ def _get_agent(node_data, node_modifier_data=None):
 
     # First, handle complexes, which will consist recursively of other agents
     if node_func == pc.COMPLEX:
-        # Get the "main" agent, to which the other members will be attached
-        # as bound conditions
-        members = node_data[pc.MEMBERS]
+        # First, check for members: if there are no members, we assume this
+        # is a named complex
+        members = node_data.get(pc.MEMBERS)
+        if members is None:
+            return None
+        # Otherwise, get the "main" agent, to which the other members will be
+        # attached as bound conditions
         main_agent = _get_agent(members[0])
         # If we can't get the main agent, return None
         if main_agent is None:
@@ -289,9 +293,12 @@ def _get_agent(node_data, node_modifier_data=None):
             # FIXME: Look up go ID in ontology lookup service
             # FIXME: For now, just use node name
             db_refs = {}
+        # For now, handle MGI/RGD but putting the name into the db_refs so
+        # it's clear what namespace the name belongs to
+        # FIXME: Full implementation would look up MGI/RGD identifiers from
+        # the names, and obtain corresponding Uniprot IDs
         elif ns in ('MGI', 'RGD'):
-            raise ValueError('Identifiers for MGI and RGD databases are not '
-                             'currently handled: %s' % node_data)
+            db_refs = {ns: name}
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
@@ -312,12 +319,9 @@ def _get_agent(node_data, node_modifier_data=None):
                                 'name %s' % name)
                 else:
                     db_refs['HGNC'] = hgnc_id
-        # For now, handle MGI/RGD but putting the name into the db_refs so
-        # it's clear what namespace the name belongs to
-        # FIXME: Full implementation would look up MGI/RGD identifiers from
-        # the names, and obtain corresponding Uniprot IDs
         elif ns in ('MGI', 'RGD'):
-            db_refs[ns] = name
+            raise ValueError('Identifiers for MGI and RGD databases are not '
+                             'currently handled: %s' % node_data)
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s'
                      % node_data)

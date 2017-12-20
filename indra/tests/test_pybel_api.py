@@ -169,6 +169,17 @@ def test_get_agent_complex_none_agent():
     assert agent is None
 
 
+def test_get_agent_named_complex():
+    # TODO: Handle named complexes and map to Bioentities where possible
+    node_data = {
+            'cname': '0043509',
+            'function': 'Complex',
+            'name': '0043509',
+            'namespace': 'GOCCID'}
+    agent = pb._get_agent(node_data)
+    assert agent is None
+
+
 def test_phosphorylation_one_site_with_evidence():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC',
