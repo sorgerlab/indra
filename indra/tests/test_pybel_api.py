@@ -111,6 +111,32 @@ def test_get_agent_chebi():
     assert agent.db_refs['CHEBI'] == 'CHEBI:16480'
 
 
+def test_get_agent_schem():
+    node_data = {
+            'cname': 'Promegestone',
+            'function': 'Abundance',
+            'name': 'Promegestone',
+            'namespace': 'SCHEM'}
+    agent = pb._get_agent(node_data)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'Promegestone'
+    assert len(agent.db_refs) == 1
+    assert agent.db_refs['SCHEM'] == 'Promegestone'
+
+
+def test_get_agent_mirna():
+    node_data = {
+            'cname': 'MIR218-1',
+            'function': 'miRNA',
+            'name': 'MIR218-1',
+            'namespace': 'HGNC'}
+    agent = pb._get_agent(node_data)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MIR218-1'
+    assert len(agent.db_refs) == 1
+    assert agent.db_refs['HGNC'] == '31595'
+
+
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})
@@ -529,5 +555,7 @@ def test_gtpactivation():
     assert stmt.obj_activity == 'kinase'
     assert len(stmt.evidence) == 1
 
+
+
 if __name__ == '__main__':
-    test_get_agent_chebi()
+    test_get_agent_mirna()

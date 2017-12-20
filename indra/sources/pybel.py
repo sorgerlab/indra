@@ -249,7 +249,7 @@ def _get_agent(node_data, node_modifier_data=None):
     # FIXME: Handle PATHOLOGY nodes
     # FIXME: Handle MIRNA, ABUNDANCE nodes
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
-                         pc.PATHOLOGY, pc.ABUNDANCE):
+                         pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
         logger.warning("Nodes of type %s not handled: %s" %
                         (node_func, node_data))
         return None
@@ -328,11 +328,11 @@ def _get_agent(node_data, node_modifier_data=None):
                 if up_id:
                     db_refs['UP'] = up_id
                 else:
-                    logger.warning('HGNC entity %s with HGNC ID %s has no '
+                    logger.info('HGNC entity %s with HGNC ID %s has no '
                                    'corresponding Uniprot ID.' %
                                    (name, hgnc_id))
             else:
-                logger.warning('Could not map EGID%s to HGNC.' % name)
+                logger.info('Could not map EGID%s to HGNC.' % name)
                 name = 'E%s' % name
         # CHEBI
         elif ns == 'CHEBI':
@@ -340,10 +340,10 @@ def _get_agent(node_data, node_modifier_data=None):
             if chebi_id:
                 db_refs = {'CHEBI': chebi_id}
             else:
-                logger.warning('CHEBI name %s not found in map.' % name)
-        # SDIS
-        elif ns == 'SDIS':
-            db_refs = {'SDIS': name}
+                logger.info('CHEBI name %s not found in map.' % name)
+        # SDIS, SCHEM: Include the name as the ID for the namespace
+        elif ns in ('SDIS', 'SCHEM'):
+            db_refs = {ns: name}
         else:
             print("Unhandled namespace: %s: %s (%s)" % (ns, name, node_data))
     # We've already got an identifier, look up other identifiers if necessary
