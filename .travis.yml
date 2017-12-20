@@ -20,7 +20,7 @@ before_install:
   - chmod +x miniconda.sh
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="/home/travis/miniconda/bin:$PATH"
-    #- conda update --yes conda
+  - conda update --yes conda
   - conda install --yes python="$TRAVIS_PYTHON_VERSION" qt=4 numpy scipy sympy cython=0.23.5 nose lxml matplotlib=1.5.0 networkx pandas
 install:
   # INDRA dependencies
