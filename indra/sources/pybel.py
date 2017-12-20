@@ -289,6 +289,9 @@ def _get_agent(node_data, node_modifier_data=None):
             # FIXME: Look up go ID in ontology lookup service
             # FIXME: For now, just use node name
             db_refs = {}
+        elif ns in ('MGI', 'RGD'):
+            raise ValueError('Identifiers for MGI and RGD databases are not '
+                             'currently handled: %s' % node_data)
     # We've already got an identifier, look up other identifiers if necessary
     else:
         # Get the name, overwriting existing name if necessary
@@ -309,6 +312,12 @@ def _get_agent(node_data, node_modifier_data=None):
                                 'name %s' % name)
                 else:
                     db_refs['HGNC'] = hgnc_id
+        # For now, handle MGI/RGD but putting the name into the db_refs so
+        # it's clear what namespace the name belongs to
+        # FIXME: Full implementation would look up MGI/RGD identifiers from
+        # the names, and obtain corresponding Uniprot IDs
+        elif ns in ('MGI', 'RGD'):
+            db_refs[ns] = name
     if db_refs is None:
         logger.info('Unable to get identifier information for node: %s'
                      % node_data)
