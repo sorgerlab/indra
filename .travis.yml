@@ -9,6 +9,7 @@ addons:
         packages:
             - ocaml-nox
             - opam
+            - aspcud
 before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
