@@ -64,7 +64,7 @@ def test_increaseamount():
     sa = SBGNAssembler([st])
     sbgn_xml = sa.make_model()
     et = _parse_sbgn(sbgn_xml)
-    _test_numelements(et, 4, 3)
+    _test_numelements(et, 3, 2)
 
 def test_bound_condition():
     bc = BoundCondition(Agent('RAF1'), True)

@@ -186,9 +186,9 @@ class SBGNAssembler(object):
         process_glyph = self._process_glyph('process')
         # Add the arcs
         if isinstance(stmt, DecreaseAmount):
-            self._arc('consumption', obj_in_glyph, process_glyph)
+            self._arc('consumption', obj_glyph, process_glyph)
         else:
-            self._arc('production', process_glyph, obj_out_glyph)
+            self._arc('production', process_glyph, obj_glyph)
         # Make glyph for subj and add arc if needed
         if stmt.subj:
             subj_glyph = self._agent_glyph(stmt.subj)
