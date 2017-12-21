@@ -273,6 +273,17 @@ def test_get_agent_named_complex_go():
     assert agent is None
 
 
+def test_get_agent_with_translocation():
+    node_data = protein(name='MAPK1', namespace='HGNC')
+    # Some example edge data
+    edge_data = translocation(from_loc=entity('GOCC', 'intracellular'),
+                             to_loc=entity('GOCC', 'extracellular space'))
+    agent = pb._get_agent(node_data, edge_data)
+    assert isinstance(agent, Agent)
+    assert agent.name == 'MAPK1'
+    assert agent.location == 'extracellular space'
+
+
 def test_phosphorylation_one_site_with_evidence():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC',
@@ -597,5 +608,43 @@ def test_conversion():
     assert len(stmt.evidence) == 1
 
 
+def test_controlled_transloc_loc_cond():
+    """Controlled translocations are currently not handled."""
+    subj = protein(name='MAP2K1', namespace='HGNC')
+    obj = protein(name='MAPK1', namespace='HGNC')
+    g = pybel.BELGraph()
+    transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
+                             to_loc=entity('GOCC', 'extracellular space'))
+    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
+                         object_modifier=transloc,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert not pbp.statements
+
+
+def test_subject_transloc_loc_cond():
+    """Translocations of the subject are treated as location conditions on the
+    subject (using the to_loc location as the condition)"""
+    subj = protein(name='MAP2K1', namespace='HGNC')
+    obj = protein(name='MAPK1', namespace='HGNC')
+    transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
+                             to_loc=entity('GOCC', 'extracellular space'))
+    g = pybel.BELGraph()
+    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
+                         subject_modifier=transloc,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, IncreaseAmount)
+    assert stmt.subj.name == 'MAP2K1'
+    assert stmt.obj.name == 'MAPK1'
+    assert stmt.obj.location == 'extracellular space'
+
+
 if __name__ == '__main__':
-    test_conversion()
+    test_get_agent_with_translocation()
+    test_controlled_transloc_loc_cond()
+    test_subject_transloc_loc_cond()
+
