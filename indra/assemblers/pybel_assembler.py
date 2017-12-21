@@ -5,7 +5,7 @@ import networkx as nx
 from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
-from pybel.parser.language import pmod_namespace
+from pybel.language import pmod_namespace
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.assemblers.pysb_assembler import mod_acttype_map
