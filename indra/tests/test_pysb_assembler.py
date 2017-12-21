@@ -649,7 +649,7 @@ def test_assemble_export_sbgn():
     assert glyph_classes.count('complex') == 2
     assert glyph_classes.count('process') == 10
     # Both the monomer DUSP and its 2 complex forms degrade
-    assert glyph_classes.count('source and sink') == 3
+    assert glyph_classes.count('source and sink') == 3, glyph_classes
     return pa
 
 def test_name_standardize():
