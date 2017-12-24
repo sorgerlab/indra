@@ -86,6 +86,14 @@ class PybelProcessor(object):
             graph_nodes.add(v)
             subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
             obj_activity = _get_activity_condition(d.get(pc.OBJECT))
+            obj_to_loc = _get_translocation_target(d.get(pc.OBJECT))
+            # If the object is a translocation, this represents a controlled
+            # translocation, which we currently do not represent
+            if obj_to_loc:
+                self.unhandled.append((u_data, v_data, d))
+                logger.warning("Controlled translocations are currently not "
+                               "handled: (%s, %s, %s)" % (u_data, v_data, d))
+                continue
             # Modification, e.g.
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
@@ -274,8 +282,6 @@ def _get_agent(node_data, node_modifier_data=None):
     # location conditions
     # Check the node type/function
     node_func = node_data[pc.FUNCTION]
-    # FIXME: Handle PATHOLOGY nodes
-    # FIXME: Handle MIRNA, ABUNDANCE nodes
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
         logger.warning("Nodes of type %s not handled: %s" %
@@ -408,7 +414,9 @@ def _get_agent(node_data, node_modifier_data=None):
     mods, muts = _get_all_pmods(node_data)
     # Get activity condition
     ac = _get_activity_condition(node_modifier_data)
-    ag = Agent(name, db_refs=db_refs, mods=mods, mutations=muts, activity=ac)
+    to_loc = _get_translocation_target(node_modifier_data)
+    ag = Agent(name, db_refs=db_refs, mods=mods, mutations=muts, activity=ac,
+               location=to_loc)
     return ag
 
 
@@ -521,6 +529,29 @@ def _get_activity_condition(node_modifier_data):
         return ActivityCondition(activity_type, True)
     # If an unsupported namespace, simply return generic activity
     return ActivityCondition('activity', True)
+
+
+def _get_translocation_target(node_modifier_data):
+    # First check if there is a translocation modifier
+    if node_modifier_data is None or node_modifier_data == {}:
+        return None
+    if node_modifier_data[pc.MODIFIER] != pc.TRANSLOCATION:
+        return None
+    # Next, make sure there is information on the translocation target
+    transloc_data = node_modifier_data[pc.EFFECT]
+    to_loc_info = transloc_data.get(pc.TO_LOC)
+    if not to_loc_info:
+        return None
+    to_loc_ns = to_loc_info.get(pc.NAMESPACE)
+    to_loc_name = to_loc_info.get(pc.NAME)
+    # Only use GO Cellular Component location names
+    if to_loc_ns != 'GOCC' or not to_loc_name:
+        return None
+    try:
+        valid_loc = get_valid_location(to_loc_name)
+    except InvalidLocationError:
+        return None
+    return valid_loc
 
 
 def _proteins_match(u_data, v_data):

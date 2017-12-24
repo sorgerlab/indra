@@ -639,12 +639,10 @@ def test_subject_transloc_loc_cond():
     stmt = pbp.statements[0]
     assert isinstance(stmt, IncreaseAmount)
     assert stmt.subj.name == 'MAP2K1'
+    assert stmt.subj.location == 'extracellular space'
     assert stmt.obj.name == 'MAPK1'
-    assert stmt.obj.location == 'extracellular space'
 
 
 if __name__ == '__main__':
-    test_get_agent_with_translocation()
-    test_controlled_transloc_loc_cond()
     test_subject_transloc_loc_cond()
 
