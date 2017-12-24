@@ -643,6 +643,29 @@ def test_subject_transloc_loc_cond():
     assert stmt.obj.name == 'MAPK1'
 
 
+def test_unhandled_node_modifiers():
+    """Translocations of the subject are treated as location conditions on the
+    subject (using the to_loc location as the condition)"""
+    subj = protein(name='MAP2K1', namespace='HGNC')
+    obj = protein(name='MAPK1', namespace='HGNC')
+    # Secretion
+    sec = secretion()
+    g = pybel.BELGraph()
+    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
+                         object_modifier=sec,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert not pbp.statements
+    # Cell surface expression
+    cse = cell_surface_expression()
+    g = pybel.BELGraph()
+    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
+                         object_modifier=cse,
+                         evidence="Some evidence.", citation='123456')
+    pbp = pb.process_pybel_graph(g)
+    assert not pbp.statements
+
+
 if __name__ == '__main__':
     test_subject_transloc_loc_cond()
 

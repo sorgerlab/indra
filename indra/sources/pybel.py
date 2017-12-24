@@ -92,7 +92,7 @@ class PybelProcessor(object):
             if obj_to_loc:
                 self.unhandled.append((u_data, v_data, d))
                 logger.warning("Controlled translocations are currently not "
-                               "handled: (%s, %s, %s)" % (u_data, v_data, d))
+                               "handled: %s)" % edge_to_bel(u_data, v_data, d))
                 continue
             # Modification, e.g.
             #   x(Foo) -> p(Bar, pmod(Ph))
@@ -284,8 +284,10 @@ def _get_agent(node_data, node_modifier_data=None):
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
+        mod_data = ('No node data' if not node_modifier_data
+                                   else node_modifier_data.get(pc.CNAME))
         logger.warning("Nodes of type %s not handled: %s" %
-                        (node_func, node_data))
+                        (node_func, mod_data))
         return None
 
     # COMPLEXES ------------
@@ -415,6 +417,10 @@ def _get_agent(node_data, node_modifier_data=None):
     # Get activity condition
     ac = _get_activity_condition(node_modifier_data)
     to_loc = _get_translocation_target(node_modifier_data)
+    # Check for unhandled node modifiers, skip if so
+    if _has_unhandled_modifiers(node_modifier_data):
+        return None
+    # Make the agent
     ag = Agent(name, db_refs=db_refs, mods=mods, mutations=muts, activity=ac,
                location=to_loc)
     return ag
@@ -552,6 +558,18 @@ def _get_translocation_target(node_modifier_data):
     except InvalidLocationError:
         return None
     return valid_loc
+
+
+def _has_unhandled_modifiers(node_modifier_data):
+    # First check if there is a translocation modifier
+    if node_modifier_data is None or node_modifier_data == {}:
+        return False
+    mod = node_modifier_data.get(pc.MODIFIER)
+    if mod is None:
+        return False
+    if mod in (pc.CELL_SECRETION, pc.CELL_SURFACE_EXPRESSION):
+        logger.warning("Unhandled node modifier data: %s" % node_modifier_data)
+        return True
 
 
 def _proteins_match(u_data, v_data):
