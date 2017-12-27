@@ -1236,9 +1236,8 @@ def test_weighted_sampling2():
 
 
 def test_weighted_sampling3():
-    """Test sampling with abundances but no tail probabilities from data,
-    but where the abundances are normalized across rule instances involving
-    the same gene."""
+    "Test sampling with normed abundances but no tail probabilities from data."
+    # Abundances are normalized across rule instances involving the same gene.
     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
     mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
