@@ -133,9 +133,7 @@ import sys
 import uuid
 import rdflib
 import logging
-import textwrap
 import networkx
-from collections import namedtuple
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
@@ -143,12 +141,12 @@ import indra.databases.uniprot_client as upc
 
 logger = logging.getLogger('indra_statements')
 
-# Python 2
-try:
+
+try:  # Python 2
     basestring
-# Python 3
-except:
+except NameError:  # Python 3
     basestring = str
+
 
 class BoundCondition(object):
     """Identify Agents bound (or not bound) to a given Agent in a given context.
@@ -200,11 +198,13 @@ class BoundCondition(object):
             return None
         is_bound = json_dict.get('is_bound')
         if is_bound is None:
-            logger.warning('BoundCondition missing is_bound, defaulting to True.')
+            logger.warning('BoundCondition missing is_bound, defaulting '
+                           'to True.')
             is_bound = True
         bc = BoundCondition(agent, is_bound)
         assert(unicode_strs(bc))
         return bc
+
 
 @python_2_unicode_compatible
 class MutCondition(object):
@@ -272,18 +272,18 @@ class MutCondition(object):
 
     def __str__(self):
         s = '(%s, %s, %s)' % (self.residue_from, self.position,
-                               self.residue_to)
+                              self.residue_to)
         return s
 
     def __repr__(self):
         return 'MutCondition' + str(self)
 
     def refinement_of(self, other):
-        from_match = (self.residue_from == other.residue_from or \
+        from_match = (self.residue_from == other.residue_from or
             (self.residue_from is not None and other.residue_from is None))
-        to_match = (self.residue_to == other.residue_to or \
+        to_match = (self.residue_to == other.residue_to or
             (self.residue_to is not None and other.residue_to is None))
-        pos_match = (self.position == other.position or \
+        pos_match = (self.position == other.position or
             (self.position is not None and other.position is None))
         return (from_match and to_match and pos_match)
 
@@ -325,7 +325,8 @@ class ModCondition(object):
     >>> unphos_erk = Agent('MAPK1', mods=(
     ... ModCondition('phosphorylation', 'Y', '187', is_modified=False)))
     """
-    def __init__(self, mod_type, residue=None, position=None, is_modified=True):
+    def __init__(self, mod_type, residue=None, position=None,
+                 is_modified=True):
         if mod_type not in modtype_conditions:
             logger.warning('Unknown modification type: %s' % mod_type)
         self.mod_type = mod_type
@@ -339,11 +340,11 @@ class ModCondition(object):
     def refinement_of(self, other, mod_hierarchy):
         if self.is_modified != other.is_modified:
             return False
-        type_match = (self.mod_type == other.mod_type or \
+        type_match = (self.mod_type == other.mod_type or
             mod_hierarchy.isa('INDRA', self.mod_type, 'INDRA', other.mod_type))
-        residue_match = (self.residue == other.residue or \
+        residue_match = (self.residue == other.residue or
             (self.residue is not None and other.residue is None))
-        pos_match = (self.position == other.position or \
+        pos_match = (self.position == other.position or
             (self.position is not None and other.position is None))
         return (type_match and residue_match and pos_match)
 
@@ -390,7 +391,8 @@ class ModCondition(object):
         position = json_dict.get('position')
         is_modified = json_dict.get('is_modified')
         if is_modified is None:
-            logger.warning('ModCondition missing is_modified, defaulting to True')
+            logger.warning('ModCondition missing is_modified, defaulting '
+                           'to True')
             is_modified = True
         mc = ModCondition(mod_type, residue, position, is_modified)
         assert(unicode_strs(mc))
@@ -405,6 +407,7 @@ class ModCondition(object):
 
     def __hash__(self):
         return hash(self.matches_key())
+
 
 class ActivityCondition(object):
     """An active or inactive state of a protein.
@@ -489,6 +492,7 @@ class ActivityCondition(object):
 
     def __repr__(self):
         return str(self)
+
 
 @python_2_unicode_compatible
 class Agent(object):
@@ -639,7 +643,7 @@ class Agent(object):
             bc_found = False
             for bc_self in self.bound_conditions:
                 if (bc_self.is_bound == bc_other.is_bound) and \
-                    bc_self.agent.refinement_of(bc_other.agent, hierarchies):
+                   bc_self.agent.refinement_of(bc_other.agent, hierarchies):
                     bc_found = True
             # If we didn't find a match for this bound condition in self, then
             # no refinement
@@ -664,7 +668,7 @@ class Agent(object):
                 if self_mod.refinement_of(other_mod,
                                           hierarchies['modification']):
                     # If this modification hasn't been used for matching yet
-                    if not ix in matched_indices:
+                    if ix not in matched_indices:
                         # Set the index as used
                         matched_indices.append(ix)
                         mod_found = True
@@ -688,7 +692,7 @@ class Agent(object):
             for ix, self_mut in enumerate(self.mutations):
                 if self_mut.refinement_of(other_mut):
                     # If this mutation hasn't been used for matching yet
-                    if not ix in matched_indices:
+                    if ix not in matched_indices:
                         # Set the index as used
                         matched_indices.append(ix)
                         mut_found = True
@@ -710,7 +714,7 @@ class Agent(object):
             # If the other location is part of this location then
             # self.location is not a refinement
             if not hierarchies['cellular_component'].partof(
-                'INDRA', self.location, 'INDRA', other.location):
+               'INDRA', self.location, 'INDRA', other.location):
                 return False
 
         # ACTIVITY
@@ -885,7 +889,7 @@ class Evidence(object):
         if self.annotations:
             json_dict['annotations'] = self.annotations
         if self.epistemics:
-            json_dict['epistemics']  = self.epistemics
+            json_dict['epistemics'] = self.epistemics
         return json_dict
 
     @classmethod
@@ -983,8 +987,8 @@ class Statement(object):
     def equals(self, other):
         if len(self.agent_list()) == len(other.agent_list()):
             for s, o in zip(self.agent_list(), other.agent_list()):
-                if (s is None and o is not None) or\
-                    (s is not None and o is None):
+                if (s is None and o is not None) or \
+                   (s is not None and o is None):
                     return False
                 if s is not None and o is not None and not s.equals(o):
                     return False
@@ -1001,7 +1005,9 @@ class Statement(object):
     def to_json(self):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
-        ### For backwards compatibility, could be removed later
+        # TODO: `uid` is not used. Is this still needed for backwards
+        # compatibility?
+        # Oringal comment: For backwards compatibility, could be removed later
         all_stmts = [self] + self.supports + self.supported_by
         for st in all_stmts:
             try:
@@ -1020,12 +1026,14 @@ class Statement(object):
         if self.supported_by:
             json_dict['supported_by'] = \
                 ['%s' % st.uuid for st in self.supported_by]
+
         def get_sbo_term(cls):
             sbo_term = stmt_sbo_map.get(cls.__name__.lower())
             while not sbo_term:
                 cls = cls.__bases__[0]
                 sbo_term = stmt_sbo_map.get(cls.__name__.lower())
             return sbo_term
+
         sbo_term = get_sbo_term(self.__class__)
         json_dict['sbo'] = \
             'http://identifiers.org/sbo/SBO:%s' % sbo_term
@@ -1079,7 +1087,7 @@ class Statement(object):
                         graph.add_edge(node_id, sub_id, label=('%s' % k))
             else:
                 if isinstance(element, basestring) and \
-                    element.startswith('http'):
+                   element.startswith('http'):
                     element = element.split('/')[-1]
                 graph.add_node(node_id, label=('%s' % element))
             return node_id
@@ -1087,6 +1095,7 @@ class Statement(object):
         graph = networkx.DiGraph()
         json_node(graph, jd, ['%s' % self.uuid])
         return graph
+
 
 @python_2_unicode_compatible
 class Modification(Statement):
@@ -1156,17 +1165,16 @@ class Modification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        residue_matches = (other.residue is None or\
-                           (self.residue == other.residue))
-        position_matches = (other.position is None or\
-                            (self.position == other.position))
+        residue_matches = (other.residue is None
+                           or (self.residue == other.residue))
+        position_matches = (other.position is None
+                            or (self.position == other.position))
         return (residue_matches and position_matches)
 
     def equals(self, other):
         matches = super(Modification, self).equals(other)
-        matches = matches and\
-                  (self.residue == other.residue) and\
-                  (self.position == other.position)
+        matches = (matches and (self.residue == other.residue)
+                   and (self.position == other.position))
         return matches
 
     def _get_mod_condition(self):
@@ -1183,11 +1191,11 @@ class Modification(Statement):
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
             json_dict['enz']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000460' # enzymatic catalyst
+                'http://identifiers.org/sbo/SBO:0000460'  # enzymatic catalyst
         if self.sub is not None:
             json_dict['sub'] = self.sub.to_json()
             json_dict['sub']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000015' # substrate
+                'http://identifiers.org/sbo/SBO:0000015'  # substrate
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1213,12 +1221,13 @@ class Modification(Statement):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
         pos_str = (', %s' % self.position) if self.position is not None else ''
         s = ("%s(%s, %s%s%s)" %
-                  (type(self).__name__, self.enz, self.sub,
-                   res_str, pos_str))
+             (type(self).__name__, self.enz, self.sub, res_str, pos_str))
         return s
+
 
 class AddModification(Modification):
     pass
+
 
 class RemoveModification(Modification):
     pass
@@ -1254,8 +1263,7 @@ class SelfModification(Statement):
         res_str = (', %s' % self.residue) if self.residue is not None else ''
         pos_str = (', %s' % self.position) if self.position is not None else ''
         s = ("%s(%s%s%s)" %
-                  (type(self).__name__, self.enz,
-                   res_str, pos_str))
+             (type(self).__name__, self.enz, res_str, pos_str))
         return s
 
     def matches_key(self):
@@ -1283,17 +1291,16 @@ class SelfModification(Statement):
         # have to match or have this one be a subtype of the other; in
         # addition, the sites have to match, or this one has to have site
         # information and the other one not.
-        residue_matches = (other.residue is None or\
-                           (self.residue == other.residue))
-        position_matches = (other.position is None or\
-                            (self.position == other.position))
+        residue_matches = (other.residue is None
+                           or self.residue == other.residue)
+        position_matches = (other.position is None
+                            or self.position == other.position)
         return (residue_matches and position_matches)
 
     def equals(self, other):
         matches = super(SelfModification, self).equals(other)
-        matches = matches and\
-                  (self.residue == other.residue) and\
-                  (self.position == other.position)
+        matches = (matches and self.residue == other.residue
+                   and self.position == other.position)
         return matches
 
     def _get_mod_condition(self):
@@ -1308,7 +1315,7 @@ class SelfModification(Statement):
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
             json_dict['enz']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000460' # enzymatic catalyst
+                'http://identifiers.org/sbo/SBO:0000460'  # enzymatic catalyst
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1480,13 +1487,16 @@ class Demyristoylation(RemoveModification):
     """Demyristoylation modification."""
     pass
 
+
 class Methylation(AddModification):
     """Methylation modification."""
     pass
 
+
 class Demethylation(RemoveModification):
     """Demethylation modification."""
     pass
+
 
 @python_2_unicode_compatible
 class RegulateActivity(Statement):
@@ -1499,6 +1509,7 @@ class RegulateActivity(Statement):
     # The constructor here is an abstractmethod so that this class cannot
     # be directly instantiated.
     __metaclass__ = abc.ABCMeta
+
     @abc.abstractmethod
     def __init__(self):
         pass
@@ -1511,8 +1522,8 @@ class RegulateActivity(Statement):
 
     def matches_key(self):
         key = (type(self), self.subj.matches_key(),
-                self.obj.matches_key(), str(self.obj_activity),
-                str(self.is_activation))
+               self.obj.matches_key(), str(self.obj_activity),
+               str(self.is_activation))
         return str(key)
 
     def agent_list(self):
@@ -1531,7 +1542,7 @@ class RegulateActivity(Statement):
         if self.is_activation != other.is_activation:
             return False
         if self.subj.refinement_of(other.subj, hierarchies) and \
-            self.obj.refinement_of(other.obj, hierarchies):
+           self.obj.refinement_of(other.obj, hierarchies):
             obj_act_match = (self.obj_activity == other.obj_activity) or \
                 hierarchies['activity'].isa('INDRA', self.obj_activity,
                                             'INDRA', other.obj_activity)
@@ -1549,18 +1560,18 @@ class RegulateActivity(Statement):
             json_dict['subj'] = self.subj.to_json()
             if self.is_activation:
                 json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000459' # stimulator
+                    'http://identifiers.org/sbo/SBO:0000459'  # stimulator
             else:
                 json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000020' # inhibitor
+                    'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
             if self.is_activation:
                 json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000643' # stimulated
+                    'http://identifiers.org/sbo/SBO:0000643'  # stimulated
             else:
                 json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000642' # inhibited
+                    'http://identifiers.org/sbo/SBO:0000642'  # inhibited
         if self.obj_activity is not None:
             json_dict['obj_activity'] = self.obj_activity
         json_dict.update(generic)
@@ -1591,9 +1602,8 @@ class RegulateActivity(Statement):
 
     def equals(self, other):
         matches = super(RegulateActivity, self).equals(other)
-        matches = matches and\
-                  (self.obj_activity == other.obj_activity) and\
-                  (self.is_activation == other.is_activation)
+        matches = (matches and self.obj_activity == other.obj_activity
+                   and self.is_activation == other.is_activation)
         return matches
 
     def _get_activity_condition(self):
@@ -1630,6 +1640,7 @@ class Inhibition(RegulateActivity):
             logger.warning('Invalid activity type: %s' % obj_activity)
         self.obj_activity = obj_activity
         self.is_activation = False
+
 
 class Activation(RegulateActivity):
     """Indicates that a protein activates another protein.
@@ -1708,7 +1719,7 @@ class ActiveForm(Statement):
 
     def matches_key(self):
         key = (type(self), self.agent.matches_key(),
-                str(self.activity), str(self.is_active))
+               str(self.activity), str(self.is_active))
         return str(key)
 
     def agent_list(self):
@@ -1730,10 +1741,10 @@ class ActiveForm(Statement):
 
         # Make sure that the relationships and activities match
         if (self.is_active == other.is_active) and \
-            (self.activity == other.activity or \
-            hierarchies['activity'].isa('INDRA', self.activity,
-                                        'INDRA', other.activity)):
-               return True
+            (self.activity == other.activity
+             or hierarchies['activity'].isa('INDRA', self.activity,
+                                            'INDRA', other.activity)):
+                return True
         else:
             return False
 
@@ -1744,7 +1755,7 @@ class ActiveForm(Statement):
                           'activity': self.activity,
                           'is_active': self.is_active})
         json_dict['agent']['sbo'] = \
-            'http://identifiers.org/sbo/SBO:0000644' # modified
+            'http://identifiers.org/sbo/SBO:0000644'  # modified
         json_dict.update(generic)
         return json_dict
 
@@ -1771,14 +1782,13 @@ class ActiveForm(Statement):
 
     def __str__(self):
         s = ("ActiveForm(%s, %s, %s)" %
-                (self.agent, self.activity, self.is_active))
+             (self.agent, self.activity, self.is_active))
         return s
 
     def equals(self, other):
         matches = super(ActiveForm, self).equals(other)
-        matches = matches and\
-                  (self.activity == other.activity) and\
-                  (self.is_active == other.is_active)
+        matches = (matches and self.activity == other.activity
+                   and self.is_active == other.is_active)
         return matches
 
 
@@ -1816,7 +1826,7 @@ class HasActivity(Statement):
 
     def matches_key(self):
         key = (type(self), self.agent.matches_key(),
-                str(self.activity), str(self.has_activity))
+               str(self.activity), str(self.has_activity))
         return str(key)
 
     def agent_list(self):
@@ -1838,22 +1848,21 @@ class HasActivity(Statement):
 
         # Make sure that the relationships and activities match
         if (self.has_activity == other.has_activity) and \
-            (self.activity == other.activity or \
-            hierarchies['activity'].isa(self.activity, other.activity)):
-               return True
+            (self.activity == other.activity
+             or hierarchies['activity'].isa(self.activity, other.activity)):
+                return True
         else:
             return False
 
     def __str__(self):
         s = ("HasActivity(%s, %s, %s)" %
-                (self.agent, self.activity, self.has_activity))
+             (self.agent, self.activity, self.has_activity))
         return s
 
     def equals(self, other):
         matches = super(HasActivity, self).equals(other)
-        matches = matches and\
-                  (self.activity == other.activity) and\
-                  (self.has_activity == other.has_activity)
+        matches = (matches and self.activity == other.activity
+                   and self.has_activity == other.has_activity)
         return matches
 
 
@@ -1886,7 +1895,7 @@ class Gef(Statement):
 
     def matches_key(self):
         key = (type(self), self.gef.matches_key(),
-                self.ras.matches_key())
+               self.ras.matches_key())
         return str(key)
 
     def agent_list(self):
@@ -1899,8 +1908,7 @@ class Gef(Statement):
         self.ras = agent_list[1]
 
     def __str__(self):
-        s = ("Gef(%s, %s)" %
-                (self.gef.name, self.ras.name))
+        s = "Gef(%s, %s)" % (self.gef.name, self.ras.name)
         return s
 
     def refinement_of(self, other, hierarchies):
@@ -1924,11 +1932,11 @@ class Gef(Statement):
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
             json_dict['gef']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000013' # catalyst
+                'http://identifiers.org/sbo/SBO:0000013'  # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
             json_dict['ras']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000015' # substrate
+                'http://identifiers.org/sbo/SBO:0000015'  # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -1936,7 +1944,6 @@ class Gef(Statement):
     def _from_json(cls, json_dict):
         gef = json_dict.get('gef')
         ras = json_dict.get('ras')
-        evidence = json_dict.get('evidence')
         if gef:
             gef = Agent._from_json(gef)
         if ras:
@@ -1974,7 +1981,7 @@ class Gap(Statement):
 
     def matches_key(self):
         key = (type(self), self.gap.matches_key(),
-                self.ras.matches_key())
+               self.ras.matches_key())
         return str(key)
 
     def agent_list(self):
@@ -1998,8 +2005,7 @@ class Gap(Statement):
             return False
 
     def __str__(self):
-        s = ("Gap(%s, %s)" %
-                (self.gap.name, self.ras.name))
+        s = "Gap(%s, %s)" % (self.gap.name, self.ras.name)
         return s
 
     def equals(self, other):
@@ -2012,11 +2018,11 @@ class Gap(Statement):
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
             json_dict['gap']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000013' # catalyst
+                'http://identifiers.org/sbo/SBO:0000013'  # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
             json_dict['ras']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000015' # substrate
+                'http://identifiers.org/sbo/SBO:0000015'  # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -2024,7 +2030,6 @@ class Gap(Statement):
     def _from_json(cls, json_dict):
         gap = json_dict.get('gap')
         ras = json_dict.get('ras')
-        evidence = json_dict.get('evidence')
         if gap:
             gap = Agent._from_json(gap)
         if ras:
@@ -2055,8 +2060,8 @@ class Complex(Statement):
         self.members = members
 
     def matches_key(self):
-        key = (type(self), tuple(m.matches_key() for m in sorted(self.members,
-                                                 key=lambda x: x.matches_key())))
+        members = sorted(self.members, key=lambda x: x.matches_key())
+        key = (type(self), tuple(m.matches_key() for m in members))
         return str(key)
 
     def entities_match_key(self):
@@ -2113,10 +2118,10 @@ class Complex(Statement):
     @classmethod
     def _from_json(cls, json_dict):
         members = json_dict.get('members')
-        evidence = json_dict.get('evidence', [])
         members = [Agent._from_json(m) for m in members]
         stmt = cls(members)
         return stmt
+
 
 @python_2_unicode_compatible
 class Translocation(Statement):
@@ -2151,7 +2156,7 @@ class Translocation(Statement):
 
     def __str__(self):
         s = ("Translocation(%s, %s, %s)" %
-                (self.agent, self.from_location, self.to_location))
+             (self.agent, self.from_location, self.to_location))
         return s
 
     def refinement_of(self, other, hierarchies=None):
@@ -2179,7 +2184,7 @@ class Translocation(Statement):
 
     def matches_key(self):
         key = (type(self), self.agent.matches_key(), str(self.from_location),
-                str(self.to_location))
+               str(self.to_location))
         return str(key)
 
     def to_json(self):
@@ -2215,7 +2220,7 @@ class RegulateAmount(Statement):
         self.subj = subj
         if obj is None:
             raise ValueError('Object of %s cannot be None.' %
-                              type(self).__name__)
+                             type(self).__name__)
         self.obj = obj
 
     def matches_key(self):
@@ -2243,18 +2248,18 @@ class RegulateAmount(Statement):
             json_dict['subj'] = self.subj.to_json()
             if isinstance(self, IncreaseAmount):
                 json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000459' # stimulator
+                    'http://identifiers.org/sbo/SBO:0000459'  # stimulator
             else:
                 json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000020' # inhibitor
+                    'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
             if isinstance(self, IncreaseAmount):
                 json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000011' # product
+                    'http://identifiers.org/sbo/SBO:0000011'  # product
             else:
                 json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000010' # reactant
+                    'http://identifiers.org/sbo/SBO:0000010'  # reactant
         json_dict.update(generic)
         return json_dict
 
@@ -2262,7 +2267,6 @@ class RegulateAmount(Statement):
     def _from_json(cls, json_dict):
         subj = json_dict.get('subj')
         obj = json_dict.get('obj')
-        evidence = json_dict.get('evidence')
         if subj:
             subj = Agent._from_json(subj)
         if obj:
@@ -2294,6 +2298,7 @@ class RegulateAmount(Statement):
     def __str__(self):
         s = ("%s(%s, %s)" % (type(self).__name__, self.subj, self.obj))
         return s
+
 
 class DecreaseAmount(RegulateAmount):
     """Degradation of a protein, possibly mediated by another protein.
@@ -2378,15 +2383,15 @@ class Conversion(Statement):
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
             json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000013' # catalyst
+                'http://identifiers.org/sbo/SBO:0000013'  # catalyst
         json_dict['obj_from'] = [o.to_json() for o in self.obj_from]
         for of in json_dict['obj_from']:
             of['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000010' # reactant
+                'http://identifiers.org/sbo/SBO:0000010'  # reactant
         json_dict['obj_to'] = [o.to_json() for o in self.obj_to]
         for ot in json_dict['obj_to']:
             ot['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000011' # product
+                'http://identifiers.org/sbo/SBO:0000011'  # product
         json_dict.update(generic)
         return json_dict
 
@@ -2395,7 +2400,6 @@ class Conversion(Statement):
         subj = json_dict.get('subj')
         obj_from = json_dict.get('obj_from')
         obj_to = json_dict.get('obj_to')
-        evidence = json_dict.get('evidence')
         if subj:
             subj = Agent._from_json(subj)
         if obj_from:
@@ -2422,7 +2426,8 @@ class Conversion(Statement):
         def refinement_agents(lst1, lst2):
             if len(lst1) != len(lst2):
                 return False
-            # Check that every agent in other is refined in self, but only once!
+            # Check that every agent in other is refined in self, but
+            # only once!
             self_match_indices = set([])
             for other_agent in lst2:
                 for self_agent_ix, self_agent in enumerate(lst1):
@@ -2448,6 +2453,7 @@ class Conversion(Statement):
         s = ("%s(%s, %s, %s)" % (type(self).__name__, self.subj, self.obj_from,
                                  self.obj_to))
         return s
+
 
 def stmts_from_json(json_in):
     if not isinstance(json_in, list):
@@ -2477,6 +2483,7 @@ def stmts_from_json(json_in):
                     pass
         return stmts
 
+
 def stmts_to_json(stmts_in):
     if not isinstance(stmts_in, list):
         json_dict = stmts_in.to_json()
@@ -2484,6 +2491,7 @@ def stmts_to_json(stmts_in):
     else:
         json_dict = [st.to_json() for st in stmts_in]
     return json_dict
+
 
 def get_valid_residue(residue):
     """Check if the given string represents a valid amino acid residue."""
@@ -2516,12 +2524,13 @@ def _read_activity_types():
     with open(ac_file, 'r'):
         g.parse(ac_file, format='nt')
     act_types = set()
-    for s, p, o in g:
+    for s, _, o in g:
         subj = s.rpartition('/')[-1]
         obj = o.rpartition('/')[-1]
         act_types.add(subj)
         act_types.add(obj)
     return sorted(list(act_types))
+
 
 activity_types = _read_activity_types()
 
@@ -2563,7 +2572,9 @@ def _read_amino_acids():
             amino_acids_reverse[v] = key
     return amino_acids, amino_acids_reverse
 
+
 amino_acids, amino_acids_reverse = _read_amino_acids()
+
 
 def _aa_short_caps(res):
     if res is None:
@@ -2573,15 +2584,16 @@ def _aa_short_caps(res):
         return None
     return res_info['short_name'].capitalize()
 
+
 # Mapping between modification type strings and subclasses of Modification
-modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in \
-                       AddModification.__subclasses__() + \
+modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in
+                       AddModification.__subclasses__() +
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
 modtype_to_modclass['modification'] = Modification
 
-modclass_to_modtype = {cls: str(cls.__name__.lower()) for cls in \
-                       AddModification.__subclasses__() + \
+modclass_to_modtype = {cls: str(cls.__name__.lower()) for cls in
+                       AddModification.__subclasses__() +
                        RemoveModification.__subclasses__()}
 # Add modification as a generic type
 modclass_to_modtype[Modification] = 'modification'
@@ -2589,9 +2601,10 @@ modclass_to_modtype[Autophosphorylation] = 'phosphorylation'
 modclass_to_modtype[Transphosphorylation] = 'phosphorylation'
 
 # These are the modification types that are valid in ModConditions
-modtype_conditions = [modclass_to_modtype[mt] for mt in \
+modtype_conditions = [modclass_to_modtype[mt] for mt in
                       AddModification.__subclasses__()]
 modtype_conditions.append('modification')
+
 
 def _get_mod_inverse_maps():
     modtype_to_inverse = {}
@@ -2606,7 +2619,9 @@ def _get_mod_inverse_maps():
         modclass_to_inverse[cls_inv] = cls
     return modtype_to_inverse, modclass_to_inverse
 
+
 modtype_to_inverse, modclass_to_inverse = _get_mod_inverse_maps()
+
 
 stmt_sbo_map = {
     'acetylation': '0000215',
@@ -2620,21 +2635,21 @@ stmt_sbo_map = {
     'geranylgeranylation': '0000223',
     'ubiquitination': '0000224',
     'dephosphorylation': '0000330',
-    'addmodification': '0000210', # addition of a chemical group
-    'removemodification': '0000211', # removal of a chemical group
-    'modification': '0000182', # conversion
-    'conversion': '0000182', # conversion
-    'autophosphorylation': '0000216', # phosphorylation
-    'transphosphorylation': '0000216', # phosphorylation
-    'decreaseamount': '0000179', # degradation
-    'increaseamount': '0000183', # transcription
-    'complex': '0000526', # protein complex formation
-    'translocation': '0000185', # transport reaction
-    'regulateactivity': '0000182', # conversion
-    'activeform': '0000412', # biological activity
-    'rasgef': '0000172', # catalysis
-    'rasgap': '0000172', # catalysis
-    'statement': '0000231' # occuring entity representation
+    'addmodification': '0000210',  # addition of a chemical group
+    'removemodification': '0000211',  # removal of a chemical group
+    'modification': '0000182',  # conversion
+    'conversion': '0000182',  # conversion
+    'autophosphorylation': '0000216',  # phosphorylation
+    'transphosphorylation': '0000216',  # phosphorylation
+    'decreaseamount': '0000179',  # degradation
+    'increaseamount': '0000183',  # transcription
+    'complex': '0000526',  # protein complex formation
+    'translocation': '0000185',  # transport reaction
+    'regulateactivity': '0000182',  # conversion
+    'activeform': '0000412',  # biological activity
+    'rasgef': '0000172',  # catalysis
+    'rasgap': '0000172',  # catalysis
+    'statement': '0000231'  # occuring entity representation
     }
 
 
@@ -2649,13 +2664,14 @@ class InvalidLocationError(ValueError):
     def __init__(self, name):
         ValueError.__init__(self, "Invalid location name: '%s'" % name)
 
+
 def draw_stmt_graph(stmts):
     try:
         import matplotlib.pyplot as plt
     except Exception:
         logger.error('Could not import matplotlib, not drawing graph.')
         return
-    try:
+    try:  # This checks whether networkx has this package to work with.
         import pygraphviz
     except Exception:
         logger.error('Could not import pygraphviz, not drawing graph.')
