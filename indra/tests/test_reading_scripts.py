@@ -6,6 +6,7 @@ import random
 import zlib
 from os import path, mkdir
 from nose import SkipTest
+from nose.plugins.attrib import attr
 
 from indra.tools.reading import read_db as rdb
 from indra.tools.reading.read_files import read_files
@@ -189,6 +190,7 @@ def test_get_reader_children():
         "Expected only 2 readers, but got %s." % str(readers)
 
 
+@attr('slow')
 def test_reading_content_insert():
     "Test the content primary through-put of make_db_readings."
     db = get_db_with_content()
@@ -235,6 +237,7 @@ def test_reading_content_insert():
     assert len(db.select_all(db.Agents)), "No agents added."
 
 
+@attr('slow')
 def test_read_db():
     "Test the low level make_db_readings functionality with various settings."
     # Prep the inputs.
@@ -271,6 +274,7 @@ def test_read_db():
         "Did not get old readings when force_read=False."
 
 
+@attr('slow')
 def test_produce_readings():
     "Comprehensive test of the high level production of readings."
     # Prep the inputs.
@@ -326,6 +330,7 @@ def test_produce_readings():
     assert all([rd.reading_id is None for rd in outputs_4])
 
 
+@attr('slow')
 def test_read_files():
     "Test that the system can read files."
     db = get_db_with_content()
@@ -377,6 +382,7 @@ def test_sparser_parallel_one_batch():
         "Expected to get %d results, but got %d." % (N_exp, N_res)
 
 
+@attr('slow')
 def test_multi_batch_run():
     "Test that reading works properly with multiple batches run."
     db = get_db_with_content()
@@ -389,6 +395,7 @@ def test_multi_batch_run():
     rdb.upload_readings(outputs)
 
 
+@attr('slow')
 def test_multiproc_statements():
     "Test the multiprocessing creation of statements."
     db = get_db_with_content()
