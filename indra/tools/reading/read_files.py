@@ -60,7 +60,7 @@ def read_files(files, readers, **kwargs):
 
 
 if __name__ == '__main__':
-    taith open(args.input_file, 'r') as f:
+    with open(args.input_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d files." % len(input_lines))
     for ftype in ['nxml', 'txt']:

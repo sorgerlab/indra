@@ -182,16 +182,13 @@ class SBGNAssembler(object):
     def _assemble_regulateamount(self, stmt):
         # Make glyphs for obj
         obj_glyph = self._agent_glyph(stmt.obj)
-        obj_none_glyph = self._none_glyph()
-        obj_in_glyph, obj_out_glyph = \
-            (obj_none_glyph, obj_glyph) if \
-            isinstance(stmt, IncreaseAmount) else \
-            (obj_glyph, obj_none_glyph)
         # Make the process glyph
         process_glyph = self._process_glyph('process')
         # Add the arcs
-        self._arc('consumption', obj_in_glyph, process_glyph)
-        self._arc('production', process_glyph, obj_out_glyph)
+        if isinstance(stmt, DecreaseAmount):
+            self._arc('consumption', obj_glyph, process_glyph)
+        else:
+            self._arc('production', process_glyph, obj_glyph)
         # Make glyph for subj and add arc if needed
         if stmt.subj:
             subj_glyph = self._agent_glyph(stmt.subj)
