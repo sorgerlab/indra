@@ -1166,6 +1166,18 @@ def test_weighted_sampling1():
     # There are two distinct paths
     assert len(set(path_result.paths)) == 3
     path_ctr = Counter(path_result.paths)
+    # For debugging -------------------------------------------------
+    import sys
+    import os
+    import pickle
+    i = 0
+    fname = 'case_py%d_%d.pkl' % (sys.version_info.major, i)
+    while fname in os.listdir('.'):
+        i += 1
+        fname = 'case_py%d_%d.pkl' % (sys.version_info.major, i)
+    with open(fname, 'wb') as f:
+        pickle.dump((pa.model, results, path_ctr), f, protocol=2)
+    # ---------------------------------------------------------------
     assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
                      ('JUN_phospho_p_obs', 1))] == 51, path_ctr
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
