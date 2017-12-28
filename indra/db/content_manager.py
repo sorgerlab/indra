@@ -209,21 +209,28 @@ class NihFtpClient(object):
             ret = str_bytes
         return ret
 
-    def ftp_ls(self, ftp_path=None, after_date=None):
+    def ftp_ls_timestamped(self, ftp_path=None):
+        "Get all contents and metadata in mlsd format from the ftp directory."
+        if ftp_path is None:
+            ftp_path = self.my_path
+        else:
+            ftp_path = self._path_join(self.my_path, ftp_path)
+
+        if not self.is_local:
+            with self.get_ftp_connection(ftp_path) as ftp:
+                raw_contents = ftp.mlsd()
+                contents = [(k, meta['modify']) for k, meta in raw_contents]
+        return contents
+
+    def ftp_ls(self, ftp_path=None):
         "Get a list of the contents in the ftp directory."
         if ftp_path is None:
             ftp_path = self.my_path
         else:
             ftp_path = self._path_join(self.my_path, ftp_path)
         if not self.is_local:
-            with self.get_ftp_connection() as ftp:
-                if after_date is None:
-                    contents = ftp.nlst()
-                else:
-                    after_timestamp = after_date.timestamp()
-                    all_contents = ftp.mlsd()
-                    contents = [k for k, meta in all_contents
-                                if meta['modify'] > str(after_timestamp)]
+            with self.get_ftp_connection(ftp_path) as ftp:
+                contents = ftp.nlst()
         else:
             contents = os.listdir(self._path_join(self.ftp_url, ftp_path))
         return contents
