@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import objectpath
-from indra.statements import Influence, Agent
+from indra.statements import Influence, Agent, Evidence
 
 class EidosProcessor(object):
     """The EidosProcessor extracts INDRA Statements from Eidos output.
@@ -51,8 +51,15 @@ class EidosProcessor(object):
             # choose the first mod if available
             subj_delta = subj_mods[0] if subj_mods else None
             obj_delta = obj_mods[0] if obj_mods else None
-            st = Influence(subj_agent, obj_agent, subj_delta, obj_delta)
+            evidence = self._get_evidence(event)
+            st = Influence(subj_agent, obj_agent, subj_delta, obj_delta,
+                           evidence=evidence)
             self.statements.append(st)
+
+    def _get_evidence(self, event):
+        text = event.get('text')
+        ev = Evidence(source_api='eidos', text=text)
+        return [ev]
 
     def _get_mods(self, term):
         mods = []
