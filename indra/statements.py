@@ -2352,6 +2352,12 @@ class Influence(IncreaseAmount):
         self.subj_delta = subj_delta
         self.obj_delta = obj_delta
 
+    def __repr__(self):
+        if sys.version_info[0] >= 3:
+            return self.__str__()
+        else:
+            return self.__str__().encode('utf-8')
+
     def __str__(self):
         def _influence_agent_str(agent, delta):
             if delta is not None:
@@ -2359,9 +2365,10 @@ class Influence(IncreaseAmount):
                 agent_str = '%s(%s)' % (agent.name, pol)
             else:
                 agent_str = agent.name
+            return agent_str
         s = ("%s(%s, %s)" % (type(self).__name__,
                              _influence_agent_str(self.subj, self.subj_delta),
-                             _influence_agent_str(self.obj), self.obj_delta))
+                             _influence_agent_str(self.obj, self.obj_delta)))
         return s
 
 
