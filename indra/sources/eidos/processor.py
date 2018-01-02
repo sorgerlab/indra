@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import objectpath
-from indra.statements import Activation, Agent
+from indra.statements import Influence, Agent
 
 class EidosProcessor(object):
     """The EidosProcessor extracts INDRA Statements from Eidos output.
@@ -47,14 +47,20 @@ class EidosProcessor(object):
             obj_agent = self._get_agent(obj)
             subj_mods = self._get_mods(subj)
             obj_mods = self._get_mods(obj)
-            st = Activation(subj_agent, obj_agent)
+            # The interpretation of multiple mods is not clear yet so we
+            # choose the first mod if available
+            subj_delta = subj_mods[0] if subj_mods else None
+            obj_delta = obj_mods[0] if obj_mods else None
+            st = Influence(subj_agent, obj_agent, subj_delta, obj_delta)
             self.statements.append(st)
 
     def _get_mods(self, term):
         mods = []
         for mod in term.get('modifications', []):
             polarity = 'positive' if mod['type'] == 'Increase' else 'negative'
-            entry = {'adjective': None, polarity: polarity}
+            # There is no adjective yet in the Eidos output so that is set
+            # to None
+            entry = {'adjective': None, 'polarity': polarity}
             mods.append(entry)
         return mods
 
