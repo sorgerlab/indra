@@ -2333,6 +2333,38 @@ class IncreaseAmount(RegulateAmount):
     pass
 
 
+class Influence(IncreaseAmount):
+    """An influence on the quantity of a concept of interest.
+
+    Parameters
+    ----------
+    subj : :py:class`indra.statement.Agent`
+        The concept which acts as the influencer.
+    obj : :py:class:`indra.statement.Agent`
+        The concept which acts as the influencee
+    subj_mods :
+    evidence : list of :py:class:`Evidence`
+        Evidence objects in support of the statement.
+    """
+    def __init__(self, subj, obj, subj_delta=None, obj_delta=None,
+                 evidence=None):
+        super(Influence, self).__init__(subj, obj, evidence)
+        self.subj_delta = subj_delta
+        self.obj_delta = obj_delta
+
+    def __str__(self):
+        def _influence_agent_str(agent, delta):
+            if delta is not None:
+                pol = delta.get('polarity')
+                agent_str = '%s(%s)' % (agent.name, pol)
+            else:
+                agent_str = agent.name
+        s = ("%s(%s, %s)" % (type(self).__name__,
+                             _influence_agent_str(self.subj, self.subj_delta),
+                             _influence_agent_str(self.obj), self.obj_delta))
+        return s
+
+
 class Conversion(Statement):
     """Conversion of molecular species mediated by a controller protein.
 
