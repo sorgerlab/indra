@@ -24,27 +24,41 @@ class EidosProcessor(object):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
 
-    def get_events(file_name):
-        with open(file_name, 'r') as fh:
-            jd = json.load(fh)
-            mentions = jd['mentions']
+    def get_events(self):
+        events = self.tree.execute("$.mentions[(@.type is 'EventMention')]")
+        events = list(events)
 
-        # Just extract event mentions
-        events = [m for m in mentions if m['type'] == 'EventMention']
         # Skip events that only have one argument
-        events = [e for e in events if len(e['arguments']) == 2]
+        #events = [e for e in events if len(e['arguments']) == 2]
 
-        stmts = []
         for event in events:
+            # Skip events with missing arguments
+            if len(event['arguments']) != 2:
+                continue
+            # Process causal events
             if 'Causal' in event['labels']:
-                cause = event['arguments']['cause'][0]['text']
-                effect = event['arguments']['effect'][0]['text']
-                st = Activation(Agent(cause), Agent(effect))
-                stmts.append(st)
+                subj = event['arguments']['cause'][0]
+                obj = event['arguments']['effect'][0]
+            # Process origin/theme events
             if 'Origin' in event['labels']:
-                origin = event['arguments']['origin'][0]['text']
-                theme = event['arguments']['theme'][0]['text']
-                st = Activation(Agent(origin), Agent(theme))
-                stmts.append(st)
-        return stmts
+                subj = event['arguments']['origin'][0]
+                obj = event['arguments']['theme'][0]
+            subj_agent = self._get_agent(subj)
+            obj_agent = self._get_agent(obj)
+            subj_mods = self._get_mods(subj)
+            obj_mods = self._get_mods(obj)
+            st = Activation(subj_agent, obj_agent)
+            self.statements.append(st)
 
+    def _get_mods(self, term):
+        mods = []
+        for mod in term.get('modifications', []):
+            polarity = 'positive' if mod['type'] == 'Increase' else 'negative'
+            entry = {'adjective': None, polarity: polarity}
+            mods.append(entry)
+        return mods
+
+    def _get_agent(self, term):
+        name = term.get('text')
+        agent = Agent(name)
+        return agent

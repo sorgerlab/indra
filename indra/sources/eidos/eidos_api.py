@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, bytes
+import json
 from .processor import EidosProcessor
 
 def process_json_file(file_name):
@@ -22,7 +23,7 @@ def process_json_file(file_name):
     try:
         with open(file_name, 'rb') as fh:
             json_str = fh.read().decode('utf-8')
-            return process_json_str(json_str, citation)
+            return process_json_str(json_str)
     except IOError:
         logger.error('Could not read file %s.' % file_name)
 
