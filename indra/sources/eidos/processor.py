@@ -17,8 +17,6 @@ class EidosProcessor(object):
         The objectpath Tree object representing the extractions.
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
-    all_events : dict[str, str]
-        The frame IDs of all events by type in the Eidos extraction.
     """
     def __init__(self, json_dict):
         self.tree = objectpath.Tree(json_dict)

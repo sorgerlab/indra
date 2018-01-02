@@ -2342,7 +2342,12 @@ class Influence(IncreaseAmount):
         The concept which acts as the influencer.
     obj : :py:class:`indra.statement.Agent`
         The concept which acts as the influencee
-    subj_mods :
+    subj_delta : Optional[dict]
+        A dictionary specifying the polarity and magnitude of
+        change in the subject.
+    obj_delta : Optional[dict]
+        A dictionary specifying the polarity and magnitude of
+        change in the object.
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the statement.
     """
