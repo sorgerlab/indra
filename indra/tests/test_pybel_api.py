@@ -296,7 +296,7 @@ def test_phosphorylation_one_site_with_evidence():
     edge_hash = g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
                                      evidence=ev_text, citation=ev_pmid,
                                      annotations={"TextLocation": 'Abstract'})
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], Phosphorylation)
@@ -328,7 +328,7 @@ def test_phosphorylation_two_sites():
     g = pybel.BELGraph()
     g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 2
     stmt1 = pbp.statements[0]
@@ -348,7 +348,7 @@ def test_regulate_amount1_prot_obj():
     g = pybel.BELGraph()
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
@@ -362,7 +362,7 @@ def test_regulate_amount2_rna_obj():
     g = pybel.BELGraph()
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
@@ -377,7 +377,7 @@ def test_regulate_amount3_deg():
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
                          object_modifier=degradation(),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], DecreaseAmount)
@@ -391,7 +391,7 @@ def test_regulate_amount4_subj_act():
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
                          subject_modifier=activity(name='tscript'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
@@ -406,7 +406,7 @@ def test_regulate_amount4_subj_act():
     g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
                          subject_modifier=activity(name='act'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], IncreaseAmount)
@@ -426,7 +426,7 @@ def test_regulate_activity():
                          subject_modifier=activity(name='kin'),
                          object_modifier=activity(name='kin'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     assert isinstance(pbp.statements[0], Activation)
@@ -450,7 +450,7 @@ def test_active_form():
     g.add_qualified_edge(p53_pmod, p53_obj, relation=pc.INCREASES,
                          object_modifier=activity(name='tscript'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -475,7 +475,7 @@ def test_gef():
                          subject_modifier=activity(name='activity'),
                          object_modifier=activity(name='gtp'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -496,7 +496,7 @@ def test_indirect_gef_is_activation():
                          subject_modifier=activity(name='activity'),
                          object_modifier=activity(name='gtp'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -518,7 +518,7 @@ def test_gap():
                          subject_modifier=activity(name='activity'),
                          object_modifier=activity(name='gtp'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -537,7 +537,7 @@ def test_activation_bioprocess():
     g = pybel.BELGraph()
     g.add_qualified_edge(bax, apoptosis, relation=pc.INCREASES,
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -556,7 +556,7 @@ def test_gtpactivation():
                          subject_modifier=activity(name='gtp'),
                          object_modifier=activity(name='kin'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -593,7 +593,7 @@ def test_conversion():
     g.add_qualified_edge(enz, rxn, relation=pc.DIRECTLY_INCREASES,
                          subject_modifier=activity(name='activity'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -621,7 +621,7 @@ def test_controlled_transloc_loc_cond():
     g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
                          object_modifier=transloc,
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert not pbp.statements
 
 
@@ -636,7 +636,7 @@ def test_subject_transloc_loc_cond():
     g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
                          subject_modifier=transloc,
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -658,7 +658,7 @@ def test_subject_transloc_active_form():
                          subject_modifier=transloc,
                          object_modifier=activity(name='kin'),
                          evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
+    pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
@@ -670,6 +670,32 @@ def test_subject_transloc_active_form():
     assert stmt.is_active is True
 
 
+def test_complex_stmt_with_activation():
+    raf = protein(name='BRAF', namespace='HGNC')
+    mek = protein(name='MAP2K1', namespace='HGNC')
+    erk = protein(name='MAPK1', namespace='HGNC',
+                  variants=[pmod('Ph', position=185, code='Thr')])
+    cplx = complex_abundance([raf, mek])
+    g = pybel.BELGraph()
+    g.add_qualified_edge(cplx, erk, relation=pc.DIRECTLY_INCREASES,
+                         object_modifier=activity(name='kin'),
+                         evidence="Some evidence.", citation='123456')
+    pbp = bel.process_pybel_graph(g)
+    assert pbp.statements
+    assert len(pbp.statements) == 2
+    stmt1 = pbp.statements[0]
+    assert isinstance(stmt1, Complex)
+    assert len(stmt1.agent_list()) == 2
+    assert sorted([ag.name for ag in stmt1.agent_list()]) == ['BRAF', 'MAP2K1']
+    stmt2 = pbp.statements[1]
+    assert isinstance(stmt2, Activation)
+    assert stmt2.subj.name == 'BRAF'
+    assert stmt2.subj.bound_conditions[0].agent.name == 'MAP2K1'
+    assert stmt2.obj.name == 'MAPK1'
+    assert stmt2.obj.activity is None
+    assert stmt2.obj_activity == 'kinase'
+
+
 if __name__ == '__main__':
-    test_subject_transloc_active_form()
+    test_complex_stmt_with_activation()
 
