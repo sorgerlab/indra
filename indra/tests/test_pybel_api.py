@@ -6,7 +6,6 @@ from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import pybel_processor as pb
 from indra.databases import hgnc_client
-from nose.tools import raises, ok_
 
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')

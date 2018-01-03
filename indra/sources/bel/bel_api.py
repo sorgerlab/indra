@@ -7,6 +7,7 @@ from rdflib.plugins.parsers.ntriples import ParseError
 from indra.databases import ndex_client
 from .belrdf_processor import BelRdfProcessor
 from .pybel_processor import PybelProcessor
+import pybel
 
 logger = logging.getLogger('bel')
 
@@ -109,7 +110,38 @@ def process_belrdf(rdf_str, print_output=True):
 
 
 def process_pybel_graph(graph):
-    proc = PybelProcessor(graph)
-    proc.get_statements()
-    return proc
+    """Return a PybelProcessor by processing a PyBEL graph.
+
+    Parameters
+    ----------
+    graph : pybel.struct.BELGraph
+        A PyBEL graph to process
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    bp = PybelProcessor(graph)
+    bp.get_statements()
+    return bp
+
+
+def process_belscript(file_name):
+    """Return a PybelProcessor by processing a BEL script file.
+
+    Parameters
+    ----------
+    file_name : str
+        The path to a BEL script file.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    pybel_graph = pybel.from_path(file_name)
+    return process_pybel_graph(pybel_graph)
 
