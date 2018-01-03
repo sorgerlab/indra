@@ -3,6 +3,7 @@ import itertools
 import numpy as np
 import networkx as nx
 from indra import logging
+import sys
 
 logger = logging.getLogger('paths_graph')
 
@@ -287,6 +288,8 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0,
                 out_edges = pg.out_edges(current_node, data=True)
             else:
                 out_edges = pg.out_edges(current_node)
+            if sys.version_info.major == 3:
+                out_edges = sorted(out_edges)
             if out_edges:
                 if weighted:
                     weights = [t[2]['weight'] for t in out_edges]
