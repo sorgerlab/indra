@@ -220,6 +220,11 @@ class NihFtpClient(object):
             with self.get_ftp_connection(ftp_path) as ftp:
                 raw_contents = ftp.mlsd()
                 contents = [(k, meta['modify']) for k, meta in raw_contents]
+        else:
+            dir_path = self._path_join(self.fpt_url, ftp_path)
+            raw_contents = os.listdir(dir_path)
+            contents = [(fname, path.getmtime(path.join(dir_path, fname)))
+                        for fname in raw_contents]
         return contents
 
     def ftp_ls(self, ftp_path=None):
