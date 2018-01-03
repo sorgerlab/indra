@@ -68,7 +68,6 @@ class PybelProcessor(object):
 
     # FIXME: Handle reactions, composite nodes
     def get_statements(self):
-        graph_nodes = set()
         for u, v, d in self.graph.edges_iter(data=True):
             u_data = self.graph.node[u]
             v_data = self.graph.node[v]
@@ -76,9 +75,11 @@ class PybelProcessor(object):
             if d[pc.RELATION] not in pc.CAUSAL_RELATIONS:
                 self.unhandled.append((u_data, v_data, d))
                 continue
-            # Add nodes to the node set
-            graph_nodes.add(u)
-            graph_nodes.add(v)
+            # If the left or right-hand sides involve complex abundances,
+            # add them as statements
+            for node_data in (u_data, v_data):
+                if node_data[pc.FUNCTION] == pc.COMPLEX:
+                    self._get_complex(node_data)
             subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
             obj_activity = _get_activity_condition(d.get(pc.OBJECT))
             obj_to_loc = _get_translocation_target(d.get(pc.OBJECT))
@@ -94,7 +95,12 @@ class PybelProcessor(object):
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if v_data[pc.FUNCTION] == pc.PROTEIN and \
                has_protein_modification(self.graph, v):
-                self._get_modification(u_data, v_data, d)
+                if obj_activity:
+                    logger.info("Ignoring object activity modifier in "
+                                "modification statement: %s, %s, %s" %
+                                (u_data, v_data, d))
+                else:
+                    self._get_modification(u_data, v_data, d)
             elif obj_activity:
                 # If the agents on the left and right hand sides are the same,
                 # then get an active form:
@@ -151,6 +157,17 @@ class PybelProcessor(object):
             #   complex(x(Foo), x(Bar), ...)
             else:
                 self.unhandled.append((u_data, v_data, d))
+
+    def _get_complex(self, node_data):
+        # Get an agent with bound conditions from the Complex
+        cplx_agent = _get_agent(node_data, None)
+        if cplx_agent is None:
+            return
+        agents = [bc.agent for bc in cplx_agent.bound_conditions]
+        cplx_agent.bound_conditions = []
+        agents.append(cplx_agent)
+        stmt = Complex(agents)
+        self.statements.append(stmt)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
@@ -344,7 +361,7 @@ def _get_agent(node_data, node_modifier_data=None):
             indra_name = bel_to_indra.get(name)
             if indra_name is None:
                 logger.info('Could not find mapping for BEL/SFAM family: '
-                            '%s (%s)', (name, node_data))
+                            '%s (%s)' % (name, node_data))
             else:
                 db_refs['BE'] = indra_name
                 name = indra_name

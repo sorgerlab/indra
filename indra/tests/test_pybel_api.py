@@ -672,8 +672,7 @@ def test_subject_transloc_active_form():
 def test_complex_stmt_with_activation():
     raf = protein(name='BRAF', namespace='HGNC')
     mek = protein(name='MAP2K1', namespace='HGNC')
-    erk = protein(name='MAPK1', namespace='HGNC',
-                  variants=[pmod('Ph', position=185, code='Thr')])
+    erk = protein(name='MAPK1', namespace='HGNC')
     cplx = complex_abundance([raf, mek])
     g = pybel.BELGraph()
     g.add_qualified_edge(cplx, erk, relation=pc.DIRECTLY_INCREASES,
@@ -694,7 +693,4 @@ def test_complex_stmt_with_activation():
     assert stmt2.obj.activity is None
     assert stmt2.obj_activity == 'kinase'
 
-
-if __name__ == '__main__':
-    test_complex_stmt_with_activation()
 
