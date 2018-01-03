@@ -46,10 +46,8 @@ _pybel_text_location_map = {
 class PybelProcessor(object):
     """Extract INDRA Statements from a PyBEL Graph.
 
-    Unhandled statements:
-        * Most statements involving composite nodes
-        * Statements involving non-causal relationships (positiveCorrelation,
-          (negativeCorrelation, hasVariant, etc.)
+    Currently does not handle non-causal relationships (positiveCorrelation,
+    (negativeCorrelation, hasVariant, etc.)
 
     Parameters
     ----------
@@ -66,7 +64,7 @@ class PybelProcessor(object):
         self.statements = []
         self.unhandled = []
 
-    # FIXME: Handle reactions, composite nodes
+    # FIXME: Handle reactions
     def get_statements(self):
         for u, v, d in self.graph.edges_iter(data=True):
             u_data = self.graph.node[u]
