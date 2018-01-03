@@ -314,7 +314,9 @@ def _cf_succ(H, t, path, v):
     for u in H.successors(v):
         if set(path) <= set(t[u]):
             succ.append(u)
-    w = np.random.choice(succ)
+    idx_list = list(range(len(succ)))
+    w_idx = np.random.choice(idx_list)
+    w = succ[w_idx]
     return w
 
 
