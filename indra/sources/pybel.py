@@ -28,7 +28,8 @@ _pybel_indra_pmod_map = {
     'Me': 'methylation',
 }
 
-#: A mapping from the BEL text location annotation to the INDRA ones at :py:data:`indra.reach.processor._section_list`
+#: A mapping from the BEL text location annotation to the INDRA ones at
+# :py:data:`indra.reach.processor._section_list`
 #: see https://arty.scai.fraunhofer.de/artifactory/bel/annotation/text-location/text-location-1.0.0.belanno
 _pybel_text_location_map = {
     "Abstract": 'abstract',
@@ -182,7 +183,7 @@ class PybelProcessor(object):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         mods, muts = _get_all_pmods(v_data, edge_data)
         v_data_no_mods = _remove_pmods(v_data)
-        obj_agent = _get_agent(v_data_no_mods,edge_data.get(pc.OBJECT))
+        obj_agent = _get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))
             return
@@ -199,7 +200,9 @@ class PybelProcessor(object):
         subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
         subj_function = u_data.get(pc.FUNCTION)
         # Object info
-        obj_agent = _get_agent(v_data)
+        # Note: Don't pass the object modifier data because we don't want to
+        # put an activity on the agent
+        obj_agent = _get_agent(v_data, None)
         obj_function = v_data.get(pc.FUNCTION)
         # If it's a bioprocess object, we won't have an activity in the edge
         if obj_function in (pc.BIOPROCESS, pc.PATHOLOGY):
@@ -228,7 +231,9 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_active_form(self, u_data, v_data, edge_data):
-        subj_agent = _get_agent(u_data)
+        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        # Don't pass the object modifier info because we don't want an activity
+        # condition applied to the agent
         obj_agent = _get_agent(v_data)
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))

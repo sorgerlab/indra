@@ -657,7 +657,6 @@ def test_subject_transloc_active_form():
                          object_modifier=activity(name='kin'),
                          evidence="Some evidence.", citation='123456')
     pbp = pb.process_pybel_graph(g)
-    import ipdb; ipdb.set_trace()
     assert pbp.statements
     assert len(pbp.statements) == 1
     stmt = pbp.statements[0]
