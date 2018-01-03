@@ -5,7 +5,7 @@ import logging
 from rdflib.plugins.parsers.ntriples import ParseError
 
 from indra.databases import ndex_client
-from .processor import BelProcessor
+from .belrdf_processor import BelRdfProcessor
 
 logger = logging.getLogger('bel')
 
@@ -13,7 +13,7 @@ ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
 
 def process_ndex_neighborhood(gene_names, network_id=None,
                               rdf_out='bel_output.rdf', print_output=True):
-    """Return a BelProcessor for an NDEx network neighborhood.
+    """Return a BelRdfProcessor for an NDEx network neighborhood.
 
     Parameters
     ----------
@@ -30,8 +30,8 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
     Returns
     -------
-    bp : BelProcessor
-        A BelProcessor object which contains INDRA Statements in bp.statements.
+    bp : BelRdfProcessor
+        A BelRdfProcessor object which contains INDRA Statements in bp.statements.
 
     Notes
     -----
@@ -63,7 +63,7 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
 
 def process_belrdf(rdf_str, print_output=True):
-    """Return a BelProcessor for a BEL/RDF string.
+    """Return a BelRdfProcessor for a BEL/RDF string.
 
     Parameters
     ----------
@@ -73,13 +73,14 @@ def process_belrdf(rdf_str, print_output=True):
 
     Returns
     -------
-    bp : BelProcessor
-        A BelProcessor object which contains INDRA Statements in bp.statements.
+    bp : BelRdfProcessor
+        A BelRdfProcessor object which contains INDRA Statements in
+        bp.statements.
 
     Notes
     -----
     This function calls all the specific get_type_of_mechanism()
-    functions of the newly constructed BelProcessor to extract
+    functions of the newly constructed BelRdfProcessor to extract
     INDRA Statements.
     """
     g = rdflib.Graph()
@@ -89,7 +90,7 @@ def process_belrdf(rdf_str, print_output=True):
         logger.error('Could not parse rdf: %s' % e)
         return None
     # Build INDRA statements from RDF
-    bp = BelProcessor(g)
+    bp = BelRdfProcessor(g)
     bp.get_complexes()
     bp.get_activating_subs()
     bp.get_modifications()

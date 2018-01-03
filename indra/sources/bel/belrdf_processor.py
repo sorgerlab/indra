@@ -70,8 +70,8 @@ def strip_statement(uri):
     uri = uri.replace(r'http://www.openbel.org/vocabulary/', '')
     return uri
 
-class BelProcessor(object):
-    """The BelProcessor extracts INDRA Statements from a BEL RDF model.
+class BelRdfProcessor(object):
+    """The BelRdfProcessor extracts INDRA Statements from a BEL RDF model.
 
     Parameters
     ----------
@@ -1110,7 +1110,7 @@ class BelProcessor(object):
             mc = ModCondition('phosphorylation')
         else:
             mc = ModCondition(mod.lower())
-        mc.residue = BelProcessor._get_residue(mod)
+        mc.residue = BelRdfProcessor._get_residue(mod)
         mc.position = mod_pos
         return mc
 

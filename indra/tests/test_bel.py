@@ -4,7 +4,7 @@ import os
 from rdflib.term import URIRef
 from indra.util import unicode_strs
 from indra.sources import bel
-from indra.sources.bel.processor import BelProcessor
+from indra.sources.bel.belrdf_processor import BelRdfProcessor
 from indra.statements import RegulateAmount
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
@@ -36,7 +36,7 @@ def test_get_agent_up_from_hgnc():
     hgnc_sym = 'MAPK1'
     concept = concept_prefix + hgnc_sym
     entity = entity_prefix + 'p_HGNC_' + hgnc_sym
-    ag = BelProcessor._get_agent(concept, entity)
+    ag = BelRdfProcessor._get_agent(concept, entity)
     assert ag.name == 'MAPK1'
     assert ag.db_refs.get('HGNC') == '6871'
     assert ag.db_refs.get('UP') == 'P28482'
@@ -46,7 +46,7 @@ def test_get_agent_hgnc_up_from_egid():
     entrez_id = '5594'
     concept = concept_prefix + entrez_id
     entity = entity_prefix + 'p_EGID_' + entrez_id
-    ag = BelProcessor._get_agent(concept, entity)
+    ag = BelRdfProcessor._get_agent(concept, entity)
     assert ag.name == 'MAPK1'
     assert ag.db_refs.get('EGID') == entrez_id
     assert ag.db_refs.get('HGNC') == '6871'
