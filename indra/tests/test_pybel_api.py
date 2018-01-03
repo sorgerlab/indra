@@ -313,7 +313,8 @@ def test_phosphorylation_one_site_with_evidence():
     assert ev.source_id == edge_hash
     assert ev.pmid == ev_pmid
     assert ev.text == ev_text
-    assert ev.annotations == {'bel': 'p(HGNC:MAP2K1) directlyIncreases p(HGNC:MAPK1, pmod(Ph, Thr, 185))'}
+    assert ev.annotations == {'bel': 'p(HGNC:MAP2K1) directlyIncreases '
+                                     'p(HGNC:MAPK1, pmod(Ph, Thr, 185))'}
     assert ev.epistemics == {'direct': True, 'section_type': 'abstract'}
 
 
@@ -643,29 +644,31 @@ def test_subject_transloc_loc_cond():
     assert stmt.obj.name == 'MAPK1'
 
 
-def test_unhandled_node_modifiers():
-    """Translocations of the subject are treated as location conditions on the
-    subject (using the to_loc location as the condition)"""
+def test_subject_transloc_active_form():
+    """ActiveForms where the subject is a translocation--should draw on the
+    to-location of the subject."""
     subj = protein(name='MAP2K1', namespace='HGNC')
-    obj = protein(name='MAPK1', namespace='HGNC')
-    # Secretion
-    sec = secretion()
+    obj = protein(name='MAP2K1', namespace='HGNC')
+    transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
+                             to_loc=entity('GOCC', 'extracellular space'))
     g = pybel.BELGraph()
     g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
-                         object_modifier=sec,
+                         subject_modifier=transloc,
+                         object_modifier=activity(name='kin'),
                          evidence="Some evidence.", citation='123456')
     pbp = pb.process_pybel_graph(g)
-    assert not pbp.statements
-    # Cell surface expression
-    cse = cell_surface_expression()
-    g = pybel.BELGraph()
-    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
-                         object_modifier=cse,
-                         evidence="Some evidence.", citation='123456')
-    pbp = pb.process_pybel_graph(g)
-    assert not pbp.statements
+    import ipdb; ipdb.set_trace()
+    assert pbp.statements
+    assert len(pbp.statements) == 1
+    stmt = pbp.statements[0]
+    assert isinstance(stmt, ActiveForm)
+    assert stmt.agent.name == 'MAP2K1'
+    assert stmt.agent.location == 'extracellular space'
+    assert stmt.agent.activity is None
+    assert stmt.activity == 'kinase'
+    assert stmt.is_active is True
 
 
 if __name__ == '__main__':
-    test_subject_transloc_loc_cond()
+    test_subject_transloc_active_form()
 

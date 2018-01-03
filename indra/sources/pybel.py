@@ -160,13 +160,9 @@ class PybelProcessor(object):
     def _get_regulate_amount(self, u_data, v_data, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         obj_agent = _get_agent(v_data, edge_data.get(pc.OBJECT))
-        # FIXME: If an RNA agent type, create a transcription-specific
-        # Statement
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))
             return
-        # FIXME: If object is a degradation, create a stability-specific
-        # Statement
         obj_mod = edge_data.get(pc.OBJECT)
         deg_polarity = (-1 if obj_mod and obj_mod[pc.MODIFIER] == pc.DEGRADATION
                            else 1)
@@ -427,9 +423,6 @@ def _get_agent(node_data, node_modifier_data=None):
 
 
 def _get_evidence(u_data, v_data, edge_data):
-    # TODO: @cthoyt put in some additional epistemics info from pybel
-    # TODO: Also add additional provenance information from the bel/pybel
-    # source document into annotations
     ev_text = edge_data.get(pc.EVIDENCE)
     ev_citation = edge_data.get(pc.CITATION)
     ev_pmid = None
