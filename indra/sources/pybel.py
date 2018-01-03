@@ -92,7 +92,7 @@ class PybelProcessor(object):
             # translocation, which we currently do not represent
             if obj_to_loc:
                 self.unhandled.append((u_data, v_data, d))
-                logger.warning("Controlled translocations are currently not "
+                logger.info("Controlled translocations are currently not "
                                "handled: %s)" % edge_to_bel(u_data, v_data, d))
                 continue
             # Modification, e.g.
@@ -287,7 +287,7 @@ def _get_agent(node_data, node_modifier_data=None):
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
         mod_data = ('No node data' if not node_modifier_data
                                    else node_modifier_data.get(pc.CNAME))
-        logger.warning("Nodes of type %s not handled: %s" %
+        logger.info("Nodes of type %s not handled: %s" %
                         (node_func, mod_data))
         return None
 
@@ -566,7 +566,7 @@ def _has_unhandled_modifiers(node_modifier_data):
     if mod is None:
         return False
     if mod in (pc.CELL_SECRETION, pc.CELL_SURFACE_EXPRESSION):
-        logger.warning("Unhandled node modifier data: %s" % node_modifier_data)
+        logger.info("Unhandled node modifier data: %s" % node_modifier_data)
         return True
 
 
