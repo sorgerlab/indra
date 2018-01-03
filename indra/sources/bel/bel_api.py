@@ -145,3 +145,24 @@ def process_belscript(file_name):
     pybel_graph = pybel.from_path(file_name)
     return process_pybel_graph(pybel_graph)
 
+
+def process_json_file(file_name):
+    """Return a PybelProcessor by processing a Node-Link JSON file.
+
+    For more information on this format, see:
+    http://pybel.readthedocs.io/en/latest/io.html#node-link-json
+
+    Parameters
+    ----------
+    file_name : str
+        The path to a Node-Link JSON file.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    with open(file_name, 'rt') as fh:
+        pybel_graph = pybel.from_json_file(fh, False)
+    return process_pybel_graph(pybel_graph)
