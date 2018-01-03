@@ -43,12 +43,6 @@ _pybel_text_location_map = {
 }
 
 
-def process_pybel_graph(graph):
-    proc = PybelProcessor(graph)
-    proc.get_statements()
-    return proc
-
-
 class PybelProcessor(object):
     """Extract INDRA Statements from a PyBEL Graph.
 

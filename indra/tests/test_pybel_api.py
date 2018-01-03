@@ -3,16 +3,18 @@ from pybel.dsl import *
 import pybel.constants as pc
 from pybel.examples import egf_graph, sialic_acid_graph
 from indra.statements import *
-from indra.sources import pybel as pb
+from indra.sources import bel
+from indra.sources.bel import pybel_processor as pb
 from indra.databases import hgnc_client
 from nose.tools import raises, ok_
+
 
 mek_hgnc_id = hgnc_client.get_hgnc_id('MAP2K1')
 mek_up_id = hgnc_client.get_uniprot_id(mek_hgnc_id)
 
 
 def test_process_pybel():
-    pbp = pb.process_pybel_graph(egf_graph)
+    pbp = bel.process_pybel_graph(egf_graph)
     assert pbp.statements
 
 

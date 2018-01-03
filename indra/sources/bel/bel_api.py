@@ -6,6 +6,7 @@ from rdflib.plugins.parsers.ntriples import ParseError
 
 from indra.databases import ndex_client
 from .belrdf_processor import BelRdfProcessor
+from .pybel_processor import PybelProcessor
 
 logger = logging.getLogger('bel')
 
@@ -105,3 +106,10 @@ def process_belrdf(rdf_str, print_output=True):
         bp.print_statement_coverage()
         bp.print_statements()
     return bp
+
+
+def process_pybel_graph(graph):
+    proc = PybelProcessor(graph)
+    proc.get_statements()
+    return proc
+
