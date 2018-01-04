@@ -150,7 +150,7 @@ def test_get_clauses():
     assert 'IN' in str(clause) and 'OR' in str(clause)
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_get_content():
     "Test that content querries are correctly formed."
     db = get_db_with_content()
@@ -184,7 +184,7 @@ def test_get_content():
         "Expected None when passing no ids."
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_get_reader_children():
     "Test method for getting reader objects."
     readers = get_readers()
@@ -192,7 +192,7 @@ def test_get_reader_children():
         "Expected only 2 readers, but got %s." % str(readers)
 
 
-@attr('slow', 'has-special-deps')
+@attr('slow', 'nonpublic')
 def test_reading_content_insert():
     "Test the content primary through-put of make_db_readings."
     db = get_db_with_content()
@@ -239,7 +239,7 @@ def test_reading_content_insert():
     assert len(db.select_all(db.Agents)), "No agents added."
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_read_db():
     "Test the low level make_db_readings functionality with various settings."
     # Prep the inputs.
@@ -276,7 +276,7 @@ def test_read_db():
         "Did not get old readings when force_read=False."
 
 
-@attr('slow', 'has-special-deps')
+@attr('slow', 'nonpublic')
 def test_produce_readings():
     "Comprehensive test of the high level production of readings."
     # Prep the inputs.
@@ -332,7 +332,7 @@ def test_produce_readings():
     assert all([rd.reading_id is None for rd in outputs_4])
 
 
-@attr('slow', 'has-special-deps')
+@attr('slow', 'nonpublic')
 def test_read_files():
     "Test that the system can read files."
     db = get_db_with_content()
@@ -360,7 +360,7 @@ def test_read_files():
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_sparser_parallel():
     "Test running sparser in parallel."
     db = get_db_with_content()
@@ -374,7 +374,7 @@ def test_sparser_parallel():
         "Expected to get %d results, but got %d." % (N_exp, N_res)
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_sparser_parallel_one_batch():
     "Test that sparser runs with multiple procs with batches of 1."
     db = get_db_with_content()
@@ -387,7 +387,7 @@ def test_sparser_parallel_one_batch():
         "Expected to get %d results, but got %d." % (N_exp, N_res)
 
 
-@attr('slow', 'has-special-deps')
+@attr('slow', 'nonpublic')
 def test_multi_batch_run():
     "Test that reading works properly with multiple batches run."
     db = get_db_with_content()
@@ -400,7 +400,7 @@ def test_multi_batch_run():
     rdb.upload_readings(outputs)
 
 
-@attr('slow', 'has-special-deps')
+@attr('slow', 'nonpublic')
 def test_multiproc_statements():
     "Test the multiprocessing creation of statements."
     db = get_db_with_content()

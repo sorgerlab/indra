@@ -95,7 +95,7 @@ def get_db_with_content():
 #==============================================================================
 # The following are tests for the database manager itself.
 #==============================================================================
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_create_tables():
     "Test the create_tables feature"
     db = get_db()
@@ -103,7 +103,7 @@ def test_create_tables():
     assert_contents_equal(db.get_active_tables(), db.get_tables())
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_insert_and_query_pmid():
     "Test that we can add a text_ref and get the text_ref back."
     db = get_db()
@@ -115,7 +115,7 @@ def test_insert_and_query_pmid():
     assert_equal(entries[0].id, text_ref_id, "Got back wrong text_ref_id.")
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_uniqueness_text_ref_doi_pmid():
     "Test uniqueness enforcement behavior for text_ref insertion."
     db = get_db()
@@ -131,7 +131,7 @@ def test_uniqueness_text_ref_doi_pmid():
     assert False, "Uniqueness was not enforced."
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_uniqueness_text_ref_url():
     "Test whether the uniqueness imposed on the url of text_refs is enforced."
     db = get_db()
@@ -144,7 +144,7 @@ def test_uniqueness_text_ref_url():
     assert False, "Uniqueness was not enforced."
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_get_abstracts():
     "Test the ability to get a list of abstracts."
     db = get_db()
@@ -209,7 +209,7 @@ def test_get_abstracts():
     assert_contents_equal(expected, received, "Didn't get expected abstracts.")
 
 
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_get_all_pmids():
     "Test whether we get all the pmids."
     db = get_db()
@@ -231,7 +231,7 @@ if IS_PY3 and not path.exists(TEST_FTP):
 
 
 @needs_py3
-@attr('has-special-deps', 'slow')
+@attr('nonpublic', 'slow')
 def test_full_upload():
     "Test whether we can perform a targeted upload to a test db."
     # This uses a specially curated sample directory designed to access most
@@ -264,7 +264,7 @@ def test_full_upload():
 
 
 @needs_py3
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_multiple_pmids():
     "Test that pre-existing pmids are correctly handled."
     db = get_db()
@@ -278,7 +278,7 @@ def test_multiple_pmids():
 
 
 @needs_py3
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_multible_pmc_oa_content():
     "Test to make sure repeated content is handled correctly."
     db = get_db()
@@ -292,7 +292,7 @@ def test_multible_pmc_oa_content():
 
 
 @needs_py3
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_multiple_text_ref_pmc_oa():
     "Test whether a duplicate text ref in pmc oa is handled correctly."
     db = get_db()
@@ -308,7 +308,7 @@ def test_multiple_text_ref_pmc_oa():
 
 
 @needs_py3
-@attr('has-special-deps')
+@attr('nonpublic')
 def test_id_handling_pmc_oa():
     "Test every conceivable combination pmid/pmcid presense."
     db = get_db()
@@ -375,7 +375,7 @@ def test_id_handling_pmc_oa():
 
 
 @needs_py3
-@attr('has-special-deps', 'slow')
+@attr('nonpublic', 'slow')
 def test_ftp_service():
     "Test the NIH FTP access client on the content managers."
     cases = [
