@@ -1179,14 +1179,14 @@ def test_weighted_sampling1():
         pickle.dump((pa.model, results, path_ctr), f, protocol=2)
     # ---------------------------------------------------------------
     assert path_ctr[(('BRAF_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 51, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 46, path_ctr
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
                      ('MAP2K1_phospho_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 24, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 22, path_ctr
     assert path_ctr[(('BRAF_phosphorylation_MAP2K1_phospho', 1),
                      ('MAP2K1_phospho_phosphorylation_MAPK1_phospho', 1),
                      ('MAPK1_phospho_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 25, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 32, path_ctr
 
 
 def test_weighted_sampling2():
@@ -1243,8 +1243,8 @@ def test_weighted_sampling2():
     mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
                             ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
-    assert mapk1_count == 69, mapk1_count
-    assert mapk3_count == 31, mapk3_count
+    assert mapk1_count == 78, mapk1_count
+    assert mapk3_count == 22, mapk3_count
 
 
 def test_weighted_sampling3():
@@ -1297,13 +1297,13 @@ def test_weighted_sampling3():
     assert len(path_ctr) == 3
     assert path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
                      ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 47, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 49, path_ctr
     assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S218', 1),
                      ('MAPK1_phosphoS218_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 22, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 31, path_ctr
     assert path_ctr[(('MAP2K1_phosphorylation_MAPK1_S222', 1),
                      ('MAPK1_phosphoS222_phosphorylation_JUN_phospho', 1),
-                     ('JUN_phospho_p_obs', 1))] == 31, path_ctr
+                     ('JUN_phospho_p_obs', 1))] == 20, path_ctr
 
 
 if __name__ == '__main__':
