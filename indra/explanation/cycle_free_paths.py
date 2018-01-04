@@ -12,7 +12,7 @@ cycle-free paths. However, we are able to "easily" sample cycle-free paths from
 The algorithm is described further in :py:func:`cycle_free_paths_graph`, below.
 """
 
-import random
+import numpy as np
 import itertools
 from copy import copy, deepcopy
 import networkx as nx
@@ -314,7 +314,11 @@ def _cf_succ(H, t, path, v):
     for u in H.successors(v):
         if set(path) <= set(t[u]):
             succ.append(u)
-    w = random.choice(succ)
+    # Note that the circuitous way of choosing from this list is the result of
+    # the odd way numpy.random handles lists of lists (it excepts).
+    idx_list = list(range(len(succ)))
+    w_idx = np.random.choice(idx_list)
+    w = succ[w_idx]
     return w
 
 

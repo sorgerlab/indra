@@ -1,3 +1,4 @@
+import os
 import random
 import itertools
 import numpy as np
@@ -287,6 +288,8 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0,
                 out_edges = pg.out_edges(current_node, data=True)
             else:
                 out_edges = pg.out_edges(current_node)
+            if 'TEST_FLAG' in os.environ:
+                out_edges.sort()
             if out_edges:
                 if weighted:
                     weights = [t[2]['weight'] for t in out_edges]
@@ -294,7 +297,7 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0,
                                                 p=weights)
                     v = out_edges[pred_idx][1]
                 else:
-                    v = random.choice(out_edges)[1]
+                    v = np.random.choice(out_edges)[1]
                 # If we've already hit this node, it's a cycle; skip
                 if v[1] in path:
                     break
