@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, bytes
+from past.builtins import basestring
 import json
 from .processor import EidosProcessor
 
