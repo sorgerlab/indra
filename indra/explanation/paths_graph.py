@@ -3,7 +3,6 @@ import itertools
 import numpy as np
 import networkx as nx
 from indra import logging
-import sys
 
 logger = logging.getLogger('paths_graph')
 
