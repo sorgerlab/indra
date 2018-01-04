@@ -8,7 +8,6 @@ import pybel.constants as pc
 from pybel.language import pmod_namespace
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.assemblers.pysb_assembler import mod_acttype_map
 
 
 logger = logging.getLogger('pybel_assembler')
@@ -23,6 +22,9 @@ _indra_pybel_act_map = {
     'gef': 'gef',
     'gap': 'gap'
 }
+
+
+_pybel_indra_act_map = {v: k for k, v in _indra_pybel_act_map.items()}
 
 
 class PybelAssembler(object):

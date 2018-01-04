@@ -5,7 +5,9 @@ import logging
 from rdflib.plugins.parsers.ntriples import ParseError
 
 from indra.databases import ndex_client
-from .processor import BelProcessor
+from .belrdf_processor import BelRdfProcessor
+from .pybel_processor import PybelProcessor
+import pybel
 
 logger = logging.getLogger('bel')
 
@@ -13,7 +15,7 @@ ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
 
 def process_ndex_neighborhood(gene_names, network_id=None,
                               rdf_out='bel_output.rdf', print_output=True):
-    """Return a BelProcessor for an NDEx network neighborhood.
+    """Return a BelRdfProcessor for an NDEx network neighborhood.
 
     Parameters
     ----------
@@ -30,8 +32,8 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
     Returns
     -------
-    bp : BelProcessor
-        A BelProcessor object which contains INDRA Statements in bp.statements.
+    bp : BelRdfProcessor
+        A BelRdfProcessor object which contains INDRA Statements in bp.statements.
 
     Notes
     -----
@@ -63,7 +65,7 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
 
 def process_belrdf(rdf_str, print_output=True):
-    """Return a BelProcessor for a BEL/RDF string.
+    """Return a BelRdfProcessor for a BEL/RDF string.
 
     Parameters
     ----------
@@ -73,13 +75,14 @@ def process_belrdf(rdf_str, print_output=True):
 
     Returns
     -------
-    bp : BelProcessor
-        A BelProcessor object which contains INDRA Statements in bp.statements.
+    bp : BelRdfProcessor
+        A BelRdfProcessor object which contains INDRA Statements in
+        bp.statements.
 
     Notes
     -----
     This function calls all the specific get_type_of_mechanism()
-    functions of the newly constructed BelProcessor to extract
+    functions of the newly constructed BelRdfProcessor to extract
     INDRA Statements.
     """
     g = rdflib.Graph()
@@ -89,7 +92,7 @@ def process_belrdf(rdf_str, print_output=True):
         logger.error('Could not parse rdf: %s' % e)
         return None
     # Build INDRA statements from RDF
-    bp = BelProcessor(g)
+    bp = BelRdfProcessor(g)
     bp.get_complexes()
     bp.get_activating_subs()
     bp.get_modifications()
@@ -104,3 +107,62 @@ def process_belrdf(rdf_str, print_output=True):
         bp.print_statement_coverage()
         bp.print_statements()
     return bp
+
+
+def process_pybel_graph(graph):
+    """Return a PybelProcessor by processing a PyBEL graph.
+
+    Parameters
+    ----------
+    graph : pybel.struct.BELGraph
+        A PyBEL graph to process
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    bp = PybelProcessor(graph)
+    bp.get_statements()
+    return bp
+
+
+def process_belscript(file_name):
+    """Return a PybelProcessor by processing a BEL script file.
+
+    Parameters
+    ----------
+    file_name : str
+        The path to a BEL script file.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    pybel_graph = pybel.from_path(file_name)
+    return process_pybel_graph(pybel_graph)
+
+
+def process_json_file(file_name):
+    """Return a PybelProcessor by processing a Node-Link JSON file.
+
+    For more information on this format, see:
+    http://pybel.readthedocs.io/en/latest/io.html#node-link-json
+
+    Parameters
+    ----------
+    file_name : str
+        The path to a Node-Link JSON file.
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    with open(file_name, 'rt') as fh:
+        pybel_graph = pybel.from_json_file(fh, False)
+    return process_pybel_graph(pybel_graph)
