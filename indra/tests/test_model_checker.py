@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import pickle
 import random
 import numpy as np
@@ -1129,6 +1130,7 @@ def test_prune_influence_map():
 
 def test_weighted_sampling1():
     """Test sampling with different path lengths but no data."""
+    os.environ['TEST_FLAG'] = 'TRUE'
     mc = ModCondition('phosphorylation')
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
@@ -1179,6 +1181,7 @@ def test_weighted_sampling1():
 
 def test_weighted_sampling2():
     """Test sampling with abundances but no tail probabilities from data."""
+    os.environ['TEST_FLAG'] = 'TRUE'
     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
     mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})
@@ -1238,6 +1241,7 @@ def test_weighted_sampling2():
 def test_weighted_sampling3():
     "Test sampling with normed abundances but no tail probabilities from data."
     # Abundances are normalized across rule instances involving the same gene.
+    os.environ['TEST_FLAG'] = 'TRUE'
     map2k1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
     mapk1 = Agent('MAPK1', db_refs={'HGNC': '6871'})
     mapk3 = Agent('MAPK3', db_refs={'HGNC': '6877'})

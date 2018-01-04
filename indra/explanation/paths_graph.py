@@ -1,3 +1,4 @@
+import os
 import random
 import itertools
 import numpy as np
@@ -287,7 +288,8 @@ def sample_single_path(pg, source, target, signed=False, target_polarity=0,
                 out_edges = pg.out_edges(current_node, data=True)
             else:
                 out_edges = pg.out_edges(current_node)
-            out_edges.sort()
+            if 'TEST_FLAG' in os.environ:
+                out_edges.sort()
             if out_edges:
                 if weighted:
                     weights = [t[2]['weight'] for t in out_edges]
