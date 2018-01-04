@@ -1,8 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.databases import ndex_client
+from nose.plugins.attrib import attr
 
 
+@attr('webservice')
 def test_ndex_ver():
     assert(ndex_client._increment_ndex_ver(None) == '1.0')
     assert(ndex_client._increment_ndex_ver('') == '1.0')
