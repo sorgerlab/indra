@@ -2366,7 +2366,8 @@ class Influence(IncreaseAmount):
         def _influence_agent_str(agent, delta):
             if delta is not None:
                 pol = delta.get('polarity')
-                agent_str = '%s(%s)' % (agent.name, pol)
+                pol_str = 'positive' if pol == 1 else 'negative'
+                agent_str = '%s(%s)' % (agent.name, pol_str)
             else:
                 agent_str = agent.name
             return agent_str
