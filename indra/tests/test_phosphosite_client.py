@@ -4,21 +4,18 @@ from indra.databases.phosphosite_client import map_to_human_site
 from nose.plugins.attrib import attr
 
 
-@attr('webservice')
 def test_map_mouse_to_human():
     mouse_up_id = 'Q61337'
     pos = map_to_human_site(mouse_up_id, 'S', '112')
     assert pos == '75'
 
 
-@attr('webservice')
 def test_isoform_mapping_from_human():
     up_id = 'P29353'
     pos = map_to_human_site(up_id, 'Y', '239')
     assert pos == '349'
 
 
-@attr('webservice')
 def test_isoform_mapping_from_mouse():
     up_id = 'P29353'
     pos = map_to_human_site(up_id, 'Y', '239')

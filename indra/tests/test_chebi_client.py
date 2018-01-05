@@ -5,7 +5,6 @@ from indra.util import unicode_strs
 from nose.plugins.attrib import attr
 
 
-@attr('webservice')
 def test_read_chebi_to_pubchem():
     (ctop, ptoc) = chebi_client.read_chebi_to_pubchem()
     assert ctop['85673'] == '252150010'
@@ -13,7 +12,6 @@ def test_read_chebi_to_pubchem():
     assert unicode_strs((ctop, ptoc))
 
 
-@attr('webservice')
 def test_read_chebi_to_chembl():
     ctoc = chebi_client.read_chebi_to_chembl()
     assert ctoc['50729'] == 'CHEMBL58'
