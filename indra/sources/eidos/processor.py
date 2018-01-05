@@ -62,7 +62,7 @@ class EidosProcessor(object):
     def _get_mods(self, term):
         mods = []
         for mod in term.get('modifications', []):
-            polarity = 'positive' if mod['type'] == 'Increase' else 'negative'
+            polarity = 1 if mod['type'] == 'Increase' else -1
             # There is no adjective yet in the Eidos output so that is set
             # to None
             entry = {'adjective': None, 'polarity': polarity}
