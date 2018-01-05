@@ -3,7 +3,7 @@ from builtins import dict, str
 
 import re
 from os import remove, path
-from sys import version_info
+from sys import version_info, argv
 from nose import SkipTest
 from nose.tools import assert_equal
 from functools import wraps
@@ -21,6 +21,11 @@ test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
 # Get host for the test database from system defaults.
 # TODO: implement setup-teardown system.
+if '-a' in argv:
+    attr_str = argv[argv.index('-a')+1]
+    if any([not_attr in attr_str for not_attr in
+            ('!nonpublic', '!webservice')]):
+        raise SkipTest("Every tests is nonpublic and a webservice.")
 TEST_HOST = None
 TEST_HOST_TYPE = ''
 key_list = list(test_defaults.keys())
