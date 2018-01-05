@@ -5,6 +5,7 @@ from indra.benchmarks import bioprocesses as bp
 from indra.benchmarks import complexes as cp
 from indra.benchmarks import phosphorylations as phos
 from indra.util import unicode_strs
+from nose.plugins.attrib import attr
 
 eval_file = join(dirname(abspath(__file__)),
                  '../benchmarks/assembly_eval/batch4/reach/' +
@@ -20,6 +21,7 @@ eval_file = join(dirname(abspath(__file__)),
 #    assert gene_set
 #    assert unicode_strs(gene_set)
 
+@attr('nonpublic', 'webservice')
 def test_complexes():
     """Smoke test to see if complexes analysis works."""
     cp.analyze(eval_file)
