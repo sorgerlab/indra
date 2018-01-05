@@ -10,7 +10,7 @@ example_ids = {'pmid': '25361007',
                'doi': '10.18632/oncotarget.2555'}
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_pmid_no_prefix_no_idtype():
     ids = pmc_client.id_lookup('25361007')
     assert(ids['doi'] == example_ids['doi'])
@@ -19,7 +19,7 @@ def test_id_lookup_pmid_no_prefix_no_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_pmid_with_prefix_no_idtype():
     ids = pmc_client.id_lookup('PMID25361007')
     assert(ids['doi'] == example_ids['doi'])
@@ -28,7 +28,7 @@ def test_id_lookup_pmid_with_prefix_no_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_pmcid_no_idtype():
     ids = pmc_client.id_lookup('PMC4322985')
     assert(ids['doi'] == example_ids['doi'])
@@ -37,7 +37,7 @@ def test_id_lookup_pmcid_no_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_pmcid_idtype():
     ids = pmc_client.id_lookup('PMC4322985', idtype='pmcid')
     assert(ids['doi'] == example_ids['doi'])
@@ -46,7 +46,7 @@ def test_id_lookup_pmcid_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_pmcid_no_prefix_idtype():
     ids = pmc_client.id_lookup('4322985', idtype='pmcid')
     assert(ids['doi'] == example_ids['doi'])
@@ -55,7 +55,7 @@ def test_id_lookup_pmcid_no_prefix_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_doi_no_prefix_no_idtype():
     ids = pmc_client.id_lookup('10.18632/oncotarget.2555')
     assert(ids['doi'] == example_ids['doi'])
@@ -64,7 +64,7 @@ def test_id_lookup_doi_no_prefix_no_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_id_lookup_doi_prefix_no_idtype():
     ids = pmc_client.id_lookup('DOI10.18632/oncotarget.2555')
     assert(ids['doi'] == example_ids['doi'])
@@ -73,13 +73,13 @@ def test_id_lookup_doi_prefix_no_idtype():
     assert unicode_strs(ids)
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 @raises(ValueError)
 def test_invalid_idtype():
     ids = pmc_client.id_lookup('DOI10.18632/oncotarget.2555', idtype='foo')
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_get_xml():
     pmc_id = '4322985'
     xml_str = pmc_client.get_xml(pmc_id)
@@ -87,7 +87,7 @@ def test_get_xml():
     assert unicode_strs((pmc_id, xml_str))
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_get_xml_PMC():
     pmc_id = 'PMC4322985'
     xml_str = pmc_client.get_xml(pmc_id)
@@ -95,7 +95,7 @@ def test_get_xml_PMC():
     assert unicode_strs((pmc_id, xml_str))
 
 
-@attr('webservice')
+@attr('webservice', 'nonpublic')
 def test_get_xml_invalid():
     pmc_id = '9999999'
     xml_str = pmc_client.get_xml(pmc_id)
