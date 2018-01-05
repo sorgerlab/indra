@@ -2,7 +2,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, bytes
 from past.builtins import basestring
 import json
+import logging
 from .processor import EidosProcessor
+
+logger = logging.getLogger('eidos')
 
 def process_json_file(file_name):
     """Return an EidosProcessor by processing the given Eidos json file.
