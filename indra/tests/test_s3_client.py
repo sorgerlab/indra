@@ -46,6 +46,7 @@ def test_get_gz_object():
     assert unicode_strs(obj)
 
 
+@attr('webservice', 'nonpublic')
 def test_get_gz_object_nosuchkey():
     obj = s3_client.get_gz_object('foobar')
     assert obj is None
