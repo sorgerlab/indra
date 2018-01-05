@@ -5,7 +5,6 @@ from indra.util import unicode_strs
 from nose.plugins.attrib import attr
 
 
-@attr('webservice')
 def test_get_uniprot_id():
     hgnc_id = '6840'
     uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
@@ -13,7 +12,6 @@ def test_get_uniprot_id():
     assert unicode_strs(uniprot_id)
 
 
-@attr('webservice')
 def test_get_uniprot_id_none():
     # This HGNC entry doesn't have a UniProt ID
     hgnc_id = '12027'
@@ -21,7 +19,6 @@ def test_get_uniprot_id_none():
     assert(uniprot_id is None)
 
 
-@attr('webservice')
 def test_get_hgnc_name():
     hgnc_id = '3236'
     hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
@@ -37,21 +34,18 @@ def test_get_hgnc_name_nonexistent():
     assert unicode_strs(hgnc_name)
 
 
-@attr('webservice')
 def test_entrez_hgnc():
     entrez_id = '653509'
     hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
     assert(hgnc_id == '10798')
 
 
-@attr('webservice')
 def test_entrez_hgnc_none():
     entrez_id = 'xxx'
     hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
     assert(hgnc_id is None)
 
 
-@attr('webservice')
 def test_mouse_map():
     hgnc_id1 = hgnc_client.get_hgnc_from_mouse('109599')
     hgnc_id2 = hgnc_client.get_hgnc_from_mouse('MGI:109599')
@@ -61,7 +55,6 @@ def test_mouse_map():
     assert(hgnc_id is None)
 
 
-@attr('webservice')
 def test_rat_map():
     hgnc_id1 = hgnc_client.get_hgnc_from_rat('6496784')
     hgnc_id2 = hgnc_client.get_hgnc_from_rat('RGD:6496784')
