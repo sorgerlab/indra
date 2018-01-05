@@ -71,9 +71,9 @@ script:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py,_require_python3.py";
     fi
-  - export NOSEATTR=""
+  - export NOSEATTR="";
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
-      export NOSEATTR="!nonpublic"
+      export NOSEATTR="!nonpublic";
     fi
   - nosetests indra -v --with-doctest --with-doctest-ignore-unicode
         --with-coverage --cover-inclusive --cover-package=indra -a $NOSEATTR
