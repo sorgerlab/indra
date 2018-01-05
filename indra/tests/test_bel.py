@@ -6,6 +6,7 @@ from indra.util import unicode_strs
 from indra.sources import bel
 from indra.sources.bel.belrdf_processor import BelRdfProcessor
 from indra.statements import RegulateAmount
+from nose.plugins.attrib import attr
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
 entity_prefix = 'http://www.openbel.org/bel/'
@@ -20,6 +21,7 @@ def assert_pmids(stmts):
             if ev.pmid is not None:
                 assert(ev.pmid.isdigit())
 
+@attr('webservice')
 def test_bel_ndex_query():
     bp = bel.process_ndex_neighborhood(['NFKB1'])
     assert_pmids(bp.statements)
@@ -67,6 +69,3 @@ def test_get_transcription():
     assert len(transcription_stmts) == 8
     pass
 
-
-if __name__ == '__main__':
-    test_get_transcription()
