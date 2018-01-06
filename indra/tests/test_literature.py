@@ -2,19 +2,26 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.literature import id_lookup, get_full_text
 from indra.util import unicode_strs
+from nose.plugins.attrib import attr
 
+
+@attr('webservice')
 def test_get_full_text_pmc():
     txt, txt_format = get_full_text('PMC4322985', 'pmcid')
     assert(txt_format == 'pmc_oa_xml')
     assert(len(txt) > 300000)
     assert unicode_strs((txt, txt_format))
 
+
+@attr('webservice')
 def test_get_full_text_doi():
     txt, txt_format = get_full_text('10.18632/oncotarget.2555', 'doi')
     assert(txt_format == 'pmc_oa_xml')
     assert(len(txt) > 300000)
     assert unicode_strs((txt, txt_format))
 
+
+@attr('webservice')
 def test_get_full_text_pubmed_abstract():
     # DOI lookup in CrossRef fails for this one because of page mismatch
     txt, txt_format = get_full_text('27075779', 'pmid')
@@ -22,10 +29,14 @@ def test_get_full_text_pubmed_abstract():
     assert(len(txt) > 800)
     assert unicode_strs((txt, txt_format))
 
+
+@attr('webservice')
 def test_id_lookup():
     res = id_lookup('17513615', 'pmid')
     assert res['doi'] == '10.1158/1535-7163.MCT-06-0807'
 
+
+@attr('webservice')
 def test_id_lookup_no_pmid():
     """Look up a paper that has a PMCID and DOI but not PMID."""
     res = id_lookup('10.1083/jcb.1974if', 'doi')
@@ -33,6 +44,7 @@ def test_id_lookup_no_pmid():
     res = id_lookup('PMC3352949', 'pmcid')
     assert res['doi'] == '10.1083/jcb.1974if'
     assert unicode_strs(res)
+
 
 def test_cr_fulltext_elsevier():
     """Test the ability to obtain publications from Elsevier using the
@@ -54,6 +66,7 @@ def test_cr_fulltext_elsevier():
     assert type == 'text/xml'
     """
 
+
 def test_cr_fulltext_wiley():
     """Test the ability to obtain publications from Wiley using the
     CrossRef Clickthrough API. Note: requires a cr_clickthrough_key file
@@ -72,11 +85,13 @@ def test_cr_fulltext_wiley():
     assert content is None
     """
 
+
 def test_other_fulltexts_with_link():
     """Test the ability to obtain publications from other publishers that have
     a full text link and a text-mining compatible license (e.g., Hindawi, which
     uses a Creative Commons License)."""
     pass
+
 
 def test_fulltext_asbmb():
     #(content, type) = get_full_text('14761976', 'pmid')

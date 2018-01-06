@@ -2,8 +2,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.databases import context_client
 from indra.util import unicode_strs
+from nose.plugins.attrib import attr
 
-
+@attr('webservice')
 def test_get_protein_expression():
     res = context_client.get_protein_expression(['EGFR'], ['BT20_BREAST'])
     assert(res is not None)
@@ -13,6 +14,7 @@ def test_get_protein_expression():
     assert unicode_strs(res)
 
 
+@attr('webservice')
 def test_get_mutations():
     res = context_client.get_mutations(['BRAF'], ['A375_SKIN'])
     assert(res is not None)
@@ -22,6 +24,7 @@ def test_get_mutations():
     assert unicode_strs(res)
 
 
+@attr('webservice')
 def test_get_protein_expression_gene_missing():
     protein_amounts = context_client.get_protein_expression(['EGFR', 'XYZ'],
                                                             ['BT20_BREAST'])
@@ -30,6 +33,7 @@ def test_get_protein_expression_gene_missing():
     assert(protein_amounts['BT20_BREAST']['XYZ'] is None)
 
 
+@attr('webservice')
 def test_get_protein_expression_cell_type_missing():
     protein_amounts = context_client.get_protein_expression(['EGFR'],
                                                             ['BT20_BREAST', 'XYZ'])
@@ -39,6 +43,7 @@ def test_get_protein_expression_cell_type_missing():
     assert(protein_amounts['XYZ'] is None)
 
 
+@attr('webservice')
 def test_get_mutations_gene_missing():
     mutations = context_client.get_mutations(['BRAF', 'XYZ'], ['A375_SKIN'])
     assert('A375_SKIN' in mutations)
@@ -46,6 +51,7 @@ def test_get_mutations_gene_missing():
     assert(not mutations['A375_SKIN']['XYZ'])
 
 
+@attr('webservice')
 def test_get_mutations_cell_type_missing():
     mutations = context_client.get_mutations(['BRAF'], ['A375_SKIN', 'XYZ'])
     assert('A375_SKIN' in mutations)

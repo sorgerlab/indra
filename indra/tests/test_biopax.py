@@ -8,6 +8,7 @@ from indra.databases import uniprot_client
 from indra.util import unicode_strs
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
+from nose.plugins.attrib import attr
 
 model_path = os.path.dirname(os.path.abspath(__file__)) +\
              '/../../data/biopax_test.owl'
@@ -154,6 +155,8 @@ def test_get_entity_mods():
     mod_pos = set([m.position for m in mods])
     assert(mod_pos == set(['1035', '1056', '1128', '1188', '1242']))
 
+
+@attr('webservice')
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
     assert_pmids(bp.statements)

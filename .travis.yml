@@ -71,8 +71,12 @@ script:
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py,_require_python3.py";
     fi
+  - export NOSEATTR="";
+  - if [[ $TRAVIS_PULL_REQUEST ]]; then
+      export NOSEATTR="!nonpublic";
+    fi
   - nosetests indra -v --with-doctest --with-doctest-ignore-unicode
-        --with-coverage --cover-inclusive --cover-package=indra
+        --with-coverage --cover-inclusive --cover-package=indra -a $NOSEATTR
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is

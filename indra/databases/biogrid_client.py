@@ -57,6 +57,8 @@ def get_interactors(gene_name):
 def get_statements(gene_list):
     res_dict = _send_request(gene_list, include_interactors=True)
     statements = []
+    if res_dict is None:
+        return statements
     for int_id, interaction in res_dict.items():
         agent_a_name = interaction['OFFICIAL_SYMBOL_A']
         agent_b_name = interaction['OFFICIAL_SYMBOL_B']
