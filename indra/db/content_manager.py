@@ -219,7 +219,8 @@ class NihFtpClient(object):
         if not self.is_local:
             with self.get_ftp_connection(ftp_path) as ftp:
                 raw_contents = ftp.mlsd()
-                contents = [(k, meta['modify']) for k, meta in raw_contents]
+                contents = [(k, meta['modify']) for k, meta in raw_contents
+                            if not k.startswith('.')]
         else:
             dir_path = self._path_join(self.fpt_url, ftp_path)
             raw_contents = os.listdir(dir_path)
