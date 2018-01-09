@@ -164,12 +164,12 @@ def build_set(n, parent_dir):
     # Get the data from pmc oa (pmc_dicts)
     print("Getting pmc oa lists....")
     pmc = PmcOA()
-    pmc_dicts = pmc.ftp.get_csv_as_dict('oa_file_list.csv')
+    pmc_dicts = pmc.ftp.get_csv_as_dict('oa_file_list.csv', header=0)
 
     # Get the data for the manuscripts (man_dicts)
     print("Getting manuscript lists...")
     man = Manuscripts()
-    man_dicts = man.ftp.get_csv_as_dict('filelist.csv')
+    man_dicts = man.ftp.get_csv_as_dict('filelist.csv', header=0)
 
     # Get pmid, pmcid, mid tuples for the examples that we will use.
     print("Generating example sets...")
@@ -182,11 +182,12 @@ def build_set(n, parent_dir):
     for pmid in random.sample(statementful_pmids, n):
         examples.append((pmid, '', ''))
     # Add a special article to check article info.
-    double_doi_info = med.get_article_info('medline17n0343.xml.gz')
+    double_doi_info = med.get_article_info('pubmed18n0343.xml.gz')
     pmids_w_double_doi = [
         k for k, v in double_doi_info.items()
         if v['doi'] is not None and len(v['doi']) > 100
         ]
+    assert len(pmids_w_double_doi), "No double dois found."
     examples.append((random.choice(pmids_w_double_doi), '', '',))
 
     # Create the test medline file.
@@ -204,7 +205,7 @@ def build_set(n, parent_dir):
         f_bts = b''
         f_bts += b"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
         f_bts += ET.tostring(tree)
-        f_path = get_path('pubmed/baseline/medline17nTEST.xml.gz')
+        f_path = get_path('pubmed/baseline/pubmed18nTEST.xml.gz')
         with open(f_path, 'wb') as gzf:
             gzf.write(gzip.compress(f_bts))
 
