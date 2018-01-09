@@ -162,7 +162,7 @@ class NihFtpClient(object):
                 cols = lst[header]
                 lst = lst[header+1:]
             else:
-                cols = list(range(len(row)))
+                cols = list(range(len(lst[0])))
         return [dict(zip(cols, row)) for row in lst]
 
     def ret_file(self, f_path, buf):
