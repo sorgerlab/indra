@@ -257,11 +257,17 @@ def test_full_upload():
         db.TextContent.text_type == texttypes.FULLTEXT)
     assert len(tc_list), "No fulltext was added."
     Manuscripts(ftp_url=TEST_FTP, local=True).populate(db)
-    tc_list = db.select_all(
-        'text_content',
+    tcs_manu = db.filter_query(
+        db.TextContent,
         db.TextContent.source == Manuscripts.my_source
-        )
-    assert len(tc_list), "No manuscripts uploaded."
+        ).count()
+    assert tcs_manu, "No manuscripts uploaded."
+    trs_w_mids = db.filter_query(
+        db.TextRef,
+        db.TextRef.manuscript_id.isnot(None)
+        ).count()
+    assert trs_w_mids >= tcs_manu,\
+        "Only %d of at least %d manuscript id's added." % (trs_w_mids, tcs_manu)
     tc_list = db.select_all('text_content')
     set_exp = {('manuscripts', 'xml', 'fulltext'),
                ('pmc_oa', 'xml', 'fulltext'),
