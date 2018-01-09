@@ -26,6 +26,7 @@ sparser_path = os.environ.get(sparser_path_var)
 
 
 def get_version():
+    assert sparser_path is not None, "Sparser path is not defined."
     with open(os.path.join(sparser_path, 'version.txt'), 'r') as f:
         version = f.read().strip()
     return version
