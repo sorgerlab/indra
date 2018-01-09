@@ -83,6 +83,7 @@ def test_get_mem_total():
     get_mem_total()
 
 
+@attr('nonpublic', 'slow')
 def test_reach_one_core():
     if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
@@ -90,6 +91,7 @@ def test_reach_one_core():
     _check_result(stmts)
 
 
+@attr('nonpublic', 'slow')
 def test_reach_two_core():
     if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
@@ -99,11 +101,13 @@ def test_reach_two_core():
     _check_result(stmts)
 
 
+@attr('nonpublic')
 def test_sparser_one_core():
     stmts = _call_reader('sparser', 1)
     _check_result(stmts)
 
 
+@attr('nonpublic')
 def test_sparser_two_core():
     if get_proc_num() <= 2:
         raise SkipTest("Not enough processes.")
