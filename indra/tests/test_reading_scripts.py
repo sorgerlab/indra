@@ -13,6 +13,8 @@ from indra.tools.reading.read_files import read_files
 from indra.tools.reading.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
+from indra.tools.reading.read_pmids import get_proc_num, get_mem_total,\
+    READER_DICT
 
 from indra.db import formats
 from test_db import get_db as get_test_db
@@ -40,7 +42,7 @@ TMP_DIR_FMT = '%s_%%s' % BASENAME
 OUTPUT_FILE_FMT = '%s_stmts_0-10.pkl' % TMP_DIR_FMT
 READINGS_PKL = 'sample_reach_outputs.pkl'
 
-''' These test a depricated feature, and take FOREVER.
+
 def _call_reader(reader, num_cores):
     out_dir = TMP_DIR_FMT % reader
     if not path.exists(out_dir):
@@ -107,7 +109,7 @@ def test_sparser_two_core():
         raise SkipTest("Not enough processes.")
     stmts = _call_reader('sparser', 2)
     _check_result(stmts)
-'''
+
 
 # ==============================================================================
 # Tests for NEW reading pipeline which uses the database.
