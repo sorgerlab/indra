@@ -280,6 +280,9 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
             )
         res = pool.map(download_from_s3_func, pmids_in_range)
         pool.close()  # Wait for procs to end.
+        logger.info('Multiprocessing pool closed.')
+        pool.join()
+        logger.info('Multiprocessing pool joined.')
     else:
         res = []
         for pmid in pmids_in_range:
@@ -459,7 +462,9 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
         logger.info("Mapping get_stmts onto pool.")
         res = pool.map(get_stmts_func, batches)
         pool.close()
-        logger.info("Pool closed.")
+        logger.info('Multiprocessing pool closed.')
+        pool.join()
+        logger.info('Multiprocessing pool joined.')
         stmts = {
             pmid: stmt_list for res_dict in res
             for pmid, stmt_list in res_dict.items()
@@ -551,6 +556,9 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
         pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
         }
     pool.close()
+    logger.info('Multiprocessing pool closed.')
+    pool.join()
+    logger.info('Multiprocessing pool joined.')
     """
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
         (num_uploaded, num_failures))
@@ -658,6 +666,9 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     logger.info('Processing REACH JSON from S3 in parallel')
     res = pool.map(process_reach_from_s3, pmids_read.keys())
     pool.close()
+    logger.info('Multiprocessing pool closed.')
+    pool.join()
+    logger.info('Multiprocessing pool joined.')
     s3_stmts = {
         pmid: stmt_list for res_dict in res
         for pmid, stmt_list in res_dict.items()
