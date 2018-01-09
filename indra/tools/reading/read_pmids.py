@@ -399,7 +399,7 @@ def get_stmts(pmids_unread, cleanup=True):
         now.strftime('%Y%m%d-%H%M%S'),
         mp.current_process().pid,
         )
-    outbuf = open(outbuf_fname, 'w')
+    outbuf = open(outbuf_fname, 'wb')
     try:
         for pmid, result in pmids_unread.items():
             logger.info('Reading %s' % pmid)
