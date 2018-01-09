@@ -153,14 +153,17 @@ class NihFtpClient(object):
         logger.info("Parsing XML metadata")
         return ET.XML(xml_bytes, parser=UTB())
 
-    def get_csv_as_dict(self, csv_file):
+    def get_csv_as_dict(self, csv_file, cols=None, header=None):
         "Get the content from a csv file as a list of dicts."
         csv_str = self.get_file(csv_file)
-        lst = []
-        reader = csv.reader(csv_str.splitlines())
-        for row in reader:
-            lst.append(row)
-        return [dict(zip(lst[0], row)) for row in lst[1:]]
+        lst = [row for row in csv.reader(csv_str.splitlines())]
+        if cols is None:
+            if header is not None:
+                cols = lst[header]
+                lst = lst[header+1:]
+            else:
+                cols = list(range(len(row)))
+        return [dict(zip(cols, row)) for row in lst]
 
     def ret_file(self, f_path, buf):
         "Load the content of a file into the given buffer."
