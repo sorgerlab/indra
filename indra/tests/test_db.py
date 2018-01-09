@@ -246,16 +246,27 @@ def test_full_upload():
     # code paths that the real system might experience, but on a much smaller
     # (thus faster) scale. Errors in the ftp service will not be caught by
     # this test.
+
+    # Test the medline/pubmed upload.
     db = get_db_with_content()
     tr_list = db.select_all('text_ref')
     assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
         'All text_refs MUST have pmids by now.'
+
+    # Test the pmc oa upload.
     PmcOA(ftp_url=TEST_FTP, local=True).populate(db)
-    tc_list = db.select_all(
-        'text_content',
-        db.TextContent.text_type == texttypes.FULLTEXT)
-    assert len(tc_list), "No fulltext was added."
+    tcs_pmc = db.filter_query(
+        db.TextContent,
+        db.TextContent.source == PmcOA.my_source).count()
+    assert tcs_pmc, "No pmc oa fulltext was added."
+    trs_w_pmcids = db.filter_query(
+        db.TextRef,
+        db.TextRef.pmcid.isnot(None)).count()
+    assert trs_w_pmcids >= tcs_pmc,\
+        "Only %d of at least %d pmcids added." % (trs_w_pmcids, tcs_pmc)
+
+    # Test the manuscripts upload.
     Manuscripts(ftp_url=TEST_FTP, local=True).populate(db)
     tcs_manu = db.filter_query(
         db.TextContent,
@@ -267,8 +278,10 @@ def test_full_upload():
         db.TextRef.manuscript_id.isnot(None)
         ).count()
     assert trs_w_mids >= tcs_manu,\
-        "Only %d of at least %d manuscript id's added." % (trs_w_mids, tcs_manu)
-    tc_list = db.select_all('text_content')
+        "Only %d of at least %d manuscript ids added." % (trs_w_mids, tcs_manu)
+
+    # Some overal checks.
+    tc_list = db.select_all(db.TextContent)
     set_exp = {('manuscripts', 'xml', 'fulltext'),
                ('pmc_oa', 'xml', 'fulltext'),
                ('pubmed', 'text', 'abstract')}
