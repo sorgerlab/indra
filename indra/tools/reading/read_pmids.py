@@ -310,8 +310,8 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
         for pmid in set(pmid_results.keys()).difference(set(pmids_read.keys()))
         }
     logger.info(
-        '%d / %d papers already read with REACH %s' %
-        (len(pmids_read), len(pmid_results), reader_version)
+        '%d / %d papers already read with %s %s' %
+        (len(pmids_read), len(pmid_results), reader, reader_version)
         )
     num_found = len([
         pmid for pmid in pmids_unread
@@ -405,11 +405,11 @@ def get_stmts(pmids_unread, cleanup=True):
             logger.info('Reading %s' % pmid)
             source = result['content_source']
             cont_path = result['content_path']
-            outbuf.write('\nReading pmid %s from %s located at %s.\n' % (
+            outbuf.write(('\nReading pmid %s from %s located at %s.\n' % (
                 pmid,
                 source,
                 cont_path
-                ))
+                )).encode('utf-8'))
             outbuf.flush()
             some_stmts = read_pmid(pmid, source, cont_path, outbuf, cleanup)
             if some_stmts is not None:
