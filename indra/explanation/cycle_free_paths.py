@@ -340,8 +340,7 @@ def _backward(v, H):
 
 
 def PG_cf(src, tgt, g, t):
-    """
-    Generate a cycle free paths graph (CFPG).
+    """Generate a cycle free paths graph (CFPG).
 
     Implements the major step (the outer loop) for constructing G_cf. We do so
     by computing dic_CF, a dictionary based version of G_cf.  dic_CF[i] will be
@@ -377,11 +376,8 @@ def PG_cf(src, tgt, g, t):
     dic_CF = {tgt[0]: ([tgt_0], next_tgt, pred_tgt, t_cf_tgt)}
 
     # If we were given an empty pre-CFPG, then the CFPG should also be empty
-    empty = ([],{}, {},{})
     if not g:
-        for j in range(0, tgt[0]+1):
-            dic_CF[j] = empty
-        return dic_CF
+        return nx.DiGraph()
     # Iterate from level n-1 (one "above" the target) back to the source
     for i in reversed(range(1, tgt[0])):
         # Get the information for level i+1 (one level closer to the target)
@@ -435,7 +431,13 @@ def PG_cf(src, tgt, g, t):
     pred_src = {src_0: []}
     t_cf_src = {src_0: t[src]}
     dic_CF[0] = (V_0 , next_src, pred_src, t_cf_src)
-    return dic_CF
+    G_cf = _dic_to_graph(dic_CF)
+    # Prune out possible unreachable nodes in G_cf
+    nodes_prune = [v for v in G_cf
+                     if (v != tgt_0 and G_cf.successors(v) == []) or
+                        (v != src_0 and G_cf.predecessors(v) == [])]
+    G_cf_pruned = _prune(G_cf, nodes_prune, src_0, tgt_0)
+    return G_cf_pruned
 
 
 def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, t, g):
@@ -487,7 +489,7 @@ def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, t, g):
     return (V_x, next_x, pred_x, t_x)
 
 
-def dic_to_graph(dic):
+def _dic_to_graph(dic):
     G = nx.DiGraph()
     E = []
     for k in dic.keys():
@@ -508,57 +510,6 @@ def name_paths(Q):
             q_names.append(q[j][1])
         Q_names.append(tuple(q_names))
     return Q_names
-
-
-def dc_prev(src_0,tgt_0, dic):
-    dic_prev = {}
-    for k in range(len(dic.keys())):
-        V_k, next_k,pred_k,t_k = dic[k]
-        prev_k = {}
-        if k == 0:
-            prev_k[src_0] = []
-            dic_prev[k] = (V_k, next_k, prev_k)
-        else:
-            V_k_1, next_k_1 ,pred_k_1, t_k_1 = dic[k-1]
-            for v in V_k:
-                prev_k[v] = [u for u in V_k_1 if v in next_k_1[u]]
-            dic_prev[k] = (V_k, next_k, prev_k)
-    return dic_prev
-
-
-def PG_cf_pruned(src_0, tgt_0, dic):
-    l = len(dic.keys())
-    current = dic.copy()
-    while True:
-        I = isolated(src_0, tgt_0, current)
-        if I == []:
-            return current
-        new = {}
-        for i in range(l):
-            V_i, next_i, prev_i = current[i]
-            V_i_pruned = [v for v in V_i if v not in I]
-            next_i_pruned = {}
-            prev_i_pruned = {}
-            for v in V_i_pruned:
-                next_i_pruned[v]= [u for u in next_i[v] if u not in I]
-                prev_i_pruned[v] = [u for u in prev_i[v] if u not in I]
-            new[i] = (V_i_pruned, next_i_pruned, prev_i_pruned)
-        current = new
-
-
-def isolated(src_0, tgt_0, dic):
-    l = len(dic.keys())
-    isolated = []
-    for i in range(1, l):
-        V_i, next_i, prev_i = dic[i]
-        V_i_1, next_i_1, prev_i_1 = dic[i-1]
-        for v in V_i:
-            prev_v = prev_i[v]
-            if (prev_v == [] and v != src_0) or \
-               (v != tgt_0 and  next_i[v] == []):
-                isolated.append(v)
-    isolated = list(set(isolated))
-    return isolated
 
 
 def sample_single_path(src_0, tgt_0, dic):
@@ -620,26 +571,7 @@ if __name__ == '__main__':
             G_0, T_0 = dic_PG[len(dic_PG)-1]
             # The above is the output of the iterative method
             T_0[tgt].append(tgt)
-            dic_cf = PG_cf(src,tgt,G_0,T_0)
-            empty = ([],{}, {},{})
-            if dic_cf[0] == empty:
-                continue
-            # dic_cf is the dictionary representation of the cycle free
-            # representation
-            src_0 = (src[0], src[1], 0)
-            tgt_0 = (tgt[0], tgt[1], 0)
-            G_cf = dic_to_graph(dic_cf)
-            dic_cf_prev = dc_prev(src_0,tgt_0, dic_cf)
-            # We throw away the pred_i and t_i dictionaries from dic_cf. We add
-            # the dictionary prev_i which yields for each v at levl i its set
-            # of predecessors in dic_cf
-            dic_cf_pruned = PG_cf_pruned(src_0, tgt_0, dic_cf_prev)
-            # In general there will be isolated nodes in the cycle free
-            # representation.  They don't seem to cause any trouble in terms of
-            # sampling for paths.  This seems to suggest they are always
-            # isolated from below. No matter.  We prune them away.  We then
-            # convert the modified and reduced representation into a digraph.
-            G_cf_pruned = dic_to_graph(dic_cf_pruned)
+            G_cf = PG_cf(src,tgt,G_0,T_0)
 
             # We verify the three required properties.
             # Recall:
@@ -651,8 +583,10 @@ if __name__ == '__main__':
             # redundancy in the representation. For every path in the original
             # graph there is a unique path in G_cf that corresponds to it.
             # To do so, we first compute the set of source-to-target paths
-            # (the nodes will be triples) in G_cf_pruned
-            P_cf_pruned = list(nx.all_simple_paths(G_cf_pruned, src_0, tgt_0))
+            # (the nodes will be triples) in G_cf
+            src_0 = (src[0], src[1], 0) # 3-tuple version of src
+            tgt_0 = (tgt[0], tgt[1], 0) # 3-tuple version of tgt
+            P_cf_pruned = list(nx.all_simple_paths(G_cf, src_0, tgt_0))
 
             # Next we extract the actual paths by projecting down to second
             # component.
