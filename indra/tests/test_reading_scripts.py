@@ -276,7 +276,6 @@ def test_sparser_parallel():
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
     result = sparser_reader.read(tc_list, verbose=True)
-    assert False
     N_exp = len(tc_list)
     N_res = len(result)
     assert N_exp == N_res, \
