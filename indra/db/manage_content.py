@@ -513,11 +513,12 @@ class PmcManager(NihManager):
                 or_list.append(getattr(db.TextRef, id_type).in_(id_list))
         tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
 
-        tr_data_idx_dict = {i: {e[i]: e for e in tr_data}
+        tr_data_idx_dict = {i: {e[i]: e for e in tr_data if e[i] is not None}
                             for i in self.tr_cols}
 
         # Look for updates to the existing text refs
         tr_data_matched_list = []
+        pmcids_to_skip = []
         for tr in tr_list:
             match_list = []
             for i, tr_data_idx in tr_data_idx_dict.items():
@@ -531,8 +532,20 @@ class PmcManager(NihManager):
                 if tr_new not in tr_data_matched_list:
                     tr_data_matched_list.append(tr_new)
                 for i in self.tr_cols:
-                    if getattr(tr, i) is None and tr_new[i] is not None:
-                        setattr(tr, i, tr_new[i])
+                    if getattr(tr, i) is None:
+                        if tr_new[i] is not None:
+                            setattr(tr, i, tr_new[i])
+                    else:
+                        if tr_new[i] is not None \
+                         and tr_new[i] != getattr(tr, i):
+                            with open('review.txt', 'a') as f:
+                                f.write(
+                                    'Got conflicting id data: in db %s vs %s.'
+                                    % ([getattr(tr, i) for i in self.tr_cols],
+                                       [tr_new[i] for i in self.tr_cols])
+                                    )
+                            if i is 'pmcid':
+                                pmcids_to_skip.append(tr_new['pmcid'])
             else:
                 with open('review.txt', 'a') as f:
                     f.write(
@@ -542,84 +555,11 @@ class PmcManager(NihManager):
                         )
         db.commit("Failed to update with new ids.")
 
-        db_conts = {
-            'pmid': [tr.pmid for tr in tr_list],
-            'pmcid': [tr.pmcid for tr in tr_list]
-            }
-        paired_list = [
-            (tr.pmid, tr.pmcid) for tr in tr_list
-            ]
-        del tr_list
-        logger.debug("Got db contents...")
+        # Now update the text refs with any new refs that were found
+        filtered_tr_records = [tuple([e[i] for i in self.tr_cols])
+                               for e in tr_data
+                               if e not in tr_data_matched_list]
 
-        # Define some helpful functions.
-        filtered_tr_records = []
-
-        def add_record(tr_entry):
-            entry_lst = []
-            for k in self.tr_cols:
-                if tr_entry[k] is None:
-                    entry = tr_entry[k]
-                else:
-                    entry = tr_entry[k]
-                entry_lst.append(entry)
-            filtered_tr_records.append(tuple(entry_lst))
-
-        def update_record_with_pmcid(tr_entry):
-            logger.debug("Updating a record with a new pmcid....")
-            tr = db.select_one('text_ref', db.TextRef.pmid == tr_entry['pmid'])
-            tr.pmcid = tr_entry['pmcid']
-            db.commit('Did not update pmcid %s.' % tr_entry['pmcid'])
-            logger.debug("Done updating...")
-
-        def update_record_with_pmid(tr_entry, pmid=None):
-            logger.debug("Updating a record with a new pmid %s..." % pmid)
-            tr = db.select_one(
-                'text_ref',
-                db.TextRef.pmcid == tr_entry['pmcid']
-                )
-            tr.pmid = tr_entry['pmid'] if pmid is None else pmid
-            db.commit('Failed to update pmid %s.' % tr.pmid)
-            logger.debug("Done updating...")
-
-        '''
-        def db_has_pmid(pmid):
-            logger.debug("Looking for pmid in db...")
-            ret = db.has_entry('text_ref', db.TextRef.pmid == pmid)
-            logger.debug("Determined pmid status...")
-            return ret
-        '''
-
-        def pmid_to_pmcid(pmid):
-            for a_pmid, a_pmcid in paired_list:
-                if a_pmid == pmid:
-                    return a_pmcid
-            return None
-
-        # Process the text ref data.
-        pmcids_to_skip = []
-        logger.debug("Beginning to filter %d text refs..." % len(tr_data))
-        for tr_entry in tr_data:
-            if tr_entry['pmcid'] in db_conts['pmcid']:
-                if tr_entry['pmid'] not in db_conts['pmid']:
-                    update_record_with_pmid(tr_entry)
-            else:
-                if tr_entry['pmid'] is None:
-                    add_record(tr_entry)
-                elif tr_entry['pmid'] in db_conts['pmid']:
-                    if pmid_to_pmcid(tr_entry['pmid']) is None:
-                        update_record_with_pmcid(tr_entry)
-                    elif pmid_to_pmcid(tr_entry['pmid']) != tr_entry['pmcid']:
-                        with open('review.txt', 'a') as f:
-                            f.write(
-                                'Skipped record from %s with pmcid %s due to '
-                                'conflicting pmids. Please review.\n'
-                                % (self.my_source, tr_entry['pmcid'])
-                                )
-                        pmcids_to_skip.append(tr_entry['pmcid'])
-                else:
-                    add_record(tr_entry)
-        logger.debug("Done filtering text refs...")
         return filtered_tr_records, pmcids_to_skip
 
     def filter_text_content(self, db, tc_data):
