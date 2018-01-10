@@ -842,6 +842,24 @@ class Manuscripts(PmcManager):
     def is_archive(self, k):
         return k.endswith('.xml.tar.gz')
 
+    def enrich_textrefs(self, db):
+        """Method to add manuscript_ids to the text refs."""
+        tr_list = db.select_all(db.TextRef,
+                                db.TextContent.text_ref_id == db.TextRef.id,
+                                db.TextContent.source == self.my_source,
+                                db.TextRef.manuscript_id.is_(None))
+        file_list = self.ftp.get_csv_as_dict('filelist.csv', header=0)
+        pmcid_mid_dict = {entry['PMCID']: entry['MID'] for entry in file_list}
+        pmid_mid_dict = {entry['PMID']: entry['MID'] for entry in file_list
+                         if entry['PMID'] is not '0'}
+        for tr in tr_list:
+            if tr.pmcid is not None:
+                tr.manuscript_id = pmcid_mid_dict[tr.pmcid]
+            elif tr.pmid is not None and tr.pmid in pmid_mid_dict.keys():
+                tr.manuscript_id = pmid_mid_dict[tr.pmid]
+        db.commit("Could not update text refs with manuscript ids.")
+        return
+
 
 if __name__ == '__main__':
     db = get_primary_db()
