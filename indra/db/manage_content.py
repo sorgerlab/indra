@@ -86,6 +86,7 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 from indra.db import get_primary_db, texttypes, formats
+from indra.db import sql_expressions as sql_exp
 
 
 try:
@@ -503,11 +504,44 @@ class PmcManager(NihManager):
 
         self.get_missing_pmids(tr_data)
 
-        tr_list = db.select_all(
-            'text_ref',
-            db.TextRef.pmcid.in_([entry['pmcid'] for entry in tr_data]) |
-            db.TextRef.pmid.in_([entry['pmid'] for entry in tr_data])
-            )
+        # Get all text refs that match any of the id data we have
+        or_list = []
+        for id_type in self.tr_cols:
+            id_list = [entry[id_type] for entry in tr_data
+                       if entry[id_type] is not None]
+            if id_list:
+                or_list.append(getattr(db.TextRef, id_type).in_(id_list))
+        tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
+
+        tr_data_idx_dict = {i: {e[i]: e for e in tr_data}
+                            for i in self.tr_cols}
+
+        # Look for updates to the existing text refs
+        tr_data_matched_list = []
+        for tr in tr_list:
+            match_list = []
+            for i, tr_data_idx in tr_data_idx_dict.items():
+                candidate = tr_data_idx.get(getattr(tr, i))
+                if candidate is not None and candidate not in match_list:
+                    match_list.append(candidate)
+            if len(match_list) == 0:
+                continue  # This would be a little weird...
+            elif len(match_list) == 1:
+                tr_new = match_list.pop()
+                if tr_new not in tr_data_matched_list:
+                    tr_data_matched_list.append(tr_new)
+                for i in self.tr_cols:
+                    if getattr(tr, i) is None and tr_new[i] is not None:
+                        setattr(tr, i, tr_new[i])
+            else:
+                with open('review.txt', 'a') as f:
+                    f.write(
+                        ('Got multiple matches for data from %s: %s.'
+                         ' Please review.\n')
+                        % (self.my_source, match_list)
+                        )
+        db.commit("Failed to update with new ids.")
+
         db_conts = {
             'pmid': [tr.pmid for tr in tr_list],
             'pmcid': [tr.pmcid for tr in tr_list]
@@ -679,8 +713,9 @@ class PmcManager(NihManager):
             return None
         if 'pmcid' not in id_data.keys():
             id_data['pmcid'] = 'PMC' + id_data['pmc']
-        tr_datum = dict.fromkeys(self.tr_cols)
-        tr_datum.update(id_data)
+        if 'manuscript' in id_data.keys():
+            id_data['manuscript_id'] = id_data['manuscript']
+        tr_datum = {k: id_data.get(k) for k in self.tr_cols}
         tc_datum = {
             'pmcid': id_data['pmcid'],
             'text_type': texttypes.FULLTEXT,
