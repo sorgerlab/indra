@@ -1,61 +1,64 @@
-# -*- coding: utf-8 -*-
 """
-We construct a representation of cycle_free paths of a fixed length. This fixed 
-length will often not be mentioned in what follows.
-We call our representation "the cycle_free paths graph". Below it is the 
-graph G_cf (actually it is G_cf_pruned but for now it will be convenient to 
-ignore this distinction).
+We construct a representation of cycle_free paths of a fixed length. This fixed
+length will often not be mentioned in what follows.  We call our representation
+"the cycle_free paths graph". Below it is the graph G_cf (actually it is
+G_cf_pruned but for now it will be convenient to ignore this distinction).
 
-G_cf is required to have three  properties.
+G_cf is required to have three properties.
 
-CF1: Every source-to-target path in G_cf is cycle free.
-CF2: Every cycle free path in the original graph appears as a source-to-target path 
-     in G_cf.
-CF3: There is a 1-1 correspondence between the paths in G_cf and the paths in the 
-     original graph. This means there is no redundancy in the representation.
-     For every path in the original graph there is a unique path in G_cf that corresponds to it.
+* CF1: Every source-to-target path in G_cf is cycle free.
+* CF2: Every cycle free path in the original graph appears as a
+  source-to-target path in G_cf.
+* CF3: There is a 1-1 correspondence between the paths in G_cf and the paths in
+  the original graph. This means there is no redundancy in the representation.
+  For every path in the original graph there is a unique path in G_cf that
+  corresponds to it.
 
-These 3 conditions will ensure that we can sample paths in the original graph 
-faithfully by sampling paths in G_cf. We can also perform graph theoretic 
-operations on G_cf to simulate useful operations on the set of paths in the original graph.
+These 3 conditions will ensure that we can sample paths in the original graph
+faithfully by sampling paths in G_cf. We can also perform graph theoretic
+operations on G_cf to simulate useful operations on the set of paths in the
+original graph.
 
-The starting point is the paths graph (pg_raw below) that represents "all" 
+The starting point is the paths graph (pg_raw below) that represents "all"
 paths (cycle free or not) of the given fixed length from source to target.
 
-Then using the previous iterative procedure we prune away junk nodes and more importantly
-tag each node with its cycle free history. More precisely if u is in tags[v] then  we are 
-guaranteed that every path from u to v that involves only nodes appearing in tags[v] will be 
-v-cycle_free. In other the name of v (i.e. v[1]) will not appear in the path. Further, it will also be
-u-cycle free. Note however tags[u] may contain node that has the same name as that of v. 
-Indeed this the crux of the problem.
+Then using an initial iterative procedure we prune away junk nodes (that cannot
+appear on any cycle free path from source to target) and more importantly tag
+each node with its cycle free history. More precisely if u is in tags[v] then
+we are guaranteed that every path from u to v that involves only nodes
+appearing in tags[v] will be v-cycle_free. In other words the name of v (i.e.
+v[1]) will not appear in the path. Further, it will also be u-cycle free.  Note
+however tags[u] may contain a node that has the same name as that of v.  Indeed
+this the crux of the problem.
 
-Moving on, this path graph 
-is named G_0 and the associated tags map is named T_0 below.
+Moving on, this tagged path graph is named G_0 and the associated tags map is
+named T_0 below.
 
-G_cf is computed by refining G_0. But first let us consider 
-why G_0 is not an ideal representation of the set of cycle free paths of a fixed length.
-First, G_0 does not have the property (CF1) (though it does have the properties (CF2) and 
-(CF3)). As a result one can't just walk through the graph 
-from source to node and generate a cycle free path. Instead one must use a sampling 
-method with memory to generate cycle free paths. In particular if one has reached the node u
-via the path p and v is a successors of u then one can extend p by moving to v only 
-if p is contained in T_0[v]. Thus whether the move along the edge (u,v) is 
-conditioned by the memory of how u was reached. Further, one can get stuck while using 
-this sampling procedure. Hence it is not clear whether one is sampling the set of 
-paths of interest in a faithful fashion. More importantly it is not clear how one can 
-perform graph theoretic operations on G_0 to simulate operations on the set of cycle fre paths of 
-interest. We will however keep in mind that G_0 together with its path sampling 
-procedure is  a useful tool to have around.
+G_cf is computed by refining G_0. But first let us consider why G_0 is not an
+ideal representation of the set of cycle free paths of a fixed length.  First,
+G_0 does not have the property (CF1) (though it does have the properties (CF2)
+and (CF3)). As a result one can't just walk through the graph from source to
+node and generate a cycle free path. Instead one must use a sampling method
+with memory to generate cycle free paths. In particular if one has reached the
+node u via the path p and v is a successors of u then one can extend p by
+moving to v only if p is contained in T_0[v]. Thus whether the move along the
+edge (u,v) is conditioned by the memory of how u was reached. Further, one can
+get stuck while using this sampling procedure. Hence it is not clear whether
+one is sampling the set of paths of interest in a faithful fashion. More
+importantly it is not clear how one can perform graph theoretic operations on
+G_0 to simulate operations on the set of cycle fre paths of interest. We will
+however keep in mind that G_0 together with its path sampling procedure is  a
+useful tool to have around.
 
-Constructing G_cf by refining G_0 may be viwed as synthesizing a memoryless strategy for 
-generating cycle free paths. In other words, if (u,v) is an edge in G_cf then no matter how we 
-have reached u we must be able to transition to v. A necessary condition that will enable 
-this is to ensure that the set of tags of u (T_cf[u]) is included in the set of tags of v (T_cf[v]) 
-in G_cf. The challenge is to achieve this while ensuring that the properies (CF1), 
-(CF2) and (CF3) are met. 
+Constructing G_cf by refining G_0 may be viewed as synthesizing a memoryless
+strategy for generating cycle free paths. In other words, if (u,v) is an edge
+in G_cf then no matter how we have reached u we must be able to transition to
+v. A necessary condition that will enable this is to ensure that the set of
+tags of u (T_cf[u]) is included in the set of tags of v (T_cf[v]) in G_cf. The
+challenge is to achieve this while ensuring that the properies (CF1), (CF2) and
+(CF3) are met.
 
 We explain below the detailed construction of G_cf from this perpective.
-  
 """
 
 import random
@@ -68,17 +71,18 @@ import cPickle as pickle
 
 def cycle_free_paths_graph(pg, source, target, path_length):
     """Compute a pre cycle free paths graph.
-    This is as before. 
-    
+
     Starting from the "raw" (i.e., containing cycles) paths graph, and given a
-    target path length n, the algorithm iterates over each "level" in the
-    graph 0 <= k <= n where level 0 consists only of the source node and level
-    n consists only of the target.
+    target path length n, the algorithm iterates over each "level" in the graph
+    0 <= k <= n where level 0 consists only of the source node and level n
+    consists only of the target.
+
     Each level k consists of a set of nodes, X; we examine each node x in X and
     identify the subset of nodes that are reachable in both the forward and
     backward directions from x. If any of the nodes in the forward reach
     subgraph contain x itself (but at a different depth), this represents a
     cyclic path back through x that is then pruned.
+
     Each node x therefore defines its own subgraph of cycle free paths, g_x.
     After iterating over all x in X, we combine these subgraphs into the
     (in-progress) cycle free paths graph H_k. H_k therefore consists of the
@@ -89,6 +93,7 @@ def cycle_free_paths_graph(pg, source, target, path_length):
     during sampling, transitions from an upstream node to a downstream node are
     only permissible if all nodes in the path up to a certain level are
     contained in the tag set of the downstream node.
+
     Parameters
     ----------
     pg : networkx.DiGraph()
@@ -100,6 +105,7 @@ def cycle_free_paths_graph(pg, source, target, path_length):
         Target node, of the form (target_depth, source_name).
     path_length : int
         Desired path length.
+
     Returns
     -------
     tuple : (networkx.DiGraph(), dict)
@@ -190,8 +196,7 @@ def cycle_free_paths_graph(pg, source, target, path_length):
 
 def _initialize_cfpg(pg, source, target):
     """Initialize cycle free paths graph data structures.
-    This is as before.
-    
+
     Parameters
     ----------
     pg : networkx.DiGraph()
@@ -201,6 +206,7 @@ def _initialize_cfpg(pg, source, target):
         Source node, of the form (0, source_name).
     target : tuple
         Target node, of the form (target_depth, source_name).
+
     Returns
     -------
     tuple : (networkx.DiGraph(), dict)
@@ -226,8 +232,7 @@ def _initialize_cfpg(pg, source, target):
 
 def _prune(pg, nodes_to_prune, source, target):
     """Iteratively prunes nodes from a copy of the paths graph.
-    This is as before.
-    
+
     We prune the graph *pg* iteratively by the following procedure:
       1. Remove the nodes given by *nodes_to_prune* from the graph.
       2. Identify nodes (other than the source node) that now have no
@@ -236,6 +241,7 @@ def _prune(pg, nodes_to_prune, source, target):
          edges.
       4. Set *nodes_to_prune* to the nodes identified in steps 2 and 3.
       5. Repeat from 1 until there are no more nodes to prune.
+
     Parameters
     ----------
     pg : networkx.DiGraph
@@ -246,6 +252,7 @@ def _prune(pg, nodes_to_prune, source, target):
         Source node, of the form (0, source_name).
     target : tuple
         Target node, of the form (target_depth, source_name).
+
     Returns
     -------
     networkx.DiGraph()
@@ -280,8 +287,7 @@ def _add_tag(tag_dict, tag_node, nodes_to_tag):
 
 def _forward(v, H, length):
     """Compute the subgraph of H defined by the paths forward from node v.
-    This is as before.
-    
+
     Parameters
     ----------
     v : tuple(int, str)
@@ -307,8 +313,7 @@ def _forward(v, H, length):
 
 def _backward(v, H):
     """Compute the subgraph of H defined by the paths backward from node v.
-    This is as before.
-    
+
     Parameters
     ----------
     v : tuple(int, str)
@@ -316,6 +321,7 @@ def _backward(v, H):
     H : networkx.DiGraph()
         For a given path length n, H defines the graph G_i at the i-th stage
         for 1 <= i <= n.
+
     Returns
     -------
     networkx.DiGraph()
@@ -332,36 +338,37 @@ def _backward(v, H):
         L[k] = [w for w in h if w[0] == k]
     return h
 
-"""
-Below is the major step (the outer loop) for constructing G_cf. We do so by computing dic_CF, 
-a dictionary based version of G_cf.
-dic_CF[i] will be a quadruple of the form (V_i, next_i, pred_i, t_i).
+def PG_cf(src, tgt, g, t):
+    """
 
-V_i will be the set of nodes at level i.
+    Implements the major step (the outer loop) for constructing G_cf. We do so
+    by computing dic_CF, a dictionary based version of G_cf.  dic_CF[i] will be
+    a quadruple of the form (V_i, next_i, pred_i, t_i).
 
-A node -after dic_CF[i] has been computed- will be of the form (i, n, c) where i is the level, n is the name and c is 
-the copy number of the node (i,n) in G_0. In other words, each node in G_0 will be split into 
-one or more copies to implement our memoryless sampling strategy.
+    V_i will be the set of nodes at level i.
 
-next_i is the successor relation
+    A node -after dic_CF[i] has been computed- will be of the form (i, n, c) where i is the level, n is the name and c is 
+    the copy number of the node (i,n) in G_0. In other words, each node in G_0 will be split into 
+    one or more copies to implement our memoryless sampling strategy.
 
-pred_i[v] is the set of predecessors of of v in V_i. The construction proceeds from 
-the target to source. At stage i of the construction we convert nodes of the form (i, n) into 
-nodes of the form (i,n,c). For any such new node pred_i[v] will be nodes of the form 
-(i-1,n) at level i-1.
+    next_i is the successor relation
 
-t_i[v] will be the new tags of the node v. They will be pairs of the form (j,n).
-In other words their type will be the same as of T_0.
-(Note: In T_0,  I assign nodes of G_0 as tags rather than their names. This turns out 
-to be convenient for the construction of G_cf)
+    pred_i[v] is the set of predecessors of of v in V_i. The construction proceeds from 
+    the target to source. At stage i of the construction we convert nodes of the form (i, n) into 
+    nodes of the form (i,n,c). For any such new node pred_i[v] will be nodes of the form 
+    (i-1,n) at level i-1.
 
-Once the construction of PG_cf is complete we will no onger 
-require pred_i and t_i.
+    t_i[v] will be the new tags of the node v. They will be pairs of the form (j,n).
+    In other words their type will be the same as of T_0.
+    (Note: In T_0,  I assign nodes of G_0 as tags rather than their names. This turns out 
+    to be convenient for the construction of G_cf)
+
+    Once the construction of PG_cf is complete we will no onger 
+    require pred_i and t_i.
   
 
 """
-def PG_cf(src, tgt, g, t):
-    """
+
     We first hardwire dic_CF[tgt[0]]. We just need to create one instance of tgt.
     """
     
@@ -584,7 +591,7 @@ def sample_single_path(src_0, tgt_0, dic):
     while current != tgt_0:
         nxt = dic[current[0]][1]
         succ = random.choice(nxt[current])
-    
+
         p.append(succ)
         current = succ
     return tuple(p)
@@ -595,7 +602,7 @@ def sample_many_paths(src_0, tgt_0, dic, n):
         p = sample_single_path(src_0, tgt_0, dic)
         P.append(p)
     return P
-  
+
 def draw(g, filename):
     ag = nx.nx_agraph.to_agraph(g)
     ag.draw(filename, prog='dot')
