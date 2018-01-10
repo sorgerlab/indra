@@ -13,6 +13,7 @@ import glob
 import json
 import pickle
 import functools
+import signal
 import multiprocessing as mp
 from datetime import datetime
 from collections import Counter
@@ -350,9 +351,13 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
 # SPARSER -- The following are methods to  process content with sparser.
 #==============================================================================
 
+def _timeout_handler(signum, frame):
+    raise Exception('Timeout')
 
 def read_pmid(pmid, source, cont_path, outbuf=None, cleanup=True):
     "Run sparser on a single pmid."
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(60)
     try:
         if (source is 'content_not_found'
            or source.startswith('unhandled_content_type')
@@ -363,6 +368,7 @@ def read_pmid(pmid, source, cont_path, outbuf=None, cleanup=True):
         if cont_path.endswith('.nxml') and source.startswith('pmc'):
             new_fname = 'PMC%s%d.nxml' % (pmid, mp.current_process().pid)
             os.rename(cont_path, new_fname)
+
             try:
                 sp = sparser.process_nxml_file(
                     new_fname,
@@ -384,7 +390,10 @@ def read_pmid(pmid, source, cont_path, outbuf=None, cleanup=True):
     except Exception as e:
         logger.error('Failed to process data for %s.' % pmid)
         logger.exception(e)
+    finally:
+        signal.alarm(0)
         return
+
     if sp is None:
         logger.error('Failed to run sparser on pmid: %s.' % pmid)
         return
