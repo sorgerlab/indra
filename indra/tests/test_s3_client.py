@@ -99,13 +99,14 @@ def test_reach_output():
     pmid = 'PMID000test3'
     reach_version = '42'
     source_text = 'pmc_oa_txt'
-    s3_client.put_reach_output(reach_data, pmid, reach_version, source_text)
+    s3_client.put_reader_output('reach', reach_data, pmid, reach_version, source_text)
     # Now get the data back
-    retrieved_reach_data = s3_client.get_reach_output(pmid)
+    retrieved_reach_data = s3_client.get_reader_output('reach', pmid)
     assert retrieved_reach_data == reach_data
     assert unicode_strs(retrieved_reach_data)
     # Get the reach version of the key we created
-    (ret_reach_version, ret_source_text) = s3_client.get_reach_metadata(pmid)
+    ret_reach_version, ret_source_text = \
+        s3_client.get_reader_metadata('reach', pmid)
     assert ret_reach_version == reach_version
     assert ret_source_text == source_text
     assert unicode_strs(ret_reach_version)

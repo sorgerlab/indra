@@ -27,7 +27,7 @@ try:
         submit_reading, wait_for_complete
     # Try to make a client
     client = boto3.client('batch')
-    from indra.literature.s3_client import get_reach_json_str, get_full_text
+    from indra.literature.s3_client import get_reader_json_str, get_full_text
     aws_available = True
 except Exception:
     aws_available = False
@@ -35,6 +35,7 @@ except Exception:
 global_filters = ['grounding', 'prior_one', 'human_only']
 
 logger = logging.getLogger('rasmachine')
+
 
 def build_prior(genes, out_file):
     gn = GeneNetwork(genes)
@@ -128,7 +129,7 @@ def process_paper_aws(pmid, start_time_local):
         logger.error('Could not get content from S3: %s' % e)
         return None, None
     logger.info('Downloading %s output from AWS' % pmid)
-    reach_json_str = get_reach_json_str(pmid)
+    reach_json_str = get_reader_json_str('reach', pmid)
     if not reach_json_str:
         logger.info('Could not get output.')
         return None, content_type
@@ -474,7 +475,8 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
                                           'model-%s.pkl' % date_str)
         model.save(inc_model_bkp_file)
     else:
-        key = 'rasmachine/%s/model-%s.pkl' % (model_path.replace('/', '_'), date_str)
+        key = 'rasmachine/%s/model-%s.pkl' % (model_path.replace('/', '_'),
+                                              date_str)
         s3 = boto3.client('s3')
         s3.upload_file(inc_model_file, 'bigmech', key)
 

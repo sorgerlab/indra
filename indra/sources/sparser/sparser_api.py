@@ -26,6 +26,7 @@ sparser_path = os.environ.get(sparser_path_var)
 
 
 def get_version():
+    assert sparser_path is not None, "Sparser path is not defined."
     with open(os.path.join(sparser_path, 'version.txt'), 'r') as f:
         version = f.read().strip()
     return version
@@ -87,15 +88,16 @@ def convert_sparser_output(output_fname, output_fmt='json'):
 
 def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
     ret = None
+    out_fname = None
     try:
-        output_fname = run_sparser(fname, output_fmt, outbuf)
-        ret = convert_sparser_output(output_fname, output_fmt)
+        out_fname = run_sparser(fname, output_fmt, outbuf)
+        ret = convert_sparser_output(out_fname, output_fmt)
     except Exception as e:
         logger.error("Sparser failed to run on %s." % fname)
         logger.exception(e)
     finally:
-        if os.path.exists(output_fname) and cleanup:
-            os.remove(output_fname)
+        if out_fname is not None and os.path.exists(out_fname) and cleanup:
+            os.remove(out_fname)
 
     return ret
 

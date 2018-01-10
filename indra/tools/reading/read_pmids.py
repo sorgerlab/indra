@@ -13,6 +13,7 @@ import glob
 import json
 import pickle
 import functools
+import signal
 import multiprocessing as mp
 from datetime import datetime
 from collections import Counter
@@ -233,18 +234,19 @@ def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
     if force_read or reader_version is None:
         return get_text()
     # If not, look for REACH JSON on S3
-    read_reach_version, read_source_text = s3_client.get_reach_metadata(pmid)
+    reader_version_s3, read_source_text = \
+        s3_client.get_reader_metadata(reader, pmid)
     # Found it, same version, no need to get text
-    if (read_reach_version is not None
-       and read_reach_version == reader_version):
+    if (reader_version_s3 is not None
+       and reader_version_s3 == reader_version):
         result = {pmid: {
-            'reader_version': read_reach_version,
+            'reader_version': reader_version_s3,
             'reach_source_text': read_source_text
             }}
     # Found it, different version, get the text
     else:
         result = get_text()
-        result[pmid].update({'reader_version': read_reach_version,
+        result[pmid].update({'reader_version': reader_version_s3,
                              'reach_source_text': read_source_text})
     return result
 
@@ -280,6 +282,9 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
             )
         res = pool.map(download_from_s3_func, pmids_in_range)
         pool.close()  # Wait for procs to end.
+        logger.info('Multiprocessing pool closed.')
+        pool.join()
+        logger.info('Multiprocessing pool joined.')
     else:
         res = []
         for pmid in pmids_in_range:
@@ -307,8 +312,8 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
         for pmid in set(pmid_results.keys()).difference(set(pmids_read.keys()))
         }
     logger.info(
-        '%d / %d papers already read with REACH %s' %
-        (len(pmids_read), len(pmid_results), reader_version)
+        '%d / %d papers already read with %s %s' %
+        (len(pmids_read), len(pmid_results), reader, reader_version)
         )
     num_found = len([
         pmid for pmid in pmids_unread
@@ -347,9 +352,14 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
 # SPARSER -- The following are methods to  process content with sparser.
 #==============================================================================
 
+def _timeout_handler(signum, frame):
+    raise Exception('Timeout')
 
-def read_pmid(pmid, source, cont_path, outbuf=None, cleanup=True):
+def read_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
+              cleanup=True):
     "Run sparser on a single pmid."
+    signal.signal(signal.SIGALRM, _timeout_handler)
+    signal.alarm(60)
     try:
         if (source is 'content_not_found'
            or source.startswith('unhandled_content_type')
@@ -360,6 +370,7 @@ def read_pmid(pmid, source, cont_path, outbuf=None, cleanup=True):
         if cont_path.endswith('.nxml') and source.startswith('pmc'):
             new_fname = 'PMC%s%d.nxml' % (pmid, mp.current_process().pid)
             os.rename(cont_path, new_fname)
+
             try:
                 sp = sparser.process_nxml_file(
                     new_fname,
@@ -381,34 +392,42 @@ def read_pmid(pmid, source, cont_path, outbuf=None, cleanup=True):
     except Exception as e:
         logger.error('Failed to process data for %s.' % pmid)
         logger.exception(e)
+    finally:
+        signal.alarm(0)
         return
+
     if sp is None:
         logger.error('Failed to run sparser on pmid: %s.' % pmid)
         return
+    s3_client.put_reader_output('sparser', sp.json_stmts, pmid,
+                                sparser_version, source)
     return sp.statements
 
 
-def get_stmts(pmids_unread, cleanup=True):
-    "Run sparser on the pmids in pmdis_unread."
+def get_stmts(pmids_unread, cleanup=True, sparser_version=None):
+    "Run sparser on the pmids in pmids_unread."
+    if sparser_version is None:
+        sparser_version = sparser.get_version()
     stmts = {}
     now = datetime.now()
     outbuf_fname = 'sparser_%s_%s.log' % (
         now.strftime('%Y%m%d-%H%M%S'),
         mp.current_process().pid,
         )
-    outbuf = open(outbuf_fname, 'w')
+    outbuf = open(outbuf_fname, 'wb')
     try:
         for pmid, result in pmids_unread.items():
             logger.info('Reading %s' % pmid)
             source = result['content_source']
             cont_path = result['content_path']
-            outbuf.write('\nReading pmid %s from %s located at %s.\n' % (
+            outbuf.write(('\nReading pmid %s from %s located at %s.\n' % (
                 pmid,
                 source,
                 cont_path
-                ))
+                )).encode('utf-8'))
             outbuf.flush()
-            some_stmts = read_pmid(pmid, source, cont_path, outbuf, cleanup)
+            some_stmts = read_pmid(pmid, source, cont_path, sparser_version,
+                                   outbuf, cleanup)
             if some_stmts is not None:
                 stmts[pmid] = some_stmts
             else:
@@ -454,12 +473,15 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
                 })
         get_stmts_func = functools.partial(
             get_stmts,
-            cleanup=cleanup
+            cleanup=cleanup,
+            sparser_version=reader_version
             )
         logger.info("Mapping get_stmts onto pool.")
         res = pool.map(get_stmts_func, batches)
         pool.close()
-        logger.info("Pool closed.")
+        logger.info('Multiprocessing pool closed.')
+        pool.join()
+        logger.info('Multiprocessing pool joined.')
         stmts = {
             pmid: stmt_list for res_dict in res
             for pmid, stmt_list in res_dict.items()
@@ -494,7 +516,7 @@ def process_reach_str(reach_json_str, pmid):
 
 
 def process_reach_from_s3(pmid):
-    reach_json_str = s3_client.get_reach_json_str(pmid)
+    reach_json_str = s3_client.get_reader_json_str('reach', pmid)
     if reach_json_str is None:
         return []
     else:
@@ -511,7 +533,7 @@ def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
         logger.error('REACH output missing JSON for %s' % pmid)
         return {pmid: []}
     # Upload the REACH output to S3
-    s3_client.put_reach_output(full_json, pmid, reader_version, source_text)
+    s3_client.put_reader_output('reach', full_json, pmid, reader_version, source_text)
     # Process the REACH output with INDRA
     # Convert the JSON object into a string first so that a series of string
     # replacements can happen in the REACH processor
@@ -551,6 +573,9 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
         pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
         }
     pool.close()
+    logger.info('Multiprocessing pool closed.')
+    pool.join()
+    logger.info('Multiprocessing pool joined.')
     """
     logger.info('Uploaded REACH JSON for %d files to S3 (%d failures)' %
         (num_uploaded, num_failures))
@@ -658,6 +683,9 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     logger.info('Processing REACH JSON from S3 in parallel')
     res = pool.map(process_reach_from_s3, pmids_read.keys())
     pool.close()
+    logger.info('Multiprocessing pool closed.')
+    pool.join()
+    logger.info('Multiprocessing pool joined.')
     s3_stmts = {
         pmid: stmt_list for res_dict in res
         for pmid, stmt_list in res_dict.items()
