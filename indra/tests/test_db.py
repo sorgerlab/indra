@@ -365,7 +365,7 @@ def test_id_handling_pmc_oa():
         ] + [
         (None, 'PMC5579538'),  # lookup pmid in db
         (None, 'PMC4238023'),  # lookup no pmid in db
-        ('26977217', 'PMC5142709'),  # wrong pmid
+        ('26977217', 'PMC5142709'),  # conflicting pmcid
         ]
     tr_inp = []
     for pmid, pmcid in oa_inp_tpl_list:
@@ -395,6 +395,11 @@ def test_id_handling_pmc_oa():
         expected_pairs,
         'DB text refs incorrect.'
         )
+
+    with open('review.txt', 'r') as f:
+        last_line = f.read().splitlines()[-1]
+        assert all([word in last_line for word in
+                    ['PMC4771487', 'PMC5142709', 'conflicting id data']])
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
