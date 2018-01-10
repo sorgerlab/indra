@@ -389,10 +389,10 @@ def read_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
                 outbuf=outbuf,
                 cleanup=cleanup
                 )
+        signal.alarm(0)
     except Exception as e:
         logger.error('Failed to process data for %s.' % pmid)
         logger.exception(e)
-    finally:
         signal.alarm(0)
         return
 
