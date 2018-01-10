@@ -544,7 +544,7 @@ class PmcManager(NihManager):
                                     % ([getattr(tr, i) for i in self.tr_cols],
                                        [tr_new[i] for i in self.tr_cols])
                                     )
-                            if i is 'pmcid':
+                            if i == 'pmcid':
                                 pmcids_to_skip.append(tr_new['pmcid'])
             else:
                 with open('review.txt', 'a') as f:
