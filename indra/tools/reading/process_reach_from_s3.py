@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     stmts = {}
     for ix, pmid in enumerate(pmid_list[start_ix:end_ix]):
-        reach_json_str = s3_client.get_reach_json_str(pmid)
+        reach_json_str = s3_client.get_reader_json_str('reach', pmid)
         # Logging message will have been produced by get_reach_output
         if reach_json_str is None:
             continue
