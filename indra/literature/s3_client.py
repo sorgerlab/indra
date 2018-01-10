@@ -51,8 +51,8 @@ def get_pmid_key(pmid):
     return prefix + pmid
 
 
-def get_reach_key(pmid):
-    return get_pmid_key(pmid) + '/reach'
+def get_reader_key(reader, pmid):
+    return get_pmid_key(pmid) + '/' + reader
 
 
 def filter_keys(prefix):
@@ -230,74 +230,77 @@ def put_abstract(pmid, text):
     client.put_object(Key=xml_key, Body=xml_gz, Bucket=bucket_name)
 
 
-def get_reach_metadata(pmid):
-    reach_key = get_reach_key(pmid)
+def get_reader_metadata(reader, pmid):
+    reading_key = get_reader_key(reader, pmid)
     try:
-        reach_gz_obj = client.get_object(Key=reach_key, Bucket=bucket_name)
+        reading_gz_obj = client.get_object(Key=reading_key, Bucket=bucket_name)
         logger.info("%s: found REACH output on S3; checking version" % pmid)
-        reach_metadata = reach_gz_obj['Metadata']
-        # The REACH version string comes back as str in Python 2, not unicode
+        reading_metadata = reading_gz_obj['Metadata']
+        # The reader version string comes back as str in Python 2, not unicode
         # Using str (instead of .decode) should work in both Python 2 and 3
-        reach_version = reach_metadata.get('reach_version')
-        if reach_version is not None:
-            reach_version = str(reach_version)
-        source_text = reach_metadata.get('source_text')
+        reader_version = reading_metadata.get('reader_version')
+        if reader_version is not None:
+            reader_version = str(reader_version)
+        source_text = reading_metadata.get('source_text')
         if source_text is not None:
             source_text = str(source_text)
     # Handle a missing object gracefully
     except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('No REACH output found on S3 for key %s' % reach_key)
-            reach_version = None
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            logger.info('No %s output found on S3 for key %s'
+                        % (reader, reading_key))
+            reader_version = None
             source_text = None
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
-    return (reach_version, source_text)
+    return (reader_version, source_text)
 
 
-def get_reach_output(pmid):
+def get_reader_output(reader, pmid):
     # Get the REACH JSON as unicode
-    reach_json_str = get_reach_json_str(pmid)
+    reader_json_str = get_reader_json_str(reader, pmid)
     # Now create the JSON object--the resulting obj will contain un-escaped
     # unicode data
-    if reach_json_str is None:
+    if reader_json_str is None:
         return None
     else:
-        reach_json = json.loads(reach_json_str)
-        return reach_json
+        reader_json = json.loads(reader_json_str)
+        return reader_json
 
 
-def get_reach_json_str(pmid):
-    reach_key = get_reach_key(pmid)
+def get_reader_json_str(reader, pmid):
+    reader_key = get_reader_key(reader, pmid)
     try:
-        reach_s3obj = client.get_object(Bucket=bucket_name, Key=reach_key)
+        reader_s3obj = client.get_object(Bucket=bucket_name, Key=reader_key)
     except botocore.exceptions.ClientError as e:
-        if e.response['Error']['Code'] =='NoSuchKey':
-            logger.info('No REACH output found on S3 for key %s' % reach_key)
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            logger.info('No %s output found on S3 for key %s'
+                        % (reader, reader_key))
             return None
         # If there was some other kind of problem, re-raise the exception
         else:
             raise e
-    #meta = reach_s3obj['Metadata']
-    reach_gz = reach_s3obj['Body'].read()
+    #meta = reader_s3obj['Metadata']
+    reader_gz = reader_s3obj['Body'].read()
     # Gunzip the the content
-    reach_bytes = zlib.decompress(reach_gz, 16+zlib.MAX_WBITS)
+    reader_bytes = zlib.decompress(reader_gz, 16+zlib.MAX_WBITS)
     # Convert from bytes to str (shouldn't affect content since all
     # Unicode should be escaped in the JSON)
-    reach_uni = reach_bytes.decode('utf-8')
-    return reach_uni
+    reader_uni = reader_bytes.decode('utf-8')
+    return reader_uni
 
 
-def put_reach_output(reach_output, pmid, reach_version, source_text):
-    if not isinstance(reach_version, basestring):
-        raise ValueError("REACH version must be a string.")
-    full_json_gz = gzip_string(json.dumps(reach_output), 'reach_output.json')
-    reach_key = get_reach_key(pmid)
-    reach_metadata = {'reach_version': reach_version,
-                      'source_text': source_text}
-    client.put_object(Key=reach_key, Body=full_json_gz, Bucket=bucket_name,
-                      Metadata=reach_metadata)
+def put_reader_output(reader, reader_output, pmid, reader_version, source_text):
+    if not isinstance(reader_version, basestring):
+        raise ValueError("Reader version must be a string.")
+    full_json_gz = gzip_string(json.dumps(reader_output),
+                               '%s_output.json' % reader)
+    reading_key = get_reader_key(reader, pmid)
+    reading_metadata = {'reader_version': reader_version,
+                        'source_text': source_text}
+    client.put_object(Key=reading_key, Body=full_json_gz, Bucket=bucket_name,
+                      Metadata=reading_metadata)
 
 
 def gzip_string(content, name):
