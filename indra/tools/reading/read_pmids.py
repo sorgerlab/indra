@@ -352,8 +352,10 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
 # SPARSER -- The following are methods to  process content with sparser.
 #==============================================================================
 
+
 def _timeout_handler(signum, frame):
     raise Exception('Timeout')
+
 
 def read_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
               cleanup=True):
@@ -523,9 +525,9 @@ def process_reach_from_s3(pmid):
         return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
-def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
+def upload_reach_readings(pmid, source_type, reader_version, output_dir=None):
+    logger.info('Uploading reach result for %s for %s.' % (source_type, pmid))
     # The prefixes should be PMIDs
-    pmid, source_text = pmid_info
     prefix_with_path = os.path.join(output_dir, pmid)
     full_json = join_json_files(prefix_with_path)
     # Check that all parts of the JSON could be assembled
@@ -533,7 +535,13 @@ def upload_process_pmid(pmid_info, output_dir=None, reader_version=None):
         logger.error('REACH output missing JSON for %s' % pmid)
         return {pmid: []}
     # Upload the REACH output to S3
-    s3_client.put_reader_output('reach', full_json, pmid, reader_version, source_text)
+    s3_client.put_reader_output('reach', full_json, pmid, reader_version,
+                                source_type)
+    return full_json
+
+
+def upload_process_pmid(pmid_json_tpl):
+    pmid, full_json = pmid_json_tpl
     # Process the REACH output with INDRA
     # Convert the JSON object into a string first so that a series of string
     # replacements can happen in the REACH processor
@@ -554,21 +562,20 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
         prefix = filename.split('.')[0]
         json_prefixes.add(prefix)
     # Make a list with PMID and source_text info
-    pmid_info = [
-        (json_prefix, pmid_info_dict[json_prefix].get('content_source'))
-        for json_prefix in json_prefixes
-        ]
+    logger.info("Uploading reading results for reach.")
+    pmid_json_tuples = [
+        (json_prefix, upload_reach_readings(
+            json_prefix,
+            pmid_info_dict[json_prefix].get('content_source'),
+            reader_version,
+            output_dir
+            )) for json_prefix in json_prefixes]
     # Create a multiprocessing pool
     logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
     # Get a multiprocessing pool.
     pool = mp.Pool(num_cores)
-    logger.info('Uploading and processing local REACH JSON files')
-    upload_process_pmid_func = functools.partial(
-        upload_process_pmid,
-        output_dir=output_dir,
-        reader_version=reader_version
-        )
-    res = pool.map(upload_process_pmid_func, pmid_info)
+    logger.info('Processing local REACH JSON files')
+    res = pool.map(upload_process_pmid, pmid_json_tuples)
     stmts_by_pmid = {
         pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
         }
