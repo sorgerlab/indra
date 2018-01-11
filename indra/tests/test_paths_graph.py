@@ -1,6 +1,6 @@
 import networkx
 import pygraphviz
-from indra.explanation import paths_graph
+from indra.explanation.paths_graph import paths_graph
 
 source = 'A'
 target = 'D'
