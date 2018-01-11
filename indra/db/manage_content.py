@@ -600,6 +600,7 @@ class PmcManager(NihManager):
                 # uploaded as new refs.
                 for tr_new in match_set:
                     tr_data_matched_set.add(tr_new)
+                    pmcids_to_skip.add(tr_new[id_idx('pmcid')])
 
                 # This condition only occurs if the records we got are
                 # internally inconsistent. This is rare, but it can happen.
