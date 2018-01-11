@@ -65,11 +65,32 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
     elif len(streams) > 1:
         print('More than 1 stream for job, returning first')
     log_stream_name = streams[0]['logStreamName']
-    lines = []
+    print("Getting log for %s/%s" % (job_name, job_id))
+    out_file = ('%s_%s.log' % (job_name, job_id)) if write_file else None
+    lines = get_log_by_name(log_group_name, log_stream_name, out_file)
+
+
+def get_log_by_name(log_group_name, log_stream_name, out_file=None):
+    """Download a log given the log's group and stream name.
+
+    Parameters
+    ----------
+    log_group_name : str
+        The name of the log group, e.g. /aws/batch/job.
+
+    log_stream_name : str
+        The name of the log stream, e.g. run_reach_jobdef/default/<UUID>
+
+    Returns
+    -------
+    lines : list[str]
+        The lines of the log as a list.
+    """
+    logs = boto3.client('logs')
     kwargs = {'logGroupName': log_group_name,
               'logStreamName': log_stream_name,
               'startFromHead': True}
-    print("Getting log for %s/%s" % (job_name, job_id))
+    lines = []
     while True:
         response = logs.get_log_events(**kwargs)
         # If we've gotten all the events already, the nextForwardToken for
@@ -83,8 +104,8 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
                           for evt in events]
             kwargs['nextToken'] = response.get('nextForwardToken')
         print('%d %s' % (len(lines), lines[-1]))
-    if write_file:
-        with open('%s_%s.log' % (job_name, job_id), 'wt') as f:
+    if out_file:
+        with open(out_file, 'wt') as f:
             for line in lines:
                 f.write(line)
     return lines
@@ -124,3 +145,4 @@ def analyze_reach_log(log):
     pmids_finished = get_finished(log)
     pmids_not_done = set(pmids_started) - set(pmids_finished)
     return pmids_not_done
+
