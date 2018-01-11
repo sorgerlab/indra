@@ -563,13 +563,20 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
         json_prefixes.add(prefix)
     # Make a list with PMID and source_text info
     logger.info("Uploading reading results for reach.")
-    pmid_json_tuples = [
-        (json_prefix, upload_reach_readings(
-            json_prefix,
-            pmid_info_dict[json_prefix].get('content_source'),
-            reader_version,
-            output_dir
-            )) for json_prefix in json_prefixes]
+    pmid_json_tuples = []
+    for json_prefix in json_prefixes:
+        try:
+            full_json = upload_reach_readings(
+                json_prefix,
+                pmid_info_dict[json_prefix].get('content_source'),
+                reader_version,
+                output_dir
+                )
+            pmid_json_tuples.append((json_prefix, full_json))
+        except Exception as e:
+            logger.error("Caught an exception while trying to upload reach "
+                         "reading results onto s3 for %s." % json_prefix)
+            logger.exception(e)
     # Create a multiprocessing pool
     logger.info('Creating a multiprocessing pool with %d cores' % num_cores)
     # Get a multiprocessing pool.
