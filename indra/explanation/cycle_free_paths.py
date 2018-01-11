@@ -67,7 +67,7 @@ from copy import copy, deepcopy
 import networkx as nx
 from explanation import paths_graph
 import pickle
-
+import numpy as np
 
 def cycle_free_paths_graph(pg, source, target, path_length):
     """Compute a pre cycle free paths graph.
@@ -225,7 +225,7 @@ def _initialize_cfpg(pg, source, target):
     pg_0 = _prune(pg, nodes_to_prune, source, target)
     # Initialize an empty list of tags for each node
     tags = dict([(node, []) for node in pg_0.nodes_iter()])
-    # Add source tag to all nodes except source itself
+    # Add source tag to all nodes
     _add_tag(tags, source, [v for v in pg_0.nodes()])
     return (pg_0, tags)
 
@@ -530,6 +530,105 @@ def sample_many_paths(src_0, tgt_0, dic, n):
         p = sample_single_path(src_0, tgt_0, dic)
         P.append(p)
     return P
+
+
+def sample_single_path_precfpg(source, target, H, t):
+    """Sample a single cycle-free path.
+
+    The sampling procedure uses the tag sets to trace out cycle-free
+    paths. If we have reached a node *v* via the path *p* then we can choose
+    the successor *u* of *v* as the next node only if *p* appears in the tag
+    set of u.
+
+    Parameters
+    ----------
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+    H : networkx.DiGraph()
+        The cycle free paths graph.
+    t : dict
+        The tags dictionary.
+
+    Returns
+    -------
+    list of strings
+        A randomly sampled, non-cyclic path. Nodes are represented as node
+        names only, i.e., the depth prefixes are removed.
+    """
+    path = [source]
+    path_names = [source[1]]
+    current = source
+    while current != target:
+        next = _cf_succ(H, t, path, current)
+        """ a sanity check; since I have not stree-tested the code yet """
+        assert next[1] not in path_names, "Error: found a cycle"
+        path.append(next)
+        path_names.append(next[1])
+        current = next
+    return tuple(path)
+
+
+def sample_many_paths_precfpg(source, target, H, t, n):
+    """Sample many cycle-free paths.
+
+    Parameters
+    ----------
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+    H : networkx.DiGraph()
+        The cycle free paths graph.
+    t : dict
+        The tags dictionary.
+
+    Returns
+    -------
+    list of lists
+        Each item in the list is a list of strings representing a path. Note
+        that the paths may not be unique.
+    """
+    # If the graph is empty, then there are no paths
+    if not H:
+        return []
+    P = []
+    for i in range(0, n):
+        p = sample_single_path_precfpg(source, target, H, t)
+        P.append(p)
+    return P
+
+
+def _cf_succ(H, t, path, v):
+    """Randomly choose a successor node of v.
+
+    Parameters
+    ----------
+    H : networkx.DiGraph()
+        The cycle free paths graph.
+    t : dict
+        The tags dictionary.
+    path : list
+        The path so far (list of nodes).
+    v : tuple
+        The current node.
+
+    Returns
+    -------
+    tuple
+        Randomly chosen successor node on a non-cyclic path.
+    """
+    succ = []
+    for u in H.successors(v):
+        if set(path) <= set(t[u]):
+            succ.append(u)
+    # Note that the circuitous way of choosing from this list is the result of
+    # the odd way numpy.random handles lists of lists (it excepts).
+    idx_list = list(range(len(succ)))
+    w_idx = np.random.choice(idx_list)
+    w = succ[w_idx]
+    return w
 
 
 def draw(g, filename):

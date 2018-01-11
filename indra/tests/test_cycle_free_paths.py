@@ -50,8 +50,8 @@ def test_pg_0():
     # Because no nodes are pruned, the initialized "cycle free" paths graph
     # will be the same as the path graph we started with
     assert pg_0 == pg_raw
-    assert tags == {(0, 'A'): [], (1, 'B'): ['A'], (2, 'C'): ['A'],
-                    (3, 'D'): ['A']}
+    assert tags == {(0, 'A'): [(0, 'A')], (1, 'B'): [(0, 'A')],
+                    (2, 'C'): [(0, 'A')], (3, 'D'): [(0, 'A')]}
 
     # The next graph contains a cycle passing through the source node, A,
     # and no acyclic paths
@@ -70,8 +70,8 @@ def test_pg_0():
     (pg_0, tags) = cfp._initialize_cfpg(pg_raw, (0, source), (length, target))
     assert set(pg_0.edges()) == set([((0, 'A'), (1, 'B')), ((1, 'B'), (2, 'C')),
                                      ((2, 'C'), (3, 'D'))])
-    assert tags == {(0, 'A'): [], (1, 'B'): ['A'], (2, 'C'): ['A'],
-                    (3, 'D'): ['A']}
+    assert tags == {(0, 'A'): [(0, 'A')], (1, 'B'): [(0, 'A')],
+                    (2, 'C'): [(0, 'A')], (3, 'D'): [(0, 'A')]}
 
     # This test stems from a randomly-generated network where no paths
     # were found--guarantees that the problem is NOT that pg_0 is empty
@@ -102,7 +102,7 @@ def test_pg():
     assert dic_PG[0][1]
 
 
-def test_sampling():
+def test_sampling_precfpg():
     """Test sampling of problematic graph.
 
     The issue with this graph is that the operation on (1, 3) would prune out
@@ -128,7 +128,7 @@ def test_sampling():
     tgt = (length, target)
     dic_PG = cfp.cycle_free_paths_graph(pg_raw, src, tgt, length)
     G_cf, T = dic_PG[length - 1]
-    P = cfp.sample_many_paths(src, tgt, G_cf, T, 1000)
+    P = cfp.sample_many_paths_precfpg(src, tgt, G_cf, T, 1000)
 
 if __name__ == '__main__':
-    test_sampling()
+    test_sampling_precfpg()
