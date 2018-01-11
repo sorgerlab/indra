@@ -3,7 +3,11 @@ from copy import copy, deepcopy
 import networkx as nx
 from explanation import paths_graph
 
-def cycle_free_paths_graph(pg, source, target, path_length):
+
+def from_graph(g, source, target, path_length):
+    pass
+
+def from_pg(pg, source, target, path_length):
     """Compute a pre cycle free paths graph.
 
     Starting from the "raw" (i.e., containing cycles) paths graph, and given a
@@ -128,6 +132,11 @@ def cycle_free_paths_graph(pg, source, target, path_length):
     return dic_PG
 
 
+class PreCFPG(object):
+    def __init__(self, pre_cfpg, tags):
+        pass
+
+
 def _initialize_cfpg(pg, source, target):
     """Initialize cycle free paths graph data structures.
 
@@ -165,7 +174,7 @@ def _initialize_cfpg(pg, source, target):
 
 
 def _prune(pg, nodes_to_prune, source, target):
-    """Iteratively prunes nodes from a copy of the paths graph.
+    """Iteratively prunes nodes from (a copy of) a paths graph or CFPG.
 
     We prune the graph *pg* iteratively by the following procedure:
       1. Remove the nodes given by *nodes_to_prune* from the graph.
