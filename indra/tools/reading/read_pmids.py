@@ -660,6 +660,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
             logger.error('Problem running REACH:')
             logger.error('Stdout: %s' % p_out.decode('utf-8'))
             logger.error('Stderr: %s' % p_err.decode('utf-8'))
+            raise Exception('REACH crashed')
 
         # Process JSON files from local file system, process to INDRA
         # Statements and upload to S3
