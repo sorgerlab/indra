@@ -1,8 +1,8 @@
 import numpy as np
 from copy import copy, deepcopy
 import networkx as nx
-from explanation import paths_graph
-
+from . import paths_graph
+from .util import prune
 
 def from_graph(g, source, target, path_length):
     pass
@@ -88,7 +88,7 @@ def from_pg(pg, source, target, path_length):
                                       if v[1] == x[1] and v[0] != k]
                     # If there are no nodes to prune then just add the tag 'x'
                     # to all the nodes in g_x_f but not to x
-                    g_x_prune = _prune(g_x, nodes_to_prune, source, target)
+                    g_x_prune = prune(g_x, nodes_to_prune, source, target)
                     # If target or x gets pruned then x will contribute
                     # nothing to G_k
                     if (target not in g_x_prune) or (x not in g_x_prune):
@@ -129,11 +129,11 @@ def from_pg(pg, source, target, path_length):
         else:
             dic_PG = {0: dic_PG[k]}
         round_counter += 1
-    return dic_PG
+    return dic_PG[path_length - 1]
 
 
 class PreCFPG(object):
-    def __init__(self, pre_cfpg, tags):
+    def __init__(self, source, target, pre_cfpg, tags):
         pass
 
 
@@ -165,7 +165,7 @@ def _initialize_cfpg(pg, source, target):
                           if (v != source) and (v != target) and \
                              ((v[1] == source[1]) or (v[1] == target[1]))])
     # Get the paths graph after initial source/target cycle pruning
-    pg_0 = _prune(pg, nodes_to_prune, source, target)
+    pg_0 = prune(pg, nodes_to_prune, source, target)
     # Initialize an empty list of tags for each node
     tags = dict([(node, []) for node in pg_0.nodes_iter()])
     # Add source tag to all nodes
@@ -173,53 +173,6 @@ def _initialize_cfpg(pg, source, target):
     return (pg_0, tags)
 
 
-def _prune(pg, nodes_to_prune, source, target):
-    """Iteratively prunes nodes from (a copy of) a paths graph or CFPG.
-
-    We prune the graph *pg* iteratively by the following procedure:
-      1. Remove the nodes given by *nodes_to_prune* from the graph.
-      2. Identify nodes (other than the source node) that now have no
-         incoming edges.
-      3. Identify nodes (other than the target node) that now have no outgoing
-         edges.
-      4. Set *nodes_to_prune* to the nodes identified in steps 2 and 3.
-      5. Repeat from 1 until there are no more nodes to prune.
-
-    Parameters
-    ----------
-    pg : networkx.DiGraph
-        Paths graph to prune.
-    nodes_to_prune : list
-        Nodes to prune from paths graph.
-    source : tuple
-        Source node, of the form (0, source_name).
-    target : tuple
-        Target node, of the form (target_depth, source_name).
-
-    Returns
-    -------
-    networkx.DiGraph()
-        Pruned paths graph.
-    """
-    # First check if we are pruning any nodes to prevent unnecessary copying
-    # of the paths graph
-    if not nodes_to_prune:
-        return pg
-    # Make a copy of the graph
-    pg_pruned = pg.copy()
-    # Perform iterative pruning
-    while nodes_to_prune:
-        # Remove the nodes in our pruning list
-        pg_pruned.remove_nodes_from(nodes_to_prune)
-        # Make a list of nodes whose in or out degree is now 0 (making
-        # sure to exclude the source and target, whose depths are at 0 and
-        # path_length, respectively)
-        no_in_edges = [node for node, in_deg in pg_pruned.in_degree_iter()
-                        if in_deg == 0 and node != source]
-        no_out_edges = [node for node, out_deg in pg_pruned.out_degree_iter()
-                        if out_deg == 0 and node != target]
-        nodes_to_prune = set(no_in_edges + no_out_edges)
-    return pg_pruned
 
 
 # Function for updating node tags in place

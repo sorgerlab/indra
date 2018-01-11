@@ -64,8 +64,8 @@ We explain below the detailed construction of G_cf from this perpective.
 import random
 import itertools
 import networkx as nx
-from explanation import paths_graph
-from explanation import pre_cfpg as pcf
+from . import paths_graph
+from . import pre_cfpg as pcf
 import pickle
 import numpy as np
 
@@ -292,7 +292,7 @@ if __name__ == '__main__':
             src = (0, source)
             tgt = (length, target)
             # The "pre" CFPG
-            dic_PG = pcf.cycle_free_paths_graph(pg_raw, src, tgt, length)
+            dic_PG = pcf.from_pg(pg_raw, src, tgt, length)
             # FIXME: Why isn't the target in dic_PG[len-1]?
             G_0, T_0 = dic_PG[len(dic_PG)-1]
             # The above is the output of the iterative method

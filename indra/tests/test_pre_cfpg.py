@@ -1,6 +1,7 @@
 import networkx as nx
-from indra.explanation import paths_graph as pg
-from indra.explanation import pre_cfpg as pcf
+from indra.explanation.paths_graph import paths_graph as pg
+from indra.explanation.paths_graph import pre_cfpg as pcf
+from indra.explanation.paths_graph.util import prune
 
 g1_uns = nx.DiGraph()
 g1_uns.add_edges_from((('A', 'B'), ('B', 'C'), ('C', 'D')))
@@ -23,7 +24,7 @@ def test_prune():
     pg_raw_edges = pg_raw.edges()
     nodes_to_prune = [(2, 'S')]
     # Prune the graph
-    pg_pruned = pcf._prune(pg_raw, nodes_to_prune, (0, 'S'), (length, 'T'))
+    pg_pruned = prune(pg_raw, nodes_to_prune, (0, 'S'), (length, 'T'))
     # Make sure we didn't change the original graphs or node lists
     assert nodes_to_prune == [(2, 'S')]
     assert pg_raw.edges() == pg_raw_edges
@@ -91,11 +92,9 @@ def test_pg():
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
     pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
-    dic_PG = pcf.cycle_free_paths_graph(pg_raw, (0, source), (length, target),
-                                        length)
-    assert len(dic_PG) == length
-    assert dic_PG[0][0]
-    assert dic_PG[0][1]
+    pcfpg, tags = pcf.from_pg(pg_raw, (0, source), (length, target), length)
+    assert pcfpg
+    assert tags
 
 
 def test_sampling_precfpg():
@@ -122,9 +121,8 @@ def test_sampling_precfpg():
     pg_raw = pg.paths_graph(g, source, target, length, f_level, b_level)
     src = (0, source)
     tgt = (length, target)
-    dic_PG = pcf.cycle_free_paths_graph(pg_raw, src, tgt, length)
-    G_cf, T = dic_PG[length - 1]
-    P = pcf.sample_many_paths_precfpg(src, tgt, G_cf, T, 1000)
+    pre_cfpg, tags = pcf.from_pg(pg_raw, src, tgt, length)
+    P = pcf.sample_many_paths_precfpg(src, tgt, pre_cfpg, tags, 1000)
 
 if __name__ == '__main__':
-    test_sampling_precfpg()
+    test_prune()
