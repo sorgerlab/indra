@@ -46,23 +46,23 @@ def wait_for_complete(queue_name, job_list=None, poll_interval=10):
 
     total_time = 0
     while True:
-        not_done = []
-        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING',
-                       'RUNNING'):
-            not_done += get_jobs_by_status(status, job_list)
+        pre_run = []
+        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
+            pre_run += get_jobs_by_status(status, job_list)
+        running = get_jobs_by_status('RUNNING', job_list)
         failed = get_jobs_by_status('FAILED', job_list)
         done = get_jobs_by_status('SUCCEEDED', job_list)
 
-        logger.info(
-            '(%d s)=(not done: %d, failed: %d, done: %d)' %
-            (total_time, len(not_done), len(failed), len(done))
-            )
+        logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
+                    (total_time, len(pre_run), len(running),
+                     len(failed), len(done)))
 
         if job_list:
             if (len(failed) + len(done)) == len(job_list):
                 return 0
         else:
-            if (len(failed) + len(done) > 0) and (len(not_done) == 0):
+            if (len(failed) + len(done) > 0) and \
+                (len(pre_run) + len(running) == 0):
                 return 0
 
         tag_instances()
