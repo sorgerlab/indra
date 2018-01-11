@@ -449,7 +449,7 @@ class PmcManager(NihManager):
                         'content',)
 
     def get_missing_pmids(self, tr_data):
-        "Try to get missing pmids."
+        "Try to get missing pmids using the pmc client."
         num_missing = 0
         num_found = 0
 
@@ -499,12 +499,25 @@ class PmcManager(NihManager):
     def filter_text_refs(self, db, tr_data):
         "Try to reconcile the data we have with what's already on the db."
         logger.info("Beginning to filter text refs...")
+
+        # This is a helper for accessing the data tuples we create
+        def id_idx(id_type):
+            return self.tr_cols.index(id_type)
+
+        # If there are not actual refs to work with, don't waste time.
         if not len(tr_data):
             return [], []
 
+        # Check for any pmids we can get from the pmc client (this is slow!)
         self.get_missing_pmids(tr_data)
 
-        # Get all text refs that match any of the id data we have
+        # Turn the list of dicts into a set of tuples
+        tr_data_set = {tuple([entry[id_type] for id_type in self.tr_cols])
+                       for entry in tr_data}
+
+        # Get all text refs that match any of the id data we have. This means
+        # each text ref WILL find a match in the data we have (unless something
+        # is seriously broken.
         or_list = []
         for id_type in self.tr_cols:
             id_list = [entry[id_type] for entry in tr_data
@@ -513,52 +526,95 @@ class PmcManager(NihManager):
                 or_list.append(getattr(db.TextRef, id_type).in_(id_list))
         tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
 
-        tr_data_idx_dict = {i: {e[i]: e for e in tr_data if e[i] is not None}
-                            for i in self.tr_cols}
+        # Create an index of tupled data entries for quick lookups by any id
+        # type, for example tr_data_idx_dict['pmid'][<a pmid>] will get the
+        # tuple with all the id data. This avoids several iterations through
+        # the list of text ref data dicts on for each text ref, at the cost of
+        # using extra memory.
+        tr_data_idx_dict = {id_type: {e[id_idx(id_type)]: e
+                                      for e in tr_data_set
+                                      if e[id_idx(id_type)] is not None}
+                            for id_type in self.tr_cols}
 
         # Look for updates to the existing text refs
-        tr_data_matched_list = []
-        pmcids_to_skip = []
+        tr_data_matched_set = set()
+        pmcids_to_skip = set()
         for tr in tr_list:
-            match_list = []
-            for i, tr_data_idx in tr_data_idx_dict.items():
-                candidate = tr_data_idx.get(getattr(tr, i))
-                if candidate is not None and candidate not in match_list:
-                    match_list.append(candidate)
-            if len(match_list) == 0:
-                continue  # This would be a little weird...
-            elif len(match_list) == 1:
-                tr_new = match_list.pop()
-                if tr_new not in tr_data_matched_list:
-                    tr_data_matched_list.append(tr_new)
-                for i in self.tr_cols:
-                    if getattr(tr, i) is None:
+            match_set = set()
+
+            # Find the matches in the data. We continue looking after finding
+            # one match in case there are any inconsistencies which need to be
+            # considered.
+            for id_type, tr_data_idx in tr_data_idx_dict.items():
+                candidate = tr_data_idx.get(getattr(tr, id_type))
+                if candidate is not None:
+                    match_set.add(candidate)
+
+            # As per the process of getting the tr_list, every tr MUST have a
+            # match, or else something is broken.
+            assert match_set, "No matches found, which is impossible."
+
+            # Assuming we found exactly one matched data entry, we can now look
+            # for new id data (for example manuscript ids) and update the tr
+            # objects. These changes are transmuted to the db via the commit
+            # command below.
+            if len(match_set) == 1:
+                tr_new = match_set.pop()
+
+                # This is how we tell what doesn't need to be added to the db.
+                tr_data_matched_set.add(tr_new)
+
+                # Go through all the id_types
+                for i, id_type in enumerate(self.tr_cols):
+                    # Check if the text ref is missing that id.
+                    if getattr(tr, id_type) is None:
+                        # If so, and if our new data does have that id, update
+                        # the text ref.
                         if tr_new[i] is not None:
-                            setattr(tr, i, tr_new[i])
+                            setattr(tr, id_type, tr_new[i])
                     else:
+                        # Check to see that all the ids agree. If not, report
+                        # it in the review.txt file.
+                        # NOTE: If this is ever done on AWS or through a
+                        # container, the review file MUST be loaded somewhere
+                        # it won't disappear. (such as s3). Perhaps these could
+                        # be logged on the database?
                         if tr_new[i] is not None \
-                         and tr_new[i] != getattr(tr, i):
+                         and tr_new[i] != getattr(tr, id_type):
                             with open('review.txt', 'a') as f:
                                 f.write(
                                     'Got conflicting id data: in db %s vs %s.'
-                                    % ([getattr(tr, i) for i in self.tr_cols],
-                                       [tr_new[i] for i in self.tr_cols])
+                                    % ([getattr(tr, id_type)
+                                        for id_type in self.tr_cols],
+                                       [tr_new[i]
+                                        for i in range(len(self.tr_cols))])
                                     )
-                            if i == 'pmcid':
-                                pmcids_to_skip.append(tr_new['pmcid'])
+                            # If the conflict was with a pmcid, don't try to
+                            # add the text content.
+                            if id_type == 'pmcid':
+                                pmcids_to_skip.add(
+                                    tr_new[id_idx('pmcid')]
+                                    )
             else:
+                # These still matched something in the db, so they shouldn't be
+                # uploaded as new refs.
+                for tr_new in match_set:
+                    tr_data_matched_set.add(tr_new)
+
+                # This condition only occurs if the records we got are
+                # internally inconsistent. This is rare, but it can happen.
                 with open('review.txt', 'a') as f:
                     f.write(
                         ('Got multiple matches for data from %s: %s.'
                          ' Please review.\n')
-                        % (self.my_source, match_list)
+                        % (self.my_source, match_set)
                         )
+
+        # This applies all the changes made to the text refs to the db.
         db.commit("Failed to update with new ids.")
 
         # Now update the text refs with any new refs that were found
-        filtered_tr_records = [tuple([e[i] for i in self.tr_cols])
-                               for e in tr_data
-                               if e not in tr_data_matched_list]
+        filtered_tr_records = tr_data_set.difference(tr_data_matched_set)
 
         return filtered_tr_records, pmcids_to_skip
 
