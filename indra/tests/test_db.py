@@ -31,6 +31,7 @@ TEST_HOST = None
 TEST_HOST_TYPE = ''
 key_list = list(test_defaults.keys())
 key_list.sort()
+report = ''
 for k in key_list:
     v = test_defaults[k]
     m = re.match('(\w+)://.*?/([\w.]+)', v)
@@ -45,7 +46,7 @@ for k in key_list:
         db = DatabaseManager(v, sqltype=sqltype)
         db._clear(force=True)
     except Exception as e:
-        print("Tried to use %s, but failed due to:\n%s" % (k, e))
+        report += "Tried to use %s, but failed due to:\n%s\n" % (k, e)
         continue  # Clearly this test table won't work.
     if db_name.endswith('.db'):
         TEST_FILE = db_name
@@ -58,7 +59,8 @@ for k in key_list:
     print("Using test database %s." % k)
     break
 else:
-    raise SkipTest("Not able to start up any of the available test hosts.")
+    raise SkipTest("Not able to start up any of the available test hosts:\n"
+                   + report)
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
@@ -244,23 +246,42 @@ def test_full_upload():
     # code paths that the real system might experience, but on a much smaller
     # (thus faster) scale. Errors in the ftp service will not be caught by
     # this test.
+
+    # Test the medline/pubmed upload.
     db = get_db_with_content()
     tr_list = db.select_all('text_ref')
     assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
         'All text_refs MUST have pmids by now.'
+
+    # Test the pmc oa upload.
     PmcOA(ftp_url=TEST_FTP, local=True).populate(db)
-    tc_list = db.select_all(
-        'text_content',
-        db.TextContent.text_type == texttypes.FULLTEXT)
-    assert len(tc_list), "No fulltext was added."
+    tcs_pmc = db.filter_query(
+        db.TextContent,
+        db.TextContent.source == PmcOA.my_source).count()
+    assert tcs_pmc, "No pmc oa fulltext was added."
+    trs_w_pmcids = db.filter_query(
+        db.TextRef,
+        db.TextRef.pmcid.isnot(None)).count()
+    assert trs_w_pmcids >= tcs_pmc,\
+        "Only %d of at least %d pmcids added." % (trs_w_pmcids, tcs_pmc)
+
+    # Test the manuscripts upload.
     Manuscripts(ftp_url=TEST_FTP, local=True).populate(db)
-    tc_list = db.select_all(
-        'text_content',
+    tcs_manu = db.filter_query(
+        db.TextContent,
         db.TextContent.source == Manuscripts.my_source
-        )
-    assert len(tc_list), "No manuscripts uploaded."
-    tc_list = db.select_all('text_content')
+        ).count()
+    assert tcs_manu, "No manuscripts uploaded."
+    trs_w_mids = db.filter_query(
+        db.TextRef,
+        db.TextRef.manuscript_id.isnot(None)
+        ).count()
+    assert trs_w_mids >= tcs_manu,\
+        "Only %d of at least %d manuscript ids added." % (trs_w_mids, tcs_manu)
+
+    # Some overal checks.
+    tc_list = db.select_all(db.TextContent)
     set_exp = {('manuscripts', 'xml', 'fulltext'),
                ('pmc_oa', 'xml', 'fulltext'),
                ('pubmed', 'text', 'abstract')}
@@ -328,6 +349,9 @@ def test_id_handling_pmc_oa():
         ] + [
         (None, 'PMCcaseC%d' % i) for i in range(2)
         ] + [
+        ('caseMisMatchA', 'PMCcaseMisMatchB'),
+        ('caseMisMatchB', 'PMCcaseMisiMatchB'),
+        ('caseMultiMatch', 'PMCcaseMultiMatch'),
         ('28884161', None),
         ('26977217', 'PMC4771487')
         ]
@@ -344,7 +368,10 @@ def test_id_handling_pmc_oa():
         ] + [
         (None, 'PMC5579538'),  # lookup pmid in db
         (None, 'PMC4238023'),  # lookup no pmid in db
-        ('26977217', 'PMC5142709'),  # wrong pmid
+        ('26977217', 'PMC5142709'),  # conflicting pmcid
+        ('caseMisMatchB', 'PMCcaseMisMatchA'),  # multiple matches
+        ('caseMultiMatch', 'PMCnotmatching'),
+        ('notmatching', 'PMCcaseMultiMatch'),
         ]
     tr_inp = []
     for pmid, pmcid in oa_inp_tpl_list:
@@ -366,7 +393,10 @@ def test_id_handling_pmc_oa():
         ('28884161', 'PMC5579538'),
         ('26977217', 'PMC4771487'),
         (None, 'PMCcaseB1'),
-        ('25409783', 'PMC4238023')
+        ('25409783', 'PMC4238023'),
+        ('caseMisMatchA', 'PMCcaseMisMatchB'),
+        ('caseMisMatchB', 'PMCcaseMisiMatchB'),
+        ('caseMultiMatch', 'PMCcaseMultiMatch'),
         ]
     actual_pairs = [(tr.pmid, tr.pmcid) for tr in db.select_all('text_ref')]
     assert_contents_equal(
@@ -374,6 +404,11 @@ def test_id_handling_pmc_oa():
         expected_pairs,
         'DB text refs incorrect.'
         )
+
+    with open('review.txt', 'r') as f:
+        last_line = f.read().splitlines()[-1]
+        assert all([word in last_line for word in
+                    ['PMC4771487', 'PMC5142709', 'conflicting id data']])
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
