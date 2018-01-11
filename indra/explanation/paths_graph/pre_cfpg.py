@@ -54,7 +54,7 @@ def from_pg(pg, source, target, path_length):
         those nodes lying on a cycle free path).
     """
     # Initialize the cycle-free paths graph and the tag dictionary
-    dic_PG = {0: _initialize_cfpg(pg, source, target)}
+    dic_PG = {0: _initialize_pre_cfpg(pg, source, target)}
     round_counter = 1
     # Perform CFPG generation in successive rounds to ensure convergence
     while True:
@@ -137,8 +137,8 @@ class PreCFPG(object):
         pass
 
 
-def _initialize_cfpg(pg, source, target):
-    """Initialize cycle free paths graph data structures.
+def _initialize_pre_cfpg(pg, source, target):
+    """Initialize pre- cycle free paths graph data structures.
 
     Parameters
     ----------
