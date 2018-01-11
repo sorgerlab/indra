@@ -349,6 +349,9 @@ def test_id_handling_pmc_oa():
         ] + [
         (None, 'PMCcaseC%d' % i) for i in range(2)
         ] + [
+        ('caseMisMatchA', 'PMCcaseMisMatchB'),
+        ('caseMisMatchB', 'PMCcaseMisiMatchB'),
+        ('caseMultiMatch', 'PMCcaseMultiMatch'),
         ('28884161', None),
         ('26977217', 'PMC4771487')
         ]
@@ -366,6 +369,9 @@ def test_id_handling_pmc_oa():
         (None, 'PMC5579538'),  # lookup pmid in db
         (None, 'PMC4238023'),  # lookup no pmid in db
         ('26977217', 'PMC5142709'),  # conflicting pmcid
+        ('caseMisMatchB', 'PMCcaseMisMatchA'),  # multiple matches
+        ('caseMultiMatch', 'PMCnotmatching'),
+        ('notmatching', 'PMCcaseMultiMatch'),
         ]
     tr_inp = []
     for pmid, pmcid in oa_inp_tpl_list:
@@ -387,7 +393,10 @@ def test_id_handling_pmc_oa():
         ('28884161', 'PMC5579538'),
         ('26977217', 'PMC4771487'),
         (None, 'PMCcaseB1'),
-        ('25409783', 'PMC4238023')
+        ('25409783', 'PMC4238023'),
+        ('caseMisMatchA', 'PMCcaseMisMatchB'),
+        ('caseMisMatchB', 'PMCcaseMisiMatchB'),
+        ('caseMultiMatch', 'PMCcaseMultiMatch'),
         ]
     actual_pairs = [(tr.pmid, tr.pmcid) for tr in db.select_all('text_ref')]
     assert_contents_equal(
