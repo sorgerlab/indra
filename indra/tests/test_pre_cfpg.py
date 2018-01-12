@@ -179,5 +179,3 @@ def test_sampling_precfpg():
     pre_cfpg = pcf.from_pg(pg_raw, src, tgt, length)
     paths = pre_cfpg.sample_paths(1000)
 
-if __name__ == '__main__':
-    test_from_graph_with_levels_bad_depth()

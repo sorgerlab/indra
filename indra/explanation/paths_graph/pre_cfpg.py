@@ -7,6 +7,59 @@ from .util import prune, check_reach_depth
 
 def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
                back_reachset=None):
+    """Compute a pre- cycle free paths graph.
+
+    Starting from the "raw" (i.e., containing cycles) paths graph, and given a
+    target path length n, the algorithm iterates over each "level" in the graph
+    0 <= k <= n where level 0 consists only of the source node and level n
+    consists only of the target.
+
+    Each level k consists of a set of nodes, X; we examine each node x in X and
+    identify the subset of nodes that are reachable in both the forward and
+    backward directions from x. If any of the nodes in the forward reach
+    subgraph contain x itself (but at a different depth), this represents a
+    cyclic path back through x that is then pruned.
+
+    Each node x therefore defines its own subgraph of cycle free paths, g_x.
+    After iterating over all x in X, we combine these subgraphs into the
+    (in-progress) cycle free paths graph H_k. H_k therefore consists of the
+    superset of nodes of all the subgraphs g_x for level k. When merging these
+    subgraphs we prevent the re-introduction of cyclic paths by annotating each
+    node in the graph with a list of "tags". The tags for any given node
+    consist of a list of nodes lying at prior (upstream) levels. Therefore
+    during sampling, transitions from an upstream node to a downstream node are
+    only permissible if all nodes in the path up to a certain level are
+    contained in the tag set of the downstream node.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph()
+        Original graph used to compute the pre-CFPG.
+    source_name : str
+        Name of the source node.
+    target_name : str
+        Name of the target node.
+    path_length : int
+        Desired path length.
+    fwd_reachset : Optional[dict]
+        Dictionary representing the forward reachset computed over the original
+        graph g up to a maximum depth greater than the requested path length.
+        If not provided, the forward reach set is calculated up to the
+        requested path length up to the requested path length by calling
+        paths_graph.get_reachable_sets.
+    back_reachset : Optional[dict]
+        Dictionary representing the backward reachset computed over the
+        original graph g up to a maximum depth greater than the requested path
+        length.  If not provided, the backward reach set is calculated up to
+        the requested path length up to the requested path length by calling
+        paths_graph.get_reachable_sets.
+
+    Returns
+    -------
+    PreCFPG
+        A instance of the PreCFPG the containing the pre- cycle free paths
+        graph.
+    """
     # If the reachable sets aren't provided by the user, compute them here
     # with a maximum depth given by the target path length.
     if fwd_reachset is None or back_reachset is None:
@@ -60,12 +113,9 @@ def from_pg(pg, source_name, target_name, path_length):
 
     Returns
     -------
-    tuple : (networkx.DiGraph(), dict)
-        The initialized, not-yet cycle free paths graph consists of the
-        paths graph remaining after cycles through the source or target
-        nodes are removed. The dict represents an initial set of tags
-        defining the permissible forward nodes from a given node (i.e.,
-        those nodes lying on a cycle free path).
+    PreCFPG
+        A instance of the PreCFPG the containing the pre- cycle free paths
+        graph.
     """
     # Initialize the cycle-free paths graph and the tag dictionary
     source_node = (0, source_name)
@@ -154,6 +204,41 @@ def from_pg(pg, source_name, target_name, path_length):
 
 
 class PreCFPG(object):
+    """Representation of a pre- cycle free paths graph with associated methods.
+
+    The pre- cycle free paths graph consists of the paths graph remaining after
+    cycles through the source or target nodes are removed. However, paths
+    through the pre-CFPG node structure itself are not guaranteed to be cycle
+    free; instead, cycle-free paths can be sampled by taking into account
+    the tags associated with each node, representing the possible cycle-free
+    histories of the node in terms of other upstream nodes.
+
+    As with the "raw" paths graph (containing cycles), nodes in the pre-CFPG
+    consist of tuples with two elements: (depth, name).
+
+    Parameters
+    ----------
+    source_name : str
+        Name of the source node in the original underlying graph.
+    target_name : str
+        Name of the target node in the original underlying graph.
+    graph : networkx.DiGraph
+        The graph structure of the pre-CFPG.
+    tags : dict
+        A dictionary, keyed by node, with lists of other nodes representing
+        the nodes lying upstream on cycle free paths. Node that each node
+        also has itself as a tag.
+    path_length : int
+        The path length for the PreCFPG.
+
+    Attributes
+    ----------
+    source_node : tuple
+        Node in the pre-CFPG graph representing the source: (0, source_name)
+    target_node: tuple
+        Node in the pre-CFPG graph representing the target:
+        (path_length, target_name)
+    """
     def __init__(self, source_name, target_name, graph, tags, path_length):
         self.source_name = source_name
         self.source_node = (0, source_name)
@@ -164,7 +249,7 @@ class PreCFPG(object):
         self.path_length = path_length
 
     def sample_paths(self, num_paths):
-        """Sample many cycle-free paths.
+        """Sample cycle-free paths from the pre-CFPG.
 
         Parameters
         ----------
@@ -174,8 +259,8 @@ class PreCFPG(object):
         Returns
         -------
         list of tuples
-            Each item in the list is a list of strings representing a path. Note
-            that the paths may not be unique.
+            Each item in the list is a tuple of strings representing a path.
+            Note that the paths may not be unique.
         """
         # If the graph is empty, then there are no paths
         if not self.graph:
@@ -189,9 +274,9 @@ class PreCFPG(object):
     def sample_single_path(self):
         """Sample a single cycle-free path using the pre-CFPG.
 
-        The sampling procedure uses the tag sets to trace out cycle-free
-        paths. If we have reached a node *v* via the path *p* then we can choose
-        the successor *u* of *v* as the next node only if *p* appears in the tag
+        The sampling procedure uses the tag sets to trace out cycle-free paths.
+        If we have reached a node *v* via the path *p* then we can choose the
+        successor *u* of *v* as the next node only if *p* appears in the tag
         set of u.
 
         Returns
@@ -240,7 +325,7 @@ class PreCFPG(object):
         pass
 
 
-def _initialize_pre_cfpg(pg, source, target):
+def _initialize_pre_cfpg(pg, source_node, target_node):
     """Initialize pre- cycle free paths graph data structures.
 
     Parameters
@@ -248,32 +333,28 @@ def _initialize_pre_cfpg(pg, source, target):
     pg : networkx.DiGraph()
         "Raw" (contains cycles) paths graph as created by
         :py:func:`indra.explanation.paths_graph.paths_graph`.
-    source : tuple
+    source_node : tuple
         Source node, of the form (0, source_name).
-    target : tuple
+    target_node : tuple
         Target node, of the form (target_depth, source_name).
 
     Returns
     -------
     tuple : (networkx.DiGraph(), dict)
-        The initialized, not-yet cycle free paths graph consists of the
-        paths graph remaining after cycles through the source or target
-        nodes are removed. The dict represents an initial set of tags
-        defining the permissible forward nodes from a given node (i.e.,
-        those nodes lying on a cycle free path).
     """
     # Identify the initial set of nodes to be pruned. In this initial phase,
     # they are simply nodes whose names match the source or target.
     nodes_to_prune = set([v for v in pg.nodes_iter()
-                          if (v != source) and (v != target) and \
-                             ((v[1] == source[1]) or (v[1] == target[1]))])
-    # Get the paths graph after initial source/target cycle pruning
-    pg_0 = prune(pg, nodes_to_prune, source, target)
+                          if (v != source_node) and (v != target_node) and \
+                             ((v[1] == source_node[1]) or \
+                              (v[1] == target_node[1]))])
+    # Get the paths graph after initial source_node/target_node cycle pruning
+    pre_cfpg_0 = prune(pg, nodes_to_prune, source_node, target_node)
     # Initialize an empty list of tags for each node
-    tags = dict([(node, []) for node in pg_0.nodes_iter()])
-    # Add source tag to all nodes
-    _add_tag(tags, source, [v for v in pg_0.nodes()])
-    return (pg_0, tags)
+    tags = dict([(node, []) for node in pre_cfpg_0.nodes_iter()])
+    # Add source_node tag to all nodes
+    _add_tag(tags, source_node, [v for v in pre_cfpg_0.nodes()])
+    return (pre_cfpg_0, tags)
 
 
 def _add_tag(tag_dict, tag_node, nodes_to_tag):
