@@ -13,7 +13,8 @@ bucket_name = 'bigmech'
 logger = logging.getLogger('aws_reading')
 
 
-def wait_for_complete(queue_name, job_list=None, poll_interval=10):
+def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
+                      poll_interval=10):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -26,16 +27,23 @@ def wait_for_complete(queue_name, job_list=None, poll_interval=10):
         A list of jobID-s in a dict, as returned by the submit function.
         Example: [{'jobId': 'e6b00f24-a466-4a72-b735-d205e29117b4'}, ...]
         If not given, this function will return if all jobs completed.
+    job_name_prefix : Optional[str]
+        A prefix for the name of the jobs to wait for. This is useful if the
+        explicit job list is not available but filtering is needed.
     poll_interval : Optional[int]
         The time delay between API calls to check the job statuses.
     """
     if job_list is None:
         job_list = []
 
-    def get_jobs_by_status(status, job_filter=None):
+    def get_jobs_by_status(status, job_filter=None, job_name_prefix=None):
         res = batch_client.list_jobs(jobQueue=queue_name,
-                                     jobStatus=status)
-        ids = [job['jobId'] for job in res['jobSummaryList']]
+                                     jobStatus=status, maxResults=10000)
+        jobs = res['jobSummaryList']
+        if job_name_prefix:
+            jobs = [job for job in jobs if
+                    job['jobName'].startswith(job_name_prefix)]
+        ids = [job['jobId'] for job in jobs]
         if job_filter:
             ids = [job_id for job_id in ids if job_id in job_filter]
         return ids
@@ -48,10 +56,10 @@ def wait_for_complete(queue_name, job_list=None, poll_interval=10):
     while True:
         pre_run = []
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
-            pre_run += get_jobs_by_status(status, job_list)
-        running = get_jobs_by_status('RUNNING', job_list)
-        failed = get_jobs_by_status('FAILED', job_list)
-        done = get_jobs_by_status('SUCCEEDED', job_list)
+            pre_run += get_jobs_by_status(status, job_list, job_name_prefix)
+        running = get_jobs_by_status('RUNNING', job_list, job_name_prefix)
+        failed = get_jobs_by_status('FAILED', job_list, job_name_prefix)
+        done = get_jobs_by_status('SUCCEEDED', job_list, job_name_prefix)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     (total_time, len(pre_run), len(running),
