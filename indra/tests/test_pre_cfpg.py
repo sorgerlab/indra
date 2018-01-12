@@ -87,9 +87,20 @@ def test_initialize():
     assert tags
 
 
-def test_pg():
-    # TODO: Flesh this out more with some examples defining typical return
-    # values
+def test_from_graph_no_levels():
+    g4_uns = nx.DiGraph()
+    g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
+    source, target, length = (0, 2, 2)
+    pre_cfpg = pcf.from_graph(g4_uns, source, target, length)
+    assert isinstance(pre_cfpg, pcf.PreCFPG)
+    assert pre_cfpg.graph
+    assert set(pre_cfpg.graph.edges()) == \
+                            set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
+    assert pre_cfpg.tags == {(0, 0): [(0, 0)],
+                             (1, 1): [(0, 0), (1, 1)],
+                             (2, 2): [(0, 0), (1, 1), (2, 2)]}
+
+def test_from_pg():
     g4_uns = nx.DiGraph()
     g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
     source, target, length = (0, 2, 2)
@@ -101,7 +112,6 @@ def test_pg():
     assert pre_cfpg.graph
     assert set(pre_cfpg.graph.edges()) == \
                             set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
-    assert pre_cfpg.tags
     assert pre_cfpg.tags == {(0, 0): [(0, 0)],
                              (1, 1): [(0, 0), (1, 1)],
                              (2, 2): [(0, 0), (1, 1), (2, 2)]}
