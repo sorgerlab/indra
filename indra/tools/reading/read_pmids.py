@@ -649,7 +649,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
 
         # Run REACH!
         logger.info("Beginning reach.")
-        args = ['java', '-Xmx24000m' '-Dconfig.file=%s' % conf_file_path,
+        args = ['java', '-Xmx24000m', '-Dconfig.file=%s' % conf_file_path,
                 '-jar', reach_ex]
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
