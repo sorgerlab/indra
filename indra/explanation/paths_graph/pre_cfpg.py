@@ -54,8 +54,6 @@ def from_pg(pg, source_name, target_name, path_length):
         those nodes lying on a cycle free path).
     """
     # Initialize the cycle-free paths graph and the tag dictionary
-
-    # Source node, of the form (0, source_name).
     source_node = (0, source_name)
     target_node = (path_length, target_name)
     dic_PG = {0: _initialize_pre_cfpg(pg, source_node, target_node)}
@@ -65,11 +63,12 @@ def from_pg(pg, source_name, target_name, path_length):
         #print("Starting round %d" % round_counter)
         #print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]),
                                                #len(dic_PG[0][0].edges())))
-        for k in range(1, path_length):
+        for k in range(1, path_length+1):
             # Start by copying the information from the previous level
             H = dic_PG[k-1][0].copy()
             tags = deepcopy(dic_PG[k-1][1])
-            # Check if we have already detected there are no cycle free paths.
+            # Check if we have already detected there are no cycle free paths,
+            # which would be indicated by an empty graph at the previous level.
             # If so just propagate this information.
             if not H:
                 dic_PG[k] = dic_PG[k-1]
@@ -101,7 +100,7 @@ def from_pg(pg, source_name, target_name, path_length):
                     nodes_to_tag = [v for v in g_x_prune.nodes()
                                     if v[0] >= k]
                     # Otherwise add the tag x to the nodes in the strict
-                    # future of x. update dic_X
+                    # future of x and update dic_X
                     for v in g_x_prune.nodes_iter():
                         if v[0] >= k:
                             D = tags[v]
@@ -125,6 +124,7 @@ def from_pg(pg, source_name, target_name, path_length):
                             t.extend(tags_x[v])
                     t = list(set(t))
                     tags_k[v] = t
+                print('HELLO: %d: %s' % (k, tags_k))
                 dic_PG[k] = (H_k, tags_k)
             #print("Level %d: %d nodes, %d edges" % (k, len(dic_PG[k][0]),
                                                     #len(dic_PG[k][0].edges())))
@@ -134,7 +134,7 @@ def from_pg(pg, source_name, target_name, path_length):
         else:
             dic_PG = {0: dic_PG[k]}
         round_counter += 1
-    pre_cfpg, tags = dic_PG[path_length - 1]
+    pre_cfpg, tags = dic_PG[path_length]
     # Return only the fully processed cfpg as an instance of the PreCFPG class
     return PreCFPG(source_name, target_name, pre_cfpg, tags, path_length)
 

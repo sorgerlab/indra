@@ -96,11 +96,15 @@ def test_pg():
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
     pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
-    pre_cfpg = pcf.from_pg(pg_raw, (0, source), (length, target), length)
+    pre_cfpg = pcf.from_pg(pg_raw, source, target, length)
     assert isinstance(pre_cfpg, pcf.PreCFPG)
     assert pre_cfpg.graph
+    assert set(pre_cfpg.graph.edges()) == \
+                            set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
     assert pre_cfpg.tags
-
+    assert pre_cfpg.tags == {(0, 0): [(0, 0)],
+                             (1, 1): [(0, 0), (1, 1)],
+                             (2, 2): [(0, 0), (1, 1), (2, 2)]}
 
 def test_sampling_precfpg():
     """Test sampling of problematic graph.
@@ -130,4 +134,4 @@ def test_sampling_precfpg():
     paths = pre_cfpg.sample_paths(1000)
 
 if __name__ == '__main__':
-    test_sampling_precfpg()
+    test_pg()
