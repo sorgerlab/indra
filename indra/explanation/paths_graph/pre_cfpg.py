@@ -2,13 +2,27 @@ import numpy as np
 from copy import copy, deepcopy
 import networkx as nx
 from . import paths_graph
-from .util import prune
+from .util import prune, check_reach_depth
 
-def from_graph(g, source, target, path_length):
-    pass
+
+def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
+               back_reachset=None):
+    # If the reachable sets aren't provided by the user, compute them here
+    # with a maximum depth given by the target path length.
+    if fwd_reachset is None or back_reachset is None:
+        (fwd_reachset, back_reachset) = paths_graph.get_reachable_sets(
+                        g, source_name, target_name, max_depth=path_length)
+    # Otherwise, if the reachable sets are provided, use them after checking
+    # if they have a depth at least equal to the given path length
+    check_reach_depth('forward', fwd_reachset, path_length)
+    check_reach_depth('backward', back_reachset, path_length)
+    pg = paths_graph.paths_graph(g, source_name, target_name, path_length,
+                                 fwd_reachset, back_reachset)
+    return from_pg(pg, source_name, target_name, path_length)
+
 
 def from_pg(pg, source_name, target_name, path_length):
-    """Compute a pre cycle free paths graph.
+    """Compute a pre- cycle free paths graph.
 
     Starting from the "raw" (i.e., containing cycles) paths graph, and given a
     target path length n, the algorithm iterates over each "level" in the graph
@@ -226,7 +240,6 @@ class PreCFPG(object):
         pass
 
 
-# Helper functions
 def _initialize_pre_cfpg(pg, source, target):
     """Initialize pre- cycle free paths graph data structures.
 
@@ -263,7 +276,6 @@ def _initialize_pre_cfpg(pg, source, target):
     return (pg_0, tags)
 
 
-# Function for updating node tags in place
 def _add_tag(tag_dict, tag_node, nodes_to_tag):
     for v in nodes_to_tag:
         tag_dict[v].append(tag_node)

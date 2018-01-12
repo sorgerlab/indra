@@ -48,3 +48,11 @@ def prune(pg, nodes_to_prune, source, target):
         nodes_to_prune = set(no_in_edges + no_out_edges)
     return pg_pruned
 
+
+def check_reach_depth(dir_name, reachset, length):
+    depth = max(reachset.keys())
+    if depth < length:
+        raise ValueError("Insufficient depth: path length is %d "
+                         "but %s reach set has maximum depth %d " %
+                         (length, dir_name, depth))
+

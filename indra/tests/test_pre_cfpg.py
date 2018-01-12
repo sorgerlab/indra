@@ -1,7 +1,9 @@
 import networkx as nx
+from nose.tools import raises
 from indra.explanation.paths_graph import paths_graph as pg
 from indra.explanation.paths_graph import pre_cfpg as pcf
 from indra.explanation.paths_graph.util import prune
+
 
 g1_uns = nx.DiGraph()
 g1_uns.add_edges_from((('A', 'B'), ('B', 'C'), ('C', 'D')))
@@ -100,6 +102,40 @@ def test_from_graph_no_levels():
                              (1, 1): [(0, 0), (1, 1)],
                              (2, 2): [(0, 0), (1, 1), (2, 2)]}
 
+
+def test_from_graph_with_levels():
+    g4_uns = nx.DiGraph()
+    g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
+    source, target, length = (0, 2, 2)
+    max_depth = 5
+    (f_reach, b_reach) = \
+            pg.get_reachable_sets(g4_uns, source, target, max_depth=max_depth)
+    pre_cfpg = pcf.from_graph(g4_uns, source, target, length,
+                              fwd_reachset=f_reach, back_reachset=b_reach)
+
+    assert isinstance(pre_cfpg, pcf.PreCFPG)
+    assert pre_cfpg.graph
+    assert set(pre_cfpg.graph.edges()) == \
+                            set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
+    assert pre_cfpg.tags == {(0, 0): [(0, 0)],
+                             (1, 1): [(0, 0), (1, 1)],
+                             (2, 2): [(0, 0), (1, 1), (2, 2)]}
+
+
+@raises(ValueError)
+def test_from_graph_with_levels_bad_depth():
+    """Raise an exception if the requested path length is greater than the
+    depth of the provided reach sets."""
+    g4_uns = nx.DiGraph()
+    g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
+    source, target, length = (0, 2, 2)
+    max_depth = 1
+    (f_reach, b_reach) = \
+            pg.get_reachable_sets(g4_uns, source, target, max_depth=max_depth)
+    pre_cfpg = pcf.from_graph(g4_uns, source, target, length,
+                              fwd_reachset=f_reach, back_reachset=b_reach)
+
+
 def test_from_pg():
     g4_uns = nx.DiGraph()
     g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
@@ -144,4 +180,4 @@ def test_sampling_precfpg():
     paths = pre_cfpg.sample_paths(1000)
 
 if __name__ == '__main__':
-    test_pg()
+    test_from_graph_with_levels_bad_depth()
