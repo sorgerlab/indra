@@ -651,15 +651,3 @@ class DatabaseManager(object):
             self.TextRef.pmid.in_(pmid_list)
             )
         return self.get_values(text_refs, 'pmid')
-
-    def _get_timestamp(self):
-        "Get the timestamp. Needed for python 2-3 compatibility."
-        try:  # Python 3
-            ret = datetime.utcnow()
-            #if self.sqltype != sqltypes.SQLITE:
-            #    ret = ret.timestamp()
-        except AttributeError:  # Python 2
-            ret = datetime.utcnow()
-            #if self.sqltype != sqltypes.SQLITE:
-            #    ret = time.mktime(ret.timetuple())+ret.microsecond/1000000.0
-        return ret
