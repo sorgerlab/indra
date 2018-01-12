@@ -96,9 +96,10 @@ def test_pg():
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
     pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
-    pcfpg, tags = pcf.from_pg(pg_raw, (0, source), (length, target), length)
-    assert pcfpg
-    assert tags
+    pre_cfpg = pcf.from_pg(pg_raw, (0, source), (length, target), length)
+    assert isinstance(pre_cfpg, pcf.PreCFPG)
+    assert pre_cfpg.graph
+    assert pre_cfpg.tags
 
 
 def test_sampling_precfpg():
@@ -125,8 +126,8 @@ def test_sampling_precfpg():
     pg_raw = pg.paths_graph(g, source, target, length, f_level, b_level)
     src = (0, source)
     tgt = (length, target)
-    pre_cfpg, tags = pcf.from_pg(pg_raw, src, tgt, length)
-    P = pcf.sample_many_paths_precfpg(src, tgt, pre_cfpg, tags, 1000)
+    pre_cfpg = pcf.from_pg(pg_raw, src, tgt, length)
+    paths = pre_cfpg.sample_paths(1000)
 
 if __name__ == '__main__':
-    test_prune()
+    test_sampling_precfpg()
