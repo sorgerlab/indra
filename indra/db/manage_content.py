@@ -85,8 +85,9 @@ from indra.util import zip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
-from indra.db import get_primary_db, texttypes, formats
-from indra.db import sql_expressions as sql_exp
+from .manage_db import texttypes, formats
+from .util import get_primary_db
+from .manage_db import sql_expressions as sql_exp
 
 
 try:
