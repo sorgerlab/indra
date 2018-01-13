@@ -75,10 +75,14 @@ def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
                back_reachset=None):
     pre_cfpg = pcf.from_graph(g, source_name, target_name, path_length,
                               fwd_reachset, back_reachset)
-    return from_pre_cfpg(pre_cfpg, source_name, target_name, path_length)
+    return from_pre_cfpg(pre_cfpg)
 
 
-def from_pre_cfpg(pre_cfpg, source_name, target_name, path_length):
+def from_pg(pg, source_name, target_name, path_length):
+    pre_cfpg = pcf.from_pg(pg, source_name, target_name, path_length)
+    return from_pre_cfpg(pre_cfpg)
+
+def from_pre_cfpg(pre_cfpg):
     """Generate a cycle free paths graph (CFPG).
 
     Implements the major step (the outer loop) for constructing G_cf. We do so
@@ -108,6 +112,9 @@ def from_pre_cfpg(pre_cfpg, source_name, target_name, path_length):
     require pred_i and t_i.
     """
     # Define old (2-tuple) and new (3-tuple) versions of src/tgt nodes
+    source_name = pre_cfpg.source_name
+    target_name = pre_cfpg.target_name
+    path_length = pre_cfpg.path_length
     src_2node = (0, source_name) # 2-tuple version of source
     src_3node = (0, source_name, 0) # 3-tuple version of source
     tgt_2node = (path_length, target_name) # 2-tuple version of target

@@ -1,11 +1,59 @@
 import pickle
 import networkx as nx
+from nose.tools import raises
 from os.path import dirname, join
 from indra.explanation.paths_graph import paths_graph, pre_cfpg as pcf
-from indra.explanation.paths_graph import cfpg
+from indra.explanation.paths_graph import cfpg as cf
 
 
 random_graph_pkl = join(dirname(__file__), 'random_graphs.pkl')
+
+g_uns = nx.DiGraph()
+g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
+                      ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
+source = 'A'
+target = 'E'
+length = 4
+
+
+def test_from_graph_no_levels():
+    cfpg = cf.from_graph(g_uns, source, target, length)
+    assert isinstance(cfpg, cf.CFPG)
+    paths = cfpg.enumerate_paths()
+    assert len(paths) == 2
+    assert ('A', 'B', 'D', 'C', 'E') in paths
+    assert ('A', 'C', 'D', 'B', 'E') in paths
+    assert len(cfpg.graph) == 8
+    # The D node should be split into two nodes
+    d_nodes = [n for n in cfpg.graph.nodes() if n[1] == 'D']
+    assert len(d_nodes) == 2
+
+
+@raises(ValueError)
+def test_from_graph_with_levels_bad_depth():
+    """Raise an exception if the requested path length is greater than the
+    depth of the provided reach sets."""
+    (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
+                                                        max_depth=2)
+    cfpg = cf.from_graph(g_uns, source, target, length, fwd_reachset=f_reach,
+                         back_reachset=b_reach)
+
+
+def test_from_pg():
+    (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
+                                                        max_depth=length)
+    pg = paths_graph.paths_graph(g_uns, source, target, length, f_reach,
+                                 b_reach)
+    cfpg = cf.from_pg(pg, source, target, length)
+    paths = cfpg.enumerate_paths()
+    assert len(paths) == 2
+    assert ('A', 'B', 'D', 'C', 'E') in paths
+    assert ('A', 'C', 'D', 'B', 'E') in paths
+    assert len(cfpg.graph) == 8
+    # The D node should be split into two nodes
+    d_nodes = [n for n in cfpg.graph.nodes() if n[1] == 'D']
+    assert len(d_nodes) == 2
+
 
 
 def test_on_random_graphs():
@@ -33,8 +81,14 @@ def test_on_random_graphs():
             # Filter to paths of this length
             P_correct = [tuple(p) for p in P if len(p) == length+1]
             # Generate the raw paths graph
-            G_cf = cfpg.from_graph(G_i, source, target, length, f_reach,
+            G_cf = cf.from_graph(G_i, source, target, length, f_reach,
                                    b_reach)
+            # Enumerate paths using node tuples
+            P_cf_pruned = G_cf.enumerate_paths(names_only=False)
+            # Next we extract the paths by projecting down to second
+            # component (node names)
+            P_cf_pruned_names = G_cf.enumerate_paths(names_only=True)
+            print("# of paths: %d" % len(P_cf_pruned_names))
 
             # We verify the three required properties.
             # Recall:
@@ -45,37 +99,26 @@ def test_on_random_graphs():
             # the paths in the original graph. This means there is no
             # redundancy in the representation. For every path in the original
             # graph there is a unique path in G_cf that corresponds to it.
-            # To do so, we first compute the set of source-to-target paths
-            # (the nodes will be triples) in G_cf
-            # src_0 = (src[0], src[1], 0)
-            # tgt_0 = (tgt[0], tgt[1], 0)
-            P_cf_pruned = G_cf.enumerate_paths(names_only=False)
-
-            # Next we extract the actual paths by projecting down to second
-            # component.
-            P_cf_pruned_names = G_cf.enumerate_paths(names_only=True)
 
             # We first verify CF1.
             for p in P_cf_pruned_names:
                 if len(p) != len(list(set(p))):
                     print("cycle!")
-                    #print(p)
-                    #break
-
+                    print(p)
+                    assert False
             # Next we verify CF2. We will in fact check if the set of paths in
             # P_cf_pruned_names is exactly the set of paths in the original
             # graph.
             if set(P_correct) != set(P_cf_pruned_names):
-                print("Missing")
-                #print("graph, length", (i, length))
-                #print("______________")
-            print("# of paths: %d" % len(P_cf_pruned_names))
-
+                print("Paths do not match reference set from networkx")
+                print("graph, length", (i, length))
+                assert False
             # Finally we verify CF3
             if len(P_cf_pruned) != len(list(set(P_cf_pruned_names))):
                 print("redundant representation!")
-                #print("graph, length", (i, length))
-                #print("____________")
+                print("graph, length", (i, length))
+                assert False
+
 
 if __name__ == '__main__':
-    test_on_random_graphs()
+    test_from_graph_with_levels_bad_depth()
