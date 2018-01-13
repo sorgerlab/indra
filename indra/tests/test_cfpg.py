@@ -2,7 +2,7 @@ import pickle
 import networkx as nx
 from os.path import dirname, join
 from indra.explanation.paths_graph import paths_graph, pre_cfpg as pcf
-from indra.explanation.paths_graph.cfpg import *
+from indra.explanation.paths_graph import cfpg
 
 
 random_graph_pkl = join(dirname(__file__), 'random_graphs.pkl')
@@ -35,9 +35,7 @@ def test_on_random_graphs():
             # Generate the raw paths graph
             pre_cfpg = pcf.from_graph(G_i, source, target, length, f_reach,
                                       b_reach)
-            src = (0, source)
-            tgt = (length, target)
-            G_cf = PG_cf(src,tgt, pre_cfpg.graph, pre_cfpg.tags)
+            G_cf = cfpg.from_pre_cfpg(pre_cfpg, source, target, length)
 
             # We verify the three required properties.
             # Recall:
@@ -50,13 +48,13 @@ def test_on_random_graphs():
             # graph there is a unique path in G_cf that corresponds to it.
             # To do so, we first compute the set of source-to-target paths
             # (the nodes will be triples) in G_cf
-            src_0 = (src[0], src[1], 0) # 3-tuple version of src
-            tgt_0 = (tgt[0], tgt[1], 0) # 3-tuple version of tgt
-            P_cf_pruned = list(nx.all_simple_paths(G_cf, src_0, tgt_0))
+            # src_0 = (src[0], src[1], 0)
+            # tgt_0 = (tgt[0], tgt[1], 0)
+            P_cf_pruned = G_cf.enumerate_paths(names_only=False)
 
             # Next we extract the actual paths by projecting down to second
             # component.
-            P_cf_pruned_names = name_paths(P_cf_pruned)
+            P_cf_pruned_names = G_cf.enumerate_paths(names_only=True)
 
             # We first verify CF1.
             for p in P_cf_pruned_names:

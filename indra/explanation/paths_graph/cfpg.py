@@ -70,7 +70,9 @@ from .util import prune
 import pickle
 import numpy as np
 
-def PG_cf(src, tgt, g, t):
+
+def from_pre_cfpg(pre_cfpg, source_name, target_name, path_length):
+#def PG_cf(src, tgt, g, t):
     """Generate a cycle free paths graph (CFPG).
 
     Implements the major step (the outer loop) for constructing G_cf. We do so
@@ -99,79 +101,104 @@ def PG_cf(src, tgt, g, t):
     Once the construction of PG_cf is complete we will no onger 
     require pred_i and t_i.
     """
-    # We first hardwire dic_CF[tgt[0]].
-    tgt_0 = (tgt[0], tgt[1], 0) # 3-tuple version of tgt
-    next_tgt = {tgt_0: []}
-    pred_tgt = {tgt_0: g.predecessors(tgt)}
-    t_cf_tgt = {tgt_0: t[tgt]}
-    dic_CF = {tgt[0]: ([tgt_0], next_tgt, pred_tgt, t_cf_tgt)}
+    # Define old (2-tuple) and new (3-tuple) versions of src/tgt nodes
+    src_2node = (0, source_name) # 2-tuple version of source
+    src_3node = (0, source_name, 0) # 3-tuple version of source
+    tgt_2node = (path_length, target_name) # 2-tuple version of target
+    tgt_3node = (path_length, target_name, 0) # 3-tuple version of target
+    # We first hardwire the contents of the dictionary for the level of the
+    # target node: dic_CF[path_length]
+    next_tgt = {tgt_3node: []}
+    pred_tgt = {tgt_3node: pre_cfpg.graph.predecessors(tgt_2node)}
+    t_cf_tgt = {tgt_3node: pre_cfpg.tags[tgt_2node]}
+    dic_CF = {path_length: ([tgt_3node], next_tgt, pred_tgt, t_cf_tgt)}
 
     # If we were given an empty pre-CFPG, then the CFPG should also be empty
-    if not g:
+    if not pre_cfpg.graph:
         return nx.DiGraph()
     # Iterate from level n-1 (one "above" the target) back to the source
-    for i in reversed(range(1, tgt[0])):
+    for i in reversed(range(1, path_length)):
         # Get the information for level i+1 (one level closer to the target)
         V_ip1, next_ip1, pred_ip1, t_cf_ip1 = dic_CF[i+1]
-        # Because we are working off of a non-empty G_0, we should never end
-        # with a level in the graph with no nodes
+        # Because we are working off of a non-empty pre-CFPG, we should never
+        # end with a level in the graph with no nodes
         assert V_ip1 != []
-        # TODO: Can V_current be replaced simply by the nodes in g at level i?
+        # TODO: Can V_current be replaced simply by the nodes in pre-CFPG at
+        # level i?
         # TODO: Rename V_current -> V_i_old, V_i -> V_i_new?
         V_current = []
         for v in V_ip1:
             V_current.extend(pred_ip1[v])
             V_current = list(set(V_current))
-        # V_current should never be empty by construction of G_0
+        # V_current should never be empty by construction of the pre-CFPG
         assert V_current != []
         # Thus V_current is the set of nodes (which will be 2-tuples) at level
-        # i to be processed. The converted  nodes(which will be 3-tuples,
+        # i to be processed. The converted  nodes (which will be 3-tuples,
         # including the copy number) will be binned into V_i.
-        V_i = []
-        next_i = {}
-        pred_i = {}
-        t_cf_i = {}
+        V_i, next_i, pred_i, t_cf_i = ([], {}, {}, {})
         # Now comes the heart of the construction. We take a node x in
-        # V_current and split it into -in general- multiple copies to ensure
+        # V_current and split it into--in general--multiple copies to ensure
         # that if (u,v) is an edge in G_cf then the set of tags of u is
         # included in the set of tags of v
         for x in V_current:
             # X_ip1 is the set of nodes at the level i+1 to which x is connected
             # via the pred_ip1 function. These nodes, already processed, will
-            # be 3-tuples. X_im1 is the nodes at the level i-1. They are
-            # unprocessed 2-tuples.
+            # be 3-tuples. X_im1 are the set of predecessor nodes of x at the
+            # level i-1. They are unprocessed 2-tuples.
             X_ip1 = [w for w in V_ip1 if x in pred_ip1[w]]
-            X_im1 = g.predecessors(x)
+            X_im1 = pre_cfpg.graph.predecessors(x)
             assert X_ip1 != []
-            # The actual splitting up and how to connect the resulting copies
+            # The actual splitting of node x and connect the resulting copies
             # of x to its neighbors above and below is carried out by the
             # _split_graph function, below.
             V_x, next_x, pred_x, t_cf_x = \
-                    _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf_ip1, t, g)
+                    _split_graph(src_2node, tgt_2node, x, X_ip1, X_im1,
+                                 t_cf_ip1, pre_cfpg)
             # We now extend V_i, next_i, pred_i and t_i in the obvious way.
-            V_i.extend(V_x)
+            V_i.extend(V_x) # V_x contains the new, split versions of x
             next_i.update(next_x)
             pred_i.update(pred_x)
             t_cf_i.update(t_cf_x)
         dic_CF[i] = (V_i, next_i, pred_i, t_cf_i)
     # Finally we hardwire dic_CF[0]
     V_1 = dic_CF[1][0]
-    src_0 = (src[0], src[1], 0) # 3-tuple version of src
-    V_0 = [src_0]
-    next_src = {src_0: V_1}
-    pred_src = {src_0: []}
-    t_cf_src = {src_0: t[src]}
+    V_0 = [src_3node]
+    next_src = {src_3node: V_1}
+    pred_src = {src_3node: []}
+    t_cf_src = {src_3node: pre_cfpg.tags[src_2node]}
     dic_CF[0] = (V_0 , next_src, pred_src, t_cf_src)
     G_cf = _dic_to_graph(dic_CF)
     # Prune out possible unreachable nodes in G_cf
     nodes_prune = [v for v in G_cf
-                     if (v != tgt_0 and G_cf.successors(v) == []) or
-                        (v != src_0 and G_cf.predecessors(v) == [])]
-    G_cf_pruned = prune(G_cf, nodes_prune, src_0, tgt_0)
-    return G_cf_pruned
+                     if (v != tgt_3node and G_cf.successors(v) == []) or
+                        (v != src_3node and G_cf.predecessors(v) == [])]
+    G_cf_pruned = prune(G_cf, nodes_prune, src_3node, tgt_3node)
+    return CFPG(source_name, target_name, G_cf_pruned, path_length)
 
 
-def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, t, g):
+class CFPG(object):
+    def __init__(self, source_name, target_name, graph, path_length):
+        self.source_name = source_name
+        self.source_node = (0, source_name, 0)
+        self.target_name = target_name
+        self.target_node = (path_length, target_name, 0)
+        self.graph = graph
+        self.path_length = path_length
+
+    def enumerate_paths(self, names_only=True):
+        paths = list(nx.all_simple_paths(self.graph, self.source_node,
+                                         self.target_node))
+        if names_only:
+            return self._name_paths(paths)
+        else:
+            return paths
+
+    @staticmethod
+    def _name_paths(paths):
+        return [tuple([node[1] for node in path]) for path in paths]
+
+
+def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
     """Splits a node x from G_0 into multiple copies for the CFPG.
 
     The nodes in X_ip1 represent the possible successor nodes to x in the CFPG.
@@ -190,13 +217,13 @@ def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, t, g):
     t_x = {}
     S_ip1 = {}
     for w in X_ip1:
-        X_wx =  set(t_cf[w]) & set(t[x])
+        X_wx =  set(t_cf[w]) & set(pre_cfpg.tags[x])
         N_wx = list(X_wx)
         # TODO: Reimplement pruning so as to avoid inducing a subgraph?
-        g_wx = g.subgraph(N_wx)
+        g_wx = pre_cfpg.graph.subgraph(N_wx)
         nodes_prune = [v for v in g_wx
                          if (v != x and g_wx.successors(v) == []) or
-                            (v!= src and g_wx.predecessors(v) == [])]
+                            (v != src and g_wx.predecessors(v) == [])]
         g_wx_pruned = prune(g_wx, nodes_prune, src, x)
         # If the pruned graph still contains both src and x itself, there is
         # at least one path from the source to x->w. The nodes in this subgraph
@@ -233,14 +260,6 @@ def _dic_to_graph(dic):
     return G
 
 
-def name_paths(Q):
-    Q_names = []
-    for q in Q:
-        q_names = []
-        for j in range(len(q)):
-            q_names.append(q[j][1])
-        Q_names.append(tuple(q_names))
-    return Q_names
 
 
 def sample_single_path(src_0, tgt_0, dic):
