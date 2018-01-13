@@ -71,8 +71,14 @@ import pickle
 import numpy as np
 
 
+def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
+               back_reachset=None):
+    pre_cfpg = pcf.from_graph(g, source_name, target_name, path_length,
+                              fwd_reachset, back_reachset)
+    return from_pre_cfpg(pre_cfpg, source_name, target_name, path_length)
+
+
 def from_pre_cfpg(pre_cfpg, source_name, target_name, path_length):
-#def PG_cf(src, tgt, g, t):
     """Generate a cycle free paths graph (CFPG).
 
     Implements the major step (the outer loop) for constructing G_cf. We do so
@@ -258,8 +264,6 @@ def _dic_to_graph(dic):
             E.extend(E_v)
     G.add_edges_from(E)
     return G
-
-
 
 
 def sample_single_path(src_0, tgt_0, dic):

@@ -33,9 +33,8 @@ def test_on_random_graphs():
             # Filter to paths of this length
             P_correct = [tuple(p) for p in P if len(p) == length+1]
             # Generate the raw paths graph
-            pre_cfpg = pcf.from_graph(G_i, source, target, length, f_reach,
-                                      b_reach)
-            G_cf = cfpg.from_pre_cfpg(pre_cfpg, source, target, length)
+            G_cf = cfpg.from_graph(G_i, source, target, length, f_reach,
+                                   b_reach)
 
             # We verify the three required properties.
             # Recall:
