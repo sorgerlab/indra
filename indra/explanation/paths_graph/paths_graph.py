@@ -5,7 +5,9 @@ import numpy as np
 import networkx as nx
 from indra import logging
 
+
 logger = logging.getLogger('paths_graph')
+
 
 def get_edges(sif_file):
     """Load edges from a SIF file with lines of the form 'u polarity v'"""
@@ -227,31 +229,6 @@ def paths_graph(g, source, target, length, f_level, b_level,
                 edge_lookup[edge_key] = edge
             for edge_key in possible_edges.intersection(g_edges):
                 actual_edges.add(edge_lookup[edge_key])
-
-            """
-            actual_
-                if (u_name, v_name) in g_edges:
-                    edge_dict = g.get_edge_data(u, v)
-                    edge_polarity = edge_dict.get('sign')
-                    # If this is a multidigraph, get_edge_data will return
-                    # a dict keyed by integers
-                    if edge_polarity is None:
-                        for edge_key, edge_data in edge_dict.items():
-                            _add_signed_edge(reachable_set, node_polarity,
-                                             edge_data['sign'])
-                    else:
-                        _add_signed_edge(reachable_set, node_polarity,
-                                         edge_polarity)
-
-                    edge_polarity = g.get_edge_data(u_name, v_name)['sign']
-
-                    # Look for an edge that flips or doesn't flip the polarity
-                    # of the path depending on what we see in the cumulative
-                    # polarities
-                    if (u_pol == v_pol and edge_polarity == 0) or \
-                       (u_pol != v_pol and edge_polarity == 1):
-                        actual_edges.add((u, v))
-            """
         else:
             # Build a set representing possible edges between adjacent levels
             possible_edges = set([(u[1], v[1]) for u, v in
@@ -266,46 +243,63 @@ def paths_graph(g, source, target, length, f_level, b_level,
     return path_graph
 
 
-def sample_single_path(pg, source, target, signed=False, target_polarity=0,
-                       weighted=False):
-    """Sample a path from the paths graph."""
-    # If the path graph is empty, there are no paths
-    if not pg:
-        return tuple([])
-    # Set the source node
-    if signed:
-        source_node = (0, (source, 0))
-        target = (target, target_polarity)
-    else:
-        source_node = (0, source)
-    assert source_node in pg
-    # Repeat until we find a path without a cycle
-    while True:
-        path = [source_node[1]]
-        current_node = source_node
-        while True:
-            if weighted:
-                out_edges = pg.out_edges(current_node, data=True)
-            else:
-                out_edges = pg.out_edges(current_node)
-            if 'TEST_FLAG' in os.environ:
-                out_edges.sort()
-            if out_edges:
-                if weighted:
-                    weights = [t[2]['weight'] for t in out_edges]
-                    pred_idx = np.random.choice(range(len(out_edges)),
-                                                p=weights)
-                    v = out_edges[pred_idx][1]
-                else:
-                    v = np.random.choice(out_edges)[1]
-                # If we've already hit this node, it's a cycle; skip
-                if v[1] in path:
-                    break
-                path.append(v[1])
-                if v[1] == target:
-                    return tuple(path)
-            current_node = v
+class PathsGraph(object):
+    def __init__(self, source_name, target_name, graph, path_length, signed,
+                 target_polarity):
+        self.source_name = source_name
+        self.target_name = target_name
+        self.signed = signed
+        self.target_polarity = target_polarity
+        if signed:
+            self.source_name = (0, (source_name, 0))
+            self.target_node = (path_length, (target_name, target_polarity))
+        else:
+            self.source_name = (0, source_name)
+            self.target_node = (path_length, target_name)
+        self.graph = graph
+        self.path_length = path_length
 
+
+    """
+    def sample_single_path(self, weighted=False):
+        # Sample a path from the paths graph.
+        # If the path graph is empty, there are no paths
+        if not self.graph:
+            return tuple([])
+        # Set the source node
+        if self.signed:
+            source_node = (0, (source, 0))
+            target = (target, target_polarity)
+        else:
+            source_node = (0, source)
+        assert source_node in pg
+        # Repeat until we find a path without a cycle
+        while True:
+            path = [source_node[1]]
+            current_node = source_node
+            while True:
+                if weighted:
+                    out_edges = pg.out_edges(current_node, data=True)
+                else:
+                    out_edges = pg.out_edges(current_node)
+                if 'TEST_FLAG' in os.environ:
+                    out_edges.sort()
+                if out_edges:
+                    if weighted:
+                        weights = [t[2]['weight'] for t in out_edges]
+                        pred_idx = np.random.choice(range(len(out_edges)),
+                                                    p=weights)
+                        v = out_edges[pred_idx][1]
+                    else:
+                        v = np.random.choice(out_edges)[1]
+                    # If we've already hit this node, it's a cycle; skip
+                    if v[1] in path:
+                        break
+                    path.append(v[1])
+                    if v[1] == target:
+                        return tuple(path)
+                current_node = v
+    """
 
 def combine_path_graphs(pg_dict):
     """Combine a dict of path graphs into a single super-pathgraph."""

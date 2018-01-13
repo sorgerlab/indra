@@ -17,13 +17,6 @@ graph1_uns = networkx.DiGraph()
 graph1_uns.add_nodes_from(['A', 'B', 'C', 'D'])
 graph1_uns.add_edges_from([('A', 'B'), ('B', 'D'), ('A', 'C'), ('C', 'D')])
 
-"""
-graph2 = networkx.DiGraph()
-graph2.add_nodes_from(['A', 'B', 'C', 'D'])
-graph2.add_edges_from([('A', 'B', {'sign': 0}), ('B', 'A', {'sign': 0}),
-                      ('A', 'C', {'sign': 0}), ('C', 'D', {'sign': 0})])
-
-"""
 
 def test_get_reachable_sets_unsigned():
     f_level, b_level = paths_graph.get_reachable_sets(
@@ -147,7 +140,3 @@ def test_multidigraph_signed():
 
 if __name__ == '__main__':
     test_multidigraph_signed()
-    #test_regression_on_er_graph()
-    #test_get_reachable_sets_unsigned()
-    #test_paths_graph_unsigned()
-    #test_simple_unreachability_signed()
