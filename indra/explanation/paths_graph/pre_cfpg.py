@@ -188,7 +188,6 @@ def from_pg(pg, source_name, target_name, path_length):
                             t.extend(tags_x[v])
                     t = list(set(t))
                     tags_k[v] = t
-                print('HELLO: %d: %s' % (k, tags_k))
                 dic_PG[k] = (H_k, tags_k)
             #print("Level %d: %d nodes, %d edges" % (k, len(dic_PG[k][0]),
                                                     #len(dic_PG[k][0].edges())))

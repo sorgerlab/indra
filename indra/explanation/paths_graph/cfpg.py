@@ -66,9 +66,9 @@ import itertools
 import networkx as nx
 from . import paths_graph
 from . import pre_cfpg as pcf
+from .util import prune
 import pickle
 import numpy as np
-
 
 def PG_cf(src, tgt, g, t):
     """Generate a cycle free paths graph (CFPG).
@@ -167,7 +167,7 @@ def PG_cf(src, tgt, g, t):
     nodes_prune = [v for v in G_cf
                      if (v != tgt_0 and G_cf.successors(v) == []) or
                         (v != src_0 and G_cf.predecessors(v) == [])]
-    G_cf_pruned = pcf._prune(G_cf, nodes_prune, src_0, tgt_0)
+    G_cf_pruned = prune(G_cf, nodes_prune, src_0, tgt_0)
     return G_cf_pruned
 
 
@@ -197,7 +197,7 @@ def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, t, g):
         nodes_prune = [v for v in g_wx
                          if (v != x and g_wx.successors(v) == []) or
                             (v!= src and g_wx.predecessors(v) == [])]
-        g_wx_pruned = pcf._prune(g_wx, nodes_prune, src, x)
+        g_wx_pruned = prune(g_wx, nodes_prune, src, x)
         # If the pruned graph still contains both src and x itself, there is
         # at least one path from the source to x->w. The nodes in this subgraph
         # constitute the new set of tags of the copy of x that lies on a path
@@ -263,79 +263,3 @@ def sample_many_paths(src_0, tgt_0, dic, n):
     return P
 
 
-if __name__ == '__main__':
-    # We use 25 randomly generated graphs for testing the algorithm
-    dic_rg_long = pickle.load(open("save.dic_rg_long", "rb"))
-    #for i in range(25):
-    min_depth = 5
-    max_depth = 5
-    for i in range(1):
-        G_i, source, target = dic_rg_long[i]
-        print("graph#, no of nodes, no of edges",
-              i, len(G_i), len(G_i.edges()))
-        (f_level, b_level)  = \
-                paths_graph.get_reachable_sets(G_i, source, target,
-                        max_depth=max_depth, signed=False)
-        # Try different path lengths
-        for length in range(min_depth, max_depth+1):
-            print("paths of length", length)
-            print("_______")
-            # For validation, we compute explicitly the set of paths in the
-            # original graph of a fixed length
-            P = list(nx.all_simple_paths(G_i, source, target, length+1))
-            # Filter to paths of this length
-            P_correct = [tuple(p) for p in P if len(p) == length+1]
-            # Generate the raw paths graph
-            pg_raw = paths_graph.paths_graph(G_i, source, target, length,
-                                             f_level, b_level, signed=False,
-                                             target_polarity=0)
-            src = (0, source)
-            tgt = (length, target)
-            # The "pre" CFPG
-            dic_PG = pcf.from_pg(pg_raw, src, tgt, length)
-            # FIXME: Why isn't the target in dic_PG[len-1]?
-            G_0, T_0 = dic_PG[len(dic_PG)-1]
-            # The above is the output of the iterative method
-            T_0[tgt].append(tgt)
-            G_cf = PG_cf(src,tgt,G_0,T_0)
-
-            # We verify the three required properties.
-            # Recall:
-            # CF1: Every source-to-target path in G_cf is cycle free.
-            # CF2: Every cycle free path in the original graph appears as a
-            #      source-to-target path in G_cf.
-            # CF3: There is a 1-1 correspondence between the paths in G_cf and
-            # the paths in the original graph. This means there is no
-            # redundancy in the representation. For every path in the original
-            # graph there is a unique path in G_cf that corresponds to it.
-            # To do so, we first compute the set of source-to-target paths
-            # (the nodes will be triples) in G_cf
-            src_0 = (src[0], src[1], 0) # 3-tuple version of src
-            tgt_0 = (tgt[0], tgt[1], 0) # 3-tuple version of tgt
-            P_cf_pruned = list(nx.all_simple_paths(G_cf, src_0, tgt_0))
-
-            # Next we extract the actual paths by projecting down to second
-            # component.
-            P_cf_pruned_names = name_paths(P_cf_pruned)
-
-            # We first verify CF1.
-            for p in P_cf_pruned_names:
-                if len(p) != len(list(set(p))):
-                    print("cycle!")
-                    print(p)
-                    break
-
-            # Next we verify CF2. We will in fact check if the set of paths in
-            # P_cf_pruned_names is exactly the set of paths in the original
-            # graph.
-            if set(P_correct) != set(P_cf_pruned_names):
-                print("Missing")
-                print("graph, length", (i, length))
-                print("______________")
-            print("# of paths: %d" % len(P_cf_pruned_names))
-
-            # Finally we verify CF3
-            if len(P_cf_pruned) != len(list(set(P_cf_pruned_names))):
-                print("redundant representation!")
-                print("graph, length", (i, length))
-                print("____________")
