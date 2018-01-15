@@ -78,8 +78,8 @@ def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
     return from_pre_cfpg(pre_cfpg)
 
 
-def from_pg(pg, source_name, target_name, path_length):
-    pre_cfpg = pcf.from_pg(pg, source_name, target_name, path_length)
+def from_pg(pg):
+    pre_cfpg = pcf.from_pg(pg)
     return from_pre_cfpg(pre_cfpg)
 
 def from_pre_cfpg(pre_cfpg):
@@ -115,10 +115,10 @@ def from_pre_cfpg(pre_cfpg):
     source_name = pre_cfpg.source_name
     target_name = pre_cfpg.target_name
     path_length = pre_cfpg.path_length
-    src_2node = (0, source_name) # 2-tuple version of source
-    src_3node = (0, source_name, 0) # 3-tuple version of source
-    tgt_2node = (path_length, target_name) # 2-tuple version of target
-    tgt_3node = (path_length, target_name, 0) # 3-tuple version of target
+    src_2node = pre_cfpg.source_node # 2-tuple version of source
+    src_3node = pre_cfpg.source_node + (0,) # 3-tuple version of source
+    tgt_2node = pre_cfpg.target_node # 2-tuple version of target
+    tgt_3node = pre_cfpg.target_node + (0,) # 3-tuple version of target
     # We first hardwire the contents of the dictionary for the level of the
     # target node: dic_CF[path_length]
     next_tgt = {tgt_3node: []}
@@ -186,17 +186,17 @@ def from_pre_cfpg(pre_cfpg):
                      if (v != tgt_3node and G_cf.successors(v) == []) or
                         (v != src_3node and G_cf.predecessors(v) == [])]
     G_cf_pruned = prune(G_cf, nodes_prune, src_3node, tgt_3node)
-    return CFPG(source_name, target_name, G_cf_pruned, path_length)
+    return CFPG(pre_cfpg, G_cf_pruned)
 
 
 class CFPG(object):
-    def __init__(self, source_name, target_name, graph, path_length):
-        self.source_name = source_name
-        self.source_node = (0, source_name, 0)
-        self.target_name = target_name
-        self.target_node = (path_length, target_name, 0)
+    def __init__(self, pre_cfpg, graph):
+        self.source_name = pre_cfpg.source_name
+        self.source_node = pre_cfpg.source_node + (0,)
+        self.target_name = pre_cfpg.target_name
+        self.target_node = pre_cfpg.target_node + (0,)
+        self.path_length = pre_cfpg.path_length
         self.graph = graph
-        self.path_length = path_length
 
     def enumerate_paths(self, names_only=True):
         paths = list(nx.all_simple_paths(self.graph, self.source_node,

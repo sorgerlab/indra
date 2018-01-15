@@ -42,9 +42,9 @@ def test_from_graph_with_levels_bad_depth():
 def test_from_pg():
     (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
                                                         max_depth=length)
-    pg = paths_graph.paths_graph(g_uns, source, target, length, f_reach,
-                                 b_reach)
-    cfpg = cf.from_pg(pg, source, target, length)
+    pg = paths_graph.from_graph(g_uns, source, target, length, f_reach,
+                                b_reach)
+    cfpg = cf.from_pg(pg)
     paths = cfpg.enumerate_paths()
     assert len(paths) == 2
     assert ('A', 'B', 'D', 'C', 'E') in paths
@@ -82,7 +82,7 @@ def test_on_random_graphs():
             P_correct = [tuple(p) for p in P if len(p) == length+1]
             # Generate the raw paths graph
             G_cf = cf.from_graph(G_i, source, target, length, f_reach,
-                                   b_reach)
+                                 b_reach)
             # Enumerate paths using node tuples
             P_cf_pruned = G_cf.enumerate_paths(names_only=False)
             # Next we extract the paths by projecting down to second
@@ -121,4 +121,4 @@ def test_on_random_graphs():
 
 
 if __name__ == '__main__':
-    test_from_graph_with_levels_bad_depth()
+    test_on_random_graphs()
