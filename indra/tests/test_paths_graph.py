@@ -38,8 +38,8 @@ def test_unreachability_unsigned():
     graph.add_edges_from([('A', 'B'), ('D', 'B'), ('C', 'A'), ('C', 'D')])
     (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
                                                     max_depth=5, signed=False)
-    assert f_level is None
-    assert b_level is None
+    assert f_level == {}
+    assert b_level == {}
 
 
 def test_unreachability_signed():
@@ -52,8 +52,8 @@ def test_unreachability_signed():
                           ('C', 'D', {'sign': 0})])
     (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
                                                     max_depth=5, signed=True)
-    assert f_level is None
-    assert b_level is None
+    assert f_level == {}
+    assert b_level == {}
     # This time, make the unreachability due to the sign
     graph = networkx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
@@ -63,11 +63,11 @@ def test_unreachability_signed():
                           ('C', 'D', {'sign': 0})])
     (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
                                                     max_depth=5, signed=True)
-    assert f_level is None
-    assert b_level is None
+    assert f_level == {}
+    assert b_level == {}
 
 
-def test_paths_graph_unsigned():
+def test_from_graph_unsigned():
     # Path length 1
     f_level, b_level = paths_graph.get_reachable_sets(graph1_s, source, target,
                                  max_depth=3, signed=False)
@@ -84,10 +84,20 @@ def test_paths_graph_unsigned():
     # Path length 3
     pg = paths_graph.from_graph(graph1_uns, source, target, 3, f_level,
                                  b_level, signed=False)
-    assert len(pg) == 0
+    assert len(pg.graph) == 0
 
 
-def test_paths_graph_signed():
+def test_from_graph_unsigned_no_levels():
+    length = 2
+    pg = paths_graph.from_graph(graph1_uns, source, target, length)
+    assert isinstance(pg, paths_graph.PathsGraph)
+    paths = list(networkx.shortest_simple_paths(pg.graph, (0, 'A'), (2, 'D')))
+    assert len(paths) == 2
+    assert [(0, 'A'), (1, 'C'), (2, 'D')] in paths
+    assert [(0, 'A'), (1, 'B'), (2, 'D')] in paths
+
+
+def test_from_graph_signed():
     # Path length 1
     f_level, b_level = paths_graph.get_reachable_sets(graph1_s, source, target,
                                  signed=True, max_depth=3)
@@ -105,7 +115,7 @@ def test_paths_graph_signed():
     # Path length 3
     pg = paths_graph.from_graph(graph1_s, source, target, 3, f_level, b_level,
                                  signed=True, target_polarity=0)
-    assert not pg
+    assert not pg.graph
 
 
 def test_pg_check_unreachable_unsigned():
@@ -114,17 +124,17 @@ def test_pg_check_unreachable_unsigned():
     graph.add_edges_from([('A', 'B'), ('D', 'B'), ('C', 'A'), ('C', 'D')])
     (f_level, b_level) = paths_graph.get_reachable_sets(graph, source, target,
                                                     max_depth=5, signed=False)
-    assert f_level is None
-    assert b_level is None
+    assert f_level == {}
+    assert b_level == {}
     pg = paths_graph.from_graph(graph, source, target, 2, f_level,
                                  b_level, signed=False)
-    assert not pg
+    assert not pg.graph
     # A graph where there is a path, but not of the given length (3)
     (f_level, b_level) = paths_graph.get_reachable_sets(graph1_s, source,
                                             target, max_depth=5, signed=False)
     pg = paths_graph.from_graph(graph, source, target, 3, f_level, b_level,
                                  signed=False)
-    assert not pg
+    assert not pg.graph
 
 
 def test_multidigraph_signed():
@@ -139,4 +149,4 @@ def test_multidigraph_signed():
 
 
 if __name__ == '__main__':
-    test_multidigraph_signed()
+    test_from_graph_unsigned()

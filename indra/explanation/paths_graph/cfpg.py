@@ -66,7 +66,6 @@ import itertools
 import networkx as nx
 from . import paths_graph
 from . import pre_cfpg as pcf
-from .util import prune
 import pickle
 import numpy as np
 
@@ -81,6 +80,7 @@ def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
 def from_pg(pg):
     pre_cfpg = pcf.from_pg(pg)
     return from_pre_cfpg(pre_cfpg)
+
 
 def from_pre_cfpg(pre_cfpg):
     """Generate a cycle free paths graph (CFPG).
@@ -119,16 +119,15 @@ def from_pre_cfpg(pre_cfpg):
     src_3node = pre_cfpg.source_node + (0,) # 3-tuple version of source
     tgt_2node = pre_cfpg.target_node # 2-tuple version of target
     tgt_3node = pre_cfpg.target_node + (0,) # 3-tuple version of target
+    # If we were given an empty pre-CFPG, then the CFPG should also be empty
+    if not pre_cfpg.graph:
+        return CFPG(pre_cfpg, nx.DiGraph())
     # We first hardwire the contents of the dictionary for the level of the
     # target node: dic_CF[path_length]
     next_tgt = {tgt_3node: []}
     pred_tgt = {tgt_3node: pre_cfpg.graph.predecessors(tgt_2node)}
     t_cf_tgt = {tgt_3node: pre_cfpg.tags[tgt_2node]}
     dic_CF = {path_length: ([tgt_3node], next_tgt, pred_tgt, t_cf_tgt)}
-
-    # If we were given an empty pre-CFPG, then the CFPG should also be empty
-    if not pre_cfpg.graph:
-        return nx.DiGraph()
     # Iterate from level n-1 (one "above" the target) back to the source
     for i in reversed(range(1, path_length)):
         # Get the information for level i+1 (one level closer to the target)
@@ -185,7 +184,7 @@ def from_pre_cfpg(pre_cfpg):
     nodes_prune = [v for v in G_cf
                      if (v != tgt_3node and G_cf.successors(v) == []) or
                         (v != src_3node and G_cf.predecessors(v) == [])]
-    G_cf_pruned = prune(G_cf, nodes_prune, src_3node, tgt_3node)
+    G_cf_pruned = pcf.prune(G_cf, nodes_prune, src_3node, tgt_3node)
     return CFPG(pre_cfpg, G_cf_pruned)
 
 
@@ -237,7 +236,7 @@ def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
         nodes_prune = [v for v in g_wx
                          if (v != x and g_wx.successors(v) == []) or
                             (v != src and g_wx.predecessors(v) == [])]
-        g_wx_pruned = prune(g_wx, nodes_prune, src, x)
+        g_wx_pruned = pcf.prune(g_wx, nodes_prune, src, x)
         # If the pruned graph still contains both src and x itself, there is
         # at least one path from the source to x->w. The nodes in this subgraph
         # constitute the new set of tags of the copy of x that lies on a path

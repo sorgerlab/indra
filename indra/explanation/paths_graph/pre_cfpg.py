@@ -2,7 +2,6 @@ import numpy as np
 from copy import copy, deepcopy
 import networkx as nx
 from . import paths_graph
-from .util import prune, check_reach_depth
 
 
 def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
@@ -60,15 +59,6 @@ def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
         A instance of the PreCFPG the containing the pre- cycle free paths
         graph.
     """
-    # If the reachable sets aren't provided by the user, compute them here
-    # with a maximum depth given by the target path length.
-    if fwd_reachset is None or back_reachset is None:
-        (fwd_reachset, back_reachset) = paths_graph.get_reachable_sets(
-                        g, source_name, target_name, max_depth=path_length)
-    # Otherwise, if the reachable sets are provided, use them after checking
-    # if they have a depth at least equal to the given path length
-    check_reach_depth('forward', fwd_reachset, path_length)
-    check_reach_depth('backward', back_reachset, path_length)
     pg = paths_graph.from_graph(g, source_name, target_name, path_length,
                                 fwd_reachset, back_reachset)
     return from_pg(pg)
@@ -350,6 +340,55 @@ def _initialize_pre_cfpg(pg):
 def _add_tag(tag_dict, tag_node, nodes_to_tag):
     for v in nodes_to_tag:
         tag_dict[v].append(tag_node)
+
+
+def prune(pg, nodes_to_prune, source, target):
+    """Iteratively prunes nodes from (a copy of) a paths graph or CFPG.
+
+    We prune the graph *pg* iteratively by the following procedure:
+      1. Remove the nodes given by *nodes_to_prune* from the graph.
+      2. Identify nodes (other than the source node) that now have no
+         incoming edges.
+      3. Identify nodes (other than the target node) that now have no outgoing
+         edges.
+      4. Set *nodes_to_prune* to the nodes identified in steps 2 and 3.
+      5. Repeat from 1 until there are no more nodes to prune.
+
+    Parameters
+    ----------
+    pg : networkx.DiGraph
+        Paths graph to prune.
+    nodes_to_prune : list
+        Nodes to prune from paths graph.
+    source : tuple
+        Source node, of the form (0, source_name).
+    target : tuple
+        Target node, of the form (target_depth, source_name).
+
+    Returns
+    -------
+    networkx.DiGraph()
+        Pruned paths graph.
+    """
+    # First check if we are pruning any nodes to prevent unnecessary copying
+    # of the paths graph
+    if not nodes_to_prune:
+        return pg
+    # Make a copy of the graph
+    pg_pruned = pg.copy()
+    # Perform iterative pruning
+    while nodes_to_prune:
+        # Remove the nodes in our pruning list
+        pg_pruned.remove_nodes_from(nodes_to_prune)
+        # Make a list of nodes whose in or out degree is now 0 (making
+        # sure to exclude the source and target, whose depths are at 0 and
+        # path_length, respectively)
+        no_in_edges = [node for node, in_deg in pg_pruned.in_degree_iter()
+                        if in_deg == 0 and node != source]
+        no_out_edges = [node for node, out_deg in pg_pruned.out_degree_iter()
+                        if out_deg == 0 and node != target]
+        nodes_to_prune = set(no_in_edges + no_out_edges)
+    return pg_pruned
 
 
 def _forward(v, H, length):

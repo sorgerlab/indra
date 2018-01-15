@@ -118,7 +118,6 @@ def test_from_graph_with_levels():
                              (2, 2): [(0, 0), (1, 1), (2, 2)]}
 
 
-@raises(ValueError)
 def test_from_graph_with_levels_bad_depth():
     """Raise an exception if the requested path length is greater than the
     depth of the provided reach sets."""
@@ -130,7 +129,7 @@ def test_from_graph_with_levels_bad_depth():
             pg.get_reachable_sets(g4_uns, source, target, max_depth=max_depth)
     pre_cfpg = pcf.from_graph(g4_uns, source, target, length,
                               fwd_reachset=f_reach, back_reachset=b_reach)
-
+    assert not pre_cfpg.graph
 
 def test_from_pg():
     g4_uns = nx.DiGraph()

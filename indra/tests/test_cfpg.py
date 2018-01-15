@@ -29,7 +29,6 @@ def test_from_graph_no_levels():
     assert len(d_nodes) == 2
 
 
-@raises(ValueError)
 def test_from_graph_with_levels_bad_depth():
     """Raise an exception if the requested path length is greater than the
     depth of the provided reach sets."""
@@ -37,7 +36,7 @@ def test_from_graph_with_levels_bad_depth():
                                                         max_depth=2)
     cfpg = cf.from_graph(g_uns, source, target, length, fwd_reachset=f_reach,
                          back_reachset=b_reach)
-
+    assert not cfpg.graph
 
 def test_from_pg():
     (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
