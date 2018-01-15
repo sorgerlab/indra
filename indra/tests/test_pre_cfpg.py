@@ -22,14 +22,14 @@ def test_prune():
                       ('C', 'D'), ('D', 'T'), ('B', 'T')))
     length = 4
     (f_level, b_level) = pg.get_reachable_sets(g, 'S', 'T', max_depth=length)
-    pg_raw = pg.paths_graph(g, 'S', 'T', length, f_level, b_level)
-    pg_raw_edges = pg_raw.edges()
+    pg_raw = pg.from_graph(g, 'S', 'T', length, f_level, b_level)
+    pg_raw_edges = pg_raw.graph.edges()
     nodes_to_prune = [(2, 'S')]
     # Prune the graph
-    pg_pruned = prune(pg_raw, nodes_to_prune, (0, 'S'), (length, 'T'))
+    pg_pruned = prune(pg_raw.graph, nodes_to_prune, (0, 'S'), (length, 'T'))
     # Make sure we didn't change the original graphs or node lists
     assert nodes_to_prune == [(2, 'S')]
-    assert pg_raw.edges() == pg_raw_edges
+    assert pg_raw.graph.edges() == pg_raw_edges
     # The correctly pruned structure
     assert set(pg_pruned.edges()) == \
            set([((0, 'S'), (1, 'B')), ((1, 'B'), (2, 'C')),
@@ -44,12 +44,11 @@ def test_initialize():
     # involving the source or target
     (f_level, b_level) = pg.get_reachable_sets(g1_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.paths_graph(g1_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw, (0, source),
-                                            (length, target))
+    pg_raw = pg.from_graph(g1_uns, source, target, length, f_level, b_level)
+    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     # Because no nodes are pruned, the initialized "cycle free" paths graph
     # will be the same as the path graph we started with
-    assert pg_0 == pg_raw
+    assert pg_0 == pg_raw.graph
     assert tags == {(0, 'A'): [(0, 'A')], (1, 'B'): [(0, 'A')],
                     (2, 'C'): [(0, 'A')], (3, 'D'): [(0, 'A')]}
 
@@ -57,9 +56,8 @@ def test_initialize():
     # and no acyclic paths
     (f_level, b_level) = pg.get_reachable_sets(g2_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.paths_graph(g2_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw, (0, source),
-                                            (length, target))
+    pg_raw = pg.from_graph(g2_uns, source, target, length, f_level, b_level)
+    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     assert not pg_0
     assert not tags
 
@@ -67,9 +65,8 @@ def test_initialize():
     # with one acyclic path
     (f_level, b_level) = pg.get_reachable_sets(g3_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.paths_graph(g3_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw, (0, source),
-                                            (length, target))
+    pg_raw = pg.from_graph(g3_uns, source, target, length, f_level, b_level)
+    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     assert set(pg_0.edges()) == set([((0, 'A'), (1, 'B')), ((1, 'B'), (2, 'C')),
                                      ((2, 'C'), (3, 'D'))])
     assert tags == {(0, 'A'): [(0, 'A')], (1, 'B'): [(0, 'A')],
@@ -82,9 +79,8 @@ def test_initialize():
     source, target, length = (0, 2, 2)
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
-    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw, (0, source),
-                                            (length, target))
+    pg_raw = pg.from_graph(g4_uns, source, target, length, f_level, b_level)
+    (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     assert pg_0
     assert tags
 
@@ -142,8 +138,8 @@ def test_from_pg():
     source, target, length = (0, 2, 2)
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.paths_graph(g4_uns, source, target, length, f_level, b_level)
-    pre_cfpg = pcf.from_pg(pg_raw, source, target, length)
+    pg_raw = pg.from_graph(g4_uns, source, target, length, f_level, b_level)
+    pre_cfpg = pcf.from_pg(pg_raw)
     assert isinstance(pre_cfpg, pcf.PreCFPG)
     assert pre_cfpg.graph
     assert set(pre_cfpg.graph.edges()) == \
@@ -173,9 +169,12 @@ def test_sampling_precfpg():
     source, target, length = (0, 5, 5)
     (f_level, b_level) = pg.get_reachable_sets(g, source, target,
                                                max_depth=length)
-    pg_raw = pg.paths_graph(g, source, target, length, f_level, b_level)
+    pg_raw = pg.from_graph(g, source, target, length, f_level, b_level)
     src = (0, source)
     tgt = (length, target)
-    pre_cfpg = pcf.from_pg(pg_raw, src, tgt, length)
+    pre_cfpg = pcf.from_pg(pg_raw)
     paths = pre_cfpg.sample_paths(1000)
 
+
+if __name__ == '__main__':
+    test_initialize()

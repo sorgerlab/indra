@@ -69,12 +69,12 @@ def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
     # if they have a depth at least equal to the given path length
     check_reach_depth('forward', fwd_reachset, path_length)
     check_reach_depth('backward', back_reachset, path_length)
-    pg = paths_graph.paths_graph(g, source_name, target_name, path_length,
-                                 fwd_reachset, back_reachset)
-    return from_pg(pg, source_name, target_name, path_length)
+    pg = paths_graph.from_graph(g, source_name, target_name, path_length,
+                                fwd_reachset, back_reachset)
+    return from_pg(pg)
 
 
-def from_pg(pg, source_name, target_name, path_length):
+def from_pg(pg):
     """Compute a pre- cycle free paths graph.
 
     Starting from the "raw" (i.e., containing cycles) paths graph, and given a
@@ -103,13 +103,7 @@ def from_pg(pg, source_name, target_name, path_length):
     ----------
     pg : networkx.DiGraph()
         "Raw" (contains cycles) paths graph as created by
-        :py:func:`indra.explanation.paths_graph.paths_graph`.
-    source_name : str
-        Name of the source node.
-    target_name : str
-        Name of the target node.
-    path_length : int
-        Desired path length.
+        :py:func:`indra.explanation.paths_graph.from_graph`.
 
     Returns
     -------
@@ -118,16 +112,16 @@ def from_pg(pg, source_name, target_name, path_length):
         graph.
     """
     # Initialize the cycle-free paths graph and the tag dictionary
-    source_node = (0, source_name)
-    target_node = (path_length, target_name)
-    dic_PG = {0: _initialize_pre_cfpg(pg, source_node, target_node)}
+    source_node = pg.source_node
+    target_node = pg.target_node
+    dic_PG = {0: _initialize_pre_cfpg(pg)}
     round_counter = 1
     # Perform CFPG generation in successive rounds to ensure convergence
     while True:
         #print("Starting round %d" % round_counter)
         #print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]),
                                                #len(dic_PG[0][0].edges())))
-        for k in range(1, path_length+1):
+        for k in range(1, pg.path_length+1):
             # Start by copying the information from the previous level
             H = dic_PG[k-1][0].copy()
             tags = deepcopy(dic_PG[k-1][1])
@@ -144,7 +138,7 @@ def from_pg(pg, source_name, target_name, path_length):
                 dic_X = {}
                 for x in X:
                     tags_x = {}
-                    g_x_f = _forward(x, H, path_length)
+                    g_x_f = _forward(x, H, pg.path_length)
                     g_x_b = _backward(x, H)
                     g_x = nx.DiGraph()
                     g_x.add_edges_from(g_x_b.edges())
@@ -197,9 +191,9 @@ def from_pg(pg, source_name, target_name, path_length):
         else:
             dic_PG = {0: dic_PG[k]}
         round_counter += 1
-    pre_cfpg, tags = dic_PG[path_length]
+    pre_cfpg, tags = dic_PG[pg.path_length]
     # Return only the fully processed cfpg as an instance of the PreCFPG class
-    return PreCFPG(source_name, target_name, pre_cfpg, tags, path_length)
+    return PreCFPG(pg, pre_cfpg, tags)
 
 
 class PreCFPG(object):
@@ -217,18 +211,15 @@ class PreCFPG(object):
 
     Parameters
     ----------
-    source_name : str
-        Name of the source node in the original underlying graph.
-    target_name : str
-        Name of the target node in the original underlying graph.
+    pg : networkx.DiGraph()
+        "Raw" (contains cycles) paths graph as created by
+        :py:func:`indra.explanation.paths_graph.from_graph`.
     graph : networkx.DiGraph
         The graph structure of the pre-CFPG.
     tags : dict
         A dictionary, keyed by node, with lists of other nodes representing
         the nodes lying upstream on cycle free paths. Node that each node
         also has itself as a tag.
-    path_length : int
-        The path length for the PreCFPG.
 
     Attributes
     ----------
@@ -238,14 +229,14 @@ class PreCFPG(object):
         Node in the pre-CFPG graph representing the target:
         (path_length, target_name)
     """
-    def __init__(self, source_name, target_name, graph, tags, path_length):
-        self.source_name = source_name
-        self.source_node = (0, source_name)
-        self.target_name = target_name
-        self.target_node = (path_length, target_name)
+    def __init__(self, pg, graph, tags):
+        self.source_name = pg.source_name
+        self.source_node = pg.source_node
+        self.target_name = pg.target_name
+        self.target_node = pg.target_node
+        self.path_length = pg.path_length
         self.graph = graph
         self.tags = tags
-        self.path_length = path_length
 
     def sample_paths(self, num_paths):
         """Sample cycle-free paths from the pre-CFPG.
@@ -324,12 +315,12 @@ class PreCFPG(object):
         pass
 
 
-def _initialize_pre_cfpg(pg, source_node, target_node):
+def _initialize_pre_cfpg(pg):
     """Initialize pre- cycle free paths graph data structures.
 
     Parameters
     ----------
-    pg : networkx.DiGraph()
+    pg : PathsGraph
         "Raw" (contains cycles) paths graph as created by
         :py:func:`indra.explanation.paths_graph.paths_graph`.
     source_node : tuple
@@ -343,16 +334,16 @@ def _initialize_pre_cfpg(pg, source_node, target_node):
     """
     # Identify the initial set of nodes to be pruned. In this initial phase,
     # they are simply nodes whose names match the source or target.
-    nodes_to_prune = set([v for v in pg.nodes_iter()
-                          if (v != source_node) and (v != target_node) and \
-                             ((v[1] == source_node[1]) or \
-                              (v[1] == target_node[1]))])
+    nodes_to_prune = set([v for v in pg.graph.nodes_iter()
+                        if (v != pg.source_node) and (v != pg.target_node) and \
+                             ((v[1] == pg.source_node[1]) or \
+                              (v[1] == pg.target_node[1]))])
     # Get the paths graph after initial source_node/target_node cycle pruning
-    pre_cfpg_0 = prune(pg, nodes_to_prune, source_node, target_node)
+    pre_cfpg_0 = prune(pg.graph, nodes_to_prune, pg.source_node, pg.target_node)
     # Initialize an empty list of tags for each node
     tags = dict([(node, []) for node in pre_cfpg_0.nodes_iter()])
     # Add source_node tag to all nodes
-    _add_tag(tags, source_node, [v for v in pre_cfpg_0.nodes()])
+    _add_tag(tags, pg.source_node, [v for v in pre_cfpg_0.nodes()])
     return (pre_cfpg_0, tags)
 
 

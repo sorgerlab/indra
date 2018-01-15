@@ -106,8 +106,8 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
     return (f_level, b_level)
 
 
-def paths_graph(g, source, target, length, f_level, b_level,
-                signed=False, target_polarity=0):
+def from_graph(g, source, target, length, f_level, b_level,
+               signed=False, target_polarity=0):
     """Generate a graph where all nodes lie on a path of the given length.
 
     Nodes in the graph account for the cumulative polarity from the source
@@ -240,7 +240,8 @@ def paths_graph(g, source, target, length, f_level, b_level,
         pg_edges |= actual_edges
     path_graph = nx.DiGraph()
     path_graph.add_edges_from(pg_edges)
-    return path_graph
+    return PathsGraph(source, target, path_graph, length, signed,
+                      target_polarity)
 
 
 class PathsGraph(object):
@@ -251,10 +252,10 @@ class PathsGraph(object):
         self.signed = signed
         self.target_polarity = target_polarity
         if signed:
-            self.source_name = (0, (source_name, 0))
+            self.source_node = (0, (source_name, 0))
             self.target_node = (path_length, (target_name, target_polarity))
         else:
-            self.source_name = (0, source_name)
+            self.source_node = (0, source_name)
             self.target_node = (path_length, target_name)
         self.graph = graph
         self.path_length = path_length

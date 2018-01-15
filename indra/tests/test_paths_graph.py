@@ -71,18 +71,18 @@ def test_paths_graph_unsigned():
     # Path length 1
     f_level, b_level = paths_graph.get_reachable_sets(graph1_s, source, target,
                                  max_depth=3, signed=False)
-    pg = paths_graph.paths_graph(graph1_uns, source, target, 1, f_level,
+    pg = paths_graph.from_graph(graph1_uns, source, target, 1, f_level,
                                  b_level, signed=False)
-    assert len(pg) == 0
+    assert len(pg.graph) == 0
     # Path length 2
-    pg = paths_graph.paths_graph(graph1_uns, source, target, 2, f_level,
+    pg = paths_graph.from_graph(graph1_uns, source, target, 2, f_level,
                                  b_level, signed=False)
-    paths = list(networkx.shortest_simple_paths(pg, (0, 'A'), (2, 'D')))
+    paths = list(networkx.shortest_simple_paths(pg.graph, (0, 'A'), (2, 'D')))
     assert len(paths) == 2
     assert [(0, 'A'), (1, 'C'), (2, 'D')] in paths
     assert [(0, 'A'), (1, 'B'), (2, 'D')] in paths
     # Path length 3
-    pg = paths_graph.paths_graph(graph1_uns, source, target, 3, f_level,
+    pg = paths_graph.from_graph(graph1_uns, source, target, 3, f_level,
                                  b_level, signed=False)
     assert len(pg) == 0
 
@@ -91,19 +91,19 @@ def test_paths_graph_signed():
     # Path length 1
     f_level, b_level = paths_graph.get_reachable_sets(graph1_s, source, target,
                                  signed=True, max_depth=3)
-    pg = paths_graph.paths_graph(graph1_s, source, target, 1, f_level, b_level,
+    pg = paths_graph.from_graph(graph1_s, source, target, 1, f_level, b_level,
                                  signed=True, target_polarity=0)
-    assert not pg
+    assert not pg.graph
     # Path length 2
-    pg = paths_graph.paths_graph(graph1_s, source, target, 2, f_level, b_level, 
+    pg = paths_graph.from_graph(graph1_s, source, target, 2, f_level, b_level, 
                                  signed=True, target_polarity=0)
-    paths = list(networkx.shortest_simple_paths(pg, (0, ('A', 0)),
-                                                    (2, ('D', 0))))
+    paths = list(networkx.shortest_simple_paths(pg.graph, (0, ('A', 0)),
+                                                          (2, ('D', 0))))
     assert len(paths) == 2
     assert [(0, ('A', 0)), (1, ('C', 0)), (2, ('D', 0))] in paths
     assert [(0, ('A', 0)), (1, ('B', 0)), (2, ('D', 0))] in paths
     # Path length 3
-    pg = paths_graph.paths_graph(graph1_s, source, target, 3, f_level, b_level,
+    pg = paths_graph.from_graph(graph1_s, source, target, 3, f_level, b_level,
                                  signed=True, target_polarity=0)
     assert not pg
 
@@ -116,13 +116,13 @@ def test_pg_check_unreachable_unsigned():
                                                     max_depth=5, signed=False)
     assert f_level is None
     assert b_level is None
-    pg = paths_graph.paths_graph(graph, source, target, 2, f_level,
+    pg = paths_graph.from_graph(graph, source, target, 2, f_level,
                                  b_level, signed=False)
     assert not pg
     # A graph where there is a path, but not of the given length (3)
     (f_level, b_level) = paths_graph.get_reachable_sets(graph1_s, source,
                                             target, max_depth=5, signed=False)
-    pg = paths_graph.paths_graph(graph, source, target, 3, f_level, b_level,
+    pg = paths_graph.from_graph(graph, source, target, 3, f_level, b_level,
                                  signed=False)
     assert not pg
 
