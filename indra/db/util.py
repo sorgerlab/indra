@@ -1,7 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_db_stmts']
+__all__ = ['get_defaults', 'get_primary_db', 'insert_agents',
+           'insert_db_stmts', 'get_abstracts_by_pmids', 'get_auth_xml_pmcids',
+           'get_statements_by_gene_role_type', 'get_statements',
+           'make_stmts_from_db_list']
 
 import os
 import json
@@ -283,7 +286,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
     for stmt in db_stmts:
         subset.append(stmt)
         if len(subset) == count:
-            stmts.extend(_stmts_from_db_list(subset))
+            stmts.extend(make_stmts_from_db_list(subset))
             subset = []
         total_counter += 1
         if total_counter % count == 0:
@@ -292,11 +295,11 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
             else:
                 print("%d statements" % total_counter)
 
-    stmts.extend(_stmts_from_db_list(subset))
+    stmts.extend(make_stmts_from_db_list(subset))
     return stmts
 
 
-def _stmts_from_db_list(db_stmt_objs):
+def make_stmts_from_db_list(db_stmt_objs):
     stmt_json_list = []
     for st_obj in db_stmt_objs:
         stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
