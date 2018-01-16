@@ -231,6 +231,9 @@ class PreCFPG(paths_graph.PathsGraph):
     def enumerate_paths(self):
         raise NotImplementedError()
 
+    def count_paths(self):
+        raise NotImplementedError()
+
     def _successor(self, path, v, weighted):
         """Randomly choose a successor node of v given the current path.
 

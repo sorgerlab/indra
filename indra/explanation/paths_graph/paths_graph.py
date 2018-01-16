@@ -4,6 +4,7 @@ import itertools
 import numpy as np
 import networkx as nx
 from indra import logging
+from collections import defaultdict
 
 logger = logging.getLogger('paths_graph')
 
@@ -290,6 +291,32 @@ class PathsGraph(object):
             return self._name_paths(paths)
         else:
             return paths
+
+    def count_paths(self):
+        """Count the total number of paths without enumerating them.
+
+        Returns
+        -------
+        int
+            The number of paths.
+        """
+        # Group nodes by level
+        levels = defaultdict(list)
+        for node in self.graph.nodes():
+            levels[node[0]].append(node)
+        # Initialize the path count
+        path_count = {}
+        path_count[self.source_node] = 1
+        # Iterate over the levels
+        for i in range(1, self.path_length + 1):
+            # Iterate over the nodes at this level
+            for node in levels[i]:
+                # The count for this node is the sum of the counts over all
+                # of its predecessors
+                path_count[node] = \
+                        sum([path_count[pred]
+                            for pred in self.graph.predecessors(node)])
+        return path_count[self.target_node]
 
     @staticmethod
     def _name_paths(paths):

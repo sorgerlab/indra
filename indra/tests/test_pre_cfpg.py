@@ -182,5 +182,11 @@ def test_enumerate_not_implemented():
     pre_cfpg.enumerate_paths()
 
 
+@raises(NotImplementedError)
+def test_count_not_implemented():
+    pre_cfpg = pcf.from_graph(g3_uns, 'A', 'D', 3)
+    pre_cfpg.count_paths()
+
+
 if __name__ == '__main__':
     test_sampling_precfpg()

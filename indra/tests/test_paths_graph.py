@@ -152,9 +152,7 @@ def test_sample_paths():
     g_uns = networkx.DiGraph()
     g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
                           ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
-    source = 'A'
-    target = 'E'
-    length = 4
+    source, target, length = ('A', 'E', 4)
     pg = paths_graph.from_graph(g_uns, source, target, length)
     sample_paths = pg.sample_paths(100)
     assert set(sample_paths) == set(
@@ -168,9 +166,7 @@ def test_enumerate_paths():
     g_uns = networkx.DiGraph()
     g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
                           ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
-    source = 'A'
-    target = 'E'
-    length = 4
+    source, target, length = ('A', 'E', 4)
     pg = paths_graph.from_graph(g_uns, source, target, length)
     enum_paths = pg.enumerate_paths()
     assert set(enum_paths) == set(
@@ -180,5 +176,15 @@ def test_enumerate_paths():
          ('A', 'C', 'D', 'C', 'E')])
 
 
+def test_count_paths():
+    g_uns = networkx.DiGraph()
+    g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
+                          ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
+    source, target, length = ('A', 'E', 4)
+    pg = paths_graph.from_graph(g_uns, source, target, length)
+    num_paths = pg.count_paths()
+    assert num_paths == 4
+
+
 if __name__ == '__main__':
-    test_from_graph_unsigned()
+    test_count_paths()

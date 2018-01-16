@@ -71,6 +71,12 @@ def test_enumerate_paths():
          ('A', 'C', 'D', 'B', 'E')])
 
 
+def test_count_paths():
+    cfpg = cf.from_graph(g_uns, source, target, length)
+    num_paths = cfpg.count_paths()
+    assert num_paths == 2
+
+
 def test_on_random_graphs():
     """For each of 25 random graphs, check that the number of cycle free paths
     for a given depth and source/target pair matches the results from
@@ -98,6 +104,9 @@ def test_on_random_graphs():
             # Generate the raw paths graph
             G_cf = cf.from_graph(G_i, source, target, length, f_reach,
                                  b_reach)
+            # Check the path count
+            path_count = G_cf.count_paths()
+            assert len(P_correct) == path_count
             # Enumerate paths using node tuples
             P_cf_pruned = G_cf.enumerate_paths(names_only=False)
             # Next we extract the paths by projecting down to second
