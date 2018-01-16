@@ -148,5 +148,32 @@ def test_multidigraph_signed():
     assert b_level[1] == {('A', 0), ('A', 1)}
 
 
+def test_sample_paths():
+    g_uns = networkx.DiGraph()
+    g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
+                          ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
+    source = 'A'
+    target = 'E'
+    length = 4
+    pg = paths_graph.from_graph(g_uns, source, target, length)
+    # TODO
+
+
+def test_enumerate_paths():
+    g_uns = networkx.DiGraph()
+    g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
+                          ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
+    source = 'A'
+    target = 'E'
+    length = 4
+    pg = paths_graph.from_graph(g_uns, source, target, length)
+    enum_paths = pg.enumerate_paths()
+    assert set(enum_paths) == set(
+        [('A', 'B', 'D', 'B', 'E'),
+         ('A', 'B', 'D', 'C', 'E'),
+         ('A', 'C', 'D', 'B', 'E'),
+         ('A', 'C', 'D', 'C', 'E')])
+
+
 if __name__ == '__main__':
-    test_from_graph_unsigned()
+    test_enumerate_paths()

@@ -38,6 +38,7 @@ def test_from_graph_with_levels_bad_depth():
                          back_reachset=b_reach)
     assert not cfpg.graph
 
+
 def test_from_pg():
     (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
                                                         max_depth=length)
@@ -52,7 +53,6 @@ def test_from_pg():
     # The D node should be split into two nodes
     d_nodes = [n for n in cfpg.graph.nodes() if n[1] == 'D']
     assert len(d_nodes) == 2
-
 
 
 def test_on_random_graphs():

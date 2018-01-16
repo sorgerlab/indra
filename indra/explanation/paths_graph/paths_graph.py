@@ -284,6 +284,19 @@ class PathsGraph(object):
         self.path_length = path_length
 
 
+    def enumerate_paths(self, names_only=True):
+        paths = list(nx.all_simple_paths(self.graph, self.source_node,
+                                         self.target_node))
+        if names_only:
+            return self._name_paths(paths)
+        else:
+            return paths
+
+
+    @staticmethod
+    def _name_paths(paths):
+        return [tuple([node[1] for node in path]) for path in paths]
+
     """
     def sample_single_path(self, weighted=False):
         # Sample a path from the paths graph.

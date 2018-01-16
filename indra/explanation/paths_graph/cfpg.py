@@ -188,7 +188,7 @@ def from_pre_cfpg(pre_cfpg):
     return CFPG(pre_cfpg, G_cf_pruned)
 
 
-class CFPG(object):
+class CFPG(paths_graph.PathsGraph):
     def __init__(self, pre_cfpg, graph):
         self.source_name = pre_cfpg.source_name
         self.source_node = pre_cfpg.source_node + (0,)
@@ -196,18 +196,6 @@ class CFPG(object):
         self.target_node = pre_cfpg.target_node + (0,)
         self.path_length = pre_cfpg.path_length
         self.graph = graph
-
-    def enumerate_paths(self, names_only=True):
-        paths = list(nx.all_simple_paths(self.graph, self.source_node,
-                                         self.target_node))
-        if names_only:
-            return self._name_paths(paths)
-        else:
-            return paths
-
-    @staticmethod
-    def _name_paths(paths):
-        return [tuple([node[1] for node in path]) for path in paths]
 
 
 def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
