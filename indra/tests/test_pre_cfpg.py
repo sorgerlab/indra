@@ -1,6 +1,6 @@
 import networkx as nx
 from nose.tools import raises
-from indra.explanation.paths_graph import paths_graph as pg
+from indra.explanation import paths_graph as pg
 from indra.explanation.paths_graph import pre_cfpg as pcf
 
 
@@ -21,7 +21,7 @@ def test_prune():
                       ('C', 'D'), ('D', 'T'), ('B', 'T')))
     length = 4
     (f_level, b_level) = pg.get_reachable_sets(g, 'S', 'T', max_depth=length)
-    pg_raw = pg.from_graph(g, 'S', 'T', length, f_level, b_level)
+    pg_raw = pg.PathsGraph.from_graph(g, 'S', 'T', length, f_level, b_level)
     pg_raw_edges = pg_raw.graph.edges()
     nodes_to_prune = [(2, 'S')]
     # Prune the graph
@@ -43,7 +43,8 @@ def test_initialize():
     # involving the source or target
     (f_level, b_level) = pg.get_reachable_sets(g1_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.from_graph(g1_uns, source, target, length, f_level, b_level)
+    pg_raw = pg.PathsGraph.from_graph(g1_uns, source, target, length, f_level,
+                                      b_level)
     (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     # Because no nodes are pruned, the initialized "cycle free" paths graph
     # will be the same as the path graph we started with
@@ -55,7 +56,8 @@ def test_initialize():
     # and no acyclic paths
     (f_level, b_level) = pg.get_reachable_sets(g2_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.from_graph(g2_uns, source, target, length, f_level, b_level)
+    pg_raw = pg.PathsGraph.from_graph(g2_uns, source, target, length, f_level,
+                                      b_level)
     (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     assert not pg_0
     assert not tags
@@ -64,7 +66,8 @@ def test_initialize():
     # with one acyclic path
     (f_level, b_level) = pg.get_reachable_sets(g3_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.from_graph(g3_uns, source, target, length, f_level, b_level)
+    pg_raw = pg.PathsGraph.from_graph(g3_uns, source, target, length, f_level,
+                                      b_level)
     (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     assert set(pg_0.edges()) == set([((0, 'A'), (1, 'B')), ((1, 'B'), (2, 'C')),
                                      ((2, 'C'), (3, 'D'))])
@@ -78,7 +81,8 @@ def test_initialize():
     source, target, length = (0, 2, 2)
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.from_graph(g4_uns, source, target, length, f_level, b_level)
+    pg_raw = pg.PathsGraph.from_graph(g4_uns, source, target, length, f_level,
+                                      b_level)
     (pg_0, tags) = pcf._initialize_pre_cfpg(pg_raw)
     assert pg_0
     assert tags
@@ -88,8 +92,8 @@ def test_from_graph_no_levels():
     g4_uns = nx.DiGraph()
     g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
     source, target, length = (0, 2, 2)
-    pre_cfpg = pcf.from_graph(g4_uns, source, target, length)
-    assert isinstance(pre_cfpg, pcf.PreCFPG)
+    pre_cfpg = pg.PreCFPG.from_graph(g4_uns, source, target, length)
+    assert isinstance(pre_cfpg, pg.PreCFPG)
     assert pre_cfpg.graph
     assert set(pre_cfpg.graph.edges()) == \
                             set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
@@ -105,10 +109,10 @@ def test_from_graph_with_levels():
     max_depth = 5
     (f_reach, b_reach) = \
             pg.get_reachable_sets(g4_uns, source, target, max_depth=max_depth)
-    pre_cfpg = pcf.from_graph(g4_uns, source, target, length,
-                              fwd_reachset=f_reach, back_reachset=b_reach)
+    pre_cfpg = pg.PreCFPG.from_graph(g4_uns, source, target, length,
+                                   fwd_reachset=f_reach, back_reachset=b_reach)
 
-    assert isinstance(pre_cfpg, pcf.PreCFPG)
+    assert isinstance(pre_cfpg, pg.PreCFPG)
     assert pre_cfpg.graph
     assert set(pre_cfpg.graph.edges()) == \
                             set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
@@ -126,8 +130,8 @@ def test_from_graph_with_levels_bad_depth():
     max_depth = 1
     (f_reach, b_reach) = \
             pg.get_reachable_sets(g4_uns, source, target, max_depth=max_depth)
-    pre_cfpg = pcf.from_graph(g4_uns, source, target, length,
-                              fwd_reachset=f_reach, back_reachset=b_reach)
+    pre_cfpg = pg.PreCFPG.from_graph(g4_uns, source, target, length,
+                                    fwd_reachset=f_reach, back_reachset=b_reach)
     assert not pre_cfpg.graph
 
 
@@ -137,9 +141,10 @@ def test_from_pg():
     source, target, length = (0, 2, 2)
     (f_level, b_level) = pg.get_reachable_sets(g4_uns, source, target,
                                                max_depth=length)
-    pg_raw = pg.from_graph(g4_uns, source, target, length, f_level, b_level)
-    pre_cfpg = pcf.from_pg(pg_raw)
-    assert isinstance(pre_cfpg, pcf.PreCFPG)
+    pg_raw = pg.PathsGraph.from_graph(g4_uns, source, target, length, f_level,
+                                      b_level)
+    pre_cfpg = pg.PreCFPG.from_pg(pg_raw)
+    assert isinstance(pre_cfpg, pg.PreCFPG)
     assert pre_cfpg.graph
     assert set(pre_cfpg.graph.edges()) == \
                             set([((0, 0), (1, 1)), ((1, 1), (2, 2))])
@@ -169,22 +174,20 @@ def test_sampling_precfpg():
     source, target, length = (0, 5, 5)
     (f_level, b_level) = pg.get_reachable_sets(g, source, target,
                                                max_depth=length)
-    pg_raw = pg.from_graph(g, source, target, length, f_level, b_level)
-    src = (0, source)
-    tgt = (length, target)
-    pre_cfpg = pcf.from_pg(pg_raw)
+    pre_cfpg = pg.PreCFPG.from_graph(g, source, target, length, f_level,
+                                     b_level)
     paths = pre_cfpg.sample_paths(20)
 
 
 @raises(NotImplementedError)
 def test_enumerate_not_implemented():
-    pre_cfpg = pcf.from_graph(g3_uns, 'A', 'D', 3)
+    pre_cfpg = pg.PreCFPG.from_graph(g3_uns, 'A', 'D', 3)
     pre_cfpg.enumerate_paths()
 
 
 @raises(NotImplementedError)
 def test_count_not_implemented():
-    pre_cfpg = pcf.from_graph(g3_uns, 'A', 'D', 3)
+    pre_cfpg = pg.PreCFPG.from_graph(g3_uns, 'A', 'D', 3)
     pre_cfpg.count_paths()
 
 

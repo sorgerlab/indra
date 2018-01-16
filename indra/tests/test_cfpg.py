@@ -1,10 +1,7 @@
 import pickle
 import networkx as nx
-from nose.tools import raises
 from os.path import dirname, join
-from indra.explanation.paths_graph import paths_graph, pre_cfpg as pcf
-from indra.explanation.paths_graph import cfpg as cf
-
+from indra.explanation import paths_graph as pg
 
 random_graph_pkl = join(dirname(__file__), 'random_graphs.pkl')
 
@@ -17,8 +14,8 @@ length = 4
 
 
 def test_from_graph_no_levels():
-    cfpg = cf.from_graph(g_uns, source, target, length)
-    assert isinstance(cfpg, cf.CFPG)
+    cfpg = pg.CFPG.from_graph(g_uns, source, target, length)
+    assert isinstance(cfpg, pg.CFPG)
     paths = cfpg.enumerate_paths()
     assert len(paths) == 2
     assert ('A', 'B', 'D', 'C', 'E') in paths
@@ -32,19 +29,19 @@ def test_from_graph_no_levels():
 def test_from_graph_with_levels_bad_depth():
     """Raise an exception if the requested path length is greater than the
     depth of the provided reach sets."""
-    (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
+    (f_reach, b_reach) = pg.get_reachable_sets(g_uns, source, target,
                                                         max_depth=2)
-    cfpg = cf.from_graph(g_uns, source, target, length, fwd_reachset=f_reach,
-                         back_reachset=b_reach)
+    cfpg = pg.CFPG.from_graph(g_uns, source, target, length,
+                              fwd_reachset=f_reach, back_reachset=b_reach)
     assert not cfpg.graph
 
 
 def test_from_pg():
-    (f_reach, b_reach) = paths_graph.get_reachable_sets(g_uns, source, target,
+    (f_reach, b_reach) = pg.get_reachable_sets(g_uns, source, target,
                                                         max_depth=length)
-    pg = paths_graph.from_graph(g_uns, source, target, length, f_reach,
-                                b_reach)
-    cfpg = cf.from_pg(pg)
+    pg_0 = pg.PathsGraph.from_graph(g_uns, source, target, length, f_reach,
+                                      b_reach)
+    cfpg = pg.CFPG.from_pg(pg_0)
     paths = cfpg.enumerate_paths()
     assert len(paths) == 2
     assert ('A', 'B', 'D', 'C', 'E') in paths
@@ -56,7 +53,7 @@ def test_from_pg():
 
 
 def test_sample_paths():
-    cfpg = cf.from_graph(g_uns, source, target, length)
+    cfpg = pg.CFPG.from_graph(g_uns, source, target, length)
     sample_paths = cfpg.sample_paths(100)
     assert set(sample_paths) == set(
         [('A', 'B', 'D', 'C', 'E'),
@@ -64,7 +61,7 @@ def test_sample_paths():
 
 
 def test_enumerate_paths():
-    cfpg = cf.from_graph(g_uns, source, target, length)
+    cfpg = pg.CFPG.from_graph(g_uns, source, target, length)
     enum_paths = cfpg.enumerate_paths()
     assert set(enum_paths) == set(
         [('A', 'B', 'D', 'C', 'E'),
@@ -72,7 +69,7 @@ def test_enumerate_paths():
 
 
 def test_count_paths():
-    cfpg = cf.from_graph(g_uns, source, target, length)
+    cfpg = pg.CFPG.from_graph(g_uns, source, target, length)
     num_paths = cfpg.count_paths()
     assert num_paths == 2
 
@@ -90,9 +87,8 @@ def test_on_random_graphs():
     for i in range(1):
         G_i, source, target = rg_dict[i]
         print("graph# %d, %d nodes, %d edges" % (i, len(G_i), len(G_i.edges())))
-        (f_reach, b_reach)  = \
-                paths_graph.get_reachable_sets(G_i, source, target,
-                        max_depth=max_depth, signed=False)
+        (f_reach, b_reach)  = pg.get_reachable_sets(G_i, source, target,
+                                        max_depth=max_depth, signed=False)
         # Try different path lengths
         for length in range(min_depth, max_depth+1):
             print("Checking paths of length %d" % length)
@@ -102,8 +98,8 @@ def test_on_random_graphs():
             # Filter to paths of this length
             P_correct = [tuple(p) for p in P if len(p) == length+1]
             # Generate the raw paths graph
-            G_cf = cf.from_graph(G_i, source, target, length, f_reach,
-                                 b_reach)
+            G_cf = pg.CFPG.from_graph(G_i, source, target, length, f_reach,
+                                      b_reach)
             # Check the path count
             path_count = G_cf.count_paths()
             assert len(P_correct) == path_count

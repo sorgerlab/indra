@@ -1,4 +1,4 @@
-import networkx
+import networkx as nx
 import pygraphviz
 from indra.explanation.paths_graph import PathsGraph, get_reachable_sets
 
@@ -6,14 +6,14 @@ source = 'A'
 target = 'D'
 target_polarity = 0
 
-graph1_s = networkx.DiGraph()
+graph1_s = nx.DiGraph()
 graph1_s.add_nodes_from(['A', 'B', 'C', 'D'])
 graph1_s.add_edges_from([('A', 'B', {'sign': 0}),
                          ('B', 'D', {'sign': 0}),
                          ('A', 'C', {'sign': 0}),
                          ('C', 'D', {'sign': 0})])
 
-graph1_uns = networkx.DiGraph()
+graph1_uns = nx.DiGraph()
 graph1_uns.add_nodes_from(['A', 'B', 'C', 'D'])
 graph1_uns.add_edges_from([('A', 'B'), ('B', 'D'), ('A', 'C'), ('C', 'D')])
 
@@ -32,7 +32,7 @@ def test_get_reachable_sets_signed():
 
 
 def test_unreachability_unsigned():
-    graph = networkx.DiGraph()
+    graph = nx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
     graph.add_edges_from([('A', 'B'), ('D', 'B'), ('C', 'A'), ('C', 'D')])
     (f_level, b_level) = get_reachable_sets(graph, source, target,
@@ -43,7 +43,7 @@ def test_unreachability_unsigned():
 
 def test_unreachability_signed():
     # First make the unreachability due to the direction of the edges
-    graph = networkx.DiGraph()
+    graph = nx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
     graph.add_edges_from([('A', 'B', {'sign': 0}),
                           ('D', 'B', {'sign': 0}),
@@ -54,7 +54,7 @@ def test_unreachability_signed():
     assert f_level == {}
     assert b_level == {}
     # This time, make the unreachability due to the sign
-    graph = networkx.DiGraph()
+    graph = nx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
     graph.add_edges_from([('A', 'B', {'sign': 0}),
                           ('D', 'B', {'sign': 0}),
@@ -76,7 +76,7 @@ def test_from_graph_unsigned():
     # Path length 2
     pg = PathsGraph.from_graph(graph1_uns, source, target, 2, f_level, b_level, 
                                signed=False)
-    paths = list(networkx.shortest_simple_paths(pg.graph, (0, 'A'), (2, 'D')))
+    paths = list(nx.shortest_simple_paths(pg.graph, (0, 'A'), (2, 'D')))
     assert len(paths) == 2
     assert [(0, 'A'), (1, 'C'), (2, 'D')] in paths
     assert [(0, 'A'), (1, 'B'), (2, 'D')] in paths
@@ -90,7 +90,7 @@ def test_from_graph_unsigned_no_levels():
     length = 2
     pg = PathsGraph.from_graph(graph1_uns, source, target, length)
     assert isinstance(pg, PathsGraph)
-    paths = list(networkx.shortest_simple_paths(pg.graph, (0, 'A'), (2, 'D')))
+    paths = list(nx.shortest_simple_paths(pg.graph, (0, 'A'), (2, 'D')))
     assert len(paths) == 2
     assert [(0, 'A'), (1, 'C'), (2, 'D')] in paths
     assert [(0, 'A'), (1, 'B'), (2, 'D')] in paths
@@ -106,7 +106,7 @@ def test_from_graph_signed():
     # Path length 2
     pg = PathsGraph.from_graph(graph1_s, source, target, 2, f_level, b_level,
                                signed=True, target_polarity=0)
-    paths = list(networkx.shortest_simple_paths(pg.graph, (0, ('A', 0)),
+    paths = list(nx.shortest_simple_paths(pg.graph, (0, ('A', 0)),
                                                           (2, ('D', 0))))
     assert len(paths) == 2
     assert [(0, ('A', 0)), (1, ('C', 0)), (2, ('D', 0))] in paths
@@ -118,7 +118,7 @@ def test_from_graph_signed():
 
 
 def test_pg_check_unreachable_unsigned():
-    graph = networkx.DiGraph()
+    graph = nx.DiGraph()
     graph.add_nodes_from(['A', 'B', 'C', 'D'])
     graph.add_edges_from([('A', 'B'), ('D', 'B'), ('C', 'A'), ('C', 'D')])
     (f_level, b_level) = get_reachable_sets(graph, source, target, max_depth=5, 
@@ -137,7 +137,7 @@ def test_pg_check_unreachable_unsigned():
 
 
 def test_multidigraph_signed():
-    graph = networkx.MultiDiGraph()
+    graph = nx.MultiDiGraph()
     graph.add_edges_from([('A', 'B', {'sign': 0}), ('A', 'B', {'sign': 1})])
     f_level, b_level = get_reachable_sets(graph, 'A', 'B', max_depth=3,
                                           signed=True)
@@ -148,7 +148,7 @@ def test_multidigraph_signed():
 
 
 def test_sample_paths():
-    g_uns = networkx.DiGraph()
+    g_uns = nx.DiGraph()
     g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
                           ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
     source, target, length = ('A', 'E', 4)
@@ -162,7 +162,7 @@ def test_sample_paths():
 
 
 def test_enumerate_paths():
-    g_uns = networkx.DiGraph()
+    g_uns = nx.DiGraph()
     g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
                           ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
     source, target, length = ('A', 'E', 4)
@@ -176,7 +176,7 @@ def test_enumerate_paths():
 
 
 def test_count_paths():
-    g_uns = networkx.DiGraph()
+    g_uns = nx.DiGraph()
     g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
                           ('D', 'B'), ('D', 'C'), ('B', 'E'), ('C', 'E')))
     source, target, length = ('A', 'E', 4)

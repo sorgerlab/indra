@@ -1,192 +1,10 @@
-import numpy as np
 from copy import copy, deepcopy
+import numpy as np
 import networkx as nx
-from . import paths_graph
+from .paths_graph import PathsGraph
 
 
-def from_graph(g, source_name, target_name, path_length, fwd_reachset=None,
-               back_reachset=None):
-    """Compute a pre- cycle free paths graph.
-
-    Starting from the "raw" (i.e., containing cycles) paths graph, and given a
-    target path length n, the algorithm iterates over each "level" in the graph
-    0 <= k <= n where level 0 consists only of the source node and level n
-    consists only of the target.
-
-    Each level k consists of a set of nodes, X; we examine each node x in X and
-    identify the subset of nodes that are reachable in both the forward and
-    backward directions from x. If any of the nodes in the forward reach
-    subgraph contain x itself (but at a different depth), this represents a
-    cyclic path back through x that is then pruned.
-
-    Each node x therefore defines its own subgraph of cycle free paths, g_x.
-    After iterating over all x in X, we combine these subgraphs into the
-    (in-progress) cycle free paths graph H_k. H_k therefore consists of the
-    superset of nodes of all the subgraphs g_x for level k. When merging these
-    subgraphs we prevent the re-introduction of cyclic paths by annotating each
-    node in the graph with a list of "tags". The tags for any given node
-    consist of a list of nodes lying at prior (upstream) levels. Therefore
-    during sampling, transitions from an upstream node to a downstream node are
-    only permissible if all nodes in the path up to a certain level are
-    contained in the tag set of the downstream node.
-
-    Parameters
-    ----------
-    g : networkx.DiGraph()
-        Original graph used to compute the pre-CFPG.
-    source_name : str
-        Name of the source node.
-    target_name : str
-        Name of the target node.
-    path_length : int
-        Desired path length.
-    fwd_reachset : Optional[dict]
-        Dictionary representing the forward reachset computed over the original
-        graph g up to a maximum depth greater than the requested path length.
-        If not provided, the forward reach set is calculated up to the
-        requested path length up to the requested path length by calling
-        paths_graph.get_reachable_sets.
-    back_reachset : Optional[dict]
-        Dictionary representing the backward reachset computed over the
-        original graph g up to a maximum depth greater than the requested path
-        length.  If not provided, the backward reach set is calculated up to
-        the requested path length up to the requested path length by calling
-        paths_graph.get_reachable_sets.
-
-    Returns
-    -------
-    PreCFPG
-        A instance of the PreCFPG the containing the pre- cycle free paths
-        graph.
-    """
-    pg = paths_graph.from_graph(g, source_name, target_name, path_length,
-                                fwd_reachset, back_reachset)
-    return from_pg(pg)
-
-
-def from_pg(pg):
-    """Compute a pre- cycle free paths graph.
-
-    Starting from the "raw" (i.e., containing cycles) paths graph, and given a
-    target path length n, the algorithm iterates over each "level" in the graph
-    0 <= k <= n where level 0 consists only of the source node and level n
-    consists only of the target.
-
-    Each level k consists of a set of nodes, X; we examine each node x in X and
-    identify the subset of nodes that are reachable in both the forward and
-    backward directions from x. If any of the nodes in the forward reach
-    subgraph contain x itself (but at a different depth), this represents a
-    cyclic path back through x that is then pruned.
-
-    Each node x therefore defines its own subgraph of cycle free paths, g_x.
-    After iterating over all x in X, we combine these subgraphs into the
-    (in-progress) cycle free paths graph H_k. H_k therefore consists of the
-    superset of nodes of all the subgraphs g_x for level k. When merging these
-    subgraphs we prevent the re-introduction of cyclic paths by annotating each
-    node in the graph with a list of "tags". The tags for any given node
-    consist of a list of nodes lying at prior (upstream) levels. Therefore
-    during sampling, transitions from an upstream node to a downstream node are
-    only permissible if all nodes in the path up to a certain level are
-    contained in the tag set of the downstream node.
-
-    Parameters
-    ----------
-    pg : networkx.DiGraph()
-        "Raw" (contains cycles) paths graph as created by
-        :py:func:`indra.explanation.paths_graph.from_graph`.
-
-    Returns
-    -------
-    PreCFPG
-        A instance of the PreCFPG the containing the pre- cycle free paths
-        graph.
-    """
-    # Initialize the cycle-free paths graph and the tag dictionary
-    source_node = pg.source_node
-    target_node = pg.target_node
-    dic_PG = {0: _initialize_pre_cfpg(pg)}
-    round_counter = 1
-    # Perform CFPG generation in successive rounds to ensure convergence
-    while True:
-        #print("Starting round %d" % round_counter)
-        #print("Level 0: %d nodes, %d edges" % (len(dic_PG[0][0]),
-                                               #len(dic_PG[0][0].edges())))
-        for k in range(1, pg.path_length+1):
-            # Start by copying the information from the previous level
-            H = dic_PG[k-1][0].copy()
-            tags = deepcopy(dic_PG[k-1][1])
-            # Check if we have already detected there are no cycle free paths,
-            # which would be indicated by an empty graph at the previous level.
-            # If so just propagate this information.
-            if not H:
-                dic_PG[k] = dic_PG[k-1]
-            else:
-                # Identify the nodes at level k in G_(k-1)
-                X = [v for v in H.nodes_iter() if v[0] == k]
-                # We will track the (g_x, tags_x) pairs contributed by each x
-                # through dic_X
-                dic_X = {}
-                for x in X:
-                    tags_x = {}
-                    g_x_f = _forward(x, H, pg.path_length)
-                    g_x_b = _backward(x, H)
-                    g_x = nx.DiGraph()
-                    g_x.add_edges_from(g_x_b.edges())
-                    g_x.add_edges_from(g_x_f.edges())
-                    # Get the nodes in the forward reach set representing cycles
-                    # back through node x, (excluding x at level k)
-                    nodes_to_prune = [v for v in g_x_f
-                                      if v[1] == x[1] and v[0] != k]
-                    # If there are no nodes to prune then just add the tag 'x'
-                    # to all the nodes in g_x_f but not to x
-                    g_x_prune = prune(g_x, nodes_to_prune, source_node,
-                                      target_node)
-                    # If target or x gets pruned then x will contribute
-                    # nothing to G_k
-                    if (target_node not in g_x_prune) or (x not in g_x_prune):
-                        pass
-                    nodes_to_tag = [v for v in g_x_prune.nodes()
-                                    if v[0] >= k]
-                    # Otherwise add the tag x to the nodes in the strict
-                    # future of x and update dic_X
-                    for v in g_x_prune.nodes_iter():
-                        if v[0] >= k:
-                            D = tags[v]
-                            D.append(x)
-                            tags_x[v] = D
-                        else:
-                            tags_x[v] = tags[v]
-                    dic_X[x] = (g_x_prune, tags_x)
-                # We can now piece together the pairs in dic_X to obtain (G_k,
-                # tags_k)
-                H_k = nx.DiGraph()
-                tags_k = {}
-                for x in X:
-                    h_x = dic_X[x][0]
-                    H_k.add_edges_from(h_x.edges())
-                for v in H_k.nodes_iter():
-                    t = []
-                    for x in X:
-                        if v in dic_X[x][0]:
-                            tags_x = dic_X[x][1]
-                            t.extend(tags_x[v])
-                    t = list(set(t))
-                    tags_k[v] = t
-                dic_PG[k] = (H_k, tags_k)
-            #print("Level %d: %d nodes, %d edges" % (k, len(dic_PG[k][0]),
-                                                    #len(dic_PG[k][0].edges())))
-        if not dic_PG[len(dic_PG)-1][0] or \
-           set(dic_PG[0][0].edges()) == set(dic_PG[len(dic_PG)-1][0].edges()):
-            break
-        else:
-            dic_PG = {0: dic_PG[k]}
-        round_counter += 1
-    pre_cfpg, tags = dic_PG[pg.path_length]
-    # Return only the fully processed cfpg as an instance of the PreCFPG class
-    return PreCFPG(pg, pre_cfpg, tags)
-
-
-class PreCFPG(paths_graph.PathsGraph):
+class PreCFPG(PathsGraph):
     """Representation of a pre- cycle free paths graph with associated methods.
 
     The pre- cycle free paths graph consists of the paths graph remaining after
@@ -201,9 +19,9 @@ class PreCFPG(paths_graph.PathsGraph):
 
     Parameters
     ----------
-    pg : networkx.DiGraph()
+    pg : PathsGraph
         "Raw" (contains cycles) paths graph as created by
-        :py:func:`indra.explanation.paths_graph.from_graph`.
+        :py:func:`indra.explanation.paths_graph.PathsGraph.from_graph`.
     graph : networkx.DiGraph
         The graph structure of the pre-CFPG.
     tags : dict
@@ -227,6 +45,187 @@ class PreCFPG(paths_graph.PathsGraph):
         self.path_length = pg.path_length
         self.graph = graph
         self.tags = tags
+
+    @classmethod
+    def from_graph(klass, g, source_name, target_name, path_length,
+                   fwd_reachset=None, back_reachset=None):
+        """Compute a pre- cycle free paths graph.
+
+        Starting from the "raw" (i.e., containing cycles) paths graph, and
+        given a target path length n, the algorithm iterates over each "level"
+        in the graph 0 <= k <= n where level 0 consists only of the source node
+        and level n consists only of the target.
+
+        Each level k consists of a set of nodes, X; we examine each node x in X
+        and identify the subset of nodes that are reachable in both the forward
+        and backward directions from x. If any of the nodes in the forward
+        reach subgraph contain x itself (but at a different depth), this
+        represents a cyclic path back through x that is then pruned.
+
+        Each node x therefore defines its own subgraph of cycle free paths,
+        g_x.  After iterating over all x in X, we combine these subgraphs into
+        the (in-progress) cycle free paths graph H_k. H_k therefore consists of
+        the superset of nodes of all the subgraphs g_x for level k. When
+        merging these subgraphs we prevent the re-introduction of cyclic paths
+        by annotating each node in the graph with a list of "tags". The tags
+        for any given node consist of a list of nodes lying at prior (upstream)
+        levels. Therefore during sampling, transitions from an upstream node to
+        a downstream node are only permissible if all nodes in the path up to a
+        certain level are contained in the tag set of the downstream node.
+
+        Parameters
+        ----------
+        g : networkx.DiGraph()
+            Original graph used to compute the pre-CFPG.
+        source_name : str
+            Name of the source node.
+        target_name : str
+            Name of the target node.
+        path_length : int
+            Desired path length.
+        fwd_reachset : Optional[dict]
+            Dictionary representing the forward reachset computed over the
+            original graph g up to a maximum depth greater than the requested
+            path length.  If not provided, the forward reach set is calculated
+            up to the requested path length up to the requested path length by
+            calling paths_graph.get_reachable_sets.
+        back_reachset : Optional[dict]
+            Dictionary representing the backward reachset computed over the
+            original graph g up to a maximum depth greater than the requested
+            path length.  If not provided, the backward reach set is calculated
+            up to the requested path length up to the requested path length by
+            calling paths_graph.get_reachable_sets.
+
+        Returns
+        -------
+        PreCFPG
+            A instance of the PreCFPG the containing the pre- cycle free paths
+            graph.
+        """
+        pg = PathsGraph.from_graph(g, source_name, target_name, path_length,
+                                   fwd_reachset, back_reachset)
+        return PreCFPG.from_pg(pg)
+
+    @classmethod
+    def from_pg(klass, pg):
+        """Compute a pre- cycle free paths graph.
+
+        Starting from the "raw" (i.e., containing cycles) paths graph, and
+        given a target path length n, the algorithm iterates over each "level"
+        in the graph 0 <= k <= n where level 0 consists only of the source node
+        and level n consists only of the target.
+
+        Each level k consists of a set of nodes, X; we examine each node x in X
+        and identify the subset of nodes that are reachable in both the forward
+        and backward directions from x. If any of the nodes in the forward
+        reach subgraph contain x itself (but at a different depth), this
+        represents a cyclic path back through x that is then pruned.
+
+        Each node x therefore defines its own subgraph of cycle free paths,
+        g_x.  After iterating over all x in X, we combine these subgraphs into
+        the (in-progress) cycle free paths graph H_k. H_k therefore consists of
+        the superset of nodes of all the subgraphs g_x for level k. When
+        merging these subgraphs we prevent the re-introduction of cyclic paths
+        by annotating each node in the graph with a list of "tags". The tags
+        for any given node consist of a list of nodes lying at prior (upstream)
+        levels. Therefore during sampling, transitions from an upstream node to
+        a downstream node are only permissible if all nodes in the path up to a
+        certain level are contained in the tag set of the downstream node.
+
+        Parameters
+        ----------
+        pg : PathsGraph
+            "Raw" (contains cycles) paths graph as created by
+            :py:func:`indra.explanation.paths_graph.PathsGraph.from_graph`.
+
+        Returns
+        -------
+        PreCFPG
+            A instance of the PreCFPG the containing the pre- cycle free paths
+            graph.
+        """
+        # Initialize the cycle-free paths graph and the tag dictionary
+        source_node = pg.source_node
+        target_node = pg.target_node
+        dic_PG = {0: _initialize_pre_cfpg(pg)}
+        round_counter = 1
+        # Perform CFPG generation in successive rounds to ensure convergence
+        while True:
+            for k in range(1, pg.path_length+1):
+                # Start by copying the information from the previous level
+                H = dic_PG[k-1][0].copy()
+                tags = deepcopy(dic_PG[k-1][1])
+                # Check if we have already detected there are no cycle free
+                # paths, which would be indicated by an empty graph at the
+                # previous level.  If so just propagate this information.
+                if not H:
+                    dic_PG[k] = dic_PG[k-1]
+                else:
+                    # Identify the nodes at level k in G_(k-1)
+                    X = [v for v in H.nodes_iter() if v[0] == k]
+                    # We will track the (g_x, tags_x) pairs contributed by each
+                    # x through dic_X
+                    dic_X = {}
+                    for x in X:
+                        tags_x = {}
+                        g_x_f = _forward(x, H, pg.path_length)
+                        g_x_b = _backward(x, H)
+                        g_x = nx.DiGraph()
+                        g_x.add_edges_from(g_x_b.edges())
+                        g_x.add_edges_from(g_x_f.edges())
+                        # Get the nodes in the forward reach set representing
+                        # cycles back through node x, (excluding x at level k)
+                        nodes_to_prune = [v for v in g_x_f
+                                          if v[1] == x[1] and v[0] != k]
+
+                        # If there are no nodes to prune then just add the tag
+                        # 'x' to all the nodes in g_x_f but not to x
+                        g_x_prune = prune(g_x, nodes_to_prune, source_node,
+                                          target_node)
+                        # If target or x gets pruned then x will contribute
+                        # nothing to G_k
+
+                        if (target_node not in g_x_prune) or \
+                           (x not in g_x_prune):
+                            pass
+                        nodes_to_tag = [v for v in g_x_prune.nodes()
+                                        if v[0] >= k]
+                        # Otherwise add the tag x to the nodes in the strict
+                        # future of x and update dic_X
+                        for v in g_x_prune.nodes_iter():
+                            if v[0] >= k:
+                                D = tags[v]
+                                D.append(x)
+                                tags_x[v] = D
+                            else:
+                                tags_x[v] = tags[v]
+                        dic_X[x] = (g_x_prune, tags_x)
+                    # We can now piece together the pairs in dic_X to obtain
+                    # (G_k, tags_k)
+                    H_k = nx.DiGraph()
+                    tags_k = {}
+                    for x in X:
+                        h_x = dic_X[x][0]
+                        H_k.add_edges_from(h_x.edges())
+                    for v in H_k.nodes_iter():
+                        t = []
+                        for x in X:
+                            if v in dic_X[x][0]:
+                                tags_x = dic_X[x][1]
+                                t.extend(tags_x[v])
+                        t = list(set(t))
+                        tags_k[v] = t
+                    dic_PG[k] = (H_k, tags_k)
+            if not dic_PG[len(dic_PG)-1][0] or \
+               set(dic_PG[0][0].edges()) == \
+                                set(dic_PG[len(dic_PG)-1][0].edges()):
+                break
+            else:
+                dic_PG = {0: dic_PG[k]}
+            round_counter += 1
+        pre_cfpg, tags = dic_PG[pg.path_length]
+        # Return the fully processed cfpg as an instance of the PreCFPG class
+        return klass(pg, pre_cfpg, tags)
 
     def enumerate_paths(self):
         raise NotImplementedError()
