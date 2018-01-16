@@ -156,7 +156,12 @@ def test_sample_paths():
     target = 'E'
     length = 4
     pg = paths_graph.from_graph(g_uns, source, target, length)
-    # TODO
+    sample_paths = pg.sample_paths(100)
+    assert set(sample_paths) == set(
+        [('A', 'B', 'D', 'B', 'E'),
+         ('A', 'B', 'D', 'C', 'E'),
+         ('A', 'C', 'D', 'B', 'E'),
+         ('A', 'C', 'D', 'C', 'E')])
 
 
 def test_enumerate_paths():
@@ -176,4 +181,4 @@ def test_enumerate_paths():
 
 
 if __name__ == '__main__':
-    test_enumerate_paths()
+    test_from_graph_unsigned()

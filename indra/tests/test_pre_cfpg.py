@@ -2,7 +2,6 @@ import networkx as nx
 from nose.tools import raises
 from indra.explanation.paths_graph import paths_graph as pg
 from indra.explanation.paths_graph import pre_cfpg as pcf
-from indra.explanation.paths_graph.util import prune
 
 
 g1_uns = nx.DiGraph()
@@ -26,7 +25,7 @@ def test_prune():
     pg_raw_edges = pg_raw.graph.edges()
     nodes_to_prune = [(2, 'S')]
     # Prune the graph
-    pg_pruned = prune(pg_raw.graph, nodes_to_prune, (0, 'S'), (length, 'T'))
+    pg_pruned = pcf.prune(pg_raw.graph, nodes_to_prune, (0, 'S'), (length, 'T'))
     # Make sure we didn't change the original graphs or node lists
     assert nodes_to_prune == [(2, 'S')]
     assert pg_raw.graph.edges() == pg_raw_edges

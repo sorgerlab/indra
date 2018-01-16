@@ -283,7 +283,6 @@ class PathsGraph(object):
         self.graph = graph
         self.path_length = path_length
 
-
     def enumerate_paths(self, names_only=True):
         paths = list(nx.all_simple_paths(self.graph, self.source_node,
                                          self.target_node))
@@ -292,51 +291,90 @@ class PathsGraph(object):
         else:
             return paths
 
-
     @staticmethod
     def _name_paths(paths):
         return [tuple([node[1] for node in path]) for path in paths]
 
-    """
-    def sample_single_path(self, weighted=False):
+    def sample_paths(self, num_samples, weighted=False, names_only=True):
+        """Sample paths of the given length between source and target.
+
+        Parameters
+        ----------
+        num_samples : int
+            The number of paths to sample.
+        weighted : boolean
+            Whether sampling should proceed according to edge weights in the
+            paths graph. If True, the edges in the paths graph should contain
+            edge attributes with the key "weight". Default is False.
+        names_only : boolean
+            Whether the paths should consist only of node names, or of node
+            tuples (e.g., including depth and polarity). Default is True
+            (only names).
+
+        Returns
+        -------
+        list of tuples
+            Each item in the list is a tuple of strings representing a path.
+            Note that the paths may not be unique.
+        """
+        if not self.graph:
+            return tuple([])
+        paths = []
+        while len(paths) < num_samples:
+            path = self.sample_single_path(weighted=False, names_only=False)
+            paths.append(path)
+        if names_only:
+            paths = self._name_paths(paths)
+        return paths
+
+    def sample_single_path(self, weighted=False, names_only=True):
+        """Sample a path of the given length between source and target.
+
+        Parameters
+        ----------
+        weighted : boolean
+            Whether sampling should proceed according to edge weights in the
+            paths graph. If True, the edges in the paths graph should contain
+            edge attributes with the key "weight". Default is False.
+        names_only : boolean
+            Whether the paths should consist only of node names, or of node
+            tuples (e.g., including depth and polarity). Default is True
+            (only names).
+
+        Returns
+        -------
+        tuple
+            Tuple of nodes or node names representing a path.
+        """
         # Sample a path from the paths graph.
         # If the path graph is empty, there are no paths
         if not self.graph:
             return tuple([])
-        # Set the source node
-        if self.signed:
-            source_node = (0, (source, 0))
-            target = (target, target_polarity)
-        else:
-            source_node = (0, source)
-        assert source_node in pg
         # Repeat until we find a path without a cycle
-        while True:
-            path = [source_node[1]]
-            current_node = source_node
-            while True:
-                if weighted:
-                    out_edges = pg.out_edges(current_node, data=True)
-                else:
-                    out_edges = pg.out_edges(current_node)
-                if 'TEST_FLAG' in os.environ:
-                    out_edges.sort()
-                if out_edges:
-                    if weighted:
-                        weights = [t[2]['weight'] for t in out_edges]
-                        pred_idx = np.random.choice(range(len(out_edges)),
-                                                    p=weights)
-                        v = out_edges[pred_idx][1]
-                    else:
-                        v = np.random.choice(out_edges)[1]
-                    # If we've already hit this node, it's a cycle; skip
-                    if v[1] in path:
-                        break
-                    path.append(v[1])
-                    if v[1] == target:
-                        return tuple(path)
-                current_node = v
-    """
+        path = [self.source_node]
+        current = self.source_node
+        while current != self.target_node:
+            next = self._successor(path, current, weighted)
+            path.append(next)
+            current = next
+        if names_only:
+            path = tuple([node[1] for node in path])
+        else:
+            path = tuple(path)
+        return path
+
+    def _successor(self, path, node, weighted):
+        out_edges = self.graph.out_edges(node, data=True)
+        if 'TEST_FLAG' in os.environ:
+            out_edges.sort()
+        if weighted:
+            weights = [t[2]['weight'] for t in out_edges]
+            pred_idx = np.random.choice(range(len(out_edges)),
+                                        p=weights)
+        else:
+            pred_idx = np.random.choice(range(len(out_edges)))
+        return out_edges[pred_idx][1]
+
 
 def combine_path_graphs(pg_dict):
     """Combine a dict of path graphs into a single super-pathgraph."""
