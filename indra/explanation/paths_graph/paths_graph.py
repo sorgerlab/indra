@@ -274,12 +274,13 @@ class PathsGraph(object):
                      target_polarity)
 
     def enumerate_paths(self, names_only=True):
-        paths = list(nx.all_simple_paths(self.graph, self.source_node,
-                                         self.target_node))
+        if not self.graph:
+            return tuple([])
+        paths = [tuple(path) for path in nx.all_simple_paths(self.graph,
+                                    self.source_node, self.target_node)]
         if names_only:
-            return self._name_paths(paths)
-        else:
-            return paths
+            paths = self._name_paths(paths)
+        return tuple(paths)
 
     def count_paths(self):
         """Count the total number of paths without enumerating them.
@@ -289,6 +290,8 @@ class PathsGraph(object):
         int
             The number of paths.
         """
+        if not self.graph:
+            return 0
         # Group nodes by level
         levels = defaultdict(list)
         for node in self.graph.nodes():
@@ -341,7 +344,7 @@ class PathsGraph(object):
             paths.append(path)
         if names_only:
             paths = self._name_paths(paths)
-        return paths
+        return tuple(paths)
 
     def sample_single_path(self, weighted=False, names_only=True):
         """Sample a path of the given length between source and target.

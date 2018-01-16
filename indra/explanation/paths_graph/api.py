@@ -23,31 +23,52 @@ def load_signed_sif(sif_file):
 
 
 def sample_paths(g, source, target, max_depth=None, num_samples=1000,
-                 eliminate_cycles=True, signed=False, target_polarity=0):
-    logger.info("Computing forward and backward reach sets...")
-    # By default the max_depth is the number of nodes
+                 cycle_free=True, signed=False, target_polarity=0):
+    return _run_by_depth('sample_paths', [num_samples], g, source, target,
+                         max_depth, cycle_free, signed, target_polarity)
+
+
+def enumerate_paths(g, source, target, max_depth=None,
+                    cycle_free=True, signed=False, target_polarity=0):
+    return _run_by_depth('enumerate_paths', [], g, source, target, max_depth,
+                         cycle_free, signed, target_polarity)
+
+
+def count_paths(g, source, target, max_depth=None,
+                cycle_free=True, signed=False, target_polarity=0):
+    return _run_by_depth('count_paths', [], g, source, target, max_depth,
+                         cycle_free, signed, target_polarity)
+
+
+def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
+                  cycle_free=True, signed=False, target_polarity=0):
     if max_depth is None:
         max_depth = len(g)
     f_level, b_level = get_reachable_sets(g, source, target, max_depth,
                                           signed=signed)
     # Compute path graphs over a range of path lengths
     pg_by_length = {}
-    paths = []
+    if func_name == 'count_paths':
+        results = 0
+    else:
+        results = []
     for path_length in range(1, max_depth+1):
         logger.info("Length %d: computing paths graph" % path_length)
         args = [g, source, target, path_length, f_level, b_level]
         kwargs = {'signed': signed, 'target_polarity': target_polarity}
-        if eliminate_cycles:
+        if cycle_free:
             pg = CFPG.from_graph(*args, **kwargs)
         else:
             pg = PathsGraph.from_graph(*args, **kwargs)
         pg_by_length[path_length] = pg
         # If we're sampling by depth, do sampling here
-        if pg and by_depth:
-            logger.info("Length %d: Sampling %d paths" %
-                        (path_length, num_samples))
-            paths += pg.sample_paths(num_samples)
-    return paths
+        if pg:
+            #logger.info("Length %d: Sampling %d paths" %
+            #            (path_length, num_samples))
+            func = getattr(pg, func_name)
+            results += func(*func_args)
+    return results
+
     """
     # If we're sampling by depth, we've already collected all our paths
     if by_depth:
