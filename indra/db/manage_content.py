@@ -322,7 +322,10 @@ class Medline(NihManager):
         text_content_info = {}
         valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
         logger.info("%d valid PMIDs" % len(valid_pmids))
-        existing_pmids = set(db.get_pmids(valid_pmids))
+        existing_pmids = set(db.get_values(db.select_all(
+            db.TextRef,
+            db.TextRef.pmid.in_(valid_pmids)
+            ), 'pmid'))
         logger.info(
             "%d valid PMIDs already in text_refs." % len(existing_pmids)
             )

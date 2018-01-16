@@ -4,13 +4,10 @@ from builtins import dict, str
 __all__ = ['sqltypes', 'texttypes', 'formats', 'DatabaseManager',
            'IndraDatabaseError', 'sql_expressions']
 
-import json
 import re
-import os
 import logging
 from io import BytesIO
 from os import path
-from datetime import datetime
 from numbers import Number
 
 from sqlalchemy.sql import expression as sql_expressions
@@ -22,10 +19,6 @@ from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
     TIMESTAMP, create_engine, inspect, LargeBinary
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
-
-from indra.statements import ActiveForm, SelfModification, Complex
-from indra.util import unzip_string
-from indra.util.get_version import get_version
 
 
 logger = logging.getLogger('db_manager')
@@ -562,92 +555,3 @@ class DatabaseManager(object):
         "Check whether an entry/entries matching given specs live in the db."
         q = self.filter_query(tbls, *args)
         return self.session.query(q.exists()).first()[0]
-
-    def insert_agents(self, stmts, *other_clauses):
-        "Insert the agents associated with the list of statements."
-        # Build a dict mapping stmt UUIDs to statement IDs
-        uuid_list = [s.uuid for s in stmts]
-        stmt_rec_list = self.select_all('statements',
-                                        self.Statements.uuid.in_(uuid_list),
-                                        *other_clauses)
-        stmt_uuid_dict = {uuid: sid for uuid, sid in
-                          self.get_values(stmt_rec_list, ['uuid', 'id'])}
-
-        # Now assemble agent records
-        agent_data = []
-        for stmt in stmts:
-            stmt_id = stmt_uuid_dict[stmt.uuid]
-            for ag_ix, ag in enumerate(stmt.agent_list()):
-                # If no agent, or no db_refs for the agent, skip the insert
-                # that follows.
-                if ag is None or ag.db_refs is None:
-                    continue
-                if any([isinstance(stmt, tp) for tp in
-                        [Complex, SelfModification, ActiveForm]]):
-                    role = 'OTHER'
-                elif ag_ix == 0:
-                    role = 'SUBJECT'
-                elif ag_ix == 1:
-                    role = 'OBJECT'
-                else:
-                    raise IndraDatabaseError("Unhandled agent role.")
-                for ns, ag_id in ag.db_refs.items():
-                    ag_rec = (stmt_id, ns, ag_id, role)
-                    agent_data.append(ag_rec)
-        cols = ('stmt_id', 'db_name', 'db_id', 'role')
-        self.copy('agents', agent_data, cols)
-        return
-
-    def insert_db_stmts(self, stmts, db_ref_id):
-        "Insert statement, their database, and any affiliated agents."
-        # Preparing the statements for copying
-        stmt_data = []
-        cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
-        for stmt in stmts:
-            stmt_rec = (
-                stmt.uuid,
-                db_ref_id,
-                stmt.__class__.__name__,
-                json.dumps(stmt.to_json()).encode('utf8'),
-                get_version()
-            )
-            stmt_data.append(stmt_rec)
-        self.copy('statements', stmt_data, cols)
-        self.insert_agents(stmts, self.Statements.db_ref == db_ref_id)
-        return
-
-    def get_abstracts_by_pmids(self, pmid_list, unzip=True):
-        "Get abstracts using the pmids in pmid_list."
-        abst_list = self.filter_query(
-            [self.TextRef, self.TextContent],
-            self.TextContent.text_ref_id == self.TextRef.id,
-            self.TextContent.text_type == 'abstract',
-            self.TextRef.pmid.in_(pmid_list)
-            ).all()
-        if unzip:
-            def unzip_func(s):
-                return unzip_string(s.tobytes())
-        else:
-            def unzip_func(s):
-                return s
-        return [(r.pmid, unzip_func(c.content)) for (r, c) in abst_list]
-
-    def get_auth_xml_pmcids(self):
-        tref_list = self.filter_query(
-            [self.TextRef, self.TextContent],
-            self.TextRef.id == self.TextContent.text_ref_id,
-            self.TextContent.text_type == texttypes.FULLTEXT,
-            self.TextContent.source == 'pmc_auth'
-            )
-        return [tref.pmcid for tref in tref_list]
-
-    def get_all_pmids(self):
-        "Get a list of all the pmids on record."
-        return self.get_values(self.select_all('text_ref'), 'pmid')
-
-    def get_pmids(self, pmid_list):
-        text_refs = self.select_all(
-            'text_ref',
-            self.TextRef.pmid.in_(pmid_list)
-            )
-        return self.get_values(text_refs, 'pmid')

@@ -9,6 +9,7 @@ from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db import DatabaseManager, texttypes, get_defaults
+from indra.db.util import get_abstracts_by_pmids
 from nose.plugins.attrib import attr
 IS_PY3 = True
 if version_info.major is not 3:
@@ -61,6 +62,7 @@ for k in key_list:
 else:
     raise SkipTest("Not able to start up any of the available test hosts:\n"
                    + report)
+
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
@@ -213,17 +215,9 @@ def test_get_abstracts():
 
     expected = [(pmid, (found_abst_fmt % pmid).encode('utf8'))
                 for pmid in ['1234', '5678']]
-    received = db.get_abstracts_by_pmids(['1234', '5678', '1357'], unzip=False)
+    received = get_abstracts_by_pmids(db, ['1234', '5678', '1357'],
+                                      unzip=False)
     assert_contents_equal(expected, received, "Didn't get expected abstracts.")
-
-
-@attr('nonpublic')
-def test_get_all_pmids():
-    "Test whether we get all the pmids."
-    db = get_db()
-    db.insert_many('text_ref', [{'pmid': '1234'}, {'pmid': '5678'}])
-    pmid_list = db.get_all_pmids()
-    assert_contents_equal(pmid_list, ['1234', '5678'])
 
 
 #==============================================================================
