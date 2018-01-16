@@ -90,6 +90,7 @@ if __name__ == '__main__':
 
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
+from indra.db.util import insert_agents
 from indra.tools.reading.readers import get_readers, ReadingData, _get_dir
 
 
@@ -654,7 +655,7 @@ def upload_statements(stmt_data_list, db=None):
     logger.info("Uploading agents to the database.")
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     if len(reading_id_set):
-        db.insert_agents([sd.statement for sd in stmt_data_list],
+        insert_agents(db, [sd.statement for sd in stmt_data_list],
                          db.Statements.reader_ref.in_(reading_id_set))
     return
 
