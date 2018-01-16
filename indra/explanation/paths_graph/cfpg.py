@@ -60,10 +60,14 @@ challenge is to achieve this while ensuring that the properies (CF1), (CF2) and
 
 We explain below the detailed construction of G_cf from this perpective.
 """
+import logging
 import itertools
 import networkx as nx
 from .paths_graph import PathsGraph
 from .pre_cfpg import PreCFPG, prune
+
+
+logger = logging.getLogger('cfpg')
 
 
 class CFPG(PathsGraph):
@@ -133,6 +137,7 @@ class CFPG(PathsGraph):
         pred_tgt = {tgt_3node: pre_cfpg.graph.predecessors(tgt_2node)}
         t_cf_tgt = {tgt_3node: pre_cfpg.tags[tgt_2node]}
         dic_CF = {path_length: ([tgt_3node], next_tgt, pred_tgt, t_cf_tgt)}
+        logger.info("Creating CFPG from pre-CFPG")
         # Iterate from level n-1 (one "above" the target) back to the source
         for i in reversed(range(1, path_length)):
             # Get the information for level i+1 (one level closer to the target)

@@ -268,8 +268,11 @@ class PathsGraph(object):
                 for u, v in possible_edges.intersection(g_edges):
                     actual_edges.add(((i, u), (i+1, v)))
             pg_edges |= actual_edges
+            logger.info("Done.")
         paths_graph = nx.DiGraph()
         paths_graph.add_edges_from(pg_edges)
+        logger.info("Paths graph for length %d has %d nodes" %
+                    (length, len(paths_graph)))
         return klass(source, target, paths_graph, length, signed,
                      target_polarity)
 

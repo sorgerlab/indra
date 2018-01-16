@@ -1,7 +1,11 @@
+import logging
 from copy import copy, deepcopy
 import numpy as np
 import networkx as nx
 from .paths_graph import PathsGraph
+
+
+logger = logging.getLogger('pre_cfpg')
 
 
 class PreCFPG(PathsGraph):
@@ -129,11 +133,14 @@ class PreCFPG(PathsGraph):
         dic_PG = {0: _initialize_pre_cfpg(pg)}
         round_counter = 1
         # Perform CFPG generation in successive rounds to ensure convergence
+        logger.info("Creating pre-CFPG from PG")
         while True:
+            logger.info("Starting round %d" % round_counter)
             for k in range(1, pg.path_length+1):
+                logger.info("Iterating over level %d" % k)
                 # Start by copying the information from the previous level
-                H = dic_PG[k-1][0].copy()
-                tags = deepcopy(dic_PG[k-1][1])
+                H = dic_PG[k-1][0]
+                tags = dic_PG[k-1][1]
                 # Check if we have already detected there are no cycle free
                 # paths, which would be indicated by an empty graph at the
                 # previous level.  If so just propagate this information.
@@ -141,10 +148,12 @@ class PreCFPG(PathsGraph):
                     dic_PG[k] = dic_PG[k-1]
                 else:
                     # Identify the nodes at level k in G_(k-1)
+                    logger.info("Finding nodes at level %d" % k)
                     X = [v for v in H.nodes_iter() if v[0] == k]
                     # We will track the (g_x, tags_x) pairs contributed by each
                     # x through dic_X
                     dic_X = {}
+                    logger.info("Iterating over nodes in level %d" % k)
                     for x in X:
                         tags_x = {}
                         g_x_f = _forward(x, H, pg.path_length)
