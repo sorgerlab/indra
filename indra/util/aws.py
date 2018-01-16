@@ -69,6 +69,7 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
     print("Getting log for %s/%s" % (job_name, job_id))
     out_file = ('%s_%s.log' % (job_name, job_id)) if write_file else None
     lines = get_log_by_name(log_group_name, log_stream_name, out_file)
+    return lines
 
 
 def get_log_by_name(log_group_name, log_stream_name, out_file=None):
