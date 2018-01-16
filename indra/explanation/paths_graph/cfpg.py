@@ -76,10 +76,8 @@ class CFPG(PathsGraph):
         self.graph = graph
 
     @classmethod
-    def from_graph(klass, g, source_name, target_name, path_length,
-                   fwd_reachset=None, back_reachset=None):
-        pre_cfpg = PreCFPG.from_graph(g, source_name, target_name, path_length,
-                                  fwd_reachset, back_reachset)
+    def from_graph(klass, *args, **kwargs):
+        pre_cfpg = PreCFPG.from_graph(*args, **kwargs)
         return klass.from_pre_cfpg(pre_cfpg)
 
     @classmethod

@@ -409,21 +409,3 @@ def _check_reach_depth(dir_name, reachset, length):
                        "but %s reach set has maximum depth %d " %
                        (length, dir_name, depth))
 
-if __name__ == '__main__':
-    g = get_edges('korkut_im.sif')
-    source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
-    target = 'EIF4EBP1_T37_p_obs'
-    target_polarity = 0
-    im_paths = set(sample_paths(g, source, target, signed=True,
-                                target_polarity=0, by_depth=True, max_depth=8,
-                                num_samples=100000))
-    # 101 paths
-    #gs = paths_to_graphset(paths_dict, pg_dict)
-
-    g = get_edges('korkut_model_pysb_pysb.sif')
-    source = 'BLK'
-    target = 'EIF4EBP1'
-    sif_paths = set(sample_paths(g, source, target, signed=False, by_depth=True,
-                             max_depth=8, num_samples=10000000))
-    #gs = paths_to_graphset(paths_dict, pg_dict)
-    # 78,057 paths

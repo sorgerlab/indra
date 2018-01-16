@@ -140,5 +140,37 @@ def test_on_random_graphs():
                 assert False
 
 
+def test_sampling_example_graph1():
+    sif_file1 = join(dirname(__file__), 'korkut_im.sif')
+    g = pg.load_signed_sif(sif_file1)
+    source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
+    target = 'EIF4EBP1_T37_p_obs'
+    target_polarity = 0
+    sampled_paths = set(pg.sample_paths(g, source, target, signed=True,
+                             target_polarity=0, max_depth=8,
+                             num_samples=10000, eliminate_cycles=False))
+    sampled_cf_paths = set(pg.sample_paths(g, source, target, signed=True,
+                             target_polarity=0, max_depth=8,
+                             num_samples=10000, eliminate_cycles=True))
+    # 101 cycle free paths
+    assert len(sampled_cf_paths) == 101
+    # All of the cycle-free paths should be contained in the set of paths
+    # with cycles
+    assert sampled_paths.intersection(sampled_cf_paths) == sampled_cf_paths
+    # Check that all paths in the set difference contain cycles
+    for path in sampled_paths.difference(sampled_cf_paths):
+        assert len(set(path)) < len(path)
+
+
+"""
+    g = get_edges('korkut_model_pysb_pysb.sif')
+    source = 'BLK'
+    target = 'EIF4EBP1'
+    sif_paths = set(sample_paths(g, source, target, signed=False, by_depth=True,
+                             max_depth=8, num_samples=10000000))
+    #gs = paths_to_graphset(paths_dict, pg_dict)
+    # 78,057 paths
+"""
+
 if __name__ == '__main__':
-    test_on_random_graphs()
+    test_example_graph1_sampling()

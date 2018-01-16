@@ -184,6 +184,3 @@ def test_count_paths():
     num_paths = pg.count_paths()
     assert num_paths == 4
 
-
-if __name__ == '__main__':
-    test_count_paths()

@@ -190,6 +190,3 @@ def test_count_not_implemented():
     pre_cfpg = pg.PreCFPG.from_graph(g3_uns, 'A', 'D', 3)
     pre_cfpg.count_paths()
 
-
-if __name__ == '__main__':
-    test_sampling_precfpg()

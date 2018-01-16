@@ -47,8 +47,7 @@ class PreCFPG(PathsGraph):
         self.tags = tags
 
     @classmethod
-    def from_graph(klass, g, source_name, target_name, path_length,
-                   fwd_reachset=None, back_reachset=None):
+    def from_graph(klass, *args, **kwargs):
         """Compute a pre- cycle free paths graph.
 
         Starting from the "raw" (i.e., containing cycles) paths graph, and
@@ -75,26 +74,7 @@ class PreCFPG(PathsGraph):
 
         Parameters
         ----------
-        g : networkx.DiGraph()
-            Original graph used to compute the pre-CFPG.
-        source_name : str
-            Name of the source node.
-        target_name : str
-            Name of the target node.
-        path_length : int
-            Desired path length.
-        fwd_reachset : Optional[dict]
-            Dictionary representing the forward reachset computed over the
-            original graph g up to a maximum depth greater than the requested
-            path length.  If not provided, the forward reach set is calculated
-            up to the requested path length up to the requested path length by
-            calling paths_graph.get_reachable_sets.
-        back_reachset : Optional[dict]
-            Dictionary representing the backward reachset computed over the
-            original graph g up to a maximum depth greater than the requested
-            path length.  If not provided, the backward reach set is calculated
-            up to the requested path length up to the requested path length by
-            calling paths_graph.get_reachable_sets.
+        TODO
 
         Returns
         -------
@@ -102,8 +82,7 @@ class PreCFPG(PathsGraph):
             A instance of the PreCFPG the containing the pre- cycle free paths
             graph.
         """
-        pg = PathsGraph.from_graph(g, source_name, target_name, path_length,
-                                   fwd_reachset, back_reachset)
+        pg = PathsGraph.from_graph(*args, **kwargs)
         return PreCFPG.from_pg(pg)
 
     @classmethod
