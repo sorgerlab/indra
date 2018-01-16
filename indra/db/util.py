@@ -18,12 +18,13 @@ from .manage_db import DatabaseManager, IndraDatabaseError, texttypes
 logger = logging.getLogger('db_util')
 
 
+DEFAULTS_FILE = path.join(path.dirname(path.abspath(__file__)), 'defaults.txt')
+__PRIMARY_DB = None
+
+
 def get_defaults():
     "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
-    default_default_file = os.path.join(
-        os.path.dirname(__file__),
-        'defaults.txt'
-        )
+    default_default_file = DEFAULTS_FILE
     env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
     env = os.environ
     available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}

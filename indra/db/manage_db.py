@@ -61,10 +61,6 @@ except ImportError:
     CAN_COPY = False
 
 
-DEFAULTS_FILE = path.join(path.dirname(path.abspath(__file__)), 'defaults.txt')
-__PRIMARY_DB = None
-
-
 def _isiterable(obj):
     "Bool determines if an object is an iterable (not a string)"
     return hasattr(obj, '__iter__') and not isinstance(obj, str)

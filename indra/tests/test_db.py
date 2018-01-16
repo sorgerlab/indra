@@ -8,8 +8,8 @@ from nose import SkipTest
 from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
-from indra.db import DatabaseManager, texttypes, get_defaults
-from indra.db.util import get_abstracts_by_pmids
+from indra.db.manage_db import DatabaseManager
+from indra.db.util import get_abstracts_by_pmids, get_defaults
 from nose.plugins.attrib import attr
 IS_PY3 = True
 if version_info.major is not 3:
