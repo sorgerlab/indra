@@ -468,39 +468,6 @@ def sample_paths(g, source, target, max_depth=None, num_samples=1000,
             return paths
 
 
-def paths_to_graphset(paths_dict, pg_dict):
-    from graphillion import GraphSet
-    # Construct the universe
-    edges = []
-    nodes = set([])
-    for path_length, pg in pg_dict.items():
-        for e in pg.edges():
-            # Putting in the depth seemed to cause problems
-            #new_edge = tuple([str(v[1][0]) for v in e])
-            new_edge = tuple([str(v[1]) for v in e])
-            nodes |= set(new_edge)
-            if new_edge in edges or tuple([new_edge[1], new_edge[0]]) in edges:
-                continue
-            else:
-                edges.append(new_edge)
-    # Set the graphset
-    GraphSet.set_universe(edges)
-    # Create a graphset from the paths in paths_dict
-    all_paths = []
-    for path_length, path_list in paths_dict.items():
-        for path in path_list:
-            new_path = []
-            for node_ix in range(len(path) - 1):
-                from_node = str(path[node_ix])
-                to_node = str(path[node_ix + 1])
-                assert from_node in nodes
-                assert to_node in nodes
-                new_path.append((from_node, to_node))
-            all_paths.append(new_path)
-    gs = GraphSet(all_paths)
-    return gs
-
-
 def _check_reach_depth(dir_name, reachset, length):
     depth = max(reachset.keys())
     if depth < length:
