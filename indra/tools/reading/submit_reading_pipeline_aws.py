@@ -7,6 +7,8 @@ from time import sleep
 from indra.literature import elsevier_client as ec
 from indra.tools.reading.read_pmids import READER_DICT
 from docutils.nodes import description
+from indra.util.aws import get_job_log
+from datetime import datetime
 
 bucket_name = 'bigmech'
 
@@ -14,7 +16,7 @@ logger = logging.getLogger('aws_reading')
 
 
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
-                      poll_interval=10):
+                      poll_interval=10, idle_log_timeout=None):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -32,6 +34,11 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         explicit job list is not available but filtering is needed.
     poll_interval : Optional[int]
         The time delay between API calls to check the job statuses.
+    idle_log_timeout : Optional[int] or None
+        If not None, then track the logs of the active jobs, and if new output
+        is not produced after `idle_log_timeout` seconds, a warning is printed.
+        If `kill_on_log_timeout` is set to True, the job will also be
+        terminated.
     """
     if job_list is None:
         job_list = []
@@ -46,7 +53,31 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         ids = [job['jobId'] for job in jobs]
         if job_filter:
             ids = [job_id for job_id in ids if job_id in job_filter]
-        return ids
+        return ids, jobs
+
+    job_log_dict = {}
+
+    def check_logs(job_defs):
+        stalled_jobs = []
+        for job_def in job_defs:
+            log_lines = get_job_log(job_def, write_file=False)
+            jid = job_def['jobId']
+            now = datetime.now()
+            if jid not in job_log_dict.keys():
+                job_log_dict[jid] = {'log': log_lines,
+                                     'check_time': now}
+            elif len(job_log_dict[jid]['log']) == len(log_lines):
+                check_dt = job_log_dict[jid]['check_time'] - now
+                if check_dt.seconds > idle_log_timeout:
+                    logger.warning(('Job \'%s\' has not produced output for '
+                                    '%d seconds.')
+                                   % (job_def['jobName'], check_dt.seconds))
+                    stalled_jobs.append(job_def)
+                job_log_dict[jid]['check_time'] = now
+            else:
+                old_log = job_log_dict[jid]['log']
+                old_log += log_lines[len(old_log):]
+        return stalled_jobs
 
     job_list = [job['jobId'] for job in job_list]
 
@@ -57,20 +88,24 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         pre_run = []
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
             pre_run += get_jobs_by_status(status, job_list, job_name_prefix)
-        running = get_jobs_by_status('RUNNING', job_list, job_name_prefix)
-        failed = get_jobs_by_status('FAILED', job_list, job_name_prefix)
-        done = get_jobs_by_status('SUCCEEDED', job_list, job_name_prefix)
+        running_ids, running_jobs = get_jobs_by_status('RUNNING', job_list,
+                                                       job_name_prefix)
+        failed_ids, _ = get_jobs_by_status('FAILED', job_list, job_name_prefix)
+        done, _ = get_jobs_by_status('SUCCEEDED', job_list, job_name_prefix)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
-                    (total_time, len(pre_run), len(running),
-                     len(failed), len(done)))
+                    (total_time, len(pre_run), len(running_ids),
+                     len(failed_ids), len(done)))
+
+        if idle_log_timeout is not None:
+            check_logs(running_jobs)
 
         if job_list:
-            if (len(failed) + len(done)) == len(job_list):
+            if (len(failed_ids) + len(done)) == len(job_list):
                 return 0
         else:
-            if (len(failed) + len(done) > 0) and \
-                (len(pre_run) + len(running) == 0):
+            if (len(failed_ids) + len(done) > 0) and \
+               (len(pre_run) + len(running_ids) == 0):
                 return 0
 
         tag_instances()
