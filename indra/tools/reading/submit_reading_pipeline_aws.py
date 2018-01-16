@@ -281,6 +281,7 @@ if __name__ == '__main__':
         dest='readers',
         choices=['sparser', 'reach', 'all'],
         default=['all'],
+        nargs='+',
         help='Choose which reader(s) to use.'
         )
     parent_read_parser = argparse.ArgumentParser(add_help=False)
@@ -386,9 +387,6 @@ if __name__ == '__main__':
         )
 
     args = parser.parse_args()
-
-    if not isinstance(args.readers, (list, tuple)):
-        args.readers = [args.readers]
 
     job_ids = None
     if args.method == 'no-db':
