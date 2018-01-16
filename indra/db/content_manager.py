@@ -4,7 +4,7 @@ from builtins import dict, str, int
 from sys import version_info, exit
 if version_info.major is not 3:
     msg = "Python 3.x is required to use this module."
-    if __name__ ==  '__main__':
+    if __name__ == '__main__':
         print(msg)
         exit()
     else:
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
-        from indra.db import logger as db_logger
+        from .database_manager import logger as db_logger
         db_logger.setLevel(logging.DEBUG)
 
     if not args.continuing and args.task == 'upload':
@@ -85,9 +85,10 @@ from indra.util import zip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
-from .manage_db import texttypes, formats
+
 from .util import get_primary_db
-from .manage_db import sql_expressions as sql_exp
+from .database_manager import texttypes, formats
+from .database_manager import sql_expressions as sql_exp
 
 
 try:
@@ -222,7 +223,7 @@ class NihFtpClient(object):
         return contents
 
 
-class Manager(object):
+class ContentManager(object):
     """Abstract class for all upload/update managers.
 
     This abstract class provides the api required for any object that is
@@ -258,7 +259,7 @@ class Manager(object):
             )
 
 
-class NihManager(Manager):
+class NihManager(ContentManager):
     """Abstract class for all the managers that use the NIH FTP service.
 
     See `NihFtpClient` for parameters.
@@ -270,7 +271,7 @@ class NihManager(Manager):
 
 
 class Medline(NihManager):
-    "Manager for the medline content."
+    "ContentManager for the medline content."
     my_path = 'pubmed/baseline'
     my_source = 'pubmed'
 
@@ -853,7 +854,7 @@ class PmcManager(NihManager):
 
 
 class PmcOA(PmcManager):
-    "Manager for the pmc open access content."
+    "ContentManager for the pmc open access content."
     my_path = 'pub/pmc'
     my_source = 'pmc_oa'
 
@@ -862,7 +863,7 @@ class PmcOA(PmcManager):
 
 
 class Manuscripts(PmcManager):
-    "Manager for the pmc manuscripts."
+    "ContentManager for the pmc manuscripts."
     my_path = 'pub/pmc/manuscript'
     my_source = 'manuscripts'
 

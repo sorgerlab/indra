@@ -12,7 +12,7 @@ from indra.util.get_version import get_version
 from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json
-from .manage_db import DatabaseManager, IndraDatabaseError, texttypes
+from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
 
 
 logger = logging.getLogger('db_util')
