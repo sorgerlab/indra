@@ -260,23 +260,3 @@ def _dic_to_graph(dic):
     return G
 
 
-def sample_single_path(src_0, tgt_0, dic):
-    p = [src_0]
-    current = src_0
-    while current != tgt_0:
-        nxt = dic[current[0]][1]
-        succ = random.choice(nxt[current])
-
-        p.append(succ)
-        current = succ
-    return tuple(p)
-
-
-def sample_many_paths(src_0, tgt_0, dic, n):
-    P = []
-    for i in range(0, n):
-        p = sample_single_path(src_0, tgt_0, dic)
-        P.append(p)
-    return P
-
-

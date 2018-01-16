@@ -55,6 +55,22 @@ def test_from_pg():
     assert len(d_nodes) == 2
 
 
+def test_sample_paths():
+    cfpg = cf.from_graph(g_uns, source, target, length)
+    sample_paths = cfpg.sample_paths(100)
+    assert set(sample_paths) == set(
+        [('A', 'B', 'D', 'C', 'E'),
+         ('A', 'C', 'D', 'B', 'E')])
+
+
+def test_enumerate_paths():
+    cfpg = cf.from_graph(g_uns, source, target, length)
+    enum_paths = cfpg.enumerate_paths()
+    assert set(enum_paths) == set(
+        [('A', 'B', 'D', 'C', 'E'),
+         ('A', 'C', 'D', 'B', 'E')])
+
+
 def test_on_random_graphs():
     """For each of 25 random graphs, check that the number of cycle free paths
     for a given depth and source/target pair matches the results from

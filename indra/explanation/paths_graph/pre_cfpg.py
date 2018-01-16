@@ -186,7 +186,7 @@ def from_pg(pg):
     return PreCFPG(pg, pre_cfpg, tags)
 
 
-class PreCFPG(object):
+class PreCFPG(paths_graph.PathsGraph):
     """Representation of a pre- cycle free paths graph with associated methods.
 
     The pre- cycle free paths graph consists of the paths graph remaining after
@@ -228,52 +228,10 @@ class PreCFPG(object):
         self.graph = graph
         self.tags = tags
 
-    def sample_paths(self, num_paths):
-        """Sample cycle-free paths from the pre-CFPG.
+    def enumerate_paths(self):
+        raise NotImplementedError()
 
-        Parameters
-        ----------
-        num_paths : int
-            The number of paths to sample.
-
-        Returns
-        -------
-        list of tuples
-            Each item in the list is a tuple of strings representing a path.
-            Note that the paths may not be unique.
-        """
-        # If the graph is empty, then there are no paths
-        if not self.graph:
-            return []
-        P = []
-        for i in range(0, num_paths):
-            p = self.sample_single_path()
-            P.append(p)
-        return P
-
-    def sample_single_path(self):
-        """Sample a single cycle-free path using the pre-CFPG.
-
-        The sampling procedure uses the tag sets to trace out cycle-free paths.
-        If we have reached a node *v* via the path *p* then we can choose the
-        successor *u* of *v* as the next node only if *p* appears in the tag
-        set of u.
-
-        Returns
-        -------
-        tuple of strings
-            A randomly sampled, non-cyclic path. Nodes are represented as node
-            names only, i.e., the depth prefixes are removed.
-        """
-        path = [self.source_node]
-        current = self.source_node
-        while current != self.target_node:
-            next = self._successor(path, current)
-            path.append(next)
-            current = next
-        return tuple(path)
-
-    def _successor(self, path, v):
+    def _successor(self, path, v, weighted):
         """Randomly choose a successor node of v given the current path.
 
         Parameters
@@ -299,10 +257,6 @@ class PreCFPG(object):
         w_idx = np.random.choice(idx_list)
         w = succ[w_idx]
         return w
-
-    @staticmethod
-    def name_paths(paths):
-        pass
 
 
 def _initialize_pre_cfpg(pg):

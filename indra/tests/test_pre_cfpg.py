@@ -130,6 +130,7 @@ def test_from_graph_with_levels_bad_depth():
                               fwd_reachset=f_reach, back_reachset=b_reach)
     assert not pre_cfpg.graph
 
+
 def test_from_pg():
     g4_uns = nx.DiGraph()
     g4_uns.add_edges_from(((0, 1), (1, 0), (0, 2), (2, 0), (1, 2), (2, 1)))
@@ -145,6 +146,7 @@ def test_from_pg():
     assert pre_cfpg.tags == {(0, 0): [(0, 0)],
                              (1, 1): [(0, 0), (1, 1)],
                              (2, 2): [(0, 0), (1, 1), (2, 2)]}
+
 
 def test_sampling_precfpg():
     """Test sampling of problematic graph.
@@ -171,8 +173,14 @@ def test_sampling_precfpg():
     src = (0, source)
     tgt = (length, target)
     pre_cfpg = pcf.from_pg(pg_raw)
-    paths = pre_cfpg.sample_paths(1000)
+    paths = pre_cfpg.sample_paths(20)
+
+
+@raises(NotImplementedError)
+def test_enumerate_not_implemented():
+    pre_cfpg = pcf.from_graph(g3_uns, 'A', 'D', 3)
+    pre_cfpg.enumerate_paths()
 
 
 if __name__ == '__main__':
-    test_initialize()
+    test_sampling_precfpg()
