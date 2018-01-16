@@ -182,38 +182,6 @@ def test_example_graph1():
         assert len(set(path)) < len(path)
 
 
-"""
-def test_sampling_example_graph2():
-    sif_file = join(dirname(__file__), 'korkut_stmts.sif')
-    g = pg.load_signed_sif(sif_file)
-    source = 'BLK'
-    target = 'EIF4EBP1'
-    sampled_cf_paths = set(pg.sample_paths(g, source, target, signed=True,
-                             target_polarity=0, max_depth=8,
-                             num_samples=10000, cycle_free=True))
-    enum_cf_paths = pg.enumerate_paths(g, source, target, signed=True,
-                             target_polarity=0, max_depth=8, cycle_free=True)
-    count_cf_paths = pg.count_paths(g, source, target, signed=True,
-                             target_polarity=0, max_depth=8, cycle_free=True)
-    print("Sampled", len(sampled_cf_paths)
-    print("Enum", len(enum_cf_paths)
-    sampled_paths = set(pg.sample_paths(g, source, target, max_depth=8,
-                                        num_samples=1000000, cycle_free=False))
-    sampled_cf_paths = set(pg.sample_paths(g, source, target, max_depth=8,
-                                          num_samples=1000000, cycle_free=True))
-    # 78,057 cycle-free paths?
-    #assert len(sampled_cf_paths) == 78057
-    print(len(sampled_cf_paths))
-    print(len(sampled_paths))
-    # All of the cycle-free paths should be contained in the set of paths
-    # with cycles
-    print("Subset?",
-          sampled_paths.intersection(sampled_cf_paths) == sampled_cf_paths)
-    # Check that all paths in the set difference contain cycles
-    for path in sampled_paths.difference(sampled_cf_paths):
-        assert len(set(path)) < len(path)
-"""
-
 def test_enumerate_example_graph2():
     sif_file = join(dirname(__file__), 'korkut_stmts.sif')
     g = pg.load_signed_sif(sif_file)
@@ -241,8 +209,20 @@ def test_enumerate_example_graph2():
     # Check that all paths in the set difference contain cycles
     for path in enum_paths.difference(enum_cf_paths):
         assert len(set(path)) < len(path)
-    globals().update(locals())
 
-if __name__ == '__main__':
-    test_example_graph1()
-    test_enumerate_example_graph2()
+
+def test_sampling_example_graph2():
+    sif_file = join(dirname(__file__), 'korkut_stmts.sif')
+    g = pg.load_signed_sif(sif_file)
+    source = 'BLK'
+    target = 'EIF4EBP1'
+    enum_cf_paths = set(pg.enumerate_paths(g, source, target, signed=True,
+                             target_polarity=0, max_depth=8, cycle_free=True))
+    sampled_cf_paths = set(pg.sample_paths(g, source, target, signed=True,
+                             target_polarity=0, max_depth=8,
+                             num_samples=10000, cycle_free=True))
+    count_cf_paths = pg.count_paths(g, source, target, signed=True,
+                             target_polarity=0, max_depth=8, cycle_free=True)
+    # The sampled paths should be a subset of the enumerated paths
+    assert sampled_cf_paths.intersection(enum_cf_paths) == sampled_cf_paths
+

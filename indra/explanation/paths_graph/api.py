@@ -6,6 +6,9 @@ from .cfpg import CFPG
 logger = logging.getLogger('paths_graph')
 
 
+__all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths']
+
+
 def load_signed_sif(sif_file):
     """Load edges from a SIF file with lines of the form 'u polarity v'"""
     edges = []
