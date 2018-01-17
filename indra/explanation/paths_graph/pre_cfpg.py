@@ -2,7 +2,7 @@ import logging
 from copy import copy, deepcopy
 import numpy as np
 import networkx as nx
-from .paths_graph import PathsGraph
+from .paths_graph import PathsGraph, PathSamplingException
 
 
 logger = logging.getLogger('pre_cfpg')
@@ -170,12 +170,6 @@ class PreCFPG(PathsGraph):
                         # 'x' to all the nodes in g_x_f but not to x
                         g_x_prune = prune(g_x, nodes_to_prune, source_node,
                                           target_node)
-                        # If target or x gets pruned then x will contribute
-                        # nothing to G_k
-
-                        if (target_node not in g_x_prune) or \
-                           (x not in g_x_prune):
-                            pass
                         nodes_to_tag = [v for v in g_x_prune.nodes()
                                         if v[0] >= k]
                         # Otherwise add the tag x to the nodes in the strict
@@ -195,10 +189,16 @@ class PreCFPG(PathsGraph):
                     for x in X:
                         h_x = dic_X[x][0]
                         H_k.add_edges_from(h_x.edges())
+                    # For every node in the combined subgraphs
                     for v in H_k.nodes_iter():
+                        # Create a set of tags...
                         t = []
+                        # ...by iterating over every node at this level
                         for x in X:
+                            # ...and checking to see if the node v in the subgraph is in the
+                            # history of a particular node x at this level
                             if v in dic_X[x][0]:
+                                # ...if so, add v to the list of tags for x
                                 tags_x = dic_X[x][1]
                                 t.extend(tags_x[v])
                         t = list(set(t))
@@ -240,6 +240,9 @@ class PreCFPG(PathsGraph):
         for u in self.graph.successors(v):
             if set(path) <= set(self.tags[u]):
                 succ.append(u)
+        # If there are no admissible successors, raise a PathSamplingException
+        if not succ:
+            raise PathSamplingException("No cycle-free successors")
         # Note that the circuitous way of choosing from this list is the
         # result of the odd way numpy.random handles lists of lists (it
         # excepts).

@@ -1,3 +1,5 @@
+import pickle
+from os.path import dirname, join
 import networkx as nx
 from nose.tools import raises
 from indra.explanation import paths_graph as pg
@@ -153,7 +155,7 @@ def test_from_pg():
                              (2, 2): [(0, 0), (1, 1), (2, 2)]}
 
 
-def test_sampling_precfpg():
+def test_sampling_graph1():
     """Test sampling of problematic graph.
 
     The issue with this graph is that the operation on (1, 3) would prune out
@@ -176,7 +178,26 @@ def test_sampling_precfpg():
                                                max_depth=length)
     pre_cfpg = pg.PreCFPG.from_graph(g, source, target, length, f_level,
                                      b_level)
-    paths = pre_cfpg.sample_paths(20)
+    paths = pre_cfpg.sample_paths(100)
+
+
+def test_sampling_graph2():
+    """Make sure that we can sample from the pre_cfpg without dead ends."""
+    # This graph produces dead-end samples which must be handled
+    pkl_file = join(dirname(__file__), 'dead_end_graph.pkl')
+    with open(pkl_file, 'rb') as f:
+        graph_dict = pickle.load(f)
+    g, source, target = graph_dict[2]
+    pre_cfpg = pg.PreCFPG.from_graph(g, source, target, 6)
+    cfpg = pg.CFPG.from_pre_cfpg(pre_cfpg)
+    # 147 unique paths
+    cf_paths = cfpg.enumerate_paths()
+    # Now, sample from the pre_cfpg and make sure that the sampled paths
+    # match the enumerated set from the cfpg
+    num_samples = 10000
+    sample_paths = pre_cfpg.sample_paths(num_samples)
+    assert len(sample_paths) == num_samples
+    assert set(sample_paths) == set(cf_paths)
 
 
 @raises(NotImplementedError)
@@ -189,4 +210,7 @@ def test_enumerate_not_implemented():
 def test_count_not_implemented():
     pre_cfpg = pg.PreCFPG.from_graph(g3_uns, 'A', 'D', 3)
     pre_cfpg.count_paths()
+
+if __name__ == '__main__':
+    test_sampling_graph2()
 

@@ -343,8 +343,11 @@ class PathsGraph(object):
             return tuple([])
         paths = []
         while len(paths) < num_samples:
-            path = self.sample_single_path(weighted=False, names_only=False)
-            paths.append(path)
+            try:
+                path = self.sample_single_path(weighted=False, names_only=False)
+                paths.append(path)
+            except PathSamplingException:
+                pass
         if names_only:
             paths = self._name_paths(paths)
         return tuple(paths)
@@ -414,4 +417,9 @@ def _check_reach_depth(dir_name, reachset, length):
         logger.warning("Insufficient depth: path length is %d "
                        "but %s reach set has maximum depth %d " %
                        (length, dir_name, depth))
+
+
+class PathSamplingException(Exception):
+    """Indicates a problem with sampling, e.g. a dead-end in the Pre-CFPG."""
+    pass
 
