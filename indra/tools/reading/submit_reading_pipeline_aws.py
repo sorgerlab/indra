@@ -17,7 +17,7 @@ logger = logging.getLogger('aws_reading')
 
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
-                      kill_on_log_timeout=False):
+                      kill_on_log_timeout=False, stash_logs=True):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -88,6 +88,13 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
     batch_client = boto3.client('batch')
 
+    # Don't start watching jobs added after this command was initialized.
+    if not job_id_list:
+        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING', 'RUNNING'):
+            job_id_list += [job_def['jobId']
+                            for job_def in get_jobs_by_status(status, None,
+                                                              job_name_prefix)]
+
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
     while True:
@@ -126,6 +133,11 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         tag_instances()
         sleep(poll_interval)
+
+    if stash_logs:
+        pass
+
+    return
 
 
 def tag_instances(project='bigmechanism'):
