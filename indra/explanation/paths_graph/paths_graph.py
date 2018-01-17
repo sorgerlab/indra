@@ -170,7 +170,8 @@ class PathsGraph(object):
         # with a maximum depth given by the target path length.
         if fwd_reachset is None or back_reachset is None:
             (fwd_reachset, back_reachset) = get_reachable_sets(g, source,
-                                                 target, max_depth=length)
+                                                 target, max_depth=length,
+                                                 signed=signed)
 
         # If either fwd_reachset or back_reachset is an empty dict (as they
         # would be if the nodes were unreachable from either directions) return
@@ -191,7 +192,7 @@ class PathsGraph(object):
         if not (length in fwd_reachset and length in back_reachset):
             paths_graph = nx.DiGraph()
             return klass(source, target, paths_graph, length, signed,
-                              target_polarity)
+                         target_polarity)
         # By default, we set the "adjusted backward reach set", aka
         # back_reachset_adj, to be the same as the original back_reachset; this
         # is only overriden if we have a signed graph and a negative target
@@ -298,8 +299,8 @@ class PathsGraph(object):
         for node in self.graph.nodes():
             levels[node[0]].append(node)
         # Initialize the path count
-        path_count = {}
-        path_count[self.target_node] = 1
+        path_counts = {}
+        path_counts[self.target_node] = 1
         # Iterate over the levels going "backwards" from the target. This way
         # the path count at each node reflects the number of paths passing
         # through that node from source to target
@@ -308,10 +309,10 @@ class PathsGraph(object):
             for node in levels[i]:
                 # The count for this node is the sum of the counts over all
                 # of its successors
-                path_count[node] = \
-                        sum([path_count[succ]
+                path_counts[node] = \
+                        sum([path_counts[succ]
                             for succ in self.graph.successors(node)])
-        return path_count
+        return path_counts
 
     def count_paths(self):
         """Count the total number of paths without enumerating them.
@@ -321,11 +322,30 @@ class PathsGraph(object):
         int
             The number of paths.
         """
-        path_count = self._get_path_counts()
-        total_count = path_count.get(self.source_node)
+        path_counts = self._get_path_counts()
+        total_count = path_counts.get(self.source_node)
         if total_count is None:
             total_count = 0
         return total_count
+
+    def set_uniform_path_distribution(self):
+        """Adjusts edge weights to allow uniform sampling of paths.
+
+        Note that after calling this function, a uniform sample is drawn
+        by calling `sample_paths` with `weighted=True`.
+        """
+        path_counts = self._get_path_counts()
+        weight_dict = {}
+        for u in self.graph.nodes():
+            count_tuples = [(v, path_counts[v])
+                            for v in self.graph.successors(u)]
+            if not count_tuples:
+                continue
+            v_list, counts = zip(*count_tuples)
+            weights = np.array(counts) / np.sum(counts)
+            for ix, v in enumerate(v_list):
+                weight_dict[(u, v)] = weights[ix]
+        nx.set_edge_attributes(self.graph, 'weight', weight_dict)
 
     @staticmethod
     def _name_paths(paths):
@@ -358,7 +378,8 @@ class PathsGraph(object):
         paths = []
         while len(paths) < num_samples:
             try:
-                path = self.sample_single_path(weighted=False, names_only=False)
+                path = self.sample_single_path(weighted=weighted,
+                                               names_only=False)
                 paths.append(path)
             except PathSamplingException:
                 pass

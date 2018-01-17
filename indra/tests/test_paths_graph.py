@@ -215,16 +215,14 @@ def test_uniform_sampling():
     # There are five different paths; sampling uniformly across the whole
     # path distribution should result in 20% of paths going through each of
     # paths going through B1-B5.
+    pg.set_uniform_path_distribution()
     os.environ['TEST_FLAG'] == 'TRUE'
     np.random.seed(1) # Seed the random number generator
     num_samples = 5000
     path_count = pg.count_paths()
     assert path_count == 5
-    #paths = pg.sample_paths(num_samples)
-    #b_ctr = Counter([p[2] for p in paths])
-    #print(b_ctr)
-    #assert b_ctr['B1'] < (0.4 * num_samples)
+    paths = pg.sample_paths(num_samples, weighted=True)
+    b_ctr = Counter([p[2] for p in paths])
+    print(b_ctr)
+    assert b_ctr == {'B1': 1021, 'B2': 991, 'B3': 964, 'B4': 1022, 'B5': 1002}
 
-
-if __name__ == '__main__':
-    test_uniform_sampling()

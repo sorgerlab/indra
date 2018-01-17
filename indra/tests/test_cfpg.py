@@ -1,6 +1,9 @@
+import os
 import pickle
-import networkx as nx
+from collections import Counter
 from os.path import dirname, join
+import numpy as np
+import networkx as nx
 from indra.explanation import paths_graph as pg
 
 random_graph_pkl = join(dirname(__file__), 'random_graphs.pkl')
@@ -180,6 +183,28 @@ def test_example_graph1():
     # Check that all paths in the set difference contain cycles
     for path in sampled_paths.difference(sampled_cf_paths):
         assert len(set(path)) < len(path)
+
+
+def test_uniform_sampling_example_graph1():
+    sif_file = join(dirname(__file__), 'korkut_im.sif')
+    g = pg.load_signed_sif(sif_file)
+    source = 'BLK_phosphoY389_phosphorylation_PTK2_Y397'
+    target = 'EIF4EBP1_T37_p_obs'
+    target_polarity = 0
+    length = 8
+    cfpg = pg.CFPG.from_graph(g, source, target, length, signed=True,
+                              target_polarity=0)
+    os.environ['TEST_FLAG'] == 'TRUE'
+    np.random.seed(1)
+    # Count paths
+    # Now, re-weight for uniformity and re-sample
+    num_samples = cfpg.path_count() * 1000
+    cfpg.set_uniform_path_distribution()
+    sampled_paths_uni = cfpg.sample_paths(num_samples=num_samples,
+                                          weighted=True)
+    ctr_uni = Counter(sampled_paths_uni)
+    for path, count in ctr_uni_list:
+        assert count > 900 and count < 1100
 
 
 def test_enumerate_example_graph2():
