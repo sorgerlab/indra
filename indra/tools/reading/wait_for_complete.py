@@ -35,12 +35,15 @@ if __name__ == '__main__':
     parser.add_argument(
         '--interval', '-i',
         dest='poll_interval',
+        default=10,
         type=int,
-        help='The time interval to wait between job status checks, in seconds.'
+        help=('The time interval to wait between job status checks, in '
+              'seconds (default: %(default)d seconds).')
         )
     parser.add_argument(
         '--timeout', '-T',
         metavar='TIMEOUT',
+        type=int,
         help=('If the logs are not updated for %(metavar)s seconds, '
               'print a warning. If `--kill_on_log_timeout` flag is set, then '
               'the offending jobs will be automatically terminated.')

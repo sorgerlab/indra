@@ -45,6 +45,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         after timeout. This has no effect if `idle_log_timeout` is None.
         Default is False.
     """
+    start_time = datetime.now()
     if job_list is None:
         job_list = []
 
@@ -55,9 +56,10 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         if job_name_prefix:
             jobs = [job for job in jobs if
                     job['jobName'].startswith(job_name_prefix)]
-        ids = [job['jobId'] for job in jobs]
         if job_filter:
-            ids = [job_id for job_id in ids if job_id in job_filter]
+            jobs = [job_def for job_def in jobs
+                    if job_def['jobId'] in job_filter]
+        ids = [job['jobId'] for job in jobs]
         return ids, jobs
 
     job_log_dict = {}
@@ -72,13 +74,12 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 job_log_dict[jid] = {'log': log_lines,
                                      'check_time': now}
             elif len(job_log_dict[jid]['log']) == len(log_lines):
-                check_dt = job_log_dict[jid]['check_time'] - now
+                check_dt = now - job_log_dict[jid]['check_time']
                 if check_dt.seconds > idle_log_timeout:
                     logger.warning(('Job \'%s\' has not produced output for '
                                     '%d seconds.')
                                    % (job_def['jobName'], check_dt.seconds))
                     stalled_jobs.add(jid)
-                job_log_dict[jid]['check_time'] = now
             else:
                 old_log = job_log_dict[jid]['log']
                 old_log += log_lines[len(old_log):]
@@ -89,20 +90,21 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     batch_client = boto3.client('batch')
 
     total_time = 0
-    terminate_msg = 'Job log has stalled for at least %d minutes.'
+    terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
     while True:
         pre_run = []
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
-            pre_run += get_jobs_by_status(status, job_list, job_name_prefix)
+            ids, _ = get_jobs_by_status(status, job_list, job_name_prefix)
+            pre_run += ids
         running_ids, running_jobs = get_jobs_by_status('RUNNING', job_list,
                                                        job_name_prefix)
         failed_ids, _ = get_jobs_by_status('FAILED', job_list, job_name_prefix)
         done, _ = get_jobs_by_status('SUCCEEDED', job_list, job_name_prefix)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
-                    (total_time, len(pre_run), len(running_ids),
-                     len(failed_ids), len(done)))
+                    ((datetime.now() - start_time).seconds, len(pre_run),
+                     len(running_ids), len(failed_ids), len(done)))
 
         # Check the logs for new output, and possibly terminate some jobs.
         if idle_log_timeout is not None:
@@ -112,8 +114,8 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 # message twice.
                 for jid in stalled_jobs.difference(terminated_jobs):
                     batch_client.terminate_job(
-                        jid,
-                        terminate_msg % (idle_log_timeout/60)
+                        jobId=jid,
+                        reason=terminate_msg % (idle_log_timeout/60.0)
                         )
                     terminated_jobs.add(jid)
 
