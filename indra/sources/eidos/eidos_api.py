@@ -4,8 +4,22 @@ from past.builtins import basestring
 import json
 import logging
 from .processor import EidosProcessor
+from .scala_utils import get_python_json
 
 logger = logging.getLogger('eidos')
+
+
+def process_text(text):
+    import os
+    from jnius import autoclass
+    eidos = autoclass('org.clulab.wm.AgroSystem')
+    eidos_reader = eidos(autoclass('java.lang.Object')())
+    mentions = eidos_reader.extractFrom(text)
+    ser = autoclass('org.clulab.wm.serialization.json.WMJSONSerializer')
+    mentions_json = ser.jsonAST(mentions)
+    json_dict = get_python_json(mentions_json)
+    return process_json(json_dict)
+
 
 def process_json_file(file_name):
     """Return an EidosProcessor by processing the given Eidos json file.
@@ -57,6 +71,25 @@ def process_json_str(json_str):
     except ValueError:
         logger.error('Could not decode JSON string.')
         return None
+    return process_json(json_dict)
+
+
+def process_json(json_dict):
+    """Return an EidosProcessor by processing the given Eidos json dict.
+
+    Parameters
+    ----------
+    json_dict : dict
+        The json dict to be processed.
+
+    Returns
+    -------
+    ep : EidosProcessor
+        A EidosProcessor containing the extracted INDRA Statements
+        in ep.statements.
+    """
+
     ep = EidosProcessor(json_dict)
     ep.get_events()
     return ep
+
