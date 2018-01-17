@@ -66,7 +66,8 @@ if __name__ == '__main__':
     bucket_name = 'bigmech'
     id_list_key = 'reading_inputs/%s/id_list' % args.basename
     readers = [reader_class(args.basename, args.num_cores)
-               for reader_class in get_readers()]
+               for reader_class in get_readers()
+               if reader_class.name.lower() in args.readers]
 
     try:
         id_list_obj = client.get_object(
