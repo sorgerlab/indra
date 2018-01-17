@@ -1,6 +1,4 @@
-import sys
 from argparse import ArgumentParser
-from indra.tools.reading.submit_reading_pipeline_aws import wait_for_complete
 
 if __name__ == '__main__':
     parser = ArgumentParser(
@@ -54,6 +52,8 @@ if __name__ == '__main__':
         help='If a log times out, terminate the offending job.'
         )
     args = parser.parse_args()
+
+    from submit_reading_pipeline_aws import wait_for_complete
 
     job_list = None
     if args.job_list is not None:

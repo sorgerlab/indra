@@ -47,20 +47,21 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     """
     start_time = datetime.now()
     if job_list is None:
-        job_list = []
+        job_id_list = []
+    else:
+        job_id_list = [job['jobId'] for job in job_list]
 
-    def get_jobs_by_status(status, job_filter=None, job_name_prefix=None):
+    def get_jobs_by_status(status, job_id_filter=None, job_name_prefix=None):
         res = batch_client.list_jobs(jobQueue=queue_name,
                                      jobStatus=status, maxResults=10000)
         jobs = res['jobSummaryList']
         if job_name_prefix:
             jobs = [job for job in jobs if
                     job['jobName'].startswith(job_name_prefix)]
-        if job_filter:
+        if job_id_filter:
             jobs = [job_def for job_def in jobs
-                    if job_def['jobId'] in job_filter]
-        ids = [job['jobId'] for job in jobs]
-        return ids, jobs
+                    if job_def['jobId'] in job_id_filter]
+        return jobs
 
     job_log_dict = {}
 
@@ -85,30 +86,25 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 old_log += log_lines[len(old_log):]
         return stalled_jobs
 
-    job_list = [job['jobId'] for job in job_list]
-
     batch_client = boto3.client('batch')
 
-    total_time = 0
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
     while True:
         pre_run = []
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
-            ids, _ = get_jobs_by_status(status, job_list, job_name_prefix)
-            pre_run += ids
-        running_ids, running_jobs = get_jobs_by_status('RUNNING', job_list,
-                                                       job_name_prefix)
-        failed_ids, _ = get_jobs_by_status('FAILED', job_list, job_name_prefix)
-        done, _ = get_jobs_by_status('SUCCEEDED', job_list, job_name_prefix)
+            pre_run += get_jobs_by_status(status, job_id_list, job_name_prefix)
+        running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
+        failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
+        done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
-                     len(running_ids), len(failed_ids), len(done)))
+                     len(running), len(failed), len(done)))
 
         # Check the logs for new output, and possibly terminate some jobs.
         if idle_log_timeout is not None:
-            stalled_jobs = check_logs(running_jobs)
+            stalled_jobs = check_logs(running)
             if kill_on_log_timeout:
                 # Keep track of terminated jobs so we don't send a terminate
                 # message twice.
@@ -117,19 +113,19 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                         jobId=jid,
                         reason=terminate_msg % (idle_log_timeout/60.0)
                         )
+                    logger.info('Terminating %s.' % jid)
                     terminated_jobs.add(jid)
 
-        if job_list:
-            if (len(failed_ids) + len(done)) == len(job_list):
+        if job_id_list:
+            if (len(failed) + len(done)) == len(job_id_list):
                 return 0
         else:
-            if (len(failed_ids) + len(done) > 0) and \
-               (len(pre_run) + len(running_ids) == 0):
+            if (len(failed) + len(done) > 0) and \
+               (len(pre_run) + len(running) == 0):
                 return 0
 
         tag_instances()
         sleep(poll_interval)
-        total_time += poll_interval
 
 
 def tag_instances(project='bigmechanism'):
