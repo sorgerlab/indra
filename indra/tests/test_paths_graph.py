@@ -1,5 +1,7 @@
-import networkx as nx
+from collections import Counter
 import pygraphviz
+import networkx as nx
+import numpy as np
 from indra.explanation.paths_graph import PathsGraph, get_reachable_sets
 
 source = 'A'
@@ -17,6 +19,14 @@ graph1_uns = nx.DiGraph()
 graph1_uns.add_nodes_from(['A', 'B', 'C', 'D'])
 graph1_uns.add_edges_from([('A', 'B'), ('B', 'D'), ('A', 'C'), ('C', 'D')])
 
+
+g_samp = nx.DiGraph() # Graph for testing sampling uniformly vs. non-uniformly
+g_samp.add_edges_from([
+    ('source', 'A1'), ('source', 'A2'),
+    ('A1', 'B1'),
+    ('A2', 'B2'), ('A2', 'B3'), ('A2', 'B4'), ('A2', 'B5'),
+    ('B1', 'target'),
+    ('B2', 'target'), ('B3', 'target'), ('B4', 'target'), ('B5', 'target')])
 
 def test_get_reachable_sets_unsigned():
     f_level, b_level = get_reachable_sets(graph1_uns, source, target,
@@ -184,3 +194,36 @@ def test_count_paths():
     num_paths = pg.count_paths()
     assert num_paths == 4
 
+
+
+
+def test_non_uniform_sampling():
+    pg = PathsGraph.from_graph(g_samp, 'source', 'target', 3)
+    # There are five different paths, but sampling uniformly based on local
+    # edge weights should result in ~50% of paths going through B1
+    num_samples = 1000
+    np.random.seed(1) # Seed the random number generator
+    paths = pg.sample_paths(num_samples)
+    num_b1_paths = len([p for p in paths if 'B1' in p])
+    num_other_paths = len([p for p in paths if 'B1' not in p])
+    assert num_b1_paths == 526
+    assert num_other_paths == 474
+
+
+def test_uniform_sampling():
+    pg = PathsGraph.from_graph(g_samp, 'source', 'target', 3)
+    # There are five different paths; sampling uniformly across the whole
+    # path distribution should result in 20% of paths going through each of
+    # paths going through B1-B5.
+    num_samples = 5000
+    np.random.seed(1) # Seed the random number generator
+    paths = pg.sample_paths(num_samples)
+    b_ctr = Counter([p[2] for p in paths])
+    print(b_ctr)
+    assert b_ctr['B1'] < (0.4 * num_samples)
+
+
+if __name__ == '__main__':
+    import os
+    os.environ['TEST_FLAG'] = 'True'
+    test_uniform_sampling()
