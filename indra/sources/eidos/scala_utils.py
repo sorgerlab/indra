@@ -1,4 +1,7 @@
 from jnius import autoclass
+import logging
+
+logger = logging.getLogger('eidos')
 
 def get_python_list(scala_list):
     """Return list from elements of scala.collection.immutable.List"""
@@ -20,21 +23,18 @@ def get_python_dict(scala_map):
 def get_python_json(scala_json):
     """Return a JSON dict from a org.json4s.JsonAST"""
     def convert_node(node):
-        if node.__class__.__name__ == 'org.json4s.JsonAST$JValue':
+        if node.__class__.__name__ in ('org.json4s.JsonAST$JValue',
+                                       'org.json4s.JsonAST$JObject'):
+            # Make a dictionary and then convert each value
             values_raw = get_python_dict(node.values())
             values = {}
             for k, v in values_raw.items():
                 values[k] = convert_node(v)
             return values
-            '''
-            entries = []
-            children = get_python_list(node.children())
-            for child in children:
-                entries.append(convert_node(child))
-            return entries
-            '''
-        elif node.__class__.__name__ == 'org.json4s.JsonAST$JObject':
-            values_raw = get_python_dict(node.values())
+        elif node.__class__.__name__.startswith('scala.collection.immutable.Map') or \
+            node.__class__.__name__ == \
+                'scala.collection.immutable.HashMap$HashTrieMap':
+            values_raw = get_python_dict(node)
             values = {}
             for k, v in values_raw.items():
                 values[k] = convert_node(v)
@@ -45,13 +45,6 @@ def get_python_json(scala_json):
             for entry in entries_raw:
                 entries.append(convert_node(entry))
             return entries
-        elif node.__class__.__name__.startswith('scala.collection.immutable.Map') or \
-            node.__class__.__name__ == 'scala.collection.immutable.HashMap$HashTrieMap':
-            values_raw = get_python_dict(node)
-            values = {}
-            for k, v in values_raw.items():
-                values[k] = convert_node(v)
-            return values
         elif node.__class__.__name__ == 'scala.collection.immutable.$colon$colon':
             entries_raw = get_python_list(node)
             entries = []
@@ -67,7 +60,8 @@ def get_python_json(scala_json):
         elif isinstance(node, (str, int, float)):
             return node
         else:
-            print(node.__class__.__name__)
+            logger.error('Cannot convert %s into Python' %
+                         node.__class__.__name__)
             return node.__class__.__name__
 
     python_json = convert_node(scala_json)
