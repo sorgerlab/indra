@@ -310,7 +310,12 @@ if __name__ == '__main__':
     # Create the top-level parser
     parser = argparse.ArgumentParser(
         'submit_reading_pipeline_aws.py',
-        description='Run reading with either the db or remote resources.'
+        description=('Run reading with either the db or remote resources. For '
+                     'more specific help, select one of the Methods with the '
+                     '`-h` option.'),
+        epilog=('Note that `python wait_for_complete.py ...` should be run as '
+                'soon as this command completes successfully. For more '
+                'details use `python wait_for_complete.py -h`.')
         )
     subparsers = parser.add_subparsers(title='Method')
     subparsers.required = True
