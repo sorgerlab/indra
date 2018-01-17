@@ -30,7 +30,7 @@ def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
 
 
 def get_job_log(job_info, log_group_name='/aws/batch/job',
-                write_file=True):
+                write_file=True, verbose=False):
     """Gets the Cloudwatch log associated with the given job.
 
     Parameters
@@ -66,13 +66,15 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
     elif len(streams) > 1:
         print('More than 1 stream for job, returning first')
     log_stream_name = streams[0]['logStreamName']
-    print("Getting log for %s/%s" % (job_name, job_id))
+    if verbose:
+        print("Getting log for %s/%s" % (job_name, job_id))
     out_file = ('%s_%s.log' % (job_name, job_id)) if write_file else None
-    lines = get_log_by_name(log_group_name, log_stream_name, out_file)
+    lines = get_log_by_name(log_group_name, log_stream_name, out_file, verbose)
     return lines
 
 
-def get_log_by_name(log_group_name, log_stream_name, out_file=None):
+def get_log_by_name(log_group_name, log_stream_name, out_file=None,
+                    verbose=True):
     """Download a log given the log's group and stream name.
 
     Parameters
@@ -105,7 +107,8 @@ def get_log_by_name(log_group_name, log_stream_name, out_file=None):
                 lines += ['%s: %s\n' % (evt['timestamp'], evt['message'])
                           for evt in events]
             kwargs['nextToken'] = response.get('nextForwardToken')
-        print('%d %s' % (len(lines), lines[-1]))
+        if verbose:
+            print('%d %s' % (len(lines), lines[-1]))
     if out_file:
         with open(out_file, 'wt') as f:
             for line in lines:
