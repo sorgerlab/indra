@@ -10,6 +10,23 @@ logger = logging.getLogger('eidos')
 
 
 def process_text(text):
+    """Return an EidosProcessor by processing the given text.
+
+    This constructs a reader object via Java and extracts mentions
+    from the text. It then serializes the mentions into JSON and
+    processes the result with process_json.
+
+    Parameters
+    ----------
+    text : str
+        The text to be processed.
+
+    Returns
+    -------
+    ep : EidosProcessor
+        A EidosProcessor containing the extracted INDRA Statements
+        in ep.statements.
+    """
     import os
     from jnius import autoclass
     eidos = autoclass('org.clulab.wm.AgroSystem')
