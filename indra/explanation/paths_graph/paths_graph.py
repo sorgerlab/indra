@@ -285,6 +285,34 @@ class PathsGraph(object):
             paths = self._name_paths(paths)
         return tuple(paths)
 
+    def _get_path_counts(self):
+        """Get a dictionary giving the number of paths through each node.
+
+        The entry for the source node gives the total number of paths in the
+        graph.
+        """
+        if not self.graph:
+            return {}
+        # Group nodes by level
+        levels = defaultdict(list)
+        for node in self.graph.nodes():
+            levels[node[0]].append(node)
+        # Initialize the path count
+        path_count = {}
+        path_count[self.target_node] = 1
+        # Iterate over the levels going "backwards" from the target. This way
+        # the path count at each node reflects the number of paths passing
+        # through that node from source to target
+        for i in reversed(range(0, self.path_length)):
+            # Iterate over the nodes at this level
+            for node in levels[i]:
+                # The count for this node is the sum of the counts over all
+                # of its successors
+                path_count[node] = \
+                        sum([path_count[succ]
+                            for succ in self.graph.successors(node)])
+        return path_count
+
     def count_paths(self):
         """Count the total number of paths without enumerating them.
 
@@ -293,25 +321,11 @@ class PathsGraph(object):
         int
             The number of paths.
         """
-        if not self.graph:
-            return 0
-        # Group nodes by level
-        levels = defaultdict(list)
-        for node in self.graph.nodes():
-            levels[node[0]].append(node)
-        # Initialize the path count
-        path_count = {}
-        path_count[self.source_node] = 1
-        # Iterate over the levels
-        for i in range(1, self.path_length + 1):
-            # Iterate over the nodes at this level
-            for node in levels[i]:
-                # The count for this node is the sum of the counts over all
-                # of its predecessors
-                path_count[node] = \
-                        sum([path_count[pred]
-                            for pred in self.graph.predecessors(node)])
-        return path_count[self.target_node]
+        path_count = self._get_path_counts()
+        total_count = path_count.get(self.source_node)
+        if total_count is None:
+            total_count = 0
+        return total_count
 
     @staticmethod
     def _name_paths(paths):
