@@ -9,9 +9,7 @@ from os import path
 import codecs
 import inspect
 
-search_directories = ['./data', '../data', '../../data', '~/data', '.']
-
-class Instance:
+class Instance(object):
     def __init__(self, action, mention, sentence, sentence_before,
             sentence_after):
         self.action = action
@@ -20,7 +18,7 @@ class Instance:
         self.sentence_before = sentence_before
         self.sentence_after = sentence_after
 
-class GenewaysAction:
+class GenewaysAction(object):
     """Represents a row of data in the Geneways human_action.txt,
     structured so you can access by field."""
     def __init__(self, textRow):
@@ -77,22 +75,21 @@ class GenewaysAction:
                 first = False
         return r
 
-class GenewaysActionParser:
+class GenewaysActionParser(object):
     """Parses a human_action.txt file, and populates
     a list of GenewaysAction objects with these data."""
 
-    def __init__(self, action_filename=None, actionmention_filename=None,
-            symbols_filename=None):
+    def __init__(self, search_directories):
         """Parses the file and populations the action data"""
-        if action_filename is None:
-            f = 'human_action.txt'
-            action_filename = self.__search_path(f)
-        if actionmention_filename is None:
-            f = 'human_actionmention.txt'
-            actionmention_filename = self.__search_path(f)
-        if symbols_filename is None:
-            f = 'human_symbols.txt'
-            symbols_filename = self.__search_path(f)
+
+        f = 'human_action.txt'
+        action_filename = self.__search_path(search_directories, f)
+
+        f = 'human_actionmention.txt'
+        actionmention_filename = self.__search_path(search_directories, f)
+
+        f = 'human_symbols.txt'
+        symbols_filename = self.__search_path(search_directories, f)
 
         if action_filename is None or actionmention_filename is None \
                 or symbols_filename is None:
@@ -105,7 +102,7 @@ class GenewaysActionParser:
         self.__linkToActionMentions(actionmention_filename)
         self.__lookupSymbols(symbols_filename)
 
-    def __search_path(self, filename):
+    def __search_path(self, search_directories, filename):
         """Searches for a given file in each of the specified directories."""
 
         for directory_name in search_directories:

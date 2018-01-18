@@ -4,7 +4,7 @@ import codecs
 
 import inspect
 
-class GenewaysActionMention:
+class GenewaysActionMention(object):
     """Represents a row of data in the Geneways human_action.txt, structured
     so you can access by field."""
     def __init__(self, textRow):
@@ -57,7 +57,7 @@ class GenewaysActionMention:
                 first = False
         return r
 
-class GenewaysActionMentionParser:
+class GenewaysActionMentionParser(object):
     """Parses a human_actionmention.txt file, and populates a list of
     GenewaysActionMention objects with these data."""
 

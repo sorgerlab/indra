@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import codecs
 
-class GenewaysSymbols:
+class GenewaysSymbols(object):
     """Parser for the Geneways symbol table. Once parsed, provides a mapping   
     from gene symbol names to Entriz IDs"""
     def __init__(self, symbols_filename):
