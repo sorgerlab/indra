@@ -1,13 +1,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
+import os
 import boto3
 import logging
 import botocore.session
 from time import sleep
+from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.tools.reading.read_pmids import READER_DICT
-from indra.util.aws import get_job_log
-from datetime import datetime
+from indra.util.aws import get_job_log, get_log_by_name
+from indra.literature.s3_client import gzip_string
 
 bucket_name = 'bigmech'
 
@@ -16,7 +19,7 @@ logger = logging.getLogger('aws_reading')
 
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
-                      kill_on_log_timeout=False, stash_logs=True):
+                      kill_on_log_timeout=False, stash_log_method=None):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -43,7 +46,15 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         If True, and if `idle_log_timeout` is set, jobs will be terminated
         after timeout. This has no effect if `idle_log_timeout` is None.
         Default is False.
+    stash_log_method : Optional[str]
+        Select a method to store the job logs, either 's3' or 'local'. If no
+        method is specified, the logs will not be loaded off of AWS. If 's3' is
+        specified, then `job_name_prefix` must also be given, as this will
+        indicate where on s3 to store the logs.
     """
+    if stash_log_method == 's3' and job_name_prefix is None:
+        raise Exception('A job_name_prefix is required to post logs on s3.')
+
     start_time = datetime.now()
     if job_list is None:
         job_id_list = []
@@ -85,17 +96,16 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 old_log += log_lines[len(old_log):]
         return stalled_jobs
 
-    batch_client = boto3.client('batch')
-
     # Don't start watching jobs added after this command was initialized.
-    if not job_id_list:
-        observed_job_def_set = set()
+    observed_job_def_set = set()
 
-        def update_observed_jobs(job_defs):
-            for job_def in job_defs:
-                observed_job_def_set.add(
-                    tuple([(k, v) for k, v in job_def.items()])
-                    )
+    def update_observed_jobs(job_defs):
+        for job_def in job_defs:
+            observed_job_def_set.add(
+                tuple([(k, v) for k, v in job_def.items()])
+                )
+
+    batch_client = boto3.client('batch')
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
@@ -107,8 +117,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
 
-        if not job_id_list:
-            update_observed_jobs(pre_run + running)
+        update_observed_jobs(pre_run + running)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
@@ -139,8 +148,34 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         tag_instances()
         sleep(poll_interval)
 
-    if stash_logs:
-        pass
+    # Stash the logs
+    if stash_log_method is not None:
+        time_fmt = '%Y%m%d_%H%M%S'
+        if stash_log_method == 's3':
+            s3_client = boto3.client('s3')
+
+            def stash_log(log_str, name_base):
+                name = '%s_%s.log' % (name_base, start_time.strftime(time_fmt))
+                log_bytes = gzip_string(log_str, name)
+                s3_client.put_object(
+                    Bucket='bigmech',
+                    Key='reading_results/%s/logs' % job_name_prefix,
+                    Body=log_bytes
+                    )
+
+        elif stash_log_method == 'local':
+            if job_name_prefix is None:
+                job_name_prefix = 'batch_%s' % start_time.strftime(time_fmt)
+            dirname = '%s_job_logs' % job_name_prefix
+            os.mkdir(dirname)
+
+            def stash_log(log_str, name_base):
+                with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
+                    f.write(log_str)
+
+        for job_def in observed_job_def_set:
+            log_str = '\n'.join(get_job_log(job_def, write_file=False))
+            stash_log(log_str, job_def['jobName'])
 
     return
 
