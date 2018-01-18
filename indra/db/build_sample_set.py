@@ -42,7 +42,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 from indra.literature import pubmed_client as pub
-from indra.db.manage_content import PmcOA, Medline, Manuscripts
+from indra.db.content_manager import PmcOA, Medline, Manuscripts
 
 
 def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
