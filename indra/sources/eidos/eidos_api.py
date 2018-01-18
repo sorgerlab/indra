@@ -4,9 +4,18 @@ from past.builtins import basestring
 import json
 import logging
 from .processor import EidosProcessor
-from .scala_utils import get_python_json
 
 logger = logging.getLogger('eidos')
+
+
+try:
+    # For text reading
+    from .eidos_reader import EidosReader
+    eidos_reader = EidosReader()
+except Exception:
+    logger.error('Could not instantiate Eidos reader, text reading '
+                 'will not be available.')
+    eidos_reader = None
 
 
 def process_text(text):
@@ -27,14 +36,10 @@ def process_text(text):
         A EidosProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
-    import os
-    from jnius import autoclass
-    eidos = autoclass('org.clulab.wm.AgroSystem')
-    eidos_reader = eidos(autoclass('java.lang.Object')())
-    mentions = eidos_reader.extractFrom(text)
-    ser = autoclass('org.clulab.wm.serialization.json.WMJSONSerializer')
-    mentions_json = ser.jsonAST(mentions)
-    json_dict = get_python_json(mentions_json)
+    if eidos_reader is None:
+        logger.error('Eidos reader is not available.')
+        return None
+    json_dict = eidos_reader.process_text(text)
     return process_json(json_dict)
 
 
