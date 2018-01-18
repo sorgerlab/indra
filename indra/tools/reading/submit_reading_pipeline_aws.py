@@ -7,6 +7,8 @@ from time import sleep
 from indra.literature import elsevier_client as ec
 from indra.tools.reading.read_pmids import READER_DICT
 from docutils.nodes import description
+from indra.util.aws import get_job_log
+from datetime import datetime
 
 bucket_name = 'bigmech'
 
@@ -14,7 +16,8 @@ logger = logging.getLogger('aws_reading')
 
 
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
-                      poll_interval=10):
+                      poll_interval=10, idle_log_timeout=None,
+                      kill_on_log_timeout=False):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -32,50 +35,97 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         explicit job list is not available but filtering is needed.
     poll_interval : Optional[int]
         The time delay between API calls to check the job statuses.
+    idle_log_timeout : Optional[int] or None
+        If not None, then track the logs of the active jobs, and if new output
+        is not produced after `idle_log_timeout` seconds, a warning is printed.
+        If `kill_on_log_timeout` is set to True, the job will also be
+        terminated.
+    kill_on_log_timeout : Optional[bool]
+        If True, and if `idle_log_timeout` is set, jobs will be terminated
+        after timeout. This has no effect if `idle_log_timeout` is None.
+        Default is False.
     """
+    start_time = datetime.now()
     if job_list is None:
-        job_list = []
+        job_id_list = []
+    else:
+        job_id_list = [job['jobId'] for job in job_list]
 
-    def get_jobs_by_status(status, job_filter=None, job_name_prefix=None):
+    def get_jobs_by_status(status, job_id_filter=None, job_name_prefix=None):
         res = batch_client.list_jobs(jobQueue=queue_name,
                                      jobStatus=status, maxResults=10000)
         jobs = res['jobSummaryList']
         if job_name_prefix:
             jobs = [job for job in jobs if
                     job['jobName'].startswith(job_name_prefix)]
-        ids = [job['jobId'] for job in jobs]
-        if job_filter:
-            ids = [job_id for job_id in ids if job_id in job_filter]
-        return ids
+        if job_id_filter:
+            jobs = [job_def for job_def in jobs
+                    if job_def['jobId'] in job_id_filter]
+        return jobs
 
-    job_list = [job['jobId'] for job in job_list]
+    job_log_dict = {}
+
+    def check_logs(job_defs):
+        stalled_jobs = set()
+        for job_def in job_defs:
+            log_lines = get_job_log(job_def, write_file=False)
+            jid = job_def['jobId']
+            now = datetime.now()
+            if jid not in job_log_dict.keys():
+                job_log_dict[jid] = {'log': log_lines,
+                                     'check_time': now}
+            elif len(job_log_dict[jid]['log']) == len(log_lines):
+                check_dt = now - job_log_dict[jid]['check_time']
+                if check_dt.seconds > idle_log_timeout:
+                    logger.warning(('Job \'%s\' has not produced output for '
+                                    '%d seconds.')
+                                   % (job_def['jobName'], check_dt.seconds))
+                    stalled_jobs.add(jid)
+            else:
+                old_log = job_log_dict[jid]['log']
+                old_log += log_lines[len(old_log):]
+        return stalled_jobs
 
     batch_client = boto3.client('batch')
 
-    total_time = 0
+    terminate_msg = 'Job log has stalled for at least %f minutes.'
+    terminated_jobs = set()
     while True:
         pre_run = []
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
-            pre_run += get_jobs_by_status(status, job_list, job_name_prefix)
-        running = get_jobs_by_status('RUNNING', job_list, job_name_prefix)
-        failed = get_jobs_by_status('FAILED', job_list, job_name_prefix)
-        done = get_jobs_by_status('SUCCEEDED', job_list, job_name_prefix)
+            pre_run += get_jobs_by_status(status, job_id_list, job_name_prefix)
+        running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
+        failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
+        done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
-                    (total_time, len(pre_run), len(running),
-                     len(failed), len(done)))
+                    ((datetime.now() - start_time).seconds, len(pre_run),
+                     len(running), len(failed), len(done)))
 
-        if job_list:
-            if (len(failed) + len(done)) == len(job_list):
+        # Check the logs for new output, and possibly terminate some jobs.
+        if idle_log_timeout is not None:
+            stalled_jobs = check_logs(running)
+            if kill_on_log_timeout:
+                # Keep track of terminated jobs so we don't send a terminate
+                # message twice.
+                for jid in stalled_jobs.difference(terminated_jobs):
+                    batch_client.terminate_job(
+                        jobId=jid,
+                        reason=terminate_msg % (idle_log_timeout/60.0)
+                        )
+                    logger.info('Terminating %s.' % jid)
+                    terminated_jobs.add(jid)
+
+        if job_id_list:
+            if (len(failed) + len(done)) == len(job_id_list):
                 return 0
         else:
             if (len(failed) + len(done) > 0) and \
-                (len(pre_run) + len(running) == 0):
+               (len(pre_run) + len(running) == 0):
                 return 0
 
         tag_instances()
         sleep(poll_interval)
-        total_time += poll_interval
 
 
 def tag_instances(project='bigmechanism'):
@@ -258,7 +308,12 @@ if __name__ == '__main__':
     # Create the top-level parser
     parser = argparse.ArgumentParser(
         'submit_reading_pipeline_aws.py',
-        description='Run reading with either the db or remote resources.'
+        description=('Run reading with either the db or remote resources. For '
+                     'more specific help, select one of the Methods with the '
+                     '`-h` option.'),
+        epilog=('Note that `python wait_for_complete.py ...` should be run as '
+                'soon as this command completes successfully. For more '
+                'details use `python wait_for_complete.py -h`.')
         )
     subparsers = parser.add_subparsers(title='Method')
     subparsers.required = True

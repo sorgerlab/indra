@@ -418,7 +418,8 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
         job_list = submit_reading('rasmachine', pmid_fname, ['reach'])
 
         # Wait for reading to complete
-        wait_for_complete('run_reach_queue', job_list)
+        wait_for_complete('run_reach_queue', job_list, idle_log_timeout=600,
+                          kill_on_log_timeout=True)
 
     # Load the model
     logger.info(time.strftime('%c'))

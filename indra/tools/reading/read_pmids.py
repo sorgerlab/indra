@@ -636,7 +636,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
 
     logger.info('Using REACH version: %s' % reach_version)
 
-    tmp_dir, _, output_dir, pmids_read, pmids_unread, _ =\
+    tmp_dir, _, output_dir, pmids_read, pmids_unread, num_found =\
         get_content_to_read(
             pmid_list, start_index, end_index, base_dir, num_cores,
             force_fulltext, force_read, 'reach', reach_version
@@ -650,7 +650,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
             REACH_MEM + MEM_BUFFER
             )
         logger.info("REACH not run.")
-    elif len(pmids_unread) > 0:
+    elif len(pmids_unread) > 0 and num_found > 0:
         # Create the REACH configuration file
         with open(REACH_CONF_FMT_FNAME, 'r') as fmt_file:
             conf_file_path = os.path.join(tmp_dir, 'indra.conf')
