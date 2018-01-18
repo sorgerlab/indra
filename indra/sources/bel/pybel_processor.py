@@ -299,7 +299,10 @@ def _get_agent(node_data, node_modifier_data=None):
         logger.info("Nodes of type %s not handled: %s" %
                         (node_func, mod_data))
         return None
-
+    # Skip gene/protein fusions
+    if pc.FUSION in node_data:
+        logger.info("Gene and protein fusions not handled: %s" % str(node_data))
+        return None
     # COMPLEXES ------------
     # First, handle complexes, which will consist recursively of other agents
     if node_func == pc.COMPLEX:
@@ -455,7 +458,7 @@ def _get_evidence(u_data, v_data, edge_data):
     if text_location is not None:
         epistemics['section_type'] = _pybel_text_location_map.get(text_location)
 
-    ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='pybel',
+    ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
                   source_id=edge_data.get(pc.HASH), epistemics=epistemics,
                   annotations=annotations)
     return ev

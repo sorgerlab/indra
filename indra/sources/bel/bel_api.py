@@ -128,8 +128,12 @@ def process_pybel_graph(graph):
     return bp
 
 
-def process_belscript(file_name):
+def process_belscript(file_name, **kwargs):
     """Return a PybelProcessor by processing a BEL script file.
+
+    Key word arguments are passed directly to pybel.from_path,
+    for further information, see
+    pybel.readthedocs.io/en/latest/io.html#pybel.from_path
 
     Parameters
     ----------
@@ -142,7 +146,7 @@ def process_belscript(file_name):
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
-    pybel_graph = pybel.from_path(file_name)
+    pybel_graph = pybel.from_path(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 
 
