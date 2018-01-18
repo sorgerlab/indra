@@ -164,7 +164,10 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 # log_bytes = gzip_string(log_str, name)
                 s3_client.put_object(
                     Bucket='bigmech',
-                    Key='reading_results/%s/logs/%s' % (job_name_prefix, name),
+                    Key='reading_results/%s/logs/%s/%s' % (
+                        job_name_prefix,
+                        queue_name,
+                        name),
                     Body=log_str
                     )
 
