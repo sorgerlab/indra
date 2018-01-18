@@ -8,19 +8,21 @@ from nose import SkipTest
 from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
-from indra.db import DatabaseManager, texttypes, get_defaults
+from indra.db.database_manager import DatabaseManager
+from indra.db.util import get_abstracts_by_pmids, get_defaults
 from nose.plugins.attrib import attr
+
 IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
 if IS_PY3:
-    from indra.db.manage_content import Medline, PmcOA, Manuscripts
+    from indra.db.content_manager import Medline, PmcOA, Manuscripts
 
 if '-a' in argv:
     attr_str = argv[argv.index('-a')+1]
     if any([not_attr in attr_str for not_attr in
             ('!nonpublic', '!webservice')]):
-        raise SkipTest("Every tests is nonpublic and a webservice.")
+        raise SkipTest("Every test is nonpublic and a webservice.")
 
 defaults = get_defaults()
 test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
@@ -61,6 +63,7 @@ for k in key_list:
 else:
     raise SkipTest("Not able to start up any of the available test hosts:\n"
                    + report)
+
 
 #==============================================================================
 # The following are some helpful functions for the rest of the tests.
@@ -213,17 +216,9 @@ def test_get_abstracts():
 
     expected = [(pmid, (found_abst_fmt % pmid).encode('utf8'))
                 for pmid in ['1234', '5678']]
-    received = db.get_abstracts_by_pmids(['1234', '5678', '1357'], unzip=False)
+    received = get_abstracts_by_pmids(db, ['1234', '5678', '1357'],
+                                      unzip=False)
     assert_contents_equal(expected, received, "Didn't get expected abstracts.")
-
-
-@attr('nonpublic')
-def test_get_all_pmids():
-    "Test whether we get all the pmids."
-    db = get_db()
-    db.insert_many('text_ref', [{'pmid': '1234'}, {'pmid': '5678'}])
-    pmid_list = db.get_all_pmids()
-    assert_contents_equal(pmid_list, ['1234', '5678'])
 
 
 #==============================================================================
