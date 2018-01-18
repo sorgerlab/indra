@@ -96,6 +96,7 @@ if __name__ == '__main__':
     # Run the reading pipelines
     stmts = {}
     content_types = {}
+    key_base = 'reading_results/%s' % args.basename
     for reader, run_reader in read.READER_DICT.items():
         if reader not in readers:
             continue
@@ -115,17 +116,25 @@ if __name__ == '__main__':
 
         # Pickle the content types to S3
         N_papers = len(some_stmts)
-        ct_key_name = 'reading_results/%s/%s/content_types/%d_%d.pkl' % \
-                      (args.basename, reader, args.start_index, args.end_index)
+        ct_key_name = key_base + '/%s/content_types/%d_%d.pkl' % \
+                                 (reader, args.start_index, args.end_index)
         logger.info("Saving content types for %d papers to %s" %
                     (N_papers, ct_key_name))
         ct_bytes = pickle.dumps(content_types[reader])
         client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
         # Pickle the statements to a bytestring
-        pickle_key_name = 'reading_results/%s/%s/stmts/%d_%d.pkl' % \
-                          (args.basename, reader, args.start_index, args.end_index)
+        pickle_key_name = key_base + '/%s/stmts/%d_%d.pkl' % \
+                                     (reader, args.start_index, args.end_index)
         logger.info("Saving stmts from %d papers to %s" %
                     (N_papers, pickle_key_name))
         stmts_bytes = pickle.dumps(some_stmts)
         client.put_object(Key=pickle_key_name, Body=stmts_bytes,
                           Bucket=bucket_name)
+
+    contents = os.listdir('.')
+    sparser_logs = [fname for fname in contents
+                    if fname.startswith('sparser') and fname.endswith('log')]
+    for fname in sparser_logs:
+        with open(fname, 'r') as f:
+            client.put_object(Key=key_base + '/logs/%s' % fname, Body=f.read(),
+                              Bucket=bucket_name)
