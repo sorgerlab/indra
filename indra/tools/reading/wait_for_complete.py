@@ -51,6 +51,16 @@ if __name__ == '__main__':
         action='store_true',
         help='If a log times out, terminate the offending job.'
         )
+    parser.add_argument(
+        '--stash_log_method', '-l',
+        choices=['s3', 'local'],
+        metavar='METHOD',
+        help=('Select a method from: [%(choices)s] to store the job logs. '
+              'If no method is specified, the logs will not be '
+              'loaded off of AWS. If \'s3\' is specified, then '
+              '`job_name_prefix` must also be given, as this will indicate '
+              'where on s3 to store the logs.')
+        )
     args = parser.parse_args()
 
     from submit_reading_pipeline_aws import wait_for_complete
