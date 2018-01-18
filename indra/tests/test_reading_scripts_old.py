@@ -9,6 +9,7 @@ from nose.plugins.attrib import attr
 
 from indra.tools.reading.read_pmids import get_proc_num, get_mem_total,\
     READER_DICT
+import shutil
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.
@@ -37,7 +38,7 @@ def _call_reader(reader, num_cores, force_read):
     out_dir = TMP_DIR_FMT % reader
     if not path.exists(out_dir):
         mkdir(out_dir)
-    stmts = READER_DICT[reader](
+    stmts, pmids_unread = READER_DICT[reader](
         PMID_LIST,
         TMP_DIR_FMT % reader,
         num_cores,
@@ -46,7 +47,7 @@ def _call_reader(reader, num_cores, force_read):
         force_read,
         False
         )
-    return stmts
+    return stmts, pmids_unread
 
 
 def _check_blind_result(reader):
@@ -77,10 +78,12 @@ def test_get_mem_total():
 def test_reach_one_core():
     if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
-    stmts = _call_reader('reach', 1, True)
+    stmts, pmids_unread = _call_reader('reach', 1, True)
     _check_result(stmts)
-    stmts2 = _call_reader('reach', 1, False)
+    assert len(pmids_unread), "Didn't read anything new."
+    stmts2, pmids_unread2 = _call_reader('reach', 1, False)
     assert len(stmts) == len(stmts2)
+    assert not len(pmids_unread2), "Didn't use cache."
 
 
 @attr('nonpublic', 'slow')
@@ -89,25 +92,31 @@ def test_reach_two_core():
         raise SkipTest("Not enough memory.")
     if get_proc_num() <= 2:
         raise SkipTest("Not enough processes.")
-    stmts = _call_reader('reach', 2, True)
+    stmts, pmids_unread = _call_reader('reach', 2, True)
     _check_result(stmts)
-    stmts2 = _call_reader('reach', 2, False)
+    assert len(pmids_unread), "Didn't read anything new."
+    stmts2, pmids_unread2 = _call_reader('reach', 2, False)
     assert len(stmts) == len(stmts2)
+    assert not len(pmids_unread2), "Didn't use cache."
 
 
 @attr('nonpublic')
 def test_sparser_one_core():
-    stmts = _call_reader('sparser', 1, True)
+    stmts, pmids_unread = _call_reader('sparser', 1, True)
     _check_result(stmts)
-    stmts2 = _call_reader('sparser', 1, False)
+    assert len(pmids_unread), "Didn't read anything new."
+    stmts2, pmids_unread2 = _call_reader('sparser', 1, False)
     assert len(stmts) == len(stmts2)
+    assert not len(pmids_unread2), "Didn't use cache."
 
 
 @attr('nonpublic')
 def test_sparser_two_core():
     if get_proc_num() <= 2:
         raise SkipTest("Not enough processes.")
-    stmts = _call_reader('sparser', 2)
+    stmts, pmids_unread = _call_reader('sparser', 2, True)
     _check_result(stmts)
-    stmts2 = _call_reader('sparser', 2, False)
+    assert len(pmids_unread), "Didn't read anything new."
+    stmts2, pmids_unread2 = _call_reader('sparser', 2, False)
     assert len(stmts) == len(stmts2)
+    assert not len(pmids_unread2), "Didn't use cache."
