@@ -449,7 +449,7 @@ def get_stmts_from_cache(pmid):
     json_str = s3_client.get_reader_json_str('sparser', pmid)
     stmts = []
     if json_str is not None:
-        stmts = sparser.process_json_dict(json.loads(json_str))
+        stmts = sparser.process_json_dict(json.loads(json_str)).statements
     return {pmid: stmts}
 
 
