@@ -69,7 +69,7 @@ script:
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py,_require_python3.py";
+      export NOSE_IGNORE_FILES="manage_content.py,build_sample_set.py,_require_python3.py,eidos_reader.py";
     fi
   - export NOSEATTR="";
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
