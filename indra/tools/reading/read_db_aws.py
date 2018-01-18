@@ -12,6 +12,7 @@ import boto3
 import botocore
 import logging
 import sys
+import os
 import random
 
 
@@ -92,6 +93,15 @@ if __name__ == '__main__':
     # Read everything ========================================
     outputs = produce_readings(id_dict, readers, verbose=True,
                                read_mode=args.mode)
+
+    contents = os.listdir('.')
+    sparser_logs = [fname for fname in contents
+                    if fname.startswith('sparser') and fname.endswith('log')]
+    for fname in sparser_logs:
+        with open(fname, 'r') as f:
+            s3_key = 'reading_results/%s/logs/%s' % (args.basename, fname)
+            client.put_object(Key=s3_key, Body=f.read(),
+                              Bucket=bucket_name)
 
     # Convert the outputs to statements ==================================
     produce_statements(outputs, n_proc=args.num_cores)
