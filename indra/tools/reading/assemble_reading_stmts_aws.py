@@ -5,14 +5,12 @@ from argparse import ArgumentParser
 
 def assemble_batch_results(basename, result_type, reader):
     # The trailing slash here is important
-    prefix = 'reading_results/%s/%s/%s' % (basename, reader, result_type)
+    prefix = 'reading_results/%s/%s/%s/' % (basename, reader, result_type)
     # Get all keys associated with reading results
     result_file_keys = []
-    marker = ''
     # Page through the files
     while True:
-        res = client.list_objects(Bucket=bucket_name, Prefix=prefix,
-                                  Delimiter='/', Marker=marker)
+        res = client.list_objects(Bucket=bucket_name, Prefix=prefix)
         if not res.get('Contents'):
             break
         result_file_keys += [item['Key'] for item in res['Contents']]
