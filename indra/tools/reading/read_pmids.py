@@ -468,7 +468,8 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
     logger.info('Adjusted...')
     if num_cores is 1:
         stmts = get_stmts(pmids_unread, cleanup=cleanup)
-        stmts += [get_stmts_from_cache(pmid) for pmid in pmids_read.keys()]
+        stmts.update({pmid: get_stmts_from_cache(pmid)[pmid]
+                      for pmid in pmids_read.keys()})
     elif num_cores > 1:
         logger.info("Starting a pool with %d cores." % num_cores)
         pool = mp.Pool(num_cores)
@@ -495,10 +496,9 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
         pool.join()
         logger.info('Multiprocessing pool joined.')
         stmts = {
-            pmid: stmt_list for res_dict in unread_res
+            pmid: stmt_list for res_dict in unread_res + read_res
             for pmid, stmt_list in res_dict.items()
             }
-        stmts += read_res
 
     return (stmts, pmids_unread)
 
