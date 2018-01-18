@@ -1,4 +1,7 @@
-"""An input processor for information extracted via the Geneways software suite
+"""
+This module provides a simplified API for invoking the Geneways input processor
+, which converts extracted information collected with Geneways into INDRA
+statements.
 
 See publication:
 Rzhetsky, Andrey, Ivan Iossifov, Tomohiro Koike, Michael Krauthammer, Pauline
@@ -17,16 +20,16 @@ def process_geneways(search_path=None):
 
     Parameters
     ----------
-    search_path: list
+    search_path : list
         a list of directories in which to search for Geneways data.
-        Looks for these geneways
-        files in these directories: human_action.txt, human_actionmention.txt,
+        Looks for these Geneways extraction data files:
+        human_action.txt, human_actionmention.txt,
         human_symbols.txt. Omit this parameter to use the default search path.
 
     Returns
     -------
-    statements: list[indra.statements.Statement]
-        A list of INDRA statements generated from the Geneways extracted.
+    statements : list[indra.statements.Statement]
+        A list of INDRA statements generated from the Geneways action mentions.
     """
     if search_path is None:
         search_path = ['./data', '../data', '../../data', '~/data', '.']

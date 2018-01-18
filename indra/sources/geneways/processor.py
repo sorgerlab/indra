@@ -1,4 +1,7 @@
-"""An input processor for information extracted via the Geneways software suite
+"""
+This module provides an input processor for information extracted using the
+Geneways software suite, converting extraction data in Geneways format into
+INDRA statements.
 
 See publication:
 Rzhetsky, Andrey, Ivan Iossifov, Tomohiro Koike, Michael Krauthammer, Pauline
@@ -16,8 +19,10 @@ from indra.sources.geneways.geneways_action_type_mapper import \
 from indra.statements import Evidence, Agent
 import indra.databases.hgnc_client as hgc
 import logging
+import sys
 
 logger = logging.getLogger('geneways')
+logger.setLevel(logging.DEBUG)
 
 # This will take in an action and action mention and create a single statement
 class GenewaysProcessor(object):
@@ -26,23 +31,29 @@ class GenewaysProcessor(object):
 
     Parameters
     ----------
-    search_path: list
+    search_path : list[str]
         A list of directories in which to search for Geneways data
 
     Attributes
     ----------
-    statements: list
+    statements : list[indra.statements.Statement]
         A list of INDRA statements converted from Geneways action
         mentions, populated by calling the constructor
     """
     def __init__(self, search_path):
         # Parse Geneways data. Will give an error if it can't find
         # the Geneways data
+        if sys.version_info[0] < 3:
+            logger.warning('This processor is very slow in python 2! ' + 
+                    'Python 3 is recommended.')
+
+
         logger.debug('Loading Geneways extractions')
         parser = GenewaysActionParser(search_path)
         logger.debug('\tGeneways extractions loaded!')
         actions = parser.actions
 
+        
         # Make a list of statements from the actions
         self.statements = []
         for action in actions:
@@ -56,18 +67,19 @@ class GenewaysProcessor(object):
 
         Parameters
         ----------
-        action: GenewaysAction
+        action : GenewaysAction
             The mechanism that the Geneways mention maps to. Note that
             several text mentions can correspond to the same action if they are
-            referring to the same thing.
-        mention: GenewaysActionMention
+            referring to the same relationship - there may be multiple
+            Geneways action mentions corresponding to each action.
+        mention : GenewaysActionMention
             The Geneways action mention object corresponding to a single mention
             of a mechanism in a specific text. We make a new INDRA statement
             corresponding to each action mention.
 
         Returns
         -------
-        statement: indra.statements.Statement
+        statement : indra.statements.Statement
             An INDRA statement corresponding to the provided Geneways action
             mention, or None if the action mention's type does not map onto
             any INDRA statement type in geneways_action_type_mapper.
