@@ -458,7 +458,14 @@ def _get_evidence(u_data, v_data, edge_data):
     annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
 
     text_location = annotations.pop('TextLocation', None)
-    if text_location is not None:
+    if text_location:
+        # Handle dictionary text_location like {'Abstract': True}
+        if isinstance(text_location, dict):
+            # FIXME: INDRA's section_type entry is meant to contain
+            # a single section string like "abstract" but in principle
+            # pybel could have a list of entries in the TextLocation dict.
+            # Here we just take the first one.
+            text_location = list(text_location.keys())[0]
         epistemics['section_type'] = _pybel_text_location_map.get(text_location)
 
     ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
