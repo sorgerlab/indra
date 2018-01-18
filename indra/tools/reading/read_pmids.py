@@ -19,153 +19,118 @@ from datetime import datetime
 from collections import Counter
 from platform import system
 import logging
-logger = logging.getLogger('runreader')
-parser = argparse.ArgumentParser(
-    description=('Apply NLP readers to the content available for a list of '
-                 'pmids.')
-    )
-parser.add_argument(
-    '-r', '--reader',
-    choices=['reach', 'sparser', 'all'],
-    default=['all'],
-    dest='readers',
-    nargs='+',
-    help='Choose which reader(s) to use.'
-    )
-parser.add_argument(
-    '-u', '--upload_json',
-    dest='upload_json',
-    action='store_true',
-    help=('Option to simply upload previously read json files. Overrides -r '
-          'option, so no reading will be done.')
-    )
-parser.add_argument(
-    '--force_fulltext',
-    dest='force_fulltext',
-    action='store_true',
-    help='Option to force reading of the full text.'
-    )
-parser.add_argument(
-    '--force_read',
-    dest='force_read',
-    action='store_true',
-    help='Option to force the reader to reread everything.'
-    )
-parser.add_argument(
-    '-n', '--num_cores',
-    dest='num_cores',
-    default=1,
-    type=int,
-    help='Select the number of cores you want to use.'
-    )
-parser.add_argument(
-    '-v', '--verbose',
-    dest='verbose',
-    action='store_true',
-    help='Show more output to screen.'
-    )
-parser.add_argument(
-    '-m', '--messy',
-    dest='cleanup',
-    action='store_false',
-    help='Choose to not clean up after run.'
-    )
-parser.add_argument(
-    '-s', '--start_index',
-    dest='start_index',
-    type=int,
-    help='Select the first pmid in the list to start reading.',
-    default=0
-    )
-parser.add_argument(
-    '-e', '--end_index',
-    dest='end_index',
-    type=int,
-    help='Select the last pmid in the list to read.',
-    default=None
-    )
-parser.add_argument(
-    '--shuffle',
-    dest='shuffle',
-    action='store_true',
-    help=('Select a random sample of the pmids provided. -s/--start_index '
-          'will be ingored, and -e/--end_index will set the number of '
-          'samples to take.')
-    )
-parser.add_argument(
-    '-o', '--outdir',
-    dest='out_dir',
-    default=None,
-    help=('The output directory where stuff is written. This is only a '
-          'temporary directory when reading. By default this will be the'
-          '"<basename>_out".')
-    )
-parser.add_argument(
-    dest='basename',
-    help='The name of this job.'
-    )
-parser.add_argument(
-    dest='pmid_list_file',
-    help=('Path to a file containing a list of line separated pmids for the '
-          'articles to be read.')
-    )
-if __name__ == '__main__':
-    args = parser.parse_args()
-
 from indra.sources import reach
-from indra.literature import pmc_client, s3_client, get_full_text, \
-                             elsevier_client
+from indra.literature import s3_client, elsevier_client
 from indra.sources.sparser import sparser_api as sparser
 
-
-# Version 1: If JSON is not available, get content and store;
-#       assume force_read is False
-# Version 1.5: If JSON is not available, get content and store;
-#       check for force_read
-# Version 2: If JSON is available, return JSON or process
-# it and return statements (process it?)
-
+logger = logging.getLogger('runreader')
 
 #==============================================================================
 # LOADING -- the following are methods to load the content to be read.
 #==============================================================================
 
+def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
+                        force_fulltext, force_read, reader, reader_version):
+    """Download and return information on text content to be read.
 
-def join_json_files(prefix):
-    """Join different REACH output JSON files into a single JSON object.
-
-    The output of REACH is broken into three files that need to be joined
-    before processing. Specifically, there will be three files of the form:
-    `<prefix>.uaz.<subcategory>.json`.
-
-    Parameters
-    ----------
-    prefix : str
-        The absolute path up to the extensions that reach will add.
-
-    Returns
-    -------
-    json_obj : dict
-        The result of joining the files, keyed by the three subcategories.
+    This function takes a list of PMIDs and uses the download_from_s3 function
+    to download cached literature content from S3. If any new content download
+    is needed, it is handled within download_from_s3.
     """
-    try:
-        with open(prefix + '.uaz.entities.json', 'rt') as f:
-            entities = json.load(f)
-        with open(prefix + '.uaz.events.json', 'rt') as f:
-            events = json.load(f)
-        with open(prefix + '.uaz.sentences.json', 'rt') as f:
-            sentences = json.load(f)
-    except IOError as e:
-        logger.error(
-            'Failed to open JSON files for %s; REACH error?' % prefix
-            )
-        logger.exception(e)
-        return None
-    return {'events': events, 'entities': entities, 'sentences': sentences}
+    if end_index is None or end_index > len(pmid_list):
+        end_index = len(pmid_list)
+    pmids_in_range = pmid_list[start_index:end_index]
+
+    # Create the temp directories for input and output
+    base_dir = tempfile.mkdtemp(prefix='read_%s_to_%s_' %
+                                (start_index, end_index), dir=tmp_dir)
+    # Make the temp directory writeable by REACH
+    os.chmod(base_dir, stat.S_IRWXO | stat.S_IRWXU | stat.S_IRWXG)
+    input_dir = os.path.join(base_dir, 'input')
+    output_dir = os.path.join(base_dir, 'output')
+    os.makedirs(input_dir)
+    os.makedirs(output_dir)
+
+    download_from_s3_func = functools.partial(
+        download_content_from_s3,
+        input_dir=input_dir,
+        reader=reader,
+        reader_version=reader_version,
+        force_read=force_read,
+        force_fulltext=force_fulltext
+        )
+
+    if num_cores > 1:
+        # Get content using a multiprocessing pool
+        logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
+        pool = mp.Pool(num_cores)
+        logger.info('Getting content for PMIDs in parallel')
+        res = pool.map(download_from_s3_func, pmids_in_range)
+        pool.close()  # Wait for procs to end.
+        logger.info('Multiprocessing pool closed.')
+        pool.join()
+        logger.info('Multiprocessing pool joined.')
+    else:
+        res = list(map(download_from_s3_func, pmids_in_range))
+
+    # Combine the results into a single dict
+    pmid_results = {
+        pmid: results for pmid_dict in res
+        for pmid, results in pmid_dict.items()
+        }
+    # Tabulate and log content results here
+    pmids_read = {
+        pmid: result for pmid, result in pmid_results.items()
+        if result.get('reader_version') == reader_version
+        }
+    pmids_unread = {
+        pmid: pmid_results[pmid]
+        for pmid in set(pmid_results.keys()).difference(set(pmids_read.keys()))
+        }
+    logger.info(
+        '%d / %d papers already read with %s %s' %
+        (len(pmids_read), len(pmid_results), reader, reader_version)
+        )
+    num_found = len([
+        pmid for pmid in pmids_unread
+        if pmids_unread[pmid].get('content_path') is not None
+        ])
+    logger.info(
+        'Retrieved content for %d / %d papers to be read' %
+        (num_found, len(pmids_unread))
+        )
+
+    # Tabulate sources and log in sorted order
+    content_source_list = [
+        pmid_dict.get('content_source') for pmid_dict in pmids_unread.values()
+        ]
+    content_source_counter = Counter(content_source_list)
+    content_source_list = [
+        (source, count) for source, count in content_source_counter.items()
+        ]
+    content_source_list.sort(key=lambda x: x[1], reverse=True)
+    if content_source_list:
+        logger.info('Content sources:')
+        for source, count in content_source_list:
+            logger.info('%s: %d' % (source, count))
+
+    # Save text sources
+    logger.info('Saving text sources...')
+    text_source_file = os.path.join(base_dir, 'content_types.pkl')
+    with open(text_source_file, 'wb') as f:
+        pickle.dump(pmids_unread, f, protocol=2)
+    logger.info('Text sources saved.')
+
+    return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
 
 
-def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
-                     force_read=False, force_fulltext=False):
+def download_content_from_s3(pmid, reader='all', input_dir=None,
+                             reader_version=None, force_read=False,
+                             force_fulltext=False):
+    """Return content and metadata for content for a single PMID.
+
+    This function attempts to get cached literature content from S3, and if
+    not available."""
     logger.info(('Downloading %s from S3, force_read=%s, force_fulltext=%s '
                  'reader_version=%s') % (pmid, force_read, force_fulltext,
                                          reader_version))
@@ -245,106 +210,132 @@ def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
     return result
 
 
-def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
-                        force_fulltext, force_read, reader, reader_version):
-    if end_index is None or end_index > len(pmid_list):
-        end_index = len(pmid_list)
-    pmids_in_range = pmid_list[start_index:end_index]
-
-    # Create the temp directories for input and output
-    base_dir = tempfile.mkdtemp(prefix='read_%s_to_%s_' %
-                                (start_index, end_index), dir=tmp_dir)
-    # Make the temp directory writeable by REACH
-    os.chmod(base_dir, stat.S_IRWXO | stat.S_IRWXU | stat.S_IRWXG)
-    input_dir = os.path.join(base_dir, 'input')
-    output_dir = os.path.join(base_dir, 'output')
-    os.makedirs(input_dir)
-    os.makedirs(output_dir)
-
-    download_from_s3_func = functools.partial(
-        download_from_s3,
-        input_dir=input_dir,
-        reader=reader,
-        reader_version=reader_version,
-        force_read=force_read,
-        force_fulltext=force_fulltext
-        )
-    if num_cores > 1:
-        # Get content using a multiprocessing pool
-        logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
-        pool = mp.Pool(num_cores)
-        logger.info('Getting content for PMIDs in parallel')
-        res = pool.map(download_from_s3_func, pmids_in_range)
-        pool.close()  # Wait for procs to end.
-        logger.info('Multiprocessing pool closed.')
-        pool.join()
-        logger.info('Multiprocessing pool joined.')
-    else:
-        res = list(map(download_from_s3_func, pmids_in_range))
-
-    # Combine the results into a single dict
-    pmid_results = {
-        pmid: results for pmid_dict in res
-        for pmid, results in pmid_dict.items()
-        }
-    # Tabulate and log content results here
-    pmids_read = {
-        pmid: result for pmid, result in pmid_results.items()
-        if result.get('reader_version') == reader_version
-        }
-    pmids_unread = {
-        pmid: pmid_results[pmid]
-        for pmid in set(pmid_results.keys()).difference(set(pmids_read.keys()))
-        }
-    logger.info(
-        '%d / %d papers already read with %s %s' %
-        (len(pmids_read), len(pmid_results), reader, reader_version)
-        )
-    num_found = len([
-        pmid for pmid in pmids_unread
-        if pmids_unread[pmid].get('content_path') is not None
-        ])
-    logger.info(
-        'Retrieved content for %d / %d papers to be read' %
-        (num_found, len(pmids_unread))
-        )
-
-    # Tabulate sources and log in sorted order
-    content_source_list = [
-        pmid_dict.get('content_source') for pmid_dict in pmids_unread.values()
-        ]
-    content_source_counter = Counter(content_source_list)
-    content_source_list = [
-        (source, count) for source, count in content_source_counter.items()
-        ]
-    content_source_list.sort(key=lambda x: x[1], reverse=True)
-    if content_source_list:
-        logger.info('Content sources:')
-        for source, count in content_source_list:
-            logger.info('%s: %d' % (source, count))
-
-    # Save text sources
-    logger.info('Saving text sources...')
-    text_source_file = os.path.join(base_dir, 'content_types.pkl')
-    with open(text_source_file, 'wb') as f:
-        pickle.dump(pmids_unread, f, protocol=2)
-    logger.info('Text sources saved.')
-
-    return base_dir, input_dir, output_dir, pmids_read, pmids_unread, num_found
-
 
 #==============================================================================
 # SPARSER -- The following are methods to  process content with sparser.
 #==============================================================================
+
+def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
+                force_read, force_fulltext, cleanup=True, verbose=True):
+    """Run the Sparser reader on a given list of PMIDs."""
+    # Get the version of the Sparser reader
+    reader_version = sparser.get_version()
+
+    # Check which PMIDs have already been read and which haven't yet
+    _, _, _, pmids_read, pmids_unread, _ = \
+        get_content_to_read(
+            pmid_list, start_index, end_index, tmp_dir, num_cores,
+            force_fulltext, force_read, 'sparser', reader_version
+            )
+
+    # Adjust number of cores to do reading with
+    logger.info('Adjusting num cores to length of pmids_unread.')
+    num_cores = min(len(pmids_unread), num_cores)
+    logger.info('Adjusted to use %d cores...' % num_cores)
+
+    # If it's a single core, just call read_pmids_sparser directly
+    if num_cores == 1:
+        # Get Statements by reading
+        stmts_from_reading = read_pmids_sparser(pmids_unread, cleanup=cleanup)
+        # Get Statements from cache
+        stmts_from_cache = {pmid: process_sparser_from_s3(pmid)[pmid]
+                            for pmid in pmids_read.keys()}
+        # Combine the two dicts
+        stmts = stmts_from_reading
+        stmts.update(stmts_from_cache)
+    elif num_cores > 1:
+        logger.info("Starting a pool with %d cores." % num_cores)
+        pool = mp.Pool(num_cores)
+        pmids_to_read = list(pmids_unread.keys())
+        N = len(pmids_unread)
+        dn = int(N/num_cores)
+        logger.info("Breaking pmids into batches.")
+        batches = []
+        for i in range(num_cores):
+            batches.append({
+                k: pmids_unread[k]
+                for k in pmids_to_read[i*dn:min((i+1)*dn, N)]
+                })
+        read_pmids_func = functools.partial(
+            read_pmids_sparser,
+            cleanup=cleanup,
+            sparser_version=reader_version
+            )
+        logger.info("Mapping read_pmids_sparser onto pool.")
+        # Get results of reading as dict of PMIDs with Statements
+        unread_res = pool.map(read_pmids_func, batches)
+        # Get results from cache as dict of PMIDs with Statements
+        read_res = pool.map(process_sparser_from_s3, pmids_read.keys())
+        pool.close()
+        logger.info('Multiprocessing pool closed.')
+        pool.join()
+        logger.info('Multiprocessing pool joined.')
+        # Combine the reading and cache results into a single dict
+        # of PMIDs with Statements
+        stmts = {
+            pmid: stmt_list for res_dict in unread_res + read_res
+            for pmid, stmt_list in res_dict.items()
+            }
+
+    return (stmts, pmids_unread)
+
+
+def read_pmids_sparser(pmids, cleanup=True, sparser_version=None):
+    """Run sparser on a list of PMIDs and return a dict of Statements
+
+    Given a list of PMIDs, this function calls read_one_pmid_sparser
+    to read each PMID, and builds up a dict of Statements with
+    the PMIDs as keys.
+    """
+    if sparser_version is None:
+        sparser_version = sparser.get_version()
+    stmts = {}
+    now = datetime.now()
+    outbuf_fname = 'sparser_%s_%s.log' % (
+        now.strftime('%Y%m%d-%H%M%S'),
+        mp.current_process().pid,
+        )
+    outbuf = open(outbuf_fname, 'wb')
+    try:
+        for pmid, result in pmids.items():
+            logger.info('Reading %s' % pmid)
+            source = result['content_source']
+            cont_path = result['content_path']
+            outbuf.write(('\nReading pmid %s from %s located at %s.\n' % (
+                pmid,
+                source,
+                cont_path
+                )).encode('utf-8'))
+            outbuf.flush()
+            some_stmts = read_one_pmid_sparser(pmid, source, cont_path,
+                                               sparser_version,
+                                               outbuf, cleanup)
+            if some_stmts is not None:
+                stmts[pmid] = some_stmts
+            else:
+                continue  # We didn't get any new statements.
+    except KeyboardInterrupt as e:
+        logger.exception(e)
+        logger.info('Caught keyboard interrupt...stopping. \n'
+                    'Results so far will be pickled unless '
+                    'Keyboard interupt is hit again.')
+    finally:
+        outbuf.close()
+        print("Sparser logs may be found in %s" % outbuf_fname)
+    return stmts
 
 
 def _timeout_handler(signum, frame):
     raise Exception('Timeout')
 
 
-def read_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
-              cleanup=True):
-    "Run sparser on a single pmid."
+def read_one_pmid_sparser(pmid, source, cont_path, sparser_version,
+                          outbuf=None, cleanup=True):
+    """Run Sparser on a single PMID and return a list of Statements.
+
+    This function runs Sparser on a single paper and caches the result of
+    reading (a JSON file) on S3.
+    """
     signal.signal(signal.SIGALRM, _timeout_handler)
     signal.alarm(60)
     try:
@@ -391,104 +382,19 @@ def read_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
     return sp.statements
 
 
-def get_stmts(pmids_unread, cleanup=True, sparser_version=None):
-    "Run sparser on the pmids in pmids_unread."
-    if sparser_version is None:
-        sparser_version = sparser.get_version()
-    stmts = {}
-    now = datetime.now()
-    outbuf_fname = 'sparser_%s_%s.log' % (
-        now.strftime('%Y%m%d-%H%M%S'),
-        mp.current_process().pid,
-        )
-    outbuf = open(outbuf_fname, 'wb')
-    try:
-        for pmid, result in pmids_unread.items():
-            logger.info('Reading %s' % pmid)
-            source = result['content_source']
-            cont_path = result['content_path']
-            outbuf.write(('\nReading pmid %s from %s located at %s.\n' % (
-                pmid,
-                source,
-                cont_path
-                )).encode('utf-8'))
-            outbuf.flush()
-            some_stmts = read_pmid(pmid, source, cont_path, sparser_version,
-                                   outbuf, cleanup)
-            if some_stmts is not None:
-                stmts[pmid] = some_stmts
-            else:
-                continue  # We didn't get any new statements.
-    except KeyboardInterrupt as e:
-        logger.exception(e)
-        logger.info('Caught keyboard interrupt...stopping. \n'
-                    'Results so far will be pickled unless '
-                    'Keyboard interupt is hit again.')
-    finally:
-        outbuf.close()
-        print("Sparser logs may be found in %s" % outbuf_fname)
-    return stmts
+def process_sparser_from_s3(pmid):
+    """Return Statements that Sparser extracted for the given PMID.
 
-
-def get_stmts_from_cache(pmid):
+    The result is returned as a dict with the given PMID as the key
+    and a list of Statements as the value.
+    """
     json_str = s3_client.get_reader_json_str('sparser', pmid)
     stmts = []
     if json_str is not None:
-        stmts = sparser.process_json_dict(json.loads(json_str)).statements
+        sp = sparser.process_json_dict(json.loads(json_str))
+        if sp is not None:
+            stmts = sp.statements
     return {pmid: stmts}
-
-
-def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
-                force_read, force_fulltext, cleanup=True, verbose=True):
-    'Run the sparser reader on the pmids in pmid_list.'
-    reader_version = sparser.get_version()
-    _, _, _, pmids_read, pmids_unread, _ =\
-        get_content_to_read(
-            pmid_list, start_index, end_index, tmp_dir, num_cores,
-            force_fulltext, force_read, 'sparser', reader_version
-            )
-
-    logger.info('Adjusting num cores to length of pmid_list.')
-    num_cores = min(len(pmid_list), num_cores)
-    logger.info('Adjusted...')
-    if num_cores is 1:
-        stmts = get_stmts(pmids_unread, cleanup=cleanup)
-        stmts.update({pmid: get_stmts_from_cache(pmid)[pmid]
-                      for pmid in pmids_read.keys()})
-    elif num_cores > 1:
-        logger.info("Starting a pool with %d cores." % num_cores)
-        pool = mp.Pool(num_cores)
-        pmids_to_read = list(pmids_unread.keys())
-        N = len(pmids_unread)
-        dn = int(N/num_cores)
-        logger.info("Breaking pmids into batches.")
-        batches = []
-        for i in range(num_cores):
-            batches.append({
-                k: pmids_unread[k]
-                for k in pmids_to_read[i*dn:min((i+1)*dn, N)]
-                })
-        get_stmts_func = functools.partial(
-            get_stmts,
-            cleanup=cleanup,
-            sparser_version=reader_version
-            )
-        logger.info("Mapping get_stmts onto pool.")
-        unread_res = pool.map(get_stmts_func, batches)
-        logger.info('len(unread_res)=%d' % len(unread_res))
-        read_res = pool.map(get_stmts_from_cache, pmids_read.keys())
-        logger.info('len(read_res)=%d' % len(read_res))
-        pool.close()
-        logger.info('Multiprocessing pool closed.')
-        pool.join()
-        logger.info('Multiprocessing pool joined.')
-        stmts = {
-            pmid: stmt_list for res_dict in unread_res + read_res
-            for pmid, stmt_list in res_dict.items()
-            }
-        logger.info('len(stmts)=%d' % len(stmts))
-
-    return (stmts, pmids_unread)
 
 
 #==============================================================================
@@ -504,6 +410,7 @@ MEM_BUFFER = 2  # GB
 
 
 def process_reach_str(reach_json_str, pmid):
+    """Process a REACH output JSON string and return Statements."""
     if reach_json_str is None:
         raise ValueError('reach_json_str cannot be None')
     # Run the REACH processor on the JSON
@@ -518,6 +425,12 @@ def process_reach_str(reach_json_str, pmid):
 
 
 def process_reach_from_s3(pmid):
+    """Return the given PMID and Statements processed from it.
+
+    This function gets the REACH output from S3, processes it
+    and returns a dict with the given PMID and the Statements
+    obtained by processing the reading result.
+    """
     reach_json_str = s3_client.get_reader_json_str('reach', pmid)
     if reach_json_str is None:
         return []
@@ -525,11 +438,12 @@ def process_reach_from_s3(pmid):
         return {pmid: process_reach_str(reach_json_str, pmid)}
 
 
-def upload_reach_readings(pmid, source_type, reader_version, output_dir=None):
+def upload_reach_json(pmid, source_type, reader_version, output_dir=None):
+    """Join and upload the output of REACH for a given PMID."""
     logger.info('Uploading reach result for %s for %s.' % (source_type, pmid))
     # The prefixes should be PMIDs
     prefix_with_path = os.path.join(output_dir, pmid)
-    full_json = join_json_files(prefix_with_path)
+    full_json = join_reach_json_files(prefix_with_path)
     # Check that all parts of the JSON could be assembled
     if full_json is None:
         logger.error('REACH output missing JSON for %s' % pmid)
@@ -540,7 +454,12 @@ def upload_reach_readings(pmid, source_type, reader_version, output_dir=None):
     return full_json
 
 
-def upload_process_pmid(pmid_json_tpl):
+def process_reach_output_pmid(pmid_json_tpl):
+    """Return a dict of a given PMID with extracted Statements.
+
+    This function processes the JSON output of REACH for a single
+    PMID.
+    """
     pmid, full_json = pmid_json_tpl
     # Process the REACH output with INDRA
     # Convert the JSON object into a string first so that a series of string
@@ -551,6 +470,7 @@ def upload_process_pmid(pmid_json_tpl):
 
 def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
                                num_cores):
+    """Upload and process all reading output from REACH."""
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
 
@@ -566,7 +486,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
     pmid_json_tuples = []
     for json_prefix in json_prefixes:
         try:
-            full_json = upload_reach_readings(
+            full_json = upload_reach_json(
                 json_prefix,
                 pmid_info_dict[json_prefix].get('content_source'),
                 reader_version,
@@ -582,7 +502,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
     # Get a multiprocessing pool.
     pool = mp.Pool(num_cores)
     logger.info('Processing local REACH JSON files')
-    res = pool.map(upload_process_pmid, pmid_json_tuples)
+    res = pool.map(process_reach_output_pmid, pmid_json_tuples)
     stmts_by_pmid = {
         pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
         }
@@ -603,7 +523,11 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
 
 def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
               force_read, force_fulltext, cleanup=False, verbose=True):
-    """Run reach on a list of pmids."""
+    """Run reach on a list of PMIDs.
+
+    As opposed to Sparser, REACH is called only once to run on all the
+    PMIDs.
+    """
     logger.info('Running REACH with force_read=%s' % force_read)
     logger.info('Running REACH with force_fulltext=%s' % force_fulltext)
 
@@ -718,6 +642,41 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     return stmts, pmids_unread
 
 
+def join_reach_json_files(prefix):
+    """Join different REACH output JSON files into a single JSON object.
+
+    The output of REACH is broken into three files that need to be joined
+    before processing. Specifically, there will be three files of the form:
+    `<prefix>.uaz.<subcategory>.json`.
+
+    Parameters
+    ----------
+    prefix : str
+        The absolute path up to the extensions that reach will add.
+
+    Returns
+    -------
+    json_obj : dict
+        The result of joining the files, keyed by the three subcategories.
+    """
+    try:
+        with open(prefix + '.uaz.entities.json', 'rt') as f:
+            entities = json.load(f)
+        with open(prefix + '.uaz.events.json', 'rt') as f:
+            events = json.load(f)
+        with open(prefix + '.uaz.sentences.json', 'rt') as f:
+            sentences = json.load(f)
+    except IOError as e:
+        logger.error(
+            'Failed to open JSON files for %s; REACH error?' % prefix
+            )
+        logger.exception(e)
+        return None
+    return {'events': events, 'entities': entities, 'sentences': sentences}
+
+
+
+
 #==============================================================================
 # MAIN -- the main script
 #==============================================================================
@@ -746,6 +705,100 @@ def get_proc_num():
     else:
         ret = None
     return ret
+
+
+parser = argparse.ArgumentParser(
+    description=('Apply NLP readers to the content available for a list of '
+                 'pmids.')
+    )
+parser.add_argument(
+    '-r', '--reader',
+    choices=['reach', 'sparser', 'all'],
+    default=['all'],
+    dest='readers',
+    nargs='+',
+    help='Choose which reader(s) to use.'
+    )
+parser.add_argument(
+    '-u', '--upload_json',
+    dest='upload_json',
+    action='store_true',
+    help=('Option to simply upload previously read json files. Overrides -r '
+          'option, so no reading will be done.')
+    )
+parser.add_argument(
+    '--force_fulltext',
+    dest='force_fulltext',
+    action='store_true',
+    help='Option to force reading of the full text.'
+    )
+parser.add_argument(
+    '--force_read',
+    dest='force_read',
+    action='store_true',
+    help='Option to force the reader to reread everything.'
+    )
+parser.add_argument(
+    '-n', '--num_cores',
+    dest='num_cores',
+    default=1,
+    type=int,
+    help='Select the number of cores you want to use.'
+    )
+parser.add_argument(
+    '-v', '--verbose',
+    dest='verbose',
+    action='store_true',
+    help='Show more output to screen.'
+    )
+parser.add_argument(
+    '-m', '--messy',
+    dest='cleanup',
+    action='store_false',
+    help='Choose to not clean up after run.'
+    )
+parser.add_argument(
+    '-s', '--start_index',
+    dest='start_index',
+    type=int,
+    help='Select the first pmid in the list to start reading.',
+    default=0
+    )
+parser.add_argument(
+    '-e', '--end_index',
+    dest='end_index',
+    type=int,
+    help='Select the last pmid in the list to read.',
+    default=None
+    )
+parser.add_argument(
+    '--shuffle',
+    dest='shuffle',
+    action='store_true',
+    help=('Select a random sample of the pmids provided. -s/--start_index '
+          'will be ingored, and -e/--end_index will set the number of '
+          'samples to take.')
+    )
+parser.add_argument(
+    '-o', '--outdir',
+    dest='out_dir',
+    default=None,
+    help=('The output directory where stuff is written. This is only a '
+          'temporary directory when reading. By default this will be the'
+          '"<basename>_out".')
+    )
+parser.add_argument(
+    dest='basename',
+    help='The name of this job.'
+    )
+parser.add_argument(
+    dest='pmid_list_file',
+    help=('Path to a file containing a list of line separated pmids for the '
+          'articles to be read.')
+    )
+if __name__ == '__main__':
+    args = parser.parse_args()
+
 
 
 def main(args):
