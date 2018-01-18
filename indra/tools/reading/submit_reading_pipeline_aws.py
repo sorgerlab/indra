@@ -99,11 +99,13 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     # Don't start watching jobs added after this command was initialized.
     observed_job_def_set = set()
 
-    def update_observed_jobs(job_defs):
-        for job_def in job_defs:
-            observed_job_def_set.add(
-                tuple([(k, v) for k, v in job_def.items()])
-                )
+    if stash_log_method is not None:
+        def update_observed_jobs(job_defs):
+            for job_def in job_defs:
+                observed_job_def_set.add(
+                    tuple([(k, v) for k, v in job_def.items()
+                           if k in ['jobName', 'jobId']])
+                    )
 
     batch_client = boto3.client('batch')
 
@@ -117,7 +119,8 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
 
-        update_observed_jobs(pre_run + running)
+        if stash_log_method is not None:
+            update_observed_jobs(pre_run + running)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
@@ -139,11 +142,13 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         if job_id_list:
             if (len(failed) + len(done)) == len(job_id_list):
-                return 0
+                ret = 0
+                break
         else:
             if (len(failed) + len(done) > 0) and \
                (len(pre_run) + len(running) == 0):
-                return 0
+                ret = 0
+                break
 
         tag_instances()
         sleep(poll_interval)
@@ -156,11 +161,11 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
             def stash_log(log_str, name_base):
                 name = '%s_%s.log' % (name_base, start_time.strftime(time_fmt))
-                log_bytes = gzip_string(log_str, name)
+                # log_bytes = gzip_string(log_str, name)
                 s3_client.put_object(
                     Bucket='bigmech',
-                    Key='reading_results/%s/logs' % job_name_prefix,
-                    Body=log_bytes
+                    Key='reading_results/%s/logs/%s' % (job_name_prefix, name),
+                    Body=log_str
                     )
 
         elif stash_log_method == 'local':
@@ -173,16 +178,21 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
                     f.write(log_str)
 
-        for job_def in observed_job_def_set:
-            log_str = '\n'.join(get_job_log(job_def, write_file=False))
-            base_name = job_def['jobName']
-            if job_def in done:
-                base_name += '_SUCCESS'
-            elif job_def in failed:
-                base_name += '_FAILED'
-            stash_log(log_str, job_def['jobName'])
+        success_ids = [job_def['jobId'] for job_def in done]
+        failure_ids = [job_def['jobId'] for job_def in failed]
 
-    return
+        for job_def_tpl in observed_job_def_set:
+            job_def = dict(job_def_tpl)
+            log_str = ''.join(get_job_log(job_def, write_file=False))
+            base_name = job_def['jobName']
+            if job_def['jobId'] in success_ids:
+                base_name += '_SUCCESS'
+            elif job_def['jobId'] in failure_ids:
+                base_name += '_FAILED'
+            logger.info('Stashing ' + base_name)
+            stash_log(log_str, base_name)
+
+    return ret
 
 
 def tag_instances(project='bigmechanism'):

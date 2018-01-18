@@ -71,4 +71,4 @@ if __name__ == '__main__':
 
     wait_for_complete(args.queue_name, job_list, args.job_name_prefix,
                       args.poll_interval, args.timeout,
-                      args.kill_on_timeout)
+                      args.kill_on_timeout, args.stash_log_method)
