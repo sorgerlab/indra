@@ -6,7 +6,6 @@ import botocore.session
 from time import sleep
 from indra.literature import elsevier_client as ec
 from indra.tools.reading.read_pmids import READER_DICT
-from docutils.nodes import description
 from indra.util.aws import get_job_log
 from datetime import datetime
 
@@ -90,10 +89,13 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
     # Don't start watching jobs added after this command was initialized.
     if not job_id_list:
-        for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING', 'RUNNING'):
-            job_id_list += [job_def['jobId']
-                            for job_def in get_jobs_by_status(status, None,
-                                                              job_name_prefix)]
+        observed_job_def_set = set()
+
+        def update_observed_jobs(job_defs):
+            for job_def in job_defs:
+                observed_job_def_set.add(
+                    tuple([(k, v) for k, v in job_def.items()])
+                    )
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
@@ -104,6 +106,9 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
         failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
+
+        if not job_id_list:
+            update_observed_jobs(pre_run + running)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
