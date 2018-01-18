@@ -138,6 +138,17 @@ def test_get_agent_mirna():
     assert agent.db_refs['HGNC'] == '31595'
 
 
+def test_get_agent_fusion():
+    node_data = {'function': 'Protein',
+                 'fusion': {
+                     'partner_5p': {'namespace': 'HGNC', 'name': 'BCR'},
+                     'range_5p': {'missing': '?'},
+                     'range_3p': {'missing': '?'},
+                     'partner_3p': {'namespace': 'HGNC', 'name': 'ABL1'}}}
+    agent = pb._get_agent(node_data)
+    assert agent is None
+
+
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
     agent = pb._get_agent(mek, {})
@@ -693,4 +704,6 @@ def test_complex_stmt_with_activation():
     assert stmt2.obj.activity is None
     assert stmt2.obj_activity == 'kinase'
 
+if __name__ == '__main__':
+    test_get_agent_fusion()
 

@@ -299,7 +299,10 @@ def _get_agent(node_data, node_modifier_data=None):
         logger.info("Nodes of type %s not handled: %s" %
                         (node_func, mod_data))
         return None
-
+    # Skip gene/protein fusions
+    if pc.FUSION in node_data:
+        logger.info("Gene and protein fusions not handled: %s" % str(node_data))
+        return None
     # COMPLEXES ------------
     # First, handle complexes, which will consist recursively of other agents
     if node_func == pc.COMPLEX:
