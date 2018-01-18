@@ -33,7 +33,7 @@ OUTPUT_FILE_FMT = '%s_stmts_0-10.pkl' % TMP_DIR_FMT
 READINGS_PKL = 'sample_reach_outputs.pkl'
 
 
-def _call_reader(reader, num_cores):
+def _call_reader(reader, num_cores, force_read):
     out_dir = TMP_DIR_FMT % reader
     if not path.exists(out_dir):
         mkdir(out_dir)
@@ -42,8 +42,8 @@ def _call_reader(reader, num_cores):
         TMP_DIR_FMT % reader,
         num_cores,
         0,
-        len(PMID_LIST),
-        True,
+        None,
+        force_read,
         False
         )
     return stmts
@@ -77,8 +77,10 @@ def test_get_mem_total():
 def test_reach_one_core():
     if get_mem_total() < 8:
         raise SkipTest("Not enough memory.")
-    stmts = _call_reader('reach', 1)
+    stmts = _call_reader('reach', 1, True)
     _check_result(stmts)
+    stmts2 = _call_reader('reach', 1, False)
+    assert len(stmts) == len(stmts2)
 
 
 @attr('nonpublic', 'slow')
@@ -87,14 +89,18 @@ def test_reach_two_core():
         raise SkipTest("Not enough memory.")
     if get_proc_num() <= 2:
         raise SkipTest("Not enough processes.")
-    stmts = _call_reader('reach', 2)
+    stmts = _call_reader('reach', 2, True)
     _check_result(stmts)
+    stmts2 = _call_reader('reach', 2, False)
+    assert len(stmts) == len(stmts2)
 
 
 @attr('nonpublic')
 def test_sparser_one_core():
-    stmts = _call_reader('sparser', 1)
+    stmts = _call_reader('sparser', 1, True)
     _check_result(stmts)
+    stmts2 = _call_reader('sparser', 1, False)
+    assert len(stmts) == len(stmts2)
 
 
 @attr('nonpublic')
@@ -103,3 +109,5 @@ def test_sparser_two_core():
         raise SkipTest("Not enough processes.")
     stmts = _call_reader('sparser', 2)
     _check_result(stmts)
+    stmts2 = _call_reader('sparser', 2, False)
+    assert len(stmts) == len(stmts2)
