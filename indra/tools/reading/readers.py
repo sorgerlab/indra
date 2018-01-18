@@ -72,11 +72,11 @@ class Reader(object):
 
     def __init__(self, base_dir=None, n_proc=1):
         if base_dir is None:
-            base_dir = 'run_' + self.name
+            base_dir = 'run_' + self.name.lower()
         self.n_proc = n_proc
         self.base_dir = _get_dir(base_dir)
         tmp_dir = tempfile.mkdtemp(
-            prefix='reach_job_%s' % _time_stamp(),
+            prefix='%s_job_%s' % (self.name.lower(), _time_stamp()),
             dir=self.base_dir
             )
         self.tmp_dir = tmp_dir
@@ -453,8 +453,8 @@ class SparserReader(Reader):
             logger.info("Beginning to run sparser.")
             output_file_list = []
             if log:
-                log_name = 'sparser_run.log'
-                outbuf = open(log_name, 'w')
+                log_name = 'sparser_run_%s.log' % _time_stamp()
+                outbuf = open(log_name, 'wb')
             else:
                 outbuf = None
             try:
@@ -488,10 +488,10 @@ class SparserReader(Reader):
                         if out_list is not None:
                             output_file_list += out_list
                         if log:
-                            outbuf.write('Log for producing output %d/%d.\n'
+                            outbuf.write(b'Log for producing output %d/%d.\n'
                                          % (i, len(out_lists_and_buffs)))
                             buff.seek(0)
-                            outbuf.write(buff.read() + '\n')
+                            outbuf.write(buff.read() + b'\n')
                             outbuf.flush()
             finally:
                 if log:
