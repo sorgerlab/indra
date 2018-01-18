@@ -445,11 +445,19 @@ def get_stmts(pmids_unread, cleanup=True, sparser_version=None):
     return stmts
 
 
+def get_stmts_from_cache(pmid):
+    json_str = s3_client.get_reader_json_str('sparser', pmid)
+    stmts = []
+    if json_str is not None:
+        stmts = sparser.process_json_dict(json.loads(json_str))
+    return {pmid: stmts}
+
+
 def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
                 force_read, force_fulltext, cleanup=True, verbose=True):
     'Run the sparser reader on the pmids in pmid_list.'
     reader_version = sparser.get_version()
-    _, _, _, _, pmids_unread, _ =\
+    _, _, _, pmids_read, pmids_unread, _ =\
         get_content_to_read(
             pmid_list, start_index, end_index, tmp_dir, num_cores,
             force_fulltext, force_read, 'sparser', reader_version
@@ -460,6 +468,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
     logger.info('Adjusted...')
     if num_cores is 1:
         stmts = get_stmts(pmids_unread, cleanup=cleanup)
+        stmts += [get_stmts_from_cache(pmid) for pmid in pmids_read.keys()]
     elif num_cores > 1:
         logger.info("Starting a pool with %d cores." % num_cores)
         pool = mp.Pool(num_cores)
@@ -479,15 +488,18 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
             sparser_version=reader_version
             )
         logger.info("Mapping get_stmts onto pool.")
-        res = pool.map(get_stmts_func, batches)
+        unread_res = pool.map(get_stmts_func, batches)
+        read_res = pool.map(get_stmts_from_cache, pmids_read.keys())
         pool.close()
         logger.info('Multiprocessing pool closed.')
         pool.join()
         logger.info('Multiprocessing pool joined.')
         stmts = {
-            pmid: stmt_list for res_dict in res
+            pmid: stmt_list for res_dict in unread_res
             for pmid, stmt_list in res_dict.items()
             }
+        stmts += read_res
+
     return (stmts, pmids_unread)
 
 
