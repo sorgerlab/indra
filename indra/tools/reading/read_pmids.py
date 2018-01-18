@@ -172,12 +172,6 @@ def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
     if input_dir is None:
         raise ValueError('input_dir must be defined')
 
-    if reader is "sparser":
-        logger.warning(
-            'Cannot yet search for preexisting reading for sparser.'
-            )
-        force_read = True
-
     # First define the text retrieval function
     def get_text():
         # full_pmid = s3_client.check_pmid(pmid)
@@ -267,35 +261,26 @@ def get_content_to_read(pmid_list, start_index, end_index, tmp_dir, num_cores,
     os.makedirs(input_dir)
     os.makedirs(output_dir)
 
+    download_from_s3_func = functools.partial(
+        download_from_s3,
+        input_dir=input_dir,
+        reader=reader,
+        reader_version=reader_version,
+        force_read=force_read,
+        force_fulltext=force_fulltext
+        )
     if num_cores > 1:
         # Get content using a multiprocessing pool
         logger.info('Creating multiprocessing pool with %d cpus' % num_cores)
         pool = mp.Pool(num_cores)
         logger.info('Getting content for PMIDs in parallel')
-        download_from_s3_func = functools.partial(
-            download_from_s3,
-            input_dir=input_dir,
-            reader=reader,
-            reader_version=reader_version,
-            force_read=force_read,
-            force_fulltext=force_fulltext
-            )
         res = pool.map(download_from_s3_func, pmids_in_range)
         pool.close()  # Wait for procs to end.
         logger.info('Multiprocessing pool closed.')
         pool.join()
         logger.info('Multiprocessing pool joined.')
     else:
-        res = []
-        for pmid in pmids_in_range:
-            res.append(download_from_s3(
-                pmid,
-                input_dir=input_dir,
-                reader=reader,
-                reader_version=reader_version,
-                force_read=force_read,
-                force_fulltext=force_fulltext
-                ))
+        res = list(map(download_from_s3_func, pmids_in_range))
 
     # Combine the results into a single dict
     pmid_results = {
