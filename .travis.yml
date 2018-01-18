@@ -1,5 +1,7 @@
 language: python
-cache: pip
+cache:
+  - $HOME/.cache/pip
+  - $TRAVIS_BUILD_DIR/KaSim
 python:
   - "2.7"
   - "3.5"
