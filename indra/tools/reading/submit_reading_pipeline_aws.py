@@ -175,6 +175,11 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         for job_def in observed_job_def_set:
             log_str = '\n'.join(get_job_log(job_def, write_file=False))
+            base_name = job_def['jobName']
+            if job_def in done:
+                base_name += '_SUCCESS'
+            elif job_def in failed:
+                base_name += '_FAILED'
             stash_log(log_str, job_def['jobName'])
 
     return
