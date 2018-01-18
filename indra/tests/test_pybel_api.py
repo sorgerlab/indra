@@ -321,7 +321,7 @@ def test_phosphorylation_one_site_with_evidence():
     # Check evidence
     assert len(pbp.statements[0].evidence) == 1
     ev = pbp.statements[0].evidence[0]
-    assert ev.source_api == 'pybel'
+    assert ev.source_api == 'bel'
     assert ev.source_id == edge_hash
     assert ev.pmid == ev_pmid
     assert ev.text == ev_text
