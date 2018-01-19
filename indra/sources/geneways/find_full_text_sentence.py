@@ -9,7 +9,7 @@ from nltk import sent_tokenize
 from nltk.tokenize import word_tokenize
 from lxml import etree
 
-from indra.sources.geneways.devel.greek_alphabet import *
+from indra.sources.geneways.greek_alphabet import *
 
 class FullTextMention:
     """Container for full text mentions and their corresponding full text"""
