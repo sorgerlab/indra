@@ -8,7 +8,7 @@ logger = logging.getLogger('paths_graph')
 
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph', 'combine_paths_graphs']
+           'sample_raw_graph', 'combine_paths_graphs', 'combine_cfpgs']
 
 
 def load_signed_sif(sif_file):
@@ -99,6 +99,16 @@ def combine_paths_graphs(pg_dict):
         combined_graph.add_edges_from(pg.graph.edges())
     cpg = PathsGraph(pg.source_name, pg.target_name, combined_graph, None,
                      pg.signed, pg.target_polarity)
+    return cpg
+
+
+def combine_cfpgs(cfpg_dict):
+    """Combine a dict of CFPGs into a single super-CFPG."""
+    combined_graph = nx.DiGraph()
+    for level, pg in cfpg_dict.items():
+        combined_graph.add_edges_from(pg.graph.edges())
+    cpg = CFPG(pg.source_name, pg.source_node, pg.target_name,
+               pg.target_node, None, combined_graph)
     return cpg
 
 

@@ -71,12 +71,13 @@ logger = logging.getLogger('cfpg')
 
 
 class CFPG(PathsGraph):
-    def __init__(self, pre_cfpg, graph):
-        self.source_name = pre_cfpg.source_name
-        self.source_node = pre_cfpg.source_node + (0,)
-        self.target_name = pre_cfpg.target_name
-        self.target_node = pre_cfpg.target_node + (0,)
-        self.path_length = pre_cfpg.path_length
+    def __init__(self, source_name, source_node, target_name, target_node,
+                 path_length, graph):
+        self.source_name = source_name
+        self.source_node = source_node
+        self.target_name = target_name
+        self.target_node = target_node + (0,)
+        self.path_length = path_length
         self.graph = graph
 
     @classmethod
@@ -130,7 +131,9 @@ class CFPG(PathsGraph):
         tgt_3node = pre_cfpg.target_node + (0,) # 3-tuple version of target
         # If we were given an empty pre-CFPG, then the CFPG should also be empty
         if not pre_cfpg.graph:
-            return CFPG(pre_cfpg, nx.DiGraph())
+            return CFPG(pre_cfpg.source_name, pre_cfpg.source_node + (0,),
+                        pre_cfpg.target_name, pre_cfpg.target_node + (0,),
+                        pre_cfpg.path_length, nx.DiGraph())
         # We first hardwire the contents of the dictionary for the level of the
         # target node: dic_CF[path_length]
         next_tgt = {tgt_3node: []}
@@ -195,7 +198,9 @@ class CFPG(PathsGraph):
                          if (v != tgt_3node and G_cf.successors(v) == []) or
                             (v != src_3node and G_cf.predecessors(v) == [])]
         G_cf_pruned = prune(G_cf, nodes_prune, src_3node, tgt_3node)
-        return klass(pre_cfpg, G_cf_pruned)
+        return klass(pre_cfpg.source_name, pre_cfpg.source_node + (0,),
+                     pre_cfpg.target_name, pre_cfpg.target_node + (0,),
+                     pre_cfpg.path_length, G_cf_pruned)
 
 
 def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):

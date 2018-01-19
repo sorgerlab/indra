@@ -3,8 +3,7 @@ from collections import Counter
 import pygraphviz
 import networkx as nx
 import numpy as np
-from indra.explanation.paths_graph import PathsGraph, get_reachable_sets, \
-                                          sample_raw_graph, combine_paths_graphs
+from indra.explanation.paths_graph import *
 
 source = 'A'
 target = 'D'
@@ -261,6 +260,19 @@ def test_combine_paths_graphs():
     cpg = combine_paths_graphs(pg_dict)
     paths = cpg.sample_paths(1000)
     path_ctr = Counter(paths)
+
+
+def test_combine_cfpgs():
+    g = nx.DiGraph()
+    g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
+    max_depth = 4
+    pg_dict = {}
+    for length in range(1, max_depth+1):
+        cfpg = CFPG.from_graph(g, 'S', 'T', length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
+    paths = cpg.sample_paths(1000)
+    path_ctr = Counter(paths)
     print(path_ctr)
     globals().update(locals())
     draw(cpg.graph, 'cpg.pdf')
@@ -272,5 +284,5 @@ def draw(g, filename):
 
 
 if __name__ == '__main__':
-    test_combine_paths_graphs()
+    test_combine_cfpgs()
 
