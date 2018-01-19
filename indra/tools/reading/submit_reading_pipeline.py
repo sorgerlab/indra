@@ -206,7 +206,7 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
             job_end_ix = end_ix
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
         command_list = ['python', '-m',
-                        'indra.tools.reading.read_pmids_aws',
+                        'indra.tools.reading.pmid_reading.read_pmids',
                         basename, '/tmp', '16', str(job_start_ix),
                         str(job_end_ix), '-r'] + readers
         print(command_list)
