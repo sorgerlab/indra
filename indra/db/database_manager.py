@@ -16,7 +16,7 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
-    TIMESTAMP, create_engine, inspect, LargeBinary
+    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 
@@ -181,6 +181,14 @@ class DatabaseManager(object):
             __table_args__ = (
                 UniqueConstraint('source', 'name'),
                 )
+
+        class Updates(self.Base):
+            __tablename__ = 'updates'
+            id = Column(Integer, primary_key=True)
+            init_upload = Column(Boolean, nullable=False)
+            source = Column(String(250), nullable=False)
+            exec_timestamp = Column(TIMESTAMP, nullable=False)
+            latest_time = Column(TIMESTAMP, nullable=False)
 
         class TextContent(self.Base):
             __tablename__ = 'text_content'
