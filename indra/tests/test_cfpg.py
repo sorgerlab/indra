@@ -194,16 +194,16 @@ def test_uniform_sampling_example_graph1():
     length = 8
     cfpg = pg.CFPG.from_graph(g, source, target, length, signed=True,
                               target_polarity=0)
-    os.environ['TEST_FLAG'] == 'TRUE'
+    os.environ['TEST_FLAG'] = 'TRUE'
     np.random.seed(1)
     # Count paths
     # Now, re-weight for uniformity and re-sample
-    num_samples = cfpg.path_count() * 1000
+    num_samples = cfpg.count_paths() * 1000
     cfpg.set_uniform_path_distribution()
     sampled_paths_uni = cfpg.sample_paths(num_samples=num_samples,
                                           weighted=True)
     ctr_uni = Counter(sampled_paths_uni)
-    for path, count in ctr_uni_list:
+    for path, count in ctr_uni.items():
         assert count > 900 and count < 1100
 
 
