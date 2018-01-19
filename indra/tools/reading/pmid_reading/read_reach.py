@@ -9,10 +9,10 @@ import glob
 import shutil
 import logging
 import subprocess
-from platform import system
 import multiprocessing as mp
 from indra.sources import reach
 from indra.literature import s3_client
+from . import get_mem_total
 from .get_content import get_content_to_read
 
 logger = logging.getLogger('pmid_reading/read_reach')
@@ -289,16 +289,4 @@ def join_reach_json_files(prefix):
         logger.exception(e)
         return None
     return {'events': events, 'entities': entities, 'sentences': sentences}
-
-
-def get_mem_total():
-    if system() == 'Linux':
-        with open('/proc/meminfo', 'r') as f:
-            lines = f.readlines()
-        tot_entry = [line for line in lines if line.startswith('MemTotal')][0]
-        ret = int(tot_entry.split(':')[1].replace('kB', '').strip())/10**6
-    else:
-        ret = None
-    return ret
-
 

@@ -29,6 +29,17 @@ def get_proc_num():
     return ret
 
 
+def get_mem_total():
+    if system() == 'Linux':
+        with open('/proc/meminfo', 'r') as f:
+            lines = f.readlines()
+        tot_entry = [line for line in lines if line.startswith('MemTotal')][0]
+        ret = int(tot_entry.split(':')[1].replace('kB', '').strip())/10**6
+    else:
+        ret = None
+    return ret
+
+
 parser = argparse.ArgumentParser(
     description=('Apply NLP readers to the content available for a list of '
                  'pmids.')
