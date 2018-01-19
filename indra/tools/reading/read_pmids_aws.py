@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.tools.reading.read_pmids import READER_DICT
+from datetime import datetime
 
 DOC = \
 """
@@ -134,7 +135,9 @@ if __name__ == '__main__':
     contents = os.listdir('.')
     sparser_logs = [fname for fname in contents
                     if fname.startswith('sparser') and fname.endswith('log')]
+    sparser_log_dir = key_base + '/logs/sparser_logs_%s/' % \
+        datetime.now().strftime('%Y%m%d_%H%M%S')
     for fname in sparser_logs:
         with open(fname, 'r') as f:
-            client.put_object(Key=key_base + '/logs/%s' % fname, Body=f.read(),
+            client.put_object(Key=sparser_log_dir + fname, Body=f.read(),
                               Bucket=bucket_name)

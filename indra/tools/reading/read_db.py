@@ -678,7 +678,7 @@ def produce_statements(output_list, enrich=True, no_upload=False,
             logger.exception(e)
             if pickle_file is None:
                 pickle_file = ("failure_stmt_dump_%s.pkl"
-                              % datetime.now().strftime('%Y%m%d_%H%M%S'))
+                               % datetime.now().strftime('%Y%m%d_%H%M%S'))
             logger.error("Could not upload statements. Results pickled in: %s."
                          % pickle_file)
     if pickle_file is not None:

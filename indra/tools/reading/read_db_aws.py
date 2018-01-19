@@ -14,6 +14,7 @@ import logging
 import sys
 import os
 import random
+from datetime import datetime
 
 
 if __name__ == '__main__':
@@ -97,9 +98,11 @@ if __name__ == '__main__':
     contents = os.listdir('.')
     sparser_logs = [fname for fname in contents
                     if fname.startswith('sparser') and fname.endswith('log')]
+    sparser_log_dir = 'reading_results/%s/logs/sparser_logs_%s/' % (
+        args.basename, datetime.now().strftime('%Y%m%d_%H%M%S'))
     for fname in sparser_logs:
         with open(fname, 'r') as f:
-            s3_key = 'reading_results/%s/logs/%s' % (args.basename, fname)
+            s3_key = sparser_log_dir + fname
             client.put_object(Key=s3_key, Body=f.read(),
                               Bucket=bucket_name)
 
