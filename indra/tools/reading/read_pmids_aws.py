@@ -111,12 +111,10 @@ if __name__ == '__main__':
                 cleanup=False,
                 verbose=True
                 )
-        stmts[reader] = some_stmts
         content_types[reader] = some_content_types
 
-    # Pickle the content types to S3
-    for reader, some_stmts in stmts.items():
-        N_papers = len(stmts[reader])
+        # Pickle the content types to S3
+        N_papers = len(some_stmts)
         ct_key_name = 'reading_results/%s/%s/content_types/%d_%d.pkl' % \
                       (args.basename, reader, args.start_index, args.end_index)
         logger.info("Saving content types for %d papers to %s" %
@@ -128,6 +126,6 @@ if __name__ == '__main__':
                           (args.basename, reader, args.start_index, args.end_index)
         logger.info("Saving stmts from %d papers to %s" %
                     (N_papers, pickle_key_name))
-        stmts_bytes = pickle.dumps(stmts[reader])
+        stmts_bytes = pickle.dumps(some_stmts)
         client.put_object(Key=pickle_key_name, Body=stmts_bytes,
                           Bucket=bucket_name)

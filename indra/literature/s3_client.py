@@ -234,11 +234,12 @@ def get_reader_metadata(reader, pmid):
     reading_key = get_reader_key(reader, pmid)
     try:
         reading_gz_obj = client.get_object(Key=reading_key, Bucket=bucket_name)
-        logger.info("%s: found REACH output on S3; checking version" % pmid)
         reading_metadata = reading_gz_obj['Metadata']
         # The reader version string comes back as str in Python 2, not unicode
         # Using str (instead of .decode) should work in both Python 2 and 3
         reader_version = reading_metadata.get('reader_version')
+        logger.info("%s: found %s output on S3 for version %s" %
+                    (pmid, reader, reader_version))
         if reader_version is not None:
             reader_version = str(reader_version)
         source_text = reading_metadata.get('source_text')
