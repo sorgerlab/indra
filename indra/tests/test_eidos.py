@@ -13,4 +13,8 @@ def test_process_json():
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
     assert isinstance(stmt, Influence)
+    assert stmt.subj_delta.get('polarity') == 1
+    assert stmt.obj_delta.get('polarity') == -1
+    assert stmt.subj_delta.get('adjectives') == ['large']
+    assert stmt.obj_delta.get('adjectives') == ['seriously']
     print(stmt)

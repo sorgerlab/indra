@@ -1,399 +1,409 @@
 {
  "mentions": [
   {
-   "document": "46282576",
-   "sentence": 0,
-   "characterEndOffset": 7,
-   "tokenInterval": {
-    "end": 2,
-    "start": 1
-   },
-   "characterStartOffset": 2,
-   "attachments": [],
-   "foundBy": "gradable-lexiconner",
-   "type": "TextBoundMention",
-   "text": "large",
-   "id": "T:542505005",
+   "attachments": [], 
+   "sentence": 0, 
+   "text": "large", 
    "labels": [
     "Quantifier"
-   ],
-   "keep": true
-  },
-  {
-   "document": "46282576",
-   "sentence": 0,
-   "characterEndOffset": 39,
+   ], 
+   "characterEndOffset": 7, 
+   "foundBy": "gradable-lexiconner", 
    "tokenInterval": {
-    "end": 6,
-    "start": 5
-   },
-   "characterStartOffset": 30,
-   "attachments": [],
-   "foundBy": "gradable-lexiconner",
-   "type": "TextBoundMention",
-   "text": "seriously",
-   "id": "T:1398175972",
+    "start": 1, 
+    "end": 2
+   }, 
+   "characterStartOffset": 2, 
+   "document": "46282576", 
+   "type": "TextBoundMention", 
+   "id": "T:542505005", 
+   "keep": true
+  }, 
+  {
+   "attachments": [], 
+   "sentence": 0, 
+   "text": "seriously", 
    "labels": [
     "Quantifier"
-   ],
-   "keep": true
-  },
-  {
-   "document": "46282576",
-   "sentence": 0,
-   "characterEndOffset": 71,
+   ], 
+   "characterEndOffset": 39, 
+   "foundBy": "gradable-lexiconner", 
    "tokenInterval": {
-    "end": 9,
-    "start": 7
-   },
-   "characterStartOffset": 48,
-   "attachments": [],
-   "foundBy": "simple-np",
-   "type": "TextBoundMention",
-   "text": "agricultural production",
-   "id": "T:-122931378",
-   "labels": [
-    "NounPhrase",
-    "Entity"
-   ],
+    "start": 5, 
+    "end": 6
+   }, 
+   "characterStartOffset": 30, 
+   "document": "46282576", 
+   "type": "TextBoundMention", 
+   "id": "T:1398175972", 
    "keep": true
-  },
+  }, 
   {
-   "document": "46282576",
-   "sentence": 0,
-   "characterEndOffset": 29,
-   "tokenInterval": {
-    "end": 5,
-    "start": 3
-   },
-   "characterStartOffset": 17,
    "attachments": [
     {
-     "mod": "{\"trigger\":\"increase\",\"quantifier\":[\"large\"]}",
-     "type": "Increase"
+     "type": "Decrease", 
+     "mod": "{\"trigger\":\"reduced\",\"quantifier\":[\"seriously\"]}"
     }
-   ],
-   "foundBy": "simple-np++Increase_ported_syntax_1_noun",
-   "type": "TextBoundMention",
-   "text": "in subsidies",
-   "id": "T:-1315374606",
+   ], 
+   "sentence": 0, 
+   "text": "agricultural production", 
    "labels": [
-    "NounPhrase",
+    "NounPhrase", 
     "Entity"
-   ],
-   "keep": true
-  },
-  {
-   "attachments": [],
-   "document": "46282576",
-   "sentence": 0,
-   "characterEndOffset": 71,
-   "arguments": {
-    "effect": [
-     {
-      "document": "46282576",
-      "sentence": 0,
-      "characterEndOffset": 71,
-      "tokenInterval": {
-       "end": 9,
-       "start": 7
-      },
-      "characterStartOffset": 48,
-      "attachments": [],
-      "foundBy": "simple-np",
-      "type": "TextBoundMention",
-      "text": "agricultural production",
-      "id": "T:-122931378",
-      "labels": [
-       "NounPhrase",
-       "Entity"
-      ],
-      "keep": true
-     }
-    ],
-    "cause": [
-     {
-      "document": "46282576",
-      "sentence": 0,
-      "characterEndOffset": 29,
-      "tokenInterval": {
-       "end": 5,
-       "start": 3
-      },
-      "characterStartOffset": 17,
-      "attachments": [
-       {
-        "mod": "{\"trigger\":\"increase\",\"quantifier\":[\"large\"]}",
-        "type": "Increase"
-       }
-      ],
-      "foundBy": "simple-np++Increase_ported_syntax_1_noun",
-      "type": "TextBoundMention",
-      "text": "in subsidies",
-      "id": "T:-1315374606",
-      "labels": [
-       "NounPhrase",
-       "Entity"
-      ],
-      "keep": true
-     }
-    ]
-   },
+   ], 
+   "characterEndOffset": 71, 
+   "foundBy": "simple-np++Decrease_ported_syntax_1_verb", 
    "tokenInterval": {
-    "end": 9,
-    "start": 3
-   },
-   "characterStartOffset": 17,
-   "keep": true,
-   "foundBy": "causeEffect_ported_syntax_1_verb-${addlabel}",
-   "type": "EventMention",
-   "text": "in subsidies seriously reduced agricultural production",
-   "id": "E:-1476771814",
+    "start": 7, 
+    "end": 9
+   }, 
+   "characterStartOffset": 48, 
+   "document": "46282576", 
+   "type": "TextBoundMention", 
+   "id": "T:-122931378", 
+   "keep": true
+  }, 
+  {
+   "attachments": [
+    {
+     "type": "Increase", 
+     "mod": "{\"trigger\":\"increase\",\"quantifier\":[\"large\"]}"
+    }
+   ], 
+   "sentence": 0, 
+   "text": "in subsidies", 
    "labels": [
-    "Causal",
-    "EntityLinker",
-    "Event"
-   ],
-   "trigger": {
-    "document": "46282576",
-    "sentence": 0,
-    "characterEndOffset": 47,
-    "tokenInterval": {
-     "end": 7,
-     "start": 6
-    },
-    "characterStartOffset": 40,
-    "attachments": [],
-    "foundBy": "causeEffect_ported_syntax_1_verb-${addlabel}",
-    "type": "TextBoundMention",
-    "text": "reduced",
-    "id": "T:-349913349",
-    "labels": [
-     "Causal",
-     "EntityLinker",
-     "Event"
-    ],
-    "keep": true
-   },
+    "NounPhrase", 
+    "Entity"
+   ], 
+   "characterEndOffset": 29, 
+   "foundBy": "simple-np++Increase_ported_syntax_1_noun", 
+   "tokenInterval": {
+    "start": 3, 
+    "end": 5
+   }, 
+   "characterStartOffset": 17, 
+   "document": "46282576", 
+   "type": "TextBoundMention", 
+   "id": "T:-1315374606", 
+   "keep": true
+  }, 
+  {
    "paths": {
-    "effect": {
-     "T:-122931378": [
-      {
-       "destination": 8,
-       "source": 6,
-       "relation": "dobj"
-      },
-      {
-       "destination": 7,
-       "source": 8,
-       "relation": "amod"
-      }
-     ]
-    },
     "cause": {
      "T:-1315374606": [
       {
-       "destination": 2,
-       "source": 6,
+       "source": 6, 
+       "destination": 2, 
        "relation": "nsubj"
-      },
+      }, 
       {
-       "destination": 4,
-       "source": 2,
+       "source": 2, 
+       "destination": 4, 
        "relation": "nmod_in"
       }
      ]
+    }, 
+    "effect": {
+     "T:-122931378": [
+      {
+       "source": 6, 
+       "destination": 8, 
+       "relation": "dobj"
+      }, 
+      {
+       "source": 8, 
+       "destination": 7, 
+       "relation": "amod"
+      }
+     ]
     }
+   }, 
+   "attachments": [], 
+   "sentence": 0, 
+   "text": "in subsidies seriously reduced agricultural production", 
+   "keep": true, 
+   "labels": [
+    "Causal", 
+    "EntityLinker", 
+    "Event"
+   ], 
+   "characterEndOffset": 71, 
+   "foundBy": "causeEffect_ported_syntax_1_verb-${addlabel}", 
+   "trigger": {
+    "attachments": [], 
+    "sentence": 0, 
+    "text": "reduced", 
+    "labels": [
+     "Causal", 
+     "EntityLinker", 
+     "Event"
+    ], 
+    "characterEndOffset": 47, 
+    "foundBy": "causeEffect_ported_syntax_1_verb-${addlabel}", 
+    "tokenInterval": {
+     "start": 6, 
+     "end": 7
+    }, 
+    "characterStartOffset": 40, 
+    "document": "46282576", 
+    "type": "TextBoundMention", 
+    "id": "T:-349913349", 
+    "keep": true
+   }, 
+   "arguments": {
+    "cause": [
+     {
+      "attachments": [
+       {
+        "type": "Increase", 
+        "mod": "{\"trigger\":\"increase\",\"quantifier\":[\"large\"]}"
+       }
+      ], 
+      "sentence": 0, 
+      "text": "in subsidies", 
+      "labels": [
+       "NounPhrase", 
+       "Entity"
+      ], 
+      "characterEndOffset": 29, 
+      "foundBy": "simple-np++Increase_ported_syntax_1_noun", 
+      "tokenInterval": {
+       "start": 3, 
+       "end": 5
+      }, 
+      "characterStartOffset": 17, 
+      "document": "46282576", 
+      "type": "TextBoundMention", 
+      "id": "T:-1315374606", 
+      "keep": true
+     }
+    ], 
+    "effect": [
+     {
+      "attachments": [
+       {
+        "type": "Decrease", 
+        "mod": "{\"trigger\":\"reduced\",\"quantifier\":[\"seriously\"]}"
+       }
+      ], 
+      "sentence": 0, 
+      "text": "agricultural production", 
+      "labels": [
+       "NounPhrase", 
+       "Entity"
+      ], 
+      "characterEndOffset": 71, 
+      "foundBy": "simple-np++Decrease_ported_syntax_1_verb", 
+      "tokenInterval": {
+       "start": 7, 
+       "end": 9
+      }, 
+      "characterStartOffset": 48, 
+      "document": "46282576", 
+      "type": "TextBoundMention", 
+      "id": "T:-122931378", 
+      "keep": true
+     }
+    ]
+   }, 
+   "characterStartOffset": 17, 
+   "document": "46282576", 
+   "type": "EventMention", 
+   "id": "E:-1476771814", 
+   "tokenInterval": {
+    "start": 3, 
+    "end": 9
    }
   }
- ],
+ ], 
  "documents": {
   "46282576": {
    "sentences": [
     {
-     "chunks": [
-      "B-NP",
-      "I-NP",
-      "I-NP",
-      "B-PP",
-      "B-NP",
-      "B-ADVP",
-      "B-VP",
-      "B-NP",
-      "I-NP"
-     ],
-     "norms": [
-      "O",
-      "O",
-      "O",
-      "O",
-      "O",
-      "O",
-      "O",
-      "O",
-      "O"
-     ],
-     "words": [
-      "a",
-      "large",
-      "increase",
-      "in",
-      "subsidies",
-      "seriously",
-      "reduced",
-      "agricultural",
-      "production"
-     ],
-     "entities": [
-      "O",
-      "B-Quantifier",
-      "O",
-      "O",
-      "O",
-      "B-Quantifier",
-      "O",
-      "O",
-      "O"
-     ],
-     "endOffsets": [
-      1,
-      7,
-      16,
-      19,
-      29,
-      39,
-      47,
-      60,
-      71
-     ],
-     "lemmas": [
-      "a",
-      "large",
-      "increase",
-      "in",
-      "subsidy",
-      "seriously",
-      "reduce",
-      "agricultural",
-      "production"
-     ],
-     "tags": [
-      "DT",
-      "JJ",
-      "NN",
-      "IN",
-      "NNS",
-      "RB",
-      "VBD",
-      "JJ",
-      "NN"
-     ],
      "graphs": {
       "universal-enhanced": {
-       "roots": [
-        6
-       ],
        "edges": [
         {
-         "destination": 0,
-         "source": 2,
+         "source": 2, 
+         "destination": 0, 
          "relation": "det"
-        },
+        }, 
         {
-         "destination": 1,
-         "source": 2,
+         "source": 2, 
+         "destination": 1, 
          "relation": "amod"
-        },
+        }, 
         {
-         "destination": 4,
-         "source": 2,
+         "source": 2, 
+         "destination": 4, 
          "relation": "nmod_in"
-        },
+        }, 
         {
-         "destination": 3,
-         "source": 4,
+         "source": 4, 
+         "destination": 3, 
          "relation": "case"
-        },
+        }, 
         {
-         "destination": 2,
-         "source": 6,
+         "source": 6, 
+         "destination": 2, 
          "relation": "nsubj"
-        },
+        }, 
         {
-         "destination": 5,
-         "source": 6,
+         "source": 6, 
+         "destination": 5, 
          "relation": "advmod"
-        },
+        }, 
         {
-         "destination": 8,
-         "source": 6,
+         "source": 6, 
+         "destination": 8, 
          "relation": "dobj"
-        },
+        }, 
         {
-         "destination": 7,
-         "source": 8,
+         "source": 8, 
+         "destination": 7, 
          "relation": "amod"
         }
-       ]
-      },
-      "universal-basic": {
+       ], 
        "roots": [
         6
-       ],
+       ]
+      }, 
+      "universal-basic": {
        "edges": [
         {
-         "destination": 0,
-         "source": 2,
+         "source": 2, 
+         "destination": 0, 
          "relation": "det"
-        },
+        }, 
         {
-         "destination": 1,
-         "source": 2,
+         "source": 2, 
+         "destination": 1, 
          "relation": "amod"
-        },
+        }, 
         {
-         "destination": 4,
-         "source": 2,
+         "source": 2, 
+         "destination": 4, 
          "relation": "nmod"
-        },
+        }, 
         {
-         "destination": 3,
-         "source": 4,
+         "source": 4, 
+         "destination": 3, 
          "relation": "case"
-        },
+        }, 
         {
-         "destination": 2,
-         "source": 6,
+         "source": 6, 
+         "destination": 2, 
          "relation": "nsubj"
-        },
+        }, 
         {
-         "destination": 5,
-         "source": 6,
+         "source": 6, 
+         "destination": 5, 
          "relation": "advmod"
-        },
+        }, 
         {
-         "destination": 8,
-         "source": 6,
+         "source": 6, 
+         "destination": 8, 
          "relation": "dobj"
-        },
+        }, 
         {
-         "destination": 7,
-         "source": 8,
+         "source": 8, 
+         "destination": 7, 
          "relation": "amod"
         }
+       ], 
+       "roots": [
+        6
        ]
       }
-     },
+     }, 
+     "tags": [
+      "DT", 
+      "JJ", 
+      "NN", 
+      "IN", 
+      "NNS", 
+      "RB", 
+      "VBD", 
+      "JJ", 
+      "NN"
+     ], 
      "startOffsets": [
-      0,
-      2,
-      8,
-      17,
-      20,
-      30,
-      40,
-      48,
+      0, 
+      2, 
+      8, 
+      17, 
+      20, 
+      30, 
+      40, 
+      48, 
       61
+     ], 
+     "lemmas": [
+      "a", 
+      "large", 
+      "increase", 
+      "in", 
+      "subsidy", 
+      "seriously", 
+      "reduce", 
+      "agricultural", 
+      "production"
+     ], 
+     "entities": [
+      "O", 
+      "B-Quantifier", 
+      "O", 
+      "O", 
+      "O", 
+      "B-Quantifier", 
+      "O", 
+      "O", 
+      "O"
+     ], 
+     "endOffsets": [
+      1, 
+      7, 
+      16, 
+      19, 
+      29, 
+      39, 
+      47, 
+      60, 
+      71
+     ], 
+     "words": [
+      "a", 
+      "large", 
+      "increase", 
+      "in", 
+      "subsidies", 
+      "seriously", 
+      "reduced", 
+      "agricultural", 
+      "production"
+     ], 
+     "norms": [
+      "O", 
+      "O", 
+      "O", 
+      "O", 
+      "O", 
+      "O", 
+      "O", 
+      "O", 
+      "O"
+     ], 
+     "chunks": [
+      "B-NP", 
+      "I-NP", 
+      "I-NP", 
+      "B-PP", 
+      "B-NP", 
+      "B-ADVP", 
+      "B-VP", 
+      "B-NP", 
+      "I-NP"
      ]
     }
    ]
