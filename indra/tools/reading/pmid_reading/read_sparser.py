@@ -6,9 +6,9 @@ import os
 import json
 import signal
 import logging
-import datetime
 import functools
 import multiprocessing as mp
+from datetime import datetime
 from indra.sources import sparser
 from indra.literature import s3_client
 from .get_content import get_content_to_read
