@@ -9,10 +9,11 @@ import logging
 import argparse
 from datetime import datetime
 from platform import system
-from .read_sparser import run_sparser
-from .read_reach import run_reach, upload_process_reach_files
+import read_sparser
+import read_reach
 
-READER_DICT = {'reach': run_reach, 'sparser': run_sparser}
+READER_DICT = {'reach': read_reach.run_reach,
+               'sparser': read_sparser.run_sparser}
 
 
 logger = logging.getLogger('runreader')
@@ -167,7 +168,7 @@ def main(args):
         if args.upload_json:
             with open(args.pmid_list_file, 'rb') as f:
                 text_sources = pickle.load(f)
-            stmts = upload_process_reach_files(
+            stmts = read_reach.upload_process_reach_files(
                 args.out_dir,
                 text_sources,
                 args.num_cores

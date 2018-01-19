@@ -91,7 +91,8 @@ if __name__ == '__main__':
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
 from indra.db.util import insert_agents
-from indra.tools.reading.readers import get_readers, ReadingData, _get_dir
+from indra.tools.reading.db_reading.readers import \
+    get_readers, ReadingData, _get_dir
 
 
 class ReadDBError(Exception):
