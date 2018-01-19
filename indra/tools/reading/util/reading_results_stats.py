@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
 import pickle
 from matplotlib import pyplot as plt
 import numpy as np
@@ -8,9 +9,6 @@ from collections import Counter
 from indra.statements import *
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-from copy import deepcopy
-from indra.databases import uniprot_client
-import sys
 from indra.preassembler import grounding_mapper as gm
 
 import logging

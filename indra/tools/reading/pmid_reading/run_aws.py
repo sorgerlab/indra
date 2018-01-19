@@ -1,6 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.tools.reading.read_pmids import READER_DICT
+import os
+import sys
+import boto3
+import pickle
+import botocore
+import logging
+
+from . import READER_DICT
 
 DOC = \
 """
@@ -46,14 +53,6 @@ if __name__ == '__main__':
         help='Choose which reader(s) to use.'
         )
     args = parser.parse_args()
-    from indra.tools.reading import read_pmids as read
-    import boto3
-    import botocore
-    import os
-    import pickle
-    import logging
-    import sys
-
     logger = logging.getLogger('read_pmids_aws')
 
     # Setting default force read/fulltext parameters
@@ -96,7 +95,7 @@ if __name__ == '__main__':
     # Run the reading pipelines
     stmts = {}
     content_types = {}
-    for reader, run_reader in read.READER_DICT.items():
+    for reader, run_reader in READER_DICT.items():
         if reader not in readers:
             continue
 

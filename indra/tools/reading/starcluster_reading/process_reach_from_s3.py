@@ -1,8 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import boto3
-import botocore
-import zlib
 from indra.sources import reach
 import pickle
 import sys

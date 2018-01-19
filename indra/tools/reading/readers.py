@@ -19,7 +19,7 @@ from platform import system
 
 from indra.db import formats
 from indra.db import sql_expressions as sql
-from indra.util import unzip_string, zip_string
+from indra.util import zip_string
 from indra.sources import sparser, reach
 
 
@@ -103,7 +103,7 @@ class ReachReader(Reader):
         self.exec_path, self.version = self._check_reach_env()
         super(ReachReader, self).__init__(*args, **kwargs)
         conf_fmt_fname = path.join(path.dirname(__file__),
-                                   'reach_conf_fmt.txt')
+                                   'util/reach_conf_fmt.txt')
         self.conf_file_path = path.join(self.tmp_dir, 'indra.conf')
         with open(conf_fmt_fname, 'r') as fmt_file:
             fmt = fmt_file.read()

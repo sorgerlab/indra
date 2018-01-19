@@ -8,7 +8,7 @@ if __name__ == '__main__':
     import time
     import pickle
     from indra.literature import pubmed_client
-    from indra.tools.reading import submit_reading_pipeline_aws as sub_aws
+    from indra.tools.reading import submit_reading_pipeline as sub_aws
     from indra.tools import assemble_corpus as ac
     from indra.util import write_unicode_csv
 

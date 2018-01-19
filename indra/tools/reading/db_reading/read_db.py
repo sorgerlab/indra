@@ -14,8 +14,8 @@ import json
 from math import log10, floor, ceil
 from datetime import datetime
 
-from indra.tools.reading.script_tools import get_parser, make_statements, \
-                                             StatementData
+from indra.tools.reading.util import get_parser, \
+        make_statements, StatementData
 
 logger = logging.getLogger('make_db_readings')
 if __name__ == '__main__':
