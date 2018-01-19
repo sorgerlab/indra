@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import json
 import objectpath
 from indra.statements import Influence, Agent, Evidence
 
@@ -54,22 +55,31 @@ class EidosProcessor(object):
                            evidence=evidence)
             self.statements.append(st)
 
-    def _get_evidence(self, event):
+    @staticmethod
+    def _get_evidence(event):
         text = event.get('text')
         ev = Evidence(source_api='eidos', text=text)
         return [ev]
 
-    def _get_mods(self, term):
+    @staticmethod
+    def _get_mods(term):
         mods = []
-        for mod in term.get('modifications', []):
-            polarity = 1 if mod['type'] == 'Increase' else -1
-            # There is no adjective yet in the Eidos output so that is set
-            # to None
-            entry = {'adjective': None, 'polarity': polarity}
+        attachments = term.get('attachments', [])
+        if len(attachments) > 1:
+            logger.warning('More than one attachment to event.')
+        for attachment in attachments:
+            # Get the polarity
+            polarity = 1 if attachment['type'] == 'Increase' else -1
+            # Get the adjective
+            mod = attachment.get('mod')
+            mod_dict = json.loads(mod)
+            adjectives = mod_dict.get('quantifier', [])
+            entry = {'adjectives': adjectives, 'polarity': polarity}
             mods.append(entry)
         return mods
 
-    def _get_agent(self, term):
+    @staticmethod
+    def _get_agent(term):
         name = term.get('text')
         agent = Agent(name)
         return agent

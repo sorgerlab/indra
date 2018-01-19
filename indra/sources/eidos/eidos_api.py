@@ -70,7 +70,7 @@ def process_json_file(file_name):
             json_str = fh.read().decode('utf-8')
             return process_json_str(json_str)
     except IOError:
-        logger.error('Could not read file %s.' % file_name)
+        logger.exception('Could not read file %s.' % file_name)
 
 
 def process_json_str(json_str):
