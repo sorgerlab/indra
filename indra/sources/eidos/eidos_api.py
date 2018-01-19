@@ -44,7 +44,7 @@ def process_text(text, save_json='eidos_output.json'):
     json_dict = eidos_reader.process_text(text)
     if save_json:
         with open(save_json, 'wt') as fh:
-            json.dump(json_dict, fh, indent=1)
+            json.dump(json_dict, fh, indent=2)
     return process_json(json_dict)
 
 
