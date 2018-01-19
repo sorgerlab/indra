@@ -12,7 +12,7 @@ import subprocess
 import multiprocessing as mp
 from indra.sources import reach
 from indra.literature import s3_client
-from . import get_mem_total
+from .util import get_mem_total
 from .get_content import get_content_to_read
 
 logger = logging.getLogger('pmid_reading/read_reach')
