@@ -388,7 +388,7 @@ class PathsGraph(object):
         return tuple(paths)
 
     def sample_single_path(self, weighted=False, names_only=True):
-        """Sample a path of the given length between source and target.
+        """Sample a path between source and target.
 
         Parameters
         ----------
@@ -413,7 +413,7 @@ class PathsGraph(object):
         # Repeat until we find a path without a cycle
         path = [self.source_node]
         current = self.source_node
-        while current != self.target_node:
+        while current[1] != self.target_name:
             next = self._successor(path, current, weighted)
             path.append(next)
             current = next
@@ -436,14 +436,6 @@ class PathsGraph(object):
         return out_edges[pred_idx][1]
 
 
-def combine_path_graphs(pg_dict):
-    """Combine a dict of path graphs into a single super-pathgraph."""
-    cpg = nx.DiGraph()
-    for level, pg in pg_dict.items():
-        # Start by adding
-        for edge in pg:
-            cpg.add_edges_from(pg.edges())
-    return cpg
 
 
 def _check_reach_depth(dir_name, reachset, length):

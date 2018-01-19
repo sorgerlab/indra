@@ -8,7 +8,7 @@ logger = logging.getLogger('paths_graph')
 
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph']
+           'sample_raw_graph', 'combine_paths_graphs']
 
 
 def load_signed_sif(sif_file):
@@ -91,6 +91,15 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
             paths = comb_pg.sample(pg, num_samples)
             return paths
     """
+
+def combine_paths_graphs(pg_dict):
+    """Combine a dict of path graphs into a single super-pathgraph."""
+    combined_graph = nx.DiGraph()
+    for level, pg in pg_dict.items():
+        combined_graph.add_edges_from(pg.graph.edges())
+    cpg = PathsGraph(pg.source_name, pg.target_name, combined_graph, None,
+                     pg.signed, pg.target_polarity)
+    return cpg
 
 
 def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,

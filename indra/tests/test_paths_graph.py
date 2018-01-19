@@ -4,7 +4,7 @@ import pygraphviz
 import networkx as nx
 import numpy as np
 from indra.explanation.paths_graph import PathsGraph, get_reachable_sets, \
-                                          sample_raw_graph
+                                          sample_raw_graph, combine_paths_graphs
 
 source = 'A'
 target = 'D'
@@ -250,5 +250,27 @@ def test_raw_graph_sampling():
     print(path_ctr)
 
 
+def test_combine_paths_graphs():
+    g = nx.DiGraph()
+    g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
+    max_depth = 4
+    pg_dict = {}
+    for length in range(1, max_depth+1):
+        paths_graph = PathsGraph.from_graph(g, 'S', 'T', length)
+        pg_dict[length] = paths_graph
+    cpg = combine_paths_graphs(pg_dict)
+    paths = cpg.sample_paths(1000)
+    path_ctr = Counter(paths)
+    print(path_ctr)
+    globals().update(locals())
+    draw(cpg.graph, 'cpg.pdf')
+
+
+def draw(g, filename):
+    ag = nx.nx_agraph.to_agraph(g)
+    ag.draw(filename, prog='dot')
+
+
 if __name__ == '__main__':
-    test_raw_graph_sampling()
+    test_combine_paths_graphs()
+
