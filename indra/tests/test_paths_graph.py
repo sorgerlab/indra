@@ -3,7 +3,8 @@ from collections import Counter
 import pygraphviz
 import networkx as nx
 import numpy as np
-from indra.explanation.paths_graph import PathsGraph, get_reachable_sets
+from indra.explanation.paths_graph import PathsGraph, get_reachable_sets, \
+                                          sample_raw_graph
 
 source = 'A'
 target = 'D'
@@ -226,3 +227,28 @@ def test_uniform_sampling():
     print(b_ctr)
     assert b_ctr == {'B1': 1021, 'B2': 991, 'B3': 964, 'B4': 1022, 'B5': 1002}
 
+
+def test_raw_graph_sampling():
+    """Smoke test for sampling on an underlying graph."""
+    g = nx.DiGraph()
+    g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
+    paths = sample_raw_graph(g, 'S', 'T', num_samples=10000,
+                             eliminate_cycles=False)
+    path_ctr = Counter([len(p) for p in paths])
+    print(path_ctr)
+
+    paths = sample_raw_graph(g, 'S', 'T', num_samples=10000,
+                             eliminate_cycles=True)
+    path_ctr = Counter([len(p) for p in paths])
+    assert len(path_ctr) == 2
+    print(path_ctr)
+
+    paths = sample_raw_graph(g, 'S', 'T', num_samples=10000,
+                             eliminate_cycles=False, max_depth=4)
+    path_ctr = Counter([len(p) for p in paths])
+    assert len(path_ctr) == 4
+    print(path_ctr)
+
+
+if __name__ == '__main__':
+    test_raw_graph_sampling()

@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import networkx as nx
 from .paths_graph import get_reachable_sets, PathsGraph
 from .cfpg import CFPG
@@ -6,7 +7,8 @@ from .cfpg import CFPG
 logger = logging.getLogger('paths_graph')
 
 
-__all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths']
+__all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
+           'sample_raw_graph']
 
 
 def load_signed_sif(sif_file):
@@ -71,7 +73,6 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
             func = getattr(pg, func_name)
             results += func(*func_args)
     return results
-
     """
     # If we're sampling by depth, we've already collected all our paths
     if by_depth:
@@ -90,3 +91,53 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
             paths = comb_pg.sample(pg, num_samples)
             return paths
     """
+
+
+def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
+                     eliminate_cycles=False):
+    """Sample paths up to a given depth from an underlying graph.
+
+    Useful for comparing the properties of sampling from paths graphs to
+    sampling from the original graph.
+    """
+    paths = []
+    while len(paths) < num_samples:
+        node = source
+        path = [source]
+        while True:
+            # If we haven't found the target within the specified depth,
+            # terminate
+            if len(path) >= max_depth + 1:
+                path = []
+                break
+            # Get a list of possible successor nodes
+            if eliminate_cycles:
+                successors = [e[1] for e in g.out_edges(node)
+                                   if e[1] not in path]
+            else:
+                successors = [e[1] for e in g.out_edges(node)]
+            # No non-cyclic successors; terminate
+            if not successors:
+                path = []
+                break
+            # Choose a successor node:
+            # If we're one step before the maximum depth, always choose
+            # the target if it's available--this mimics the
+            if len(path) == max_depth:
+                if target in successors:
+                    node = target
+                else:
+                    path = []
+                    break
+            else:
+                succ_ix = np.random.choice(range(len(successors)))
+                node = successors[succ_ix]
+            path.append(node)
+            # Terminate if we reached the target
+            if node == target:
+                break
+        # Only add the path if we successfully got one
+        if path:
+            paths.append(tuple(path))
+    return paths
+

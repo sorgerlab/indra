@@ -239,7 +239,7 @@ def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
     # are assembled using S_ip1; pred is defined in the expected way using
     # X_im1.
     for c, r in enumerate(S):
-        x_c = (x[0], x[1], c)
+        x_c = (x[0], x[1], r) # Identify the node with its history, r
         V_x.append(x_c)
         next_x[x_c] = [w for w in S_ip1.keys() if r == S_ip1[w]]
         pred_x[x_c] = [u for u in X_im1 if u in r]
