@@ -475,7 +475,9 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
             )
         logger.info("Mapping get_stmts onto pool.")
         unread_res = pool.map(get_stmts_func, batches)
+        logger.info('len(unread_res)=%d' % len(unread_res))
         read_res = pool.map(get_stmts_from_cache, pmids_read.keys())
+        logger.info('len(read_res)=%d' % len(read_res))
         pool.close()
         logger.info('Multiprocessing pool closed.')
         pool.join()
@@ -484,6 +486,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
             pmid: stmt_list for res_dict in unread_res + read_res
             for pmid, stmt_list in res_dict.items()
             }
+        logger.info('len(stmts)=%d' % len(stmts))
 
     return (stmts, pmids_unread)
 
