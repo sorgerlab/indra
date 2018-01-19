@@ -25,7 +25,7 @@ REACH_MEM = 5  # GB
 MEM_BUFFER = 2  # GB
 
 
-def process_reach_str(reach_json_str, pmid):
+def process_json_str(reach_json_str, pmid):
     """Process a REACH output JSON string and return Statements."""
     if reach_json_str is None:
         raise ValueError('reach_json_str cannot be None')
@@ -40,7 +40,7 @@ def process_reach_str(reach_json_str, pmid):
     return reach_proc.statements
 
 
-def process_reach_from_s3(pmid):
+def process_json_from_s3(pmid):
     """Return the given PMID and Statements processed from it.
 
     This function gets the REACH output from S3, processes it
@@ -51,15 +51,15 @@ def process_reach_from_s3(pmid):
     if reach_json_str is None:
         return []
     else:
-        return {pmid: process_reach_str(reach_json_str, pmid)}
+        return {pmid: process_json_str(reach_json_str, pmid)}
 
 
-def upload_reach_json(pmid, source_type, reader_version, output_dir=None):
+def upload_json(pmid, source_type, reader_version, output_dir=None):
     """Join and upload the output of REACH for a given PMID."""
     logger.info('Uploading reach result for %s for %s.' % (source_type, pmid))
     # The prefixes should be PMIDs
     prefix_with_path = os.path.join(output_dir, pmid)
-    full_json = join_reach_json_files(prefix_with_path)
+    full_json = join_json_files(prefix_with_path)
     # Check that all parts of the JSON could be assembled
     if full_json is None:
         logger.error('REACH output missing JSON for %s' % pmid)
@@ -70,7 +70,7 @@ def upload_reach_json(pmid, source_type, reader_version, output_dir=None):
     return full_json
 
 
-def process_reach_output_pmid(pmid_json_tpl):
+def process_json_for_pmid(pmid_json_tpl):
     """Return a dict of a given PMID with extracted Statements.
 
     This function processes the JSON output of REACH for a single
@@ -81,11 +81,11 @@ def process_reach_output_pmid(pmid_json_tpl):
     # Convert the JSON object into a string first so that a series of string
     # replacements can happen in the REACH processor
     reach_json_str = json.dumps(full_json)
-    return {pmid: process_reach_str(reach_json_str, pmid)}
+    return {pmid: process_json_str(reach_json_str, pmid)}
 
 
-def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
-                               num_cores):
+def upload_process_jsons(output_dir, pmid_info_dict, reader_version,
+                         num_cores):
     """Upload and process all reading output from REACH."""
     # At this point, we have a directory full of JSON files
     # Collect all the prefixes into a set, then iterate over the prefixes
@@ -102,7 +102,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
     pmid_json_tuples = []
     for json_prefix in json_prefixes:
         try:
-            full_json = upload_reach_json(
+            full_json = upload_json(
                 json_prefix,
                 pmid_info_dict[json_prefix].get('content_source'),
                 reader_version,
@@ -118,7 +118,7 @@ def upload_process_reach_files(output_dir, pmid_info_dict, reader_version,
     # Get a multiprocessing pool.
     pool = mp.Pool(num_cores)
     logger.info('Processing local REACH JSON files')
-    res = pool.map(process_reach_output_pmid, pmid_json_tuples)
+    res = pool.map(process_json_for_pmid, pmid_json_tuples)
     stmts_by_pmid = {
         pmid: stmts for res_dict in res for pmid, stmts in res_dict.items()
         }
@@ -219,7 +219,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
 
         # Process JSON files from local file system, process to INDRA
         # Statements and upload to S3
-        some_stmts = upload_process_reach_files(
+        some_stmts = upload_process_jsons(
             output_dir,
             pmids_unread,
             reach_version,
@@ -237,7 +237,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
 
     # Download and process the JSON files on S3
     logger.info('Processing REACH JSON from S3 in parallel')
-    res = pool.map(process_reach_from_s3, pmids_read.keys())
+    res = pool.map(process_json_from_s3, pmids_read.keys())
     pool.close()
     logger.info('Multiprocessing pool closed.')
     pool.join()
@@ -258,7 +258,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     return stmts, pmids_unread
 
 
-def join_reach_json_files(prefix):
+def join_json_files(prefix):
     """Join different REACH output JSON files into a single JSON object.
 
     The output of REACH is broken into three files that need to be joined

@@ -7,8 +7,8 @@ from os import path, mkdir
 from nose import SkipTest
 from nose.plugins.attrib import attr
 
-from indra.tools.reading.pmid_reading import get_proc_num, get_mem_total, \
-    READER_DICT
+from indra.tools.reading.pmid_reading.util import get_proc_num, get_mem_total
+from indra.tools.reading.pmid_reading import READER_DICT
 
 # ==============================================================================
 # Tests for OLD reading pipeline that did not use the database.

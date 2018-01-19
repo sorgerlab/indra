@@ -146,7 +146,7 @@ def main(args):
         if args.upload_json:
             with open(args.pmid_list_file, 'rb') as f:
                 text_sources = pickle.load(f)
-            stmts = read_reach.upload_process_reach_files(
+            stmts = read_reach.upload_process_jsons(
                 args.out_dir,
                 text_sources,
                 args.num_cores

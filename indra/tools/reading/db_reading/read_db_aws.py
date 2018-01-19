@@ -9,7 +9,7 @@ import boto3
 import random
 import logging
 import botocore
-from .readers import get_readers
+from indra.tools.reading.readers import get_readers
 from .read_db import produce_readings, produce_statements, get_id_dict
 
 

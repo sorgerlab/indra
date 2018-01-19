@@ -37,9 +37,9 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
     # If it's a single core, just call read_pmids_sparser directly
     if num_cores == 1:
         # Get Statements by reading
-        stmts_from_reading = read_pmids_sparser(pmids_unread, cleanup=cleanup)
+        stmts_from_reading = read_pmids(pmids_unread, cleanup=cleanup)
         # Get Statements from cache
-        stmts_from_cache = {pmid: process_sparser_from_s3(pmid)[pmid]
+        stmts_from_cache = {pmid: process_from_s3(pmid)[pmid]
                             for pmid in pmids_read.keys()}
         # Combine the two dicts
         stmts = stmts_from_reading
@@ -58,7 +58,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
                 for k in pmids_to_read[i*dn:min((i+1)*dn, N)]
                 })
         read_pmids_func = functools.partial(
-            read_pmids_sparser,
+            read_pmids,
             cleanup=cleanup,
             sparser_version=reader_version
             )
@@ -66,7 +66,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
         # Get results of reading as dict of PMIDs with Statements
         unread_res = pool.map(read_pmids_func, batches)
         # Get results from cache as dict of PMIDs with Statements
-        read_res = pool.map(process_sparser_from_s3, pmids_read.keys())
+        read_res = pool.map(process_from_s3, pmids_read.keys())
         pool.close()
         logger.info('Multiprocessing pool closed.')
         pool.join()
@@ -81,10 +81,10 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
     return (stmts, pmids_unread)
 
 
-def read_pmids_sparser(pmids, cleanup=True, sparser_version=None):
+def read_pmids(pmids, cleanup=True, sparser_version=None):
     """Run sparser on a list of PMIDs and return a dict of Statements
 
-    Given a list of PMIDs, this function calls read_one_pmid_sparser
+    Given a list of PMIDs, this function calls read_one_pmid
     to read each PMID, and builds up a dict of Statements with
     the PMIDs as keys.
     """
@@ -108,7 +108,7 @@ def read_pmids_sparser(pmids, cleanup=True, sparser_version=None):
                 cont_path
                 )).encode('utf-8'))
             outbuf.flush()
-            some_stmts = read_one_pmid_sparser(pmid, source, cont_path,
+            some_stmts = read_one_pmid(pmid, source, cont_path,
                                                sparser_version,
                                                outbuf, cleanup)
             if some_stmts is not None:
@@ -130,8 +130,8 @@ def _timeout_handler(signum, frame):
     raise Exception('Timeout')
 
 
-def read_one_pmid_sparser(pmid, source, cont_path, sparser_version,
-                          outbuf=None, cleanup=True):
+def read_one_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
+                  cleanup=True):
     """Run Sparser on a single PMID and return a list of Statements.
 
     This function runs Sparser on a single paper and caches the result of
@@ -183,7 +183,7 @@ def read_one_pmid_sparser(pmid, source, cont_path, sparser_version,
     return sp.statements
 
 
-def process_sparser_from_s3(pmid):
+def process_from_s3(pmid):
     """Return Statements that Sparser extracted for the given PMID.
 
     The result is returned as a dict with the given PMID as the key
