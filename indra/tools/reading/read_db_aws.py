@@ -101,6 +101,7 @@ if __name__ == '__main__':
                                read_mode=args.mode,
                                force_fulltext=args.force_fulltext)
 
+    # Preserve the sparser logs
     contents = os.listdir('.')
     sparser_logs = [fname for fname in contents
                     if fname.startswith('sparser') and fname.endswith('log')]
@@ -110,8 +111,10 @@ if __name__ == '__main__':
                            datetime.now().strftime('%Y%m%d_%H%M%S')
                            )
     for fname in sparser_logs:
+        s3_key = sparser_log_dir + fname
+        logger.info("Saving sparser logs to %s on s3 in %s."
+                    % (s3_key, bucket_name))
         with open(fname, 'r') as f:
-            s3_key = sparser_log_dir + fname
             client.put_object(Key=s3_key, Body=f.read(),
                               Bucket=bucket_name)
 
