@@ -16,10 +16,13 @@ from builtins import dict, str
 from indra.sources.geneways.geneways_action_parser import GenewaysActionParser
 from indra.sources.geneways.geneways_action_type_mapper import \
         geneways_action_to_indra_statement_type
+from indra.sources.geneways.find_full_text_sentence import FullTextMention
 from indra.statements import Evidence, Agent
 import indra.databases.hgnc_client as hgc
 import logging
 import sys
+from indra.literature import *
+
 
 logger = logging.getLogger('geneways')
 logger.setLevel(logging.DEBUG)
@@ -92,6 +95,27 @@ class GenewaysProcessor(object):
             # Geneways statement does not map onto an indra statement
             return None 
         else:
+            #Try to find the full-text sentence
+            #Unfortunately, the sentence numbers in the Geneways dataset
+            #don't correspond to an obvious sentence segmentation.
+            #This code looks for sentences with the subject, object, and verb
+            #listed by the Geneways action mention table and only includes
+            #it in the evidence if there is exactly one such sentence
+            try:
+                content, content_type = get_full_text(mention.pmid, 'pmid')
+                if content is not None:
+                    ftm = FullTextMention(mention, content)
+                    sentences = ftm.find_matching_sentences()
+                    if len(sentences) == 1:
+                        text = sentences[0]
+                    else:
+                        text = None
+                else:
+                    text = None
+            except:
+                logger.warning('Could not fetch full text for PMID ' + pmid)
+
+
             # Make an evidence object
             epistemics = dict()
             epistemics['direct'] = is_direct
@@ -99,7 +123,7 @@ class GenewaysProcessor(object):
             annotations['plo'] = action.plo #plo only in action table
             evidence = Evidence(source_api='geneways',
                                 source_id=mention.actionmentionid,
-                                pmid=mention.pmid, text=None,
+                                pmid=mention.pmid, text=text,
                                 epistemics=epistemics,
                                 annotations=annotations)
 
@@ -115,6 +139,7 @@ class GenewaysProcessor(object):
             upstream_db['UP']   = hgc.get_uniprot_id(upstream_db['HGNC'])
             upstream_db['TEXT']   = up_name
             upstream_agent = Agent(up_name, db_refs=upstream_db)
+
 
             # Ground the downstream agent
             down_name = mention.downstream
