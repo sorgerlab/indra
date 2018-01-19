@@ -59,7 +59,7 @@ if __name__ == '__main__':
             '-b', 'y', '-V', '-cwd', '-N', READING_JOB_NAME, '-pe', 'orte',
             str(args.num_cores),
             'python',
-            '-m', 'indra.tools.reading.read_pmids',
+            '-m', 'indra.tools.reading.pmid_reading',
             '-n', str(args.num_cores),
             '-s', str(node_start_ix),
             '-e', str(node_end_ix),

@@ -23,7 +23,7 @@ from indra.literature import pubmed_client, get_full_text, elsevier_client
 
 try:
     import boto3
-    from indra.tools.reading.submit_reading_pipeline_aws import \
+    from indra.tools.reading.submit_reading_pipeline import \
         submit_reading, wait_for_complete
     # Try to make a client
     client = boto3.client('batch')
