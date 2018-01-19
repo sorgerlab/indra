@@ -60,6 +60,11 @@ if __name__ == '__main__':
         nargs='+',
         help='Choose which reader(s) to use.'
         )
+    parser.add_argument(
+        '--force_fulltext',
+        action='store_true',
+        help='Require that content be fulltext, skip anything that isn\'t.'
+        )
     args = parser.parse_args()
 
     logger = logging.getLogger('read_db_aws')
@@ -93,7 +98,8 @@ if __name__ == '__main__':
 
     # Read everything ========================================
     outputs = produce_readings(id_dict, readers, verbose=True,
-                               read_mode=args.mode)
+                               read_mode=args.mode,
+                               force_fulltext=args.force_fulltext)
 
     contents = os.listdir('.')
     sparser_logs = [fname for fname in contents

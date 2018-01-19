@@ -8,9 +8,7 @@ import botocore.session
 from time import sleep
 from datetime import datetime
 from indra.literature import elsevier_client as ec
-from indra.tools.reading.read_pmids import READER_DICT
-from indra.util.aws import get_job_log, get_log_by_name
-from indra.literature.s3_client import gzip_string
+from indra.util.aws import get_job_log
 
 bucket_name = 'bigmech'
 
@@ -250,7 +248,8 @@ def get_environment():
 
 
 def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
-                   end_ix=None, pmids_per_job=3000, num_tries=2):
+                   end_ix=None, pmids_per_job=3000, num_tries=2,
+                   force_read=False, force_fulltext=False):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -280,6 +279,10 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
                         'indra.tools.reading.read_pmids_aws',
                         basename, '/tmp', '16', str(job_start_ix),
                         str(job_end_ix), '-r'] + readers
+        if force_read:
+            command_list.append('--force_read')
+        if force_fulltext:
+            command_list.append('--force_fulltext')
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -296,7 +299,8 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
 
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
-                      end_ix=None, pmids_per_job=3000, num_tries=2):
+                      end_ix=None, pmids_per_job=3000, num_tries=2,
+                      force_read=False, force_fulltext=False):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
     s3_client = boto3.client('s3')
@@ -318,6 +322,11 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     if 'all' in readers:
         readers = ['reach', 'sparser']
 
+    if force_read:
+        mode = 'all'
+    else:
+        mode = 'unread'
+
     # Iterate over the list of PMIDs and submit the job in chunks
     batch_client = boto3.client('batch')
     job_list = []
@@ -328,8 +337,10 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
         command_list = ['python', '-m',
                         'indra.tools.reading.read_db_aws',
-                        basename, '/tmp', 'unread', '32', str(job_start_ix),
+                        basename, '/tmp', mode, '32', str(job_start_ix),
                         str(job_end_ix), '-r'] + readers
+        if force_fulltext:
+            command_list.append('--force_fulltext')
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -522,7 +533,10 @@ if __name__ == '__main__':
                 args.readers,
                 args.start_ix,
                 args.end_ix,
-                args.ids_per_job
+                args.ids_per_job,
+                2,
+                args.force_read,
+                args.force_fulltext
                 )
         if args.job_type in ['combine', 'full']:
             submit_combine(args.basename, args.readers, job_ids)
@@ -533,5 +547,8 @@ if __name__ == '__main__':
             args.readers,
             args.start_ix,
             args.end_ix,
-            args.ids_per_job
+            args.ids_per_job,
+            2,
+            args.force_read,
+            args.force_fulltext
             )

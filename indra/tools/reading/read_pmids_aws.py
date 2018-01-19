@@ -39,6 +39,16 @@ if __name__ == '__main__':
         type=int
         )
     parser.add_argument(
+        '--force_read',
+        action='store_true',
+        help='Read everything, even things that were already read.'
+        )
+    parser.add_argument(
+        '--force_fulltext',
+        action='store_true',
+        help='Only read fulltext content.'
+        )
+    parser.add_argument(
         '-r', '--readers',
         dest='readers',
         default='all',
@@ -58,8 +68,8 @@ if __name__ == '__main__':
     logger = logging.getLogger('read_pmids_aws')
 
     # Setting default force read/fulltext parameters
-    force_read = False
-    force_fulltext = False
+    force_read = args.force_read
+    force_fulltext = args.force_fulltext
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
