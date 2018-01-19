@@ -4,10 +4,10 @@ import boto3
 import logging
 import botocore.session
 from time import sleep
-from indra.literature import elsevier_client as ec
-from docutils.nodes import description
-from indra.util.aws import get_job_log
 from datetime import datetime
+from indra.util.aws import get_job_log
+from indra.literature import elsevier_client as ec
+
 
 bucket_name = 'bigmech'
 

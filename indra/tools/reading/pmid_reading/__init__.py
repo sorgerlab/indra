@@ -9,9 +9,8 @@ import logging
 import argparse
 from datetime import datetime
 from platform import system
-from .read_reach import run_reach
 from .read_sparser import run_sparser
-
+from .read_reach import run_reach, upload_process_reach_files
 
 READER_DICT = {'reach': run_reach, 'sparser': run_sparser}
 
