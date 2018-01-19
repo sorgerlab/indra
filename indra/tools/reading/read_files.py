@@ -1,15 +1,14 @@
 """Read a list of files located in your local directory."""
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
-import logging
 import pickle
 import random
+import logging
 from .util import get_parser, make_statements
+from .readers import _get_dir, get_readers
 
 
 logger = logging.getLogger('read_files')
-
 
 
 if __name__ == '__main__':
@@ -26,8 +25,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
-
-from indra.tools.reading.readers import _get_dir, get_readers
 
 
 def read_files(files, readers, **kwargs):

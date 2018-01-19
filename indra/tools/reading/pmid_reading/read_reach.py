@@ -19,7 +19,7 @@ logger = logging.getLogger('pmid_reading/read_reach')
 
 
 REACH_CONF_FMT_FNAME = os.path.join(os.path.dirname(__file__),
-                                    'reach_conf_fmt.txt')
+                                    '../util/reach_conf_fmt.txt')
 
 REACH_MEM = 5  # GB
 MEM_BUFFER = 2  # GB
