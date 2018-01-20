@@ -146,7 +146,7 @@ if __name__ == '__main__':
     contents = os.listdir('.')
     sparser_logs = [fname for fname in contents
                     if fname.startswith('sparser') and fname.endswith('log')]
-    sparser_log_dir = key_base + '/logs/sparser_logs_%s/' % \
+    sparser_log_dir = key_base + '/logs/run_reach_queue/sparser_logs_%s/' % \
         datetime.now().strftime('%Y%m%d_%H%M%S')
     for fname in sparser_logs:
         s3_key = sparser_log_dir + fname
