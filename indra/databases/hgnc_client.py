@@ -69,10 +69,8 @@ def get_hgnc_from_entrez(entrez_id):
     hgnc_id : str
         The HGNC ID corresponding to the given Entrez ID.
     """
-    for k, v in entrez_ids.items():
-        if v == entrez_id and k not in hgnc_withdrawn:
-            hgnc_id = k
-            return hgnc_id
+    hgnc_id = entrez_ids_reverse.get(entrez_id)
+    return hgnc_id
 
 def get_hgnc_name(hgnc_id):
     """Return the HGNC symbol corresponding to the given HGNC ID.
@@ -217,6 +215,7 @@ def _read_hgnc_maps():
     hgnc_withdrawn = []
     uniprot_ids = {}
     entrez_ids = {}
+    entrez_ids_reverse = {}
     mouse_map = {}
     rat_map = {}
     for row in csv_rows:
@@ -238,6 +237,7 @@ def _read_hgnc_maps():
         # Entrez
         entrez_id = row[5]
         entrez_ids[hgnc_id] = entrez_id
+        entrez_ids_reverse[entrez_id] = hgnc_id
         # Mouse
         mgi_id = row[7]
         if mgi_id:
@@ -255,8 +255,8 @@ def _read_hgnc_maps():
                     rgd_id = rgd_id[4:]
                 rat_map[rgd_id] = hgnc_id
     return (hgnc_names, hgnc_ids, hgnc_withdrawn,
-            uniprot_ids, entrez_ids, mouse_map, rat_map)
+            uniprot_ids, entrez_ids, entrez_ids_reverse, mouse_map, rat_map)
 
 (hgnc_names, hgnc_ids, hgnc_withdrawn, uniprot_ids, entrez_ids,
- mouse_map, rat_map) = \
+ entrez_ids_reverse, mouse_map, rat_map) = \
     _read_hgnc_maps()
