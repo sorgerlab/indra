@@ -18,7 +18,7 @@ class FullTextMention:
         self.xml_full_text = xml_full_text
 
     def __repr__(self):
-        return '%s %s %s' %(self.mention.upstream, self.mention.actiontype,
+        return '%s %s %s' % (self.mention.upstream, self.mention.actiontype,
                 self.mention.downstream)
 
     def write_xml_to_file(self, output_file):
@@ -35,9 +35,10 @@ class FullTextMention:
         XML tags except for those listed in block_tags."""
         sentences = []
         for element in root_element:
-            #tag = self.remove_namespace_from_tag(element.tag)
-            if not self.any_ends_with(block_tags, element.tag): #tag not in block_tags:
-                if element.text is not None and not re.match('^\s*$', element.text):
+            if not self.any_ends_with(block_tags, element.tag):
+                # tag not in block_tags
+                if element.text is not None and not re.match('^\s*$',
+                                                             element.text):
                     sentences.extend(self.sentence_tokenize(element.text))
                 sentences.extend(self.get_sentences(element, block_tags))
 
@@ -48,7 +49,8 @@ class FullTextMention:
         return sentences
 
     def any_ends_with(self, string_list, pattern):
-        """Returns true iff one of the strings in string_list ends in pattern."""
+        """Returns true iff one of the strings in string_list ends in
+        pattern."""
         try:
             s_base = basestring
         except:
@@ -64,31 +66,28 @@ class FullTextMention:
         return False
 
     def extract_sentences(self, block_tags, strip_tags, remove_tags):
-        #Remove these tags from the text
+        # Remove these tags from the text
         s_text = self.xml_full_text
         for strip_tag in strip_tags:
             start_tag1 = '<' + strip_tag + '>'
             start_tag2 = '<' + strip_tag + ' [^<>]*>'
             end_tag = '</' + strip_tag + '>'
-            s_text = re.sub(start_tag1, '', s_text);
-            s_text = re.sub(start_tag2, '', s_text);
-            s_text = re.sub(end_tag, '', s_text);
-            
-        #Remove these tags and anything in them from the text
+            s_text = re.sub(start_tag1, '', s_text)
+            s_text = re.sub(start_tag2, '', s_text)
+            s_text = re.sub(end_tag, '', s_text)
+
+        # Remove these tags and anything in them from the text
         for remove_tag in remove_tags:
             r = '<' + remove_tag + '[^>]*>' + '[^<]*</' + remove_tag + '>'
             s_text = re.sub(r, '', s_text)
 
-        #Convert greek characters to names
+        # Convert greek characters to names
         for a in greek_alphabet.keys():
             s_text = s_text.replace(a, greek_alphabet[a])
-
-
 
         f = open('foo.txt', 'w')
         f.write(s_text)
         f.close()
-
 
         try:
             root = etree.fromstring(s_text.encode('utf-8'))
@@ -99,34 +98,28 @@ class FullTextMention:
             sentences = self.sentence_tokenize(self.xml_full_text)
         return sentences
 
-    def find_matching_sentences(self, block_tags=None, strip_tags=None, remove_tags=None):
+    def find_matching_sentences(self, block_tags=None, strip_tags=None,
+                                remove_tags=None):
         if block_tags is None:
             block_tags = []
-            #block_tags = ['OAI-PMH', 'responseDate', 'request', 'header', 'journal-meta', 'back', 'fig', 'formula', 'id']
         if strip_tags is None:
             strip_tags = ['italic', 'bold', 'sup', 'sub', 'xref']
         if remove_tags is None:
             remove_tags = []
-            #remove_tags = ['ext-link']
 
         sentences = self.extract_sentences(block_tags, strip_tags, remove_tags)
 
         matching_sentences = []
         for sentence in sentences:
-            if self.sentence_matches(sentence) or self.sentence_matches(sentence.replace('-', ' ')):
+            if self.sentence_matches(sentence) or \
+                self.sentence_matches(sentence.replace('-', ' ')):
                 matching_sentences.append(sentence)
 
         return matching_sentences
 
-
-
     def get_tag_names(self):
         """Returns the set of tag names present in the XML."""
         root = etree.fromstring(self.xml_full_text.encode('utf-8'))
-
-        
-
-
         return self.get_children_tag_names(root)
 
     def get_children_tag_names(self, xml_element):
@@ -154,17 +147,19 @@ class FullTextMention:
         has_downstream = False
         has_verb = False
 
-        #Get the first word of the action type and assume this is the verb
-        #(Ex. get depends for depends on)
+        # Get the first word of the action type and assume this is the verb
+        # (Ex. get depends for depends on)
         actiontype_words = word_tokenize(self.mention.actiontype)
         actiontype_verb_stemmed = stem(actiontype_words[0])
 
         words = word_tokenize(sentence_text)
 
-        if self.string_matches_sans_whitespace(sentence_text.lower(), self.mention.upstream.lower()):
+        if self.string_matches_sans_whitespace(sentence_text.lower(),
+            self.mention.upstream.lower()):
             has_upstream = True
 
-        if self.string_matches_sans_whitespace(sentence_text.lower(), self.mention.downstream.lower()):
+        if self.string_matches_sans_whitespace(sentence_text.lower(),
+            self.mention.downstream.lower()):
             has_downstream = True
 
         for word in words:
@@ -172,8 +167,3 @@ class FullTextMention:
                 has_verb = True
 
         return has_upstream and has_downstream and has_verb
-
-
-
-
-

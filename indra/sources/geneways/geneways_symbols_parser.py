@@ -3,8 +3,8 @@ from builtins import dict, str
 import codecs
 
 class GenewaysSymbols(object):
-    """Parser for the Geneways symbol table. Once parsed, provides a mapping   
-    from gene symbol names to Entriz IDs"""
+    """Parser for the Geneways symbol table. Once parsed, provides a mapping
+    from gene symbol names to Entrez IDs"""
     def __init__(self, symbols_filename):
         """Load in the symbol table, row by row, and populate hashmaps
         linking the Geneways ids to Entrez ids and vice versa."""
@@ -44,7 +44,7 @@ class GenewaysSymbols(object):
 
                 self.symbols_to_ids[symbol].append(entrez_id)
                 self.ids_to_symbols[entrez_id] = symbol
-                
+
         f.close()
 
     def symbol_to_id(self, symbol):
@@ -67,18 +67,3 @@ class GenewaysSymbols(object):
 
     def symbols_with_multiple_ids(self):
         return self.appears_multiple_times
-
-if __name__ == '__main__':
-    # Test code
-    symbols_filename = '/Users/daniel/data/human_symbols.txt'
-    symbols = GenewaysSymbols(symbols_filename)
-
-    print('These symbols have more than one corresponding Entrez ID:')
-    print(symbols.symbols_with_multiple_ids())
-
-    print('Entrez IDs for tec:')
-    print(repr(symbols.symbol_to_id('tec')))
-
-    print('48 corresponds to ' + symbols.id_to_symbol('48'))
-
-
