@@ -12,7 +12,6 @@ Journal of biomedical informatics 37, no. 1 (2004): 43-53.
 
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import sys
 import logging
 from indra.statements import Evidence, Agent
 import indra.databases.hgnc_client as hgc
@@ -50,13 +49,9 @@ class GenewaysProcessor(object):
     def __init__(self, search_path):
         # Parse Geneways data. Will give an error if it can't find
         # the Geneways data
-        if sys.version_info[0] < 3:
-            logger.warning('This processor is very slow in python 2! ' +
-                           'Python 3 is recommended.')
-
-        logger.debug('Loading Geneways extractions')
+        logger.info('Loading Geneways extractions')
         parser = GenewaysActionParser(search_path)
-        logger.debug('\tGeneways extractions loaded!')
+        logger.info('Geneways extractions loaded')
         actions = parser.actions
 
         # Make a list of statements from the actions
