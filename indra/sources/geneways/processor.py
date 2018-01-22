@@ -58,9 +58,10 @@ class GenewaysProcessor(object):
         self.statements = []
         for action in actions:
             for mention in action.action_mentions:
-                new_statement = self.make_statement(action, mention)
-                if new_statement is not None:
-                    self.statements.append(new_statement)
+                if mention.negative != '1':
+                    new_statement = self.make_statement(action, mention)
+                    if new_statement is not None:
+                        self.statements.append(new_statement)
 
     def make_statement(self, action, mention):
         """Makes an INDRA statement from a Geneways action and action mention.

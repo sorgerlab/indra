@@ -10,8 +10,7 @@ from indra.sources.geneways.geneways_action_parser import \
         GenewaysActionParser
 from indra.sources.geneways.geneways_actionmention_parser import \
         GenewaysActionMentionParser
-#from indra.sources.geneways.geneways_api import process_geneways_files
-#from indra.sources.geneways.processor import GenewaysProcessor
+from indra.sources.geneways.geneways_api import process_geneways_files
 
 # Path to the Geneways test/dummy data folder
 path_this = os.path.dirname(os.path.abspath(__file__))
@@ -139,3 +138,9 @@ def test_geneways_action_parser():
     assert(action2.max_prec == '0.17')
     assert(len(action2.action_mentions) == 1)
 
+def test_geneways_processor():
+    processor = process_geneways_files(data_folder)
+
+    statements = processor.statements
+    print('Number of statements: ', len(statements))
+    assert(len(statements) == 3)
