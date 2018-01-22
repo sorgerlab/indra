@@ -150,52 +150,57 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         sleep(poll_interval)
 
     # Stash the logs
-    if stash_log_method is not None:
-        time_fmt = '%Y%m%d_%H%M%S'
-        if stash_log_method == 's3':
-            s3_client = boto3.client('s3')
-
-            def stash_log(log_str, name_base):
-                name = '%s_%s.log' % (name_base, start_time.strftime(time_fmt))
-                # log_bytes = gzip_string(log_str, name)
-                s3_client.put_object(
-                    Bucket='bigmech',
-                    Key='reading_results/%s/logs/%s/%s' % (
-                        job_name_prefix,
-                        queue_name,
-                        name),
-                    Body=log_str
-                    )
-
-        elif stash_log_method == 'local':
-            if job_name_prefix is None:
-                job_name_prefix = 'batch_%s' % start_time.strftime(time_fmt)
-            dirname = '%s_job_logs' % job_name_prefix
-            os.mkdir(dirname)
-
-            def stash_log(log_str, name_base):
-                with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
-                    f.write(log_str)
-
+    if stash_log_method:
         success_ids = [job_def['jobId'] for job_def in done]
         failure_ids = [job_def['jobId'] for job_def in failed]
-
-        for job_def_tpl in observed_job_def_set:
-            job_def = dict(job_def_tpl)
-            lines = get_job_log(job_def, write_file=False)
-            if lines is None:
-                logger.warning("No logs found for %s." % job_def['jobName'])
-                continue
-            log_str = ''.join(lines)
-            base_name = job_def['jobName']
-            if job_def['jobId'] in success_ids:
-                base_name += '_SUCCESS'
-            elif job_def['jobId'] in failure_ids:
-                base_name += '_FAILED'
-            logger.info('Stashing ' + base_name)
-            stash_log(log_str, base_name)
+        stash_logs(observed_job_def_set, success_ids, failure_ids, queue_name,
+                   stash_log_method, job_name_prefix,
+                   start_time.strftime('%Y%m%d_%H%M%S'))
 
     return ret
+
+
+def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
+               job_name_prefix=None, tag='stash'):
+    if method == 's3':
+        s3_client = boto3.client('s3')
+
+        def stash_log(log_str, name_base):
+            name = '%s_%s.log' % (name_base, tag)
+            s3_client.put_object(
+                Bucket='bigmech',
+                Key='reading_results/%s/logs/%s/%s' % (
+                    job_name_prefix,
+                    queue_name,
+                    name),
+                Body=log_str
+                )
+
+    elif method == 'local':
+        if job_name_prefix is None:
+            job_name_prefix = 'batch_%s' % tag
+        dirname = '%s_job_logs' % job_name_prefix
+        os.mkdir(dirname)
+
+        def stash_log(log_str, name_base):
+            with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
+                f.write(log_str)
+
+    for job_def_tpl in job_defs:
+        job_def = dict(job_def_tpl)
+        lines = get_job_log(job_def, write_file=False)
+        if lines is None:
+            logger.warning("No logs found for %s." % job_def['jobName'])
+            continue
+        log_str = ''.join(lines)
+        base_name = job_def['jobName']
+        if job_def['jobId'] in success_ids:
+            base_name += '_SUCCESS'
+        elif job_def['jobId'] in failure_ids:
+            base_name += '_FAILED'
+        logger.info('Stashing ' + base_name)
+        stash_log(log_str, base_name)
+    return
 
 
 def tag_instances(project='bigmechanism'):
