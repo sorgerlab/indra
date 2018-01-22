@@ -21,7 +21,7 @@ path_this = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(path_this, '../../../data')
 
 
-def process_geneways(input_folder=data_folder):
+def process_geneways_files(input_folder=data_folder):
     """Reads in Geneways data and returns a list of statements.
 
     Parameters
