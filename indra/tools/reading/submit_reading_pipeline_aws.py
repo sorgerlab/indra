@@ -98,10 +98,10 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     observed_job_def_set = set()
 
     if stash_log_method is not None:
-        def update_observed_jobs(job_defs):
-            observed_job_def_set |= {tuple([(k, v) for k, v in job_def.items()
-                                            if k in ['jobName', 'jobId'])
-                                     for job_def in job_defs}
+        def get_set_of_job_tuples(job_defs):
+            return {tuple([(k, v) for k, v in job_def.items()
+                           if k in ['jobName', 'jobId']])
+                    for job_def in job_defs}
 
     batch_client = boto3.client('batch')
 
@@ -116,7 +116,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
 
         if stash_log_method is not None:
-            update_observed_jobs(pre_run + running)
+            observed_job_def_set |= get_set_of_job_tuples(pre_run + running)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
@@ -182,7 +182,11 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         for job_def_tpl in observed_job_def_set:
             job_def = dict(job_def_tpl)
-            log_str = ''.join(get_job_log(job_def, write_file=False))
+            lines = get_job_log(job_def, write_file=False)
+            if lines is None:
+                logger.warning("No logs found for %s." % job_def['jobName'])
+                continue
+            log_str = ''.join(lines)
             base_name = job_def['jobName']
             if job_def['jobId'] in success_ids:
                 base_name += '_SUCCESS'
