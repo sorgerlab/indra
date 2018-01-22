@@ -12,28 +12,32 @@ Journal of biomedical informatics 37, no. 1 (2004): 43-53.
 
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
+import os
 from indra.sources.geneways.processor import GenewaysProcessor
 
-def process_geneways(search_path=None):
+
+# Path to the INDRA data folder
+path_this = os.path.dirname(os.path.abspath(__file__))
+data_folder = os.path.join(path_this, '../../../data')
+
+
+def process_geneways(input_folder=data_folder):
     """Reads in Geneways data and returns a list of statements.
 
     Parameters
     ----------
-    search_path : list
-        a list of directories in which to search for Geneways data.
-        Looks for these Geneways extraction data files:
-        human_action.txt, human_actionmention.txt,
-        human_symbols.txt. Omit this parameter to use the default search path.
+    input_folder : Optional[str]
+        A folder in which to search for Geneways data. Looks for these
+        Geneways extraction data files: human_action.txt,
+        human_actionmention.txt, human_symbols.txt.
+        Omit this parameter to use the default input folder which is
+        indra/data.
 
     Returns
     -------
-    statements : list[indra.statements.Statement]
-        A list of INDRA statements generated from the Geneways action mentions.
+    gp : GenewaysProcessor
+        A GenewaysProcessor object which contains a list of INDRA statements
+        generated from the Geneways action mentions.
     """
-    if search_path is None:
-        search_path = ['./data', '../data', '../../data', '~/data', '.']
-
-    processor = GenewaysProcessor(search_path)
-    return processor.statements
-
+    gp = GenewaysProcessor(input_folder)
+    return gp
