@@ -1,0 +1,4 @@
+hiid	up	dn	actiontype	action_count	actionmention_count	plo	max(score)	max(prec)
+1	2	1	phosphorylate	1	2	P	0.77	0.88
+2	3	4	bind	1	1	P	0.12	0.34
+3	5	6	bind	1	1	P	0.16	0.17

@@ -6,8 +6,8 @@ from nose.tools import raises
 from indra.statements import *
 from indra.sources.geneways.geneways_symbols_parser import \
         GenewaysSymbols
-#from indra.sources.geneways.geneways_action_parser import \
-#        GenewaysActionParser
+from indra.sources.geneways.geneways_action_parser import \
+        GenewaysActionParser
 from indra.sources.geneways.geneways_actionmention_parser import \
         GenewaysActionMentionParser
 #from indra.sources.geneways.geneways_api import process_geneways_files
@@ -20,8 +20,6 @@ data_folder = os.path.join(path_this,
 symbols_file = os.path.join(data_folder, 'human_symbols.txt')
 actionmention_file = os.path.join(data_folder,
         'human_actionmention.txt')
-action_file = os.path.join(data_folder,
-        'human_action.txt')
 
 def test_geneways_symbols_parser():
     symbols = GenewaysSymbols(symbols_file)
@@ -97,4 +95,47 @@ def test_geneways_actionmention_parser():
     assert(mention3.sentencenumber == '0')
     assert(mention3.score == '0.22')
     assert(mention3.prec == '0.55')
+
+def test_geneways_action_parser():
+    parser = GenewaysActionParser(data_folder)
+
+    actions = parser.actions
+    assert(len(actions) == 3)
+
+    action0 = actions[0]
+    action1 = actions[1]
+    action2 = actions[2]
+
+    assert(action0.hiid == '1')
+    assert(action0.up == '2')
+    assert(action0.dn == '1')
+    assert(action0.actiontype == 'phosphorylate')
+    assert(action0.action_count == '1')
+    assert(action0.actionmention_count == '2')
+    assert(action0.plo == 'P')
+    assert(action0.max_score == '0.77')
+    assert(action0.max_prec == '0.88')
+    assert(len(action0.action_mentions) == 2)
+
+    assert(action1.hiid == '2')
+    assert(action1.up == '3')
+    assert(action1.dn == '4')
+    assert(action1.actiontype == 'bind')
+    assert(action1.action_count == '1')
+    assert(action1.actionmention_count == '1')
+    assert(action1.plo == 'P')
+    assert(action1.max_score == '0.12')
+    assert(action1.max_prec == '0.34')
+    assert(len(action1.action_mentions) == 1)
+
+    assert(action2.hiid == '3')
+    assert(action2.up == '5')
+    assert(action2.dn == '6')
+    assert(action2.actiontype == 'bind')
+    assert(action2.action_count == '1')
+    assert(action2.actionmention_count == '1')
+    assert(action2.plo == 'P')
+    assert(action2.max_score == '0.16')
+    assert(action2.max_prec == '0.17')
+    assert(len(action2.action_mentions) == 1)
 
