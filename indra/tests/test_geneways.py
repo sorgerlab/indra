@@ -142,5 +142,14 @@ def test_geneways_processor():
     processor = process_geneways_files(data_folder)
 
     statements = processor.statements
-    print('Number of statements: ', len(statements))
     assert(len(statements) == 3)
+
+    statement0 = statements[0]
+    statement1 = statements[1]
+    statement2 = statements[2]
+
+    assert(isinstance(statement0, Phosphorylation))
+
+    assert(isinstance(statement1, Complex))
+
+    assert(isinstance(statement2, Complex))
