@@ -9,7 +9,7 @@ logger = logging.getLogger('paths_graph')
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
            'sample_raw_graph', 'combine_paths_graphs', 'combine_cfpgs',
-           'graph_of_paths']
+           'PathTree']
 
 
 def load_signed_sif(sif_file):
@@ -169,15 +169,55 @@ def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
     return paths
 
 
-def graph_of_paths(paths):
-    edge_set = set()
-    for path in paths:
-        # Split path at all branch points
-        for i in range(1, len(path)):
-            head = tuple(path[0:i])
-            tail = tuple(path[0:i+1])
-            edge_set.add((head, tail))
-    g = nx.DiGraph()
-    g.add_edges_from(edge_set)
-    return g
+class PathTree(object):
+    """Build a tree representing a set of paths.
+
+    Nodes in the tree are tuples representing the common prefix of all
+    downstream paths. The head of the tree is an empty tuple, `()`. Each leaf
+    of the tree represents a complete path.
+
+    Parameters
+    ----------
+    paths : iterable of tuples
+        Each element of the iterable is a tuple representing a sequence of
+        nodes that constitutes a path.
+
+    Attributes
+    ----------
+    graph : networkx.DiGraph
+        A directed graph representing the set of paths as a tree.
+    """
+    def __init__(self, paths):
+        edge_set = set()
+        for path in paths:
+            # Split path at all branch points
+            for i in range(0, len(path)):
+                head = tuple(path[0:i])
+                tail = tuple(path[0:i+1])
+                edge_set.add((head, tail))
+        self.graph = nx.DiGraph()
+        self.graph.add_edges_from(edge_set)
+
+    def sample(self, num_samples=1000):
+        """Sample a set of paths from the path tree.
+
+        Parameters
+        ----------
+        num_samples : int
+            Number of paths to sample.
+        """
+        sampled_paths = []
+        while len(sampled_paths) < num_samples:
+            node = tuple()
+            while True:
+                successors = self.graph.successors(node)
+                # If there are no successors to the current node, then we've
+                # hit a leaf of the tree and have found a path
+                if not successors:
+                    break
+                succ_ix = np.random.choice(range(len(successors)))
+                node = successors[succ_ix]
+            sampled_paths.append(node)
+        return sampled_paths
+
 
