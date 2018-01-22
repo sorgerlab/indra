@@ -149,7 +149,22 @@ def test_geneways_processor():
     statement2 = statements[2]
 
     assert(isinstance(statement0, Phosphorylation))
+    assert(statement0.enz.db_refs['TEXT'] == 'c-Src')
+    assert(statement0.enz.name == 'A2M')
+    assert(statement0.sub.db_refs['TEXT'] == 'Akt')
+    assert(statement0.sub.name == 'A1BG')
+    assert(statement0.evidence[0].pmid == '19262695')
+    assert(statement0.evidence[0].epistemics['direct'])
 
-    assert(isinstance(statement1, Complex))
+    assert(isinstance(statement1, Phosphorylation))
+    assert(statement1.enz.db_refs['TEXT'] == 'c-Src')
+    assert(statement1.enz.name == 'A2M')
+    assert(statement1.sub.db_refs['TEXT'] == 'Akt')
+    assert(statement1.sub.name == 'A1BG')
+    assert(statement1.evidence[0].pmid == '2')
+    assert(statement1.evidence[0].epistemics['direct'])
 
     assert(isinstance(statement2, Complex))
+    assert(statement2.members[0].db_refs['TEXT'] == 'C')
+    assert(statement2.members[1].db_refs['TEXT'] == 'D')
+
