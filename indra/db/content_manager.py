@@ -294,17 +294,24 @@ class Medline(NihManager):
     my_path = 'pubmed'
     my_source = 'pubmed'
 
-    def get_deleted_pmids(self):
-        del_pmid_str = self.ftp.get_uncompressed_bytes(
-            'deleted.pmids.gz'
-            )
-        pmid_list = [
-            line.strip() for line in del_pmid_str.split('\n')
-            ]
-        return pmid_list
+    def __init__(self, *args, **kwargs):
+        super(Medline, self).__init__(*args, **kwargs)
+        self.deleted_pmids = None
+        return
 
-    def get_file_list(self):
-        all_files = self.ftp.ftp_ls('baseline')
+    def get_deleted_pmids(self):
+        if self.deleted_pmids is None:
+            del_pmid_str = self.ftp.get_uncompressed_bytes(
+                'deleted.pmids.gz'
+                )
+            pmid_list = [
+                line.strip() for line in del_pmid_str.split('\n')
+                ]
+            self.deleted_pmids = pmid_list
+        return self.deleted_pmids[:]
+
+    def get_file_list(self, sub_dir):
+        all_files = self.ftp.ftp_ls(sub_dir)
         return [k for k in all_files if k.endswith('.xml.gz')]
 
     def get_article_info(self, xml_file, q=None):
@@ -400,7 +407,7 @@ class Medline(NihManager):
             )
         return True
 
-    def populate(self, db, n_procs=1, continuing=False):
+    def populate(self, db, n_procs=1, continuing=False, first_time=True):
         """Perform the initial input of the pubmed content into the database.
 
         Parameters
@@ -414,10 +421,15 @@ class Medline(NihManager):
             continuing from an earlier process. This means we will skip over
             source files contained in the database. If false, all files will be
             read and parsed.
+        first_time : bool
+            Indicate whether this is the initial upload of the database or not.
+            If not, greater care will be taken to ensure text refs are
+            maintained, because we can no longer assume we're the first to
+            create text refs.
         """
-        xml_files = self.get_file_list()
+        xml_files = self.get_file_list('baseline')
         sf_list = db.select_all(
-            'source_file',
+            db.SourceFile,
             db.SourceFile.source == self.my_source
             )
         existing_files = [sf.name for sf in sf_list]
@@ -446,29 +458,29 @@ class Medline(NihManager):
             proc_list.pop(0).start()
             self.upload_article(db, article_info)
             if xml_file not in existing_files:
-                db.insert('source_file', source=self.my_source, name=xml_file)
+                db.insert(db.SourceFile, source=self.my_source, name=xml_file)
             n_tot -= 1
 
         while n_tot is not 0:
             xml_file, article_info = q.get()
-            if xml_file not in existing_files:
-                db.insert('source_file', source=self.my_source, name=xml_file)
             self.upload_article(db, article_info)
+            if xml_file not in existing_files:
+                db.insert(db.SourceFile, source=self.my_source, name=xml_file)
             n_tot -= 1
 
         return
 
     def update(self, db, n_procs=1, continuing=False):
         """Update the contents of the database with the latest articles."""
-        # Get the date latest date of the last update. That's our earliest date
-        my_updates = db.select_all(db.Updates,
-                                   db.Updates.source == self.my_source)
-        update_end_times = [u.latest_time for u in my_updates]
-        earliest_date = max(update_end_times)
-
-        # Get a list of content from the server with more recent than the
-        # earliest date.
-        self.ftp.ftp_ls('updatefiles', earliest_date)
+        baseline_files = self.get_file_list('baseline')
+        db_baseline_files = [
+            sf.name for sf in db.select_all(
+                db.SourceFile,
+                db.SourceFile.source == self.my_source
+                )
+            ]
+        if any([fname not in db_baseline_files for fname in baseline_files]):
+            self.populate(db, n_procs=n_procs, first_time=False)
         return
 
 
