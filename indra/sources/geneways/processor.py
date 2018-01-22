@@ -113,7 +113,7 @@ class GenewaysProcessor(object):
                 else:
                     text = None
             except:
-                logger.warning('Could not fetch full text for PMID ' + pmid)
+                logger.warning('Could not fetch full text for PMID ' + mention.pmid)
 
 
             # Make an evidence object
