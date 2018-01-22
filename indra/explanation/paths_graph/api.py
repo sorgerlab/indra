@@ -1,4 +1,5 @@
 import logging
+import itertools
 import numpy as np
 import networkx as nx
 from .paths_graph import get_reachable_sets, PathsGraph
@@ -74,24 +75,7 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
             func = getattr(pg, func_name)
             results += func(*func_args)
     return results
-    """
-    # If we're sampling by depth, we've already collected all our paths
-    if by_depth:
-        return paths
-    # Otherwise, run the sampling on the combined path graph
-    else:
-        # Combine the path graphs into one
-        logger.info("Sampling %d paths from the combined path graph" %
-                    num_samples)
-        comb_pg = combine_path_graphs(pg_by_length)
-        # If the combined path graph is empty, return an empty path list
-        if not comb_pg:
-            return []
-        # Otherwise, sample from the combined path graph
-        else:
-            paths = comb_pg.sample(pg, num_samples)
-            return paths
-    """
+
 
 def combine_paths_graphs(pg_dict):
     """Combine a dict of path graphs into a single super-pathgraph."""
@@ -110,6 +94,34 @@ def combine_cfpgs(cfpg_dict):
         combined_graph.add_edges_from(pg.graph.edges())
     cpg = CFPG(pg.source_name, pg.source_node, pg.target_name,
                pg.target_node, None, combined_graph)
+    # In cases where nodes have been split along similar lines for paths
+    # of different depths, we need to add edges from nodes that represent
+    # compatible histories.
+    # Start by itterating over the nodes at each level by starting from the
+    # source node and collecting all successor nodes at the next level
+    nodes = [cpg.source_node]
+    while True:
+        # Collect all successors of the current set of nodes
+        next_nodes = set([succ for node in nodes
+                               for succ in cpg.graph.successors(node)])
+        # If there are no nodes at the next level, we're done
+        if not next_nodes:
+            break
+        # Otherwise, check these nodes for having subset relationships
+        for u, v in itertools.permutations(next_nodes, 2):
+            u_tags = u[2]
+            v_tags = v[2]
+            # If either node has the tag set 0, indicating an instance of the
+            # target node, skip the comparison
+            if u_tags == 0 or v_tags == 0:
+                continue
+            # If the tags of u are a strict subset of the tags of v, then
+            # add edges from u to all of the successors of v
+            if u_tags <= v_tags:
+                v_succs = cpg.graph.successors(v)
+                edges_to_add = zip([u]*len(v_succs), v_succs)
+                cpg.graph.add_edges_from(edges_to_add)
+        nodes = next_nodes
     return cpg
 
 

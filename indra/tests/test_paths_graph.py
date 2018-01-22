@@ -29,6 +29,14 @@ g_samp.add_edges_from([
     ('B1', 'target'),
     ('B2', 'target'), ('B3', 'target'), ('B4', 'target'), ('B5', 'target')])
 
+
+g_split_nodes = nx.DiGraph()
+g_split_nodes.add_edges_from(
+    [(0, 1), (0, 2), (0, 3), (0, 5), (1, 0), (1, 2), (1, 3), (1, 4), (2, 0),
+     (2, 3), (2, 4), (3, 0), (3, 1), (3, 2), (3, 4), (3, 5), (4, 1), (4, 2),
+     (4, 3), (5, 1), (5, 3), (5, 4)])
+
+
 def test_get_reachable_sets_unsigned():
     f_level, b_level = get_reachable_sets(graph1_uns, source, target,
                                           signed=False)
@@ -275,6 +283,27 @@ def test_combine_cfpgs():
     path_ctr = Counter(paths)
 
 
+def test_combine_cfpgs_link_split_nodes():
+    g = g_split_nodes
+    # Make combined paths graph
+    pg_dict = {}
+    max_depth = 5
+    src, tgt = (0, 5)
+    for length in range(max_depth+1):
+        cfpg = CFPG.from_graph(g, src, tgt, length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
+    # The edges that should be added by the edge addition procedure:
+    linked_edges = [
+       ((2, 4, frozenset({(0, 0), (1, 1), (2, 4)})),
+        (3, 3, frozenset({(0, 0), (1, 1), (1, 2), (2, 2), (2, 4), (3, 3)}))),
+       ((2, 4, frozenset({(0, 0), (1, 2), (2, 4)})),
+        (3, 3, frozenset({(0, 0), (1, 1), (1, 2), (2, 2), (2, 4), (3, 3)}))),
+     ]
+    for e in linked_edges:
+        assert e in cpg.graph.edges()
+
+
 def test_path_tree():
     g = nx.DiGraph()
     g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),
@@ -316,11 +345,10 @@ def draw(g, filename):
 
 
 if __name__ == '__main__':
-    test_path_tree()
+    #test_combine_cfpgs_link_split_nodes()
 
-"""
     edge_prob = 0.5
-    num_nodes = 5
+    num_nodes = 6
     src = 0
     tgt = num_nodes - 1
     max_depth = num_nodes - 1
@@ -328,65 +356,6 @@ if __name__ == '__main__':
     #g = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob,
     #                                           directed=True)
     g = nx.DiGraph()
-    g.add_edges_from([(0, 3),
-         (0, 4),
-         #(1, 2),
-         (1, 4),
-         #(2, 3),
-         #(3, 0),
-         (3, 1),
-         (3, 2),
-         (3, 4),])
-         #(4, 1),
-         #(4, 2)])
-
-    # Make combined paths graph
-    pg_dict = {}
-    for length in range(max_depth+1):
-        cfpg = CFPG.from_graph(g, src, tgt, length)
-        pg_dict[length] = cfpg
-    cpg = combine_cfpgs(pg_dict)
-
-    # Filter only to edges in cycle free paths
-    all_paths = list(nx.all_simple_paths(g, src, tgt))
-    filt_g = graph_of_paths(all_paths)
-
-    # Draw graphs
-    draw(g, 'problem_graph.pdf')
-    draw(filt_g, 'problem_graph_filt.pdf')
-    draw(cpg.graph, 'problem_combined_cfpg.pdf')
-
-    print("Sampling CFPG")
-    cfpg_paths = cpg.sample_paths(num_samples)
-    cfpg_path_ctr = Counter([len(p)-1 for p in cfpg_paths])
-    cfpg_path_ctr = sorted(cfpg_path_ctr.items(), key=lambda x: x[0])
-
-    print("Sampling raw")
-    raw_paths = sample_raw_graph(g, src, tgt, max_depth=max_depth,
-                             num_samples=num_samples, eliminate_cycles=True)
-    raw_path_ctr = Counter([len(p)-1 for p in raw_paths])
-    raw_path_ctr = sorted(raw_path_ctr.items(), key=lambda x: x[0])
-
-    print("Sampling filt")
-    filt_paths = sample_raw_graph(filt_g, (src,), None,
-                                  max_depth=max_depth,
-                                 num_samples=num_samples, eliminate_cycles=True)
-    filt_path_ctr = Counter([len(p)-1 for p in filt_paths])
-    filt_path_ctr = sorted(filt_path_ctr.items(), key=lambda x: x[0])
-
-    print("Raw")
-    print(raw_path_ctr)
-    print(Counter(raw_paths))
-    print("Filt")
-    print(filt_path_ctr)
-    print(Counter(filt_paths))
-    print("CFPG")
-    print(cfpg_path_ctr)
-    print(Counter(cfpg_paths))
-
-
-# Another one
-
     g.add_edges_from(
 [(0, 1),
  (0, 2),
@@ -411,5 +380,45 @@ if __name__ == '__main__':
  (5, 3),
  (5, 4)])
 
+    # Make combined paths graph
+    pg_dict = {}
+    for length in range(max_depth+1):
+        cfpg = CFPG.from_graph(g, src, tgt, length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
 
-"""
+    # Filter only to edges in cycle free paths
+    all_paths = list(nx.all_simple_paths(g, src, tgt))
+    pt = PathTree(all_paths)
+
+    # Draw graphs
+    draw(g, 'problem_graph.pdf')
+    draw(pt.graph, 'problem_graph_tree.pdf')
+    draw(cpg.graph, 'problem_combined_cfpg.pdf')
+
+    print("Sampling raw")
+    raw_paths = sample_raw_graph(g, src, tgt, max_depth=max_depth,
+                             num_samples=num_samples, eliminate_cycles=True)
+    raw_path_ctr = Counter([len(p)-1 for p in raw_paths])
+    raw_path_ctr = sorted(raw_path_ctr.items(), key=lambda x: x[0])
+
+    print("Sampling tree")
+    tree_paths = pt.sample(num_samples)
+    tree_path_ctr = Counter([len(p)-1 for p in tree_paths])
+    tree_path_ctr = sorted(tree_path_ctr.items(), key=lambda x: x[0])
+
+    print("Sampling CFPG")
+    cfpg_paths = cpg.sample_paths(num_samples)
+    cfpg_path_ctr = Counter([len(p)-1 for p in cfpg_paths])
+    cfpg_path_ctr = sorted(cfpg_path_ctr.items(), key=lambda x: x[0])
+
+    print("Raw")
+    print(raw_path_ctr)
+    print(Counter(raw_paths))
+    print("Tree")
+    print(tree_path_ctr)
+    print(Counter(tree_paths))
+    print("CFPG")
+    print(cfpg_path_ctr)
+    print(Counter(cfpg_paths))
+
