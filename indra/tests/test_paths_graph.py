@@ -304,6 +304,35 @@ def test_combine_cfpgs_link_split_nodes():
         assert e in cpg.graph.edges()
 
 
+def test_correct_edge_multiplicities():
+    g = g_split_nodes
+    # Make combined paths graph
+    pg_dict = {}
+    max_depth = 5
+    src, tgt = (0, 5)
+    for length in range(max_depth+1):
+        cfpg = CFPG.from_graph(g, src, tgt, length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
+    cpg.correct_edge_multiplicities()
+    # The edges that should be adjusted, each with 0.5
+    adjust_edges = [
+       ((1, 2, frozenset({(1, 2), (0, 0)})),
+        (2, 4, frozenset({(1, 2), (0, 0), (1, 1), (2, 4)}))),
+       ((1, 2, frozenset({(1, 2), (0, 0)})),
+        (2, 4, frozenset({(1, 2), (0, 0), (2, 4)}))),
+       ((1, 1, frozenset({(0, 0), (1, 1)})),
+        (2, 4, frozenset({(1, 2), (0, 0), (1, 1), (2, 4)}))),
+       ((1, 1, frozenset({(0, 0), (1, 1)})),
+        (2, 4, frozenset({(0, 0), (1, 1), (2, 4)})))]
+    for u, v, data in cpg.graph.edges_iter(data=True):
+        assert 'weight' in data
+        if (u, v) in adjust_edges:
+            assert data['weight'] == 0.5
+        else:
+            assert data['weight'] == 1
+
+
 def test_path_tree():
     g = nx.DiGraph()
     g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),
@@ -346,7 +375,8 @@ def draw(g, filename):
 
 if __name__ == '__main__':
     #test_combine_cfpgs_link_split_nodes()
-
+    test_correct_edge_multiplicities()
+"""
     edge_prob = 0.5
     num_nodes = 6
     src = 0
@@ -421,4 +451,4 @@ if __name__ == '__main__':
     print("CFPG")
     print(cfpg_path_ctr)
     print(Counter(cfpg_paths))
-
+"""

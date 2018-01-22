@@ -429,8 +429,10 @@ class PathsGraph(object):
             out_edges.sort()
         if weighted:
             weights = [t[2]['weight'] for t in out_edges]
+            # Normalize the weights to a proper probability distribution
+            p = np.array(weights) / np.sum(weights)
             pred_idx = np.random.choice(range(len(out_edges)),
-                                        p=weights)
+                                        p=p)
         else:
             pred_idx = np.random.choice(range(len(out_edges)))
         return out_edges[pred_idx][1]

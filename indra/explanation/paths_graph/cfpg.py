@@ -62,6 +62,7 @@ We explain below the detailed construction of G_cf from this perpective.
 """
 import logging
 import itertools
+from collections import Counter
 import networkx as nx
 from .paths_graph import PathsGraph
 from .pre_cfpg import PreCFPG, prune
@@ -201,6 +202,23 @@ class CFPG(PathsGraph):
         return klass(pre_cfpg.source_name, pre_cfpg.source_node + (0,),
                      pre_cfpg.target_name, pre_cfpg.target_node + (0,),
                      pre_cfpg.path_length, G_cf_pruned)
+
+    def correct_edge_multiplicities(self):
+        """Weight edges to account for equivalent downstream nodes."""
+        # Among the successors of each node, find nodes that have the same
+        # name and split the weights among them by the number of copies
+        weight_dict = {}
+        for node in self.graph.nodes():
+            edges = self.graph.out_edges(node, data=True)
+            mults = Counter([e[1][1] for e in edges])
+            for u, v, data in edges:
+                # Get the weight if there is one, otherwise set to 1
+                weight = data.get('weight', 1)
+                # Divide the weight by the multiplicity for the downstream node
+                v_name = v[1]
+                weight = weight / float(mults[v_name])
+                weight_dict[(u, v)] = weight
+        nx.set_edge_attributes(self.graph, 'weight', weight_dict)
 
 
 def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
