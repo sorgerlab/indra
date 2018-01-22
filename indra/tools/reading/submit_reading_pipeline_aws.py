@@ -99,11 +99,9 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
     if stash_log_method is not None:
         def update_observed_jobs(job_defs):
-            for job_def in job_defs:
-                observed_job_def_set.add(
-                    tuple([(k, v) for k, v in job_def.items()
-                           if k in ['jobName', 'jobId']])
-                    )
+            observed_job_def_set |= {tuple([(k, v) for k, v in job_def.items()
+                                            if k in ['jobName', 'jobId'])
+                                     for job_def in job_defs}
 
     batch_client = boto3.client('batch')
 
