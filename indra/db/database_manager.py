@@ -254,8 +254,8 @@ class DatabaseManager(object):
             role = Column(String(20), nullable=False)
 
         self.tables = {}
-        for tbl in [TextRef, TextContent, Readings, SourceFile, DBInfo,
-                    Statements, Agents]:
+        for tbl in [TextRef, TextContent, Readings, SourceFile, Updates,
+                    DBInfo, Statements, Agents]:
             self.tables[tbl.__tablename__] = tbl
             self.__setattr__(tbl.__name__, tbl)
         self.engine = create_engine(host)
