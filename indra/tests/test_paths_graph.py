@@ -273,9 +273,34 @@ def test_combine_cfpgs():
     cpg = combine_cfpgs(pg_dict)
     paths = cpg.sample_paths(1000)
     path_ctr = Counter(paths)
-    print(path_ctr)
-    globals().update(locals())
-    draw(cpg.graph, 'cpg.pdf')
+
+
+def test_graph_of_paths():
+    g = nx.DiGraph()
+    g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),
+                          ('B', 'D'), ('B', 'E'),
+                          ('C', 'D'), ('C', 'E'),
+                          ('D', 'B'), ('D', 'C'), ('D', 'E'),
+                          ))
+    source, target, length = ('A', 'E', 4)
+    paths = list(nx.all_simple_paths(g, source, target))
+    gop = graph_of_paths(paths)
+    gop_ref_edges = set([
+            (('A',), ('A', 'E')),
+            (('A',), ('A', 'B')),
+            (('A',), ('A', 'C')),
+            (('A', 'B'), ('A', 'B', 'E')),
+            (('A', 'B'), ('A', 'B', 'D')),
+            (('A', 'C'), ('A', 'C', 'E')),
+            (('A', 'C'), ('A', 'C', 'D')),
+            (('A', 'B', 'D'), ('A', 'B', 'D', 'E')),
+            (('A', 'C', 'D'), ('A', 'C', 'D', 'E')),
+            (('A', 'B', 'D'), ('A', 'B', 'D', 'C')),
+            (('A', 'C', 'D'), ('A', 'C', 'D', 'B')),
+            (('A', 'B', 'D', 'C'), ('A', 'B', 'D', 'C', 'E')),
+            (('A', 'C', 'D', 'B'), ('A', 'C', 'D', 'B', 'E')),
+        ])
+    assert set(gop.edges()) == gop_ref_edges
 
 
 def draw(g, filename):
@@ -284,5 +309,135 @@ def draw(g, filename):
 
 
 if __name__ == '__main__':
-    test_combine_cfpgs()
+    test_graph_of_paths()
 
+    """
+    pg_dict = {}
+    max_depth = 4
+    for length in range(1, max_depth+1):
+        cfpg = CFPG.from_graph(g, source, target, length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
+    """
+
+"""
+    edge_prob = 0.5
+    num_nodes = 5
+    src = 0
+    tgt = num_nodes - 1
+    max_depth = num_nodes - 1
+    num_samples = 50000
+    #g = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob,
+    #                                           directed=True)
+    g = nx.DiGraph()
+    g.add_edges_from(
+[(0, 1),
+ (0, 2),
+ (0, 3),
+ (0, 5),
+ (1, 0),
+ (1, 2),
+ (1, 3),
+ (1, 4),
+ (2, 0),
+ (2, 3),
+ (2, 4),
+ (3, 0),
+ (3, 1),
+ (3, 2),
+ (3, 4),
+ (3, 5),
+ (4, 1),
+ (4, 2),
+ (4, 3),
+ (5, 1),
+ (5, 3),
+ (5, 4)])
+
+
+    # Make combined paths graph
+    pg_dict = {}
+    for length in range(max_depth+1):
+        cfpg = CFPG.from_graph(g, src, tgt, length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
+
+    # Filter only to edges in cycle free paths
+    filt_edges = set([])
+    for u, v in cpg.graph.edges():
+        filt_edges.add((u[1], v[1]))
+    filt_g = nx.DiGraph()
+    filt_g.add_edges_from(filt_edges)
+
+    # Draw graphs
+    draw(g, 'problem_graph.pdf')
+    draw(filt_g, 'problem_graph_filt.pdf')
+    draw(cpg.graph, 'problem_combined_cfpg.pdf')
+
+    print("Sampling CFPG")
+    cfpg_paths = cpg.sample_paths(num_samples)
+    cfpg_path_ctr = Counter([len(p)-1 for p in cfpg_paths])
+    cfpg_path_ctr = sorted(cfpg_path_ctr.items(), key=lambda x: x[0])
+
+    print("Sampling raw")
+    raw_paths = sample_raw_graph(g, src, tgt, max_depth=max_depth,
+                             num_samples=num_samples, eliminate_cycles=True)
+    raw_path_ctr = Counter([len(p)-1 for p in raw_paths])
+    raw_path_ctr = sorted(raw_path_ctr.items(), key=lambda x: x[0])
+
+    print("Sampling filt")
+    filt_paths = sample_raw_graph(filt_g, src, tgt,
+                                  max_depth=max_depth,
+                                 num_samples=num_samples, eliminate_cycles=True)
+    filt_path_ctr = Counter([len(p)-1 for p in filt_paths])
+    filt_path_ctr = sorted(filt_path_ctr.items(), key=lambda x: x[0])
+
+    print("Raw")
+    print(raw_path_ctr)
+    print(Counter(raw_paths))
+    print("Filt")
+    print(filt_path_ctr)
+    print(Counter(filt_paths))
+    print("CFPG")
+    print(cfpg_path_ctr)
+    print(Counter(cfpg_paths))
+
+[(0, 1),
+ (0, 2),
+ (0, 3),
+ (0, 5),
+ (1, 0),
+ (1, 2),
+ (1, 3),
+ (1, 4),
+ (2, 0),
+ (2, 3),
+ (2, 4),
+ (3, 0),
+ (3, 1),
+ (3, 2),
+ (3, 4),
+ (3, 5),
+ (4, 1),
+ (4, 2),
+ (4, 3),
+ (5, 1),
+ (5, 3),
+ (5, 4)]
+
+# Another one
+
+g.add_edges_from([(0, 3),
+ (0, 4),
+ #(1, 2),
+ (1, 4),
+ #(2, 3),
+ #(3, 0),
+ (3, 1),
+ (3, 2),
+ (3, 4),])
+ #(4, 1),
+ #(4, 2)])
+
+
+"""

@@ -8,7 +8,8 @@ logger = logging.getLogger('paths_graph')
 
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph', 'combine_paths_graphs', 'combine_cfpgs']
+           'sample_raw_graph', 'combine_paths_graphs', 'combine_cfpgs',
+           'graph_of_paths']
 
 
 def load_signed_sif(sif_file):
@@ -120,15 +121,20 @@ def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
     sampling from the original graph.
     """
     paths = []
+    if target not in g:
+        raise ValueError("Target node %s not in graph" % target)
+    # Check if any paths exist
+    if not nx.has_path(g, source, target):
+        return []
     while len(paths) < num_samples:
         node = source
         path = [source]
         while True:
             # If we haven't found the target within the specified depth,
             # terminate
-            if len(path) >= max_depth + 1:
-                path = []
-                break
+            #if len(path) >= max_depth + 1:
+            #    path = []
+            #    break
             # Get a list of possible successor nodes
             if eliminate_cycles:
                 successors = [e[1] for e in g.out_edges(node)
@@ -140,8 +146,9 @@ def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
                 path = []
                 break
             # Choose a successor node:
-            # If we're one step before the maximum depth, always choose
-            # the target if it's available--this mimics the
+            # If we're one step before the maximum reachable depth,
+            # always choose the target if it's available--this mimics
+            # the behavior of the paths graph
             if len(path) == max_depth:
                 if target in successors:
                     node = target
@@ -151,6 +158,7 @@ def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
             else:
                 succ_ix = np.random.choice(range(len(successors)))
                 node = successors[succ_ix]
+            # Add the current node to the path
             path.append(node)
             # Terminate if we reached the target
             if node == target:
@@ -159,4 +167,17 @@ def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
         if path:
             paths.append(tuple(path))
     return paths
+
+
+def graph_of_paths(paths):
+    edge_set = set()
+    for path in paths:
+        # Split path at all branch points
+        for i in range(1, len(path)):
+            head = tuple(path[0:i])
+            tail = tuple(path[0:i+1])
+            edge_set.add((head, tail))
+    g = nx.DiGraph()
+    g.add_edges_from(edge_set)
+    return g
 
