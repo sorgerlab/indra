@@ -127,30 +127,28 @@ class GenewaysProcessor(object):
                             epistemics=epistemics,
                             annotations=annotations)
 
-        # Ground the upstream agent
-        # Note that we are using the name as it appeared in the text, rather
-        # than some standardized name in a database, but grounding it by
+        # Construct the grounded and name standardized agents
+        # Note that this involves grounding the agent by
         # converting the Entrez ID listed in the Geneways data with
         # HGNC and UniProt
-        up_name = mention.upstream
-        upstream_db = dict()
-        logger.debug('Looking up grounding data for Entrez #%s' % action.up)
-        upstream_db['HGNC'] = hgc.get_hgnc_from_entrez(action.up)
-        upstream_db['UP'] = hgc.get_uniprot_id(upstream_db['HGNC'])
-        upstream_db['TEXT'] = up_name
-        upstream_agent = Agent(up_name, db_refs=upstream_db)
-
-        # Ground the downstream agent
-        down_name = mention.downstream
-        downstream_db = dict()
-        logger.debug('Looking up grounding data for Entrez #%s' % action.dn)
-        downstream_db['HGNC'] = hgc.get_hgnc_from_entrez(action.dn)
-        downstream_db['UP'] = hgc.get_uniprot_id(downstream_db['HGNC'])
-        downstream_db['TEXT'] = down_name
-        downstream_agent = Agent(down_name, db_refs=downstream_db)
+        upstream_agent = get_agent(mention.upstream, action.up)
+        downstream_agent = get_agent(mention.downstream, action.dn)
 
         # Make the statement
         return statement_generator(upstream_agent, downstream_agent, evidence)
+
+
+def get_agent(raw_name, entrez_id):
+    db_refs = {'TEXT': raw_name}
+    logger.debug('Looking up grounding data for Entrez #%s' % entrez_id)
+    hgnc_id = hgc.get_hgnc_from_entrez(entrez_id)
+    if hgnc_id is not None:
+        db_refs['UP'] = hgc.get_uniprot_id(hgnc_id)
+        name = hgc.get_hgnc_name(hgnc_id)
+    else:
+        name = raw_name
+    agent = Agent(name, db_refs=db_refs)
+    return agent
 
 
 def geneways_action_to_indra_statement_type(actiontype, plo):
