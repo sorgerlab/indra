@@ -1,14 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
+import os
 import boto3
 import logging
 import botocore.session
 from time import sleep
-from indra.literature import elsevier_client as ec
-from indra.tools.reading.read_pmids import READER_DICT
-from docutils.nodes import description
-from indra.util.aws import get_job_log
 from datetime import datetime
+from indra.literature import elsevier_client as ec
+from indra.util.aws import get_job_log
 
 bucket_name = 'bigmech'
 
@@ -17,7 +17,7 @@ logger = logging.getLogger('aws_reading')
 
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
-                      kill_on_log_timeout=False):
+                      kill_on_log_timeout=False, stash_log_method=None):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -44,7 +44,15 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         If True, and if `idle_log_timeout` is set, jobs will be terminated
         after timeout. This has no effect if `idle_log_timeout` is None.
         Default is False.
+    stash_log_method : Optional[str]
+        Select a method to store the job logs, either 's3' or 'local'. If no
+        method is specified, the logs will not be loaded off of AWS. If 's3' is
+        specified, then `job_name_prefix` must also be given, as this will
+        indicate where on s3 to store the logs.
     """
+    if stash_log_method == 's3' and job_name_prefix is None:
+        raise Exception('A job_name_prefix is required to post logs on s3.')
+
     start_time = datetime.now()
     if job_list is None:
         job_id_list = []
@@ -86,6 +94,15 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 old_log += log_lines[len(old_log):]
         return stalled_jobs
 
+    # Don't start watching jobs added after this command was initialized.
+    observed_job_def_set = set()
+
+    if stash_log_method is not None:
+        def get_set_of_job_tuples(job_defs):
+            return {tuple([(k, v) for k, v in job_def.items()
+                           if k in ['jobName', 'jobId']])
+                    for job_def in job_defs}
+
     batch_client = boto3.client('batch')
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
@@ -97,6 +114,9 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         running = get_jobs_by_status('RUNNING', job_id_list, job_name_prefix)
         failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
+
+        if stash_log_method is not None:
+            observed_job_def_set |= get_set_of_job_tuples(pre_run + running)
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
@@ -118,14 +138,69 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         if job_id_list:
             if (len(failed) + len(done)) == len(job_id_list):
-                return 0
+                ret = 0
+                break
         else:
             if (len(failed) + len(done) > 0) and \
                (len(pre_run) + len(running) == 0):
-                return 0
+                ret = 0
+                break
 
         tag_instances()
         sleep(poll_interval)
+
+    # Stash the logs
+    if stash_log_method:
+        success_ids = [job_def['jobId'] for job_def in done]
+        failure_ids = [job_def['jobId'] for job_def in failed]
+        stash_logs(observed_job_def_set, success_ids, failure_ids, queue_name,
+                   stash_log_method, job_name_prefix,
+                   start_time.strftime('%Y%m%d_%H%M%S'))
+
+    return ret
+
+
+def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
+               job_name_prefix=None, tag='stash'):
+    if method == 's3':
+        s3_client = boto3.client('s3')
+
+        def stash_log(log_str, name_base):
+            name = '%s_%s.log' % (name_base, tag)
+            s3_client.put_object(
+                Bucket='bigmech',
+                Key='reading_results/%s/logs/%s/%s' % (
+                    job_name_prefix,
+                    queue_name,
+                    name),
+                Body=log_str
+                )
+
+    elif method == 'local':
+        if job_name_prefix is None:
+            job_name_prefix = 'batch_%s' % tag
+        dirname = '%s_job_logs' % job_name_prefix
+        os.mkdir(dirname)
+
+        def stash_log(log_str, name_base):
+            with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
+                f.write(log_str)
+
+    for job_def_tpl in job_defs:
+        job_def = dict(job_def_tpl)
+        lines = get_job_log(job_def, write_file=False)
+        if lines is None:
+            logger.warning("No logs found for %s." % job_def['jobName'])
+            continue
+        log_str = ''.join(lines)
+        base_name = job_def['jobName']
+        if job_def['jobId'] in success_ids:
+            base_name += '_SUCCESS'
+        elif job_def['jobId'] in failure_ids:
+            base_name += '_FAILED'
+        logger.info('Stashing ' + base_name)
+        stash_log(log_str, base_name)
+    return
 
 
 def tag_instances(project='bigmechanism'):
@@ -180,7 +255,8 @@ def get_environment():
 
 
 def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
-                   end_ix=None, pmids_per_job=3000, num_tries=2):
+                   end_ix=None, pmids_per_job=3000, num_tries=2,
+                   force_read=False, force_fulltext=False):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -210,6 +286,10 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
                         'indra.tools.reading.read_pmids_aws',
                         basename, '/tmp', '16', str(job_start_ix),
                         str(job_end_ix), '-r'] + readers
+        if force_read:
+            command_list.append('--force_read')
+        if force_fulltext:
+            command_list.append('--force_fulltext')
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -226,7 +306,8 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
 
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
-                      end_ix=None, pmids_per_job=3000, num_tries=2):
+                      end_ix=None, pmids_per_job=3000, num_tries=2,
+                      force_read=False, force_fulltext=False):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
     s3_client = boto3.client('s3')
@@ -248,6 +329,11 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     if 'all' in readers:
         readers = ['reach', 'sparser']
 
+    if force_read:
+        mode = 'all'
+    else:
+        mode = 'unread'
+
     # Iterate over the list of PMIDs and submit the job in chunks
     batch_client = boto3.client('batch')
     job_list = []
@@ -258,8 +344,10 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
         command_list = ['python', '-m',
                         'indra.tools.reading.read_db_aws',
-                        basename, '/tmp', 'unread', '32', str(job_start_ix),
+                        basename, '/tmp', mode, '32', str(job_start_ix),
                         str(job_end_ix), '-r'] + readers
+        if force_fulltext:
+            command_list.append('--force_fulltext')
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -452,7 +540,10 @@ if __name__ == '__main__':
                 args.readers,
                 args.start_ix,
                 args.end_ix,
-                args.ids_per_job
+                args.ids_per_job,
+                2,
+                args.force_read,
+                args.force_fulltext
                 )
         if args.job_type in ['combine', 'full']:
             submit_combine(args.basename, args.readers, job_ids)
@@ -463,5 +554,8 @@ if __name__ == '__main__':
             args.readers,
             args.start_ix,
             args.end_ix,
-            args.ids_per_job
+            args.ids_per_job,
+            2,
+            args.force_read,
+            args.force_fulltext
             )

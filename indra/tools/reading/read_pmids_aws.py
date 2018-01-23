@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.tools.reading.read_pmids import READER_DICT
+from datetime import datetime
 
 DOC = \
 """
@@ -38,6 +39,16 @@ if __name__ == '__main__':
         type=int
         )
     parser.add_argument(
+        '--force_read',
+        action='store_true',
+        help='Read everything, even things that were already read.'
+        )
+    parser.add_argument(
+        '--force_fulltext',
+        action='store_true',
+        help='Only read fulltext content.'
+        )
+    parser.add_argument(
         '-r', '--readers',
         dest='readers',
         default='all',
@@ -57,8 +68,8 @@ if __name__ == '__main__':
     logger = logging.getLogger('read_pmids_aws')
 
     # Setting default force read/fulltext parameters
-    force_read = False
-    force_fulltext = False
+    force_read = args.force_read
+    force_fulltext = args.force_fulltext
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
@@ -96,6 +107,7 @@ if __name__ == '__main__':
     # Run the reading pipelines
     stmts = {}
     content_types = {}
+    key_base = 'reading_results/%s' % args.basename
     for reader, run_reader in read.READER_DICT.items():
         if reader not in readers:
             continue
@@ -115,17 +127,31 @@ if __name__ == '__main__':
 
         # Pickle the content types to S3
         N_papers = len(some_stmts)
-        ct_key_name = 'reading_results/%s/%s/content_types/%d_%d.pkl' % \
-                      (args.basename, reader, args.start_index, args.end_index)
+        ct_key_name = key_base + '/%s/content_types/%d_%d.pkl' % \
+                                 (reader, args.start_index, args.end_index)
         logger.info("Saving content types for %d papers to %s" %
                     (N_papers, ct_key_name))
         ct_bytes = pickle.dumps(content_types[reader])
         client.put_object(Key=ct_key_name, Body=ct_bytes, Bucket=bucket_name)
         # Pickle the statements to a bytestring
-        pickle_key_name = 'reading_results/%s/%s/stmts/%d_%d.pkl' % \
-                          (args.basename, reader, args.start_index, args.end_index)
+        pickle_key_name = key_base + '/%s/stmts/%d_%d.pkl' % \
+                                     (reader, args.start_index, args.end_index)
         logger.info("Saving stmts from %d papers to %s" %
                     (N_papers, pickle_key_name))
         stmts_bytes = pickle.dumps(some_stmts)
         client.put_object(Key=pickle_key_name, Body=stmts_bytes,
                           Bucket=bucket_name)
+
+    # Preserved the sparser logs.
+    contents = os.listdir('.')
+    sparser_logs = [fname for fname in contents
+                    if fname.startswith('sparser') and fname.endswith('log')]
+    sparser_log_dir = key_base + '/logs/run_reach_queue/sparser_logs_%s/' % \
+        datetime.now().strftime('%Y%m%d_%H%M%S')
+    for fname in sparser_logs:
+        s3_key = sparser_log_dir + fname
+        logger.info("Saving sparser logs to %s on s3 in %s."
+                    % (s3_key, bucket_name))
+        with open(fname, 'r') as f:
+            client.put_object(Key=s3_key, Body=f.read(),
+                              Bucket=bucket_name)

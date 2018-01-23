@@ -12,7 +12,9 @@ import boto3
 import botocore
 import logging
 import sys
+import os
 import random
+from datetime import datetime
 
 
 if __name__ == '__main__':
@@ -58,6 +60,11 @@ if __name__ == '__main__':
         nargs='+',
         help='Choose which reader(s) to use.'
         )
+    parser.add_argument(
+        '--force_fulltext',
+        action='store_true',
+        help='Require that content be fulltext, skip anything that isn\'t.'
+        )
     args = parser.parse_args()
 
     logger = logging.getLogger('read_db_aws')
@@ -91,7 +98,25 @@ if __name__ == '__main__':
 
     # Read everything ========================================
     outputs = produce_readings(id_dict, readers, verbose=True,
-                               read_mode=args.mode)
+                               read_mode=args.mode,
+                               force_fulltext=args.force_fulltext)
+
+    # Preserve the sparser logs
+    contents = os.listdir('.')
+    sparser_logs = [fname for fname in contents
+                    if fname.startswith('sparser') and fname.endswith('log')]
+    sparser_log_dir = ('reading_results/%s/logs/run_db_reading_queue/'
+                       'sparser_logs_%s/') % (
+                           args.basename,
+                           datetime.now().strftime('%Y%m%d_%H%M%S')
+                           )
+    for fname in sparser_logs:
+        s3_key = sparser_log_dir + fname
+        logger.info("Saving sparser logs to %s on s3 in %s."
+                    % (s3_key, bucket_name))
+        with open(fname, 'r') as f:
+            client.put_object(Key=s3_key, Body=f.read(),
+                              Bucket=bucket_name)
 
     # Convert the outputs to statements ==================================
     produce_statements(outputs, n_proc=args.num_cores)

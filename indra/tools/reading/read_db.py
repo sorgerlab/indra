@@ -547,7 +547,7 @@ def upload_readings(output_list, db=None):
 
 def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
                      force_fulltext=False, batch_size=1000, no_upload=False,
-                     pickle_file=None, db=None):
+                     pickle_file=None, db=None, log_readers=True):
     """Produce the reading output for the given ids, and upload them to db.
 
     This function will also retrieve pre-existing readings from the database,
@@ -613,7 +613,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
                                    skip_dict=skip_reader_tcid_dict, db=db,
                                    force_fulltext=force_fulltext,
                                    force_read=(read_mode == 'all'),
-                                   batch_size=batch_size)
+                                   batch_size=batch_size, log=log_readers)
         logger.info("Made %d new readings." % len(outputs))
 
     if not no_upload:
@@ -678,7 +678,7 @@ def produce_statements(output_list, enrich=True, no_upload=False,
             logger.exception(e)
             if pickle_file is None:
                 pickle_file = ("failure_stmt_dump_%s.pkl"
-                              % datetime.now().strftime('%Y%m%d_%H%M%S'))
+                               % datetime.now().strftime('%Y%m%d_%H%M%S'))
             logger.error("Could not upload statements. Results pickled in: %s."
                          % pickle_file)
     if pickle_file is not None:
