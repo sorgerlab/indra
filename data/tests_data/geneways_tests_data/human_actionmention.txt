@@ -1,0 +1,5 @@
+hiid	actionmentionid	negative	upstream	actiontype	downstream	pmid	isFullText	sentencenumber	score	prec
+1	1	0	c-Src	phosphorylate	Akt	19262695	1	4	0.56	0.78
+1	2	0	c-Src	phosphorylate	Akt	2	0	7	0.23	0.34
+2	3	1	A	bind	B	0	0	0	0.12	0.48
+3	4	0	C	bind	D	0	0	0	0.22	0.55
