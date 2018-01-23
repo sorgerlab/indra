@@ -287,7 +287,7 @@ def test_full_upload():
     # Test careful upload of medline (very shallow test...checks only for
     # critical failures)
     m = Medline(ftp_url=TEST_FTP, local=True)
-    m.populate(db, first_time=False)
+    m.load_files(db, 'baseline', carefully=True)
 
 
 @needs_py3

@@ -428,10 +428,10 @@ class Medline(NihManager):
 
     def get_file_list(self, sub_dir):
         all_files = self.ftp.ftp_ls(sub_dir)
-        return [k for k in all_files if k.endswith('.xml.gz')]
+        return [sub_dir + '/' + k for k in all_files if k.endswith('.xml.gz')]
 
     def get_article_info(self, xml_file, q=None):
-        tree = self.ftp.get_xml_file('baseline/' + xml_file)
+        tree = self.ftp.get_xml_file(xml_file)
         article_info = pubmed_client.get_metadata_from_xml_tree(
             tree,
             get_abstracts=True,
@@ -543,32 +543,19 @@ class Medline(NihManager):
         self.load_text_content(db, article_info, valid_pmids)
         return True
 
-    def populate(self, db, n_procs=1, continuing=False, first_time=True):
-        """Perform the initial input of the pubmed content into the database.
-
-        Parameters
-        ----------
-        db : indra.db.DatabaseManager instance
-            The database to which the data will be uploaded.
-        n_procs : int
-            The number of processes to use when parsing xmls.
-        continuing : bool
-            If true, assume that we are picking up after an error, or otherwise
-            continuing from an earlier process. This means we will skip over
-            source files contained in the database. If false, all files will be
-            read and parsed.
-        first_time : bool
-            Indicate whether this is the initial upload of the database or not.
-            If not, greater care will be taken to ensure text refs are
-            maintained, because we can no longer assume we're the first to
-            create text refs.
-        """
-        xml_files = self.get_file_list('baseline')
+    def load_files(self, db, dirname, n_procs=1, continuing=False,
+                   carefully=False):
+        """Load a the files in subdirectory indicated by `dirname`."""
+        xml_files = self.get_file_list(dirname)
         sf_list = db.select_all(
             db.SourceFile,
             db.SourceFile.source == self.my_source
             )
-        existing_files = [sf.name for sf in sf_list]
+        existing_files = [sf.name for sf in sf_list if dirname in sf.name]
+        logger.debug('Source files on db for %s: %s'
+                     % (dirname, str(existing_files)))
+        logger.debug('Xml files found for %s: %s.'
+                     % (dirname, str(xml_files)))
 
         # This could perhaps be simplified with map_async from mp.pool.
         q = mp.Queue()
@@ -589,34 +576,46 @@ class Medline(NihManager):
             if len(proc_list):
                 proc_list.pop(0).start()
 
-        while len(proc_list):
+        def upload_and_record_next(start_new):
             xml_file, article_info = q.get()  # Block until at least 1 is done.
-            proc_list.pop(0).start()
-            self.upload_article(db, article_info, carefully=not first_time)
+            if start_new:
+                proc_list.pop(0).start()
+            self.upload_article(db, article_info, carefully)
             if xml_file not in existing_files:
                 db.insert('source_file', source=self.my_source, name=xml_file)
+
+        while len(proc_list):
+            upload_and_record_next(True)
             n_tot -= 1
 
         while n_tot is not 0:
-            xml_file, article_info = q.get()
-            self.upload_article(db, article_info, carefully=not first_time)
-            if xml_file not in existing_files:
-                db.insert('source_file', source=self.my_source, name=xml_file)
+            upload_and_record_next(False)
             n_tot -= 1
 
         return
 
+    def populate(self, db, n_procs=1, continuing=False):
+        """Perform the initial input of the pubmed content into the database.
+
+        Parameters
+        ----------
+        db : indra.db.DatabaseManager instance
+            The database to which the data will be uploaded.
+        n_procs : int
+            The number of processes to use when parsing xmls.
+        continuing : bool
+            If true, assume that we are picking up after an error, or otherwise
+            continuing from an earlier process. This means we will skip over
+            source files contained in the database. If false, all files will be
+            read and parsed.
+        """
+        self.load_files(db, 'baseline', n_procs, continuing, False)
+        return
+
     def update(self, db, n_procs=1, continuing=False):
         """Update the contents of the database with the latest articles."""
-        baseline_files = self.get_file_list('baseline')
-        db_baseline_files = [
-            sf.name for sf in db.select_all(
-                db.SourceFile,
-                db.SourceFile.source == self.my_source
-                )
-            ]
-        if any([fname not in db_baseline_files for fname in baseline_files]):
-            self.populate(db, n_procs=n_procs, first_time=False)
+        self.load_files(db, 'baseline', n_procs, continuing, True)
+        self.load_files(db, 'updatefiles', n_procs, continuing, True)
         return
 
 
