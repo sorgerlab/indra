@@ -1215,7 +1215,7 @@ def test_weighted_sampling2():
     # Now, try sampling
     mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
-    results = mc.check_model(max_path_length=5, max_paths=100)
+    results = mc.check_model(max_path_length=5, max_paths=1000)
     assert type(results) == list
     assert len(results) == 1
     stmt_tuple = results[0]
@@ -1234,8 +1234,8 @@ def test_weighted_sampling2():
     mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
                             ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
-    assert mapk1_count == 78, mapk1_count
-    assert mapk3_count == 22, mapk3_count
+    assert mapk1_count == 750, mapk1_count
+    assert mapk3_count == 250, mapk3_count
 
 
 def test_weighted_sampling3():
@@ -1299,7 +1299,7 @@ def test_weighted_sampling3():
 
 
 if __name__ == '__main__':
-    test_weighted_sampling1()
+    #test_weighted_sampling1()
     test_weighted_sampling2()
     test_weighted_sampling3()
 

@@ -15,7 +15,6 @@ from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
-from indra.explanation import cycle_free_paths as cfp
 from indra.explanation import paths_graph as pg
 from collections import Counter
 
@@ -422,17 +421,17 @@ class ModelChecker(object):
         # -------------------------------------------------
         # Create combined paths_graph
         f_level, b_level = pg.get_reachable_sets(nx_graph, source_node,
-                                                 obs_name, max_path_length+1,
+                                                 obs_name, max_path_length,
                                                  signed=True)
-        pg_dict = {}
-        for path_length in range(1, max_path_length+2):
-            pg_dict[path_length] = \
-                    pg.paths_graph(nx_graph, source_node, obs_name, path_length,
-                                   f_level, b_level, signed=True,
-                                   target_polarity=pg_polarity)
-        combined_pg = pg.combine_path_graphs(pg_dict)
+        pg_list = []
+        for path_length in range(1, max_path_length+1):
+            cfpg = pg.CFPG.from_graph(
+                    nx_graph, source_node, obs_name, path_length, f_level,
+                    b_level, signed=True, target_polarity=pg_polarity)
+            pg_list.append(cfpg)
+        combined_pg = pg.CombinedCFPG(pg_list)
         # Make sure the combined paths graph is not empty
-        if not combined_pg:
+        if not combined_pg.graph:
             pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
             pr.paths = []
@@ -455,11 +454,11 @@ class ModelChecker(object):
             ic_dict[mon.name] = ic_value
 
         # Set weights in PG based on model initial conditions
-        for cur_node in combined_pg.nodes():
+        for cur_node in combined_pg.graph.nodes():
             edge_weights = {}
             rule_obj_list = []
             edge_weights_by_gene = {}
-            for u, v in combined_pg.out_edges(cur_node):
+            for u, v in combined_pg.graph.out_edges(cur_node):
                 v_rule = v[1][0]
                 # Get the object of the rule (a monomer name)
                 rule_obj = rule_obj_dict.get(v_rule)
@@ -488,17 +487,12 @@ class ModelChecker(object):
                     rule_obj_count = 1
                 edge_weights_norm[e] = ((v / float(edge_weight_sum)) /
                                         float(rule_obj_count))
-            # Iterate again, adding edge weights to paths graph
-            nx.set_edge_attributes(combined_pg, 'weight', edge_weights_norm)
-            # Update weights in paths graph
+            # Add edge weights to paths graph
+            nx.set_edge_attributes(combined_pg.graph, 'weight',
+                                   edge_weights_norm)
 
-        # Sample from the combined paths graph (eliminates cycles)
-        paths = []
-        for i in range(max_paths):
-            path = pg.sample_single_path(combined_pg, source_node, obs_name,
-                                         signed=True, weighted=True,
-                                         target_polarity=pg_polarity)
-            paths.append(path)
+        # Sample from the combined CFPG
+        paths = combined_pg.sample_paths(max_paths)
         # -------------------------------------------------
         if paths:
             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)

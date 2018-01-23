@@ -60,6 +60,7 @@ challenge is to achieve this while ensuring that the properies (CF1), (CF2) and
 
 We explain below the detailed construction of G_cf from this perpective.
 """
+import os
 import logging
 import itertools
 from collections import Counter
@@ -280,7 +281,12 @@ class CombinedCFPG(object):
         # normalized by multiplicities
         node_names = []
         weights = np.empty(len(nodes_by_name))
-        for ix, name in enumerate(nodes_by_name.keys()):
+        nodes_by_name_keys = nodes_by_name.keys()
+        # If we're testing, canonicalize the order of the nodes we're choosing
+        if 'TEST_FLAG' in os.environ:
+            nodes_by_name_keys = sorted(list(nodes_by_name_keys))
+        # Get node names and weights in a corresponding order
+        for ix, name in enumerate(nodes_by_name_keys):
             node_names.append(name)
             weights[ix] = weight_dict[name]
         # Normalize the weights to a proper probability distribution
