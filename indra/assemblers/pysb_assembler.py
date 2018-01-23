@@ -1238,7 +1238,7 @@ def modification_assemble_interactions_only(stmt, model, agent_set):
     # Create a rule specifying that the substrate binds to the kinase at
     # its active site
     lhs = enz(**{active_site: None}) + sub(**{mod_site: None})
-    rhs = enz(**{active_site: 1}) + sub(**{mod_site: 1})
+    rhs = enz(**{active_site: 1}) % sub(**{mod_site: 1})
     r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
     add_rule_to_model(model, r_fwd)
 
@@ -1557,7 +1557,7 @@ def demodification_assemble_interactions_only(stmt, model, agent_set):
     r = Rule('%s_%s_%s_%s' %
              (rule_enz_str, demod_condition_name, rule_sub_str, demod_site),
              enz(**{active_site: None}) + sub(**{demod_site: None}) >>
-             enz(**{active_site: 1}) + sub(**{demod_site: 1}),
+             enz(**{active_site: 1}) % sub(**{demod_site: 1}),
              kf_bind)
     add_rule_to_model(model, r)
 
@@ -2004,7 +2004,7 @@ def gef_assemble_interactions_only(stmt, model, agent_set):
              (rule_gef_str, rule_ras_str),
              gef(**{'gef_site': None}) +
              ras(**{'p_loop': None}) >>
-             gef(**{'gef_site': 1}) +
+             gef(**{'gef_site': 1}) %
              ras(**{'p_loop': 1}),
              kf_bind)
     add_rule_to_model(model, r)
@@ -2067,7 +2067,7 @@ def gap_assemble_interactions_only(stmt, model, agent_set):
              (rule_gap_str, rule_ras_str),
              gap(**{'gap_site': None}) +
              ras(**{'gtp_site': None}) >>
-             gap(**{'gap_site': 1}) +
+             gap(**{'gap_site': 1}) %
              ras(**{'gtp_site': 1}),
              kf_bind)
     add_rule_to_model(model, r)
@@ -2196,7 +2196,7 @@ def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
 
     r = Rule(rule_name,
              subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
-             subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
+             subj(**{subj_site_name: 1}) % obj(**{obj_site_name: 1}),
              kf_bind)
 
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
@@ -2263,7 +2263,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
 
     r = Rule(rule_name,
             subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
-            subj(**{subj_site_name: 1}) + obj(**{obj_site_name: 1}),
+            subj(**{subj_site_name: 1}) % obj(**{obj_site_name: 1}),
             kf_bind)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
