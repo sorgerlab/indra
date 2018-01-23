@@ -266,7 +266,7 @@ class ContentManager(object):
             logger.exception(e)
             logger.info('Continuing...')
 
-    def filter_text_refs(self, db, tr_data):
+    def filter_text_refs(self, db, tr_data_set):
         "Try to reconcile the data we have with what's already on the db."
         logger.info("Beginning to filter text refs...")
         review_fname = 'review_%s.txt' % self.my_source
@@ -276,20 +276,16 @@ class ContentManager(object):
             return self.tr_cols.index(id_type)
 
         # If there are not actual refs to work with, don't waste time.
-        if not len(tr_data):
+        if not len(tr_data_set):
             return [], []
-
-        # Turn the list of dicts into a set of tuples
-        tr_data_set = {tuple([entry[id_type] for id_type in self.tr_cols])
-                       for entry in tr_data}
 
         # Get all text refs that match any of the id data we have. This means
         # each text ref WILL find a match in the data we have (unless something
         # is seriously broken.
         or_list = []
         for id_type in self.tr_cols:
-            id_list = [entry[id_type] for entry in tr_data
-                       if entry[id_type] is not None]
+            id_list = [entry[id_idx(id_type)] for entry in tr_data_set
+                       if entry[id_idx(id_type)] is not None]
             if id_list:
                 or_list.append(getattr(db.TextRef, id_type).in_(id_list))
         tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
@@ -349,9 +345,9 @@ class ContentManager(object):
                         # be logged on the database?
                         if tr_new[i] is not None \
                          and tr_new[i] != getattr(tr, id_type):
-                            with open(review_fname, 'a') as f:
+                            with open(review_fname, 'a+') as f:
                                 f.write(
-                                    'Got conflicting id data: in db %s vs %s.'
+                                    'Got conflicting id data: in db %s vs %s.\n'
                                     % ([getattr(tr, id_type)
                                         for id_type in self.tr_cols],
                                        [tr_new[i]
@@ -359,19 +355,17 @@ class ContentManager(object):
                                     )
                             # If the conflict was with a pmcid, don't try to
                             # add the text content.
-                            flawed_tr_data.append({'occurrence': id_type,
-                                                   'id_data': tr_new})
+                            flawed_tr_data.append((id_type, tr_new))
             else:
                 # These still matched something in the db, so they shouldn't be
                 # uploaded as new refs.
                 for tr_new in match_set:
                     tr_data_matched_set.add(tr_new)
-                    flawed_tr_data.append({'occurrence': 'over_match',
-                                           'id_data': tr_new})
+                    flawed_tr_data.append(('over_match', tr_new))
 
                 # This condition only occurs if the records we got are
                 # internally inconsistent. This is rare, but it can happen.
-                with open(review_fname, 'a') as f:
+                with open(review_fname, 'a+') as f:
                     f.write(
                         ('Got multiple matches for data from %s: %s.'
                          ' Please review.\n')
@@ -461,65 +455,75 @@ class Medline(NihManager):
         logger.info("Fixing doubled doi: %s" % doi)
         return doi[:L]
 
-    def upload_article(self, db, article_info):
-        deleted_pmids = self.get_deleted_pmids()
+    def load_text_refs(self, db, article_info, carefully=False):
+        "Sanitize, update old, and upload new text refs."
 
-        logger.info("%d PMIDs in XML dataset" % len(article_info))
+        # Remove PMID's listed as deleted.
+        deleted_pmids = self.get_deleted_pmids()
+        valid_pmids = set(article_info.keys()) - set(deleted_pmids)
+        logger.info("%d valid PMIDs" % len(valid_pmids))
+
+        # Remove existing pmids if we're not being careful (this suffices for
+        # filtering in the initial upload).
+        if not carefully:
+            existing_pmids = set(db.get_values(db.select_all(
+                db.TextRef,
+                db.TextRef.pmid.in_(valid_pmids)
+                ), 'pmid'))
+            logger.info(
+                "%d valid PMIDs already in text_refs." % len(existing_pmids)
+                )
+            valid_pmids -= existing_pmids
+            logger.info("%d PMIDs to add to text_refs" % len(valid_pmids))
+
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
-        text_ref_records = []
-        text_content_info = {}
-        valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
-        logger.info("%d valid PMIDs" % len(valid_pmids))
-        existing_pmids = set(db.get_values(db.select_all(
-            db.TextRef,
-            db.TextRef.pmid.in_(valid_pmids)
-            ), 'pmid'))
-        logger.info(
-            "%d valid PMIDs already in text_refs." % len(existing_pmids)
-            )
-        pmids_to_add = valid_pmids.difference(existing_pmids)
-        logger.info("%d PMIDs to add to text_refs" % len(pmids_to_add))
-        for pmid in pmids_to_add:
-            pmid_data = article_info[pmid]
-            rec = (
-                pmid, pmid_data.get('pmcid'),
-                self.fix_doi(pmid_data.get('doi')),
-                pmid_data.get('pii')
-                )
-            text_ref_records.append(
-                tuple([None if not r else r for r in rec])
-                )
-            abstract = pmid_data.get('abstract')
-            # Make sure it's not an empty or whitespace-only string
-            if abstract and abstract.strip():
-                abstract_gz = zip_string(abstract)
-                text_content_info[pmid] = (self.my_source, formats.TEXT,
-                                           texttypes.ABSTRACT, abstract_gz)
 
-        self.copy_into_db(
-            db,
-            'text_ref',
-            text_ref_records,
-            self.tr_cols
-            )
+        def get_val(data, id_type):
+            r = data.get(id_type)
+            if id_type == 'doi':
+                r = self.fix_doi(r)
+            return None if not r else r
+
+        text_ref_records = {tuple([pmid]+[get_val(article_info[pmid], id_type)
+                                          for id_type in self.tr_cols[1:]])
+                            for pmid in valid_pmids}
+
+        # Check the ids more carefully against what is already in the db.
+        if carefully:
+            text_ref_records, flawed_refs = \
+                self.filter_text_refs(db, text_ref_records)
+            logger.info('%d new records to add to text_refs.'
+                        % len(text_ref_records))
+            valid_pmids -= {ref[self.tr_cols.index('pmid')]
+                            for cause, ref in flawed_refs
+                            if cause in ['pmid', 'over_match']}
+            logger.info('Only %d valid pmids.' % len(valid_pmids))
+
+        self.copy_into_db(db, 'text_ref', text_ref_records, self.tr_cols)
+        return valid_pmids
+
+    def load_text_content(self, db, article_info, valid_pmids):
 
         # Build a dict mapping PMIDs to text_ref IDs
-        pmid_list = list(text_content_info.keys())
-        tref_list = db.select_all(
-            'text_ref',
-            db.TextRef.pmid.in_([p for p in pmid_list])
-            )
+        tref_list = db.select_all(db.TextRef, db.TextRef.pmid.in_(valid_pmids))
         pmid_tr_dict = {pmid: trid for (pmid, trid) in
                         db.get_values(tref_list, ['pmid', 'id'])}
 
         # Add the text_ref IDs to the content to be inserted
         text_content_records = []
-        for pmid, tc_data in text_content_info.items():
+        for pmid in valid_pmids:
             if pmid not in pmid_tr_dict.keys():
+                logger.warning("Found content that was determined valid but "
+                               "which does not have a pmid on the db.")
                 continue
             tr_id = pmid_tr_dict[pmid]
-            text_content_records.append((tr_id,) + tc_data)
+            abstract = article_info[pmid].get('abstract')
+            if abstract and abstract.strip():
+                abstract_gz = zip_string(abstract)
+                text_content_records.append((tr_id, self.my_source,
+                                             formats.TEXT, texttypes.ABSTRACT,
+                                             abstract_gz))
 
         self.copy_into_db(
             db,
@@ -527,6 +531,16 @@ class Medline(NihManager):
             text_content_records,
             cols=('text_ref_id', 'source', 'format', 'text_type', 'content',)
             )
+        return
+
+    def upload_article(self, db, article_info, carefully=False):
+        "Process the content of an xml dataset and load into the database."
+        logger.info("%d PMIDs in XML dataset" % len(article_info))
+
+        # Process and load the text refs, updating where appropriate.
+        valid_pmids = self.load_text_refs(db, article_info, carefully)
+
+        self.load_text_content(db, article_info, valid_pmids)
         return True
 
     def populate(self, db, n_procs=1, continuing=False, first_time=True):
@@ -578,14 +592,14 @@ class Medline(NihManager):
         while len(proc_list):
             xml_file, article_info = q.get()  # Block until at least 1 is done.
             proc_list.pop(0).start()
-            self.upload_article(db, article_info)
+            self.upload_article(db, article_info, carefully=not first_time)
             if xml_file not in existing_files:
                 db.insert('source_file', source=self.my_source, name=xml_file)
             n_tot -= 1
 
         while n_tot is not 0:
             xml_file, article_info = q.get()
-            self.upload_article(db, article_info)
+            self.upload_article(db, article_info, carefully=not first_time)
             if xml_file not in existing_files:
                 db.insert('source_file', source=self.my_source, name=xml_file)
             n_tot -= 1
@@ -714,11 +728,16 @@ class PmcManager(NihManager):
 
         # Check for any pmids we can get from the pmc client (this is slow!)
         self.get_missing_pmids(tr_data)
+
+        # Turn the list of dicts into a set of tuples
+        tr_data_set = {tuple([entry[id_type] for id_type in self.tr_cols])
+                       for entry in tr_data}
+
         filtered_tr_records, flawed_tr_records = \
-            self.filter_text_refs(db, tr_data)
-        pmcids_to_skip = {rec['id_data'][self.tr_cols.index('pmcid')]
-                          for rec in flawed_tr_records
-                          if rec['occurrence'] in ['pmcid', 'over_match']}
+            self.filter_text_refs(db, tr_data_set)
+        pmcids_to_skip = {rec[self.tr_cols.index('pmcid')]
+                          for cause, rec in flawed_tr_records
+                          if cause in ['pmcid', 'over_match']}
         if len(pmcids_to_skip) is not 0:
             mod_tc_data = [
                 tc for tc in tc_data if tc['pmcid'] not in pmcids_to_skip
