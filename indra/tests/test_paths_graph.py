@@ -374,18 +374,105 @@ def draw(g, filename):
 
 
 if __name__ == '__main__':
-    #test_combine_cfpgs_link_split_nodes()
-    test_correct_edge_multiplicities()
-"""
     edge_prob = 0.5
     num_nodes = 6
     src = 0
     tgt = num_nodes - 1
     max_depth = num_nodes - 1
-    num_samples = 50000
+    num_samples = 20000
+
+    g = nx.DiGraph()
+    g.add_edges_from([(0, 1),
+     (0, 3),
+     (1, 4),
+     (1, 5),
+     (2, 0),
+     (2, 1),
+     (2, 5),
+     (3, 0),
+     (3, 1),
+     (3, 4),
+     (4, 0),
+     (4, 1),
+     (4, 2),
+     (4, 3),
+     (5, 2),
+     (5, 3),
+     (5, 4)])
+
     #g = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob,
     #                                           directed=True)
-    g = nx.DiGraph()
+    # Make combined paths graph
+    pg_dict = {}
+    for length in range(max_depth+1):
+        cfpg = CFPG.from_graph(g, src, tgt, length)
+        pg_dict[length] = cfpg
+    cpg = combine_cfpgs(pg_dict)
+    draw(pg_dict[4].graph, 'problem_graph_cfpg4.pdf')
+    draw(pg_dict[5].graph, 'problem_graph_cfpg5.pdf')
+    cpg.graph.add_edge(
+            (3, 2, frozenset({(3, 2), (1, 3), (2, 4), (0, 0)})),
+            (4, 5, 0))
+    cpg.correct_edge_multiplicities()
+
+    # Build path tree
+    all_paths = list(nx.all_simple_paths(g, src, tgt))
+    pt = PathTree(all_paths)
+
+    # Draw graphs
+    draw(g, 'problem_graph.pdf')
+    draw(pt.graph, 'problem_graph_tree.pdf')
+    draw(cpg.graph, 'problem_combined_cfpg.pdf')
+
+    """
+    print("Sampling raw")
+    raw_paths = sample_raw_graph(g, src, tgt, max_depth=max_depth,
+                             num_samples=num_samples, eliminate_cycles=True)
+    raw_path_ctr = Counter([len(p)-1 for p in raw_paths])
+    raw_path_ctr = sorted(raw_path_ctr.items(), key=lambda x: x[0])
+    """
+
+    print("Sampling tree")
+    tree_paths = pt.sample(num_samples)
+    #tree_path_ctr = Counter([len(p)-1 for p in tree_paths])
+    #tree_path_ctr = sorted(tree_path_ctr.items(), key=lambda x: x[0])
+    tree_path_ctr = Counter(tree_paths)
+
+    print("Sampling CFPG")
+    cfpg_paths = cpg.sample_paths(num_samples, weighted=True)
+    #cfpg_path_ctr = Counter([len(p)-1 for p in cfpg_paths])
+    #cfpg_path_ctr = sorted(cfpg_path_ctr.items(), key=lambda x: x[0])
+    cfpg_path_ctr = Counter(cfpg_paths)
+    assert set(tree_path_ctr.keys()) == set(cfpg_path_ctr.keys())
+
+    # Build contingency table for statistical comparison
+    tree_path_ctr = sorted([(k, v) for k, v in tree_path_ctr.items()],
+                            key=lambda x: x[0])
+    cfpg_path_ctr = sorted([(k, v) for k, v in cfpg_path_ctr.items()],
+                           key=lambda x: x[0])
+    # Check to make sure we have paths; if not, both should be empty
+    #if cfpg_path_ctr == [] and tree_path_ctr == []:
+    #    continue
+
+    cont_tbl = [[t[1] for t in cfpg_path_ctr],
+                [t[1] for t in tree_path_ctr]]
+    import scipy.stats
+    chi2_result = scipy.stats.chi2_contingency(cont_tbl)
+    pval = chi2_result[1]
+    print("Tree")
+    print(tree_path_ctr)
+    print(Counter(tree_paths))
+    print("CFPG")
+    print(cfpg_path_ctr)
+    print(Counter(cfpg_paths))
+    print(chi2_result)
+    #assert pval > 0.01
+
+
+
+"""
+
+
     g.add_edges_from(
 [(0, 1),
  (0, 2),
@@ -410,45 +497,4 @@ if __name__ == '__main__':
  (5, 3),
  (5, 4)])
 
-    # Make combined paths graph
-    pg_dict = {}
-    for length in range(max_depth+1):
-        cfpg = CFPG.from_graph(g, src, tgt, length)
-        pg_dict[length] = cfpg
-    cpg = combine_cfpgs(pg_dict)
-
-    # Filter only to edges in cycle free paths
-    all_paths = list(nx.all_simple_paths(g, src, tgt))
-    pt = PathTree(all_paths)
-
-    # Draw graphs
-    draw(g, 'problem_graph.pdf')
-    draw(pt.graph, 'problem_graph_tree.pdf')
-    draw(cpg.graph, 'problem_combined_cfpg.pdf')
-
-    print("Sampling raw")
-    raw_paths = sample_raw_graph(g, src, tgt, max_depth=max_depth,
-                             num_samples=num_samples, eliminate_cycles=True)
-    raw_path_ctr = Counter([len(p)-1 for p in raw_paths])
-    raw_path_ctr = sorted(raw_path_ctr.items(), key=lambda x: x[0])
-
-    print("Sampling tree")
-    tree_paths = pt.sample(num_samples)
-    tree_path_ctr = Counter([len(p)-1 for p in tree_paths])
-    tree_path_ctr = sorted(tree_path_ctr.items(), key=lambda x: x[0])
-
-    print("Sampling CFPG")
-    cfpg_paths = cpg.sample_paths(num_samples)
-    cfpg_path_ctr = Counter([len(p)-1 for p in cfpg_paths])
-    cfpg_path_ctr = sorted(cfpg_path_ctr.items(), key=lambda x: x[0])
-
-    print("Raw")
-    print(raw_path_ctr)
-    print(Counter(raw_paths))
-    print("Tree")
-    print(tree_path_ctr)
-    print(Counter(tree_paths))
-    print("CFPG")
-    print(cfpg_path_ctr)
-    print(Counter(cfpg_paths))
 """
