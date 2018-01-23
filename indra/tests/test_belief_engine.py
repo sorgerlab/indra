@@ -3,7 +3,8 @@ from builtins import dict, str
 from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
-from indra.belief import _get_belief_package, default_probs, sample_statements
+from indra.belief import _get_belief_package, default_probs, \
+        sample_statements, evidence_random_noise_prior
 from indra.belief.evidence_subtype_tagger import tag_evidence_subtype
 
 ev1 = Evidence(source_api='reach')
@@ -273,4 +274,40 @@ def test_evidence_subtype_tagger():
     assert(stype == 'donald_duck')
     assert(subtype is None)
 
+def test_evidence_random_noise_prior():
+    type_probs = {'biopax': 0.9, 'geneways': 0.2}
+    biopax_subtype_probs = {
+            'reactome' : 0.4,
+            'biogrid' : 0.2}
+    geneways_subtype_probs = {
+            'phosphorylate': 0.5,
+            'bind' : 0.7}
+    subtype_probs = {
+        'biopax' : biopax_subtype_probs,
+        'geneways' : geneways_subtype_probs }
+
+    ev_geneways_bind = Evidence(source_api='geneways', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'actiontype': 'bind'})
+    ev_biopax_reactome = Evidence(source_api='biopax', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'source_sub_id': 'reactome'})
+    ev_biopax_pid = Evidence(source_api='biopax', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'source_sub_id': 'pid'})
+
+    #Random noise prior for geneways bind evidence is the subtype prior,
+    #since we specified it
+    assert(evidence_random_noise_prior(ev_geneways_bind,
+        type_probs, subtype_probs) == 0.7)
+
+    #Random noise prior for reactome biopax evidence is the subtype prior,
+    #since we specified it
+    assert(evidence_random_noise_prior(ev_biopax_reactome,
+        type_probs, subtype_probs) == 0.4)
+
+    #Random noise prior for pid evidence is the subtype prior,
+    #since we specified it
+    assert(evidence_random_noise_prior(ev_biopax_pid,
+        type_probs, subtype_probs) == 0.9)
 

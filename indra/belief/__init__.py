@@ -3,6 +3,7 @@ from builtins import dict, str
 import numpy
 import networkx
 
+from indra.belief.evidence_subtype_tagger import tag_evidence_subtype
 
 default_probs = {
     'rand': {
@@ -56,11 +57,16 @@ class BeliefEngine(object):
     prior_probs : dict[dict]
         A dictionary of prior systematic and random error probabilities for
         each knowledge source.
+    subtype_probs: dict[dict]
+        A dictionary of random error probabilities for knowledge sources.
+        When a subtype random error probability is not specified, will just
+        use the overall type prior in prior_probs
     """
-    def __init__(self, prior_probs=None):
+    def __init__(self, prior_probs=None, subtype_probs=None):
         self.prior_probs = default_probs
         if prior_probs:
             self.prior_probs.update(prior_probs)
+        self.subtype_probs = subtype_probs
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -90,7 +96,7 @@ class BeliefEngine(object):
                         evidence_random_noise_prior(
                             ev,
                             self.prior_probs['rand'],
-                            None))
+                            self.subtype_probs))
 
             neg_prob_prior = 1
             for s in uniq_sources:
@@ -225,7 +231,14 @@ def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
 
     Otherwise, gives the random-noise prior for the overall rule type.
     """
-    source_api = evidence.source_api
+    (stype, subtype) = tag_evidence_subtype(evidence)
+    #Get the subtype, if available
 
-    return type_probs[source_api]
+    #Return the subtype random noise prior, if available
+    if subtype_probs is not None:
+        if stype in subtype_probs:
+            if subtype in subtype_probs[stype]:
+                return subtype_probs[stype][subtype]
 
+    #Fallback to just returning the overall evidence type random noise prior
+    return type_probs[stype]

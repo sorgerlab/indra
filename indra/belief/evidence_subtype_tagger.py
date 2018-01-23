@@ -64,7 +64,12 @@ def tag_evidence_subtype(evidence):
     if source_api == 'biopax':
         subtype = annotations['source_sub_id']
     elif source_api == 'reach':
-        subtype = determine_reach_subtype(evidence)
+        if 'found_by' in annotations:
+            subtype = determine_reach_subtype(evidence)
+        else:
+            logger.warning('Could not find found_by attribute in reach ' + 
+                    'statement annoations')
+            subtype = None
     elif source_api == 'geneways':
         subtype = annotations['actiontype']
     else:
