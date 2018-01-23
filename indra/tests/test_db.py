@@ -284,6 +284,11 @@ def test_full_upload():
     assert set_exp == set_got,\
         "Expected %s, got %s for content layout." % (set_exp, set_got)
 
+    # Test careful upload of medline (very shallow test...checks only for
+    # critical failures)
+    m = Medline(ftp_url=TEST_FTP, local=True)
+    m.populate(db, first_time=False)
+
 
 @needs_py3
 @attr('nonpublic')
@@ -400,13 +405,113 @@ def test_id_handling_pmc_oa():
         'DB text refs incorrect.'
         )
 
-    with open('review.txt', 'r') as f:
+    with open('review_%s.txt' % pmc.my_source, 'r') as f:
         last_line = f.read().splitlines()[-1]
         assert all([word in last_line for word in
                     ['PMC4771487', 'PMC5142709', 'conflicting id data']])
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
+    return
+
+
+@needs_py3
+@attr('nonpublic')
+def test_medline_ref_checks():
+    "Test the text ref checks used by medline."
+    db = get_db()
+    med = Medline(ftp_url=TEST_FTP, local=True)
+
+    def check_input(input_pairs, expected_pairs, carefully, num):
+        article_info = {pmid: dict(zip(['pmid', 'pmcid'], [pmid, pmcid]))
+                        for pmid, pmcid in input_pairs}
+        med.load_text_refs(db, article_info, carefully)
+        actual_pairs = [(tr.pmid, tr.pmcid)
+                        for tr in db.select_all(db.TextRef)]
+        desc = 'careful' if carefully else 'careless'
+        msg = 'DB text refs mismatch after upload %d (%s)' % (num, desc)
+        actual_pairs.sort()
+        expected_pairs.sort()
+        assert_contents_equal(actual_pairs, expected_pairs, msg)
+
+    expected_pairs = [
+        ('caseA', None),
+        ('caseB', 'PMCIDcaseB'),
+        ('caseC', None),
+        ('caseD', 'PMCIDcaseD')
+        ]
+
+    # Upload round 1
+    check_input(
+        [
+            ('caseA', None),
+            ('caseB', 'PMCIDcaseB'),
+            ('caseC', None),
+            ('caseC', None),
+            ('caseD', None),
+            ('caseD', 'PMCIDcaseD')
+            ],
+        expected_pairs,
+        False,
+        1
+        )
+
+    # Upload round 2
+    expected_pairs += [
+        ('caseE', None)
+        ]
+    check_input(
+        [
+            ('caseE', None),
+            ('caseC', 'PMCIDcaseC'),
+            ('caseH1', 'PMCIDcaseH'),
+            ('caseK', 'PMCIDcaseK1')
+            ],
+        expected_pairs + [
+            ('caseH1', 'PMCIDcaseH'),
+            ('caseK', 'PMCIDcaseK1')
+            ],
+        False,
+        2
+        )
+
+    # Interlude
+    db.insert_many('text_ref', [
+        {'pmcid': 'PMCIDcaseG'},
+        ])
+
+    # Upload round 3
+    input_pairs = expected_pairs + [
+        ('caseF', None),
+        ('caseC', 'PMCIDcaseC'),
+        ('caseG', 'PMCIDcaseG'),
+        ('caseH2', 'PMCIDcaseH'),  # this should trigger a review.
+        ('caseK', 'PMCIDcaseK2')  # and so should this
+        ]
+    expected_pairs.remove(('caseC', None))
+    expected_pairs += [
+        ('caseF', None),
+        ('caseC', 'PMCIDcaseC'),
+        ('caseG', 'PMCIDcaseG'),
+        ('caseH1', 'PMCIDcaseH'),
+        ('caseK', 'PMCIDcaseK1')
+        ]
+    review_fname = 'review_%s.txt' % med.my_source
+    if path.exists(review_fname):
+        with open(review_fname, 'r') as f:
+            num_lines = len(f.readlines())
+    else:
+        num_lines = 0
+    check_input(
+        input_pairs,
+        expected_pairs,
+        True,
+        3
+        )
+    with open(review_fname, 'r') as f:
+        lines = f.readlines()
+        assert len(lines) == num_lines + 2, \
+            "Not all new reviews added: %d / %d" % (len(lines), num_lines+2)
     return
 
 
