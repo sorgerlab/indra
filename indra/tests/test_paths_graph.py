@@ -283,27 +283,6 @@ def test_combine_cfpgs():
     path_ctr = Counter(paths)
 
 
-def test_combine_cfpgs_link_split_nodes():
-    g = g_split_nodes
-    # Make combined paths graph
-    pg_dict = {}
-    max_depth = 5
-    src, tgt = (0, 5)
-    for length in range(max_depth+1):
-        cfpg = CFPG.from_graph(g, src, tgt, length)
-        pg_dict[length] = cfpg
-    cpg = combine_cfpgs(pg_dict)
-    # The edges that should be added by the edge addition procedure:
-    linked_edges = [
-       ((2, 4, frozenset({(0, 0), (1, 1), (2, 4)})),
-        (3, 3, frozenset({(0, 0), (1, 1), (1, 2), (2, 2), (2, 4), (3, 3)}))),
-       ((2, 4, frozenset({(0, 0), (1, 2), (2, 4)})),
-        (3, 3, frozenset({(0, 0), (1, 1), (1, 2), (2, 2), (2, 4), (3, 3)}))),
-     ]
-    for e in linked_edges:
-        assert e in cpg.graph.edges()
-
-
 def test_path_tree():
     g = nx.DiGraph()
     g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),

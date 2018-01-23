@@ -87,44 +87,6 @@ def combine_paths_graphs(pg_dict):
     return cpg
 
 
-def combine_cfpgs(cfpg_dict):
-    """Combine a dict of CFPGs into a single super-CFPG."""
-    combined_graph = nx.DiGraph()
-    for level, pg in cfpg_dict.items():
-        combined_graph.add_edges_from(pg.graph.edges())
-    cpg = CFPG(pg.source_name, pg.source_node, pg.target_name,
-               pg.target_node, None, combined_graph)
-    # In cases where nodes have been split along similar lines for paths
-    # of different depths, we need to add edges from nodes that represent
-    # compatible histories.
-    # Start by itterating over the nodes at each level by starting from the
-    # source node and collecting all successor nodes at the next level
-    nodes = [cpg.source_node]
-    while True:
-        # Collect all successors of the current set of nodes
-        next_nodes = set([succ for node in nodes
-                               for succ in cpg.graph.successors(node)])
-        # If there are no nodes at the next level, we're done
-        if not next_nodes:
-            break
-        # Otherwise, check these nodes for having subset relationships
-        for u, v in itertools.permutations(next_nodes, 2):
-            u_tags = u[2]
-            v_tags = v[2]
-            # If either node has the tag set 0, indicating an instance of the
-            # target node, skip the comparison
-            if u_tags == 0 or v_tags == 0:
-                continue
-            # If the tags of u are a strict subset of the tags of v, then
-            # add edges from u to all of the successors of v
-            if u_tags <= v_tags:
-                v_succs = cpg.graph.successors(v)
-                edges_to_add = zip([u]*len(v_succs), v_succs)
-                cpg.graph.add_edges_from(edges_to_add)
-        nodes = next_nodes
-    return cpg
-
-
 def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
                      eliminate_cycles=False):
     """Sample paths up to a given depth from an underlying graph.
