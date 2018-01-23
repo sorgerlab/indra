@@ -304,35 +304,6 @@ def test_combine_cfpgs_link_split_nodes():
         assert e in cpg.graph.edges()
 
 
-def test_correct_edge_multiplicities():
-    g = g_split_nodes
-    # Make combined paths graph
-    pg_dict = {}
-    max_depth = 5
-    src, tgt = (0, 5)
-    for length in range(max_depth+1):
-        cfpg = CFPG.from_graph(g, src, tgt, length)
-        pg_dict[length] = cfpg
-    cpg = combine_cfpgs(pg_dict)
-    cpg.correct_edge_multiplicities()
-    # The edges that should be adjusted, each with 0.5
-    adjust_edges = [
-       ((1, 2, frozenset({(1, 2), (0, 0)})),
-        (2, 4, frozenset({(1, 2), (0, 0), (1, 1), (2, 4)}))),
-       ((1, 2, frozenset({(1, 2), (0, 0)})),
-        (2, 4, frozenset({(1, 2), (0, 0), (2, 4)}))),
-       ((1, 1, frozenset({(0, 0), (1, 1)})),
-        (2, 4, frozenset({(1, 2), (0, 0), (1, 1), (2, 4)}))),
-       ((1, 1, frozenset({(0, 0), (1, 1)})),
-        (2, 4, frozenset({(0, 0), (1, 1), (2, 4)})))]
-    for u, v, data in cpg.graph.edges_iter(data=True):
-        assert 'weight' in data
-        if (u, v) in adjust_edges:
-            assert data['weight'] == 0.5
-        else:
-            assert data['weight'] == 1
-
-
 def test_path_tree():
     g = nx.DiGraph()
     g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),
@@ -375,11 +346,11 @@ def draw(g, filename):
 
 if __name__ == '__main__':
     edge_prob = 0.5
-    num_nodes = 10
+    num_nodes = 8
     src = 0
     tgt = num_nodes - 1
     max_depth = num_nodes - 1
-    num_samples = 30000
+    num_samples = 100000
 
     #while True:
     #    g = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob,
@@ -443,7 +414,7 @@ if __name__ == '__main__':
     cpg = CombinedCFPG(pg_list)
 
     # Build path tree
-    all_paths = list(nx.all_simple_paths(g, src, tgt))
+    all_paths = list([tuple(p) for p in nx.all_simple_paths(g, src, tgt)])
     pt = PathTree(all_paths)
 
     # Draw graphs
@@ -458,7 +429,8 @@ if __name__ == '__main__':
     print("Sampling CFPG")
     cfpg_paths = cpg.sample_paths(num_samples)
     cfpg_path_ctr = Counter(cfpg_paths)
-    assert set(tree_path_ctr.keys()) == set(cfpg_path_ctr.keys())
+    in_cfpg_not_all = set(cfpg_paths).difference(set(all_paths))
+    in_all_not_cfpg = set(all_paths).difference(set(cfpg_paths))
 
     # Build contingency table for statistical comparison
     tree_path_ctr = sorted([(k, v) for k, v in tree_path_ctr.items()],
@@ -483,6 +455,7 @@ if __name__ == '__main__':
     print(chi2_result)
     #assert pval > 0.01
 
+    assert set(cfpg_paths) == set(all_paths)
 
 
 """
