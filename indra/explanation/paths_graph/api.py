@@ -200,15 +200,16 @@ class PathTree(object):
         A directed graph representing the set of paths as a tree.
     """
     def __init__(self, paths):
-        edge_set = set()
-        for path in paths:
-            # Split path at all branch points
-            for i in range(0, len(path)):
-                head = tuple(path[0:i])
-                tail = tuple(path[0:i+1])
-                edge_set.add((head, tail))
         self.graph = nx.DiGraph()
-        self.graph.add_edges_from(edge_set)
+        if paths:
+            edge_set = set()
+            for path in paths:
+                # Split path at all branch points
+                for i in range(0, len(path)):
+                    head = tuple(path[0:i])
+                    tail = tuple(path[0:i+1])
+                    edge_set.add((head, tail))
+            self.graph.add_edges_from(edge_set)
 
     def sample(self, num_samples=1000):
         """Sample a set of paths from the path tree.
@@ -218,8 +219,13 @@ class PathTree(object):
         num_samples : int
             Number of paths to sample.
         """
+        # Make sure we have a graph to sample from
+        if not self.graph:
+            return []
+        # If so, do the sampling
         sampled_paths = []
         while len(sampled_paths) < num_samples:
+            # The root of the tree should be the empty tuple
             node = tuple()
             while True:
                 successors = self.graph.successors(node)
@@ -227,8 +233,11 @@ class PathTree(object):
                 # hit a leaf of the tree and have found a path
                 if not successors:
                     break
+                # If not, choose a successor at random and continue branching
+                # TODO: Allow this to be weighted
                 succ_ix = np.random.choice(range(len(successors)))
                 node = successors[succ_ix]
+            # Add the path to the list of sampled paths
             sampled_paths.append(node)
         return sampled_paths
 
