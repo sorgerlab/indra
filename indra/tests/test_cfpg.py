@@ -251,3 +251,16 @@ def test_sampling_example_graph2():
     # The sampled paths should be a subset of the enumerated paths
     assert sampled_cf_paths.intersection(enum_cf_paths) == sampled_cf_paths
 
+
+def test_combine_cfpgs():
+    g = nx.DiGraph()
+    g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
+    max_depth = 4
+    pg_list = []
+    for length in range(1, max_depth+1):
+        cfpg = pg.CFPG.from_graph(g, 'S', 'T', length)
+        pg_list.append(cfpg)
+    cpg = pg.CombinedCFPG(pg_list)
+    paths = cpg.sample_paths(1000)
+    path_ctr = Counter(paths)
+

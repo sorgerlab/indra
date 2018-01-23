@@ -270,19 +270,6 @@ def test_combine_paths_graphs():
     path_ctr = Counter(paths)
 
 
-def test_combine_cfpgs():
-    g = nx.DiGraph()
-    g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
-    max_depth = 4
-    pg_dict = {}
-    for length in range(1, max_depth+1):
-        cfpg = CFPG.from_graph(g, 'S', 'T', length)
-        pg_dict[length] = cfpg
-    cpg = combine_cfpgs(pg_dict)
-    paths = cpg.sample_paths(1000)
-    path_ctr = Counter(paths)
-
-
 def test_path_tree():
     g = nx.DiGraph()
     g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),

@@ -78,7 +78,7 @@ class CFPG(PathsGraph):
         self.source_name = source_name
         self.source_node = source_node
         self.target_name = target_name
-        self.target_node = target_node + (0,)
+        self.target_node = target_node
         self.path_length = path_length
         self.graph = graph
 

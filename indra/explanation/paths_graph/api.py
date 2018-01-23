@@ -9,8 +9,7 @@ logger = logging.getLogger('paths_graph')
 
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph', 'combine_paths_graphs', 'combine_cfpgs',
-           'PathTree']
+           'sample_raw_graph', 'combine_paths_graphs', 'PathTree']
 
 
 def load_signed_sif(sif_file):

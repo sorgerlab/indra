@@ -195,8 +195,9 @@ class PreCFPG(PathsGraph):
                         t = []
                         # ...by iterating over every node at this level
                         for x in X:
-                            # ...and checking to see if the node v in the subgraph is in the
-                            # history of a particular node x at this level
+                            # ...and checking to see if the node v in the
+                            # subgraph is in the history of a particular node x
+                            # at this level
                             if v in dic_X[x][0]:
                                 # ...if so, add v to the list of tags for x
                                 tags_x = dic_X[x][1]

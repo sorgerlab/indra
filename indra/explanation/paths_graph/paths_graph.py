@@ -99,8 +99,10 @@ class PathsGraph(object):
         self.signed = signed
         self.target_polarity = target_polarity
         if signed:
-            self.source_node = (0, (source_name, 0))
-            self.target_node = (path_length, (target_name, target_polarity))
+            self.source_name = (source_name, 0)
+            self.source_node = (0, self.source_name)
+            self.target_name = (target_name, target_polarity)
+            self.target_node = (path_length, self.target_name)
         else:
             self.source_node = (0, source_name)
             self.target_node = (path_length, target_name)
