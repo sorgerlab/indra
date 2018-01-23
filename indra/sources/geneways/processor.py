@@ -19,7 +19,7 @@ from indra.literature import *
 from indra.statements import Complex, Phosphorylation
 from indra.sources.geneways.geneways_action_parser import GenewaysActionParser
 try:
-    from indra.sources.geneways._find_full_text_sentence import FullTextMention
+    from indra.sources.geneways.find_full_text_sentence import FullTextMention
     get_ft_mention = True
 except ImportError:
     logger.error('Install the nltk and stemming packages to extract full '
