@@ -410,7 +410,6 @@ class PathsGraph(object):
         # If the path graph is empty, there are no paths
         if not self.graph:
             return tuple([])
-        # Repeat until we find a path without a cycle
         path = [self.source_node]
         current = self.source_node
         while current[1] != self.target_name:

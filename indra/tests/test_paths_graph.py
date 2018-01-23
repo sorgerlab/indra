@@ -375,73 +375,88 @@ def draw(g, filename):
 
 if __name__ == '__main__':
     edge_prob = 0.5
-    num_nodes = 6
+    num_nodes = 10
     src = 0
     tgt = num_nodes - 1
     max_depth = num_nodes - 1
-    num_samples = 20000
+    num_samples = 30000
 
+    #while True:
+    #    g = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob,
+    #                                               directed=True)
     g = nx.DiGraph()
-    g.add_edges_from([(0, 1),
-     (0, 3),
-     (1, 4),
-     (1, 5),
-     (2, 0),
-     (2, 1),
-     (2, 5),
-     (3, 0),
-     (3, 1),
-     (3, 4),
-     (4, 0),
-     (4, 1),
-     (4, 2),
-     (4, 3),
-     (5, 2),
-     (5, 3),
-     (5, 4)])
+    g.add_edges_from([
+ (0, 1),
+ (0, 2),
+ (0, 3),
+ (0, 5),
+ (0, 8),
+ (1, 3),
+ (1, 4),
+ (1, 5),
+ (1, 7),
+ (1, 8),
+ (1, 9),
+ (2, 4),
+ (2, 5),
+ (2, 7),
+ (2, 8),
+ (2, 9),
+ (3, 1),
+ (3, 5),
+ (3, 6),
+ (3, 7),
+ (3, 8),
+ (3, 9),
+ (4, 2),
+ (4, 3),
+ (4, 5),
+ (4, 8),
+ (5, 0),
+ (5, 2),
+ (5, 3),
+ (5, 4),
+ (5, 9),
+ (6, 3),
+ (6, 4),
+ (6, 5),
+ (6, 8),
+ (6, 9),
+ (7, 0),
+ (7, 2),
+ (7, 5),
+ (7, 8),
+ (8, 1),
+ (8, 7),
+ (8, 9),
+ (9, 0),
+ (9, 1),
+ (9, 2),
+ (9, 4),
+ (9, 6)])
 
-    #g = nx.random_graphs.erdos_renyi_graph(num_nodes, edge_prob,
-    #                                           directed=True)
     # Make combined paths graph
-    pg_dict = {}
+    pg_list = []
     for length in range(max_depth+1):
         cfpg = CFPG.from_graph(g, src, tgt, length)
-        pg_dict[length] = cfpg
-    cpg = combine_cfpgs(pg_dict)
-    draw(pg_dict[4].graph, 'problem_graph_cfpg4.pdf')
-    draw(pg_dict[5].graph, 'problem_graph_cfpg5.pdf')
-    cpg.graph.add_edge(
-            (3, 2, frozenset({(3, 2), (1, 3), (2, 4), (0, 0)})),
-            (4, 5, 0))
-    cpg.correct_edge_multiplicities()
+        pg_list.append(cfpg)
+    cpg = CombinedCFPG(pg_list)
 
     # Build path tree
     all_paths = list(nx.all_simple_paths(g, src, tgt))
     pt = PathTree(all_paths)
 
     # Draw graphs
-    draw(g, 'problem_graph.pdf')
-    draw(pt.graph, 'problem_graph_tree.pdf')
-    draw(cpg.graph, 'problem_combined_cfpg.pdf')
-
-    """
-    print("Sampling raw")
-    raw_paths = sample_raw_graph(g, src, tgt, max_depth=max_depth,
-                             num_samples=num_samples, eliminate_cycles=True)
-    raw_path_ctr = Counter([len(p)-1 for p in raw_paths])
-    raw_path_ctr = sorted(raw_path_ctr.items(), key=lambda x: x[0])
-    """
+    #draw(g, 'problem_graph.pdf')
+    #draw(pt.graph, 'problem_graph_tree.pdf')
+    #draw(cpg.graph, 'problem_combined_cfpg.pdf')
 
     print("Sampling tree")
     tree_paths = pt.sample(num_samples)
-    #tree_path_ctr = Counter([len(p)-1 for p in tree_paths])
-    #tree_path_ctr = sorted(tree_path_ctr.items(), key=lambda x: x[0])
     tree_path_ctr = Counter(tree_paths)
 
     print("Sampling CFPG")
-    cfpg_paths = cpg.sample_paths(num_samples, weighted=True)
-    #cfpg_path_ctr = Counter([len(p)-1 for p in cfpg_paths])
-    #cfpg_path_ctr = sorted(cfpg_path_ctr.items(), key=lambda x: x[0])
+    cfpg_paths = cpg.sample_paths(num_samples)
     cfpg_path_ctr = Counter(cfpg_paths)
     assert set(tree_path_ctr.keys()) == set(cfpg_path_ctr.keys())
 
@@ -473,28 +488,48 @@ if __name__ == '__main__':
 """
 
 
-    g.add_edges_from(
+g.add_edges_from(
 [(0, 1),
- (0, 2),
+(0, 2),
+(0, 3),
+(0, 5),
+(1, 0),
+(1, 2),
+(1, 3),
+(1, 4),
+(2, 0),
+(2, 3),
+(2, 4),
+(3, 0),
+(3, 1),
+(3, 2),
+(3, 4),
+(3, 5),
+(4, 1),
+(4, 2),
+(4, 3),
+(5, 1),
+(5, 3),
+(5, 4)])
+
+g = nx.DiGraph()
+g.add_edges_from([(0, 1),
  (0, 3),
- (0, 5),
- (1, 0),
- (1, 2),
- (1, 3),
  (1, 4),
+ (1, 5),
  (2, 0),
- (2, 3),
- (2, 4),
+ (2, 1),
+ (2, 5),
  (3, 0),
  (3, 1),
- (3, 2),
  (3, 4),
- (3, 5),
+ (4, 0),
  (4, 1),
  (4, 2),
  (4, 3),
- (5, 1),
+ (5, 2),
  (5, 3),
  (5, 4)])
+
 
 """

@@ -63,6 +63,7 @@ We explain below the detailed construction of G_cf from this perpective.
 import logging
 import itertools
 from collections import Counter
+import numpy as np
 import networkx as nx
 from .paths_graph import PathsGraph
 from .pre_cfpg import PreCFPG, prune
@@ -219,6 +220,92 @@ class CFPG(PathsGraph):
                 weight = weight / float(mults[v_name])
                 weight_dict[(u, v)] = weight
         nx.set_edge_attributes(self.graph, 'weight', weight_dict)
+
+
+class CombinedCFPG(object):
+    """Combine a set of CFPGs for different lengths into a single super-CFPG.
+
+    Parameters
+    ----------
+    cfpg_list : list of cfpg instances
+
+    Attributes
+    ----------
+    source_name
+    source_node
+    target_name
+    target_node
+    graph
+    """
+    def __init__(self, cfpg_list):
+        self.graph = nx.DiGraph()
+        for cfpg in cfpg_list:
+            self.graph.add_edges_from(cfpg.graph.edges())
+        # Add info from the last CFPG
+        self.source_name = cfpg.source_name
+        self.source_node = cfpg.source_node
+        self.target_name = cfpg.target_name
+        self.target_node = cfpg.target_node
+
+    def sample_paths(self, num_samples):
+        """Sample paths of variable length between source and target.
+
+        Sampling makes use of edge weights where available; if they are not
+        set, equal local edge weights of 1 are assumed.
+
+        Parameters
+        ----------
+        num_samples : int
+            The number of paths to sample.
+
+        Returns
+        -------
+        list of tuples
+            Each item in the list is a tuple of strings representing a path.
+            Note that the paths may not be unique.
+        """
+        if not self.graph:
+            return tuple([])
+        paths = []
+        while len(paths) < num_samples:
+            # Get a path, starting from the source node
+            current_nodes = [self.source_node]
+            current_name = self.source_name
+            path = [current_name]
+            while current_name != self.target_name:
+                current_name, current_nodes = self._successors(current_nodes)
+                path.append(current_name)
+            # Add the current path
+            paths.append(tuple(path))
+        return tuple(paths)
+
+    def _successors(self, current_nodes):
+        out_edges = [e for node in current_nodes
+                       for e in self.graph.out_edges(node, data=True)]
+        # Get the multiplicities of each node name
+        #mults = Counter([e[1][1] for e in edges])
+        weight_dict = {}
+        nodes_by_name = {}
+        for u, v, data in out_edges:
+            v_name = v[1]
+            weight_dict[v_name] = data.get('weight', 1)
+            if v_name in nodes_by_name:
+                nodes_by_name[v_name].append(v)
+            else:
+                nodes_by_name[v_name] = [v]
+        # Get list of possible downstream nodes with associated weights,
+        # normalized by multiplicities
+        node_names = []
+        weights = np.empty(len(nodes_by_name))
+        for ix, name in enumerate(nodes_by_name.keys()):
+            node_names.append(name)
+            weights[ix] = weight_dict[name]
+        # Normalize the weights to a proper probability distribution
+        p =  weights / np.sum(weights)
+        pred_idx = np.random.choice(len(node_names), p=p)
+        next_name = node_names[pred_idx]
+        next_nodes = nodes_by_name[next_name]
+        return (next_name, next_nodes)
 
 
 def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
