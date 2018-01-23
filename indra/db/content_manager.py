@@ -446,12 +446,12 @@ class Medline(NihManager):
     def fix_doi(self, doi):
         "Sometimes the doi is doubled (no idea why). Fix it."
         if doi is None:
-            return doi
+            return
         L = len(doi)
         if L % 2 is not 0:
-            return
+            return doi
         if doi[:L] != doi[L:]:
-            return
+            return doi
         logger.info("Fixing doubled doi: %s" % doi)
         return doi[:L]
 
