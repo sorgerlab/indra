@@ -85,8 +85,13 @@ class BeliefEngine(object):
             syst_factors = {s: self.prior_probs['syst'][s]
                             for s in uniq_sources}
             rand_factors = {k: [] for k in uniq_sources}
-            for s in sources:
-                rand_factors[s].append(self.prior_probs['rand'][s])
+            for ev in st.evidence:
+                rand_factors[ev.source_api].append(
+                        evidence_random_noise_prior(
+                            ev,
+                            self.prior_probs['rand'],
+                            None))
+
             neg_prob_prior = 1
             for s in uniq_sources:
                 neg_prob_prior *= (syst_factors[s] +
@@ -211,3 +216,16 @@ def sample_statements(stmts, seed=None):
         if r[i] < stmt.belief:
             new_stmts.append(stmt)
     return new_stmts
+
+def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
+    """Determines the random-noise prior probability for this evidence.
+
+    If the evidence corresponds to a subtype, and that subtype has a curated
+    prior noise probability, use that.
+
+    Otherwise, gives the random-noise prior for the overall rule type.
+    """
+    source_api = evidence.source_api
+
+    return type_probs[source_api]
+
