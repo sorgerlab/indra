@@ -928,6 +928,9 @@ class PmcOA(PmcManager):
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
+    def update(self, db, n_procs=1, continuing=False):
+        pass
+
 
 class Manuscripts(PmcManager):
     "ContentManager for the pmc manuscripts."
@@ -964,6 +967,9 @@ class Manuscripts(PmcManager):
         db.commit("Could not update text refs with manuscript ids.")
         return
 
+    def update(self, db, n_procs=1, continuing=False):
+        pass
+
 
 if __name__ == '__main__':
     db = get_primary_db()
@@ -978,7 +984,9 @@ if __name__ == '__main__':
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
     elif args.task == 'update':
-        logger.warning("Sorry, this feature not yet available.")
+        Medline().update(db, args.num_procs, args.continuing)
+        PmcOA().update(db, args.num_procs, args.continuing)
+        Manuscripts().update(db, args.num_procs, args.continuing)
 
     # High-level content update procedure
     # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,
