@@ -339,7 +339,7 @@ class PathsGraph(object):
         path_counts = self._get_path_counts()
         weight_dict = {}
         for u in self.graph.nodes():
-            count_tuples = [(v, path_counts[v])
+            count_tuples = [(v, float(path_counts[v]))
                             for v in self.graph.successors(u)]
             if not count_tuples:
                 continue

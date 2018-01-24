@@ -304,5 +304,3 @@ def test_paths_tree():
     assert len(samp_paths) == num_samples
     assert set(samp_paths) == set([tuple(p) for p in paths])
 
-if __name__ == '__main__':
-    test_uniform_sampling()
