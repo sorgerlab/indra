@@ -304,3 +304,26 @@ def test_paths_tree():
     assert len(samp_paths) == num_samples
     assert set(samp_paths) == set([tuple(p) for p in paths])
 
+
+def test_paths_tree_weighted_sampling():
+    g = nx.DiGraph()
+    g.add_edges_from([
+        ('A', 'B', {'weight': 3}),
+        ('A', 'C', {'weight': 1}),
+        ('B', 'D', {'weight': 1}),
+        ('C', 'D', {'weight': 1})])
+    source, target, length = ('A', 'D', 2)
+    paths = list(nx.all_simple_paths(g, source, target))
+    pt = PathsTree(paths, source_graph=g)
+    num_samples = 1000
+    # For determinism in testing
+    os.environ['TEST_FLAG'] = 'TRUE'
+    # Seed the random number generator
+    np.random.seed(1)
+    samp_paths = pt.sample(num_samples=num_samples)
+    assert len(samp_paths) == num_samples
+    assert set(samp_paths) == set([tuple(p) for p in paths])
+    ctr = Counter(samp_paths)
+    assert ctr[('A', 'B', 'D')] == 744
+    assert ctr[('A', 'C', 'D')] == 256
+
