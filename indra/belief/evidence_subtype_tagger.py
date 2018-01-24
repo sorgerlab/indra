@@ -8,6 +8,14 @@ import re
 
 logger = logging.getLogger('evidence_subtype_tagger')
 
+# Load in a file with the regular expressions corresponding to each reach rule
+# Why regular expression matching?
+# The rule name in found_by has instances of some reach rules for each possible
+# even type
+# (activation, binding, etc). This makes for too many different types of
+# rules for practical curation of examples.
+# We use regular expressions to only match the rule used for extraction,
+# independently of what the event is.
 reach_rule_filename = 'data/reach_rule_substrings.p'
 try:
     reach_rule_regexp = pickle.load( open( reach_rule_filename, "rb" ) )
@@ -16,13 +24,22 @@ except:
             ' to use priors for individual reach rules')
 
 def determine_reach_subtype(evidence):
-    """Returns the subtype of the reach rule. Looks at a list of regular
-    expressiosn corresponding to reach rule types, and returns the longest regexp that matches, or None if none of them match.
+    """Returns the subtype of the reach rule.
+    
+    Looks at a list of regular
+    expressions corresponding to reach rule types, and returns the longest
+    regexp that matches, or None if none of them match.
     
     Parameters
     ----------
     evidence: indra.statements.Evidence
         A reach evidence object to subtype
+
+    Returns
+    -------
+    best_match: str
+        A regular expression corresponding to the reach rule that was used to
+        extract this evidence
     """
 
     assert(evidence.source_api == 'reach')
@@ -40,8 +57,9 @@ def determine_reach_subtype(evidence):
 
 
 def tag_evidence_subtype(evidence):
-    """Returns the type and subtype of an evidence object as a string, typically the extraction
-    rule or database from which the statement was generated.
+    """Returns the type and subtype of an evidence object as a string,
+    typically the extraction rule or database from which the statement
+    was generated.
 
     For biopax, this is just the database name.
 

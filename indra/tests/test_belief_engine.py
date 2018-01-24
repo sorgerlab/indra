@@ -311,3 +311,16 @@ def test_evidence_random_noise_prior():
     assert(evidence_random_noise_prior(ev_biopax_pid,
         type_probs, subtype_probs) == 0.9)
 
+    #Make sure this all still works when we go through the belief engine
+    statements = []
+    members = [Agent('a'), Agent('b')]
+    statements.append( Complex(members, evidence=ev_geneways_bind) )
+    statements.append( Complex(members, evidence=ev_biopax_reactome) )
+    statements.append( Complex(members, evidence=ev_biopax_pid) )
+    p = {'rand': type_probs, 'syst': {'biopax':0, 'geneways':0}}
+    engine = BeliefEngine(p, subtype_probs)
+    engine.set_prior_probs(statements)
+    assert(statements[0].belief == 1 - 0.7)
+    assert(statements[1].belief == 1 - 0.4)
+    assert(statements[2].belief == 1 - 0.9)
+
