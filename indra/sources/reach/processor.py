@@ -10,53 +10,6 @@ import indra.databases.uniprot_client as up_client
 
 logger = logging.getLogger('reach')
 
-# Load in a file with the regular expressions corresponding to each reach rule
-# Why regular expression matching?
-# The rule name in found_by has instances of some reach rules for each possible
-# even type
-# (activation, binding, etc). This makes for too many different types of
-# rules for practical curation of examples.
-# We use regular expressions to only match the rule used for extraction,
-# independently of what the event is.
-reach_rule_filename = 'indra/sources/reach/reach_rule_regexps.txt'
-try:
-    f = open(reach_rule_filename, 'r')
-except:
-    logger.error('Cannot open ' +  reach_rule_filename +  ', will not be able' + 
-            ' to use priors for individual reach rules')
-reach_rule_regexp = []
-for line in f:
-    reach_rule_regexp.append(line.rstrip())
-f.close()
-
-def determine_reach_subtype(event_name):
-    """Returns the category of reach rule from the reach rule instance.
-    
-    Looks at a list of regular
-    expressions corresponding to reach rule types, and returns the longest
-    regexp that matches, or None if none of them match.
-    
-    Parameters
-    ----------
-    evidence: indra.statements.Evidence
-        A reach evidence object to subtype
-
-    Returns
-    -------
-    best_match: str
-        A regular expression corresponding to the reach rule that was used to
-        extract this evidence
-    """
-
-    best_match_length = None
-    best_match = None
-    for ss in reach_rule_regexp:
-        if re.search(ss, event_name):
-            if best_match is None or len(ss) > best_match_length:
-                best_match = ss
-                best_match_length = len(ss)
-
-    return best_match
 
 
 class ReachProcessor(object):
@@ -717,3 +670,56 @@ def _read_bioentities_map():
     return bioentities_map
 
 bioentities_map = _read_bioentities_map()
+
+
+def _read_reach_rule_regexps():
+    """Load in a file with the regular expressions corresponding to each
+    reach rule. Why regular expression matching?
+    The rule name in found_by has instances of some reach rules for each
+    possible event type
+    (activation, binding, etc). This makes for too many different types of
+    rules for practical curation of examples.
+    We use regular expressions to only match the rule used for extraction,
+    independently of what the event is.
+    """
+    reach_rule_filename = \
+        os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                     'reach_rule_regexps.txt')
+    with open(reach_rule_filename, 'r') as f:
+        reach_rule_regexp = []
+        for line in f:
+            reach_rule_regexp.append(line.rstrip())
+    return reach_rule_regexp
+
+
+reach_rule_regexps = _read_reach_rule_regexps()
+
+
+def determine_reach_subtype(event_name):
+    """Returns the category of reach rule from the reach rule instance.
+
+    Looks at a list of regular
+    expressions corresponding to reach rule types, and returns the longest
+    regexp that matches, or None if none of them match.
+
+    Parameters
+    ----------
+    evidence: indra.statements.Evidence
+        A reach evidence object to subtype
+
+    Returns
+    -------
+    best_match: str
+        A regular expression corresponding to the reach rule that was used to
+        extract this evidence
+    """
+
+    best_match_length = None
+    best_match = None
+    for ss in reach_rule_regexps:
+        if re.search(ss, event_name):
+            if best_match is None or len(ss) > best_match_length:
+                best_match = ss
+                best_match_length = len(ss)
+
+    return best_match
