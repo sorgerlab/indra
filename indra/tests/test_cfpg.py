@@ -200,8 +200,7 @@ def test_uniform_sampling_example_graph1():
     # Now, re-weight for uniformity and re-sample
     num_samples = cfpg.count_paths() * 1000
     cfpg.set_uniform_path_distribution()
-    sampled_paths_uni = cfpg.sample_paths(num_samples=num_samples,
-                                          weighted=True)
+    sampled_paths_uni = cfpg.sample_paths(num_samples=num_samples)
     ctr_uni = Counter(sampled_paths_uni)
     for path, count in ctr_uni.items():
         assert count > 900 and count < 1100
@@ -252,6 +251,27 @@ def test_sampling_example_graph2():
     assert sampled_cf_paths.intersection(enum_cf_paths) == sampled_cf_paths
 
 
+def test_weighted_sampling():
+    g = nx.DiGraph()
+    g.add_edges_from([
+        ('A', 'B', {'weight': 3}),
+        ('A', 'C', {'weight': 1}),
+        ('C', 'D'),
+        ('B', 'D'),
+        ('D', 'B'),
+        ('D', 'C'),
+        ('B', 'E'),
+        ('C', 'E')])
+    source, target, length = ('A', 'E', 4)
+    cfpg = pg.CFPG.from_graph(g, source, target, length)
+    os.environ['TEST_FLAG'] = 'TRUE'
+    np.random.seed(1)
+    samp_paths = cfpg.sample_paths(1000)
+    ctr = Counter(samp_paths)
+    assert ctr[('A', 'B', 'D', 'C', 'E')] == 767
+    assert ctr[('A', 'C', 'D', 'B', 'E')] == 233
+
+
 def test_combine_cfpgs():
     g = nx.DiGraph()
     g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
@@ -263,4 +283,5 @@ def test_combine_cfpgs():
     cpg = pg.CombinedCFPG(pg_list)
     paths = cpg.sample_paths(1000)
     path_ctr = Counter(paths)
+
 

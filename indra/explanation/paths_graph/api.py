@@ -75,8 +75,6 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
         pg_by_length[path_length] = pg
         # If we're sampling by depth, do sampling here
         if pg:
-            #logger.info("Length %d: Sampling %d paths" %
-            #            (path_length, num_samples))
             func = getattr(pg, func_name)
             results += func(*func_args)
     return results

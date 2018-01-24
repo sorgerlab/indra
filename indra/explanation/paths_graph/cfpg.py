@@ -194,8 +194,8 @@ class CFPG(PathsGraph):
         next_src = {src_3node: V_1}
         pred_src = {src_3node: []}
         t_cf_src = {src_3node: pre_cfpg.tags[src_2node]}
-        dic_CF[0] = (V_0 , next_src, pred_src, t_cf_src)
-        G_cf = _dic_to_graph(dic_CF)
+        dic_CF[0] = (V_0, next_src, pred_src, t_cf_src)
+        G_cf = _dic_to_graph(dic_CF, pre_cfpg)
         # Prune out possible unreachable nodes in G_cf
         nodes_prune = [v for v in G_cf
                          if (v != tgt_3node and G_cf.successors(v) == []) or
@@ -224,7 +224,7 @@ class CombinedCFPG(object):
     def __init__(self, cfpg_list):
         self.graph = nx.DiGraph()
         for cfpg in cfpg_list:
-            self.graph.add_edges_from(cfpg.graph.edges())
+            self.graph.add_edges_from(cfpg.graph.edges(data=True))
         # Add info from the last CFPG
         self.source_name = cfpg.source_name
         self.source_node = cfpg.source_node
@@ -266,19 +266,16 @@ class CombinedCFPG(object):
     def _successors(self, current_nodes):
         out_edges = [e for node in current_nodes
                        for e in self.graph.out_edges(node, data=True)]
-        # Get the multiplicities of each node name
-        #mults = Counter([e[1][1] for e in edges])
         weight_dict = {}
         nodes_by_name = {}
         for u, v, data in out_edges:
             v_name = v[1]
-            weight_dict[v_name] = data.get('weight', 1)
+            weight_dict[v_name] = data['weight']
             if v_name in nodes_by_name:
                 nodes_by_name[v_name].append(v)
             else:
                 nodes_by_name[v_name] = [v]
-        # Get list of possible downstream nodes with associated weights,
-        # normalized by multiplicities
+        # Get list of possible downstream nodes with associated weights
         node_names = []
         weights = np.empty(len(nodes_by_name))
         nodes_by_name_keys = nodes_by_name.keys()
@@ -346,15 +343,17 @@ def _split_graph(src, tgt, x,  X_ip1, X_im1, t_cf, pre_cfpg):
     return (V_x, next_x, pred_x, t_x)
 
 
-def _dic_to_graph(dic):
+def _dic_to_graph(dic, pre_cfpg):
+    """Create a graph from the dict, adding edge weights from the pre-CFPG."""
     G = nx.DiGraph()
     E = []
     for k in dic.keys():
         V_k = dic[k][0]
         next_k = dic[k][1]
         for v in V_k:
-            E_v = list(itertools.product([v], next_k[v]))
-            E.extend(E_v)
+            for u, v in itertools.product([v], next_k[v]):
+                weight = pre_cfpg.graph[u[0:2]][v[0:2]]['weight']
+                E.append((u, v, {'weight': weight}))
     G.add_edges_from(E)
     return G
 
