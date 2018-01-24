@@ -16,12 +16,16 @@ logger = logging.getLogger('evidence_subtype_tagger')
 # rules for practical curation of examples.
 # We use regular expressions to only match the rule used for extraction,
 # independently of what the event is.
-reach_rule_filename = 'data/reach_rule_substrings.p'
+reach_rule_filename = 'indra/sources/reach/reach_rule_regexps.txt'
 try:
-    reach_rule_regexp = pickle.load( open( reach_rule_filename, "rb" ) )
+    f = open(reach_rule_filename, 'r')
 except:
-    logger.error('Cannot open ', reach_rule_filename, ', will not be able' + 
+    logger.error('Cannot open ' +  reach_rule_filename +  ', will not be able' + 
             ' to use priors for individual reach rules')
+reach_rule_regexp = []
+for line in f:
+    reach_rule_regexp.append(line.rstrip())
+f.close()
 
 def determine_reach_subtype(evidence):
     """Returns the subtype of the reach rule.
