@@ -9,7 +9,7 @@ logger = logging.getLogger('paths_graph')
 
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph', 'PathTree']
+           'sample_raw_graph']
 
 
 def load_signed_sif(sif_file):
@@ -136,66 +136,4 @@ def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
         if path:
             paths.append(tuple(path))
     return paths
-
-
-class PathTree(object):
-    """Build a tree representing a set of paths.
-
-    Nodes in the tree are tuples representing the common prefix of all
-    downstream paths. The head of the tree is an empty tuple, `()`. Each leaf
-    of the tree represents a complete path.
-
-    Parameters
-    ----------
-    paths : iterable of tuples
-        Each element of the iterable is a tuple representing a sequence of
-        nodes that constitutes a path.
-
-    Attributes
-    ----------
-    graph : networkx.DiGraph
-        A directed graph representing the set of paths as a tree.
-    """
-    def __init__(self, paths):
-        self.graph = nx.DiGraph()
-        if paths:
-            edge_set = set()
-            for path in paths:
-                # Split path at all branch points
-                for i in range(0, len(path)):
-                    head = tuple(path[0:i])
-                    tail = tuple(path[0:i+1])
-                    edge_set.add((head, tail))
-            self.graph.add_edges_from(edge_set)
-
-    def sample(self, num_samples=1000):
-        """Sample a set of paths from the path tree.
-
-        Parameters
-        ----------
-        num_samples : int
-            Number of paths to sample.
-        """
-        # Make sure we have a graph to sample from
-        if not self.graph:
-            return []
-        # If so, do the sampling
-        sampled_paths = []
-        while len(sampled_paths) < num_samples:
-            # The root of the tree should be the empty tuple
-            node = tuple()
-            while True:
-                successors = self.graph.successors(node)
-                # If there are no successors to the current node, then we've
-                # hit a leaf of the tree and have found a path
-                if not successors:
-                    break
-                # If not, choose a successor at random and continue branching
-                # TODO: Allow this to be weighted
-                succ_ix = np.random.choice(range(len(successors)))
-                node = successors[succ_ix]
-            # Add the path to the list of sampled paths
-            sampled_paths.append(node)
-        return sampled_paths
-
 

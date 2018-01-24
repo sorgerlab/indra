@@ -270,7 +270,7 @@ def test_combine_paths_graphs():
     path_ctr = Counter(paths)
 
 
-def test_path_tree():
+def test_paths_tree():
     g = nx.DiGraph()
     g.add_edges_from((('A', 'B'), ('A', 'C'), ('A', 'E'),
                           ('B', 'D'), ('B', 'E'),
@@ -279,7 +279,7 @@ def test_path_tree():
                           ))
     source, target, length = ('A', 'E', 4)
     paths = list(nx.all_simple_paths(g, source, target))
-    pt = PathTree(paths)
+    pt = PathsTree(paths)
     pt_ref_edges = set([
             (tuple(), ('A',)),
             (('A',), ('A', 'E')),
@@ -304,3 +304,5 @@ def test_path_tree():
     assert len(samp_paths) == num_samples
     assert set(samp_paths) == set([tuple(p) for p in paths])
 
+if __name__ == '__main__':
+    test_uniform_sampling()
