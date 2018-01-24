@@ -22,6 +22,28 @@ class PreCFPG(PathsGraph):
     As with the "raw" paths graph (containing cycles), nodes in the pre-CFPG
     consist of tuples with two elements: (depth, name).
 
+    Starting from the "raw" (i.e., containing cycles) paths graph, and
+    given a target path length n, the algorithm iterates over each "level"
+    in the graph 0 <= k <= n where level 0 consists only of the source node
+    and level n consists only of the target.
+
+    Each level k consists of a set of nodes, X; we examine each node x in X
+    and identify the subset of nodes that are reachable in both the forward
+    and backward directions from x. If any of the nodes in the forward
+    reach subgraph contain x itself (but at a different depth), this
+    represents a cyclic path back through x that is then pruned.
+
+    Each node x therefore defines its own subgraph of cycle free paths,
+    g_x.  After iterating over all x in X, we combine these subgraphs into
+    the (in-progress) cycle free paths graph H_k. H_k therefore consists of
+    the superset of nodes of all the subgraphs g_x for level k. When
+    merging these subgraphs we prevent the re-introduction of cyclic paths
+    by annotating each node in the graph with a list of "tags". The tags
+    for any given node consist of a list of nodes lying at prior (upstream)
+    levels. Therefore during sampling, transitions from an upstream node to
+    a downstream node are only permissible if all nodes in the path up to a
+    certain level are contained in the tag set of the downstream node.
+
     Parameters
     ----------
     pg : PathsGraph
@@ -53,33 +75,42 @@ class PreCFPG(PathsGraph):
 
     @classmethod
     def from_graph(klass, *args, **kwargs):
-        """Compute a pre- cycle free paths graph.
-
-        Starting from the "raw" (i.e., containing cycles) paths graph, and
-        given a target path length n, the algorithm iterates over each "level"
-        in the graph 0 <= k <= n where level 0 consists only of the source node
-        and level n consists only of the target.
-
-        Each level k consists of a set of nodes, X; we examine each node x in X
-        and identify the subset of nodes that are reachable in both the forward
-        and backward directions from x. If any of the nodes in the forward
-        reach subgraph contain x itself (but at a different depth), this
-        represents a cyclic path back through x that is then pruned.
-
-        Each node x therefore defines its own subgraph of cycle free paths,
-        g_x.  After iterating over all x in X, we combine these subgraphs into
-        the (in-progress) cycle free paths graph H_k. H_k therefore consists of
-        the superset of nodes of all the subgraphs g_x for level k. When
-        merging these subgraphs we prevent the re-introduction of cyclic paths
-        by annotating each node in the graph with a list of "tags". The tags
-        for any given node consist of a list of nodes lying at prior (upstream)
-        levels. Therefore during sampling, transitions from an upstream node to
-        a downstream node are only permissible if all nodes in the path up to a
-        certain level are contained in the tag set of the downstream node.
+        """Compute a pre- cycle free paths graph from a graph.
 
         Parameters
         ----------
-        TODO
+        g : networkx.DiGraph
+            The underlying graph on which paths will be generated.
+        source : str
+            Name of the source node.
+        target : str
+            Name of the target node.
+        target_polarity : int
+            Whether the desired path from source to target is positive (0)
+            or negative (1).
+        length : int
+            Length of paths to compute.
+        fwd_reachset : Optional[dict]
+            Dictionary of sets representing the forward reachset computed over
+            the original graph g up to a maximum depth greater than the
+            requested path length.  If not provided, the forward reach set is
+            calculated up to the requested path length up to the requested path
+            length by calling paths_graph.get_reachable_sets.
+        back_reachset : Optional[dict]
+            Dictionary of sets representing the backward reachset computed over
+            the original graph g up to a maximum depth greater than the
+            requested path length.  If not provided, the backward reach set is
+            calculated up to the requested path length up to the requested path
+            length by calling paths_graph.get_reachable_sets.
+        signed : bool
+            Specifies whether the underlying graph and the corresponding
+            f_level and b_level reachable sets have signed edges.  If True,
+            sign information should be encoded in the 'sign' field of the edge
+            data, with 0 indicating a positive edge and 1 indicating a negative
+            edge.
+        target_polarity : 0 or 1
+            Specifies the polarity of the target node: 0 indicates
+            positive/activation, 1 indicates negative/inhibition.
 
         Returns
         -------
@@ -92,29 +123,7 @@ class PreCFPG(PathsGraph):
 
     @classmethod
     def from_pg(klass, pg):
-        """Compute a pre- cycle free paths graph.
-
-        Starting from the "raw" (i.e., containing cycles) paths graph, and
-        given a target path length n, the algorithm iterates over each "level"
-        in the graph 0 <= k <= n where level 0 consists only of the source node
-        and level n consists only of the target.
-
-        Each level k consists of a set of nodes, X; we examine each node x in X
-        and identify the subset of nodes that are reachable in both the forward
-        and backward directions from x. If any of the nodes in the forward
-        reach subgraph contain x itself (but at a different depth), this
-        represents a cyclic path back through x that is then pruned.
-
-        Each node x therefore defines its own subgraph of cycle free paths,
-        g_x.  After iterating over all x in X, we combine these subgraphs into
-        the (in-progress) cycle free paths graph H_k. H_k therefore consists of
-        the superset of nodes of all the subgraphs g_x for level k. When
-        merging these subgraphs we prevent the re-introduction of cyclic paths
-        by annotating each node in the graph with a list of "tags". The tags
-        for any given node consist of a list of nodes lying at prior (upstream)
-        levels. Therefore during sampling, transitions from an upstream node to
-        a downstream node are only permissible if all nodes in the path up to a
-        certain level are contained in the tag set of the downstream node.
+        """Compute a pre- cycle free paths graph from a PathsGraph.
 
         Parameters
         ----------

@@ -22,6 +22,10 @@ def get_reachable_sets(g, source, target, max_depth=10, signed=False):
         Name of target node.
     max_depth : int
         Maximum path length (depth) over which to compute reachable sets.
+    signed : boolean
+        Whether the graph is signed. If True, sign information should be encoded
+        in the 'sign' field of the edge data, with 0 indicating a positive edge
+        and 1 indicating a negative edge.
 
     Returns
     -------
@@ -157,7 +161,10 @@ class PathsGraph(object):
             length by calling paths_graph.get_reachable_sets.
         signed : bool
             Specifies whether the underlying graph and the corresponding
-            f_level and b_level reachable sets have signed edges.
+            f_level and b_level reachable sets have signed edges.  If True,
+            sign information should be encoded in the 'sign' field of the edge
+            data, with 0 indicating a positive edge and 1 indicating a negative
+            edge.
         target_polarity : 0 or 1
             Specifies the polarity of the target node: 0 indicates
             positive/activation, 1 indicates negative/inhibition.

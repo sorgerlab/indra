@@ -1,65 +1,3 @@
-"""
-We construct a representation of cycle_free paths of a fixed length. This fixed
-length will often not be mentioned in what follows.  We call our representation
-"the cycle_free paths graph". Below it is the graph G_cf (actually it is
-G_cf_pruned but for now it will be convenient to ignore this distinction).
-
-G_cf is required to have three properties.
-
-* CF1: Every source-to-target path in G_cf is cycle free.
-* CF2: Every cycle free path in the original graph appears as a
-  source-to-target path in G_cf.
-* CF3: There is a 1-1 correspondence between the paths in G_cf and the paths in
-  the original graph. This means there is no redundancy in the representation.
-  For every path in the original graph there is a unique path in G_cf that
-  corresponds to it.
-
-These 3 conditions will ensure that we can sample paths in the original graph
-faithfully by sampling paths in G_cf. We can also perform graph theoretic
-operations on G_cf to simulate useful operations on the set of paths in the
-original graph.
-
-The starting point is the paths graph (pg_raw below) that represents "all"
-paths (cycle free or not) of the given fixed length from source to target.
-
-Then using an initial iterative procedure we prune away junk nodes (that cannot
-appear on any cycle free path from source to target) and more importantly tag
-each node with its cycle free history. More precisely if u is in tags[v] then
-we are guaranteed that every path from u to v that involves only nodes
-appearing in tags[v] will be v-cycle_free. In other words the name of v (i.e.
-v[1]) will not appear in the path. Further, it will also be u-cycle free.  Note
-however tags[u] may contain a node that has the same name as that of v.  Indeed
-this the crux of the problem.
-
-Moving on, this tagged path graph is named G_0 and the associated tags map is
-named T_0 below.
-
-G_cf is computed by refining G_0. But first let us consider why G_0 is not an
-ideal representation of the set of cycle free paths of a fixed length.  First,
-G_0 does not have the property (CF1) (though it does have the properties (CF2)
-and (CF3)). As a result one can't just walk through the graph from source to
-node and generate a cycle free path. Instead one must use a sampling method
-with memory to generate cycle free paths. In particular if one has reached the
-node u via the path p and v is a successors of u then one can extend p by
-moving to v only if p is contained in T_0[v]. Thus whether the move along the
-edge (u,v) is conditioned by the memory of how u was reached. Further, one can
-get stuck while using this sampling procedure. Hence it is not clear whether
-one is sampling the set of paths of interest in a faithful fashion. More
-importantly it is not clear how one can perform graph theoretic operations on
-G_0 to simulate operations on the set of cycle fre paths of interest. We will
-however keep in mind that G_0 together with its path sampling procedure is  a
-useful tool to have around.
-
-Constructing G_cf by refining G_0 may be viewed as synthesizing a memoryless
-strategy for generating cycle free paths. In other words, if (u,v) is an edge
-in G_cf then no matter how we have reached u we must be able to transition to
-v. A necessary condition that will enable this is to ensure that the set of
-tags of u (T_cf[u]) is included in the set of tags of v (T_cf[v]) in G_cf. The
-challenge is to achieve this while ensuring that the properies (CF1), (CF2) and
-(CF3) are met.
-
-We explain below the detailed construction of G_cf from this perpective.
-"""
 import os
 import logging
 import itertools
@@ -74,6 +12,69 @@ logger = logging.getLogger('cfpg')
 
 
 class CFPG(PathsGraph):
+    """Representation of cycle-free paths in a graph of a given length.
+
+    We construct a representation of cycle_free paths of a fixed length. This
+    fixed length will often not be mentioned in what follows.  We call our
+    representation "the cycle_free paths graph". Below it is the graph G_cf
+    (actually it is G_cf_pruned but for now it will be convenient to ignore
+    this distinction).
+
+    G_cf is required to have three properties.
+
+    * CF1: Every source-to-target path in G_cf is cycle free.
+    * CF2: Every cycle free path in the original graph appears as a
+      source-to-target path in G_cf.
+    * CF3: There is a 1-1 correspondence between the paths in G_cf and the
+      paths in the original graph. This means there is no redundancy in the
+      representation.  For every path in the original graph there is a unique
+      path in G_cf that corresponds to it.
+
+    These 3 conditions will ensure that we can sample paths in the original
+    graph faithfully by sampling paths in G_cf. We can also perform graph
+    theoretic operations on G_cf to simulate useful operations on the set of
+    paths in the original graph.
+
+    The starting point is the paths graph (pg_raw below) that represents "all"
+    paths (cycle free or not) of the given fixed length from source to target.
+
+    Then using an initial iterative procedure we prune away junk nodes (that
+    cannot appear on any cycle free path from source to target) and more
+    importantly tag each node with its cycle free history. More precisely if u
+    is in tags[v] then we are guaranteed that every path from u to v that
+    involves only nodes appearing in tags[v] will be v-cycle_free. In other
+    words the name of v (i.e.  v[1]) will not appear in the path. Further, it
+    will also be u-cycle free.  Note however tags[u] may contain a node that
+    has the same name as that of v.  Indeed this the crux of the problem.
+
+    Moving on, this tagged path graph is named G_0 and the associated tags map
+    is named T_0 below.
+
+    G_cf is computed by refining G_0. But first let us consider why G_0 is not
+    an ideal representation of the set of cycle free paths of a fixed length.
+    First, G_0 does not have the property (CF1) (though it does have the
+    properties (CF2) and (CF3)). As a result one can't just walk through the
+    graph from source to node and generate a cycle free path. Instead one must
+    use a sampling method with memory to generate cycle free paths. In
+    particular if one has reached the node u via the path p and v is a
+    successors of u then one can extend p by moving to v only if p is contained
+    in T_0[v]. Thus whether the move along the edge (u,v) is conditioned by the
+    memory of how u was reached. Further, one can get stuck while using this
+    sampling procedure. Hence it is not clear whether one is sampling the set
+    of paths of interest in a faithful fashion. More importantly it is not
+    clear how one can perform graph theoretic operations on G_0 to simulate
+    operations on the set of cycle fre paths of interest. We will however keep
+    in mind that G_0 together with its path sampling procedure is  a useful
+    tool to have around.
+
+    Constructing G_cf by refining G_0 may be viewed as synthesizing a
+    memoryless strategy for generating cycle free paths. In other words, if
+    (u,v) is an edge in G_cf then no matter how we have reached u we must be
+    able to transition to v. A necessary condition that will enable this is to
+    ensure that the set of tags of u (T_cf[u]) is included in the set of tags
+    of v (T_cf[v]) in G_cf. The challenge is to achieve this while ensuring
+    that the properies (CF1), (CF2) and (CF3) are met.
+    """
     def __init__(self, source_name, source_node, target_name, target_node,
                  path_length, graph):
         self.source_name = source_name
@@ -85,11 +86,68 @@ class CFPG(PathsGraph):
 
     @classmethod
     def from_graph(klass, *args, **kwargs):
+        """Get an instance of a CFPG from a graph.
+
+        Parameters
+        ----------
+        g : networkx.DiGraph
+            The underlying graph on which paths will be generated.
+        source : str
+            Name of the source node.
+        target : str
+            Name of the target node.
+        target_polarity : int
+            Whether the desired path from source to target is positive (0)
+            or negative (1).
+        length : int
+            Length of paths to compute.
+        fwd_reachset : Optional[dict]
+            Dictionary of sets representing the forward reachset computed over
+            the original graph g up to a maximum depth greater than the
+            requested path length.  If not provided, the forward reach set is
+            calculated up to the requested path length up to the requested path
+            length by calling paths_graph.get_reachable_sets.
+        back_reachset : Optional[dict]
+            Dictionary of sets representing the backward reachset computed over
+            the original graph g up to a maximum depth greater than the
+            requested path length.  If not provided, the backward reach set is
+            calculated up to the requested path length up to the requested path
+            length by calling paths_graph.get_reachable_sets.
+        signed : bool
+            Specifies whether the underlying graph and the corresponding
+            f_level and b_level reachable sets have signed edges.  If True,
+            sign information should be encoded in the 'sign' field of the edge
+            data, with 0 indicating a positive edge and 1 indicating a negative
+            edge.
+        target_polarity : 0 or 1
+            Specifies the polarity of the target node: 0 indicates
+            positive/activation, 1 indicates negative/inhibition.
+
+        Returns
+        -------
+        CFPG
+            Instance of CFPG class representing cycle-free paths from source to
+            target with a given length and overall polarity.
+        """
         pre_cfpg = PreCFPG.from_graph(*args, **kwargs)
         return klass.from_pre_cfpg(pre_cfpg)
 
     @classmethod
     def from_pg(klass, pg):
+        """Get an instance of a CFPG from a PathsGraph.
+
+        Parameters
+        ----------
+        pg : PathsGraph
+            "Raw" (contains cycles) paths graph as created by
+            :py:func:`indra.explanation.paths_graph.PathsGraph.from_graph`.
+
+        Returns
+        -------
+        CFPG
+            Instance of CFPG class representing cycle-free paths from source to
+            target with a given length and overall polarity.
+        """
         pre_cfpg = PreCFPG.from_pg(pg)
         return klass.from_pre_cfpg(pre_cfpg)
 
@@ -123,6 +181,17 @@ class CFPG(PathsGraph):
 
         Once the construction of PG_cf is complete we will no onger 
         require pred_i and t_i.
+
+        Parameters
+        ----------
+        pre_cfpg : instance of PreCFPG
+            The pre-cycle free paths graph to use to compute the CFPG.
+
+        Returns
+        -------
+        CFPG
+            Instance of CFPG class representing cycle-free paths from source to
+            target with a given length and overall polarity.
         """
         # Define old (2-tuple) and new (3-tuple) versions of src/tgt nodes
         source_name = pre_cfpg.source_name
@@ -212,14 +281,6 @@ class CombinedCFPG(object):
     Parameters
     ----------
     cfpg_list : list of cfpg instances
-
-    Attributes
-    ----------
-    source_name
-    source_node
-    target_name
-    target_node
-    graph
     """
     def __init__(self, cfpg_list):
         self.graph = nx.DiGraph()
