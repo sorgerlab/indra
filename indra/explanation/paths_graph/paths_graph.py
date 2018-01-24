@@ -248,7 +248,7 @@ class PathsGraph(object):
             else:
                 edge_key = (u, v)
             g_edges.append(edge_key)
-            edge_weights[edge_key] = data.get('weight', 1.0)
+            edge_weights[edge_key] = float(data.get('weight', 1.0))
         for i in range(0, length):
             actual_edges = []
             logger.info("paths_graph: identifying edges at level %d" % i)
@@ -343,11 +343,7 @@ class PathsGraph(object):
         return total_count
 
     def set_uniform_path_distribution(self):
-        """Adjusts edge weights to allow uniform sampling of paths.
-
-        Note that after calling this function, a uniform sample is drawn
-        by calling `sample_paths` with `weighted=True`.
-        """
+        """Adjusts edge weights to allow uniform sampling of paths."""
         path_counts = self._get_path_counts()
         weight_dict = {}
         for u in self.graph.nodes():
@@ -435,7 +431,7 @@ class PathsGraph(object):
         weights = [t[2]['weight'] for t in out_edges]
         # Normalize the weights to a proper probability distribution
         p = np.array(weights) / np.sum(weights)
-        pred_idx = np.random.choice(range(len(out_edges)), p=p)
+        pred_idx = np.random.choice(len(out_edges), p=p)
         return out_edges[pred_idx][1]
 
 

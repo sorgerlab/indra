@@ -1,3 +1,4 @@
+import os
 import logging
 from copy import copy, deepcopy
 import numpy as np
@@ -159,8 +160,8 @@ class PreCFPG(PathsGraph):
                         g_x_f = _forward(x, H, pg.path_length)
                         g_x_b = _backward(x, H)
                         g_x = nx.DiGraph()
-                        g_x.add_edges_from(g_x_b.edges())
-                        g_x.add_edges_from(g_x_f.edges())
+                        g_x.add_edges_from(g_x_b.edges(data=True))
+                        g_x.add_edges_from(g_x_f.edges(data=True))
                         # Get the nodes in the forward reach set representing
                         # cycles back through node x, (excluding x at level k)
                         nodes_to_prune = [v for v in g_x_f
@@ -188,7 +189,7 @@ class PreCFPG(PathsGraph):
                     tags_k = {}
                     for x in X:
                         h_x = dic_X[x][0]
-                        H_k.add_edges_from(h_x.edges())
+                        H_k.add_edges_from(h_x.edges(data=True))
                     # For every node in the combined subgraphs
                     for v in H_k.nodes_iter():
                         # Create a set of tags...
@@ -222,35 +223,23 @@ class PreCFPG(PathsGraph):
     def count_paths(self):
         raise NotImplementedError()
 
-    def _successor(self, path, v, weighted):
-        """Randomly choose a successor node of v given the current path.
-
-        Parameters
-        ----------
-        path : list
-            The path so far (list of nodes).
-        v : tuple
-            The current node.
-
-        Returns
-        -------
-        tuple
-            Randomly chosen successor node on a non-cyclic path.
-        """
-        succ = []
-        for u in self.graph.successors(v):
-            if set(path) <= set(self.tags[u]):
-                succ.append(u)
+    def _successor(self, path, u):
+        """Randomly choose a successor node of u given the current path."""
+        out_edges = []
+        for edge in self.graph.out_edges(u, data=True):
+            if set(path) <= set(self.tags[edge[1]]):
+                out_edges.append(edge)
         # If there are no admissible successors, raise a PathSamplingException
-        if not succ:
+        if not out_edges:
             raise PathSamplingException("No cycle-free successors")
-        # Note that the circuitous way of choosing from this list is the
-        # result of the odd way numpy.random handles lists of lists (it
-        # excepts).
-        idx_list = list(range(len(succ)))
-        w_idx = np.random.choice(idx_list)
-        w = succ[w_idx]
-        return w
+        # For determinism in testing
+        if 'TEST_FLAG' in os.environ:
+            out_edges.sort()
+        weights = [t[2]['weight'] for t in out_edges]
+        # Normalize the weights to a proper probability distribution
+        p = np.array(weights) / np.sum(weights)
+        pred_idx = np.random.choice(len(out_edges), p=p)
+        return out_edges[pred_idx][1]
 
 
 def _initialize_pre_cfpg(pg):
@@ -360,7 +349,7 @@ def _forward(v, H, length):
     h = nx.DiGraph()
     for k in range(j+1, length+1):
         for v in L[k - 1]:
-            h.add_edges_from(H.out_edges(v))
+            h.add_edges_from(H.out_edges(v, data=True))
         L[k] = [w for w in h if w[0] == k]
     return h
 
@@ -388,7 +377,7 @@ def _backward(v, H):
     h = nx.DiGraph()
     for k in J:
         for v in L[k+1]:
-            h.add_edges_from(H.in_edges(v))
+            h.add_edges_from(H.in_edges(v, data=True))
         L[k] = [w for w in h if w[0] == k]
     return h
 

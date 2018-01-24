@@ -1,5 +1,8 @@
+import os
 import pickle
+from collections import Counter
 from os.path import dirname, join
+import numpy as np
 import networkx as nx
 from nose.tools import raises
 from indra.explanation import paths_graph as pg
@@ -200,6 +203,27 @@ def test_sampling_graph2():
     assert set(sample_paths) == set(cf_paths)
 
 
+def test_weighted_sampling():
+    g = nx.DiGraph()
+    g.add_edges_from([
+        ('A', 'B', {'weight': 3}),
+        ('A', 'C', {'weight': 1}),
+        ('C', 'D'),
+        ('B', 'D'),
+        ('D', 'B'),
+        ('D', 'C'),
+        ('B', 'E'),
+        ('C', 'E')])
+    source, target, length = ('A', 'E', 4)
+    pre_cfpg = pg.PreCFPG.from_graph(g, source, target, length)
+    os.environ['TEST_FLAG'] = 'TRUE'
+    np.random.seed(1)
+    samp_paths = pre_cfpg.sample_paths(1000)
+    ctr = Counter(samp_paths)
+    assert ctr[('A', 'B', 'D', 'C', 'E')] == 767
+    assert ctr[('A', 'C', 'D', 'B', 'E')] == 233
+
+
 @raises(NotImplementedError)
 def test_enumerate_not_implemented():
     pre_cfpg = pg.PreCFPG.from_graph(g3_uns, 'A', 'D', 3)
@@ -210,7 +234,4 @@ def test_enumerate_not_implemented():
 def test_count_not_implemented():
     pre_cfpg = pg.PreCFPG.from_graph(g3_uns, 'A', 'D', 3)
     pre_cfpg.count_paths()
-
-if __name__ == '__main__':
-    test_sampling_graph2()
 
