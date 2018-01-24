@@ -32,7 +32,7 @@ install:
   - pip install git+https://github.com/pysb/pysb.git
   - export KAPPAPATH=$TRAVIS_BUILD_DIR/KaSim
   - |
-    if [[ ! -d "$KAPPAPATH" ]]; then
+    if [[ ! -f "$KAPPAPATH/KaSim" ]]; then
       # Kappa
       sudo apt-get install -y ocaml-nox opam aspcud;
       # First install ocamlfind via opam (needed to build KaSim/KaSa)
