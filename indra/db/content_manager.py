@@ -92,7 +92,7 @@ from .database_manager import sql_expressions as sql_exp
 
 
 try:
-    from psycopg2 import IntegrityError
+    from psycopg2 import IntegrityError, DataError
 except ImportError:
     class IntegrityError(object):
         "Using this in a try-except will catch nothing. (That's the point.)"
@@ -253,9 +253,7 @@ class ContentManager(object):
 
     def copy_into_db(self, db, *args, **kwargs):
         "Wrapper around the db.copy feature, pickels args upon exception."
-        try:
-            db.copy(*args, **kwargs)
-        except IntegrityError as e:
+        def handle_error(e):
             pkl_file_fmt = "copy_failure_%d.pkl"
             i = 0
             while os.path.exists(pkl_file_fmt % i):
@@ -264,7 +262,15 @@ class ContentManager(object):
                 pickle.dump((e, args, kwargs), f, protocol=3)
             logger.error('Failed in a copy. Pickling args and kwargs.')
             logger.exception(e)
-            logger.info('Continuing...')
+            raise e
+
+        try:
+            db.copy(*args, **kwargs)
+        except IntegrityError as e:
+            handle_error(e)
+        except DataError as e:
+            handle_error(e)
+        return
 
     def filter_text_refs(self, db, tr_data_set):
         "Try to reconcile the data we have with what's already on the db."
@@ -450,10 +456,10 @@ class Medline(NihManager):
         L = len(doi)
         if L % 2 is not 0:
             return doi
-        if doi[:L] != doi[L:]:
+        if doi[:L//2] != doi[L//2:]:
             return doi
         logger.info("Fixing doubled doi: %s" % doi)
-        return doi[:L]
+        return doi[:L//2]
 
     def load_text_refs(self, db, article_info, carefully=False):
         "Sanitize, update old, and upload new text refs."
