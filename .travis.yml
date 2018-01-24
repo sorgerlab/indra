@@ -1,4 +1,8 @@
 language: python
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $TRAVIS_BUILD_DIR/KaSim
 python:
   - "2.7"
   - "3.5"
@@ -6,10 +10,6 @@ addons:
     apt:
         sources:
             - avsm
-        packages:
-            - ocaml-nox
-            - opam
-            - aspcud
 before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
@@ -30,19 +30,23 @@ install:
   - tar xzf bionetgen.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
-  # Kappa
-  # First install ocamlfind via opam (needed to build KaSim/KaSa)
-  - opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env)
-  - opam install -y conf-which base-bytes
-  - opam install -y ocamlbuild yojson
-  # Install KaSim/KaSa
-  - git clone https://github.com/Kappa-Dev/KaSim.git
-  - cd KaSim
-  # KaSim as of 5/1/2017
-  - git checkout 0733210
-  - make all
-  - export KAPPAPATH=`pwd`
-  - cd ../
+  - export KAPPAPATH=$TRAVIS_BUILD_DIR/KaSim
+  - |
+    if [[ ! -f "$KAPPAPATH/KaSim" ]]; then
+      # Kappa
+      sudo apt-get install -y ocaml-nox opam aspcud;
+      # First install ocamlfind via opam (needed to build KaSim/KaSa)
+      opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env);
+      opam install -y conf-which base-bytes;
+      opam install -y ocamlbuild yojson;
+      # Install KaSim/KaSa
+      git clone https://github.com/Kappa-Dev/KaSim.git;
+      cd $KAPPAPATH;
+      # KaSim as of 5/1/2017
+      git checkout 0733210;
+      make all;
+      cd $TRAVIS_BUILD_DIR;
+    fi
   # Biopax/Paxtools dependencies
   - pip install jnius-indra
   # Install NDEx package
