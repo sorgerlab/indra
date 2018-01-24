@@ -60,7 +60,8 @@ class BeliefEngine(object):
     subtype_probs: dict[dict]
         A dictionary of random error probabilities for knowledge sources.
         When a subtype random error probability is not specified, will just
-        use the overall type prior in prior_probs
+        use the overall type prior in prior_probs. If None, will 
+        only use the priors for each rule.
     """
     def __init__(self, prior_probs=None, subtype_probs=None):
         self.prior_probs = default_probs
