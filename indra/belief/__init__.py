@@ -63,7 +63,7 @@ class BeliefEngine(object):
     subtype_probs: dict[dict]
         A dictionary of random error probabilities for knowledge sources.
         When a subtype random error probability is not specified, will just
-        use the overall type prior in prior_probs. If None, will 
+        use the overall type prior in prior_probs. If None, will
         only use the priors for each rule.
     """
     def __init__(self, prior_probs=None, subtype_probs=None):
@@ -134,6 +134,7 @@ class BeliefEngine(object):
                     g.add_node(st2.matches_key(), {'stmt': st2})
                     g.add_edge(st2.matches_key(), st1.matches_key())
             return g
+
         def get_ranked_stmts(g):
             node_ranks = networkx.topological_sort(g, reverse=True)
             stmts = [g.node[n]['stmt'] for n in node_ranks]
@@ -227,6 +228,7 @@ def sample_statements(stmts, seed=None):
             new_stmts.append(stmt)
     return new_stmts
 
+
 def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
     """Determines the random-noise prior probability for this evidence.
 
@@ -236,16 +238,17 @@ def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
     Otherwise, gives the random-noise prior for the overall rule type.
     """
     (stype, subtype) = tag_evidence_subtype(evidence)
-    #Get the subtype, if available
+    # Get the subtype, if available
 
-    #Return the subtype random noise prior, if available
+    # Return the subtype random noise prior, if available
     if subtype_probs is not None:
         if stype in subtype_probs:
             if subtype in subtype_probs[stype]:
                 return subtype_probs[stype][subtype]
 
-    #Fallback to just returning the overall evidence type random noise prior
+    # Fallback to just returning the overall evidence type random noise prior
     return type_probs[stype]
+
 
 def tag_evidence_subtype(evidence):
     """Returns the type and subtype of an evidence object as a string,
@@ -276,8 +279,8 @@ def tag_evidence_subtype(evidence):
         if 'found_by' in annotations:
             subtype = determine_reach_subtype(annotations['found_by'])
         else:
-            logger.warning('Could not find found_by attribute in reach ' + 
-                    'statement annoations')
+            logger.warning('Could not find found_by attribute in reach '
+                           'statement annoations')
             subtype = None
     elif source_api == 'geneways':
         subtype = annotations['actiontype']
@@ -285,6 +288,3 @@ def tag_evidence_subtype(evidence):
         subtype = None
 
     return (source_api, subtype)
-
-
-

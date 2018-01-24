@@ -684,7 +684,7 @@ def _read_reach_rule_regexps():
     """
     reach_rule_filename = \
         os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                     'reach_rule_regexps.txt')
+                     'reach_rule_regexps.txt')
     with open(reach_rule_filename, 'r') as f:
         reach_rule_regexp = []
         for line in f:
