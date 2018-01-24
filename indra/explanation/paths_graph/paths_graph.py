@@ -439,6 +439,53 @@ class PathsGraph(object):
         return out_edges[pred_idx][1]
 
 
+class CombinedPathsGraph(object):
+    """Combine PathsGraphs for different lengths into a single super-PG.
+
+    This is particularly useful for sampling paths where the sampled paths
+    reflect the likelihood of drawing paths of particular lengths, given
+    the weights on the edges.
+
+
+    Parameters
+    ----------
+    pg_list : list of cfpg instances
+
+    Attributes
+    ----------
+    source_name
+    source_node
+    target_name
+    target_node
+    graph
+    """
+    def __init__(self, pg_list):
+        self.graph = nx.DiGraph()
+        for pg in pg_list:
+            self.graph.add_edges_from(pg.graph.edges(data=True))
+        # Add info from the last PG in the list
+        self.source_name = pg.source_name
+        self.source_node = pg.source_node
+        self.target_name = pg.target_name
+        self.target_node = pg.target_node
+        self.signed = pg.signed
+        self.target_polarity = pg.target_polarity
+        # Internally we create a PG wrapping the graph so as to re-use its
+        # sampling method by composition
+        self._pg = PathsGraph(pg.source_name, pg.target_name, self.graph,
+                              None, pg.signed, pg.target_polarity)
+
+    def sample_paths(self, num_samples):
+        return self._pg.sample_paths(num_samples=num_samples)
+
+def combine_paths_graphs(pg_dict):
+    """Combine a dict of path graphs into a single super-pathgraph."""
+    combined_graph = nx.DiGraph()
+    for level, pg in pg_dict.items():
+        combined_graph.add_edges_from(pg.graph.edges())
+    cpg = PathsGraph(pg.source_name, pg.target_name, combined_graph, None,
+                     pg.signed, pg.target_polarity)
+    return cpg
 
 
 def _check_reach_depth(dir_name, reachset, length):

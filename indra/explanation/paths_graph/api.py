@@ -9,7 +9,7 @@ logger = logging.getLogger('paths_graph')
 
 
 __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph', 'combine_paths_graphs', 'PathTree']
+           'sample_raw_graph', 'PathTree']
 
 
 def load_signed_sif(sif_file):
@@ -30,6 +30,12 @@ def load_signed_sif(sif_file):
 
 def sample_paths(g, source, target, max_depth=None, num_samples=1000,
                  cycle_free=True, signed=False, target_polarity=0):
+    """Sample paths from a graph using PathsGraphs or CFPGs.
+
+    This high-level function provides explicit access to path sampling
+    without the user need to explicit create PathsGraphs or CFPGs for
+    different path lengths.
+    """
     return _run_by_depth('sample_paths', [num_samples], g, source, target,
                          max_depth, cycle_free, signed, target_polarity)
 
@@ -74,16 +80,6 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
             func = getattr(pg, func_name)
             results += func(*func_args)
     return results
-
-
-def combine_paths_graphs(pg_dict):
-    """Combine a dict of path graphs into a single super-pathgraph."""
-    combined_graph = nx.DiGraph()
-    for level, pg in pg_dict.items():
-        combined_graph.add_edges_from(pg.graph.edges())
-    cpg = PathsGraph(pg.source_name, pg.target_name, combined_graph, None,
-                     pg.signed, pg.target_polarity)
-    return cpg
 
 
 def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,

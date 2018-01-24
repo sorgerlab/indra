@@ -261,11 +261,11 @@ def test_combine_paths_graphs():
     g = nx.DiGraph()
     g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
     max_depth = 4
-    pg_dict = {}
+    pg_list = []
     for length in range(1, max_depth+1):
         paths_graph = PathsGraph.from_graph(g, 'S', 'T', length)
-        pg_dict[length] = paths_graph
-    cpg = combine_paths_graphs(pg_dict)
+        pg_list.append(paths_graph)
+    cpg = CombinedPathsGraph(pg_list)
     paths = cpg.sample_paths(1000)
     path_ctr = Counter(paths)
 
