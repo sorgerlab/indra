@@ -2,8 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import numpy
 import networkx
+import logging
 
-from indra.belief.evidence_subtype_tagger import tag_evidence_subtype
+from indra.sources.reach.processor import determine_reach_subtype
+
+logger = logging.getLogger("belief")
 
 default_probs = {
     'rand': {
@@ -243,3 +246,45 @@ def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
 
     #Fallback to just returning the overall evidence type random noise prior
     return type_probs[stype]
+
+def tag_evidence_subtype(evidence):
+    """Returns the type and subtype of an evidence object as a string,
+    typically the extraction rule or database from which the statement
+    was generated.
+
+    For biopax, this is just the database name.
+
+    Parameters
+    ----------
+    statement: indra.statements.Evidence
+        The statement which we wish to subtype
+
+    Returns
+    -------
+    types: tuple
+        A tuple with (type, subtype), both strings
+        Returns (type, None) if the type of statement is not yet handled in
+        this function.
+    """
+
+    source_api = evidence.source_api
+    annotations = evidence.annotations
+
+    if source_api == 'biopax':
+        subtype = annotations['source_sub_id']
+    elif source_api == 'reach':
+        if 'found_by' in annotations:
+            subtype = determine_reach_subtype(annotations['found_by'])
+        else:
+            logger.warning('Could not find found_by attribute in reach ' + 
+                    'statement annoations')
+            subtype = None
+    elif source_api == 'geneways':
+        subtype = annotations['actiontype']
+    else:
+        subtype = None
+
+    return (source_api, subtype)
+
+
+

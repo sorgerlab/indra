@@ -4,8 +4,7 @@ from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.belief import _get_belief_package, default_probs, \
-        sample_statements, evidence_random_noise_prior
-from indra.belief.evidence_subtype_tagger import tag_evidence_subtype
+        sample_statements, evidence_random_noise_prior, tag_evidence_subtype
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
