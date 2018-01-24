@@ -1,7 +1,8 @@
 language: python
 cache:
-  - $HOME/.cache/pip
-  - $TRAVIS_BUILD_DIR/KaSim
+  directories:
+    - $HOME/.cache/pip
+    - $TRAVIS_BUILD_DIR/KaSim
 python:
   - "2.7"
   - "3.5"
@@ -9,10 +10,10 @@ addons:
     apt:
         sources:
             - avsm
-#        packages:
-#            - ocaml-nox
-#            - opam
-#            - aspcud
+        packages:
+            - ocaml-nox
+            - opam
+            - aspcud
 before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
@@ -35,17 +36,15 @@ install:
   - pip install git+https://github.com/pysb/pysb.git
   # Kappa
   # First install ocamlfind via opam (needed to build KaSim/KaSa)
-  # - opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env)
-  # - opam install -y conf-which base-bytes
-  # - opam install -y ocamlbuild yojson
+  - opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env)
+  - opam install -y conf-which base-bytes
+  - opam install -y ocamlbuild yojson
   # Install KaSim/KaSa
-  # - git clone https://github.com/Kappa-Dev/KaSim.git
-  - echo `pwd`
-  - echo $TRAVIS_BUILD_DIR
+  - git clone https://github.com/Kappa-Dev/KaSim.git
   - cd KaSim
   # KaSim as of 5/1/2017
-  # - git checkout 0733210
-  # - make all
+  - git checkout 0733210
+  - make all
   - export KAPPAPATH=`pwd`
   - cd ../
   # Biopax/Paxtools dependencies
