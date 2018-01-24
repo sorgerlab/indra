@@ -231,10 +231,10 @@ def test_sample_paths_weighted_signed():
     # Seed the random number generator
     np.random.seed(1)
     sample_paths = pg.sample_paths(200)
-    #assert set(sample_paths) == set([('A', 'B', 'D'), ('A', 'C', 'D')])
     ctr = Counter(sample_paths)
-    print(ctr)
-    #assert ctr[('A', 'B', 'D')] > ctr[('A', 'C', 'D')]
+    assert len(ctr) == 2
+    assert ctr[(('A', 0), ('B', 1), ('D', 0))] == 148
+    assert ctr[(('A', 0), ('C', 1), ('D', 0))] == 52
 
 
 def test_enumerate_paths():
@@ -386,6 +386,3 @@ def test_paths_tree_weighted_sampling():
 
 if __name__ == '__main__':
     test_sample_paths_weighted_signed()
-    #test_non_uniform_sampling()
-    #test_sample_paths_weighted()
-

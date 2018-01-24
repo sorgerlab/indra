@@ -239,20 +239,25 @@ class PathsGraph(object):
         # original graph. Note that we have to check for an edge of the
         # appropriate polarity.
         pg_edges = []
-        if signed:
-            g_edges_raw = g.edges(data=True)
-            g_edges = [(u, v, data['sign']) for u, v, data in g_edges_raw]
-        else:
-            g_edges = []
-            edge_weights = {}
-            for u, v, data in g.edges_iter(data=True):
-                g_edges.append((u, v))
-                edge_weights[(u, v)] = data.get('weight', 1.0)
+        g_edges = []
+        edge_weights = {}
+        # Collect edge and edge weight info from the graph
+        for u, v, data in g.edges_iter(data=True):
+            if signed:
+                edge_key = (u, v, data['sign'])
+            else:
+                edge_key = (u, v)
+            g_edges.append(edge_key)
+            edge_weights[edge_key] = data.get('weight', 1.0)
         for i in range(0, length):
             actual_edges = []
             logger.info("paths_graph: identifying edges at level %d" % i)
             if signed:
+                # This set stores the information for performing the set
+                # intersection with the edges in the source graph
                 possible_edges = set()
+                # This dict stores the information for the actual edge, with
+                # weight, as we will need to add it to the PG
                 edge_lookup = {}
                 for edge in itertools.product(pg_nodes[i], pg_nodes[i+1]):
                     u_name, u_pol = edge[0][1]
@@ -264,7 +269,9 @@ class PathsGraph(object):
                     possible_edges.add(edge_key)
                     edge_lookup[edge_key] = edge
                 for edge_key in possible_edges.intersection(g_edges):
-                    actual_edges.add(edge_lookup[edge_key])
+                    weighted_edge = edge_lookup[edge_key] + \
+                                       ({'weight': edge_weights[edge_key]},)
+                    actual_edges.append(weighted_edge)
             else:
                 # Build a set representing possible edges between adjacent
                 # levels
