@@ -450,6 +450,8 @@ class DatabaseManager(object):
 
     def copy(self, tbl_name, data, cols=None):
         "Use pg_copy to copy over a large amount of data."
+        logger.info("Received request to copy %d entries into %s." %
+                    (len(data), tbl_name))
         if len(data) is 0:
             return  # Nothing to do....
 

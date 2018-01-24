@@ -504,15 +504,32 @@ class Medline(NihManager):
             valid_pmids -= {ref[self.tr_cols.index('pmid')]
                             for cause, ref in flawed_refs
                             if cause in ['pmid', 'over_match']}
-            logger.info('Only %d valid pmids.' % len(valid_pmids))
+            logger.info('Only %d valid for upload candidacy.'
+                        % len(valid_pmids))
 
         self.copy_into_db(db, 'text_ref', text_ref_records, self.tr_cols)
         return valid_pmids
 
-    def load_text_content(self, db, article_info, valid_pmids):
+    def load_text_content(self, db, article_info, valid_pmids,
+                          carefully=False):
 
         # Build a dict mapping PMIDs to text_ref IDs
-        tref_list = db.select_all(db.TextRef, db.TextRef.pmid.in_(valid_pmids))
+        tr_qry = db.filter_query(db.TextRef, db.TextRef.pmid.in_(valid_pmids))
+        if not carefully:
+            # This doesn't check if there are any existing refs.
+            tref_list = tr_qry.all()
+            logger.info('There are %d content entries that will be uploaded.'
+                        % len(tref_list))
+        else:
+            # This does...
+            tr_to_avoid_qry = tr_qry.filter(
+                db.TextRef.id == db.TextContent.text_ref_id,
+                db.TextContent.source == self.my_source
+                )
+            valid_pmids -= {tr.pmid for tr in tr_to_avoid_qry.all()}
+            tref_list = tr_qry.except_(tr_to_avoid_qry).all()
+            logger.info("Only %d entries without pre-existing content."
+                        % len(tref_list))
         pmid_tr_dict = {pmid: trid for (pmid, trid) in
                         db.get_values(tref_list, ['pmid', 'id'])}
 
@@ -520,8 +537,9 @@ class Medline(NihManager):
         text_content_records = []
         for pmid in valid_pmids:
             if pmid not in pmid_tr_dict.keys():
-                logger.warning("Found content that was determined valid but "
-                               "which does not have a pmid on the db.")
+                logger.warning("Found content marked to be uploaded which "
+                               "does not have a text ref. Skipping pmid "
+                               "%s..." % pmid)
                 continue
             tr_id = pmid_tr_dict[pmid]
             abstract = article_info[pmid].get('abstract')
@@ -546,7 +564,7 @@ class Medline(NihManager):
         # Process and load the text refs, updating where appropriate.
         valid_pmids = self.load_text_refs(db, article_info, carefully)
 
-        self.load_text_content(db, article_info, valid_pmids)
+        self.load_text_content(db, article_info, valid_pmids, carefully)
         return True
 
     def load_files(self, db, dirname, n_procs=1, continuing=False,
