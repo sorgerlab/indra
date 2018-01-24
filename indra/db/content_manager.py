@@ -843,35 +843,11 @@ class PmcManager(NihManager):
     def get_file_list(self):
         return [k for k in self.ftp.ftp_ls() if self.is_archive(k)]
 
-    def populate(self, db, n_procs=1, continuing=False):
-        """Perform the initial population of the pmc content into the database.
-
-        Parameters
-        ----------
-        db : indra.db.DatabaseManager instance
-            The database to which the data will be uploaded.
-        n_procs : int
-            The number of processes to use when parsing xmls.
-        continuing : bool
-            If true, assume that we are picking up after an error, or
-            otherwise continuing from an earlier process. This means we will
-            skip over source files contained in the database. If false, all
-            files will be read and parsed.
-        """
-        archives = self.get_file_list()
-
-        sf_list = db.select_all(
-            'source_file',
-            db.SourceFile.source == self.my_source
-            )
-        existing_arcs = [sf.name for sf in sf_list]
-
+    def upload_archives(self, db, archives, n_procs=1):
+        "Do the grunt work of downloading and processing a list of archives."
         q = mp.Queue(len(archives))
         wait_list = []
         for archive in archives:
-            if continuing and archive in existing_arcs:
-                logger.info("Skipping %s. Already uploaded." % archive)
-                continue
             p = mp.Process(
                 target=self.process_archive,
                 args=(archive, ),
@@ -895,7 +871,10 @@ class PmcManager(NihManager):
         # Monitor the processes while any are still active.
         while len(active_list) is not 0:
             for a, p in [(a, p) for a, p in active_list if not p.is_alive()]:
-                if a not in existing_arcs:
+                sf_list = db.select_all(db.SourceFile,
+                                        db.SourceFile.source == self.my_source,
+                                        db.SourceFile.name == a)
+                if not sf_list:
                     db.insert('source_file', source=self.my_source, name=a)
                 active_list.remove((a, p))
                 start_next_proc()
@@ -916,6 +895,32 @@ class PmcManager(NihManager):
             except Exception:
                 break
             self.upload_batch(db, tr_data, tc_data)
+
+    def populate(self, db, n_procs=1, continuing=False):
+        """Perform the initial population of the pmc content into the database.
+
+        Parameters
+        ----------
+        db : indra.db.DatabaseManager instance
+            The database to which the data will be uploaded.
+        n_procs : int
+            The number of processes to use when parsing xmls.
+        continuing : bool
+            If true, assume that we are picking up after an error, or
+            otherwise continuing from an earlier process. This means we will
+            skip over source files contained in the database. If false, all
+            files will be read and parsed.
+        """
+        archives = set(self.get_file_list())
+
+        if continuing:
+            sf_list = db.select_all(
+                'source_file',
+                db.SourceFile.source == self.my_source
+                )
+            archives -= {sf.name for sf in sf_list}
+
+        self.upload_archives(db, archives, n_procs)
 
         return
 
@@ -968,7 +973,29 @@ class Manuscripts(PmcManager):
         return
 
     def update(self, db, n_procs=1, continuing=False):
-        pass
+        """Add any new content found in the archives.
+
+        Note that this is very much the same as populating for manuscripts,
+        as there are no finer grained means of getting manuscripts than just
+        looking through the massive archive files. We do check to see if there
+        are any new listings in each files, minimizing the amount of time
+        downloading and searching, however this will in general be the slowest
+        of the update methods.
+
+        The continuing feature isn't implented yet.
+        """
+        ftp_file_list = self.ftp.get_csv_as_dict('file_list.csv', header=0)
+        ftp_pmcid_set = {entry['PMCID'] for entry in ftp_file_list}
+        tr_list = db.select_all(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.source == self.my_source
+            )
+        db_pmcid_set = {tr.pmcid for tr in tr_list}
+        update_archives = {'PMC00%dXXXXXX.xml.tar.gz' % pmcid[3]
+                           for pmcid in (ftp_pmcid_set - db_pmcid_set)}
+        self.upload_archives(db, update_archives, n_procs)
+        return
 
 
 if __name__ == '__main__':
@@ -977,7 +1004,8 @@ if __name__ == '__main__':
     if args.task == 'upload':
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
-            clear_succeeded = db._clear([db.TextContent, db.TextRef, db.SourceFile])
+            clear_succeeded = db._clear([db.TextContent, db.TextRef,
+                                         db.SourceFile])
             if not clear_succeeded:
                 sys.exit()
         Medline().populate(db, args.num_procs, args.continuing)
