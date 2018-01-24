@@ -238,14 +238,18 @@ class PathsGraph(object):
         # Finally we add edges between these nodes if they are found in the
         # original graph. Note that we have to check for an edge of the
         # appropriate polarity.
-        pg_edges = set()
+        pg_edges = []
         if signed:
             g_edges_raw = g.edges(data=True)
             g_edges = [(u, v, data['sign']) for u, v, data in g_edges_raw]
         else:
-            g_edges = [(u, v) for u, v in g.edges()]
+            g_edges = []
+            edge_weights = {}
+            for u, v, data in g.edges_iter(data=True):
+                g_edges.append((u, v))
+                edge_weights[(u, v)] = data.get('weight', 1.0)
         for i in range(0, length):
-            actual_edges = set()
+            actual_edges = []
             logger.info("paths_graph: identifying edges at level %d" % i)
             if signed:
                 possible_edges = set()
@@ -269,8 +273,9 @@ class PathsGraph(object):
                 # Actual edges are the ones contained in the original graph; add
                 # to list with prepended depths
                 for u, v in possible_edges.intersection(g_edges):
-                    actual_edges.add(((i, u), (i+1, v)))
-            pg_edges |= actual_edges
+                    actual_edges.append(((i, u), (i+1, v),
+                                         {'weight': edge_weights[(u, v)]}))
+            pg_edges.extend(actual_edges)
             logger.info("Done.")
         paths_graph = nx.DiGraph()
         paths_graph.add_edges_from(pg_edges)
@@ -353,17 +358,13 @@ class PathsGraph(object):
     def _name_paths(paths):
         return [tuple([node[1] for node in path]) for path in paths]
 
-    def sample_paths(self, num_samples, weighted=False, names_only=True):
+    def sample_paths(self, num_samples, names_only=True):
         """Sample paths of the given length between source and target.
 
         Parameters
         ----------
         num_samples : int
             The number of paths to sample.
-        weighted : boolean
-            Whether sampling should proceed according to edge weights in the
-            paths graph. If True, the edges in the paths graph should contain
-            edge attributes with the key "weight". Default is False.
         names_only : boolean
             Whether the paths should consist only of node names, or of node
             tuples (e.g., including depth and polarity). Default is True
@@ -380,8 +381,7 @@ class PathsGraph(object):
         paths = []
         while len(paths) < num_samples:
             try:
-                path = self.sample_single_path(weighted=weighted,
-                                               names_only=False)
+                path = self.sample_single_path(names_only=False)
                 paths.append(path)
             except PathSamplingException:
                 pass
@@ -389,15 +389,11 @@ class PathsGraph(object):
             paths = self._name_paths(paths)
         return tuple(paths)
 
-    def sample_single_path(self, weighted=False, names_only=True):
+    def sample_single_path(self, names_only=True):
         """Sample a path between source and target.
 
         Parameters
         ----------
-        weighted : boolean
-            Whether sampling should proceed according to edge weights in the
-            paths graph. If True, the edges in the paths graph should contain
-            edge attributes with the key "weight". Default is False.
         names_only : boolean
             Whether the paths should consist only of node names, or of node
             tuples (e.g., including depth and polarity). Default is True
@@ -415,7 +411,7 @@ class PathsGraph(object):
         path = [self.source_node]
         current = self.source_node
         while current[1] != self.target_name:
-            next = self._successor(path, current, weighted)
+            next = self._successor(path, current)
             path.append(next)
             current = next
         if names_only:
@@ -424,18 +420,15 @@ class PathsGraph(object):
             path = tuple(path)
         return path
 
-    def _successor(self, path, node, weighted):
+    def _successor(self, path, node):
         out_edges = self.graph.out_edges(node, data=True)
+        # For determinism in testing
         if 'TEST_FLAG' in os.environ:
             out_edges.sort()
-        if weighted:
-            weights = [t[2]['weight'] for t in out_edges]
-            # Normalize the weights to a proper probability distribution
-            p = np.array(weights) / np.sum(weights)
-            pred_idx = np.random.choice(range(len(out_edges)),
-                                        p=p)
-        else:
-            pred_idx = np.random.choice(range(len(out_edges)))
+        weights = [t[2]['weight'] for t in out_edges]
+        # Normalize the weights to a proper probability distribution
+        p = np.array(weights) / np.sum(weights)
+        pred_idx = np.random.choice(range(len(out_edges)), p=p)
         return out_edges[pred_idx][1]
 
 

@@ -180,6 +180,63 @@ def test_sample_paths():
          ('A', 'C', 'D', 'C', 'E')])
 
 
+def test_sample_paths_default_weights():
+    g = nx.DiGraph()
+    g.add_edges_from([('A', 'B'), ('A', 'C'), ('B', 'D'), ('C', 'D')])
+    source, target, length = ('A', 'D', 2)
+    pg = PathsGraph.from_graph(g, source, target, length)
+    # For determinism in testing
+    os.environ['TEST_FLAG'] = 'TRUE'
+    # Seed the random number generator
+    np.random.seed(1)
+    sample_paths = pg.sample_paths(200)
+    assert set(sample_paths) == set([('A', 'B', 'D'), ('A', 'C', 'D')])
+    ctr = Counter(sample_paths)
+    assert ctr[('A', 'B', 'D')] == 100
+    assert ctr[('A', 'C', 'D')] == 100
+
+
+def test_sample_paths_weighted():
+    g = nx.DiGraph()
+    g.add_edges_from([
+        ('A', 'B', {'weight': 3}),
+        ('A', 'C', {'weight': 1}),
+        ('B', 'D', {'weight': 1}),
+        ('C', 'D', {'weight': 1})])
+    source, target, length = ('A', 'D', 2)
+    pg = PathsGraph.from_graph(g, source, target, length)
+    # For determinism in testing
+    os.environ['TEST_FLAG'] = 'TRUE'
+    # Seed the random number generator
+    np.random.seed(1)
+    sample_paths = pg.sample_paths(200)
+    assert set(sample_paths) == set([('A', 'B', 'D'), ('A', 'C', 'D')])
+    ctr = Counter(sample_paths)
+    assert ctr[('A', 'B', 'D')] == 148
+    assert ctr[('A', 'C', 'D')] == 52
+
+
+def test_sample_paths_weighted_signed():
+    g = nx.DiGraph()
+    g.add_edges_from([
+        ('A', 'B', {'weight': 3, 'sign': 1}),
+        ('A', 'C', {'weight': 1, 'sign': 1}),
+        ('B', 'D', {'weight': 1, 'sign': 1}),
+        ('C', 'D', {'weight': 1, 'sign': 1})])
+    source, target, length = ('A', 'D', 2)
+    pg = PathsGraph.from_graph(g, source, target, length, signed=True,
+                               target_polarity=0)
+    # For determinism in testing
+    os.environ['TEST_FLAG'] = 'TRUE'
+    # Seed the random number generator
+    np.random.seed(1)
+    sample_paths = pg.sample_paths(200)
+    #assert set(sample_paths) == set([('A', 'B', 'D'), ('A', 'C', 'D')])
+    ctr = Counter(sample_paths)
+    print(ctr)
+    #assert ctr[('A', 'B', 'D')] > ctr[('A', 'C', 'D')]
+
+
 def test_enumerate_paths():
     g_uns = nx.DiGraph()
     g_uns.add_edges_from((('A', 'B'), ('A', 'C'), ('C', 'D'), ('B', 'D'),
@@ -214,8 +271,8 @@ def test_non_uniform_sampling():
     paths = pg.sample_paths(num_samples)
     num_b1_paths = len([p for p in paths if 'B1' in p])
     num_other_paths = len([p for p in paths if 'B1' not in p])
-    assert num_b1_paths == 526
-    assert num_other_paths == 474
+    assert num_b1_paths == 510
+    assert num_other_paths == 490
 
 
 def test_uniform_sampling():
@@ -229,7 +286,7 @@ def test_uniform_sampling():
     num_samples = 5000
     path_count = pg.count_paths()
     assert path_count == 5
-    paths = pg.sample_paths(num_samples, weighted=True)
+    paths = pg.sample_paths(num_samples)
     b_ctr = Counter([p[2] for p in paths])
     print(b_ctr)
     assert b_ctr == {'B1': 1021, 'B2': 991, 'B3': 964, 'B4': 1022, 'B5': 1002}
@@ -326,4 +383,9 @@ def test_paths_tree_weighted_sampling():
     ctr = Counter(samp_paths)
     assert ctr[('A', 'B', 'D')] == 744
     assert ctr[('A', 'C', 'D')] == 256
+
+if __name__ == '__main__':
+    test_sample_paths_weighted_signed()
+    #test_non_uniform_sampling()
+    #test_sample_paths_weighted()
 
