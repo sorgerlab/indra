@@ -40,6 +40,8 @@ install:
   # - opam install -y ocamlbuild yojson
   # Install KaSim/KaSa
   # - git clone https://github.com/Kappa-Dev/KaSim.git
+  - echo `pwd`
+  - echo $TRAVIS_BUILD_DIR
   - cd KaSim
   # KaSim as of 5/1/2017
   # - git checkout 0733210
