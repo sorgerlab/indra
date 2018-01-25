@@ -292,28 +292,6 @@ def test_uniform_sampling():
     assert b_ctr == {'B1': 1021, 'B2': 991, 'B3': 964, 'B4': 1022, 'B5': 1002}
 
 
-def test_raw_graph_sampling():
-    """Smoke test for sampling on an underlying graph."""
-    g = nx.DiGraph()
-    g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])
-    paths = sample_raw_graph(g, 'S', 'T', num_samples=10000,
-                             eliminate_cycles=False)
-    path_ctr = Counter([len(p) for p in paths])
-    print(path_ctr)
-
-    paths = sample_raw_graph(g, 'S', 'T', num_samples=10000,
-                             eliminate_cycles=True)
-    path_ctr = Counter([len(p) for p in paths])
-    assert len(path_ctr) == 2
-    print(path_ctr)
-
-    paths = sample_raw_graph(g, 'S', 'T', num_samples=10000,
-                             eliminate_cycles=False, max_depth=4)
-    path_ctr = Counter([len(p) for p in paths])
-    assert len(path_ctr) == 4
-    print(path_ctr)
-
-
 def test_combine_paths_graphs():
     g = nx.DiGraph()
     g.add_edges_from([('S', 'A'), ('S', 'T'), ('A', 'T'), ('A', 'S')])

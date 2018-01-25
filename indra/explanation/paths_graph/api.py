@@ -8,8 +8,7 @@ from .cfpg import CFPG
 logger = logging.getLogger('paths_graph')
 
 
-__all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
-           'sample_raw_graph']
+__all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths']
 
 
 def load_signed_sif(sif_file):
@@ -191,60 +190,4 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
             func = getattr(pg, func_name)
             results += func(*func_args)
     return results
-
-
-def _sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
-                     eliminate_cycles=False):
-    """Sample paths up to a given depth from an underlying graph.
-
-    Useful for comparing the properties of sampling from paths graphs to
-    sampling from the original graph.
-    """
-    paths = []
-    if target not in g:
-        raise ValueError("Target node %s not in graph" % target)
-    # Check if any paths exist
-    if not nx.has_path(g, source, target):
-        return []
-    while len(paths) < num_samples:
-        node = source
-        path = [source]
-        while True:
-            # If we haven't found the target within the specified depth,
-            # terminate
-            #if len(path) >= max_depth + 1:
-            #    path = []
-            #    break
-            # Get a list of possible successor nodes
-            if eliminate_cycles:
-                successors = [e[1] for e in g.out_edges(node)
-                                   if e[1] not in path]
-            else:
-                successors = [e[1] for e in g.out_edges(node)]
-            # No non-cyclic successors; terminate
-            if not successors:
-                path = []
-                break
-            # Choose a successor node:
-            # If we're one step before the maximum reachable depth,
-            # always choose the target if it's available--this mimics
-            # the behavior of the paths graph
-            if len(path) == max_depth:
-                if target in successors:
-                    node = target
-                else:
-                    path = []
-                    break
-            else:
-                succ_ix = np.random.choice(range(len(successors)))
-                node = successors[succ_ix]
-            # Add the current node to the path
-            path.append(node)
-            # Terminate if we reached the target
-            if node == target:
-                break
-        # Only add the path if we successfully got one
-        if path:
-            paths.append(tuple(path))
-    return paths
 
