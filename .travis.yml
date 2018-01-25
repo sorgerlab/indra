@@ -38,7 +38,7 @@ install:
       # First install ocamlfind via opam (needed to build KaSim/KaSa)
       opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env);
       opam install -y conf-which base-bytes;
-      opam install -y ocamlbuild yojson;
+      opam install -y ocamlbuild yojson result;
       # Install KaSim/KaSa
       git clone https://github.com/Kappa-Dev/KaSim.git;
       cd $KAPPAPATH;
