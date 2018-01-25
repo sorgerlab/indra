@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, int
 
 from sys import version_info, exit
+from math import ceil
 if version_info.major is not 3:
     msg = "Python 3.x is required to use this module."
     if __name__ == '__main__':
@@ -276,7 +277,7 @@ class ContentManager(object):
             raise e
         return
 
-    def filter_text_refs(self, db, tr_data_set):
+    def filter_text_refs(self, db, tr_data_set, n_per_batch=None):
         "Try to reconcile the data we have with what's already on the db."
         logger.info("Beginning to filter text refs...")
         review_fname = 'review_%s.txt' % self.my_source
@@ -286,8 +287,21 @@ class ContentManager(object):
             return self.tr_cols.index(id_type)
 
         # If there are not actual refs to work with, don't waste time.
-        if not len(tr_data_set):
+        N = len(tr_data_set)
+        if not N:
             return [], []
+
+        if n_per_batch is not None:
+            tr_data_list = list(tr_data_set)
+            filtered_tr_records = set()
+            flawed_tr_data = []
+            for i in range(ceil(N/n_per_batch)):
+                tr_data_batch = tr_data_list[i*n_per_batch:i*(n_per_batch+1)]
+                filtered_tr_batch, flawed_tr_batch = \
+                    self.filter_text_refs(db, set(tr_data_batch))
+                filtered_tr_records += filtered_tr_batch
+                flawed_tr_data += flawed_tr_batch
+            return filtered_tr_records, flawed_tr_data
 
         # Get all text refs that match any of the id data we have. This means
         # each text ref WILL find a match in the data we have (unless something
@@ -514,7 +528,7 @@ class Medline(NihManager):
         # Check the ids more carefully against what is already in the db.
         if carefully:
             text_ref_records, flawed_refs = \
-                self.filter_text_refs(db, text_ref_records)
+                self.filter_text_refs(db, text_ref_records, n_per_batch=100)
             logger.info('%d new records to add to text_refs.'
                         % len(text_ref_records))
             valid_pmids -= {ref[self.tr_cols.index('pmid')]
@@ -610,10 +624,6 @@ class Medline(NihManager):
             db.SourceFile.source == self.my_source
             )
         existing_files = [sf.name for sf in sf_list if dirname in sf.name]
-        logger.debug('Source files on db for %s: %s'
-                     % (dirname, str(existing_files)))
-        logger.debug('Xml files found for %s: %s.'
-                     % (dirname, str(xml_files)))
 
         # This could perhaps be simplified with map_async from mp.pool.
         q = mp.Queue()
@@ -1064,7 +1074,7 @@ if __name__ == '__main__':
         key_list.sort()
         for k in key_list:
             test_name = test_defaults[k]
-            m = re.match('(\w+)://.*?/([\w.]+)', v)
+            m = re.match('(\w+)://.*?/([\w.]+)', test_name)
             sqltype = m.groups()[0]
             try:
                 db = DatabaseManager(test_name, sqltype=sqltype)
