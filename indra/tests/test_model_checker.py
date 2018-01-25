@@ -1082,7 +1082,6 @@ def test_model_check_data():
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, [stmt_to_check], agent_obs)
     results = mc.check_model(max_paths=5)
-    mc.get_im().draw('im.pdf', prog='dot')
     # Create observable
     assert len(results) == 1
     pr = results[0][1]
@@ -1120,10 +1119,8 @@ def test_prune_influence_map():
     mc = ModelChecker(pa.model, [st1])
     im = mc.get_im()
     remove_im_params(pa.model, im)
-    #im.draw('before_pruning.pdf', prog='dot')
     mc.prune_influence_map()
     im = mc.get_im()
-    #im.draw('after_pruning.pdf', prog='dot')
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
 
@@ -1154,8 +1151,6 @@ def test_weighted_sampling1():
     # Seed the random number generator
     np.random.seed(1)
     results = mc.check_model(max_path_length=5, max_paths=100)
-    im = mc.get_im()
-    mc.get_im().draw('im.pdf', prog='dot')
     assert type(results) == list
     assert len(results) == 1
     stmt_tuple = results[0]
@@ -1299,9 +1294,7 @@ def test_weighted_sampling3():
 
 
 if __name__ == '__main__':
-    #test_weighted_sampling1()
-    test_weighted_sampling2()
-    test_weighted_sampling3()
+    test_model_check_data()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
