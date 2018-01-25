@@ -21,7 +21,7 @@ import os
 import multiprocessing as mp
 import pickle
 import sys
-from os import path
+from os import path, remove
 from ftplib import FTP
 from io import BytesIO
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
-        from .database_manager import logger as db_logger
+        from indra.db.database_manager import logger as db_logger
         db_logger.setLevel(logging.DEBUG)
 
     if not args.continuing and args.task == 'upload':
@@ -86,13 +86,13 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 
-from .util import get_primary_db
-from .database_manager import texttypes, formats
-from .database_manager import sql_expressions as sql_exp
+from indra.db.util import get_primary_db, get_defaults
+from indra.db.database_manager import texttypes, formats, DatabaseManager
+from indra.db.database_manager import sql_expressions as sql_exp
 
 
 try:
-    from psycopg2 import IntegrityError, DataError
+    from psycopg2 import DatabaseError
 except ImportError:
     class IntegrityError(object):
         "Using this in a try-except will catch nothing. (That's the point.)"
@@ -183,9 +183,11 @@ class NihFtpClient(object):
                 buf.flush()
         return
 
-    def download_file(self, f_path):
+    def download_file(self, f_path, dest=None):
         "Download a file into a file given by f_path."
         name = path.basename(f_path)
+        if dest is not None:
+            name = path.join(dest, name)
         with open(name, 'wb') as gzf:
             self.ret_file(f_path, gzf)
         return name
@@ -253,23 +255,20 @@ class ContentManager(object):
 
     def copy_into_db(self, db, *args, **kwargs):
         "Wrapper around the db.copy feature, pickels args upon exception."
-        def handle_error(e):
+        try:
+            db.copy(*args, **kwargs)
+        except DatabaseError as e:
             pkl_file_fmt = "copy_failure_%d.pkl"
             i = 0
             while os.path.exists(pkl_file_fmt % i):
                 i += 1
             with open(pkl_file_fmt % i, 'wb') as f:
                 pickle.dump((e, args, kwargs), f, protocol=3)
+            db.grab_session()
+            db.session.rollback()
             logger.error('Failed in a copy. Pickling args and kwargs.')
             logger.exception(e)
             raise e
-
-        try:
-            db.copy(*args, **kwargs)
-        except IntegrityError as e:
-            handle_error(e)
-        except DataError as e:
-            handle_error(e)
         return
 
     def filter_text_refs(self, db, tr_data_set):
@@ -288,6 +287,7 @@ class ContentManager(object):
         # Get all text refs that match any of the id data we have. This means
         # each text ref WILL find a match in the data we have (unless something
         # is seriously broken.
+        logger.debug("Getting list of existing text refs...")
         or_list = []
         for id_type in self.tr_cols:
             id_list = [entry[id_idx(id_type)] for entry in tr_data_set
@@ -295,18 +295,21 @@ class ContentManager(object):
             if id_list:
                 or_list.append(getattr(db.TextRef, id_type).in_(id_list))
         tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
+        logger.debug("Found %d potentially relevent text refs." % len(tr_list))
 
         # Create an index of tupled data entries for quick lookups by any id
         # type, for example tr_data_idx_dict['pmid'][<a pmid>] will get the
         # tuple with all the id data. This avoids several iterations through
         # the list of text ref data dicts on for each text ref, at the cost of
         # using extra memory.
+        logger.debug("Building index of new data...")
         tr_data_idx_dict = {id_type: {e[id_idx(id_type)]: e
                                       for e in tr_data_set
                                       if e[id_idx(id_type)] is not None}
                             for id_type in self.tr_cols}
 
         # Look for updates to the existing text refs
+        logger.debug("Beginning to iterate over text refs...")
         tr_data_matched_set = set()
         flawed_tr_data = []
         for tr in tr_list:
@@ -341,6 +344,7 @@ class ContentManager(object):
                         # If so, and if our new data does have that id, update
                         # the text ref.
                         if tr_new[i] is not None:
+                            logger.debug("Updating text ref for %s." % id_type)
                             setattr(tr, id_type, tr_new[i])
                     else:
                         # Check to see that all the ids agree. If not, report
@@ -351,6 +355,8 @@ class ContentManager(object):
                         # be logged on the database?
                         if tr_new[i] is not None \
                          and tr_new[i] != getattr(tr, id_type):
+                            logger.waring("Found conflict! Check %s."
+                                          % review_fname)
                             with open(review_fname, 'a+') as f:
                                 f.write(
                                     'Got conflicting id data: in db %s vs %s.\n'
@@ -371,6 +377,8 @@ class ContentManager(object):
 
                 # This condition only occurs if the records we got are
                 # internally inconsistent. This is rare, but it can happen.
+                logger.warning("Got multiple matches! Check %s."
+                               % review_fname)
                 with open(review_fname, 'a+') as f:
                     f.write(
                         ('Got multiple matches for data from %s: %s.'
@@ -379,11 +387,14 @@ class ContentManager(object):
                         )
 
         # This applies all the changes made to the text refs to the db.
+        logger.debug("Committing changes...")
         db.commit("Failed to update with new ids.")
 
         # Now update the text refs with any new refs that were found
-        filtered_tr_records = tr_data_set.difference(tr_data_matched_set)
+        filtered_tr_records = tr_data_set - tr_data_matched_set
 
+        logger.debug("Filtering complete! %d records remaining."
+                     % len(filtered_tr_records))
         return filtered_tr_records, flawed_tr_data
 
     def populate(self, db):
@@ -507,7 +518,15 @@ class Medline(NihManager):
             logger.info('Only %d valid for upload candidacy.'
                         % len(valid_pmids))
 
-        self.copy_into_db(db, 'text_ref', text_ref_records, self.tr_cols)
+        try:
+            self.copy_into_db(db, 'text_ref', text_ref_records, self.tr_cols)
+        except DatabaseError as e:
+            if not carefully:
+                logger.exception(e)
+                logger.warning("Caught database error while trying to copy "
+                               "text refs carelessly.")
+                logger.info("Trying again more carefully...")
+                return self.load_text_refs(db, article_info, carefully=True)
         return valid_pmids
 
     def load_text_content(self, db, article_info, valid_pmids,
@@ -549,12 +568,22 @@ class Medline(NihManager):
                                              formats.TEXT, texttypes.ABSTRACT,
                                              abstract_gz))
 
-        self.copy_into_db(
-            db,
-            'text_content',
-            text_content_records,
-            cols=('text_ref_id', 'source', 'format', 'text_type', 'content',)
-            )
+        try:
+            self.copy_into_db(
+                db,
+                'text_content',
+                text_content_records,
+                cols=('text_ref_id', 'source', 'format', 'text_type',
+                      'content')
+                )
+        except DatabaseError as e:
+            if not carefully:
+                logger.exception(e)
+                logger.warning("Caught database error while trying to copy "
+                               "text content carelessly.")
+                logger.info("Trying again more carefully...")
+                return self.load_text_content(db, article_info, valid_pmids,
+                                              carefully=True)
         return
 
     def upload_article(self, db, article_info, carefully=False):
