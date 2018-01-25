@@ -1017,10 +1017,12 @@ def _match_lhs(cp, rules):
 def _cp_embeds_into(cp1, cp2):
     """Check that any state in ComplexPattern2 is matched in ComplexPattern1.
     """
-    # Check that any state in cp2 is matched in cp2
+    # Check that any state in cp2 is matched in cp1
     # If the thing we're matching to is just a monomer pattern, that makes
     # things easier--we just need to find the corresponding monomer pattern
     # in cp1
+    if cp1 is None or cp2 is None:
+        return False
     cp1 = as_complex_pattern(cp1)
     cp2 = as_complex_pattern(cp2)
     if len(cp2.monomer_patterns) == 1:
