@@ -279,7 +279,7 @@ class ContentManager(object):
 
     def filter_text_refs(self, db, tr_data_set, n_per_batch=None):
         "Try to reconcile the data we have with what's already on the db."
-        logger.info("Beginning to filter text refs...")
+        logger.info("Beginning to filter %d text refs..." % len(tr_data_set))
         review_fname = 'review_%s.txt' % self.my_source
 
         # This is a helper for accessing the data tuples we create
@@ -289,17 +289,18 @@ class ContentManager(object):
         # If there are not actual refs to work with, don't waste time.
         N = len(tr_data_set)
         if not N:
-            return [], []
+            return set(), []
 
         if n_per_batch is not None:
             tr_data_list = list(tr_data_set)
             filtered_tr_records = set()
             flawed_tr_data = []
             for i in range(ceil(N/n_per_batch)):
-                tr_data_batch = tr_data_list[i*n_per_batch:i*(n_per_batch+1)]
+                tr_data_batch = tr_data_list[i*n_per_batch:(i+1)*n_per_batch]
                 filtered_tr_batch, flawed_tr_batch = \
                     self.filter_text_refs(db, set(tr_data_batch))
-                filtered_tr_records += filtered_tr_batch
+                filtered_tr_records = \
+                    filtered_tr_records.union(filtered_tr_batch)
                 flawed_tr_data += flawed_tr_batch
             return filtered_tr_records, flawed_tr_data
 
