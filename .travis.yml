@@ -42,8 +42,7 @@ install:
       # Install KaSim/KaSa
       git clone https://github.com/Kappa-Dev/KaSim.git;
       cd $KAPPAPATH;
-      # KaSim as of 5/1/2017
-      git checkout 0733210;
+      git checkout v4.0rc1;
       make all;
       cd $TRAVIS_BUILD_DIR;
     fi
