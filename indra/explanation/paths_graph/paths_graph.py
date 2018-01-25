@@ -350,7 +350,11 @@ class PathsGraph(object):
         return total_count
 
     def set_uniform_path_distribution(self):
-        """Adjusts edge weights to allow uniform sampling of paths."""
+        """Adjusts edge weights to allow uniform sampling of paths.
+
+        Note that calling this method will over-write any existing edge
+        weights in the graph.
+        """
         path_counts = self._get_path_counts()
         weight_dict = {}
         for u in self.graph.nodes():
@@ -480,15 +484,6 @@ class CombinedPathsGraph(object):
 
     def sample_paths(self, num_samples):
         return self._pg.sample_paths(num_samples=num_samples)
-
-def combine_paths_graphs(pg_dict):
-    """Combine a dict of path graphs into a single super-pathgraph."""
-    combined_graph = nx.DiGraph()
-    for level, pg in pg_dict.items():
-        combined_graph.add_edges_from(pg.graph.edges())
-    cpg = PathsGraph(pg.source_name, pg.target_name, combined_graph, None,
-                     pg.signed, pg.target_polarity)
-    return cpg
 
 
 def _check_reach_depth(dir_name, reachset, length):

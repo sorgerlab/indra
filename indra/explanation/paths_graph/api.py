@@ -13,7 +13,23 @@ __all__ = ['load_signed_sif', 'sample_paths', 'enumerate_paths', 'count_paths',
 
 
 def load_signed_sif(sif_file):
-    """Load edges from a SIF file with lines of the form 'u polarity v'"""
+    """Load edges from a SIF file with lines of the form 'u polarity v'.
+
+    Entries within each line can be separated by spaces and/or tabs. Polarity
+    should be specified by 0 (for a positive/activating edge) or 1 (for a
+    negative/inhibitory edge).
+
+    Parameters
+    ----------
+    sif_file : str
+        Path to the SIF file.
+
+    Returns
+    -------
+    nx.DiGraph
+        Graph with the sign information encoded in the 'sign' attribute of each
+        edge.
+    """
     edges = []
     with open(sif_file, 'rt') as f:
         for line in f.readlines():
@@ -30,11 +46,46 @@ def load_signed_sif(sif_file):
 
 def sample_paths(g, source, target, max_depth=None, num_samples=1000,
                  cycle_free=True, signed=False, target_polarity=0):
-    """Sample paths from a graph using PathsGraphs or CFPGs.
+    """Sample paths over a range of lengths from a graph.
 
     This high-level function provides explicit access to path sampling
     without the user need to explicit create PathsGraphs or CFPGs for
     different path lengths.
+
+    Note that this function samples an equal number of paths from each depth;
+    to sample paths where the sampling distribution reflects the probability
+    of reach paths of different lengths, use an instance of `CombinedCFPG`.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph
+        The underlying graph on which paths will be generated.
+    source : str
+        Name of the source node.
+    target : str
+        Name of the target node.
+    max_depth : Optional[int]
+        The maximum path length to consider. If not specified, the number of
+        nodes in the graph is used as the default maximum depth.
+    num_samples : int
+        Number of path samples at each depth.
+    cycle_free : bool
+        If True, sample only cycle-free paths using CFPGs. Default is True.
+    signed : bool
+        Specifies whether the underlying graph and the corresponding
+        f_level and b_level reachable sets have signed edges.  If True,
+        sign information should be encoded in the 'sign' field of the edge
+        data, with 0 indicating a positive edge and 1 indicating a negative
+        edge.
+    target_polarity : 0 or 1
+        For a signed graph, specifies the polarity of the target node: 0
+        indicates positive/activation, 1 indicates negative/inhibition.
+
+    Returns
+    -------
+    list of paths
+        Each path in the list contains a sequence of node names representing
+        a path from source to target.
     """
     return _run_by_depth('sample_paths', [num_samples], g, source, target,
                          max_depth, cycle_free, signed, target_polarity)
@@ -42,18 +93,80 @@ def sample_paths(g, source, target, max_depth=None, num_samples=1000,
 
 def enumerate_paths(g, source, target, max_depth=None,
                     cycle_free=True, signed=False, target_polarity=0):
+    """Enumerate paths over a range of lengths.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph
+        The underlying graph on which paths will be generated.
+    source : str
+        Name of the source node.
+    target : str
+        Name of the target node.
+    max_depth : Optional[int]
+        The maximum path length to consider. If not specified, the number of
+        nodes in the graph is used as the default maximum depth.
+    cycle_free : bool
+        If True, sample only cycle-free paths using CFPGs. Default is True.
+    signed : bool
+        Specifies whether the underlying graph and the corresponding
+        f_level and b_level reachable sets have signed edges.  If True,
+        sign information should be encoded in the 'sign' field of the edge
+        data, with 0 indicating a positive edge and 1 indicating a negative
+        edge.
+    target_polarity : 0 or 1
+        For a signed graph, specifies the polarity of the target node: 0
+        indicates positive/activation, 1 indicates negative/inhibition.
+
+    Returns
+    -------
+    list of paths
+        Each path in the list contains a sequence of node names representing
+        a path from source to target.
+    """
     return _run_by_depth('enumerate_paths', [], g, source, target, max_depth,
                          cycle_free, signed, target_polarity)
 
 
 def count_paths(g, source, target, max_depth=None,
                 cycle_free=True, signed=False, target_polarity=0):
+    """Count unique paths over a range of lengths without explicit enumeration.
+
+    Parameters
+    ----------
+    g : networkx.DiGraph
+        The underlying graph on which paths will be generated.
+    source : str
+        Name of the source node.
+    target : str
+        Name of the target node.
+    max_depth : Optional[int]
+        The maximum path length to consider. If not specified, the number of
+        nodes in the graph is used as the default maximum depth.
+    cycle_free : bool
+        If True, sample only cycle-free paths using CFPGs. Default is True.
+    signed : bool
+        Specifies whether the underlying graph and the corresponding
+        f_level and b_level reachable sets have signed edges.  If True,
+        sign information should be encoded in the 'sign' field of the edge
+        data, with 0 indicating a positive edge and 1 indicating a negative
+        edge.
+    target_polarity : 0 or 1
+        For a signed graph, specifies the polarity of the target node: 0
+        indicates positive/activation, 1 indicates negative/inhibition.
+
+    Returns
+    -------
+    int
+        Total number of paths up to the specified maximum depth.
+    """
     return _run_by_depth('count_paths', [], g, source, target, max_depth,
                          cycle_free, signed, target_polarity)
 
 
 def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
                   cycle_free=True, signed=False, target_polarity=0):
+    """Run a function over paths graphs computed for different lengths."""
     if max_depth is None:
         max_depth = len(g)
     f_level, b_level = get_reachable_sets(g, source, target, max_depth,
@@ -80,7 +193,7 @@ def _run_by_depth(func_name, func_args, g, source, target, max_depth=None,
     return results
 
 
-def sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
+def _sample_raw_graph(g, source, target, max_depth=10, num_samples=1000,
                      eliminate_cycles=False):
     """Sample paths up to a given depth from an underlying graph.
 

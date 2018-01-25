@@ -232,6 +232,9 @@ class PreCFPG(PathsGraph):
     def count_paths(self):
         raise NotImplementedError()
 
+    def set_uniform_path_distribution():
+        raise NotImplementedError()
+
     def _successor(self, path, u):
         """Randomly choose a successor node of u given the current path."""
         out_edges = []
