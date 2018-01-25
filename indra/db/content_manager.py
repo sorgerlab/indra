@@ -59,6 +59,11 @@ if __name__ == '__main__':
         action='store_true',
         help='Run with debugging level output.'
         )
+    parser.add_argument(
+        '-t', '--test',
+        action='store_true',
+        help='Run tests using one of the designated test databases.'
+        )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -1052,7 +1057,30 @@ class Manuscripts(PmcManager):
 
 
 if __name__ == '__main__':
-    db = get_primary_db()
+    if args.test:
+        defaults = get_defaults()
+        test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
+        key_list = list(test_defaults.keys())
+        key_list.sort()
+        for k in key_list:
+            test_name = test_defaults[k]
+            m = re.match('(\w+)://.*?/([\w.]+)', v)
+            sqltype = m.groups()[0]
+            try:
+                db = DatabaseManager(test_name, sqltype=sqltype)
+                db.grab_session()
+            except Exception as e:
+                logger.debug("Tried to use %s, but failed due to:\n%s\n"
+                             % (k, e))
+                continue  # Clearly this test database won't work.
+            print("Using test database %s." % k)
+            break
+        else:
+            logger.error("Could not load a test database!")
+            sys.exit(1)
+    else:
+        db = get_primary_db()
+
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
         if not args.continuing:
