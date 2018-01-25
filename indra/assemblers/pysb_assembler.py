@@ -2227,7 +2227,7 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set):
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name,
-            subj_pattern + obj_pattern >> subj_pattern,
+            subj_pattern + obj_pattern >> subj_pattern + None,
             kf_one_step_degrade)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
@@ -2323,7 +2323,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
                 kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
             model.add_component(synth_rate)
 
-        r = Rule(rule_name, subj_pattern >> subj_pattern + obj_pattern,
+        r = Rule(rule_name, subj_pattern + None >> subj_pattern + obj_pattern,
                  synth_rate)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
