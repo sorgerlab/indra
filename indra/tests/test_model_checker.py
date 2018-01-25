@@ -1082,7 +1082,6 @@ def test_model_check_data():
     pa.make_model(policies='one_step')
     mc = ModelChecker(pa.model, [stmt_to_check], agent_obs)
     results = mc.check_model(max_paths=5)
-    mc.get_im().draw('im.pdf', prog='dot')
     # Create observable
     assert len(results) == 1
     pr = results[0][1]
@@ -1120,10 +1119,8 @@ def test_prune_influence_map():
     mc = ModelChecker(pa.model, [st1])
     im = mc.get_im()
     remove_im_params(pa.model, im)
-    #im.draw('before_pruning.pdf', prog='dot')
     mc.prune_influence_map()
     im = mc.get_im()
-    #im.draw('after_pruning.pdf', prog='dot')
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
 
@@ -1154,8 +1151,6 @@ def test_weighted_sampling1():
     # Seed the random number generator
     np.random.seed(1)
     results = mc.check_model(max_path_length=5, max_paths=100)
-    im = mc.get_im()
-    mc.get_im().draw('im.pdf', prog='dot')
     assert type(results) == list
     assert len(results) == 1
     stmt_tuple = results[0]
@@ -1215,7 +1210,7 @@ def test_weighted_sampling2():
     # Now, try sampling
     mc = ModelChecker(pa.model, [stmt_to_check], do_sampling=True, seed=1)
     mc.prune_influence_map()
-    results = mc.check_model(max_path_length=5, max_paths=100)
+    results = mc.check_model(max_path_length=5, max_paths=1000)
     assert type(results) == list
     assert len(results) == 1
     stmt_tuple = results[0]
@@ -1234,8 +1229,8 @@ def test_weighted_sampling2():
     mapk3_count = path_ctr[(('MAP2K1_phosphorylation_MAPK3_phospho', 1),
                             ('MAPK3_phospho_phosphorylation_JUN_phospho', 1),
                             ('JUN_phospho_p_obs', 1))]
-    assert mapk1_count == 78, mapk1_count
-    assert mapk3_count == 22, mapk3_count
+    assert mapk1_count == 750, mapk1_count
+    assert mapk3_count == 250, mapk3_count
 
 
 def test_weighted_sampling3():
@@ -1299,9 +1294,7 @@ def test_weighted_sampling3():
 
 
 if __name__ == '__main__':
-    test_weighted_sampling1()
-    test_weighted_sampling2()
-    test_weighted_sampling3()
+    test_model_check_data()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation

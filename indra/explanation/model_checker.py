@@ -15,7 +15,6 @@ from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
-from indra.explanation import cycle_free_paths as cfp
 from indra.explanation import paths_graph as pg
 from collections import Counter
 
@@ -242,20 +241,22 @@ class ModelChecker(object):
 
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
-        self._im.is_multigraph = lambda: False
+        #self._im.is_multigraph = lambda: False
         # Now, for every rule in the model, check if there are any observables
         # downstream
         # Alternatively, for every observable in the model, get a list of rules
+        # We'll need the dictionary to check if nodes are observables
+        node_attributes = nx.get_node_attributes(self._im, 'shape')
         for rule in self.model.rules:
             obs_list = []
             # Get successors of the rule node
             for neighb in self._im.neighbors(rule.name):
                 # Check if the node is an observable
-                if not _is_obs_node(neighb):
+                if node_attributes[neighb] != 'ellipse':
                     continue
                 # Get the edge and check the polarity
-                edge_sign = _get_edge_sign(self._im.get_edge(rule.name, neighb))
-                obs_list.append((neighb.name, edge_sign))
+                edge_sign = _get_edge_sign(self._im, (rule.name, neighb))
+                obs_list.append((neighb, edge_sign))
             self.rule_obs_dict[rule.name] = obs_list
         return self._im
 
@@ -414,7 +415,7 @@ class ModelChecker(object):
                           for path in path_list]
 
         pg_polarity = 0 if target_polarity > 0 else 1
-        nx_graph = _agraph_to_digraph(self.get_im())
+        nx_graph = _im_to_signed_digraph(self.get_im())
         # Add edges from dummy node to input rules
         source_node = 'SOURCE_NODE'
         for rule in input_rule_set:
@@ -422,17 +423,17 @@ class ModelChecker(object):
         # -------------------------------------------------
         # Create combined paths_graph
         f_level, b_level = pg.get_reachable_sets(nx_graph, source_node,
-                                                 obs_name, max_path_length+1,
+                                                 obs_name, max_path_length,
                                                  signed=True)
-        pg_dict = {}
-        for path_length in range(1, max_path_length+2):
-            pg_dict[path_length] = \
-                    pg.paths_graph(nx_graph, source_node, obs_name, path_length,
-                                   f_level, b_level, signed=True,
-                                   target_polarity=pg_polarity)
-        combined_pg = pg.combine_path_graphs(pg_dict)
+        pg_list = []
+        for path_length in range(1, max_path_length+1):
+            cfpg = pg.CFPG.from_graph(
+                    nx_graph, source_node, obs_name, path_length, f_level,
+                    b_level, signed=True, target_polarity=pg_polarity)
+            pg_list.append(cfpg)
+        combined_pg = pg.CombinedCFPG(pg_list)
         # Make sure the combined paths graph is not empty
-        if not combined_pg:
+        if not combined_pg.graph:
             pr = PathResult(False, 'NO_PATHS_FOUND', max_paths, max_path_length)
             pr.path_metrics = None
             pr.paths = []
@@ -455,11 +456,11 @@ class ModelChecker(object):
             ic_dict[mon.name] = ic_value
 
         # Set weights in PG based on model initial conditions
-        for cur_node in combined_pg.nodes():
+        for cur_node in combined_pg.graph.nodes():
             edge_weights = {}
             rule_obj_list = []
             edge_weights_by_gene = {}
-            for u, v in combined_pg.out_edges(cur_node):
+            for u, v in combined_pg.graph.out_edges(cur_node):
                 v_rule = v[1][0]
                 # Get the object of the rule (a monomer name)
                 rule_obj = rule_obj_dict.get(v_rule)
@@ -488,17 +489,12 @@ class ModelChecker(object):
                     rule_obj_count = 1
                 edge_weights_norm[e] = ((v / float(edge_weight_sum)) /
                                         float(rule_obj_count))
-            # Iterate again, adding edge weights to paths graph
-            nx.set_edge_attributes(combined_pg, 'weight', edge_weights_norm)
-            # Update weights in paths graph
+            # Add edge weights to paths graph
+            nx.set_edge_attributes(combined_pg.graph, 'weight',
+                                   edge_weights_norm)
 
-        # Sample from the combined paths graph (eliminates cycles)
-        paths = []
-        for i in range(max_paths):
-            path = pg.sample_single_path(combined_pg, source_node, obs_name,
-                                         signed=True, weighted=True,
-                                         target_polarity=pg_polarity)
-            paths.append(path)
+        # Sample from the combined CFPG
+        paths = combined_pg.sample_paths(max_paths)
         # -------------------------------------------------
         if paths:
             pr = PathResult(True, 'PATHS_FOUND', max_paths, max_path_length)
@@ -688,13 +684,6 @@ class ModelChecker(object):
                               reverse=True)
         return scored_paths
 
-    def _extreme_prune(self, node_list, filename='im.pdf'):
-        im = self.get_im()
-        for node in im.nodes():
-            if not node in node_list:
-                im.remove_node(node)
-        im.draw(filename, prog='dot')
-
     def prune_influence_map(self):
         """Remove edges between rules causing problematic non-transitivity.
 
@@ -713,7 +702,7 @@ class ModelChecker(object):
         for e in im.edges():
             if e[0] == e[1]:
                 logger.info('Removing self loop: %s', e)
-                im.remove_edge(e)
+                im.remove_edge(e[0], e[1])
         # Now compare nodes pairwise and look for overlap between child nodes
         edges_to_remove = []
         remove_im_params(self.model, im)
@@ -729,24 +718,17 @@ class ModelChecker(object):
             if succ_dict[p1].difference(succ_dict[p2]) == set([p2]) and \
                succ_dict[p2].difference(succ_dict[p1]) == set([p1]):
                 for u, v in ((p1, p2), (p2, p1)):
-                    edge = im.get_edge(u, v)
+                    edge = (u, v)
                     edges_to_remove.append(edge)
-                    edge_sign = _get_edge_sign(edge)
+                    edge_sign = _get_edge_sign(im, edge)
                     logger.debug('Will remove edge (%s, %s) with polarity %s',
                                  u, v, edge_sign)
         for edge in im.edges():
             if edge in edges_to_remove:
-                im.remove_edge(edge)
+                im.remove_edge(edge[0], edge[1])
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
-
-    '''
-    agent_data = {self.agent_obs[0]: 1, self.agent_obs[1]: -1, self.agent_obs[2]: 1}
-    _find_sources_sample(self.get_im(), obs_name, input_rule_set, target_polarity, self.
-    rule_obs_dict, self.agent_to_obs, agent_data)
-    '''
-
     # Build up dict mapping observables to values
     obs_dict = {}
     for ag, val in agents_values.items():
@@ -970,17 +952,27 @@ def _get_signed_predecessors(im, node, polarity):
     signed_pred_list = []
     predecessors = im.predecessors_iter
     for pred in predecessors(node):
-        pred_edge = im.get_edge(pred, node)
-        yield (pred.name, _get_edge_sign(pred_edge) * polarity)
+        pred_edge = (pred, node)
+        yield (pred, _get_edge_sign(im, pred_edge) * polarity)
 
 
-def _get_edge_sign(edge):
+def _get_edge_sign(im, edge):
     """Get the polarity of the influence by examining the edge color."""
-    if edge.attr.get('color') is None:
+    edge_data = im[edge[0]][edge[1]]
+    # Handle possible multiple edges between nodes
+    colors = list(set([v['color'] for v in edge_data.values()
+                                  if v.get('color')]))
+    if len(colors) > 1:
+        logger.warning("Edge %s has conflicting polarities; choosing "
+                       "positive polarity by default" % edge)
+        color = 'green'
+    else:
+        color = colors[0]
+    if color is None:
         raise Exception('No color attribute for edge.')
-    elif edge.attr['color'] == 'green':
+    elif color == 'green':
         return 1
-    elif edge.attr['color'] == 'red':
+    elif color == 'red':
         return -1
     else:
         raise Exception('Unexpected edge color: %s' % edge.attr['color'])
@@ -1025,10 +1017,12 @@ def _match_lhs(cp, rules):
 def _cp_embeds_into(cp1, cp2):
     """Check that any state in ComplexPattern2 is matched in ComplexPattern1.
     """
-    # Check that any state in cp2 is matched in cp2
+    # Check that any state in cp2 is matched in cp1
     # If the thing we're matching to is just a monomer pattern, that makes
     # things easier--we just need to find the corresponding monomer pattern
     # in cp1
+    if cp1 is None or cp2 is None:
+        return False
     cp1 = as_complex_pattern(cp1)
     cp2 = as_complex_pattern(cp2)
     if len(cp2.monomer_patterns) == 1:
@@ -1104,8 +1098,8 @@ def _path_with_polarities(im, path):
     for from_tup, to_tup in edges:
         from_rule = from_tup[0]
         to_rule = to_tup[0]
-        edge = im.get_edge(from_rule, to_rule)
-        edge_polarities.append(_get_edge_sign(edge))
+        edge = (from_rule, to_rule)
+        edge_polarities.append(_get_edge_sign(im, edge))
     # Compute and return the overall path polarity
     #path_polarity = np.prod(edge_polarities)
     # Calculate left product of edge polarities return
@@ -1166,19 +1160,13 @@ def _monomer_pattern_label(mp):
     return '%s_%s' % (mp.monomer.name, '_'.join(site_strs))
 
 
-def _agraph_to_digraph(agraph):
+def _im_to_signed_digraph(im):
     edges = []
-    for e in agraph.edges():
-        edge_sign = _get_edge_sign(e)
+    for e in im.edges():
+        edge_sign = _get_edge_sign(im, e)
         polarity = 0 if edge_sign > 0 else 1
-        edges.append((e[0].name, e[1].name, dict([('sign', polarity)])))
-    mdg = nx.DiGraph()
-    mdg.add_edges_from(edges)
-    return mdg
+        edges.append((e[0], e[1], dict([('sign', polarity)])))
+    dg = nx.DiGraph()
+    dg.add_edges_from(edges)
+    return dg
 
-
-def _is_obs_node(node):
-    if node.attr['shape'] == 'ellipse':
-        return True
-    else:
-        return False

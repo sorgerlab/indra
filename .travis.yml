@@ -21,7 +21,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy
+  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@master
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
@@ -38,12 +38,11 @@ install:
       # First install ocamlfind via opam (needed to build KaSim/KaSa)
       opam init -a git://github.com/ocaml/opam-repository && eval $(opam config env);
       opam install -y conf-which base-bytes;
-      opam install -y ocamlbuild yojson;
+      opam install -y ocamlbuild yojson result;
       # Install KaSim/KaSa
       git clone https://github.com/Kappa-Dev/KaSim.git;
       cd $KAPPAPATH;
-      # KaSim as of 5/1/2017
-      git checkout 0733210;
+      git checkout v4.0rc1;
       make all;
       cd $TRAVIS_BUILD_DIR;
     fi
