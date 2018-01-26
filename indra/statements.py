@@ -2356,6 +2356,22 @@ class Influence(IncreaseAmount):
         self.subj_delta = subj_delta
         self.obj_delta = obj_delta
 
+    def overall_polarity(self):
+        # Set p1 and p2 to None / 1 / -1 depending on polarity
+        p1 = self.subj_delta['polarity'] if self.subj_delta and \
+            self.subj_delta['polarity'] else None
+        p2 = self.obj_delta['polarity'] if self.obj_delta and \
+            self.obj_delta['polarity'] else None
+        if p1 is None and p2 is None:
+            pol = None
+        elif p2 is None:
+            pol = p1
+        elif p1 is None:
+            pol = p2
+        else:
+            pol = p1 * p2
+        return pol
+
     def __repr__(self):
         if sys.version_info[0] >= 3:
             return self.__str__()

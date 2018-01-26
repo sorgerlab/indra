@@ -1474,3 +1474,25 @@ def test_bound_condition_matches():
     assert not bcs[0].matches(bcs[1])
     assert not bcs[0].matches(bcs[2])
     assert bcs[0].matches(bcs[3])
+
+
+def test_influence_polarity():
+    st = Influence(Agent('a'), Agent('b'))
+    assert st.overall_polarity() is None
+    st.subj_delta = {'polarity': None, 'magnitude': None}
+    assert st.overall_polarity() is None
+    st.obj_delta = {'polarity': None, 'magnitude': None}
+    assert st.overall_polarity() is None
+    st.subj_delta['polarity'] = 1
+    assert st.overall_polarity() == 1
+    st.subj_delta['polarity'] = -1
+    assert st.overall_polarity() == -1
+    st.obj_delta['polarity'] = 1
+    assert st.overall_polarity() == -1
+    st.obj_delta['polarity'] = -1
+    assert st.overall_polarity() == 1
+    st.subj_delta['polarity'] = 1
+    assert st.overall_polarity() == -1
+    st.obj_delta['polarity'] = 1
+    assert st.overall_polarity() == 1, st
+
