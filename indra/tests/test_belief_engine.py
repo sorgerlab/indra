@@ -3,7 +3,8 @@ from builtins import dict, str
 from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
-from indra.belief import _get_belief_package, default_probs, sample_statements
+from indra.belief import _get_belief_package, default_probs, \
+        sample_statements, evidence_random_noise_prior, tag_evidence_subtype
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
@@ -237,3 +238,88 @@ def test_check_prior_probs():
     st = Phosphorylation(None, Agent('ERK'),
                          evidence=[Evidence(source_api='xxx')])
     be.set_prior_probs([st])
+
+def test_evidence_subtype_tagger():
+    #Test for reach evidence
+    evidence_reach = Evidence(source_api='reach', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'found_by': 'Positive_early_activation'})
+    (stype, subtype) = tag_evidence_subtype(evidence_reach)
+    assert(stype == 'reach')
+    assert(subtype == 'Positive_early_[^_]*')
+
+    #Test for biopax evidence
+    evidence_biopax = Evidence(source_api='biopax', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'source_sub_id': 'reactome'})
+    (stype, subtype) = tag_evidence_subtype(evidence_biopax)
+    assert(stype == 'biopax')
+    assert(subtype == 'reactome')
+
+    #Test for geneways evidence
+    evidence_geneways = Evidence(source_api='geneways', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'actiontype': 'bind'})
+    (stype, subtype) = tag_evidence_subtype(evidence_geneways)
+    assert(stype == 'geneways')
+    assert(subtype == 'bind')
+
+    #Test for unsupported evidence
+    evidence_donald_duck = Evidence(source_api='donald_duck', source_id=0,
+            pmid=29053813, text=None, epistemics={'direct': True},
+            annotations={'quack': 'quack',
+                         'quack?' : 'QUAAAAAAAAACK!'})
+    (stype, subtype) = tag_evidence_subtype(evidence_donald_duck)
+    assert(stype == 'donald_duck')
+    assert(subtype is None)
+
+def test_evidence_random_noise_prior():
+    type_probs = {'biopax': 0.9, 'geneways': 0.2}
+    biopax_subtype_probs = {
+            'reactome' : 0.4,
+            'biogrid' : 0.2}
+    geneways_subtype_probs = {
+            'phosphorylate': 0.5,
+            'bind' : 0.7}
+    subtype_probs = {
+        'biopax' : biopax_subtype_probs,
+        'geneways' : geneways_subtype_probs }
+
+    ev_geneways_bind = Evidence(source_api='geneways', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'actiontype': 'bind'})
+    ev_biopax_reactome = Evidence(source_api='biopax', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'source_sub_id': 'reactome'})
+    ev_biopax_pid = Evidence(source_api='biopax', source_id=0,
+            pmid=0, text=None, epistemics={},
+            annotations={'source_sub_id': 'pid'})
+
+    #Random noise prior for geneways bind evidence is the subtype prior,
+    #since we specified it
+    assert(evidence_random_noise_prior(ev_geneways_bind,
+        type_probs, subtype_probs) == 0.7)
+
+    #Random noise prior for reactome biopax evidence is the subtype prior,
+    #since we specified it
+    assert(evidence_random_noise_prior(ev_biopax_reactome,
+        type_probs, subtype_probs) == 0.4)
+
+    #Random noise prior for pid evidence is the subtype prior,
+    #since we specified it
+    assert(evidence_random_noise_prior(ev_biopax_pid,
+        type_probs, subtype_probs) == 0.9)
+
+    #Make sure this all still works when we go through the belief engine
+    statements = []
+    members = [Agent('a'), Agent('b')]
+    statements.append( Complex(members, evidence=ev_geneways_bind) )
+    statements.append( Complex(members, evidence=ev_biopax_reactome) )
+    statements.append( Complex(members, evidence=ev_biopax_pid) )
+    p = {'rand': type_probs, 'syst': {'biopax':0, 'geneways':0}}
+    engine = BeliefEngine(p, subtype_probs)
+    engine.set_prior_probs(statements)
+    assert(statements[0].belief == 1 - 0.7)
+    assert(statements[1].belief == 1 - 0.4)
+    assert(statements[2].belief == 1 - 0.9)
+

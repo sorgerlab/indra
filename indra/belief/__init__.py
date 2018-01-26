@@ -2,7 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import numpy
 import networkx
+import logging
 
+from indra.sources.reach.processor import determine_reach_subtype
+
+logger = logging.getLogger("belief")
 
 default_probs = {
     'rand': {
@@ -56,11 +60,17 @@ class BeliefEngine(object):
     prior_probs : dict[dict]
         A dictionary of prior systematic and random error probabilities for
         each knowledge source.
+    subtype_probs: dict[dict]
+        A dictionary of random error probabilities for knowledge sources.
+        When a subtype random error probability is not specified, will just
+        use the overall type prior in prior_probs. If None, will
+        only use the priors for each rule.
     """
-    def __init__(self, prior_probs=None):
+    def __init__(self, prior_probs=None, subtype_probs=None):
         self.prior_probs = default_probs
         if prior_probs:
             self.prior_probs.update(prior_probs)
+        self.subtype_probs = subtype_probs
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -85,8 +95,13 @@ class BeliefEngine(object):
             syst_factors = {s: self.prior_probs['syst'][s]
                             for s in uniq_sources}
             rand_factors = {k: [] for k in uniq_sources}
-            for s in sources:
-                rand_factors[s].append(self.prior_probs['rand'][s])
+            for ev in st.evidence:
+                rand_factors[ev.source_api].append(
+                        evidence_random_noise_prior(
+                            ev,
+                            self.prior_probs['rand'],
+                            self.subtype_probs))
+
             neg_prob_prior = 1
             for s in uniq_sources:
                 neg_prob_prior *= (syst_factors[s] +
@@ -119,6 +134,7 @@ class BeliefEngine(object):
                     g.add_node(st2.matches_key(), {'stmt': st2})
                     g.add_edge(st2.matches_key(), st1.matches_key())
             return g
+
         def get_ranked_stmts(g):
             node_ranks = networkx.topological_sort(g, reverse=True)
             stmts = [g.node[n]['stmt'] for n in node_ranks]
@@ -211,3 +227,64 @@ def sample_statements(stmts, seed=None):
         if r[i] < stmt.belief:
             new_stmts.append(stmt)
     return new_stmts
+
+
+def evidence_random_noise_prior(evidence, type_probs, subtype_probs):
+    """Determines the random-noise prior probability for this evidence.
+
+    If the evidence corresponds to a subtype, and that subtype has a curated
+    prior noise probability, use that.
+
+    Otherwise, gives the random-noise prior for the overall rule type.
+    """
+    (stype, subtype) = tag_evidence_subtype(evidence)
+    # Get the subtype, if available
+
+    # Return the subtype random noise prior, if available
+    if subtype_probs is not None:
+        if stype in subtype_probs:
+            if subtype in subtype_probs[stype]:
+                return subtype_probs[stype][subtype]
+
+    # Fallback to just returning the overall evidence type random noise prior
+    return type_probs[stype]
+
+
+def tag_evidence_subtype(evidence):
+    """Returns the type and subtype of an evidence object as a string,
+    typically the extraction rule or database from which the statement
+    was generated.
+
+    For biopax, this is just the database name.
+
+    Parameters
+    ----------
+    statement: indra.statements.Evidence
+        The statement which we wish to subtype
+
+    Returns
+    -------
+    types: tuple
+        A tuple with (type, subtype), both strings
+        Returns (type, None) if the type of statement is not yet handled in
+        this function.
+    """
+
+    source_api = evidence.source_api
+    annotations = evidence.annotations
+
+    if source_api == 'biopax':
+        subtype = annotations['source_sub_id']
+    elif source_api == 'reach':
+        if 'found_by' in annotations:
+            subtype = determine_reach_subtype(annotations['found_by'])
+        else:
+            logger.warning('Could not find found_by attribute in reach '
+                           'statement annoations')
+            subtype = None
+    elif source_api == 'geneways':
+        subtype = annotations['actiontype']
+    else:
+        subtype = None
+
+    return (source_api, subtype)
