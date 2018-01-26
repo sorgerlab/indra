@@ -696,6 +696,7 @@ def test_complex_stmt_with_activation():
     assert isinstance(stmt1, Complex)
     assert len(stmt1.agent_list()) == 2
     assert sorted([ag.name for ag in stmt1.agent_list()]) == ['BRAF', 'MAP2K1']
+    assert stmt1.evidence
     stmt2 = pbp.statements[1]
     assert isinstance(stmt2, Activation)
     assert stmt2.subj.name == 'BRAF'
@@ -703,6 +704,7 @@ def test_complex_stmt_with_activation():
     assert stmt2.obj.name == 'MAPK1'
     assert stmt2.obj.activity is None
     assert stmt2.obj_activity == 'kinase'
+
 
 if __name__ == '__main__':
     test_get_agent_fusion()

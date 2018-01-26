@@ -75,9 +75,9 @@ class PybelProcessor(object):
                 continue
             # If the left or right-hand sides involve complex abundances,
             # add them as statements
-            for node_data in (u_data, v_data):
+            for node_ix, node_data in enumerate((u_data, v_data)):
                 if node_data[pc.FUNCTION] == pc.COMPLEX:
-                    self._get_complex(node_data)
+                    self._get_complex(u_data, v_data, d, node_ix)
             subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
             obj_activity = _get_activity_condition(d.get(pc.OBJECT))
             obj_to_loc = _get_translocation_target(d.get(pc.OBJECT))
@@ -156,15 +156,18 @@ class PybelProcessor(object):
             else:
                 self.unhandled.append((u_data, v_data, d))
 
-    def _get_complex(self, node_data):
+    def _get_complex(self, u_data, v_data, edge_data, node_ix):
         # Get an agent with bound conditions from the Complex
+        assert node_ix in (0, 1)
+        node_data = [u_data, v_data][node_ix]
         cplx_agent = _get_agent(node_data, None)
         if cplx_agent is None:
             return
         agents = [bc.agent for bc in cplx_agent.bound_conditions]
         cplx_agent.bound_conditions = []
         agents.append(cplx_agent)
-        stmt = Complex(agents)
+        ev = _get_evidence(u_data, v_data, edge_data)
+        stmt = Complex(agents, evidence=[ev])
         self.statements.append(stmt)
 
     def _get_regulate_amount(self, u_data, v_data, edge_data):
