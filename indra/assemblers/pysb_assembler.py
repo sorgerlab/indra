@@ -2337,6 +2337,21 @@ increaseamount_monomers_hill = increaseamount_monomers_one_step
 increaseamount_assemble_hill = lambda a, b, c: \
         increaseamount_assemble_one_step(a, b, c, 'hill')
 
+
+# INFLUENCE ###################################################
+
+influence_monomers_one_step = increaseamount_monomers_one_step
+def influence_assemble_one_step(stmt, *args):
+    if stmt.overall_polarity() == -1:
+        return decreaseamount_assemble_one_step(stmt, *args)
+    else:
+        return increaseamount_assemble_one_step(stmt, *args)
+influence_monomers_default = influence_monomers_one_step
+influence_assemble_default = influence_assemble_one_step
+
+
+# CONVERSION ###################################################
+
 def conversion_monomers_one_step(stmt, agent_set):
     # Skip statements with more than one from object due to complications
     # with rate law

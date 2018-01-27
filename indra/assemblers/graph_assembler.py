@@ -212,7 +212,8 @@ class GraphAssembler():
         if isinstance(stmt, RemoveModification) or \
              isinstance(stmt, Inhibition) or \
              isinstance(stmt, DecreaseAmount) or \
-             isinstance(stmt, Gap):
+             isinstance(stmt, Gap) or \
+             (isinstance(stmt, Influence) and stmt.overall_polarity() == -1):
             color = '#ff0000'
         else:
             color = '#000000'
@@ -245,6 +246,7 @@ class GraphAssembler():
                 return True
             else:
                 return False
+
 
 def _get_node_label(agent):
     # If the agent doesn't have grounding in a known
