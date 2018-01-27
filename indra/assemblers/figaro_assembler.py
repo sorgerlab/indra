@@ -12,16 +12,25 @@ class FigaroAssembler(object):
     def make_model(self):
         self.BN = networkx.DiGraph()
         for stmt in self.statements:
-            if isinstance(stmt, RegulateActivity):
+            if isinstance(stmt, RegulateAmount):
                 strength = self.strengths.get((stmt.subj.name, stmt.obj.name))
                 if not strength:
                     coeff = 1
                 else:
                     coeff = self.magnitudes[strength[1]] / \
                         self.magnitudes[strength[0]]
+                if isinstance(stmt, DecreaseAmount):
+                    pol = '-'
+                elif isinstance(stmt, IncreaseAmount):
+                    pol = '+'
+                elif isinstance(stmt, Influence):
+                    pol_stmt = stmt.overall_polarity()
+                    pol = '+' if (pol_stmt is None or pol_stmt == '-1') \
+                        else '-'
+                else:
+                    pol = '+'
                 self.BN.add_edge(_n(stmt.subj.name), _n(stmt.obj.name),
-                    pol=('+' if isinstance(stmt, Activation) else '-'),
-                    coeff=coeff)
+                                 pol=pol, coeff=coeff)
 
     def print_model(self, fname=None):
         imports = ['language._', 'library.atomic._',
