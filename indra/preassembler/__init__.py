@@ -7,6 +7,7 @@ import tempfile
 import itertools
 import functools
 import collections
+import networkx as nx
 import multiprocessing as mp
 try:
     import pygraphviz as pgv
@@ -15,7 +16,7 @@ except ImportError:
 from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.databases import uniprot_client
-
+from indra.assemblers import EnglishAssembler
 
 logger = logging.getLogger('preassembler')
 
@@ -516,7 +517,8 @@ def _set_supports_stmt_pairs(stmt_tuples, hierarchies=None,
     return ix_map
 
 
-def render_stmt_graph(statements, agent_style=None):
+def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
+                      agent_style=None):
     """Render the statement hierarchy as a pygraphviz graph.
 
     Parameters
@@ -525,6 +527,18 @@ def render_stmt_graph(statements, agent_style=None):
         A list of top-level statements with associated supporting statements
         resulting from building a statement hierarchy with
         :py:meth:`combine_related`.
+    reduce : bool
+        Whether to perform a transitive reduction of the edges in the graph.
+        Default is True.
+    english : bool
+        If True, the statements in the graph are represented by their
+        English-assembled equivalent; otherwise they are represented as
+        text-formatted Statements.
+    rank_dir : str or None
+        Argument to pass through to the  pygraphviz `AGraph` constructor
+        specifying graph layout direction. In particular, a value of 'LR'
+        specifies a left-to-right direction. If None, the pygraphviz default
+        is used.
     agent_style : dict or None
         Dict of attributes specifying the visual properties of nodes. If None,
         the following default attributes are used::
@@ -561,6 +575,17 @@ def render_stmt_graph(statements, agent_style=None):
         :alt: Example statement graph rendered by Graphviz
 
     """
+    def transitive_reduction(G):
+        # NOTE: Copied from networkx version 2.0 source
+        TR = nx.DiGraph()
+        TR.add_nodes_from(G.nodes())
+        for u in G:
+            u_edges = set(G[u])
+            for v in G[u]:
+                u_edges -= {y for x, y in nx.dfs_edges(G, v)}
+            TR.add_edges_from((u, v) for v in u_edges)
+        return TR
+
     # Set the default agent formatting properties
     if agent_style is None:
         agent_style = {'color': 'lightgray', 'style': 'filled',
@@ -569,9 +594,11 @@ def render_stmt_graph(statements, agent_style=None):
     # of the statements
     nodes = set([])
     edges = set([])
+    stmt_dict = {}
     # Recursive function for processing all statements
     def process_stmt(stmt):
-        nodes.add(stmt)
+        nodes.add(str(stmt.matches_key()))
+        stmt_dict[str(stmt.matches_key())] = stmt
         for sby_ix, sby_stmt in enumerate(stmt.supported_by):
             edges.add((str(stmt.matches_key()), str(sby_stmt.matches_key())))
             process_stmt(sby_stmt)
@@ -579,17 +606,33 @@ def render_stmt_graph(statements, agent_style=None):
     # recursively
     for stmt in statements:
         process_stmt(stmt)
-    # Add the nodes and edges to the graph
+    # Create a networkx graph from the nodes
+    nx_graph = nx.DiGraph()
+    nx_graph.add_edges_from(edges)
+    # Perform transitive reduction if desired
+    if reduce:
+        nx_graph = transitive_reduction(nx_graph)
+    # Create a pygraphviz graph from the nx graph
     try:
-        graph = pgv.AGraph(name='statements', directed=True, rankdir='LR')
+        pgv_graph = pgv.AGraph(name='statements', directed=True,
+                               rankdir=rankdir)
     except NameError:
         logger.error('Cannot generate graph because '
                      'pygraphviz could not be imported.')
         return None
-    for node in nodes:
-        graph.add_node(str(node.matches_key()), label=str(node), **agent_style)
-    graph.add_edges_from(edges)
-    return graph
+    for node in nx_graph.nodes():
+        stmt = stmt_dict[node]
+        if english:
+            ea = EnglishAssembler([stmt])
+            stmt_str = ea.make_model()
+        else:
+            stmt_str = str(stmt)
+        pgv_graph.add_node(node,
+                           label='%s (%d)' % (stmt_str, len(stmt.evidence)),
+                           **agent_style)
+    pgv_graph.add_edges_from(nx_graph.edges())
+    return pgv_graph
+
 
 
 def flatten_stmts(stmts):
