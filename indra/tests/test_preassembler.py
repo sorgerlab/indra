@@ -415,7 +415,7 @@ def test_render_stmt_graph():
     stmts = [p0, p1, p2, p3, p4, p5, p6]
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_related()
-    graph = render_stmt_graph(pa.related_stmts)
+    graph = render_stmt_graph(pa.related_stmts, reduce=False)
     # One node for each statement
     assert len(graph.nodes()) == 7
     # Edges:
