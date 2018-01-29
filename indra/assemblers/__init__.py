@@ -38,3 +38,7 @@ try:
     from indra.assemblers.pybel_assembler import PybelAssembler
 except ImportError:
     pass
+try:
+    from indra.assemblers.figaro_assembler import FigaroAssembler
+except ImportError:
+    pass
