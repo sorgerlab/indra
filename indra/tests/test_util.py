@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from indra.util import UnicodeXMLTreeBuilder as UTB, kappy_json_to_graph
 from indra.util import unicode_strs
 from io import BytesIO
+from os import path
 
 
 def test_unicode_tree_builder():
@@ -17,7 +18,7 @@ def test_unicode_tree_builder():
 
 
 def test_kappy_influence_json_to_graph():
-    with open('kappy_influence.json', 'r') as f:
+    with open(path.join(path.dirname(path.abspath(__file__)), 'kappy_influence.json'), 'r') as f:
         imap = json.load(f)
     graph = kappy_json_to_graph(imap)
     assert graph is not None, 'No graph produced.'
