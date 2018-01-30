@@ -208,16 +208,18 @@ def kappy_json_to_graph(kappy_json):
 
         def add_edges(link_list):
             for link_dict in link_list:
+                source = link_dict['source']
                 for target_dict in link_dict['target map']:
-                    if 'target' in target_dict.keys() and 'rule' in target_dict['target']:
-                        graph.add_edge(id_node_dict[link_dict['source']['rule']],
-                                       id_node_dict[target_dict['target']['rule']])
+                    target = target_dict['target']
+                    src_id = list(source.keys())[0] + str(list(source.values())[0])
+                    tgt_id = list(target.keys())[0] + str(list(target.values())[0])
+                    graph.add_edge(id_node_dict[src_id], id_node_dict[tgt_id])
 
         id_node_dict = {}
         for node_dict in imap_data['nodes']:
-            if 'rule' in node_dict.keys():
-                graph.add_node(node_dict['rule']['label'])
-                id_node_dict[node_dict['rule']['id']] = node_dict['rule']['label']
+            key = list(node_dict.keys())[0]
+            graph.add_node(node_dict[key]['label'], node_type=key)
+            id_node_dict[key + str(node_dict[key]['id'])] = node_dict[key]['label']
 
         add_edges(imap_data['wake-up map'])
         add_edges(imap_data['inhibition map'])

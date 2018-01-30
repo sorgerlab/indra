@@ -24,8 +24,8 @@ def test_kappy_influence_json_to_graph():
     assert graph is not None, 'No graph produced.'
     n_nodes = len(graph.nodes)
     n_edges = len(graph.edges)
-    assert n_nodes == 4, \
-        'Wrong number (%d vs. %d) of nodes on the graph.' % (n_nodes, 4)
+    assert n_nodes == 13, \
+        'Wrong number (%d vs. %d) of nodes on the graph.' % (n_nodes, 13)
     assert n_edges == 6, \
         "Wrong number (%d vs. %d) of edges on graph." % (n_edges, 4)
 
