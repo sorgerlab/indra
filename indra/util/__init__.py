@@ -206,22 +206,26 @@ def kappy_json_to_graph(kappy_json):
         imap_data = kappy_json['influence map']['map']
         graph = MultiDiGraph()
 
-        def add_edges(link_list):
+        def add_edges(link_list, edge_sign):
             for link_dict in link_list:
                 source = link_dict['source']
                 for target_dict in link_dict['target map']:
                     target = target_dict['target']
-                    src_id = list(source.keys())[0] + str(list(source.values())[0])
-                    tgt_id = list(target.keys())[0] + str(list(target.values())[0])
-                    graph.add_edge(id_node_dict[src_id], id_node_dict[tgt_id])
+                    src_id = list(source.keys())[0] \
+                        + str(list(source.values())[0])
+                    tgt_id = list(target.keys())[0] \
+                        + str(list(target.values())[0])
+                    graph.add_edge(id_node_dict[src_id], id_node_dict[tgt_id],
+                                   sign = edge_sign)
 
         id_node_dict = {}
         for node_dict in imap_data['nodes']:
             key = list(node_dict.keys())[0]
             graph.add_node(node_dict[key]['label'], node_type=key)
-            id_node_dict[key + str(node_dict[key]['id'])] = node_dict[key]['label']
+            new_key = key + str(node_dict[key]['id'])
+            id_node_dict[new_key] = node_dict[key]['label']
 
-        add_edges(imap_data['wake-up map'])
-        add_edges(imap_data['inhibition map'])
+        add_edges(imap_data['wake-up map'], 1)
+        add_edges(imap_data['inhibition map'], -1)
 
     return graph

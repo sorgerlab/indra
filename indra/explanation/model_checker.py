@@ -963,25 +963,23 @@ def _get_signed_predecessors(im, node, polarity):
 
 
 def _get_edge_sign(im, edge):
-    """Get the polarity of the influence by examining the edge color."""
+    """Get the polarity of the influence by examining the edge sign."""
     edge_data = im[edge[0]][edge[1]]
     # Handle possible multiple edges between nodes
-    colors = list(set([v['color'] for v in edge_data.values()
-                                  if v.get('color')]))
-    if len(colors) > 1:
+    signs = list(set([v['sign'] for v in edge_data.values()
+                                  if v.get('sign')]))
+    if len(signs) > 1:
         logger.warning("Edge %s has conflicting polarities; choosing "
                        "positive polarity by default" % edge)
-        color = 'green'
+        sign = 1
     else:
-        color = colors[0]
-    if color is None:
-        raise Exception('No color attribute for edge.')
-    elif color == 'green':
-        return 1
-    elif color == 'red':
-        return -1
+        sign = signs[0]
+    if sign is None:
+        raise Exception('No sign attribute for edge.')
+    elif abs(sign) == 1:
+        return sign
     else:
-        raise Exception('Unexpected edge color: %s' % edge.attr['color'])
+        raise Exception('Unexpected edge sign: %s' % edge.attr['sign'])
 
 
 def _add_modification_to_agent(agent, mod_type, residue, position):
