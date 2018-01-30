@@ -252,13 +252,13 @@ class ModelChecker(object):
         # downstream; alternatively, for every observable in the model, get a
         # list of rules.
         # We'll need the dictionary to check if nodes are observables
-        node_attributes = nx.get_node_attributes(self._im, 'shape')
+        node_attributes = nx.get_node_attributes(self._im, 'node_type')
         for rule in self.model.rules:
             obs_list = []
             # Get successors of the rule node
             for neighb in self._im.neighbors(rule.name):
                 # Check if the node is an observable
-                if node_attributes[neighb] != 'ellipse':
+                if node_attributes[neighb] != 'variable':
                     continue
                 # Get the edge and check the polarity
                 edge_sign = _get_edge_sign(self._im, (rule.name, neighb))
