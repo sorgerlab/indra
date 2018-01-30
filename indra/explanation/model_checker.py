@@ -9,14 +9,15 @@ import numpy as np
 import scipy.stats
 from copy import deepcopy
 from collections import deque, defaultdict, namedtuple
-from pysb import kappa, WILD
-from pysb import Observable, ComponentSet
+from pysb import kappa, WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
 from indra.explanation import paths_graph as pg
 from collections import Counter
+import kappy
+from indra.util import kappy_json_to_graph
 
 logger = logging.getLogger('model_checker')
 
@@ -166,6 +167,15 @@ class ModelChecker(object):
         """
         self.statements += stmts
 
+    def generate_im(self, model):
+        kappa = kappy.KappaStd()
+        model_str = export.export(model, 'kappa')
+        kappa.add_model_string(model_str)
+        kappa.project_parse()
+        imap = kappa.analyses_influence_map()
+        graph = kappy_json_to_graph(imap)
+        return graph
+
     def get_im(self, force_update=False):
         """Get the influence map for the model, generating it if necessary.
 
@@ -236,7 +246,8 @@ class ModelChecker(object):
             self.agent_to_obs[ag] = obs_list
 
         logger.info("Generating influence map")
-        self._im = kappa.influence_map(self.model)
+        self._im = self.generate_im(self.model)
+        #self._im.is_multigraph = lambda: False
         # Now, for every rule in the model, check if there are any observables
         # downstream; alternatively, for every observable in the model, get a
         # list of rules.
