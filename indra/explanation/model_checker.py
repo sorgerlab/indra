@@ -9,7 +9,7 @@ import numpy as np
 import scipy.stats
 from copy import deepcopy
 from collections import deque, defaultdict, namedtuple
-from pysb import kappa, WILD, export, Observable, ComponentSet
+from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
