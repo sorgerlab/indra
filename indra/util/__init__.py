@@ -209,8 +209,9 @@ def kappy_json_to_graph(kappy_json):
         def add_edges(link_list):
             for link_dict in link_list:
                 for target_dict in link_dict['target map']:
-                    graph.add_edge(id_node_dict[link_dict['source']['rule']],
-                                   id_node_dict[target_dict['target']['rule']])
+                    if 'target' in target_dict.keys() and 'rule' in target_dict['target']:
+                        graph.add_edge(id_node_dict[link_dict['source']['rule']],
+                                       id_node_dict[target_dict['target']['rule']])
 
         id_node_dict = {}
         for node_dict in imap_data['nodes']:
