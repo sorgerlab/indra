@@ -6,6 +6,7 @@ import gzip
 import zlib
 from io import BytesIO
 import xml.etree.ElementTree as ET
+from networkx import MultiDiGraph
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes
@@ -198,3 +199,26 @@ def flatten(l):
 def flatMap(f, xs):
     """Map a function onto an iterable and flatten the result."""
     return flatten(lmap(f, xs))
+
+def kappy_json_to_graph(kappy_json):
+    # handle the influence map case.
+    if 'influence map' in kappy_json.keys():
+        imap_data = kappy_json['influence map']['map']
+        graph = MultiDiGraph()
+
+        def add_edges(link_list):
+            for link_dict in link_list:
+                for target_dict in link_dict['target map']:
+                    graph.add_edge(id_node_dict[link_dict['source']['rule']],
+                                   id_node_dict[target_dict['target']['rule']])
+
+        id_node_dict = {}
+        for node_dict in imap_data['nodes']:
+            if 'rule' in node_dict.keys():
+                graph.add_node(node_dict['rule']['label'])
+                id_node_dict[node_dict['rule']['id']] = node_dict['rule']['label']
+
+        add_edges(imap_data['wake-up map'])
+        add_edges(imap_data['inhibition map'])
+
+    return graph
