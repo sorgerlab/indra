@@ -46,7 +46,8 @@ class DrumReader(KQMLModule):
             raise ImportError('Install the `pykqml` package to use ' +
                               'the DrumReader')
         self.to_read = kwargs.pop('to_read', None)
-        super(DrumReader, self).__init__(name='DrumReader')
+        host = kwargs.pop('host', 'localhost')
+        super(DrumReader, self).__init__(name='DrumReader', host=host)
         self.msg_counter = random.randint(1, 100000)
         self.ready()
         self.extractions = []
@@ -55,7 +56,7 @@ class DrumReader(KQMLModule):
             self.read_text(text)
 
     def read_text(self, text):
-        print('Reading %s' % text)
+        print('Reading: "%s"' % text)
         msg_id = 'RT000%s' % self.msg_counter
         kqml_perf = _get_perf(text, msg_id)
         self.send(kqml_perf)
