@@ -1,70 +1,11 @@
+import json
 from indra.sources import sparser
 from indra.sources.sparser.processor import _fix_agent
-from indra.statements import Agent
+from indra.statements import Agent, Phosphorylation
 
-xml_str1 = '''
-<article pmid="54321">
- <interpretation>
- <sentence-text>MEK1 phosphorylates ERK1</sentence-text>
- <sem>
-     <ref category="phosphorylate">
-         <var name="agent">
-         <ref category="protein">
-             <var name="name">MP2K1_HUMAN</var>
-             <var name="uid">UP:MP2K1_HUMAN</var>
-         </ref>
-         </var>
-         <var name="substrate">
-            <ref category="protein">
-                <var name="name">MK03_HUMAN</var>
-                <var name="uid">UP:MK03_HUMAN</var>
-            </ref>
-         </var>
-     <var name="present"><ref category="present"></ref></var>
-     </ref>
- </sem>
-</interpretation>
-</article>
-'''
-
-xml_str2 = '''
-<article pmid="12345">
-<interpretation>
-  <sentence-text>Hence ASPP2 can be phosphorylated at serine 827 by MAPK1 in vitro</sentence-text>
-  <sem>
-    <ref category="phosphorylate">
-      <var name="subordinate-conjunction">
-          <ref category="subordinate-conjunction"><var name="word">hence</var></ref></var>
-      <var name="substrate">
-          <ref category="protein">
-              <var name="name">ASPP2_HUMAN</var>
-              <var name="uid">UP:ASPP2_HUMAN</var>
-          </ref>
-      </var>
-      <var name="agent">
-        <ref category="protein">
-          <var name="context">
-            <ref category="in-vitro"></ref>
-          </var>
-          <var name="uid">UP:MK01_HUMAN</var>
-          <var name="name">MK01_HUMAN</var>
-        </ref>
-      </var>
-      <var name="site">
-        <ref category="residue-on-protein">
-          <var name="amino-acid">
-            <ref category="amino-acid"><var name="name">serine</var></ref>
-          </var>
-          <var name="position"> 827</var>
-        </ref>
-      </var>
-      <var name="modal"><ref category="can"></ref></var>
-    </ref>
-  </sem>
-</interpretation>
-</article>
-'''
-
+# ############################
+# XML processing tests
+# ############################
 
 def test_invalid_xml():
     sp = sparser.process_xml('xyz')
@@ -132,3 +73,105 @@ def test_fix_agent_ncit_only():
     _fix_agent(a)
     assert(a.name == 'TUBB')
     assert(a.db_refs.get('BE') == 'TUBB')
+
+
+# ############################
+# JSON processing tests
+# ############################
+
+def test_process_json_str():
+    sp = sparser.process_json_dict(json.loads(json_str1))
+    assert sp is not None
+    assert len(sp.statements) == 1
+    assert isinstance(sp.statements[0], Phosphorylation)
+    sp.set_statements_pmid('1234567')
+    assert sp.statements[0].evidence[0].pmid == '1234567'
+    assert sp.json_stmts[0]['evidence'][0]['pmid'] == '1234567'
+
+
+xml_str1 = '''
+<article pmid="54321">
+ <interpretation>
+ <sentence-text>MEK1 phosphorylates ERK1</sentence-text>
+ <sem>
+     <ref category="phosphorylate">
+         <var name="agent">
+         <ref category="protein">
+             <var name="name">MP2K1_HUMAN</var>
+             <var name="uid">UP:MP2K1_HUMAN</var>
+         </ref>
+         </var>
+         <var name="substrate">
+            <ref category="protein">
+                <var name="name">MK03_HUMAN</var>
+                <var name="uid">UP:MK03_HUMAN</var>
+            </ref>
+         </var>
+     <var name="present"><ref category="present"></ref></var>
+     </ref>
+ </sem>
+</interpretation>
+</article>
+'''
+
+xml_str2 = '''
+<article pmid="12345">
+<interpretation>
+  <sentence-text>Hence ASPP2 can be phosphorylated at serine 827 by MAPK1 in vitro</sentence-text>
+  <sem>
+    <ref category="phosphorylate">
+      <var name="subordinate-conjunction">
+          <ref category="subordinate-conjunction"><var name="word">hence</var></ref></var>
+      <var name="substrate">
+          <ref category="protein">
+              <var name="name">ASPP2_HUMAN</var>
+              <var name="uid">UP:ASPP2_HUMAN</var>
+          </ref>
+      </var>
+      <var name="agent">
+        <ref category="protein">
+          <var name="context">
+            <ref category="in-vitro"></ref>
+          </var>
+          <var name="uid">UP:MK01_HUMAN</var>
+          <var name="name">MK01_HUMAN</var>
+        </ref>
+      </var>
+      <var name="site">
+        <ref category="residue-on-protein">
+          <var name="amino-acid">
+            <ref category="amino-acid"><var name="name">serine</var></ref>
+          </var>
+          <var name="position"> 827</var>
+        </ref>
+      </var>
+      <var name="modal"><ref category="can"></ref></var>
+    </ref>
+  </sem>
+</interpretation>
+</article>
+'''
+
+json_str1 = '''
+[
+ {
+  "type": "Phosphorylation",
+  "evidence": [
+  {
+    "source_api": "sparser",
+    "text": "MEK phosphorylates ERK",
+    "pmid": "PMC_3500"}],
+  "sub": {
+    "name": "ERK",
+    "db_refs": {
+      "NCIT": "C26360",
+      "TEXT": "ERK"},
+    "TEXT": "ERK"},
+  "enz": {
+    "name": "MEK",
+    "db_refs": {
+      "BE": "MEK",
+      "TEXT": "MEK"},
+    "TEXT": "MEK"}
+ }
+]'''

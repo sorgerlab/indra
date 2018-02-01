@@ -83,6 +83,23 @@ class SparserJSONProcessor(object):
             # Step 5: Append to list of Statements
             self.statements.append(stmt)
 
+    def set_statements_pmid(self, pmid):
+        """Set the evidence PMID of Statements that have been extracted.
+
+        pmid : str
+            The PMID to be used in the Evidence objects of the Statements
+            that were extracted by the processor.
+        """
+        # Replace PMID value in JSON dict first
+        for stmt in self.json_stmts:
+            evs = stmt.get('evidence', [])
+            for ev in evs:
+                ev['pmid'] = pmid
+        # Replace PMID value in extracted Statements next
+        for stmt in self.statements:
+            for ev in stmt.evidence:
+                ev.pmid = pmid
+
 
 def _fix_agent(agent):
     if agent is None:
