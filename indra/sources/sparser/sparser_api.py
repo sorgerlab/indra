@@ -40,7 +40,8 @@ def process_text(text, output_fmt='json', outbuf=None, cleanup=True, key=''):
         A file like object that the Sparser output is written to.
     cleanup : Optional[bool]
         If True, the temporary file created, which is used as an input
-        file for Sparser, is removed. Default: True
+        file for Sparser, as well as the output file created by Sparser
+        are removed. Default: True
     key : Optional[str]
         A key which is embedded into the name of the temporary file
         passed to Sparser for reading. Default is empty string.
@@ -69,7 +70,8 @@ def process_nxml_str(nxml_str, output_fmt='json', outbuf=None, cleanup=True,
         A file like object that the Sparser output is written to.
     cleanup : Optional[bool]
         If True, the temporary file created in this function,
-        which is used as an input file for Sparser, is removed. Default: True
+        which is used as an input file for Sparser, as well as the
+        output file created by Sparser are removed. Default: True
     key : Optional[str]
         A key which is embedded into the name of the temporary file
         passed to Sparser for reading. Default is empty string.
@@ -103,7 +105,8 @@ def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
     outbuf : Optional[file]
         A file like object that the Sparser output is written to.
     cleanup : Optional[bool]
-        ?
+        If True, the output file created by Sparser is removed.
+        Default: True
 
     Returns
     -------
