@@ -578,6 +578,7 @@ class ReadingData(object):
                          % (self.reader, self.tcid))
             stmts = []
         else:
+            processor.set_statements_pmid(None)
             stmts = processor.statements
         return stmts
 
