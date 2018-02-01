@@ -64,6 +64,9 @@ def _check_blind_result(reader):
 
 def _check_result(stmts):
     assert len(stmts), "No statements found."
+    assert all([stmt.evidence[0].pmid == pmid for pmid in stmts.keys()
+                for stmt in stmts[pmid]]), \
+        "pmids in evidence do not match true pmids."
 
 
 def test_get_proc_num():
