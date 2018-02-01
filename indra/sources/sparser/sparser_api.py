@@ -113,7 +113,7 @@ def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
     sp : SparserXMLProcessor or SparserJSONProcessor depending on what output
     format was chosen.
     """
-    ret = None
+    sp = None
     out_fname = None
     try:
         out_fname = run_sparser(fname, output_fmt, outbuf)
@@ -158,7 +158,7 @@ def process_sparser_output(output_fname, output_fmt='json'):
         else:
             xml_str = fh.read()
             sp = process_xml(xml_str)
-    return ret
+    return sp
 
 
 def process_json_dict(json_dict):
