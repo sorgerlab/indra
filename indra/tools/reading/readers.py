@@ -346,7 +346,7 @@ class SparserReader(Reader):
                     new_fpath = path.join(self.tmp_dir, new_fname)
                     with open(fpath, 'r') as f_old:
                         content = f_old.read()
-                    nxml_str = sparser.make_sparser_nxml_from_text(content)
+                    nxml_str = sparser.make_nxml_from_text(content)
                     with open(new_fpath, 'w') as f_new:
                         f_new.write(nxml_str)
                     file_list.append(new_fpath)
@@ -360,7 +360,7 @@ class SparserReader(Reader):
                         )
                 elif item.format == formats.TEXT:
                     txt_bts = zlib.decompress(item.content, 16+zlib.MAX_WBITS)
-                    nxml_str = sparser.make_sparser_nxml_from_text(
+                    nxml_str = sparser.make_nxml_from_text(
                         txt_bts.decode('utf8')
                         )
                     add_nxml_file(item.id, nxml_str.encode('utf8'))
