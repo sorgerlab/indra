@@ -386,6 +386,9 @@ def read_pmid(pmid, source, cont_path, sparser_version, outbuf=None,
     if sp is None:
         logger.error('Failed to run sparser on pmid: %s.' % pmid)
         return
+    # At this point, we rewrite the PMID in the Evidence of Sparser
+    # Statements according to the actual PMID that was read.
+    sp.set_statements_pmid(pmid)
     s3_client.put_reader_output('sparser', sp.json_stmts, pmid,
                                 sparser_version, source)
     return sp.statements
