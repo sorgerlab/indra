@@ -924,7 +924,7 @@ class PmcManager(NihManager):
             }
         return tr_datum, tc_datum
 
-    def upload_archive(self, archive, q=None, db=None):
+    def unpack_archive(self, archive, q=None, db=None):
         "Process a single tar gzipped article archive."
         tr_data = []
         tc_data = []
@@ -940,7 +940,7 @@ class PmcManager(NihManager):
                 self.upload_batch(db, tr_data[:], tc_data[:])
             else:
                 raise UploadError(
-                    "upload_archive must receive either a db instance"
+                    "unpack_archive must receive either a db instance"
                     " or a queue instance."
                     )
             tr_data.clear()
@@ -968,7 +968,7 @@ class PmcManager(NihManager):
         try:
             logger.info('Downloading archive %s.' % archive)
             self.ftp.download_file(archive)
-            self.upload_archive(archive, q=q, db=db)
+            self.unpack_archive(archive, q=q, db=db)
         finally:
             os.remove(archive)
 
@@ -1002,6 +1002,10 @@ class PmcManager(NihManager):
 
         # Monitor the processes while any are still active.
         while len(active_list) is not 0:
+            # Check for processes that have been unpacking archives to
+            # complete, and when they do, add them to the source_file table.
+            # If there are any more archives waiting to be processed, start
+            # the next one.
             for a, p in [(a, p) for a, p in active_list if not p.is_alive()]:
                 sf_list = db.select_all(db.SourceFile,
                                         db.SourceFile.source == self.my_source,
@@ -1010,6 +1014,8 @@ class PmcManager(NihManager):
                     db.insert('source_file', source=self.my_source, name=a)
                 active_list.remove((a, p))
                 start_next_proc()
+
+            # Wait for the next output from an archive unpacker.
             try:
                 # This will not block until at least one is done
                 label, tr_data, tc_data = q.get_nowait()
