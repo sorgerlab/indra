@@ -922,7 +922,7 @@ class PmcManager(NihManager):
             id_data['pmcid'] = 'PMC' + id_data['pmc']
         if 'manuscript' in id_data.keys():
             id_data['manuscript_id'] = id_data['manuscript']
-        tr_datum = {k: id_data.get(k) for k in self.tr_cols}
+        tr_datum = {k: id_data.get(k).strip().upper() for k in self.tr_cols}
         tc_datum = {
             'pmcid': id_data['pmcid'],
             'text_type': texttypes.FULLTEXT,
@@ -1082,10 +1082,6 @@ class PmcOA(PmcManager):
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
-    def unpack_package(self, db, fpath):
-        "Upload the content from a packages."
-        return
-
     def update(self, db, n_procs=1, continuing=False):
         latest_update = db.select_all(db.Updates,
                                       db.Updates.source == self.my_source)
@@ -1114,6 +1110,8 @@ class PmcOA(PmcManager):
         # Upload these archives.
         logger.info("Updating the database with %d articles." % len(fpath_set))
         self.upload_archives(db, fpath_set, n_procs=n_procs)
+        db.insert('updates', init_upload=False, source=self.my_source,
+                  datetime=datetime.utcnow())
         return
 
 
