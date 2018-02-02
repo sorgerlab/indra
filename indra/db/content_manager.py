@@ -930,31 +930,32 @@ class PmcManager(NihManager):
             }
         return tr_datum, tc_datum
 
-    def unpack_archive(self, archive, q=None, db=None):
-        "Process a single tar gzipped article archive."
+    def unpack_archive_path(self, archive_path, q=None, db=None):
+        "Process a single tar gzipped article at archive_path."
         tr_data = []
         tc_data = []
 
         def submit(tag, tr_data, tc_data):
             batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
             logger.info("Submitting %s of data for %s..." %
-                        (batch_name, archive))
+                        (batch_name, archive_path))
 
             if q is not None:
-                q.put(((batch_name, archive), tr_data[:], tc_data[:]))
+                q.put(((batch_name, archive_path), tr_data[:], tc_data[:]))
             elif db is not None:
                 self.upload_batch(db, tr_data[:], tc_data[:])
             else:
                 raise UploadError(
-                    "unpack_archive must receive either a db instance"
+                    "unpack_archive_path must receive either a db instance"
                     " or a queue instance."
                     )
             tr_data.clear()
             tc_data.clear()
 
-        with tarfile.open(archive, mode='r:gz') as tar:
-            logger.info('Loading %s...' % archive)
-            xml_files = [m for m in tar.getmembers() if m.isfile()]
+        with tarfile.open(archive_path, mode='r:gz') as tar:
+            logger.info('Loading %s...' % archive_path)
+            xml_files = [m for m in tar.getmembers() if m.isfile()
+                         and m.name.endswith('nxml')]
             for i, xml_file in enumerate(xml_files):
                 xml_str = tar.extractfile(xml_file).read().decode('utf8')
                 res = self.get_data_from_xml_str(xml_str, xml_file.name)
@@ -973,8 +974,8 @@ class PmcManager(NihManager):
     def process_archive(self, archive, q=None, db=None):
         try:
             logger.info('Downloading archive %s.' % archive)
-            self.ftp.download_file(archive)
-            self.unpack_archive(archive, q=q, db=db)
+            archive_local_path = self.ftp.download_file(archive)
+            self.unpack_archive(archive_local_path, q=q, db=db)
         finally:
             os.remove(archive)
 
@@ -1081,8 +1082,39 @@ class PmcOA(PmcManager):
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
+    def unpack_package(self, db, fpath):
+        "Upload the content from a packages."
+        return
+
     def update(self, db, n_procs=1, continuing=False):
-        pass
+        latest_update = db.select_all(db.Updates,
+                                      db.Updates.source == self.my_source)
+        min_datetime = latest_update.datetime
+
+        # Search down through the oa_package directory. Below the first level,
+        # the files are timestamped, so we can filter down each level
+        # efficiently finding the latest files to update.
+        logger.info("Getting list of articles that have been uploaded since "
+                    "the last update.")
+        fpath_set = set()
+        for top_dirname in self.ftp.ftp_ls('oa_package'):
+            top_dirpath = path.join('oa_package', top_dirname)
+            top_dir_contents = self.ftp.ftp_ls_timestamped(top_dirpath)
+            for dirname, dir_mod_time in top_dir_contents:
+                mod_datetime = datetime.strptime(dir_mod_time, '%Y%m%d%H%M%S')
+                if mod_datetime > min_datetime:
+                    dirpath = path.join(top_dirpath, dirname)
+                    dir_contents = self.ftp.ftp_ls_timestamped(dirpath)
+                    for fname, f_mod_time in dir_contents:
+                        f_mod_datetime = datetime.strptime(f_mod_time,
+                                                           '%Y%m%d%H%M%S')
+                        if f_mod_datetime > min_datetime:
+                            fpath_set.add(path.join(dirpath, fname))
+
+        # Upload these archives.
+        logger.info("Updating the database with %d articles." % len(fpath_set))
+        self.upload_archives(db, fpath_set, n_procs=n_procs)
+        return
 
 
 class Manuscripts(PmcManager):
