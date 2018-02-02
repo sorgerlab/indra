@@ -329,7 +329,8 @@ class ContentManager(object):
         logger.debug('Finished copying.')
         return vile_data
 
-    def filter_text_refs(self, db, tr_data_set, n_per_batch=None):
+    def filter_text_refs(self, db, tr_data_set, n_per_batch=None,
+                         primary_id_types=None):
         """Try to reconcile the data we have with what's already on the db.
 
         Note that this method is VERY slow in general, and therefore should
@@ -365,7 +366,11 @@ class ContentManager(object):
         # is seriously broken.
         logger.debug("Getting list of existing text refs...")
         or_list = []
-        for id_type in self.tr_cols:
+        if primary_id_types is not None:
+            match_id_types = primary_id_types
+        else:
+            match_id_types = self.tr_cols
+        for id_type in match_id_types:
             id_list = [entry[id_idx(id_type)] for entry in tr_data_set
                        if entry[id_idx(id_type)] is not None]
             if id_list:
@@ -585,7 +590,8 @@ class Medline(NihManager):
         # Check the ids more carefully against what is already in the db.
         if carefully:
             text_ref_records, flawed_refs = \
-                self.filter_text_refs(db, text_ref_records, n_per_batch=100)
+                self.filter_text_refs(db, text_ref_records, n_per_batch=100,
+                                      primary_id_types=['pmcid', 'pmid'])
             logger.info('%d new records to add to text_refs.'
                         % len(text_ref_records))
             valid_pmids -= {ref[self.tr_cols.index('pmid')]
@@ -853,7 +859,9 @@ class PmcManager(NihManager):
                        for entry in tr_data}
 
         filtered_tr_records, flawed_tr_records = \
-            self.filter_text_refs(db, tr_data_set)
+            self.filter_text_refs(db, tr_data_set,
+                                  primary_id_types=['pmid', 'pmcid',
+                                                    'manuscript_id'])
         pmcids_to_skip = {rec[self.tr_cols.index('pmcid')]
                           for cause, rec in flawed_tr_records
                           if cause in ['pmcid', 'over_match']}
