@@ -1,12 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from past.builtins import basestring
 from builtins import object, dict, str
-import json
 import logging
-import itertools
-import numpy as np
-from indra.statements import *
-from indra.preassembler import Preassembler
 import networkx as nx
 from indra.util import flatMap
 from indra.statements import Influence
@@ -18,77 +12,95 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('cyjs_assembler')
+logger = logging.getLogger('cag_assembler')
 
 
 class CAGAssembler(object):
-    """This class assembles a causal analysis graph from a set of INDRA 
-    statements.
+    """Assembles a causal analysis graph from INDRA Statements.
 
     Parameters
     ----------
-    statements : Optional[List[Influence]]
-        A list of INDRA Influence Statements to be assembled.
+    stmts : Optional[list[indra.statement.Statements]]
+        A list of INDRA Statements to be assembled. Currently supports
+        Influence Statements.
 
     Attributes
     ----------
-    statements : List[Influence]
+    statements : list[indra.statements.Statement]
         A list of INDRA Statements to be assembled.
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
-    def __init__(self, stmts):
-        self.statements = stmts
-        self.CAG = self.create_causal_analysis_graph()
+    def __init__(self, stmts=None):
+        if not stmts:
+            self.statements = []
+        else:
+            self.statements = stmts
 
-    def create_causal_analysis_graph(self):
-        """ Create a networkx MultiDiGraph object that represents a causal
-        analysis graph. 
-        
+    def add_statements(self, stmts):
+        """Add a list of Statements to the assembler."""
+        self.statements += stmts
+
+    def make_model(self):
+        """Return a networkx MultiDiGraph representing a causal analysis graph.
+
         Returns
         -------
         nx.MultiDiGraph
-
+            The assembled CAG.
         """
+        # Filter to Influence Statements which are currently supported
+        statements = [stmt for stmt in self.statements if
+                      isinstance(stmt, Influence)]
 
         # Extract unique factors from the INDRA statements
         factors = set(flatMap(lambda x: (x.subj.name, x.obj.name),
-                              self.statements))
+                              statements))
 
         # Interleave partial deriviatives w.r.t. time to create index of the
         # latent state components.
         s_index = flatMap(lambda a: (a, '∂('+a+')/∂t'), sorted(factors))
 
-        G = nx.MultiDiGraph() 
+        self.CAG = nx.MultiDiGraph()
 
         for latent_state_component in s_index:
-            G.add_node(latent_state_component.capitalize(), simulable=False)
+            self.CAG.add_node(latent_state_component.capitalize(),
+                              simulable=False)
 
-        for s in self.statements:
+        for s in statements:
             subj, obj = s.subj.name.capitalize(), s.obj.name.capitalize()
 
-            if s.subj_delta['polarity'] != None and s.obj_delta['polarity'] != None:
-                G.nodes[subj]['simulable'] = True
-                G.nodes[obj]['simulable'] = True
+            if (s.subj_delta['polarity'] is not None and
+                    s.obj_delta['polarity'] is not None):
+                self.CAG.nodes[subj]['simulable'] = True
+                self.CAG.nodes[obj]['simulable'] = True
 
             key = G.add_edge(subj, obj,
-                        subj_polarity = s.subj_delta['polarity'],
-                        subj_adjectives = s.subj_delta['adjectives'],
-                        obj_polarity = s.obj_delta['polarity'],
-                        obj_adjectives = s.obj_delta['adjectives'],
-                        linestyle='dotted'
-                    )
-            if s.subj_delta['polarity'] != None and s.obj_delta['polarity'] != None:
-                G[subj][obj][key]['linestyle']='solid'
+                             subj_polarity=s.subj_delta['polarity'],
+                             subj_adjectives=s.subj_delta['adjectives'],
+                             obj_polarity=s.obj_delta['polarity'],
+                             obj_adjectives=s.obj_delta['adjectives'],
+                             linestyle='dotted')
+            if (s.subj_delta['polarity'] is not None and
+                    s.obj_delta['polarity'] is not None):
+                self.CAG[subj][obj][key]['linestyle'] = 'solid'
 
-        return G
+        return self.CAG
 
     def export_to_cytoscapejs(self):
-        """ Export networkx to format readable by CytoscapeJS """
+        """Return CAG in format readable by CytoscapeJS.
+
+        Return
+        ------
+        dict
+            A JSON-like dict representing the graph for use with
+            CytoscapeJS.
+        """
         return {
-                'nodes':[{'data':{'id': n[0], 'simulable': n[1]['simulable']}} 
-                    for n in self.G.nodes(data=True)],
-                'edges':[ {
+                'nodes': [{'data': {'id': n[0],
+                                    'simulable': n[1]['simulable']}}
+                          for n in self.CAG.nodes(data=True)],
+                'edges': [{
                     'data': {
                         'id'              : e[0]+'_'+e[1],
                         'source'          : e[0],
@@ -98,12 +110,11 @@ class CAGAssembler(object):
                         'subj_polarity'   : e[3]["subj_polarity"],
                         'obj_adjectives'  : e[3]["obj_adjectives"],
                         'obj_polarity'    : e[3]["obj_polarity"],
-                        'simulable' : False if (e[3]['obj_polarity'] == None or
-                            e[3]['subj_polarity'] == None) else True
+                        'simulable' : False if (
+                            e[3]['obj_polarity'] is None or
+                            e[3]['subj_polarity'] is None) else True
                         }
-                    } 
-                    for e in self.G.edges(data=True, keys = True)
+                    }
+                    for e in self.CAG.edges(data=True, keys=True)
                     ]
                 }
-
-

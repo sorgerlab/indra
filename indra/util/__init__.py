@@ -187,15 +187,14 @@ def fast_deepcopy(obj):
     return obj_new
 
 def lmap(f, xs):
-    """ A non-lazy version of map. """
+    """A non-lazy version of map."""
     return list(map(f, xs))
 
 def flatten(l):
-    """ Flatten a nested list """
-    return sum(map(flatten,l),[]) if isinstance(l,list) or isinstance(l,tuple) else [l]
+    """Flatten a nested list."""
+    return sum(map(flatten, l), []) \
+        if isinstance(l, list) or isinstance(l, tuple) else [l]
 
 def flatMap(f, xs):
-    """ Map a function onto an iterable and flatten the result. """
+    """Map a function onto an iterable and flatten the result."""
     return flatten(lmap(f, xs))
-
-

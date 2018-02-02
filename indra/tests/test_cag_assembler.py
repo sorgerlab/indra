@@ -10,7 +10,9 @@ statements = [Influence(
     {'adjectives': 'significant', 'polarity': 1},
 )]
 
+
 def test_influence():
-    cagAssembler = CAGAssembler(statements)
+    ca = CAGAssembler(statements)
+    ca.make_model()
     assert(len(cagAssembler.CAG) == 2)
     assert(len(cagAssembler.CAG.edges) == 1)
