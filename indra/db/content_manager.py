@@ -335,6 +335,10 @@ class ContentManager(object):
 
         Note that this method is VERY slow in general, and therefore should
         be avoided whenever possible.
+
+        The process can be sped up considerably by multiple orders of
+        magnitude if you specify a limited set of id types to query to get
+        text refs. This does leave some possibility of missing relevant refs.
         """
         logger.info("Beginning to filter %d text refs..." % len(tr_data_set))
         review_fname = 'review_%s.txt' % self.my_source
@@ -437,11 +441,12 @@ class ContentManager(object):
                         if tr_new[i] is not None \
                          and tr_new[i] != getattr(tr, id_type):
                             logger.warning("Found conflict! Check %s."
-                                          % review_fname)
+                                           % review_fname)
                             with open(review_fname, 'a+') as f:
                                 f.write(
-                                    'Got conflicting id data: in db %s vs %s.\n'
-                                    % ([getattr(tr, id_type)
+                                    'Got conflicting %s: in db %s vs %s.\n'
+                                    % (id_type,
+                                       [getattr(tr, id_type)
                                         for id_type in self.tr_cols],
                                        [tr_new[i]
                                         for i in range(len(self.tr_cols))])
@@ -461,11 +466,10 @@ class ContentManager(object):
                 logger.warning("Got multiple matches! Check %s."
                                % review_fname)
                 with open(review_fname, 'a+') as f:
-                    f.write(
-                        ('Got multiple matches for data from %s: %s.'
-                         ' Please review.\n')
-                        % (self.my_source, match_set)
-                        )
+                    f.write('Got multiple matches for %s from %s: %s. Please '
+                            'review.\n' % ([getattr(tr, id_type)
+                                            for id_type in self.tr_cols],
+                                           self.my_source, match_set))
 
         # This applies all the changes made to the text refs to the db.
         logger.debug("Committing changes...")
