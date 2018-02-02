@@ -72,18 +72,19 @@ class CAGAssembler(object):
 
             if (s.subj_delta['polarity'] is not None and
                     s.obj_delta['polarity'] is not None):
-                self.CAG.nodes[subj]['simulable'] = True
-                self.CAG.nodes[obj]['simulable'] = True
+                self.CAG.node[subj]['simulable'] = True
+                self.CAG.node[obj]['simulable'] = True
 
-            key = G.add_edge(subj, obj,
-                             subj_polarity=s.subj_delta['polarity'],
-                             subj_adjectives=s.subj_delta['adjectives'],
-                             obj_polarity=s.obj_delta['polarity'],
-                             obj_adjectives=s.obj_delta['adjectives'],
-                             linestyle='dotted')
-            if (s.subj_delta['polarity'] is not None and
-                    s.obj_delta['polarity'] is not None):
-                self.CAG[subj][obj][key]['linestyle'] = 'solid'
+            linestyle = 'solid' if (s.subj_delta['polarity'] is not None and
+                                    s.obj_delta['polarity'] is not None) \
+                        else 'dotted'
+
+            edge_attrs = {'subj_polarity': s.subj_delta['polarity'],
+                          'subj_adjectives': s.subj_delta['adjectives'],
+                          'obj_polarity': s.obj_delta['polarity'],
+                          'obj_adjectives': s.obj_delta['adjectives'],
+                          'linestyle': linestyle}
+            self.CAG.add_edge(subj, obj, attr_dict=edge_attrs)
 
         return self.CAG
 
