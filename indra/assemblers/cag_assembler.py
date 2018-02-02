@@ -56,7 +56,7 @@ class CAGAssembler(object):
 
         # Interleave partial deriviatives w.r.t. time to create index of the
         # latent state components.
-        s_index = flatMap(lambda a: (a, f'∂({a})/∂t'), sorted(factors))
+        s_index = flatMap(lambda a: (a, '∂('+a+')/∂t'), sorted(factors))
 
         G = nx.MultiDiGraph() 
 
@@ -85,19 +85,19 @@ class CAGAssembler(object):
     def export_to_cytoscapejs(self):
         """ Export networkx to format readable by CytoscapeJS """
         return {
-                'nodes':[{'data':{'id':f'{n[0]}', 'simulable': n[1]['simulable']}} for n in self.G.nodes(data=True)],
+                'nodes':[{'data':{'id': n[0], 'simulable': n[1]['simulable']}} for n in self.G.nodes(data=True)],
                 'edges':[
                     {
                         'data':
                         {
-                            'id'              : f'{e[0]}_{e[1]}',
-                            'source'          : f'{e[0]}',
-                            'target'          : f'{e[1]}',
-                            'linestyle'       : f'{e[3]["linestyle"]}',
-                            'subj_adjectives' : f'{e[3]["subj_adjectives"]}',
-                            'subj_polarity'   : f'{e[3]["subj_polarity"]}',
-                            'obj_adjectives' : f'{e[3]["obj_adjectives"]}',
-                            'obj_polarity'   : f'{e[3]["obj_polarity"]}',
+                            'id'              : e[0]+'_'+e[1],
+                            'source'          : e[0],
+                            'target'          : e[1],
+                            'linestyle'       : e[3]["linestyle"],
+                            'subj_adjectives' : e[3]["subj_adjectives"],
+                            'subj_polarity'   : e[3]["subj_polarity"],
+                            'obj_adjectives'  : e[3]["obj_adjectives"],
+                            'obj_polarity'    : e[3]["obj_polarity"],
                             'simulable' : False if (e[3]['obj_polarity'] == None or
                                 e[3]['subj_polarity'] == None) else True
                         }
