@@ -258,27 +258,83 @@ class ContentManager(object):
     """
     my_source = NotImplemented
     tr_cols = NotImplemented
+    err_patt = re.compile('.*?constraint "(.*?)".*?Key \((.*?)\)=\((.*?)\).*?',
+                          re.DOTALL)
 
-    def copy_into_db(self, db, *args, **kwargs):
+    def copy_into_db(self, db, tbl_name, data, cols=None, retry=True):
         "Wrapper around the db.copy feature, pickels args upon exception."
+        vile_data = None
         try:
-            db.copy(*args, **kwargs)
+            db.copy(tbl_name, data, cols=cols)
         except DatabaseError as e:
-            pkl_file_fmt = "copy_failure_%d.pkl"
-            i = 0
-            while os.path.exists(pkl_file_fmt % i):
-                i += 1
-            with open(pkl_file_fmt % i, 'wb') as f:
-                pickle.dump((e, args, kwargs), f, protocol=3)
+            review_fname = 'review_%s.txt' % self.my_source
             db.grab_session()
             db.session.rollback()
-            logger.error('Failed in a copy. Pickling args and kwargs.')
-            logger.exception(e)
-            raise e
-        return
+            logger.warning('Failed in a copy.')
+
+            # Try to extract the failed record and try again.
+            m = self.err_patt.match(e.args[0])
+            if m is not None and retry:
+                constraint, id_types, ids = m.groups()
+                logger.info('Constraint %s was violated by (%s)=(%s).'
+                            % (constraint, id_types, ids))
+                id_dict = dict(zip(id_types.split(', '), ids.split(', ')))
+                new_data = set()
+                vile_data = set()
+                for datum in data:
+                    # Determine if this record is a match using best available
+                    # means.
+                    if cols is not None:
+                        is_match = all([
+                            datum[cols.index(id_type)] == id_val
+                            for id_type, id_val in id_dict.items()
+                            ])
+                    else:
+                        is_match = all([
+                            id_val in datum for id_val in id_dict.values()
+                            ])
+
+                    # Now decide to ad to the new data or log the error.
+                    if is_match:
+                        logger.warning("Found offending data: %s! Check %s."
+                                       % (str(datum), review_fname))
+                        with open(review_fname, 'a+') as f:
+                            f.write('Entry violated \"%s\": %s.n'
+                                    % (constraint, str(datum)))
+                        vile_data.add(datum)
+                    else:
+                        new_data.add(datum)
+
+                logger.info('Resubmitting copy without the offending ids.')
+                more_vile_data = self.copy_into_db(db, tbl_name, new_data,
+                                                   cols=cols, retry=True)
+
+                # This prevents a potential endless recursion scenario.
+                if more_vile_data == vile_data:
+                    logger.error("Conflicting data not correctly handled.")
+                    raise e
+                elif more_vile_data is not None:
+                    vile_data = vile_data.union(more_vile_data)
+            else:
+                pkl_file_fmt = "copy_failure_%d.pkl"
+                i = 0
+                while os.path.exists(pkl_file_fmt % i):
+                    i += 1
+                with open(pkl_file_fmt % i, 'wb') as f:
+                    pickle.dump((e, tbl_name, data, cols), f, protocol=3)
+                logger.error('Could not resubmit, not a handled error. '
+                             'Pickling the data in %s.' % (pkl_file_fmt % i))
+                logger.exception(e)
+                raise e
+        logger.debug('Finished copying.')
+        return vile_data
 
     def filter_text_refs(self, db, tr_data_set, n_per_batch=None):
-        "Try to reconcile the data we have with what's already on the db."
+        """Try to reconcile the data we have with what's already on the db.
+
+        Note that this method is VERY slow in general, and therefore should
+        be avoided whenever possible.
+        """
         logger.info("Beginning to filter %d text refs..." % len(tr_data_set))
         review_fname = 'review_%s.txt' % self.my_source
 
@@ -375,7 +431,7 @@ class ContentManager(object):
                         # be logged on the database?
                         if tr_new[i] is not None \
                          and tr_new[i] != getattr(tr, id_type):
-                            logger.waring("Found conflict! Check %s."
+                            logger.warning("Found conflict! Check %s."
                                           % review_fname)
                             with open(review_fname, 'a+') as f:
                                 f.write(
@@ -538,15 +594,10 @@ class Medline(NihManager):
             logger.info('Only %d valid for upload candidacy.'
                         % len(valid_pmids))
 
-        try:
-            self.copy_into_db(db, 'text_ref', text_ref_records, self.tr_cols)
-        except DatabaseError as e:
-            if not carefully:
-                logger.exception(e)
-                logger.warning("Caught database error while trying to copy "
-                               "text refs carelessly.")
-                logger.info("Trying again more carefully...")
-                return self.load_text_refs(db, article_info, carefully=True)
+        vile_data = self.copy_into_db(db, 'text_ref', text_ref_records,
+                                      self.tr_cols)
+        if vile_data is not None:
+            valid_pmids -= {d[self.tr_cols.index('pmid')] for d in vile_data}
         return valid_pmids
 
     def load_text_content(self, db, article_info, valid_pmids,
