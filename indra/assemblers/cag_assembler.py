@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import object, dict, str
 import logging
@@ -59,7 +60,7 @@ class CAGAssembler(object):
 
         # Interleave partial deriviatives w.r.t. time to create index of the
         # latent state components.
-        s_index = flatMap(lambda a: (a, '∂('+a+')/∂t'), sorted(factors))
+        s_index = flatMap(lambda a: (a, '∂(%s)/∂t' % a), sorted(factors))
 
         self.CAG = nx.MultiDiGraph()
 
