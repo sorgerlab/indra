@@ -3,6 +3,8 @@ from builtins import dict, str, int
 
 from sys import version_info, exit
 from math import ceil
+from datetime import datetime
+from wheel import archive
 if version_info.major is not 3:
     msg = "Python 3.x is required to use this module."
     if __name__ == '__main__':
@@ -740,12 +742,16 @@ class Medline(NihManager):
             read and parsed.
         """
         self.load_files(db, 'baseline', n_procs, continuing, False)
+        db.insert('updates', init_upload=True, source=self.my_source,
+                  datetime=datetime.utcnow())
         return
 
     def update(self, db, n_procs=1, continuing=False):
         """Update the contents of the database with the latest articles."""
         self.load_files(db, 'baseline', n_procs, continuing, True)
         self.load_files(db, 'updatefiles', n_procs, continuing, True)
+        db.insert('updates', init_upload=False, source=self.my_source,
+                  datetime=datetime.utcnow())
         return
 
 
@@ -1057,9 +1063,13 @@ class PmcManager(NihManager):
                 db.SourceFile.source == self.my_source
                 )
             archives -= {sf.name for sf in sf_list}
+            # Don't do unnecessary work.
+            if not len(archives):
+                return
 
         self.upload_archives(db, archives, n_procs)
-
+        db.insert('updates', init_upload=True, source=self.my_source,
+                  datetime=datetime.utcnow())
         return
 
 
@@ -1120,7 +1130,7 @@ class Manuscripts(PmcManager):
         downloading and searching, however this will in general be the slowest
         of the update methods.
 
-        The continuing feature isn't implented yet.
+        The continuing feature isn't implemented yet.
         """
         ftp_file_list = self.ftp.get_csv_as_dict('file_list.csv', header=0)
         ftp_pmcid_set = {entry['PMCID'] for entry in ftp_file_list}
@@ -1133,6 +1143,8 @@ class Manuscripts(PmcManager):
         update_archives = {'PMC00%dXXXXXX.xml.tar.gz' % pmcid[3]
                            for pmcid in (ftp_pmcid_set - db_pmcid_set)}
         self.upload_archives(db, update_archives, n_procs)
+        db.insert('updates', init_upload=False, source=self.my_source,
+                  datetime=datetime.utcnow())
         return
 
 
