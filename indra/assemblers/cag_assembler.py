@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
+from past.builtins import basestring
+from builtins import object, dict, str
 import json
 import logging
 import itertools
@@ -85,21 +86,20 @@ class CAGAssembler(object):
     def export_to_cytoscapejs(self):
         """ Export networkx to format readable by CytoscapeJS """
         return {
-                'nodes':[{'data':{'id': n[0], 'simulable': n[1]['simulable']}} for n in self.G.nodes(data=True)],
-                'edges':[
-                    {
-                        'data':
-                        {
-                            'id'              : e[0]+'_'+e[1],
-                            'source'          : e[0],
-                            'target'          : e[1],
-                            'linestyle'       : e[3]["linestyle"],
-                            'subj_adjectives' : e[3]["subj_adjectives"],
-                            'subj_polarity'   : e[3]["subj_polarity"],
-                            'obj_adjectives'  : e[3]["obj_adjectives"],
-                            'obj_polarity'    : e[3]["obj_polarity"],
-                            'simulable' : False if (e[3]['obj_polarity'] == None or
-                                e[3]['subj_polarity'] == None) else True
+                'nodes':[{'data':{'id': n[0], 'simulable': n[1]['simulable']}} 
+                    for n in self.G.nodes(data=True)],
+                'edges':[ {
+                    'data': {
+                        'id'              : e[0]+'_'+e[1],
+                        'source'          : e[0],
+                        'target'          : e[1],
+                        'linestyle'       : e[3]["linestyle"],
+                        'subj_adjectives' : e[3]["subj_adjectives"],
+                        'subj_polarity'   : e[3]["subj_polarity"],
+                        'obj_adjectives'  : e[3]["obj_adjectives"],
+                        'obj_polarity'    : e[3]["obj_polarity"],
+                        'simulable' : False if (e[3]['obj_polarity'] == None or
+                            e[3]['subj_polarity'] == None) else True
                         }
                     } 
                     for e in self.G.edges(data=True, keys = True)
@@ -107,77 +107,3 @@ class CAGAssembler(object):
                 }
 
 
-if __name__ == '__main__':
-    statements = [
-        Influence(
-            Agent('cultivar'),
-            Agent('agricultural production'),
-            {'adjectives': [], 'polarity': 1},
-            {'adjectives': [], 'polarity': 1},
-        ),
-        Influence(
-            Agent('agricultural production'),
-            Agent('food security'),
-            {'adjectives': [], 'polarity': 1},
-            {'adjectives': [], 'polarity': 1},
-        ),
-        Influence(
-            Agent('inorganic fertilizer'),
-            Agent('biophysical conditions'),
-            {'adjectives': 'serious', 'polarity': -1},
-            {'adjectives': [], 'polarity': -1},
-        ),
-        Influence(
-            Agent('inorganic fertilizer'),
-            Agent('water'),
-            {'adjectives': 'serious', 'polarity': -1},
-            {'adjectives': [], 'polarity': -1},
-        ),
-        Influence(
-            Agent('inorganic fertilizer'),
-            Agent('farm sizes'),
-            {'adjectives': 'serious', 'polarity': 1},
-            {'adjectives': 'significant', 'polarity': 1},
-        ),
-        Influence(
-            Agent('fertilizer subsidy'),
-            Agent('biophysical conditions'),
-            {'adjectives': 'serious', 'polarity': -1},
-            {'adjectives': [], 'polarity': -1},
-        ),
-        Influence(
-            Agent('fertilizer subsidy'),
-            Agent('water'),
-            {'adjectives': 'serious', 'polarity': -1},
-            {'adjectives': [], 'polarity': -1},
-        ),
-        Influence(
-            Agent('fertilizer subsidy'),
-            Agent('farm sizes'),
-            {'adjectives': 'serious', 'polarity': 1},
-            {'adjectives': 'significant', 'polarity': 1},
-        ),
-
-        Influence(
-            Agent('farm sizes'),
-            Agent('agricultural production'),
-            {'adjectives': [], 'polarity': 1},
-            {'adjectives': [], 'polarity': 1},
-        ),
-
-        Influence(
-            Agent('biophysical conditions'),
-            Agent('agricultural production'),
-            {'adjectives': [], 'polarity': 1},
-            {'adjectives': [], 'polarity': 1},
-        ),
-
-        Influence(
-            Agent('water'),
-            Agent('agricultural production'),
-            {'adjectives': [], 'polarity': 1},
-            {'adjectives': [], 'polarity': 1},
-        ),
-    ]
-    assembler = CAGAssembler(statements)
-    print(assembler.export_to_cytoscapejs())
