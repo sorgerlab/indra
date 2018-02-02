@@ -274,7 +274,7 @@ def tag_evidence_subtype(evidence):
     annotations = evidence.annotations
 
     if source_api == 'biopax':
-        subtype = annotations['source_sub_id']
+        subtype = annotations.get('source_sub_id')
     elif source_api == 'reach':
         if 'found_by' in annotations:
             subtype = determine_reach_subtype(annotations['found_by'])
