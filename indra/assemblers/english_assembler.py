@@ -136,6 +136,8 @@ def _assemble_agent_str(agent):
                         mod_lst.append(residue_str)
                     else:
                         mod_lst.append('an unknown residue')
+                elif m.position is not None and m.residue is None:
+                    mod_lst.append('amino acid %s' % m.position)
                 else:
                     mod_lst.append(m.residue + m.position)
             agent_str += _join_list(mod_lst)
@@ -354,7 +356,8 @@ mod_state_prefix = {
     'glycosylation': 'glycosylated',
     'deglycosylation': 'deglycosylated',
     'ribosylation': 'ribosylated',
-    'deribosylation': 'deribosylated'
+    'deribosylation': 'deribosylated',
+    'modification': 'modified',
 }
 
 mod_process_prefix = {
