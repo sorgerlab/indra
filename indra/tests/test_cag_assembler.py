@@ -14,5 +14,5 @@ statements = [Influence(
 def test_influence():
     ca = CAGAssembler(statements)
     CAG = ca.make_model()
-    assert(len(CAG.nodes()) == 4)
+    assert(len(CAG.nodes()) == 2)
     assert(len(CAG.edges()) == 1)
