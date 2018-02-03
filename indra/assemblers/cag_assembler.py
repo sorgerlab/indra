@@ -58,10 +58,6 @@ class CAGAssembler(object):
         factors = set(flatMap(lambda x: (x.subj.name, x.obj.name),
                               statements))
 
-        # Interleave partial deriviatives w.r.t. time to create index of the
-        # latent state components.
-        s_index = flatMap(lambda a: (a, '∂(%s)/∂t' % a), sorted(factors))
-
         self.CAG = nx.MultiDiGraph()
 
         for latent_state_component in s_index:
