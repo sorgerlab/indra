@@ -53,8 +53,8 @@ class EidosProcessor(object):
             obj_mods = self._get_mods(obj)
             # The interpretation of multiple mods is not clear yet so we
             # choose the first mod if available
-            subj_delta = subj_mods[0] if subj_mods else None
-            obj_delta = obj_mods[0] if obj_mods else None
+            subj_delta = subj_mods[0] if subj_mods else {'adjectives': None, 'polarity': None}
+            obj_delta = obj_mods[0] if obj_mods else {'adjectives':None, 'polarity': None}
             evidence = self._get_evidence(event)
             st = Influence(subj_agent, obj_agent, subj_delta, obj_delta,
                            evidence=evidence)
@@ -74,7 +74,12 @@ class EidosProcessor(object):
             logger.warning('More than one attachment to event.')
         for attachment in attachments:
             # Get the polarity
-            polarity = 1 if attachment['type'] == 'Increase' else -1
+            if attachment['type'] == 'Increase':
+                polarity = 1
+            elif attachment['type'] == 'Decrease':
+                polarity = -1
+            else:
+                polarity = None
             # Get the adjective
             mod = attachment.get('mod')
             mod_dict = json.loads(mod)
