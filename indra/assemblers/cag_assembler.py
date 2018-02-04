@@ -56,29 +56,31 @@ class CAGAssembler(object):
         # Initialize graph
         self.CAG = nx.MultiDiGraph()
 
-        # Extract node names from the INDRA Statements and add to graph
-        node_names = set()
-        for stmt in self.statements:
-            for agent in stmt.agent_list():
-                node_name = self._node_name(agent.name)
-                if node_name not in self.CAG:
-                    self.CAG.add_node(node_name, simulable=False)
-
-        # Add edges to the graph
+        # Add nodes and edges to the graph
         for s in statements:
+            # Get standardized name of subject and object
             subj, obj = (self._node_name(s.subj.name),
                          self._node_name(s.obj.name))
 
-            if (s.subj_delta['polarity'] is not None and
-                    s.obj_delta['polarity'] is not None):
-                self.CAG.node[subj]['simulable'] = True
-                self.CAG.node[obj]['simulable'] = True
+            # See if both subject and object have polarities given
+            has_both_polarity = (s.subj_delta['polarity'] is not None and
+                                 s.obj_delta['polarity'] is not None)
 
-            linestyle = 'solid' if (s.subj_delta['polarity'] is not None and
-                                    s.obj_delta['polarity'] is not None) \
-                        else 'dotted'
+            # Add the nodes to the graph
+            for node in (subj, obj):
+                if node not in self.CAG:
+                    # If both polarities are given, the nodes are simulable
+                    self.CAG.add_node(node, simulable=has_both_polarity)
+                # If the node is already in the graph and both polarities
+                # are given here, we set the node to simulable
+                elif has_both_polarity:
+                    self.CAG[node]['simulable'] = True
 
-            self.CAG.add_edge(subj, obj, 
+            # Edge is solid if both nodes have polarity given
+            linestyle = 'solid' if has_both_polarity else 'dotted'
+
+            # Add edge to the graph with metadata from statement
+            self.CAG.add_edge(subj, obj,
                     subj_polarity   = s.subj_delta['polarity'],
                     subj_adjectives = s.subj_delta['adjectives'],
                     obj_polarity    = s.obj_delta['polarity'],
