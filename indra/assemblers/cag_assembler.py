@@ -60,7 +60,7 @@ class CAGAssembler(object):
 
         self.CAG = nx.MultiDiGraph()
 
-        for latent_state_component in s_index:
+        for latent_state_component in factors:
             self.CAG.add_node(latent_state_component.capitalize(),
                               simulable=False)
 
@@ -76,12 +76,13 @@ class CAGAssembler(object):
                                     s.obj_delta['polarity'] is not None) \
                         else 'dotted'
 
-            edge_attrs = {'subj_polarity': s.subj_delta['polarity'],
-                          'subj_adjectives': s.subj_delta['adjectives'],
-                          'obj_polarity': s.obj_delta['polarity'],
-                          'obj_adjectives': s.obj_delta['adjectives'],
-                          'linestyle': linestyle}
-            self.CAG.add_edge(subj, obj, attr_dict=edge_attrs)
+            self.CAG.add_edge(subj, obj, 
+                    subj_polarity   = s.subj_delta['polarity'],
+                    subj_adjectives = s.subj_delta['adjectives'],
+                    obj_polarity    = s.obj_delta['polarity'],
+                    obj_adjectives  = s.obj_delta['adjectives'],
+                    linestyle       = linestyle
+                    )
 
         return self.CAG
 
