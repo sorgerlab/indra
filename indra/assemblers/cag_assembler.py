@@ -3,7 +3,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import object, dict, str
 import logging
 import networkx as nx
-from indra.util import flatMap
 from indra.statements import Influence
 
 # Python 2
@@ -54,18 +53,21 @@ class CAGAssembler(object):
         statements = [stmt for stmt in self.statements if
                       isinstance(stmt, Influence)]
 
-        # Extract unique factors from the INDRA statements
-        factors = set(flatMap(lambda x: (x.subj.name, x.obj.name),
-                              statements))
-
+        # Initialize graph
         self.CAG = nx.MultiDiGraph()
 
-        for latent_state_component in factors:
-            self.CAG.add_node(latent_state_component.capitalize(),
-                              simulable=False)
+        # Extract node names from the INDRA Statements and add to graph
+        node_names = set()
+        for stmt in self.statements:
+            for agent in stmt.agent_list():
+                node_name = self._node_name(agent.name)
+                if node_name not in self.CAG:
+                    self.CAG.add_node(node_name, simulable=False)
 
+        # Add edges to the graph
         for s in statements:
-            subj, obj = s.subj.name.capitalize(), s.obj.name.capitalize()
+            subj, obj = (self._node_name(s.subj.name),
+                         self._node_name(s.obj.name))
 
             if (s.subj_delta['polarity'] is not None and
                     s.obj_delta['polarity'] is not None):
@@ -117,3 +119,8 @@ class CAGAssembler(object):
                     for e in self.CAG.edges(data=True, keys=True)
                     ]
                 }
+
+    @staticmethod
+    def _node_name(agent_name):
+        """Return a standardized name for a node given an Agent name."""
+        return agent_name.capitalize()
