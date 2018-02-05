@@ -89,7 +89,7 @@ if __name__ == '__main__':
         if resp == 'no':
             print ("Aborting...")
             exit()
-from indra.util import zip_string
+from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
@@ -200,11 +200,13 @@ class NihFtpClient(object):
             self.ret_file(f_path, gzf)
         return name
 
-    def get_file(self, f_path, force_str=True):
+    def get_file(self, f_path, force_str=True, decompress=True):
         "Get the contents of a file as a string."
         gzf_bytes = BytesIO()
         self.ret_file(f_path, gzf_bytes)
         ret = gzf_bytes.getvalue()
+        if f_path.endswith('.gz') and decompress:
+            ret = zlib.decompress(ret, 16+zlib.MAX_WBITS)
         if force_str and isinstance(ret, bytes):
             ret = ret.decode('utf8')
         return ret
