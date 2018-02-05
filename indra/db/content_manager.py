@@ -994,18 +994,24 @@ class PmcManager(NihManager):
                 submit('final', tr_data, tc_data)
         return
 
-    def process_archive(self, archive, q=None, db=None):
-        try:
+    def process_archive(self, archive, q=None, db=None, continuing=False):
+        local_dir = path.dirname(path.abspath(__file__))
+        archive_local_path = path.join(local_dir, path.basename(archive))
+        if continuing and path.exists(archive_local_path):
+            logger.info('Archive %s found locally at %s, not loading again.'
+                        % (archive, archive_local_path))
+        else:
             logger.info('Downloading archive %s.' % archive)
-            archive_local_path = self.ftp.download_file(archive)
-            self.unpack_archive_path(archive_local_path, q=q, db=db)
-        finally:
-            os.remove(archive)
+            archive_local_path = self.ftp.download_file(archive,
+                                                        dest=local_dir)
+        self.unpack_archive_path(archive_local_path, q=q, db=db)
+        os.remove(archive)
+        return
 
     def get_file_list(self):
         return [k for k in self.ftp.ftp_ls() if self.is_archive(k)]
 
-    def upload_archives(self, db, archives, n_procs=1):
+    def upload_archives(self, db, archives, n_procs=1, continuing=False):
         "Do the grunt work of downloading and processing a list of archives."
         q = mp.Queue(len(archives))
         wait_list = []
@@ -1013,7 +1019,7 @@ class PmcManager(NihManager):
             p = mp.Process(
                 target=self.process_archive,
                 args=(archive, ),
-                kwargs={'q': q, },
+                kwargs={'q': q, 'continuing': continuing},
                 daemon=True
                 )
             wait_list.append((archive, p))
@@ -1091,7 +1097,7 @@ class PmcManager(NihManager):
             if not len(archives):
                 return
 
-        self.upload_archives(db, archives, n_procs)
+        self.upload_archives(db, archives, n_procs, continuing=continuing)
         db.insert('updates', init_upload=True, source=self.my_source,
                   datetime=datetime.utcnow())
         return
