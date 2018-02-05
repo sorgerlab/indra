@@ -201,6 +201,11 @@ class ModelChecker(object):
         Returns
         -------
         networkx MultiDiGraph object containing the influence map.
+            The influence map can be rendered as a pdf using the dot layout
+            program as follows::
+
+                im_agraph = nx.nx_agraph.to_agraph(influence_map)
+                im_agraph.draw('influence_map.pdf', prog='dot')
         """
         if self._im and not force_update:
             return self._im
