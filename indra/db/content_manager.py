@@ -943,7 +943,9 @@ class PmcManager(NihManager):
             id_data['pmcid'] = 'PMC' + id_data['pmc']
         if 'manuscript' in id_data.keys():
             id_data['manuscript_id'] = id_data['manuscript']
-        tr_datum = {k: id_data.get(k).strip().upper() for k in self.tr_cols}
+        tr_datum_raw = {k: id_data.get(k) for k in self.tr_cols}
+        tr_datum = {k: val.strip().upper() if val is not None else None
+                    for k, val in tr_datum_raw.items()}
         tc_datum = {
             'pmcid': id_data['pmcid'],
             'text_type': texttypes.FULLTEXT,
@@ -996,7 +998,7 @@ class PmcManager(NihManager):
         try:
             logger.info('Downloading archive %s.' % archive)
             archive_local_path = self.ftp.download_file(archive)
-            self.unpack_archive(archive_local_path, q=q, db=db)
+            self.unpack_archive_path(archive_local_path, q=q, db=db)
         finally:
             os.remove(archive)
 
