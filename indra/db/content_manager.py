@@ -470,7 +470,7 @@ class ContentManager(object):
                         # it won't disappear. (such as s3). Perhaps these could
                         # be logged on the database?
                         if tr_new[i] is not None \
-                         and tr_new[i] != getattr(tr, id_type):
+                         and tr_new[i] != getattr(tr, id_type).strip().upper():
                             self.add_to_review(
                                 'conflicting ids',
                                 'Got conflicting %s: in db %s vs %s.'
