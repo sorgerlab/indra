@@ -75,27 +75,30 @@ def cm_json_to_graph(im_json):
     # Initialize the graph
     graph = AGraph()
 
-    # We need to build a map of sites to be able to reference them
-    # from the port links
-    site_map = {}
-    # We also collect all the edges here
+    # In this loop we add sites as nodes and clusters around sites to the
+    # graph. We also collect edges to be added between sites later.
     edges = []
     for node_idx, node in enumerate(cmap_data):
+        sites_in_node = []
         for site_idx, site in enumerate(node['node_sites']):
-            # We generate a unique ID based on the parent node and the
-            # specific site
-            site_id = '%s/%s' % (node['node_type'], site['site_name'])
-            site_map[(node_idx, site_idx)] = site_id
+            # We map the unique ID of the site to its name
+            site_key = (node_idx, site_idx)
+            sites_in_node.append(site_key)
+            graph.add_node(site_key, label=site['site_name'], style='filled',
+                           shape='ellipse')
             # Each port link is an edge from the current site to the
             # specified site
             if not site['site_type'] or not site['site_type'][0] == 'port':
                 continue
             for port_link in site['site_type'][1]['port_links']:
-                edge = ((node_idx, site_idx), tuple(port_link))
+                edge = (site_key, tuple(port_link))
                 edges.append(edge)
+        graph.add_subgraph(sites_in_node,
+                           name='cluster_%s' % node['node_type'],
+                           label=node['node_type'])
 
+    # Finally we add the edges between the sites
     for source, target in edges:
-        source_name = site_map[source]
-        target_name = site_map[target]
-        graph.add_edge(source_name, target_name)
+        graph.add_edge(source, target)
+
     return graph
