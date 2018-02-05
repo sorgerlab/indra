@@ -358,20 +358,6 @@ class ContentManager(object):
         """
         logger.info("Beginning to filter %d text refs..." % len(tr_data_set))
 
-        def add_to_found_record_list(record, found_record_list):
-            if tr_new not in tr_data_match_list:
-                tr_data_match_list.append(tr_new)
-                added = True
-            else:
-                self.add_to_review(
-                    "tr matching input record matched to another tr",
-                    "Input record %s already matched. Matched again to %s."
-                    % (tr_new, self.make_text_ref_str(tr), tr_new)
-                    )
-                flawed_tr_data.append(('over_match_db', tr_new))
-                added = False
-            return added
-
         # This is a helper for accessing the data tuples we create
         def id_idx(id_type):
             return self.tr_cols.index(id_type)
@@ -426,6 +412,21 @@ class ContentManager(object):
         logger.debug("Beginning to iterate over text refs...")
         tr_data_match_list = []
         flawed_tr_data = []
+
+        def add_to_found_record_list(record):
+            if record not in tr_data_match_list:
+                tr_data_match_list.append(record)
+                added = True
+            else:
+                self.add_to_review(
+                    "tr matching input record matched to another tr",
+                    "Input record %s already matched. Matched again to %s."
+                    % (record, self.make_text_ref_str(tr))
+                    )
+                flawed_tr_data.append(('over_match_db', record))
+                added = False
+            return added
+
         for tr in tr_list:
             match_set = set()
 
@@ -449,7 +450,7 @@ class ContentManager(object):
                 tr_new = match_set.pop()
 
                 # This is how we tell what doesn't need to be added to the db.
-                if not add_to_found_record_list(tr_new, tr_data_match_list):
+                if not add_to_found_record_list(tr_new):
                     continue
 
                 # Go through all the id_types
@@ -482,7 +483,7 @@ class ContentManager(object):
                 # These still matched something in the db, so they shouldn't be
                 # uploaded as new refs.
                 for tr_new in match_set:
-                    add_to_found_record_list(tr_new, tr_data_match_list)
+                    add_to_found_record_list(tr_new)
                     flawed_tr_data.append(('over_match_input', tr_new))
 
                 # This condition only occurs if the records we got are
@@ -1002,10 +1003,13 @@ class PmcManager(NihManager):
                         % (archive, archive_local_path))
         else:
             logger.info('Downloading archive %s.' % archive)
-            archive_local_path = self.ftp.download_file(archive,
-                                                        dest=local_dir)
+            try:
+                archive_local_path = self.ftp.download_file(archive,
+                                                            dest=local_dir)
+            except BaseException:
+                os.remove(archive_local_path)
         self.unpack_archive_path(archive_local_path, q=q, db=db)
-        os.remove(archive)
+        os.remove(archive_local_path)
         return
 
     def get_file_list(self):
