@@ -1,0 +1,119 @@
+{
+ "contact map": {
+  "accuracy": "low",
+  "map": [
+   {
+    "node_type": "BRAF",
+    "node_sites": [
+     {
+      "site_name": "map2k",
+      "site_type": [
+       "port",
+       {
+        "port_links": [
+         [
+          3,
+          0
+         ]
+        ],
+        "port_states": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "node_type": "MAPK1",
+    "node_sites": [
+     {
+      "site_name": "map2k",
+      "site_type": [
+       "port",
+       {
+        "port_links": [
+         [
+          3,
+          1
+         ]
+        ],
+        "port_states": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "node_type": "MAPK3",
+    "node_sites": [
+     {
+      "site_name": "map2k",
+      "site_type": [
+       "port",
+       {
+        "port_links": [
+         [
+          3,
+          1
+         ]
+        ],
+        "port_states": []
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "node_type": "MEK",
+    "node_sites": [
+     {
+      "site_name": "map3k",
+      "site_type": [
+       "port",
+       {
+        "port_links": [
+         [
+          0,
+          0
+         ]
+        ],
+        "port_states": []
+       }
+      ]
+     },
+     {
+      "site_name": "mapk",
+      "site_type": [
+       "port",
+       {
+        "port_links": [
+         [
+          2,
+          0
+         ],
+         [
+          1,
+          0
+         ]
+        ],
+        "port_states": []
+       }
+      ]
+     },
+     {
+      "site_name": "phospho",
+      "site_type": [
+       "port",
+       {
+        "port_links": [],
+        "port_states": [
+         "p",
+         "u"
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ }
+}
