@@ -9,6 +9,7 @@ import numpy as np
 import scipy.stats
 from copy import deepcopy
 from collections import deque, defaultdict, namedtuple
+import kappy
 from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
@@ -16,8 +17,7 @@ from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
 from indra.explanation import paths_graph as pg
 from collections import Counter
-import kappy
-from indra.util import kappy_json_to_graph
+from indra.util.kappa_util import im_json_to_graph
 
 logger = logging.getLogger('model_checker')
 
@@ -185,7 +185,7 @@ class ModelChecker(object):
         kappa.add_model_string(model_str)
         kappa.project_parse()
         imap = kappa.analyses_influence_map()
-        graph = kappy_json_to_graph(imap)
+        graph = im_json_to_graph(imap)
         return graph
 
     def get_im(self, force_update=False):
