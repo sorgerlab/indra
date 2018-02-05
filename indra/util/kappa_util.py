@@ -27,13 +27,19 @@ def im_json_to_graph(im_json):
         # as key, and all the node data as the value
         node_type, node = list(node_dict.items())[0]
         # Add the node to the graph with its label and type
-        graph.add_node(node['label'], node_type=node_type)
+        attrs = {'fillcolor': '#b7d2ff' if node_type == 'rule' else '#cdffc9',
+                 'shape': 'box' if node_type == 'rule' else 'oval',
+                 'style': 'filled'}
+        graph.add_node(node['label'], node_type=node_type, **attrs)
         # Save the key of the node to refer to it later
         new_key = '%s%s' % (node_type, node['id'])
         id_node_dict[new_key] = node['label']
 
 
     def add_edges(link_list, edge_sign):
+        attrs = {'sign': edge_sign,
+                 'color': 'green' if edge_sign == 1 else 'red',
+                 'arrowhead': 'normal' if edge_sign == 1 else 'tee'}
         for link_dict in link_list:
             source = link_dict['source']
             for target_dict in link_dict['target map']:
@@ -41,7 +47,7 @@ def im_json_to_graph(im_json):
                 src_id = '%s%s' % list(source.items())[0]
                 tgt_id = '%s%s' % list(target.items())[0]
                 graph.add_edge(id_node_dict[src_id], id_node_dict[tgt_id],
-                               sign=edge_sign)
+                               **attrs)
 
     # Add all the edges from the positive and negative influences
     add_edges(imap_data['wake-up map'], 1)
