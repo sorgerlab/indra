@@ -263,13 +263,16 @@ class ContentManager(object):
     err_patt = re.compile('.*?constraint "(.*?)".*?Key \((.*?)\)=\((.*?)\).*?',
                           re.DOTALL)
 
+    def __init__(self):
+        self.review_fname = 'review_%s.txt' % self.my_source
+        return
+
     def copy_into_db(self, db, tbl_name, data, cols=None, retry=True):
         "Wrapper around the db.copy feature, pickels args upon exception."
         vile_data = None
         try:
             db.copy(tbl_name, data, cols=cols)
         except DatabaseError as e:
-            review_fname = 'review_%s.txt' % self.my_source
             db.grab_session()
             db.session.rollback()
             logger.warning('Failed in a copy.')
@@ -298,11 +301,10 @@ class ContentManager(object):
 
                     # Now decide to ad to the new data or log the error.
                     if is_match:
-                        logger.warning("Found offending data: %s! Check %s."
-                                       % (str(datum), review_fname))
-                        with open(review_fname, 'a+') as f:
-                            f.write('Entry violated \"%s\": %s.n'
-                                    % (constraint, str(datum)))
+                        logger.debug("Found offending data: %s." % str(datum))
+                        self.add_to_review('conflict in copy',
+                                           'Entry violated \"%s\": %s'
+                                           % (constraint, str(datum)))
                         vile_data.add(datum)
                     else:
                         new_data.add(datum)
@@ -331,6 +333,18 @@ class ContentManager(object):
         logger.debug('Finished copying.')
         return vile_data
 
+    def make_text_ref_str(self, tr):
+        """Make a string from a text ref using tr_cols."""
+        return str([getattr(tr, id_type) for id_type in self.tr_cols])
+
+    def add_to_review(self, desc, msg):
+        """Add an entry to the review document."""
+        logger.warning("Found \"%s\"! Check %s."
+                       % (desc, self.review_fname))
+        with open(self.review_fname, 'a+') as f:
+            f.write(msg + '\n')
+        return
+
     def filter_text_refs(self, db, tr_data_set, n_per_batch=None,
                          primary_id_types=None):
         """Try to reconcile the data we have with what's already on the db.
@@ -343,7 +357,20 @@ class ContentManager(object):
         text refs. This does leave some possibility of missing relevant refs.
         """
         logger.info("Beginning to filter %d text refs..." % len(tr_data_set))
-        review_fname = 'review_%s.txt' % self.my_source
+
+        def add_to_found_record_list(record, found_record_list):
+            if tr_new not in tr_data_match_list:
+                tr_data_match_list.append(tr_new)
+                added = True
+            else:
+                self.add_to_review(
+                    "tr matching input record matched to another tr",
+                    "Input record %s already matched. Matched again to %s."
+                    % (tr_new, self.make_text_ref_str(tr), tr_new)
+                    )
+                flawed_tr_data.append(('over_match_db', tr_new))
+                added = False
+            return added
 
         # This is a helper for accessing the data tuples we create
         def id_idx(id_type):
@@ -397,7 +424,7 @@ class ContentManager(object):
 
         # Look for updates to the existing text refs
         logger.debug("Beginning to iterate over text refs...")
-        tr_data_matched_set = set()
+        tr_data_match_list = []
         flawed_tr_data = []
         for tr in tr_list:
             match_set = set()
@@ -422,7 +449,8 @@ class ContentManager(object):
                 tr_new = match_set.pop()
 
                 # This is how we tell what doesn't need to be added to the db.
-                tr_data_matched_set.add(tr_new)
+                if not add_to_found_record_list(tr_new, tr_data_match_list):
+                    continue
 
                 # Go through all the id_types
                 for i, id_type in enumerate(self.tr_cols):
@@ -442,17 +470,11 @@ class ContentManager(object):
                         # be logged on the database?
                         if tr_new[i] is not None \
                          and tr_new[i] != getattr(tr, id_type):
-                            logger.warning("Found conflict! Check %s."
-                                           % review_fname)
-                            with open(review_fname, 'a+') as f:
-                                f.write(
-                                    'Got conflicting %s: in db %s vs %s.\n'
-                                    % (id_type,
-                                       [getattr(tr, id_type)
-                                        for id_type in self.tr_cols],
-                                       [tr_new[i]
-                                        for i in range(len(self.tr_cols))])
-                                    )
+                            self.add_to_review(
+                                'conflicting ids',
+                                'Got conflicting %s: in db %s vs %s.'
+                                % (id_type, self.make_text_ref_str(tr), tr_new)
+                                )
                             # If the conflict was with a pmcid, don't try to
                             # add the text content.
                             flawed_tr_data.append((id_type, tr_new))
@@ -460,25 +482,22 @@ class ContentManager(object):
                 # These still matched something in the db, so they shouldn't be
                 # uploaded as new refs.
                 for tr_new in match_set:
-                    tr_data_matched_set.add(tr_new)
-                    flawed_tr_data.append(('over_match', tr_new))
+                    add_to_found_record_list(tr_new, tr_data_match_list)
+                    flawed_tr_data.append(('over_match_input', tr_new))
 
                 # This condition only occurs if the records we got are
                 # internally inconsistent. This is rare, but it can happen.
-                logger.warning("Got multiple matches! Check %s."
-                               % review_fname)
-                with open(review_fname, 'a+') as f:
-                    f.write('Got multiple matches for %s from %s: %s. Please '
-                            'review.\n' % ([getattr(tr, id_type)
-                                            for id_type in self.tr_cols],
-                                           self.my_source, match_set))
+                self.add_to_review(
+                    "multiple matches in records for tex ref",
+                    'Multiple matches for %s from %s: %s.'
+                    % (self.make_text_ref_str(tr), self.my_source, match_set))
 
         # This applies all the changes made to the text refs to the db.
         logger.debug("Committing changes...")
         db.commit("Failed to update with new ids.")
 
         # Now update the text refs with any new refs that were found
-        filtered_tr_records = tr_data_set - tr_data_matched_set
+        filtered_tr_records = tr_data_set - set(tr_data_match_list)
 
         logger.debug("Filtering complete! %d records remaining."
                      % len(filtered_tr_records))
@@ -506,6 +525,8 @@ class NihManager(ContentManager):
 
     def __init__(self, *args, **kwargs):
         self.ftp = NihFtpClient(self.my_path, *args, **kwargs)
+        super(NihManager, self).__init__()
+        return
 
 
 class Medline(NihManager):
