@@ -898,7 +898,8 @@ class PmcManager(NihManager):
                                                     'manuscript_id'])
         pmcids_to_skip = {rec[self.tr_cols.index('pmcid')]
                           for cause, rec in flawed_tr_records
-                          if cause in ['pmcid', 'over_match']}
+                          if cause in ['pmcid', 'over_match_input',
+                                       'over_match_db']}
         if len(pmcids_to_skip) is not 0:
             mod_tc_data = [
                 tc for tc in tc_data if tc['pmcid'] not in pmcids_to_skip
