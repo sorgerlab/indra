@@ -20,13 +20,17 @@ def im_json_to_graph(im_json):
     # Initialize the graph
     graph = MultiDiGraph()
 
-    # Add each node to the graph
     id_node_dict = {}
+    # Add each node to the graph
     for node_dict in imap_data['nodes']:
-        key = list(node_dict.keys())[0]
-        graph.add_node(node_dict[key]['label'], node_type=key)
-        new_key = key + str(node_dict[key]['id'])
-        id_node_dict[new_key] = node_dict[key]['label']
+        # There is always just one entry here with the node type e.g. "rule"
+        # as key, and all the node data as the value
+        node_type, node = list(node_dict.items())[0]
+        # Add the node to the graph with its label and type
+        graph.add_node(node['label'], node_type=node_type)
+        # Save the key of the node to refer to it later
+        new_key = '%s%s' % (node_type, node['id'])
+        id_node_dict[new_key] = node['label']
 
 
     def add_edges(link_list, edge_sign):
@@ -34,13 +38,12 @@ def im_json_to_graph(im_json):
             source = link_dict['source']
             for target_dict in link_dict['target map']:
                 target = target_dict['target']
-                src_id = list(source.keys())[0] \
-                    + str(list(source.values())[0])
-                tgt_id = list(target.keys())[0] \
-                    + str(list(target.values())[0])
+                src_id = '%s%s' % list(source.items())[0]
+                tgt_id = '%s%s' % list(target.items())[0]
                 graph.add_edge(id_node_dict[src_id], id_node_dict[tgt_id],
-                               sign = edge_sign)
+                               sign=edge_sign)
 
+    # Add all the edges from the positive and negative influences
     add_edges(imap_data['wake-up map'], 1)
     add_edges(imap_data['inhibition map'], -1)
 
