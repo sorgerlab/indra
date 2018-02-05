@@ -4,7 +4,6 @@ from builtins import dict, str, int
 from sys import version_info, exit
 from math import ceil
 from datetime import datetime
-from wheel import archive
 if version_info.major is not 3:
     msg = "Python 3.x is required to use this module."
     if __name__ == '__main__':
@@ -213,13 +212,7 @@ class NihFtpClient(object):
 
     def get_uncompressed_bytes(self, f_path, force_str=True):
         "Get a file that is gzipped, and return the unzipped string."
-        zipped_str = self.get_file(f_path, force_str=False)
-        str_bytes = zlib.decompress(zipped_str, 16+zlib.MAX_WBITS)
-        if force_str:
-            ret = str_bytes.decode('utf8')
-        else:
-            ret = str_bytes
-        return ret
+        return self.get_file(f_path, force_str=force_str, decompress=True)
 
     def ftp_ls_timestamped(self, ftp_path=None):
         "Get all contents and metadata in mlsd format from the ftp directory."
@@ -396,7 +389,10 @@ class ContentManager(object):
                        if entry[id_idx(id_type)] is not None]
             if id_list:
                 or_list.append(getattr(db.TextRef, id_type).in_(id_list))
-        tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
+        if len(or_list) == 1:
+            tr_list = db.select_all(db.TextRef, or_list[0])
+        else:
+            tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
         logger.debug("Found %d potentially relevent text refs." % len(tr_list))
 
         # Create an index of tupled data entries for quick lookups by any id
@@ -494,6 +490,16 @@ class ContentManager(object):
                     "multiple matches in records for tex ref",
                     'Multiple matches for %s from %s: %s.'
                     % (self.make_text_ref_str(tr), self.my_source, match_set))
+
+        # Remove unhealthy text refs.
+        logger.debug("Removing at-risk refs.")
+        tr_list_clean = [tr for tr in tr_list
+                         if not any([
+                             getattr(tr, id_type) == rec[id_idx[id_type]]
+                             for rec in flawed_tr_data for id_type in self.tr_cols
+                             ])]
+        logger.debug("Only %d at-risk refs left." % len(tr_list_clean))
+        del tr_list
 
         # This applies all the changes made to the text refs to the db.
         logger.debug("Committing changes...")
@@ -620,8 +626,8 @@ class Medline(NihManager):
         # Check the ids more carefully against what is already in the db.
         if carefully:
             text_ref_records, flawed_refs = \
-                self.filter_text_refs(db, text_ref_records, n_per_batch=100,
-                                      primary_id_types=['pmcid', 'pmid'])
+                self.filter_text_refs(db, text_ref_records, n_per_batch=1000,
+                                      primary_id_types=['pmid'])
             logger.info('%d new records to add to text_refs.'
                         % len(text_ref_records))
             valid_pmids -= {ref[self.tr_cols.index('pmid')]
