@@ -414,8 +414,10 @@ class ContentManager(object):
         logger.debug("Beginning to iterate over text refs...")
         tr_data_match_list = []
         flawed_tr_data = []
+        risky_trids = set()
+        update_dict = {}
 
-        def add_to_found_record_list(record):
+        def add_to_found_record_list(record, trid):
             if record not in tr_data_match_list:
                 tr_data_match_list.append(record)
                 added = True
@@ -426,6 +428,7 @@ class ContentManager(object):
                     % (record, self.make_text_ref_str(tr))
                     )
                 flawed_tr_data.append(('over_match_db', record))
+                risky_trids.add(trid)
                 added = False
             return added
 
@@ -452,19 +455,21 @@ class ContentManager(object):
                 tr_new = match_set.pop()
 
                 # This is how we tell what doesn't need to be added to the db.
-                if not add_to_found_record_list(tr_new):
+                if not add_to_found_record_list(tr_new, tr.id):
                     continue
 
                 # Go through all the id_types
                 for i, id_type in enumerate(self.tr_cols):
                     # Check if the text ref is missing that id.
+                    id_updates = {}
+                    all_good = True
                     if getattr(tr, id_type) is None:
                         # If so, and if our new data does have that id, update
                         # the text ref.
                         if tr_new[i] is not None:
-                            logger.debug("Updating text ref for %s: %s."
+                            logger.debug("Will update text ref for %s: %s."
                                          % (id_type, tr_new[i]))
-                            setattr(tr, id_type, tr_new[i])
+                            id_updates[id_type] = tr_new[i]
                     else:
                         # Check to see that all the ids agree. If not, report
                         # it in the review.txt file.
@@ -476,11 +481,15 @@ class ContentManager(object):
                                 % (id_type, self.make_text_ref_str(tr), tr_new)
                                 )
                             flawed_tr_data.append((id_type, tr_new))
+                            all_good = False
+
+                    if all_good and len(id_updates):
+                        update_dict[tr.id] = (tr, id_updates)
             else:
                 # These still matched something in the db, so they shouldn't be
                 # uploaded as new refs.
                 for tr_new in match_set:
-                    add_to_found_record_list(tr_new)
+                    add_to_found_record_list(tr_new, tr.id)
                     flawed_tr_data.append(('over_match_input', tr_new))
 
                 # This condition only occurs if the records we got are
@@ -491,17 +500,11 @@ class ContentManager(object):
                     % (self.make_text_ref_str(tr), self.my_source, match_set))
 
         # Remove unhealthy text refs.
-        logger.debug("Removing at-risk refs.")
-        tr_list_clean = [tr for tr in tr_list
-                         if not any([
-                             getattr(tr, id_type) == rec[id_idx(id_type)]
-                             for _, rec in flawed_tr_data
-                             for id_type in self.tr_cols
-                             if rec[id_idx(id_type)] is not None
-                             and getattr(tr, id_type) is not None
-                             ])]
-        logger.debug("Only %d not-at-risk refs left." % len(tr_list_clean))
-        del tr_list
+        logger.info("Applying %d updates." % len(update_dict))
+        for tr, id_updates in update_dict.values():
+            if tr.id not in risky_trids:
+                for id_type, id_val in id_updates.items():
+                    setattr(tr, id_type, id_val)
 
         # This applies all the changes made to the text refs to the db.
         logger.debug("Committing changes...")
