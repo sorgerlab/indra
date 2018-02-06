@@ -10,7 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 
-from indra.statements import Phosphorylation, Complex
+from indra.statements import Phosphorylation, Dephosphorylation, Complex
 from indra.sources.tees.parse_tees import run_and_parse_tees
 
 class TEESProcessor(object):
@@ -180,10 +180,22 @@ class TEESProcessor(object):
             cause = self.get_entity_text_for_relation(pos_reg, 'Cause')
             theme = self.get_entity_text_for_relation(phos, 'Theme')
 
+            # If the trigger word is dephosphorylate or similar, then we
+            # extract a dephosphorylation statement
+            trigger_word = self.get_entity_text_for_relation(phos,
+                    'Phosphorylation')
+            if 'dephos' in trigger_word:
+                deph = True
+            else:
+                deph = False
+
             site = self.get_entity_text_for_relation(phos, 'Site')
 
             if theme is not None:
-                statements.append( Phosphorylation(cause, theme, site) )
+                if deph:
+                    statements.append( Dephosphorylation(cause, theme, site) )
+                else:
+                    statements.append( Phosphorylation(cause, theme, site) )
         return statements
 
     def process_binding_statements(self):

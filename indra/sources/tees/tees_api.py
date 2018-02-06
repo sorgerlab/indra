@@ -124,13 +124,20 @@ if __name__ == '__main__':
     events = tp.G
     subgraph_nodes = set()
     for node in events.node:
-        if events.node[node]['is_event'] and events.node[node]['type'] == 'Binding':
+        if events.node[node]['is_event'] and events.node[node]['type'] == 'Gene_expression':
             subgraph_nodes.add(node)
             subgraph_nodes.update(dag.ancestors(events, node))
             subgraph_nodes.update(dag.descendants(events, node))
     print('Subgraph size: %d' % len(subgraph_nodes))
     print('Subgraph nodes: ', subgraph_nodes)
-    tees_parse_networkx_to_dot(events, 'tees_binding.dot', subgraph_nodes)
+    subgraph_subset = set()
+    counter = 0
+    for n in subgraph_nodes:
+        subgraph_subset.add(n)
+        counter = counter + 1
+        if counter > 200:
+            break
+    tees_parse_networkx_to_dot(events, 'tees_all.dot', list(events.node.keys()))
 
     n = tp.find_event_with_outgoing_edges('Binding', ['Theme', 'Theme2'])
     print('Events in total:', len(n))
