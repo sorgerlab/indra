@@ -11,7 +11,7 @@ except ImportError:
     from functools32 import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
-from indra.databases import hgnc_client, uniprot_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.statements import *
 from . import pathway_commons_client as pcc
 from indra.util import decode_obj
@@ -1088,21 +1088,11 @@ class BiopaxProcessor(object):
             if dbname == 'CHEBI':
                 chebi_ids.append(dbid.replace('CHEBI:', ''))
             elif dbname == 'CAS':
-                # Special handling of common entities
-                if dbid == '86-01-1':
-                    chebi_ids.append('15996')
-                elif dbid == '86527-72-2':
-                    chebi_ids.append('15996')
-                elif dbid == '24696-26-2':
-                    chebi_ids.append('17761')
-                elif dbid == '23261-20-3':
-                    chebi_ids.append('18035')
-                elif dbid == '146-91-8':
-                    chebi_ids.append('17552')
-                elif dbid == '165689-82-7':
-                    chebi_ids.append('16618')
+                chebi_mapped = chebi_client.get_chebi_id_from_cas(dbid)
+                if chebi_mapped is not None:
+                    chebi_ids.append(chebi_mapped)
                 else:
-                    logger.info('Unknown cas id: %s (%s)' %
+                    logger.info('Unknown CAS id: %s (%s)' %
                                  (dbid, bpe.getDisplayName()))
         if not chebi_ids:
             return None
