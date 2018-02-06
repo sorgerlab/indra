@@ -334,6 +334,10 @@ class ContentManager(object):
 
     def add_to_review(self, desc, msg):
         """Add an entry to the review document."""
+        # NOTE: If this is ever done on AWS or through a
+        # container, the review file MUST be loaded somewhere
+        # it won't disappear. (such as s3). Perhaps these could
+        # be logged on the database?
         logger.warning("Found \"%s\"! Check %s."
                        % (desc, self.review_fname))
         with open(self.review_fname, 'a+') as f:
@@ -464,10 +468,6 @@ class ContentManager(object):
                     else:
                         # Check to see that all the ids agree. If not, report
                         # it in the review.txt file.
-                        # NOTE: If this is ever done on AWS or through a
-                        # container, the review file MUST be loaded somewhere
-                        # it won't disappear. (such as s3). Perhaps these could
-                        # be logged on the database?
                         if tr_new[i] is not None \
                          and tr_new[i] != getattr(tr, id_type).strip().upper():
                             self.add_to_review(
@@ -475,8 +475,6 @@ class ContentManager(object):
                                 'Got conflicting %s: in db %s vs %s.'
                                 % (id_type, self.make_text_ref_str(tr), tr_new)
                                 )
-                            # If the conflict was with a pmcid, don't try to
-                            # add the text content.
                             flawed_tr_data.append((id_type, tr_new))
             else:
                 # These still matched something in the db, so they shouldn't be
@@ -826,8 +824,8 @@ class PmcManager(NihManager):
         num_found_non_db = 0
         for tr_entry in missing_pmid_entries:
             if tr_entry['pmcid'] not in pmids_from_db.keys():
-                ret = id_lookup(tr_entry['pmcid'])
-                if 'pmid' in ret.keys():
+                ret = id_lookup(tr_entry['pmcid'], idtype='pmcid')
+                if 'pmid' in ret.keys() and ret['pmid'] is not None:
                     tr_entry['pmid'] = ret['pmid']
                     num_found_non_db += 1
                     num_missing -= 1
