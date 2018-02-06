@@ -845,6 +845,8 @@ class PmcManager(NihManager):
         arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
         if not len(tc_data):
             return []
+
+        logger.debug("Getting text refs for pmcid->trid dict..")
         tref_list = db.select_all(
             'text_ref',
             db.TextRef.pmcid.in_(arc_pmcid_list)
@@ -853,7 +855,9 @@ class PmcManager(NihManager):
             pmcid: trid for (pmcid, trid) in
             db.get_values(tref_list, ['pmcid', 'id'])
             }
+
         # This should be a very small list, in general.
+        logger.debug('Finding existing text content from db.')
         existing_tcs = db.select_all(
             'text_content',
             db.TextContent.text_ref_id.in_(pmcid_trid_dict.values()),
@@ -864,6 +868,8 @@ class PmcManager(NihManager):
             (tc.text_ref_id, tc.source, tc.format, tc.text_type)
             for tc in existing_tcs
             ]
+        logger.debug("Found %d existing records on the db."
+                     % len(existing_tc_records))
         tc_records = []
         for tc in tc_data:
             tc_records.append(
@@ -878,7 +884,7 @@ class PmcManager(NihManager):
         filtered_tc_records = [
             rec for rec in tc_records if rec[:-1] not in existing_tc_records
             ]
-        logger.info("Finished filtering the text content...")
+        logger.info("Finished filtering the text content.")
         return list(set(filtered_tc_records))
 
     def upload_batch(self, db, tr_data, tc_data):
