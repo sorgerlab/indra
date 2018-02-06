@@ -162,6 +162,27 @@ def update_cas_to_chebi():
                   header=['CAS', 'CHEBI'], index=False)
 
 
+def update_chebi_primary_map():
+    logger.info('--Updating ChEBI primary map entries----')
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
+        'Flat_file_tab_delimited/compounds.tsv.gz'
+    fname = os.path.join(path, 'compounds.tsv.gz')
+    urlretrieve(url, fname)
+    with gzip.open(fname, 'rb') as fh:
+        logger.info('Loading %s' % fname)
+        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+    fname = os.path.join(path, 'chebi_to_primary.tsv')
+    logger.info('Saving into %s' % fname)
+    df = df[df['PARENT_ID'] != 'null']
+    df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
+    df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
+                   inplace=True)
+    df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
+    df.to_csv(fname, sep=b'\t',
+              columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
+              header=['Seconday', 'Primary'], index=False)
+
+
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
     url = 'http://purl.obolibrary.org/obo/go.owl'
@@ -354,3 +375,4 @@ if __name__ == '__main__':
     update_cellular_component_hierarchy()
     update_bioentities_map()
     update_ncit_map()
+    update_chebi_primary_map()
