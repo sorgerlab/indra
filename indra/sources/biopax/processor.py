@@ -1112,7 +1112,7 @@ class BiopaxProcessor(object):
     def _get_rna_grounding(bpe):
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
-            return None
+            return {}
         xrefs = bp_entref.getXref().toArray()
         rna_grounding = {}
         for xr in xrefs:
@@ -1135,7 +1135,7 @@ class BiopaxProcessor(object):
     def _get_chemical_grounding(bpe):
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
-            return None
+            return {}
         xrefs = bp_entref.getXref().toArray()
         chemical_grounding = {}
         for xr in xrefs:
