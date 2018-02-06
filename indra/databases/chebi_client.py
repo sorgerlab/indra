@@ -105,6 +105,7 @@ def _read_cas_to_chebi():
                              '../resources/cas_to_chebi.tsv')
     csv_reader = read_unicode_csv(cas_to_chebi_file, delimiter='\t')
     cas_chebi = {}
+    next(csv_reader)
     for row in csv_reader:
         cas_chebi[row[0]] = row[1]
     return cas_chebi
