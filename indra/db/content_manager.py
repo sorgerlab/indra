@@ -458,7 +458,8 @@ class ContentManager(object):
                         # If so, and if our new data does have that id, update
                         # the text ref.
                         if tr_new[i] is not None:
-                            logger.debug("Updating text ref for %s." % id_type)
+                            logger.debug("Updating text ref for %s: %s."
+                                         % (id_type, tr_new[i]))
                             setattr(tr, id_type, tr_new[i])
                     else:
                         # Check to see that all the ids agree. If not, report
@@ -495,10 +496,13 @@ class ContentManager(object):
         logger.debug("Removing at-risk refs.")
         tr_list_clean = [tr for tr in tr_list
                          if not any([
-                             getattr(tr, id_type) == rec[id_idx[id_type]]
-                             for rec in flawed_tr_data for id_type in self.tr_cols
+                             getattr(tr, id_type) == rec[id_idx(id_type)]
+                             for _, rec in flawed_tr_data
+                             for id_type in self.tr_cols
+                             if rec[id_idx(id_type)] is not None
+                             and getattr(tr, id_type) is not None
                              ])]
-        logger.debug("Only %d at-risk refs left." % len(tr_list_clean))
+        logger.debug("Only %d not-at-risk refs left." % len(tr_list_clean))
         del tr_list
 
         # This applies all the changes made to the text refs to the db.
@@ -798,52 +802,41 @@ class PmcManager(NihManager):
         self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
                         'content',)
 
-    def get_missing_pmids(self, tr_data):
+    def get_missing_pmids(self, db, tr_data):
         "Try to get missing pmids using the pmc client."
-        num_missing = 0
-        num_found = 0
 
         logger.debug("Getting missing pmids.")
 
-        # TODO: This is very slow...should find a way to speed it up.
+        missing_pmid_entries = []
         for tr_entry in tr_data:
             if tr_entry['pmid'] is None:
-                num_missing += 1
+                missing_pmid_entries.append(tr_entry)
+
+        num_missing = len(missing_pmid_entries)
+        logger.debug('Missing %d pmids.' % num_missing)
+        tr_list = db.select_all(
+            db.TextRef, db.TextRef.pmcid.in_(
+                [tr_entry['pmcid'] for tr_entry in missing_pmid_entries]
+                )
+            )
+        pmids_from_db = {tr.pmcid: tr.pmid for tr in tr_list
+                         if tr.pmid is not None}
+
+        logger.debug("Found %d pmids on the databse." % len(pmids_from_db))
+        num_found_non_db = 0
+        for tr_entry in missing_pmid_entries:
+            if tr_entry['pmcid'] not in pmids_from_db.keys():
                 ret = id_lookup(tr_entry['pmcid'])
                 if 'pmid' in ret.keys():
                     tr_entry['pmid'] = ret['pmid']
-                    num_found += 1
-
-        ''' # The web api does not support this much access, sadly.
-        thread_list = []
-        for tr_entry in tr_data:
-            if tr_entry['pmid'] is None:
-                th = Thread(target=lookup_pmid, args=[tr_entry])
-                thread_list.append(th)
-
-        N = min(10, len(thread_list))
-        logger.debug("Starting %d threading pool." % N)
-        active_threads = []
-        for _ in range(N):
-            th = thread_list.pop()
-            th.start()
-            active_threads.append(th)
-
-        while len(thread_list):
-            for th in active_threads[:]:
-                if not th.is_alive():
-                    th.join()
-                    active_threads.remove(th)
-                    if len(thread_list):
-                        new_th = thread_list.pop()
-                        new_th.start()
-                        active_threads.append(th)
-            sleep(0.1)
-
-        for th in active_threads:
-            th.join()
-        '''
-        logger.debug("Found %d/%d new pmids." % (num_found, num_missing))
+                    num_found_non_db += 1
+                    num_missing -= 1
+            else:
+                tr_entry['pmid'] = pmids_from_db[tr_entry['pmcid']]
+                num_missing -= 1
+        logger.debug("Found %d more pmids from other sources."
+                     % num_found_non_db)
+        logger.debug("There are %d missing pmids remaining." % num_missing)
         return
 
     def filter_text_content(self, db, tc_data):
@@ -892,7 +885,7 @@ class PmcManager(NihManager):
         "Add a batch of text refs and text content to the database."
 
         # Check for any pmids we can get from the pmc client (this is slow!)
-        self.get_missing_pmids(tr_data)
+        self.get_missing_pmids(db, tr_data)
 
         # Turn the list of dicts into a set of tuples
         tr_data_set = {tuple([entry[id_type] for id_type in self.tr_cols])
