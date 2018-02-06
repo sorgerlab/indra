@@ -959,6 +959,9 @@ class BiopaxProcessor(object):
                 db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
+            mirbase_id = BiopaxProcessor._get_mirbase_id(bpe)
+            if mirbase_id is not None:
+                db_refs['MIRBASE'] = mirbase_id
         elif _is_small_molecule(bpe):
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
@@ -1104,6 +1107,22 @@ class BiopaxProcessor(object):
             return chebi_ids[0]
         else:
             return chebi_ids
+
+    @staticmethod
+    def _get_mirbase_id(bpe):
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return None
+        xrefs = bp_entref.getXref().toArray()
+        for xr in xrefs:
+            dbname = xr.getDb()
+            dbid = xr.getId()
+            if dbname is None:
+                continue
+            dbname = dbname.upper()
+            if dbname == 'MIRBASE SEQUENCE':
+                return dbid
+        return None
 
     @staticmethod
     def _get_chemical_grounding(bpe):
