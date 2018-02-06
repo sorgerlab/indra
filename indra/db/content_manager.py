@@ -619,7 +619,7 @@ class Medline(NihManager):
             r = data.get(id_type)
             if id_type == 'doi':
                 r = self.fix_doi(r)
-            return None if not r else r
+            return None if not r else r.strip().upper()
 
         text_ref_records = {tuple([pmid]+[get_val(article_info[pmid], id_type)
                                           for id_type in self.tr_cols[1:]])
@@ -628,7 +628,7 @@ class Medline(NihManager):
         # Check the ids more carefully against what is already in the db.
         if carefully:
             text_ref_records, flawed_refs = \
-                self.filter_text_refs(db, text_ref_records, n_per_batch=1000,
+                self.filter_text_refs(db, text_ref_records,
                                       primary_id_types=['pmid'])
             logger.info('%d new records to add to text_refs.'
                         % len(text_ref_records))
@@ -780,8 +780,8 @@ class Medline(NihManager):
 
     def update(self, db, n_procs=1, continuing=False):
         """Update the contents of the database with the latest articles."""
-        self.load_files(db, 'baseline', n_procs, continuing, True)
-        self.load_files(db, 'updatefiles', n_procs, continuing, True)
+        self.load_files(db, 'baseline', n_procs, True, True)
+        self.load_files(db, 'updatefiles', n_procs, True, True)
         db.insert('updates', init_upload=False, source=self.my_source,
                   datetime=datetime.utcnow())
         return
@@ -1049,7 +1049,7 @@ class PmcManager(NihManager):
         # Monitor the processes while any are still active.
         batch_log = path.join(path.dirname(path.abspath(__file__)),
                               '%s_batch_log.tmp' % self.my_source)
-        open(batch_log, 'w').close()
+        open(batch_log, 'a+').close()
         while len(active_list) is not 0:
             # Check for processes that have been unpacking archives to
             # complete, and when they do, add them to the source_file table.
