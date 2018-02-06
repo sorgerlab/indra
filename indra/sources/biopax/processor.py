@@ -1121,12 +1121,14 @@ class BiopaxProcessor(object):
             if dbname is None:
                 continue
             dbname = dbname.upper()
-            if dbname == 'MIRBASE SEQUENCE':
+            if dbname in ('MIRBASE SEQUENCE', 'MIRBASE'):
                 rna_grounding['MIRBASE'] = dbid
             elif dbname == 'MIRBASE MATURE SEQUENCE':
                 rna_grounding['MIRBASEM'] = dbid
             elif dbname == 'NCBI GENE':
                 rna_grounding['NCBI'] = dbid
+            elif dbname == 'ENSEMBL':
+                rna_grounding['ENSEMBL'] = dbid
         return rna_grounding
 
     @staticmethod
