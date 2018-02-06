@@ -140,6 +140,55 @@ def update_chebi_entries():
     df_chembl.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
+
+def update_cas_to_chebi():
+    logger.info('--Updating CAS to ChEBI entries----')
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
+        'Flat_file_tab_delimited/database_accession.tsv'
+    fname = os.path.join(path, 'database_accession.tsv')
+    urlretrieve(url, fname)
+    with open(fname, 'rb') as fh:
+        logger.info('Loading %s' % fname)
+        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+    fname = os.path.join(path, 'cas_to_chebi.tsv')
+    logger.info('Saving into %s' % fname)
+    df_cas = df[df['TYPE'] == 'CAS Registry Number']
+    df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
+                       inplace=True)
+    # Here we need to map to primary ChEBI IDs
+    with open('chebi_to_primary.tsv', 'rb') as fh:
+        df_prim = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        mapping = {s: p for s, p in zip(df_prim['Secondary'].tolist(),
+                                        df_prim['Primary'].tolist())}
+    df_cas.COMPOUND_ID.replace(mapping, inplace=True)
+    df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
+                           inplace=True)
+    df_cas.to_csv(fname, sep=b'\t',
+                  columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
+                  header=['CAS', 'CHEBI'], index=False)
+
+
+def update_chebi_primary_map():
+    logger.info('--Updating ChEBI primary map entries----')
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
+        'Flat_file_tab_delimited/compounds.tsv.gz'
+    fname = os.path.join(path, 'compounds.tsv.gz')
+    urlretrieve(url, fname)
+    with gzip.open(fname, 'rb') as fh:
+        logger.info('Loading %s' % fname)
+        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+    fname = os.path.join(path, 'chebi_to_primary.tsv')
+    logger.info('Saving into %s' % fname)
+    df = df[df['PARENT_ID'] != 'null']
+    df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
+    df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
+                   inplace=True)
+    df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
+    df.to_csv(fname, sep=b'\t',
+              columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
+              header=['Secondary', 'Primary'], index=False)
+
+
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
     url = 'http://purl.obolibrary.org/obo/go.owl'
@@ -323,6 +372,7 @@ if __name__ == '__main__':
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_chebi_names()
+    update_cas_to_chebi()
     update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
@@ -331,3 +381,4 @@ if __name__ == '__main__':
     update_cellular_component_hierarchy()
     update_bioentities_map()
     update_ncit_map()
+    update_chebi_primary_map()

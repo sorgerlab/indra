@@ -11,7 +11,7 @@ except ImportError:
     from functools32 import lru_cache
 
 from indra.java_vm import autoclass, JavaException, cast
-from indra.databases import hgnc_client, uniprot_client
+from indra.databases import hgnc_client, uniprot_client, chebi_client
 from indra.statements import *
 from . import pathway_commons_client as pcc
 from indra.util import decode_obj
@@ -959,10 +959,17 @@ class BiopaxProcessor(object):
                 db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
+            if not hgnc_id and not uniprot_id:
+                rna_groundings = BiopaxProcessor._get_rna_grounding(bpe)
+                db_refs.update(rna_groundings)
         elif _is_small_molecule(bpe):
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
                 db_refs['CHEBI'] = chebi_id
+            else:
+                chemical_groundings = \
+                    BiopaxProcessor._get_chemical_grounding(bpe)
+                db_refs.update(chemical_groundings)
         else:
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
@@ -1088,21 +1095,11 @@ class BiopaxProcessor(object):
             if dbname == 'CHEBI':
                 chebi_ids.append(dbid.replace('CHEBI:', ''))
             elif dbname == 'CAS':
-                # Special handling of common entities
-                if dbid == '86-01-1':
-                    chebi_ids.append('15996')
-                elif dbid == '86527-72-2':
-                    chebi_ids.append('15996')
-                elif dbid == '24696-26-2':
-                    chebi_ids.append('17761')
-                elif dbid == '23261-20-3':
-                    chebi_ids.append('18035')
-                elif dbid == '146-91-8':
-                    chebi_ids.append('17552')
-                elif dbid == '165689-82-7':
-                    chebi_ids.append('16618')
+                chebi_mapped = chebi_client.get_chebi_id_from_cas(dbid)
+                if chebi_mapped is not None:
+                    chebi_ids.append(chebi_mapped)
                 else:
-                    logger.info('Unknown cas id: %s (%s)' %
+                    logger.info('Unknown CAS id: %s (%s)' %
                                  (dbid, bpe.getDisplayName()))
         if not chebi_ids:
             return None
@@ -1110,6 +1107,52 @@ class BiopaxProcessor(object):
             return chebi_ids[0]
         else:
             return chebi_ids
+
+    @staticmethod
+    def _get_rna_grounding(bpe):
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return {}
+        xrefs = bp_entref.getXref().toArray()
+        rna_grounding = {}
+        for xr in xrefs:
+            dbname = xr.getDb()
+            dbid = xr.getId()
+            if dbname is None:
+                continue
+            dbname = dbname.upper()
+            if dbname in ('MIRBASE SEQUENCE', 'MIRBASE'):
+                rna_grounding['MIRBASE'] = dbid
+            elif dbname == 'MIRBASE MATURE SEQUENCE':
+                rna_grounding['MIRBASEM'] = dbid
+            elif dbname == 'NCBI GENE':
+                rna_grounding['NCBI'] = dbid
+            elif dbname == 'ENSEMBL':
+                rna_grounding['ENSEMBL'] = dbid
+        return rna_grounding
+
+    @staticmethod
+    def _get_chemical_grounding(bpe):
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return {}
+        xrefs = bp_entref.getXref().toArray()
+        chemical_grounding = {}
+        for xr in xrefs:
+            dbname = xr.getDb()
+            dbid = xr.getId()
+            if dbname is None:
+                continue
+            dbname = dbname.upper()
+            if dbname == 'PUBCHEM-COMPOUND':
+                chemical_grounding['PUBCHEM'] = 'PUBCHEM:%s' % dbid
+            elif dbname == 'MESH':
+                chemical_grounding['MESH'] = dbid
+            elif dbname == 'DRUGBANK':
+                chemical_grounding['DRUGBANK'] = dbid
+            elif dbname == 'HMDB':
+                chemical_grounding['HMDB'] = dbid
+        return chemical_grounding
 
     @staticmethod
     def _get_hgnc_id(bpe):
