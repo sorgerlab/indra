@@ -959,9 +959,9 @@ class BiopaxProcessor(object):
                 db_refs['HGNC'] = hgnc_id
             if uniprot_id is not None:
                 db_refs['UP'] = uniprot_id
-            mirbase_id = BiopaxProcessor._get_mirbase_id(bpe)
-            if mirbase_id is not None:
-                db_refs['MIRBASE'] = mirbase_id
+            if not hgnc_id and not uniprot_id:
+                rna_groundings = BiopaxProcessor._get_rna_grounding(bpe)
+                db_refs.update(rna_groundings)
         elif _is_small_molecule(bpe):
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
@@ -1109,11 +1109,12 @@ class BiopaxProcessor(object):
             return chebi_ids
 
     @staticmethod
-    def _get_mirbase_id(bpe):
+    def _get_rna_grounding(bpe):
         bp_entref = BiopaxProcessor._get_entref(bpe)
         if bp_entref is None:
             return None
         xrefs = bp_entref.getXref().toArray()
+        rna_grounding = {}
         for xr in xrefs:
             dbname = xr.getDb()
             dbid = xr.getId()
@@ -1121,8 +1122,12 @@ class BiopaxProcessor(object):
                 continue
             dbname = dbname.upper()
             if dbname == 'MIRBASE SEQUENCE':
-                return dbid
-        return None
+                rna_grounding['MIRBASE'] = dbid
+            elif dbname == 'MIRBASE MATURE SEQUENCE':
+                rna_grounding['MIRBASEM'] = dbid
+            elif dbname == 'NCBI GENE':
+                rna_grounding['NCBI'] = dbid
+        return rna_grounding
 
     @staticmethod
     def _get_chemical_grounding(bpe):
