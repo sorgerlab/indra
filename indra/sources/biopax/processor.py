@@ -963,6 +963,10 @@ class BiopaxProcessor(object):
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
                 db_refs['CHEBI'] = chebi_id
+            else:
+                chemical_groundings = \
+                    BiopaxProcessor._get_chemical_grounding(bpe)
+                db_refs.update(chemical_groundings)
         else:
             chebi_id = BiopaxProcessor._get_chebi_id(bpe)
             if chebi_id is not None:
@@ -1100,6 +1104,29 @@ class BiopaxProcessor(object):
             return chebi_ids[0]
         else:
             return chebi_ids
+
+    @staticmethod
+    def _get_chemical_grounding(bpe):
+        bp_entref = BiopaxProcessor._get_entref(bpe)
+        if bp_entref is None:
+            return None
+        xrefs = bp_entref.getXref().toArray()
+        chemical_grounding = {}
+        for xr in xrefs:
+            dbname = xr.getDb()
+            dbid = xr.getId()
+            if dbname is None:
+                continue
+            dbname = dbname.upper()
+            if dbname == 'PUBCHEM-COMPOUND':
+                chemical_grounding['PUBCHEM'] = 'PUBCHEM:%s' % dbid
+            elif dbname == 'MESH':
+                chemical_grounding['MESH'] = dbid
+            elif dbname == 'DRUGBANK':
+                chemical_grounding['DRUGBANK'] = dbid
+            elif dbname == 'HMDB':
+                chemical_grounding['HMDB'] = dbid
+        return chemical_grounding
 
     @staticmethod
     def _get_hgnc_id(bpe):
