@@ -1047,6 +1047,9 @@ class PmcManager(NihManager):
             start_next_proc()
 
         # Monitor the processes while any are still active.
+        batch_log = path.join(path.dirname(path.abspath(__file__)),
+                              '%s_batch_log.tmp' % self.my_source)
+        open(batch_log, 'w').close()
         while len(active_list) is not 0:
             # Check for processes that have been unpacking archives to
             # complete, and when they do, add them to the source_file table.
@@ -1068,7 +1071,14 @@ class PmcManager(NihManager):
             except Exception:
                 continue
             logger.info("Beginning to upload %s from %s..." % label)
+            if continuing:
+                with open(batch_log, 'r') as f:
+                    if str(label) in f.read().splitlines():
+                        logger.info("Batch already completed: skipping...")
+                        continue
             self.upload_batch(db, tr_data, tc_data)
+            with open(batch_log, 'a+') as f:
+                f.write(str(label) + '\n')
             logger.info("Finished %s from %s..." % label)
             time.sleep(0.1)
 
@@ -1079,6 +1089,10 @@ class PmcManager(NihManager):
             except Exception:
                 break
             self.upload_batch(db, tr_data, tc_data)
+
+        os.remove(batch_log)
+
+        return
 
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial population of the pmc content into the database.
