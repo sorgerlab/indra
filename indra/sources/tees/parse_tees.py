@@ -126,6 +126,7 @@ def parse_a2(a2_filename, entities, tees_sentences):
         property that gives the text.
     """
     G = nx.DiGraph()
+    event_names = set()
 
     # Put entities into the graph
     for entity_name in entities.keys():
@@ -185,6 +186,8 @@ def parse_a2(a2_filename, entities, tees_sentences):
                 G.node[event_identifier]['type'] = event_name
                 G.node[event_identifier]['is_event'] = True
 
+                event_names.add(event_name)
+
 
             elif line[0] == 'M': #Event modification
                 tokens = line.split('\t')
@@ -208,6 +211,8 @@ def parse_a2(a2_filename, entities, tees_sentences):
                     # affect whether we want to process them into statements
                     print('Unknown negation event: %s' % line)
                     assert(False)
+    for e in event_names:
+        print(e)
     return G
 
 class TEESSentences:

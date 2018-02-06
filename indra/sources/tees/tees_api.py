@@ -15,6 +15,10 @@ import os.path
 import logging
 import codecs
 
+from parse_tees import tees_parse_networkx_to_dot
+import networkx.algorithms.dag as dag
+
+
 logger = logging.getLogger('tees')
 
 # If TEES isn't specified, we will check to see if any of these directories
@@ -115,3 +119,27 @@ if __name__ == '__main__':
     statements = tp.statements
     for statement in statements:
         print(statement)
+
+    # Make a graph with nodes involving Binding events
+    events = tp.G
+    subgraph_nodes = set()
+    for node in events.node:
+        if events.node[node]['is_event'] and events.node[node]['type'] == 'Binding':
+            subgraph_nodes.add(node)
+            subgraph_nodes.update(dag.ancestors(events, node))
+            subgraph_nodes.update(dag.descendants(events, node))
+    print('Subgraph size: %d' % len(subgraph_nodes))
+    print('Subgraph nodes: ', subgraph_nodes)
+    tees_parse_networkx_to_dot(events, 'tees_binding.dot', subgraph_nodes)
+
+    n = tp.find_event_with_outgoing_edges('Binding', ['Theme', 'Theme2'])
+    print('Events in total:', len(n))
+    print('=====================')
+    print('Binding events: ', n)
+    print('Moo now')
+
+
+    #TODO: parse binding events by looking for a Binding that has Theme and Theme2
+
+
+

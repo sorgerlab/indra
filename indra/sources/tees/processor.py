@@ -10,7 +10,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 
-from indra.statements import Phosphorylation
+from indra.statements import Phosphorylation, Complex
 from indra.sources.tees.parse_tees import run_and_parse_tees
 
 class TEESProcessor(object):
@@ -45,7 +45,8 @@ class TEESProcessor(object):
 
         # Extract statements from the TEES graph
         self.statements = []
-        self.statements.extend(self.make_phosphorylation_statements())
+        self.statements.extend(self.process_phosphorylation_statements())
+        self.statements.extend(self.process_binding_statements())
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
@@ -112,6 +113,40 @@ class TEESProcessor(object):
                         break
         return list(set(matches))
 
+    def find_event_with_outgoing_edges(self, event_name, desired_relations):
+        """Gets a list of event nodes with the specified event_name and
+        outgoing edges annotated with each of the specified relations.
+
+        Parameters
+        ----------
+        event_name: str
+            Look for event nodes with this name
+        desired_relations: list[str]
+            Look for event nodes with outgoing edges annotated with each of
+            these relations
+
+        Returns
+        -------
+        event_nodes: list[str]
+            Event nodes that fit the desired criteria
+        """
+
+        G = self.G
+        desired_relations = set(desired_relations)
+
+        desired_event_nodes = []
+
+        for node in G.node.keys():
+            if G.node[node]['is_event'] and G.node[node]['type'] == event_name:
+                has_relations = [G.edge[node][to]['relation'] for \
+                        to in G.edge[node].keys()]
+                has_relations = set(has_relations)
+                # Did the outgoing edges from this node have all of the
+                # desired relations?
+                if desired_relations.issubset(has_relations):
+                    desired_event_nodes.append(node)
+        return desired_event_nodes
+
     def get_entity_text_for_relation(self, node, relation):
         """Looks for an edge from node to some other node, such that the edge is
         annotated with the given relation. If there exists such an edge, and the
@@ -124,8 +159,8 @@ class TEESProcessor(object):
                 return G.node[to]['text']
         return None
 
-    def make_phosphorylation_statements(self):
-        """Looks for phosphorylation events in the graph and extracts them into
+    def process_phosphorylation_statements(self):
+        """Looks for Phosphorylation events in the graph and extracts them into
         INDRA statements.
 
         In particular, looks for a Positive_regulation event node with a child
@@ -150,29 +185,28 @@ class TEESProcessor(object):
             if theme is not None:
                 statements.append( Phosphorylation(cause, theme, site) )
         return statements
-            
-if __name__ == '__main__':
-    text = ''
-    with codecs.open('abstracts_100.txt', 'r', encoding='utf-8') as f:
-        text = text + f.read()
 
-    tees_path = '/Users/daniel/Downloads/jbjorne-TEES-1125ab0'
-    good_sentence = 'Raf increases the phosphorylation of BRAF.'
-    weird_sentence = 'Serine 446 is constituitively phosphorylated in BRAF.'
-    s = 'Our data demonstrated that Abl and Arg were activated downstream of chemokine receptors and mediated the chemokine-induced tyrosine phosphorylation of human enhancer of filamentation 1 (HEF1), an adaptor protein that is required for the activity of the guanosine triphosphatase Rap1, which mediates cell adhesion and migration.'
-    events = run_and_parse_tees(tees_path, text)
+    def process_binding_statements(self):
+        """Looks for Binding events in the graph and extracts them into INDRA
+        statements.
 
-    subgraph_nodes = set()
-    for node in events.node:
-        if events.node[node]['is_event'] and events.node[node]['type'] == 'Phosphorylation':
-            subgraph_nodes.add(node)
-            subgraph_nodes.update(dag.ancestors(events, node))
-            subgraph_nodes.update(dag.descendants(events, node))
-    print('Subgraph size: %d' % len(subgraph_nodes))
-    print('Subgraph nodes: ', subgraph_nodes)
-    tees_parse_networkx_to_dot(events, 'moo.dot', subgraph_nodes)
+        In particular, looks for a Binding event node with outgoing edges
+        with relations Theme and Theme2 - the entities these edges point to
+        are the two constituents of the Complex INDRA statement.
+        """
+        G = self.G
+        statements = []
 
-    statements = make_phosphorylation_statements(events)
-    for s in statements:
-        print(s)
+        binding_nodes = self.find_event_with_outgoing_edges('Binding',
+                ['Theme', 'Theme2'])
+
+        for node in binding_nodes:
+            theme1 = self.get_entity_text_for_relation(node, 'Theme')
+            theme2 = self.get_entity_text_for_relation(node, 'Theme2')
+
+            assert(theme1 is not None)
+            assert(theme2 is not None)
+
+            statements.append( Complex([theme1, theme2]) )
+        return statements
 
