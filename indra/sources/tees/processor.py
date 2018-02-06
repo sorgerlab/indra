@@ -68,15 +68,9 @@ class TEESProcessor(object):
                 return to
         return None
 
-    def find_events_by_pattern(self, event_name):
-        G = self.G
-        nodes = []
-        for n in G.node:
-            if G.node[n]['is_event'] and G.node[n]['type'] == event_name:
-                nodes.append(n)
-        return nodes
-
     def general_node_label(self, node):
+        """Used for debugging - gives a short text description of a
+        graph node."""
         G = self.G
         if G.node[node]['is_event']:
             return 'event type=' + G.node[node]['type']
@@ -84,6 +78,8 @@ class TEESProcessor(object):
             return 'entity text=' + G.node[node]['text']
 
     def print_parent_and_children_info(self, node):
+        """Used for debugging - prints a short description of a a node, its
+        children, its parents, and its parents' children."""
         G = self.G
         parents = G.predecessors(node)
         children = G.successors(node)
@@ -102,6 +98,9 @@ class TEESProcessor(object):
             print(tabs + 'Child (%s): (%s)' % (relation, general_node_label(G, child)))
 
     def find_event_parent_with_event_child(self, parent_name, child_name):
+        """Finds all event nodes (is_event node attribute is True) that are
+        of the type parent_name, that have a child event node with the type
+        child_name."""
         G = self.G
         matches = []
         for n in G.node.keys():
@@ -116,8 +115,8 @@ class TEESProcessor(object):
     def get_entity_text_for_relation(self, node, relation):
         """Looks for an edge from node to some other node, such that the edge is
         annotated with the given relation. If there exists such an edge, and the
-        node at the other edge is an entity, return that entity's text. Otherwise,
-        return None."""
+        node at the other edge is an entity, return that entity's text.
+        Otherwise, returns None."""
         G = self.G
         for to in G.edge[node]:
             to_relation = G.edge[node][to]['relation']
@@ -126,22 +125,30 @@ class TEESProcessor(object):
         return None
 
     def make_phosphorylation_statements(self):
+        """Looks for phosphorylation events in the graph and extracts them into
+        INDRA statements.
+
+        In particular, looks for a Positive_regulation event node with a child
+        Phosphorylation event node.
+
+        If Positive_regulation has an outgoing Cause edge, that's the subject
+        If Phosphorylation has an outgoing Theme edge, that's the object
+        If Phosphorylation has an outgoing Site edge, that's the site
+        """
         G = self.G
         statements = []
 
-        pwcs = self.find_event_parent_with_event_child('Positive_regulation', 'Phosphorylation')
+        pwcs = self.find_event_parent_with_event_child('Positive_regulation',
+                'Phosphorylation')
         for pair in pwcs:
             (pos_reg, phos) = pair
             cause = self.get_entity_text_for_relation(pos_reg, 'Cause')
             theme = self.get_entity_text_for_relation(phos, 'Theme')
 
             site = self.get_entity_text_for_relation(phos, 'Site')
-            if site is None:
-                site_text = ''
-            else:
-                site_text = 'at ' + site
 
-            statements.append( Phosphorylation(cause, theme, site) )
+            if theme is not None:
+                statements.append( Phosphorylation(cause, theme, site) )
         return statements
             
 if __name__ == '__main__':

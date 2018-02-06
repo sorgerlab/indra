@@ -34,6 +34,23 @@ except NameError:  # Python 3
 logger = logging.getLogger('tees_parser')
 
 class TEESEntity:
+    """Temporary structure for holding information about a TEES entity before
+    moving this information into a networkx graph.
+
+    Each TEESEntity corresponds to one row in the .a1 files outputted by
+    TEES during extraction.
+
+    Attributes
+    ----------
+    identifier: str
+        The unique tag for each entity, starting with T (ex. T28)
+    entity_type: str
+        The type of entity (ex. Protein)
+    entity_name: str
+        The name of the entity, as listed in the text
+    offsets: list[int]
+        The lower and upper offsets where the entity was mentioned in the text
+    """
     def __init__(self, identifier, entity_type, entity_name, offsets):
         self.identifier = identifier
         self.entity_type = entity_type
@@ -49,17 +66,19 @@ class TEESEntity:
                 self.offsets[1])
 
 def parse_a1(a1_filename):
-    """Parses an a1 file format.
+    """Parses an a1 file, the file TEES outputs that lists the entities in
+    the extracted events.
 
     Parameters
     ----------
-    a1_file: str
+    a1_filename: str
         File with the list of entities.
 
     Returns
     -------
     entities: Dictionary mapping TEES identifiers to TEESEntity objects
-        describing each entity
+        describing each entity. Each row of the .a1 file corresponds to one
+        TEESEntity object.
     """
     entities = {}
 
@@ -87,15 +106,6 @@ def parse_a1(a1_filename):
                     offsets)
 
     return entities
-
-class TEESEvent:
-    def __init__(self, event_name, text, properties):
-        self.event_name = event_name
-        self.text = text
-        self.properties = properties
-
-    def __repr__(self):
-        return '%s %s: %s' % (self.event_name, repr(self.properties), self.text)
 
 def parse_a2(a2_filename, entities, tees_sentences):
     """Extracts events from a TEES a2 files into a networkx directed graph.
@@ -325,7 +335,19 @@ def parse_tees_output_directory(output_dir):
 
 def run_and_parse_tees(text, tees_path, python2_path):
     """Runs TEES on the given text in a temporary directory and returns a
-    dictionary mapping TEES event identifiers to TEESEvent parsed events.
+    directed networkx graph containing TEES entity and event information.
+    
+    Each node of the graph corresponds to either an entity or an event.
+    Nodes have these properties:
+    * is_event: True if an event, False if an entity
+    * type: Specified only if the node is an event; gives the even type (ex.
+        "Phosphorylation")
+    * text: Specified only if the node is an entity; gives the text describing
+        the entity in the original plain text (ex. "BRAF"), rather than using
+        some standardized identifier
+
+    Edges have the property relation, that describe the relationship between
+    two nodes as listed in the originl .a2 file.
 
     Invokes TEES by calling a new python interpreter so that although TEES
     is only compatable with python 2, this script can be used with either
@@ -333,10 +355,12 @@ def run_and_parse_tees(text, tees_path, python2_path):
 
     Parameters
     ----------
-    tees_path: str
-        Path to the TEES directory
     text: str
         Text from which to extract relationships
+    tees_path: str
+        Path to the TEES directory
+    python2_path: str
+        The path to the python 2 interpreter
     """
     # Make sure the provided TEES directory exists
     if not os.path.isdir(tees_path):
