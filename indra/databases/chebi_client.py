@@ -108,6 +108,12 @@ def _read_cas_to_chebi():
     next(csv_reader)
     for row in csv_reader:
         cas_chebi[row[0]] = row[1]
+    # These are missing from the resource but appear often, so we map
+    # them manually
+    extra_entries = {'24696-26-2': '17761',
+                     '23261-20-3': '18035',
+                     '165689-82-7': '16618'}
+    cas_chebi.update(extra_entries)
     return cas_chebi
 
 

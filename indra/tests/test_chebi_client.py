@@ -20,4 +20,5 @@ def test_read_chebi_to_chembl():
 
 def test_cas_to_chebi():
     assert chebi_client.get_chebi_id_from_cas('23261-20-3') == '18035'
+    assert chebi_client.get_chebi_id_from_cas('100-51-6') == '17987'
     assert chebi_client.get_chebi_id_from_cas('-1') is None
