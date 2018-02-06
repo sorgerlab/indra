@@ -11,7 +11,7 @@ from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
-        IncreaseAmount
+        IncreaseAmount, DecreaseAmount
 from indra.sources.tees.parse_tees import run_and_parse_tees
 
 class TEESProcessor(object):
@@ -48,7 +48,8 @@ class TEESProcessor(object):
         self.statements = []
         self.statements.extend(self.process_phosphorylation_statements())
         self.statements.extend(self.process_binding_statements())
-        self.statements.extend(self.process_positive_regulation())
+        self.statements.extend(self.process_increase_expression_amount())
+        self.statements.extend(self.process_decrease_expression_amount())
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
@@ -161,7 +162,7 @@ class TEESProcessor(object):
                 return G.node[to]['text']
         return None
 
-    def process_positive_regulation(self):
+    def process_increase_expression_amount(self):
         """Looks for Positive_Regulation events with a specified Cause
         and a Gene_Expression theme, and processes them into INDRA statements.
         """
@@ -178,6 +179,25 @@ class TEESProcessor(object):
 
             if cause is not None and target is not None:
                 statements.append(IncreaseAmount(cause, target))
+        return statements
+
+    def process_decrease_expression_amount(self):
+        """Looks for Negative_Regulation events with a specified Cause
+        and a Gene_Expression theme, and processes them into INDRA statements.
+        """
+        statements = []
+
+        pwcs = self.find_event_parent_with_event_child('Negative_regulation',
+                'Gene_expression')
+        for pair in pwcs:
+            pos_reg = pair[0]
+            expression = pair[1]
+
+            cause = self.get_entity_text_for_relation(pos_reg, 'Cause')
+            target = self.get_entity_text_for_relation(expression, 'Theme')
+
+            if cause is not None and target is not None:
+                statements.append(DecreaseAmount(cause, target))
         return statements
 
     def process_phosphorylation_statements(self):
