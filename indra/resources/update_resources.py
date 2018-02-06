@@ -140,6 +140,28 @@ def update_chebi_entries():
     df_chembl.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
+
+def update_cas_to_chebi():
+    logger.info('--Updating CAS to ChEBI entries----')
+    url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
+        'Flat_file_tab_delimited/database_accession.tsv'
+    fname = os.path.join(path, 'database_accession.tsv')
+    urlretrieve(url, fname)
+    with open(fname, 'rb') as fh:
+        logger.info('Loading %s' % fname)
+        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+    fname = os.path.join(path, 'cas_to_chebi.tsv')
+    logger.info('Saving into %s' % fname)
+    df_cas = df[df['TYPE'] == 'CAS Registry Number']
+    df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
+                       inplace=True)
+    df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
+                           inplace=True)
+    df_cas.to_csv(fname, sep=b'\t',
+                  columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
+                  header=['CAS', 'CHEBI'], index=False)
+
+
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
     url = 'http://purl.obolibrary.org/obo/go.owl'
@@ -323,6 +345,7 @@ if __name__ == '__main__':
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_chebi_names()
+    update_cas_to_chebi()
     update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
