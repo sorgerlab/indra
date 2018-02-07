@@ -414,7 +414,7 @@ class ContentManager(object):
         logger.debug("Beginning to iterate over text refs...")
         tr_data_match_list = []
         flawed_tr_data = []
-        risky_records = set()
+        multi_match_records = set()
         update_dict = {}
 
         def add_to_found_record_list(record):
@@ -428,7 +428,7 @@ class ContentManager(object):
                     % (record, self.make_text_ref_str(tr))
                     )
                 flawed_tr_data.append(('over_match_db', record))
-                risky_records.add(record)
+                multi_match_records.add(record)
                 added = False
             return added
 
@@ -490,7 +490,6 @@ class ContentManager(object):
                 # uploaded as new refs.
                 for tr_new in match_set:
                     add_to_found_record_list(tr_new)
-                    risky_records.add(tr_new)
                     flawed_tr_data.append(('over_match_input', tr_new))
 
                 # This condition only occurs if the records we got are
@@ -503,7 +502,7 @@ class ContentManager(object):
         # Remove unhealthy text refs.
         logger.info("Applying %d updates." % len(update_dict))
         for tr, id_updates, record in update_dict.values():
-            if record not in risky_records:
+            if record not in multi_match_records:
                 for id_type, id_val in id_updates.items():
                     setattr(tr, id_type, id_val)
 
