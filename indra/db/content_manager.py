@@ -414,10 +414,10 @@ class ContentManager(object):
         logger.debug("Beginning to iterate over text refs...")
         tr_data_match_list = []
         flawed_tr_data = []
-        risky_trids = set()
+        risky_records = set()
         update_dict = {}
 
-        def add_to_found_record_list(record, trid):
+        def add_to_found_record_list(record):
             if record not in tr_data_match_list:
                 tr_data_match_list.append(record)
                 added = True
@@ -428,7 +428,7 @@ class ContentManager(object):
                     % (record, self.make_text_ref_str(tr))
                     )
                 flawed_tr_data.append(('over_match_db', record))
-                risky_trids.add(trid)
+                risky_records.add(record)
                 added = False
             return added
 
@@ -455,14 +455,14 @@ class ContentManager(object):
                 tr_new = match_set.pop()
 
                 # This is how we tell what doesn't need to be added to the db.
-                if not add_to_found_record_list(tr_new, tr.id):
+                if not add_to_found_record_list(tr_new):
                     continue
 
                 # Go through all the id_types
+                all_good = True
+                id_updates = {}
                 for i, id_type in enumerate(self.tr_cols):
                     # Check if the text ref is missing that id.
-                    id_updates = {}
-                    all_good = True
                     if getattr(tr, id_type) is None:
                         # If so, and if our new data does have that id, update
                         # the text ref.
@@ -483,13 +483,14 @@ class ContentManager(object):
                             flawed_tr_data.append((id_type, tr_new))
                             all_good = False
 
-                    if all_good and len(id_updates):
-                        update_dict[tr.id] = (tr, id_updates)
+                if all_good and len(id_updates):
+                    update_dict[tr.id] = (tr, id_updates, tr_new)
             else:
                 # These still matched something in the db, so they shouldn't be
                 # uploaded as new refs.
                 for tr_new in match_set:
-                    add_to_found_record_list(tr_new, tr.id)
+                    add_to_found_record_list(tr_new)
+                    risky_records.add(tr_new)
                     flawed_tr_data.append(('over_match_input', tr_new))
 
                 # This condition only occurs if the records we got are
@@ -501,8 +502,8 @@ class ContentManager(object):
 
         # Remove unhealthy text refs.
         logger.info("Applying %d updates." % len(update_dict))
-        for tr, id_updates in update_dict.values():
-            if tr.id not in risky_trids:
+        for tr, id_updates, record in update_dict.values():
+            if record not in risky_records:
                 for id_type, id_val in id_updates.items():
                     setattr(tr, id_type, id_val)
 
@@ -685,6 +686,8 @@ class Medline(NihManager):
                 text_content_records.append((tr_id, self.my_source,
                                              formats.TEXT, texttypes.ABSTRACT,
                                              abstract_gz))
+        logger.info("Found %d new text content entries."
+                    % len(text_content_records))
 
         try:
             self.copy_into_db(
