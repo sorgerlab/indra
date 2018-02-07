@@ -279,6 +279,13 @@ class ContentManager(object):
                 logger.info('Constraint %s was violated by (%s)=(%s).'
                             % (constraint, id_types, ids))
                 id_dict = dict(zip(id_types.split(', '), ids.split(', ')))
+
+                # Primary keys are returned from the database as integers.
+                for id_type, id_val in id_dict.copy():
+                    if id_type in ['text_ref_id', 'text_content_id']:
+                        id_dict[id_type] = int(id_val)
+
+                # Now look for matches and remove offending entries.
                 new_data = set()
                 vile_data = set()
                 for datum in data:
