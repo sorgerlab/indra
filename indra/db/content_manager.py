@@ -304,15 +304,15 @@ class ContentManager(object):
                     else:
                         new_data.add(datum)
 
+                if not len(vile_data):
+                    logger.error("Failed to find erroneous data.")
+                    raise e
+
                 logger.info('Resubmitting copy without the offending ids.')
                 more_vile_data = self.copy_into_db(db, tbl_name, new_data,
                                                    cols=cols, retry=True)
 
-                # This prevents a potential endless recursion scenario.
-                if more_vile_data == vile_data:
-                    logger.error("Conflicting data not correctly handled.")
-                    raise e
-                elif more_vile_data is not None:
+                if more_vile_data is not None:
                     vile_data = vile_data.union(more_vile_data)
             else:
                 pkl_file_fmt = "copy_failure_%d.pkl"
@@ -749,7 +749,9 @@ class Medline(NihManager):
             xml_file, article_info = q.get()  # Block until at least 1 is done.
             if start_new:
                 proc_list.pop(0).start()
+            logger.info("Beginning to upload %s." % xml_file)
             self.upload_article(db, article_info, carefully)
+            logger.info("Completed %s." % xml_file)
             if xml_file not in existing_files:
                 db.insert('source_file', source=self.my_source, name=xml_file)
 
@@ -966,7 +968,12 @@ class PmcManager(NihManager):
         return tr_datum, tc_datum
 
     def unpack_archive_path(self, archive_path, q=None, db=None):
-        "Process a single tar gzipped article at archive_path."
+        """"Unpack the contents of an archive.
+
+        If `q` is given, then the data is put into the que to be handed off for
+        upload by another process. Otherwise, if `db` is provided, upload the
+        batches of data on this process. One or the other MUST be provided.
+        """
         tr_data = []
         tc_data = []
 
@@ -1007,8 +1014,17 @@ class PmcManager(NihManager):
         return
 
     def process_archive(self, archive, q=None, db=None, continuing=False):
+        """Download an archive and begin unpacking it.
+
+        Either `q` or `db` MUST be provided. For details see explanation for
+        `unpack_archive_path`, which this method calls.
+        """
+
+        # This is a guess at the location of the archive.
         local_dir = path.dirname(path.abspath(__file__))
         archive_local_path = path.join(local_dir, path.basename(archive))
+
+        # Download the archive if need be.
         if continuing and path.exists(archive_local_path):
             logger.info('Archive %s found locally at %s, not loading again.'
                         % (archive, archive_local_path))
@@ -1018,8 +1034,16 @@ class PmcManager(NihManager):
                 archive_local_path = self.ftp.download_file(archive,
                                                             dest=local_dir)
             except BaseException:
+                logger.error("Failed to download %s. Deleting corrupt file."
+                             % archive)
                 os.remove(archive_local_path)
+                raise
+
+        # Now unpack the archive.
         self.unpack_archive_path(archive_local_path, q=q, db=db)
+
+        # Assuming we completed correctly, remove the archive.
+        logger.info("Removing %s." % archive_local_path)
         os.remove(archive_local_path)
         return
 
