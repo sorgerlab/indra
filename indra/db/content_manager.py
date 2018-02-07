@@ -4,6 +4,7 @@ from builtins import dict, str, int
 from sys import version_info, exit
 from math import ceil
 from datetime import datetime
+from functools import wraps
 if version_info.major is not 3:
     msg = "Python 3.x is required to use this module."
     if __name__ == '__main__':
@@ -108,6 +109,9 @@ except ImportError:
 
 ftp_blocksize = 33554432  # Chunk size recommended by NCBI
 BATCH_SIZE = 10000
+
+
+THIS_DIR = path.dirname(path.abspath(__file__))
 
 
 class UploadError(Exception):
@@ -259,7 +263,7 @@ class ContentManager(object):
                           re.DOTALL)
 
     def __init__(self):
-        self.review_fname = 'review_%s.txt' % self.my_source
+        self.review_fname = None
         return
 
     def copy_into_db(self, db, tbl_name, data, cols=None, retry=True):
@@ -529,6 +533,24 @@ class ContentManager(object):
                      % len(filtered_tr_records))
         return filtered_tr_records, flawed_tr_data
 
+    @classmethod
+    def _principal_action(cls, func):
+        @wraps(func)
+        def take_action(self, db, *args, **kwargs):
+            time_string = datetime.now().strftime('%Y%m%d-%H%M%S')
+            self.review_fname = path.join(
+                THIS_DIR,
+                "review_%s_%s_%s.txt" % (func.__name__, self.my_source,
+                                         time_string)
+                )
+            logger.info("Creating review file %s." % self.review_fname)
+            open(self.review_fname, 'w').close()
+            ret = func(self, db, *args, **kwargs)
+            db.insert('updates', init_upload=(func.__name__ == 'populate'),
+                      source=self.my_source, datetime=datetime.utcnow())
+            return ret
+        return take_action
+
     def populate(self, db):
         "A stub for the method used to initially populate the database."
         raise NotImplementedError(
@@ -777,6 +799,7 @@ class Medline(NihManager):
 
         return
 
+    @ContentManager._principal_action
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial input of the pubmed content into the database.
 
@@ -793,16 +816,13 @@ class Medline(NihManager):
             read and parsed.
         """
         self.load_files(db, 'baseline', n_procs, continuing, False)
-        db.insert('updates', init_upload=True, source=self.my_source,
-                  datetime=datetime.utcnow())
         return
 
+    @ContentManager._principal_action
     def update(self, db, n_procs=1, continuing=False):
         """Update the contents of the database with the latest articles."""
         self.load_files(db, 'baseline', n_procs, True, True)
         self.load_files(db, 'updatefiles', n_procs, True, True)
-        db.insert('updates', init_upload=False, source=self.my_source,
-                  datetime=datetime.utcnow())
         return
 
 
@@ -1037,8 +1057,7 @@ class PmcManager(NihManager):
         """
 
         # This is a guess at the location of the archive.
-        local_dir = path.dirname(path.abspath(__file__))
-        archive_local_path = path.join(local_dir, path.basename(archive))
+        archive_local_path = path.join(THIS_DIR, path.basename(archive))
 
         # Download the archive if need be.
         if continuing and path.exists(archive_local_path):
@@ -1048,7 +1067,7 @@ class PmcManager(NihManager):
             logger.info('Downloading archive %s.' % archive)
             try:
                 archive_local_path = self.ftp.download_file(archive,
-                                                            dest=local_dir)
+                                                            dest=THIS_DIR)
             except BaseException:
                 logger.error("Failed to download %s. Deleting corrupt file."
                              % archive)
@@ -1092,8 +1111,7 @@ class PmcManager(NihManager):
             start_next_proc()
 
         # Monitor the processes while any are still active.
-        batch_log = path.join(path.dirname(path.abspath(__file__)),
-                              '%s_batch_log.tmp' % self.my_source)
+        batch_log = path.join(THIS_DIR, '%s_batch_log.tmp' % self.my_source)
         open(batch_log, 'a+').close()
         while len(active_list) is not 0:
             # Check for processes that have been unpacking archives to
@@ -1139,6 +1157,7 @@ class PmcManager(NihManager):
 
         return
 
+    @ContentManager._principal_action
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial population of the pmc content into the database.
 
@@ -1167,8 +1186,6 @@ class PmcManager(NihManager):
                 return
 
         self.upload_archives(db, archives, n_procs, continuing=continuing)
-        db.insert('updates', init_upload=True, source=self.my_source,
-                  datetime=datetime.utcnow())
         return
 
 
@@ -1180,6 +1197,7 @@ class PmcOA(PmcManager):
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
+    @ContentManager._principal_action
     def update(self, db, n_procs=1, continuing=False):
         latest_update = db.select_all(db.Updates,
                                       db.Updates.source == self.my_source)
@@ -1208,8 +1226,6 @@ class PmcOA(PmcManager):
         # Upload these archives.
         logger.info("Updating the database with %d articles." % len(fpath_set))
         self.upload_archives(db, fpath_set, n_procs=n_procs)
-        db.insert('updates', init_upload=False, source=self.my_source,
-                  datetime=datetime.utcnow())
         return
 
 
@@ -1248,6 +1264,7 @@ class Manuscripts(PmcManager):
         db.commit("Could not update text refs with manuscript ids.")
         return
 
+    @ContentManager._principal_action
     def update(self, db, n_procs=1, continuing=False):
         """Add any new content found in the archives.
 
@@ -1271,8 +1288,6 @@ class Manuscripts(PmcManager):
         update_archives = {'PMC00%dXXXXXX.xml.tar.gz' % pmcid[3]
                            for pmcid in (ftp_pmcid_set - db_pmcid_set)}
         self.upload_archives(db, update_archives, n_procs)
-        db.insert('updates', init_upload=False, source=self.my_source,
-                  datetime=datetime.utcnow())
         return
 
 
