@@ -70,7 +70,6 @@ class DrumReader(KQMLModule):
             self.exit(0)
 
 def _get_perf(text, msg_id):
-    text = text.encode('utf-8')
     msg = KQMLPerformative('REQUEST')
     msg.set('receiver', 'DRUM')
     content = KQMLList('run-text')
