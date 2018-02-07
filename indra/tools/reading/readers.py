@@ -19,7 +19,7 @@ from platform import system
 
 from indra.db import formats
 from indra.db import sql_expressions as sql
-from indra.util import unzip_string, zip_string
+from indra.util import zip_string
 from indra.sources import sparser, reach
 
 

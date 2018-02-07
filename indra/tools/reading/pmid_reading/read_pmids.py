@@ -19,7 +19,11 @@ from datetime import datetime
 from collections import Counter
 from platform import system
 import logging
+
+
 logger = logging.getLogger('runreader')
+
+
 parser = argparse.ArgumentParser(
     description=('Apply NLP readers to the content available for a list of '
                  'pmids.')

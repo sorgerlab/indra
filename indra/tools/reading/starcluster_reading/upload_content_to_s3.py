@@ -1,10 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import sys
-import botocore
 from indra.literature import s3_client
-from indra.literature import get_full_text
-from indra.literature import pubmed_client
 import logging
 
 if __name__ == '__main__':

@@ -1,12 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import boto3
-import botocore
-import zlib
-from indra.sources import reach
-import pickle
 import sys
+import pickle
 import logging
+from indra.sources import reach
 from indra.literature import s3_client
 
 if __name__ == '__main__':

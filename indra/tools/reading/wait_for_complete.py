@@ -63,7 +63,7 @@ if __name__ == '__main__':
         )
     args = parser.parse_args()
 
-    from submit_reading_pipeline_aws import wait_for_complete
+    from submit_reading_pipeline import wait_for_complete
 
     job_list = None
     if args.job_list is not None:

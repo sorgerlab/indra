@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.tools.reading.read_pmids import READER_DICT
+from indra.tools.reading.pmid_reading.read_pmids import READER_DICT
 from datetime import datetime
 
 DOC = \
@@ -57,7 +57,7 @@ if __name__ == '__main__':
         help='Choose which reader(s) to use.'
         )
     args = parser.parse_args()
-    from indra.tools.reading import read_pmids as read
+    from indra.tools.reading.pmid_reading import read_pmids as read
     import boto3
     import botocore
     import os
