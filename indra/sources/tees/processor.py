@@ -44,7 +44,12 @@ class TEESProcessor(object):
 
     def __init__(self, text, tees_path, python2_path):
         # Load grounding information
-        gm = load_grounding_map('data/extracted_reach_grounding_map.csv')
+        gm_fname = 'data/extracted_reach_grounding_map.csv'
+        try:
+            gm = load_grounding_map(gm_fname)
+        except:
+            raise Exception('Could not load the grounding map from ' + 
+                    gm_fname)
         mapper = GroundingMapper(gm)
 
         # Run TEES and parse into networkx graph

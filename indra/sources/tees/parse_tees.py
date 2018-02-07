@@ -413,9 +413,8 @@ def run_and_parse_tees(text, tees_path, python2_path):
                 '-i', text_path,
                 '-o', output_path]
         try:
-            pass
-            #out = subprocess.check_output(command, stderr=subprocess.STDOUT)
-            #print(out.decode('utf-8'))
+            out = subprocess.check_output(command, stderr=subprocess.STDOUT)
+            print(out.decode('utf-8'))
         except subprocess.CalledProcessError as e:
             # If there's an error, print it out and then propagate the
             # exception
@@ -423,8 +422,7 @@ def run_and_parse_tees(text, tees_path, python2_path):
             raise e
 
         # Parse TEES output
-        debug_tmp_dir = '/var/folders/kl/rlq1nj8946q12s86n339__ph0000gp/T/tmpcoft2dmhindra_tees_processor'
-        events = parse_tees_output_directory(debug_tmp_dir)
+        events = parse_tees_output_directory(tmp_dir)
 
         # Remove the temorary directory
         shutil.rmtree(tmp_dir)
