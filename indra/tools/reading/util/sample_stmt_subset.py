@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import sys
+import pickle
+import numpy as np
+
 
 if __name__ == '__main__':
-    import sys
-    import numpy as np
-    import pickle
-
     if len(sys.argv) != 3:
         print("Usage: %s stmt_file num_sample_papers" % sys.argv[0])
         sys.exit()

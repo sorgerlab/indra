@@ -7,9 +7,9 @@ import zlib
 from os import path
 from nose.plugins.attrib import attr
 
-from indra.tools.reading import read_db as rdb
+from indra.tools.reading.db_reading import read_db as rdb
 from indra.tools.reading.read_files import read_files
-from indra.tools.reading.script_tools import make_statements
+from indra.tools.reading.util.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 

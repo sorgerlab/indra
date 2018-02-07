@@ -4,10 +4,6 @@ REACH version and path) or loaded from S3 (e.g., the list of PMIDs).
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
-from indra.tools.reading.read_db import produce_readings, produce_statements,\
-    get_id_dict
-from indra.tools.reading.readers import get_readers
 import boto3
 import botocore
 import logging
@@ -15,6 +11,9 @@ import sys
 import os
 import random
 from datetime import datetime
+from indra.tools.reading.db_reading.read_db import produce_readings, \
+    produce_statements, get_id_dict
+from indra.tools.reading.readers import get_readers
 
 
 if __name__ == '__main__':

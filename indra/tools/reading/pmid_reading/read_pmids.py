@@ -19,7 +19,11 @@ from datetime import datetime
 from collections import Counter
 from platform import system
 import logging
+
+
 logger = logging.getLogger('runreader')
+
+
 parser = argparse.ArgumentParser(
     description=('Apply NLP readers to the content available for a list of '
                  'pmids.')
@@ -500,7 +504,7 @@ def run_sparser(pmid_list, tmp_dir, num_cores, start_index, end_index,
 
 
 REACH_CONF_FMT_FNAME = os.path.join(os.path.dirname(__file__),
-                                    'reach_conf_fmt.txt')
+                                    '../util/reach_conf_fmt.txt')
 
 REACH_MEM = 5  # GB
 MEM_BUFFER = 2  # GB

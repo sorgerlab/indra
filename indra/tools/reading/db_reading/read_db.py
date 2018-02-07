@@ -4,8 +4,6 @@ database. This may also be run as a script; for details run:
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
-import os
 import logging
 import random
 import zlib
@@ -13,8 +11,7 @@ import pickle
 import json
 from math import log10, floor, ceil
 from datetime import datetime
-
-from indra.tools.reading.script_tools import get_parser, make_statements, \
+from indra.tools.reading.util.script_tools import get_parser, make_statements, \
                                              StatementData
 
 logger = logging.getLogger('make_db_readings')

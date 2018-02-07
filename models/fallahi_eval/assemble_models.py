@@ -1,6 +1,6 @@
 from indra.util import _require_python3, write_unicode_csv
 import indra.tools.assemble_corpus as ac
-#from indra.tools.reading.submit_reading_pipeline_aws import \
+#from indra.tools.reading.submit_reading_pipeline import \
 #    submit_run_reach, submit_combine, wait_for_complete
 import assemble_pysb
 import process_data

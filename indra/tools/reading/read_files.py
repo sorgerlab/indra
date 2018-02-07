@@ -8,7 +8,7 @@ import random
 
 logger = logging.getLogger('file_reader')
 
-from indra.tools.reading.script_tools import get_parser, make_statements
+from indra.tools.reading.util.script_tools import get_parser, make_statements
 
 if __name__ == '__main__':
     parser = get_parser(
