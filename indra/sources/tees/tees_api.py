@@ -18,7 +18,6 @@ import codecs
 from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
 import networkx.algorithms.dag as dag
 
-
 logger = logging.getLogger('tees')
 
 # If TEES isn't specified, we will check to see if any of these directories
@@ -147,6 +146,4 @@ if __name__ == '__main__':
 
 
     #TODO: parse binding events by looking for a Binding that has Theme and Theme2
-
-
 
