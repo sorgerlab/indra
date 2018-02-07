@@ -505,13 +505,18 @@ class ContentManager(object):
             if record not in multi_match_records:
                 for id_type, id_val in id_updates.items():
                     setattr(tr, id_type, id_val)
+            else:
+                logger.warning("Skipping update of text ref %d with %s due "
+                               "to multiple matches to record %s."
+                               % (tr.id, id_updates, record))
 
         # This applies all the changes made to the text refs to the db.
         logger.debug("Committing changes...")
         db.commit("Failed to update with new ids.")
 
         # Now update the text refs with any new refs that were found
-        filtered_tr_records = tr_data_set - set(tr_data_match_list)
+        filtered_tr_records = tr_data_set - set(tr_data_match_list) \
+            - multi_match_records
 
         logger.debug("Filtering complete! %d records remaining."
                      % len(filtered_tr_records))
@@ -853,7 +858,7 @@ class PmcManager(NihManager):
 
         logger.debug("Getting text refs for pmcid->trid dict..")
         tref_list = db.select_all(
-            'text_ref',
+            db.TextRef,
             db.TextRef.pmcid.in_(arc_pmcid_list)
             )
         pmcid_trid_dict = {
@@ -864,7 +869,7 @@ class PmcManager(NihManager):
         # This should be a very small list, in general.
         logger.debug('Finding existing text content from db.')
         existing_tcs = db.select_all(
-            'text_content',
+            db.TextContent,
             db.TextContent.text_ref_id.in_(pmcid_trid_dict.values()),
             db.TextContent.source == self.my_source,
             db.TextContent.format == formats.XML
@@ -877,6 +882,10 @@ class PmcManager(NihManager):
                      % len(existing_tc_records))
         tc_records = []
         for tc in tc_data:
+            if tc['pmcid'] not in pmcid_trid_dict.keys():
+                logger.warning("Found pmcid (%s) among text content data, but "
+                               "not in the database. Skipping." % tc['pmcid'])
+                continue
             tc_records.append(
                 (
                     pmcid_trid_dict[tc['pmcid']],
