@@ -22,7 +22,7 @@ if __name__ == '__main__':
         if not isdir(output_dir):
             continue
         cmd_list = ['qsub', '-b', 'y', '-V', '-cwd', 'python', '-m',
-                    'indra.tools.reading.read_pmids', 'upload_json',
-                    output_dir, content_types_path]
+                    'indra.tools.reading.pmid_reading.read_pmids',
+                    'upload_json', output_dir, content_types_path]
         print(' '.join(cmd_list))
         subprocess.call(cmd_list)
