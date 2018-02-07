@@ -285,7 +285,7 @@ class ContentManager(object):
                 id_dict = dict(zip(id_types.split(', '), ids.split(', ')))
 
                 # Primary keys are returned from the database as integers.
-                for id_type, id_val in id_dict.copy():
+                for id_type, id_val in id_dict.copy().items():
                     if id_type in ['text_ref_id', 'text_content_id']:
                         id_dict[id_type] = int(id_val)
 
