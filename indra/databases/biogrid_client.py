@@ -7,6 +7,7 @@ import logging
 import requests
 from collections import Counter
 from indra.statements import Complex, Agent, Evidence
+from indra.databases import hgnc_client
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
@@ -59,11 +60,36 @@ def get_statements(gene_list):
     statements = []
     if res_dict is None:
         return statements
+
+    def get_db_refs(egid):
+        hgnc_id = hgnc_client.get_hgnc_from_entrez(egid)
+        if not hgnc_id:
+            logger.info("No HGNC ID for Entrez ID: %s" % egid)
+            return (None, {})
+        hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
+        if not hgnc_name:
+            logger.info("No HGNC name for HGNC ID: %s" % hgnc_id)
+            return (None, {})
+        up_id = hgnc_client.get_uniprot_id(hgnc_id)
+        if not up_id:
+            logger.info("No Uniprot ID for EGID / HGNC ID / Symbol "
+                        "%s / %s / %s" % (egid, hgnc_id, hgnc_name))
+            return (None, {})
+        return (hgnc_name, {'HGNC': hgnc_id, 'UP': up_id})
+
     for int_id, interaction in res_dict.items():
-        agent_a_name = interaction['OFFICIAL_SYMBOL_A']
-        agent_b_name = interaction['OFFICIAL_SYMBOL_B']
-        agent_a = Agent(agent_a_name, db_refs={'HGNC': agent_a_name})
-        agent_b = Agent(agent_b_name, db_refs={'HGNC': agent_b_name})
+        agent_a_egid = interaction['ENTREZ_GENE_A']
+        agent_b_egid = interaction['ENTREZ_GENE_B']
+        agent_a_name, agent_a_db_refs = get_db_refs(agent_a_egid)
+        agent_b_name, agent_b_db_refs = get_db_refs(agent_b_egid)
+        if agent_a_name is None or agent_b_name is None:
+            continue
+        if interaction['EXPERIMENTAL_SYSTEM_TYPE'] != 'physical':
+            logger.info("Skipping non-physical interaction: %s" %
+                        str(interaction))
+            continue
+        agent_a = Agent(agent_a_name, db_refs=agent_a_db_refs)
+        agent_b = Agent(agent_b_name, db_refs=agent_b_db_refs)
         ev = Evidence(source_api='biogrid',
                       source_id=int_id,
                       pmid=interaction['PUBMED_ID'],
