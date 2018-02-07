@@ -262,7 +262,20 @@ class TEESSentences:
             return None
 
 def parse_tees_output_directory(output_dir):
-    """Parses the files in the TEES output directory."""
+    """Parses the files in the TEES output directory. And returns a networkx
+    graph.
+
+    Parameters
+    ----------
+    output_dir: str
+        Directory containing the output of the TEES system
+
+    Returns
+    -------
+    events: networkx.DiGraph
+        networkx graph with the entities, events, and relationship between
+        extracted by TEES
+    """
 
     # Locate the file of sentences segmented by the TEES system, described
     # in a compressed xml document
@@ -366,6 +379,12 @@ def run_and_parse_tees(text, tees_path, python2_path):
         Path to the TEES directory
     python2_path: str
         The path to the python 2 interpreter
+
+    Returns
+    -------
+    events: networkx.DiGraph
+        networkx graph containing the entities, events, and relationships
+        extracted by TEES
     """
     # Make sure the provided TEES directory exists
     if not os.path.isdir(tees_path):
@@ -420,8 +439,18 @@ def run_and_parse_tees(text, tees_path, python2_path):
     return events
 
 def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
-    """A very simple converter from networkx to .dot files that only supports
-    the attributes of graphs used in this TEES parser."""
+    """Converts TEES extractions stored in a networkx graph into a graphviz
+    .dot file.
+
+    Parameters
+    ----------
+    G: networkx.DiGraph
+        Graph with TEES extractions returned by run_and_parse_tees
+    output_file: str
+        Output file to which to write .dot file
+    subgraph_nodes: list[str]
+        Only convert the connected graph that includes these ndoes
+    """
 
     with codecs.open(output_file, 'w', encoding='utf-8') as f:
         f.write('digraph teesParse {\n')

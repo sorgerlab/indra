@@ -11,8 +11,10 @@ from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
-        IncreaseAmount, DecreaseAmount
+        IncreaseAmount, DecreaseAmount, Agent
 from indra.sources.tees.parse_tees import run_and_parse_tees
+from indra.preassembler.grounding_mapper import load_grounding_map,\
+        GroundingMapper
 
 class TEESProcessor(object):
     """Converts the specified text into a series of INDRA statmenets.
@@ -41,6 +43,10 @@ class TEESProcessor(object):
     """
 
     def __init__(self, text, tees_path, python2_path):
+        # Load grounding information
+        gm = load_grounding_map('data/extracted_reach_grounding_map.csv')
+        mapper = GroundingMapper(gm)
+
         # Run TEES and parse into networkx graph
         self.G = run_and_parse_tees(text, tees_path, python2_path)
 
@@ -50,6 +56,9 @@ class TEESProcessor(object):
         self.statements.extend(self.process_binding_statements())
         self.statements.extend(self.process_increase_expression_amount())
         self.statements.extend(self.process_decrease_expression_amount())
+
+        # Ground statements
+        self.statements = mapper.map_agents(self.statements)
 
     def node_has_edge_with_label(self, node_name, edge_label):
         """Looks for an edge from node_name to some other node with the specified
@@ -178,7 +187,7 @@ class TEESProcessor(object):
             target = self.get_entity_text_for_relation(expression, 'Theme')
 
             if cause is not None and target is not None:
-                statements.append(IncreaseAmount(cause, target))
+                statements.append(IncreaseAmount(s2a(cause), s2a(target)))
         return statements
 
     def process_decrease_expression_amount(self):
@@ -197,9 +206,10 @@ class TEESProcessor(object):
             target = self.get_entity_text_for_relation(expression, 'Theme')
 
             if cause is not None and target is not None:
-                statements.append(DecreaseAmount(cause, target))
+                statements.append(DecreaseAmount(s2a(cause), s2a(target)))
         return statements
 
+    
     def process_phosphorylation_statements(self):
         """Looks for Phosphorylation events in the graph and extracts them into
         INDRA statements.
@@ -234,9 +244,11 @@ class TEESProcessor(object):
 
             if theme is not None:
                 if deph:
-                    statements.append( Dephosphorylation(cause, theme, site) )
+                    statements.append( Dephosphorylation(s2a(cause),
+                        s2a(theme), site) )
                 else:
-                    statements.append( Phosphorylation(cause, theme, site) )
+                    statements.append( Phosphorylation(s2a(cause),
+                        s2a(theme), site) )
         return statements
 
     def process_binding_statements(self):
@@ -260,6 +272,11 @@ class TEESProcessor(object):
             assert(theme1 is not None)
             assert(theme2 is not None)
 
-            statements.append( Complex([theme1, theme2]) )
+            statements.append( Complex([s2a(theme1), s2a(theme2)]) )
+
         return statements
+
+def s2a(s):
+    """Makes an Agent from a string describing the agent."""
+    return Agent(s, db_refs={'TEXT': s})
 

@@ -15,7 +15,7 @@ import os.path
 import logging
 import codecs
 
-from parse_tees import tees_parse_networkx_to_dot
+from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
 import networkx.algorithms.dag as dag
 
 
