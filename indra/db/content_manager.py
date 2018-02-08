@@ -1181,9 +1181,13 @@ class PmcManager(NihManager):
                 'source_file',
                 db.SourceFile.source == self.my_source
                 )
-            archives -= {sf.name for sf in sf_list}
+            for sf in sf_list:
+                logger.info("Skipping %s, already done." % sf.name)
+                archives.remove(sf.name)
+
             # Don't do unnecessary work.
             if not len(archives):
+                logger.info("No archives to load. All done.")
                 return
 
         self.upload_archives(db, archives, n_procs, continuing=continuing)
