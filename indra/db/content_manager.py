@@ -672,9 +672,10 @@ class Medline(NihManager):
             valid_pmids -= {ref[self.tr_cols.index('pmid')]
                             for cause, ref in flawed_refs
                             if cause in ['pmid', 'over_match']}
-            logger.info('Only %d valid for upload candidacy.'
+            logger.info('Only %d valid for potential content upload.'
                         % len(valid_pmids))
 
+        # Remove the pmids from any data entries that failed to copy.
         vile_data = self.copy_into_db(db, 'text_ref', text_ref_records,
                                       self.tr_cols)
         if vile_data is not None:
