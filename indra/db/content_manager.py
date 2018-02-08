@@ -375,9 +375,7 @@ class ContentManager(object):
         if not N:
             return set(), []
 
-        # Get all text refs that match any of the id data we have. This means
-        # each text ref WILL find a match in the data we have (unless something
-        # is seriously broken.
+        # Get all text refs that match any of the id data we have.
         logger.debug("Getting list of existing text refs...")
         or_list = []
         if primary_id_types is not None:
@@ -397,9 +395,7 @@ class ContentManager(object):
 
         # Create an index of tupled data entries for quick lookups by any id
         # type, for example tr_data_idx_dict['pmid'][<a pmid>] will get the
-        # tuple with all the id data. This avoids several iterations through
-        # the list of text ref data dicts on for each text ref, at the cost of
-        # using extra memory.
+        # tuple with all the id data.
         logger.debug("Building index of new data...")
         tr_data_idx_dict = {id_type: {e[id_idx(id_type)]: e
                                       for e in tr_data_set
@@ -431,22 +427,17 @@ class ContentManager(object):
         for tr in tr_list:
             match_set = set()
 
-            # Find the matches in the data. We continue looking after finding
-            # one match in case there are any inconsistencies which need to be
-            # considered.
+            # Find the matches in the data. Multiple distinct matches indicate
+            # problems, and ar flagged.
             for id_type, tr_data_idx in tr_data_idx_dict.items():
                 candidate = tr_data_idx.get(getattr(tr, id_type))
                 if candidate is not None:
                     match_set.add(candidate)
 
-            # As per the process of getting the tr_list, every tr MUST have a
-            # match, or else something is broken.
+            # Every tr MUST have a match, or else something is broken.
             assert match_set, "No matches found, which is impossible."
 
-            # Assuming we found exactly one matched data entry, we can now look
-            # for new id data (for example manuscript ids) and update the tr
-            # objects. These changes are transmuted to the db via the commit
-            # command below.
+            # Given a unique match, update any missing ids from the input data.
             if len(match_set) == 1:
                 tr_new = match_set.pop()
 
