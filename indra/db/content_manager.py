@@ -1009,9 +1009,10 @@ class PmcManager(NihManager):
             xml_files = [m for m in tar.getmembers() if m.isfile()
                          and m.name.endswith('xml')]
             N_tot = len(xml_files)
-            logger.info('Loading %d which contains %d files.'
+            logger.info('Loading %s which contains %d files.'
                         % (path.basename(archive_path), N_tot))
-            for i in range(N_tot//batch_size+1):
+            N_batches = N_tot//batch_size + 1
+            for i in range(N_batches):
                 tr_data = []
                 tc_data = []
                 for xml_file in xml_files[i*batch_size:(i+1)*batch_size]:
@@ -1025,8 +1026,9 @@ class PmcManager(NihManager):
                     tc_data.append(tc)
 
                 if q is not None:
-                    q.put((("%d/%d" % (i, N_tot), path.basename(archive_path)),
-                           tr_data[:], tc_data[:]))
+                    label = ("%d/%d" % (i, N_batches),
+                             path.basename(archive_path))
+                    q.put((label, tr_data[:], tc_data[:]))
                 elif db is not None:
                     self.upload_batch(db, tr_data[:], tc_data[:])
                 else:
