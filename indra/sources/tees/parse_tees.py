@@ -130,8 +130,10 @@ def parse_a2(a2_filename, entities, tees_sentences):
 
     # Put entities into the graph
     for entity_name in entities.keys():
+        offset0 = entities[entity_name].offsets[0]
         G.add_node(entity_name, text=entities[entity_name].entity_name,
-                type=entities[entity_name].entity_type, is_event=False)
+                type=entities[entity_name].entity_type, is_event=False,
+                sentence_text=tees_sentences.index_to_sentence(offset0))
 
     with open(a2_filename, 'r') as a2_file:
 
@@ -149,6 +151,8 @@ def parse_a2(a2_filename, entities, tees_sentences):
                     G.add_node(identifier)
                 G.node[identifier]['text'] = text
                 G.node[identifier]['is_event'] = False
+
+
             elif line[0] == 'E': #New event
                 tokens = line.rstrip().split('\t')
                 assert(len(tokens) == 2)

@@ -11,10 +11,11 @@ from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
-        IncreaseAmount, DecreaseAmount, Agent
+        IncreaseAmount, DecreaseAmount, Agent, Evidence
 from indra.sources.tees.parse_tees import run_and_parse_tees
 from indra.preassembler.grounding_mapper import load_grounding_map,\
         GroundingMapper
+from networkx.algorithms import dag
 
 class TEESProcessor(object):
     """Converts the specified text into a series of INDRA statmenets.
@@ -28,6 +29,9 @@ class TEESProcessor(object):
     text: str
         Plain text from biomedical publications from which to extract
         INDRA statements.
+    pmid: int
+        The pmid which the text comes from, or None if we don't want to specify
+        at the moment. Stored in the Evidence object for each statement.
     tees_path: str
         Path to the directory containing the TEES installation, in
         particular containing TEES' classify.py.
@@ -42,7 +46,10 @@ class TEESProcessor(object):
         A list of INDRA statements extracted from the provided text via TEES
     """
 
-    def __init__(self, text, tees_path, python2_path):
+    def __init__(self, text, pmid, tees_path, python2_path):
+        # Store pmid
+        self.pmid = pmid
+
         # Load grounding information
         gm_fname = 'data/extracted_reach_grounding_map.csv'
         try:
@@ -164,17 +171,30 @@ class TEESProcessor(object):
                     desired_event_nodes.append(node)
         return desired_event_nodes
 
+    def get_related_node(self, node, relation):
+        """Looks for an edge from node to some other node, such that the edge is
+        annotated with the given relation. If there exists such an edge, returns
+        the name of the node it points to. Otherwise, returns None."""
+        G = self.G
+        for to in G.edge[node]:
+            to_relation = G.edge[node][to]['relation']
+            if to_relation == relation: 
+                return to
+        return None
+
     def get_entity_text_for_relation(self, node, relation):
         """Looks for an edge from node to some other node, such that the edge is
         annotated with the given relation. If there exists such an edge, and the
         node at the other edge is an entity, return that entity's text.
         Otherwise, returns None."""
+
         G = self.G
-        for to in G.edge[node]:
-            to_relation = G.edge[node][to]['relation']
-            if to_relation == relation and not G.node[to]['is_event']:
-                return G.node[to]['text']
-        return None
+        related_node = self.get_related_node(node, relation)
+        #print('G.node[related_node] =', G.node[related_node])
+        if not G.node[related_node]['is_event']:
+            return G.node[related_node]['text']
+        else:
+            return None
 
     def process_increase_expression_amount(self):
         """Looks for Positive_Regulation events with a specified Cause
@@ -272,14 +292,73 @@ class TEESProcessor(object):
 
         for node in binding_nodes:
             theme1 = self.get_entity_text_for_relation(node, 'Theme')
+            theme1_node = self.get_related_node(node, 'Theme')
             theme2 = self.get_entity_text_for_relation(node, 'Theme2')
 
             assert(theme1 is not None)
             assert(theme2 is not None)
 
-            statements.append( Complex([s2a(theme1), s2a(theme2)]) )
+            evidence = self.node_to_evidence(theme1_node, is_direct=True)
+            statements.append( Complex([s2a(theme1), s2a(theme2)],
+                                evidence=evidence) )
 
         return statements
+
+    def node_to_evidence(self, entity_node, is_direct):
+        """Computes an evidence object for a statement.
+
+        We assume that the entire event happens within a single statement, and
+        get the text of the sentence by getting the text of the sentence
+        containing the provided node that corresponds to one of the entities
+        participanting in the event.
+
+        The Evidence's pmid is whatever was provided to the constructor
+        (perhaps None), and the annotations are the subgraph containing the
+        provided node, its ancestors, and its descendants.
+        """
+
+        # We assume that the entire event is within a single sentence, and
+        # get this sentence by getting the sentence containing one of the
+        # entities
+        sentence_text = self.G.node[entity_node]['sentence_text']
+
+        # Make annotations object containing the fully connected subgraph
+        # containing these nodes
+        subgraph = self.connected_subgraph(entity_node)
+        annotations = {'node_properties': subgraph.node,
+                       'edge_properties': subgraph.edge}
+
+        # Make evidence object
+        epistemics = dict()
+        evidence = Evidence(source_api='tees',
+                            pmid = self.pmid,
+                            text = sentence_text,
+                            epistemics={'direct': is_direct},
+                            annotations=annotations)
+        return evidence
+
+    def connected_subgraph(self, node):
+        """Returns the subgraph containing the given node, its ancestors, and
+        its descendants.
+
+        Parameters
+        ----------
+        node: str
+            We want to create the subgraph containing this node.
+
+        Returns
+        -------
+        subgraph: networkx.DiGraph
+            The subgraph containing the specified node.
+        """
+        G = self.G
+
+        subgraph_nodes = set()
+        subgraph_nodes.add(node)
+        subgraph_nodes.update(dag.ancestors(G, node))
+        subgraph_nodes.update(dag.descendants(G, node))
+        return G.subgraph(subgraph_nodes)
+
 
 def s2a(s):
     """Makes an Agent from a string describing the agent."""

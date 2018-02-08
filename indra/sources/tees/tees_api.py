@@ -28,7 +28,7 @@ tees_installation_files = ['batch.py', 'classify.py', 'train.py',
         'visualize.py']
 tees_installation_dirs = ['Classifiers', 'Detectors', 'Evaluators', 'Core']
 
-def tees_process_text(text, tees_path=None, python2_path=None):
+def tees_process_text(text, pmid=None, tees_path=None, python2_path=None):
     """Processes the specified plain text with TEES and converts output to
     supported INDRA statements.
 
@@ -36,6 +36,9 @@ def tees_process_text(text, tees_path=None, python2_path=None):
     ----------
     text: str
         Plain text to process with TEES
+    pmid: str
+        The PMID from which the paper comes from, to be stored in the Evidence
+        object of statements. Set to None if this is unspecified.
     tees_path: str
         The path of the TEES installation directory containing classify.py.
         If None, searches several common paths.
@@ -79,7 +82,7 @@ def tees_process_text(text, tees_path=None, python2_path=None):
                 # we expected in a TEES installation - let's assume it's a
                 # TEES installation
                 tees_path = cpath
-                print('Found TEES installation at' + cpath)
+                print('Found TEES installation at ' + cpath)
                 break
 
     # If tees_path is None then we didn't find any installations
@@ -101,7 +104,7 @@ def tees_process_text(text, tees_path=None, python2_path=None):
                 'Need python2 to run TEES.')
 
     # Run the TEES processor
-    tp = TEESProcessor(text, tees_path, python2_path)
+    tp = TEESProcessor(text, pmid, tees_path, python2_path)
     return tp
 
 if __name__ == '__main__':
