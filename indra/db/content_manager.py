@@ -852,6 +852,10 @@ class PmcManager(NihManager):
                 missing_pmid_entries.append(tr_entry)
 
         num_missing = len(missing_pmid_entries)
+        if num_missing is 0:
+            logger.debug("No missing pmids.")
+            return
+
         logger.debug('Missing %d pmids.' % num_missing)
         tr_list = db.select_all(
             db.TextRef, db.TextRef.pmcid.in_(
