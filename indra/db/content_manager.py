@@ -1035,7 +1035,7 @@ class PmcManager(NihManager):
         with tarfile.open(archive_path, mode='r:gz') as tar:
             logger.info('Loading %s...' % archive_path)
             xml_files = [m for m in tar.getmembers() if m.isfile()
-                         and m.name.endswith('nxml')]
+                         and m.name.endswith('xml')]
             for i, xml_file in enumerate(xml_files):
                 xml_str = tar.extractfile(xml_file).read().decode('utf8')
                 res = self.get_data_from_xml_str(xml_str, xml_file.name)
