@@ -108,7 +108,6 @@ except ImportError:
 
 
 ftp_blocksize = 33554432  # Chunk size recommended by NCBI
-BATCH_SIZE = 10000
 
 
 THIS_DIR = path.dirname(path.abspath(__file__))
@@ -995,7 +994,8 @@ class PmcManager(NihManager):
             }
         return tr_datum, tc_datum
 
-    def unpack_archive_path(self, archive_path, q=None, db=None):
+    def unpack_archive_path(self, archive_path, q=None, db=None,
+                            batch_size=10000):
         """"Unpack the contents of an archive.
 
         If `q` is given, then the data is put into the que to be handed off for
@@ -1005,40 +1005,35 @@ class PmcManager(NihManager):
         tr_data = []
         tc_data = []
 
-        def submit(tag, tr_data, tc_data):
-            batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
-            logger.info("Submitting %s of data for %s..." %
-                        (batch_name, archive_path))
-
-            if q is not None:
-                q.put(((batch_name, archive_path), tr_data[:], tc_data[:]))
-            elif db is not None:
-                self.upload_batch(db, tr_data[:], tc_data[:])
-            else:
-                raise UploadError(
-                    "unpack_archive_path must receive either a db instance"
-                    " or a queue instance."
-                    )
-            tr_data.clear()
-            tc_data.clear()
-
         with tarfile.open(archive_path, mode='r:gz') as tar:
-            logger.info('Loading %s...' % archive_path)
             xml_files = [m for m in tar.getmembers() if m.isfile()
                          and m.name.endswith('xml')]
-            for i, xml_file in enumerate(xml_files):
-                xml_str = tar.extractfile(xml_file).read().decode('utf8')
-                res = self.get_data_from_xml_str(xml_str, xml_file.name)
-                if res is None:
-                    continue
+            N_tot = len(xml_files)
+            logger.info('Loading %d which contains %d files.'
+                        % (path.basename(archive_path), N_tot))
+            for i in range(N_tot//batch_size+1):
+                tr_data = []
+                tc_data = []
+                for xml_file in xml_files[i*batch_size:(i+1)*batch_size]:
+                    xml_str = tar.extractfile(xml_file).read().decode('utf8')
+                    res = self.get_data_from_xml_str(xml_str, xml_file.name)
+                    if res is None:
+                        continue
+                    else:
+                        tr, tc = res
+                    tr_data.append(tr)
+                    tc_data.append(tc)
+
+                if q is not None:
+                    q.put((("%d/%d" % (i, N_tot), path.basename(archive_path)),
+                           tr_data[:], tc_data[:]))
+                elif db is not None:
+                    self.upload_batch(db, tr_data[:], tc_data[:])
                 else:
-                    tr, tc = res
-                tr_data.append(tr)
-                tc_data.append(tc)
-                if (i+1) % BATCH_SIZE is 0:
-                    submit((i+1)/BATCH_SIZE, tr_data, tc_data)
-            else:
-                submit('final', tr_data, tc_data)
+                    raise UploadError(
+                        "unpack_archive_path must receive either a db instance"
+                        " or a queue instance."
+                        )
         return
 
     def process_archive(self, archive, q=None, db=None, continuing=False):
@@ -1127,7 +1122,7 @@ class PmcManager(NihManager):
                 label, tr_data, tc_data = q.get_nowait()
             except Exception:
                 continue
-            logger.info("Beginning to upload %s from %s..." % label)
+            logger.info("Beginning to upload batch %s from %s..." % label)
             if continuing:
                 with open(batch_log, 'r') as f:
                     if str(label) in f.read().splitlines():
@@ -1136,7 +1131,7 @@ class PmcManager(NihManager):
             self.upload_batch(db, tr_data, tc_data)
             with open(batch_log, 'a+') as f:
                 f.write(str(label) + '\n')
-            logger.info("Finished %s from %s..." % label)
+            logger.info("Finished batch %s from %s..." % label)
             time.sleep(0.1)
 
         # Empty the queue.
