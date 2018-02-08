@@ -1,32 +1,30 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, int
 
-from sys import version_info, exit
-from math import ceil
-from datetime import datetime
-from functools import wraps
-if version_info.major is not 3:
-    msg = "Python 3.x is required to use this module."
-    if __name__ == '__main__':
-        print(msg)
-        exit()
-    else:
-        raise ImportError(msg)
 
+import sys
+import re
 import csv
 import time
 import tarfile
 import zlib
 import logging
-import xml.etree.ElementTree as ET
-import re
-import os
-import multiprocessing as mp
 import pickle
-import sys
-from os import path, remove
+import xml.etree.ElementTree as ET
+import multiprocessing as mp
+from os import path, remove, rename, listdir
+from datetime import datetime
+from functools import wraps
 from ftplib import FTP
 from io import BytesIO
+
+if sys.version_info.major is not 3:
+    msg = "Python 3.x is required to use this module."
+    if __name__ == '__main__':
+        print(msg)
+        sys.exit()
+    else:
+        raise ImportError(msg)
 
 logger = logging.getLogger('content_manager')
 if __name__ == '__main__':
@@ -88,7 +86,8 @@ if __name__ == '__main__':
         resp = input("Are you sure you want to continue? [yes/NO]: ")
         if resp == 'no':
             print ("Aborting...")
-            exit()
+            sys.exit()
+
 from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
@@ -108,8 +107,6 @@ except ImportError:
 
 
 ftp_blocksize = 33554432  # Chunk size recommended by NCBI
-
-
 THIS_DIR = path.dirname(path.abspath(__file__))
 
 
@@ -231,7 +228,7 @@ class NihFtpClient(object):
                             if not k.startswith('.')]
         else:
             dir_path = self._path_join(self.fpt_url, ftp_path)
-            raw_contents = os.listdir(dir_path)
+            raw_contents = listdir(dir_path)
             contents = [(fname, path.getmtime(path.join(dir_path, fname)))
                         for fname in raw_contents]
         return contents
@@ -246,7 +243,7 @@ class NihFtpClient(object):
             with self.get_ftp_connection(ftp_path) as ftp:
                 contents = ftp.nlst()
         else:
-            contents = os.listdir(self._path_join(self.ftp_url, ftp_path))
+            contents = listdir(self._path_join(self.ftp_url, ftp_path))
         return contents
 
 
@@ -327,7 +324,7 @@ class ContentManager(object):
             else:
                 pkl_file_fmt = "copy_failure_%d.pkl"
                 i = 0
-                while os.path.exists(pkl_file_fmt % i):
+                while path.exists(pkl_file_fmt % i):
                     i += 1
                 with open(pkl_file_fmt % i, 'wb') as f:
                     pickle.dump((e, tbl_name, data, cols), f, protocol=3)
@@ -523,7 +520,7 @@ class ContentManager(object):
                 utcnow = datetime.utcnow()
                 db.insert('updates', init_upload=(func.__name__ == 'populate'),
                           source=self.my_source, datetime=utcnow)
-                os.rename(self.review_fname,
+                rename(self.review_fname,
                           review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
             return completed
         return take_action
@@ -1057,7 +1054,7 @@ class PmcManager(NihManager):
             except BaseException:
                 logger.error("Failed to download %s. Deleting corrupt file."
                              % archive)
-                os.remove(archive_local_path)
+                remove(archive_local_path)
                 raise
 
         # Now unpack the archive.
@@ -1065,7 +1062,7 @@ class PmcManager(NihManager):
 
         # Assuming we completed correctly, remove the archive.
         logger.info("Removing %s." % archive_local_path)
-        os.remove(archive_local_path)
+        remove(archive_local_path)
         return
 
     def get_file_list(self):
@@ -1148,7 +1145,7 @@ class PmcManager(NihManager):
                 break
             self.upload_batch(db, tr_data, tc_data)
 
-        os.remove(batch_log)
+        remove(batch_log)
 
         return
 
