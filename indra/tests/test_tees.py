@@ -9,7 +9,7 @@ from indra.statements import Phosphorylation, Dephosphorylation, \
         IncreaseAmount, DecreaseAmount, Complex
 
 def test_process_phosphorylation():
-    #Test the extraction of phosphorylation with a simple example.
+    # Test the extraction of phosphorylation with a simple example.
     s = 'Ras leads to the phosphorylation of Braf.'
     tp = tees_process_text(s)
     statements = tp.statements
@@ -28,9 +28,13 @@ def test_process_phosphorylation():
     sub = statement.sub
     assert(sub.db_refs['TEXT'] == 'Braf')
 
+    # There should be an evidence object (properties of evidence tested in
+    # other tests)
+    assert(len(statements[0].evidence) == 1)
+
 def test_process_dephosphorylation():
-    #Test the extraction of a dephosphorylation sentence. This sentence is
-    #processed into two INDRA statements, at least one of which is correct.
+    # Test the extraction of a dephosphorylation sentence. This sentence is
+    # processed into two INDRA statements, at least one of which is correct.
 
     # Text statement describing phosphorylation
     s = 'Here we show that febuxostat suppresses LPS-induced MCP-1 ' + \
@@ -57,15 +61,20 @@ def test_process_dephosphorylation():
         # Is the statement a phosphorylation statement?
         type_correct = isinstance(statement, Dephosphorylation)
 
+        # There should be an evidence object (properties of evidence tested in
+        # other tests)
+        assert(len(statements[0].evidence) == 1)
+
         # If yes to both, the correct statement was among those extracted
         statement_correct = type_correct and entities_correct
         some_statement_correct = statement_correct or some_statement_correct
+        
 
     assert(some_statement_correct)
 
 def test_process_increase_amount():
-    #Test extraction of IncreaseAmount statements from a text description
-    #of a substance increasing the expression of some gene.
+    # Test extraction of IncreaseAmount statements from a text description
+    # of a substance increasing the expression of some gene.
 
     s = 'BRAF increases the expression of p53.'
 
@@ -87,9 +96,14 @@ def test_process_increase_amount():
     obj0 = statement0.obj.db_refs['TEXT']
     assert(obj0 == 'p53')
 
+    # There should be an evidence object (properties of evidence tested in
+    # other tests)
+    assert(len(statements[0].evidence) == 1)
+
+
 def test_process_decrease_amount():
-    #Test extraction of DecreaseAmount statements from a text description
-    #of a substance decreasing the expression of some gene.
+    # Test extraction of DecreaseAmount statements from a text description
+    # of a substance decreasing the expression of some gene.
 
     s = 'BRAF decreases the expression of p53.'
     tp = tees_process_text(s)
@@ -110,9 +124,13 @@ def test_process_decrease_amount():
     obj0 = statement0.obj.db_refs['TEXT']
     assert(obj0 == 'p53')
 
+    # There should be an evidence object (properties of evidence tested in
+    # other tests)
+    assert(len(statements[0].evidence) == 1)
+
 def test_process_bind():
-    #Test extracting of Complex statement from a text description of
-    #substances binding to each other.
+    # Test extracting of Complex statement from a text description of
+    # substances binding to each other.
 
     s = 'BRAF binds to p53.'
     tp = tees_process_text(s)
@@ -132,4 +150,49 @@ def test_process_bind():
     assert(len(members) == 2)
     assert('BRAF' in members)
     assert('p53' in members)
+
+    # is_direct should be true in evidence for bind statement
+    assert(len(statement0.evidence) == 1)
+    assert(statement0.evidence[0].epistemics['direct'] == True)
+
+def test_evidence_text():
+    # Test the ability of the processor to extract which sentence in particular
+    # lead to the creation of the INDRA statement, amongst a corpus of text
+    # not related to the statement's mechanism.
+
+    # Corpus containing exactly one biological mechanism
+    corpus = """Why did the cows return to the marijuana field? It was the pot
+    calling the cattle back. Why do cows have hooves instead of feet? Because
+    they lactose. When making non-dairy butter, there is little margarine for
+    error. Ras leads to the phosphorylation of Raf. Do ghost cows say "moo" or
+    "boo"? The surprising fact is they say "moo", but with a rising vibrato
+    tone instead of an elongated one."""
+
+    # Process the corpus
+    tp = tees_process_text(corpus)
+    statements = tp.statements
+
+    # Only one of the sentences was related to a biological mechanism
+    assert(len(statements) == 1)
+    statement0 = statements[0]
+
+    # Make sure it got the right sentence
+    text = statement0.evidence[0].text
+    print('Statement text:"', text + '"')
+    assert(text == 'Ras leads to the phosphorylation of Raf.')
+
+def test_evidence_pmid():
+    # Test whether the pmid provided to the TEES processor is put into the
+    # statement's evidence
+
+    pmid = '42'
+
+    # Process some text
+    s = 'BRAF binds to p53.'
+    tp = tees_process_text(s, pmid)
+    statements = tp.statements
+
+    # Verify that the pmid was put in the right place
+    assert(len(statements[0].evidence) == 1)
+    assert(statements[0].evidence[0].pmid == pmid)
 

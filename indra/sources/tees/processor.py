@@ -214,7 +214,12 @@ class TEESProcessor(object):
             target = self.get_entity_text_for_relation(expression, 'Theme')
 
             if cause is not None and target is not None:
-                statements.append(IncreaseAmount(s2a(cause), s2a(target)))
+                theme_node = self.get_related_node(expression, 'Theme')
+                assert(theme_node is not None)
+                evidence = self.node_to_evidence(theme_node, is_direct=False)
+
+                statements.append(IncreaseAmount(s2a(cause), s2a(target),
+                    evidence=evidence))
         return statements
 
     def process_decrease_expression_amount(self):
@@ -233,7 +238,12 @@ class TEESProcessor(object):
             target = self.get_entity_text_for_relation(expression, 'Theme')
 
             if cause is not None and target is not None:
-                statements.append(DecreaseAmount(s2a(cause), s2a(target)))
+                theme_node = self.get_related_node(expression, 'Theme')
+                assert(theme_node is not None)
+                evidence = self.node_to_evidence(theme_node, is_direct=False)
+
+                statements.append(DecreaseAmount(s2a(cause), s2a(target),
+                        evidence=evidence))
         return statements
 
     

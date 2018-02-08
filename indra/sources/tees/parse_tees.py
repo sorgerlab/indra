@@ -215,8 +215,8 @@ def parse_a2(a2_filename, entities, tees_sentences):
                     # affect whether we want to process them into statements
                     print('Unknown negation event: %s' % line)
                     assert(False)
-    for e in event_names:
-        print(e)
+    #for e in event_names:
+    #    print(e)
     return G
 
 class TEESSentences:
