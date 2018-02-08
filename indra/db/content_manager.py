@@ -1108,11 +1108,17 @@ class PmcManager(NihManager):
             # If there are any more archives waiting to be processed, start
             # the next one.
             for a, p in [(a, p) for a, p in active_list if not p.is_alive()]:
-                sf_list = db.select_all(db.SourceFile,
-                                        db.SourceFile.source == self.my_source,
-                                        db.SourceFile.name == a)
-                if not sf_list:
-                    db.insert('source_file', source=self.my_source, name=a)
+                if p.exitcode is 0:
+                    sf_list = db.select_all(
+                        db.SourceFile,
+                        db.SourceFile.source == self.my_source,
+                        db.SourceFile.name == a
+                        )
+                    if not sf_list:
+                        db.insert('source_file', source=self.my_source, name=a)
+                else:
+                    logger.error("Process for %s exitted with exit code %d."
+                                 % (path.basename(a), p.exitcode))
                 active_list.remove((a, p))
                 start_next_proc()
 
