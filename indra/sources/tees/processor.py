@@ -190,9 +190,11 @@ class TEESProcessor(object):
 
         G = self.G
         related_node = self.get_related_node(node, relation)
-        #print('G.node[related_node] =', G.node[related_node])
-        if not G.node[related_node]['is_event']:
-            return G.node[related_node]['text']
+        if related_node is not None:
+            if not G.node[related_node]['is_event']:
+                return G.node[related_node]['text']
+            else:
+                return None
         else:
             return None
 
@@ -255,6 +257,7 @@ class TEESProcessor(object):
             (pos_reg, phos) = pair
             cause = self.get_entity_text_for_relation(pos_reg, 'Cause')
             theme = self.get_entity_text_for_relation(phos, 'Theme')
+            print('Cause:', cause, 'Theme:', theme)
 
             # If the trigger word is dephosphorylate or similar, then we
             # extract a dephosphorylation statement
@@ -267,13 +270,17 @@ class TEESProcessor(object):
 
             site = self.get_entity_text_for_relation(phos, 'Site')
 
+            theme_node = self.get_related_node(phos, 'Theme')
+            assert(theme_node is not None)
+            evidence = self.node_to_evidence(theme_node, is_direct=False)
+
             if theme is not None:
                 if deph:
                     statements.append( Dephosphorylation(s2a(cause),
-                        s2a(theme), site) )
+                        s2a(theme), site, evidence=evidence) )
                 else:
                     statements.append( Phosphorylation(s2a(cause),
-                        s2a(theme), site) )
+                        s2a(theme), site, evidence=evidence) )
         return statements
 
     def process_binding_statements(self):
