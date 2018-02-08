@@ -731,12 +731,16 @@ class Medline(NihManager):
     def load_files(self, db, dirname, n_procs=1, continuing=False,
                    carefully=False):
         """Load a the files in subdirectory indicated by `dirname`."""
-        xml_files = self.get_file_list(dirname)
+        xml_files = set(self.get_file_list(dirname))
         sf_list = db.select_all(
             db.SourceFile,
             db.SourceFile.source == self.my_source
             )
-        existing_files = [sf.name for sf in sf_list if dirname in sf.name]
+        existing_files = {sf.name for sf in sf_list if dirname in sf.name}
+
+        if continuing and xml_files == existing_files:
+            logger.info("All files have been loaded. Nothing to do.")
+            return False
 
         # This could perhaps be simplified with map_async from mp.pool.
         q = mp.Queue()
@@ -775,7 +779,7 @@ class Medline(NihManager):
             upload_and_record_next(False)
             n_tot -= 1
 
-        return
+        return True
 
     @ContentManager._principal_action
     def populate(self, db, n_procs=1, continuing=False):
@@ -793,15 +797,14 @@ class Medline(NihManager):
             source files contained in the database. If false, all files will be
             read and parsed.
         """
-        self.load_files(db, 'baseline', n_procs, continuing, False)
-        return
+        return self.load_files(db, 'baseline', n_procs, continuing, False)
 
     @ContentManager._principal_action
     def update(self, db, n_procs=1, continuing=False):
         """Update the contents of the database with the latest articles."""
-        self.load_files(db, 'baseline', n_procs, True, True)
-        self.load_files(db, 'updatefiles', n_procs, True, True)
-        return
+        did_base = self.load_files(db, 'baseline', n_procs, True, True)
+        did_update = self.load_files(db, 'updatefiles', n_procs, True, True)
+        return did_base or did_update
 
 
 class PmcManager(NihManager):
@@ -1017,8 +1020,9 @@ class PmcManager(NihManager):
                     tc_data.append(tc)
 
                 if q is not None:
-                    label = ("%d/%d" % (i, N_batches),
-                             path.basename(archive_path))
+                    label = (i+1, N_batches, path.basename(archive_path))
+                    logger.debug("Submitting batch %d/%d for %s to queue."
+                                 % label)
                     q.put((label, tr_data[:], tc_data[:]))
                 elif db is not None:
                     self.upload_batch(db, tr_data[:], tc_data[:])
@@ -1094,6 +1098,7 @@ class PmcManager(NihManager):
 
         # Monitor the processes while any are still active.
         batch_log = path.join(THIS_DIR, '%s_batch_log.tmp' % self.my_source)
+        batch_entry_fmt = '%s %d\n'
         open(batch_log, 'a+').close()
         while len(active_list) is not 0:
             # Check for processes that have been unpacking archives to
@@ -1121,16 +1126,18 @@ class PmcManager(NihManager):
                 label, tr_data, tc_data = q.get_nowait()
             except Exception:
                 continue
-            logger.info("Beginning to upload batch %s from %s..." % label)
+            logger.info("Beginning to upload batch %d/%d from %s..." % label)
+            batch_id, _, arc_name = label
             if continuing:
                 with open(batch_log, 'r') as f:
-                    if str(label) in f.read().splitlines():
-                        logger.info("Batch already completed: skipping...")
+                    if batch_entry_fmt % (arc_name, batch_id) in f.readlines():
+                        logger.info("Batch %d already completed: skipping..."
+                                    % batch_id)
                         continue
             self.upload_batch(db, tr_data, tc_data)
             with open(batch_log, 'a+') as f:
-                f.write(str(label) + '\n')
-            logger.info("Finished batch %s from %s..." % label)
+                f.write(batch_entry_fmt % (arc_name, batch_id))
+            logger.info("Finished batch %d/%d from %s..." % label)
             time.sleep(0.1)
 
         # Empty the queue.
@@ -1225,7 +1232,7 @@ class PmcOA(PmcManager):
         # Upload these archives.
         logger.info("Updating the database with %d articles." % len(fpath_set))
         self.upload_archives(db, fpath_set, n_procs=n_procs)
-        return
+        return True
 
 
 class Manuscripts(PmcManager):
@@ -1287,7 +1294,7 @@ class Manuscripts(PmcManager):
         update_archives = {'PMC00%dXXXXXX.xml.tar.gz' % pmcid[3]
                            for pmcid in (ftp_pmcid_set - db_pmcid_set)}
         self.upload_archives(db, update_archives, n_procs)
-        return
+        return True
 
 
 if __name__ == '__main__':
