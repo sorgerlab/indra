@@ -355,8 +355,7 @@ class ContentManager(object):
             f.write(msg + '\n')
         return
 
-    def filter_text_refs(self, db, tr_data_set, n_per_batch=None,
-                         primary_id_types=None):
+    def filter_text_refs(self, db, tr_data_set, primary_id_types=None):
         """Try to reconcile the data we have with what's already on the db.
 
         Note that this method is VERY slow in general, and therefore should
@@ -376,19 +375,6 @@ class ContentManager(object):
         N = len(tr_data_set)
         if not N:
             return set(), []
-
-        if n_per_batch is not None:
-            tr_data_list = list(tr_data_set)
-            filtered_tr_records = set()
-            flawed_tr_data = []
-            for i in range(ceil(N/n_per_batch)):
-                tr_data_batch = tr_data_list[i*n_per_batch:(i+1)*n_per_batch]
-                filtered_tr_batch, flawed_tr_batch = \
-                    self.filter_text_refs(db, set(tr_data_batch))
-                filtered_tr_records = \
-                    filtered_tr_records.union(filtered_tr_batch)
-                flawed_tr_data += flawed_tr_batch
-            return filtered_tr_records, flawed_tr_data
 
         # Get all text refs that match any of the id data we have. This means
         # each text ref WILL find a match in the data we have (unless something
