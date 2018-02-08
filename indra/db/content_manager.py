@@ -545,10 +545,11 @@ class ContentManager(object):
                 )
             logger.info("Creating review file %s." % self.review_fname)
             open(self.review_fname, 'w').close()
-            ret = func(self, db, *args, **kwargs)
-            db.insert('updates', init_upload=(func.__name__ == 'populate'),
-                      source=self.my_source, datetime=datetime.utcnow())
-            return ret
+            completed = func(self, db, *args, **kwargs)
+            if completed:
+                db.insert('updates', init_upload=(func.__name__ == 'populate'),
+                          source=self.my_source, datetime=datetime.utcnow())
+            return completed
         return take_action
 
     def populate(self, db):
@@ -1069,6 +1070,8 @@ class PmcManager(NihManager):
             try:
                 archive_local_path = self.ftp.download_file(archive,
                                                             dest=THIS_DIR)
+                logger.debug("Download succesfully completed for %s."
+                             % archive)
             except BaseException:
                 logger.error("Failed to download %s. Deleting corrupt file."
                              % archive)
@@ -1173,6 +1176,13 @@ class PmcManager(NihManager):
             otherwise continuing from an earlier process. This means we will
             skip over source files contained in the database. If false, all
             files will be read and parsed.
+
+        Returns
+        -------
+        completed : bool
+            If True, an update was completed. Othewise, the updload was aborted
+            for some reason, often because the upload was already completed
+            at some earlier time.
         """
         archives = set(self.get_file_list())
 
@@ -1188,10 +1198,10 @@ class PmcManager(NihManager):
             # Don't do unnecessary work.
             if not len(archives):
                 logger.info("No archives to load. All done.")
-                return
+                return False
 
         self.upload_archives(db, archives, n_procs, continuing=continuing)
-        return
+        return True
 
 
 class PmcOA(PmcManager):
