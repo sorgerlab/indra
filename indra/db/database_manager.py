@@ -265,7 +265,6 @@ class DatabaseManager(object):
             self.session.rollback()
         except:
             print("Failed to execute rollback of database upon deletion.")
-            raise
 
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."

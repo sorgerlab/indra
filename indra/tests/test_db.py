@@ -16,7 +16,7 @@ IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
 if IS_PY3:
-    from indra.db.content_manager import Medline, PmcOA, Manuscripts
+    from indra.db.content_manager import Pubmed, PmcOA, Manuscripts
 
 if '-a' in argv:
     attr_str = argv[argv.index('-a')+1]
@@ -99,7 +99,7 @@ def needs_py3(func):
 def get_db_with_content():
     "Populate the database."
     db = get_db()
-    Medline(ftp_url=TEST_FTP, local=True).populate(db)
+    Pubmed(ftp_url=TEST_FTP, local=True).populate(db)
     return db
 
 
@@ -286,7 +286,7 @@ def test_full_upload():
 
     # Test careful upload of medline (very shallow test...checks only for
     # critical failures)
-    m = Medline(ftp_url=TEST_FTP, local=True)
+    m = Pubmed(ftp_url=TEST_FTP, local=True)
     m.load_files(db, 'baseline', carefully=True)
 
 
@@ -295,7 +295,7 @@ def test_full_upload():
 def test_multiple_pmids():
     "Test that pre-existing pmids are correctly handled."
     db = get_db()
-    med = Medline(ftp_url=TEST_FTP, local=True)
+    med = Pubmed(ftp_url=TEST_FTP, local=True)
     med.populate(db)
     num_refs = len(db.select_all('text_ref'))
     med.populate(db)
@@ -420,7 +420,7 @@ def test_id_handling_pmc_oa():
 def test_medline_ref_checks():
     "Test the text ref checks used by medline."
     db = get_db()
-    med = Medline(ftp_url=TEST_FTP, local=True)
+    med = Pubmed(ftp_url=TEST_FTP, local=True)
 
     def check_input(input_pairs, expected_pairs, carefully, num):
         article_info = {pmid: dict(zip(['pmid', 'pmcid'], [pmid, pmcid]))
@@ -523,7 +523,7 @@ def test_ftp_service():
         ('.csv', 'csv_as_dict'),
         ('.txt', 'file')
         ]
-    for Child in [Medline, PmcOA, Manuscripts]:
+    for Child in [Pubmed, PmcOA, Manuscripts]:
         c = Child()
         files = c.ftp.ftp_ls()
         for end, meth in cases:

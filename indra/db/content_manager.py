@@ -521,7 +521,7 @@ class ContentManager(object):
                 db.insert('updates', init_upload=(func.__name__ == 'populate'),
                           source=self.my_source, datetime=utcnow)
                 rename(self.review_fname,
-                          review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
+                       review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
             return completed
         return take_action
 
@@ -551,14 +551,14 @@ class NihManager(ContentManager):
         return
 
 
-class Medline(NihManager):
-    "Manager for the medline content."
+class Pubmed(NihManager):
+    "Manager for the pubmed/medline content."
     my_path = 'pubmed'
     my_source = 'pubmed'
     tr_cols = ('pmid', 'pmcid', 'doi', 'pii',)
 
     def __init__(self, *args, **kwargs):
-        super(Medline, self).__init__(*args, **kwargs)
+        super(Pubmed, self).__init__(*args, **kwargs)
         self.deleted_pmids = None
         return
 
@@ -697,22 +697,13 @@ class Medline(NihManager):
         logger.info("Found %d new text content entries."
                     % len(text_content_records))
 
-        try:
-            self.copy_into_db(
-                db,
-                'text_content',
-                text_content_records,
-                cols=('text_ref_id', 'source', 'format', 'text_type',
-                      'content')
-                )
-        except DatabaseError as e:
-            if not carefully:
-                logger.exception(e)
-                logger.warning("Caught database error while trying to copy "
-                               "text content carelessly.")
-                logger.info("Trying again more carefully...")
-                return self.load_text_content(db, article_info, valid_pmids,
-                                              carefully=True)
+        self.copy_into_db(
+            db,
+            'text_content',
+            text_content_records,
+            cols=('text_ref_id', 'source', 'format', 'text_type',
+                  'content')
+            )
         return
 
     def upload_article(self, db, article_info, carefully=False):
@@ -797,7 +788,7 @@ class Medline(NihManager):
         return self.load_files(db, 'baseline', n_procs, continuing, False)
 
     @ContentManager._principal_action
-    def update(self, db, n_procs=1, continuing=False):
+    def update(self, db, n_procs=1):
         """Update the contents of the database with the latest articles."""
         did_base = self.load_files(db, 'baseline', n_procs, True, True)
         did_update = self.load_files(db, 'updatefiles', n_procs, True, True)
@@ -1201,7 +1192,7 @@ class PmcOA(PmcManager):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
     @ContentManager._principal_action
-    def update(self, db, n_procs=1, continuing=False):
+    def update(self, db, n_procs=1):
         latest_update = db.select_all(db.Updates,
                                       db.Updates.source == self.my_source)
         min_datetime = latest_update.datetime
@@ -1268,7 +1259,7 @@ class Manuscripts(PmcManager):
         return
 
     @ContentManager._principal_action
-    def update(self, db, n_procs=1, continuing=False):
+    def update(self, db, n_procs=1):
         """Add any new content found in the archives.
 
         Note that this is very much the same as populating for manuscripts,
@@ -1327,13 +1318,13 @@ if __name__ == '__main__':
                                          db.SourceFile])
             if not clear_succeeded:
                 sys.exit()
-        Medline().populate(db, args.num_procs, args.continuing)
+        Pubmed().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
     elif args.task == 'update':
-        Medline().update(db, args.num_procs, args.continuing)
-        PmcOA().update(db, args.num_procs, args.continuing)
-        Manuscripts().update(db, args.num_procs, args.continuing)
+        Pubmed().update(db, args.num_procs)
+        PmcOA().update(db, args.num_procs)
+        Manuscripts().update(db, args.num_procs)
 
     # High-level content update procedure
     # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,
