@@ -523,18 +523,18 @@ class ContentManager(object):
     def _principal_action(cls, func):
         @wraps(func)
         def take_action(self, db, *args, **kwargs):
-            time_string = datetime.now().strftime('%Y%m%d-%H%M%S')
-            self.review_fname = path.join(
-                THIS_DIR,
-                "review_%s_%s_%s.txt" % (func.__name__, self.my_source,
-                                         time_string)
-                )
+            review_fmt = "review_%s_%s_%%s.txt" % (func.__name__,
+                                                   self.my_source)
+            self.review_fname = path.join(THIS_DIR, review_fmt % 'in_progress')
             logger.info("Creating review file %s." % self.review_fname)
-            open(self.review_fname, 'w').close()
+            open(self.review_fname, 'a+').close()
             completed = func(self, db, *args, **kwargs)
             if completed:
+                utcnow = datetime.utcnow()
                 db.insert('updates', init_upload=(func.__name__ == 'populate'),
-                          source=self.my_source, datetime=datetime.utcnow())
+                          source=self.my_source, datetime=utcnow)
+                os.rename(self.review_fname,
+                          review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
             return completed
         return take_action
 
