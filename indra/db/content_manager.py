@@ -666,7 +666,7 @@ class Medline(NihManager):
         if carefully:
             text_ref_records, flawed_refs = \
                 self.filter_text_refs(db, text_ref_records,
-                                      primary_id_types=['pmid'])
+                                      primary_id_types=['pmid', 'pmcid'])
             logger.info('%d new records to add to text_refs.'
                         % len(text_ref_records))
             valid_pmids -= {ref[self.tr_cols.index('pmid')]
