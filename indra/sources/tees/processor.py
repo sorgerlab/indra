@@ -17,6 +17,7 @@ from indra.sources.tees.parse_tees import run_and_parse_tees
 from indra.preassembler.grounding_mapper import load_grounding_map,\
         GroundingMapper
 from networkx.algorithms import dag
+import os.path
 
 class TEESProcessor(object):
     """Converts the specified text into a series of INDRA statmenets.
@@ -52,12 +53,14 @@ class TEESProcessor(object):
         self.pmid = pmid
 
         # Load grounding information
-        gm_fname = 'data/extracted_reach_grounding_map.csv'
+        path_this = os.path.dirname(os.path.abspath(__file__))
+        gm_fname = os.path.join(path_this, '../../../data/',
+                                'extracted_reach_grounding_map.csv')
         try:
             gm = load_grounding_map(gm_fname)
         except:
-            raise Exception('Could not load the grounding map from ' + 
-                    gm_fname)
+            raise Exception('Could not load the grounding map from ' +
+                            gm_fname)
         mapper = GroundingMapper(gm)
 
         # Run TEES and parse into networkx graph

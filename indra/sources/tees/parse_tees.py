@@ -25,6 +25,7 @@ import subprocess
 import networkx as nx
 import codecs
 import networkx.algorithms.dag as dag
+import sys
 
 try:  # Python 2
     basestring
@@ -341,6 +342,7 @@ def parse_tees_output_directory(output_dir):
         #Parse the a1 (entities) file
         entities = parse_a1(os.path.join(tmp_dir, a1_file))
 
+
         # Parse the a2 (events) file
         events = parse_a2(os.path.join(tmp_dir, a2_file),
                 entities, tees_sentences)
@@ -395,12 +397,15 @@ def run_and_parse_tees(text, tees_path, python2_path):
         raise Exception('Provided TEES directory does not exist.')
 
     # Make sure the classify.py script exists within this directory
-    classify_path = os.path.join(tees_path, 'classify.py')
-    if not os.path.isfile(classify_path):
-        raise Exception('classify.py does not exist in provided TEES path.')
+    #classify_path = os.path.join(tees_path, 'classify.py')
+    classify_path = 'classify.py'
+    #if not os.path.isfile(classify_path):
+    #    raise Exception('classify.py does not exist in provided TEES path.')
 
     # Create a temporary directory to tag the shared-task files
     tmp_dir = tempfile.mkdtemp(suffix='indra_tees_processor')
+
+    pwd = os.path.abspath(     os.getcwd()     )
 
     try:
         # Write text to a file in the temporary directory
@@ -413,16 +418,29 @@ def run_and_parse_tees(text, tees_path, python2_path):
 
         # Run TEES
         output_path = os.path.join(tmp_dir, 'output')
-        command = [python2_path, classify_path, '-m', 'GE11',
+        model_path = os.path.join(tees_path, 'tees_data/models/GE11-test/')
+        command = [python2_path, classify_path, '-m', model_path,
                 '-i', text_path,
                 '-o', output_path]
         try:
-            out = subprocess.check_output(command, stderr=subprocess.STDOUT)
-            print(out.decode('utf-8'))
-        except subprocess.CalledProcessError as e:
+            pwd = os.path.abspath(     os.getcwd()     )
+            os.chdir(tees_path) # Change to TEES directory
+            #print('cwd is:', os.getcwd())
+            #out = subprocess.check_output(command, stderr=subprocess.STDOUT)
+            p = subprocess.Popen(command, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, cwd=tees_path)
+            p.wait()
+            (so, se) = p.communicate()
+            print(so)
+            print(se)
+            os.chdir(pwd) # Change back to previous directory
+            #print('cwd is:', os.getcwd())
+            #print(out.decode('utf-8'))
+        except BaseException as e:
             # If there's an error, print it out and then propagate the
             # exception
-            print (e.output.decode('utf-8'))
+            os.chdir(pwd) # Change back to previous directory
+            #print (e.output.decode('utf-8'))
             raise e
 
         # Parse TEES output

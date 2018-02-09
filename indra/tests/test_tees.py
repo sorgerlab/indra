@@ -8,6 +8,9 @@ from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
 from indra.statements import Phosphorylation, Dephosphorylation, \
         IncreaseAmount, DecreaseAmount, Complex
 
+_multiprocess_can_split_ = False
+_multiprocess_shared_ = False
+
 def test_process_phosphorylation():
     # Test the extraction of phosphorylation with a simple example.
     s = 'Ras leads to the phosphorylation of Braf.'
