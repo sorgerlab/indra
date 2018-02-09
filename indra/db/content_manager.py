@@ -1354,7 +1354,7 @@ if __name__ == '__main__':
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
             clear_succeeded = db._clear([db.TextContent, db.TextRef,
-                                         db.SourceFile])
+                                         db.SourceFile, db.Updates])
             if not clear_succeeded:
                 sys.exit()
         Pubmed().populate(db, args.num_procs, args.continuing)
