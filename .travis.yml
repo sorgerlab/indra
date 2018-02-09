@@ -83,6 +83,7 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
+  - python indra/sources/tees/tees_api.py
   - nosetests indra -v --with-doctest --with-doctest-ignore-unicode
         --with-coverage --cover-inclusive --cover-package=indra -a $NOSEATTR
   # Run NL model examples only when the environmental variable
