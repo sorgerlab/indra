@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This module provides a simplified API for invoking the Turku Event Extraction
 System (TEES) on text and extracting INDRA statement from TEES output.
