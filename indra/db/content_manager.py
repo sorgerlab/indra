@@ -1024,8 +1024,27 @@ class PmcManager(NihManager):
     def process_archive(self, archive, q=None, db=None, continuing=False):
         """Download an archive and begin unpacking it.
 
-        Either `q` or `db` MUST be provided. For details see explanation for
-        `unpack_archive_path`, which this method calls.
+        Either `q` or `db` must be specified. The uncompressed contents of the
+        archive will be loaded onto the database or placed on the queue in
+        batches.
+
+        Parameters
+        ----------
+        archive : str
+            The path of the archive beneath the head of this sources ftp
+            directory.
+        q : multiprocessing.Queue
+            When this method is called as a separate process, the contents of
+            the archive are posted to a queue in batches to be handled
+            externally.
+        db : indra.db.DatabaseManager
+            When not multprocessing, the contents of the archive are uploaded
+            to the database directly by this method.
+        continuing : bool
+            True if this method is being called to complete an earlier failed
+            attempt to execute this method; will not download the archive if an
+            archive of the same name is already downloaded locally. Default is
+            False.
         """
 
         # This is a guess at the location of the archive.
@@ -1193,9 +1212,14 @@ class PmcOA(PmcManager):
 
     @ContentManager._principal_action
     def update(self, db, n_procs=1):
-        latest_update = db.select_all(db.Updates,
-                                      db.Updates.source == self.my_source)
-        min_datetime = latest_update.datetime
+        update_list = db.select_all(db.Updates,
+                                    db.Updates.source == self.my_source)
+        if not len(update_list):
+            logger.error("The database has not had an initial upload, or else "
+                         "the updates table has not been populated.")
+            return False
+
+        min_datetime = max([u.datetime for u in update_list])
 
         # Search down through the oa_package directory. Below the first level,
         # the files are timestamped, so we can filter down each level
@@ -1204,6 +1228,7 @@ class PmcOA(PmcManager):
                     "the last update.")
         fpath_set = set()
         for top_dirname in self.ftp.ftp_ls('oa_package'):
+            logger.debug("Looking in %s." % top_dirname)
             top_dirpath = path.join('oa_package', top_dirname)
             top_dir_contents = self.ftp.ftp_ls_timestamped(top_dirpath)
             for dirname, dir_mod_time in top_dir_contents:
@@ -1215,7 +1240,10 @@ class PmcOA(PmcManager):
                         f_mod_datetime = datetime.strptime(f_mod_time,
                                                            '%Y%m%d%H%M%S')
                         if f_mod_datetime > min_datetime:
-                            fpath_set.add(path.join(dirpath, fname))
+                            fpath = path.join(dirpath, fname)
+                            logger.debug("Adding %s (%s) to updates."
+                                         % (fpath, f_mod_time))
+                            fpath_set.add(fpath)
 
         # Upload these archives.
         logger.info("Updating the database with %d articles." % len(fpath_set))
@@ -1271,16 +1299,27 @@ class Manuscripts(PmcManager):
 
         The continuing feature isn't implemented yet.
         """
-        ftp_file_list = self.ftp.get_csv_as_dict('file_list.csv', header=0)
+        logger.info("Getting list of manuscript content available.")
+        ftp_file_list = self.ftp.get_csv_as_dict('filelist.csv', header=0)
         ftp_pmcid_set = {entry['PMCID'] for entry in ftp_file_list}
+
+        logger.info("Getting a list of text refs that already correspond to "
+                    "manuscript content.")
         tr_list = db.select_all(
             db.TextRef,
             db.TextRef.id == db.TextContent.text_ref_id,
             db.TextContent.source == self.my_source
             )
-        db_pmcid_set = {tr.pmcid for tr in tr_list}
-        update_archives = {'PMC00%dXXXXXX.xml.tar.gz' % pmcid[3]
-                           for pmcid in (ftp_pmcid_set - db_pmcid_set)}
+        load_pmcid_set = ftp_pmcid_set - {tr.pmcid for tr in tr_list}
+
+        logger.info("There are %d manuscripts to load."
+                    % (len(load_pmcid_set)))
+
+        logger.info("Determining which archives need to be laoded.")
+        update_archives = {'PMC00%sXXXXXX.xml.tar.gz' % pmcid[3]
+                           for pmcid in load_pmcid_set}
+
+        logger.info("Beginning to upload archives.")
         self.upload_archives(db, update_archives, n_procs)
         return True
 
