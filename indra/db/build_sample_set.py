@@ -42,7 +42,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 from indra.literature import pubmed_client as pub
-from indra.db.content_manager import PmcOA, Medline, Manuscripts
+from indra.db.content_manager import PmcOA, Pubmed, Manuscripts
 
 
 def _get_example(case, med_pmid_list, pmc_dicts, man_dicts):
@@ -116,7 +116,7 @@ def build_set(n, parent_dir):
     # Get the pmid data from medline (med_pmid_list)
     print("Getting medline lists...")
     med_pmid_list = []
-    med = Medline()
+    med = Pubmed()
     for i in range(1, 7):
         buf = BytesIO()
         med.ftp.ret_file("../MuId-PmId-%d.zip" % i, buf)
