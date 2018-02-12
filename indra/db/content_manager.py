@@ -1226,24 +1226,13 @@ class PmcOA(PmcManager):
         # efficiently finding the latest files to update.
         logger.info("Getting list of articles that have been uploaded since "
                     "the last update.")
-        fpath_set = set()
-        for top_dirname in self.ftp.ftp_ls('oa_package'):
-            logger.debug("Looking in %s." % top_dirname)
-            top_dirpath = path.join('oa_package', top_dirname)
-            top_dir_contents = self.ftp.ftp_ls_timestamped(top_dirpath)
-            for dirname, dir_mod_time in top_dir_contents:
-                mod_datetime = datetime.strptime(dir_mod_time, '%Y%m%d%H%M%S')
-                if mod_datetime > min_datetime:
-                    dirpath = path.join(top_dirpath, dirname)
-                    dir_contents = self.ftp.ftp_ls_timestamped(dirpath)
-                    for fname, f_mod_time in dir_contents:
-                        f_mod_datetime = datetime.strptime(f_mod_time,
-                                                           '%Y%m%d%H%M%S')
-                        if f_mod_datetime > min_datetime:
-                            fpath = path.join(dirpath, fname)
-                            logger.debug("Adding %s (%s) to updates."
-                                         % (fpath, f_mod_time))
-                            fpath_set.add(fpath)
+        files = self.ftp.get_csv_as_dict('oa_file_list.csv', header=0)
+        fpath_set = {
+            f['File'] for f in files
+            if datetime.strptime(f['Last Updated (YYYY-MM-DD HH:MM:SS)'],
+                                 '%Y-%m-%d %H:%M:%S')
+            > min_datetime
+            }
 
         # Upload these archives.
         logger.info("Updating the database with %d articles." % len(fpath_set))
