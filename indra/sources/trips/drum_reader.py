@@ -55,14 +55,28 @@ class DrumReader(KQMLModule):
         for text in self.to_read:
             self.read_text(text)
 
+    def read_pmc(self, pmcid):
+        # '(request :receiver DRUM :content (run-pmcid :pmcid "5148607"' + \
+        #      ' :reply-when-done true) :reply-with P-5148607)'
+        msg = KQMLPerformative('REQUEST')
+        msg.set('receiver', 'DRUM')
+        content = KQMLList('run-pmcid')
+        content.sets('pmcid', pmcid)
+        content.set('reply-when-done', 'true')
+        msg.set('content', content)
+        msg.set('reply-with', 'P-%s' % pmcid)
+        self.send(msg)
+
     def read_text(self, text):
         print('Reading: "%s"' % text)
         msg_id = 'RT000%s' % self.msg_counter
         kqml_perf = _get_perf(text, msg_id)
         self.send(kqml_perf)
+        print('===SENT READING===')
         self.msg_counter += 1
 
     def receive_reply(self, msg, content):
+        print('===RECEIVED REPLY===')
         extractions = content.gets(':extractions')
         self.extractions.append(extractions)
         self.reply_counter -= 1
