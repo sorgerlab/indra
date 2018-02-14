@@ -40,6 +40,9 @@ def save_results(statements, out_fname):
         pickle.dump(statements, fh)
 
 
+# TODO: this currently assumes that a list of sentences is to be read
+# for a given PMID. Other usage modes to support are reading a full
+# NXML paper (from PMC), and reading the abstract for a given PMID.
 if __name__ == '__main__':
     host = sys.argv[1]
     file_name = sys.argv[2]

@@ -46,8 +46,7 @@ class DrumReader(KQMLModule):
             raise ImportError('Install the `pykqml` package to use ' +
                               'the DrumReader')
         self.to_read = kwargs.pop('to_read', None)
-        host = kwargs.pop('host', 'localhost')
-        super(DrumReader, self).__init__(name='DrumReader', host=host)
+        super(DrumReader, self).__init__(name='DrumReader', **kwargs)
         self.msg_counter = random.randint(1, 100000)
         self.ready()
         self.extractions = []
@@ -77,8 +76,13 @@ class DrumReader(KQMLModule):
 
     def receive_reply(self, msg, content):
         print('===RECEIVED REPLY===')
-        extractions = content.gets(':extractions')
-        self.extractions.append(extractions)
+        reply_head = content.head()
+        if reply_head == 'error':
+            comment = content.gets('comment')
+            logger.error('Got error reply: "%s"' % comment)
+        else:
+            extractions = content.gets('extractions')
+            self.extractions.append(extractions)
         self.reply_counter -= 1
         if self.reply_counter == 0:
             self.exit(0)
