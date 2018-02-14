@@ -31,7 +31,7 @@ class EidosReader(object):
             A JSON object of mentions extracted from text.
         """
         if self.eidos_reader is None:
-            eidos = autoclass('org.clulab.wm.AgroSystem')
+            eidos = autoclass('org.clulab.wm.EidosSystem')
             self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
         mentions = self.eidos_reader.extractFrom(text)
