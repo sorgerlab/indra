@@ -22,10 +22,14 @@ def get_statments():
                                                  role='SUBJECT',
                                                  stmt_type=act)
         if obj is not None:
-            stmts = [s for s in stmts if s.agent_list()[1].name == obj]
+            stmts = [s for s in stmts if len(s.agent_list()) > 1
+                     and s.agent_list()[1].name == obj]
     elif obj is not None:
         stmts = get_statements_by_gene_role_type(agent_id=obj,
                                                  role='OBJECT',
                                                  stmt_type=act)
 
     return jsonify([stmt.to_json() for stmt in stmts])
+
+if __name__ == '__main__':
+    app.run()
