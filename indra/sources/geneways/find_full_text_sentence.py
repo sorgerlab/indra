@@ -9,9 +9,9 @@ from nltk import sent_tokenize
 from nltk.tokenize import word_tokenize
 from lxml import etree
 
-from indra.sources.geneways.greek_alphabet import *
+from indra.resources.greek_alphabet import greek_alphabet
 
-class FullTextMention:
+class FullTextMention(object):
     """Container for full text mentions and their corresponding full text"""
     def __init__(self, mention, xml_full_text):
         self.mention = mention
