@@ -16,7 +16,7 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
-    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime
+    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime, func
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 
@@ -168,6 +168,8 @@ class DatabaseManager(object):
             pii = Column(String(250))
             url = Column(String(250), unique=True)  # Maybe longer?
             manuscript_id = Column(String(100), unique=True)
+            create_date = Column(DateTime, default=func.now())
+            last_updated = Column(DateTime, onupdate=func.now())
             __table_args__ = (
                 UniqueConstraint('pmid', 'doi'),
                 UniqueConstraint('pmcid', 'doi')
@@ -178,6 +180,7 @@ class DatabaseManager(object):
             id = Column(Integer, primary_key=True)
             source = Column(String(250), nullable=False)
             name = Column(String(250), nullable=False)
+            load_date = Column(DateTime, default=func.now())
             __table_args__ = (
                 UniqueConstraint('source', 'name'),
                 )
@@ -187,7 +190,7 @@ class DatabaseManager(object):
             id = Column(Integer, primary_key=True)
             init_upload = Column(Boolean, nullable=False)
             source = Column(String(250), nullable=False)
-            datetime = Column(DateTime, nullable=False)
+            datetime = Column(DateTime, default=func.now())
 
         class TextContent(self.Base):
             __tablename__ = 'text_content'
@@ -200,6 +203,8 @@ class DatabaseManager(object):
             format = Column(String(250), nullable=False)
             text_type = Column(String(250), nullable=False)
             content = Column(Bytea, nullable=False)
+            insert_date = Column(DateTime, default=func.now())
+            last_updated = Column(DateTime, onupdate=func.now())
             __table_args__ = (
                 UniqueConstraint(
                     'text_ref_id', 'source', 'format', 'text_type'
@@ -217,6 +222,8 @@ class DatabaseManager(object):
             reader_version = Column(String(20), nullable=False)
             format = Column(String(20), nullable=False)  # xml, json, etc.
             bytes = Column(Bytea, nullable=False)
+            create_date = Column(DateTime, default=func.now())
+            last_updated = Column(DateTime, onupdate=func.now())
             __table_args__ = (
                 UniqueConstraint(
                     'text_content_id', 'reader', 'reader_version'
@@ -227,7 +234,8 @@ class DatabaseManager(object):
             __tablename__ = 'db_info'
             id = Column(Integer, primary_key=True)
             db_name = Column(String(20), nullable=False)
-            timestamp = Column(TIMESTAMP, nullable=False)
+            create_date = Column(DateTime, default=func.now())
+            last_updated = Column(DateTime, onupdate=func.now())
 
         class Statements(self.Base):
             __tablename__ = 'statements'
@@ -240,6 +248,7 @@ class DatabaseManager(object):
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
+            create_date = Column(DateTime, default=func.now())
 
         class Agents(self.Base):
             __tablename__ = 'agents'

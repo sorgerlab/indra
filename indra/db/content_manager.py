@@ -519,7 +519,7 @@ class ContentManager(object):
             if completed:
                 utcnow = datetime.utcnow()
                 db.insert('updates', init_upload=(func.__name__ == 'populate'),
-                          source=self.my_source, datetime=utcnow)
+                          source=self.my_source)
                 rename(self.review_fname,
                        review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
             return completed
