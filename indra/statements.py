@@ -2356,15 +2356,17 @@ class Influence(IncreaseAmount):
     def __init__(self, subj, obj, subj_delta=None, obj_delta=None,
                  evidence=None):
         super(Influence, self).__init__(subj, obj, evidence)
+        if subj_delta is None:
+            subj_delta = {'polarity': None, 'adjectives': []}
+        if obj_delta is None:
+            obj_delta = {'polarity': None, 'adjectives': []}
         self.subj_delta = subj_delta
         self.obj_delta = obj_delta
 
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity
-        p1 = self.subj_delta['polarity'] if self.subj_delta and \
-            self.subj_delta['polarity'] else None
-        p2 = self.obj_delta['polarity'] if self.obj_delta and \
-            self.obj_delta['polarity'] else None
+        p1 = self.subj_delta['polarity']
+        p2 = self.obj_delta['polarity']
         if p1 is None and p2 is None:
             pol = None
         elif p2 is None:
@@ -2385,7 +2387,12 @@ class Influence(IncreaseAmount):
         def _influence_agent_str(agent, delta):
             if delta is not None:
                 pol = delta.get('polarity')
-                pol_str = 'positive' if pol == 1 else 'negative'
+                if pol == 1:
+                    pol_str = 'positive'
+                elif pol == -1:
+                    pol_str = 'negative'
+                else:
+                    pol_str = ''
                 agent_str = '%s(%s)' % (agent.name, pol_str)
             else:
                 agent_str = agent.name

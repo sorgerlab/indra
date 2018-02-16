@@ -53,8 +53,10 @@ class EidosProcessor(object):
             obj_mods = self._get_mods(obj)
             # The interpretation of multiple mods is not clear yet so we
             # choose the first mod if available
-            subj_delta = subj_mods[0] if subj_mods else {'adjectives': None, 'polarity': None}
-            obj_delta = obj_mods[0] if obj_mods else {'adjectives':None, 'polarity': None}
+            subj_delta = subj_mods[0] if subj_mods else \
+                {'adjectives': [], 'polarity': None}
+            obj_delta = obj_mods[0] if obj_mods else \
+                {'adjectives': [], 'polarity': None}
             evidence = self._get_evidence(event)
             st = Influence(subj_agent, obj_agent, subj_delta, obj_delta,
                            evidence=evidence)
