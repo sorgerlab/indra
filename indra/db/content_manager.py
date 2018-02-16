@@ -518,8 +518,12 @@ class ContentManager(object):
             completed = func(self, db, *args, **kwargs)
             if completed:
                 utcnow = datetime.utcnow()
-                db.insert('updates', init_upload=(func.__name__ == 'populate'),
-                          source=self.my_source)
+                is_init_upload = (func.__name__ == 'populate')
+                with open(self.review_fname, 'r') as f:
+                    conflicts_bytes = zip_string(f.read())
+                    db.insert('updates', init_upload=is_init_upload,
+                              source=self.my_source,
+                              unresolved_conflicts_file=conflicts_bytes)
                 rename(self.review_fname,
                        review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
             return completed

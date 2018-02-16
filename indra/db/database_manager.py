@@ -190,6 +190,7 @@ class DatabaseManager(object):
             id = Column(Integer, primary_key=True)
             init_upload = Column(Boolean, nullable=False)
             source = Column(String(250), nullable=False)
+            unresolved_conflicts_file = Column(Bytea)
             datetime = Column(DateTime, default=func.now())
 
         class TextContent(self.Base):
