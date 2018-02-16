@@ -77,6 +77,11 @@ def assert_contents_equal(list1, list2, msg=None):
     assert res, err_msg
 
 
+def capitalize_list_of_tpls(l):
+    return [tuple([i.upper() if isinstance(i, str) else i for i in e])
+            for e in l]
+
+
 def get_db(clear=True):
     "Set up the database for testing."
     db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
@@ -324,6 +329,7 @@ def test_multiple_text_ref_pmc_oa():
     "Test whether a duplicate text ref in pmc oa is handled correctly."
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
+    pmc.review_fname = 'test_review_multiple_text_ref_pmc_oa.txt'
     inp = dict.fromkeys(pmc.tr_cols)
     inp.update(pmcid='PMC5579538', doi='10.1021/acsomega.7b00205')
     pmc.upload_batch(db, [inp], [])
@@ -331,6 +337,7 @@ def test_multiple_text_ref_pmc_oa():
     pmc.upload_batch(db, [inp], [])
     assert len(db.select_all('text_ref')) == num_refs,\
         "Duplicate refs allowed to be submitted.."
+    remove(pmc.review_fname)
     return
 
 
@@ -342,7 +349,7 @@ def test_id_handling_pmc_oa():
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
 
     # Initialize with all possible states we could have gotten from medline.
-    pm_inp_tpl_list = [
+    pm_inp_tpl_list = capitalize_list_of_tpls([
         ('caseA%d' % i, 'PMCcaseA%d' % i) for i in range(2)
         ] + [
         ('caseB%d' % i, None) for i in range(2)
@@ -354,14 +361,14 @@ def test_id_handling_pmc_oa():
         ('caseMultiMatch', 'PMCcaseMultiMatch'),
         ('28884161', None),
         ('26977217', 'PMC4771487')
-        ]
+        ])
     db.insert_many(
         'text_ref',
         [dict(zip(('pmid', 'pmcid'), d)) for d in pm_inp_tpl_list]
         )
 
     # Prepare the 'batch' to be submitted for pmc oa, and try it.
-    oa_inp_tpl_list = [
+    oa_inp_tpl_list = capitalize_list_of_tpls([
         ('case%s0' % l, 'PMCcase%s0' % l) for l in ['A', 'B', 'C']
         ] + [
         (None, 'PMCcase%s1' % l) for l in ['A', 'B', 'C']
@@ -372,7 +379,7 @@ def test_id_handling_pmc_oa():
         ('caseMisMatchB', 'PMCcaseMisMatchA'),  # multiple matches
         ('caseMultiMatch', 'PMCnotmatching'),
         ('notmatching', 'PMCcaseMultiMatch'),
-        ]
+        ])
     tr_inp = []
     for pmid, pmcid in oa_inp_tpl_list:
         inp_dict = dict.fromkeys(pmc.tr_cols)
@@ -380,10 +387,11 @@ def test_id_handling_pmc_oa():
         tr_inp.append(inp_dict)
     tc_inp = [{'pmcid': pmcid, 'text_type': 'txt', 'content': b'content'}
               for _, pmcid in oa_inp_tpl_list]
+    pmc.review_fname = 'test_review_%s.txt' % pmc.my_source
     pmc.upload_batch(db, tr_inp, tc_inp)
 
     # Check the text refs.
-    expected_pairs = [
+    expected_pairs = capitalize_list_of_tpls([
         ('caseA0', 'PMCcaseA0'),
         ('caseA1', 'PMCcaseA1'),
         ('caseB0', 'PMCcaseB0'),
@@ -397,21 +405,19 @@ def test_id_handling_pmc_oa():
         ('caseMisMatchA', 'PMCcaseMisMatchB'),
         ('caseMisMatchB', 'PMCcaseMisiMatchB'),
         ('caseMultiMatch', 'PMCcaseMultiMatch'),
-        ]
+        ])
     actual_pairs = [(tr.pmid, tr.pmcid) for tr in db.select_all('text_ref')]
-    assert_contents_equal(
-        actual_pairs,
-        expected_pairs,
-        'DB text refs incorrect.'
-        )
+    assert_contents_equal(actual_pairs, expected_pairs,
+                          'DB text refs incorrect.')
 
-    with open('review_%s.txt' % pmc.my_source, 'r') as f:
+    with open(pmc.review_fname, 'r') as f:
         last_line = f.read().splitlines()[-1]
         assert all([word in last_line for word in
-                    ['PMC4771487', 'PMC5142709', 'conflicting id data']])
+                    ['PMC4771487', 'PMC5142709', 'conflicting pmcid']])
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
+    remove(pmc.review_fname)
     return
 
 
@@ -430,26 +436,26 @@ def test_medline_ref_checks():
                         for tr in db.select_all(db.TextRef)]
         desc = 'careful' if carefully else 'careless'
         msg = 'DB text refs mismatch after upload %d (%s)' % (num, desc)
-        actual_pairs.sort()
-        expected_pairs.sort()
+        actual_pairs.sort(key=str)
+        expected_pairs.sort(key=str)
         assert_contents_equal(actual_pairs, expected_pairs, msg)
 
     expected_pairs = [
-        ('caseA', None),
-        ('caseB', 'PMCIDcaseB'),
-        ('caseC', None),
-        ('caseD', 'PMCIDcaseD')
+        ('CASEA', None),
+        ('CASEB', 'PMCIDCASEB'),
+        ('CASEC', None),
+        ('CASED', 'PMCIDCASED')
         ]
 
     # Upload round 1
     check_input(
         [
-            ('caseA', None),
-            ('caseB', 'PMCIDcaseB'),
-            ('caseC', None),
-            ('caseC', None),
-            ('caseD', None),
-            ('caseD', 'PMCIDcaseD')
+            ('CASEA', None),
+            ('CASEB', 'PMCIDCASEB'),
+            ('CASEC', None),
+            ('CASEC', None),
+            ('CASED', None),
+            ('CASED', 'PMCIDCASED')
             ],
         expected_pairs,
         False,
@@ -458,18 +464,18 @@ def test_medline_ref_checks():
 
     # Upload round 2
     expected_pairs += [
-        ('caseE', None)
+        ('CASEE', None)
         ]
     check_input(
         [
-            ('caseE', None),
-            ('caseC', 'PMCIDcaseC'),
-            ('caseH1', 'PMCIDcaseH'),
-            ('caseK', 'PMCIDcaseK1')
+            ('CASEE', None),
+            ('CASEC', 'PMCIDCASEC'),
+            ('CASEH1', 'PMCIDCASEH'),
+            ('CASEK', 'PMCIDCASEK1')
             ],
         expected_pairs + [
-            ('caseH1', 'PMCIDcaseH'),
-            ('caseK', 'PMCIDcaseK1')
+            ('CASEH1', 'PMCIDCASEH'),
+            ('CASEK', 'PMCIDCASEK1')
             ],
         False,
         2
@@ -477,41 +483,41 @@ def test_medline_ref_checks():
 
     # Interlude
     db.insert_many('text_ref', [
-        {'pmcid': 'PMCIDcaseG'},
+        {'pmcid': 'PMCIDCASEG'},
         ])
 
     # Upload round 3
     input_pairs = expected_pairs + [
-        ('caseF', None),
-        ('caseC', 'PMCIDcaseC'),
-        ('caseG', 'PMCIDcaseG'),
-        ('caseH2', 'PMCIDcaseH'),  # this should trigger a review.
-        ('caseK', 'PMCIDcaseK2')  # and so should this
+        ('CASEF', None),
+        ('CASEC', 'PMCIDCASEC'),
+        ('CASEG', 'PMCIDCASEG'),
+        ('CASEH2', 'PMCIDCASEH'),  # this should trigger a review.
+        ('CASEK', 'PMCIDCASEK2')  # and so should this
         ]
-    expected_pairs.remove(('caseC', None))
+    expected_pairs.remove(('CASEC', None))
     expected_pairs += [
-        ('caseF', None),
-        ('caseC', 'PMCIDcaseC'),
-        ('caseG', 'PMCIDcaseG'),
-        ('caseH1', 'PMCIDcaseH'),
-        ('caseK', 'PMCIDcaseK1')
+        ('CASEF', None),
+        ('CASEC', 'PMCIDCASEC'),
+        ('CASEG', 'PMCIDCASEG'),
+        ('CASEH1', 'PMCIDCASEH'),
+        ('CASEK', 'PMCIDCASEK1')
         ]
-    review_fname = 'review_%s.txt' % med.my_source
-    if path.exists(review_fname):
-        with open(review_fname, 'r') as f:
-            num_lines = len(f.readlines())
-    else:
-        num_lines = 0
+    med.review_fname = 'test_review_%s.txt' % med.my_source
+    open(med.review_fname, 'a+').close()
+    with open(med.review_fname, 'r') as f:
+        num_orig_lines = len(f.readlines())
     check_input(
         input_pairs,
         expected_pairs,
         True,
         3
         )
-    with open(review_fname, 'r') as f:
+    with open(med.review_fname, 'r') as f:
         lines = f.readlines()
-        assert len(lines) == num_lines + 2, \
-            "Not all new reviews added: %d / %d" % (len(lines), num_lines+2)
+        assert len(lines) == num_orig_lines + 2, \
+            "Not all new reviews added: %d / %d" % (len(lines),
+                                                    num_orig_lines + 2)
+    remove(med.review_fname)
     return
 
 
