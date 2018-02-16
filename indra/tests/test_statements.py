@@ -1479,9 +1479,9 @@ def test_bound_condition_matches():
 def test_influence_polarity():
     st = Influence(Agent('a'), Agent('b'))
     assert st.overall_polarity() is None
-    st.subj_delta = {'polarity': None, 'magnitude': None}
+    st.subj_delta = {'polarity': None, 'adjectives': []}
     assert st.overall_polarity() is None
-    st.obj_delta = {'polarity': None, 'magnitude': None}
+    st.obj_delta = {'polarity': None, 'adjectives': []}
     assert st.overall_polarity() is None
     st.subj_delta['polarity'] = 1
     assert st.overall_polarity() == 1
