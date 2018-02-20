@@ -10,7 +10,7 @@ class EidosReader(object):
 
     Attributes
     ----------
-    eidos_reader : org.clulab.wm.AgroSystem
+    eidos_reader : org.clulab.wm.EidosSystem
         A Scala object, an instance of the Eidos reading system. It is
         instantiated only when first processing text.
     """
@@ -34,7 +34,7 @@ class EidosReader(object):
             eidos = autoclass('org.clulab.wm.EidosSystem')
             self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
-        mentions = self.eidos_reader.extractFrom(text)
+        mentions = self.eidos_reader.extractFrom(text, False).mentions()
         ser = autoclass('org.clulab.wm.serialization.json.WMJSONSerializer')
         mentions_json = ser.toJsonStr(mentions)
         json_dict = json.loads(mentions_json)
