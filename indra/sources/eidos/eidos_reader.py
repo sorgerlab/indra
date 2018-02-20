@@ -10,7 +10,7 @@ class EidosReader(object):
 
     Attributes
     ----------
-    eidos_reader : org.clulab.wm.AgroSystem
+    eidos_reader : org.clulab.wm.EidosSystem
         A Scala object, an instance of the Eidos reading system. It is
         instantiated only when first processing text.
     """
