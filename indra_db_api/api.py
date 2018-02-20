@@ -3,7 +3,16 @@ from indra.db.util import get_statements_by_gene_role_type
 
 app = Flask(__name__)
 
-@app.route('/statements', methods=['GET'])
+@app.route('/')
+def welcome():
+    return ("Welcome the the INDRA database webservice!\n"
+            "\n"
+            "Use modes:\n"
+            "----------\n"
+            "/ - (you are here) Welcome page.\n"
+            "/statements - Get statement content from INDRA's database.\n")
+
+@app.route('/statements')
 def get_statments():
     """Get some statements constrained by query."""
     json_req = request.get_json()
