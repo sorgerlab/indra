@@ -98,7 +98,8 @@ def test_reach_two_core():
     _check_result(stmts)
     assert len(pmids_unread), "Didn't read anything new."
     stmts2, pmids_unread2 = _call_reader('reach', 2, False)
-    assert len(stmts) == len(stmts2)
+    assert len(stmts) == len(stmts2), \
+        'Expected %d statements, but got %d.' % (len(stmts), len(stmts2))
     assert not len(pmids_unread2), "Didn't use cache."
 
 
@@ -120,5 +121,6 @@ def test_sparser_two_core():
     _check_result(stmts)
     assert len(pmids_unread), "Didn't read anything new."
     stmts2, pmids_unread2 = _call_reader('sparser', 2, False)
-    assert len(stmts) == len(stmts2)
+    assert len(stmts) == len(stmts2), \
+        'Expected %d statements, but got %d.' % (len(stmts), len(stmts2))
     assert not len(pmids_unread2), "Didn't use cache."
