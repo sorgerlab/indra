@@ -1,10 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import csv
-import rdflib
 import logging
-import requests
 try:
     # Python 3
     from functools import lru_cache
@@ -41,6 +38,7 @@ def query_protein(protein_id):
     g : rdflib.Graph
         The RDF graph corresponding to the UniProt entry.
     """
+    import rdflib
     # Try looking up a primary ID if the given one
     # is a secondary ID
     try:
@@ -139,11 +137,12 @@ def get_family_members(family_name, human_only=True):
     gene_names : list
         The HGNC gene symbols corresponding to the given family.
     """
+    from requests import get
     data = {'query': 'family:%s' % family_name, 
             'format': 'list'}
     if human_only:
         data['fil'] = 'organism:human'
-    res = requests.get(uniprot_url, params=data)
+    res = get(uniprot_url, params=data)
     if not res.status_code == 200 or not res.text:
         return None
     # res.text gets us the Unicode
@@ -268,13 +267,14 @@ def get_gene_name(protein_id, web_fallback=True):
 
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
+    from requests import get
     try:
         prim_ids = uniprot_sec[protein_id]
         protein_id = prim_ids[0]
     except KeyError:
         pass
     url = uniprot_url + '%s.fasta' % protein_id
-    res = requests.get(url)
+    res = get(url)
     if not res.status_code == 200:
         logger.warning('Could not find sequence for protein %s' % protein_id)
         return None

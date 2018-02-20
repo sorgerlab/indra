@@ -131,9 +131,7 @@ import os
 import abc
 import sys
 import uuid
-import rdflib
 import logging
-import networkx
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
@@ -802,9 +800,9 @@ class Agent(object):
             attr_strs.append(mod_str)
         if self.activity:
             if self.activity.is_active:
-                 attr_strs.append('%s' % self.activity.activity_type)
+                attr_strs.append('%s' % self.activity.activity_type)
             else:
-                 attr_strs.append('%s: %s' % (self.activity.activity_type,
+                attr_strs.append('%s: %s' % (self.activity.activity_type,
                                               self.activity.is_active))
         if self.mutations:
             mut_str = 'muts: '
@@ -1007,14 +1005,10 @@ class Statement(object):
     def to_json(self):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
-        # TODO: `uid` is not used. Is this still needed for backwards
-        # compatibility?
         # Oringal comment: For backwards compatibility, could be removed later
         all_stmts = [self] + self.supports + self.supported_by
         for st in all_stmts:
-            try:
-                uid = st.uuid
-            except AttributeError:
+            if not hasattr(st, 'uuid'):
                 st.uuid = '%s' % uuid.uuid4()
         ##################
         json_dict = _o({'type': stmt_type})
@@ -1059,6 +1053,7 @@ class Statement(object):
 
     def to_graph(self):
         """Return Statement as a networkx graph."""
+        import networkx
         def json_node(graph, element, prefix):
             if not element:
                 return None
@@ -2588,6 +2583,7 @@ def get_valid_location(location):
 
 def _read_activity_types():
     """Read types of valid activities from a resource file."""
+    import rdflib
     this_dir = os.path.dirname(os.path.abspath(__file__))
     ac_file = this_dir + '/resources/activity_hierarchy.rdf'
     g = rdflib.Graph()
@@ -2736,6 +2732,7 @@ class InvalidLocationError(ValueError):
 
 
 def draw_stmt_graph(stmts):
+    import networkx
     try:
         import matplotlib.pyplot as plt
     except Exception:
