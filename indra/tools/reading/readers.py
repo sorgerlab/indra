@@ -570,6 +570,8 @@ class ReadingData(object):
             if self.format == formats.JSON:
                 # Process the sparser content into statements
                 processor = sparser.process_json_dict(self.content)
+                if processor is not None:
+                    processor.set_statements_pmid(None)
             else:
                 raise ReadingError("Sparser should only ever be JSON, not %s."
                                    % self.format)
@@ -578,7 +580,6 @@ class ReadingData(object):
                          % (self.reader, self.tcid))
             stmts = []
         else:
-            processor.set_statements_pmid(None)
             stmts = processor.statements
         return stmts
 

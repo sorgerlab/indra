@@ -7,7 +7,7 @@ from builtins import dict, str
 
 __all__ = ['process_text', 'process_nxml_str', 'process_nxml_file',
            'process_sparser_output', 'process_json_dict', 'process_xml',
-           'run_sparser', 'get_version']
+           'run_sparser', 'get_version', 'make_nxml_from_text']
 
 import os
 import json
