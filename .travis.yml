@@ -54,7 +54,6 @@ install:
   # Install NDEx package
   - pip install ndex
   # Download a number of useful resource files for testing purposes
-  #- wget http://geneontology.org/ontology/go.owl -P data/
   - git submodule update --remote
   - pip install .[machine]
   - cd indra/benchmarks/assembly_eval/batch4
@@ -66,7 +65,6 @@ install:
   - pip install pycodestyle
   # TEES
   - sudo apt-get --yes install ruby # Dependency
-  #- wget https://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2
   - wget https://s3.amazonaws.com/bigmech/TEES/TEES.tar.bz2
   - tar xjf TEES.tar.bz2
   - mv TEES ~/TEES
@@ -93,12 +91,8 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
-  #- nosetests indra -v --process-restartworker --with-doctest --with-doctest-ignore-unicode
-  #    --with-coverage --cover-inclusive --cover-package=indra -a $NOSEATTR
-  #- nosetests -v -s --process-restartworker --processes=1 indra/tests/test_tees.py -a $NOSEATTR
   - nosetests -v -s --process-restartworker indra/tests/test_tees.py -a $NOSEATTR
   - python travis_continual_output.py nosetests indra -v  -s -a $NOSEATTR -e '.*tees.*'
-  # - nosetests -s --with-isolation --process-restartworker --processes=0 -a $NOSEATTR
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
