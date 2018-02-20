@@ -1,6 +1,10 @@
 import json
 from indra.java_vm import autoclass, JavaException
 
+
+eidos_package = 'org.clulab.wm.eidos'
+
+
 class EidosReader(object):
     """Reader object keeping an instance of the Eidos reader as a singleton.
 
@@ -10,10 +14,11 @@ class EidosReader(object):
 
     Attributes
     ----------
-    eidos_reader : org.clulab.wm.AgroSystem
+    eidos_reader : org.clulab.wm.eidos.EidosSystem
         A Scala object, an instance of the Eidos reading system. It is
         instantiated only when first processing text.
     """
+
     def __init__(self):
         self.eidos_reader = None
 
@@ -31,11 +36,11 @@ class EidosReader(object):
             A JSON object of mentions extracted from text.
         """
         if self.eidos_reader is None:
-            eidos = autoclass('org.clulab.wm.EidosSystem')
+            eidos = autoclass(eidos_package + '.EidosSystem')
             self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
-        mentions = self.eidos_reader.extractFrom(text)
-        ser = autoclass('org.clulab.wm.serialization.json.WMJSONSerializer')
+        mentions = self.eidos_reader.extractFrom(text, False).mentions()
+        ser = autoclass(eidos_package + '.serialization.json.WMJSONSerializer')
         mentions_json = ser.toJsonStr(mentions)
         json_dict = json.loads(mentions_json)
         return json_dict
