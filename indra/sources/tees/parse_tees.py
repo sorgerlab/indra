@@ -34,6 +34,7 @@ except NameError:  # Python 3
 
 logger = logging.getLogger('tees_parser')
 
+
 class TEESEntity:
     """Temporary structure for holding information about a TEES entity before
     moving this information into a networkx graph.
@@ -61,10 +62,11 @@ class TEESEntity:
     def __repr__(self):
         return '%s=%s (%s, %d-%d)' % \
                 (self.identifier,
-                self.entity_name,
-                self.entity_type,
-                self.offsets[0],
-                self.offsets[1])
+                 self.entity_name,
+                 self.entity_type,
+                 self.offsets[0],
+                 self.offsets[1])
+
 
 def parse_a1(a1_filename):
     """Parses an a1 file, the file TEES outputs that lists the entities in
@@ -85,7 +87,6 @@ def parse_a1(a1_filename):
 
     with open(a1_filename, 'r') as a1_file:
         for line in a1_file:
-            #print(line.rstrip())
             tokens = line.rstrip().split('\t')
             assert(len(tokens) == 3)
 
@@ -107,6 +108,7 @@ def parse_a1(a1_filename):
                     offsets)
 
     return entities
+
 
 def parse_a2(a2_filename, entities, tees_sentences):
     """Extracts events from a TEES a2 files into a networkx directed graph.
@@ -133,28 +135,23 @@ def parse_a2(a2_filename, entities, tees_sentences):
     for entity_name in entities.keys():
         offset0 = entities[entity_name].offsets[0]
         G.add_node(entity_name, text=entities[entity_name].entity_name,
-                type=entities[entity_name].entity_type, is_event=False,
-                sentence_text=tees_sentences.index_to_sentence(offset0))
+                   type=entities[entity_name].entity_type, is_event=False,
+                   sentence_text=tees_sentences.index_to_sentence(offset0))
 
     with open(a2_filename, 'r') as a2_file:
 
         for line in a2_file:
-            #print(line.rstrip())
-            if line[0] == 'T': #New text
+            if line[0] == 'T':  # New text
                 tokens = line.rstrip().split('\t')
-                
                 identifier = tokens[0]
                 text = tokens[2]
-
-                #print('\tParsing text for node %s: %s' % (identifier, text))
 
                 if identifier not in G.node:
                     G.add_node(identifier)
                 G.node[identifier]['text'] = text
                 G.node[identifier]['is_event'] = False
 
-
-            elif line[0] == 'E': #New event
+            elif line[0] == 'E':  # New event
                 tokens = line.rstrip().split('\t')
                 assert(len(tokens) == 2)
 
@@ -164,25 +161,20 @@ def parse_a2(a2_filename, entities, tees_sentences):
                 # and values separated by the colon
                 key_value_pairs = tokens[1].split()
                 event_name = key_value_pairs[0].split(':')[0]
-                #print('Event name: ', event_name)
                 properties = dict()
                 for pair in key_value_pairs:
                     key_and_value = pair.split(':')
                     assert(len(key_and_value) == 2)
                     properties[key_and_value[0]] = key_and_value[1]
-                #print('Properties: ', properties)
-               
+
                 # Add event to the graph if we haven't added it yet
                 if event_identifier not in G.node:
                     G.add_node(event_identifier)
 
                 # Add edges
-                #print('Adding these edges:')
                 for key in properties.keys():
-                    #print('\tAdding edge %s -> %s' % (event_identifier,
-                    #    properties[key]))
                     G.add_edge(event_identifier, properties[key],
-                            relation=key)
+                               relation=key)
 
                 # We assume that node is not negated unless a event modifier
                 # later says otherwise
@@ -193,8 +185,7 @@ def parse_a2(a2_filename, entities, tees_sentences):
 
                 event_names.add(event_name)
 
-
-            elif line[0] == 'M': #Event modification
+            elif line[0] == 'M':  # Event modification
                 tokens = line.split('\t')
                 assert(len(tokens) == 2)
 
@@ -203,8 +194,8 @@ def parse_a2(a2_filename, entities, tees_sentences):
                 modification_type = tokens2[0]
                 modified = tokens2[1]
 
-                # But assuming this is a negation modifier, we'll need to 
-                #  handle it
+                # But assuming this is a negation modifier, we'll need to
+                # handle it
                 if modification_type == 'Negation':
                     G.node[modified]['negated'] = True
                 elif modification_type == 'Speculation':
@@ -216,14 +207,13 @@ def parse_a2(a2_filename, entities, tees_sentences):
                     # affect whether we want to process them into statements
                     print('Unknown negation event: %s' % line)
                     assert(False)
-    #for e in event_names:
-    #    print(e)
     return G
+
 
 class TEESSentences:
     """Parses a TEES sentences.xml.gz and creates a list of sentences and
     their corresponding indicies.
-    
+
     Allows querying of a sentence corresponding to a given index.
     """
 
@@ -249,7 +239,7 @@ class TEESSentences:
     def index_to_sentence(self, index):
         """Locates a sentences in the corpus corresponding to the given index.
         If none can be found, returns None.
-        
+
         Parameters
         ----------
         index: int
@@ -265,6 +255,7 @@ class TEESSentences:
             return self.index_to_text[index]
         else:
             return None
+
 
 def parse_tees_output_directory(output_dir):
     """Parses the files in the TEES output directory. And returns a networkx
@@ -290,7 +281,8 @@ def parse_tees_output_directory(output_dir):
     # Make sure there is exactly one such file
     if len(sentences_filename_candidates) != 1:
         m = 'Looking for exactly one file matching %s but found %d matches'
-        raise Exception(m%(sentences_glob, len(sentences_filename_candidates)))
+        raise Exception(m % (
+            sentences_glob, len(sentences_filename_candidates)))
 
     # Parse the sentence segmentation document
     tees_sentences = TEESSentences(sentences_filename_candidates[0])
@@ -304,8 +296,8 @@ def parse_tees_output_directory(output_dir):
         tarfile_glob = os.path.join(output_dir, '*-events.tar.gz')
         candidate_tarfiles = glob.glob(tarfile_glob)
         if len(candidate_tarfiles) != 1:
-            raise Exception('Expected exactly one match for glob %s' % \
-                    tarfile_glob)
+            raise Exception('Expected exactly one match for glob %s' %
+                            tarfile_glob)
 
         # Decide what tar files to extract
         # (We're not blindly extracting all files because of the security
@@ -332,20 +324,19 @@ def parse_tees_output_directory(output_dir):
 
         # There should be exactly two files that match these criteria
         if len(extract_these) != 2 or a1_file is None or a2_file is None:
-            raise Exception('We thought there would be one .a1 and one .a2' + 
-                    ' file in the tarball, but we got %d files total' % \
-                    len(extract_these))
+            raise Exception('We thought there would be one .a1 and one .a2' +
+                            ' file in the tarball, but we got %d files total' %
+                            len(extract_these))
 
         # Extract the files that we decided to extract
         tar_file.extractall(path=tmp_dir, members=extract_these)
 
-        #Parse the a1 (entities) file
+        # Parse the a1 (entities) file
         entities = parse_a1(os.path.join(tmp_dir, a1_file))
-
 
         # Parse the a2 (events) file
         events = parse_a2(os.path.join(tmp_dir, a2_file),
-                entities, tees_sentences)
+                          entities, tees_sentences)
 
         # Now that we're done, remove the temporary directory
         shutil.rmtree(tmp_dir)
@@ -357,10 +348,11 @@ def parse_tees_output_directory(output_dir):
         shutil.rmtree(tmp_dir)
         raise e
 
+
 def run_and_parse_tees(text, tees_path, python2_path):
     """Runs TEES on the given text in a temporary directory and returns a
     directed networkx graph containing TEES entity and event information.
-    
+
     Each node of the graph corresponds to either an entity or an event.
     Nodes have these properties:
     * is_event: True if an event, False if an entity
@@ -397,50 +389,50 @@ def run_and_parse_tees(text, tees_path, python2_path):
         raise Exception('Provided TEES directory does not exist.')
 
     # Make sure the classify.py script exists within this directory
-    #classify_path = os.path.join(tees_path, 'classify.py')
     classify_path = 'classify.py'
-    #if not os.path.isfile(classify_path):
+    # if not os.path.isfile(classify_path):
     #    raise Exception('classify.py does not exist in provided TEES path.')
 
     # Create a temporary directory to tag the shared-task files
     tmp_dir = tempfile.mkdtemp(suffix='indra_tees_processor')
 
-    pwd = os.path.abspath(     os.getcwd()     )
+    pwd = os.path.abspath(os.getcwd())
 
     try:
         # Write text to a file in the temporary directory
         text_path = os.path.join(tmp_dir, 'text.txt')
-        # Had some trouble with non-ascii characters. A possible TODO item in the
-        # future is to look into resolving this, for now just ignoring non-ascii
-        # characters
-        with codecs.open(text_path, 'w', encoding='ascii', errors='ignore') as f:
+        # Had some trouble with non-ascii characters. A possible TODO item in
+        # the future is to look into resolving this, for now just ignoring
+        # non-ascii characters
+        with codecs.open(text_path, 'w', encoding='ascii', errors='ignore') \
+                as f:
             f.write(text)
 
         # Run TEES
         output_path = os.path.join(tmp_dir, 'output')
         model_path = os.path.join(tees_path, 'tees_data/models/GE11-test/')
         command = [python2_path, classify_path, '-m', model_path,
-                '-i', text_path,
-                '-o', output_path]
+                   '-i', text_path,
+                   '-o', output_path]
         try:
-            pwd = os.path.abspath(     os.getcwd()     )
-            os.chdir(tees_path) # Change to TEES directory
-            #print('cwd is:', os.getcwd())
-            #out = subprocess.check_output(command, stderr=subprocess.STDOUT)
+            pwd = os.path.abspath(os.getcwd())
+            os.chdir(tees_path)  # Change to TEES directory
+            # print('cwd is:', os.getcwd())
+            # out = subprocess.check_output(command, stderr=subprocess.STDOUT)
             p = subprocess.Popen(command, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE, cwd=tees_path)
+                                 stderr=subprocess.PIPE, cwd=tees_path)
             p.wait()
             (so, se) = p.communicate()
             print(so)
             print(se)
-            os.chdir(pwd) # Change back to previous directory
-            #print('cwd is:', os.getcwd())
-            #print(out.decode('utf-8'))
+            os.chdir(pwd)  # Change back to previous directory
+            # print('cwd is:', os.getcwd())
+            # print(out.decode('utf-8'))
         except BaseException as e:
             # If there's an error, print it out and then propagate the
             # exception
-            os.chdir(pwd) # Change back to previous directory
-            #print (e.output.decode('utf-8'))
+            os.chdir(pwd)  # Change back to previous directory
+            # print (e.output.decode('utf-8'))
             raise e
 
         # Parse TEES output
@@ -455,8 +447,9 @@ def run_and_parse_tees(text, tees_path, python2_path):
         shutil.rmtree(tmp_dir)
         raise e
     # Return parsed TEES output
-    #print('Events: ' , events)
+    # print('Events: ' , events)
     return events
+
 
 def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
     """Converts TEES extractions stored in a networkx graph into a graphviz
@@ -483,10 +476,9 @@ def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
                 mentioned_nodes.add(to_node)
                 relation = G.edge[from_node][to_node]['relation']
                 f.write('%s -> %s [ label = "%s" ];\n' % (from_node, to_node,
-                    relation))
+                        relation))
 
         for node in mentioned_nodes:
-            #print(G.node[node])
             is_event = G.node[node]['is_event']
             if is_event:
                 node_type = G.node[node]['type']
@@ -509,4 +501,3 @@ def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
             f.write('%s [label="%s"];\n' % (node, node_label))
 
         f.write('}\n')
-
