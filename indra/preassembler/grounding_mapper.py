@@ -118,6 +118,7 @@ class GroundingMapper(object):
                                                      'corresponding to gene '
                                                      'symbol %s in grounding '
                                                      'map.' % hgnc_sym)
+                                map_db_refs['HGNC'] = hgnc_id
                     # Assign the DB refs from the grounding map to the agent
                     agent.db_refs = map_db_refs
                     # Are we renaming right now?

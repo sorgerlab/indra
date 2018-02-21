@@ -193,8 +193,8 @@ def test_map_entry_hgnc_and_up():
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
-    ms = mapped_stmst[0]
-    assert ms.sub.db_refs = {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
+    ms = mapped_stmts[0]
+    assert ms.sub.db_refs == {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
                              'HGNC': '9955'}
 
 def test_map_agent():
