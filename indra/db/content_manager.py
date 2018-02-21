@@ -1,31 +1,28 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str, int
 
-from sys import version_info, exit
-if version_info.major is not 3:
-    msg = "Python 3.x is required to use this module."
-    if __name__ == '__main__':
-        print(msg)
-        exit()
-    else:
-        raise ImportError(msg)
 
+import sys
+import re
 import csv
 import time
 import tarfile
 import zlib
 import logging
-import xml.etree.ElementTree as ET
-import re
-import os
-import multiprocessing as mp
 import pickle
-import sys
-from os import path
+import xml.etree.ElementTree as ET
+import multiprocessing as mp
+from os import path, remove, rename, listdir
+from datetime import datetime
+from functools import wraps
 from ftplib import FTP
 from io import BytesIO
+from indra.util import _require_python3
+
 
 logger = logging.getLogger('content_manager')
+
+
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
     # here prevents a long wait just to fined out you entered a command wrong.
@@ -59,10 +56,15 @@ if __name__ == '__main__':
         action='store_true',
         help='Run with debugging level output.'
         )
+    parser.add_argument(
+        '-t', '--test',
+        action='store_true',
+        help='Run tests using one of the designated test databases.'
+        )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
-        from .database_manager import logger as db_logger
+        from indra.db.database_manager import logger as db_logger
         db_logger.setLevel(logging.DEBUG)
 
     if not args.continuing and args.task == 'upload':
@@ -77,30 +79,31 @@ if __name__ == '__main__':
             "# `update` in your command. For mor details, use --help.      #"
             )
         print("#"*63)
-        resp = input("Are you sure you want to continue? [yes/NO]: ")
-        if resp == 'no':
+        resp = input("Are you sure you want to continue? [yes/no]: ")
+        if resp not in ('yes', 'y'):
             print ("Aborting...")
-            exit()
-from indra.util import zip_string
+            sys.exit()
+
+from indra.util import zip_string, unzip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 
-from .util import get_primary_db
-from .database_manager import texttypes, formats
-from .database_manager import sql_expressions as sql_exp
+from indra.db.util import get_primary_db, get_defaults
+from indra.db.database_manager import texttypes, formats, DatabaseManager
+from indra.db.database_manager import sql_expressions as sql_exp
 
 
 try:
-    from psycopg2 import IntegrityError
+    from psycopg2 import DatabaseError
 except ImportError:
-    class IntegrityError(object):
+    class DatabaseError(object):
         "Using this in a try-except will catch nothing. (That's the point.)"
         pass
 
 
 ftp_blocksize = 33554432  # Chunk size recommended by NCBI
-BATCH_SIZE = 10000
+THIS_DIR = path.dirname(path.abspath(__file__))
 
 
 class UploadError(Exception):
@@ -183,31 +186,48 @@ class NihFtpClient(object):
                 buf.flush()
         return
 
-    def download_file(self, f_path):
+    def download_file(self, f_path, dest=None):
         "Download a file into a file given by f_path."
         name = path.basename(f_path)
+        if dest is not None:
+            name = path.join(dest, name)
         with open(name, 'wb') as gzf:
             self.ret_file(f_path, gzf)
         return name
 
-    def get_file(self, f_path, force_str=True):
+    def get_file(self, f_path, force_str=True, decompress=True):
         "Get the contents of a file as a string."
         gzf_bytes = BytesIO()
         self.ret_file(f_path, gzf_bytes)
         ret = gzf_bytes.getvalue()
+        if f_path.endswith('.gz') and decompress:
+            ret = zlib.decompress(ret, 16+zlib.MAX_WBITS)
         if force_str and isinstance(ret, bytes):
             ret = ret.decode('utf8')
         return ret
 
     def get_uncompressed_bytes(self, f_path, force_str=True):
         "Get a file that is gzipped, and return the unzipped string."
-        zipped_str = self.get_file(f_path, force_str=False)
-        str_bytes = zlib.decompress(zipped_str, 16+zlib.MAX_WBITS)
-        if force_str:
-            ret = str_bytes.decode('utf8')
+        return self.get_file(f_path, force_str=force_str, decompress=True)
+
+    def ftp_ls_timestamped(self, ftp_path=None):
+        "Get all contents and metadata in mlsd format from the ftp directory."
+        if ftp_path is None:
+            ftp_path = self.my_path
         else:
-            ret = str_bytes
-        return ret
+            ftp_path = self._path_join(self.my_path, ftp_path)
+
+        if not self.is_local:
+            with self.get_ftp_connection(ftp_path) as ftp:
+                raw_contents = ftp.mlsd()
+                contents = [(k, meta['modify']) for k, meta in raw_contents
+                            if not k.startswith('.')]
+        else:
+            dir_path = self._path_join(self.fpt_url, ftp_path)
+            raw_contents = listdir(dir_path)
+            contents = [(fname, path.getmtime(path.join(dir_path, fname)))
+                        for fname in raw_contents]
+        return contents
 
     def ftp_ls(self, ftp_path=None):
         "Get a list of the contents in the ftp directory."
@@ -216,10 +236,10 @@ class NihFtpClient(object):
         else:
             ftp_path = self._path_join(self.my_path, ftp_path)
         if not self.is_local:
-            with self.get_ftp_connection() as ftp:
+            with self.get_ftp_connection(ftp_path) as ftp:
                 contents = ftp.nlst()
         else:
-            contents = os.listdir(self._path_join(self.ftp_url, ftp_path))
+            contents = listdir(self._path_join(self.ftp_url, ftp_path))
         return contents
 
 
@@ -230,21 +250,290 @@ class ContentManager(object):
     used to manage content between the database and the content.
     """
     my_source = NotImplemented
+    tr_cols = NotImplemented
+    err_patt = re.compile('.*?constraint "(.*?)".*?Key \((.*?)\)=\((.*?)\).*?',
+                          re.DOTALL)
 
-    def copy_into_db(self, db, *args, **kwargs):
+    def __init__(self):
+        self.review_fname = None
+        return
+
+    def copy_into_db(self, db, tbl_name, data, cols=None, retry=True):
         "Wrapper around the db.copy feature, pickels args upon exception."
+        vile_data = None
         try:
-            db.copy(*args, **kwargs)
-        except IntegrityError as e:
-            pkl_file_fmt = "copy_failure_%d.pkl"
-            i = 0
-            while os.path.exists(pkl_file_fmt % i):
-                i += 1
-            with open(pkl_file_fmt % i, 'wb') as f:
-                pickle.dump((e, args, kwargs), f, protocol=3)
-            logger.error('Failed in a copy. Pickling args and kwargs.')
-            logger.exception(e)
-            logger.info('Continuing...')
+            db.copy(tbl_name, data, cols=cols)
+        except DatabaseError as e:
+            db.grab_session()
+            db.session.rollback()
+            logger.warning('Failed in a copy.')
+
+            # Try to extract the failed record and try again.
+            m = self.err_patt.match(e.args[0])
+            if m is not None and retry:
+                constraint, id_types, ids = m.groups()
+                logger.info('Constraint %s was violated by (%s)=(%s).'
+                            % (constraint, id_types, ids))
+                id_dict = dict(zip(id_types.split(', '), ids.split(', ')))
+
+                # Primary keys are returned from the database as integers.
+                for id_type, id_val in id_dict.copy().items():
+                    if id_type in ['text_ref_id', 'text_content_id']:
+                        id_dict[id_type] = int(id_val)
+
+                # Now look for matches and remove offending entries.
+                new_data = set()
+                vile_data = set()
+                for datum in data:
+                    # Determine if this record is a match using best available
+                    # means.
+                    if cols is not None:
+                        is_match = all([
+                            datum[cols.index(id_type)] == id_val
+                            for id_type, id_val in id_dict.items()
+                            ])
+                    else:
+                        is_match = all([
+                            id_val in datum for id_val in id_dict.values()
+                            ])
+
+                    # Now decide to ad to the new data or log the error.
+                    if is_match:
+                        logger.debug("Found offending data: %s." % str(datum))
+                        self.add_to_review('conflict in copy',
+                                           'Entry violated \"%s\": %s'
+                                           % (constraint, str(datum)))
+                        vile_data.add(datum)
+                    else:
+                        new_data.add(datum)
+
+                if not len(vile_data):
+                    logger.error("Failed to find erroneous data.")
+                    raise e
+
+                logger.info('Resubmitting copy without the offending ids.')
+                more_vile_data = self.copy_into_db(db, tbl_name, new_data,
+                                                   cols=cols, retry=True)
+
+                if more_vile_data is not None:
+                    vile_data = vile_data.union(more_vile_data)
+            else:
+                pkl_file_fmt = "copy_failure_%d.pkl"
+                i = 0
+                while path.exists(pkl_file_fmt % i):
+                    i += 1
+                with open(pkl_file_fmt % i, 'wb') as f:
+                    pickle.dump((e, tbl_name, data, cols), f, protocol=3)
+                logger.error('Could not resubmit, not a handled error. '
+                             'Pickling the data in %s.' % (pkl_file_fmt % i))
+                logger.exception(e)
+                raise e
+        logger.debug('Finished copying.')
+        return vile_data
+
+    def make_text_ref_str(self, tr):
+        """Make a string from a text ref using tr_cols."""
+        return str([getattr(tr, id_type) for id_type in self.tr_cols])
+
+    def add_to_review(self, desc, msg):
+        """Add an entry to the review document."""
+        # NOTE: If this is ever done on AWS or through a
+        # container, the review file MUST be loaded somewhere
+        # it won't disappear. (such as s3). Perhaps these could
+        # be logged on the database?
+        logger.warning("Found \"%s\"! Check %s."
+                       % (desc, self.review_fname))
+        with open(self.review_fname, 'a+') as f:
+            f.write(msg + '\n')
+        return
+
+    def filter_text_refs(self, db, tr_data_set, primary_id_types=None):
+        """Try to reconcile the data we have with what's already on the db.
+
+        Note that this method is VERY slow in general, and therefore should
+        be avoided whenever possible.
+
+        The process can be sped up considerably by multiple orders of
+        magnitude if you specify a limited set of id types to query to get
+        text refs. This does leave some possibility of missing relevant refs.
+        """
+        logger.info("Beginning to filter %d text refs..." % len(tr_data_set))
+
+        # This is a helper for accessing the data tuples we create
+        def id_idx(id_type):
+            return self.tr_cols.index(id_type)
+
+        # If there are not actual refs to work with, don't waste time.
+        N = len(tr_data_set)
+        if not N:
+            return set(), []
+
+        # Get all text refs that match any of the id data we have.
+        logger.debug("Getting list of existing text refs...")
+        or_list = []
+        if primary_id_types is not None:
+            match_id_types = primary_id_types
+        else:
+            match_id_types = self.tr_cols
+        # Get IDs from the tr_data_set that have one or more of the listed
+        # id types.
+        for id_type in match_id_types:
+            id_list = [entry[id_idx(id_type)] for entry in tr_data_set
+                       if entry[id_idx(id_type)] is not None]
+            # Add SqlAlchemy filter clause based on the ID list for this ID type
+            if id_list:
+                or_list.append(getattr(db.TextRef, id_type).in_(id_list))
+        if len(or_list) == 1:
+            tr_list = db.select_all(db.TextRef, or_list[0])
+        else:
+            tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
+        logger.debug("Found %d potentially relevant text refs." % len(tr_list))
+
+        # Create an index of tupled data entries for quick lookups by any id
+        # type, for example tr_data_idx_dict['pmid'][<a pmid>] will get the
+        # tuple with all the id data.
+        logger.debug("Building index of new data...")
+        tr_data_idx_dict = {id_type: {e[id_idx(id_type)]: e
+                                      for e in tr_data_set
+                                      if e[id_idx(id_type)] is not None}
+                            for id_type in self.tr_cols}
+
+        # Look for updates to the existing text refs
+        logger.debug("Beginning to iterate over text refs...")
+        tr_data_match_list = []
+        flawed_tr_data = []
+        multi_match_records = set()
+        update_dict = {}
+
+        def add_to_found_record_list(record):
+            # Adds a record tuple from tr_data_list to tr_data_match_list and
+            # return True on success. If the record has multiple matches in
+            # the database then we wouldn't know which one to update--hence
+            # we record for review and return False for failure.
+            if record not in tr_data_match_list:
+                tr_data_match_list.append(record)
+                added = True
+            else:
+                self.add_to_review(
+                    "tr matching input record matched to another tr",
+                    "Input record %s already matched. Matched again to %s."
+                    % (record, self.make_text_ref_str(tr))
+                    )
+                flawed_tr_data.append(('over_match_db', record))
+                multi_match_records.add(record)
+                added = False
+            return added
+
+        for tr in tr_list:
+            match_set = set()
+
+            # Find the matches in the data. Multiple distinct matches indicate
+            # problems, and are flagged.
+            for id_type, tr_data_idx in tr_data_idx_dict.items():
+                candidate = tr_data_idx.get(getattr(tr, id_type))
+                if candidate is not None:
+                    match_set.add(candidate)
+
+            # Every tr MUST have a match, or else something is broken.
+            assert match_set, "No matches found, which is impossible."
+
+            # Given a unique match, update any missing ids from the input data.
+            if len(match_set) == 1:
+                tr_new = match_set.pop()
+
+                # Add this record to the match list, unless there are conflicts;
+                # If there are conflicts (multiple matches in the DB) then
+                # we skip any updates.
+                if not add_to_found_record_list(tr_new):
+                    continue
+
+                # Tabulate new/updated ID information.
+                # Go through all the id_types
+                all_good = True
+                id_updates = {}
+                for i, id_type in enumerate(self.tr_cols):
+                    # Check if the text ref is missing that id.
+                    if getattr(tr, id_type) is None:
+                        # If so, and if our new data does have that id, update
+                        # the text ref.
+                        if tr_new[i] is not None:
+                            logger.debug("Will update text ref for %s: %s."
+                                         % (id_type, tr_new[i]))
+                            id_updates[id_type] = tr_new[i]
+                    else:
+                        # Check to see that all the ids agree. If not, report
+                        # it in the review.txt file.
+                        if tr_new[i] is not None \
+                         and tr_new[i] != getattr(tr, id_type).strip().upper():
+                            self.add_to_review(
+                                'conflicting ids',
+                                'Got conflicting %s: in db %s vs %s.'
+                                % (id_type, self.make_text_ref_str(tr), tr_new)
+                                )
+                            flawed_tr_data.append((id_type, tr_new))
+                            all_good = False
+
+                if all_good and len(id_updates):
+                    update_dict[tr.id] = (tr, id_updates, tr_new)
+            else:
+                # These still matched something in the db, so they shouldn't be
+                # uploaded as new refs.
+                for tr_new in match_set:
+                    add_to_found_record_list(tr_new)
+                    flawed_tr_data.append(('over_match_input', tr_new))
+
+                # This condition only occurs if the records we got are
+                # internally inconsistent. This is rare, but it can happen.
+                self.add_to_review(
+                    "multiple matches in records for tex ref",
+                    'Multiple matches for %s from %s: %s.'
+                    % (self.make_text_ref_str(tr), self.my_source, match_set))
+
+        # Apply ID updates to TextRefs with unique matches in tr_data_set
+        logger.info("Applying %d updates." % len(update_dict))
+        for tr, id_updates, record in update_dict.values():
+            if record not in multi_match_records:
+                for id_type, id_val in id_updates.items():
+                    setattr(tr, id_type, id_val)
+            else:
+                logger.warning("Skipping update of text ref %d with %s due "
+                               "to multiple matches to record %s."
+                               % (tr.id, id_updates, record))
+
+        # This applies all the changes made to the text refs to the db.
+        logger.debug("Committing changes...")
+        db.commit("Failed to update with new ids.")
+
+        # Now update the text refs with any new refs that were found
+        filtered_tr_records = tr_data_set - set(tr_data_match_list) \
+            - multi_match_records
+
+        logger.debug("Filtering complete! %d records remaining."
+                     % len(filtered_tr_records))
+        return filtered_tr_records, flawed_tr_data
+
+    @classmethod
+    def _record_for_review(cls, func):
+        @wraps(func)
+        def take_action(self, db, *args, **kwargs):
+            review_fmt = "review_%s_%s_%%s.txt" % (func.__name__,
+                                                   self.my_source)
+            self.review_fname = path.join(THIS_DIR, review_fmt % 'in_progress')
+            logger.info("Creating review file %s." % self.review_fname)
+            open(self.review_fname, 'a+').close()
+            completed = func(self, db, *args, **kwargs)
+            if completed:
+                utcnow = datetime.utcnow()
+                is_init_upload = (func.__name__ == 'populate')
+                with open(self.review_fname, 'r') as f:
+                    conflicts_bytes = zip_string(f.read())
+                    db.insert('updates', init_upload=is_init_upload,
+                              source=self.my_source,
+                              unresolved_conflicts_file=conflicts_bytes)
+                rename(self.review_fname,
+                       review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
+            return completed
+        return take_action
 
     def populate(self, db):
         "A stub for the method used to initially populate the database."
@@ -268,25 +557,35 @@ class NihManager(ContentManager):
 
     def __init__(self, *args, **kwargs):
         self.ftp = NihFtpClient(self.my_path, *args, **kwargs)
+        super(NihManager, self).__init__()
+        return
 
 
-class Medline(NihManager):
-    "ContentManager for the medline content."
-    my_path = 'pubmed/baseline'
+class Pubmed(NihManager):
+    "Manager for the pubmed/medline content."
+    my_path = 'pubmed'
     my_source = 'pubmed'
+    tr_cols = ('pmid', 'pmcid', 'doi', 'pii',)
+
+    def __init__(self, *args, **kwargs):
+        super(Pubmed, self).__init__(*args, **kwargs)
+        self.deleted_pmids = None
+        return
 
     def get_deleted_pmids(self):
-        del_pmid_str = self.ftp.get_uncompressed_bytes(
-            '../deleted.pmids.gz'
-            )
-        pmid_list = [
-            line.strip() for line in del_pmid_str.split('\n')
-            ]
-        return pmid_list
+        if self.deleted_pmids is None:
+            del_pmid_str = self.ftp.get_uncompressed_bytes(
+                'deleted.pmids.gz'
+                )
+            pmid_list = [
+                line.strip() for line in del_pmid_str.split('\n')
+                ]
+            self.deleted_pmids = pmid_list
+        return self.deleted_pmids[:]
 
-    def get_file_list(self):
-        all_files = self.ftp.ftp_ls()
-        return [k for k in all_files if k.endswith('.xml.gz')]
+    def get_file_list(self, sub_dir):
+        all_files = self.ftp.ftp_ls(sub_dir)
+        return [sub_dir + '/' + k for k in all_files if k.endswith('.xml.gz')]
 
     def get_article_info(self, xml_file, q=None):
         tree = self.ftp.get_xml_file(xml_file)
@@ -304,106 +603,144 @@ class Medline(NihManager):
     def fix_doi(self, doi):
         "Sometimes the doi is doubled (no idea why). Fix it."
         if doi is None:
-            return doi
+            return
         L = len(doi)
         if L % 2 is not 0:
-            return
-        if doi[:L] != doi[L:]:
-            return
+            return doi
+        if doi[:L//2] != doi[L//2:]:
+            return doi
         logger.info("Fixing doubled doi: %s" % doi)
-        return doi[:L]
+        return doi[:L//2]
 
-    def upload_article(self, db, article_info):
+    def load_text_refs(self, db, article_info, carefully=False):
+        "Sanitize, update old, and upload new text refs."
+
+        # Remove PMID's listed as deleted.
         deleted_pmids = self.get_deleted_pmids()
+        valid_pmids = set(article_info.keys()) - set(deleted_pmids)
+        logger.info("%d valid PMIDs" % len(valid_pmids))
 
-        logger.info("%d PMIDs in XML dataset" % len(article_info))
+        # Remove existing pmids if we're not being careful (this suffices for
+        # filtering in the initial upload).
+        if not carefully:
+            existing_pmids = set(db.get_values(db.select_all(
+                db.TextRef,
+                db.TextRef.pmid.in_(valid_pmids)
+                ), 'pmid'))
+            logger.info(
+                "%d valid PMIDs already in text_refs." % len(existing_pmids)
+                )
+            valid_pmids -= existing_pmids
+            logger.info("%d PMIDs to add to text_refs" % len(valid_pmids))
+
         # Convert the article_info into a list of tuples for insertion into
         # the text_ref table
-        text_ref_records = []
-        text_content_info = {}
-        valid_pmids = set(article_info.keys()).difference(set(deleted_pmids))
-        logger.info("%d valid PMIDs" % len(valid_pmids))
-        existing_pmids = set(db.get_values(db.select_all(
-            db.TextRef,
-            db.TextRef.pmid.in_(valid_pmids)
-            ), 'pmid'))
-        logger.info(
-            "%d valid PMIDs already in text_refs." % len(existing_pmids)
-            )
-        pmids_to_add = valid_pmids.difference(existing_pmids)
-        logger.info("%d PMIDs to add to text_refs" % len(pmids_to_add))
-        for pmid in pmids_to_add:
-            pmid_data = article_info[pmid]
-            rec = (
-                pmid, pmid_data.get('pmcid'),
-                self.fix_doi(pmid_data.get('doi')),
-                pmid_data.get('pii')
-                )
-            text_ref_records.append(
-                tuple([None if not r else r for r in rec])
-                )
-            abstract = pmid_data.get('abstract')
-            # Make sure it's not an empty or whitespace-only string
-            if abstract and abstract.strip():
-                abstract_gz = zip_string(abstract)
-                text_content_info[pmid] = (self.my_source, formats.TEXT,
-                                           texttypes.ABSTRACT, abstract_gz)
 
-        self.copy_into_db(
-            db,
-            'text_ref',
-            text_ref_records,
-            ('pmid', 'pmcid', 'doi', 'pii',)
-            )
+        def get_val(data, id_type):
+            r = data.get(id_type)
+            if id_type == 'doi':
+                r = self.fix_doi(r)
+            return None if not r else r.strip().upper()
+
+        text_ref_records = {tuple([pmid]+[get_val(article_info[pmid], id_type)
+                                          for id_type in self.tr_cols[1:]])
+                            for pmid in valid_pmids}
+
+        # Check the ids more carefully against what is already in the db.
+        if carefully:
+            text_ref_records, flawed_refs = \
+                self.filter_text_refs(db, text_ref_records,
+                                      primary_id_types=['pmid', 'pmcid'])
+            logger.info('%d new records to add to text_refs.'
+                        % len(text_ref_records))
+            valid_pmids -= {ref[self.tr_cols.index('pmid')]
+                            for cause, ref in flawed_refs
+                            if cause in ['pmid', 'over_match']}
+            logger.info('Only %d valid for potential content upload.'
+                        % len(valid_pmids))
+
+        # Remove the pmids from any data entries that failed to copy.
+        vile_data = self.copy_into_db(db, 'text_ref', text_ref_records,
+                                      self.tr_cols)
+        if vile_data is not None:
+            valid_pmids -= {d[self.tr_cols.index('pmid')] for d in vile_data}
+        return valid_pmids
+
+    def load_text_content(self, db, article_info, valid_pmids,
+                          carefully=False):
 
         # Build a dict mapping PMIDs to text_ref IDs
-        pmid_list = list(text_content_info.keys())
-        tref_list = db.select_all(
-            'text_ref',
-            db.TextRef.pmid.in_([p for p in pmid_list])
-            )
+        tr_qry = db.filter_query(db.TextRef, db.TextRef.pmid.in_(valid_pmids))
+        if not carefully:
+            # This doesn't check if there are any existing refs.
+            tref_list = tr_qry.all()
+            logger.info('There are %d content entries that will be uploaded.'
+                        % len(tref_list))
+        else:
+            # This does...
+            tr_to_avoid_qry = tr_qry.filter(
+                db.TextRef.id == db.TextContent.text_ref_id,
+                db.TextContent.source == self.my_source
+                )
+            valid_pmids -= {tr.pmid for tr in tr_to_avoid_qry.all()}
+            tref_list = tr_qry.except_(tr_to_avoid_qry).all()
+            logger.info("Only %d entries without pre-existing content."
+                        % len(tref_list))
         pmid_tr_dict = {pmid: trid for (pmid, trid) in
                         db.get_values(tref_list, ['pmid', 'id'])}
 
         # Add the text_ref IDs to the content to be inserted
         text_content_records = []
-        for pmid, tc_data in text_content_info.items():
+        for pmid in valid_pmids:
             if pmid not in pmid_tr_dict.keys():
+                logger.warning("Found content marked to be uploaded which "
+                               "does not have a text ref. Skipping pmid "
+                               "%s..." % pmid)
                 continue
             tr_id = pmid_tr_dict[pmid]
-            text_content_records.append((tr_id,) + tc_data)
+            abstract = article_info[pmid].get('abstract')
+            if abstract and abstract.strip():
+                abstract_gz = zip_string(abstract)
+                text_content_records.append((tr_id, self.my_source,
+                                             formats.TEXT, texttypes.ABSTRACT,
+                                             abstract_gz))
+        logger.info("Found %d new text content entries."
+                    % len(text_content_records))
 
         self.copy_into_db(
             db,
             'text_content',
             text_content_records,
-            cols=('text_ref_id', 'source', 'format', 'text_type', 'content',)
+            cols=('text_ref_id', 'source', 'format', 'text_type',
+                  'content')
             )
+        return
+
+    def upload_article(self, db, article_info, carefully=False):
+        "Process the content of an xml dataset and load into the database."
+        logger.info("%d PMIDs in XML dataset" % len(article_info))
+
+        # Process and load the text refs, updating where appropriate.
+        valid_pmids = self.load_text_refs(db, article_info, carefully)
+
+        self.load_text_content(db, article_info, valid_pmids, carefully)
         return True
 
-    def populate(self, db, n_procs=1, continuing=False):
-        """Perform the initial input of the pubmed content into the database.
-
-        Parameters
-        ----------
-        db : indra.db.DatabaseManager instance
-            The database to which the data will be uploaded.
-        n_procs : int
-            The number of processes to use when parsing xmls.
-        continuing : bool
-            If true, assume that we are picking up after an error, or otherwise
-            continuing from an earlier process. This means we will skip over
-            source files contained in the database. If false, all files will be
-            read and parsed.
-        """
-        xml_files = self.get_file_list()
+    def load_files(self, db, dirname, n_procs=1, continuing=False,
+                   carefully=False):
+        """Load the files in subdirectory indicated by `dirname`."""
+        xml_files = set(self.get_file_list(dirname))
         sf_list = db.select_all(
-            'source_file',
+            db.SourceFile,
             db.SourceFile.source == self.my_source
             )
-        existing_files = [sf.name for sf in sf_list]
+        existing_files = {sf.name for sf in sf_list if dirname in sf.name}
 
-        # This could perhaps be simplified with map_async from mp.pool.
+        if continuing and xml_files == existing_files:
+            logger.info("All files have been loaded. Nothing to do.")
+            return False
+
+        # Download the XML files in parallel
         q = mp.Queue()
         proc_list = []
         for xml_file in xml_files:
@@ -422,22 +759,50 @@ class Medline(NihManager):
             if len(proc_list):
                 proc_list.pop(0).start()
 
-        while len(proc_list):
+        def upload_and_record_next(start_new):
             xml_file, article_info = q.get()  # Block until at least 1 is done.
-            proc_list.pop(0).start()
-            self.upload_article(db, article_info)
+            if start_new:
+                proc_list.pop(0).start()
+            logger.info("Beginning to upload %s." % xml_file)
+            self.upload_article(db, article_info, carefully)
+            logger.info("Completed %s." % xml_file)
             if xml_file not in existing_files:
                 db.insert('source_file', source=self.my_source, name=xml_file)
+
+        while len(proc_list):
+            upload_and_record_next(True)
             n_tot -= 1
 
         while n_tot is not 0:
-            xml_file, article_info = q.get()
-            if xml_file not in existing_files:
-                db.insert('source_file', source=self.my_source, name=xml_file)
-            self.upload_article(db, article_info)
+            upload_and_record_next(False)
             n_tot -= 1
 
-        return
+        return True
+
+    @ContentManager._record_for_review
+    def populate(self, db, n_procs=1, continuing=False):
+        """Perform the initial input of the pubmed content into the database.
+
+        Parameters
+        ----------
+        db : indra.db.DatabaseManager instance
+            The database to which the data will be uploaded.
+        n_procs : int
+            The number of processes to use when parsing xmls.
+        continuing : bool
+            If true, assume that we are picking up after an error, or otherwise
+            continuing from an earlier process. This means we will skip over
+            source files contained in the database. If false, all files will be
+            read and parsed.
+        """
+        return self.load_files(db, 'baseline', n_procs, continuing, False)
+
+    @ContentManager._record_for_review
+    def update(self, db, n_procs=1):
+        """Update the contents of the database with the latest articles."""
+        did_base = self.load_files(db, 'baseline', n_procs, True, True)
+        did_update = self.load_files(db, 'updatefiles', n_procs, True, True)
+        return did_base or did_update
 
 
 class PmcManager(NihManager):
@@ -446,183 +811,53 @@ class PmcManager(NihManager):
     For Paramters, see `NihManager`.
     """
     my_source = NotImplemented
+    tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
 
     def __init__(self, *args, **kwargs):
         super(PmcManager, self).__init__(*args, **kwargs)
-        self.tr_cols = ('pmid', 'pmcid', 'doi', 'manuscript_id',)
         self.tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
                         'content',)
 
-    def get_missing_pmids(self, tr_data):
+    def get_missing_pmids(self, db, tr_data):
         "Try to get missing pmids using the pmc client."
-        num_missing = 0
-        num_found = 0
 
         logger.debug("Getting missing pmids.")
 
-        # TODO: This is very slow...should find a way to speed it up.
+        missing_pmid_entries = []
         for tr_entry in tr_data:
             if tr_entry['pmid'] is None:
-                num_missing += 1
-                ret = id_lookup(tr_entry['pmcid'])
-                if 'pmid' in ret.keys():
+                missing_pmid_entries.append(tr_entry)
+
+        num_missing = len(missing_pmid_entries)
+        if num_missing is 0:
+            logger.debug("No missing pmids.")
+            return
+
+        logger.debug('Missing %d pmids.' % num_missing)
+        tr_list = db.select_all(
+            db.TextRef, db.TextRef.pmcid.in_(
+                [tr_entry['pmcid'] for tr_entry in missing_pmid_entries]
+                )
+            )
+        pmids_from_db = {tr.pmcid: tr.pmid for tr in tr_list
+                         if tr.pmid is not None}
+
+        logger.debug("Found %d pmids on the databse." % len(pmids_from_db))
+        num_found_non_db = 0
+        for tr_entry in missing_pmid_entries:
+            if tr_entry['pmcid'] not in pmids_from_db.keys():
+                ret = id_lookup(tr_entry['pmcid'], idtype='pmcid')
+                if 'pmid' in ret.keys() and ret['pmid'] is not None:
                     tr_entry['pmid'] = ret['pmid']
-                    num_found += 1
-
-        ''' # The web api does not support this much access, sadly.
-        thread_list = []
-        for tr_entry in tr_data:
-            if tr_entry['pmid'] is None:
-                th = Thread(target=lookup_pmid, args=[tr_entry])
-                thread_list.append(th)
-
-        N = min(10, len(thread_list))
-        logger.debug("Starting %d threading pool." % N)
-        active_threads = []
-        for _ in range(N):
-            th = thread_list.pop()
-            th.start()
-            active_threads.append(th)
-
-        while len(thread_list):
-            for th in active_threads[:]:
-                if not th.is_alive():
-                    th.join()
-                    active_threads.remove(th)
-                    if len(thread_list):
-                        new_th = thread_list.pop()
-                        new_th.start()
-                        active_threads.append(th)
-            sleep(0.1)
-
-        for th in active_threads:
-            th.join()
-        '''
-        logger.debug("Found %d/%d new pmids." % (num_found, num_missing))
-        return
-
-    def filter_text_refs(self, db, tr_data):
-        "Try to reconcile the data we have with what's already on the db."
-        logger.info("Beginning to filter text refs...")
-
-        # This is a helper for accessing the data tuples we create
-        def id_idx(id_type):
-            return self.tr_cols.index(id_type)
-
-        # If there are not actual refs to work with, don't waste time.
-        if not len(tr_data):
-            return [], []
-
-        # Check for any pmids we can get from the pmc client (this is slow!)
-        self.get_missing_pmids(tr_data)
-
-        # Turn the list of dicts into a set of tuples
-        tr_data_set = {tuple([entry[id_type] for id_type in self.tr_cols])
-                       for entry in tr_data}
-
-        # Get all text refs that match any of the id data we have. This means
-        # each text ref WILL find a match in the data we have (unless something
-        # is seriously broken.
-        or_list = []
-        for id_type in self.tr_cols:
-            id_list = [entry[id_type] for entry in tr_data
-                       if entry[id_type] is not None]
-            if id_list:
-                or_list.append(getattr(db.TextRef, id_type).in_(id_list))
-        tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
-
-        # Create an index of tupled data entries for quick lookups by any id
-        # type, for example tr_data_idx_dict['pmid'][<a pmid>] will get the
-        # tuple with all the id data. This avoids several iterations through
-        # the list of text ref data dicts on for each text ref, at the cost of
-        # using extra memory.
-        tr_data_idx_dict = {id_type: {e[id_idx(id_type)]: e
-                                      for e in tr_data_set
-                                      if e[id_idx(id_type)] is not None}
-                            for id_type in self.tr_cols}
-
-        # Look for updates to the existing text refs
-        tr_data_matched_set = set()
-        pmcids_to_skip = set()
-        for tr in tr_list:
-            match_set = set()
-
-            # Find the matches in the data. We continue looking after finding
-            # one match in case there are any inconsistencies which need to be
-            # considered.
-            for id_type, tr_data_idx in tr_data_idx_dict.items():
-                candidate = tr_data_idx.get(getattr(tr, id_type))
-                if candidate is not None:
-                    match_set.add(candidate)
-
-            # As per the process of getting the tr_list, every tr MUST have a
-            # match, or else something is broken.
-            assert match_set, "No matches found, which is impossible."
-
-            # Assuming we found exactly one matched data entry, we can now look
-            # for new id data (for example manuscript ids) and update the tr
-            # objects. These changes are transmuted to the db via the commit
-            # command below.
-            if len(match_set) == 1:
-                tr_new = match_set.pop()
-
-                # This is how we tell what doesn't need to be added to the db.
-                tr_data_matched_set.add(tr_new)
-
-                # Go through all the id_types
-                for i, id_type in enumerate(self.tr_cols):
-                    # Check if the text ref is missing that id.
-                    if getattr(tr, id_type) is None:
-                        # If so, and if our new data does have that id, update
-                        # the text ref.
-                        if tr_new[i] is not None:
-                            setattr(tr, id_type, tr_new[i])
-                    else:
-                        # Check to see that all the ids agree. If not, report
-                        # it in the review.txt file.
-                        # NOTE: If this is ever done on AWS or through a
-                        # container, the review file MUST be loaded somewhere
-                        # it won't disappear. (such as s3). Perhaps these could
-                        # be logged on the database?
-                        if tr_new[i] is not None \
-                         and tr_new[i] != getattr(tr, id_type):
-                            with open('review.txt', 'a') as f:
-                                f.write(
-                                    'Got conflicting id data: in db %s vs %s.'
-                                    % ([getattr(tr, id_type)
-                                        for id_type in self.tr_cols],
-                                       [tr_new[i]
-                                        for i in range(len(self.tr_cols))])
-                                    )
-                            # If the conflict was with a pmcid, don't try to
-                            # add the text content.
-                            if id_type == 'pmcid':
-                                pmcids_to_skip.add(
-                                    tr_new[id_idx('pmcid')]
-                                    )
+                    num_found_non_db += 1
+                    num_missing -= 1
             else:
-                # These still matched something in the db, so they shouldn't be
-                # uploaded as new refs.
-                for tr_new in match_set:
-                    tr_data_matched_set.add(tr_new)
-                    pmcids_to_skip.add(tr_new[id_idx('pmcid')])
-
-                # This condition only occurs if the records we got are
-                # internally inconsistent. This is rare, but it can happen.
-                with open('review.txt', 'a') as f:
-                    f.write(
-                        ('Got multiple matches for data from %s: %s.'
-                         ' Please review.\n')
-                        % (self.my_source, match_set)
-                        )
-
-        # This applies all the changes made to the text refs to the db.
-        db.commit("Failed to update with new ids.")
-
-        # Now update the text refs with any new refs that were found
-        filtered_tr_records = tr_data_set.difference(tr_data_matched_set)
-
-        return filtered_tr_records, pmcids_to_skip
+                tr_entry['pmid'] = pmids_from_db[tr_entry['pmcid']]
+                num_missing -= 1
+        logger.debug("Found %d more pmids from other sources."
+                     % num_found_non_db)
+        logger.debug("There are %d missing pmids remaining." % num_missing)
+        return
 
     def filter_text_content(self, db, tc_data):
         'Filter the text content to identify pre-existing records.'
@@ -630,17 +865,21 @@ class PmcManager(NihManager):
         arc_pmcid_list = [tc['pmcid'] for tc in tc_data]
         if not len(tc_data):
             return []
+
+        logger.debug("Getting text refs for pmcid->trid dict..")
         tref_list = db.select_all(
-            'text_ref',
+            db.TextRef,
             db.TextRef.pmcid.in_(arc_pmcid_list)
             )
         pmcid_trid_dict = {
             pmcid: trid for (pmcid, trid) in
             db.get_values(tref_list, ['pmcid', 'id'])
             }
+
         # This should be a very small list, in general.
+        logger.debug('Finding existing text content from db.')
         existing_tcs = db.select_all(
-            'text_content',
+            db.TextContent,
             db.TextContent.text_ref_id.in_(pmcid_trid_dict.values()),
             db.TextContent.source == self.my_source,
             db.TextContent.format == formats.XML
@@ -649,8 +888,14 @@ class PmcManager(NihManager):
             (tc.text_ref_id, tc.source, tc.format, tc.text_type)
             for tc in existing_tcs
             ]
+        logger.debug("Found %d existing records on the db."
+                     % len(existing_tc_records))
         tc_records = []
         for tc in tc_data:
+            if tc['pmcid'] not in pmcid_trid_dict.keys():
+                logger.warning("Found pmcid (%s) among text content data, but "
+                               "not in the database. Skipping." % tc['pmcid'])
+                continue
             tc_records.append(
                 (
                     pmcid_trid_dict[tc['pmcid']],
@@ -663,13 +908,27 @@ class PmcManager(NihManager):
         filtered_tc_records = [
             rec for rec in tc_records if rec[:-1] not in existing_tc_records
             ]
-        logger.info("Finished filtering the text content...")
+        logger.info("Finished filtering the text content.")
         return list(set(filtered_tc_records))
 
     def upload_batch(self, db, tr_data, tc_data):
         "Add a batch of text refs and text content to the database."
-        filtered_tr_records, pmcids_to_skip = \
-            self.filter_text_refs(db, tr_data)
+
+        # Check for any pmids we can get from the pmc client (this is slow!)
+        self.get_missing_pmids(db, tr_data)
+
+        # Turn the list of dicts into a set of tuples
+        tr_data_set = {tuple([entry[id_type] for id_type in self.tr_cols])
+                       for entry in tr_data}
+
+        filtered_tr_records, flawed_tr_records = \
+            self.filter_text_refs(db, tr_data_set,
+                                  primary_id_types=['pmid', 'pmcid',
+                                                    'manuscript_id'])
+        pmcids_to_skip = {rec[self.tr_cols.index('pmcid')]
+                          for cause, rec in flawed_tr_records
+                          if cause in ['pmcid', 'over_match_input',
+                                       'over_match_db']}
         if len(pmcids_to_skip) is not 0:
             mod_tc_data = [
                 tc for tc in tc_data if tc['pmcid'] not in pmcids_to_skip
@@ -717,7 +976,9 @@ class PmcManager(NihManager):
             id_data['pmcid'] = 'PMC' + id_data['pmc']
         if 'manuscript' in id_data.keys():
             id_data['manuscript_id'] = id_data['manuscript']
-        tr_datum = {k: id_data.get(k) for k in self.tr_cols}
+        tr_datum_raw = {k: id_data.get(k) for k in self.tr_cols}
+        tr_datum = {k: val.strip().upper() if val is not None else None
+                    for k, val in tr_datum_raw.items()}
         tc_datum = {
             'pmcid': id_data['pmcid'],
             'text_type': texttypes.FULLTEXT,
@@ -725,90 +986,117 @@ class PmcManager(NihManager):
             }
         return tr_datum, tc_datum
 
-    def upload_archive(self, archive, q=None, db=None):
-        "Process a single tar gzipped article archive."
+    def unpack_archive_path(self, archive_path, q=None, db=None,
+                            batch_size=10000):
+        """"Unpack the contents of an archive.
+
+        If `q` is given, then the data is put into the que to be handed off for
+        upload by another process. Otherwise, if `db` is provided, upload the
+        batches of data on this process. One or the other MUST be provided.
+        """
         tr_data = []
         tc_data = []
 
-        def submit(tag, tr_data, tc_data):
-            batch_name = 'final batch' if tag is 'final' else 'batch %d' % tag
-            logger.info("Submitting %s of data for %s..." %
-                        (batch_name, archive))
+        with tarfile.open(archive_path, mode='r:gz') as tar:
+            xml_files = [m for m in tar.getmembers() if m.isfile()
+                         and m.name.endswith('xml')]
+            N_tot = len(xml_files)
+            logger.info('Loading %s which contains %d files.'
+                        % (path.basename(archive_path), N_tot))
+            N_batches = N_tot//batch_size + 1
+            for i in range(N_batches):
+                tr_data = []
+                tc_data = []
+                for xml_file in xml_files[i*batch_size:(i+1)*batch_size]:
+                    xml_str = tar.extractfile(xml_file).read().decode('utf8')
+                    res = self.get_data_from_xml_str(xml_str, xml_file.name)
+                    if res is None:
+                        continue
+                    else:
+                        tr, tc = res
+                    tr_data.append(tr)
+                    tc_data.append(tc)
 
-            if q is not None:
-                q.put(((batch_name, archive), tr_data[:], tc_data[:]))
-            elif db is not None:
-                self.upload_batch(db, tr_data[:], tc_data[:])
-            else:
-                raise UploadError(
-                    "upload_archive must receive either a db instance"
-                    " or a queue instance."
-                    )
-            tr_data.clear()
-            tc_data.clear()
-
-        with tarfile.open(archive, mode='r:gz') as tar:
-            logger.info('Loading %s...' % archive)
-            xml_files = [m for m in tar.getmembers() if m.isfile()]
-            for i, xml_file in enumerate(xml_files):
-                xml_str = tar.extractfile(xml_file).read().decode('utf8')
-                res = self.get_data_from_xml_str(xml_str, xml_file.name)
-                if res is None:
-                    continue
+                if q is not None:
+                    label = (i+1, N_batches, path.basename(archive_path))
+                    logger.debug("Submitting batch %d/%d for %s to queue."
+                                 % label)
+                    q.put((label, tr_data[:], tc_data[:]))
+                elif db is not None:
+                    self.upload_batch(db, tr_data[:], tc_data[:])
                 else:
-                    tr, tc = res
-                tr_data.append(tr)
-                tc_data.append(tc)
-                if (i+1) % BATCH_SIZE is 0:
-                    submit((i+1)/BATCH_SIZE, tr_data, tc_data)
-            else:
-                submit('final', tr_data, tc_data)
+                    raise UploadError(
+                        "unpack_archive_path must receive either a db instance"
+                        " or a queue instance."
+                        )
         return
 
-    def process_archive(self, archive, q=None, db=None):
-        try:
+    def process_archive(self, archive, q=None, db=None, continuing=False):
+        """Download an archive and begin unpacking it.
+
+        Either `q` or `db` must be specified. The uncompressed contents of the
+        archive will be loaded onto the database or placed on the queue in
+        batches.
+
+        Parameters
+        ----------
+        archive : str
+            The path of the archive beneath the head of this sources ftp
+            directory.
+        q : multiprocessing.Queue
+            When this method is called as a separate process, the contents of
+            the archive are posted to a queue in batches to be handled
+            externally.
+        db : indra.db.DatabaseManager
+            When not multprocessing, the contents of the archive are uploaded
+            to the database directly by this method.
+        continuing : bool
+            True if this method is being called to complete an earlier failed
+            attempt to execute this method; will not download the archive if an
+            archive of the same name is already downloaded locally. Default is
+            False.
+        """
+
+        # This is a guess at the location of the archive.
+        archive_local_path = path.join(THIS_DIR, path.basename(archive))
+
+        # Download the archive if need be.
+        if continuing and path.exists(archive_local_path):
+            logger.info('Archive %s found locally at %s, not loading again.'
+                        % (archive, archive_local_path))
+        else:
             logger.info('Downloading archive %s.' % archive)
-            self.ftp.download_file(archive)
-            self.upload_archive(archive, q=q, db=db)
-        finally:
-            os.remove(archive)
+            try:
+                archive_local_path = self.ftp.download_file(archive,
+                                                            dest=THIS_DIR)
+                logger.debug("Download succesfully completed for %s."
+                             % archive)
+            except BaseException:
+                logger.error("Failed to download %s. Deleting corrupt file."
+                             % archive)
+                remove(archive_local_path)
+                raise
+
+        # Now unpack the archive.
+        self.unpack_archive_path(archive_local_path, q=q, db=db)
+
+        # Assuming we completed correctly, remove the archive.
+        logger.info("Removing %s." % archive_local_path)
+        remove(archive_local_path)
+        return
 
     def get_file_list(self):
         return [k for k in self.ftp.ftp_ls() if self.is_archive(k)]
 
-    def populate(self, db, n_procs=1, continuing=False):
-        """Perform the initial population of the pmc content into the database.
-
-        Parameters
-        ----------
-        db : indra.db.DatabaseManager instance
-            The database to which the data will be uploaded.
-        n_procs : int
-            The number of processes to use when parsing xmls.
-        continuing : bool
-            If true, assume that we are picking up after an error, or
-            otherwise continuing from an earlier process. This means we will
-            skip over source files contained in the database. If false, all
-            files will be read and parsed.
-        """
-        archives = self.get_file_list()
-
-        sf_list = db.select_all(
-            'source_file',
-            db.SourceFile.source == self.my_source
-            )
-        existing_arcs = [sf.name for sf in sf_list]
-
+    def upload_archives(self, db, archives, n_procs=1, continuing=False):
+        "Do the grunt work of downloading and processing a list of archives."
         q = mp.Queue(len(archives))
         wait_list = []
         for archive in archives:
-            if continuing and archive in existing_arcs:
-                logger.info("Skipping %s. Already uploaded." % archive)
-                continue
             p = mp.Process(
                 target=self.process_archive,
                 args=(archive, ),
-                kwargs={'q': q, },
+                kwargs={'q': q, 'continuing': continuing},
                 daemon=True
                 )
             wait_list.append((archive, p))
@@ -826,20 +1114,47 @@ class PmcManager(NihManager):
             start_next_proc()
 
         # Monitor the processes while any are still active.
+        batch_log = path.join(THIS_DIR, '%s_batch_log.tmp' % self.my_source)
+        batch_entry_fmt = '%s %d\n'
+        open(batch_log, 'a+').close()
         while len(active_list) is not 0:
+            # Check for processes that have been unpacking archives to
+            # complete, and when they do, add them to the source_file table.
+            # If there are any more archives waiting to be processed, start
+            # the next one.
             for a, p in [(a, p) for a, p in active_list if not p.is_alive()]:
-                if a not in existing_arcs:
-                    db.insert('source_file', source=self.my_source, name=a)
+                if p.exitcode is 0:
+                    sf_list = db.select_all(
+                        db.SourceFile,
+                        db.SourceFile.source == self.my_source,
+                        db.SourceFile.name == a
+                        )
+                    if not sf_list:
+                        db.insert('source_file', source=self.my_source, name=a)
+                else:
+                    logger.error("Process for %s exitted with exit code %d."
+                                 % (path.basename(a), p.exitcode))
                 active_list.remove((a, p))
                 start_next_proc()
+
+            # Wait for the next output from an archive unpacker.
             try:
                 # This will not block until at least one is done
                 label, tr_data, tc_data = q.get_nowait()
             except Exception:
                 continue
-            logger.info("Beginning to upload %s from %s..." % label)
+            logger.info("Beginning to upload batch %d/%d from %s..." % label)
+            batch_id, _, arc_name = label
+            if continuing:
+                with open(batch_log, 'r') as f:
+                    if batch_entry_fmt % (arc_name, batch_id) in f.readlines():
+                        logger.info("Batch %d already completed: skipping..."
+                                    % batch_id)
+                        continue
             self.upload_batch(db, tr_data, tc_data)
-            logger.info("Finished %s from %s..." % label)
+            with open(batch_log, 'a+') as f:
+                f.write(batch_entry_fmt % (arc_name, batch_id))
+            logger.info("Finished batch %d/%d from %s..." % label)
             time.sleep(0.1)
 
         # Empty the queue.
@@ -850,7 +1165,51 @@ class PmcManager(NihManager):
                 break
             self.upload_batch(db, tr_data, tc_data)
 
+        remove(batch_log)
+
         return
+
+    @ContentManager._record_for_review
+    def populate(self, db, n_procs=1, continuing=False):
+        """Perform the initial population of the pmc content into the database.
+
+        Parameters
+        ----------
+        db : indra.db.DatabaseManager instance
+            The database to which the data will be uploaded.
+        n_procs : int
+            The number of processes to use when parsing xmls.
+        continuing : bool
+            If true, assume that we are picking up after an error, or
+            otherwise continuing from an earlier process. This means we will
+            skip over source files contained in the database. If false, all
+            files will be read and parsed.
+
+        Returns
+        -------
+        completed : bool
+            If True, an update was completed. Othewise, the updload was aborted
+            for some reason, often because the upload was already completed
+            at some earlier time.
+        """
+        archives = set(self.get_file_list())
+
+        if continuing:
+            sf_list = db.select_all(
+                'source_file',
+                db.SourceFile.source == self.my_source
+                )
+            for sf in sf_list:
+                logger.info("Skipping %s, already done." % sf.name)
+                archives.remove(sf.name)
+
+            # Don't do unnecessary work.
+            if not len(archives):
+                logger.info("No archives to load. All done.")
+                return False
+
+        self.upload_archives(db, archives, n_procs, continuing=continuing)
+        return True
 
 
 class PmcOA(PmcManager):
@@ -860,6 +1219,35 @@ class PmcOA(PmcManager):
 
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
+
+    @ContentManager._record_for_review
+    def update(self, db, n_procs=1):
+        update_list = db.select_all(db.Updates,
+                                    db.Updates.source == self.my_source)
+        if not len(update_list):
+            logger.error("The database has not had an initial upload, or else "
+                         "the updates table has not been populated.")
+            return False
+
+        min_datetime = max([u.datetime for u in update_list])
+
+        # Search down through the oa_package directory. Below the first level,
+        # the files are timestamped, so we can filter down each level
+        # efficiently finding the latest files to update.
+        logger.info("Getting list of articles that have been uploaded since "
+                    "the last update.")
+        files = self.ftp.get_csv_as_dict('oa_file_list.csv', header=0)
+        fpath_set = {
+            f['File'] for f in files
+            if datetime.strptime(f['Last Updated (YYYY-MM-DD HH:MM:SS)'],
+                                 '%Y-%m-%d %H:%M:%S')
+            > min_datetime
+            }
+
+        # Upload these archives.
+        logger.info("Updating the database with %d articles." % len(fpath_set))
+        self.upload_archives(db, fpath_set, n_procs=n_procs)
+        return True
 
 
 class Manuscripts(PmcManager):
@@ -897,32 +1285,82 @@ class Manuscripts(PmcManager):
         db.commit("Could not update text refs with manuscript ids.")
         return
 
+    @ContentManager._record_for_review
+    def update(self, db, n_procs=1):
+        """Add any new content found in the archives.
+
+        Note that this is very much the same as populating for manuscripts,
+        as there are no finer grained means of getting manuscripts than just
+        looking through the massive archive files. We do check to see if there
+        are any new listings in each files, minimizing the amount of time
+        downloading and searching, however this will in general be the slowest
+        of the update methods.
+
+        The continuing feature isn't implemented yet.
+        """
+        logger.info("Getting list of manuscript content available.")
+        ftp_file_list = self.ftp.get_csv_as_dict('filelist.csv', header=0)
+        ftp_pmcid_set = {entry['PMCID'] for entry in ftp_file_list}
+
+        logger.info("Getting a list of text refs that already correspond to "
+                    "manuscript content.")
+        tr_list = db.select_all(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.source == self.my_source
+            )
+        load_pmcid_set = ftp_pmcid_set - {tr.pmcid for tr in tr_list}
+
+        logger.info("There are %d manuscripts to load."
+                    % (len(load_pmcid_set)))
+
+        logger.info("Determining which archives need to be laoded.")
+        update_archives = {'PMC00%sXXXXXX.xml.tar.gz' % pmcid[3]
+                           for pmcid in load_pmcid_set}
+
+        logger.info("Beginning to upload archives.")
+        self.upload_archives(db, update_archives, n_procs)
+        return True
+
 
 if __name__ == '__main__':
-    db = get_primary_db()
+    if args.test:
+        defaults = get_defaults()
+        test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
+        key_list = list(test_defaults.keys())
+        key_list.sort()
+        for k in key_list:
+            test_name = test_defaults[k]
+            m = re.match('(\w+)://.*?/([\w.]+)', test_name)
+            sqltype = m.groups()[0]
+            try:
+                db = DatabaseManager(test_name, sqltype=sqltype)
+                db.grab_session()
+            except Exception as e:
+                logger.debug("Tried to use %s, but failed due to:\n%s\n"
+                             % (k, e))
+                continue  # Clearly this test database won't work.
+            print("Using test database %s." % k)
+            break
+        else:
+            logger.error("Could not load a test database!")
+            sys.exit(1)
+    else:
+        db = get_primary_db()
+
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
-            clear_succeeded = db._clear([db.TextContent, db.TextRef, db.SourceFile])
+            clear_succeeded = db._clear([db.TextContent, db.TextRef,
+                                         db.SourceFile, db.Updates])
             if not clear_succeeded:
                 sys.exit()
-        Medline().populate(db, args.num_procs, args.continuing)
+        Pubmed().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
     elif args.task == 'update':
-        logger.warning("Sorry, this feature not yet available.")
+        Pubmed().update(db, args.num_procs)
+        PmcOA().update(db, args.num_procs)
+        Manuscripts().update(db, args.num_procs)
 
-    # High-level content update procedure
-    # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,
-    #    other info
-    # 2. Download PMC, update text refs with PMCIDs where possible, with
-    #    update commands.
-    # 3. Add PMC-OA content.
-    # 4. Add PMC-author manuscript information, updating files with manuscript
-    #    IDs and content.
-    # 5. (Optional): Run script to check for/obtain DOIs for those that are
-    #    missing
-    # 6. Obtain Elsevier XML for Elsevier articles
-    # 7. Obtain Springer content for Springer articles
-    # 8. Obtain scraped PDF content for other articles available via OA-DOI.

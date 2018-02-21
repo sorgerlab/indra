@@ -16,7 +16,7 @@ IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
 if IS_PY3:
-    from indra.db.content_manager import Medline, PmcOA, Manuscripts
+    from indra.db.content_manager import Pubmed, PmcOA, Manuscripts
 
 if '-a' in argv:
     attr_str = argv[argv.index('-a')+1]
@@ -28,7 +28,6 @@ defaults = get_defaults()
 test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
 # Get host for the test database from system defaults.
-# TODO: implement setup-teardown system.
 TEST_HOST = None
 TEST_HOST_TYPE = ''
 key_list = list(test_defaults.keys())
@@ -77,6 +76,11 @@ def assert_contents_equal(list1, list2, msg=None):
     assert res, err_msg
 
 
+def capitalize_list_of_tpls(l):
+    return [tuple([i.upper() if isinstance(i, str) else i for i in e])
+            for e in l]
+
+
 def get_db(clear=True):
     "Set up the database for testing."
     db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
@@ -99,7 +103,7 @@ def needs_py3(func):
 def get_db_with_content():
     "Populate the database."
     db = get_db()
-    Medline(ftp_url=TEST_FTP, local=True).populate(db)
+    Pubmed(ftp_url=TEST_FTP, local=True).populate(db)
     return db
 
 
@@ -284,13 +288,18 @@ def test_full_upload():
     assert set_exp == set_got,\
         "Expected %s, got %s for content layout." % (set_exp, set_got)
 
+    # Test careful upload of medline (very shallow test...checks only for
+    # critical failures)
+    m = Pubmed(ftp_url=TEST_FTP, local=True)
+    m.load_files(db, 'baseline', carefully=True)
+
 
 @needs_py3
 @attr('nonpublic')
 def test_multiple_pmids():
     "Test that pre-existing pmids are correctly handled."
     db = get_db()
-    med = Medline(ftp_url=TEST_FTP, local=True)
+    med = Pubmed(ftp_url=TEST_FTP, local=True)
     med.populate(db)
     num_refs = len(db.select_all('text_ref'))
     med.populate(db)
@@ -319,6 +328,7 @@ def test_multiple_text_ref_pmc_oa():
     "Test whether a duplicate text ref in pmc oa is handled correctly."
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
+    pmc.review_fname = 'test_review_multiple_text_ref_pmc_oa.txt'
     inp = dict.fromkeys(pmc.tr_cols)
     inp.update(pmcid='PMC5579538', doi='10.1021/acsomega.7b00205')
     pmc.upload_batch(db, [inp], [])
@@ -326,18 +336,19 @@ def test_multiple_text_ref_pmc_oa():
     pmc.upload_batch(db, [inp], [])
     assert len(db.select_all('text_ref')) == num_refs,\
         "Duplicate refs allowed to be submitted.."
+    remove(pmc.review_fname)
     return
 
 
 @needs_py3
 @attr('nonpublic')
 def test_id_handling_pmc_oa():
-    "Test every conceivable combination pmid/pmcid presense."
+    "Test every conceivable combination pmid/pmcid presence."
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
 
     # Initialize with all possible states we could have gotten from medline.
-    pm_inp_tpl_list = [
+    pm_inp_tpl_list = capitalize_list_of_tpls([
         ('caseA%d' % i, 'PMCcaseA%d' % i) for i in range(2)
         ] + [
         ('caseB%d' % i, None) for i in range(2)
@@ -349,14 +360,14 @@ def test_id_handling_pmc_oa():
         ('caseMultiMatch', 'PMCcaseMultiMatch'),
         ('28884161', None),
         ('26977217', 'PMC4771487')
-        ]
+        ])
     db.insert_many(
         'text_ref',
         [dict(zip(('pmid', 'pmcid'), d)) for d in pm_inp_tpl_list]
         )
 
     # Prepare the 'batch' to be submitted for pmc oa, and try it.
-    oa_inp_tpl_list = [
+    oa_inp_tpl_list = capitalize_list_of_tpls([
         ('case%s0' % l, 'PMCcase%s0' % l) for l in ['A', 'B', 'C']
         ] + [
         (None, 'PMCcase%s1' % l) for l in ['A', 'B', 'C']
@@ -367,7 +378,7 @@ def test_id_handling_pmc_oa():
         ('caseMisMatchB', 'PMCcaseMisMatchA'),  # multiple matches
         ('caseMultiMatch', 'PMCnotmatching'),
         ('notmatching', 'PMCcaseMultiMatch'),
-        ]
+        ])
     tr_inp = []
     for pmid, pmcid in oa_inp_tpl_list:
         inp_dict = dict.fromkeys(pmc.tr_cols)
@@ -375,10 +386,11 @@ def test_id_handling_pmc_oa():
         tr_inp.append(inp_dict)
     tc_inp = [{'pmcid': pmcid, 'text_type': 'txt', 'content': b'content'}
               for _, pmcid in oa_inp_tpl_list]
+    pmc.review_fname = 'test_review_%s.txt' % pmc.my_source
     pmc.upload_batch(db, tr_inp, tc_inp)
 
     # Check the text refs.
-    expected_pairs = [
+    expected_pairs = capitalize_list_of_tpls([
         ('caseA0', 'PMCcaseA0'),
         ('caseA1', 'PMCcaseA1'),
         ('caseB0', 'PMCcaseB0'),
@@ -392,21 +404,123 @@ def test_id_handling_pmc_oa():
         ('caseMisMatchA', 'PMCcaseMisMatchB'),
         ('caseMisMatchB', 'PMCcaseMisiMatchB'),
         ('caseMultiMatch', 'PMCcaseMultiMatch'),
-        ]
+        ])
     actual_pairs = [(tr.pmid, tr.pmcid) for tr in db.select_all('text_ref')]
-    assert_contents_equal(
-        actual_pairs,
-        expected_pairs,
-        'DB text refs incorrect.'
-        )
+    assert_contents_equal(actual_pairs, expected_pairs,
+                          'DB text refs incorrect.')
 
-    with open('review.txt', 'r') as f:
-        last_line = f.read().splitlines()[-1]
-        assert all([word in last_line for word in
-                    ['PMC4771487', 'PMC5142709', 'conflicting id data']])
+    with open(pmc.review_fname, 'r') as f:
+        found_conflict_msg = False
+        for line in f.read().splitlines():
+            if all([word in line for word in
+                    ['PMC4771487', 'PMC5142709', 'conflicting pmcid']]):
+                found_conflict_msg = True
+                break
+        assert found_conflict_msg
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
+    remove(pmc.review_fname)
+    return
+
+
+@needs_py3
+@attr('nonpublic')
+def test_medline_ref_checks():
+    "Test the text ref checks used by medline."
+    db = get_db()
+    med = Pubmed(ftp_url=TEST_FTP, local=True)
+
+    def check_input(input_pairs, expected_pairs, carefully, num):
+        article_info = {pmid: dict(zip(['pmid', 'pmcid'], [pmid, pmcid]))
+                        for pmid, pmcid in input_pairs}
+        med.load_text_refs(db, article_info, carefully)
+        actual_pairs = [(tr.pmid, tr.pmcid)
+                        for tr in db.select_all(db.TextRef)]
+        desc = 'careful' if carefully else 'careless'
+        msg = 'DB text refs mismatch after upload %d (%s)' % (num, desc)
+        actual_pairs.sort(key=str)
+        expected_pairs.sort(key=str)
+        assert_contents_equal(actual_pairs, expected_pairs, msg)
+
+    expected_pairs = [
+        ('CASEA', None),
+        ('CASEB', 'PMCIDCASEB'),
+        ('CASEC', None),
+        ('CASED', 'PMCIDCASED')
+        ]
+
+    # Upload round 1
+    check_input(
+        [
+            ('CASEA', None),
+            ('CASEB', 'PMCIDCASEB'),
+            ('CASEC', None),
+            ('CASEC', None),
+            ('CASED', None),
+            ('CASED', 'PMCIDCASED')
+            ],
+        expected_pairs,
+        False,
+        1
+        )
+
+    # Upload round 2
+    expected_pairs += [
+        ('CASEE', None)
+        ]
+    check_input(
+        [
+            ('CASEE', None),
+            ('CASEC', 'PMCIDCASEC'),
+            ('CASEH1', 'PMCIDCASEH'),
+            ('CASEK', 'PMCIDCASEK1')
+            ],
+        expected_pairs + [
+            ('CASEH1', 'PMCIDCASEH'),
+            ('CASEK', 'PMCIDCASEK1')
+            ],
+        False,
+        2
+        )
+
+    # Interlude
+    db.insert_many('text_ref', [
+        {'pmcid': 'PMCIDCASEG'},
+        ])
+
+    # Upload round 3
+    input_pairs = expected_pairs + [
+        ('CASEF', None),
+        ('CASEC', 'PMCIDCASEC'),
+        ('CASEG', 'PMCIDCASEG'),
+        ('CASEH2', 'PMCIDCASEH'),  # this should trigger a review.
+        ('CASEK', 'PMCIDCASEK2')  # and so should this
+        ]
+    expected_pairs.remove(('CASEC', None))
+    expected_pairs += [
+        ('CASEF', None),
+        ('CASEC', 'PMCIDCASEC'),
+        ('CASEG', 'PMCIDCASEG'),
+        ('CASEH1', 'PMCIDCASEH'),
+        ('CASEK', 'PMCIDCASEK1')
+        ]
+    med.review_fname = 'test_review_%s.txt' % med.my_source
+    open(med.review_fname, 'a+').close()
+    with open(med.review_fname, 'r') as f:
+        num_orig_lines = len(f.readlines())
+    check_input(
+        input_pairs,
+        expected_pairs,
+        True,
+        3
+        )
+    with open(med.review_fname, 'r') as f:
+        lines = f.readlines()
+        assert len(lines) == num_orig_lines + 2, \
+            "Not all new reviews added: %d / %d" % (len(lines),
+                                                    num_orig_lines + 2)
+    remove(med.review_fname)
     return
 
 
@@ -418,7 +532,7 @@ def test_ftp_service():
         ('.csv', 'csv_as_dict'),
         ('.txt', 'file')
         ]
-    for Child in [Medline, PmcOA, Manuscripts]:
+    for Child in [Pubmed, PmcOA, Manuscripts]:
         c = Child()
         files = c.ftp.ftp_ls()
         for end, meth in cases:

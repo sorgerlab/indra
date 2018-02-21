@@ -121,8 +121,9 @@ def get_stmts_safely(reading_data):
                      % reading_data.reading_id)
         logger.exception(e)
         return
-    for stmt in stmts:
-        stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
+    if stmts is not None:
+        for stmt in stmts:
+            stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
     return stmt_data_list
 
 

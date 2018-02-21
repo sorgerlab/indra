@@ -14,8 +14,8 @@ from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 
 from indra.db import formats
-from test_db import get_db as get_test_db
-from test_db import get_db_with_content
+from indra.tests.test_db import get_db as get_test_db
+from indra.tests.test_db import get_db_with_content
 
 
 # ==============================================================================
@@ -303,9 +303,12 @@ def test_multi_batch_run():
     tc_list = db.select_all(db.TextContent)
     id_dict = {'tcid': [tc.id for tc in tc_list]}
     outputs = rdb.make_db_readings(id_dict, readers,
-                                   batch_size=int(len(tc_list)/2), db=db)
+                                   batch_size=len(tc_list)//2, db=db)
     # This should catch any repeated readings.
-    rdb.upload_readings(outputs)
+    rdb.upload_readings(outputs, db=db)
+    num_readings = db.filter_query(db.Readings).count()
+    assert num_readings == 2*len(tc_list), \
+        "Expected %d readings, only found %d." % (2*len(tc_list), num_readings)
 
 
 @attr('slow', 'nonpublic')
