@@ -107,6 +107,9 @@ script:
   - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
   - python run_combined.py
   - cd $TRAVIS_BUILD_DIR
-  - git diff master | pycodestyle --diff
+  # Run code style report on diff
+  - git remote set-branches --add origin master
+  - git fetch
+  - git diff origin/master | pycodestyle --diff
 after_success:
   - coveralls
