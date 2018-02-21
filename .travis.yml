@@ -1,4 +1,5 @@
 language: python
+dist: precise
 cache:
   directories:
     - $HOME/.cache/pip
@@ -14,8 +15,10 @@ before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
   - pip install numpy scipy sympy cython==0.23.5 nose lxml matplotlib==1.5.0 pandas
+  - pip2 install numpy
 install:
   # INDRA dependencies
+  - sudo apt-get install libstdc++6
   - sudo apt-get install graphviz
   - sudo apt-get install oracle-java8-installer
   - sudo update-java-alternatives -s java-8-oracle
@@ -51,7 +54,6 @@ install:
   # Install NDEx package
   - pip install ndex
   # Download a number of useful resource files for testing purposes
-  #- wget http://geneontology.org/ontology/go.owl -P data/
   - git submodule update --remote
   - pip install .[machine]
   - cd indra/benchmarks/assembly_eval/batch4
@@ -61,12 +63,18 @@ install:
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
   - export REACHPATH=$TRAVIS_BUILD_DIR
   - pip install pycodestyle
+  # TEES
+  - sudo apt-get --yes install ruby # Dependency
+  - wget https://s3.amazonaws.com/bigmech/TEES/TEES.tar.bz2
+  - tar xjf TEES.tar.bz2
+  - mv TEES ~/TEES
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3
 script:
+  - export TEES_SETTINGS=~/TEES/tees_local_settings.py
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
@@ -83,8 +91,11 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
-  - nosetests indra -v --with-doctest --with-doctest-ignore-unicode
-        --with-coverage --cover-inclusive --cover-package=indra -a $NOSEATTR
+  # First run TEES tests separately for technical reasons
+  - nosetests -v --process-restartworker indra/tests/test_tees.py
+  # Now run all INDRA tests
+  - nosetests indra -v -a $NOSEATTR -e '.*tees.*' --with-coverage --cover-inclusive
+        --cover-package=indra --with-doctest --with-doctest-ignore-unicode
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
