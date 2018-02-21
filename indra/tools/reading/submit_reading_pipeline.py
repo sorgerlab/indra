@@ -168,7 +168,7 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
         def stash_log(log_str, name_base):
             name = '%s_%s.log' % (name_base, tag)
             s3_client.put_object(
-                Bucket='bigmech',
+                Bucket=bucket_name,
                 Key='reading_results/%s/logs/%s/%s' % (
                     job_name_prefix,
                     queue_name,
@@ -203,7 +203,7 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
     return
 
 
-def tag_instances(project='bigmechanism'):
+def tag_instances(project='cwc'):
     """Adds project tag to untagged fleet instances."""
     # First, get all the instances
     ec2_client = boto3.client('ec2')
@@ -260,7 +260,7 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
-    s3_client.upload_file(pmid_list_filename, 'bigmech', pmid_list_key)
+    s3_client.upload_file(pmid_list_filename, bucket_name, pmid_list_key)
 
     # If no end index is specified, read all the PMIDs
     if end_ix is None:
@@ -311,7 +311,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
     s3_client = boto3.client('s3')
-    s3_client.upload_file(id_list_filename, 'bigmech', pmid_list_key)
+    s3_client.upload_file(id_list_filename, bucket_name, pmid_list_key)
 
     # If no end index is specified, read all the PMIDs
     if end_ix is None:
