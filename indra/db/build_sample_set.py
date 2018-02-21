@@ -119,7 +119,7 @@ def build_set(n, parent_dir):
     med = Pubmed()
     for i in range(1, 7):
         buf = BytesIO()
-        med.ftp.ret_file("../MuId-PmId-%d.zip" % i, buf)
+        med.ftp.ret_file("MuId-PmId-%d.zip" % i, buf)
         zf = zipfile.ZipFile(buf)
         with zf.open(zf.namelist()[0]) as id_f:
             id_str = id_f.read().decode('utf8')
@@ -182,7 +182,7 @@ def build_set(n, parent_dir):
     for pmid in random.sample(statementful_pmids, n):
         examples.append((pmid, '', ''))
     # Add a special article to check article info.
-    double_doi_info = med.get_article_info('pubmed18n0343.xml.gz')
+    double_doi_info = med.get_article_info('baseline/pubmed18n0343.xml.gz')
     pmids_w_double_doi = [
         k for k, v in double_doi_info.items()
         if v['doi'] is not None and len(v['doi']) > 100

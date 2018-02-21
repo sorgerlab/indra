@@ -28,7 +28,6 @@ defaults = get_defaults()
 test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
 
 # Get host for the test database from system defaults.
-# TODO: implement setup-teardown system.
 TEST_HOST = None
 TEST_HOST_TYPE = ''
 key_list = list(test_defaults.keys())
