@@ -52,7 +52,7 @@ install:
   # Biopax/Paxtools dependencies
   - pip install jnius-indra
   # Install NDEx package
-  - pip install ndex
+  - pip install ndex2
   # Download a number of useful resource files for testing purposes
   - git submodule update --remote
   - pip install .[machine]
