@@ -343,7 +343,7 @@ def test_multiple_text_ref_pmc_oa():
 @needs_py3
 @attr('nonpublic')
 def test_id_handling_pmc_oa():
-    "Test every conceivable combination pmid/pmcid presense."
+    "Test every conceivable combination pmid/pmcid presence."
     db = get_db()
     pmc = PmcOA(ftp_url=TEST_FTP, local=True)
 
@@ -410,9 +410,13 @@ def test_id_handling_pmc_oa():
                           'DB text refs incorrect.')
 
     with open(pmc.review_fname, 'r') as f:
-        last_line = f.read().splitlines()[-1]
-        assert all([word in last_line for word in
-                    ['PMC4771487', 'PMC5142709', 'conflicting pmcid']])
+        found_conflict_msg = False
+        for line in f.read().splitlines():
+            if all([word in line for word in
+                    ['PMC4771487', 'PMC5142709', 'conflicting pmcid']]):
+                found_conflict_msg = True
+                break
+        assert found_conflict_msg
 
     # Check the text content
     assert len(db.select_all('text_content')) is 8, 'Too much DB text content.'
