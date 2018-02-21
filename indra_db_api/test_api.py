@@ -14,14 +14,14 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_blank_response(self):
         """Test the response to an empty request."""
-        resp = self.app.get('/statements')
-        assert resp.status_code == 400, 'Got response with no input.'
+        resp = self.app.post('/statements')
+        assert resp.status_code == 400, 'Got clean response with no input.'
 
     def test_specific_query(self):
         """Test whether we can get a "fully" specified statement."""
         data = json.dumps(dict(object='MAP2K1', subject='MAPK1',
                                action='Phosphorylation'))
-        resp = self.app.get('/statements', data=data,
+        resp = self.app.post('/statements', data=data,
                             content_type='application/json')
         assert resp.status_code == 200, \
             'Got error code %d.' % resp.status_code
