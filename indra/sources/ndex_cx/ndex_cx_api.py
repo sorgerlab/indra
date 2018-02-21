@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
-import ndex.client
+import ndex2.client
 from .processor import NdexCxProcessor
 
 
@@ -48,7 +48,7 @@ def process_ndex_network(network_id, username=None, password=None,
         Processor containing Statements. Returns None if there if the HTTP
         status code indicates an unsuccessful request.
     """
-    nd = ndex.client.Ndex(username=username, password=password)
+    nd = ndex2.client.Ndex2(username=username, password=password)
     res = nd.get_network_as_cx_stream(network_id)
     if res.status_code != 200:
         logger.error('Problem downloading network: status code %s' %
