@@ -7,8 +7,6 @@ import requests
 import logging
 import ndex2.client
 from ndex2.niceCXNetwork import NiceCXNetwork
-#import ndex
-#import ndex.client
 
 logger = logging.getLogger('ndex_client')
 
@@ -174,7 +172,6 @@ def update_network(cx_str, network_id, ndex_cred):
 
 def set_style(network_id, ndex_cred):
     # Update network style
-    # import ndex.beta.toolbox as toolbox
     template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
     server = 'http://public.ndexbio.org'
@@ -185,13 +182,10 @@ def set_style(network_id, ndex_cred):
                                              password=password,
                                              uuid=network_id)
 
-    source_network = NiceCXNetwork(
-            username=username,
-            password=password,
-            uuid=network_id)
+    source_network = NiceCXNetwork(username=username,
+                                   password=password,
+                                   uuid=network_id)
 
-    # toolbox.apply_template(source_network, template_uuid, server=server,
-    #                        username=username, password=password)
     source_network.apply_template(server, template_uuid)
 
     source_network.update_to(network_id, server=server, username=username,
