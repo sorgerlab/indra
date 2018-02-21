@@ -1,4 +1,4 @@
-from flask import Flask, request, abort, jsonify
+from flask import Flask, request, abort, jsonify, Response
 from indra.db.util import get_statements_by_gene_role_type
 import logging
 
@@ -21,15 +21,18 @@ def welcome():
 def get_statments():
     """Get some statements constrained by query."""
     logger.info("Got request for statements!")
+    headers = request.headers
+    if 'Content-Type' not in headers.keys() or headers['Content-Type'] != 'application/json':
+        abort(Response("Content-Type not set to application/json.\n", 400))
     json_req = None
     try:
         json_req = request.get_json()
         logger.info("Got json data: %s" % json_req)
     except:
         logger.error("Could not load json request data.")
-        return "Failed to get json data."
+        abort(Response("Failed to get json data.\n"), 400)
     if not json_req:
-        return "No data provided!\n"
+        abort(Response("No data provided!\n", 400))
     logger.info("Getting query details.")
     obj = json_req.get('object')
     act = json_req.get('action')
@@ -37,28 +40,28 @@ def get_statments():
 
     if sub is None and obj is None:
         logger.error("No subject or object.")
-        return "No subject or object!\n"
+        abort(Response("No subject or object!\n", 400))
 
     stmts = []
     logger.info("Getting statements...")
     if sub is not None:
-        logger.debug("Getting statements by subject...")
+        logger.info("Getting statements by subject...")
         stmts = get_statements_by_gene_role_type(agent_id=sub,
                                                  role='SUBJECT',
                                                  stmt_type=act,
                                                  do_stmt_count=False)
         if obj is not None:
-            logger.debug("Filtering by object...")
+            logger.info("Filtering by object...")
             stmts = [s for s in stmts if len(s.agent_list()) > 1
                      and s.agent_list()[1].name == obj]
     elif obj is not None:
-        logger.debug("Getting statements by object...")
+        logger.info("Getting statements by object...")
         stmts = get_statements_by_gene_role_type(agent_id=obj,
                                                  role='OBJECT',
                                                  stmt_type=act,
                                                  do_stmt_count=False)
 
-    logger.debug("Exiting with %d statements." % len(stmts))
+    logger.info("Exiting with %d statements." % len(stmts))
     return jsonify([stmt.to_json() for stmt in stmts])
 
 if __name__ == '__main__':
