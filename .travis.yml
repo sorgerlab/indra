@@ -60,6 +60,7 @@ install:
   - cd $TRAVIS_BUILD_DIR
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
   - export REACHPATH=$TRAVIS_BUILD_DIR
+  - pip install pycodestyle
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
@@ -106,5 +107,6 @@ script:
   - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
   - python run_combined.py
   - cd $TRAVIS_BUILD_DIR
+  - git diff master | pycodestyle --diff
 after_success:
-  coveralls
+  - coveralls
