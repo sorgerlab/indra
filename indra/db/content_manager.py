@@ -17,16 +17,12 @@ from datetime import datetime
 from functools import wraps
 from ftplib import FTP
 from io import BytesIO
+from indra.util import _require_python3
 
-if sys.version_info.major is not 3:
-    msg = "Python 3.x is required to use this module."
-    if __name__ == '__main__':
-        print(msg)
-        sys.exit()
-    else:
-        raise ImportError(msg)
 
 logger = logging.getLogger('content_manager')
+
+
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
     # here prevents a long wait just to fined out you entered a command wrong.
@@ -83,8 +79,8 @@ if __name__ == '__main__':
             "# `update` in your command. For mor details, use --help.      #"
             )
         print("#"*63)
-        resp = input("Are you sure you want to continue? [yes/NO]: ")
-        if resp == 'no':
+        resp = input("Are you sure you want to continue? [yes/no]: ")
+        if resp not in ('yes', 'y'):
             print ("Aborting...")
             sys.exit()
 
@@ -101,7 +97,7 @@ from indra.db.database_manager import sql_expressions as sql_exp
 try:
     from psycopg2 import DatabaseError
 except ImportError:
-    class IntegrityError(object):
+    class DatabaseError(object):
         "Using this in a try-except will catch nothing. (That's the point.)"
         pass
 
@@ -379,16 +375,19 @@ class ContentManager(object):
             match_id_types = primary_id_types
         else:
             match_id_types = self.tr_cols
+        # Get IDs from the tr_data_set that have one or more of the listed
+        # id types.
         for id_type in match_id_types:
             id_list = [entry[id_idx(id_type)] for entry in tr_data_set
                        if entry[id_idx(id_type)] is not None]
+            # Add SqlAlchemy filter clause based on the ID list for this ID type
             if id_list:
                 or_list.append(getattr(db.TextRef, id_type).in_(id_list))
         if len(or_list) == 1:
             tr_list = db.select_all(db.TextRef, or_list[0])
         else:
             tr_list = db.select_all(db.TextRef, sql_exp.or_(*or_list))
-        logger.debug("Found %d potentially relevent text refs." % len(tr_list))
+        logger.debug("Found %d potentially relevant text refs." % len(tr_list))
 
         # Create an index of tupled data entries for quick lookups by any id
         # type, for example tr_data_idx_dict['pmid'][<a pmid>] will get the
@@ -407,6 +406,10 @@ class ContentManager(object):
         update_dict = {}
 
         def add_to_found_record_list(record):
+            # Adds a record tuple from tr_data_list to tr_data_match_list and
+            # return True on success. If the record has multiple matches in
+            # the database then we wouldn't know which one to update--hence
+            # we record for review and return False for failure.
             if record not in tr_data_match_list:
                 tr_data_match_list.append(record)
                 added = True
@@ -425,7 +428,7 @@ class ContentManager(object):
             match_set = set()
 
             # Find the matches in the data. Multiple distinct matches indicate
-            # problems, and ar flagged.
+            # problems, and are flagged.
             for id_type, tr_data_idx in tr_data_idx_dict.items():
                 candidate = tr_data_idx.get(getattr(tr, id_type))
                 if candidate is not None:
@@ -438,10 +441,13 @@ class ContentManager(object):
             if len(match_set) == 1:
                 tr_new = match_set.pop()
 
-                # This is how we tell what doesn't need to be added to the db.
+                # Add this record to the match list, unless there are conflicts;
+                # If there are conflicts (multiple matches in the DB) then
+                # we skip any updates.
                 if not add_to_found_record_list(tr_new):
                     continue
 
+                # Tabulate new/updated ID information.
                 # Go through all the id_types
                 all_good = True
                 id_updates = {}
@@ -483,7 +489,7 @@ class ContentManager(object):
                     'Multiple matches for %s from %s: %s.'
                     % (self.make_text_ref_str(tr), self.my_source, match_set))
 
-        # Remove unhealthy text refs.
+        # Apply ID updates to TextRefs with unique matches in tr_data_set
         logger.info("Applying %d updates." % len(update_dict))
         for tr, id_updates, record in update_dict.values():
             if record not in multi_match_records:
@@ -507,7 +513,7 @@ class ContentManager(object):
         return filtered_tr_records, flawed_tr_data
 
     @classmethod
-    def _principal_action(cls, func):
+    def _record_for_review(cls, func):
         @wraps(func)
         def take_action(self, db, *args, **kwargs):
             review_fmt = "review_%s_%s_%%s.txt" % (func.__name__,
@@ -722,7 +728,7 @@ class Pubmed(NihManager):
 
     def load_files(self, db, dirname, n_procs=1, continuing=False,
                    carefully=False):
-        """Load a the files in subdirectory indicated by `dirname`."""
+        """Load the files in subdirectory indicated by `dirname`."""
         xml_files = set(self.get_file_list(dirname))
         sf_list = db.select_all(
             db.SourceFile,
@@ -734,7 +740,7 @@ class Pubmed(NihManager):
             logger.info("All files have been loaded. Nothing to do.")
             return False
 
-        # This could perhaps be simplified with map_async from mp.pool.
+        # Download the XML files in parallel
         q = mp.Queue()
         proc_list = []
         for xml_file in xml_files:
@@ -773,7 +779,7 @@ class Pubmed(NihManager):
 
         return True
 
-    @ContentManager._principal_action
+    @ContentManager._record_for_review
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial input of the pubmed content into the database.
 
@@ -791,7 +797,7 @@ class Pubmed(NihManager):
         """
         return self.load_files(db, 'baseline', n_procs, continuing, False)
 
-    @ContentManager._principal_action
+    @ContentManager._record_for_review
     def update(self, db, n_procs=1):
         """Update the contents of the database with the latest articles."""
         did_base = self.load_files(db, 'baseline', n_procs, True, True)
@@ -1163,7 +1169,7 @@ class PmcManager(NihManager):
 
         return
 
-    @ContentManager._principal_action
+    @ContentManager._record_for_review
     def populate(self, db, n_procs=1, continuing=False):
         """Perform the initial population of the pmc content into the database.
 
@@ -1214,7 +1220,7 @@ class PmcOA(PmcManager):
     def is_archive(self, k):
         return k.startswith('articles') and k.endswith('.xml.tar.gz')
 
-    @ContentManager._principal_action
+    @ContentManager._record_for_review
     def update(self, db, n_procs=1):
         update_list = db.select_all(db.Updates,
                                     db.Updates.source == self.my_source)
@@ -1279,7 +1285,7 @@ class Manuscripts(PmcManager):
         db.commit("Could not update text refs with manuscript ids.")
         return
 
-    @ContentManager._principal_action
+    @ContentManager._record_for_review
     def update(self, db, n_procs=1):
         """Add any new content found in the archives.
 
@@ -1358,16 +1364,3 @@ if __name__ == '__main__':
         PmcOA().update(db, args.num_procs)
         Manuscripts().update(db, args.num_procs)
 
-    # High-level content update procedure
-    # 1. Download MEDLINE baseline, will contain all PMIDs, abstracts,
-    #    other info
-    # 2. Download PMC, update text refs with PMCIDs where possible, with
-    #    update commands.
-    # 3. Add PMC-OA content.
-    # 4. Add PMC-author manuscript information, updating files with manuscript
-    #    IDs and content.
-    # 5. (Optional): Run script to check for/obtain DOIs for those that are
-    #    missing
-    # 6. Obtain Elsevier XML for Elsevier articles
-    # 7. Obtain Springer content for Springer articles
-    # 8. Obtain scraped PDF content for other articles available via OA-DOI.
