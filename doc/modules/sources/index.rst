@@ -11,3 +11,4 @@ Processors for model input (:py:mod:`indra.sources`)
    ndex_cx/index
    signor/index
    geneways/index
+   tees/index
