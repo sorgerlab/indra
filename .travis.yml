@@ -91,8 +91,8 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
-  - nosetests -v -s --process-restartworker indra/tests/test_tees.py -a $NOSEATTR
-  - python travis_continual_output.py nosetests indra -v  -s -a $NOSEATTR -e '.*tees.*'
+  - nosetests -v --process-restartworker indra/tests/test_tees.py -a $NOSEATTR #-s
+  - nosetests indra -v -a $NOSEATTR -e '.*tees.*'
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
