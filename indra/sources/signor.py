@@ -161,9 +161,10 @@ class SignorProcessor(object):
                                          skiprows=1)
         # If no CSV given, download directly from web
         else:
-            res = requests.post('http://signor.uniroma2.it/download_entity.php',
-                                data={'organism':'human', 'format':'csv',
-                                      'submit':'Download'})
+            url = 'https://signor.uniroma2.it/download_entity.php'
+            res = requests.post(url, data={'organism':'human',
+                                           'format':'csv',
+                                           'submit':'Download'})
             if res.status_code == 200:
                 # Python 2 -- csv.reader will need bytes
                 if sys.version_info[0] < 3:
