@@ -91,7 +91,7 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
-  - nosetests -v --process-restartworker indra/tests/test_tees.py -a $NOSEATTR #-s
+  - nosetests -v --process-restartworker indra/tests/test_tees.py -a $NOSEATTR --with-coverage --cover-inclusive --cover-package=indra --with-doctest --with-doctest-ignore-unicode #-s
   - nosetests indra -v -a $NOSEATTR -e '.*tees.*'
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
