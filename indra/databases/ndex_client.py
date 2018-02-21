@@ -5,8 +5,10 @@ import json
 import time
 import requests
 import logging
-import ndex
-import ndex.client
+import ndex2.client
+from ndex2.niceCXNetwork import NiceCXNetwork
+#import ndex
+#import ndex.client
 
 logger = logging.getLogger('ndex_client')
 
@@ -93,7 +95,7 @@ def create_network(cx_str, ndex_cred):
         The UUID of the NDEx network that was created by uploading
         the assembled CX model.
     """
-    nd = ndex.client.Ndex('http://public.ndexbio.org',
+    nd = ndex2.client.Ndex2('http://public.ndexbio.org',
                           username=ndex_cred.get('user'),
                           password=ndex_cred.get('password'))
     cx_stream = io.BytesIO(cx_str.encode('utf-8'))
@@ -128,7 +130,7 @@ def update_network(cx_str, network_id, ndex_cred):
     server = 'http://public.ndexbio.org'
     username = ndex_cred.get('user')
     password = ndex_cred.get('password')
-    nd = ndex.client.Ndex(server, username, password)
+    nd = ndex2.client.Ndex2(server, username, password)
 
     try:
         logger.info('Getting network summary...')
@@ -172,19 +174,25 @@ def update_network(cx_str, network_id, ndex_cred):
 
 def set_style(network_id, ndex_cred):
     # Update network style
-    import ndex.beta.toolbox as toolbox
+    # import ndex.beta.toolbox as toolbox
     template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
     server = 'http://public.ndexbio.org'
     username = ndex_cred.get('user')
     password = ndex_cred.get('password')
 
-    source_network = ndex.networkn.NdexGraph(server=server, username=username,
+    source_network = ndex2.networkn.NdexGraph(server=server, username=username,
                                              password=password,
                                              uuid=network_id)
 
-    toolbox.apply_template(source_network, template_uuid, server=server,
-                           username=username, password=password)
+    source_network = NiceCXNetwork(
+            username=username,
+            password=password,
+            uuid=network_id)
+
+    # toolbox.apply_template(source_network, template_uuid, server=server,
+    #                        username=username, password=password)
+    source_network.apply_template(server, template_uuid)
 
     source_network.update_to(network_id, server=server, username=username,
                              password=password)
@@ -194,7 +202,7 @@ def set_provenance(provenance, network_id, ndex_cred):
     server = 'http://public.ndexbio.org'
     username = ndex_cred.get('user')
     password = ndex_cred.get('password')
-    nd = ndex.client.Ndex(server, username, password)
+    nd = ndex2.client.Ndex2(server, username, password)
     try:
         logger.info('Setting network provenance...')
         nd.set_provenance(network_id, provenance)
