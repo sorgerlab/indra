@@ -2,7 +2,7 @@
 
 # INDRA
 
-![alt text](/doc/indra_logo.png?raw=True")
+<img align="left" src="/doc/indra_logo.png?raw=True" width="300" height="224" />
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
 model assembly system for molecular biology and beyond. It draws on
@@ -14,6 +14,8 @@ assembly modules that operate on INDRA Statements and correct certain errors,
 find and resolve redundancies, infer missing information,
 filter to a scope of interest and assess belief.
 
+### Knowledge sources
+
 INDRA is currently integrated with the following natural language processing
 systems:
 - [TRIPS/DRUM](http://trips.ihmc.us/parser/cgi/drum) - for biology
@@ -21,26 +23,32 @@ systems:
 - [Sparser](https://github.com/ddmcdonald/sparser) - for biology
 - [TEES](https://github.com/jbjorne/TEES) - for biology
 - [Eidos](https://github.com/clulab/eidos) - general purpose
+
 and can collect information from these databases:
 - [Pathway Commons database](http://pathwaycommons.org/) or any source
     using the [BioPAX](http://www.biopax.org/) format
 - [BEL Large Corpus](https://github.com/OpenBEL/) or any source using the
     [BEL](https://github.com/OpenBEL/) format
 - [SIGNOR](https://signor.uniroma2.it/)
+
 These input modules (available in `indra.sources`) all produce INDRA
 Statements.
+
+### Output model assemblers
 
 INDRA also provides several model output assemblers that take INDRA Statements
 as input. INDRA can assemble into the following modeling formalisms
 - Detailed mechanistic, executable models in [PySB](http://pysb.org/)
-    which can further be exported into SBML, SBGN, Kappa, BNGL, etc.
-- Directed node-edge graps in
+    which can further be exported into SBML, SBGN, Kappa, and BNGL.
+- Directed causal networks in
     [SIF](http://wiki.cytoscape.org/Cytoscape_User_Manual/Network_Formats), 
     [NDEx/CX](http://www.home.ndexbio.org/data-model/), 
-    [Cytoscape.js](http://js.cytoscape.org/),
-    [Graphviz](https://www.graphviz.org/) formats
-- English language (i.e. generating a human-readable report of the information
+    [Cytoscape.js](http://js.cytoscape.org/), and
+    [Graphviz](https://www.graphviz.org/) formats.
+- English language (a human-readable summary of the information
     collected and assembled by INDRA)
+
+### Internal knowledge assembly
 
 The internal assembly steps of INDRA are exposed in the
 [indra.tools.assemble_corpus](http://indra.readthedocs.io/en/latest/modules/tools/index.html#module-indra.tools.assemble_corpus) 
