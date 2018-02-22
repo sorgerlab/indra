@@ -229,12 +229,14 @@ def get_ecs_cluster_for_queue(queue_name, batch_client=None):
 
     compute_envs = batch_client.describe_compute_environments(
         computeEnvironments=[compute_env_name]
-        )
+        )['computeEnvironments']
     if len(compute_envs) == 1:
         compute_env = compute_envs[0]
     else:
-        raise BatchReadingError("Error getting compute environment %s for %s."
-                                % (compute_env_name, queue_name))
+        raise BatchReadingError("Error getting compute environment %s for %s. "
+                                "Got %d enviornments instead of 1."
+                                % (compute_env_name, queue_name,
+                                   len(compute_envs)))
 
     ecs_cluster_name = os.path.basename(compute_env['ecsClusterArn'])
     return ecs_cluster_name
@@ -245,6 +247,8 @@ def tag_instances(cluster_name, project='cwc'):
     # Get the relevent instance ids from the ecs cluster
     ecs = boto3.client('ecs')
     task_arns = ecs.list_tasks(cluster=cluster_name)['taskArns']
+    if not len(task_arns):
+        return
     tasks = ecs.describe_tasks(cluster=cluster_name, tasks=task_arns)['tasks']
     container_instances = ecs.describe_container_instances(
         cluster=cluster_name,
@@ -255,10 +259,14 @@ def tag_instances(cluster_name, project='cwc'):
     # Instantiate each instance to tag as a resource and create project tag
     ec2 = boto3.resource('ec2')
     for instance_id in ec2_instance_ids:
-        logger.info('Adding project tag to instance %s' % instance_id)
         instance = ec2.Instance(instance_id)
-        instance.create_tags(Tags=[{'Key': 'project',
-                                    'Value': project}])
+        for tag in instance.tags:
+            if tag.get('Key') == 'project':
+                break
+        else:
+            logger.info('Adding project tag to instance %s' % instance_id)
+            instance.create_tags(Tags=[{'Key': 'project',
+                                        'Value': project}])
     return
 
 
