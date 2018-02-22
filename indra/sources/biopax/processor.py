@@ -1310,6 +1310,7 @@ _mftype_dict = {
     '4hypro': ('hydroxylation', 'P'),
     '3-hydroxy-L-proline': ('hydroxylation', 'P'),
     '5-hydroxy-L-lysine': ('hydroxylation', 'K'),
+    'O-palmitoyl-L-serine': ('palmitoylation', 'S')
     }
 
 # Functions for accessing frequently used java classes with shortened path
