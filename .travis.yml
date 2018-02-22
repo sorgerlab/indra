@@ -64,8 +64,8 @@ install:
   - export REACHPATH=$TRAVIS_BUILD_DIR
   - pip install pycodestyle
   # TEES
-  - sudo apt-get --yes install ruby # Dependency
-  - wget -nv http://http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2
+  - sudo apt-get --yes install ruby
+  - wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2
   - tar xjf TEES.tar.bz2
   - mv TEES ~/TEES
 before_script:
