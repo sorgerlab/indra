@@ -65,7 +65,7 @@ install:
   - pip install pycodestyle
   # TEES
   - sudo apt-get --yes install ruby # Dependency
-  - wget https://s3.amazonaws.com/bigmech/TEES/TEES.tar.bz2
+  - wget -nv http://http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2
   - tar xjf TEES.tar.bz2
   - mv TEES ~/TEES
 before_script:
