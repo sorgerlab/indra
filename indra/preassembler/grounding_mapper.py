@@ -370,12 +370,15 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
     write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
-default_grounding_map_path = os.path.join(os.path.dirname(__file__),
-                                   '../../bioentities/grounding_map.csv')
-default_ignore_path = os.path.join(os.path.dirname(__file__),
-                                   '../../bioentities/ignore.csv')
-default_agent_grounding_path = os.path.join(os.path.dirname(__file__),
-                                   '../resources/grounding_agents.json')
+default_grounding_map_path = \
+    os.path.join(os.path.dirname(__file__),
+                 '../resources/bioentities/grounding_map.csv')
+default_ignore_path = \
+    os.path.join(os.path.dirname(__file__),
+                 '../resources/bioentities/ignore.csv')
+default_agent_grounding_path = \
+    os.path.join(os.path.dirname(__file__),
+                 '../resources/grounding_agents.json')
 default_grounding_map = \
     load_grounding_map(default_grounding_map_path, default_ignore_path)
 
