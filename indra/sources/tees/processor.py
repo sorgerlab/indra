@@ -95,8 +95,10 @@ class TEESProcessor(object):
             The text in the relation property of the edge
         """
         G = self.G
-        for to in G.edge[node_name].keys():
-            relation_name = G.edge[node_name][to]['relation']
+        for edge in G.edges(node_name):
+            to = edge[1]
+
+            relation_name = G.edges[node_name, to]['relation']
             if relation_name == edge_label:
                 return to
         return None
@@ -120,16 +122,16 @@ class TEESProcessor(object):
         print(general_node_label(G, node))
         tabs = '\t'
         for parent in parents:
-            relation = G.edge[parent][node]['relation']
+            relation = G.edges[parent, node]['relation']
             print(tabs + 'Parent (%s): %s' % (relation,
                   general_node_label(G, parent)))
             for cop in G.successors(parent):
                 if cop != node:
-                    relation = G.edge[parent][cop]['relation']
+                    relation = G.edges[parent, cop]['relation']
                     print(tabs + 'Child of parent (%s): %s' % (relation,
                           general_node_label(G, cop)))
         for child in children:
-            relation = G.edge[node][child]['relation']
+            relation = G.edges[node, child]['relation']
             print(tabs + 'Child (%s): (%s)' % (relation,
                                                general_node_label(G, child)))
 
@@ -174,8 +176,8 @@ class TEESProcessor(object):
 
         for node in G.node.keys():
             if G.node[node]['is_event'] and G.node[node]['type'] == event_name:
-                has_relations = [G.edge[node][to]['relation'] for
-                                 to in G.edge[node].keys()]
+                has_relations = [G.edges[node, edge[1]]['relation'] for
+                                 edge in G.edges(node)]
                 has_relations = set(has_relations)
                 # Did the outgoing edges from this node have all of the
                 # desired relations?
@@ -188,8 +190,10 @@ class TEESProcessor(object):
         annotated with the given relation. If there exists such an edge,
         returns the name of the node it points to. Otherwise, returns None."""
         G = self.G
-        for to in G.edge[node]:
-            to_relation = G.edge[node][to]['relation']
+        for edge in G.edges(node):
+            to = edge[1]
+
+            to_relation = G.edges[node, to]['relation']
             if to_relation == relation:
                 return to
         return None
@@ -354,8 +358,12 @@ class TEESProcessor(object):
         # Make annotations object containing the fully connected subgraph
         # containing these nodes
         subgraph = self.connected_subgraph(entity_node)
+        edge_properties = {}
+        for edge in subgraph.edges():
+            edge_properties[edge] = subgraph.edges[edge]
+
         annotations = {'node_properties': subgraph.node,
-                       'edge_properties': subgraph.edge}
+                       'edge_properties': edge_properties}
 
         # Make evidence object
         epistemics = dict()

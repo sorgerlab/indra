@@ -471,10 +471,12 @@ def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
         mentioned_nodes = set()
 
         for from_node in subgraph_nodes:
-            for to_node in G.edge[from_node]:
+            for edge in G.edges(from_node):
+                to_node = edge[1]
+
                 mentioned_nodes.add(from_node)
                 mentioned_nodes.add(to_node)
-                relation = G.edge[from_node][to_node]['relation']
+                relation = G.edges[from_node, to_node]['relation']
                 f.write('%s -> %s [ label = "%s" ];\n' % (from_node, to_node,
                         relation))
 
