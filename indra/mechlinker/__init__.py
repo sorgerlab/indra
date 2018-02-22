@@ -781,7 +781,7 @@ def _get_graph_reductions(graph):
                 frontiers = frontiers.union(frontier(graph, n))
             return frontiers
     reductions = {}
-    nodes_sort = networkx.topological_sort(graph)
+    nodes_sort = list(networkx.algorithms.dag.topological_sort(graph))
     frontiers = [frontier(graph, n) for n in nodes_sort]
     # This loop ensures that if a node n2 comes after node n1 in the topological
     # sort, and their frontiers are identical then n1 can be reduced to n2.
