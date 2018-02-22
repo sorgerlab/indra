@@ -2,6 +2,8 @@
 
 # INDRA
 
+![alt text](/doc/indra_logo.png?raw=True")
+
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
 model assembly system for molecular biology and beyond. It draws on
 natural language processing systems and structured databases to
