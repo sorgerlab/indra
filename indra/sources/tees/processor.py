@@ -58,7 +58,7 @@ class TEESProcessor(object):
 
         # Load grounding information
         path_this = os.path.dirname(os.path.abspath(__file__))
-        gm_fname = os.path.join(path_this, '../../../data/',
+        gm_fname = os.path.join(path_this, '../../resources/',
                                 'extracted_reach_grounding_map.csv')
         try:
             gm = load_grounding_map(gm_fname)
