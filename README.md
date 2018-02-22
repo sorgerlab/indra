@@ -1,28 +1,68 @@
 [![Build Status](https://travis-ci.org/sorgerlab/indra.svg?branch=travis_ci)](https://travis-ci.org/sorgerlab/indra) [![Documentation Status](https://readthedocs.org/projects/indra/badge/?version=latest)](https://indra.readthedocs.io/en/latest/?badge=latest)
 
-INDRA
-=====
+# INDRA
 
-INDRA (Integrated Network and Dynamical Reasoning Assembler) generates
-executable models of pathway dynamics from natural language (using the
-[TRIPS](http://trips.ihmc.us/parser/cgi/drum) and
-[REACH](https://github.com/clulab/reach) reading systems), and BioPAX and
-BEL sources
-(including the [Pathway Commons database](http://pathwaycommons.org/) and
-[NDEx](http://ndexbio.org)).
+INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
+model assembly system for molecular biology and beyond. It draws on
+natural language processing systems and structured databases to
+collect mechanistic and causal assertions, represent them in a standardized
+form (INDRA Statements), and assemble them into various modeling formalisms
+including causal graphs and dynamical models. INDRA also provides knowledge
+assembly modules that operate on INDRA Statements and correct certain errors,
+find and resolve redundancies, infer missing information,
+filter to a scope of interest and assess belief.
 
-Reference: [From word models to executable models of signal transduction
+INDRA is currently integrated with the following natural language processing
+systems:
+- [TRIPS/DRUM](http://trips.ihmc.us/parser/cgi/drum) - for biology
+- [REACH](https://github.com/clulab/reach) - for biology
+- [Sparser](https://github.com/ddmcdonald/sparser) - for biology
+- [TEES](https://github.com/jbjorne/TEES) - for biology
+- [Eidos](https://github.com/clulab/eidos) - general purpose
+and can collect information from these databases:
+- [Pathway Commons database](http://pathwaycommons.org/) or any source
+    using the [BioPAX](http://www.biopax.org/) format
+- [BEL Large Corpus](https://github.com/OpenBEL/) or any source using the
+    [BEL](https://github.com/OpenBEL/) format
+- [SIGNOR](https://signor.uniroma2.it/)
+These input modules (available in `indra.sources`) all produce INDRA
+Statements.
+
+INDRA also provides several model output assemblers that take INDRA Statements
+as input. INDRA can assemble into the following modeling formalisms
+- Detailed mechanistic, executable models in [PySB](http://pysb.org/)
+    which can further be exported into SBML, SBGN, Kappa, BNGL, etc.
+- Directed node-edge graps in
+    [SIF](http://wiki.cytoscape.org/Cytoscape_User_Manual/Network_Formats), 
+    [NDEx/CX](http://www.home.ndexbio.org/data-model/), 
+    [Cytoscape.js](http://js.cytoscape.org/),
+    [Graphviz](https://www.graphviz.org/) formats
+- English language (i.e. generating a human-readable report of the information
+    collected and assembled by INDRA)
+
+The internal assembly steps of INDRA are exposed in the
+[indra.tools.assemble_corpus](http://indra.readthedocs.io/en/latest/modules/tools/index.html#module-indra.tools.assemble_corpus) 
+submodule. This submodule contains functions each of which
+take Statements as input and produce Statements as output. They can be
+composed to form an assembly pipeline connecting knowledge collected from
+sources with an output model.
+
+INDRA contains modules to access literature content (e.g. PubMed) and
+ontological information (e.g. UniProt, HGNC), and other utilities.
+
+## Citation
+
+[From word models to executable models of signal transduction
 using automated assembly](http://msb.embopress.org/content/13/11/954),
 Molecular Systems Biology (2017)
 
-Documentation
--------------
+## Documentation
 
 Documentation is available at
 [http://indra.readthedocs.io](http://indra.readthedocs.io).
 
-Installing INDRA
-----------------
+
+## Installation
 
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
@@ -56,14 +96,13 @@ release as
 However, releases will usually be behind the latest code available in this
 repository.
 
-INDRA depends on a few standard Python packages (e.g. rdflib, requests, pysb).
-These packages are installed by either setup method (using pip or running
-setup.py install). For certain modules and use cases, other dependencies
-may be needed, which are described in detail in the
+INDRA depends on a few standard Python package. These packages are installed by
+either setup method (using pip or running setup.py install).
+For certain modules and use cases, other dependencies may be needed,
+which are described in detail in the
 [documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-Using INDRA
------------
+## Using INDRA
 
 In this example INDRA assembles a PySB model from the natural language
 description of a mechanism via the [TRIPS reading web
