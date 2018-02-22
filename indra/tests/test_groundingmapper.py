@@ -182,6 +182,21 @@ def test_in_place_overwrite_of_gm():
     gmap_after_mapping = gm.gm
     assert set(gmap_after_mapping['ERK1'].keys()) == set(['TEXT', 'UP'])
 
+def test_map_entry_hgnc_and_up():
+    """Make sure that HGNC symbol is replaced with HGNC ID when grounding map
+    includes both UP ID and HGNC symbol."""
+    rela = Agent('NF-kappaB p65', db_refs={'TEXT': 'NF-kappaB p65'})
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    stmt = Phosphorylation(erk, rela)
+    g_map = {'NF-kappaB p65': {'TEXT': 'NF-kappaB p65', 'UP':'Q04206',
+                               'HGNC': 'RELA'}}
+    gm = GroundingMapper(g_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert len(mapped_stmts) == 1
+    ms = mapped_stmts[0]
+    assert ms.sub.db_refs == {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
+                             'HGNC': '9955'}
+
 def test_map_agent():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     p_erk = Agent('P-ERK', db_refs={'TEXT': 'p-ERK'})
@@ -191,3 +206,7 @@ def test_map_agent():
     mapped_ag = mapped_stmts[0].members[1]
     assert mapped_ag.name == 'ERK'
     assert mapped_ag.db_refs.get('BE') == 'ERK'
+
+if __name__ == '__main__':
+    test_map_entry_hgnc_and_up()
+
