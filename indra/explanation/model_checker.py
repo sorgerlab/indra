@@ -178,11 +178,7 @@ class ModelChecker(object):
 
         Returns
         -------
-        pygraphviz AGraph object containing the influence map.
-            The influence map can be rendered as a pdf using the dot layout
-            program as follows::
-
-                influence_map.draw('influence_map.pdf', prog='dot')
+        networkx MultiDiGraph object containing the influence map.
         """
         if self._im and not force_update:
             return self._im
@@ -241,10 +237,9 @@ class ModelChecker(object):
 
         logger.info("Generating influence map")
         self._im = kappa.influence_map(self.model)
-        #self._im.is_multigraph = lambda: False
         # Now, for every rule in the model, check if there are any observables
-        # downstream
-        # Alternatively, for every observable in the model, get a list of rules
+        # downstream; alternatively, for every observable in the model, get a
+        # list of rules.
         # We'll need the dictionary to check if nodes are observables
         node_attributes = nx.get_node_attributes(self._im, 'shape')
         for rule in self.model.rules:
@@ -780,7 +775,7 @@ def _find_sources_with_paths(im, target, sources, polarity):
 
     Parameters
     ----------
-    im : pygraphviz.AGraph
+    im : networkx.MultiDiGraph
         Graph containing the influence map.
     target : string
         The node (rule name) in the influence map to start looking upstream for
@@ -841,12 +836,12 @@ def remove_im_params(model, im):
     ----------
     model : pysb.core.Model
         PySB model.
-    im : pygraphviz AGraph
+    im : networkx.MultiDiGraph
         Influence map.
 
     Returns
     -------
-    pygraphviz AGraph
+    networkx.MultiDiGraph
         Influence map with the parameter nodes removed.
     """
     for param in model.parameters:
@@ -868,7 +863,7 @@ def _find_sources(im, target, sources, polarity):
 
     Parameters
     ----------
-    im : pygraphviz.AGraph
+    im : networkx.MultiDiGraph
         Graph containing the influence map.
     target : string
         The node (rule name) in the influence map to start looking upstream for
@@ -934,7 +929,7 @@ def _get_signed_predecessors(im, node, polarity):
 
     Parameters
     ----------
-    im : pygraphviz.AGraph
+    im : networkx.MultiDiGraph
         Graph containing the influence map.
     node : string
         The node (rule name) in the influence map to get predecessors (upstream
