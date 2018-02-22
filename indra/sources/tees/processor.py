@@ -394,6 +394,21 @@ class TEESProcessor(object):
         subgraph_nodes.add(node)
         subgraph_nodes.update(dag.ancestors(G, node))
         subgraph_nodes.update(dag.descendants(G, node))
+
+        # Keep adding the ancesotrs and descendants on nodes of the graph
+        # until we can't do so any longer
+        graph_changed = True
+        while graph_changed:
+            initial_count = len(subgraph_nodes)
+
+            old_nodes = set(subgraph_nodes)
+            for n in old_nodes:
+                subgraph_nodes.update(dag.ancestors(G, n))
+                subgraph_nodes.update(dag.descendants(G, n))
+
+            current_count = len(subgraph_nodes)
+            graph_changed = current_count > initial_count
+
         return G.subgraph(subgraph_nodes)
 
 
