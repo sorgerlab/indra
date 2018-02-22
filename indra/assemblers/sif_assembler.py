@@ -252,4 +252,4 @@ class SifAssembler(object):
         if edge_attributes is None:
             self.graph.add_edge(s, t)
         else:
-            self.graph.add_edge(s, t, edge_attributes)
+            self.graph.add_edge(s, t, **edge_attributes)
