@@ -1,3 +1,3 @@
 [submodule "bioentities"]
-	path = bioentities
+	path = indra/resources/bioentities
 	url = https://github.com/sorgerlab/bioentities.git
