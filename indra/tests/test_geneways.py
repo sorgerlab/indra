@@ -14,11 +14,9 @@ from indra.sources.geneways.geneways_api import process_geneways_files
 
 # Path to the Geneways test/dummy data folder
 path_this = os.path.dirname(os.path.abspath(__file__))
-data_folder = os.path.join(path_this,
-        '../../data/tests_data/geneways_tests_data')
+data_folder = os.path.join(path_this, 'geneways_tests_data')
 symbols_file = os.path.join(data_folder, 'human_symbols.txt')
-actionmention_file = os.path.join(data_folder,
-        'human_actionmention.txt')
+actionmention_file = os.path.join(data_folder, 'human_actionmention.txt')
 
 def test_geneways_symbols_parser():
     symbols = GenewaysSymbols(symbols_file)
