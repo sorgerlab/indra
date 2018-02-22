@@ -5,14 +5,15 @@
 <img align="left" src="/doc/indra_logo.png?raw=True" width="300" height="224" />
 
 INDRA (Integrated Network and Dynamical Reasoning Assembler) is an automated
-model assembly system for molecular biology and beyond. It draws on
-natural language processing systems and structured databases to
-collect mechanistic and causal assertions, represent them in a standardized
-form (INDRA Statements), and assemble them into various modeling formalisms
-including causal graphs and dynamical models. INDRA also provides knowledge
-assembly modules that operate on INDRA Statements and correct certain errors,
-find and resolve redundancies, infer missing information,
-filter to a scope of interest and assess belief.
+model assembly system, originally developed for molecular systems biology and
+currently being generalized to other domains. INDRA draws on natural language
+processing systems and structured databases to collect mechanistic and causal
+assertions, represents them in a standardized form (INDRA Statements), and
+assembles them into various modeling formalisms including causal graphs and
+dynamical models. INDRA also provides knowledge assembly procedures that
+operate on INDRA Statements and correct certain errors, find and resolve
+redundancies, infer missing information, filter to a scope of interest and
+assess belief.
 
 ### Knowledge sources
 
@@ -52,13 +53,13 @@ as input. INDRA can assemble into the following modeling formalisms
 
 The internal assembly steps of INDRA are exposed in the
 [indra.tools.assemble_corpus](http://indra.readthedocs.io/en/latest/modules/tools/index.html#module-indra.tools.assemble_corpus) 
-submodule. This submodule contains functions each of which
-take Statements as input and produce Statements as output. They can be
-composed to form an assembly pipeline connecting knowledge collected from
+submodule. This submodule contains functions that
+take Statements as input and produce processed Statements as output. They can
+be composed to form an assembly pipeline connecting knowledge collected from
 sources with an output model.
 
-INDRA contains modules to access literature content (e.g. PubMed) and
-ontological information (e.g. UniProt, HGNC), and other utilities.
+INDRA also contains utility modules to access literature content (e.g. PubMed),
+ontological information (e.g. UniProt, HGNC), and other resources.
 
 ## Citation
 
@@ -106,7 +107,7 @@ release as
 However, releases will usually be behind the latest code available in this
 repository.
 
-INDRA depends on a few standard Python package. These packages are installed by
+INDRA depends on a few standard Python packages. These packages are installed by
 either setup method (using pip or running setup.py install).
 For certain modules and use cases, other dependencies may be needed,
 which are described in detail in the
