@@ -15,6 +15,10 @@ bucket_name = 'bigmech'
 logger = logging.getLogger('aws_reading')
 
 
+class BatchReadingError(Exception):
+    pass
+
+
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
                       kill_on_log_timeout=False, stash_log_method=None):
@@ -104,6 +108,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                     for job_def in job_defs}
 
     batch_client = boto3.client('batch')
+    ecs_cluster_name = get_ecs_cluster_for_queue(queue_name, batch_client)
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
@@ -146,7 +151,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 ret = 0
                 break
 
-        tag_instances()
+        tag_instances(ecs_cluster_name)
         sleep(poll_interval)
 
     # Stash the logs
@@ -203,34 +208,58 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
     return
 
 
-def tag_instances(project='cwc'):
+def get_ecs_cluster_for_queue(queue_name, batch_client=None):
+    """Get the name of the ecs cluster using the batch client."""
+    if batch_client is None:
+        batch_client = boto3.client('batch')
+
+    queue_resp = batch_client.describe_job_queues(jobQueues=[queue_name])
+    if len(queue_resp['jobQueues']) == 1:
+        queue = queue_resp['jobQueues'][0]
+    else:
+        raise BatchReadingError('Error finding queue with name %s.'
+                                % queue_name)
+
+    compute_env_names = queue['computeEnvironmentOrder']
+    if len(compute_env_names) == 1:
+        compute_env_name = compute_env_names[0]['computeEnvironment']
+    else:
+        raise BatchReadingError('Error finding the compute environment name '
+                                'for %s.' % queue_name)
+
+    compute_envs = batch_client.describe_compute_environments(
+        computeEnvironments=[compute_env_name]
+        )
+    if len(compute_envs) == 1:
+        compute_env = compute_envs[0]
+    else:
+        raise BatchReadingError("Error getting compute environment %s for %s."
+                                % (compute_env_name, queue_name))
+
+    ecs_cluster_name = os.path.basename(compute_env['ecsClusterArn'])
+    return ecs_cluster_name
+
+
+def tag_instances(cluster_name, project='cwc'):
     """Adds project tag to untagged fleet instances."""
-    # First, get all the instances
-    ec2_client = boto3.client('ec2')
-    resp = ec2_client.describe_instances()
-    instances = []
-    for res in resp.get('Reservations', []):
-        instances += res.get('Instances', [])
-    instances_to_tag = []
-    # Check each instance to see if it's tagged and if it's a spot fleet
-    # instance
-    for instance in instances:
-        tagged = False
-        need_tag = False
-        for tag in instance.get('Tags', []):
-            if tag.get('Key') == 'project':
-                tagged = True
-            elif tag.get('Key') == 'aws:ec2spot:fleet-request-id':
-                need_tag = True
-        if not tagged and need_tag:
-            instances_to_tag.append(instance['InstanceId'])
+    # Get the relevent instance ids from the ecs cluster
+    ecs = boto3.client('ecs')
+    task_arns = ecs.list_tasks(cluster=cluster_name)['taskArns']
+    tasks = ecs.describe_tasks(cluster=cluster_name, tasks=task_arns)['tasks']
+    container_instances = ecs.describe_container_instances(
+        cluster=cluster_name,
+        containerInstances=[task['containerInstanceArn'] for task in tasks]
+        )['containerInstances']
+    ec2_instance_ids = [ci['ec2InstanceId'] for ci in container_instances]
+
     # Instantiate each instance to tag as a resource and create project tag
     ec2 = boto3.resource('ec2')
-    for instance_id in instances_to_tag:
+    for instance_id in ec2_instance_ids:
         logger.info('Adding project tag to instance %s' % instance_id)
         instance = ec2.Instance(instance_id)
         instance.create_tags(Tags=[{'Key': 'project',
                                     'Value': project}])
+    return
 
 
 def get_environment():
