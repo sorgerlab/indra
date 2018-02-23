@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import networkx
 from indra.statements import *
 
@@ -47,7 +49,7 @@ class FigaroAssembler(object):
                 node_def = 'val %s = Normal(1,0.2)' % node
             elif npar == 1:
                 node_def = 'val %s = Chain(%s, (v:Double) => Normal(v, 0.2))' % \
-                    (node, self.BN.predecessors(node)[0])
+                    (node, list(self.BN.predecessors(node))[0])
             else:
                 node_def_p = 'val %s = Chain(^^(%s), (v:(%s)) => Normal(%s, 0.2))'
                 parents = ','.join(self.BN.predecessors(node))
