@@ -101,7 +101,7 @@ script:
       export NOSEATTR="!slow",$NOSEATTR;
     fi
   # First run TEES tests separately for technical reasons
-  - nosetests -v --process-restartworker indra/tests/test_tees.py
+  - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
   # Now run all INDRA tests
   - nosetests indra -v -a $NOSEATTR -e '.*tees.*' --with-coverage --cover-inclusive
         --cover-package=indra --with-doctest --with-doctest-ignore-unicode
