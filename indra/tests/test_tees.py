@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, dirname
 from nose.tools import raises
+from nose.plugins.attrib import attr
 
 from indra.sources.tees import tees_api
 from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
@@ -12,6 +13,7 @@ _multiprocess_can_split_ = False
 _multiprocess_shared_ = False
 
 
+@attr('slow')
 def test_process_phosphorylation():
     # Test the extraction of phosphorylation with a simple example.
     s = 'Ras leads to the phosphorylation of Braf.'
@@ -37,6 +39,7 @@ def test_process_phosphorylation():
     assert(len(statements[0].evidence) == 1)
 
 
+@attr('slow')
 def test_process_dephosphorylation():
     # Test the extraction of a dephosphorylation sentence. This sentence is
     # processed into two INDRA statements, at least one of which is correct.
@@ -77,6 +80,7 @@ def test_process_dephosphorylation():
     assert(some_statement_correct)
 
 
+@attr('slow')
 def test_process_increase_amount():
     # Test extraction of IncreaseAmount statements from a text description
     # of a substance increasing the expression of some gene.
@@ -106,6 +110,7 @@ def test_process_increase_amount():
     assert(len(statements[0].evidence) == 1)
 
 
+@attr('slow')
 def test_process_decrease_amount():
     # Test extraction of DecreaseAmount statements from a text description
     # of a substance decreasing the expression of some gene.
@@ -134,6 +139,7 @@ def test_process_decrease_amount():
     assert(len(statements[0].evidence) == 1)
 
 
+@attr('slow')
 def test_process_bind():
     # Test extracting of Complex statement from a text description of
     # substances binding to each other.
@@ -162,6 +168,7 @@ def test_process_bind():
     assert(statement0.evidence[0].epistemics['direct'])
 
 
+@attr('slow')
 def test_evidence_text():
     # Test the ability of the processor to extract which sentence in particular
     # lead to the creation of the INDRA statement, amongst a corpus of text
@@ -189,6 +196,7 @@ def test_evidence_text():
     assert(text == 'Ras leads to the phosphorylation of Raf.')
 
 
+@attr('slow')
 def test_evidence_pmid():
     # Test whether the pmid provided to the TEES processor is put into the
     # statement's evidence
