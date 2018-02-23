@@ -16,10 +16,6 @@ before_install:
   - sudo apt-get update
   - pip install numpy scipy sympy cython==0.23.5 nose lxml matplotlib==1.5.0 pandas
   - pip2 install numpy
-  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
-        export RUN_SLOW=true;
-    fi
-  - echo "Run slow setting is: $RUN_SLOW"
 install:
   # INDRA dependencies
   - sudo apt-get install libstdc++6
@@ -68,6 +64,9 @@ install:
   - export REACHPATH=$TRAVIS_BUILD_DIR
   - pip install pycodestyle
   # TEES
+  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+        export RUN_SLOW=true;
+    fi
   - |
     if [[ $RUN_SLOW ]]; then
         sudo apt-get --yes install ruby;
