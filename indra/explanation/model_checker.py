@@ -747,10 +747,9 @@ class ModelChecker(object):
 
         # Now compare nodes pairwise and look for overlap between child nodes
         logger.info('Get successorts of each node')
-        successors = im.successors_iter
         succ_dict = {}
         for node in im.nodes():
-            succ_dict[node] = set(successors(node))
+            succ_dict[node] = set(im.successors(node))
         # Sort and then group nodes by number of successors
         logger.info('Compare combinations of successors')
         group_key_fun = lambda x: len(succ_dict[x])
@@ -1023,8 +1022,7 @@ def _get_signed_predecessors(im, node, polarity):
         polarity of the overall path (int) to that node.
     """
     signed_pred_list = []
-    predecessors = im.predecessors_iter
-    for pred in predecessors(node):
+    for pred in im.predecessors(node):
         pred_edge = (pred, node)
         yield (pred, _get_edge_sign(im, pred_edge) * polarity)
 
