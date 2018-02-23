@@ -24,7 +24,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy
+  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy nose-timer
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@master
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
@@ -64,10 +64,16 @@ install:
   - export REACHPATH=$TRAVIS_BUILD_DIR
   - pip install pycodestyle
   # TEES
-  - sudo apt-get --yes install ruby
-  - wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2
-  - tar xjf TEES.tar.bz2
-  - mv TEES ~/TEES
+  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+        export RUN_SLOW=true;
+    fi
+  - |
+    if [[ $RUN_SLOW == "true" ]]; then
+        sudo apt-get --yes install ruby;
+        wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2;
+        tar xjf TEES.tar.bz2;
+        mv TEES ~/TEES;
+    fi
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
@@ -91,11 +97,14 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
+  - if [[ $RUN_SLOW != "true" ]]; then
+      export NOSEATTR="!slow,$NOSEATTR";
+    fi
   # First run TEES tests separately for technical reasons
-  - nosetests -v --process-restartworker indra/tests/test_tees.py
+  - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
   # Now run all INDRA tests
   - nosetests indra -v -a $NOSEATTR -e '.*tees.*' --with-coverage --cover-inclusive
-        --cover-package=indra --with-doctest --with-doctest-ignore-unicode
+        --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is

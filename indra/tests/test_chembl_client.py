@@ -50,7 +50,6 @@ def test_target_query():
 
 
 @attr('webservice', 'slow')
-@unittest.skip('This test is very slow and not critical')
 def test_get_drug_inhibition_stmts_vem():
     stmts = chembl_client.get_drug_inhibition_stmts(vem)
     assert(len(stmts) > 0)
@@ -65,7 +64,6 @@ def test_get_drug_inhibition_stmts_vem():
 
 
 @attr('webservice', 'slow')
-@unittest.skip('This test is very slow and not critical')
 def test_get_drug_inhibition_stmts_az628():
     stmts = chembl_client.get_drug_inhibition_stmts(az628)
     assert(len(stmts) > 0)
