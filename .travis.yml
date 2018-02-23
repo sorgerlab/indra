@@ -16,6 +16,10 @@ before_install:
   - sudo apt-get update
   - pip install numpy scipy sympy cython==0.23.5 nose lxml matplotlib==1.5.0 pandas
   - pip2 install numpy
+  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+        export RUN_SLOW=true;
+    fi
+  - echo "Run slow setting is: $RUN_SLOW"
 install:
   # INDRA dependencies
   - sudo apt-get install libstdc++6
@@ -64,10 +68,13 @@ install:
   - export REACHPATH=$TRAVIS_BUILD_DIR
   - pip install pycodestyle
   # TEES
-  - sudo apt-get --yes install ruby
-  - wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2
-  - tar xjf TEES.tar.bz2
-  - mv TEES ~/TEES
+  - |
+    if [[ $RUN_SLOW ]]; then
+        sudo apt-get --yes install ruby;
+        wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2;
+        tar xjf TEES.tar.bz2;
+        mv TEES ~/TEES;
+    fi
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
@@ -90,6 +97,9 @@ script:
   - export NOSEATTR="";
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
+    fi
+  - if [[ $RUN_SLOW ]]; then
+      export NOSEATTR="!slow",$NOSEATTR;
     fi
   # First run TEES tests separately for technical reasons
   - nosetests -v --process-restartworker indra/tests/test_tees.py
