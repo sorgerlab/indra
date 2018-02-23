@@ -24,7 +24,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy
+  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2 pgcopy nose-timer
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@master
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
@@ -104,7 +104,7 @@ script:
   - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
   # Now run all INDRA tests
   - nosetests indra -v -a $NOSEATTR -e '.*tees.*' --with-coverage --cover-inclusive
-        --cover-package=indra --with-doctest --with-doctest-ignore-unicode
+        --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
