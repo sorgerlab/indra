@@ -68,7 +68,7 @@ install:
         export RUN_SLOW=true;
     fi
   - |
-    if [[ $RUN_SLOW ]]; then
+    if [[ $RUN_SLOW == "true" ]]; then
         sudo apt-get --yes install ruby;
         wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2;
         tar xjf TEES.tar.bz2;
@@ -97,7 +97,7 @@ script:
   - if [[ $TRAVIS_PULL_REQUEST ]]; then
       export NOSEATTR="!nonpublic";
     fi
-  - if [[ $RUN_SLOW ]]; then
+  - if [[ $RUN_SLOW != "true" ]]; then
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES tests separately for technical reasons
