@@ -133,6 +133,6 @@ script:
   # Run code style report on diff
   - git remote set-branches --add origin master
   - git fetch
-  - git diff origin/master | pycodestyle --diff
+  - git diff origin/master | pycodestyle --diff > pep8.txt; cat pep8.txt;
 after_success:
   - coveralls
