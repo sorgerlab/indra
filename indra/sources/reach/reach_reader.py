@@ -15,12 +15,12 @@ def _set_classpath():
     # Look at all the parts of the CLASSPATH
     for part in clp_parts:
         # If Eidos is on the CLASSPATH, remove it
-        if os.path.abspath(part) != eip:
+        if not eip or os.path.abspath(part) != eip:
             new_clp_parts.append(part)
         # If REACH is not on the CLASSPATH, add it
-        if os.path.abspath(part) == rep:
+        if rep and os.path.abspath(part) == rep:
             has_reach = True
-    if not has_reach:
+    if rep and not has_reach:
         new_clp_parts.append(rep)
     # Set the new CLASSPATH
     new_clp = ':'.join(new_clp_parts)
