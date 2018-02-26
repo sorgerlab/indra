@@ -1,4 +1,30 @@
+import os
 import json
+
+# Before the import, we have to deal with the CLASSPATH to avoid clashes
+# with REACH.
+def _set_classpath():
+    clp = os.environ.get('CLASSPATH')
+    eip = os.environ.get('EIDOSPATH')
+    rep = os.environ.get('REACHPATH')
+    clp_parts = clp.split(':') if clp else []
+    new_clp_parts = []
+    has_eidos = False
+    # Look at all the parts of the CLASSPATH
+    for part in clp_parts:
+        # If REACH is on the CLASSPATH, remove it
+        if os.path.abspath(part) != rep:
+            new_clp_parts.append(part)
+        # If Eidos is not on the CLASSPATH, add it
+        if os.path.abspath(part) == eip:
+            has_eidos = True
+    if not has_eidos:
+        new_clp_parts.append(eip)
+    # Set the new CLASSPATH
+    new_clp = ':'.join(new_clp_parts)
+    os.environ['CLASSPATH'] = new_clp
+_set_classpath()
+
 from indra.java_vm import autoclass, JavaException
 
 
