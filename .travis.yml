@@ -101,11 +101,15 @@ script:
   - if [[ $RUN_SLOW != "true" ]]; then
       export NOSEATTR="!slow,$NOSEATTR";
     fi
-  # First run TEES tests separately for technical reasons
+  # First run TEES and Eidos tests separately for technical reasons
   - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
+  - nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
   # Now run all INDRA tests
-  - nosetests indra -v -a $NOSEATTR -e '.*tees.*' --with-coverage --cover-inclusive
-        --cover-package=indra --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
+  - nosetests indra -v -a $NOSEATTR
+        --exclude='.*tees.*' --exclude='.*eidos.*'
+        --with-coverage --cover-inclusive --cover-package=indra
+        --with-doctest --with-doctest-ignore-unicode
+        --with-timer --timer-top-n 10
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
