@@ -107,6 +107,7 @@ framework also needs to be installed in a way that is visible to PySB.
 Detailed instructions are given in the
 `PySB documentation <http://docs.pysb.org/en/latest/installation.html#option-1-install-pysb-natively-on-your-computer>`_.
 
+.. _pyjniussetup:
 
 Pyjnius
 ```````

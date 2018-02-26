@@ -614,31 +614,21 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     logger.info('Running REACH with force_read=%s' % force_read)
     logger.info('Running REACH with force_fulltext=%s' % force_fulltext)
 
-    # Get the path to the reach directory.
+    # Get the path to the REACH JAR
     path_to_reach = os.environ.get('REACHPATH', None)
     if path_to_reach is None or not os.path.exists(path_to_reach):
         logger.warning(
             'Reach path not set or invalid. Check REACHPATH environment var.'
             )
         return {}, {}
-    patt = re.compile('reach-(.*?)\.jar')
 
-    # Find the jar file.
-    for fname in os.listdir(path_to_reach):
-        m = patt.match(fname)
-        if m is not None:
-            reach_ex = os.path.join(path_to_reach, fname)
-            break
-    else:
-        logger.warning("Could not find reach jar in reach dir.")
-        return {}, {}
+    logger.info('Using REACH jar at: %s' % path_to_reach)
 
-    logger.info('Using REACH jar at: %s' % reach_ex)
-
-    # Get the reach version.
+    # Get the REACH version
     reach_version = os.environ.get('REACH_VERSION', None)
     if reach_version is None:
         logger.info('REACH version not set in REACH_VERSION')
+        m = re.match('reach-(.*?)\.jar', os.path.basename(path_to_reach))
         reach_version = re.sub('-SNAP.*?$', '', m.groups()[0])
 
     logger.info('Using REACH version: %s' % reach_version)
@@ -671,7 +661,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
         # Run REACH!
         logger.info("Beginning reach.")
         args = ['java', '-Xmx24000m', '-Dconfig.file=%s' % conf_file_path,
-                '-jar', reach_ex]
+                '-jar', path_to_reach]
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         if verbose:

@@ -74,10 +74,10 @@ if __name__ == '__main__':
     client = boto3.client('s3')
     bucket_name = 'bigmech'
     pmid_list_key = 'reading_results/%s/pmids' % args.basename
-    path_to_reach = os.environ.get('REACH_JAR_PATH')
+    path_to_reach = os.environ.get('REACHPATH')
     reach_version = os.environ.get('REACH_VERSION')
     if path_to_reach is None or reach_version is None:
-        print('REACH_JAR_PATH and/or REACH_VERSION not defined, exiting.')
+        print('REACHPATH and/or REACH_VERSION not defined, exiting.')
         sys.exit(1)
 
     try:

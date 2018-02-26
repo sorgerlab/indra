@@ -12,9 +12,10 @@ try:
     # For text reading
     from .eidos_reader import EidosReader
     eidos_reader = EidosReader()
-except Exception:
+except Exception as e:
     logger.error('Could not instantiate Eidos reader, text reading '
                  'will not be available.')
+    logger.exception(e)
     eidos_reader = None
 
 
