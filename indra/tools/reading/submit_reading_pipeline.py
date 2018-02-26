@@ -247,11 +247,20 @@ def get_ecs_cluster_for_queue(queue_name, batch_client=None):
 
 
 def tag_instances(cluster_name, project='cwc'):
-    """Adds project tag to untagged fleet instances."""
+    """Adds project tag to untagged instances in a given cluster.
+
+    Parameters
+    ----------
+    cluster_name : str
+        The name of the AWS ECS cluster in which running instances
+        should be tagged.
+    project : str
+        The name of the project to tag instances with.
+    """
     # Get the relevent instance ids from the ecs cluster
     ecs = boto3.client('ecs')
     task_arns = ecs.list_tasks(cluster=cluster_name)['taskArns']
-    if not len(task_arns):
+    if not task_arns:
         return
     tasks = ecs.describe_tasks(cluster=cluster_name, tasks=task_arns)['tasks']
     container_instances = ecs.describe_container_instances(
@@ -268,7 +277,8 @@ def tag_instances(cluster_name, project='cwc'):
             if tag.get('Key') == 'project':
                 break
         else:
-            logger.info('Adding project tag to instance %s' % instance_id)
+            logger.info('Adding project tag "%s" to instance %s' %
+                        (project, instance_id))
             instance.create_tags(Tags=[{'Key': 'project',
                                         'Value': project}])
     return
