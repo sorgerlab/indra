@@ -178,9 +178,10 @@ def set_style(network_id, ndex_cred):
     username = ndex_cred.get('user')
     password = ndex_cred.get('password')
 
-    source_network = NiceCXNetwork(username=username,
-                                   password=password,
-                                   uuid=network_id)
+    source_network = ndex2.create_nice_cx_from_server(username=username,
+                                                      password=password,
+                                                      uuid=network_id,
+                                                      server=server)
 
     source_network.apply_template(server, template_uuid)
 
