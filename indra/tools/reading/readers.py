@@ -157,33 +157,24 @@ class ReachReader(Reader):
 
     def _check_reach_env(self):
         """Check that the environment supports runnig reach."""
-        # Get the path to the reach directory.
+        # Get the path to the REACH JAR
         path_to_reach = environ.get('REACHPATH', None)
         if path_to_reach is None or not path.exists(path_to_reach):
             raise ReachError(
                 'Reach path unset or invalid. Check REACHPATH environment var.'
                 )
-        patt = re.compile('reach-(.*?)\.jar')
 
-        # Find the jar file.
-        for fname in listdir(path_to_reach):
-            m = patt.match(fname)
-            if m is not None:
-                reach_ex = path.join(path_to_reach, fname)
-                break
-        else:
-            raise ReachError("Could not find reach jar in reach dir.")
-
-        logger.debug('Using REACH jar at: %s' % reach_ex)
+        logger.debug('Using REACH jar at: %s' % path_to_reach)
 
         # Get the reach version.
         reach_version = environ.get('REACH_VERSION', None)
         if reach_version is None:
             logger.debug('REACH version not set in REACH_VERSION')
+            m = re.match('reach-(.*?)\.jar', path.basename(path_to_reach))
             reach_version = re.sub('-SNAP.*?$', '', m.groups()[0])
 
         logger.debug('Using REACH version: %s' % reach_version)
-        return reach_ex, reach_version
+        return path_to_reach, reach_version
 
     def write_content(self, text_content):
         def write_content_file(ext):
