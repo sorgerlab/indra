@@ -9,7 +9,6 @@ from random import shuffle
 from matplotlib import pyplot as plt
 from indra.preassembler import grounding_mapper as gm
 
-import ndex
 from indra.sources import ndex_cx
 from indra.databases import hgnc_client, ndex_client
 import indra.tools.assemble_corpus as ac

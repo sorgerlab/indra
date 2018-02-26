@@ -307,7 +307,7 @@ MOCK_MODULES = [
     'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples',
     'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
     'networkx', 'networkx.algorithms', 'networkx.algorithms.dag',
-    'functools32', 'ndex', 'ndex.client',
+    'functools32', 'ndex2', 'ndex2.client',
     'sqlalchemy', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
     'sqlalchemy.orm', 'sqlalchemy.dialects', 'sqlalchemy.dialects.postgresql',
     'sqlalchemy.schema', 'sqlalchemy.ext.compiler', 'sqlalchemy.sql',
