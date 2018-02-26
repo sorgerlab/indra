@@ -88,7 +88,7 @@ script:
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
   # These are files that are ignored so that doctests don't fail
-  - export NOSE_IGNORE_FILES="eidos_reader.py,find_full_text_sentence.py";
+  - export NOSE_IGNORE_FILES="find_full_text_sentence.py";
   # These files are ignored in Python 2 because they only work in Python 3 and
   # doctests on Travis would otherwise fail
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
