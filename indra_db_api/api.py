@@ -1,6 +1,7 @@
 from flask import Flask, request, abort, jsonify, Response
 from indra.db.util import get_statements_by_gene_role_type
 import logging
+import re
 
 logger = logging.getLogger("db-api")
 
@@ -17,26 +18,26 @@ def welcome():
             "/statements  - Get statement content from INDRA's database.\n"
             "\n")
 
-@app.route('/statements', methods=['POST'])
-def get_statments():
+@app.route('/statements', methods=['GET'])
+def get_statements_query_format():
+    return ('To get a list of statements, use ?[object,subject,action]=<val>, '
+            'for example ?object=MAP2K1?subject=MAPK1?action=Phosphorylation')
+
+@app.route('/statements/<query_str>', methods=['GET'])
+def get_statments(query_str):
     """Get some statements constrained by query."""
-    logger.info("Got request for statements!")
-    headers = request.headers
-    if 'Content-Type' not in headers.keys() or headers['Content-Type'] != 'application/json':
-        abort(Response("Content-Type not set to application/json.\n", 400))
-    json_req = None
-    try:
-        json_req = request.get_json()
-        logger.info("Got json data: %s" % json_req)
-    except:
-        logger.error("Could not load json request data.")
-        abort(Response("Failed to get json data.\n"), 400)
-    if not json_req:
-        abort(Response("No data provided!\n", 400))
+    logger.info("Got query for statements!")
+    arg_patt = re.compile('\?(\w+)=(\w+)')
+    query_dict = dict(arg_patt.findall(query_str))
+
     logger.info("Getting query details.")
-    obj = json_req.get('object')
-    act = json_req.get('action')
-    sub = json_req.get('subject')
+    obj = query_dict.pop('object', None)
+    act = query_dict.pop('action', None)
+    sub = query_dict.pop('subject', None)
+    if query_dict:
+        abort(Response("Unrecognized query options; %s." %
+                       list(query_dict.keys()),
+                       400))
 
     if sub is None and obj is None:
         logger.error("No subject or object.")
