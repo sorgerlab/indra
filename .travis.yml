@@ -61,7 +61,9 @@ install:
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
-  - export REACHPATH=$TRAVIS_BUILD_DIR
+  - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
+  - wget http://sorger.med.harvard.edu/data/bgyori/eidos-assembly-0.1-SNAPSHOT.jar -nv
+  - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos-assembly-0.1-SNAPSHOT.jar
   - pip install pycodestyle
   # TEES
   - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
@@ -82,7 +84,6 @@ before_script:
 script:
   - export TEES_SETTINGS=~/TEES/tees_local_settings.py
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
-  - export CLASSPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
   # Run standard unit tests
   - cd $TRAVIS_BUILD_DIR
