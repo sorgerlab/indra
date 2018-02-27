@@ -79,11 +79,14 @@ script:
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
+  - nosetests --processes=1 --process-restartworker --with-isolation -v -s
+        -a $NOSEATTR indra/tests/test_model_checker.py:test_consumption_rule
   - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
   - nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
   # Now run all INDRA tests
   - nosetests indra -v -a $NOSEATTR
         --exclude='.*tees.*' --exclude='.*eidos.*'
+        --exclude='.*model_checker.*'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode
         --with-timer --timer-top-n 10
