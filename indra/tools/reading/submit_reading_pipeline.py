@@ -15,6 +15,10 @@ bucket_name = 'bigmech'
 logger = logging.getLogger('aws_reading')
 
 
+class BatchReadingError(Exception):
+    pass
+
+
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
                       kill_on_log_timeout=False, stash_log_method=None):
@@ -80,18 +84,22 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
             jid = job_def['jobId']
             now = datetime.now()
             if jid not in job_log_dict.keys():
+                logger.info("Adding job %s to the log tracker at %s."
+                            % (jid, now))
                 job_log_dict[jid] = {'log': log_lines,
                                      'check_time': now}
             elif len(job_log_dict[jid]['log']) == len(log_lines):
                 check_dt = now - job_log_dict[jid]['check_time']
+                logger.warning(('Job \'%s\' has not produced output for '
+                                '%d seconds.')
+                               % (job_def['jobName'], check_dt.seconds))
                 if check_dt.seconds > idle_log_timeout:
-                    logger.warning(('Job \'%s\' has not produced output for '
-                                    '%d seconds.')
-                                   % (job_def['jobName'], check_dt.seconds))
+                    logger.warning("Job \'%s\' has stalled.")
                     stalled_jobs.add(jid)
             else:
                 old_log = job_log_dict[jid]['log']
                 old_log += log_lines[len(old_log):]
+                job_log_dict[jid]['check_time'] = now
         return stalled_jobs
 
     # Don't start watching jobs added after this command was initialized.
@@ -104,6 +112,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                     for job_def in job_defs}
 
     batch_client = boto3.client('batch')
+    ecs_cluster_name = get_ecs_cluster_for_queue(queue_name, batch_client)
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
@@ -146,7 +155,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 ret = 0
                 break
 
-        tag_instances()
+        tag_instances(ecs_cluster_name)
         sleep(poll_interval)
 
     # Stash the logs
@@ -203,34 +212,76 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
     return
 
 
-def tag_instances(project='cwc'):
-    """Adds project tag to untagged fleet instances."""
-    # First, get all the instances
-    ec2_client = boto3.client('ec2')
-    resp = ec2_client.describe_instances()
-    instances = []
-    for res in resp.get('Reservations', []):
-        instances += res.get('Instances', [])
-    instances_to_tag = []
-    # Check each instance to see if it's tagged and if it's a spot fleet
-    # instance
-    for instance in instances:
-        tagged = False
-        need_tag = False
-        for tag in instance.get('Tags', []):
-            if tag.get('Key') == 'project':
-                tagged = True
-            elif tag.get('Key') == 'aws:ec2spot:fleet-request-id':
-                need_tag = True
-        if not tagged and need_tag:
-            instances_to_tag.append(instance['InstanceId'])
+def get_ecs_cluster_for_queue(queue_name, batch_client=None):
+    """Get the name of the ecs cluster using the batch client."""
+    if batch_client is None:
+        batch_client = boto3.client('batch')
+
+    queue_resp = batch_client.describe_job_queues(jobQueues=[queue_name])
+    if len(queue_resp['jobQueues']) == 1:
+        queue = queue_resp['jobQueues'][0]
+    else:
+        raise BatchReadingError('Error finding queue with name %s.'
+                                % queue_name)
+
+    compute_env_names = queue['computeEnvironmentOrder']
+    if len(compute_env_names) == 1:
+        compute_env_name = compute_env_names[0]['computeEnvironment']
+    else:
+        raise BatchReadingError('Error finding the compute environment name '
+                                'for %s.' % queue_name)
+
+    compute_envs = batch_client.describe_compute_environments(
+        computeEnvironments=[compute_env_name]
+        )['computeEnvironments']
+    if len(compute_envs) == 1:
+        compute_env = compute_envs[0]
+    else:
+        raise BatchReadingError("Error getting compute environment %s for %s. "
+                                "Got %d enviornments instead of 1."
+                                % (compute_env_name, queue_name,
+                                   len(compute_envs)))
+
+    ecs_cluster_name = os.path.basename(compute_env['ecsClusterArn'])
+    return ecs_cluster_name
+
+
+def tag_instances(cluster_name, project='cwc'):
+    """Adds project tag to untagged instances in a given cluster.
+
+    Parameters
+    ----------
+    cluster_name : str
+        The name of the AWS ECS cluster in which running instances
+        should be tagged.
+    project : str
+        The name of the project to tag instances with.
+    """
+    # Get the relevent instance ids from the ecs cluster
+    ecs = boto3.client('ecs')
+    task_arns = ecs.list_tasks(cluster=cluster_name)['taskArns']
+    if not task_arns:
+        return
+    tasks = ecs.describe_tasks(cluster=cluster_name, tasks=task_arns)['tasks']
+    container_instances = ecs.describe_container_instances(
+        cluster=cluster_name,
+        containerInstances=[task['containerInstanceArn'] for task in tasks]
+        )['containerInstances']
+    ec2_instance_ids = [ci['ec2InstanceId'] for ci in container_instances]
+
     # Instantiate each instance to tag as a resource and create project tag
     ec2 = boto3.resource('ec2')
-    for instance_id in instances_to_tag:
-        logger.info('Adding project tag to instance %s' % instance_id)
+    for instance_id in ec2_instance_ids:
         instance = ec2.Instance(instance_id)
-        instance.create_tags(Tags=[{'Key': 'project',
-                                    'Value': project}])
+        for tag in instance.tags:
+            if tag.get('Key') == 'project':
+                break
+        else:
+            logger.info('Adding project tag "%s" to instance %s' %
+                        (project, instance_id))
+            instance.create_tags(Tags=[{'Key': 'project',
+                                        'Value': project}])
+    return
 
 
 def get_environment():
