@@ -23,12 +23,11 @@ def get_statements_query_format():
     return ('To get a list of statements, use ?[object,subject,action]=<val>, '
             'for example ?object=MAP2K1?subject=MAPK1?action=Phosphorylation')
 
-@app.route('/statements/<query_str>', methods=['GET'])
-def get_statments(query_str):
+@app.route('/statements/', methods=['GET'])
+def get_statments():
     """Get some statements constrained by query."""
     logger.info("Got query for statements!")
-    arg_patt = re.compile('\?(\w+)=(\w+)')
-    query_dict = dict(arg_patt.findall(query_str))
+    query_dict = request.args.copy()
 
     logger.info("Getting query details.")
     obj = query_dict.pop('object', None)
