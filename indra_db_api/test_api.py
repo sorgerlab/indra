@@ -22,7 +22,7 @@ class DbApiTestCase(unittest.TestCase):
     def test_specific_query(self):
         """Test whether we can get a "fully" specified statement."""
         resp = self.app.get('/statements/?object=MAP2K1&subject=MAPK1'
-                            '&action=Phosphorylation')
+                            '&type=Phosphorylation')
         assert resp.status_code == 200, \
             'Got error code %d: \"%s\".' % (resp.status_code, resp.data.decode())
         assert len(json.loads(resp.data.decode())) is not 0, \
