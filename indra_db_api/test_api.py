@@ -28,5 +28,15 @@ class DbApiTestCase(unittest.TestCase):
         assert len(json.loads(resp.data.decode())) is not 0, \
             'Did not get any statements.'
 
+    def test_query_with_other(self):
+        """Test that we can get an ActiveForm."""
+        resp = self.app.get('/statements/?other=MAPK1'
+                            '&type=ActiveForm')
+        assert resp.status_code == 200, \
+            'Got error code %d: \"%s\".' % (resp.status_code, resp.data.decode())
+        assert len(json.loads(resp.data.decode())) is not 0, \
+            'Did not get any statements.'
+        
+
 if __name__ == '__main__':
     unittest.main()
