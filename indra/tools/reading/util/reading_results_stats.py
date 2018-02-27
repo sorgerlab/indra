@@ -1,19 +1,68 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import sys
+
 import pickle
-from matplotlib import pyplot as plt
+import logging
 import numpy as np
+from datetime import datetime
 from collections import Counter
+from matplotlib import pyplot as plt
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
+logger = logging.getLogger('reading_results')
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(
+        description='Get statistics on a bunch of statements.'
+        )
+
+    subparsers = parser.add_subparsers(title='Source')
+    subparsers.required = True
+    subparsers.dest = 'source'
+
+    # Make file subparser
+    file_subparser_parent = ArgumentParser(add_help=False)
+    file_subparser_parent.add_argument(
+        'file_path',
+        help=('The path to the pickle file containing the statements to be '
+              'analyzed.')
+        )
+    file_parser = subparsers.add_parser(
+        'from-pickle',
+        parents=[file_subparser_parent],
+        description=('Get statistics of statements in a pickle file.'),
+        formatter_class=ArgumentDefaultsHelpFormatter
+        )
+
+    # Make db subparser
+    db_subparser_parent = ArgumentParser(add_help=False)
+    db_subparser_parent.add_argument(
+        '--indra_version',
+        help='Specify the indra version for the batch of statements'
+        )
+    db_subparser_parent.add_argument(
+        '--date_range',
+        help=('Specify the range of datetimes for statements. Must be in the '
+              'format: \"YYYYMMDDHHMMSS:YYYMMDDHHMMSS\". If you do not want '
+              'to impose the upper or lower bound, simply leave it blank, eg. '
+              '\"YYYYMMDDHHMMSS:\" if you don\'t care about the upper bound.')
+        )
+    db_parser = subparsers.add_parser(
+        'from-db',
+        parents=[db_subparser_parent],
+        description=('Get statistics from statements on the database.'),
+        formatter_class=ArgumentDefaultsHelpFormatter
+        )
+
+    # Parse the arguments.
+    args = parser.parse_args()
+
+
 from indra.util import plot_formatting as pf
-from indra.statements import *
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import grounding_mapper as gm
-
-import logging
-
-logger = logging.getLogger('reading_results')
 
 pf.set_fig_params()
 
@@ -28,7 +77,7 @@ def load_file(stmts_file):
 def report_stmt_counts(paper_stmts, plot_prefix=None):
     counts_per_paper = [(pmid, len(stmts)) for pmid, stmts in results.items()]
     counts = np.array([tup[1] for tup in counts_per_paper])
-    logger.info("%.2f +/- %.2f statements per paper" % 
+    logger.info("%.2f +/- %.2f statements per paper" %
                 (np.mean(counts), np.std(counts)))
     logger.info("Median %d statements per paper" % np.median(counts))
 
@@ -130,7 +179,7 @@ def report_stmt_types(stmts, plot_prefix=None):
     ax = fig.gca()
     sorted_counts = sorted(stmt_type_counter.items(), key=lambda x: x[1],
                            reverse=True)
-    labels = [t.__name__ for t, n in sorted_counts]
+    labels = [t.__name__ for t, _ in sorted_counts]
 
     logger.info('Distribution of statement types:')
     for stmt_type, count in sorted_counts:
@@ -179,13 +228,30 @@ def report_evidence_distribution(stmts, list_length=10, plot_prefix=None):
 
 
 if __name__ == '__main__':
-    # Load the statements
-    if len(sys.argv) < 2:
-        print("Usage: %s reach_stmts_file" % sys.argv[0])
-        sys.exit()
-    results = load_file(sys.argv[1])
-    all_stmts = [stmt for paper_stmts in results.values()
-                      for stmt in paper_stmts]
+    # Load the statements.
+    if args.source == 'from-pickle':
+        results = load_file(args.file_path)
+        all_stmts = [stmt for paper_stmts in results.values()
+                     for stmt in paper_stmts]
+    if args.source == 'from-db':
+        from indra.db import get_primary_db
+        from indra.db.util import make_stmts_from_db_list
+        db = get_primary_db()
+        clauses = []
+        if args.indra_version:
+            clauses.append(db.Statements.indra_version == args.indra_version)
+        if args.date_range:
+            min_date_str, max_date_str = args.date_range.split(':')
+            if min_date_str:
+                min_date = datetime.strptime(min_date_str, '%Y%m%d%H%M%S')
+                clauses.add(db.Statements.create_date > min_date)
+            if max_date_str:
+                max_date = datetime.strptime(max_date_str, '%Y%m%d%H%M%S')
+                clauses.add(db.Statements.create_date < max_date)
+
+        assert clauses, "No constraints provided for selecting statements."
+
+        stmts = make_stmts_from_db_list(db.select_all(db.Statements, *clauses))
 
     report_stmt_counts(results, plot_prefix='raw')
     report_grounding(all_stmts, plot_prefix='raw')
@@ -205,4 +271,3 @@ if __name__ == '__main__':
     pa.combine_duplicates()
 
     report_evidence_distribution(pa.unique_stmts, plot_prefix='preassembled')
-
