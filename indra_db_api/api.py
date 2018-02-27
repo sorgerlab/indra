@@ -63,7 +63,7 @@ def get_statments():
                 # Get an initial list
                 stmts = get_statements_by_gene_role_type(agent_id=agent,
                                                          role=role.upper(),
-                                                         stmt_type=act.capitalize(),
+                                                         stmt_type=act,
                                                          do_stmt_count=False)
             elif role.lower() == 'subject':
                 stmts = [s for s in stmts if len(s.agent_list()) > 1
