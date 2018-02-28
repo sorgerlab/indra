@@ -2,6 +2,7 @@ from flask import Flask, request, abort, jsonify, Response
 from indra.db.util import get_statements_by_gene_role_type
 import logging
 import re
+from indra.statements import make_statement_camel
 
 logger = logging.getLogger("db-api")
 
@@ -46,7 +47,11 @@ def get_statments():
     free_agents = query_dict.poplist('agent')
     agents = {role: query_dict.pop(role, None) for role
               in ['subject', 'object']}
-    act = query_dict.pop('type', None)
+    act_uncamelled = query_dict.pop('type', None)
+    if act_uncamelled is not None:
+        act = make_statement_camel(act_uncamelled)
+    else:
+        act = None
     if query_dict:
         abort(Response("Unrecognized query options; %s." %
                        list(query_dict.keys()),

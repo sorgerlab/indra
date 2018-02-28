@@ -51,6 +51,9 @@ class DbApiTestCase(unittest.TestCase):
     def test_query_with_other(self):
         """Test that we can get an ActiveForm."""
         self.__check_good_query(agent='MAPK1', type='ActiveForm')
+
+    def test_bad_camel(self):
+        self.__check_good_query(agent='MAPK1', type='acTivefOrm')
         
 
 if __name__ == '__main__':
