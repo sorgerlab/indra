@@ -4,9 +4,20 @@ INDRA Database tools (:py:mod:`indra.db`)
 .. automodule:: indra.db
     :members:
 
-Content Manager (:py:mod:`indra.db.manage_content`)
----------------------------------------------------
+Database Manager (:py:mod:`indra.db.database_manager`)
+------------------------------------------------------
 
-.. automodule:: indra.db.manage_content
+.. automodule:: indra.db.database_manager
     :members:
 
+Content Manager (:py:mod:`indra.db.content_manager`)
+----------------------------------------------------
+
+.. automodule:: indra.db.content_manager
+    :members:
+
+Utilities (:py:mod:`indra.db.util`)
+-----------------------------------
+
+.. automodule:: indra.db.util
+    :members:
