@@ -198,3 +198,4 @@ def flatten(l):
 def flatMap(f, xs):
     """Map a function onto an iterable and flatten the result."""
     return flatten(lmap(f, xs))
+

@@ -1,0 +1,412 @@
+{
+ "influence map": {
+  "map": {
+   "wake-up map": [
+    {
+     "source": {
+      "rule": 0
+     },
+     "target map": [
+      {
+       "target": {
+        "rule": 1
+       },
+       "location pair list": [
+        {
+         "LHS": {
+          "direct": 0
+         },
+         "RHS": {
+          "direct": 1
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "source": {
+      "rule": 2
+     },
+     "target map": [
+      {
+       "target": {
+        "rule": 1
+       },
+       "location pair list": [
+        {
+         "LHS": {
+          "direct": 0
+         },
+         "RHS": {
+          "direct": 1
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "inhibition map": [
+    {
+     "source": {
+      "rule": 0
+     },
+     "target map": [
+      {
+       "target": {
+        "rule": 2
+       },
+       "location pair list": [
+        {
+         "LHS": {
+          "direct": 1
+         },
+         "RHS": {
+          "direct": 1
+         }
+        }
+       ]
+      },
+      {
+       "target": {
+        "rule": 3
+       },
+       "location pair list": [
+        {
+         "LHS": {
+          "direct": 0
+         },
+         "RHS": {
+          "direct": 1
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "source": {
+      "rule": 2
+     },
+     "target map": [
+      {
+       "target": {
+        "rule": 0
+       },
+       "location pair list": [
+        {
+         "LHS": {
+          "direct": 1
+         },
+         "RHS": {
+          "direct": 1
+         }
+        }
+       ]
+      },
+      {
+       "target": {
+        "rule": 3
+       },
+       "location pair list": [
+        {
+         "LHS": {
+          "direct": 0
+         },
+         "RHS": {
+          "direct": 1
+         }
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "nodes": [
+    {
+     "rule": {
+      "ast": "a(), b(phospho{u}[.]) -> a(), b(phospho{p}[.])",
+      "id": 0,
+      "label": "a_phosphorylation_b_phospho",
+      "direction": "direct",
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 30,
+         "line": 17
+        },
+        "to_pos": {
+         "chr": 102,
+         "line": 17
+        }
+       },
+       "val": null
+      },
+      "hidden": "false"
+     }
+    },
+    {
+     "rule": {
+      "ast": "b(phospho{p}[#]), c(phospho{u}[.]) -> b(phospho{p}[#]), c(phospho{p}[.])",
+      "id": 1,
+      "label": "b_phospho_phosphorylation_c_phospho",
+      "direction": "direct",
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 38,
+         "line": 18
+        },
+        "to_pos": {
+         "chr": 136,
+         "line": 18
+        }
+       },
+       "val": null
+      },
+      "hidden": "false"
+     }
+    },
+    {
+     "rule": {
+      "ast": "alpha(), b(phospho{u}[.]) -> alpha(), b(phospho{p}[.])",
+      "id": 2,
+      "label": "alpha_phosphorylation_b_phospho",
+      "direction": "direct",
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 34,
+         "line": 19
+        },
+        "to_pos": {
+         "chr": 114,
+         "line": 19
+        }
+       },
+       "val": null
+      },
+      "hidden": "false"
+     }
+    },
+    {
+     "rule": {
+      "ast": "b(phospho{u}[#]), gamma(phospho{u}[.]) -> b(phospho{u}[#]), gamma(phospho{p}[.])",
+      "id": 3,
+      "label": "b_phospho_phosphorylation_gamma_phospho",
+      "direction": "direct",
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 42,
+         "line": 20
+        },
+        "to_pos": {
+         "chr": 148,
+         "line": 20
+        }
+       },
+       "val": null
+      },
+      "hidden": "false"
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "kf_ab_phosphorylation_1",
+      "id": 0,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 7
+        },
+        "to_pos": {
+         "chr": 31,
+         "line": 7
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "kf_bc_phosphorylation_1",
+      "id": 1,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 8
+        },
+        "to_pos": {
+         "chr": 31,
+         "line": 8
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "kf_ab_phosphorylation_2",
+      "id": 2,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 9
+        },
+        "to_pos": {
+         "chr": 31,
+         "line": 9
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "kf_bg_phosphorylation_1",
+      "id": 3,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 10
+        },
+        "to_pos": {
+         "chr": 31,
+         "line": 10
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "gamma_0",
+      "id": 4,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 11
+        },
+        "to_pos": {
+         "chr": 15,
+         "line": 11
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "a_0",
+      "id": 5,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 12
+        },
+        "to_pos": {
+         "chr": 11,
+         "line": 12
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "c_0",
+      "id": 6,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 13
+        },
+        "to_pos": {
+         "chr": 11,
+         "line": 13
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "alpha_0",
+      "id": 7,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 14
+        },
+        "to_pos": {
+         "chr": 15,
+         "line": 14
+        }
+       },
+       "val": null
+      }
+     }
+    },
+    {
+     "variable": {
+      "ast": "",
+      "label": "b_0",
+      "id": 8,
+      "location": {
+       "loc": {
+        "file": "inlined_input-1ea54138-02db-11e8-b8c2-1866da1105aa",
+        "from_pos": {
+         "chr": 6,
+         "line": 15
+        },
+        "to_pos": {
+         "chr": 11,
+         "line": 15
+        }
+       },
+       "val": null
+      }
+     }
+    }
+   ]
+  },
+  "accuracy": "low"
+ }
+}
