@@ -1,6 +1,6 @@
 import rdflib
+import collections
 from indra.statements import Agent, Influence
-from indra.assemblers import GraphAssembler
 
 prefixes = """
     PREFIX causal: <http://worldmodelers.com/CauseEffect#>
@@ -17,8 +17,8 @@ def load_graph(fname):
     return g
 
 
-if __name__ == '__main__':
-    g = load_graph('cag.json-ld')
+def process_json_file(fname):
+    g = load_graph(fname)
     query = prefixes + """
         SELECT ?rel
             ?causetext
@@ -33,21 +33,23 @@ if __name__ == '__main__':
             ?effect cco:has_text_value ?effecttext .
             }
         """
+    # All this stuff below is just to get the shorter of the two text
+    # values for the cause/effect events
     res = g.query(query)
-    rdict = {}
+    rdict = collections.defaultdict(list)
     for rel, causetext, effecttext, evtext in res:
         relid = rel.rsplit('#')[1]
-        if relid not in rdict:
-            rdict[relid] = [(causetext, effecttext)]
-        else:
-            rdict[relid].append((causetext, effecttext))
+        rdict[relid].append((causetext, effecttext))
     stmts = []
     for relid, ces in rdict.items():
         cause = sorted(set([c[0] for c in ces]), key=lambda x: len(x))[0]
         effect = sorted(set([c[1] for c in ces]), key=lambda x: len(x))[0]
         print('%s -> %s' % (cause, effect))
-        stmts.append(Influence(Agent(cause), Agent(effect)))
-    ga = GraphAssembler(stmts)
-    ga.make_model()
-    ga.print_pdf('bbn_cag.pdf')
+        stmt = Influence(Agent(cause), Agent(effect))
+        stmts.append(stmt)
+    return stmts
 
+
+if __name__ == '__main__':
+    fname = 'cag.json-ld'
+    stmts = proccess_json_file(fname)
