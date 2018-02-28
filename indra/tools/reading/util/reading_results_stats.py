@@ -64,7 +64,7 @@ from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import grounding_mapper as gm
 
-pf.set_fig_params()
+#pf.set_fig_params()
 
 
 def load_file(stmts_file):
