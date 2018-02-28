@@ -1,5 +1,4 @@
 language: python
-dist: precise
 #cache:
 #  directories:
 #    - $HOME/.cache/pip
@@ -10,7 +9,7 @@ before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
   - pip install numpy scipy sympy cython==0.23.5 nose lxml matplotlib==1.5.0 pandas
-  - pip2 install numpy
+  - sudo pip2 install numpy
 install:
   # INDRA dependencies
   - sudo apt-get install libstdc++6
