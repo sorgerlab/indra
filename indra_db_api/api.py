@@ -26,9 +26,10 @@ def get_statements_query_format():
     return Response('To get a list of statements, include a query after '
                     '/statements/ with the following keys:\n\n'
                     'type : the type of interaction (e.g. Phosphorylation)\n'
-                    '[subject, object, other] : the agents, indicated by '
+                    '[subject, object, agent] : the agents, indicated by '
                     'their role. Note that at least one agent is needed in '
-                    'a query.\n\n'
+                    'a query. If agent is use, that agent will be matched to '
+                    'any argument in the statement.\n\n'
                     'For example: /statements/?subject=MAP2K1&object=MAPK1'
                     '&type=Phosphorylation'
                     'Most statements have a subject and an object, but unary '
@@ -42,15 +43,16 @@ def get_statments():
     query_dict = request.args.copy()
 
     logger.info("Getting query details.")
+    free_agents = query_dict.poplist('agent')
     agents = {role: query_dict.pop(role, None) for role
-              in ['subject', 'object', 'other']}
+              in ['subject', 'object']}
     act = query_dict.pop('type', None)
     if query_dict:
         abort(Response("Unrecognized query options; %s." %
                        list(query_dict.keys()),
                        400))
 
-    if not any(agents.values()):
+    if not any(agents.values()) and not free_agents:
         logger.error("No agents.")
         abort(Response(("No agents. Must have 'subject', 'object', or "
                         "'other'!\n"), 400))
@@ -66,14 +68,21 @@ def get_statments():
                                                          stmt_type=act,
                                                          do_stmt_count=False)
             elif role.lower() == 'subject':
-                stmts = [s for s in stmts if len(s.agent_list()) > 1
+                stmts = [s for s in stmts if len(s.agent_list()) > 0
                          and s.agent_list()[0].name == agent]
             elif role.lower() == 'object':
                 stmts = [s for s in stmts if len(s.agent_list()) > 1
                          and s.agent_list()[1].name == agent]
-            else: # other
-                stmts = [s for s in stmts if len(s.agent_list()) > 1
-                         and agent in [ag.name for ag in s.agent_list()]]
+    for agent in free_agents:
+        if not stmts and agent is not None:
+            # Get an initial list
+            stmts = get_statements_by_gene_role_type(agent_id=agent,
+                                                     stmt_type=act,
+                                                     do_stmt_count=False)
+        else:
+            stmts = [s for s in stmts if len(s.agent_list()) > 0
+                     and agent in [ag.name for ag in s.agent_list()
+                                   if ag is not None]]
 
     logger.info("Exiting with %d statements." % len(stmts))
     return jsonify([stmt.to_json() for stmt in stmts])
