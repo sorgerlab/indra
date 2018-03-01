@@ -302,16 +302,17 @@ texinfo_documents = [
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
 MOCK_MODULES = [
+    'pybel', 'pybel.constants', 'pybel.struct', 'pybel.canonicalize', 'pybel.language',
     'pygraphviz', 'jnius', 'jnius_config',
-    'rdflib', 'rdflib.namespace', 'rdflib.plugins',
+    'rdflib', 'rdflib.namespace', 'rdflib.plugins', 'networkx.drawing.nx_agraph',
     'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples',
     'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
-    'networkx', 'networkx.algorithms', 'networkx.algorithms.dag',
-    'functools32', 'ndex2', 'ndex2.client',
+    'networkx', 'networkx.algorithms', 'networkx.algorithms.dag', 'networkx.drawing',
+    'functools32', 'ndex2', 'ndex2.client', 'ndex2.niceCXNetwork',
     'sqlalchemy', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
     'sqlalchemy.orm', 'sqlalchemy.dialects', 'sqlalchemy.dialects.postgresql',
     'sqlalchemy.schema', 'sqlalchemy.ext.compiler', 'sqlalchemy.sql',
-    'sqlalchemy.sql.expression'
+    'sqlalchemy.sql.expression', 'nltk'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
