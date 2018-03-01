@@ -328,6 +328,11 @@ def get_auth_xml_pmcids(db):
     return [tref.pmcid for tref in tref_list]
 
 
+#==============================================================================
+# Below are some functions that are useful for getting raw statements from the
+# database at various levels of abstraction.
+#==============================================================================
+
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
                                      stmt_type=None, count=1000, db=None,
                                      do_stmt_count=True, preassembled=True):
@@ -461,6 +466,11 @@ def make_stmts_from_db_list(db_stmt_objs):
     for st_obj in db_stmt_objs:
         stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
     return stmts_from_json(stmt_json_list)
+
+
+#==============================================================================
+# Below are functions used for getting statistics on tables in the database.
+#==============================================================================
 
 
 def __report_stat(report_str, fname=None, do_print=True):
