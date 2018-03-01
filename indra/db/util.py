@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from indra.tools.machine.gmail_client import get_text
 
 __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
            'insert_db_stmts', 'get_abstracts_by_pmids', 'get_auth_xml_pmcids',
@@ -462,125 +463,188 @@ def make_stmts_from_db_list(db_stmt_objs):
     return stmts_from_json(stmt_json_list)
 
 
+def __report_stat(report_str, fname=None, do_print=True):
+    if do_print:
+        print(report_str)
+    if fname is not None:
+        with open(fname, 'a+') as f:
+            f.write(report_str + '\n')
+    return
+
+
+def get_text_ref_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    tr_tc_link = db.TextRef.id == db.TextContent.text_ref_id
+    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
+    __report_stat("Text ref statistics:", fname)
+    __report_stat("--------------------", fname)
+    tr_q = db.filter_query(db.TextRef)
+    total_refs = tr_q.count()
+    __report_stat('Total number of text refs: %d' % total_refs, fname)
+    tr_w_cont_q = tr_q.filter(tr_tc_link)
+    refs_with_content = tr_w_cont_q.distinct().count()
+    __report_stat('Total number of refs with content: %d' % refs_with_content,
+                  fname)
+    tr_w_fulltext_q = tr_w_cont_q.filter(db.TextContent.text_type == 'fulltext')
+    refs_with_fulltext = tr_w_fulltext_q.distinct().count()
+    __report_stat('Number of refs with fulltext: %d' % refs_with_fulltext,
+                  fname)
+    tr_w_abstract_q = tr_w_cont_q.filter(db.TextContent.text_type == 'abstract')
+    refs_with_abstract = tr_w_abstract_q.distinct().count()
+    __report_stat('Number of refs with abstract: %d' % refs_with_abstract,
+                  fname)
+    __report_stat(('Number of refs with only abstract: %d'
+                   % (refs_with_content-refs_with_fulltext)), fname)
+    tr_w_read_content_q = tr_w_cont_q.filter(tc_rdng_link)
+    refs_with_reading = tr_w_read_content_q.distinct().count()
+    __report_stat('Number of refs that have been read: %d' % refs_with_reading,
+                  fname)
+    tr_w_fulltext_read_q = tr_w_fulltext_q.filter(tc_rdng_link)
+    refs_with_fulltext_read = tr_w_fulltext_read_q.distinct().count()
+    __report_stat(('Number of refs with fulltext read: %d'
+                   % refs_with_fulltext_read), fname)
+    return
+
+
+def get_text_content_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
+    __report_stat("\nText Content statistics:", fname)
+    __report_stat('------------------------', fname)
+    tc_q = db.filter_query(db.TextContent)
+    total_content = tc_q.count()
+    __report_stat("Total number of text content entries: %d" % total_content)
+    latest_updates = (db.session.query(db.Updates.source,
+                                       func.max(db.Updates.datetime))
+                      .group_by(db.Updates.source)
+                      .all())
+    __report_stat(("Latest updates:\n    %s"
+                   % '\n    '.join(['%s: %s' % (s, d)
+                                    for s, d in latest_updates])),
+                  fname
+                  )
+    tc_w_reading_q = tc_q.filter(tc_rdng_link)
+    content_read = tc_w_reading_q.distinct().count()
+    __report_stat("Total content read: %d" % content_read, fname)
+    tc_fulltext_q = tc_q.filtre(db.TextContent == 'fulltext')
+    fulltext_content = tc_fulltext_q.count()
+    __report_stat("Number of fulltext entries: %d" % fulltext_content, fname)
+    tc_fulltext_read_q = tc_fulltext_q.filter(tc_rdng_link)
+    fulltext_read = tc_fulltext_read_q.count()
+    __report_stat("Number of fulltext entries read: %d" % fulltext_read, fname)
+    content_by_source = (db.session.query(db.TextContent.source,
+                                          func.count(db.TextContent.id))
+                         .group_by(db.TextContent.source)
+                         .all())
+    __report_stat(("Content by source:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n)
+                                    for s, n in content_by_source])),
+                  fname
+                  )
+    content_read_by_source = (db.session.query(db.TextContent.source,
+                                               func.count(db.TextContent.id))
+                              .filter(tc_rdng_link)
+                              .group_by(db.TextContent.source)
+                              .all())
+    __report_stat(("Content read by source:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n)
+                                    for s, n in content_read_by_source])),
+                  fname
+                  )
+    return
+
+
+def get_readings_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+
+    __report_stat('\nReading statistics:', fname)
+    __report_stat('-------------------', fname)
+    rdg_q = db.filter_query(db.Readings)
+    __report_stat('Total number or readings: %d' % rdg_q.count(), fname)
+    readings_by_reader_and_version = (
+        db.session.query(db.Readings.reader,
+                         db.Readings.reader_version,
+                         db.TextContent.source,
+                         func.count(db.Readings.id))
+        .filter(db.TextContent.id == db.Readings.text_content_id)
+        .group_by(db.Readings.reader_version, db.TextContent.source)
+        .all()
+        )
+    __report_stat(("Readings by reader and version:\n    %s"
+                   % '\n    '.join(readings_by_reader_and_version)),
+                  fname
+                  )
+    return
+
+
+def get_statements_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
+    stmt_rdng_link = db.Readings.id == db.Statements.reader_ref
+
+    __report_stat('\nStatement Statistics:', fname)
+    __report_stat('---------------------', fname)
+    stmt_q = db.filter_query(db.Statements)
+    __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
+    statements_by_reading_source = (
+        db.session.query(db.Readings.reader, db.TextContent.text_type,
+                         func.count(db.Statements.id))
+        .filter(stmt_rdng_link, tc_rdng_link)
+        .group_by(db.Readings.reader, db.TextContent.text_type)
+        .all()
+        )
+    __report_stat(("Statements by reader and content type:\n    %s"
+                   % '\n    '.join(statements_by_reading_source)),
+                  fname
+                  )
+    statements_by_db_source = (
+        db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
+        .filter(db.Statements.db_ref == db.DBInfo.id)
+        .group_by(db.Readings.reader, db.TextContent.text_type)
+        .all()
+        )
+    __report_stat(("Statements by database:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n)
+                                    for s, n in statements_by_db_source])),
+                  fname
+                  )
+    statements_produced_by_indra_version = (
+        db.session.query(db.Statements.indra_version,
+                         func.count(db.Statements.id))
+        .group_by(db.Statements.indra_version)
+        .all()
+        )
+    __report_stat(("Number of statements by indra version:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n) for s, n
+                                    in statements_produced_by_indra_version])),
+                  fname
+                  )
+    return
+
+
 def get_db_statistics(fname=None, db=None, tables=None):
     """Get statistics on the contents of the database"""
     if db is None:
         db = get_primary_db()
 
-    tr_tc_link = db.TextRef.id == db.TextContent.text_ref_id
-    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
-    stmt_rdng_link = db.Statements.reader_ref == db.Readings.id
-    stmt_dbinfo_link = db.Statements.db_ref == db.DBInfo.id
-
     # Text Ref statistics
     if tables is None or (tables is not None and 'text_ref' in tables):
-        print("Text ref statistics:")
-        print("--------------------")
-        tr_q = db.filter_query(db.TextRef)
-        total_refs = tr_q.count()
-        print('Total number of text refs: %d' % total_refs)
-        tr_w_cont_q = tr_q.filter(tr_tc_link)
-        refs_with_content = tr_w_cont_q.distinct().count()
-        print('Total number of refs with content: %d' % refs_with_content)
-        tr_w_fulltext_q = tr_w_cont_q.filter(db.TextContent.text_type == 'fulltext')
-        refs_with_fulltext = tr_w_fulltext_q.distinct().count()
-        print('Number of refs with fulltext: %d' % refs_with_fulltext)
-        tr_w_abstract_q = tr_w_cont_q.filter(db.TextContent.text_type == 'abstract')
-        refs_with_abstract = tr_w_abstract_q.distinct().count()
-        print('Number of refs with abstract: %d' % refs_with_abstract)
-        print('Number of refs with only abstract: %d'
-              % (refs_with_content-refs_with_fulltext))
-        tr_w_read_content_q = tr_w_cont_q.filter(tc_rdng_link)
-        refs_with_reading = tr_w_read_content_q.distinct().count()
-        print('Number of refs that have been read: %d' % refs_with_reading)
-        tr_w_fulltext_read_q = tr_w_fulltext_q.filter(tc_rdng_link)
-        refs_with_fulltext_read = tr_w_fulltext_read_q.distinct().count()
-        print('Number of refs with fulltext read: %d' % refs_with_fulltext_read)
+        get_text_ref_stats(fname, db)
 
     # Text Content statistics
     if tables is None or (tables is not None and 'text_content' in tables):
-        print("\nText Content statistics:")
-        print('------------------------')
-        tc_q = db.filter_query(db.TextContent)
-        total_content = tc_q.count()
-        print("Total number of text content entries: %d" % total_content)
-        latest_updates = (db.session.query(db.Updates.source,
-                                           func.max(db.Updates.datetime))
-                          .group_by(db.Updates.source)
-                          .all())
-        print("Latest updates:\n    %s"
-              % '\n    '.join(['%s: %s' % (s, d) for s, d in latest_updates]))
-        tc_w_reading_q = tc_q.filter(tc_rdng_link)
-        content_read = tc_w_reading_q.distinct().count()
-        print("Total content read: %d" % content_read)
-        tc_fulltext_q = tc_q.filtre(db.TextContent == 'fulltext')
-        fulltext_content = tc_fulltext_q.count()
-        print("Number of fulltext entries: %d" % fulltext_content)
-        tc_fulltext_read_q = tc_fulltext_q.filter(tc_rdng_link)
-        fulltext_read = tc_fulltext_read_q.count()
-        print("Number of fulltext entries read: %d" % fulltext_read)
-        content_by_source = (db.session.query(db.TextContent.source,
-                                              func.count(db.TextContent.id))
-                             .group_by(db.TextContent.source)
-                             .all())
-        print("Content by source:\n    %s"
-              % '\n    '.join(['%s: %d' % (s, n) for s, n in content_by_source]))
-        content_read_by_source = (db.session.query(db.TextContent.source,
-                                                   func.count(db.TextContent.id))
-                                  .filter(tc_rdng_link)
-                                  .group_by(db.TextContent.source)
-                                  .all())
-        print("Content read by source:\n    %s"
-              % '\n    '.join(['%s: %d' % (s, n)
-                               for s, n in content_read_by_source]))
+        get_text_content_stats(fname, db)
 
     # Readings statistics
     if tables is None or (tables is not None and 'readings' in tables):
-        print('\nReading statistics:')
-        print('-------------------')
-        rdg_q = db.filter_query(db.Readings)
-        print('Total number or readings: %d' % rdg_q.count())
-        readings_by_reader_and_version = (
-            db.session.query(db.Readings.reader,
-                             db.Readings.reader_version,
-                             db.TextContent.source,
-                             func.count(db.Readings.id))
-            .group_by(db.Readings.reader_version, db.TextContent.source)
-            .all()
-            )
-        print("Readings by reader and version:\n    %s"
-              % '\n    '.join(readings_by_reader_and_version))
+        get_readings_stats(fname, db)
 
     # Statement Statistics
     if tables is None or (tables is not None and 'statements' in tables):
-        print('\nStatement Statistics:')
-        print('---------------------')
-        stmt_q = db.filter_query(db.Statements)
-        print("Total number of statments: %d" % stmt_q.count())
-        statements_by_reading_source = (
-            db.session.query(db.Readings.reader, db.TextContent.text_type,
-                             func.count(db.Statements.id))
-            .filter(stmt_rdng_link, tc_rdng_link)
-            .group_by(db.Readings.reader, db.TextContent.text_type)
-            .all()
-            )
-        print("Statements by reader and content type:\n    %s"
-              % '\n    '.join(statements_by_reading_source))
-        statements_by_db_source = (
-            db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
-            .filter(stmt_dbinfo_link)
-            .group_by(db.Readings.reader, db.TextContent.text_type)
-            .all()
-            )
-        print("Statements by database:\n    %s"
-              % '\n    '.join(['%s: %d' % (s, n)
-                               for s, n in statements_by_db_source]))
-        statements_produced_by_indra_version = (
-            db.session.query(db.Statements.indra_version,
-                             func.count(db.Statements.id))
-            .group_by(db.Statements.indra_version)
-            .all()
-            )
-        print("Number of statements by indra version:\n    %s"
-              % '\n    '.join(['%s: %d' % (s, n)
-                               for s, n in statements_produced_by_indra_version]))
+        get_statements_stats(fname, db)
+
+    return
