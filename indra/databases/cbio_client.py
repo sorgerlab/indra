@@ -374,11 +374,16 @@ def get_ccle_cna(gene_list, cell_lines):
     """Return a dict of CNAs in given genes and cell lines from CCLE.
 
     CNA values correspond to the following alterations
+
     -2 = homozygous deletion
+
     -1 = hemizygous deletion
-     0 = neutral / no change
-     1 = gain
-     2 = high level amplification
+
+    0 = neutral / no change
+
+    1 = gain
+
+    2 = high level amplification
 
     Parameters
     ----------
