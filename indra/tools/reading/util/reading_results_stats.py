@@ -170,7 +170,7 @@ def report_grounding(stmts, list_length=10, bin_interval=10, plot_prefix=None):
     # Ungrounded agents
     ungrounded = gm.ungrounded_texts(stmts)
     logger.info('Top %d ungrounded strings, with frequencies' % list_length)
-    for i in range(list_length):
+    for i in range(min(len(ungrounded), list_length)):
         logger.info('%s: %d' % (ungrounded[i][0], ungrounded[i][1]))
     ungr_counts = [t[1] for t in ungrounded]
     if plot_prefix:
