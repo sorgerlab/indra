@@ -65,7 +65,8 @@ class EidosProcessor(object):
     @staticmethod
     def _get_evidence(event):
         text = event.get('text')
-        ev = Evidence(source_api='eidos', text=text)
+        annotations = {'found_by' : event['foundBy']}
+        ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]
 
     @staticmethod
