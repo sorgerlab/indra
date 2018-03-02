@@ -1,7 +1,7 @@
 import unittest
 import json
 
-from indra_db_api import api
+from db_rest_api import api
 from datetime import datetime
 
 class DbApiTestCase(unittest.TestCase):
@@ -58,3 +58,4 @@ class DbApiTestCase(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
