@@ -113,6 +113,9 @@ if __name__ == '__main__':
     for assertion in causal_assertions:
         assertion_id = shorter_name(assertion['@id'])
 
+        assertion_text = assertion[text_attr][0]['@value']
+        node_labels[assertion_id] = assertion_text
+
 
         # If there's an effect, add to the graph
         if cause_attr in assertion:
