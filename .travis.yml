@@ -38,8 +38,9 @@ install:
   - cd $TRAVIS_BUILD_DIR
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
-  - wget http://sorger.med.harvard.edu/data/bgyori/eidos-assembly-0.1-SNAPSHOT.jar -nv
-  - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos-assembly-0.1-SNAPSHOT.jar
+  # Get a daily updated Eidos jar for testing
+  - wget http://sorger.med.harvard.edu/data/bgyori/eidos.jar -nv
+  - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - pip install pycodestyle
   # TEES
   - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
