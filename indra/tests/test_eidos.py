@@ -19,7 +19,7 @@ def test_process_json():
     assert stmt.obj_delta.get('adjectives') == ['seriously']
 
     assert(stmt.evidence[0].annotations['found_by'] == \
-            'causeEffect_ported_syntax_1_verb-${addlabel}')
+            'ported_syntax_1_verb-Causal')
     print(stmt)
 
 
