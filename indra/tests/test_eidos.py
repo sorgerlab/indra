@@ -17,6 +17,9 @@ def test_process_json():
     assert stmt.obj_delta.get('polarity') == -1
     assert stmt.subj_delta.get('adjectives') == ['large']
     assert stmt.obj_delta.get('adjectives') == ['seriously']
+
+    assert(stmt.evidence[0].annotations['found_by'] == \
+            'causeEffect_ported_syntax_1_verb-${addlabel}')
     print(stmt)
 
 
@@ -29,3 +32,5 @@ def test_process_text():
     assert stmt.subj.name == 'cost of fuel'
     assert stmt.obj.name == 'water trucking'
     assert stmt.obj_delta.get('polarity') == -1
+    assert(stmt.evidence[0].annotations['found_by'] == \
+            'ported_syntax_1_verb-Causal')
