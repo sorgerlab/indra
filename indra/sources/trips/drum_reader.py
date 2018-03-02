@@ -24,17 +24,15 @@ class DrumReader(KQMLModule):
     instructions at: https://github.com/wdebeaum/drum
     Once installed, run `drum/bin/trips-drum -nouser` to run DRUM without
     a GUI. Once DRUM is running, this class can be instantiated as
-    `dr = DrumReader(to_read=text_list)`, at which point it attempts to
-    connect to DRUM via the socket and send the texts for reading.
+    `dr = DrumReader()`, at which point it attempts to
+    connect to DRUM via the socket. You can use `dr.read_text(text)` to
+    send text for reading.
+    In another usage more, `dr.read_pmc(pmcid)` can be used to read
+    a full open-access PMC paper.
     Receiving responses can be started as `dr.start()` which waits for
     responses from the reader and returns when all responses were received.
     Once finished, the list of EKB XML extractions can be accessed via
     `dr.extractions`.
-
-    Parameters
-    ----------
-    to_read : list[str]
-        A list of text strings to read with DRUM.
 
     Attributes
     ----------
@@ -45,18 +43,21 @@ class DrumReader(KQMLModule):
         if not have_kqml:
             raise ImportError('Install the `pykqml` package to use ' +
                               'the DrumReader')
-        self.to_read = kwargs.pop('to_read', None)
         super(DrumReader, self).__init__(name='DrumReader', **kwargs)
         self.msg_counter = random.randint(1, 100000)
         self.ready()
         self.extractions = []
-        self.reply_counter = len(self.to_read)
-        for text in self.to_read:
-            self.read_text(text)
+        self.reply_counter = 0
 
     def read_pmc(self, pmcid):
-        # '(request :receiver DRUM :content (run-pmcid :pmcid "5148607"' + \
-        #      ' :reply-when-done true) :reply-with P-5148607)'
+        """Read a given PMC article.
+
+        Parameters
+        ----------
+        pmcid : str
+            The PMC ID of the article to read. Note that only
+            articles in the open-access subset of PMC will work.
+        """
         msg = KQMLPerformative('REQUEST')
         msg.set('receiver', 'DRUM')
         content = KQMLList('run-pmcid')
@@ -64,18 +65,26 @@ class DrumReader(KQMLModule):
         content.set('reply-when-done', 'true')
         msg.set('content', content)
         msg.set('reply-with', 'P-%s' % pmcid)
+        self.reply_counter += 1
         self.send(msg)
 
     def read_text(self, text):
-        print('Reading: "%s"' % text)
+        """Read a given text phrase.
+
+        Parameters
+        ----------
+        text : str
+            The text to read. Typically a sentence or a paragraph.
+        """
+        logger.info('Reading: "%s"' % text)
         msg_id = 'RT000%s' % self.msg_counter
         kqml_perf = _get_perf(text, msg_id)
-        self.send(kqml_perf)
-        print('===SENT READING===')
+        self.reply_counter += 1
         self.msg_counter += 1
+        self.send(kqml_perf)
 
     def receive_reply(self, msg, content):
-        print('===RECEIVED REPLY===')
+        """Handle replies with reading results."""
         reply_head = content.head()
         if reply_head == 'error':
             comment = content.gets('comment')
@@ -87,7 +96,9 @@ class DrumReader(KQMLModule):
         if self.reply_counter == 0:
             self.exit(0)
 
+
 def _get_perf(text, msg_id):
+    """Return a request message for a given text."""
     msg = KQMLPerformative('REQUEST')
     msg.set('receiver', 'DRUM')
     content = KQMLList('run-text')
@@ -95,8 +106,3 @@ def _get_perf(text, msg_id):
     msg.set('content', content)
     msg.set('reply-with', msg_id)
     return msg
-
-if __name__ == '__main__':
-    to_read = ['MEK phosphorylates ERK1.', 'BRAF phosphorylates MEK1.']
-    dr = DrumReader(to_read=to_read)
-    dr.start()
