@@ -538,7 +538,7 @@ def get_text_content_stats(fname=None, db=None):
     tc_w_reading_q = tc_q.filter(tc_rdng_link)
     content_read = tc_w_reading_q.distinct().count()
     __report_stat("Total content read: %d" % content_read, fname)
-    tc_fulltext_q = tc_q.filtre(db.TextContent == 'fulltext')
+    tc_fulltext_q = tc_q.filter(db.TextContent.text_type == 'fulltext')
     fulltext_content = tc_fulltext_q.count()
     __report_stat("Number of fulltext entries: %d" % fulltext_content, fname)
     tc_fulltext_read_q = tc_fulltext_q.filter(tc_rdng_link)
@@ -556,6 +556,7 @@ def get_text_content_stats(fname=None, db=None):
     content_read_by_source = (db.session.query(db.TextContent.source,
                                                func.count(db.TextContent.id))
                               .filter(tc_rdng_link)
+                              .distinct()
                               .group_by(db.TextContent.source)
                               .all())
     __report_stat(("Content read by source:\n    %s"
@@ -575,16 +576,17 @@ def get_readings_stats(fname=None, db=None):
     rdg_q = db.filter_query(db.Readings)
     __report_stat('Total number or readings: %d' % rdg_q.count(), fname)
     readings_by_reader_and_version = (
-        db.session.query(db.Readings.reader,
-                         db.Readings.reader_version,
+        db.session.query(db.Readings.reader_version,
                          db.TextContent.source,
                          func.count(db.Readings.id))
         .filter(db.TextContent.id == db.Readings.text_content_id)
+        .distinct()
         .group_by(db.Readings.reader_version, db.TextContent.source)
         .all()
         )
     __report_stat(("Readings by reader and version:\n    %s"
-                   % '\n    '.join(readings_by_reader_and_version)),
+                   % '\n    '.join([str(r) for r
+                                    in readings_by_reader_and_version])),
                   fname
                   )
     return
@@ -604,17 +606,20 @@ def get_statements_stats(fname=None, db=None):
         db.session.query(db.Readings.reader, db.TextContent.text_type,
                          func.count(db.Statements.id))
         .filter(stmt_rdng_link, tc_rdng_link)
+        .distinct()
         .group_by(db.Readings.reader, db.TextContent.text_type)
         .all()
         )
     __report_stat(("Statements by reader and content type:\n    %s"
-                   % '\n    '.join(statements_by_reading_source)),
+                   % '\n    '.join([str(r) for r
+                                    in statements_by_reading_source])),
                   fname
                   )
     statements_by_db_source = (
         db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
         .filter(db.Statements.db_ref == db.DBInfo.id)
-        .group_by(db.Readings.reader, db.TextContent.text_type)
+        .distinct()
+        .group_by(db.DBInfo.db_name)
         .all()
         )
     __report_stat(("Statements by database:\n    %s"
