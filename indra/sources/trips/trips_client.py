@@ -34,7 +34,7 @@ def send_query(text, service_endpoint='drum', query_args=None):
     if service_endpoint == 'drum':
         url = drum_url
     elif service_endpoint == 'drum-dev':
-        ur = drum_dev_url
+        url = drum_dev_url
     else:
         logger.error('Invalid service endpoint: %s' % service_endpoint)
         return ''
@@ -97,6 +97,7 @@ def save_xml(xml_str, file_name, pretty=True):
     else:
         fh.write(xml_str)
     fh.close()
+
 
 if __name__ == '__main__':
     filemode = False
