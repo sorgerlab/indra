@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import logging
+import rdflib
+import requests
 try:
     # Python 3
     from functools import lru_cache
@@ -38,7 +40,6 @@ def query_protein(protein_id):
     g : rdflib.Graph
         The RDF graph corresponding to the UniProt entry.
     """
-    import rdflib
     # Try looking up a primary ID if the given one
     # is a secondary ID
     try:
@@ -137,12 +138,11 @@ def get_family_members(family_name, human_only=True):
     gene_names : list
         The HGNC gene symbols corresponding to the given family.
     """
-    from requests import get
     data = {'query': 'family:%s' % family_name, 
             'format': 'list'}
     if human_only:
         data['fil'] = 'organism:human'
-    res = get(uniprot_url, params=data)
+    res = requests.get(uniprot_url, params=data)
     if not res.status_code == 200 or not res.text:
         return None
     # res.text gets us the Unicode

@@ -131,6 +131,7 @@ import os
 import abc
 import sys
 import uuid
+import rdflib
 import logging
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
@@ -2583,7 +2584,6 @@ def get_valid_location(location):
 
 def _read_activity_types():
     """Read types of valid activities from a resource file."""
-    import rdflib
     this_dir = os.path.dirname(os.path.abspath(__file__))
     ac_file = this_dir + '/resources/activity_hierarchy.rdf'
     g = rdflib.Graph()
