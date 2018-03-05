@@ -1,6 +1,10 @@
 import rdflib
+import logging
 import collections
 from indra.statements import Agent, Influence
+
+
+logger = logging.getLogger('bbn')
 
 
 prefixes = """
@@ -54,6 +58,6 @@ class BBNProcessor(object):
         for relid, ces in rdict.items():
             cause = sorted(set([c[0] for c in ces]), key=lambda x: len(x))[0]
             effect = sorted(set([c[1] for c in ces]), key=lambda x: len(x))[0]
-            print('%s -> %s' % (cause, effect))
+            logger.debug('%s -> %s' % (cause, effect))
             stmt = Influence(Agent(cause), Agent(effect))
             self.statements.append(stmt)
