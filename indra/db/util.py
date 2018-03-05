@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_defaults', 'get_primary_db', 'insert_agents',
+__all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
            'insert_db_stmts', 'get_abstracts_by_pmids', 'get_auth_xml_pmcids',
            'get_statements_by_gene_role_type', 'get_statements',
            'make_stmts_from_db_list']
@@ -73,7 +73,7 @@ def get_primary_db(force_new=False):
     general application, you should not rely on this feature to get your access
     to the database, as it can make substituting a different database host both
     complicated and messy. Rather, a database instance should be explicitly
-    passed between different users as is done in the `by_gene_role_type`
+    passed between different users as is done in `get_statements_by_gene_role_type`
     function's call to `get_statements` in `indra.db.query_db_stmts`.
 
     Parameters
@@ -103,11 +103,11 @@ def get_primary_db(force_new=False):
     return __PRIMARY_DB
 
 
-def insert_agents(db, stmts, *other_clauses):
+def insert_agents(db, stmts, stmt_table, *other_clauses):
     "Insert the agents associated with the list of statements."
     # Build a dict mapping stmt UUIDs to statement IDs
     uuid_list = [s.uuid for s in stmts]
-    stmt_rec_list = db.select_all('statements',
+    stmt_rec_list = db.select_all(stmt_table,
                                   db.Statements.uuid.in_(uuid_list),
                                   *other_clauses)
     stmt_uuid_dict = {uuid: sid for uuid, sid in
@@ -158,7 +158,24 @@ def insert_db_stmts(db, stmts, db_ref_id):
         )
         stmt_data.append(stmt_rec)
     db.copy('statements', stmt_data, cols)
-    db.insert_agents(stmts, db.Statements.db_ref == db_ref_id)
+    insert_agents(db, stmts, 'statements', db.Statements.db_ref == db_ref_id)
+    return
+
+
+def insert_pa_stmts(db, stmts):
+    """Insert pre-assembled statements, and any affiliated agents."""
+    stmt_data = []
+    cols = ('uuid', 'type', 'json', 'indra_version')
+    for stmt in stmts:
+        stmt_rec = (
+            stmt.uuid,
+            stmt.__class__.__name__,
+            json.dumps(stmt.to_json()).encode('utf8'),
+            get_version()
+        )
+        stmt_data.append(stmt_rec)
+    db.copy('pa_statements', stmt_data, cols)
+    insert_agents(db, stmts, 'statements')
     return
 
 

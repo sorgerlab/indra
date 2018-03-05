@@ -263,9 +263,29 @@ class DatabaseManager(object):
             db_id = Column(String, nullable=False)
             role = Column(String(20), nullable=False)
 
+        class PAStatements(self.Base):
+            __tablename__ = 'pa_statements'
+            id = Column(Integer, primary_key=True)
+            uuid = Column(String(40), unique=True, nullable=False)
+            type = Column(String(100), nullable=False)
+            indra_version = Column(String(100), nullable=False)
+            json = Column(Bytea, nullable=False)
+            create_date = Column(DateTime, default=func.now())
+
+        class PAAgents(self.Base):
+            __tablename__ = 'pa_agents'
+            id = Column(Integer, primary_key=True)
+            stmt_id = Column(Integer,
+                             ForeignKey('pa_statements.id'),
+                             nullable=False)
+            statements = relationship(PAStatements)
+            db_name = Column(String(40), nullable=False)
+            db_id = Column(String, nullable=False)
+            role = Column(String(20), nullable=False)
+
         self.tables = {}
         for tbl in [TextRef, TextContent, Readings, SourceFile, Updates,
-                    DBInfo, Statements, Agents]:
+                    DBInfo, Statements, Agents, PAStatements, PAAgents]:
             self.tables[tbl.__tablename__] = tbl
             self.__setattr__(tbl.__name__, tbl)
         self.engine = create_engine(host)
@@ -291,7 +311,9 @@ class DatabaseManager(object):
                 else:
                     tbl_name_list.append(tbl.__tablename__)
             # These tables must be created in this order.
-            for tbl_name in ['text_ref', 'text_content', 'readings', 'db_info', 'statements', 'agents']:
+            for tbl_name in ['text_ref', 'text_content', 'readings', 'db_info',
+                             'statements', 'agents', 'pa_statements',
+                             'pa_agents']:
                 if tbl_name in tbl_name_list:
                     tbl_name_list.remove(tbl_name)
                     logger.debug("Creating %s..." % tbl_name)
