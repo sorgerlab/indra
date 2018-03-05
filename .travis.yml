@@ -79,7 +79,6 @@ script:
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
-  - nosetests -v -a $NOSTATTR db_rest_api/test_api.py
   - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
   - nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
   # Now run all INDRA tests
