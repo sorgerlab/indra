@@ -288,7 +288,7 @@ def ungrounded_texts(stmts):
                   if ag is not None and ag.db_refs.keys() == ['TEXT']]
     ungroundc = Counter(ungrounded)
     ungroundc = ungroundc.items()
-    ungroundc.sort(key=lambda x: x[1], reverse=True)
+    ungroundc = sorted(ungroundc, key=lambda x: x[1], reverse=True)
     return ungroundc
 
 
