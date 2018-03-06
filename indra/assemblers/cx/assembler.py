@@ -168,7 +168,7 @@ class CxAssembler(object):
             cx_str = self.print_cx()
             fh.write(cx_str)
 
-    def upload_model(self, ndex_cred=None, private=True):
+    def upload_model(self, ndex_cred, private=True, style='default'):
         """Creates a new NDEx network of the assembled CX model.
 
         To upload the assembled CX model to NDEx, you need to have
@@ -182,9 +182,14 @@ class CxAssembler(object):
             A dictionary with the following entries:
             'user': NDEx user name
             'password': NDEx password
-
         private : Optional[bool]
             Whether or not the created network will be private on NDEX.
+        style : Optional[str]
+            This optional parameter can either be (1)
+            The UUID of an existing NDEx network whose style should be applied
+            to the new network. (2) Unspecified or 'default' to use
+            the default INDRA-assembled network style. (3) None to
+            not set a network style.
 
         Returns
         -------
@@ -198,6 +203,9 @@ class CxAssembler(object):
             ndex_cred = {'user': username,
                          'password': password}
         network_id = ndex_client.create_network(cx_str, ndex_cred, private)
+        if network_id and style:
+            template_id = None if style == 'default' else style
+            ndex_client.set_style(network_id, ndex_cred, style)
         return network_id
 
     def set_context(self, cell_type):
