@@ -653,7 +653,8 @@ def upload_statements(stmt_data_list, db=None):
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     if len(reading_id_set):
         insert_agents(db, [sd.statement for sd in stmt_data_list],
-                      'statements', db.Statements.reader_ref.in_(reading_id_set))
+                      db.Statements, 'agents',
+                      db.Statements.reader_ref.in_(reading_id_set))
     return
 
 

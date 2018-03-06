@@ -103,13 +103,13 @@ def get_primary_db(force_new=False):
     return __PRIMARY_DB
 
 
-def insert_agents(db, stmts, stmt_table, *other_clauses):
+def insert_agents(db, stmts, stmt_tbl_obj, agent_tbl_name, *other_clauses):
     "Insert the agents associated with the list of statements."
     # Build a dict mapping stmt UUIDs to statement IDs
     logger.info("Beginning to insert agents.")
     uuid_list = [s.uuid for s in stmts]
-    stmt_rec_list = db.select_all(stmt_table,
-                                  db.Statements.uuid.in_(uuid_list),
+    stmt_rec_list = db.select_all(stmt_tbl_obj,
+                                  stmt_tbl_obj.uuid.in_(uuid_list),
                                   *other_clauses)
     stmt_uuid_dict = {uuid: sid for uuid, sid in
                       db.get_values(stmt_rec_list, ['uuid', 'id'])}
@@ -136,7 +136,7 @@ def insert_agents(db, stmts, stmt_table, *other_clauses):
                 ag_rec = (stmt_id, ns, ag_id, role)
                 agent_data.append(ag_rec)
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
-    db.copy('agents', agent_data, cols)
+    db.copy(agent_tbl_name, agent_data, cols)
     return
 
 
@@ -159,7 +159,8 @@ def insert_db_stmts(db, stmts, db_ref_id):
         )
         stmt_data.append(stmt_rec)
     db.copy('statements', stmt_data, cols)
-    insert_agents(db, stmts, 'statements', db.Statements.db_ref == db_ref_id)
+    insert_agents(db, stmts, db.Statements, 'agents',
+                  db.Statements.db_ref == db_ref_id)
     return
 
 
@@ -167,6 +168,7 @@ def insert_pa_stmts(db, stmts, verbose=True):
     """Insert pre-assembled statements, and any affiliated agents."""
     logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
+    indra_version = get_version()
     cols = ('uuid', 'type', 'json', 'indra_version')
     if verbose:
         print("Loading:", end='', flush=True)
@@ -175,7 +177,7 @@ def insert_pa_stmts(db, stmts, verbose=True):
             stmt.uuid,
             stmt.__class__.__name__,
             json.dumps(stmt.to_json()).encode('utf8'),
-            get_version()
+            indra_version
         )
         stmt_data.append(stmt_rec)
         if verbose and i % (len(stmts)//25) == 0:
@@ -183,7 +185,7 @@ def insert_pa_stmts(db, stmts, verbose=True):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('pa_statements', stmt_data, cols)
-    insert_agents(db, stmts, 'statements')
+    insert_agents(db, stmts, db.PAStatements, 'pa_agents')
     return
 
 
