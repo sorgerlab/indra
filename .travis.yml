@@ -30,7 +30,6 @@ install:
   # Biopax/Paxtools dependencies
   - pip install jnius-indra
   # Download a number of useful resource files for testing purposes
-  - git submodule update --remote
   - pip install .[machine]
   - cd indra/benchmarks/assembly_eval/batch4
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz -nv
