@@ -120,7 +120,9 @@ def _fix_agent(agent):
             db_refs_tmp.pop('XFAM', None)
             db_refs_tmp['PF'] = db_id.split('.')[0]
     agent.db_refs = db_refs_tmp
-    # Check if we have a FPLX entry
+    # Check if we have a FPLX entry and handle old BE mappings
+    if 'BE' in agent.db_refs:
+        agent.db_refs['FPLX'] = agent.db_refs.pop('BE')
     be_id = agent.db_refs.get('FPLX')
     # Try to map to FPLX from NXP, IPR, PF, NCIT
     if not be_id:
@@ -349,6 +351,9 @@ class SparserXMLProcessor(object):
                 db_refs['CHEBI'] = 'CHEBI:' + db_id
             elif db_ns in ['GO', 'MESH', 'FPLX']:
                 db_refs[db_ns] = db_id
+            # Handle old BE mappings and add them as FPLX
+            elif db_ns == 'BE':
+                db_refs['FPLX'] = db_id
             elif db_ns in ['PR', 'CO', 'CVCL', 'EFO', 'ORPHANET']:
                 db_refs[db_ns] = db_id
             else:
