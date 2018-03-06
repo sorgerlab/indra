@@ -277,9 +277,9 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
     stmts = []
     q = db.filter_query('statements', *clauses)
     if do_stmt_count:
-        print("Counting statements...")
+        logger.info("Counting statements...")
         num_stmts = q.count()
-        print("Total of %d statements" % num_stmts)
+        logger.info("Total of %d statements" % num_stmts)
     db_stmts = q.yield_per(count)
     subset = []
     total_counter = 0
@@ -291,9 +291,9 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
         total_counter += 1
         if total_counter % count == 0:
             if do_stmt_count:
-                print("%d of %d statements" % (total_counter, num_stmts))
+                logger.info("%d of %d statements" % (total_counter, num_stmts))
             else:
-                print("%d statements" % total_counter)
+                logger.info("%d statements" % total_counter)
 
     stmts.extend(make_stmts_from_db_list(subset))
     return stmts

@@ -133,7 +133,6 @@ import sys
 import uuid
 import rdflib
 import logging
-import networkx
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
@@ -802,9 +801,9 @@ class Agent(object):
             attr_strs.append(mod_str)
         if self.activity:
             if self.activity.is_active:
-                 attr_strs.append('%s' % self.activity.activity_type)
+                attr_strs.append('%s' % self.activity.activity_type)
             else:
-                 attr_strs.append('%s: %s' % (self.activity.activity_type,
+                attr_strs.append('%s: %s' % (self.activity.activity_type,
                                               self.activity.is_active))
         if self.mutations:
             mut_str = 'muts: '
@@ -1007,14 +1006,10 @@ class Statement(object):
     def to_json(self):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
-        # TODO: `uid` is not used. Is this still needed for backwards
-        # compatibility?
         # Oringal comment: For backwards compatibility, could be removed later
         all_stmts = [self] + self.supports + self.supported_by
         for st in all_stmts:
-            try:
-                uid = st.uuid
-            except AttributeError:
+            if not hasattr(st, 'uuid'):
                 st.uuid = '%s' % uuid.uuid4()
         ##################
         json_dict = _o({'type': stmt_type})
@@ -1059,6 +1054,7 @@ class Statement(object):
 
     def to_graph(self):
         """Return Statement as a networkx graph."""
+        import networkx
         def json_node(graph, element, prefix):
             if not element:
                 return None
@@ -2736,6 +2732,7 @@ class InvalidLocationError(ValueError):
 
 
 def draw_stmt_graph(stmts):
+    import networkx
     try:
         import matplotlib.pyplot as plt
     except Exception:
@@ -2784,3 +2781,29 @@ def draw_stmt_graph(stmts):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     plt.show()
+
+
+def get_all_descendants(parent):
+    """Get all the descendants of a parent class, recursively."""
+    children = parent.__subclasses__()
+    descendants = children[:]
+    for child in children:
+        descendants += get_all_descendants(child)
+    return descendants
+
+
+class NotAStatementName(Exception):
+    pass
+
+
+def make_statement_camel(stmt_name):
+    """Makes a statement name match the case of the corresponding statement."""
+    stmt_classes = get_all_descendants(Statement)
+    for stmt_class in stmt_classes:
+        if stmt_class.__name__.lower() == stmt_name.lower():
+            ret = stmt_class.__name__
+            break
+    else:
+        raise NotAStatementName('%s is not recognized as a statement.'
+                                % stmt_name)
+    return ret
