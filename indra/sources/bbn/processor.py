@@ -85,9 +85,16 @@ class CauseEffect(object):
                 self.effect_polarity != 'Positive':
                     return None
 
+        # The cause and effect events list both the full text and the text
+        # identified as the cause/effect. Get the relevant text by getting
+        # the shortest string.
         cause_text = shortest_string_in_list(self.cause_texts)
         effect_text = shortest_string_in_list(self.effect_texts)
 
+        # Add an evidence object with the full text. There should be exactly
+        # only full text string, but if there is more than one, list them all.
+        # Note how we're careful to convert from rdflib's string representation
+        # to a python string with str().
         evidence_texts = list(self.evidence_texts)
         if len(evidence_texts) == 1:
             evidence_text = evidence_texts[0]
@@ -120,6 +127,7 @@ class BBNProcessor(object):
         self.statements = self.get_statements()
 
     def get_statements(self):
+        """Extract causal assertions in the graph into INDRA statements."""
         # SPARQL query to get causal relations and their arguments
         query = prefixes + """
             SELECT ?rel
@@ -146,9 +154,11 @@ class BBNProcessor(object):
         # Accumulate the cause, effect, and evidence textss for each causal
         # assertion. When there are several cause texts, the CauseEffect
         # class will only keep the shortest when we generate the statement
-        # (and likewise for the effect texts).
+        # (since these events include both the full event and the cause/effect
+        # snippet).
         rdict = collections.defaultdict(CauseEffect)
-        for rel, cause_text, effect_text, evtext, cause_polarity, effect_polarity in res:
+        for rel, cause_text, effect_text, evtext, cause_polarity, \
+                effect_polarity in res:
             relid = shorter_name(rel)
 
             rdict[relid].cause_texts.add(cause_text)
@@ -163,11 +173,10 @@ class BBNProcessor(object):
         not_positive = 0
         for relid, ces in rdict.items():
             statement = ces.to_statement()
-            if statement is None:
+            if statement is None: #Returns None when polarity not positive
                 not_positive = not_positive + 1
             else:
                 stmts.append(statement)
-            #print(ces)
 
         print('%d statements skipped because of polarity' % not_positive)
 
