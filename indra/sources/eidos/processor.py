@@ -44,9 +44,17 @@ class EidosProcessor(object):
                 subj = event['arguments']['cause'][0]
                 obj = event['arguments']['effect'][0]
             # Process origin/theme events
-            if 'Origin' in event['labels']:
+            elif 'Origin' in event['labels']:
                 subj = event['arguments']['origin'][0]
                 obj = event['arguments']['theme'][0]
+            # Skip correlation events for now
+            elif 'Correlation' in event['labels']:
+                logger.warning('Correlation event %s skipped.' % event['id'])
+                continue
+            else:
+                logger.warning('Could not classify event with labels: %s' %
+                               ', '.join(event['labels']))
+                continue
             subj_agent = self._get_agent(subj)
             obj_agent = self._get_agent(obj)
             subj_mods = self._get_mods(subj)
