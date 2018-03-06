@@ -5,6 +5,10 @@ Files that need to be periodically updated
 
 Files that can be generated automatically
 -----------------------------------------
+famplex/*.csv
+- A set of csv files downloaded from the FamPlex resource at
+https://github.com/sorgerlab/famplex
+
 bel_chebi_map.tsv
 - A table containing mappings from ChEBI names in the BEL namespace to
   ChEBI IDs used in INDRA

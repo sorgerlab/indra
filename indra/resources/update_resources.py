@@ -364,7 +364,20 @@ def update_chebi_names():
     df.to_csv(fname, sep=b'\t', header=True, index=False,
               columns=['COMPOUND_ID', 'NAME'])
 
+
+def update_famplex():
+    """Update all the CSV files that form the FamPlex resource."""
+    famplex_url_pattern = \
+        'https://raw.githubusercontent.com/sorgerlab/famplex/master/%s.csv'
+    csv_names = ['entities', 'equivalences', 'gene_prefixes',
+                 'grounding_map', 'ignore', 'relations']
+    for csv_name in csv_names:
+        url = famplex_url_pattern % csv_name
+        save_from_http(url, 'famplex/%s.csv' % csv_name)
+
+
 if __name__ == '__main__':
+    update_famplex()
     update_hgnc_entries()
     update_kinases()
     update_uniprot_entries()
