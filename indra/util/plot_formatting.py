@@ -25,3 +25,8 @@ def format_axis(ax, label_padding=2, tick_padding=0, yticks_position='left'):
     ax.xaxis.label.set_size(fontsize)
     ax.yaxis.label.set_size(fontsize)
 
+
+# 3-color swatch from colorbrewer2.org
+GREEN = "#66C2A5"
+ORANGE = "#FC8D62"
+PURPLE = "#8DA0CB"
