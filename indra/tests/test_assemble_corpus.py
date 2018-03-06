@@ -259,3 +259,13 @@ def test_get_unreachable_mods():
     assert 'Y' in res, res
     assert res['Y'] == set([('phosphorylation', 'S', '218')])
 
+
+def test_rename_db_ref():
+    x = Agent('X', db_refs={'BE': 'X'})
+    y = Agent('Y', db_refs={'FPLX': 'Y'})
+    st1 = Phosphorylation(x, y)
+    stmts = ac.rename_db_ref([st1], 'BE', 'FPLX')
+    assert len(stmts) == 1
+    assert stmts[0].enz.db_refs.get('FPLX') == 'X'
+    assert 'BE' not in stmts[0].enz.db_refs
+    assert stmts[0].sub.db_refs.get('FPLX') == 'Y'

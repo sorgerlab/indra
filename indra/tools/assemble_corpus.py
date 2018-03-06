@@ -1134,6 +1134,43 @@ def dump_stmt_strings(stmts, fname):
         for st in stmts:
             fh.write(('%s\n' % st).encode('utf-8'))
 
+
+def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
+    """Rename an entry in the db_refs of each Agent.
+
+    This is particularly useful when old Statements in pickle files
+    need to be updated after a namespace was changed such as
+    'BE' to 'FPLX'.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements whose Agents' db_refs need to be changed
+    ns_from : str
+        The namespace identifier to replace
+    ns_to : str
+        The namespace identifier to replace to
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of Statements with Agents' db_refs changed.
+    """
+    logger.info('Remapping "%s" to "%s" in db_refs on %d statements...' %
+                (ns_from, ns_to, len(stmts_in)))
+    stmts_out = [deepcopy(st) for st in stmts_in]
+    for stmt in stmts_out:
+        for agent in stmt.agent_list():
+            if ns_from in agent.db_refs:
+                agent.db_refs[ns_to] = agent.db_refs.pop(ns_from)
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         logger.error('Usage: assemble_corpus.py <pickle_file> <output_folder>')
