@@ -8,8 +8,8 @@ stmts = [Complex([Agent('MAPK1'), Agent('MAPK3')]),
 stmts2 = [Phosphorylation(None, Agent('MAPK3', db_refs={'UP': '123'}))]
 stmt3 = Phosphorylation(None, Agent('BRAF', db_refs={'HGNC': '1097',
                                                      'UP': 'P15056'}))
-stmt4 = Phosphorylation(None, Agent('RAF', db_refs={'BE': 'RAF'}))
-stmt5 = Phosphorylation(Agent('X'), Agent('RAF', db_refs={'BE': 'RAF'}))
+stmt4 = Phosphorylation(None, Agent('RAF', db_refs={'FPLX': 'RAF'}))
+stmt5 = Phosphorylation(Agent('X'), Agent('RAF', db_refs={'FPLX': 'RAF'}))
 
 def test_add_stmts_blank():
     im = IncrementalModel()

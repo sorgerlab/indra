@@ -503,7 +503,7 @@ def _get_agent_type(agent):
     fa_id = agent.db_refs.get('FA')
     chebi_id = agent.db_refs.get('CHEBI')
     pubchem_id = agent.db_refs.get('PUBCHEM')
-    be_id = agent.db_refs.get('BE')
+    be_id = agent.db_refs.get('FPLX')
     go_id = agent.db_refs.get('GO')
     if hgnc_id or uniprot_id:
         agent_type = 'protein'

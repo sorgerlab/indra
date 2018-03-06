@@ -39,7 +39,7 @@ def test_phosphorylation2():
 
 
 def test_fix_agent_be_name():
-    a = Agent('XXX', db_refs={'BE': 'CDK'})
+    a = Agent('XXX', db_refs={'FPLX': 'CDK'})
     _fix_agent(a)
     assert(a.name == 'CDK')
 
@@ -55,7 +55,7 @@ def test_fix_agent_fa_only():
     a = Agent('XXX', db_refs={'FA': '00815'})
     _fix_agent(a)
     assert(a.name == 'Cyclin')
-    assert(a.db_refs.get('BE') == 'Cyclin')
+    assert(a.db_refs.get('FPLX') == 'Cyclin')
     assert(a.db_refs.get('NXPFA') == '00815')
     assert('FA' not in a.db_refs)
 
@@ -72,7 +72,7 @@ def test_fix_agent_ncit_only():
     a = Agent('XXX', db_refs={'NCIT': 'C104166'})
     _fix_agent(a)
     assert(a.name == 'TUBB')
-    assert(a.db_refs.get('BE') == 'TUBB')
+    assert(a.db_refs.get('FPLX') == 'TUBB')
 
 
 # ############################
@@ -170,7 +170,7 @@ json_str1 = '''
   "enz": {
     "name": "MEK",
     "db_refs": {
-      "BE": "MEK",
+      "FPLX": "MEK",
       "TEXT": "MEK"},
     "TEXT": "MEK"}
  }

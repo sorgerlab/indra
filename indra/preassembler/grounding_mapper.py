@@ -123,9 +123,9 @@ class GroundingMapper(object):
                     agent.db_refs = map_db_refs
                     # Are we renaming right now?
                     if do_rename:
-                        # If there's a Bioentities ID, prefer that for the name
-                        if agent.db_refs.get('BE'):
-                            agent.name = agent.db_refs.get('BE')
+                        # If there's a FamPlex ID, prefer that for the name
+                        if agent.db_refs.get('FPLX'):
+                            agent.name = agent.db_refs.get('FPLX')
                         # Get the HGNC symbol or gene name (retrieved above)
                         elif hgnc_sym is not None:
                             agent.name = hgnc_sym
@@ -147,9 +147,9 @@ class GroundingMapper(object):
                 if agent is None:
                     continue
                 old_name = agent.name
-                # If there's a Bioentities ID, prefer that for the name
-                if agent.db_refs.get('BE'):
-                    agent.name = agent.db_refs.get('BE')
+                # If there's a FamPlex ID, prefer that for the name
+                if agent.db_refs.get('FPLX'):
+                    agent.name = agent.db_refs.get('FPLX')
                 # Take a HGNC name from Uniprot next
                 elif agent.db_refs.get('UP'):
                     # Try for the gene name
@@ -372,10 +372,10 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
 
 default_grounding_map_path = \
     os.path.join(os.path.dirname(__file__),
-                 '../resources/bioentities/grounding_map.csv')
+                 '../resources/famplex/grounding_map.csv')
 default_ignore_path = \
     os.path.join(os.path.dirname(__file__),
-                 '../resources/bioentities/ignore.csv')
+                 '../resources/famplex/ignore.csv')
 default_agent_grounding_path = \
     os.path.join(os.path.dirname(__file__),
                  '../resources/grounding_agents.json')

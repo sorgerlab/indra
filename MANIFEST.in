@@ -2,7 +2,6 @@ include ez_setup.py
 include LICENSE
 graft indra/resources
 graft indra/benchmarks
-graft bioentities
 graft data
 graft doc
 graft models

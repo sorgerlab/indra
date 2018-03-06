@@ -59,17 +59,11 @@ less reliable than the former ones.
 Cloning the source code from Github
 ```````````````````````````````````
 You may want to simply clone the source code without installing INDRA
-as a system-wide package. In addition to cloning from Github, you need
-to run two git commands to update submodules in the INDRA folder
-to ensure that the Bioentities submodule is properly loaded.
-This can be done as follows:
+as a system-wide package.
 
 .. code-block:: bash
 
     git clone https://github.com/sorgerlab/indra.git
-    cd indra
-    git submodule init
-    git submodule update --remote
 
 To be able to use INDRA this way, you need
 to make sure that all its requirements are installed. To be able to

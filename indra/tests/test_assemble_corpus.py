@@ -6,15 +6,15 @@ from indra.statements import *
 
 a = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'})
 b = Agent('b', db_refs={'UP': 'P15056', 'TEXT': 'b'})
-c = Agent('c', db_refs={'BE': 'XXX', 'TEXT': 'c'})
+c = Agent('c', db_refs={'FPLX': 'XXX', 'TEXT': 'c'})
 d = Agent('d', db_refs={'TEXT': 'd'})
 e = Agent('e', db_refs={'CHEBI': 'CHEBI:1234', 'TEXT': 'e'})
 f = Agent('b', db_refs={'UP': 'P28028', 'TEXT': 'b'})
-g = Agent('g', db_refs={'BE': 'ERK'})
+g = Agent('g', db_refs={'FPLX': 'ERK'})
 h = Agent('g', mods=['x', 'y'], mutations=['x', 'y'], activity='x',
                location='nucleus', bound_conditions=['x', 'y', 'z'])
 mapk1 = Agent('MAPK1', db_refs={'HGNC':'6871', 'UP':'P28482'})
-erk = Agent('ERK', db_refs={'BE': 'ERK'})
+erk = Agent('ERK', db_refs={'FPLX': 'ERK'})
 st1 = Phosphorylation(a, b)
 st2 = Phosphorylation(a, d)
 st3 = Phosphorylation(c, d)
@@ -161,13 +161,13 @@ def test_map_grounding():
     st = Activation(a, b)
     st_out = ac.map_grounding([st], do_rename=False)
     assert(len(st_out) == 1)
-    assert(st_out[0].subj.db_refs.get('BE'))
-    assert(st_out[0].obj.db_refs.get('BE'))
+    assert(st_out[0].subj.db_refs.get('FPLX'))
+    assert(st_out[0].obj.db_refs.get('FPLX'))
     assert(st_out[0].obj.name == 'X')
     st_out = ac.map_grounding([st], do_rename=True)
     assert(len(st_out) == 1)
-    assert(st_out[0].subj.db_refs.get('BE'))
-    assert(st_out[0].obj.db_refs.get('BE'))
+    assert(st_out[0].subj.db_refs.get('FPLX'))
+    assert(st_out[0].obj.db_refs.get('FPLX'))
     assert(st_out[0].obj.name == 'ERK')
 
 def test_map_sequence():
@@ -259,3 +259,13 @@ def test_get_unreachable_mods():
     assert 'Y' in res, res
     assert res['Y'] == set([('phosphorylation', 'S', '218')])
 
+
+def test_rename_db_ref():
+    x = Agent('X', db_refs={'BE': 'X'})
+    y = Agent('Y', db_refs={'FPLX': 'Y'})
+    st1 = Phosphorylation(x, y)
+    stmts = ac.rename_db_ref([st1], 'BE', 'FPLX')
+    assert len(stmts) == 1
+    assert stmts[0].enz.db_refs.get('FPLX') == 'X'
+    assert 'BE' not in stmts[0].enz.db_refs
+    assert stmts[0].sub.db_refs.get('FPLX') == 'Y'

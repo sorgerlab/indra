@@ -1113,7 +1113,9 @@ class TripsProcessor(object):
             # Determine the agent name
             hgnc_id = db_refs.get('HGNC')
             up_id = db_refs.get('UP')
-            be_id = db_refs.get('BE')
+            # We handle the BE namespace here which has since been renamed
+            # to FPLX
+            be_id = db_refs.get('FPLX')
             agent_name = None
             # HGNC name takes precedence
             if hgnc_id:
@@ -1125,8 +1127,8 @@ class TripsProcessor(object):
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name:
                     agent_name = gene_name
-            # If it is mapped to Bioentities then we standardize its name
-            # to the Bioentities entry name
+            # If it is mapped to FamPlex then we standardize its name
+            # to the FamPlex entry name
             elif be_id:
                 agent_name = be_id
             # Otherwise, take the name of the term as agent name
@@ -1639,7 +1641,7 @@ def _get_db_refs(term):
     ns_priority = {
         'HGNC': 1,
         'UP': 1,
-        'BE': 2,
+        'FPLX': 2,
         'CHEBI': 3,
         'GO': 4,
         'FA': 5,
@@ -1676,11 +1678,11 @@ def _get_db_refs(term):
                     # This is a corner case in which a protein family
                     # should be prioritized over a specific protein,
                     # specifically when HGNC was mapped from NCIT but
-                    # BE was not mapped from NCIT, the HGNC shouldn't
+                    # FPLX was not mapped from NCIT, the HGNC shouldn't
                     # take precedence.
                     if entry.get('comment') == 'HGNC_FROM_NCIT' and \
-                        'BE' in top_entry['refs'] and \
-                        top_entry.get('comment') != 'BE_FROM_NCIT':
+                        'FPLX' in top_entry['refs'] and \
+                        top_entry.get('comment') != 'FPLX_FROM_NCIT':
                         continue
                     top_entry = entry
                     top_idx = i
@@ -1700,7 +1702,7 @@ def _get_db_refs(term):
     # Sometimes the top grounding has much lower priority and not much higher
     # score than the second grounding. Typically 1.0 vs 0.82857 and 5 vs 2.
     # In this case we take the second entry. A special case is handled where
-    # a BE entry was mapped from FA, in which case priority difference of < 2
+    # a FPLX entry was mapped from FA, in which case priority difference of < 2
     # is also accepted.
     if len(top_per_score_group) > 1:
         score_diff = top_per_score_group[0]['score'] - \
@@ -1708,7 +1710,7 @@ def _get_db_refs(term):
         priority_diff = top_per_score_group[0]['priority'] - \
                         top_per_score_group[1]['priority']
         if score_diff < 0.2 and (priority_diff >= 2 or \
-            top_per_score_group[0].get('comment') == 'BE_FROM_FA'):
+            top_per_score_group[0].get('comment') == 'FPLX_FROM_FA'):
             top_grounding = top_per_score_group[1]
     relevant_ambiguities = []
     for amb in ambiguities:
@@ -1777,6 +1779,8 @@ def _get_grounding_terms(term):
                 refs = {}
         else:
             db_ns, db_id = dbid_str.split(':')
+            if db_ns == 'BE':
+                db_ns = 'FPLX'
             refs = {db_ns: db_id}
 
         # Next look at the xref tags
@@ -1788,6 +1792,8 @@ def _get_grounding_terms(term):
             # not desirable here
             if db_ns == 'XFAM':
                 continue
+            if db_ns == 'BE':
+                db_ns = 'FPLX'
             refs[db_ns] = db_id
 
         comment = None
@@ -1799,12 +1805,12 @@ def _get_grounding_terms(term):
             db_mappings = _get_db_mappings(ref_ns, ref_id)
             for ref_mapped in db_mappings:
                 new_refs[ref_mapped[0]] = ref_mapped[1]
-        if 'FA' in refs and 'BE' not in refs and 'BE' in new_refs:
-            comment = 'BE_FROM_FA'
+        if 'FA' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
+            comment = 'FPLX_FROM_FA'
         if 'NCIT' in refs and 'HGNC' not in refs and 'HGNC' in new_refs:
             comment = 'HGNC_FROM_NCIT'
-        if 'NCIT' in refs and 'BE' not in refs and 'BE' in new_refs:
-            comment = 'BE_FROM_NCIT'
+        if 'NCIT' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
+            comment = 'FPLX_FROM_NCIT'
         for k, v in new_refs.items():
             refs[k] = v
 
@@ -1864,7 +1870,8 @@ def _get_grounding_terms(term):
                         any_match = True
                 # If there are, add all the items to the independent term
                 if match:
-                    if it.get('comment') == 'BE_FROM_FA' and 'BE' in t['refs']:
+                    if it.get('comment') == 'FPLX_FROM_FA' and \
+                        'FPLX' in t['refs']:
                         it['comment'] = None
                     for k, v in t['refs'].items():
                         it['refs'][k] = v
@@ -1880,9 +1887,9 @@ def _get_db_mappings(dbname, dbid):
         dbname = 'NXP'
         dbid = 'FA:' + dbid
     db_mappings = []
-    be_id = bioentities_map.get((dbname, dbid))
+    be_id = famplex_map.get((dbname, dbid))
     if be_id is not None:
-        db_mappings.append(('BE', be_id))
+        db_mappings.append(('FPLX', be_id))
     if dbname == 'NCIT':
         target = ncit_map.get(dbid)
         if target is not None:
@@ -1919,16 +1926,16 @@ def _read_ncit_map():
 
 ncit_map = _read_ncit_map()
 
-def _read_bioentities_map():
+def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../../resources/bioentities_map.tsv')
-    bioentities_map = {}
+                         '../../resources/famplex_map.tsv')
+    famplex_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
         source_ns = row[0]
         source_id = row[1]
         be_id = row[2]
-        bioentities_map[(source_ns, source_id)] = be_id
-    return bioentities_map
+        famplex_map[(source_ns, source_id)] = be_id
+    return famplex_map
 
-bioentities_map = _read_bioentities_map()
+famplex_map = _read_famplex_map()

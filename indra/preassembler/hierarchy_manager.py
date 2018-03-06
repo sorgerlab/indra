@@ -329,7 +329,7 @@ class HierarchyManager(object):
             return 'http://identifiers.org/hgnc.symbol/' + id
         elif ns == 'UP':
             return 'http://identifiers.org/uniprot/' + id
-        elif ns == 'BE' or ns == 'INDRA':
+        elif ns == 'FPLX' or ns == 'INDRA':
             return 'http://sorger.med.harvard.edu/indra/entities/' + id
         else:
             return ns + id

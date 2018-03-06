@@ -555,7 +555,7 @@ def test_43():
     st = tp.statements[0]
     erk = st.agent
     assert(erk.name == 'ERK')
-    assert(erk.db_refs.get('BE') == 'ERK')
+    assert(erk.db_refs.get('FPLX') == 'ERK')
     assert(len(erk.mods) == 1)
 
 def test_44():

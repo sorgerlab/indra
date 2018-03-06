@@ -384,7 +384,7 @@ def filter_genes_only(stmts_in, **kwargs):
                 if not specific_only:
                     if not(agent.db_refs.get('HGNC') or \
                            agent.db_refs.get('UP') or \
-                           agent.db_refs.get('BE')):
+                           agent.db_refs.get('FPLX')):
                         genes_only = False
                         break
                 else:
@@ -460,7 +460,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
         possibly others not in the list "all": keep statements that only
         contain genes given in the list
     allow_families : Optional[bool]
-        Will include statements involving Bioentities families containing one
+        Will include statements involving FamPlex families containing one
         of the genes in the gene list. Default: False
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
@@ -476,7 +476,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
         genes_str = ', '.join(gene_list)
         logger.info('Filtering %d statements for ones containing "%s" of: '
                     '%s...' % (len(stmts_in), policy, genes_str))
-    # If we're allowing families, make a list of all Bioentities IDs that
+    # If we're allowing families, make a list of all FamPlex IDs that
     # contain members of the gene list, and add them to the filter list
     filter_list = copy(gene_list)
     if allow_families:
@@ -1037,7 +1037,7 @@ def filter_uuid_list(stmts_in, uuids, **kwargs):
 
 
 def expand_families(stmts_in, **kwargs):
-    """Expand Bioentities Agents to individual genes.
+    """Expand FamPlex Agents to individual genes.
 
     Parameters
     ----------
@@ -1133,6 +1133,43 @@ def dump_stmt_strings(stmts, fname):
     with open(fname, 'wb') as fh:
         for st in stmts:
             fh.write(('%s\n' % st).encode('utf-8'))
+
+
+def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
+    """Rename an entry in the db_refs of each Agent.
+
+    This is particularly useful when old Statements in pickle files
+    need to be updated after a namespace was changed such as
+    'BE' to 'FPLX'.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements whose Agents' db_refs need to be changed
+    ns_from : str
+        The namespace identifier to replace
+    ns_to : str
+        The namespace identifier to replace to
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of Statements with Agents' db_refs changed.
+    """
+    logger.info('Remapping "%s" to "%s" in db_refs on %d statements...' %
+                (ns_from, ns_to, len(stmts_in)))
+    stmts_out = [deepcopy(st) for st in stmts_in]
+    for stmt in stmts_out:
+        for agent in stmt.agent_list():
+            if ns_from in agent.db_refs:
+                agent.db_refs[ns_to] = agent.db_refs.pop(ns_from)
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

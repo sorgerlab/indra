@@ -24,7 +24,7 @@ def test_simple_mapping():
     assert len(mapped_stmts) == 1
     mapped_akt = mapped_stmts[0].sub
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
-    assert mapped_akt.db_refs['BE'] == 'AKT'
+    assert mapped_akt.db_refs['FPLX'] == 'AKT'
     assert unicode_strs((akt, stmt, gm, mapped_akt))
 
 def test_ignore():
@@ -35,7 +35,7 @@ def test_ignore():
     assert len(mapped_stmts) == 0
 
 def test_renaming():
-    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'BE':'AKT family',
+    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX':'AKT family',
                                         'UP': 'P31749'})
     akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'P31749'})
     akt_other = Agent('pkbA', db_refs={'TEXT': 'Akt'})
@@ -205,7 +205,7 @@ def test_map_agent():
     mapped_stmts = gm.map_agents([stmt])
     mapped_ag = mapped_stmts[0].members[1]
     assert mapped_ag.name == 'ERK'
-    assert mapped_ag.db_refs.get('BE') == 'ERK'
+    assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
 if __name__ == '__main__':
     test_map_entry_hgnc_and_up()

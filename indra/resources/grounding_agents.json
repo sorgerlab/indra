@@ -9,7 +9,7 @@
     }
    ],
    "db_refs": {
-    "BE": "AKT",
+    "FPLX": "AKT",
     "NCIT": "C41625"
    }
   },
@@ -25,7 +25,7 @@
     }
    ],
    "db_refs": {
-    "BE": "ERK",
+    "FPLX": "ERK",
     "NCIT": "C26360"
    }
   },
@@ -60,7 +60,7 @@
     }
    ],
    "db_refs": {
-    "BE": "AKT",
+    "FPLX": "AKT",
     "NCIT": "C41625"
    }
   },
@@ -78,7 +78,7 @@
     }
    ],
    "db_refs": {
-    "BE": "AKT",
+    "FPLX": "AKT",
     "NCIT": "C41625"
    }
   },
@@ -107,7 +107,7 @@
   "agent": {
    "name": "PI3K",
    "db_refs": {
-    "BE": "PI3K",
+    "FPLX": "PI3K",
     "NCIT": "C17270"
    }
   },
@@ -117,7 +117,7 @@
   "agent": {
    "name": "PI3K",
    "db_refs": {
-    "BE": "PI3K",
+    "FPLX": "PI3K",
     "NCIT": "C17270"
    }
   },
@@ -139,7 +139,7 @@
     }
    ],
    "db_refs": {
-    "BE": "ERK",
+    "FPLX": "ERK",
     "NCIT": "C26360"
    }
   },
@@ -186,7 +186,7 @@
     }
    ],
    "db_refs": {
-    "BE": "PI3K",
+    "FPLX": "PI3K",
     "NCIT": "C17270"
    }
   },
@@ -202,7 +202,7 @@
     }
    ],
    "db_refs": {
-    "BE": "MEK"
+    "FPLX": "MEK"
    }
   },
   "nl": "MEK that is phosphorylated"
@@ -217,7 +217,7 @@
     }
    ],
    "db_refs": {
-    "BE": "MEK"
+    "FPLX": "MEK"
    }
   },
   "nl": "MEK that is phosphorylated"
@@ -232,7 +232,7 @@
     }
    ],
    "db_refs": {
-    "BE": "ERK",
+    "FPLX": "ERK",
     "NCIT": "C26360"
    }
   },
@@ -254,7 +254,7 @@
     }
    ],
    "db_refs": {
-    "BE": "RAS",
+    "FPLX": "RAS",
     "NCIT": "C17061",
     "NXPFA": "03663"
    }
@@ -271,7 +271,7 @@
     }
    ],
    "db_refs": {
-    "BE": "AKT",
+    "FPLX": "AKT",
     "NCIT": "C41625"
    }
   },
@@ -287,7 +287,7 @@
     }
    ],
    "db_refs": {
-    "BE": "ERK",
+    "FPLX": "ERK",
     "NCIT": "C26360"
    }
   },
@@ -302,7 +302,7 @@
      "position": "12"
    }],
    "db_refs": {
-    "BE": "RAS"
+    "FPLX": "RAS"
    }
   },
   "nl": "RAS-V12"
@@ -336,7 +336,7 @@
      }
     ],
     "db_refs": {
-     "BE": "SMAD2_3"
+     "FPLX": "SMAD2_3"
     }
    }
  }

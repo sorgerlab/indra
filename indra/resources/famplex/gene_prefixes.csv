@@ -1,0 +1,138 @@
+Pattern,Category,Notes
+Ad-{Gene name},experimental context,adenoviral gene delivery
+Adv-{Gene name},experimental context,adenoviral gene delivery
+endogenous {Gene name},experimental context,
+exogenous {Gene name},experimental context,
+EGFP-{Gene name},experimental context,fluorescent protein tag
+eGFP-{Gene name},experimental context,fluorescent protein tag
+egfp-{Gene name},experimental context,fluorescent protein tag
+FLAG-{Gene name},experimental context,protein tag
+Flag-{Gene name},experimental context,protein tag
+flag-{Gene name},experimental context,protein tag
+full-length {Gene name},experimental context,
+full length {Gene name},experimental context,
+GFP-{Gene name},experimental context,fluorescent protein tag
+gfp-{Gene name},experimental context,fluorescent protein tag
+Gfp-{Gene name},experimental context,fluorescent protein tag
+gfp{Gene name},experimental context,fluorescent protein tag
+GST {Gene name},experimental context,protein tag
+GST-{Gene name},experimental context,protein tag
+Gst-{Gene name},experimental context,protein tag
+HA-{Gene name},experimental context,protein tag
+Ha-{Gene name},experimental context,protein tag
+h{Gene name},species,human
+hs{Gene name},species,human
+Hs{Gene name},species,human
+lenti-{Gene name},experimental context,lentiviral gene delivery
+Lenti-{Gene name} ,experimental context,lentiviral gene delivery
+lent-{Gene name},experimental context,lentiviral gene delivery
+lentivirus-{Gene name},experimental context,lentiviral gene delivery
+Lentivirus-{Gene name},experimental context,lentiviral gene delivery
+LV-{Gene name},experimental context,lentiviral gene delivery
+Lv-{Gene name},experimental context,lentiviral gene delivery
+Luc-{Gene name},experimental context,luciferase gene tag
+mammalian {Gene name},species,
+Mammalian {Gene name},species,
+MBP-{Gene name},experimental context,protein tag
+mCherry-{Gene name},experimental context,fluorescent protein tag
+mcherry-{Gene name},experimental context,fluorescent protein tag
+mChy-{Gene name},experimental context,fluorescent protein tag
+Chy-{Gene name},experimental context,fluorescent protein tag
+CHY-{Gene name},experimental context,fluorescent protein tag
+MCHY-{Gene name},experimental context,fluorescent protein tag
+mEGFP-{Gene name},experimental context,fluorescent protein tag
+MMTV-{Gene name},experimental context,mouse mammary tumor virus gene delivery
+mmu-{microRNA name},species,mus musculus
+Mmu-{microRNA name},species,mus musculus
+murine {Gene name},species,mus musculus
+Murine {Gene name},species,mus musculus
+oncogene {Gene name},generic descriptor,
+oncogenic {Gene name},generic descriptor,
+oncoprotein {Gene name},generic descriptor,
+myc-{Gene name},experimental context,protein tag
+Myc-{Gene name},experimental context,protein tag
+MYC-{Gene name},experimental context,protein tag
+protein {Gene name},generic descriptor,
+proto-oncogene {Gene name},generic descriptor,
+rAAV-{Gene name},experimental context,adenoviral gene delivery
+recombinant {Gene name},experimental context,
+Recombinant {Gene name},experimental context,
+rh-{Gene name},experimental context,recombinant human
+Rh-{Gene name},experimental context,recombinant human
+rh{Gene name},experimental context,recombinant human
+Rh{Gene name},experimental context,recombinant human
+Wild type {Gene name},experimental context,
+Wild-type {Gene name},experimental context,
+wild-type {Gene name},experimental context,
+wild type {Gene name},experimental context,
+WT {Gene name},experimental context,wild-type
+wt {Gene name},experimental context,wild-type
+wt-{Gene name},experimental context,wild-type
+WT-{Gene name},experimental context,wild-type
+wt{Gene name},experimental context,wild-type
+Wt{Gene name},experimental context,wild-type
+WT{Gene name},experimental context,wild-type
+YFP-{Gene name},experimental context,fluorescent protein tag
+protease {Gene name},generic descriptor,
+{Gene name} protein,generic descriptor,
+{Gene name} Protein,generic descriptor,
+{Gene name} proteins,generic descriptor,
+{Gene name} Proteins,generic descriptor,
+{Gene name}-EGFP,experimental context,fluorescent protein tag
+{Gene name}-eGFP,experimental context,fluorescent protein tag
+{Gene name}-GFP,experimental context,fluorescent protein tag
+transcription factor {Gene name},generic descriptor,
+Transcription factor {Gene name},generic descriptor,
+activated {Gene name},protein state,
+activated-{Gene name},protein state,
+active {Gene name},protein state,
+cytosolic {Gene name},protein state,
+cytoplasmic {Gene name},protein state,
+mutant {Gene name},protein state,
+Mutant {Gene name},protein state,
+mutated {Gene name},protein state,
+Mutated {Gene name},protein state,
+mut{Gene name},protein state,
+mut{Gene name}{mutation},protein state,
+myr-{Gene name},protein state,myristoylated
+Myr-{Gene name},protein state,myristoylated
+myr{Gene name},protein state,myristoylated
+nuclear {Gene name},protein state,
+p-{Gene name},protein state,phosphorylated
+P-{Gene name},protein state,phosphorylated
+p{Gene name},protein state,phosphorylated
+phospho-{Gene name},protein state,phosphorylated
+Phospho-{Gene name},protein state,phosphorylated
+phosphor-{Gene name},protein state,phosphorylated
+Phosphor-{Gene name},protein state,phosphorylated
+phosphorylated-{Gene name},protein state,phosphorylated
+phosphorylated {Gene name},protein state,phosphorylated
+pro-{Gene name},protein state,uncleaved protein
+Pro-{Gene name},protein state,uncleaved protein
+pro{Gene name},protein state,uncleaved protein
+{Gene name}-{mutation},protein state,
+{Gene name} mRNA,mrna grounding,
+Ub-{Gene name},protein state,ubiquitinated
+ubiquitinated {Gene name},protein state,
+DN-{Gene name},inhibition,dominant negative
+dn-{Gene name},inhibition,dominant negative
+dn{Gene name},inhibition,dominant negative
+dominant negative {Gene name},inhibition,dominant negative
+dominant-negative {Gene name},inhibition,dominant negative
+sh{Gene name},inhibition,short hairpin RNA
+sh{Gene name},inhibition,short hairpin RNA
+sh-{Gene name},inhibition,short hairpin RNA
+SH-{Gene name},inhibition,short hairpin RNA
+shRNA-{Gene name},inhibition,short hairpin RNA
+si-{Gene name},inhibition,small interfering RNA
+Si-{Gene name},inhibition,small interfering RNA
+silencing {Gene name},inhibition,
+Targeting {Gene name},inhibition,genetic or chemical inhibition
+{Gene name} knockdown,inhibition,siRNA-based knockdown
+{Gene name}KD,inhibition,siRNA-based knockdown
+{Gene name}-KD,inhibition,siRNA-based knockdown
+{Gene name} knockout,inhibition,
+{Gene name} siRNA,inhibition,siRNA-based knockdown
+{Gene name} siRNAs,inhibition,siRNA-based knockdown
+{Gene name} shRNA,inhibition,siRNA-based knockdown
+{Gene name}-shRNA,inhibition,siRNA-based knockdown

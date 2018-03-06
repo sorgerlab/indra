@@ -104,7 +104,7 @@ class Expander(object):
         for complex, subunits in all_complexes.items():
             # Create an Evidence object for the statement with the URI of the
             # complex as the source_id
-            ev = Evidence(source_api='bioentities', source_id=complex)
+            ev = Evidence(source_api='famplex', source_id=complex)
             subunit_agents = [_agent_from_uri(su) for su in subunits]
             complex_stmt = Complex(subunit_agents, evidence=[ev])
             complex_stmts.append(complex_stmt)

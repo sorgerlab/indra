@@ -394,7 +394,7 @@ class SBGNAssembler(object):
 
 def _get_agent_type(agent):
     if agent.db_refs.get('UP') or agent.db_refs.get('HGNC') or \
-        agent.db_refs.get('BE') or agent.db_refs.get('PF'):
+        agent.db_refs.get('FPLX') or agent.db_refs.get('PF'):
         return 'macromolecule'
     elif agent.db_refs.get('CHEBI') or agent.db_refs.get('PUBCHEM'):
         return 'simple chemical'

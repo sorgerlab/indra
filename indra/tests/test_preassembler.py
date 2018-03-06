@@ -109,7 +109,7 @@ def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
-    ras = Agent('RAS', db_refs = {'BE': 'RAS'})
+    ras = Agent('RAS', db_refs = {'FPLX': 'RAS'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     st1 = Phosphorylation(src, ras, 'tyrosine', '32')
     st2 = Phosphorylation(src, nras, 'tyrosine', '32')
@@ -207,7 +207,7 @@ def test_modification_norefinement_subsfamily():
     generic modification statement."""
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
-    ras = Agent('RAS', db_refs = {'BE': 'RAS'})
+    ras = Agent('RAS', db_refs = {'FPLX': 'RAS'})
     st1 = Phosphorylation(src, nras)
     st2 = Phosphorylation(src, ras, 'Y', '32',
                           evidence=[Evidence(text='foo')])
@@ -333,7 +333,7 @@ def test_activating_substitution_refinement():
     mc2 = MutCondition('61', 'Q', 'L')
     nras1 = Agent('NRAS', mutations=[mc1], db_refs = {'HGNC': '7989'})
     nras2 = Agent('NRAS', mutations=[mc2], db_refs = {'HGNC': '7989'})
-    ras = Agent('RAS', mutations=[mc1], db_refs={'BE': 'RAS'})
+    ras = Agent('RAS', mutations=[mc1], db_refs={'FPLX': 'RAS'})
     st1 = ActiveForm(ras, 'gtpbound', True,
                      evidence=Evidence(text='bar'))
     st2 = ActiveForm(nras1, 'gtpbound', True,
@@ -403,7 +403,7 @@ def test_grounding_aggregation_complex():
 def test_render_stmt_graph():
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
     # Statements
     p0 = Phosphorylation(braf, mek)
     p1 = Phosphorylation(braf, mek1)
@@ -516,7 +516,7 @@ def test_return_toplevel():
 def test_multiprocessing():
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
     # Statements
     p0 = Phosphorylation(braf, mek)
     p1 = Phosphorylation(braf, mek1)
@@ -535,7 +535,7 @@ def test_multiprocessing():
     assert len(toplevel) == 3
 
 def test_conversion_refinement():
-    ras = Agent('RAS', db_refs={'BE': 'RAS'})
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     hras = Agent('HRAS', db_refs={'HGNC': '5173'})
     gtp = Agent('GTP')
     gdp = Agent('GDP')

@@ -22,19 +22,19 @@ def test_hierarchy_unicode():
                          act_hierarchy.partof_closure))
 
 def test_isa_entity():
-    assert(ent_hierarchy.isa('HGNC', 'BRAF', 'BE', 'RAF'))
+    assert(ent_hierarchy.isa('HGNC', 'BRAF', 'FPLX', 'RAF'))
 
 def test_isa_entity2():
     assert(not ent_hierarchy.isa('HGNC', 'BRAF', 'HGNC', 'ARAF'))
 
 def test_isa_entity3():
-    assert(not ent_hierarchy.isa('BE', 'RAF', 'HGNC', 'BRAF'))
+    assert(not ent_hierarchy.isa('FPLX', 'RAF', 'HGNC', 'BRAF'))
 
 def test_partof_entity():
-    assert ent_hierarchy.partof('BE', 'HIF_alpha', 'BE', 'HIF')
+    assert ent_hierarchy.partof('FPLX', 'HIF_alpha', 'FPLX', 'HIF')
 
 def test_partof_entity_not():
-    assert not ent_hierarchy.partof('BE', 'HIF1', 'BE', 'HIF_alpha')
+    assert not ent_hierarchy.partof('FPLX', 'HIF1', 'FPLX', 'HIF_alpha')
 
 def test_isa_mod():
     assert(mod_hierarchy.isa('INDRA', 'phosphorylation',
@@ -118,15 +118,15 @@ def test_mtorc_partof_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
-    assert(ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'BE', 'mTORC1'))
-    assert(not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'BE', 'mTORC2'))
+    assert(ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC1'))
+    assert(not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC2'))
 
 def test_erk_isa_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
-    assert(ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'BE', 'MAPK'))
-    assert(not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'BE', 'JNK'))
+    assert(ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'MAPK'))
+    assert(not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'JNK'))
 
 def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'

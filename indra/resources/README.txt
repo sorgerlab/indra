@@ -5,6 +5,10 @@ Files that need to be periodically updated
 
 Files that can be generated automatically
 -----------------------------------------
+famplex/*.csv
+- A set of csv files downloaded from the FamPlex resource at
+https://github.com/sorgerlab/famplex
+
 bel_chebi_map.tsv
 - A table containing mappings from ChEBI names in the BEL namespace to
   ChEBI IDs used in INDRA
@@ -13,9 +17,9 @@ bel_chebi_map.tsv
   with
   http://resource.belframework.org/belframework/latest-release/equivalence/chebi.beleq
 
-bioentities_map.tsv
-- A table containing mappings from outside name spaces into Bioentities.
-- It is generated from bioentities/equivalences.csv
+famplex_map.tsv
+- A table containing mappings from outside name spaces into FamPlex.
+- It is generated from famplex/equivalences.csv
 
 cellular_components.tsv
 - A table of GO IDs and standardized names corresponding to cellular locations

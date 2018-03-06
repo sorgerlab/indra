@@ -120,12 +120,14 @@ def _fix_agent(agent):
             db_refs_tmp.pop('XFAM', None)
             db_refs_tmp['PF'] = db_id.split('.')[0]
     agent.db_refs = db_refs_tmp
-    # Check if we have a BE entry
-    be_id = agent.db_refs.get('BE')
-    # Try to map to BE from NXP, IPR, PF, NCIT
+    # Check if we have a FPLX entry and handle old BE mappings
+    if 'BE' in agent.db_refs:
+        agent.db_refs['FPLX'] = agent.db_refs.pop('BE')
+    be_id = agent.db_refs.get('FPLX')
+    # Try to map to FPLX from NXP, IPR, PF, NCIT
     if not be_id:
         for db_ns, db_id in agent.db_refs.items():
-            be_id = bioentities_map.get((db_ns, db_id))
+            be_id = famplex_map.get((db_ns, db_id))
             if be_id:
                 break
     # Try mapping NCIT to specific genes if possible
@@ -136,9 +138,9 @@ def _fix_agent(agent):
     # Check what entries we have
     up_id = agent.db_refs.get('UP')
     hgnc_id = agent.db_refs.get('HGNC')
-    # BE takes precedence if we have it
+    # FPLX takes precedence if we have it
     if be_id:
-        agent.db_refs['BE'] = be_id
+        agent.db_refs['FPLX'] = be_id
         agent.name = be_id
     elif hgnc_id:
         gene_name = hgnc_client.get_hgnc_name(hgnc_id)
@@ -312,10 +314,10 @@ class SparserXMLProcessor(object):
         # If we have a proper UID then we try to reconstruct an Agent from that
         if uid is not None and len(uid.split(':')) == 2:
             db_ns, db_id = uid.split(':')
-            be_id = bioentities_map.get((db_ns, db_id))
+            be_id = famplex_map.get((db_ns, db_id))
             if be_id:
                 db_refs[db_ns] = db_id
-                db_refs['BE'] = be_id
+                db_refs['FPLX'] = be_id
                 agent_name = be_id
             elif db_ns in ['UP', 'Uniprot']:
                 db_refs['UP'] = db_id
@@ -347,8 +349,11 @@ class SparserXMLProcessor(object):
                 db_refs['PF'] = db_id.split('.')[0]
             elif db_ns == 'CHEBI':
                 db_refs['CHEBI'] = 'CHEBI:' + db_id
-            elif db_ns in ['GO', 'MESH', 'BE']:
+            elif db_ns in ['GO', 'MESH', 'FPLX']:
                 db_refs[db_ns] = db_id
+            # Handle old BE mappings and add them as FPLX
+            elif db_ns == 'BE':
+                db_refs['FPLX'] = db_id
             elif db_ns in ['PR', 'CO', 'CVCL', 'EFO', 'ORPHANET']:
                 db_refs[db_ns] = db_id
             else:
@@ -414,10 +419,10 @@ def _read_ncit_map():
 ncit_map = _read_ncit_map()
 
 
-def _read_bioentities_map():
+def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../../resources/bioentities_map.tsv')
-    bioentities_map = {}
+                         '../../resources/famplex_map.tsv')
+    famplex_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
         source_ns = row[0]
@@ -426,8 +431,8 @@ def _read_bioentities_map():
         if source_ns == 'NXP':
             source_ns = 'NXPFA'
             source_id = source_id.split(':')[1]
-        bioentities_map[(source_ns, source_id)] = be_id
-    return bioentities_map
+        famplex_map[(source_ns, source_id)] = be_id
+    return famplex_map
 
 
-bioentities_map = _read_bioentities_map()
+famplex_map = _read_famplex_map()

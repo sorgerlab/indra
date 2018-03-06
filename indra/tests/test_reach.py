@@ -144,8 +144,8 @@ def test_be_grounding():
         assert unicode_strs(rp.statements)
         if offline == True:
             st = rp.statements[0]
-            assert(st.subj.db_refs.get('BE') == 'MEK')
-            assert(st.obj.db_refs.get('BE') == 'ERK')
+            assert(st.subj.db_refs.get('FPLX') == 'MEK')
+            assert(st.obj.db_refs.get('FPLX') == 'ERK')
 
 def test_activity():
     for offline in offline_modes:
