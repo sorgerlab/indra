@@ -264,7 +264,7 @@ def update_bel_chebi_map():
 
 def update_entity_hierarchy():
     logger.info('--Updating entity hierarchy----')
-    fname = os.path.join(path, 'bioentities/relations.csv')
+    fname = os.path.join(path, 'famplex/relations.csv')
     make_ent_hierarchy(fname)
 
 def update_modification_hierarchy():
@@ -279,13 +279,13 @@ def update_cellular_component_hierarchy():
     logger.info('--Updating cellular component hierarchy----')
     make_ccomp_hierarchy()
 
-def update_bioentities_map():
-    logger.info('--Updating Bioentities map----')
-    # Currently this is a trivial "copy" of the Bioentities equivalences.csv
+def update_famplex_map():
+    logger.info('--Updating FamPlex map----')
+    # Currently this is a trivial "copy" of the FamPlex equivalences.csv
     # file. Later, name spaces may need to be adapted and other format changes
     # may be needed.
-    fname_in = os.path.join(path, 'bioentities/equivalences.csv')
-    fname_out = os.path.join(path, 'bioentities_map.tsv')
+    fname_in = os.path.join(path, 'famplex/equivalences.csv')
+    fname_out = os.path.join(path, 'famplex_map.tsv')
     rows = read_unicode_csv(fname_in)
     write_unicode_csv(fname_out, rows, delimiter='\t')
 
@@ -379,6 +379,6 @@ if __name__ == '__main__':
     update_modification_hierarchy()
     update_activity_hierarchy()
     update_cellular_component_hierarchy()
-    update_bioentities_map()
+    update_famplex_map()
     update_ncit_map()
     update_chebi_primary_map()

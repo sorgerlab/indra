@@ -82,10 +82,10 @@ Agents also carry grounding information which links them to database entries.
 These database references are represented as a dictionary in the `db_refs`
 attribute of each Agent. The dictionary can have multiple entries. For
 instance, INDRA's input Processors produce genes and proteins that carry both
-UniProt and HGNC IDs in db_refs, whenever possible. Bioentities provides a name
+UniProt and HGNC IDs in db_refs, whenever possible. FamPlex provides a name
 space for protein families that are typically used in the literature.  More
-information about Bioentities can be found here:
-https://github.com/sorgerlab/bioentities
+information about FamPlex can be found here:
+https://github.com/sorgerlab/famplex
 
 +------------------------+------------------+--------------------------+
 | Type                   | Database         | Example                  |
@@ -94,7 +94,7 @@ https://github.com/sorgerlab/bioentities
 +------------------------+------------------+--------------------------+
 | Gene/Protein           | UniProt          | {'UP': 'P04637'}         |
 +------------------------+------------------+--------------------------+
-| Gene/Protein family    | Bioentities      | {'BE': 'ERK'}            |
+| Gene/Protein family    | FamPlex          | {'FPLX': 'ERK'}          |
 +------------------------+------------------+--------------------------+
 | Gene/Protein family    | InterPro         | {'IP': 'IPR000308'}      |
 +------------------------+------------------+--------------------------+
@@ -574,16 +574,16 @@ class Agent(object):
         return self.entity_matches_key() == other.entity_matches_key()
 
     def entity_matches_key(self):
-        db_refs_key = 'BE:%s;UP:%s;HGNC:%s' % (self.db_refs.get('BE'),
-                                               self.db_refs.get('UP'),
-                                               self.db_refs.get('HGNC'))
+        db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
+                                                 self.db_refs.get('UP'),
+                                                 self.db_refs.get('HGNC'))
         return str((self.name, db_refs_key))
 
     # Function to get the namespace to look in
     def get_grounding(self):
-        be = self.db_refs.get('BE')
+        be = self.db_refs.get('FPLX')
         if be:
-            return ('BE', be)
+            return ('FPLX', be)
         hgnc = self.db_refs.get('HGNC')
         if hgnc:
             if isinstance(hgnc, list):

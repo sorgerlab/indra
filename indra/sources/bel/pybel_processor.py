@@ -359,7 +359,7 @@ def _get_agent(node_data, node_modifier_data=None):
         # the names, and obtain corresponding Uniprot IDs
         elif ns in ('MGI', 'RGD'):
             db_refs = {ns: name}
-        # Map Selventa families to Bioentities
+        # Map Selventa families to FamPlexes
         elif ns == 'SFAM':
             db_refs = {'SFAM': name}
             indra_name = bel_to_indra.get(name)
@@ -367,7 +367,7 @@ def _get_agent(node_data, node_modifier_data=None):
                 logger.info('Could not find mapping for BEL/SFAM family: '
                             '%s (%s)' % (name, node_data))
             else:
-                db_refs['BE'] = indra_name
+                db_refs['FPLX'] = indra_name
                 name = indra_name
         # Map Entrez genes to HGNC/UP
         elif ns == 'EGID':

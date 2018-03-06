@@ -374,7 +374,7 @@ def _get_agent_grounding(agent):
         return id
     hgnc_id = _get_id(agent, 'HGNC')
     uniprot_id = _get_id(agent, 'UP')
-    be_id = _get_id(agent, 'BE')
+    be_id = _get_id(agent, 'FPLX')
     pfam_id = _get_id(agent, 'PF')
     fa_id = _get_id(agent, 'FA')
     chebi_id = _get_id(agent, 'CHEBI')
@@ -391,7 +391,7 @@ def _get_agent_grounding(agent):
     elif uniprot_id:
         return (pc.PROTEIN, 'UP', uniprot_id)
     elif be_id:
-        return (pc.PROTEIN, 'BE', be_id)
+        return (pc.PROTEIN, 'FPLX', be_id)
     elif pfam_id:
         return (pc.PROTEIN, 'PFAM', be_id)
     elif fa_id:

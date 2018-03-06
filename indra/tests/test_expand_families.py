@@ -10,11 +10,11 @@ def test_expand_families():
     # Get the Expander
     exp = ef.Expander(hierarchies)
     # Declare some agents
-    akt = Agent('AKT', db_refs={'BE':'AKT'})
-    raf = Agent('RAF', db_refs={'BE':'RAF'})
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
-    mapk1 = Agent('MAPK1', db_refs={'BE':'MAPK1'})
-    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
+    akt = Agent('AKT', db_refs={'FPLX':'AKT'})
+    raf = Agent('RAF', db_refs={'FPLX':'RAF'})
+    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
+    mapk1 = Agent('MAPK1', db_refs={'FPLX':'MAPK1'})
+    ampk = Agent('AMPK', db_refs={'FPLX':'AMPK'})
     # Test case where one agent is a family and the other is a gene
     st = Phosphorylation(mek, mapk1)
     expanded_stmts = exp.expand_families([st])
@@ -36,9 +36,9 @@ def test_complexes_from_hierarchy():
     exp = ef.Expander(hierarchies)
     complexes = exp.complexes_from_hierarchy()
     keys = [c.matches_key() for c in complexes]
-    probe_stmt = Complex([Agent('AMPK_alpha', db_refs={'BE':'AMPK_alpha'}),
-                          Agent('AMPK_beta', db_refs={'BE':'AMPK_beta'}),
-                          Agent('AMPK_gamma', db_refs={'BE':'AMPK_gamma'})])
+    probe_stmt = Complex([Agent('AMPK_alpha', db_refs={'FPLX':'AMPK_alpha'}),
+                          Agent('AMPK_beta', db_refs={'FPLX':'AMPK_beta'}),
+                          Agent('AMPK_gamma', db_refs={'FPLX':'AMPK_gamma'})])
     assert probe_stmt.matches_key() in keys
 
 def test_expanded_complexes_from_hierarchy():
@@ -62,7 +62,7 @@ def test_db_ref_keys():
     # Declare some agents
     grb2 = Agent('GRB2',
                  db_refs={'TEXT': 'Grb2', 'UP': 'P62993', 'HGNC': '4566'})
-    shc = Agent('SHC', db_refs={'BE':'SHC'})
+    shc = Agent('SHC', db_refs={'FPLX':'SHC'})
     # Test case where one agent is a family and the other is a gene
     st = Activation(grb2, shc)
     expanded_stmts = exp.expand_families([st])
@@ -90,7 +90,7 @@ def test_db_ref_keys():
 
 def test_get_children():
     exp = ef.Expander(hierarchies)
-    raf = Agent('RAF', db_refs={'BE':'RAF'})
+    raf = Agent('RAF', db_refs={'FPLX':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
     # Look up RAF
     rafs = exp.get_children(raf)
@@ -107,13 +107,13 @@ def test_get_children():
     # The lookup for a top-level family (e.g., MAPK, which has as children
     # both the intermediate family ERK as well as all MAPK1-15 members)
     # should not return the intermediate families when a filter is applied.
-    mapk = Agent('MAPK', db_refs={'BE':'MAPK'})
+    mapk = Agent('MAPK', db_refs={'FPLX':'MAPK'})
     mapks = exp.get_children(mapk, ns_filter=None)
     assert len(mapks) == 12
     assert ('HGNC', 'MAPK1') in mapks
     assert ('HGNC', 'MAPK9') in mapks
-    assert ('BE', 'ERK') in mapks
-    assert ('BE', 'JNK') in mapks
+    assert ('FPLX', 'ERK') in mapks
+    assert ('FPLX', 'JNK') in mapks
     assert unicode_strs(mapks)
     # Now do the same expansion with a namespace filter
     mapks = exp.get_children(mapk, ns_filter='HGNC')
@@ -121,10 +121,10 @@ def test_get_children():
     assert len(mapks) == 9
     assert ('HGNC', 'MAPK3') in mapks
     assert ('HGNC', 'MAPK10') in mapks
-    assert ('BE', 'ERK') not in mapks
+    assert ('FPLX', 'ERK') not in mapks
     # Make sure we can also do this in a case involving both family and complex
     # relationships
-    ampk = Agent('AMPK', db_refs={'BE':'AMPK'})
+    ampk = Agent('AMPK', db_refs={'FPLX':'AMPK'})
     ampks = exp.get_children(ampk, ns_filter=None)
     assert len(ampks) == 22
     ampks = exp.get_children(ampk, ns_filter='HGNC')

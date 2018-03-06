@@ -18,8 +18,8 @@ up_ns = Namespace('http://identifiers.org/uniprot/')
 indra_ent_ns = Namespace(indra_ns + 'entities/')
 indra_rel_ns = Namespace(indra_ns + 'relations/')
 
-ns_map = {'http://sorger.med.harvard.edu/indra/entities/': 'BE',
-          'http://sorger.med.harvard.edu/indra/relations/': 'BE',
+ns_map = {'http://sorger.med.harvard.edu/indra/entities/': 'FPLX',
+          'http://sorger.med.harvard.edu/indra/relations/': 'FPLX',
           'http://identifiers.org/hgnc.symbol/': 'HGNC',
           'http://identifiers.org/uniprot/': 'UP',}
 
@@ -39,7 +39,7 @@ def make_term(ns_name, id):
         term = hgnc_ns.term(id)
     elif ns_name == 'UP':
         term = up_ns.term(id)
-    elif ns_name == 'BE':
+    elif ns_name == 'FPLX':
         term = indra_ent_ns.term(id)
     else:
         raise ValueError("Unknown namespace %s" % ns_name)

@@ -533,7 +533,7 @@ def test_entities_match_complex():
 def test_agent_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
-    ras = Agent('RAS', db_refs = {'BE': 'RAS'})
+    ras = Agent('RAS', db_refs = {'FPLX': 'RAS'})
     nras = Agent('NRAS', db_refs = {'HGNC': '7989'})
     assert nras.refinement_of(ras, hierarchies)
     assert not ras.refinement_of(nras, hierarchies)
@@ -546,7 +546,7 @@ def test_agent_boundcondition_refinement():
     bc1 = BoundCondition(Agent('BRAF', db_refs = {'HGNC': '1097'}), True)
     bc2 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': '9829'}), True)
     bc3 = BoundCondition(Agent('RAF1', db_refs = {'HGNC': '9829'}), False)
-    bc4 = BoundCondition(Agent('RAF', db_refs = {'BE': 'RAF'}), True)
+    bc4 = BoundCondition(Agent('RAF', db_refs = {'FPLX': 'RAF'}), True)
 
     nras1 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc1])
     nras2 = Agent('NRAS', db_refs = {'HGNC': '7989'}, bound_conditions=[bc2])
@@ -762,9 +762,9 @@ def test_autophosphorylation_modification_refinement():
     assert not p5.refinement_of(p6, hierarchies)
 
 def test_activation_modification_refinement():
-    raf = Agent('RAF', db_refs={'BE': 'RAF'})
+    raf = Agent('RAF', db_refs={'FPLX': 'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
-    mek = Agent('MEK', db_refs={'BE': 'MEK'})
+    mek = Agent('MEK', db_refs={'FPLX': 'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 
     st1 = Activation(raf, mek, 'kinase')
@@ -800,12 +800,12 @@ def test_activation_modification_refinement():
 
 def test_activation_activity_hierarchy_refinement():
     raf_k = Agent('RAF', activity=ActivityCondition('kinase', True),
-                  db_refs={'BE': 'RAF'})
+                  db_refs={'FPLX': 'RAF'})
     raf_c = Agent('RAF', activity=ActivityCondition('catalytic', True),
-                  db_refs={'BE': 'RAF'})
+                  db_refs={'FPLX': 'RAF'})
     raf_a = Agent('RAF', activity=ActivityCondition('activity', True),
-                  db_refs={'BE': 'RAF'})
-    mek = Agent('MEK', db_refs={'BE': 'MEK'})
+                  db_refs={'FPLX': 'RAF'})
+    mek = Agent('MEK', db_refs={'FPLX': 'MEK'})
 
     st1 = Activation(raf_k, mek, 'kinase')
     st2 = Inhibition(raf_k, mek, 'kinase')
@@ -830,9 +830,9 @@ def test_activitymod_refinement():
     mc4 = ModCondition('phosphorylation', 'S', '222')
     mek_fam = Agent('MEK')
     mek1 = Agent('MAP2K1')
-    p1 = ActiveForm(Agent('MEK', mods=[mc1], db_refs={'BE':'MEK'}),
+    p1 = ActiveForm(Agent('MEK', mods=[mc1], db_refs={'FPLX':'MEK'}),
                     'kinase', True)
-    p2 = ActiveForm(Agent('MEK', mods=[mc3], db_refs={'BE':'MEK'}),
+    p2 = ActiveForm(Agent('MEK', mods=[mc3], db_refs={'FPLX':'MEK'}),
                     'kinase', True)
     p3 = ActiveForm(Agent('MAP2K1', mods=[mc1], db_refs={'HGNC':'6840'}),
                     'kinase', True)
@@ -908,7 +908,7 @@ def test_activeform_activity_hierarchy_refinement():
 
 def test_activatingsub_family_refinement():
     mc = MutCondition('12', 'G', 'D')
-    ras = Agent('RAS', mutations=[mc], db_refs={'BE':'RAS'})
+    ras = Agent('RAS', mutations=[mc], db_refs={'FPLX':'RAS'})
     kras = Agent('KRAS', mutations=[mc], db_refs={'HGNC':'6407'})
     nras = Agent('NRAS', mutations=[mc], db_refs={'HGNC':'7989'})
     st1 = ActiveForm(ras, 'activity', True)
@@ -933,13 +933,13 @@ def test_activatingsub_family_refinement():
     assert not st3.refinement_of(st4, hierarchies)
 
 def test_gef_family_refinement():
-    sos = Agent('SOS', db_refs={'BE':'SOS'})
+    sos = Agent('SOS', db_refs={'FPLX':'SOS'})
     sos1 = Agent('SOS1', db_refs={'HGNC':'11187'})
     sos1_a = Agent('SOS1', activity=ActivityCondition('activity', True),
                    db_refs={'HGNC': '11187'})
     sos1_c = Agent('SOS1', activity=ActivityCondition('catalytic', True),
                    db_refs={'HGNC': '11187'})
-    ras = Agent('RAS', db_refs={'BE':'RAS'})
+    ras = Agent('RAS', db_refs={'FPLX':'RAS'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
     # Statements
     st1 = Gef(sos, ras)
@@ -982,9 +982,9 @@ def test_gef_family_refinement():
     assert not st5.refinement_of(st6, hierarchies)
 
 def test_gap_family_refinement():
-    rasa = Agent('RASA', db_refs={'BE':'RASA'})
+    rasa = Agent('RASA', db_refs={'FPLX':'RASA'})
     rasa1 = Agent('RASA1', db_refs={'HGNC':'9871'})
-    ras = Agent('RAS', db_refs={'BE':'RAS'})
+    ras = Agent('RAS', db_refs={'FPLX':'RAS'})
     kras = Agent('KRAS', db_refs={'HGNC':'6407'})
     rasa1_a = Agent('RASA1', activity=ActivityCondition('activity', True),
                     db_refs={'HGNC': '9871'})
@@ -1031,10 +1031,10 @@ def test_gap_family_refinement():
     assert not st5.refinement_of(st6, hierarchies)
 
 def test_complex_family_refinement():
-    raf = Agent('RAF', db_refs={'BE':'RAF'})
+    raf = Agent('RAF', db_refs={'FPLX':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
     st1 = Complex([raf, mek])
@@ -1246,12 +1246,12 @@ def test_translocation_refinement():
     assert(st7.refinement_of(st9, hierarchies))
 
 def test_decrease_amt_refinement():
-    raf = Agent('RAF', db_refs={'BE':'RAF'})
+    raf = Agent('RAF', db_refs={'FPLX':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
     brafk = Agent('BRAF', activity=ActivityCondition('kinase', True),
                   db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
     st1 = DecreaseAmount(raf, mek)
@@ -1278,12 +1278,12 @@ def test_decrease_amt_refinement():
     assert not st3.refinement_of(st4, hierarchies)
 
 def test_increase_amt_refinement():
-    raf = Agent('RAF', db_refs={'BE':'RAF'})
+    raf = Agent('RAF', db_refs={'FPLX':'RAF'})
     braf = Agent('BRAF', db_refs={'HGNC':'1097'})
     brafk = Agent('BRAF', activity=ActivityCondition('kinase', True),
                   db_refs={'HGNC':'1097'})
     raf1 = Agent('RAF1', db_refs={'HGNC':'9829'})
-    mek = Agent('MEK', db_refs={'BE':'MEK'})
+    mek = Agent('MEK', db_refs={'FPLX':'MEK'})
     mek1 = Agent('MAP2K1', db_refs={'HGNC':'6840'})
 
     st1 = IncreaseAmount(raf, mek)
@@ -1429,7 +1429,7 @@ def test_conversion_init():
     st = Conversion(Agent('RAS'), Agent('GTP'), Agent('GDP'))
 
 def test_conversion_refinement():
-    ras = Agent('RAS', db_refs={'BE': 'RAS'})
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     hras = Agent('HRAS', db_refs={'HGNC': '5173'})
     gtp = Agent('GTP')
     gdp = Agent('GDP')

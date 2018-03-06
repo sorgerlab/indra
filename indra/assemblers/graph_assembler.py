@@ -255,8 +255,8 @@ def _get_node_label(agent):
     if not (agent.db_refs.get('UP') or
             agent.db_refs.get('HGNC') or
             agent.db_refs.get('CHEBI')):
-        if agent.db_refs.get('BE'):
-            name_for_node = agent.db_refs['BE']
+        if agent.db_refs.get('FPLX'):
+            name_for_node = agent.db_refs['FPLX']
             return name_for_node
         if agent.db_refs.get('TEXT'):
             name_for_node = agent.db_refs['TEXT']

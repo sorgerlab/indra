@@ -983,7 +983,7 @@ class BelRdfProcessor(object):
                 msg = 'Could not find mapping for BEL family: %s' % name
                 logger.warning(msg)
             else:
-                db_refs['BE'] = indra_name
+                db_refs['FPLX'] = indra_name
                 db_refs['TEXT'] = name
                 agent_name = indra_name
         elif namespace in ('NCH', 'SCOMP'):
@@ -994,7 +994,7 @@ class BelRdfProcessor(object):
                 msg = 'Could not find mapping for BEL complex: %s' % name
                 logger.warning(msg)
             else:
-                db_refs['BE'] = indra_name
+                db_refs['FPLX'] = indra_name
                 db_refs['TEXT'] = name
                 agent_name = indra_name
         elif namespace == 'CHEBI':
@@ -1115,9 +1115,9 @@ class BelRdfProcessor(object):
         return mc
 
 
-def _build_bioentities_map():
+def _build_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../../resources/bioentities_map.tsv')
+                         '../../resources/famplex_map.tsv')
     bel_to_indra = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
@@ -1140,5 +1140,5 @@ def _build_chebi_map():
         chebi_name_id[chebi_name] = chebi_id
     return chebi_name_id
 
-bel_to_indra = _build_bioentities_map()
+bel_to_indra = _build_famplex_map()
 chebi_name_id = _build_chebi_map()

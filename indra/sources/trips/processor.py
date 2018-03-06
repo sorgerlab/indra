@@ -1113,7 +1113,7 @@ class TripsProcessor(object):
             # Determine the agent name
             hgnc_id = db_refs.get('HGNC')
             up_id = db_refs.get('UP')
-            be_id = db_refs.get('BE')
+            be_id = db_refs.get('FPLX')
             agent_name = None
             # HGNC name takes precedence
             if hgnc_id:
@@ -1125,8 +1125,8 @@ class TripsProcessor(object):
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name:
                     agent_name = gene_name
-            # If it is mapped to Bioentities then we standardize its name
-            # to the Bioentities entry name
+            # If it is mapped to FamPlex then we standardize its name
+            # to the FamPlex entry name
             elif be_id:
                 agent_name = be_id
             # Otherwise, take the name of the term as agent name
@@ -1639,7 +1639,7 @@ def _get_db_refs(term):
     ns_priority = {
         'HGNC': 1,
         'UP': 1,
-        'BE': 2,
+        'FPLX': 2,
         'CHEBI': 3,
         'GO': 4,
         'FA': 5,
@@ -1679,7 +1679,7 @@ def _get_db_refs(term):
                     # BE was not mapped from NCIT, the HGNC shouldn't
                     # take precedence.
                     if entry.get('comment') == 'HGNC_FROM_NCIT' and \
-                        'BE' in top_entry['refs'] and \
+                        'FPLX' in top_entry['refs'] and \
                         top_entry.get('comment') != 'BE_FROM_NCIT':
                         continue
                     top_entry = entry
@@ -1799,11 +1799,11 @@ def _get_grounding_terms(term):
             db_mappings = _get_db_mappings(ref_ns, ref_id)
             for ref_mapped in db_mappings:
                 new_refs[ref_mapped[0]] = ref_mapped[1]
-        if 'FA' in refs and 'BE' not in refs and 'BE' in new_refs:
+        if 'FA' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
             comment = 'BE_FROM_FA'
         if 'NCIT' in refs and 'HGNC' not in refs and 'HGNC' in new_refs:
             comment = 'HGNC_FROM_NCIT'
-        if 'NCIT' in refs and 'BE' not in refs and 'BE' in new_refs:
+        if 'NCIT' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
             comment = 'BE_FROM_NCIT'
         for k, v in new_refs.items():
             refs[k] = v
@@ -1864,7 +1864,8 @@ def _get_grounding_terms(term):
                         any_match = True
                 # If there are, add all the items to the independent term
                 if match:
-                    if it.get('comment') == 'BE_FROM_FA' and 'BE' in t['refs']:
+                    if it.get('comment') == 'BE_FROM_FA' and \
+                        'FPLX' in t['refs']:
                         it['comment'] = None
                     for k, v in t['refs'].items():
                         it['refs'][k] = v
@@ -1880,9 +1881,9 @@ def _get_db_mappings(dbname, dbid):
         dbname = 'NXP'
         dbid = 'FA:' + dbid
     db_mappings = []
-    be_id = bioentities_map.get((dbname, dbid))
+    be_id = famplex_map.get((dbname, dbid))
     if be_id is not None:
-        db_mappings.append(('BE', be_id))
+        db_mappings.append(('FPLX', be_id))
     if dbname == 'NCIT':
         target = ncit_map.get(dbid)
         if target is not None:
@@ -1919,16 +1920,16 @@ def _read_ncit_map():
 
 ncit_map = _read_ncit_map()
 
-def _read_bioentities_map():
+def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../../resources/bioentities_map.tsv')
-    bioentities_map = {}
+                         '../../resources/famplex_map.tsv')
+    famplex_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
         source_ns = row[0]
         source_id = row[1]
         be_id = row[2]
-        bioentities_map[(source_ns, source_id)] = be_id
-    return bioentities_map
+        famplex_map[(source_ns, source_id)] = be_id
+    return famplex_map
 
-bioentities_map = _read_bioentities_map()
+famplex_map = _read_famplex_map()

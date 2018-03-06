@@ -385,15 +385,15 @@ class ReachProcessor(object):
                 if up_id:
                     db_refs['UP'] = up_id
             elif ns == 'pfam':
-                be_id = bioentities_map.get(('PF', xr['id']))
+                be_id = famplex_map.get(('PF', xr['id']))
                 if be_id:
-                    db_refs['BE'] = be_id
+                    db_refs['FPLX'] = be_id
                     agent_name = be_id
                 db_refs['PF'] = xr['id']
             elif ns == 'interpro':
-                be_id = bioentities_map.get(('IP', xr['id']))
+                be_id = famplex_map.get(('IP', xr['id']))
                 if be_id:
-                    db_refs['BE'] = be_id
+                    db_refs['FPLX'] = be_id
                     agent_name = be_id
                 db_refs['IP'] = xr['id']
             elif ns == 'chebi':
@@ -410,8 +410,8 @@ class ReachProcessor(object):
                 if xr['id'].startswith('HMDB'):
                     db_refs['HMDB'] = xr['id']
             elif ns == 'be':
-                db_refs['BE'] = xr['id']
-                agent_name = db_refs['BE']
+                db_refs['FPLX'] = xr['id']
+                agent_name = db_refs['FPLX']
             # These name spaces are ignored
             elif ns in ['uaz']:
                 pass
@@ -657,19 +657,19 @@ agent_mod_map = {
     'unknown': ('modification', True),
 }
 
-def _read_bioentities_map():
+def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                         '../../resources/bioentities_map.tsv')
-    bioentities_map = {}
+                         '../../resources/famplex_map.tsv')
+    famplex_map = {}
     csv_rows = read_unicode_csv(fname, delimiter='\t')
     for row in csv_rows:
         source_ns = row[0]
         source_id = row[1]
         be_id = row[2]
-        bioentities_map[(source_ns, source_id)] = be_id
-    return bioentities_map
+        famplex_map[(source_ns, source_id)] = be_id
+    return famplex_map
 
-bioentities_map = _read_bioentities_map()
+famplex_map = _read_famplex_map()
 
 
 def _read_reach_rule_regexps():

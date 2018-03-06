@@ -82,7 +82,7 @@ def test_get_agent_sfam():
     assert isinstance(agent, Agent)
     assert len(agent.db_refs) == 2
     assert agent.db_refs['SFAM'] == 'PRKC Family'
-    assert agent.db_refs['BE'] == 'PKC'
+    assert agent.db_refs['FPLX'] == 'PKC'
     assert agent.name == 'PKC'
 
 
@@ -275,7 +275,7 @@ def test_get_agent_complex_none_agent():
 
 
 def test_get_agent_named_complex_go():
-    # TODO: Handle named complexes and map to Bioentities where possible
+    # TODO: Handle named complexes and map to FamPlex where possible
     node_data = {
             'cname': '0043509',
             'function': 'Complex',
