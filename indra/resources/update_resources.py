@@ -370,7 +370,7 @@ def update_famplex():
     famplex_url_pattern = \
         'https://raw.githubusercontent.com/sorgerlab/famplex/master/%s.csv'
     csv_names = ['entities', 'equivalences', 'gene_prefixes',
-                 'grounding_map', 'ignore', 'relations']
+                 'grounding_map', 'relations']
     for csv_name in csv_names:
         url = famplex_url_pattern % csv_name
         save_from_http(url, 'famplex/%s.csv' % csv_name)
