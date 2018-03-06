@@ -1113,6 +1113,8 @@ class TripsProcessor(object):
             # Determine the agent name
             hgnc_id = db_refs.get('HGNC')
             up_id = db_refs.get('UP')
+            # We handle the BE namespace here which has since been renamed
+            # to FPLX
             be_id = db_refs.get('FPLX')
             agent_name = None
             # HGNC name takes precedence
@@ -1680,7 +1682,7 @@ def _get_db_refs(term):
                     # take precedence.
                     if entry.get('comment') == 'HGNC_FROM_NCIT' and \
                         'FPLX' in top_entry['refs'] and \
-                        top_entry.get('comment') != 'BE_FROM_NCIT':
+                        top_entry.get('comment') != 'FPLX_FROM_NCIT':
                         continue
                     top_entry = entry
                     top_idx = i
@@ -1708,7 +1710,7 @@ def _get_db_refs(term):
         priority_diff = top_per_score_group[0]['priority'] - \
                         top_per_score_group[1]['priority']
         if score_diff < 0.2 and (priority_diff >= 2 or \
-            top_per_score_group[0].get('comment') == 'BE_FROM_FA'):
+            top_per_score_group[0].get('comment') == 'FPLX_FROM_FA'):
             top_grounding = top_per_score_group[1]
     relevant_ambiguities = []
     for amb in ambiguities:
@@ -1777,6 +1779,8 @@ def _get_grounding_terms(term):
                 refs = {}
         else:
             db_ns, db_id = dbid_str.split(':')
+            if db_ns == 'BE':
+                db_ns = 'FPLX'
             refs = {db_ns: db_id}
 
         # Next look at the xref tags
@@ -1788,6 +1792,8 @@ def _get_grounding_terms(term):
             # not desirable here
             if db_ns == 'XFAM':
                 continue
+            if db_ns == 'BE':
+                db_ns = 'FPLX'
             refs[db_ns] = db_id
 
         comment = None
@@ -1800,11 +1806,11 @@ def _get_grounding_terms(term):
             for ref_mapped in db_mappings:
                 new_refs[ref_mapped[0]] = ref_mapped[1]
         if 'FA' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
-            comment = 'BE_FROM_FA'
+            comment = 'FPLX_FROM_FA'
         if 'NCIT' in refs and 'HGNC' not in refs and 'HGNC' in new_refs:
             comment = 'HGNC_FROM_NCIT'
         if 'NCIT' in refs and 'FPLX' not in refs and 'FPLX' in new_refs:
-            comment = 'BE_FROM_NCIT'
+            comment = 'FPLX_FROM_NCIT'
         for k, v in new_refs.items():
             refs[k] = v
 
@@ -1864,7 +1870,7 @@ def _get_grounding_terms(term):
                         any_match = True
                 # If there are, add all the items to the independent term
                 if match:
-                    if it.get('comment') == 'BE_FROM_FA' and \
+                    if it.get('comment') == 'FPLX_FROM_FA' and \
                         'FPLX' in t['refs']:
                         it['comment'] = None
                     for k, v in t['refs'].items():
