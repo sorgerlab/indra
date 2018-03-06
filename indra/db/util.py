@@ -106,6 +106,7 @@ def get_primary_db(force_new=False):
 def insert_agents(db, stmts, stmt_table, *other_clauses):
     "Insert the agents associated with the list of statements."
     # Build a dict mapping stmt UUIDs to statement IDs
+    logger.info("Beginning to insert agents.")
     uuid_list = [s.uuid for s in stmts]
     stmt_rec_list = db.select_all(stmt_table,
                                   db.Statements.uuid.in_(uuid_list),
@@ -162,11 +163,14 @@ def insert_db_stmts(db, stmts, db_ref_id):
     return
 
 
-def insert_pa_stmts(db, stmts):
+def insert_pa_stmts(db, stmts, verbose=True):
     """Insert pre-assembled statements, and any affiliated agents."""
+    logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
     cols = ('uuid', 'type', 'json', 'indra_version')
-    for stmt in stmts:
+    if verbose:
+        print("Loading:", end='', flush=True)
+    for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
             stmt.__class__.__name__,
@@ -174,6 +178,10 @@ def insert_pa_stmts(db, stmts):
             get_version()
         )
         stmt_data.append(stmt_rec)
+        if verbose and i % (len(stmts)//25) == 0:
+            print('|', end='', flush=True)
+    if verbose:
+        print(" Done loading %d statements." % len(stmts))
     db.copy('pa_statements', stmt_data, cols)
     insert_agents(db, stmts, 'statements')
     return
