@@ -2,6 +2,28 @@
 
 import sys
 import json
+from nltk.tokenize import word_tokenize
+
+def split_long_sentence(sentence, words_per_line):
+    """Takes a sentence and adds a newline every "words_per_line" words.
+
+    Parameters
+    ----------
+    sentence: str
+        Sentene to split
+    words_per_line: double
+        Add a newline every this many words
+    """
+    words = word_tokenize(sentence)
+    split_sentence = ''
+    for i in range(len(words)):
+        split_sentence = split_sentence + words[i]
+        if (i+1) % words_per_line == 0:
+            split_sentence = split_sentence + '\n'
+        elif i != len(words) - 1:
+            split_sentence = split_sentence + " "
+    return split_sentence
+
 
 def shorter_name(key):
     """Finds a shorter name for an id by only taking the last part of the URI,
@@ -189,7 +211,7 @@ if __name__ == '__main__':
         assertion_id = shorter_name(assertion['@id'])
 
         assertion_text = assertion[text_attr][0]['@value']
-        node_labels[assertion_id] = assertion_text
+        node_labels[assertion_id] = split_long_sentence(assertion_text, 5)
 
 
         # If there's an effect, add to the graph
