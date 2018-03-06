@@ -267,14 +267,13 @@ def get_gene_name(protein_id, web_fallback=True):
 
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
-    from requests import get
     try:
         prim_ids = uniprot_sec[protein_id]
         protein_id = prim_ids[0]
     except KeyError:
         pass
     url = uniprot_url + '%s.fasta' % protein_id
-    res = get(url)
+    res = requests.get(url)
     if not res.status_code == 200:
         logger.warning('Could not find sequence for protein %s' % protein_id)
         return None
