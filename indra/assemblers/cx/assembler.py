@@ -424,10 +424,9 @@ class CxAssembler(object):
             self.cx['edgeCitations'].append(edge_citation)
 
         # Add the textual supports for the edge
-        texts = [e.text for e in stmt.evidence if e.text]
+        texts = [_fix_evidence_text(e.text) for e in stmt.evidence if e.text]
         edge_supports = []
         for text in texts:
-            text = text.replace('XREF_BIBR', '')
             support_id = self._get_new_id()
             support = {'@id': support_id,
                        'text': text}
@@ -440,7 +439,7 @@ class CxAssembler(object):
 
         belief_str = '%.2f' % stmt.belief
         edge_attribute = {'po': edge_id,
-                          'n': 'Belief score',
+                          'n': 'belief',
                           'v': belief_str}
         self.cx['edgeAttributes'].append(edge_attribute)
 
@@ -450,7 +449,7 @@ class CxAssembler(object):
         if texts:
             text = texts[0]
             edge_attribute = {'po': edge_id,
-                              'n': 'Text',
+                              'n': 'text',
                               'v': text}
             self.cx['edgeAttributes'].append(edge_attribute)
 
@@ -518,6 +517,7 @@ def _get_stmt_type(stmt):
         edge_polarity = 'none'
     return edge_type, edge_polarity
 
+
 def _get_agent_type(agent):
     hgnc_id = agent.db_refs.get('HGNC')
     uniprot_id = agent.db_refs.get('UP')
@@ -541,3 +541,17 @@ def _get_agent_type(agent):
     else:
         agent_type = 'other'
     return agent_type
+
+
+def _fix_evidence_text(txt):
+    """Eliminate some symbols to have cleaner supporting text."""
+    txt = re.sub('[ ]?\( xref \)', '', txt)
+    # This is to make [ xref ] become [] to match the two readers
+    txt = re.sub('\[ xref \]', '[]', txt)
+    txt = re.sub('[\(]?XREF_BIBR[\)]?[,]?', '', txt)
+    txt = re.sub('[\(]?XREF_FIG[\)]?[,]?', '', txt)
+    txt = re.sub('[\(]?XREF_SUPPLEMENT[\)]?[,]?', '', txt)
+    txt = txt.strip()
+    return txt
+
+
