@@ -1676,7 +1676,7 @@ def _get_db_refs(term):
                     # This is a corner case in which a protein family
                     # should be prioritized over a specific protein,
                     # specifically when HGNC was mapped from NCIT but
-                    # BE was not mapped from NCIT, the HGNC shouldn't
+                    # FPLX was not mapped from NCIT, the HGNC shouldn't
                     # take precedence.
                     if entry.get('comment') == 'HGNC_FROM_NCIT' and \
                         'FPLX' in top_entry['refs'] and \
@@ -1700,7 +1700,7 @@ def _get_db_refs(term):
     # Sometimes the top grounding has much lower priority and not much higher
     # score than the second grounding. Typically 1.0 vs 0.82857 and 5 vs 2.
     # In this case we take the second entry. A special case is handled where
-    # a BE entry was mapped from FA, in which case priority difference of < 2
+    # a FPLX entry was mapped from FA, in which case priority difference of < 2
     # is also accepted.
     if len(top_per_score_group) > 1:
         score_diff = top_per_score_group[0]['score'] - \

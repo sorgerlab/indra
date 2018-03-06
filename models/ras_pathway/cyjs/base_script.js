@@ -300,7 +300,7 @@ $(function(){
             pie_mutations[current_slice] = (members[gene].mutation);
             var db_links = [];
             for (var namespace in members[gene]['db_refs']){
-              if (namespace !== 'BE'){
+              if (namespace !== 'FPLX'){
                 db_links.push({
                   id: gene,
                   name: namespace,

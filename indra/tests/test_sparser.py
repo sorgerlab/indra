@@ -170,7 +170,7 @@ json_str1 = '''
   "enz": {
     "name": "MEK",
     "db_refs": {
-      "BE": "MEK",
+      "FPLX": "MEK",
       "TEXT": "MEK"},
     "TEXT": "MEK"}
  }

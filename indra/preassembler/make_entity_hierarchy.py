@@ -10,7 +10,7 @@ hierarchy_path = join(dirname(abspath(__file__)),
                       '../resources/entity_hierarchy.rdf')
 
 relations_file = join(dirname(abspath(__file__)),
-                      '../resources/bioentities/relations.csv')
+                      '../resources/famplex/relations.csv')
 
 indra_ns = 'http://sorger.med.harvard.edu/indra/'
 hgnc_ns = Namespace('http://identifiers.org/hgnc.symbol/')
