@@ -388,7 +388,7 @@ class CxAssembler(object):
         if self.add_indra_json:
             indra_stmt_json = json.dumps(stmt.to_json())
             edge_attribute = {'po': edge_id,
-                              'n': 'INDRA json',
+                              'n': '__INDRA json',
                               'v': indra_stmt_json}
             self.cx['edgeAttributes'].append(edge_attribute)
 
