@@ -117,7 +117,8 @@ via the REACH API, an additional package called
 classes from Python. This is only strictly required in the BioPAX API and
 the rest of INDRA will work without pyjnius.
 
-1. Install `JRE and JDK from Oracle <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
+1. Install `JRE and JDK 8 from Oracle <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_. Pyjnius is currently incompatible with Java 9, so
+make sure to get Java 8.
 
 2. On Mac, `install Legacy Java for OSX <http://support.apple.com/kb/DL1572>`_.
 If you have trouble installing it, you can try the following as an alternative.
