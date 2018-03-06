@@ -93,7 +93,11 @@ class CauseEffect(object):
             evidence_text = evidence_texts[0]
         else:
             evidence_text = repr(evidence_texts)
-        ev = Evidence(source_api='bbn', text=evidence_text)
+        ev = Evidence(source_api='bbn', text=str(evidence_text))
+
+        # Convert from rdf literal to python string
+        cause_text = str(cause_text)
+        effect_text = str(effect_text)
 
         return Influence(Agent(cause_text), Agent(effect_text), evidence=ev)
 

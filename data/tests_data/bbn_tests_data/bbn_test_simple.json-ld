@@ -1,0 +1,60 @@
+[
+    {
+        "@id": "http://worldmodelers.com/performers/bbn#REL-CausalAssertion-1",
+        "@type": [
+            "http://worldmodelers.com/CauseEffect#CausalAssertion"
+        ],
+        "http://worldmodelers.com/CauseEffect#has_cause": [
+            {
+                "@id": "http://worldmodelers.com/performers/bbn#EV-Class-cow-1"
+            }
+        ],
+        "http://worldmodelers.com/CauseEffect#has_effect": [
+            {
+                "@id": "http://worldmodelers.com/performers/bbn#EV-Class-moo-1"
+            }
+        ],
+        "http://www.ontologyrepository.com/CommonCoreOntologies/has_text_value": [
+            {
+                "@value": "Cow causes moo."
+            }
+        ]
+    },
+
+	{
+        "@id": "http://worldmodelers.com/performers/bbn#EV-Class-cow-1",
+        "http://worldmodelers.com/Event#has_polarity": [
+            {
+                "@id": "http://worldmodelers.com/Event#Positive"
+            }
+        ],
+        "http://www.ontologyrepository.com/CommonCoreOntologies/has_text_value": [
+            {
+                "@value": "cow"
+            },
+            {
+                "@value": "Cow causes moo."
+            }
+        ]
+    },
+
+	{
+        "@id": "http://worldmodelers.com/performers/bbn#EV-Class-moo-1",
+        "http://worldmodelers.com/Event#has_polarity": [
+            {
+                "@id": "http://worldmodelers.com/Event#Positive"
+            }
+        ],
+        "http://www.ontologyrepository.com/CommonCoreOntologies/has_text_value": [
+            {
+                "@value": "moo"
+            },
+            {
+                "@value": "Cow causes moo."
+            }
+        ]
+    }
+
+
+]
+
