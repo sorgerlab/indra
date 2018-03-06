@@ -193,9 +193,21 @@ def update_network(cx_str, network_id, ndex_cred=None):
     set_style(network_id, ndex_cred)
 
 
-def set_style(network_id, ndex_cred=None):
-    # Update network style
-    template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
+def set_style(network_id, ndex_cred=None, template_id=None):
+    """Set the style of the network to a given template network's style
+
+    Parameters
+    ----------
+    network_id : str
+        The UUID of the NDEx network whose style is to be changed.
+    ndex_cred : dict
+        A dictionary of NDEx credentials.
+    template_id : Optional[str]
+        The UUID of the NDEx network whose style is used on the
+        network specified in the first argument.
+    """
+    if not template_id:
+        template_id = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
     server = 'http://public.ndexbio.org'
     username, password = get_default_ndex_cred(ndex_cred)
@@ -205,7 +217,7 @@ def set_style(network_id, ndex_cred=None):
                                                       uuid=network_id,
                                                       server=server)
 
-    source_network.apply_template(server, template_uuid)
+    source_network.apply_template(server, template_id)
 
     source_network.update_to(network_id, server=server, username=username,
                              password=password)
