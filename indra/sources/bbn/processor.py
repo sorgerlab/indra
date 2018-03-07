@@ -12,6 +12,8 @@ prefixes = """
     PREFIX cco: <http://www.ontologyrepository.com/CommonCoreOntologies/>
     PREFIX ev: <http://worldmodelers.com/Event#>
     """
+
+
 class BBNProcessor(object):
     """Process a BBN extraction graph into INDRA Statements.
 
@@ -67,7 +69,7 @@ class BBNProcessor(object):
 
             rdict[relid].cause_texts.add(cause_text)
             rdict[relid].effect_texts.add(effect_text)
-            rdict[relid].evidence_texts.add(evtext);
+            rdict[relid].evidence_texts.add(evtext)
 
             if cause_polarity is not None:
                 rdict[relid].cause_polarity = shorter_name(cause_polarity)
@@ -76,7 +78,7 @@ class BBNProcessor(object):
         not_positive = 0
         for relid, ces in rdict.items():
             statement = ces.to_statement()
-            if statement is None: #Returns None when polarity not positive
+            if statement is None:  # Returns None when polarity not positive
                 not_positive = not_positive + 1
             else:
                 self.statements.append(statement)

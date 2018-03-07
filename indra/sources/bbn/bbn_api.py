@@ -33,4 +33,3 @@ def _load_graph(fname):
         g.parse(fh, format='json-ld')
         logger.info('Finished loading graph')
     return g
-
