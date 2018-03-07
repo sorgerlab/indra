@@ -539,13 +539,14 @@ def get_text_content_stats(fname=None, db=None):
     content_read = tc_w_reading_q.distinct().count()
     __report_stat("Total content read: %d" % content_read, fname)
     tc_fulltext_q = tc_q.filter(db.TextContent.text_type == 'fulltext')
-    fulltext_content = tc_fulltext_q.count()
+    fulltext_content = tc_fulltext_q.distinct().count()
     __report_stat("Number of fulltext entries: %d" % fulltext_content, fname)
     tc_fulltext_read_q = tc_fulltext_q.filter(tc_rdng_link)
-    fulltext_read = tc_fulltext_read_q.count()
+    fulltext_read = tc_fulltext_read_q.distinct().count()
     __report_stat("Number of fulltext entries read: %d" % fulltext_read, fname)
     content_by_source = (db.session.query(db.TextContent.source,
                                           func.count(db.TextContent.id))
+                         .distinct()
                          .group_by(db.TextContent.source)
                          .all())
     __report_stat(("Content by source:\n    %s"
@@ -584,7 +585,7 @@ def get_readings_stats(fname=None, db=None):
         .group_by(db.Readings.reader_version, db.TextContent.source)
         .all()
         )
-    __report_stat(("Readings by reader and version:\n    %s"
+    __report_stat(("Readings by reader version and content source:\n    %s"
                    % '\n    '.join([str(r) for r
                                     in readings_by_reader_and_version])),
                   fname
@@ -607,10 +608,10 @@ def get_statements_stats(fname=None, db=None):
                          func.count(db.Statements.id))
         .filter(stmt_rdng_link, tc_rdng_link)
         .distinct()
-        .group_by(db.Readings.reader, db.TextContent.text_type)
+        .group_by(db.Readings.reader, db.TextContent.source)
         .all()
         )
-    __report_stat(("Statements by reader and content type:\n    %s"
+    __report_stat(("Statements by reader and content source:\n    %s"
                    % '\n    '.join([str(r) for r
                                     in statements_by_reading_source])),
                   fname
