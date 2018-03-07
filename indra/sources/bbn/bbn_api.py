@@ -22,6 +22,7 @@ def process_json_file(fname):
     """
     graph = _load_graph(fname)
     bp = processor.BBNProcessor(graph)
+    bp.get_statements()
     return bp
 
 
