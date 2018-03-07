@@ -2,7 +2,7 @@
 
 import sys
 import json
-from nltk.tokenize import word_tokenize
+
 
 def split_long_sentence(sentence, words_per_line):
     """Takes a sentence and adds a newline every "words_per_line" words.
@@ -14,7 +14,7 @@ def split_long_sentence(sentence, words_per_line):
     words_per_line: double
         Add a newline every this many words
     """
-    words = word_tokenize(sentence)
+    words = sentence.split(' ')
     split_sentence = ''
     for i in range(len(words)):
         split_sentence = split_sentence + words[i]
@@ -26,9 +26,11 @@ def split_long_sentence(sentence, words_per_line):
 
 
 def shorter_name(key):
-    """Finds a shorter name for an id by only taking the last part of the URI,
+    """Return a shorter name for an id.
+
+    Does this by only taking the last part of the URI,
     after the last / and the last #. Also replaces - and . with _.
-    
+
     Parameters
     ----------
     key: str
@@ -48,6 +50,7 @@ def shorter_name(key):
             key_short = key_short
     return key_short.replace('-', '_').replace('.', '_')
 
+
 def add_event_property_edges(event_entity, entries):
     """Adds edges to the graph for event properties."""
     do_not_log = ['@type', '@id',
@@ -62,13 +65,17 @@ def add_event_property_edges(event_entity, entries):
                 value = value[0]['@id']
 
                 if value in entries:
-                    value_str = get_entry_compact_text_repr(entries[value], entries)
+                    value_str = get_entry_compact_text_repr(entries[value],
+                                                            entries)
                 #get_entry_compact_text_repr(entry, entries)
 
             if value_str is not None:
-                edges.append([shorter_name(event_entity['@id']), shorter_name(value), shorter_name(prop)])
+                edges.append([shorter_name(event_entity['@id']),
+                                           shorter_name(value),
+                                           shorter_name(prop)])
                 node_labels[shorter_name(value)] = value_str
             #print('\t', prop, value, value_str)
+
 
 def get_shortest_string(string_list):
     """From a list of strings, returns the string with the shortest length.
@@ -91,6 +98,7 @@ def get_shortest_string(string_list):
             shortest_length = len(s)
             shortest_string = s
     return shortest_string
+
 
 def get_shortest_text_value(entry):
     """Given a JSON-LD entry, returns the text attribute that has the
@@ -115,6 +123,7 @@ def get_shortest_text_value(entry):
     else:
         return None
 
+
 def get_sourced_from(entry):
     """Get a list of values from the source_from attribute"""
     sourced_from = 'http://worldmodelers.com/DataProvenance#sourced_from'
@@ -123,6 +132,7 @@ def get_sourced_from(entry):
         values = entry[sourced_from]
         values = [i['@id'] for i in values]
         return values
+
 
 def get_entry_compact_text_repr(entry, entries):
     """If the entry has a text value, return that.
@@ -143,8 +153,9 @@ def get_entry_compact_text_repr(entry, entries):
                 texts.append(get_shortest_text_value(source_entry))
             return get_shortest_string(texts)
 
+
 def get_entity_type(entry):
-    """Given a JSON-LD entry, returns the abbreviated @type and the 
+    """Given a JSON-LD entry, returns the abbreviated @type and the
     text attribute that has the shortest length.
 
     Parameters
@@ -163,9 +174,8 @@ def get_entity_type(entry):
     entry_type = entry['@type']
     entry_type = [shorter_name(t) for t in entry_type]
     entry_type = repr(entry_type)
-
-    
     return entry_type
+
 
 def load_json(visualize_file):
     # Load in the entries of the JSON-LD file and bucket by id
@@ -179,6 +189,7 @@ def load_json(visualize_file):
             assert(entry_id not in entries) #IDs should be unique
             entries[entry_id] = entry
     return entries
+
 
 if __name__ == '__main__':
     # First argument is the JSON file to visualize
@@ -213,7 +224,6 @@ if __name__ == '__main__':
         assertion_text = assertion[text_attr][0]['@value']
         node_labels[assertion_id] = split_long_sentence(assertion_text, 5)
 
-
         # If there's an effect, add to the graph
         if cause_attr in assertion:
             cause_uri = assertion[cause_attr][0]['@id']
@@ -229,8 +239,7 @@ if __name__ == '__main__':
             edges.append([cause_uri, cause_uri + '_type', 'type'])
             node_labels[cause_uri + '_type'] = cause_type
 
-
-            add_event_property_edges(cause_entry, entries) 
+            add_event_property_edges(cause_entry, entries)
         else:
             cause_uri = None
 
@@ -250,7 +259,7 @@ if __name__ == '__main__':
             edges.append([effect_uri, effect_uri + '_type', 'type'])
             node_labels[effect_uri + '_type'] = effect_type
 
-            add_event_property_edges(effect_entry, entries) 
+            add_event_property_edges(effect_entry, entries)
         else:
             effect_uri = None
 
@@ -270,5 +279,3 @@ if __name__ == '__main__':
         f.write('}\n')
 
     print('Causal assertions found:', len(causal_assertions))
-    #has_cause
-    #has_effect
