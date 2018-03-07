@@ -65,7 +65,8 @@ class EidosReader(object):
             eidos = autoclass(eidos_package + '.EidosSystem')
             self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
-        mentions = self.eidos_reader.extractFrom(text, False).mentions()
+        annot_doc = self.eidos_reader.extractFromText(text, False, False)
+        mentions = annot_doc.odinMentions()
         ser = autoclass(eidos_package + '.serialization.json.WMJSONSerializer')
         mentions_json = ser.toJsonStr(mentions)
         json_dict = json.loads(mentions_json)
