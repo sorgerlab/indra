@@ -1163,7 +1163,7 @@ def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
     stmts_out = [deepcopy(st) for st in stmts_in]
     for stmt in stmts_out:
         for agent in stmt.agent_list():
-            if ns_from in agent.db_refs:
+            if agent is not None and ns_from in agent.db_refs:
                 agent.db_refs[ns_to] = agent.db_refs.pop(ns_from)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
