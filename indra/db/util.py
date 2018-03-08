@@ -103,8 +103,14 @@ def get_primary_db(force_new=False):
     return __PRIMARY_DB
 
 
-def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses):
+def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
+                  **kwargs):
     "Insert the agents associated with the list of statements."
+    verbose = kwargs.pop('verbose', False)
+    num_per_yield = kwargs.pop('num_per_yield', 100)
+    if len(kwargs):
+        raise IndraDatabaseError("Unrecognized keyword argument(s): %s."
+                                 % kwargs)
     # Build a dict mapping stmt UUIDs to statement IDs
     logger.info("Getting %s that lack %s in the database."
                 % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
@@ -114,11 +120,17 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses):
         )
     stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
                          .except_(stmts_w_agents_q))
-    stmts_wo_agents = stmts_wo_agents_q.yield_per(100)
+    if verbose:
+        num_stmts = stmts_wo_agents_q.count()
+        print("Adding agents for %d statements." % num_stmts)
+    stmts_wo_agents = stmts_wo_agents_q.yield_per(num_per_yield)
 
     # Now assemble agent records
+    logger.info("Building agent data for insert...")
+    if verbose:
+        print("Loading:", end='', flush=True)
     agent_data = []
-    for db_stmt in stmts_wo_agents:
+    for i, db_stmt in enumerate(stmts_wo_agents):
         stmt = stmts_from_json(json.loads(db_stmt.json.decode()))
         for ag_ix, ag in enumerate(stmt.agent_list()):
             # If no agent, or no db_refs for the agent, skip the insert
@@ -137,6 +149,10 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses):
             for ns, ag_id in ag.db_refs.items():
                 ag_rec = (db_stmt.id, ns, ag_id, role)
                 agent_data.append(ag_rec)
+        if verbose and i % (num_stmts//25) == 0:
+            print('|', end='', flush=True)
+    if verbose:
+        print(" Done loading %d statements." % num_stmts)
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
@@ -187,7 +203,7 @@ def insert_pa_stmts(db, stmts, verbose=True):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('pa_statements', stmt_data, cols)
-    insert_agents(db, db.PAStatements, db.PAAgents)
+    insert_agents(db, db.PAStatements, db.PAAgents, verbose=verbose)
     return
 
 
