@@ -161,7 +161,7 @@ def insert_db_stmts(db, stmts, db_ref_id):
         )
         stmt_data.append(stmt_rec)
     db.copy('statements', stmt_data, cols)
-    insert_agents(db, stmts, db.Statements, 'agents',
+    insert_agents(db, db.Statements, db.Agents,
                   db.Statements.db_ref == db_ref_id)
     return
 
@@ -187,7 +187,7 @@ def insert_pa_stmts(db, stmts, verbose=True):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('pa_statements', stmt_data, cols)
-    insert_agents(db, stmts, db.PAStatements, 'pa_agents')
+    insert_agents(db, db.PAStatements, db.PAAgents)
     return
 
 
