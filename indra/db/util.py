@@ -105,7 +105,30 @@ def get_primary_db(force_new=False):
 
 def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
                   **kwargs):
-    "Insert the agents associated with the list of statements."
+    """Insert agents for statements that don't have any agents.
+
+    Note: This method currently works for both Statements and PAStatements and their
+    corresponding agents (Agents and PAAgents).
+
+    Parameters:
+    -----------
+    db : indra.db.DatabaseManager
+        The manager for the database into which you are adding agents.
+    stmt_tbl_obj : sqlalchemy table object
+        For example, `db.Statements`. The object corresponding to the
+        statements column you creating agents for.
+    agent_tbl_obj : sqlalchemy table object
+        That agent table corresponding to the statement table above.
+    *other_stmt_clauses : sqlalchemy clauses
+        Further arguments, such as `db.Statements.db_ref == 1' are used to
+        restrict the scope of statements whose agents may be added.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        agents for insert from statements. Default False.
+    num_per_yield : int
+        To conserve memory, statements are loaded in batches of `num_per_yeild`
+        using the `yeild_per` feature of sqlalchemy queries.
+    """
     verbose = kwargs.pop('verbose', False)
     num_per_yield = kwargs.pop('num_per_yield', 100)
     if len(kwargs):
@@ -145,29 +168,45 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
             elif ag_ix == 1:
                 role = 'OBJECT'
             else:
-                raise IndraDatabaseError("Unhandled agent role.")
+                raise IndraDatabaseError("Unhandled agent role for stmt %s "
+                                         "with agents: %s."
+                                         % (str(stmt), str(stmt.agent_list())))
             for ns, ag_id in ag.db_refs.items():
                 ag_rec = (db_stmt.id, ns, ag_id, role)
                 agent_data.append(ag_rec)
         if verbose and i % (num_stmts//25) == 0:
             print('|', end='', flush=True)
     if verbose:
-        print(" Done loading %d statements." % num_stmts)
+        print(" Done loading agents for %d statements." % num_stmts)
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
 
 
-def insert_db_stmts(db, stmts, db_ref_id):
+def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     """Insert statement, their database, and any affiliated agents.
 
     Note that this method is for uploading statements that came from a
     database to our databse, not for inserting any statements to the database.
+
+    Parameters:
+    -----------
+    db : indra.db.DatabaseManager
+        The manager for the database into which you are loading statements.
+    stmts : list [indra.statements.Statement]
+        A list of un-assembled indra statements to be uploaded to the datbase.
+    db_ref_id : int
+        The id to the db_ref entry corresponding to these statements.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        statements for insert. Default False.
     """
     # Preparing the statements for copying
     stmt_data = []
     cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
-    for stmt in stmts:
+    if verbose:
+        print("Loading:", end='', flush=True)
+    for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
             db_ref_id,
@@ -176,14 +215,30 @@ def insert_db_stmts(db, stmts, db_ref_id):
             get_version()
         )
         stmt_data.append(stmt_rec)
+        if verbose and i % (len(stmts)//25) == 0:
+            print('|', end='', flush=True)
+    if verbose:
+        print(" Done loading %d statements." % len(stmts))
     db.copy('statements', stmt_data, cols)
     insert_agents(db, db.Statements, db.Agents,
                   db.Statements.db_ref == db_ref_id)
     return
 
 
-def insert_pa_stmts(db, stmts, verbose=True):
-    """Insert pre-assembled statements, and any affiliated agents."""
+def insert_pa_stmts(db, stmts, verbose=False):
+    """Insert pre-assembled statements, and any affiliated agents.
+
+    Parameters:
+    -----------
+    db : indra.db.DatabaseManager
+        The manager for the database into which you are loading pre-assembled
+        statements.
+    stmts : list [indra.statements.Statement]
+        A list of pre-assembled indra statements to be uploaded to the datbase.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        statements for insert. Default False.
+    """
     logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
     indra_version = get_version()
