@@ -27,7 +27,8 @@ try:
     reach_reader = ReachReader()
     try_offline = True
 except Exception:
-    logger.error('Could not import jnius, offline reading cannot be used.')
+    logger.warning('Could not import jnius, offline reading option will not '
+                   'be available.')
     try_offline = False
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'

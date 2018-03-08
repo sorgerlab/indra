@@ -106,9 +106,9 @@ Detailed instructions are given in the
 Pyjnius
 ```````
 To be able to use INDRA's BioPAX API and optional offline reading
-via the REACH API, an additional package called
+via the REACH and Eidos APIs, an additional package called
 `pyjnius <https://github.com/kivy/pyjnius>`_ is needed to allow using Java/Scala
-classes from Python. This is only strictly required in the BioPAX API and
+classes from Python. This is only strictly required in these input sources and
 the rest of INDRA will work without pyjnius.
 
 1. Install `JRE and JDK 8 from Oracle <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_. Pyjnius is currently incompatible with Java 9, so
