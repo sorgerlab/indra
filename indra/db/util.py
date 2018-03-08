@@ -103,21 +103,23 @@ def get_primary_db(force_new=False):
     return __PRIMARY_DB
 
 
-def insert_agents(db, stmts, stmt_tbl_obj, agent_tbl_name, *other_clauses):
+def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses):
     "Insert the agents associated with the list of statements."
     # Build a dict mapping stmt UUIDs to statement IDs
-    logger.info("Beginning to insert agents.")
-    uuid_list = [s.uuid for s in stmts]
-    stmt_rec_list = db.select_all(stmt_tbl_obj,
-                                  stmt_tbl_obj.uuid.in_(uuid_list),
-                                  *other_clauses)
-    stmt_uuid_dict = {uuid: sid for uuid, sid in
-                      db.get_values(stmt_rec_list, ['uuid', 'id'])}
+    logger.info("Getting %s that lack %s in the database."
+                % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
+    stmts_w_agents_q = db.filter_query(
+        stmt_tbl_obj,
+        stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+        )
+    stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+                         .except_(stmts_w_agents_q))
+    stmts_wo_agents = stmts_wo_agents_q.yield_per(100)
 
     # Now assemble agent records
     agent_data = []
-    for stmt in stmts:
-        stmt_id = stmt_uuid_dict[stmt.uuid]
+    for db_stmt in stmts_wo_agents:
+        stmt = stmts_from_json(json.loads(db_stmt.json.decode()))
         for ag_ix, ag in enumerate(stmt.agent_list()):
             # If no agent, or no db_refs for the agent, skip the insert
             # that follows.
@@ -133,10 +135,10 @@ def insert_agents(db, stmts, stmt_tbl_obj, agent_tbl_name, *other_clauses):
             else:
                 raise IndraDatabaseError("Unhandled agent role.")
             for ns, ag_id in ag.db_refs.items():
-                ag_rec = (stmt_id, ns, ag_id, role)
+                ag_rec = (db_stmt.id, ns, ag_id, role)
                 agent_data.append(ag_rec)
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
-    db.copy(agent_tbl_name, agent_data, cols)
+    db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
 
 
