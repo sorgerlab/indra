@@ -14,7 +14,7 @@ from indra.databases import hgnc_client
 from indra.util.get_version import get_version
 from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
-    stmts_from_json, Conversion
+    stmts_from_json, Conversion, Translocation
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
 
 
@@ -159,8 +159,9 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
 
         # Figure out how the agents are structured and assign roles.
         ag_list = stmt.agent_list()
-        if any([isinstance(stmt, tp) for tp in
-               [Complex, SelfModification, ActiveForm, Conversion]]):
+        nary_stmt_types = [Complex, SelfModification, ActiveForm, Conversion,
+                           Translocation]
+        if any([isinstance(stmt, tp) for tp in nary_stmt_types]):
             agents = {('OTHER', ag) for ag in ag_list}
         elif len(ag_list) == 2:
             agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
