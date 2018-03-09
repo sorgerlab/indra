@@ -7,6 +7,7 @@ __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
            'make_stmts_from_db_list']
 
 import os
+import re
 import json
 import logging
 from os import path
@@ -101,6 +102,30 @@ def get_primary_db(force_new=False):
         __PRIMARY_DB = DatabaseManager(primary_host, label='primary')
         __PRIMARY_DB.grab_session()
     return __PRIMARY_DB
+
+
+def get_test_db():
+    """Get a DatabaseManager for the test database."""
+    defaults = get_defaults()
+    test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
+    key_list = list(test_defaults.keys())
+    key_list.sort()
+    for k in key_list:
+        test_name = test_defaults[k]
+        m = re.match('(\w+)://.*?/([\w.]+)', test_name)
+        sqltype = m.groups()[0]
+        try:
+            db = DatabaseManager(test_name, sqltype=sqltype)
+            db.grab_session()
+        except Exception as e:
+            logger.error("%s didn't work" % test_name)
+            logger.exception(e)
+            continue  # Clearly this test database won't work.
+        logger.info("Using test database %s." % k)
+        break
+    else:
+        logger.error("Could not load a test database!")
+    return db
 
 
 def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
