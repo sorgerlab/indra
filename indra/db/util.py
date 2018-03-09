@@ -14,7 +14,7 @@ from indra.databases import hgnc_client
 from indra.util.get_version import get_version
 from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
-    stmts_from_json
+    stmts_from_json, Conversion
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
 
 
@@ -154,30 +154,35 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
         print("Loading:", end='', flush=True)
     agent_data = []
     for i, db_stmt in enumerate(stmts_wo_agents):
+        # Convert the database statement entry object into an indra statement.
         stmt = stmts_from_json(json.loads(db_stmt.json.decode()))
-        for ag_ix, ag in enumerate(stmt.agent_list()):
+
+        # Figure out how the agents are structured and assign roles.
+        ag_list = stmt.agent_list()
+        if any([isinstance(stmt, tp) for tp in
+               [Complex, SelfModification, ActiveForm, Conversion]]):
+            agents = {('OTHER', ag) for ag in ag_list}
+        elif len(ag_list) == 2:
+            agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
+        else:
+            raise IndraDatabaseError("Unhandled agent structure for stmt %s "
+                                     "with agents: %s."
+                                     % (str(stmt), str(stmt.agent_list())))
+
+        # Prep the agents for copy into the database.
+        for role, ag in agents:
             # If no agent, or no db_refs for the agent, skip the insert
             # that follows.
             if ag is None or ag.db_refs is None:
                 continue
-            if any([isinstance(stmt, tp) for tp in
-                    [Complex, SelfModification, ActiveForm]]):
-                role = 'OTHER'
-            elif ag_ix == 0:
-                role = 'SUBJECT'
-            elif ag_ix == 1:
-                role = 'OBJECT'
-            else:
-                raise IndraDatabaseError("Unhandled agent role for stmt %s "
-                                         "with agents: %s."
-                                         % (str(stmt), str(stmt.agent_list())))
             for ns, ag_id in ag.db_refs.items():
                 ag_rec = (db_stmt.id, ns, ag_id, role)
                 agent_data.append(ag_rec)
+
+        # Optionally print another tick on the progress bar.
         if verbose and i % (num_stmts//25) == 0:
             print('|', end='', flush=True)
-    if verbose:
-        print(" Done loading agents for %d statements." % num_stmts)
+
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
