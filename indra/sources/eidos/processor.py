@@ -70,6 +70,23 @@ class EidosProcessor(object):
                            evidence=evidence)
             self.statements.append(st)
 
+    def get_events_json_ld(self):
+        events = self.tree.execute("$.extractions[(@.@type is 'DirectedRelation')]")
+        entity_ids = self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
+        entity_texts = self.tree.execute("$.extractions[(@.@type is 'Entity')].text")
+        entity_dict = {id:text for id, text in zip(entity_ids, entity_texts)}
+
+        for event in list(events):
+
+            # For now, just take the first source and first destination. Later,
+            # might deal with hypergraph representation.
+
+            if 'Causal' in event['labels']:
+                subj = entity_dict[event['sources'][0]['@id']]
+                obj = entity_dict[event['destinations'][0]['@id']]
+            st = Influence(Agent(subj), Agent(obj))
+            self.statements.append(st)
+
     @staticmethod
     def _get_evidence(event):
         text = event.get('text')
