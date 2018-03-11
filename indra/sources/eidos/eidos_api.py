@@ -3,7 +3,7 @@ from builtins import dict, str, bytes
 from past.builtins import basestring
 import json
 import logging
-from .processor import EidosProcessor
+from .processor import EidosJsonProcessor, EidosJsonLdProcessor
 
 logger = logging.getLogger('eidos')
 
@@ -42,12 +42,11 @@ def process_text(text, save_json='eidos_output.json'):
     if eidos_reader is None:
         logger.error('Eidos reader is not available.')
         return None
-    json_dict = eidos_reader.process_text(text)
+    json_dict = eidos_reader.process_text(text, format='json')
     if save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
     return process_json(json_dict)
-
 
 
 def process_json_file(file_name):
@@ -63,8 +62,8 @@ def process_json_file(file_name):
 
     Returns
     -------
-    ep : EidosProcessor
-        A EidosProcessor containing the extracted INDRA Statements
+    ep : EidosJsonProcessor
+        A EidosJsonProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
     try:
@@ -88,8 +87,8 @@ def process_json_ld_file(file_name):
 
     Returns
     -------
-    ep : EidosProcessor
-        A EidosProcessor containing the extracted INDRA Statements
+    ep : EidosJsonLdProcessor
+        A EidosJsonLdProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
     try:
@@ -112,7 +111,7 @@ def process_json_str(json_str):
 
     Returns
     -------
-    ep : EidosProcessor
+    ep : EidosJsonProcessor
         A EidosProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
@@ -127,10 +126,11 @@ def process_json_str(json_str):
         return None
     return process_json(json_dict)
 
-def process_json_ld_str(json_str):
-    """Return an EidosProcessor by processing the given Eidos json-LD string.
 
-    The output from the Eidos parser is in json-LD format.
+def process_json_ld_str(json_str):
+    """Return an EidosJsonLdProcessor by processing the Eidos JSON-LD string.
+
+    The output from the Eidos parser is in JSON-LD format.
 
     Parameters
     ----------
@@ -139,8 +139,8 @@ def process_json_ld_str(json_str):
 
     Returns
     -------
-    ep : EidosProcessor
-        A EidosProcessor containing the extracted INDRA Statements
+    ep : EidosJsonLdProcessor
+        A EidosJsonLdProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
     if not isinstance(json_str, basestring):
@@ -156,40 +156,40 @@ def process_json_ld_str(json_str):
 
 
 def process_json(json_dict):
-    """Return an EidosProcessor by processing the given Eidos json dict.
+    """Return an EidosJsonProcessor by processing the given Eidos JSON dict.
 
     Parameters
     ----------
     json_dict : dict
-        The json dict to be processed.
+        The JSON dict to be processed.
 
     Returns
     -------
-    ep : EidosProcessor
-        A EidosProcessor containing the extracted INDRA Statements
+    ep : EidosJsonProcessor
+        A EidosJsonProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
 
-    ep = EidosProcessor(json_dict)
+    ep = EidosJsonProcessor(json_dict)
     ep.get_events()
     return ep
 
+
 def process_json_ld(json_dict):
-    """Return an EidosProcessor by processing the given Eidos json-LD dict
+    """Return an EidosJsonLdProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
     ----------
     json_dict : dict
-        The json-LD dict to be processed.
+        The JSON-LD dict to be processed.
 
     Returns
     -------
-    ep : EidosProcessor
-        A EidosProcessor containing the extracted INDRA Statements
+    ep : EidosJsonLdProcessor
+        A EidosJsonLdProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
 
-    ep = EidosProcessor(json_dict)
-    ep.get_events_json_ld()
+    ep = EidosJsonLdProcessor(json_dict)
+    ep.get_events()
     return ep
-

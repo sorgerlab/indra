@@ -9,13 +9,84 @@ from indra.statements import Influence, Agent, Evidence
 logger = logging.getLogger('eidos')
 
 
-class EidosProcessor(object):
-    """The EidosProcessor extracts INDRA Statements from Eidos output.
+class EidosJsonLdProcessor(object):
+    """This processor extracts INDRA Statements from Eidos JSON-LD output.
 
     Parameters
     ----------
     json_dict : dict
-        A JSON dictionary containing the Eidos extractions.
+        A JSON dictionary containing the Eidos extractions in JSON-LD format.
+
+    Attributes
+    ----------
+    tree : objectpath.Tree
+        The objectpath Tree object representing the extractions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    """
+    def __init__(self, json_dict):
+        self.tree = objectpath.Tree(json_dict)
+        self.statements = []
+
+    def get_events_json_ld(self):
+        events = \
+            self.tree.execute("$.extractions[(@.@type is 'DirectedRelation')]")
+        entities = \
+            self.tree.execute("$.extractions[(@.@type is 'Entity')]")
+        entity_ids = \
+            self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
+        entity_dict = {id:entity for id, entity in zip(entity_ids, entities)}
+
+        for event in list(events):
+
+            # For now, just take the first source and first destination. Later,
+            # might deal with hypergraph representation.
+
+            if 'Causal' in event['labels']:
+                # Get the canonical names
+                subj = entity_dict[event['sources'][0]['@id']]
+                obj = entity_dict[event['destinations'][0]['@id']]
+
+            # The first state corresponds to increase/decrease
+            def get_polarity(x):
+                # x is either subj or obj
+                if 'states' in x.keys():
+                    if x['states'][0]['type'] == 'DEC':
+                        return -1
+                    elif x['states'][0]['type'] == 'INC':
+                        return 1
+                    else:
+                        return None
+                else:
+                    return None
+
+            def get_adjectives(x):
+                # x is either subj or obj
+                if 'states' in x.keys():
+                    if 'modifiers' in x['states'][0].keys():
+                        return [mod['text'] for mod in x['states'][0]['modifiers']]
+                else:
+                    return []
+
+            subj_delta = {'adjectives': get_adjectives(subj),
+                          'polarity': get_polarity(subj)}
+            obj_delta = {'adjectives': get_adjectives(obj),
+                         'polarity': get_polarity(obj)}
+
+            st = Influence(Agent(subj['text']), Agent(obj['text']),
+                           subj_delta, obj_delta)
+            self.statements.append(st)
+
+
+class EidosJsonProcessor(object):
+    """This processor extracts INDRA Statements from Eidos JSON (not JSON-LD)
+    output.
+
+    Parameters
+    ----------
+    json_dict : dict
+        A JSON dictionary containing the Eidos extractions in JSON
+        (not JSON-LD) format.
 
     Attributes
     ----------
@@ -68,49 +139,6 @@ class EidosProcessor(object):
             evidence = self._get_evidence(event)
             st = Influence(subj_agent, obj_agent, subj_delta, obj_delta,
                            evidence=evidence)
-            self.statements.append(st)
-
-    def get_events_json_ld(self):
-        events = self.tree.execute("$.extractions[(@.@type is 'DirectedRelation')]")
-        entities = self.tree.execute("$.extractions[(@.@type is 'Entity')]")
-        entity_ids = self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
-        entity_dict = {id:entity for id, entity in zip(entity_ids, entities)}
-
-        for event in list(events):
-
-            # For now, just take the first source and first destination. Later,
-            # might deal with hypergraph representation.
-
-            if 'Causal' in event['labels']:
-                # Get the canonical names
-                subj = entity_dict[event['sources'][0]['@id']]
-                obj = entity_dict[event['destinations'][0]['@id']]
-
-            # The first state corresponds to increase/decrease
-            def get_polarity(x):
-                # x is either subj or obj
-                if 'states' in x.keys():
-                    if x['states'][0]['type'] == 'DEC':
-                        return -1
-                    elif x['states'][0]['type'] == 'INC':
-                        return 1
-                    else:
-                        return None
-                else:
-                    return None
-
-            def get_adjectives(x):
-                # x is either subj or obj
-                if 'states' in x.keys():
-                    if 'modifiers' in x['states'][0].keys():
-                        return [mod['text'] for mod in x['states'][0]['modifiers']]
-                else:
-                    return []
-
-            subj_delta = {'adjectives': get_adjectives(subj), 'polarity': get_polarity(subj)}
-            obj_delta = {'adjectives': get_adjectives(obj), 'polarity': get_polarity(obj)}
-
-            st = Influence(Agent(subj['text']), Agent(obj['text']), subj_delta, obj_delta)
             self.statements.append(st)
 
     @staticmethod

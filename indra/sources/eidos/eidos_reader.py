@@ -48,13 +48,15 @@ class EidosReader(object):
     def __init__(self):
         self.eidos_reader = None
 
-    def process_text(self, text):
+    def process_text(self, text, format='json'):
         """Return a mentions JSON object given text.
 
         Parameters
         ----------
         text : str
             Text to be processed.
+        format : str
+            The format of the output to produce. Default: json
 
         Returns
         -------
