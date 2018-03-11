@@ -78,7 +78,7 @@ def process_json_file(file_name):
 def process_json_ld_file(file_name):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
-    The output from the Eidos reader is in json format. This function is
+    The output from the Eidos reader is in json-LD format. This function is
     useful if the output is saved as a file and needs to be processed.
 
     Parameters
@@ -128,14 +128,14 @@ def process_json_str(json_str):
     return process_json(json_dict)
 
 def process_json_ld_str(json_str):
-    """Return an EidosProcessor by processing the given Eidos json string.
+    """Return an EidosProcessor by processing the given Eidos json-LD string.
 
-    The output from the Eidos parser is in json format.
+    The output from the Eidos parser is in json-LD format.
 
     Parameters
     ----------
     json_str : str
-        The json string to be processed.
+        The json-LD string to be processed.
 
     Returns
     -------
@@ -150,7 +150,7 @@ def process_json_ld_str(json_str):
     try:
         json_dict = json.loads(json_str)
     except ValueError:
-        logger.error('Could not decode JSON string.')
+        logger.error('Could not decode JSON-LD string.')
         return None
     return process_json_ld(json_dict)
 
@@ -175,12 +175,12 @@ def process_json(json_dict):
     return ep
 
 def process_json_ld(json_dict):
-    """Return an EidosProcessor by processing the given Eidos json dict.
+    """Return an EidosProcessor by processing the given Eidos json-LD dict
 
     Parameters
     ----------
     json_dict : dict
-        The json dict to be processed.
+        The json-LD dict to be processed.
 
     Returns
     -------

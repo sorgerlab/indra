@@ -72,9 +72,9 @@ class EidosProcessor(object):
 
     def get_events_json_ld(self):
         events = self.tree.execute("$.extractions[(@.@type is 'DirectedRelation')]")
+        entities = self.tree.execute("$.extractions[(@.@type is 'Entity')]")
         entity_ids = self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
-        entity_texts = self.tree.execute("$.extractions[(@.@type is 'Entity')].text")
-        entity_dict = {id:text for id, text in zip(entity_ids, entity_texts)}
+        entity_dict = {id:entity for id, entity in zip(entity_ids, entities)}
 
         for event in list(events):
 
@@ -82,9 +82,35 @@ class EidosProcessor(object):
             # might deal with hypergraph representation.
 
             if 'Causal' in event['labels']:
+                # Get the canonical names
                 subj = entity_dict[event['sources'][0]['@id']]
                 obj = entity_dict[event['destinations'][0]['@id']]
-            st = Influence(Agent(subj), Agent(obj))
+
+            # The first state corresponds to increase/decrease
+            def get_polarity(x):
+                # x is either subj or obj
+                if 'states' in x.keys():
+                    if x['states'][0]['type'] == 'DEC':
+                        return -1
+                    elif x['states'][0]['type'] == 'INC':
+                        return 1
+                    else:
+                        return None
+                else:
+                    return None
+
+            def get_adjectives(x):
+                # x is either subj or obj
+                if 'states' in x.keys():
+                    if 'modifiers' in x['states'][0].keys():
+                        return [mod['text'] for mod in x['states'][0]['modifiers']]
+                else:
+                    return []
+
+            subj_delta = {'adjectives': get_adjectives(subj), 'polarity': get_polarity(subj)}
+            obj_delta = {'adjectives': get_adjectives(obj), 'polarity': get_polarity(obj)}
+
+            st = Influence(Agent(subj['text']), Agent(obj['text']), subj_delta, obj_delta)
             self.statements.append(st)
 
     @staticmethod
