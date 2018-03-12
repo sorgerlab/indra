@@ -14,8 +14,17 @@ def test_get_ids():
 
 @attr('webservice')
 def test_get_no_ids():
-    ids = pubmed_client.get_ids('', retmax=10, db='pubmed')
+    ids = pubmed_client.get_ids('xkcd', retmax=10, db='pubmed')
     assert(not ids)
+
+
+@attr('webservice')
+def test_get_ids():
+    ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
+    ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
+    assert(len(ids1) > len(ids2))
+    assert unicode_strs(ids1)
+    assert unicode_strs(ids2)
 
 
 @attr('webservice')
