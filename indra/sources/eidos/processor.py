@@ -37,8 +37,7 @@ class EidosJsonLdProcessor(object):
             self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
         entity_dict = {id:entity for id, entity in zip(entity_ids, entities)}
 
-        for event in list(events):
-
+        for event in events:
             # For now, just take the first source and first destination. Later,
             # might deal with hypergraph representation.
 
@@ -73,9 +72,18 @@ class EidosJsonLdProcessor(object):
             obj_delta = {'adjectives': get_adjectives(obj),
                          'polarity': get_polarity(obj)}
 
+            evidence = self._get_evidence(event) 
+
             st = Influence(Agent(subj['text']), Agent(obj['text']),
-                           subj_delta, obj_delta)
+                           subj_delta, obj_delta, evidence=evidence)
             self.statements.append(st)
+
+    @staticmethod
+    def _get_evidence(event):
+        text = event.get('text')
+        annotations = {'found_by' : event.get('rule')}
+        ev = Evidence(source_api='eidos', text=text, annotations=annotations)
+        return [ev]
 
 
 class EidosJsonProcessor(object):
