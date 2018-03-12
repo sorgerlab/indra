@@ -34,3 +34,17 @@ def test_process_text():
     assert stmt.obj_delta.get('polarity') == -1
     assert(stmt.evidence[0].annotations['found_by'] == \
             'ported_syntax_1_verb-Causal')
+
+def test_process_text_json_ld():
+    ep = eidos.process_text('The cost of fuel decreases water trucking.',
+                            out_format='json_ld')
+    assert ep is not None
+    assert len(ep.statements) == 1
+    stmt = ep.statements[0]
+    assert isinstance(stmt, Influence)
+    assert stmt.subj.name == 'cost of fuel'
+    assert stmt.obj.name == 'water trucking'
+    assert stmt.obj_delta.get('polarity') == -1
+    assert(stmt.evidence[0].annotations['found_by'] == \
+            'ported_syntax_1_verb-Causal')
+
