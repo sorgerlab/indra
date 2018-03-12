@@ -83,7 +83,7 @@ def process_json_file(file_name):
         logger.exception('Could not read file %s.' % file_name)
 
 
-def process_json_ld_file(file_name, grounding_threshold = 1):
+def process_json_ld_file(file_name, grounding_threshold = 1.0):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
     The output from the Eidos reader is in json-LD format. This function is
@@ -141,7 +141,7 @@ def process_json_str(json_str):
     return process_json(json_dict)
 
 
-def process_json_ld_str(json_str, grounding_threshold = 1):
+def process_json_ld_str(json_str, grounding_threshold = 1.0):
     """Return an EidosJsonLdProcessor by processing the Eidos JSON-LD string.
 
     The output from the Eidos parser is in JSON-LD format.
@@ -194,7 +194,7 @@ def process_json(json_dict):
     return ep
 
 
-def process_json_ld(json_dict, grounding_threshold = 1):
+def process_json_ld(json_dict, grounding_threshold = 1.0):
     """Return an EidosJsonLdProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
