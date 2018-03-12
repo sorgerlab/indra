@@ -83,7 +83,7 @@ def process_json_file(file_name):
         logger.exception('Could not read file %s.' % file_name)
 
 
-def process_json_ld_file(file_name):
+def process_json_ld_file(file_name, grounding_threshold = 1.0):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
     The output from the Eidos reader is in json-LD format. This function is
@@ -93,6 +93,11 @@ def process_json_ld_file(file_name):
     ----------
     file_name : str
         The name of the JSON-LD file to be processed.
+    grounding_threshold: float
+        The score threshold for grounding entities. If there are grounding
+        matches for an entity that score higher than this threshhold, the
+        highest-scoring match will be used to ground the entity. Otherwise, the
+        entity will not be grounded.
 
     Returns
     -------
@@ -103,7 +108,7 @@ def process_json_ld_file(file_name):
     try:
         with open(file_name, 'rb') as fh:
             json_str = fh.read().decode('utf-8')
-            return process_json_ld_str(json_str)
+            return process_json_ld_str(json_str, grounding_threshold = grounding_threshold)
     except IOError:
         logger.exception('Could not read file %s.' % file_name)
 
@@ -136,7 +141,7 @@ def process_json_str(json_str):
     return process_json(json_dict)
 
 
-def process_json_ld_str(json_str):
+def process_json_ld_str(json_str, grounding_threshold = 1.0):
     """Return an EidosJsonLdProcessor by processing the Eidos JSON-LD string.
 
     The output from the Eidos parser is in JSON-LD format.
@@ -145,6 +150,11 @@ def process_json_ld_str(json_str):
     ----------
     json_str : str
         The json-LD string to be processed.
+    grounding_threshold: float
+        The score threshold for grounding entities. If there are grounding
+        matches for an entity that score higher than this threshhold, the
+        highest-scoring match will be used to ground the entity. Otherwise, the
+        entity will not be grounded.
 
     Returns
     -------
@@ -161,7 +171,7 @@ def process_json_ld_str(json_str):
     except ValueError:
         logger.error('Could not decode JSON-LD string.')
         return None
-    return process_json_ld(json_dict)
+    return process_json_ld(json_dict, grounding_threshold = grounding_threshold)
 
 
 def process_json(json_dict):
@@ -184,13 +194,18 @@ def process_json(json_dict):
     return ep
 
 
-def process_json_ld(json_dict):
+def process_json_ld(json_dict, grounding_threshold = 1.0):
     """Return an EidosJsonLdProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
     ----------
     json_dict : dict
         The JSON-LD dict to be processed.
+    grounding_threshold: float
+        The score threshold for grounding entities. If there are grounding
+        matches for an entity that score higher than this threshhold, the
+        highest-scoring match will be used to ground the entity. Otherwise, the
+        entity will not be grounded.
 
     Returns
     -------
@@ -199,6 +214,6 @@ def process_json_ld(json_dict):
         in ep.statements.
     """
 
-    ep = EidosJsonLdProcessor(json_dict)
+    ep = EidosJsonLdProcessor(json_dict, grounding_threshold = grounding_threshold)
     ep.get_events()
     return ep
