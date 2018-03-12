@@ -56,7 +56,8 @@ class EidosReader(object):
         text : str
             Text to be processed.
         format : str
-            The format of the output to produce. Default: json
+            The format of the output to produce, one of "json" or "json_ld".
+            Default: "json"
 
         Returns
         -------

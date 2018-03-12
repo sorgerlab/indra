@@ -30,14 +30,17 @@ def process_text(text, out_format='json', save_json='eidos_output.json'):
     ----------
     text : str
         The text to be processed.
+    out_format : str
+        The type of Eidos output to read into and process. Can be one of
+        "json" or "json_ld". Default: "json"
     save_json : Optional[str]
         The name of a file in which to dump the JSON output of Eidos.
 
     Returns
     -------
-    ep : EidosProcessor
-        A EidosProcessor containing the extracted INDRA Statements
-        in ep.statements.
+    ep : EidosJsonProcessor or EidosJsonLdProcessor depending on out_format
+        A EidosJsonProcessor or EidosJsonLdProcessor containing the extracted
+        INDRA Statements in ep.statements.
     """
     if eidos_reader is None:
         logger.error('Eidos reader is not available.')
