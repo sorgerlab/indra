@@ -19,7 +19,7 @@ except Exception as e:
     eidos_reader = None
 
 
-def process_text(text, save_json='eidos_output.json'):
+def process_text(text, out_format='json', save_json='eidos_output.json'):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -42,11 +42,17 @@ def process_text(text, save_json='eidos_output.json'):
     if eidos_reader is None:
         logger.error('Eidos reader is not available.')
         return None
-    json_dict = eidos_reader.process_text(text, format='json')
+    json_dict = eidos_reader.process_text(text, out_format)
     if save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
-    return process_json(json_dict)
+    if out_format == 'json':
+        return process_json(json_dict)
+    elif out_format == 'json_ld':
+        return process_json_ld(json_dict)
+    else:
+        logger.error('Output format %s is invalid.' % output_format)
+        return None
 
 
 def process_json_file(file_name):

@@ -68,9 +68,17 @@ class EidosReader(object):
             self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
         annot_doc = self.eidos_reader.extractFromText(text, False, False)
-        mentions = annot_doc.odinMentions()
-        ser = autoclass(eidos_package + '.serialization.json.WMJSONSerializer')
-        mentions_json = ser.toJsonStr(mentions)
+        if format == 'json':
+            mentions = annot_doc.odinMentions()
+            ser = autoclass(eidos_package + '.serialization.json.WMJSONSerializer')
+            mentions_json = ser.toJsonStr(mentions)
+        elif format == 'json_ld':
+            # We need to get a Scala Seq of annot docs here
+            ml = autoclass('scala.collection.mutable.MutableList')()
+            ml.appendElem(annot_doc)
+            jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
+            corpus = jc(ml, None)
+            mentions_json = corpus.toJsonStr()
         json_dict = json.loads(mentions_json)
         return json_dict
 
