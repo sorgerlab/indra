@@ -28,7 +28,7 @@ class EidosJsonLdProcessor(object):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
 
-    def get_events_json_ld(self):
+    def get_events(self):
         events = \
             self.tree.execute("$.extractions[(@.@type is 'DirectedRelation')]")
         entities = \
