@@ -68,26 +68,24 @@ class CAGAssembler(object):
 
             # Add the nodes to the graph
             for node in (subj, obj):
-                if node not in self.CAG:
-                    # If both polarities are given, the nodes are simulable
-                    self.CAG.add_node(node, simulable=has_both_polarity)
-                # If the node is already in the graph and both polarities
-                # are given here, we set the node to simulable
-                elif has_both_polarity:
-                    self.CAG[node]['simulable'] = True
+                self.CAG.add_node(node, simulable=has_both_polarity)
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
+            targetArrowShape = 'tee' if has_both_polarity and \
+                s.subj_delta['polarity'] != s.obj_delta['polarity']\
+                else 'circle'
 
             # Add edge to the graph with metadata from statement
-            self.CAG.add_edge(subj, obj,
-                    subj_polarity   = s.subj_delta['polarity'],
-                    subj_adjectives = s.subj_delta['adjectives'],
-                    obj_polarity    = s.obj_delta['polarity'],
-                    obj_adjectives  = s.obj_delta['adjectives'],
-                    linestyle       = linestyle
-                    )
-
+            attr_dict = {
+                    'subj_polarity'    : s.subj_delta['polarity'],
+                    'subj_adjectives'  : s.subj_delta['adjectives'],
+                    'obj_polarity'     : s.obj_delta['polarity'],
+                    'obj_adjectives'   : s.obj_delta['adjectives'],
+                    'linestyle'        : linestyle,
+                    'targetArrowShape' : targetArrowShape
+                    }
+            self.CAG.add_edge(subj, obj, attr_dict = attr_dict)
         return self.CAG
 
     def export_to_cytoscapejs(self):
@@ -99,27 +97,27 @@ class CAGAssembler(object):
             A JSON-like dict representing the graph for use with
             CytoscapeJS.
         """
-        return {
-                'nodes': [{'data': {'id': n[0],
-                                    'simulable': n[1]['simulable']}}
+        def _create_edge_data_dict(e):
+            return {
+                    'id'               : e[0]+'_'+e[1],
+                    'source'           : e[0],
+                    'target'           : e[1],
+                    'linestyle'        : e[3]["linestyle"],
+                    'targetArrowShape' : e[3]["targetArrowShape"],
+                    'subj_adjectives'  : e[3]["subj_adjectives"],
+                    'subj_polarity'    : e[3]["subj_polarity"],
+                    'obj_adjectives'   : e[3]["obj_adjectives"],
+                    'obj_polarity'     : e[3]["obj_polarity"],
+                    'simulable'        : False if (
+                        e[3]['obj_polarity'] is None or
+                        e[3]['subj_polarity'] is None) else True
+                   }
+        return { 
+                'nodes': [{'data': {'id': n[0], 'simulable': n[1]['simulable']}}
                           for n in self.CAG.nodes(data=True)],
-                'edges': [{
-                    'data': {
-                        'id'              : e[0]+'_'+e[1],
-                        'source'          : e[0],
-                        'target'          : e[1],
-                        'linestyle'       : e[3]["linestyle"],
-                        'subj_adjectives' : e[3]["subj_adjectives"],
-                        'subj_polarity'   : e[3]["subj_polarity"],
-                        'obj_adjectives'  : e[3]["obj_adjectives"],
-                        'obj_polarity'    : e[3]["obj_polarity"],
-                        'simulable' : False if (
-                            e[3]['obj_polarity'] is None or
-                            e[3]['subj_polarity'] is None) else True
-                        }
-                    }
-                    for e in self.CAG.edges(data=True, keys=True)
-                    ]
+
+                'edges': [{ 'data': _create_edge_data_dict(e)} 
+                            for e in self.CAG.edges(data=True, keys=True) ]
                 }
 
     @staticmethod
