@@ -16,6 +16,11 @@ class EidosJsonLdProcessor(object):
     ----------
     json_dict : dict
         A JSON dictionary containing the Eidos extractions in JSON-LD format.
+    grounding : Optional[float]
+        Ground the extracted entities with Eidos' internal taxonomy. The JSON-LD
+        file has a list of grounding matches for each entity, with associated
+        scores between 0 and 1. If no value is provided, the processor defaults
+        to no grounding.
 
     Attributes
     ----------
@@ -24,9 +29,10 @@ class EidosJsonLdProcessor(object):
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
     """
-    def __init__(self, json_dict):
+    def __init__(self, json_dict, grounding_threshold = 1.0):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
+        self.grounding_threshold = grounding_threshold
 
     def get_events(self):
         events = \
@@ -64,6 +70,7 @@ class EidosJsonLdProcessor(object):
                 if 'states' in x.keys():
                     if 'modifiers' in x['states'][0].keys():
                         return [mod['text'] for mod in x['states'][0]['modifiers']]
+                    else: return []
                 else:
                     return []
 
@@ -74,8 +81,18 @@ class EidosJsonLdProcessor(object):
 
             evidence = self._get_evidence(event) 
 
-            st = Influence(Agent(subj['text']), Agent(obj['text']),
+            def get_grounding(x):
+                # x is subj or obj
+                best_match = x['grounding'][0]
+                if best_match['value'] > self.grounding_threshold:
+                    return best_match['ontologyConcept'].split('/')[-1].replace('_', ' ')
+                else:
+                    return x['text']
+
+
+            st = Influence(Agent(get_grounding(subj)), Agent(get_grounding(obj)),
                            subj_delta, obj_delta, evidence=evidence)
+
             self.statements.append(st)
 
     @staticmethod
