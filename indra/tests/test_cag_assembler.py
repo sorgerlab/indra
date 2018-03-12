@@ -11,8 +11,16 @@ statements = [Influence(
 )]
 
 
-def test_influence():
+def test_assemble_influence():
     ca = CAGAssembler(statements)
     CAG = ca.make_model()
     assert(len(CAG.nodes()) == 2)
     assert(len(CAG.edges()) == 1)
+
+
+def test_export_to_cyjs():
+    ca = CAGAssembler(statements)
+    ca.make_model()
+    cyjs = ca.export_to_cytoscapejs()
+    assert len(cyjs['nodes']) == 2
+    assert len(cyjs['edges']) == 1

@@ -85,7 +85,7 @@ class CAGAssembler(object):
                     'linestyle'        : linestyle,
                     'targetArrowShape' : targetArrowShape
                     }
-            self.CAG.add_edge(subj, obj, attr_dict = attr_dict)
+            self.CAG.add_edge(subj, obj, attr_dict=attr_dict)
         return self.CAG
 
     def export_to_cytoscapejs(self):
@@ -112,12 +112,12 @@ class CAGAssembler(object):
                         e[3]['obj_polarity'] is None or
                         e[3]['subj_polarity'] is None) else True
                    }
-        return { 
+        return {
                 'nodes': [{'data': {'id': n[0], 'simulable': n[1]['simulable']}}
                           for n in self.CAG.nodes(data=True)],
 
-                'edges': [{ 'data': _create_edge_data_dict(e)} 
-                            for e in self.CAG.edges(data=True, keys=True) ]
+                'edges': [{'data': _create_edge_data_dict(e)}
+                           for e in self.CAG.edges(data=True, keys=True)]
                 }
 
     @staticmethod
