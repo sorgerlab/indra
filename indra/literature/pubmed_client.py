@@ -57,8 +57,8 @@ def get_ids(search_term, **kwargs):
 
     PubMed, by default, limits returned PMIDs to a small number, and this
     number can be controlled by the "retmax" parameter. This function
-    uses a retmax value of 100,000 by default that can be changed via keyword
-    argument.
+    uses a retmax value of 100,000 by default that can be changed via the
+    corresponding keyword argument.
 
     Parameters
     ----------
@@ -72,6 +72,7 @@ def get_ids(search_term, **kwargs):
         option can eliminate spurious search results such as all articles
         published in June for a search for the "JUN" gene, or journal names
         that contain Acad for a search for the "ACAD" gene.
+        See also: https://www.nlm.nih.gov/bsd/disted/pubmedtutorial/020_760.html
         Default : True
     kwargs : kwargs
         Additional keyword arguments to pass to the PubMed search as
