@@ -74,6 +74,8 @@ _type_db_map = {
     ('phenotype', 'SIGNOR'): 'SIGNOR',
     ('stimulus', 'SIGNOR'): 'SIGNOR',
     ('chemical', 'PUBCHEM'): 'PUBCHEM',
+    ('fusion protein', 'SIGNOR'): 'SIGNOR',
+    ('smallmolecule', 'ChEBI'): 'CHEBI',
 }
 
 
@@ -205,7 +207,10 @@ class SignorProcessor(object):
                 db_refs['HGNC'] = hgnc_id
         # Other possible groundings are PUBCHEM and SIGNOR
         elif gnd_type is not None:
-            assert database in ('PUBCHEM', 'SIGNOR')
+            if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI'):
+                raise ValueError('Unexpected database %s' % database)
+            if database == 'ChEBI':
+                database = 'CHEBI'
             db_refs = {database: id}
             name = ent_name
         # If no grounding, include as an untyped/ungrounded node
