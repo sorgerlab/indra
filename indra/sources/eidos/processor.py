@@ -74,14 +74,37 @@ class EidosJsonLdProcessor(object):
 
             evidence = self._get_evidence(event) 
 
-            st = Influence(Agent(subj['text']), Agent(obj['text']),
+            def _get_mods(entity):
+                if 'states' in entity.keys():
+                    # For now, take the first state
+                    if 'modifiers' in entity['states'][0].keys():
+                        return [m['text'] for m in entity['states'][0]['modifiers']]
+                    else:
+                        return None
+                else:
+                    return None
+
+            def _get_eidos_groundings(entity):
+                return [(g['ontologyConcept'], g['value']) 
+                        for g in entity['grounding']]
+        
+            def _make_agent(entity):
+                return Agent(entity['text'],
+                        mods = _get_mods(entity),
+                        db_refs = {'Eidos':_get_eidos_groundings(entity)})
+
+            st = Influence(_make_agent(subj), _make_agent(obj),
                            subj_delta, obj_delta, evidence=evidence)
+
             self.statements.append(st)
 
     @staticmethod
     def _get_evidence(event):
         text = event.get('text')
-        annotations = {'found_by' : event.get('rule')}
+        annotations = {
+                'found_by'   : event.get('rule'),
+                'provenance' : event.get('provenance'),
+                }
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]
 

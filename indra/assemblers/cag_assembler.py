@@ -4,6 +4,7 @@ from builtins import object, dict, str
 import logging
 import networkx as nx
 from indra.statements import Influence
+import json
 
 # Python 2
 try:
@@ -31,24 +32,32 @@ class CAGAssembler(object):
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
-    def __init__(self, stmts=None):
+    def __init__(self, stmts=None, grounding_threshold = None):
         if not stmts:
             self.statements = []
         else:
             self.statements = stmts
+        self.grounding_threshold = grounding_threshold
 
     def add_statements(self, stmts):
         """Add a list of Statements to the assembler."""
         self.statements += stmts
 
-    def make_model(self):
+    def make_model(self, grounding_threshold = None):
         """Return a networkx MultiDiGraph representing a causal analysis graph.
+
+        Parameters
+        ----------
+        grounding_threshold: Optional[float]
+            Minimum threshold score for Eidos grounding.
 
         Returns
         -------
         nx.MultiDiGraph
             The assembled CAG.
         """
+        self.grounding_threshold = grounding_threshold
+
         # Filter to Influence Statements which are currently supported
         statements = [stmt for stmt in self.statements if
                       isinstance(stmt, Influence)]
@@ -59,33 +68,38 @@ class CAGAssembler(object):
         # Add nodes and edges to the graph
         for s in statements:
             # Get standardized name of subject and object
-            subj, obj = (self._node_name(s.subj.name),
-                         self._node_name(s.obj.name))
+            # subj, obj = (self._node_name(s.subj), self._node_name(s.obj))
 
             # See if both subject and object have polarities given
             has_both_polarity = (s.subj_delta['polarity'] is not None and
                                  s.obj_delta['polarity'] is not None)
 
             # Add the nodes to the graph
-            for node in (subj, obj):
-                self.CAG.add_node(node, simulable=has_both_polarity)
+            for node in (s.subj, s.obj):
+                self.CAG.add_node(self._node_name(node),
+                        simulable=has_both_polarity, mods = node.mods)
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
-            targetArrowShape = 'tee' if has_both_polarity and \
+            targetArrowShape, linecolor = ('tee', 'maroon') if has_both_polarity and \
                 s.subj_delta['polarity'] != s.obj_delta['polarity']\
-                else 'circle'
+                else ('circle', 'green')
 
             # Add edge to the graph with metadata from statement
-            attr_dict = {
-                    'subj_polarity'    : s.subj_delta['polarity'],
-                    'subj_adjectives'  : s.subj_delta['adjectives'],
-                    'obj_polarity'     : s.obj_delta['polarity'],
-                    'obj_adjectives'   : s.obj_delta['adjectives'],
-                    'linestyle'        : linestyle,
-                    'targetArrowShape' : targetArrowShape
-                    }
-            self.CAG.add_edge(subj, obj, attr_dict=attr_dict)
+            self.CAG.add_edge(
+                    self._node_name(s.subj),
+                    self._node_name(s.obj),
+                    subj_polarity    = s.subj_delta['polarity'],
+                    subj_adjectives  = s.subj_delta['adjectives'],
+                    obj_polarity     = s.obj_delta['polarity'],
+                    obj_adjectives   = s.obj_delta['adjectives'],
+                    linestyle        = linestyle,
+                    linecolor=linecolor,
+                    targetArrowShape = targetArrowShape,
+                    provenance = s.evidence[0].annotations['provenance'],
+                )
+
+
         return self.CAG
 
     def export_to_cytoscapejs(self):
@@ -98,29 +112,43 @@ class CAGAssembler(object):
             CytoscapeJS.
         """
         def _create_edge_data_dict(e):
+            # A hack to get rid of the redundant 'Provenance' label.
+            del e[3]['provenance'][0]['@type']
             return {
                     'id'               : e[0]+'_'+e[1],
                     'source'           : e[0],
                     'target'           : e[1],
                     'linestyle'        : e[3]["linestyle"],
+                    'linecolor'        : e[3]["linecolor"],
                     'targetArrowShape' : e[3]["targetArrowShape"],
                     'subj_adjectives'  : e[3]["subj_adjectives"],
                     'subj_polarity'    : e[3]["subj_polarity"],
                     'obj_adjectives'   : e[3]["obj_adjectives"],
                     'obj_polarity'     : e[3]["obj_polarity"],
+                    'tooltip'          : e[3]['provenance'][0],
                     'simulable'        : False if (
                         e[3]['obj_polarity'] is None or
-                        e[3]['subj_polarity'] is None) else True
+                        e[3]['subj_polarity'] is None) else True,
                    }
         return {
-                'nodes': [{'data': {'id': n[0], 'simulable': n[1]['simulable']}}
-                          for n in self.CAG.nodes(data=True)],
+                'nodes': [{'data': {
+                    'id': n[0],
+                    'simulable': n[1]['simulable'],
+                    'tooltip': 'Modifiers: '+json.dumps(n[1]['mods'])}
+                    } for n in self.CAG.nodes(data=True)],
 
                 'edges': [{'data': _create_edge_data_dict(e)}
                            for e in self.CAG.edges(data=True, keys=True)]
                 }
 
-    @staticmethod
-    def _node_name(agent_name):
+    def _node_name(self, agent):
         """Return a standardized name for a node given an Agent name."""
-        return agent_name.capitalize()
+        gt = self.grounding_threshold
+        if gt is not None:
+            best_match = agent.db_refs['Eidos'][0]
+            if best_match[1] > gt:
+                return best_match[0].split('/')[-1].replace('_', ' ').capitalize()
+            else:
+                return agent.name.capitalize()
+        else:
+            return agent.name.capitalize()
