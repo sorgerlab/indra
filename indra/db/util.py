@@ -604,7 +604,7 @@ def get_statements_stats(fname=None, db=None):
     stmt_q = db.filter_query(db.Statements)
     __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
     statements_by_reading_source = (
-        db.session.query(db.Readings.reader, db.TextContent.text_type,
+        db.session.query(db.Readings.reader, db.TextContent.source,
                          func.count(db.Statements.id))
         .filter(stmt_rdng_link, tc_rdng_link)
         .distinct()
