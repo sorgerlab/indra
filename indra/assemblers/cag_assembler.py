@@ -81,11 +81,16 @@ class CAGAssembler(object):
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
-            targetArrowShape, linecolor = ('tee', 'maroon') if has_both_polarity and \
-                s.subj_delta['polarity'] != s.obj_delta['polarity']\
+            targetArrowShape, linecolor = ('tee', 'maroon') if \
+                    (has_both_polarity and
+                     s.subj_delta['polarity'] != s.obj_delta['polarity']) \
                 else ('circle', 'green')
 
             # Add edge to the graph with metadata from statement
+            if s.evidence:
+                provenance = s.evidence[0].annotations.get('provenance', {})
+            else:
+                provenance = {}
             self.CAG.add_edge(
                     self._node_name(s.subj),
                     self._node_name(s.obj),
@@ -95,8 +100,8 @@ class CAGAssembler(object):
                     obj_adjectives   = s.obj_delta['adjectives'],
                     linestyle        = linestyle,
                     linecolor=linecolor,
-                    targetArrowShape = targetArrowShape,
-                    provenance = s.evidence[0].annotations['provenance'],
+                    targetArrowShape=targetArrowShape,
+                    provenance=provenance,
                 )
 
 
@@ -113,7 +118,11 @@ class CAGAssembler(object):
         """
         def _create_edge_data_dict(e):
             # A hack to get rid of the redundant 'Provenance' label.
-            del e[3]['provenance'][0]['@type']
+            if e[3].get('provenance'):
+                tooltip = e[3]['provenance'][0]
+                del tooltip['@type']
+            else:
+                tooltip = None
             return {
                     'id'               : e[0]+'_'+e[1],
                     'source'           : e[0],
@@ -125,7 +134,7 @@ class CAGAssembler(object):
                     'subj_polarity'    : e[3]["subj_polarity"],
                     'obj_adjectives'   : e[3]["obj_adjectives"],
                     'obj_polarity'     : e[3]["obj_polarity"],
-                    'tooltip'          : e[3]['provenance'][0],
+                    'tooltip'          : tooltip,
                     'simulable'        : False if (
                         e[3]['obj_polarity'] is None or
                         e[3]['subj_polarity'] is None) else True,
@@ -145,7 +154,8 @@ class CAGAssembler(object):
         """Return a standardized name for a node given an Agent name."""
         gt = self.grounding_threshold
         if gt is not None:
-            best_match = agent.db_refs['Eidos'][0]
+            # TODO: handle other types of grounding here
+            best_match = agent.db_refs['EIDOS'][0]
             if best_match[1] > gt:
                 return best_match[0].split('/')[-1].replace('_', ' ').capitalize()
             else:
