@@ -3,9 +3,12 @@ from builtins import dict, str
 from indra.statements import *
 from indra.assemblers import CAGAssembler
 
+eg1 = {'EIDOS': [('a/b/c', 0.123)]}
+eg2 = {'EIDOS': [('a/b/c', 0.234)]}
+
 statements = [Influence(
-    Agent('inorganic fertilizer'),
-    Agent('farm sizes'),
+    Agent('inorganic fertilizer', db_refs=eg1),
+    Agent('farm sizes', db_refs=eg2),
     {'adjectives': 'serious', 'polarity': 1},
     {'adjectives': 'significant', 'polarity': 1},
 )]
