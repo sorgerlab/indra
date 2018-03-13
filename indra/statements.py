@@ -1101,7 +1101,7 @@ class Modification(Statement):
 
     Parameters
     ----------
-    enz : :py:class`indra.statement.Agent`
+    enz : :py:class:`indra.statement.Agent`
         The enzyme involved in the modification.
     sub : :py:class:`indra.statement.Agent`
         The substrate of the modification.
@@ -1237,7 +1237,7 @@ class SelfModification(Statement):
 
     Parameters
     ----------
-    enz : :py:class`indra.statement.Agent`
+    enz : :py:class:`indra.statement.Agent`
         The enzyme involved in the modification, which is also the substrate.
     residue : str or None
         The amino acid residue being modified, or None if it is unknown or
@@ -2306,7 +2306,7 @@ class DecreaseAmount(RegulateAmount):
 
     Parameters
     ----------
-    subj : :py:class`indra.statement.Agent`
+    subj : :py:class:`indra.statement.Agent`
         The protein mediating the degradation.
     obj : :py:class:`indra.statement.Agent`
         The protein that is degraded.
@@ -2321,7 +2321,7 @@ class IncreaseAmount(RegulateAmount):
 
     Parameters
     ----------
-    subj : :py:class`indra.statement.Agent`
+    subj : :py:class:`indra.statement.Agent`
         The protein mediating the synthesis.
     obj : :py:class:`indra.statement.Agent`
         The protein that is synthesized.
@@ -2336,7 +2336,7 @@ class Influence(IncreaseAmount):
 
     Parameters
     ----------
-    subj : :py:class`indra.statement.Agent`
+    subj : :py:class:`indra.statement.Agent`
         The concept which acts as the influencer.
     obj : :py:class:`indra.statement.Agent`
         The concept which acts as the influencee
@@ -2404,7 +2404,7 @@ class Conversion(Statement):
 
     Parameters
     ----------
-    subj : :py:class`indra.statement.Agent`
+    subj : :py:class:`indra.statement.Agent`
         The protein mediating the conversion.
     obj_from : list of :py:class:`indra.statement.Agent`
         The list of molecular species being consumed by the conversion.
