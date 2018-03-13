@@ -48,7 +48,7 @@ def send_query(text, service_endpoint='drum', query_args=None):
     return res.text
 
 
-def get_xml(html, content_tag='ekb'):
+def get_xml(html, content_tag='ekb', fail_if_empty=False):
     """Extract the content XML from the HTML output of the TRIPS web service.
 
     Parameters
@@ -57,6 +57,9 @@ def get_xml(html, content_tag='ekb'):
         The HTML output from the TRIPS web service.
     content_tag : str
         The xml tag used to label the content. Default is 'ekb'.
+    fail_if_empty : bool
+        If True, and if the xml content found is an empty string, raise an
+        exception. Default is False.
 
     Returns
     -------
@@ -74,6 +77,10 @@ def get_xml(html, content_tag='ekb'):
     else:
         events_terms = ''
         meta = ''
+
+    if fail_if_empty:
+        assert events_terms != '',\
+            "Get empty string for events content from html:\n%s" % html
 
     header = ('<?xml version="1.0" encoding="utf-8" standalone="yes"?><%s%s>'
               % (content_tag, meta))
