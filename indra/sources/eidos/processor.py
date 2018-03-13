@@ -63,7 +63,8 @@ class EidosJsonLdProcessor(object):
                 # x is either subj or obj
                 if 'states' in x.keys():
                     if 'modifiers' in x['states'][0].keys():
-                        return [mod['text'] for mod in x['states'][0]['modifiers']]
+                        return [mod['text'] for mod in
+                                x['states'][0]['modifiers']]
                 else:
                     return []
 
@@ -78,20 +79,28 @@ class EidosJsonLdProcessor(object):
                 if 'states' in entity.keys():
                     # For now, take the first state
                     if 'modifiers' in entity['states'][0].keys():
-                        return [m['text'] for m in entity['states'][0]['modifiers']]
+                        return [m['text'] for m in
+                                entity['states'][0]['modifiers']]
                     else:
                         return None
                 else:
                     return None
 
             def _get_eidos_groundings(entity):
-                return [(g['ontologyConcept'], g['value']) 
-                        for g in entity['grounding']]
-        
+                """Return Eidos groundings are a list of tuples with scores."""
+                return [(g['ontologyConcept'], g['value'])
+                        for g in entity.get('grounding', [])]
+
             def _make_agent(entity):
-                return Agent(entity['text'],
-                        mods = _get_mods(entity),
-                        db_refs = {'Eidos':_get_eidos_groundings(entity)})
+                """Return an Agent from an Eidos entity."""
+                # For now we just use the text for the agent as the name
+                name = entity['text']
+                # Save raw text and Eidos scored groundings as db_refs
+                db_refs = {'TEXT': entity['text'],
+                           'EIDOS': _get_eidos_groundings(entity)}
+                mods = _get_mods(entity)
+                agent = Agent(name, mods=mods, db_refs=db_refs)
+                return agent
 
             st = Influence(_make_agent(subj), _make_agent(obj),
                            subj_delta, obj_delta, evidence=evidence)

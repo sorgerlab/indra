@@ -47,4 +47,12 @@ def test_process_text_json_ld():
     assert stmt.obj_delta.get('polarity') == -1
     assert(stmt.evidence[0].annotations['found_by'] == \
             'ported_syntax_1_verb-Causal')
+    assert 'TEXT' in stmt.subj.db_refs
+    assert 'TEXT' in stmt.obj.db_refs
+    assert 'EIDOS' in stmt.subj.db_refs
+    assert 'EIDOS' in stmt.obj.db_refs
+    # FIXME: once groundings are propagated well from offline reading
+    # this should work
+    # assert len(stmt.subj.db_refs['EIDOS']) > 5
+    # assert len(stmt.obj.db_refs['EIDOS']) > 5
 
