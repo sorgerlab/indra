@@ -97,11 +97,7 @@ def test_gef():
 
 
 def __make_support_link(supporting_stmt, supported_stmt):
-    if supporting_stmt.supports is None:
-        supporting_stmt.supports = []
     supporting_stmt.supports.append(supported_stmt)
-    if supported_stmt.supported_by is None:
-        supporting_stmt.supported_by = []
     supported_stmt.supported_by.append(supporting_stmt)
     return
 
@@ -109,7 +105,7 @@ def __make_support_link(supporting_stmt, supported_stmt):
 def test_supports():
     stmt1 = Gap(Agent('B'), Agent('B'), evidence=[ev])
     stmt2 = Gap(Agent('a'), Agent('b'), evidence=[ev])
-    __make_support_link(stmt2, stmt1)
+    __make_support_link(stmt1, stmt2)
     jd1 = stmt1.to_json()
     jd2 = stmt2.to_json()
     jds = [jd1, jd2]
@@ -142,39 +138,53 @@ def test_supports_missing_uuids():
     assert all([any([s_out.matches(s_in) for s_in in stmts])
                 for s_out in output_stmts]),\
         "Output statements do not match input statements."
-    all_input_supports = [s for attr in ['supports', 'supported_by']
-                          for stmt in stmts for s in getattr(stmt, attr)]
+    all_input_supports = [s for stmt in stmts
+                          for s in (stmt.supports + stmt.supported_by)]
+    print("Total input supports: %d." % len(all_input_supports))
 
     # Test the behavior when some statements are missing.
     for missing_stmt in stmts:
         print("Performing knock-out of %s." % str(missing_stmt))
         input_stmts = stmts[:]
         input_stmts.remove(missing_stmt)
+        exp_num_supports_removed = (len(missing_stmt.supports)
+                                    + len(missing_stmt.supported_by))
+        print("Knockout removed %d supports." % exp_num_supports_removed)
         stmts_json = stmts_to_json(input_stmts)
 
         # Test 'handle' behavior (default)
         output_stmts = stmts_from_json(stmts_json, 'handle')
         assert len(output_stmts) == 2,\
             "Got %d stmts, not 2 when using 'handle'." % len(output_stmts)
-        all_supports = [s for attr in ['supports', 'supported_by']
-                        for stmt in output_stmts for s in getattr(stmt, attr)]
+        all_supports = [s for stmt in output_stmts
+                        for s in (stmt.supports + stmt.supported_by)]
+        print("Number of supports for 'handle': %d." % len(all_supports))
         unresolved_supports = [s for s in all_supports
                                if isinstance(s, Unresolved)]
-        assert len(all_supports) is len(all_input_supports),\
-            "Missing some supports in 'handle' behavior."
-        assert 0 < len(unresolved_supports) < len(all_input_supports),\
-            "No outputs are of type Unresolved for 'handle' behavior."
+        print("Number of unresolved supports: %d." % len(unresolved_supports))
+        exp_num_handle_supports = (len(all_input_supports)
+                                   - exp_num_supports_removed)
+        print("Expected number of supports: %d." % exp_num_handle_supports)
+        assert len(all_supports) is exp_num_handle_supports,\
+            ("Expected %d supports in 'handle' behavior, got %d."
+             % (exp_num_handle_supports, len(all_supports)))
+        assert len(unresolved_supports) is exp_num_supports_removed,\
+            ("Expected %d output supports of type Unresolved "
+             "for 'handle' behavior, but got %d."
+             % (exp_num_supports_removed, len(unresolved_supports)))
 
         # Test 'ignore' behavior
         output_stmts = stmts_from_json(stmts_json, 'ignore')
         assert len(output_stmts) == 2,\
             "Got %d stmts, not 2 when using 'ignore'." % len(output_stmts)
-        all_supports = [s for attr in ['supports', 'supported_by']
-                        for stmt in output_stmts for s in getattr(stmt, attr)]
-        exp_num_remaining = len(all_input_supports) - len(unresolved_supports)
-        assert len(all_supports) == exp_num_remaining,\
+        all_supports = [s for stmt in output_stmts
+                        for s in (stmt.supports + stmt.supported_by)]
+        print("Number of supports for 'ignore': %d." % len(all_supports))
+        exp_num_ignore_supports = (exp_num_handle_supports
+                                   - len(unresolved_supports))
+        assert len(all_supports) == exp_num_ignore_supports,\
             ("Expected %d remaining support stmts, but got %d using 'ignore'."
-             % (exp_num_remaining, len(all_supports)))
+             % (exp_num_ignore_supports, len(all_supports)))
 
         # Test 'error' behavior
         try:
