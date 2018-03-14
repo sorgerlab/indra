@@ -75,9 +75,10 @@ class CAGAssembler(object):
                                  s.obj_delta['polarity'] is not None)
 
             # Add the nodes to the graph
-            for node in (s.subj, s.obj):
+            for node, delta in zip((s.subj, s.obj),
+                                   (s.subj_delta, s.obj_delta)):
                 self.CAG.add_node(self._node_name(node),
-                        simulable=has_both_polarity, mods = node.mods)
+                        simulable=has_both_polarity, mods=delta['adjectives'])
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'

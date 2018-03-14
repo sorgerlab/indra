@@ -73,18 +73,7 @@ class EidosJsonLdProcessor(object):
             obj_delta = {'adjectives': get_adjectives(obj),
                          'polarity': get_polarity(obj)}
 
-            evidence = self._get_evidence(event) 
-
-            def _get_mods(entity):
-                if 'states' in entity.keys():
-                    # For now, take the first state
-                    if 'modifiers' in entity['states'][0].keys():
-                        return [m['text'] for m in
-                                entity['states'][0]['modifiers']]
-                    else:
-                        return None
-                else:
-                    return None
+            evidence = self._get_evidence(event)
 
             def _get_eidos_groundings(entity):
                 """Return Eidos groundings are a list of tuples with scores."""
@@ -98,8 +87,7 @@ class EidosJsonLdProcessor(object):
                 # Save raw text and Eidos scored groundings as db_refs
                 db_refs = {'TEXT': entity['text'],
                            'EIDOS': _get_eidos_groundings(entity)}
-                mods = _get_mods(entity)
-                agent = Agent(name, mods=mods, db_refs=db_refs)
+                agent = Agent(name, db_refs=db_refs)
                 return agent
 
             st = Influence(_make_agent(subj), _make_agent(obj),
