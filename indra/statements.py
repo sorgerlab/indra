@@ -2521,7 +2521,76 @@ class Conversion(Statement):
         return s
 
 
-def stmts_from_json(json_in):
+class InputError(Exception):
+    pass
+
+
+class UnresolvedUuidError(Exception):
+    pass
+
+
+class Unresolved(Statement):
+    """A special statement type used in support when a uuid can't be resolved.
+
+    When using the `stmts_from_json` method, it is sometimes not possible to
+    resolve the uuid found in `support` and `supported_by` in the json
+    representation of an indra statement. When this happens, this class is used
+    as a place-holder, carrying only the uuid of the statement.
+    """
+    def __init__(self, uuid_str):
+        super(Unresolved, self).__init__()
+        self.uuid = uuid_str
+
+
+def stmts_from_json(json_in, on_missing_support='handle'):
+    '''Get a list of statements from statement jsons.
+
+    In the case of pre-assembled statements which have `supports` and
+    `supported_by` lists, the uuids will be replaced with references to
+    Statement objects from the json, where possible. The method of handling
+    missing support is controled by the `on_missing_support` key-word argument.
+
+    Parameters:
+    -----------
+    json_in : json list
+        A json list containing json dict representations of indra statements,
+        as produced by the `to_json` methods of subclasses of Statement, or
+        equivalently by `stmts_to_json`.
+    on_missing_support : str
+        Handles the behavoir when a uuid reference in `supports` or
+        `supported_by` attribute cannot be resolved. This happens because uuids
+        can only be linked to statements contained in the `json_in` list, and
+        some may be missing if only some of all the statements from pre-
+        assembly are contained in the list.
+
+        Options are:
+            'handle' - (default) convert unresolved uuids into `Unresolved`
+                Statement objects.
+            'ignore' - Simply omit any uuids that cannot be linked to any
+                statements in the list.
+            'error' - Raise an error upon hitting an un-linkable uuid.
+
+    Returns:
+    --------
+    stmts : list [Statement]
+        A list of indra statements.
+    '''
+    valid_handling_choices = ['handle', 'error', 'ignore']
+    if on_missing_support not in valid_handling_choices:
+        raise InputError('Invalid option for `on_missing_support`: \'%s\'\n'
+                         'Choices are: %s.'
+                         % (on_missing_support, str(valid_handling_choices)))
+
+    def handle_missing_support(sup_list, idx, uuid):
+        if on_missing_support == 'handle':
+            sup_list[idx] = Unresolved(uuid)
+        elif on_missing_support == 'ignore':
+            sup_list.remove(uuid)
+        elif on_missing_support == 'error':
+            raise UnresolvedUuidError("Uuid %s not found in statement jsons."
+                                      % uuid)
+        return
+
     if not isinstance(json_in, list):
         st = Statement._from_json(json_in)
         return st
@@ -2541,12 +2610,12 @@ def stmts_from_json(json_in):
                 try:
                     st.supports[i] = uuid_dict[uid]
                 except KeyError:
-                    pass
+                    handle_missing_support(st.supports, i, uid)
             for i, uid in enumerate(st.supported_by):
                 try:
                     st.supported_by[i] = uuid_dict[uid]
                 except KeyError:
-                    pass
+                    handle_missing_support(st.supported_by, i, uid)
         return stmts
 
 
