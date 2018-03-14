@@ -1041,10 +1041,10 @@ class Statement(object):
         stmt_type = json_dict.get('type')
         stmt_cls = getattr(sys.modules[__name__], stmt_type)
         stmt = stmt_cls._from_json(json_dict)
-        evidence = json_dict.get('evidence', [])
+        evidence = json_dict.get('evidence', []).copy()
         stmt.evidence = [Evidence._from_json(ev) for ev in evidence]
-        stmt.supports = json_dict.get('supports', [])
-        stmt.supported_by = json_dict.get('supported_by', [])
+        stmt.supports = json_dict.get('supports', []).copy()
+        stmt.supported_by = json_dict.get('supported_by', []).copy()
         stmt.belief = json_dict.get('belief', 1.0)
         stmt_id = json_dict.get('id')
         if not stmt_id:
