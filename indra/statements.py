@@ -2607,14 +2607,14 @@ def stmts_from_json(json_in, on_missing_support='handle'):
             uuid_dict[st.uuid] = st
         for st in stmts:
             for i, uid in enumerate(st.supports):
-                try:
+                if uid in uuid_dict.keys():
                     st.supports[i] = uuid_dict[uid]
-                except KeyError:
+                else:
                     handle_missing_support(st.supports, i, uid)
             for i, uid in enumerate(st.supported_by):
-                try:
+                if uid in uuid_dict.keys():
                     st.supported_by[i] = uuid_dict[uid]
-                except KeyError:
+                else:
                     handle_missing_support(st.supported_by, i, uid)
         return stmts
 
