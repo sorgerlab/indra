@@ -9,9 +9,17 @@ import jnius_config
 
 logger = logging.getLogger('java_vm')
 
-if '-Xmx4g' not in jnius_config.get_options():
+def _has_xmx(options):
+    for option in options:
+        if option.startswith('-Xmx'):
+            return True
+    return False
+
+default_mem_limit = '8g'
+
+if not _has_xmx(jnius_config.get_options()):
     if not jnius_config.vm_running:
-        jnius_config.add_options('-Xmx4g')
+        jnius_config.add_options('-Xmx%s' % default_mem_limit)
     else:
         logger.warning("Couldn't set memory limit for Java VM because the VM "
                        "is already running.")
