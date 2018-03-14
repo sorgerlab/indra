@@ -1,10 +1,31 @@
 import os
 from indra.sources import eidos
 from indra.statements import Influence
+import requests
+import json
+from indra.assemblers.cag_assembler import CAGAssembler
+from indra.assemblers.cx_assembler import CxAssembler
+from indra.assemblers.pysb_assembler import PysbAssembler
 
 
 path_this = os.path.dirname(os.path.abspath(__file__))
 test_json = os.path.join(path_this, 'eidos_test.json')
+
+
+def __get_remote_jsonld():
+    res = requests.get('https://raw.githubusercontent.com/clulab/eidos/master/'
+                       'example_output/example_mar6.jsonld')
+    assert res.status_code is 200, "Could not get example json from remote."
+    example_json = json.loads(res.content.decode('utf-8'))
+    return example_json
+
+
+def __get_stmts_from_remote_jsonld():
+    ex_json = __get_remote_jsonld()
+    ep = eidos.process_json_ld(ex_json)
+    assert ep is not None, 'Failed to handle json with eidos processor.'
+    assert len(ep.statements), 'Did not get statements from json.'
+    return ep.statements
 
 
 def test_process_json():
@@ -18,8 +39,8 @@ def test_process_json():
     assert stmt.subj_delta.get('adjectives') == ['large']
     assert stmt.obj_delta.get('adjectives') == ['seriously']
 
-    assert(stmt.evidence[0].annotations['found_by'] == \
-            'ported_syntax_1_verb-Causal')
+    assert(stmt.evidence[0].annotations['found_by']
+           == 'ported_syntax_1_verb-Causal')
     print(stmt)
 
 
@@ -32,8 +53,9 @@ def test_process_text():
     assert stmt.subj.name == 'cost of fuel'
     assert stmt.obj.name == 'water trucking'
     assert stmt.obj_delta.get('polarity') == -1
-    assert(stmt.evidence[0].annotations['found_by'] == \
-            'ported_syntax_1_verb-Causal')
+    assert(stmt.evidence[0].annotations['found_by']
+           == 'ported_syntax_1_verb-Causal')
+
 
 def test_process_text_json_ld():
     ep = eidos.process_text('The cost of fuel decreases water trucking.',
@@ -45,8 +67,8 @@ def test_process_text_json_ld():
     assert stmt.subj.name == 'cost of fuel'
     assert stmt.obj.name == 'water trucking'
     assert stmt.obj_delta.get('polarity') == -1
-    assert(stmt.evidence[0].annotations['found_by'] == \
-            'ported_syntax_1_verb-Causal')
+    assert(stmt.evidence[0].annotations['found_by']
+           == 'ported_syntax_1_verb-Causal')
     assert 'TEXT' in stmt.subj.db_refs
     assert 'TEXT' in stmt.obj.db_refs
     assert 'EIDOS' in stmt.subj.db_refs
@@ -56,3 +78,43 @@ def test_process_text_json_ld():
     # assert len(stmt.subj.db_refs['EIDOS']) > 5
     # assert len(stmt.obj.db_refs['EIDOS']) > 5
 
+
+def test_eidos_to_cag():
+    stmts = __get_stmts_from_remote_jsonld()
+    ca = CAGAssembler()
+
+    # Make sure these don't error
+    ca.add_statements(stmts)
+    ca.make_model()
+    ca.export_to_cytoscapejs()
+    return
+
+
+def test_eidos_to_cx():
+    stmts = __get_stmts_from_remote_jsonld()
+    cx = CxAssembler()
+
+    # Make sure these don't error
+    cx.add_statements(stmts)
+    cx.make_model()
+    test_fname = 'test_cag_to_cx.cx'
+    try:
+        cx.save_model(test_fname)
+        assert os.path.exists(test_fname), "Failed to create cx file."
+    finally:
+        if os.path.exists(test_fname):
+            os.remove(test_fname)
+    return
+
+
+def test_eids_to_pysb():
+    stmts = __get_stmts_from_remote_jsonld()
+    pa = PysbAssembler()
+
+    # Make sure these don't error
+    pa.add_statements(stmts)
+    pa.make_model()
+    for fmt in ['kappa', 'sbml', 'sbgn']:
+        exp_str = pa.export_model(fmt)
+        assert exp_str, "Got no exported model from eidos->psyb to %s." % fmt
+    return
