@@ -2542,6 +2542,26 @@ class Unresolved(Statement):
         self.uuid = uuid_str
 
 
+def _promote_support(sup_list, uuid_dict, on_missing='handle'):
+    """Promote the list of support-related uuids to statements, if possible."""
+    valid_handling_choices = ['handle', 'error', 'ignore']
+    if on_missing not in valid_handling_choices:
+        raise InputError('Invalid option for `on_missing_support`: \'%s\'\n'
+                         'Choices are: %s.'
+                         % (on_missing, str(valid_handling_choices)))
+    for idx, uuid in enumerate(sup_list):
+        if uuid in uuid_dict.keys():
+            sup_list[idx] = uuid_dict[uuid]
+        elif on_missing == 'handle':
+            sup_list[idx] = Unresolved(uuid)
+        elif on_missing == 'ignore':
+            sup_list.remove(uuid)
+        elif on_missing == 'error':
+            raise UnresolvedUuidError("Uuid %s not found in stmt jsons."
+                                      % uuid)
+    return
+
+
 def stmts_from_json(json_in, on_missing_support='handle'):
     '''Get a list of statements from statement jsons.
 
@@ -2575,21 +2595,6 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     stmts : list [Statement]
         A list of indra statements.
     '''
-    valid_handling_choices = ['handle', 'error', 'ignore']
-    if on_missing_support not in valid_handling_choices:
-        raise InputError('Invalid option for `on_missing_support`: \'%s\'\n'
-                         'Choices are: %s.'
-                         % (on_missing_support, str(valid_handling_choices)))
-
-    def handle_missing_support(sup_list, idx, uuid):
-        if on_missing_support == 'handle':
-            sup_list[idx] = Unresolved(uuid)
-        elif on_missing_support == 'ignore':
-            sup_list.remove(uuid)
-        elif on_missing_support == 'error':
-            raise UnresolvedUuidError("Uuid %s not found in statement jsons."
-                                      % uuid)
-        return
 
     if not isinstance(json_in, list):
         st = Statement._from_json(json_in)
@@ -2606,16 +2611,8 @@ def stmts_from_json(json_in, on_missing_support='handle'):
             stmts.append(st)
             uuid_dict[st.uuid] = st
         for st in stmts:
-            for i, uid in enumerate(st.supports):
-                if uid in uuid_dict.keys():
-                    st.supports[i] = uuid_dict[uid]
-                else:
-                    handle_missing_support(st.supports, i, uid)
-            for i, uid in enumerate(st.supported_by):
-                if uid in uuid_dict.keys():
-                    st.supported_by[i] = uuid_dict[uid]
-                else:
-                    handle_missing_support(st.supported_by, i, uid)
+            _promote_support(st.supports, uuid_dict, on_missing_support)
+            _promote_support(st.supported_by, uuid_dict, on_missing_support)
         return stmts
 
 
