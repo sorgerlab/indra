@@ -161,6 +161,8 @@ def test_supports_missing_uuids():
         print("Number of supports for 'handle': %d." % len(all_supports))
         unresolved_supports = [s for s in all_supports
                                if isinstance(s, Unresolved)]
+        unresolved_uuids = get_unresolved_support_uuids(output_stmts)
+        assert unresolved_uuids == {s.uuid for s in unresolved_supports}
         print("Number of unresolved supports: %d." % len(unresolved_supports))
         exp_num_handle_supports = (len(all_input_supports)
                                    - exp_num_supports_removed)

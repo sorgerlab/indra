@@ -2615,6 +2615,12 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     return stmts
 
 
+def get_unresolved_support_uuids(stmts):
+    """Get uuids unresolved in support from stmts from stmts_from_json."""
+    return {s.uuid for stmt in stmts for s in stmt.supports + stmt.supported_by
+            if isinstance(s, Unresolved)}
+
+
 def stmts_to_json(stmts_in):
     if not isinstance(stmts_in, list):
         json_dict = stmts_in.to_json()
