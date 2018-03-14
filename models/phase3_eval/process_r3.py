@@ -22,7 +22,7 @@ def read_stmts(fname):
     for js in jsons:
         if not isinstance(js['evidence'], list):
             js['evidence'] = [js['evidence']]
-        st = stmts_from_json(js)
+        st = stmts_from_json([js])[0]
         if not hasattr(st.agent, 'mutations'):
             st.agent.mutations = []
         if not hasattr(st.agent, 'location'):

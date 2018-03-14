@@ -2596,24 +2596,20 @@ def stmts_from_json(json_in, on_missing_support='handle'):
         A list of indra statements.
     '''
 
-    if not isinstance(json_in, list):
-        st = Statement._from_json(json_in)
-        return st
-    else:
-        stmts = []
-        uuid_dict = {}
-        for json_stmt in json_in:
-            try:
-                st = Statement._from_json(json_stmt)
-            except Exception as e:
-                logger.warning("Error creating statement: %s" % e)
-                continue
-            stmts.append(st)
-            uuid_dict[st.uuid] = st
-        for st in stmts:
-            _promote_support(st.supports, uuid_dict, on_missing_support)
-            _promote_support(st.supported_by, uuid_dict, on_missing_support)
-        return stmts
+    stmts = []
+    uuid_dict = {}
+    for json_stmt in json_in:
+        try:
+            st = Statement._from_json(json_stmt)
+        except Exception as e:
+            logger.warning("Error creating statement: %s" % e)
+            continue
+        stmts.append(st)
+        uuid_dict[st.uuid] = st
+    for st in stmts:
+        _promote_support(st.supports, uuid_dict, on_missing_support)
+        _promote_support(st.supported_by, uuid_dict, on_missing_support)
+    return stmts
 
 
 def stmts_to_json(stmts_in):
