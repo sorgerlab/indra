@@ -2541,6 +2541,9 @@ class Unresolved(Statement):
         super(Unresolved, self).__init__()
         self.uuid = uuid_str
 
+    def __str__(self):
+        return "%s(%s)" % (type(self).__name__, self.uuid)
+
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
     """Promote the list of support-related uuids to statements, if possible."""
