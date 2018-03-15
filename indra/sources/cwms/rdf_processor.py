@@ -11,7 +11,7 @@ PREFIX role: <http://www.cs.rochester.edu/research/trips/role#>
 PREFIX lf: <http://www.cs.rochester.edu/research/trips/LF#>
 """
 
-class CWMSProcessor(object):
+class CWMSRDFProcessor(object):
     """This processor extracts INDRA statements from CWMS RDF output.
 
     Parameters

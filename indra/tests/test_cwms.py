@@ -4,7 +4,7 @@ from os.path import join, dirname
 from nose.tools import raises
 
 from indra.statements import *
-from indra.sources.cwms_rdf import process_rdf_file
+from indra.sources.cwms import process_rdf_file
 
 # Path to the CWMS test/dummy data folder
 path_this = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +23,7 @@ def load_text(fname):
     with open(fname, 'r') as f:
         return f.read()
 
-def test_example1():
+def test_rdf_example1():
     # Example: These impacts on livestock and crops have resulted in
     # livelihoods being decimated.
 
@@ -37,7 +37,7 @@ def test_example1():
     assert(statement0.obj.db_refs['TEXT'] == \
             'in livelihoods being decimated')
 
-def test_example2():
+def test_rdf_example2():
     # Conflict and economic decline have led to violence and displacement.
 
     txt = load_text(example2_txt)
@@ -50,7 +50,7 @@ def test_example2():
     assert(statement0.obj.db_refs['TEXT'] == \
             'to violence and displacement')
 
-def test_example3():
+def test_rdf_example3():
     # Violence has caused livestock to be looted, killed and disease-prone and
     # crops destroyed, and displacement has caused delayed planting.
     
