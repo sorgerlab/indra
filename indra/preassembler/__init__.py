@@ -115,16 +115,18 @@ class Preassembler(object):
         >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
         ['evidence 1', 'evidence 2']
         """
+
+        def match_func(x): return x.matches_key()
+
         unique_stmts = []
         # Remove exact duplicates using a set() call, then make copies:
         st = list(set(stmts))
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
-        st.sort(key=lambda x: x.matches_key())
+        st.sort(key=match_func)
 
-        for key, duplicates in itertools.groupby(st,
-                                                 key=lambda x: x.matches_key()):
+        for _, duplicates in itertools.groupby(st, key=match_func):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
