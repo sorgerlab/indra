@@ -15,6 +15,7 @@ from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger('grounding_mapper')
 
+
 class GroundingMapper(object):
     """Maps grounding of INDRA Agents based on a given grounding map.
 
@@ -148,12 +149,11 @@ class GroundingMapper(object):
         # Make a copy of the stmts
         mapped_stmts = deepcopy(stmts)
         # Iterate over the statements
-        for stmt_ix, stmt in enumerate(mapped_stmts):
+        for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
                 if agent is None:
                     continue
-                old_name = agent.name
                 # If there's a FamPlex ID, prefer that for the name
                 if agent.db_refs.get('FPLX'):
                     agent.name = agent.db_refs.get('FPLX')
@@ -188,9 +188,9 @@ def load_grounding_map(grounding_map_path, ignore_path=None):
                                 lineterminator='\r\n')
     if ignore_path and os.path.exists(ignore_path):
         ignore_rows = read_unicode_csv(ignore_path, delimiter=',',
-                                    quotechar='"',
-                                    quoting=csv.QUOTE_MINIMAL,
-                                    lineterminator='\r\n')
+                                       quotechar='"',
+                                       quoting=csv.QUOTE_MINIMAL,
+                                       lineterminator='\r\n')
     else:
         ignore_rows = []
     csv_rows = chain(map_rows, ignore_rows)
@@ -269,11 +269,11 @@ def agent_texts_with_grounding(stmts):
             if list(db_refs.keys()) == ['TEXT']:
                 db_ref_list.append((None, None, count))
             # Add any other db_refs (not TEXT)
-            for db, id in db_refs.items():
+            for db, db_id in db_refs.items():
                 if db == 'TEXT':
                     continue
                 else:
-                    db_ref_list.append((db, id, count))
+                    db_ref_list.append((db, db_id, count))
             total += count
         # Sort the db_ref_list by the occurrences of each grounding
         entry.append(tuple(sorted(db_ref_list, key=lambda x: x[2],
@@ -301,23 +301,24 @@ def ungrounded_texts(stmts):
 
 def get_agents_with_name(name, stmts):
     return [ag for stmt in stmts for ag in stmt.agent_list()
-               if ag is not None and ag.name == name]
+            if ag is not None and ag.name == name]
 
 
 def save_base_map(filename, grouped_by_text):
     rows = []
     for group in grouped_by_text:
         text_string = group[0]
-        for db, id, count in group[1]:
+        for db, db_id, count in group[1]:
             if db == 'UP':
-                name = uniprot_client.get_mnemonic(id)
+                name = uniprot_client.get_mnemonic(db_id)
             else:
                 name = ''
-            row = [text_string, db, id, count, name]
+            row = [text_string, db, db_id, count, name]
             rows.append(row)
 
     write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
+
 
 def protein_map_from_twg(twg):
     """Build map of entity texts to validated protein grounding.
@@ -332,14 +333,14 @@ def protein_map_from_twg(twg):
     unmatched = 0
     matched = 0
     logger.info('Building grounding map for human proteins')
-    for agent_text, grounding_list, total_count in twg:
+    for agent_text, grounding_list, _ in twg:
         # If 'UP' (Uniprot) not one of the grounding entries for this text,
         # then we skip it.
-        if not 'UP' in [entry[0] for entry in grounding_list]:
+        if 'UP' not in [entry[0] for entry in grounding_list]:
             continue
         # Otherwise, collect all the Uniprot IDs for this protein.
         uniprot_ids = [entry[1] for entry in grounding_list
-                                if entry[0] == 'UP']
+                       if entry[0] == 'UP']
         # For each Uniprot ID, look up the species
         for uniprot_id in uniprot_ids:
             # If it's not a human protein, skip it
@@ -354,12 +355,14 @@ def protein_map_from_twg(twg):
                 continue
             if agent_text.upper() == gene_name.upper():
                 matched += 1
-                protein_map[agent_text] = {'TEXT': agent_text, 'UP': uniprot_id}
+                protein_map[agent_text] = {'TEXT': agent_text,
+                                           'UP': uniprot_id}
             else:
                 unmatched += 1
     logger.info('Exact matches for %d proteins' % matched)
     logger.info('No match (or no gene name) for %d proteins' % unmatched)
     return protein_map
+
 
 def save_sentences(twg, stmts, filename, agent_limit=300):
     sentences = []
@@ -377,6 +380,7 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
     write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
+
 default_grounding_map_path = \
     os.path.join(os.path.dirname(__file__),
                  '../resources/famplex/grounding_map.csv')
@@ -389,9 +393,11 @@ default_agent_grounding_path = \
 default_grounding_map = \
     load_grounding_map(default_grounding_map_path, default_ignore_path)
 
+
 gm = default_grounding_map
 with open(default_agent_grounding_path, 'r') as fh:
     default_agent_map = json.load(fh)
+
 
 if __name__ == '__main__':
 
