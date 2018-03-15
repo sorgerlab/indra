@@ -900,8 +900,8 @@ class Evidence(object):
         source_id = json_dict.get('source_id')
         pmid = json_dict.get('pmid')
         text = json_dict.get('text')
-        annotations = json_dict.get('annotations', {})
-        epistemics = json_dict.get('epistemics', {})
+        annotations = json_dict.get('annotations', {}).copy()
+        epistemics = json_dict.get('epistemics', {}).copy()
         ev = Evidence(source_api=source_api, source_id=source_id,
                       pmid=pmid, text=text, annotations=annotations,
                       epistemics=epistemics)
@@ -1043,8 +1043,8 @@ class Statement(object):
         stmt = stmt_cls._from_json(json_dict)
         evidence = json_dict.get('evidence', [])
         stmt.evidence = [Evidence._from_json(ev) for ev in evidence]
-        stmt.supports = json_dict.get('supports', [])
-        stmt.supported_by = json_dict.get('supported_by', [])
+        stmt.supports = json_dict.get('supports', [])[:]
+        stmt.supported_by = json_dict.get('supported_by', [])[:]
         stmt.belief = json_dict.get('belief', 1.0)
         stmt_id = json_dict.get('id')
         if not stmt_id:
@@ -2521,33 +2521,104 @@ class Conversion(Statement):
         return s
 
 
-def stmts_from_json(json_in):
-    if not isinstance(json_in, list):
-        st = Statement._from_json(json_in)
-        return st
-    else:
-        stmts = []
-        uuid_dict = {}
-        for json_stmt in json_in:
-            try:
-                st = Statement._from_json(json_stmt)
-            except Exception as e:
-                logger.warning("Error creating statement: %s" % e)
-                continue
-            stmts.append(st)
-            uuid_dict[st.uuid] = st
-        for st in stmts:
-            for i, uid in enumerate(st.supports):
-                try:
-                    st.supports[i] = uuid_dict[uid]
-                except KeyError:
-                    pass
-            for i, uid in enumerate(st.supported_by):
-                try:
-                    st.supported_by[i] = uuid_dict[uid]
-                except KeyError:
-                    pass
-        return stmts
+class InputError(Exception):
+    pass
+
+
+class UnresolvedUuidError(Exception):
+    pass
+
+
+class Unresolved(Statement):
+    """A special statement type used in support when a uuid can't be resolved.
+
+    When using the `stmts_from_json` method, it is sometimes not possible to
+    resolve the uuid found in `support` and `supported_by` in the json
+    representation of an indra statement. When this happens, this class is used
+    as a place-holder, carrying only the uuid of the statement.
+    """
+    def __init__(self, uuid_str):
+        super(Unresolved, self).__init__()
+        self.uuid = uuid_str
+
+    def __str__(self):
+        return "%s(%s)" % (type(self).__name__, self.uuid)
+
+
+def _promote_support(sup_list, uuid_dict, on_missing='handle'):
+    """Promote the list of support-related uuids to Statements, if possible."""
+    valid_handling_choices = ['handle', 'error', 'ignore']
+    if on_missing not in valid_handling_choices:
+        raise InputError('Invalid option for `on_missing_support`: \'%s\'\n'
+                         'Choices are: %s.'
+                         % (on_missing, str(valid_handling_choices)))
+    for idx, uuid in enumerate(sup_list):
+        if uuid in uuid_dict.keys():
+            sup_list[idx] = uuid_dict[uuid]
+        elif on_missing == 'handle':
+            sup_list[idx] = Unresolved(uuid)
+        elif on_missing == 'ignore':
+            sup_list.remove(uuid)
+        elif on_missing == 'error':
+            raise UnresolvedUuidError("Uuid %s not found in stmt jsons."
+                                      % uuid)
+    return
+
+
+def stmts_from_json(json_in, on_missing_support='handle'):
+    """Get a list of Statements from Statement jsons.
+
+    In the case of pre-assembled Statements which have `supports` and
+    `supported_by` lists, the uuids will be replaced with references to
+    Statement objects from the json, where possible. The method of handling
+    missing support is controled by the `on_missing_support` key-word argument.
+
+    Parameters:
+    -----------
+    json_in : json list
+        A json list containing json dict representations of INDRA Statements,
+        as produced by the `to_json` methods of subclasses of Statement, or
+        equivalently by `stmts_to_json`.
+    on_missing_support : str
+        Handles the behavior when a uuid reference in `supports` or
+        `supported_by` attribute cannot be resolved. This happens because uuids
+        can only be linked to Statements contained in the `json_in` list, and
+        some may be missing if only some of all the Statements from pre-
+        assembly are contained in the list.
+
+        Options are:
+            'handle' - (default) convert unresolved uuids into `Unresolved`
+                Statement objects.
+            'ignore' - Simply omit any uuids that cannot be linked to any
+                Statements in the list.
+            'error' - Raise an error upon hitting an un-linkable uuid.
+
+    Returns:
+    --------
+    stmts : list[:py:class:`Statement`]
+        A list of INDRA Statements.
+    """
+
+    stmts = []
+    uuid_dict = {}
+    for json_stmt in json_in:
+        try:
+            st = Statement._from_json(json_stmt)
+        except Exception as e:
+            logger.warning("Error creating statement: %s" % e)
+            continue
+        stmts.append(st)
+        uuid_dict[st.uuid] = st
+    for st in stmts:
+        _promote_support(st.supports, uuid_dict, on_missing_support)
+        _promote_support(st.supported_by, uuid_dict, on_missing_support)
+    return stmts
+
+
+def get_unresolved_support_uuids(stmts):
+    """Get uuids unresolved in support from stmts from stmts_from_json."""
+    return {s.uuid for stmt in stmts for s in stmt.supports + stmt.supported_by
+            if isinstance(s, Unresolved)}
 
 
 def stmts_to_json(stmts_in):
