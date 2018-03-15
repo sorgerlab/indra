@@ -144,125 +144,40 @@ class Preassembler(object):
             unique_stmts.append(first_stmt)
         return unique_stmts
 
-    def combine_related(self, return_toplevel=True, poolsize=None,
-                        size_cutoff=100):
-        """Connect related statements based on their refinement relationships.
-
-        This function takes as a starting point the unique statements (with
-        duplicates removed) and returns a modified flat list of statements
-        containing only those statements which do not represent a refinement of
-        other existing statements. In other words, the more general versions of
-        a given statement do not appear at the top level, but instead are
-        listed in the `supports` field of the top-level statements.
-
-        If :py:attr:`unique_stmts` has not been initialized with the
-        de-duplicated statements, :py:meth:`combine_duplicates` is called
-        internally.
-
-        After this function is called the attribute :py:attr:`related_stmts` is
-        set as a side-effect.
-
-        The procedure for combining statements in this way involves a series
-        of steps:
-
-        1. The statements are grouped by type (e.g., Phosphorylation) and
-           each type is iterated over independently.
-        2. Statements of the same type are then grouped according to their
-           Agents' entity hierarchy component identifiers. For instance,
-           ERK, MAPK1 and MAPK3 are all in the same connected component in the
-           entity hierarchy and therefore all Statements of the same type
-           referencing these entities will be grouped. This grouping assures
-           that relations are only possible within Statement groups and
-           not among groups. For two Statements to be in the same group at
-           this step, the Statements must be the same type and the Agents at
-           each position in the Agent lists must either be in the same
-           hierarchy component, or if they are not in the hierarchy, must have
-           identical entity_matches_keys. Statements with None in one of the
-           Agent list positions are collected separately at this stage.
-        3. Statements with None at either the first or second position are
-           iterated over. For a statement with a None as the first Agent,
-           the second Agent is examined; then the Statement with None is
-           added to all Statement groups with a corresponding component or
-           entity_matches_key in the second position. The same procedure is
-           performed for Statements with None at the second Agent position.
-        4. The statements within each group are then compared; if one
-           statement represents a refinement of the other (as defined by the
-           `refinement_of()` method implemented for the Statement), then the
-           more refined statement is added to the `supports` field of the more
-           general statement, and the more general statement is added to the
-           `supported_by` field of the more refined statement.
-        5. A new flat list of statements is created that contains only those
-           statements that have no `supports` entries (statements containing
-           such entries are not eliminated, because they will be retrievable
-           from the `supported_by` fields of other statements). This list
-           is returned to the caller.
-
-        On multi-core machines, the algorithm can be parallelized by setting
-        the poolsize argument to the desired number of worker processes.
-        This feature is only available in Python > 3.4.
-
-        .. note:: Subfamily relationships must be consistent across arguments
-
-            For now, we require that merges can only occur if the *isa*
-            relationships are all in the *same direction for all the agents* in
-            a Statement. For example, the two statement groups: `RAF_family ->
-            MEK1` and `BRAF -> MEK_family` would not be merged, since BRAF
-            *isa* RAF_family, but MEK_family is not a MEK1. In the future this
-            restriction could be revisited.
-
-        Parameters
-        ----------
-        return_toplevel : Optional[bool]
-            If True only the top level statements are returned.
-            If False, all statements are returned. Default: True
-        poolsize : Optional[int]
-            The number of worker processes to use to parallelize the
-            comparisons performed by the function. If None (default), no
-            parallelization is performed. NOTE: Parallelization is only
-            available on Python 3.4 and above.
-        size_cutoff : Optional[int]
-            Groups with size_cutoff or more statements are sent to worker
-            processes, while smaller groups are compared in the parent process.
-            Default value is 100. Not relevant when parallelization is not
-            used.
-
-        Returns
-        -------
-        list of :py:class:`indra.statement.Statement`
-            The returned list contains Statements representing the more
-            concrete/refined versions of the Statements involving particular
-            entities. The attribute :py:attr:`related_stmts` is also set to
-            this list. However, if return_toplevel is False then all
-            statements are returned, irrespective of level of specificity.
-            In this case the relationships between statements can
-            be accessed via the supports/supported_by attributes.
-
-        Examples
-        --------
-        A more general statement with no information about a Phosphorylation
-        site is identified as supporting a more specific statement:
-
-        >>> from indra.preassembler.hierarchy_manager import hierarchies
-        >>> braf = Agent('BRAF')
-        >>> map2k1 = Agent('MAP2K1')
-        >>> st1 = Phosphorylation(braf, map2k1)
-        >>> st2 = Phosphorylation(braf, map2k1, residue='S')
-        >>> pa = Preassembler(hierarchies, [st1, st2])
-        >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
-        >>> combined_stmts
-        [Phosphorylation(BRAF(), MAP2K1(), S)]
-        >>> combined_stmts[0].supported_by
-        [Phosphorylation(BRAF(), MAP2K1())]
-        >>> combined_stmts[0].supported_by[0].supports
-        [Phosphorylation(BRAF(), MAP2K1(), S)]
-        """
-        if self.related_stmts is not None:
-            if return_toplevel:
-                return self.related_stmts
+    def _get_entities(self, stmt, stmt_type, eh):
+        entities = []
+        for a in stmt.agent_list():
+            # Entity is None: add the None to the entities list
+            if a is None and stmt_type != Complex:
+                entities.append(a)
+                continue
+            # Entity is not None, but could be ungrounded or not
+            # in a family
             else:
-                assert self.unique_stmts is not None
-                return self.unique_stmts
+                a_ns, a_id = a.get_grounding()
+                # No grounding available--in this case, use the
+                # entity_matches_key
+                if a_ns is None or a_id is None:
+                    entities.append(a.entity_matches_key())
+                    continue
+                # We have grounding, now check for a component ID
+                uri = eh.get_uri(a_ns, a_id)
+                # This is the component ID corresponding to the agent
+                # in the entity hierarchy
+                component = eh.components.get(uri)
+                # If no component ID, use the entity_matches_key()
+                if component is None:
+                    entities.append(a.entity_matches_key())
+                # Component ID, so this is in a family
+                else:
+                    # We turn the component ID into a string so that
+                    # we can sort it along with entity_matches_keys
+                    # for Complexes
+                    entities.append(str(component))
+        return entities
 
+    def generate_id_maps(self, unique_stmts, poolsize=None, size_cutoff=100):
+        """Make a map between statements using their refinement relationships."""
         # Check arguments relating to multiprocessing
         if poolsize is None:
             logger.info('combine_related: poolsize not set, '
@@ -277,20 +192,12 @@ class Preassembler(object):
             use_mp = False
             logger.info('combine_related: Python < 3.4 detected, '
                         'not using multiprocessing.')
-
-        # Call combine_duplicates, which lazily initializes self.unique_stmts
-        unique_stmts = self.combine_duplicates()
         eh = self.hierarchies['entity']
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(lambda: [])
-        for stmt_ix, stmt in enumerate(unique_stmts):
-            stmts_by_type[type(stmt)].append((stmt_ix, stmt))
+        for stmt in unique_stmts:
+            stmts_by_type[type(stmt)].append((stmt.matches_key(), stmt))
 
-        group_sizes = []
-        largest_group = None
-        largest_group_size = 0
-        num_stmts = len(unique_stmts)
-        related_stmts = []
         child_proc_groups = []
         parent_proc_groups = []
         # Each Statement type can be preassembled independently
@@ -311,36 +218,8 @@ class Preassembler(object):
             # Here we group Statements according to the hierarchy graph
             # components that their agents are part of
             for stmt_tuple in stmts_this_type:
-                stmt_ix, stmt = stmt_tuple
-                entities = []
-                for i, a in enumerate(stmt.agent_list()):
-                    # Entity is None: add the None to the entities list
-                    if a is None and stmt_type != Complex:
-                        entities.append(a)
-                        continue
-                    # Entity is not None, but could be ungrounded or not
-                    # in a family
-                    else:
-                        a_ns, a_id = a.get_grounding()
-                        # No grounding available--in this case, use the
-                        # entity_matches_key
-                        if a_ns is None or a_id is None:
-                            entities.append(a.entity_matches_key())
-                            continue
-                        # We have grounding, now check for a component ID
-                        uri = eh.get_uri(a_ns, a_id)
-                        # This is the component ID corresponding to the agent
-                        # in the entity hierarchy
-                        component = eh.components.get(uri)
-                        # If no component ID, use the entity_matches_key()
-                        if component is None:
-                            entities.append(a.entity_matches_key())
-                        # Component ID, so this is in a family
-                        else:
-                            # We turn the component ID into a string so that
-                            # we can sort it along with entity_matches_keys
-                            # for Complexes
-                            entities.append(str(component))
+                _, stmt = stmt_tuple
+                entities = self._get_entities(stmt, stmt_type, eh)
                 # At this point we have an entity list
                 # If we're dealing with Complexes, sort the entities and use
                 # as dict key
@@ -354,6 +233,7 @@ class Preassembler(object):
                     if stmt_tuple not in stmt_by_group[key]:
                         stmt_by_group[key].append(stmt_tuple)
                 elif stmt_type == Conversion:
+                    # TODO: Fix comment
                     # There shouldn't be any statements of the type
                     # e.g., Complex([Foo, None, Bar])
                     assert len(entities) > 0
@@ -491,8 +371,140 @@ class Preassembler(object):
         for group_ix_map in stmt_ix_map:
             for ix_pair in group_ix_map:
                 stmt_ix_map_set.add(ix_pair)
+        return stmt_ix_map_set
+
+    def combine_related(self, return_toplevel=True, poolsize=None,
+                        size_cutoff=100):
+        """Connect related statements based on their refinement relationships.
+
+        This function takes as a starting point the unique statements (with
+        duplicates removed) and returns a modified flat list of statements
+        containing only those statements which do not represent a refinement of
+        other existing statements. In other words, the more general versions of
+        a given statement do not appear at the top level, but instead are
+        listed in the `supports` field of the top-level statements.
+
+        If :py:attr:`unique_stmts` has not been initialized with the
+        de-duplicated statements, :py:meth:`combine_duplicates` is called
+        internally.
+
+        After this function is called the attribute :py:attr:`related_stmts` is
+        set as a side-effect.
+
+        The procedure for combining statements in this way involves a series
+        of steps:
+
+        1. The statements are grouped by type (e.g., Phosphorylation) and
+           each type is iterated over independently.
+        2. Statements of the same type are then grouped according to their
+           Agents' entity hierarchy component identifiers. For instance,
+           ERK, MAPK1 and MAPK3 are all in the same connected component in the
+           entity hierarchy and therefore all Statements of the same type
+           referencing these entities will be grouped. This grouping assures
+           that relations are only possible within Statement groups and
+           not among groups. For two Statements to be in the same group at
+           this step, the Statements must be the same type and the Agents at
+           each position in the Agent lists must either be in the same
+           hierarchy component, or if they are not in the hierarchy, must have
+           identical entity_matches_keys. Statements with None in one of the
+           Agent list positions are collected separately at this stage.
+        3. Statements with None at either the first or second position are
+           iterated over. For a statement with a None as the first Agent,
+           the second Agent is examined; then the Statement with None is
+           added to all Statement groups with a corresponding component or
+           entity_matches_key in the second position. The same procedure is
+           performed for Statements with None at the second Agent position.
+        4. The statements within each group are then compared; if one
+           statement represents a refinement of the other (as defined by the
+           `refinement_of()` method implemented for the Statement), then the
+           more refined statement is added to the `supports` field of the more
+           general statement, and the more general statement is added to the
+           `supported_by` field of the more refined statement.
+        5. A new flat list of statements is created that contains only those
+           statements that have no `supports` entries (statements containing
+           such entries are not eliminated, because they will be retrievable
+           from the `supported_by` fields of other statements). This list
+           is returned to the caller.
+
+        On multi-core machines, the algorithm can be parallelized by setting
+        the poolsize argument to the desired number of worker processes.
+        This feature is only available in Python > 3.4.
+
+        .. note:: Subfamily relationships must be consistent across arguments
+
+            For now, we require that merges can only occur if the *isa*
+            relationships are all in the *same direction for all the agents* in
+            a Statement. For example, the two statement groups: `RAF_family ->
+            MEK1` and `BRAF -> MEK_family` would not be merged, since BRAF
+            *isa* RAF_family, but MEK_family is not a MEK1. In the future this
+            restriction could be revisited.
+
+        Parameters
+        ----------
+        return_toplevel : Optional[bool]
+            If True only the top level statements are returned.
+            If False, all statements are returned. Default: True
+        poolsize : Optional[int]
+            The number of worker processes to use to parallelize the
+            comparisons performed by the function. If None (default), no
+            parallelization is performed. NOTE: Parallelization is only
+            available on Python 3.4 and above.
+        size_cutoff : Optional[int]
+            Groups with size_cutoff or more statements are sent to worker
+            processes, while smaller groups are compared in the parent process.
+            Default value is 100. Not relevant when parallelization is not
+            used.
+
+        Returns
+        -------
+        list of :py:class:`indra.statement.Statement`
+            The returned list contains Statements representing the more
+            concrete/refined versions of the Statements involving particular
+            entities. The attribute :py:attr:`related_stmts` is also set to
+            this list. However, if return_toplevel is False then all
+            statements are returned, irrespective of level of specificity.
+            In this case the relationships between statements can
+            be accessed via the supports/supported_by attributes.
+
+        Examples
+        --------
+        A more general statement with no information about a Phosphorylation
+        site is identified as supporting a more specific statement:
+
+        >>> from indra.preassembler.hierarchy_manager import hierarchies
+        >>> braf = Agent('BRAF')
+        >>> map2k1 = Agent('MAP2K1')
+        >>> st1 = Phosphorylation(braf, map2k1)
+        >>> st2 = Phosphorylation(braf, map2k1, residue='S')
+        >>> pa = Preassembler(hierarchies, [st1, st2])
+        >>> combined_stmts = pa.combine_related() # doctest:+ELLIPSIS
+        >>> combined_stmts
+        [Phosphorylation(BRAF(), MAP2K1(), S)]
+        >>> combined_stmts[0].supported_by
+        [Phosphorylation(BRAF(), MAP2K1())]
+        >>> combined_stmts[0].supported_by[0].supports
+        [Phosphorylation(BRAF(), MAP2K1(), S)]
+        """
+        if self.related_stmts is not None:
+            if return_toplevel:
+                return self.related_stmts
+            else:
+                assert self.unique_stmts is not None
+                return self.unique_stmts
+
+        # Call combine_duplicates, which lazily initializes self.unique_stmts
+        unique_stmts = self.combine_duplicates()
+
+        # Generate mapping from unique_stmts indexes to match_keys
+        idx_match_map = {s.matches_key(): i for i, s in enumerate(unique_stmts)}
+
+        # Generate the index map, linking related statements.
+        match_map = self.generate_id_maps(unique_stmts, poolsize, size_cutoff)
+
         # Now iterate over all indices and set supports/supported by
-        for ix1, ix2 in stmt_ix_map_set:
+        for mkey1, mkey2 in match_map:
+            ix1 = idx_match_map[mkey1]
+            ix2 = idx_match_map[mkey2]
             unique_stmts[ix1].supported_by.append(unique_stmts[ix2])
             unique_stmts[ix2].supports.append(unique_stmts[ix1])
         # Get the top level statements
