@@ -2546,7 +2546,7 @@ class Unresolved(Statement):
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
-    """Promote the list of support-related uuids to statements, if possible."""
+    """Promote the list of support-related uuids to Statements, if possible."""
     valid_handling_choices = ['handle', 'error', 'ignore']
     if on_missing not in valid_handling_choices:
         raise InputError('Invalid option for `on_missing_support`: \'%s\'\n'
@@ -2566,9 +2566,9 @@ def _promote_support(sup_list, uuid_dict, on_missing='handle'):
 
 
 def stmts_from_json(json_in, on_missing_support='handle'):
-    '''Get a list of statements from statement jsons.
+    """Get a list of Statements from Statement jsons.
 
-    In the case of pre-assembled statements which have `supports` and
+    In the case of pre-assembled Statements which have `supports` and
     `supported_by` lists, the uuids will be replaced with references to
     Statement objects from the json, where possible. The method of handling
     missing support is controled by the `on_missing_support` key-word argument.
@@ -2576,28 +2576,28 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     Parameters:
     -----------
     json_in : json list
-        A json list containing json dict representations of indra statements,
+        A json list containing json dict representations of INDRA Statements,
         as produced by the `to_json` methods of subclasses of Statement, or
         equivalently by `stmts_to_json`.
     on_missing_support : str
-        Handles the behavoir when a uuid reference in `supports` or
+        Handles the behavior when a uuid reference in `supports` or
         `supported_by` attribute cannot be resolved. This happens because uuids
-        can only be linked to statements contained in the `json_in` list, and
-        some may be missing if only some of all the statements from pre-
+        can only be linked to Statements contained in the `json_in` list, and
+        some may be missing if only some of all the Statements from pre-
         assembly are contained in the list.
 
         Options are:
             'handle' - (default) convert unresolved uuids into `Unresolved`
                 Statement objects.
             'ignore' - Simply omit any uuids that cannot be linked to any
-                statements in the list.
+                Statements in the list.
             'error' - Raise an error upon hitting an un-linkable uuid.
 
     Returns:
     --------
-    stmts : list [Statement]
-        A list of indra statements.
-    '''
+    stmts : list[:py:class:`Statement`]
+        A list of INDRA Statements.
+    """
 
     stmts = []
     uuid_dict = {}
