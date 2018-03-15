@@ -42,26 +42,45 @@ class CWMSProcessor(object):
         self.extract_statements()
 
     def extract_statement_from_query_result(self, res):
+        """Adds a statement based on one element of a rdflib SPARQL query.
+
+        Parameters
+        ----------
+        res: rdflib.query.ResultRow
+            Element of rdflib SPARQL query result
+        """
         agent_start, agent_end, affected_start, affected_end = res
 
+        # Convert from rdflib literals to python integers so we can use
+        # them to index strings
         agent_start = int(agent_start)
         agent_end = int(agent_end)
         affected_start = int(affected_start)
         affected_end = int(affected_end)
 
+        # Find the text corresponding to these indices
         agent = self.text[agent_start:agent_end]
         affected = self.text[affected_start:affected_end]
 
+        # Strip off surrounding whitespace
         agent = agent.lstrip().rstrip()
         affected = affected.lstrip().rstrip()
 
-        agent = Agent(agent, db_refs={'TEXT': agent})
-        affected = Agent(affected, db_refs={'TEXT': affected})
+        # Make an Agent object for both the subject and the object
+        subj = Agent(agent, db_refs={'TEXT': agent})
+        obj = Agent(affected, db_refs={'TEXT': affected})
 
-        statement = Influence(subj=agent, obj=affected)
+        statement = Influence(subj=subj, obj=obj)
+
+        # Add the statement to the list of statements
         self.statements.append(statement)
 
     def extract_statements(self):
+        """Extracts INDRA statements from the RDF graph via SPARQL queries.
+        """
+
+        # Look for events that have an AGENT and an AFFECTED, and get the
+        # start and ending text indices for each.
         query = prefixes + """
         SELECT 
             ?agent_start
@@ -79,11 +98,15 @@ class CWMSProcessor(object):
         """
         results = self.graph.query(query)
         for res in results:
+            # Make a statement for each query match
             self.extract_statement_from_query_result(res)
 
+        # Look for events that have an AGENT and a RESULT, and get the start
+        # and ending text indices for each.
         query = query.replace('role:AFFECTED', 'role:RESULT')
         results = self.graph.query(query)
         for res in results:
+            # Make a statement for each query match
             self.extract_statement_from_query_result(res)
 
 
