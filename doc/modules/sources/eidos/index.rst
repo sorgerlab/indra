@@ -22,6 +22,13 @@ The `pyjnius` package needs to be set up and operational to use Eidos reading
 in Python. For more details, see :ref:`pyjniussetup` setup instructions in
 the documentation.
 
+For eidos to provide grounding information to be included in INDRA statements,
+the eidos configuration needs to be adjusted. First, in the eidos installation,
+create the directory src/main/resources/org/clulab/wm/eidos/w2v. Then, obtain
+vectors.txt from the eidos developers and put it in this directory. Next,
+set the property "useW2V" to true in src/main/resources/eidos.conf.
+Finally, rerun sbt compile and sbt assembly.
+
 
 Eidos API (:py:mod:`indra.sources.eidos.eidos_api`)
 ---------------------------------------------------
