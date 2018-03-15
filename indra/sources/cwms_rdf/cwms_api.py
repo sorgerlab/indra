@@ -1,8 +1,8 @@
 import rdflib
 import logging
-from indra.sources.cwms.processor import CWMSProcessor
+from indra.sources.cwms_rdf.processor import CWMSProcessor
 
-logger = logging.getLogger('cwms')
+logger = logging.getLogger('cwms_rdf')
 
 def process_rdf_file(text, rdf_filename):
     """Process CWMS's RDF output for the given statement and returns a
