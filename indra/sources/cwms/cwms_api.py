@@ -1,6 +1,6 @@
 import rdflib
 import logging
-from indra.sources.cwms_rdf.processor import CWMSProcessor
+from indra.sources.cwms.rdf_processor import CWMSRDFProcessor
 
 logger = logging.getLogger('cwms_rdf')
 
@@ -17,10 +17,10 @@ def process_rdf_file(text, rdf_filename):
 
     Returns
     -------
-    cp : indra.sources.cwms.CWMSProcessor
+    cp : indra.sources.cwms.CWMSRDFProcessor
         A CWMSProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
-    cp = CWMSProcessor(text, rdf_filename)
+    cp = CWMSRDFProcessor(text, rdf_filename)
     return cp
 
