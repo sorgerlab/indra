@@ -40,36 +40,50 @@ class EidosJsonLdProcessor(object):
             self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
         entity_dict = {id:entity for id, entity in zip(entity_ids, entities)}
 
-        for event in events:
-            # For now, just take the first source and first destination. Later,
-            # might deal with hypergraph representation.
+        # The first state corresponds to increase/decrease
+        def get_polarity(x):
+            # x is either subj or obj
+            if 'states' in x.keys():
+                if x['states'][0]['type'] == 'DEC':
+                    return -1
+                elif x['states'][0]['type'] == 'INC':
+                    return 1
+                else:
+                    return None
+            else:
+                return None
 
+        def get_adjectives(x):
+            # x is either subj or obj
+            if 'states' in x.keys():
+                if 'modifiers' in x['states'][0].keys():
+                    return [mod['text'] for mod in
+                            x['states'][0]['modifiers']]
+            else:
+                return []
+
+        def _get_eidos_groundings(entity):
+            """Return Eidos groundings are a list of tuples with
+            scores."""
+            return [(g['ontologyConcept'], g['value'])
+                    for g in entity.get('grounding', [])]
+
+        def _make_agent(entity):
+            """Return an Agent from an Eidos entity."""
+            # For now we just use the text for the agent as the name
+            name = entity['text']
+            # Save raw text and Eidos scored groundings as db_refs
+            db_refs = {'TEXT': entity['text'],
+                    'EIDOS': _get_eidos_groundings(entity)}
+            agent = Agent(name, db_refs=db_refs)
+            return agent
+
+        for event in events:
             if 'Causal' in event['labels']:
-                # Get the canonical names
+                # For now, just take the first source and first destination.
+                # Later, might deal with hypergraph representation.
                 subj = entity_dict[event['sources'][0]['@id']]
                 obj = entity_dict[event['destinations'][0]['@id']]
-
-                # The first state corresponds to increase/decrease
-                def get_polarity(x):
-                    # x is either subj or obj
-                    if 'states' in x.keys():
-                        if x['states'][0]['type'] == 'DEC':
-                            return -1
-                        elif x['states'][0]['type'] == 'INC':
-                            return 1
-                        else:
-                            return None
-                    else:
-                        return None
-
-                def get_adjectives(x):
-                    # x is either subj or obj
-                    if 'states' in x.keys():
-                        if 'modifiers' in x['states'][0].keys():
-                            return [mod['text'] for mod in
-                                    x['states'][0]['modifiers']]
-                    else:
-                        return []
 
                 subj_delta = {'adjectives': get_adjectives(subj),
                             'polarity': get_polarity(subj)}
@@ -77,22 +91,6 @@ class EidosJsonLdProcessor(object):
                             'polarity': get_polarity(obj)}
 
                 evidence = self._get_evidence(event)
-
-                def _get_eidos_groundings(entity):
-                    """Return Eidos groundings are a list of tuples with
-                    scores."""
-                    return [(g['ontologyConcept'], g['value'])
-                            for g in entity.get('grounding', [])]
-
-                def _make_agent(entity):
-                    """Return an Agent from an Eidos entity."""
-                    # For now we just use the text for the agent as the name
-                    name = entity['text']
-                    # Save raw text and Eidos scored groundings as db_refs
-                    db_refs = {'TEXT': entity['text'],
-                            'EIDOS': _get_eidos_groundings(entity)}
-                    agent = Agent(name, db_refs=db_refs)
-                    return agent
 
                 st = Influence(_make_agent(subj), _make_agent(obj),
                             subj_delta, obj_delta, evidence=evidence)
