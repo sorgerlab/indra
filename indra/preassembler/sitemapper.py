@@ -17,6 +17,7 @@ except:
 
 logger = logging.getLogger('sitemapper')
 
+
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
 
@@ -109,6 +110,69 @@ class SiteMapper(object):
         self._cache = {}
         self._sitecount = {}
 
+    def map_stmt_sites(self, stmt, do_methionine_offset=True,
+                       do_orthology_mapping=True, do_isoform_mapping=True):
+        stmt_copy = deepcopy(stmt)
+        # For all statements, replace agents with invalid modifications
+        invalid_sites = []
+        new_agent_list = []
+        for agent in stmt.agent_list():
+            if agent is not None:
+                agent_invalid_sites, new_agent = self._map_agent_sites(
+                    agent,
+                    do_methionine_offset=do_methionine_offset,
+                    do_orthology_mapping=do_orthology_mapping,
+                    do_isoform_mapping=do_isoform_mapping
+                    )
+                invalid_sites += agent_invalid_sites
+                new_agent_list.append(new_agent)
+            else:
+                new_agent_list.append(agent)
+        if invalid_sites:
+            stmt_copy.set_agent_list(new_agent_list)
+
+        # --- Special handling for these statements ---
+        # For modifications, fix residue and position
+        if (isinstance(stmt, Modification) or
+            isinstance(stmt, SelfModification)) and \
+           stmt.residue is not None and stmt.position is not None:
+            # Make sure we didn't end up with lists by accident
+            assert isinstance(stmt.residue, basestring) and \
+                   isinstance(stmt.position, basestring)
+            # Get the right agent depending on whether this is a
+            # Modification or SelfModification statement
+            agent_to_check = (stmt_copy.sub
+                              if isinstance(stmt, Modification)
+                              else stmt_copy.enz)
+            # Check the modification on the appropriate agent
+            old_mod_list = [ModCondition('modification', stmt.residue,
+                                         stmt.position)]
+            # Figure out if this site is invalid
+            stmt_invalid_sites = self._check_agent_mod(
+                    agent_to_check,
+                    old_mod_list,
+                    do_methionine_offset=do_methionine_offset,
+                    do_orthology_mapping=do_orthology_mapping,
+                    do_isoform_mapping=do_isoform_mapping
+                    )
+            # Add to our list of invalid sites
+            invalid_sites += stmt_invalid_sites
+            # Get the updated list of ModCondition objects
+            new_mod_list = _update_mod_list(agent_to_check.name, old_mod_list,
+                                            stmt_invalid_sites)
+            # Update the statement with the correct site
+            stmt_copy.residue = new_mod_list[0].residue
+            stmt_copy.position = new_mod_list[0].position
+
+        # If the invalid_sites list isn't empty, that means that there were
+        # incorrect residues for this statement; add the statement to
+        # the mapped_statements list
+        mapped_stmt = None
+        if invalid_sites:
+            mapped_stmt = MappedStatement(stmt, invalid_sites, stmt_copy)
+
+        return mapped_stmt
+
     def map_sites(self, stmts, do_methionine_offset=True,
                   do_orthology_mapping=True, do_isoform_mapping=True):
         """Check a set of statements for invalid modification sites.
@@ -161,62 +225,14 @@ class SiteMapper(object):
         mapped_statements = []
 
         for stmt in stmts:
-            stmt_copy = deepcopy(stmt)
-            # For all statements, replace agents with invalid modifications
-            invalid_sites = []
-            new_agent_list = []
-            for agent in stmt.agent_list():
-                if agent is not None:
-                    (agent_invalid_sites, new_agent) = \
-                        self._map_agent_sites(agent,
-                                    do_methionine_offset=do_methionine_offset,
-                                    do_orthology_mapping=do_orthology_mapping,
-                                    do_isoform_mapping=do_isoform_mapping)
-                    invalid_sites += agent_invalid_sites
-                    new_agent_list.append(new_agent)
-                else:
-                    new_agent_list.append(agent)
-            if invalid_sites:
-                stmt_copy.set_agent_list(new_agent_list)
-
-            # --- Special handling for these statements ---
-            # For modifications, fix residue and position
-            if (isinstance(stmt, Modification) or \
-                isinstance(stmt, SelfModification)) and \
-                 stmt.residue is not None and stmt.position is not None:
-                # Make sure we didn't end up with lists by accident
-                assert isinstance(stmt.residue, basestring) and \
-                       isinstance(stmt.position, basestring)
-                # Get the right agent depending on whether this is a
-                # Modification or SelfModification statement
-                agent_to_check = (stmt_copy.sub
-                                  if isinstance(stmt, Modification)
-                                  else stmt_copy.enz)
-                # Check the modification on the appropriate agent
-                old_mod_list = [ModCondition('modification', stmt.residue,
-                                             stmt.position)]
-                # Figure out if this site is invalid
-                stmt_invalid_sites = \
-                        self._check_agent_mod(agent_to_check, old_mod_list,
-                                     do_methionine_offset=do_methionine_offset,
-                                     do_orthology_mapping=do_orthology_mapping,
-                                     do_isoform_mapping=do_isoform_mapping)
-                # Add to our list of invalid sites
-                invalid_sites += stmt_invalid_sites
-                # Get the updated list of ModCondition objects
-                new_mod_list = \
-                        _update_mod_list(agent_to_check.name, old_mod_list,
-                                        stmt_invalid_sites)
-                # Update the statement with the correct site
-                stmt_copy.residue = new_mod_list[0].residue
-                stmt_copy.position = new_mod_list[0].position
+            mapped_stmt = self.map_stmt_sites(stmt, do_methionine_offset,
+                                              do_orthology_mapping,
+                                              do_isoform_mapping)
 
             # If the invalid_sites list isn't empty, that means that there were
             # incorrect residues for this statement; add the statement to
             # the mapped_statements list
-            if invalid_sites:
-                mapped_stmt = \
-                            MappedStatement(stmt, invalid_sites, stmt_copy)
+            if mapped_stmt is not None:
                 mapped_statements.append(mapped_stmt)
             else:
                 valid_statements.append(stmt)
