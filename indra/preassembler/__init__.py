@@ -76,6 +76,21 @@ class Preassembler(object):
         return self.unique_stmts
 
     @staticmethod
+    def get_stmt_matching_groups(stmts):
+        """Use the matches_key method to get sets of matching statements."""
+
+        def match_func(x): return x.matches_key()
+
+        # Remove exact duplicates using a set() call, then make copies:
+        st = list(set(stmts))
+        # Group statements according to whether they are matches (differing
+        # only in their evidence).
+        # Sort the statements in place by matches_key()
+        st.sort(key=match_func)
+
+        return itertools.groupby(st, key=match_func)
+
+    @staticmethod
     def combine_duplicate_stmts(stmts):
         """Combine evidence from duplicate Statements.
 
@@ -115,18 +130,8 @@ class Preassembler(object):
         >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
         ['evidence 1', 'evidence 2']
         """
-
-        def match_func(x): return x.matches_key()
-
         unique_stmts = []
-        # Remove exact duplicates using a set() call, then make copies:
-        st = list(set(stmts))
-        # Group statements according to whether they are matches (differing
-        # only in their evidence).
-        # Sort the statements in place by matches_key()
-        st.sort(key=match_func)
-
-        for _, duplicates in itertools.groupby(st, key=match_func):
+        for _, duplicates in Preassembler.get_stmt_matching_groups(stmts):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
