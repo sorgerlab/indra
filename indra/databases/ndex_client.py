@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import io
+import os
 import json
 import time
 import requests
@@ -11,6 +12,20 @@ from ndex2.niceCXNetwork import NiceCXNetwork
 logger = logging.getLogger('ndex_client')
 
 ndex_base_url = 'http://52.37.175.128'
+
+
+def get_default_ndex_cred(ndex_cred):
+    """Gets the NDEx credentials from the dict, or tries the environment if None"""
+    username = ndex_cred.get('user')
+    password = ndex_cred.get('password')
+
+    if username is not None and password is not None:
+        return username, password
+
+    username = os.environ.get('NDEX_USERNAME')
+    password = os.environ.get('NDEX_PASSWORD')
+
+    return username, password
 
 def send_request(ndex_service_url, params, is_json=True, use_get=False):
     """Send a request to the NDEx server.
@@ -93,9 +108,10 @@ def create_network(cx_str, ndex_cred):
         The UUID of the NDEx network that was created by uploading
         the assembled CX model.
     """
+    username, password = get_default_ndex_cred(ndex_cred)
     nd = ndex2.client.Ndex2('http://public.ndexbio.org',
-                          username=ndex_cred.get('user'),
-                          password=ndex_cred.get('password'))
+                            username=username,
+                            password=password)
     cx_stream = io.BytesIO(cx_str.encode('utf-8'))
     try:
         logger.info('Uploading network to NDEx.')
@@ -126,8 +142,7 @@ def update_network(cx_str, network_id, ndex_cred):
         'password': NDEx password
     """
     server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('user')
-    password = ndex_cred.get('password')
+    username, password = get_default_ndex_cred(ndex_cred)
     nd = ndex2.client.Ndex2(server, username, password)
 
     try:
@@ -175,8 +190,7 @@ def set_style(network_id, ndex_cred):
     template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
     server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('user')
-    password = ndex_cred.get('password')
+    username, password = get_default_ndex_cred(ndex_cred)
 
     source_network = ndex2.create_nice_cx_from_server(username=username,
                                                       password=password,
@@ -191,8 +205,7 @@ def set_style(network_id, ndex_cred):
 
 def set_provenance(provenance, network_id, ndex_cred):
     server = 'http://public.ndexbio.org'
-    username = ndex_cred.get('user')
-    password = ndex_cred.get('password')
+    username, password = get_default_ndex_cred(ndex_cred)
     nd = ndex2.client.Ndex2(server, username, password)
     try:
         logger.info('Setting network provenance...')
