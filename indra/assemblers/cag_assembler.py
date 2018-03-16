@@ -82,10 +82,15 @@ class CAGAssembler(object):
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
-            targetArrowShape, linecolor = ('tee', 'maroon') if \
-                    (has_both_polarity and
-                     s.subj_delta['polarity'] != s.obj_delta['polarity']) \
-                else ('circle', 'green')
+            if has_both_polarity:
+                same_polarity = s.subj_delta['polarity'] == s.obj_delta['polarity']
+                if same_polarity:
+                    targetArrowShape, linecolor = ('circle', 'green')
+                else:
+                    targetArrowShape, linecolor = ('tee', 'maroon')
+            else:
+                targetArrowShape, linecolor = ('triangle', 'maroon')
+
 
             # Add edge to the graph with metadata from statement
             if s.evidence:
