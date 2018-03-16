@@ -200,8 +200,8 @@ class Preassembler(object):
         eh = self.hierarchies['entity']
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(lambda: [])
-        for stmt in unique_stmts:
-            stmts_by_type[type(stmt)].append((stmt.matches_key(), stmt))
+        for idx, stmt in enumerate(unique_stmts):
+            stmts_by_type[type(stmt)].append((idx, stmt))
 
         child_proc_groups = []
         parent_proc_groups = []
@@ -500,16 +500,11 @@ class Preassembler(object):
         # Call combine_duplicates, which lazily initializes self.unique_stmts
         unique_stmts = self.combine_duplicates()
 
-        # Generate mapping from unique_stmts indexes to match_keys
-        idx_match_map = {s.matches_key(): i for i, s in enumerate(unique_stmts)}
-
         # Generate the index map, linking related statements.
-        match_map = self.generate_id_maps(unique_stmts, poolsize, size_cutoff)
+        idx_map = self.generate_id_maps(unique_stmts, poolsize, size_cutoff)
 
         # Now iterate over all indices and set supports/supported by
-        for mkey1, mkey2 in match_map:
-            ix1 = idx_match_map[mkey1]
-            ix2 = idx_match_map[mkey2]
+        for ix1, ix2 in idx_map:
             unique_stmts[ix1].supported_by.append(unique_stmts[ix2])
             unique_stmts[ix2].supports.append(unique_stmts[ix1])
         # Get the top level statements
