@@ -1094,6 +1094,11 @@ class Statement(object):
         json_node(graph, jd, ['%s' % self.uuid])
         return graph
 
+    def get_new_copy(self):
+        kwargs = self.__dict__.copy()
+        kwargs.pop('evidence', None)
+        return self.__class__(**kwargs)
+
 
 @python_2_unicode_compatible
 class Modification(Statement):
