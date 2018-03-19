@@ -12,7 +12,7 @@ def make_unique_statement_set(preassembler, stmts):
         # Statements to it
         for stmt_ix, stmt in enumerate(duplicates):
             if stmt_ix == 0:
-                first_stmt = stmt.get_new_copy()
+                first_stmt = stmt.make_generic_copy()
             first_stmt.evidence.append(stmt.uuid)
         # This should never be None or anything else
         assert isinstance(first_stmt, type(stmt))
@@ -49,10 +49,12 @@ def make_graph(unique_stmts, match_key_maps):
     """Create a networkx graph of the statement and their links."""
     import networkx as nx
     g = nx.Graph()
+    link_matches = {m for l in match_key_maps for m in l}
     unique_stmts_dict = {}
     for stmt in unique_stmts:
-        g.add_node(stmt)
-        unique_stmts_dict[stmt.matches_key()] = stmt
+        if stmt.matches_key() in link_matches:
+            g.add_node(stmt)
+            unique_stmts_dict[stmt.matches_key()] = stmt
 
     for k1, k2 in match_key_maps:
         g.add_edge(unique_stmts_dict[k1], unique_stmts_dict[k2])

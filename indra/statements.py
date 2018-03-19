@@ -1095,7 +1095,17 @@ class Statement(object):
         json_node(graph, jd, ['%s' % self.uuid])
         return graph
 
-    def get_new_copy(self, deeply=False):
+    def make_generic_copy(self, deeply=False):
+        """Make a new matching Statement with no provenance.
+
+        All agents and other attributes besides evidence, belief, supports, and
+        supported_by will be copied over, and a new uuid will be assigned.
+        Thus, the new Statement will satisfy `new_stmt.matches(old_stmt)`.
+
+        If `deeply` is set to True, all the attributes will be deep-copied,
+        which is comparatively slow. Otherwise, attributes of this statement
+        may be altered by changes to the new matching statement.
+        """
         if deeply:
             kwargs = deepcopy(self.__dict__)
         else:
