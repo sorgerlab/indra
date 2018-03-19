@@ -357,7 +357,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         more meaningful progress messages.
     preassembled : bool
         If true, statements will be selected from the table of pre-assembled
-        statements. Otherwise, they will be selected from teh raw statements.
+        statements. Otherwise, they will be selected from the raw statements.
         Default is True.
 
     Returns
@@ -417,7 +417,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         besides the primary database, for example a local database instance.
     preassembled : bool
         If true, statements will be selected from the table of pre-assembled
-        statements. Otherwise, they will be selected from teh raw statements.
+        statements. Otherwise, they will be selected from the raw statements.
         Default is True.
 
     Returns
