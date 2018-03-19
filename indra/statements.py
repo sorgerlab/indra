@@ -133,6 +133,7 @@ import sys
 import uuid
 import rdflib
 import logging
+from copy import deepcopy
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
@@ -1094,9 +1095,14 @@ class Statement(object):
         json_node(graph, jd, ['%s' % self.uuid])
         return graph
 
-    def get_new_copy(self):
-        kwargs = self.__dict__.copy()
-        kwargs.pop('evidence', None)
+    def get_new_copy(self, deeply=False):
+        if deeply:
+            kwargs = deepcopy(self.__dict__)
+        else:
+            kwargs = self.__dict__.copy()
+        for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
+                     'is_activation']:
+            kwargs.pop(attr, None)
         return self.__class__(**kwargs)
 
 
