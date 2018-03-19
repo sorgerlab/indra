@@ -6,12 +6,33 @@ from indra.assemblers import CAGAssembler
 eg1 = {'EIDOS': [('a/b/c', 0.123)]}
 eg2 = {'EIDOS': [('a/b/c', 0.234)]}
 
-statements = [Influence(
-    Agent('inorganic fertilizer', db_refs=eg1),
-    Agent('farm sizes', db_refs=eg2),
-    {'adjectives': 'serious', 'polarity': 1},
-    {'adjectives': 'significant', 'polarity': 1},
-)]
+# An example provenance from Eidos
+prov = [{
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : {
+        "@type" : "Interval",
+        "start" : 29,
+        "end" : 31
+      }
+    }]
+
+st1 = Influence(Agent('inorganic fertilizer', db_refs=eg1),
+                Agent('farm sizes', db_refs=eg2),
+                {'adjectives': 'serious', 'polarity': 1},
+                {'adjectives': 'significant', 'polarity': 1},
+                evidence=[Evidence(source_api='eidos',
+                                   text=('A serious increase in the use of '
+                                         'incorganic fertilizers '
+                                         'resulted in a significant increase '
+                                         'in farm sizes.'),
+                                   annotations={'provenance': prov})])
+statements = [st1]
 
 
 def test_assemble_influence():
