@@ -238,9 +238,6 @@ class Preassembler(object):
                     if stmt_tuple not in stmt_by_group[key]:
                         stmt_by_group[key].append(stmt_tuple)
                 elif stmt_type == Conversion:
-                    # TODO: Fix comment
-                    # There shouldn't be any statements of the type
-                    # e.g., Complex([Foo, None, Bar])
                     assert len(entities) > 0
                     key = (entities[0],
                            tuple(sorted(entities[1:len(stmt.obj_from)+1])),
