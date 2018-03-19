@@ -5,7 +5,7 @@ from indra.preassembler.hierarchy_manager import hierarchies
 
 
 def make_unique_statement_set(preassembler, stmts):
-    stmt_groups = preassembler.get_stmt_matching_groups(stmts)
+    stmt_groups = preassembler._get_stmt_matching_groups(stmts)
     unique_stmts = []
     for _, duplicates in stmt_groups:
         # Get the first statement and add the evidence of all subsequent
@@ -21,8 +21,8 @@ def make_unique_statement_set(preassembler, stmts):
 
 
 def get_match_key_maps(preassembler, unique_stmts, **generate_id_map_kwargs):
-    id_maps = preassembler.generate_id_maps(unique_stmts,
-                                            **generate_id_map_kwargs)
+    id_maps = preassembler._generate_id_maps(unique_stmts,
+                                             **generate_id_map_kwargs)
     return {tuple([unique_stmts[idx].matches_key() for idx in idx_pair])
             for idx_pair in id_maps}
 

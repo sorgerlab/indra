@@ -76,7 +76,7 @@ class Preassembler(object):
         return self.unique_stmts
 
     @staticmethod
-    def get_stmt_matching_groups(stmts):
+    def _get_stmt_matching_groups(stmts):
         """Use the matches_key method to get sets of matching statements."""
 
         def match_func(x): return x.matches_key()
@@ -131,7 +131,7 @@ class Preassembler(object):
         ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
-        for _, duplicates in Preassembler.get_stmt_matching_groups(stmts):
+        for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
@@ -181,7 +181,7 @@ class Preassembler(object):
                     entities.append(str(component))
         return entities
 
-    def generate_id_maps(self, unique_stmts, poolsize=None, size_cutoff=100):
+    def _generate_id_maps(self, unique_stmts, poolsize=None, size_cutoff=100):
         """Make a map between statements using their refinement relationships."""
         # Check arguments relating to multiprocessing
         if poolsize is None:
@@ -498,7 +498,7 @@ class Preassembler(object):
         unique_stmts = self.combine_duplicates()
 
         # Generate the index map, linking related statements.
-        idx_map = self.generate_id_maps(unique_stmts, poolsize, size_cutoff)
+        idx_map = self._generate_id_maps(unique_stmts, poolsize, size_cutoff)
 
         # Now iterate over all indices and set supports/supported by
         for ix1, ix2 in idx_map:
