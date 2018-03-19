@@ -43,3 +43,18 @@ def preassemble_db_stmts(db, num_proc, *clauses):
     unique_stmts, match_key_maps = process_statements(stmts, poolsize=num_proc)
     insert_pa_stmts(db, unique_stmts)
     return unique_stmts, match_key_maps
+
+
+def make_graph(unique_stmts, match_key_maps):
+    """Create a networkx graph of the statement and their links."""
+    import networkx as nx
+    g = nx.Graph()
+    unique_stmts_dict = {}
+    for stmt in unique_stmts:
+        g.add_node(stmt)
+        unique_stmts_dict[stmt.matches_key()] = stmt
+
+    for k1, k2 in match_key_maps:
+        g.add_edge(unique_stmts_dict[k1], unique_stmts_dict[k2])
+
+    return g
