@@ -20,24 +20,26 @@ def make_unique_statement_set(preassembler, stmts):
     return unique_stmts
 
 
-def get_match_key_maps(preassembler, unique_stmts, num_procs=1):
-    id_maps = preassembler.generate_id_maps(unique_stmts, num_procs)
-    return [[unique_stmts[idx].matches_key() for idx in idx_pair]
-            for idx_pair in id_maps]
+def get_match_key_maps(preassembler, unique_stmts, **generate_id_map_kwargs):
+    id_maps = preassembler.generate_id_maps(unique_stmts,
+                                            **generate_id_map_kwargs)
+    return {tuple([unique_stmts[idx].matches_key() for idx in idx_pair])
+            for idx_pair in id_maps}
 
 
-def process_statements(stmts, num_procs=1):
+def process_statements(stmts, **generate_id_map_kwargs):
     stmts = ac.map_grounding(stmts)
     stmts = ac.map_sequence(stmts)
     pa = Preassembler(hierarchies)
     unique_stmts = make_unique_statement_set(pa, stmts)
-    match_key_maps = get_match_key_maps(pa, unique_stmts, num_procs)
+    match_key_maps = get_match_key_maps(pa, unique_stmts,
+                                        **generate_id_map_kwargs)
     return unique_stmts, match_key_maps
 
 
-def preassemble_db_stmts(db, num_procs, *clauses):
+def preassemble_db_stmts(db, num_proc, *clauses):
     """Run pre-assembly on a set of statements in the database."""
     stmts = get_statements(clauses, db=db, do_stmt_count=False)
-    pa_stmts = process_statements(stmts, num_procs)
-    insert_pa_stmts(db, pa_stmts)
-    return pa_stmts
+    unique_stmts, match_key_maps = process_statements(stmts, poolsize=num_proc)
+    insert_pa_stmts(db, unique_stmts)
+    return unique_stmts, match_key_maps
