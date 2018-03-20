@@ -1,5 +1,6 @@
 include ez_setup.py
 include LICENSE
+include README.md
 graft indra/resources
 graft indra/benchmarks
 graft data

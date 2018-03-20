@@ -14,7 +14,7 @@ def main():
         install_list.append('functools32')
 
     setup(name='indra',
-          version='1.5.0',
+          version='1.6.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models and '
@@ -25,14 +25,16 @@ def main():
           url='http://github.com/sorgerlab/indra',
           packages=['indra', 'indra.assemblers', 'indra.belief',
                     'indra.benchmarks', 'indra.databases', 'indra.db',
-                    'indra.explanation',
+                    'indra.explanation', 'indra.explanation.paths_graph',
                     'indra.literature', 'indra.mechlinker',
-                    'indra.preassembler', 'indra.sources', 'indra.sources.bel',
+                    'indra.preassembler', 'indra.sources',
+                    'indra.sources.bbn', 'indra.sources.bel',
                     'indra.sources.biopax', 'indra.sources.eidos',
                     'indra.sources.geneways', 'indra.sources.index_cards',
                     'indra.sources.ndex_cx', 'indra.sources.reach',
                     'indra.sources.sparser', 'indra.sources.tees',
-                    'indra.sources.trips', 'indra.resources', 'indra.tests',
+                    'indra.sources.trips', 'indra.resources',
+                    'indra.resources.famplex', 'indra.tests',
                     'indra.tools', 'indra.tools.reading',
                     'indra.tools.reading.db_reading',
                     'indra.tools.reading.pmid_reading',
