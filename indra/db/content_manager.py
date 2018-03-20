@@ -18,6 +18,7 @@ from functools import wraps
 from ftplib import FTP
 from io import BytesIO
 from indra.util import _require_python3
+from indra.literature.elsevier_client import download_article
 
 
 logger = logging.getLogger('content_manager')
@@ -1321,6 +1322,37 @@ class Manuscripts(PmcManager):
         logger.info("Beginning to upload archives.")
         self.upload_archives(db, update_archives, n_procs)
         return True
+
+
+class Elsevier(ContentManager):
+    """Content manager for maintaining content from Elsevier."""
+    my_source = 'elsevier'
+    tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
+               'content',)
+
+    @ContentManager._record_for_review
+    def upload(self, db, n_procs=1):
+        """Load all available elsevier content for refs with no pmc content."""
+        tr_w_pmc_q = db.filter_query(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.source.in_([PmcOA.my_source, Manuscripts.my_source,
+                                       self.my_source])
+            )
+        tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
+        article_tuples = []
+        for tr in tr_wo_pmc_q.yield_per(1000):
+            if tr.doi is not None:
+                content_str = download_article(tr.doi)
+                content_zip = zip_string(content_str)
+                article_tuples.append((tr.id, self.my_source, formats.TEXT,
+                                       texttypes.FULLTEXT, content_zip))
+        self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
+        return
+
+    @ContentManager._record_for_review
+    def update(self, db, n_procs=1):
+        """Load all available new elsevier content from new pmids."""
 
 
 if __name__ == '__main__':
