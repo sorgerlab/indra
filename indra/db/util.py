@@ -582,15 +582,15 @@ def get_readings_stats(fname=None, db=None):
                        .distinct().all())
     sources = db.session.query(db.TextContent.source).distinct().all()
     stats = ''
-    for rv in reader_versions:
-        for src in sources:
+    for rv, in reader_versions:
+        for src, in sources:
             cnt = db.filter_query(
                 db.Readings,
                 db.TextContent.id == db.Readings.text_content_id,
                 db.TextContent.source == src,
                 db.Readings.reader_version == rv
                 ).distinct().count()
-            stats += '    %s reading %s: %d\n' % (rv, src, cnt)
+            stats += '    Readings by %s from %s: %d\n' % (rv, src, cnt)
     __report_stat("Readings by reader version and content source:\n%s" % stats,
                   fname)
     return
@@ -609,8 +609,8 @@ def get_statements_stats(fname=None, db=None):
     readers = db.session.query(db.Readings.reader).distinct().all()
     sources = db.session.query(db.TextContent.source).distinct().all()
     stats = ''
-    for reader in readers:
-        for src in sources:
+    for reader, in readers:
+        for src, in sources:
             cnt = db.filter_query(
                 db.Statements,
                 stmt_rdng_link,
@@ -620,7 +620,7 @@ def get_statements_stats(fname=None, db=None):
                 ).distinct().count()
             stats += ('    Statements from %s reading %s: %d\n'
                       % (reader, src, cnt))
-    __report_stat("Statements by reader and content source:\n    %s" % stats,
+    __report_stat("Statements by reader and content source:\n%s" % stats,
                   fname)
     statements_by_db_source = (
         db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
