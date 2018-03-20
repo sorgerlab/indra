@@ -648,25 +648,46 @@ def get_statements_stats(fname=None, db=None):
     return
 
 
+def get_pa_statement_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    __report_stat('\nStatement Statistics:', fname)
+    __report_stat('---------------------', fname)
+    stmt_q = db.filter_query(db.PAStatements)
+    __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
+    statements_produced_by_indra_version = (
+        db.session.query(db.PAStatements.indra_version,
+                         func.count(db.PAStatements.id))
+        .group_by(db.PAStatements.indra_version)
+        .all()
+        )
+    __report_stat(("Number of statements by indra version:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n) for s, n
+                                    in statements_produced_by_indra_version])),
+                  fname
+                  )
+    return
+
+
 def get_db_statistics(fname=None, db=None, tables=None):
     """Get statistics on the contents of the database"""
     if db is None:
         db = get_primary_db()
 
-    # Text Ref statistics
-    if tables is None or (tables is not None and 'text_ref' in tables):
-        get_text_ref_stats(fname, db)
+    task_dict = {
+        'text_ref': get_text_ref_stats,
+        'text_content': get_text_content_stats,
+        'readings': get_readings_stats,
+        'statements': get_statements_stats,
+        'pa_statements': get_pa_statement_stats
+        }
 
-    # Text Content statistics
-    if tables is None or (tables is not None and 'text_content' in tables):
-        get_text_content_stats(fname, db)
-
-    # Readings statistics
-    if tables is None or (tables is not None and 'readings' in tables):
-        get_readings_stats(fname, db)
-
-    # Statement Statistics
-    if tables is None or (tables is not None and 'statements' in tables):
-        get_statements_stats(fname, db)
+    # Get the statistics
+    if tables is None:
+        for stat_meth in task_dict.values():
+            stat_meth(fname, db)
+    else:
+        for table_key in set(tables):
+            task_dict[table_key](fname, db)
 
     return
