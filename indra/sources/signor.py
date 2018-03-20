@@ -76,6 +76,7 @@ _type_db_map = {
     ('chemical', 'PUBCHEM'): 'PUBCHEM',
     ('fusion protein', 'SIGNOR'): 'SIGNOR',
     ('smallmolecule', 'ChEBI'): 'CHEBI',
+    ('mirna', 'miRBase'): 'MIRBASE',
 }
 
 
@@ -207,7 +208,7 @@ class SignorProcessor(object):
                 db_refs['HGNC'] = hgnc_id
         # Other possible groundings are PUBCHEM and SIGNOR
         elif gnd_type is not None:
-            if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI'):
+            if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
                 raise ValueError('Unexpected database %s' % database)
             if database == 'ChEBI':
                 database = 'CHEBI'
