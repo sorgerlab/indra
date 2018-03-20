@@ -181,8 +181,116 @@ class Preassembler(object):
                     entities.append(str(component))
         return entities
 
+    def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):
+        """Group Statements of `stmt_type` by their heirarchical relations."""
+        # Dict of stmt group key tuples, indexed by their first Agent
+        stmt_by_first = collections.defaultdict(lambda: [])
+        # Dict of stmt group key tuples, indexed by their second Agent
+        stmt_by_second = collections.defaultdict(lambda: [])
+        # Dict of statements with None first, with second Agent as keys
+        none_first = collections.defaultdict(lambda: [])
+        # Dict of statements with None second, with first Agent as keys
+        none_second = collections.defaultdict(lambda: [])
+        # The dict of all statement groups, with tuples of components
+        # or entity_matches_keys as keys
+        stmt_by_group = collections.defaultdict(lambda: [])
+        # Here we group Statements according to the hierarchy graph
+        # components that their agents are part of
+        for stmt_tuple in stmts_this_type:
+            _, stmt = stmt_tuple
+            entities = self._get_entities(stmt, stmt_type, eh)
+            # At this point we have an entity list
+            # If we're dealing with Complexes, sort the entities and use
+            # as dict key
+            if stmt_type == Complex:
+                # There shouldn't be any statements of the type
+                # e.g., Complex([Foo, None, Bar])
+                assert None not in entities
+                assert len(entities) > 0
+                entities.sort()
+                key = tuple(entities)
+                if stmt_tuple not in stmt_by_group[key]:
+                    stmt_by_group[key].append(stmt_tuple)
+            elif stmt_type == Conversion:
+                assert len(entities) > 0
+                key = (entities[0],
+                       tuple(sorted(entities[1:len(stmt.obj_from)+1])),
+                       tuple(sorted(entities[-len(stmt.obj_to):])))
+                if stmt_tuple not in stmt_by_group[key]:
+                    stmt_by_group[key].append(stmt_tuple)
+            # Now look at all other statement types
+            # All other statements will have one or two entities
+            elif len(entities) == 1:
+                # If only one entity, we only need the one key
+                # It should not be None!
+                assert None not in entities
+                key = tuple(entities)
+                if stmt_tuple not in stmt_by_group[key]:
+                    stmt_by_group[key].append(stmt_tuple)
+            else:
+                # Make sure we only have two entities, and they are not both
+                # None
+                key = tuple(entities)
+                assert len(key) == 2
+                assert key != (None, None)
+                # First agent is None; add in the statements, indexed by
+                # 2nd
+                if key[0] is None and stmt_tuple not in none_first[key[1]]:
+                    none_first[key[1]].append(stmt_tuple)
+                # Second agent is None; add in the statements, indexed by
+                # 1st
+                elif key[1] is None and stmt_tuple not in none_second[key[0]]:
+                    none_second[key[0]].append(stmt_tuple)
+                # Neither entity is None!
+                elif None not in key:
+                    if stmt_tuple not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt_tuple)
+                    if key not in stmt_by_first[key[0]]:
+                        stmt_by_first[key[0]].append(key)
+                    if key not in stmt_by_second[key[1]]:
+                        stmt_by_second[key[1]].append(key)
+
+        # When we've gotten here, we should have stmt_by_group entries, and
+        # we may or may not have stmt_by_first/second dicts filled out
+        # (depending on the statement type).
+        if none_first:
+            # Get the keys associated with stmts having a None first
+            # argument
+            for second_arg, stmts in none_first.items():
+                # Look for any statements with this second arg
+                second_arg_keys = stmt_by_second[second_arg]
+                # If there are no more specific statements matching this
+                # set of statements with a None first arg, then the
+                # statements with the None first arg deserve to be in
+                # their own group.
+                if not second_arg_keys:
+                    stmt_by_group[(None, second_arg)] = stmts
+                # On the other hand, if there are statements with a matching
+                # second arg component, we need to add the None first
+                # statements to all groups with the matching second arg
+                for second_arg_key in second_arg_keys:
+                    stmt_by_group[second_arg_key] += stmts
+        # Now do the corresponding steps for the statements with None as the
+        # second argument:
+        if none_second:
+            for first_arg, stmts in none_second.items():
+                # Look for any statements with this first arg
+                first_arg_keys = stmt_by_first[first_arg]
+                # If there are no more specific statements matching this
+                # set of statements with a None second arg, then the
+                # statements with the None second arg deserve to be in
+                # their own group.
+                if not first_arg_keys:
+                    stmt_by_group[(first_arg, None)] = stmts
+                # On the other hand, if there are statements with a matching
+                # first arg component, we need to add the None second
+                # statements to all groups with the matching first arg
+                for first_arg_key in first_arg_keys:
+                    stmt_by_group[first_arg_key] += stmts
+        return stmt_by_group
+
     def _generate_id_maps(self, unique_stmts, poolsize=None, size_cutoff=100):
-        """Make a map between statements using their refinement relationships."""
+        """Connect statements using their refinement relationships."""
         # Check arguments relating to multiprocessing
         if poolsize is None:
             logger.info('combine_related: poolsize not set, '
@@ -209,111 +317,8 @@ class Preassembler(object):
         for stmt_type, stmts_this_type in stmts_by_type.items():
             logger.info('Preassembling %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
-            # Dict of stmt group key tuples, indexed by their first Agent
-            stmt_by_first = collections.defaultdict(lambda: [])
-            # Dict of stmt group key tuples, indexed by their second Agent
-            stmt_by_second = collections.defaultdict(lambda: [])
-            # Dict of statements with None first, with second Agent as keys
-            none_first = collections.defaultdict(lambda: [])
-            # Dict of statements with None second, with first Agent as keys
-            none_second = collections.defaultdict(lambda: [])
-            # The dict of all statement groups, with tuples of components
-            # or entity_matches_keys as keys
-            stmt_by_group = collections.defaultdict(lambda: [])
-            # Here we group Statements according to the hierarchy graph
-            # components that their agents are part of
-            for stmt_tuple in stmts_this_type:
-                _, stmt = stmt_tuple
-                entities = self._get_entities(stmt, stmt_type, eh)
-                # At this point we have an entity list
-                # If we're dealing with Complexes, sort the entities and use
-                # as dict key
-                if stmt_type == Complex:
-                    # There shouldn't be any statements of the type
-                    # e.g., Complex([Foo, None, Bar])
-                    assert None not in entities
-                    assert len(entities) > 0
-                    entities.sort()
-                    key = tuple(entities)
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                elif stmt_type == Conversion:
-                    assert len(entities) > 0
-                    key = (entities[0],
-                           tuple(sorted(entities[1:len(stmt.obj_from)+1])),
-                           tuple(sorted(entities[-len(stmt.obj_to):])))
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                # Now look at all other statement types
-                # All other statements will have one or two entities
-                elif len(entities) == 1:
-                    # If only one entity, we only need the one key
-                    # It should not be None!
-                    assert None not in entities
-                    key = tuple(entities)
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                else:
-                    # Make sure we only have two entities, and they are not both
-                    # None
-                    key = tuple(entities)
-                    assert len(key) == 2
-                    assert key != (None, None)
-                    # First agent is None; add in the statements, indexed by
-                    # 2nd
-                    if key[0] is None and stmt_tuple not in none_first[key[1]]:
-                        none_first[key[1]].append(stmt_tuple)
-                    # Second agent is None; add in the statements, indexed by
-                    # 1st
-                    elif key[1] is None and \
-                         stmt_tuple not in none_second[key[0]]:
-                        none_second[key[0]].append(stmt_tuple)
-                    # Neither entity is None!
-                    elif None not in key:
-                        if stmt_tuple not in stmt_by_group[key]:
-                            stmt_by_group[key].append(stmt_tuple)
-                        if key not in stmt_by_first[key[0]]:
-                            stmt_by_first[key[0]].append(key)
-                        if key not in stmt_by_second[key[1]]:
-                            stmt_by_second[key[1]].append(key)
-
-            # When we've gotten here, we should have stmt_by_group entries, and
-            # we may or may not have stmt_by_first/second dicts filled out
-            # (depending on the statement type).
-            if none_first:
-                # Get the keys associated with stmts having a None first
-                # argument
-                for second_arg, stmts in none_first.items():
-                    # Look for any statements with this second arg
-                    second_arg_keys = stmt_by_second[second_arg]
-                    # If there are no more specific statements matching this
-                    # set of statements with a None first arg, then the
-                    # statements with the None first arg deserve to be in
-                    # their own group.
-                    if not second_arg_keys:
-                        stmt_by_group[(None, second_arg)] = stmts
-                    # On the other hand, if there are statements with a matching
-                    # second arg component, we need to add the None first
-                    # statements to all groups with the matching second arg
-                    for second_arg_key in second_arg_keys:
-                        stmt_by_group[second_arg_key] += stmts
-            # Now do the corresponding steps for the statements with None as the
-            # second argument:
-            if none_second:
-                for first_arg, stmts in none_second.items():
-                    # Look for any statements with this first arg
-                    first_arg_keys = stmt_by_first[first_arg]
-                    # If there are no more specific statements matching this
-                    # set of statements with a None second arg, then the
-                    # statements with the None second arg deserve to be in
-                    # their own group.
-                    if not first_arg_keys:
-                        stmt_by_group[(first_arg, None)] = stmts
-                    # On the other hand, if there are statements with a matching
-                    # first arg component, we need to add the None second
-                    # statements to all groups with the matching first arg
-                    for first_arg_key in first_arg_keys:
-                        stmt_by_group[first_arg_key] += stmts
+            stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
+                                                    eh)
 
             # Divide statements by group size
             # If we're not using multiprocessing, then all groups are local
