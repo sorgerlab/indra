@@ -9,7 +9,7 @@ def main():
     # for Python 3)
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx==1.11', 'pandas', 'kappy']
+                    'networkx==1.11', 'pandas']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
@@ -60,6 +60,7 @@ def main():
             ],
           extras_require={'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                       'pyyaml', 'click'],
+                          'explanation': ['kappy'],
                           'bbn': ['rdflib-jsonld']},
           entry_points={'console_scripts':
                         ['indra-machine = indra.tools.machine.cli:main']}
