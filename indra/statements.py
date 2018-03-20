@@ -2373,6 +2373,34 @@ class Influence(IncreaseAmount):
             pol = p1 * p2
         return pol
 
+    def to_json(self):
+        generic = super(Influence, self).to_json()
+        json_dict = _o({'type': generic['type']})
+        json_dict['subj'] = generic['subj']
+        json_dict['subj_delta'] = self.subj_delta
+        json_dict['obj'] = generic['obj']
+        json_dict['obj_delta'] = self.obj_delta
+        json_dict.update(generic)
+        if json_dict['subj'].get('sbo'):
+            json_dict['subj'].pop('sbo')
+        if json_dict['obj'].get('sbo'):
+            json_dict['obj'].pop('sbo')
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        subj = json_dict.get('subj')
+        obj = json_dict.get('obj')
+        subj_delta = json_dict.get('subj_delta')
+        obj_delta = json_dict.get('obj_delta')
+        if subj:
+            subj = Agent._from_json(subj)
+        if obj:
+            obj = Agent._from_json(obj)
+        stmt = cls(subj, obj, subj_delta, obj_delta)
+        return stmt
+
+
     def __repr__(self):
         if sys.version_info[0] >= 3:
             return self.__str__()
