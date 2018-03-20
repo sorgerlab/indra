@@ -133,6 +133,7 @@ import sys
 import uuid
 import rdflib
 import logging
+from copy import deepcopy
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
@@ -1093,6 +1094,26 @@ class Statement(object):
         graph = networkx.DiGraph()
         json_node(graph, jd, ['%s' % self.uuid])
         return graph
+
+    def make_generic_copy(self, deeply=False):
+        """Make a new matching Statement with no provenance.
+
+        All agents and other attributes besides evidence, belief, supports, and
+        supported_by will be copied over, and a new uuid will be assigned.
+        Thus, the new Statement will satisfy `new_stmt.matches(old_stmt)`.
+
+        If `deeply` is set to True, all the attributes will be deep-copied,
+        which is comparatively slow. Otherwise, attributes of this statement
+        may be altered by changes to the new matching statement.
+        """
+        if deeply:
+            kwargs = deepcopy(self.__dict__)
+        else:
+            kwargs = self.__dict__.copy()
+        for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
+                     'is_activation']:
+            kwargs.pop(attr, None)
+        return self.__class__(**kwargs)
 
 
 @python_2_unicode_compatible

@@ -15,6 +15,7 @@ from indra.util import read_unicode_csv, write_unicode_csv
 
 logger = logging.getLogger('grounding_mapper')
 
+
 class GroundingMapper(object):
     """Maps grounding of INDRA Agents based on a given grounding map.
 
@@ -30,110 +31,117 @@ class GroundingMapper(object):
         self.gm = gm
         self.agent_map = agent_map if agent_map is not None else {}
 
+    def update_agent_db_refs(self, agent, agent_text, do_rename=True):
+        gene_name = None
+        map_db_refs = deepcopy(self.gm.get(agent_text))
+        up_id = map_db_refs.get('UP')
+        hgnc_sym = map_db_refs.get('HGNC')
+        if up_id and not hgnc_sym:
+            gene_name = uniprot_client.get_gene_name(up_id, False)
+            if gene_name:
+                hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                if hgnc_id:
+                    map_db_refs['HGNC'] = hgnc_id
+        elif hgnc_sym and not up_id:
+            # Override the HGNC symbol entry from the grounding
+            # map with an HGNC ID
+            hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+            if hgnc_id:
+                map_db_refs['HGNC'] = hgnc_id
+                # Now get the Uniprot ID for the gene
+                up_id = hgnc_client.get_uniprot_id(hgnc_id)
+                if up_id:
+                    map_db_refs['UP'] = up_id
+            # If there's no HGNC ID for this symbol, raise an
+            # Exception
+            else:
+                raise ValueError('No HGNC ID corresponding to gene '
+                                 'symbol %s in grounding map.' %
+                                 hgnc_sym)
+        # If we have both, check the gene symbol ID against the
+        # mapping from Uniprot
+        elif up_id and hgnc_sym:
+            # Get HGNC Symbol from Uniprot
+            gene_name = uniprot_client.get_gene_name(up_id)
+            if not gene_name:
+                raise ValueError('No gene name found for Uniprot '
+                                 'ID %s (expected %s)' %
+                                 (up_id, hgnc_sym))
+            # We got gene name, compare it to the HGNC name
+            else:
+                if gene_name != hgnc_sym:
+                    raise ValueError('Gene name %s for Uniprot ID '
+                                     '%s does not match HGNC '
+                                     'symbol %s given in grounding '
+                                     'map.' %
+                                     (gene_name, up_id, hgnc_sym))
+                else:
+                    hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
+                    if not hgnc_id:
+                        raise ValueError('No HGNC ID '
+                                         'corresponding to gene '
+                                         'symbol %s in grounding '
+                                         'map.' % hgnc_sym)
+                    map_db_refs['HGNC'] = hgnc_id
+        # Assign the DB refs from the grounding map to the agent
+        agent.db_refs = map_db_refs
+        # Are we renaming right now?
+        if do_rename:
+            # If there's a FamPlex ID, prefer that for the name
+            if agent.db_refs.get('FPLX'):
+                agent.name = agent.db_refs.get('FPLX')
+            # Get the HGNC symbol or gene name (retrieved above)
+            elif hgnc_sym is not None:
+                agent.name = hgnc_sym
+            elif gene_name is not None:
+                agent.name = gene_name
+        return
+
+    def map_agents_for_stmt(self, stmt, do_rename=True):
+        mapped_stmt = deepcopy(stmt)
+        # Iterate over the agents
+        mapped_agent_list = mapped_stmt.agent_list()
+        for idx, agent in enumerate(mapped_agent_list):
+            if agent is None or agent.db_refs.get('TEXT') is None:
+                continue
+            agent_text = agent.db_refs.get('TEXT')
+            mapped_to_agent_json = self.agent_map.get(agent_text)
+            if mapped_to_agent_json:
+                mapped_to_agent = \
+                    Agent._from_json(mapped_to_agent_json['agent'])
+                mapped_agent_list[idx] = mapped_to_agent
+                mapped_stmt.set_agent_list(mapped_agent_list)
+            # Look this string up in the grounding map
+            # If not in the map, leave agent alone and continue
+            if agent_text in self.gm.keys():
+                map_db_refs = self.gm[agent_text]
+            else:
+                continue
+            # If it's in the map but it maps to None, then filter out
+            # this statement by skipping it
+            if map_db_refs is None:
+                # Increase counter if this statement has not already
+                # been skipped via another agent
+                logger.debug("Skipping %s" % agent_text)
+                return None
+            # If it has a value that's not None, map it and add it
+            else:
+                # Otherwise, update the agent's db_refs field
+                self.update_agent_db_refs(agent, agent_text, do_rename)
+        return mapped_stmt
+
     def map_agents(self, stmts, do_rename=True):
         # Make a copy of the stmts
         mapped_stmts = []
         num_skipped = 0
         # Iterate over the statements
         for stmt in stmts:
-            mapped_stmt = deepcopy(stmt)
-            # Iterate over the agents
-            skip_stmt = False
-            mapped_agent_list = mapped_stmt.agent_list()
-            for idx, agent in enumerate(mapped_agent_list):
-                if agent is None or agent.db_refs.get('TEXT') is None:
-                    continue
-                agent_text = agent.db_refs.get('TEXT')
-                mapped_to_agent_json = self.agent_map.get(agent_text)
-                if mapped_to_agent_json:
-                    mapped_to_agent = \
-                        Agent._from_json(mapped_to_agent_json['agent'])
-                    mapped_agent_list[idx] = mapped_to_agent
-                    mapped_stmt.set_agent_list(mapped_agent_list)
-                # Look this string up in the grounding map
-                # If not in the map, leave agent alone and continue
-                try:
-                    map_db_refs = self.gm[agent_text]
-                except KeyError:
-                    continue
-                # If it's in the map but it maps to None, then filter out
-                # this statement by skipping it
-                if map_db_refs is None:
-                    # Increase counter if this statement has not already
-                    # been skipped via another agent
-                    if not skip_stmt:
-                        num_skipped += 1
-                    logger.debug("Skipping %s" % agent_text)
-                    skip_stmt = True
-                # If it has a value that's not None, map it and add it
-                else:
-                    # Otherwise, update the agent's db_refs field
-                    gene_name = None
-                    map_db_refs = deepcopy(self.gm.get(agent_text))
-                    up_id = map_db_refs.get('UP')
-                    hgnc_sym = map_db_refs.get('HGNC')
-                    if up_id and not hgnc_sym:
-                        gene_name = uniprot_client.get_gene_name(up_id, False)
-                        if gene_name:
-                            hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                            if hgnc_id:
-                                map_db_refs['HGNC'] = hgnc_id
-                    elif hgnc_sym and not up_id:
-                        # Override the HGNC symbol entry from the grounding
-                        # map with an HGNC ID
-                        hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-                        if hgnc_id:
-                            map_db_refs['HGNC'] = hgnc_id
-                            # Now get the Uniprot ID for the gene
-                            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-                            if up_id:
-                                map_db_refs['UP'] = up_id
-                        # If there's no HGNC ID for this symbol, raise an
-                        # Exception
-                        else:
-                            raise ValueError('No HGNC ID corresponding to gene '
-                                             'symbol %s in grounding map.' %
-                                             hgnc_sym)
-                    # If we have both, check the gene symbol ID against the
-                    # mapping from Uniprot
-                    elif up_id and hgnc_sym:
-                        # Get HGNC Symbol from Uniprot
-                        gene_name = uniprot_client.get_gene_name(up_id)
-                        if not gene_name:
-                            raise ValueError('No gene name found for Uniprot '
-                                             'ID %s (expected %s)' %
-                                             (up_id, hgnc_sym))
-                        # We got gene name, compare it to the HGNC name
-                        else:
-                            if gene_name != hgnc_sym:
-                                raise ValueError('Gene name %s for Uniprot ID '
-                                                 '%s does not match HGNC '
-                                                 'symbol %s given in grounding '
-                                                 'map.' %
-                                                 (gene_name, up_id, hgnc_sym))
-                            else:
-                                hgnc_id = hgnc_client.get_hgnc_id(hgnc_sym)
-                                if not hgnc_id:
-                                    raise ValueError('No HGNC ID '
-                                                     'corresponding to gene '
-                                                     'symbol %s in grounding '
-                                                     'map.' % hgnc_sym)
-                                map_db_refs['HGNC'] = hgnc_id
-                    # Assign the DB refs from the grounding map to the agent
-                    agent.db_refs = map_db_refs
-                    # Are we renaming right now?
-                    if do_rename:
-                        # If there's a FamPlex ID, prefer that for the name
-                        if agent.db_refs.get('FPLX'):
-                            agent.name = agent.db_refs.get('FPLX')
-                        # Get the HGNC symbol or gene name (retrieved above)
-                        elif hgnc_sym is not None:
-                            agent.name = hgnc_sym
-                        elif gene_name is not None:
-                            agent.name = gene_name
+            mapped_stmt = self.map_agents_for_stmt(stmt, do_rename)
             # Check if we should skip the statement
-            if not skip_stmt:
+            if mapped_stmt is not None:
                 mapped_stmts.append(mapped_stmt)
+            else:
+                num_skipped += 1
         logger.info('%s statements filtered out' % num_skipped)
         return mapped_stmts
 
@@ -141,12 +149,11 @@ class GroundingMapper(object):
         # Make a copy of the stmts
         mapped_stmts = deepcopy(stmts)
         # Iterate over the statements
-        for stmt_ix, stmt in enumerate(mapped_stmts):
+        for _, stmt in enumerate(mapped_stmts):
             # Iterate over the agents
             for agent in stmt.agent_list():
                 if agent is None:
                     continue
-                old_name = agent.name
                 # If there's a FamPlex ID, prefer that for the name
                 if agent.db_refs.get('FPLX'):
                     agent.name = agent.db_refs.get('FPLX')
@@ -181,9 +188,9 @@ def load_grounding_map(grounding_map_path, ignore_path=None):
                                 lineterminator='\r\n')
     if ignore_path and os.path.exists(ignore_path):
         ignore_rows = read_unicode_csv(ignore_path, delimiter=',',
-                                    quotechar='"',
-                                    quoting=csv.QUOTE_MINIMAL,
-                                    lineterminator='\r\n')
+                                       quotechar='"',
+                                       quoting=csv.QUOTE_MINIMAL,
+                                       lineterminator='\r\n')
     else:
         ignore_rows = []
     csv_rows = chain(map_rows, ignore_rows)
@@ -262,11 +269,11 @@ def agent_texts_with_grounding(stmts):
             if list(db_refs.keys()) == ['TEXT']:
                 db_ref_list.append((None, None, count))
             # Add any other db_refs (not TEXT)
-            for db, id in db_refs.items():
+            for db, db_id in db_refs.items():
                 if db == 'TEXT':
                     continue
                 else:
-                    db_ref_list.append((db, id, count))
+                    db_ref_list.append((db, db_id, count))
             total += count
         # Sort the db_ref_list by the occurrences of each grounding
         entry.append(tuple(sorted(db_ref_list, key=lambda x: x[2],
@@ -294,23 +301,24 @@ def ungrounded_texts(stmts):
 
 def get_agents_with_name(name, stmts):
     return [ag for stmt in stmts for ag in stmt.agent_list()
-               if ag is not None and ag.name == name]
+            if ag is not None and ag.name == name]
 
 
 def save_base_map(filename, grouped_by_text):
     rows = []
     for group in grouped_by_text:
         text_string = group[0]
-        for db, id, count in group[1]:
+        for db, db_id, count in group[1]:
             if db == 'UP':
-                name = uniprot_client.get_mnemonic(id)
+                name = uniprot_client.get_mnemonic(db_id)
             else:
                 name = ''
-            row = [text_string, db, id, count, name]
+            row = [text_string, db, db_id, count, name]
             rows.append(row)
 
     write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
+
 
 def protein_map_from_twg(twg):
     """Build map of entity texts to validated protein grounding.
@@ -325,14 +333,14 @@ def protein_map_from_twg(twg):
     unmatched = 0
     matched = 0
     logger.info('Building grounding map for human proteins')
-    for agent_text, grounding_list, total_count in twg:
+    for agent_text, grounding_list, _ in twg:
         # If 'UP' (Uniprot) not one of the grounding entries for this text,
         # then we skip it.
-        if not 'UP' in [entry[0] for entry in grounding_list]:
+        if 'UP' not in [entry[0] for entry in grounding_list]:
             continue
         # Otherwise, collect all the Uniprot IDs for this protein.
         uniprot_ids = [entry[1] for entry in grounding_list
-                                if entry[0] == 'UP']
+                       if entry[0] == 'UP']
         # For each Uniprot ID, look up the species
         for uniprot_id in uniprot_ids:
             # If it's not a human protein, skip it
@@ -347,12 +355,14 @@ def protein_map_from_twg(twg):
                 continue
             if agent_text.upper() == gene_name.upper():
                 matched += 1
-                protein_map[agent_text] = {'TEXT': agent_text, 'UP': uniprot_id}
+                protein_map[agent_text] = {'TEXT': agent_text,
+                                           'UP': uniprot_id}
             else:
                 unmatched += 1
     logger.info('Exact matches for %d proteins' % matched)
     logger.info('No match (or no gene name) for %d proteins' % unmatched)
     return protein_map
+
 
 def save_sentences(twg, stmts, filename, agent_limit=300):
     sentences = []
@@ -370,6 +380,7 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
     write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
+
 default_grounding_map_path = \
     os.path.join(os.path.dirname(__file__),
                  '../resources/famplex/grounding_map.csv')
@@ -382,9 +393,11 @@ default_agent_grounding_path = \
 default_grounding_map = \
     load_grounding_map(default_grounding_map_path, default_ignore_path)
 
+
 gm = default_grounding_map
 with open(default_agent_grounding_path, 'r') as fh:
     default_agent_map = json.load(fh)
+
 
 if __name__ == '__main__':
 

@@ -1,12 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_defaults', 'get_primary_db', 'insert_agents',
+__all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
            'insert_db_stmts', 'get_abstracts_by_pmids', 'get_auth_xml_pmcids',
            'get_statements_by_gene_role_type', 'get_statements',
            'make_stmts_from_db_list']
 
 import os
+import re
 import json
 import logging
 from os import path
@@ -14,7 +15,7 @@ from indra.databases import hgnc_client
 from indra.util.get_version import get_version
 from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
-    stmts_from_json
+    stmts_from_json, Conversion, Translocation
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
 
 
@@ -73,7 +74,7 @@ def get_primary_db(force_new=False):
     general application, you should not rely on this feature to get your access
     to the database, as it can make substituting a different database host both
     complicated and messy. Rather, a database instance should be explicitly
-    passed between different users as is done in the `by_gene_role_type`
+    passed between different users as is done in `get_statements_by_gene_role_type`
     function's call to `get_statements` in `indra.db.query_db_stmts`.
 
     Parameters
@@ -103,52 +104,146 @@ def get_primary_db(force_new=False):
     return __PRIMARY_DB
 
 
-def insert_agents(db, stmts, *other_clauses):
-    "Insert the agents associated with the list of statements."
+def get_test_db():
+    """Get a DatabaseManager for the test database."""
+    defaults = get_defaults()
+    test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
+    key_list = list(test_defaults.keys())
+    key_list.sort()
+    for k in key_list:
+        test_name = test_defaults[k]
+        m = re.match('(\w+)://.*?/([\w.]+)', test_name)
+        sqltype = m.groups()[0]
+        try:
+            db = DatabaseManager(test_name, sqltype=sqltype)
+            db.grab_session()
+        except Exception as e:
+            logger.error("%s didn't work" % test_name)
+            logger.exception(e)
+            continue  # Clearly this test database won't work.
+        logger.info("Using test database %s." % k)
+        break
+    else:
+        logger.error("Could not load a test database!")
+    return db
+
+
+def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
+                  **kwargs):
+    """Insert agents for statements that don't have any agents.
+
+    Note: This method currently works for both Statements and PAStatements and their
+    corresponding agents (Agents and PAAgents).
+
+    Parameters:
+    -----------
+    db : indra.db.DatabaseManager
+        The manager for the database into which you are adding agents.
+    stmt_tbl_obj : sqlalchemy table object
+        For example, `db.Statements`. The object corresponding to the
+        statements column you creating agents for.
+    agent_tbl_obj : sqlalchemy table object
+        That agent table corresponding to the statement table above.
+    *other_stmt_clauses : sqlalchemy clauses
+        Further arguments, such as `db.Statements.db_ref == 1' are used to
+        restrict the scope of statements whose agents may be added.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        agents for insert from statements. Default False.
+    num_per_yield : int
+        To conserve memory, statements are loaded in batches of `num_per_yeild`
+        using the `yeild_per` feature of sqlalchemy queries.
+    """
+    verbose = kwargs.pop('verbose', False)
+    num_per_yield = kwargs.pop('num_per_yield', 100)
+    if len(kwargs):
+        raise IndraDatabaseError("Unrecognized keyword argument(s): %s."
+                                 % kwargs)
     # Build a dict mapping stmt UUIDs to statement IDs
-    uuid_list = [s.uuid for s in stmts]
-    stmt_rec_list = db.select_all('statements',
-                                  db.Statements.uuid.in_(uuid_list),
-                                  *other_clauses)
-    stmt_uuid_dict = {uuid: sid for uuid, sid in
-                      db.get_values(stmt_rec_list, ['uuid', 'id'])}
+    logger.info("Getting %s that lack %s in the database."
+                % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
+    stmts_w_agents_q = db.filter_query(
+        stmt_tbl_obj,
+        stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+        )
+    stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+                         .except_(stmts_w_agents_q))
+    if verbose:
+        num_stmts = stmts_wo_agents_q.count()
+        print("Adding agents for %d statements." % num_stmts)
+    stmts_wo_agents = stmts_wo_agents_q.yield_per(num_per_yield)
 
     # Now assemble agent records
+    logger.info("Building agent data for insert...")
+    if verbose:
+        print("Loading:", end='', flush=True)
     agent_data = []
-    for stmt in stmts:
-        stmt_id = stmt_uuid_dict[stmt.uuid]
-        for ag_ix, ag in enumerate(stmt.agent_list()):
+    for i, db_stmt in enumerate(stmts_wo_agents):
+        # Convert the database statement entry object into an indra statement.
+        stmt = stmts_from_json(json.loads(db_stmt.json.decode()))
+
+        # Figure out how the agents are structured and assign roles.
+        ag_list = stmt.agent_list()
+        nary_stmt_types = [Complex, SelfModification, ActiveForm, Conversion,
+                           Translocation]
+        if any([isinstance(stmt, tp) for tp in nary_stmt_types]):
+            agents = {('OTHER', ag) for ag in ag_list}
+        elif len(ag_list) == 2:
+            agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
+        else:
+            raise IndraDatabaseError("Unhandled agent structure for stmt %s "
+                                     "with agents: %s."
+                                     % (str(stmt), str(stmt.agent_list())))
+
+        # Prep the agents for copy into the database.
+        for role, ag in agents:
             # If no agent, or no db_refs for the agent, skip the insert
             # that follows.
             if ag is None or ag.db_refs is None:
                 continue
-            if any([isinstance(stmt, tp) for tp in
-                    [Complex, SelfModification, ActiveForm]]):
-                role = 'OTHER'
-            elif ag_ix == 0:
-                role = 'SUBJECT'
-            elif ag_ix == 1:
-                role = 'OBJECT'
-            else:
-                raise IndraDatabaseError("Unhandled agent role.")
             for ns, ag_id in ag.db_refs.items():
-                ag_rec = (stmt_id, ns, ag_id, role)
-                agent_data.append(ag_rec)
+                if isinstance(ag_id, list):
+                    for sub_id in ag_id:
+                        agent_data.append((db_stmt.id, ns, sub_id, role))
+                else:
+                    agent_data.append((db_stmt.id, ns, ag_id, role))
+
+        # Optionally print another tick on the progress bar.
+        if verbose and i % (num_stmts//25) == 0:
+            print('|', end='', flush=True)
+
+    if verbose:
+        print()
+
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
-    db.copy('agents', agent_data, cols)
+    db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
 
 
-def insert_db_stmts(db, stmts, db_ref_id):
+def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     """Insert statement, their database, and any affiliated agents.
 
     Note that this method is for uploading statements that came from a
     database to our databse, not for inserting any statements to the database.
+
+    Parameters:
+    -----------
+    db : indra.db.DatabaseManager
+        The manager for the database into which you are loading statements.
+    stmts : list [indra.statements.Statement]
+        A list of un-assembled indra statements to be uploaded to the datbase.
+    db_ref_id : int
+        The id to the db_ref entry corresponding to these statements.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        statements for insert. Default False.
     """
     # Preparing the statements for copying
     stmt_data = []
     cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
-    for stmt in stmts:
+    if verbose:
+        print("Loading:", end='', flush=True)
+    for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
             db_ref_id,
@@ -157,8 +252,50 @@ def insert_db_stmts(db, stmts, db_ref_id):
             get_version()
         )
         stmt_data.append(stmt_rec)
+        if verbose and i % (len(stmts)//25) == 0:
+            print('|', end='', flush=True)
+    if verbose:
+        print(" Done loading %d statements." % len(stmts))
     db.copy('statements', stmt_data, cols)
-    db.insert_agents(stmts, db.Statements.db_ref == db_ref_id)
+    insert_agents(db, db.Statements, db.Agents,
+                  db.Statements.db_ref == db_ref_id)
+    return
+
+
+def insert_pa_stmts(db, stmts, verbose=False):
+    """Insert pre-assembled statements, and any affiliated agents.
+
+    Parameters:
+    -----------
+    db : indra.db.DatabaseManager
+        The manager for the database into which you are loading pre-assembled
+        statements.
+    stmts : list [indra.statements.Statement]
+        A list of pre-assembled indra statements to be uploaded to the datbase.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        statements for insert. Default False.
+    """
+    logger.info("Beginning to insert pre-assembled statements.")
+    stmt_data = []
+    indra_version = get_version()
+    cols = ('uuid', 'type', 'json', 'indra_version')
+    if verbose:
+        print("Loading:", end='', flush=True)
+    for i, stmt in enumerate(stmts):
+        stmt_rec = (
+            stmt.uuid,
+            stmt.__class__.__name__,
+            json.dumps(stmt.to_json()).encode('utf8'),
+            indra_version
+        )
+        stmt_data.append(stmt_rec)
+        if verbose and i % (len(stmts)//25) == 0:
+            print('|', end='', flush=True)
+    if verbose:
+        print(" Done loading %d statements." % len(stmts))
+    db.copy('pa_statements', stmt_data, cols)
+    insert_agents(db, db.PAStatements, db.PAAgents, verbose=verbose)
     return
 
 
@@ -190,8 +327,8 @@ def get_auth_xml_pmcids(db):
 
 
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
-                                     stmt_type=None, count=1000,
-                                     do_stmt_count=True, db=None):
+                                     stmt_type=None, count=1000, db=None,
+                                     do_stmt_count=True, preassembled=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -212,12 +349,16 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
     count : int
         Number of statements to retrieve in each batch (passed to
         :py:func:`get_statements`).
-    do_stmt_count : bool
-        Whether or not to perform an initial statement counting step to give
-        more meaningful progress messages.
     db : indra.db.DatabaseManager object.
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
+    preassembled : bool
+        If true, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
 
     Returns
     -------
@@ -225,6 +366,13 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
     """
     if db is None:
         db = get_primary_db()
+
+    if preassembled:
+        Statements = db.PAStatements
+        Agents = db.PAAgents
+    else:
+        Statements = db.Statements
+        Agents = db.Agents
 
     if not (agent_id or role or stmt_type):
         raise ValueError('At least one of agent_id, role, or stmt_type '
@@ -235,23 +383,24 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         if not hgnc_id:
             logger.warning('Invalid gene name: %s' % agent_id)
             return []
-        clauses.extend([db.Agents.db_name == 'HGNC',
-                        db.Agents.db_id == hgnc_id])
+        clauses.extend([Agents.db_name == 'HGNC',
+                        Agents.db_id == hgnc_id])
     elif agent_id:
-        clauses.extend([db.Agents.db_name == agent_ns,
-                        db.Agents.db_id == agent_id])
+        clauses.extend([Agents.db_name == agent_ns,
+                        Agents.db_id == agent_id])
     if role:
-        clauses.append(db.Agents.role == role)
+        clauses.append(Agents.role == role)
     if agent_id or role:
-        clauses.append(db.Agents.stmt_id == db.Statements.id)
+        clauses.append(Agents.stmt_id == Statements.id)
     if stmt_type:
-        clauses.append(db.Statements.type == stmt_type)
+        clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
-                           db=db)
+                           db=db, preassembled=preassembled)
     return stmts
 
 
-def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
+def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
+                   preassembled=True):
     """Select statements according to a given set of clauses.
 
     Parameters
@@ -266,6 +415,10 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
     db : indra.db.DatabaseManager object.
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local database instance.
+    preassembled : bool
+        If true, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
 
     Returns
     -------
@@ -274,8 +427,10 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None):
     if db is None:
         db = get_primary_db()
 
+    stmts_tblname = 'pa_statements' if preassembled else 'statements'
+
     stmts = []
-    q = db.filter_query('statements', *clauses)
+    q = db.filter_query(stmts_tblname, *clauses)
     if do_stmt_count:
         logger.info("Counting statements...")
         num_stmts = q.count()

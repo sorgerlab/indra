@@ -76,6 +76,21 @@ class Preassembler(object):
         return self.unique_stmts
 
     @staticmethod
+    def _get_stmt_matching_groups(stmts):
+        """Use the matches_key method to get sets of matching statements."""
+
+        def match_func(x): return x.matches_key()
+
+        # Remove exact duplicates using a set() call, then make copies:
+        st = list(set(stmts))
+        # Group statements according to whether they are matches (differing
+        # only in their evidence).
+        # Sort the statements in place by matches_key()
+        st.sort(key=match_func)
+
+        return itertools.groupby(st, key=match_func)
+
+    @staticmethod
     def combine_duplicate_stmts(stmts):
         """Combine evidence from duplicate Statements.
 
@@ -116,15 +131,7 @@ class Preassembler(object):
         ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
-        # Remove exact duplicates using a set() call, then make copies:
-        st = list(set(stmts))
-        # Group statements according to whether they are matches (differing
-        # only in their evidence).
-        # Sort the statements in place by matches_key()
-        st.sort(key=lambda x: x.matches_key())
-
-        for key, duplicates in itertools.groupby(st,
-                                                 key=lambda x: x.matches_key()):
+        for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
@@ -141,6 +148,237 @@ class Preassembler(object):
             assert isinstance(first_stmt, Statement)
             unique_stmts.append(first_stmt)
         return unique_stmts
+
+    def _get_entities(self, stmt, stmt_type, eh):
+        entities = []
+        for a in stmt.agent_list():
+            # Entity is None: add the None to the entities list
+            if a is None and stmt_type != Complex:
+                entities.append(a)
+                continue
+            # Entity is not None, but could be ungrounded or not
+            # in a family
+            else:
+                a_ns, a_id = a.get_grounding()
+                # No grounding available--in this case, use the
+                # entity_matches_key
+                if a_ns is None or a_id is None:
+                    entities.append(a.entity_matches_key())
+                    continue
+                # We have grounding, now check for a component ID
+                uri = eh.get_uri(a_ns, a_id)
+                # This is the component ID corresponding to the agent
+                # in the entity hierarchy
+                component = eh.components.get(uri)
+                # If no component ID, use the entity_matches_key()
+                if component is None:
+                    entities.append(a.entity_matches_key())
+                # Component ID, so this is in a family
+                else:
+                    # We turn the component ID into a string so that
+                    # we can sort it along with entity_matches_keys
+                    # for Complexes
+                    entities.append(str(component))
+        return entities
+
+    def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):
+        """Group Statements of `stmt_type` by their heirarchical relations."""
+        # Dict of stmt group key tuples, indexed by their first Agent
+        stmt_by_first = collections.defaultdict(lambda: [])
+        # Dict of stmt group key tuples, indexed by their second Agent
+        stmt_by_second = collections.defaultdict(lambda: [])
+        # Dict of statements with None first, with second Agent as keys
+        none_first = collections.defaultdict(lambda: [])
+        # Dict of statements with None second, with first Agent as keys
+        none_second = collections.defaultdict(lambda: [])
+        # The dict of all statement groups, with tuples of components
+        # or entity_matches_keys as keys
+        stmt_by_group = collections.defaultdict(lambda: [])
+        # Here we group Statements according to the hierarchy graph
+        # components that their agents are part of
+        for stmt_tuple in stmts_this_type:
+            _, stmt = stmt_tuple
+            entities = self._get_entities(stmt, stmt_type, eh)
+            # At this point we have an entity list
+            # If we're dealing with Complexes, sort the entities and use
+            # as dict key
+            if stmt_type == Complex:
+                # There shouldn't be any statements of the type
+                # e.g., Complex([Foo, None, Bar])
+                assert None not in entities
+                assert len(entities) > 0
+                entities.sort()
+                key = tuple(entities)
+                if stmt_tuple not in stmt_by_group[key]:
+                    stmt_by_group[key].append(stmt_tuple)
+            elif stmt_type == Conversion:
+                assert len(entities) > 0
+                key = (entities[0],
+                       tuple(sorted(entities[1:len(stmt.obj_from)+1])),
+                       tuple(sorted(entities[-len(stmt.obj_to):])))
+                if stmt_tuple not in stmt_by_group[key]:
+                    stmt_by_group[key].append(stmt_tuple)
+            # Now look at all other statement types
+            # All other statements will have one or two entities
+            elif len(entities) == 1:
+                # If only one entity, we only need the one key
+                # It should not be None!
+                assert None not in entities
+                key = tuple(entities)
+                if stmt_tuple not in stmt_by_group[key]:
+                    stmt_by_group[key].append(stmt_tuple)
+            else:
+                # Make sure we only have two entities, and they are not both
+                # None
+                key = tuple(entities)
+                assert len(key) == 2
+                assert key != (None, None)
+                # First agent is None; add in the statements, indexed by
+                # 2nd
+                if key[0] is None and stmt_tuple not in none_first[key[1]]:
+                    none_first[key[1]].append(stmt_tuple)
+                # Second agent is None; add in the statements, indexed by
+                # 1st
+                elif key[1] is None and stmt_tuple not in none_second[key[0]]:
+                    none_second[key[0]].append(stmt_tuple)
+                # Neither entity is None!
+                elif None not in key:
+                    if stmt_tuple not in stmt_by_group[key]:
+                        stmt_by_group[key].append(stmt_tuple)
+                    if key not in stmt_by_first[key[0]]:
+                        stmt_by_first[key[0]].append(key)
+                    if key not in stmt_by_second[key[1]]:
+                        stmt_by_second[key[1]].append(key)
+
+        # When we've gotten here, we should have stmt_by_group entries, and
+        # we may or may not have stmt_by_first/second dicts filled out
+        # (depending on the statement type).
+        if none_first:
+            # Get the keys associated with stmts having a None first
+            # argument
+            for second_arg, stmts in none_first.items():
+                # Look for any statements with this second arg
+                second_arg_keys = stmt_by_second[second_arg]
+                # If there are no more specific statements matching this
+                # set of statements with a None first arg, then the
+                # statements with the None first arg deserve to be in
+                # their own group.
+                if not second_arg_keys:
+                    stmt_by_group[(None, second_arg)] = stmts
+                # On the other hand, if there are statements with a matching
+                # second arg component, we need to add the None first
+                # statements to all groups with the matching second arg
+                for second_arg_key in second_arg_keys:
+                    stmt_by_group[second_arg_key] += stmts
+        # Now do the corresponding steps for the statements with None as the
+        # second argument:
+        if none_second:
+            for first_arg, stmts in none_second.items():
+                # Look for any statements with this first arg
+                first_arg_keys = stmt_by_first[first_arg]
+                # If there are no more specific statements matching this
+                # set of statements with a None second arg, then the
+                # statements with the None second arg deserve to be in
+                # their own group.
+                if not first_arg_keys:
+                    stmt_by_group[(first_arg, None)] = stmts
+                # On the other hand, if there are statements with a matching
+                # first arg component, we need to add the None second
+                # statements to all groups with the matching first arg
+                for first_arg_key in first_arg_keys:
+                    stmt_by_group[first_arg_key] += stmts
+        return stmt_by_group
+
+    def _generate_id_maps(self, unique_stmts, poolsize=None, size_cutoff=100):
+        """Connect statements using their refinement relationships."""
+        # Check arguments relating to multiprocessing
+        if poolsize is None:
+            logger.info('combine_related: poolsize not set, '
+                        'not using multiprocessing.')
+            use_mp = False
+        elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
+            use_mp = True
+            logger.info('combine_related: Python >= 3.4 detected, '
+                        'using multiprocessing with poolsize %d, '
+                        'size_cutoff %d' % (poolsize, size_cutoff))
+        else:
+            use_mp = False
+            logger.info('combine_related: Python < 3.4 detected, '
+                        'not using multiprocessing.')
+        eh = self.hierarchies['entity']
+        # Make a list of Statement types
+        stmts_by_type = collections.defaultdict(lambda: [])
+        for idx, stmt in enumerate(unique_stmts):
+            stmts_by_type[type(stmt)].append((idx, stmt))
+
+        child_proc_groups = []
+        parent_proc_groups = []
+        # Each Statement type can be preassembled independently
+        for stmt_type, stmts_this_type in stmts_by_type.items():
+            logger.info('Preassembling %s (%s)' %
+                        (stmt_type.__name__, len(stmts_this_type)))
+            stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
+                                                    eh)
+
+            # Divide statements by group size
+            # If we're not using multiprocessing, then all groups are local
+            for g in stmt_by_group.values():
+                if use_mp and len(g) >= size_cutoff:
+                    child_proc_groups.append(g)
+                else:
+                    parent_proc_groups.append(g)
+
+        # Now run preassembly!
+        logger.info("Groups: %d parent, %d worker" %
+                    (len(parent_proc_groups), len(child_proc_groups)))
+
+        # Check if we are running any groups in child processes; note that if
+        # use_mp is False, child_proc_groups will be empty
+        if child_proc_groups:
+            # Get a multiprocessing context
+            ctx = mp.get_context('spawn')
+            pool = ctx.Pool(poolsize)
+            supports_func = functools.partial(_set_supports_stmt_pairs,
+                                              hierarchies=self.hierarchies,
+                                              check_entities_match=False)
+            # Run the large groups remotely
+            logger.debug("Running %d groups in child processes" %
+                         len(child_proc_groups))
+            res = pool.map_async(supports_func, child_proc_groups)
+            workers_ready = False
+        else:
+            workers_ready = True
+
+        # Run the small groups locally
+        logger.debug("Running %d groups in parent process" %
+                     len(parent_proc_groups))
+        stmt_ix_map = []
+        for stmt_tuples in parent_proc_groups:
+            stmt_ix_map.append(_set_supports_stmt_pairs(stmt_tuples,
+                                            hierarchies=self.hierarchies))
+        logger.info("Done running parent process groups")
+
+        while not workers_ready:
+            logger.debug("Checking child processes")
+            if res.ready():
+                workers_ready = True
+                logger.debug('Child process group comparisons successful? %s' %
+                             res.successful())
+                if not res.successful():
+                    raise Exception("Sorry, there was a problem with "
+                                    "preassembly in the child processes.")
+                else:
+                    stmt_ix_map += res.get()
+                pool.close()
+                pool.join()
+            time.sleep(1)
+        logger.info("Done.")
+        # Combine all redundant map edges
+        stmt_ix_map_set = set([])
+        for group_ix_map in stmt_ix_map:
+            for ix_pair in group_ix_map:
+                stmt_ix_map_set.add(ix_pair)
+        return stmt_ix_map_set
 
     def combine_related(self, return_toplevel=True, poolsize=None,
                         size_cutoff=100):
@@ -261,236 +499,14 @@ class Preassembler(object):
                 assert self.unique_stmts is not None
                 return self.unique_stmts
 
-        # Check arguments relating to multiprocessing
-        if poolsize is None:
-            logger.info('combine_related: poolsize not set, '
-                        'not using multiprocessing.')
-            use_mp = False
-        elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
-            use_mp = True
-            logger.info('combine_related: Python >= 3.4 detected, '
-                        'using multiprocessing with poolsize %d, '
-                        'size_cutoff %d' % (poolsize, size_cutoff))
-        else:
-            use_mp = False
-            logger.info('combine_related: Python < 3.4 detected, '
-                        'not using multiprocessing.')
-
         # Call combine_duplicates, which lazily initializes self.unique_stmts
         unique_stmts = self.combine_duplicates()
-        eh = self.hierarchies['entity']
-        # Make a list of Statement types
-        stmts_by_type = collections.defaultdict(lambda: [])
-        for stmt_ix, stmt in enumerate(unique_stmts):
-            stmts_by_type[type(stmt)].append((stmt_ix, stmt))
 
-        group_sizes = []
-        largest_group = None
-        largest_group_size = 0
-        num_stmts = len(unique_stmts)
-        related_stmts = []
-        child_proc_groups = []
-        parent_proc_groups = []
-        # Each Statement type can be preassembled independently
-        for stmt_type, stmts_this_type in stmts_by_type.items():
-            logger.info('Preassembling %s (%s)' %
-                        (stmt_type.__name__, len(stmts_this_type)))
-            # Dict of stmt group key tuples, indexed by their first Agent
-            stmt_by_first = collections.defaultdict(lambda: [])
-            # Dict of stmt group key tuples, indexed by their second Agent
-            stmt_by_second = collections.defaultdict(lambda: [])
-            # Dict of statements with None first, with second Agent as keys
-            none_first = collections.defaultdict(lambda: [])
-            # Dict of statements with None second, with first Agent as keys
-            none_second = collections.defaultdict(lambda: [])
-            # The dict of all statement groups, with tuples of components
-            # or entity_matches_keys as keys
-            stmt_by_group = collections.defaultdict(lambda: [])
-            # Here we group Statements according to the hierarchy graph
-            # components that their agents are part of
-            for stmt_tuple in stmts_this_type:
-                stmt_ix, stmt = stmt_tuple
-                entities = []
-                for i, a in enumerate(stmt.agent_list()):
-                    # Entity is None: add the None to the entities list
-                    if a is None and stmt_type != Complex:
-                        entities.append(a)
-                        continue
-                    # Entity is not None, but could be ungrounded or not
-                    # in a family
-                    else:
-                        a_ns, a_id = a.get_grounding()
-                        # No grounding available--in this case, use the
-                        # entity_matches_key
-                        if a_ns is None or a_id is None:
-                            entities.append(a.entity_matches_key())
-                            continue
-                        # We have grounding, now check for a component ID
-                        uri = eh.get_uri(a_ns, a_id)
-                        # This is the component ID corresponding to the agent
-                        # in the entity hierarchy
-                        component = eh.components.get(uri)
-                        # If no component ID, use the entity_matches_key()
-                        if component is None:
-                            entities.append(a.entity_matches_key())
-                        # Component ID, so this is in a family
-                        else:
-                            # We turn the component ID into a string so that
-                            # we can sort it along with entity_matches_keys
-                            # for Complexes
-                            entities.append(str(component))
-                # At this point we have an entity list
-                # If we're dealing with Complexes, sort the entities and use
-                # as dict key
-                if stmt_type == Complex:
-                    # There shouldn't be any statements of the type
-                    # e.g., Complex([Foo, None, Bar])
-                    assert None not in entities
-                    assert len(entities) > 0
-                    entities.sort()
-                    key = tuple(entities)
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                elif stmt_type == Conversion:
-                    # There shouldn't be any statements of the type
-                    # e.g., Complex([Foo, None, Bar])
-                    assert len(entities) > 0
-                    key = (entities[0],
-                           tuple(sorted(entities[1:len(stmt.obj_from)+1])),
-                           tuple(sorted(entities[-len(stmt.obj_to):])))
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                # Now look at all other statement types
-                # All other statements will have one or two entities
-                elif len(entities) == 1:
-                    # If only one entity, we only need the one key
-                    # It should not be None!
-                    assert None not in entities
-                    key = tuple(entities)
-                    if stmt_tuple not in stmt_by_group[key]:
-                        stmt_by_group[key].append(stmt_tuple)
-                else:
-                    # Make sure we only have two entities, and they are not both
-                    # None
-                    key = tuple(entities)
-                    assert len(key) == 2
-                    assert key != (None, None)
-                    # First agent is None; add in the statements, indexed by
-                    # 2nd
-                    if key[0] is None and stmt_tuple not in none_first[key[1]]:
-                        none_first[key[1]].append(stmt_tuple)
-                    # Second agent is None; add in the statements, indexed by
-                    # 1st
-                    elif key[1] is None and \
-                         stmt_tuple not in none_second[key[0]]:
-                        none_second[key[0]].append(stmt_tuple)
-                    # Neither entity is None!
-                    elif None not in key:
-                        if stmt_tuple not in stmt_by_group[key]:
-                            stmt_by_group[key].append(stmt_tuple)
-                        if key not in stmt_by_first[key[0]]:
-                            stmt_by_first[key[0]].append(key)
-                        if key not in stmt_by_second[key[1]]:
-                            stmt_by_second[key[1]].append(key)
+        # Generate the index map, linking related statements.
+        idx_map = self._generate_id_maps(unique_stmts, poolsize, size_cutoff)
 
-            # When we've gotten here, we should have stmt_by_group entries, and
-            # we may or may not have stmt_by_first/second dicts filled out
-            # (depending on the statement type).
-            if none_first:
-                # Get the keys associated with stmts having a None first
-                # argument
-                for second_arg, stmts in none_first.items():
-                    # Look for any statements with this second arg
-                    second_arg_keys = stmt_by_second[second_arg]
-                    # If there are no more specific statements matching this
-                    # set of statements with a None first arg, then the
-                    # statements with the None first arg deserve to be in
-                    # their own group.
-                    if not second_arg_keys:
-                        stmt_by_group[(None, second_arg)] = stmts
-                    # On the other hand, if there are statements with a matching
-                    # second arg component, we need to add the None first
-                    # statements to all groups with the matching second arg
-                    for second_arg_key in second_arg_keys:
-                        stmt_by_group[second_arg_key] += stmts
-            # Now do the corresponding steps for the statements with None as the
-            # second argument:
-            if none_second:
-                for first_arg, stmts in none_second.items():
-                    # Look for any statements with this first arg
-                    first_arg_keys = stmt_by_first[first_arg]
-                    # If there are no more specific statements matching this
-                    # set of statements with a None second arg, then the
-                    # statements with the None second arg deserve to be in
-                    # their own group.
-                    if not first_arg_keys:
-                        stmt_by_group[(first_arg, None)] = stmts
-                    # On the other hand, if there are statements with a matching
-                    # first arg component, we need to add the None second
-                    # statements to all groups with the matching first arg
-                    for first_arg_key in first_arg_keys:
-                        stmt_by_group[first_arg_key] += stmts
-
-            # Divide statements by group size
-            # If we're not using multiprocessing, then all groups are local
-            for g in stmt_by_group.values():
-                if use_mp and len(g) >= size_cutoff:
-                    child_proc_groups.append(g)
-                else:
-                    parent_proc_groups.append(g)
-
-        # Now run preassembly!
-        logger.info("Groups: %d parent, %d worker" %
-                    (len(parent_proc_groups), len(child_proc_groups)))
-
-        # Check if we are running any groups in child processes; note that if
-        # use_mp is False, child_proc_groups will be empty
-        if child_proc_groups:
-            # Get a multiprocessing context
-            ctx = mp.get_context('spawn')
-            pool = ctx.Pool(poolsize)
-            supports_func = functools.partial(_set_supports_stmt_pairs,
-                                              hierarchies=self.hierarchies,
-                                              check_entities_match=False)
-            # Run the large groups remotely
-            logger.debug("Running %d groups in child processes" %
-                         len(child_proc_groups))
-            res = pool.map_async(supports_func, child_proc_groups)
-            workers_ready = False
-        else:
-            workers_ready = True
-
-        # Run the small groups locally
-        logger.debug("Running %d groups in parent process" %
-                     len(parent_proc_groups))
-        stmt_ix_map = []
-        for stmt_tuples in parent_proc_groups:
-            stmt_ix_map.append(_set_supports_stmt_pairs(stmt_tuples,
-                                            hierarchies=self.hierarchies))
-        logger.info("Done running parent process groups")
-
-        while not workers_ready:
-            logger.debug("Checking child processes")
-            if res.ready():
-                workers_ready = True
-                logger.debug('Child process group comparisons successful? %s' %
-                             res.successful())
-                if not res.successful():
-                    raise Exception("Sorry, there was a problem with "
-                                    "preassembly in the child processes.")
-                else:
-                    stmt_ix_map += res.get()
-                pool.close()
-                pool.join()
-            time.sleep(1)
-        logger.info("Done.")
-        # Combine all redundant map edges
-        stmt_ix_map_set = set([])
-        for group_ix_map in stmt_ix_map:
-            for ix_pair in group_ix_map:
-                stmt_ix_map_set.add(ix_pair)
         # Now iterate over all indices and set supports/supported by
-        for ix1, ix2 in stmt_ix_map_set:
+        for ix1, ix2 in idx_map:
             unique_stmts[ix1].supported_by.append(unique_stmts[ix2])
             unique_stmts[ix2].supports.append(unique_stmts[ix1])
         # Get the top level statements
