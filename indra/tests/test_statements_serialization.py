@@ -96,6 +96,22 @@ def test_gef():
     assert(jd == jd2)
 
 
+def test_influence():
+    stmt = Influence(Agent('inorganic fertilizer'),
+                     Agent('farm sizes'),
+                     {'adjectives': 'serious', 'polarity': 1},
+                     {'adjectives': 'significant', 'polarity': 1})
+    jd = stmt.to_json()
+    assert 'sbo' not in jd['subj']
+    assert 'sbo' not in jd['obj']
+    stmt.to_graph()
+    st_deserialize = Statement._from_json(jd)
+    assert st_deserialize.subj_delta['polarity'] == 1
+    assert st_deserialize.obj_delta['adjectives'] == 'significant'
+    jd2 = st_deserialize.to_json()
+    assert(jd == jd2)
+
+
 def __make_support_link(supporting_stmt, supported_stmt):
     supporting_stmt.supports.append(supported_stmt)
     supported_stmt.supported_by.append(supporting_stmt)
