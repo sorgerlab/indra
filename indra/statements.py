@@ -2398,6 +2398,29 @@ class Influence(IncreaseAmount):
                              _influence_agent_str(self.obj, self.obj_delta)))
         return s
 
+    def to_json(self):
+        """Return serialized Statement as a json dict."""
+        stmt_type = type(self).__name__
+        # Oringal comment: For backwards compatibility, could be removed later
+        all_stmts = [self] + self.supports + self.supported_by
+        for st in all_stmts:
+            if not hasattr(st, 'uuid'):
+                st.uuid = '%s' % uuid.uuid4()
+        ##################
+        json_dict = _o({'type': stmt_type})
+        if self.evidence:
+            evidence = [ev.to_json() for ev in self.evidence]
+            json_dict['evidence'] = evidence
+        json_dict['id'] = '%s' % self.uuid
+        if self.supports:
+            json_dict['supports'] = \
+                ['%s' % st.uuid for st in self.supports]
+        if self.supported_by:
+            json_dict['supported_by'] = \
+                ['%s' % st.uuid for st in self.supported_by]
+
+        return json_dict
+
 
 class Conversion(Statement):
     """Conversion of molecular species mediated by a controller protein.
