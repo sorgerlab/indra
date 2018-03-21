@@ -18,7 +18,7 @@ from functools import wraps
 from ftplib import FTP
 from io import BytesIO
 from indra.util import _require_python3
-from indra.literature.elsevier_client import download_article
+from indra.literature.elsevier_client import download_article_from_ids
 
 
 logger = logging.getLogger('content_manager')
@@ -1331,7 +1331,7 @@ class Elsevier(ContentManager):
                'content',)
 
     @ContentManager._record_for_review
-    def upload(self, db, n_procs=1):
+    def populate(self, db, n_procs=1):
         """Load all available elsevier content for refs with no pmc content."""
         tr_w_pmc_q = db.filter_query(
             db.TextRef,
@@ -1342,13 +1342,17 @@ class Elsevier(ContentManager):
         tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
         article_tuples = []
         for tr in tr_wo_pmc_q.yield_per(1000):
-            if tr.doi is not None:
-                content_str = download_article(tr.doi)
-                content_zip = zip_string(content_str)
-                article_tuples.append((tr.id, self.my_source, formats.TEXT,
-                                       texttypes.FULLTEXT, content_zip))
+            id_dict = {id_type: getattr(tr, id_type)
+                       for id_type in ['doi', 'pmid', 'pii']
+                       if getattr(tr, id_type) is not None}
+            if id_dict:
+                content_str = download_article_from_ids(**id_dict)
+                if content_str is not None:
+                    content_zip = zip_string(content_str)
+                    article_tuples.append((tr.id, self.my_source, formats.TEXT,
+                                           texttypes.FULLTEXT, content_zip))
         self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
-        return
+        return True
 
     @ContentManager._record_for_review
     def update(self, db, n_procs=1):

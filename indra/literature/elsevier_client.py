@@ -25,7 +25,7 @@ logger = logging.getLogger('elsevier')
 
 # THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
 elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
-elsevier_article_url = '%s/article/doi' % elsevier_api_url
+elsevier_article_url_fmt = '%s/article/%%s' % elsevier_api_url
 elsevier_search_url = '%s/search/scidir' % elsevier_api_url
 elsevier_entitlement_url = '%s/article/entitlement/doi' % elsevier_api_url
 
@@ -95,23 +95,44 @@ def check_entitlement(doi):
         return False
 
 
-def download_article(doi):
-    """Download an article in XML format from Elsevier."""
+def download_article(id_val, id_type='doi'):
+    """Low level function to get an XML article for a particular id."""
     if elsevier_keys is None:
         logger.error('Missing API key, could not download article.')
         return None
-    if doi.lower().startswith('doi:'):
-        doi = doi[4:]
-    url = '%s/%s' % (elsevier_article_url, doi)
+    if id_type == 'pmid':
+        id_type = 'pubmed_id'
+    url = '%s/%s' % (elsevier_article_url_fmt % id_type, id_val)
+    logger.debug("Getting url=%s" % url)
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=elsevier_keys)
     if not res.status_code == 200:
-        logger.error('Could not download article %s: status code %d' %
-                     (doi, res.status_code))
+        logger.error('Could not download article %s=%s: status code %d' %
+                     (id_type, id_val, res.status_code))
         logger.error('Elsevier response: %s' % res.text)
         return None
     # Return the XML content as a unicode string, assuming UTF-8 encoding
     return res.content.decode('utf-8')
+
+
+def download_article_from_ids(**id_dict):
+    """Download an article in XML format from Elsevier."""
+    valid_id_types = ['eid', 'doi', 'pmid', 'pii']
+    assert all([k in valid_id_types for k in id_dict.keys()]),\
+        ("One of these id keys is invalid: %s Valid keys are: %s."
+         % (list(id_dict.keys()), valid_id_types))
+    if 'doi' in id_dict.keys() and id_dict['doi'].lower().startswith('doi:'):
+        id_dict['doi'] = id_dict['doi'][4:]
+    content = None
+    for id_type in valid_id_types:
+        if id_type in id_dict.keys():
+            content = download_article(id_dict[id_type], id_type)
+            if content is not None:
+                break
+    else:
+        logger.error("Could not download article with any of the ids: %s."
+                     % str(id_dict))
+    return content
 
 
 def get_abstract(doi):
