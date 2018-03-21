@@ -12,6 +12,80 @@ logger = logging.getLogger('tsv_assembler')
 class TsvAssembler(object):
     """Assembles Statements into a set of tabular files for export or curation.
 
+    Currently designed for use with "raw" Statements, i.e., Statements with a
+    single evidence entry. Exports Statements into a single tab-separated file
+    with the following columns:
+
+    *INDEX*
+        A 1-indexed integer identifying the statement.
+    *UUID*
+        The UUID of the Statement.
+    *TYPE*
+        Statement type, given by the name of the class in indra.statements.
+    *STR*
+        String representation of the Statement. Contains most relevant
+        information for curation including any additional statement data
+        beyond the Statement type and Agents.
+    *AG_A_TEXT*
+        For Statements extracted from text, the text in the sentence
+        corresponding to the first agent (i.e., the 'TEXT' entry in the
+        db_refs dictionary). For all other Statements, the Agent name is
+        given. Empty field if the Agent is None.
+    *AG_A_LINKS*
+        Groundings for the first agent given as a comma-separated list of
+        identifiers.org links. Empty if the Agent is None.
+    *AG_A_STR*
+        String representation of the first agent, including additional
+        agent context (e.g. modification, mutation, location, and bound
+        conditions). Empty if the Agent is None.
+    *AG_B_TEXT, AG_B_LINKS, AG_B_STR*
+        As above for the second agent. Note that the Agent may be None (and
+        these fields left empty) if the Statement consists only of a single
+        Agent (e.g., SelfModification, ActiveForm, or Translocation statement).
+    *PMID*
+        PMID of the first entry in the evidence list for the Statement.
+    *TEXT*
+        Evidence text for the Statement.
+    *IS_HYP*
+        Whether the Statement represents a "hypothesis", as flagged by some
+        reading systems and recorded in the `evidence.epistemics['hypothesis']`
+        field.
+    *IS_DIRECT*
+        Whether the Statement represents a direct physical interactions,
+        as recorded by the `evidence.epistemics['direct']` field.
+
+    In addition, if the `add_curation_cols` flag is set when calling
+    :py:meth:`TsvAssembler.make_model`, the following additional (empty)
+    columns will be added, to be filled out by curators:
+
+    *AG_A_IDS_CORRECT*
+        Correctness of Agent A grounding.
+    *AG_A_STATE_CORRECT*
+        Correctness of Agent A context (e.g., modification, bound, and other
+        conditions).
+    *AG_B_IDS_CORRECT, AG_B_STATE_CORRECT*
+        As above, for Agent B.
+    *EVENT_CORRECT*
+        Whether the event is supported by the evidence text if the entities
+        (Agents A and B) are considered as placeholders (i.e.,
+        ignoring the correctness of their grounding).
+    *RES_CORRECT*
+        For Modification statements, whether the amino acid residue indicated
+        by the Statement is supported by the evidence.
+    *POS_CORRECT*
+        For Modification statements, whether the amino acid position indicated
+        by the Statement is supported by the evidence.
+    *SUBJ_ACT_CORRECT*
+        For Activation/Inhibition Statements, whether the activity indicated
+        for the subject (Agent A) is supported by the evidence.
+    *OBJ_ACT_CORRECT*
+        For Activation/Inhibition Statements, whether the activity indicated
+        for the object (Agent B) is supported by the evidence.
+    *HYP_CORRECT*
+        Whether the Statement is correctly flagged as a hypothesis.
+    *HYP_CORRECT*
+        Whether the Statement is correctly flagged as direct.
+
     Parameters
     ----------
     stmts : Optional[list[indra.statements.Statement]]
@@ -31,7 +105,7 @@ class TsvAssembler(object):
     def add_statements(self, stmts):
         self.statements.extend(stmts)
 
-    def make_model(self, output_file, add_curation_cols=False):
+    def make_model(self, output_file, add_curation_cols=False, up_only=False):
         """Export the statements into a tab-separated text file.
 
         Parameters
@@ -41,6 +115,12 @@ class TsvAssembler(object):
         add_curation_cols : bool
             Whether to add columns to facilitate statement curation. Default
             is False (no additional columns).
+        up_only : bool
+            Whether to include identifiers.org links *only* for the Uniprot
+            grounding of an agent when one is available. Because most
+            spreadsheets allow only a single hyperlink per cell, this can makes
+            it easier to link to Uniprot information pages for curation
+            purposes. Default is False.
         """
         stmt_header = ['INDEX', 'UUID', 'TYPE', 'STR',
                        'AG_A_TEXT', 'AG_A_LINKS', 'AG_A_STR',
@@ -70,7 +150,8 @@ class TsvAssembler(object):
                 (ag_a, ag_b) = stmt.agent_list()
             # Put together the data row
             row = [ix+1, stmt.uuid, stmt.__class__.__name__, str(stmt)] + \
-                  _format_agent_entries(ag_a) + _format_agent_entries(ag_b) + \
+                  _format_agent_entries(ag_a, up_only) + \
+                  _format_agent_entries(ag_b, up_only) + \
                   [stmt.evidence[0].pmid, stmt.evidence[0].text,
                    stmt.evidence[0].epistemics.get('hypothesis', ''),
                    stmt.evidence[0].epistemics.get('direct', '')]
@@ -89,7 +170,7 @@ def _format_id(ns, id):
     return (label, url)
 
 
-def _format_agent_entries(agent):
+def _format_agent_entries(agent, up_only):
     if agent is None:
         return ['', '', '']
     # Agent text/name
@@ -104,7 +185,7 @@ def _format_agent_entries(agent):
                             for k, v in db_refs.items()])
     # Agent links
     identifier_links = []
-    if 'UP' in db_refs:
+    if up_only and 'UP' in db_refs:
         up_label, up_url = _format_id('UP', db_refs['UP'])
         identifier_links = [up_url]
     else:
