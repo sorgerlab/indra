@@ -1,21 +1,70 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import sys
+
 import pickle
-from matplotlib import pyplot as plt
+import logging
 import numpy as np
+from datetime import datetime
 from collections import Counter
+from matplotlib import pyplot as plt
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+
+logger = logging.getLogger('reading_results')
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(
+        description='Get statistics on a bunch of statements.'
+        )
+
+    subparsers = parser.add_subparsers(title='Source')
+    subparsers.required = True
+    subparsers.dest = 'source'
+
+    # Make file subparser
+    file_subparser_parent = ArgumentParser(add_help=False)
+    file_subparser_parent.add_argument(
+        'file_path',
+        help=('The path to the pickle file containing the statements to be '
+              'analyzed.')
+        )
+    file_parser = subparsers.add_parser(
+        'from-pickle',
+        parents=[file_subparser_parent],
+        description=('Get statistics of statements in a pickle file.'),
+        formatter_class=ArgumentDefaultsHelpFormatter
+        )
+
+    # Make db subparser
+    db_subparser_parent = ArgumentParser(add_help=False)
+    db_subparser_parent.add_argument(
+        '--indra_version',
+        help='Specify the indra version for the batch of statements'
+        )
+    db_subparser_parent.add_argument(
+        '--date_range',
+        help=('Specify the range of datetimes for statements. Must be in the '
+              'format: \"YYYYMMDDHHMMSS:YYYMMDDHHMMSS\". If you do not want '
+              'to impose the upper or lower bound, simply leave it blank, eg. '
+              '\"YYYYMMDDHHMMSS:\" if you don\'t care about the upper bound.')
+        )
+    db_parser = subparsers.add_parser(
+        'from-db',
+        parents=[db_subparser_parent],
+        description=('Get statistics from statements on the database.'),
+        formatter_class=ArgumentDefaultsHelpFormatter
+        )
+
+    # Parse the arguments.
+    args = parser.parse_args()
+
+
 from indra.util import plot_formatting as pf
-from indra.statements import *
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import grounding_mapper as gm
 
-import logging
-
-logger = logging.getLogger('reading_results')
-
-pf.set_fig_params()
+#pf.set_fig_params()
 
 
 def load_file(stmts_file):
@@ -25,10 +74,39 @@ def load_file(stmts_file):
     return results
 
 
-def report_stmt_counts(paper_stmts, plot_prefix=None):
+def load_stmts_from_db(clauses, db):
+    assert clauses, "No constraints provided for selecting statements."
+
+    stmt_query = db.filter_query(
+        [db.Statements, db.Readings.reader, db.TextRef.id],
+        db.Statements.reader_ref == db.Readings.id,
+        db.Readings.text_content_id == db.TextContent.id,
+        db.TextContent.text_ref_id == db.TextRef.id,
+        *clauses
+        )
+    all_db_stmts = stmt_query.all()
+    logger.info("Found %d statements on the database." % len(all_db_stmts))
+    all_stmts = make_stmts_from_db_list([db_stmt
+                                         for db_stmt, _, _, in all_db_stmts])
+    results_db = {'reach': {}, 'sparser': {}}
+    for stmt, reader_name, trid in all_db_stmts:
+        reader_name = reader_name.lower()
+        if trid in results_db[reader_name]:
+            results_db[reader_name][trid].append(stmt)
+        else:
+            results_db[reader_name][trid] = [stmt]
+
+    results = {reader_name: {trid: make_stmts_from_db_list(stmts)
+                             for trid, stmts in paper_stmts.items()}
+               for reader_name, paper_stmts in results_db.items()}
+    logger.info("Done sorting db statements.")
+    return all_stmts, results
+
+
+def report_stmt_counts(results, plot_prefix=None):
     counts_per_paper = [(pmid, len(stmts)) for pmid, stmts in results.items()]
     counts = np.array([tup[1] for tup in counts_per_paper])
-    logger.info("%.2f +/- %.2f statements per paper" % 
+    logger.info("%.2f +/- %.2f statements per paper" %
                 (np.mean(counts), np.std(counts)))
     logger.info("Median %d statements per paper" % np.median(counts))
 
@@ -37,7 +115,7 @@ def report_stmt_counts(paper_stmts, plot_prefix=None):
 
     # Distribution of numbers of statements
     if plot_prefix:
-        plot_filename = '%s_stmts_per_paper.pdf' % plot_prefix
+        plot_filename = '%s_stmts_per_paper.png' % plot_prefix
         logger.info('Plotting distribution of statements per paper in %s' %
                     plot_filename)
         fig = plt.figure(figsize=(2, 2), dpi=300)
@@ -48,10 +126,13 @@ def report_stmt_counts(paper_stmts, plot_prefix=None):
         plt.subplots_adjust(left=0.23, bottom=0.16)
         ax.set_xlabel('No. of statements')
         ax.set_ylabel('No. of papers')
-        plt.savefig(plot_filename)
+        fig = plt.gcf()
+        fig.savefig(plot_filename, format='png')
+        logger.info('plotted...')
 
 
 def plot_frequencies(counts, plot_filename, bin_interval):
+    logger.info("Plotting frequencies")
     freq_dist = []
     bin_starts = range(0, len(counts), bin_interval)
     for bin_start_ix in bin_starts:
@@ -82,18 +163,18 @@ def report_grounding(stmts, list_length=10, bin_interval=10, plot_prefix=None):
         logger.info('%s: %d' % (agents[i][0], agents[i][2]))
     agent_counts = [t[2] for t in agents]
     if plot_prefix:
-        plot_filename = '%s_agent_distribution.pdf' % plot_prefix
+        plot_filename = '%s_agent_distribution.png' % plot_prefix
         logger.info('Plotting occurrences of agent strings in %s' %
                     plot_filename)
         plot_frequencies(agent_counts, plot_filename, bin_interval)
     # Ungrounded agents
     ungrounded = gm.ungrounded_texts(stmts)
     logger.info('Top %d ungrounded strings, with frequencies' % list_length)
-    for i in range(list_length):
+    for i in range(min(len(ungrounded), list_length)):
         logger.info('%s: %d' % (ungrounded[i][0], ungrounded[i][1]))
     ungr_counts = [t[1] for t in ungrounded]
     if plot_prefix:
-        plot_filename = '%s_ungrounded_distribution.pdf' % plot_prefix
+        plot_filename = '%s_ungrounded_distribution.png' % plot_prefix
         logger.info('Plotting occurrences of ungrounded agents in %s' %
                     plot_filename)
         plot_frequencies(ungr_counts, plot_filename, bin_interval)
@@ -130,7 +211,7 @@ def report_stmt_types(stmts, plot_prefix=None):
     ax = fig.gca()
     sorted_counts = sorted(stmt_type_counter.items(), key=lambda x: x[1],
                            reverse=True)
-    labels = [t.__name__ for t, n in sorted_counts]
+    labels = [t.__name__ for t, _ in sorted_counts]
 
     logger.info('Distribution of statement types:')
     for stmt_type, count in sorted_counts:
@@ -179,15 +260,34 @@ def report_evidence_distribution(stmts, list_length=10, plot_prefix=None):
 
 
 if __name__ == '__main__':
-    # Load the statements
-    if len(sys.argv) < 2:
-        print("Usage: %s reach_stmts_file" % sys.argv[0])
-        sys.exit()
-    results = load_file(sys.argv[1])
-    all_stmts = [stmt for paper_stmts in results.values()
-                      for stmt in paper_stmts]
+    # Load the statements.
+    if args.source == 'from-pickle':
+        logger.info("Getting statements from pickle file.")
+        results = load_file(args.file_path)
+        all_stmts = [stmt for reader_stmts in results.values()
+                     for paper_stmts in reader_stmts
+                     for stmt in paper_stmts]
+    if args.source == 'from-db':
+        logger.info("Getting statements from the database.")
+        from indra.db import get_primary_db
+        from indra.db.util import make_stmts_from_db_list
+        db = get_primary_db()
+        clauses = []
+        if args.indra_version:
+            clauses.append(db.Statements.indra_version == args.indra_version)
+        if args.date_range:
+            min_date_str, max_date_str = args.date_range.split(':')
+            if min_date_str:
+                min_date = datetime.strptime(min_date_str, '%Y%m%d%H%M%S')
+                clauses.add(db.Statements.create_date > min_date)
+            if max_date_str:
+                max_date = datetime.strptime(max_date_str, '%Y%m%d%H%M%S')
+                clauses.add(db.Statements.create_date < max_date)
 
-    report_stmt_counts(results, plot_prefix='raw')
+        all_stmts, results = load_stmts_from_db(clauses, db)
+
+    report_stmt_counts(results['reach'], plot_prefix='raw_reach')
+    report_stmt_counts(results['sparser'], plot_prefix='raw_sparser')
     report_grounding(all_stmts, plot_prefix='raw')
     report_stmt_types(all_stmts, plot_prefix='raw')
     report_stmt_participants(all_stmts)
@@ -205,4 +305,3 @@ if __name__ == '__main__':
     pa.combine_duplicates()
 
     report_evidence_distribution(pa.unique_stmts, plot_prefix='preassembled')
-

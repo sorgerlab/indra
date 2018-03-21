@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 __all__ = ['sqltypes', 'texttypes', 'formats', 'DatabaseManager',
            'IndraDatabaseError', 'sql_expressions']
@@ -546,8 +547,10 @@ class DatabaseManager(object):
     def filter_query(self, tbls, *args):
         "Query a table and filter results."
         self.grab_session()
+        ok_classes = [type(self.Base), InstrumentedAttribute]
         if _isiterable(tbls) and not isinstance(tbls, dict):
-            if isinstance(tbls[0], type(self.Base)):
+            if all([any([isinstance(tbl, ok_class) for ok_class in ok_classes])
+                    for tbl in tbls]):
                 query_args = tbls
             elif isinstance(tbls[0], str):
                 query_args = [self.tables[tbl] for tbl in tbls]
@@ -557,7 +560,7 @@ class DatabaseManager(object):
                     type(tbls[0])
                     )
         else:
-            if isinstance(tbls, type(self.Base)):
+            if any([isinstance(tbls, ok_class) for ok_class in ok_classes]):
                 query_args = [tbls]
             elif isinstance(tbls, str):
                 query_args = [self.tables[tbls]]
