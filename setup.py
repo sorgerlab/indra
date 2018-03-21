@@ -60,7 +60,7 @@ def main():
             ],
           extras_require={'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                       'pyyaml', 'click'],
-                          'explanation': ['kappy'],
+                          'explanation': ['kappy==4.0.0rc1'],
                           'bbn': ['rdflib-jsonld']},
           entry_points={'console_scripts':
                         ['indra-machine = indra.tools.machine.cli:main']}
