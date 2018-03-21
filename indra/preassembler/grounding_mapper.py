@@ -292,7 +292,7 @@ def ungrounded_texts(stmts):
     ungrounded = [ag.db_refs['TEXT']
                   for s in stmts
                   for ag in s.agent_list()
-                  if ag is not None and ag.db_refs.keys() == ['TEXT']]
+                  if ag is not None and list(ag.db_refs.keys()) == ['TEXT']]
     ungroundc = Counter(ungrounded)
     ungroundc = ungroundc.items()
     ungroundc = sorted(ungroundc, key=lambda x: x[1], reverse=True)
