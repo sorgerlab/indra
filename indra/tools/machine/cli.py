@@ -12,10 +12,10 @@ problems--the code will get executed twice:
 Also see (1) from http://click.pocoo.org/5/setuptools/#setuptools-integration
 """
 
+import os
 import sys
 
 import click
-import os
 
 from indra.tools.machine.config import copy_default_config
 
@@ -23,11 +23,6 @@ from indra.tools.machine.config import copy_default_config
 @click.group()
 def main():
     """INDRA"""
-
-
-#@main.group()
-#def machine():
-#    """RAS Machine"""
 
 
 @main.command()
@@ -73,6 +68,17 @@ def run_with_pmids(model_path, pmids):
     """Run with given list of PMIDs."""
     from indra.tools.machine.machine import run_with_pmids_helper
     run_with_pmids_helper(model_path, pmids)
+
+
+@click.argument('model_path')
+@click.argument('name')
+@click.option('--output', type=click.File('w'))
+def to_cx(model_path, name, output):
+    from indra.tools.machine.machine import load_model, assemble_cx
+    model = load_model(model_path)
+    stmts = model.get_statements()
+    cx_str = assemble_cx(stmts, name)
+    click.echo(cx_str, output)
 
 
 if __name__ == '__main__':

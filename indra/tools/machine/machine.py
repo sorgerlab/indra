@@ -626,11 +626,15 @@ def run_with_search_helper(model_path, config):
     )
 
 
-def summarize_helper(model_path):
+def load_model(model_path):
     logger.info(time.strftime('%c'))
     logger.info('Loading original model.')
     inc_model_file = os.path.join(model_path, 'model.pkl')
-    model = IncrementalModel(inc_model_file)
+    return IncrementalModel(inc_model_file)
+
+
+def summarize_helper(model_path):
+    model = load_model(model_path)
     stmts = model.get_statements()
     click.echo('Number of statements: {}'.format(len(stmts)))
     agents = model.get_model_agents()
