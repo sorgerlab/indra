@@ -390,11 +390,11 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         if not hgnc_id:
             logger.warning('Invalid gene name: %s' % agent_id)
             return []
-        clauses.extend([Agents.db_name == 'HGNC',
-                        Agents.db_id == hgnc_id])
+        clauses.extend([Agents.db_name.like('HGNC'),
+                        Agents.db_id.like(hgnc_id)])
     elif agent_id:
-        clauses.extend([Agents.db_name == agent_ns,
-                        Agents.db_id == agent_id])
+        clauses.extend([Agents.db_name.like(agent_ns),
+                        Agents.db_id.like(agent_id)])
     if role:
         clauses.append(Agents.role == role)
     if agent_id or role:
