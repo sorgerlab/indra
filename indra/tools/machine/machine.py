@@ -98,7 +98,7 @@ def process_paper(model_name, pmid):
     else:
         try:
             txt, txt_format = get_full_text(pmid, 'pmid')
-        except:
+        except Exception:
             return None, None
 
         if txt_format == 'pmc_oa_xml':
@@ -557,7 +557,7 @@ def run_with_search_helper(model_path, config):
             # Put the email_pmids into the pmids dictionary
             pmids['Gmail'] = email_pmids
             logger.info('Collected %d PMIDs from Gmail', len(email_pmids))
-        except:
+        except Exception:
             logger.exception('Could not get PMIDs from Gmail, continuing.')
 
     # Get PMIDs for general search_terms and genes
