@@ -205,6 +205,9 @@ def extend_model(model_name, model, pmids, start_time_local):
 
     logger.info('Found %d unique and novel PMIDS', len(pmids_inv))
 
+    if not os.path.exists(os.path.join(model_name, 'jsons')):
+        os.mkdir(os.path.join(model_name, 'jsons'))
+
     for counter, (pmid, search_terms) in enumerate(pmids_inv.items(), start=1):
         logger.info('[%d/%d] Processing %s for search terms: %s',
                     counter, len(pmids_inv), pmid, search_terms)
