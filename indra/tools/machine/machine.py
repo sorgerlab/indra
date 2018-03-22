@@ -45,12 +45,12 @@ def build_prior(genes, out_file):
 
 
 def get_email_pmids(gmail_cred):
-    M = gmail_client.gmail_login(gmail_cred.get('user'),
+    mailbox = gmail_client.gmail_login(gmail_cred.get('user'),
                                  gmail_cred.get('password'))
-    gmail_client.select_mailbox(M, 'INBOX')
+    gmail_client.select_mailbox(mailbox, 'INBOX')
     num_days = int(gmail_cred.get('num_days', 10))
     logger.info('Searching last %d days of emails', num_days)
-    pmids = gmail_client.get_message_pmids(M, num_days)
+    pmids = gmail_client.get_message_pmids(mailbox, num_days)
     return pmids
 
 
