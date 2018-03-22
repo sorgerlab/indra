@@ -13,3 +13,4 @@ Assemblers of model output (:py:mod:`indra.assemblers`)
    sbgn_assembler
    cyjs_assembler
    cag_assembler
+   tsv_assembler

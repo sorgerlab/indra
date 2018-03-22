@@ -42,8 +42,12 @@ try:
     from indra.assemblers.figaro_assembler import FigaroAssembler
 except ImportError:
     pass
-
 try:
     from indra.assemblers.cag_assembler import CAGAssembler
 except ImportError:
     pass
+try:
+    from indra.assemblers.tsv_assembler import TsvAssembler
+except ImportError:
+    pass
+

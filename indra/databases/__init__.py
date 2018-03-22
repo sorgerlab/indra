@@ -36,6 +36,10 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + 'pubchem.compound/%s' % db_id
     elif db_name == 'PF':
         url = identifiers_url + 'pfam/%s' % db_id
+    elif db_name == 'MIRBASEM':
+        url = identifiers_url + 'mirbase.mature/%s' % db_id
+    elif db_name == 'MIRBASE':
+        url = identifiers_url + 'mirbase/%s' % db_id
     elif db_name == 'MESH':
         url = identifiers_url + 'mesh/%s' % db_id
     elif db_name == 'HMDB':
