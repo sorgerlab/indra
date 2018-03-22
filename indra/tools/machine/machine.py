@@ -252,12 +252,12 @@ def get_config(config_fname):
         fh = open(config_fname, 'rt')
     except IOError as e:
         logger.error('Could not open configuration file %s.' % config_fname)
-        raise(e)
+        raise e
     try:
         config = yaml.load(fh)
     except Exception as e:
         logger.error('Could not parse YAML configuration %s.' % config_fname)
-        raise(e)
+        raise e
 
     return config
 
