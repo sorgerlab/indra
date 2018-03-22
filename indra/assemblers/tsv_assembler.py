@@ -5,9 +5,10 @@ from copy import copy
 from indra.databases import get_identifiers_url
 from indra.statements import *
 from indra.util import write_unicode_csv
-from indra.tools import assemble_corpus as ac
+
 
 logger = logging.getLogger('tsv_assembler')
+
 
 class TsvAssembler(object):
     """Assembles Statements into a set of tabular files for export or curation.
