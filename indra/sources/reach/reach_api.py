@@ -7,6 +7,7 @@ from builtins import dict, str, bytes
 
 import json
 import logging
+import os
 import requests
 
 from indra.literature import id_lookup
@@ -33,6 +34,7 @@ except Exception:
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
 reach_nxml_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/nxml'
+reach_output_fname = 'reach_output.json'
 
 
 def process_pmc(pmc_id, offline=False):
@@ -70,7 +72,7 @@ def process_pmc(pmc_id, offline=False):
     return rp
 
 
-def process_pubmed_abstract(pubmed_id, offline=False):
+def process_pubmed_abstract(pubmed_id, offline=False, directory=None):
     """Return a ReachProcessor by processing an abstract with a given Pubmed id.
 
     Uses the Pubmed client to get the abstract. If that fails, None is
@@ -86,6 +88,9 @@ def process_pubmed_abstract(pubmed_id, offline=False):
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    directory : Optional[str]
+        The directory to output the reach data to. Defaults to current working
+        directory.
 
     Returns
     -------
@@ -96,7 +101,8 @@ def process_pubmed_abstract(pubmed_id, offline=False):
     abs_txt = pubmed_client.get_abstract(pubmed_id)
     if abs_txt is None:
         return None
-    rp = process_text(abs_txt, citation=pubmed_id, offline=offline)
+    rp = process_text(abs_txt, citation=pubmed_id, offline=offline,
+                      directory=directory)
     if rp and rp.statements:
         for st in rp.statements:
             for ev in st.evidence:
@@ -104,7 +110,7 @@ def process_pubmed_abstract(pubmed_id, offline=False):
     return rp
 
 
-def process_text(text, citation=None, offline=False):
+def process_text(text, citation=None, offline=False, directory=None):
     """Return a ReachProcessor by processing the given text.
 
     Parameters
@@ -118,6 +124,9 @@ def process_text(text, citation=None, offline=False):
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    directory : Optional[str]
+        The directory to output the reach data to. Defaults to current working
+        directory.
 
     Returns
     -------
@@ -161,12 +170,18 @@ def process_text(text, citation=None, offline=False):
         json_str = res.content
     if not isinstance(json_str, bytes):
         raise TypeError('{} is {} instead of {}'.format(json_str, json_str.__class__, bytes))
-    with open('reach_output.json', 'wb') as fh:
+
+    if directory is not None:
+        reach_output_path = os.path.join(directory, reach_output_fname)
+    else:
+        reach_output_path = reach_output_fname
+
+    with open(reach_output_path, 'wb') as fh:
         fh.write(json_str)
     return process_json_str(json_str.decode('utf-8'), citation)
 
 
-def process_nxml_str(nxml_str, citation=None, offline=False):
+def process_nxml_str(nxml_str, citation=None, offline=False, directory=None):
     """Return a ReachProcessor by processing the given NXML string.
 
     NXML is the format used by PubmedCentral for papers in the open
@@ -182,6 +197,9 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
     offline : Optional[bool]
         If set to True, the REACH system is ran offline. Otherwise (by default)
         the web service is called. Default: False
+    directory : Optional[str]
+        The directory to output the reach data to. Defaults to current working
+        directory.
 
     Returns
     -------
@@ -228,7 +246,13 @@ def process_nxml_str(nxml_str, citation=None, offline=False):
                          + 'Status code: %d' % res.status_code)
             return None
         json_str = res.text
-        with open('reach_output.json', 'wb') as fh:
+
+        if directory is not None:
+            reach_output_path = os.path.join(directory, reach_output_fname)
+        else:
+            reach_output_path = reach_output_fname
+
+        with open(reach_output_path, 'wb') as fh:
             fh.write(json_str.encode('utf-8'))
         return process_json_str(json_str, citation)
 
