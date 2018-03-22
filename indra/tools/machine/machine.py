@@ -413,10 +413,10 @@ def get_ndex_cred(config):
     ndex_cred = config.get('ndex')
     if not ndex_cred:
         return
-    elif not ndex_cred.get('user'):
+    elif not ndex_cred.get('user') and 'NDEX_USERNAME' not in os.environ:
         logger.info('NDEx user missing.')
         return
-    elif not ndex_cred.get('password'):
+    elif not ndex_cred.get('password')and 'NDEX_PASSWORD' not in os.environ:
         logger.info('NDEx password missing.')
         return
     elif not ndex_cred.get('network'):
