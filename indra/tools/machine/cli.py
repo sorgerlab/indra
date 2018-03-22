@@ -70,6 +70,7 @@ def run_with_pmids(model_path, pmids):
     run_with_pmids_helper(model_path, pmids)
 
 
+@main.command()
 @click.argument('model_path')
 @click.argument('name')
 @click.option('--output', type=click.File('w'))
