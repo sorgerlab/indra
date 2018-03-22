@@ -71,7 +71,7 @@ def get_searchgenes_pmids(search_genes, num_days):
     for s in search_genes:
         try:
             pmids[s] = pubmed_client.get_ids_for_gene(s, reldate=num_days)
-        except ValueError as e:
+        except ValueError:
             logger.error('Gene symbol %s is invalid')
             continue
     return pmids
