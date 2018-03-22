@@ -120,15 +120,18 @@ class SifAssembler(object):
             sif_str += '%s %s %s\n' % (n1, rel, n2)
         return sif_str
 
-    def save_model(self, fname):
+    def save_model(self, fname, include_unsigned_edges=False):
         """Save the assembled model's SIF string into a file.
 
         Parameters
         ----------
         fname : str
             The name of the file to save the SIF into.
+        include_unsigned_edges : bool
+            If True, includes edges with an unknown activating/inactivating
+            relationship (e.g., most PTMs). Default is False.
         """
-        sif_str = self.print_model()
+        sif_str = self.print_model(include_unsigned_edges)
         with open(fname, 'wb') as fh:
             fh.write(sif_str.encode('utf-8'))
 
