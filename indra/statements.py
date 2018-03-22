@@ -495,7 +495,76 @@ class ActivityCondition(object):
 
 
 @python_2_unicode_compatible
-class Agent(object):
+class Concept(object):
+    """A concept/entity of interest that is the argument of a Statement
+
+    Parameters
+    ----------
+    name : str
+        The name of the concept, possibly a canonicalized name.
+    db_refs : dict
+        Dictionary of database identifiers associated with this concept.
+    """
+    def __init__(self, name, db_refs=None):
+        self.name = name
+        self.db_refs = db_refs if db_refs else {}
+
+    def matches(self, other):
+        return self.matches_key() == other.matches_key()
+
+    def matches_key(self):
+        key = self.entity_matches_key()
+        return str(key)
+
+    def entity_matches(self, other):
+        return self.entity_matches_key() == other.entity_matches_key()
+
+    def entity_matches_key(self):
+        return self.name
+
+    def equals(self, other):
+        matches = (self.name == other.name) and \
+                  (self.db_refs == other.db_refs)
+        return matches
+
+    def isa(self, other, hierarchies):
+        # Get the namespaces for the comparison
+        (self_ns, self_id) = self.get_grounding()
+        (other_ns, other_id) = other.get_grounding()
+        # If one of the agents isn't grounded to a relevant namespace,
+        # there can't be an isa relationship
+        if not all((self_ns, self_id, other_ns, other_id)):
+            return False
+        # Check for isa relationship
+        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+
+
+    def to_json(self):
+        json_dict = _o({'name': self.name})
+        json_dict['db_refs'] = self.db_refs
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        name = json_dict.get('name')
+        db_refs = json_dict.get('db_refs', {})
+        if not name:
+            logger.error('Agent missing name.')
+            return None
+        if not db_refs:
+            db_refs = {}
+        agent = Agent(name, db_refs=db_refs)
+        return agent
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return str(self)
+
+
+@python_2_unicode_compatible
+class Agent(Concept):
     """A molecular entity, e.g., a protein.
 
     Parameters
@@ -520,7 +589,7 @@ class Agent(object):
     def __init__(self, name, mods=None, activity=None,
                  bound_conditions=None, mutations=None,
                  location=None, db_refs=None):
-        self.name = name
+        super(self, Agent).__init__(name, db_refs=db_refs)
 
         if mods is None:
             self.mods = []
@@ -553,9 +622,6 @@ class Agent(object):
         else:
             self.db_refs = db_refs
 
-    def matches(self, other):
-        return self.matches_key() == other.matches_key()
-
     def matches_key(self):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
@@ -570,9 +636,6 @@ class Agent(object):
                      for bc in sorted(self.bound_conditions,
                                       key=lambda x: x.agent.name)))
         return str(key)
-
-    def entity_matches(self, other):
-        return self.entity_matches_key() == other.entity_matches_key()
 
     def entity_matches_key(self):
         db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
@@ -820,9 +883,6 @@ class Agent(object):
         attr_str = ', '.join(attr_strs)
         agent_name = self.name
         return '%s(%s)' % (agent_name, attr_str)
-
-    def __repr__(self):
-        return str(self)
 
 
 @python_2_unicode_compatible
