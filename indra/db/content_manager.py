@@ -1334,7 +1334,7 @@ class Elsevier(ContentManager):
 
     def __init__(self, *args, **kwargs):
         super(Elsevier, self).__init__(*args, **kwargs)
-        with open('elsevier_titles.txt', 'r') as f:
+        with open(path.join(THIS_DIR, 'elsevier_titles.txt'), 'r') as f:
             self.__elsevier_journal_set = set(f.read().splitlines())
 
     def __select_elsevier_refs(self, tr_set):
@@ -1349,8 +1349,8 @@ class Elsevier(ContentManager):
         if tr_set:
             pmid_set = {tr.pmid for tr in tr_set}
             tr_dict = {tr.pmid: tr for tr in tr_set}
-            titles = {meta['journal_title']
-                      for meta in get_metadata_for_ids(pmid_set)}
+            titles = {(pmid, meta['journal_title'])
+                      for pmid, meta in get_metadata_for_ids(pmid_set).items()}
             for pmid, title in titles:
                 if title in self.__elsevier_journal_set:
                     elsevier_tr_set.add(tr_dict[pmid])
@@ -1372,7 +1372,7 @@ class Elsevier(ContentManager):
                                         texttypes.FULLTEXT, content_zip))
         return article_tuples
 
-    def __process_batch(self, tr_batch):
+    def __process_batch(self, db, tr_batch):
         logger.info("Beginning to load batch of %d text refs." % len(tr_batch))
         elsevier_trs = self.__select_elsevier_refs(tr_batch)
         logger.debug("Found %d elsevier text refs." % len(tr_batch))
@@ -1396,11 +1396,11 @@ class Elsevier(ContentManager):
             tr_batch.add(tr)
             if (i+1) % 1000 is 0:
                 logger.info('Beginning batch %d.' % ((i+1)//1000))
-                self.__process_batch(tr_batch)
+                self.__process_batch(db, tr_batch)
                 tr_batch.clear()
         if tr_batch:
             logger.info('Loading final batch.')
-            self.__process_batch(tr_batch)
+            self.__process_batch(db, tr_batch)
         return True
 
     @ContentManager._record_for_review

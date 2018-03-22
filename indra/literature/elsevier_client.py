@@ -107,7 +107,7 @@ def download_article(id_val, id_type='doi', on_retry=False):
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=elsevier_keys)
     if res.status_code == 404:
-        logger.debug("Resource for %s=%s not available on elsevier."
+        logger.debug("Resource for %s not available on elsevier."
                      % url)
     elif res.status_code == 429:
         if not on_retry:
@@ -119,7 +119,7 @@ def download_article(id_val, id_type='doi', on_retry=False):
             logger.error("Still breaking speed limit after waiting.")
             logger.error("Elsevier response: %s" % res.text)
             return None
-    if not res.status_code == 200:
+    elif not res.status_code == 200:
         logger.error('Could not download article %s: status code %d' %
                      (url, res.status_code))
         logger.error('Elsevier response: %s' % res.text)
