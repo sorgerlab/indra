@@ -224,10 +224,10 @@ def extend_model(model_name, model, pmids, start_time_local):
             nexisting += 1
 
         if not rp.statements:
-            logger.info('No statement from PMID%s (%s)' % \
+            logger.info('No statement from PMID%s (%s)' %
                         (pmid, txt_format))
         else:
-            logger.info('%d statements from PMID%s (%s)' % \
+            logger.info('%d statements from PMID%s (%s)' %
                         (len(rp.statements), pmid, txt_format))
         model.add_statements(pmid, rp.statements)
 
@@ -285,13 +285,13 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
         supp = []
         for st in stmt.supports:
             sources = set([ev.source_api for ev in st.evidence])
-            if st.belief >= belief_cutoff or \
-                sources.intersection(db_names):
+            if (st.belief >= belief_cutoff or
+                sources.intersection(db_names)):
                 supp.append(st)
         for st in stmt.supported_by:
             sources = set([ev.source_api for ev in st.evidence])
-            if st.belief >= belief_cutoff or \
-                sources.intersection(db_names):
+            if (st.belief >= belief_cutoff or
+               sources.intersection(db_names)):
                 supp_by.append(st)
         stmt.supports = supp
         stmt.supported_by = supp_by
