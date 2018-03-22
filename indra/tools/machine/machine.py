@@ -19,7 +19,6 @@ from indra.tools.machine import gmail_client
 from indra.tools.machine import twitter_client
 from indra.tools.gene_network import GeneNetwork
 from indra.tools.incremental_model import IncrementalModel
-from indra.sources.reach.reach_api import reach_output_fname
 from indra.literature import pubmed_client, get_full_text, elsevier_client
 
 try:
@@ -120,25 +119,17 @@ def process_paper(model_name, pmid):
         except Exception:
             return None, None
 
-        reach_output_path = os.path.join(model_name, reach_output_fname)
-
         if txt_format == 'pmc_oa_xml':
             rp = reach.process_nxml_str(txt, citation=pmid, offline=True,
-                                        directory=model_name)
-            if os.path.exists(reach_output_path):
-                shutil.move(reach_output_path, json_path)
+                                        output_fname=json_path)
         elif txt_format == 'elsevier_xml':
             # Extract the raw text from the Elsevier XML
             txt = elsevier_client.extract_text(txt)
             rp = reach.process_text(txt, citation=pmid, offline=True,
-                                    directory=model_name)
-            if os.path.exists(reach_output_path):
-                shutil.move(reach_output_path, json_path)
+                                    output_fname=json_path)
         elif txt_format == 'abstract':
             rp = reach.process_text(txt, citation=pmid, offline=True,
-                                    directory=model_name)
-            if os.path.exists(reach_output_path):
-                shutil.move(reach_output_path, json_path)
+                                    output_fname=json_path)
         else:
             rp = None
     if rp is not None:
