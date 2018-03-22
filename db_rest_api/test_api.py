@@ -6,7 +6,7 @@ from datetime import datetime
 from indra.statements import stmts_from_json
 from itertools import combinations
 
-TIMELIMIT = 20
+TIMELIMIT = 1
 
 class DbApiTestCase(unittest.TestCase):
 
@@ -20,7 +20,9 @@ class DbApiTestCase(unittest.TestCase):
     def __time_get_query(self, query_str):
         start_time = datetime.now()
         resp = self.app.get('/statements/?%s' % query_str)
-        dt = datetime.now() - start_time
+        t_delta = datetime.now() - start_time
+        dt = t_delta.seconds + t_delta.microseconds/1e6
+        print(dt)
         return resp, dt
 
     def __check_good_query(self, *args, **kwargs):
@@ -37,8 +39,8 @@ class DbApiTestCase(unittest.TestCase):
             "Some statements lack support: %s." % str([str(s) for s in stmts if not s.supports + s.supported_by])
         assert all([not s1.matches(s2) for s1, s2 in combinations(stmts, 2)]),\
             "Some statements match: %s." % str([(s1, s2) for s1, s2 in combinations(stmts, 2) if s1.matches(s2)])
-        assert dt.seconds <= TIMELIMIT, \
-            "Query took %d seconds. Must be less than 25." % dt.seconds
+        assert dt <= TIMELIMIT, \
+            "Query took %f seconds. Must be less than %f seconds." % (dt, TIMELIMIT)
         return resp
 
     def test_blank_response(self):
@@ -47,8 +49,8 @@ class DbApiTestCase(unittest.TestCase):
         assert resp.status_code == 400, \
             ('Got unexpected response with code %d: %s.'
              % (resp.status_code, resp.data.decode()))
-        assert dt.seconds <= TIMELIMIT, \
-            "Query took %d seconds. Must be less than 25." % dt.seconds
+        assert dt <= TIMELIMIT, \
+            "Query took %f seconds. Must be less than %f seconds." % (dt, TIMELIMIT)
 
     def test_specific_query(self):
         """Test whether we can get a "fully" specified statement."""
