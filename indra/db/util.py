@@ -182,7 +182,7 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     agent_data = []
     for i, db_stmt in enumerate(stmts_wo_agents):
         # Convert the database statement entry object into an indra statement.
-        stmt = stmts_from_json(json.loads(db_stmt.json.decode()))
+        stmt = stmts_from_json([json.loads(db_stmt.json.decode())])[0]
 
         # Figure out how the agents are structured and assign roles.
         ag_list = stmt.agent_list()
