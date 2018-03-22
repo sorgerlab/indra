@@ -1335,14 +1335,25 @@ class Elsevier(ContentManager):
     def __init__(self, *args, **kwargs):
         super(Elsevier, self).__init__(*args, **kwargs)
         with open(path.join(THIS_DIR, 'elsevier_titles.txt'), 'r') as f:
-            self.__elsevier_journal_set = set(f.read().splitlines())
+            self.__journal_set = {self.__regularize_title(t)
+                                  for t in f.read().splitlines()}
+        return
+
+    @staticmethod
+    def __regularize_title(title):
+        title = title.lower()
+        for space_car in [' ', '_', '-', '.']:
+            title = title.replace(space_car, '')
+        return title
 
     def __select_elsevier_refs(self, tr_set):
         """Try to check if this content is available on Elsevier."""
         elsevier_tr_set = set()
         for tr in tr_set.copy():
             if tr.doi is not None:
-                if get_publisher(tr.doi).lower() == self.my_source:
+                publisher = get_publisher(tr.doi)
+                if publisher is not None and\
+                   publisher.lower() == self.my_source:
                     tr_set.remove(tr)
                     elsevier_tr_set.add(tr)
 
@@ -1351,9 +1362,9 @@ class Elsevier(ContentManager):
             tr_dict = {tr.pmid: tr for tr in tr_set}
             titles = {(pmid, meta['journal_title'])
                       for pmid, meta in get_metadata_for_ids(pmid_set).items()}
-            for pmid, title in titles:
-                if title in self.__elsevier_journal_set:
-                    elsevier_tr_set.add(tr_dict[pmid])
+            elsevier_tr_set |= {tr_dict[pmid] for pmid, title in titles
+                                if self.__regularize_title(title)
+                                in self.__journal_set}
 
         return elsevier_tr_set
 
@@ -1375,7 +1386,7 @@ class Elsevier(ContentManager):
     def __process_batch(self, db, tr_batch):
         logger.info("Beginning to load batch of %d text refs." % len(tr_batch))
         elsevier_trs = self.__select_elsevier_refs(tr_batch)
-        logger.debug("Found %d elsevier text refs." % len(tr_batch))
+        logger.debug("Found %d elsevier text refs." % len(elsevier_trs))
         article_tuples = self.__get_content(elsevier_trs)
         logger.debug("Got %d elsevier results." % len(article_tuples))
         self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
@@ -1394,8 +1405,8 @@ class Elsevier(ContentManager):
         tr_batch = set()
         for i, tr in enumerate(tr_wo_pmc_q.yield_per(1000)):
             tr_batch.add(tr)
-            if (i+1) % 1000 is 0:
-                logger.info('Beginning batch %d.' % ((i+1)//1000))
+            if (i+1) % 200 is 0:
+                logger.info('Beginning batch %d.' % ((i+1)//200))
                 self.__process_batch(db, tr_batch)
                 tr_batch.clear()
         if tr_batch:
