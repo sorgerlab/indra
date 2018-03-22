@@ -11,6 +11,7 @@ import logging
 import textwrap
 import xml.etree.ElementTree as ET
 import requests
+from time import sleep
 # Python3
 try:
     from functools import lru_cache
@@ -58,8 +59,8 @@ try:
         elsevier_keys = None
 except IOError:
     logger.debug('Elsevier API keys file could not be read, trying '
-                  'environment variables $%s and $%s.' %
-                  (api_key_env_name, inst_key_env_name))
+                 'environment variables $%s and $%s.' %
+                 (api_key_env_name, inst_key_env_name))
     logger.debug('Tried key file: %s' % api_key_file)
     # Try the environment variable for the api key. This one is optional,
     # so if it is not found then we just leave it out of the keys dict
@@ -95,7 +96,7 @@ def check_entitlement(doi):
         return False
 
 
-def download_article(id_val, id_type='doi'):
+def download_article(id_val, id_type='doi', on_retry=False):
     """Low level function to get an XML article for a particular id."""
     if elsevier_keys is None:
         logger.error('Missing API key, could not download article.')
@@ -103,12 +104,24 @@ def download_article(id_val, id_type='doi'):
     if id_type == 'pmid':
         id_type = 'pubmed_id'
     url = '%s/%s' % (elsevier_article_url_fmt % id_type, id_val)
-    logger.debug("Getting url=%s" % url)
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=elsevier_keys)
+    if res.status_code == 404:
+        logger.debug("Resource for %s=%s not available on elsevier."
+                     % url)
+    elif res.status_code == 429:
+        if not on_retry:
+            logger.warning("Broke the speed limit. Waiting half a second then "
+                           "trying again...")
+            sleep(0.5)
+            return download_article(id_val, id_type, True)
+        else:
+            logger.error("Still breaking speed limit after waiting.")
+            logger.error("Elsevier response: %s" % res.text)
+            return None
     if not res.status_code == 200:
-        logger.error('Could not download article %s=%s: status code %d' %
-                     (id_type, id_val, res.status_code))
+        logger.error('Could not download article %s: status code %d' %
+                     (url, res.status_code))
         logger.error('Elsevier response: %s' % res.text)
         return None
     # Return the XML content as a unicode string, assuming UTF-8 encoding
