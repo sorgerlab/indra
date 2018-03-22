@@ -1373,8 +1373,11 @@ class Elsevier(ContentManager):
         return article_tuples
 
     def __process_batch(self, tr_batch):
+        logger.info("Beginning to load batch of %d text refs." % len(tr_batch))
         elsevier_trs = self.__select_elsevier_refs(tr_batch)
+        logger.debug("Found %d elsevier text refs." % len(tr_batch))
         article_tuples = self.__get_content(elsevier_trs)
+        logger.debug("Got %d elsevier results." % len(article_tuples))
         self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
         return
 
@@ -1392,9 +1395,11 @@ class Elsevier(ContentManager):
         for i, tr in enumerate(tr_wo_pmc_q.yield_per(1000)):
             tr_batch.add(tr)
             if (i+1) % 1000 is 0:
+                logger.info('Beginning batch %d.' % ((i+1)//1000))
                 self.__process_batch(tr_batch)
                 tr_batch.clear()
         if tr_batch:
+            logger.info('Loading final batch.')
             self.__process_batch(tr_batch)
         return True
 
