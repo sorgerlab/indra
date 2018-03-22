@@ -19,6 +19,8 @@ from ftplib import FTP
 from io import BytesIO
 from indra.util import _require_python3
 from indra.literature.elsevier_client import download_article_from_ids
+from indra.literature.crossref_client import get_publisher
+from indra.literature.pubmed_client import get_metadata_for_ids
 
 
 logger = logging.getLogger('content_manager')
@@ -1330,6 +1332,52 @@ class Elsevier(ContentManager):
     tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
                'content',)
 
+    def __init__(self, *args, **kwargs):
+        super(Elsevier, self).__init__(*args, **kwargs)
+        with open('elsevier_titles.txt', 'r') as f:
+            self.__elsevier_journal_set = set(f.read().splitlines())
+
+    def __select_elsevier_refs(self, tr_set):
+        """Try to check if this content is available on Elsevier."""
+        elsevier_tr_set = set()
+        for tr in tr_set.copy():
+            if tr.doi is not None:
+                if get_publisher(tr.doi).lower() == self.my_source:
+                    tr_set.remove(tr)
+                    elsevier_tr_set.add(tr)
+
+        if tr_set:
+            pmid_set = {tr.pmid for tr in tr_set}
+            tr_dict = {tr.pmid: tr for tr in tr_set}
+            titles = {meta['journal_title']
+                      for meta in get_metadata_for_ids(pmid_set)}
+            for pmid, title in titles:
+                if title in self.__elsevier_journal_set:
+                    elsevier_tr_set.add(tr_dict[pmid])
+
+        return elsevier_tr_set
+
+    def __get_content(self, trs):
+        """Get the content."""
+        article_tuples = set()
+        for tr in trs:
+            id_dict = {id_type: getattr(tr, id_type)
+                       for id_type in ['doi', 'pmid', 'pii']
+                       if getattr(tr, id_type) is not None}
+            if id_dict:
+                content_str = download_article_from_ids(**id_dict)
+                if content_str is not None:
+                    content_zip = zip_string(content_str)
+                    article_tuples.add((tr.id, self.my_source, formats.TEXT,
+                                        texttypes.FULLTEXT, content_zip))
+        return article_tuples
+
+    def __process_batch(self, tr_batch):
+        elsevier_trs = self.__select_elsevier_refs(tr_batch)
+        article_tuples = self.__get_content(elsevier_trs)
+        self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
+        return
+
     @ContentManager._record_for_review
     def populate(self, db, n_procs=1):
         """Load all available elsevier content for refs with no pmc content."""
@@ -1340,18 +1388,14 @@ class Elsevier(ContentManager):
                                        self.my_source])
             )
         tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
-        article_tuples = []
-        for tr in tr_wo_pmc_q.yield_per(1000):
-            id_dict = {id_type: getattr(tr, id_type)
-                       for id_type in ['doi', 'pmid', 'pii']
-                       if getattr(tr, id_type) is not None}
-            if id_dict:
-                content_str = download_article_from_ids(**id_dict)
-                if content_str is not None:
-                    content_zip = zip_string(content_str)
-                    article_tuples.append((tr.id, self.my_source, formats.TEXT,
-                                           texttypes.FULLTEXT, content_zip))
-        self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
+        tr_batch = set()
+        for i, tr in enumerate(tr_wo_pmc_q.yield_per(1000)):
+            tr_batch.add(tr)
+            if (i+1) % 1000 is 0:
+                self.__process_batch(tr_batch)
+                tr_batch.clear()
+        if tr_batch:
+            self.__process_batch(tr_batch)
         return True
 
     @ContentManager._record_for_review
