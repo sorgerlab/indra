@@ -101,6 +101,8 @@ def process_paper(model_name, pmid):
     rp : ReachProcessor
         A ReachProcessor containing the extracted INDRA Statements
         in rp.statements.
+    txt_format : str
+        A string representing the format of the text
     """
     json_directory = os.path.join(model_name, 'jsons')
     json_path = os.path.join(json_directory, 'PMID%s.json' % pmid)
