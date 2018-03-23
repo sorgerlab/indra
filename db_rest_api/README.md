@@ -5,11 +5,14 @@ INDRA Statements. This web API allows accessing Statements in a database by
 searching Statements matching a given set of query paramerters and returning
 the Statements in a JSON serialized form.
 
-You need the following information to access the running web service:
+You need the following information to access a running web service:
 - The address of the web service (below shown with the placeholder
 host.of.api.com)
-- An API key which needs to be sent in the header of each request to the
-service
+- (for some implementations) An API key which needs to be sent in the header of each request to the
+service, or any other credentials that are implemented.
+
+If you want to use our implementation of the web API, you can contact us for
+the path and the API key.
 
 The service in `api.py` is implemented using the Flask Python package.
 The means of hosting this api are left to the user.
@@ -24,24 +27,22 @@ the agent arguments as well as the type of Statement of interest.
 The query parameters available are as follows:
 - **`subject`**, **`object`**: The HGNC gene symbol of the subject or
 object of the Statement.
+**Note**: only one of each of `subject` and `object` will be accepted per
+query.
   - Example 1: if looking for Statements where MAP2K1 is a subject
 (e.g. "What does MAP2K1 phosphorylate?"), specify
 `subject=MAP2K1` as a query parameter
   - Example 2: if looking for Statements where MAP2K1 is the subject and
 MAPK1 is the object, add both `subject=MAP2K1` and `object=MAPK1` as
 query parameters.
-**Note**: only one of each of `subject` and `object` will be accepted per
-query.
 - **`agent`**: This parameter is used if the specific role of the agent
 (subject or object) is irrelevant, or the distinction doesn't apply to the
-type of Statement of interest (e.g. Complex,
-Translocation, ActiveForm).
+type of Statement of interest (e.g. Complex, Translocation, ActiveForm).
+**Note**: You can include as many `agent` queries as you like, however you
+will only get Statements that include all agents you query, in addition to
+those queried for `subject` and `object`.
   - Example: To obtain Statements that
 involve SMAD2 in any role, add `agent=SMAD2` to the query.
-**Note**: You can
-include as many `agent` queries as you like, however you will only get
-Statements that include all agents you query, in addition to those queried
-for `subject` and `object`.
 - **`type`**: This parameter can be used to specify what type of Statement
 of interest (e.g. Phosphorylation, Activation, Complex).
   - Example: To answer the question "Does MAP2K1 phosphorylate MAPK1?"
