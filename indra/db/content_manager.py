@@ -1337,6 +1337,8 @@ class Elsevier(ContentManager):
         with open(path.join(THIS_DIR, 'elsevier_titles.txt'), 'r') as f:
             self.__journal_set = {self.__regularize_title(t)
                                   for t in f.read().splitlines()}
+        self.__found_journal_set = set()
+        self.__matched_journal_set = set()
         return
 
     @staticmethod
@@ -1364,10 +1366,12 @@ class Elsevier(ContentManager):
             if meta_data_dict is not None:
                 titles = {(pmid, meta['journal_title'])
                           for pmid, meta in meta_data_dict.items()}
-                elsevier_tr_set |= {tr_dict[pmid] for pmid, title in titles
-                                    if self.__regularize_title(title)
-                                    in self.__journal_set}
-
+                for pmid, title in titles:
+                    reg_title = self.__regularize_title(title)
+                    self.__found_journal_set.add(reg_title)
+                    if reg_title in self.__journal_set:
+                        self.__matched_journal_set.add(reg_title)
+                        elsevier_tr_set.add(tr_dict[pmid])
         return elsevier_tr_set
 
     def __get_content(self, trs):
@@ -1412,17 +1416,21 @@ class Elsevier(ContentManager):
         if continuing:
             with open(pickle_stash_fname, 'rb') as f:
                 tr_ids_checked = pickle.load(f)
+            logger.info("Continuing; %d text refs already checked."
+                        % len(tr_ids_checked))
         else:
             tr_ids_checked = set()
         try:
-            for i, tr in enumerate(tr_wo_pmc_q.yield_per(1000)):
+            batch_num = 0
+            for tr in tr_wo_pmc_q.yield_per(1000):
                 # If we're continuing an earlier upload, don't check id's we've
                 # already checked.
                 if continuing and tr.id in tr_ids_checked:
                     continue
                 tr_batch.add(tr)
-                if (i+1) % 200 is 0:
-                    logger.info('Beginning batch %d.' % ((i+1)//200))
+                if len(tr_batch) % 200 is 0:
+                    batch_num += 1
+                    logger.info('Beginning batch %d.' % batch_num)
                     self.__process_batch(db, tr_batch)
                     tr_ids_checked |= {tr.id for tr in tr_batch}
                     tr_batch.clear()
@@ -1438,6 +1446,11 @@ class Elsevier(ContentManager):
             logger.info("Stashed the set of checked text ref ids in: %s"
                         % pickle_stash_fname)
             return False
+        finally:
+            with open('journals.pkl', 'wb') as f:
+                pickle.dump({'elsevier': self.__journal_set,
+                             'found': self.__found_journal_set,
+                             'matched': self.__matched_journal_set}, f)
         if path.exists(pickle_stash_fname):
             remove(pickle_stash_fname)
         return True
