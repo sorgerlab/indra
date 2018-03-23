@@ -1360,11 +1360,13 @@ class Elsevier(ContentManager):
         if tr_set:
             pmid_set = {tr.pmid for tr in tr_set}
             tr_dict = {tr.pmid: tr for tr in tr_set}
-            titles = {(pmid, meta['journal_title'])
-                      for pmid, meta in get_metadata_for_ids(pmid_set).items()}
-            elsevier_tr_set |= {tr_dict[pmid] for pmid, title in titles
-                                if self.__regularize_title(title)
-                                in self.__journal_set}
+            meta_data_dict = get_metadata_for_ids(pmid_set)
+            if meta_data_dict is not None:
+                titles = {(pmid, meta['journal_title'])
+                          for pmid, meta in meta_data_dict.items()}
+                elsevier_tr_set |= {tr_dict[pmid] for pmid, title in titles
+                                    if self.__regularize_title(title)
+                                    in self.__journal_set}
 
         return elsevier_tr_set
 
@@ -1393,8 +1395,12 @@ class Elsevier(ContentManager):
         return
 
     @ContentManager._record_for_review
-    def populate(self, db, n_procs=1):
+    def populate(self, db, continuing=False):
         """Load all available elsevier content for refs with no pmc content."""
+        # Note that we do not implement multiprocessing, because by the nature
+        # of the web API's used, we are limited by bandwidth from any one IP.
+        pickle_stash_fname = path.join(THIS_DIR,
+                                       'checked_elsevier_trid_stash.pkl')
         tr_w_pmc_q = db.filter_query(
             db.TextRef,
             db.TextRef.id == db.TextContent.text_ref_id,
@@ -1403,15 +1409,37 @@ class Elsevier(ContentManager):
             )
         tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
         tr_batch = set()
-        for i, tr in enumerate(tr_wo_pmc_q.yield_per(1000)):
-            tr_batch.add(tr)
-            if (i+1) % 200 is 0:
-                logger.info('Beginning batch %d.' % ((i+1)//200))
+        if continuing:
+            with open(pickle_stash_fname, 'rb') as f:
+                tr_ids_checked = pickle.load(f)
+        else:
+            tr_ids_checked = set()
+        try:
+            for i, tr in enumerate(tr_wo_pmc_q.yield_per(1000)):
+                # If we're continuing an earlier upload, don't check id's we've
+                # already checked.
+                if continuing and tr.id in tr_ids_checked:
+                    continue
+                tr_batch.add(tr)
+                if (i+1) % 200 is 0:
+                    logger.info('Beginning batch %d.' % ((i+1)//200))
+                    self.__process_batch(db, tr_batch)
+                    tr_ids_checked |= {tr.id for tr in tr_batch}
+                    tr_batch.clear()
+            if tr_batch:
+                logger.info('Loading final batch.')
                 self.__process_batch(db, tr_batch)
-                tr_batch.clear()
-        if tr_batch:
-            logger.info('Loading final batch.')
-            self.__process_batch(db, tr_batch)
+                tr_ids_checked |= {tr.id for tr in tr_batch}
+        except BaseException as e:
+            logger.error("Caught exception while loading elsevier.")
+            logger.exception(e)
+            with open(pickle_stash_fname, 'wb') as f:
+                pickle.dump(tr_ids_checked, f)
+            logger.info("Stashed the set of checked text ref ids in: %s"
+                        % pickle_stash_fname)
+            return False
+        if path.exists(pickle_stash_fname):
+            remove(pickle_stash_fname)
         return True
 
     @ContentManager._record_for_review
