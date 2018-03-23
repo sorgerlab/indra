@@ -14,7 +14,7 @@ def main():
     print("Saving record to s3.")
     s3 = boto3.client('s3')
     with open(fname, 'rb') as f:
-        s3.put_objec(Body=f, Bucket='bigmech', Key='indra-db/reports/%s' % fname)
+        s3.put_object(Body=f, Bucket='bigmech', Key='indra-db/reports/%s' % fname)
     return
 
 if __name__ == '__main__':
