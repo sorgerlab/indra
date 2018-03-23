@@ -153,6 +153,34 @@ def get_id_dict(id_str_list):
     return id_dict
 
 
+def get_priority_tcids(id_dict, priorities, db=None):
+    """For all ids, besides tcids, choose best content available.
+
+    This function will convert all ids to tcids.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    def is_better(new, old):
+        return priorities.index(new) < priorities.index(old)
+
+    logger.debug("Getting content prioritized by %s." % str(priorities))
+    tcids = set(id_dict.pop('tcid', []))
+    clauses = get_clauses(id_dict, db)
+    tcid_source = set()
+    for clause in clauses:
+        q = (db.session.query(db.TextRef.id, db.TextContent.id,
+                              db.TextContent.source)
+             .filter(db.TextContent.text_ref_id == db.TextRef.id, clause))
+        tcid_source |= set(q.all())
+    tr_best = {}
+    for trid, tcid, source in tcid_source:
+        if trid not in tr_best.keys() or is_better(source, tr_best[trid][0]):
+            tr_best[trid] = (source, tcid)
+    tcids |= {tcid for _, tcid in tr_best.values()}
+    return tcids
+
+
 def get_clauses(id_dict, db):
     """Get a list of clauses to be passed to a db query.
 
@@ -180,14 +208,17 @@ def get_clauses(id_dict, db):
         `db.filter_query(<table>, <other clauses>, *clause_list)`.
         If the id_dict has no ids, an effectively empty condition is returned.
     """
+    # Handle all id types besides text ref ids (trid) and text content ids (tcid).
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
                          if len(id_list) and id_type not in ['tcid', 'trid']]
+
+    # Handle the special id types trid and tcid.
     for id_type, table in [('trid', db.TextRef), ('tcid', db.TextContent)]:
         if id_type in id_dict.keys() and len(id_dict[id_type]):
             int_id_list = [int(i) for i in id_dict[id_type]]
             id_condition_list.append(table.id.in_(int_id_list))
-    return [sql.or_(*id_condition_list)]
+    return id_condition_list
 
 
 def get_text_content_summary_string(q, db, num_ids=None):
@@ -281,7 +312,11 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
     # If we are actually getting anything, else we return None.
     if ids == 'all' or any([len(id_list) > 0 for id_list in ids.values()]):
         if ids is not 'all':
-            clauses += get_clauses(ids, db)
+            sub_clauses = get_clauses(ids, db)
+            if len(sub_clauses) > 1:
+                clauses.append(sql.or_(*sub_clauses))
+            else:
+                clauses.append(*sub_clauses)
 
         # Get the text content query object
         tc_query = db.filter_query(
