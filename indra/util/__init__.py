@@ -6,6 +6,7 @@ import gzip
 import zlib
 from io import BytesIO
 import xml.etree.ElementTree as ET
+import re
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes
@@ -199,3 +200,9 @@ def flatMap(f, xs):
     """Map a function onto an iterable and flatten the result."""
     return flatten(lmap(f, xs))
 
+def regularize_slashes(file_name):
+    """For a filename input, replace multiple instances of / or \ with a
+    single instance."""
+    file_name = re.sub('/+', '/', file_name)
+    file_name = re.sub('\\\\+', '\\\\', file_name)
+    return file_name

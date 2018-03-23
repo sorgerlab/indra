@@ -135,7 +135,7 @@ import rdflib
 import logging
 from copy import deepcopy
 from collections import OrderedDict as _o
-from indra.util import unicode_strs
+from indra.util import unicode_strs, regularize_slashes
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
 
@@ -2706,6 +2706,7 @@ def _read_activity_types():
     """Read types of valid activities from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
     ac_file = this_dir + '/resources/activity_hierarchy.rdf'
+    ac_file = regularize_slashes(ac_file)
     g = rdflib.Graph()
     with open(ac_file, 'r'):
         g.parse(ac_file, format='nt')
