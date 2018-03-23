@@ -237,11 +237,19 @@ def assemble_pysb():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
+    export_format = body.get('export_format')
     stmts = stmts_from_json(stmts_json)
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model()
-    model_str = pa.print_model()
+    if not export_format:
+        model_str = pa.print_model()
+    else:
+        try:
+            model_str = pa.export_model(format=export_format)
+        except Exception as e:
+            logger.exception(e)
+            model_str = ''
     res = {'model': model_str}
     return res
 
