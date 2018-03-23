@@ -182,7 +182,7 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     agent_data = []
     for i, db_stmt in enumerate(stmts_wo_agents):
         # Convert the database statement entry object into an indra statement.
-        stmt = stmts_from_json(json.loads(db_stmt.json.decode()))
+        stmt = stmts_from_json([json.loads(db_stmt.json.decode())])[0]
 
         # Figure out how the agents are structured and assign roles.
         ag_list = stmt.agent_list()
@@ -390,11 +390,11 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         if not hgnc_id:
             logger.warning('Invalid gene name: %s' % agent_id)
             return []
-        clauses.extend([Agents.db_name == 'HGNC',
-                        Agents.db_id == hgnc_id])
+        clauses.extend([Agents.db_name.like('HGNC'),
+                        Agents.db_id.like(hgnc_id)])
     elif agent_id:
-        clauses.extend([Agents.db_name == agent_ns,
-                        Agents.db_id == agent_id])
+        clauses.extend([Agents.db_name.like(agent_ns),
+                        Agents.db_id.like(agent_id)])
     if role:
         clauses.append(Agents.role == role)
     if agent_id or role:
