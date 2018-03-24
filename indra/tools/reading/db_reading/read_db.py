@@ -162,7 +162,9 @@ def get_priority_tcids(id_dict, priorities, db=None):
         db = get_primary_db()
 
     def is_better(new, old):
-        return priorities.index(new) < priorities.index(old)
+        if new in priorities and old in priorities:
+            return priorities.index(new) < priorities.index(old)
+        return False
 
     logger.debug("Getting content prioritized by %s." % str(priorities))
     tcids = set(id_dict.pop('tcid', []))
@@ -172,7 +174,10 @@ def get_priority_tcids(id_dict, priorities, db=None):
         q = (db.session.query(db.TextRef.id, db.TextContent.id,
                               db.TextContent.source)
              .filter(db.TextContent.text_ref_id == db.TextRef.id, clause))
-        tcid_source |= set(q.all())
+        id_set = set(q.all())
+        logger.debug("Got %d more ids." % len(id_set))
+        tcid_source |= id_set
+    logger.debug("Got %d id's total." % len(tcid_source))
     tr_best = {}
     for trid, tcid, source in tcid_source:
         if trid not in tr_best.keys() or is_better(source, tr_best[trid][0]):
