@@ -153,7 +153,7 @@ def get_id_dict(id_str_list):
     return id_dict
 
 
-def get_priority_tcids(id_dict, priorities, db=None):
+def get_priority_tcids(id_dict, priorities, always_add=None, db=None):
     """For all ids, besides tcids, choose best content available.
 
     This function will convert all ids to tcids.
@@ -182,6 +182,8 @@ def get_priority_tcids(id_dict, priorities, db=None):
     for trid, tcid, source in tcid_source:
         if trid not in tr_best.keys() or is_better(source, tr_best[trid][0]):
             tr_best[trid] = (source, tcid)
+        if always_add is not None and source in always_add:
+            tcids.add(tcid)
     tcids |= {tcid for _, tcid in tr_best.values()}
     return tcids
 
