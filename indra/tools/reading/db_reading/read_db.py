@@ -81,6 +81,11 @@ if __name__ == '__main__':
         help='Make the reader only read full text from the database.',
         action='store_true'
         )
+    parser.add_argument(
+        '--use-best-fulltext',
+        help='Use only the best full text available.',
+        action='store_true'
+        )
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
@@ -586,7 +591,8 @@ def upload_readings(output_list, db=None):
 
 def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
                      force_fulltext=False, batch_size=1000, no_upload=False,
-                     pickle_file=None, db=None, log_readers=True):
+                     pickle_file=None, db=None, log_readers=True,
+                     prioritize=False):
     """Produce the reading output for the given ids, and upload them to db.
 
     This function will also retrieve pre-existing readings from the database,
@@ -635,6 +641,13 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
     logger.debug("Producing readings in %s mode." % read_mode)
     if db is None:
         db = get_primary_db()
+
+    # Sort out our priorities
+    if prioritize:
+        tcids = get_priority_tcids(id_dict,
+                                   ['pmc_oa', 'manuscripts', 'elsevier'],
+                                   always_add=['pubmed'], db=db)
+        id_dict = {'tcid': list(tcids)}
 
     prev_readings = []
     skip_reader_tcid_dict = None
@@ -785,7 +798,8 @@ if __name__ == "__main__":
                                    read_mode=args.mode, batch_size=args.b_in,
                                    force_fulltext=args.force_fulltext,
                                    no_upload=args.no_reading_upload,
-                                   pickle_file=reading_pickle)
+                                   pickle_file=reading_pickle,
+                                   prioritize=args.prioritize)
 
         # Convert the outputs to statements ==================================
         produce_statements(outputs, no_upload=args.no_statement_upload,

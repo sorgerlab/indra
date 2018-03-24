@@ -98,7 +98,8 @@ if __name__ == '__main__':
     # Read everything ========================================
     outputs = produce_readings(id_dict, readers, verbose=True,
                                read_mode=args.mode,
-                               force_fulltext=args.force_fulltext)
+                               force_fulltext=args.force_fulltext,
+                               prioritize=True)
 
     # Preserve the sparser logs
     contents = os.listdir('.')
