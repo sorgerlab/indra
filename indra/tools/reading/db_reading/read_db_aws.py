@@ -67,6 +67,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     logger = logging.getLogger('read_db_aws')
+    logger.setLevel(logging.DEBUG)
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
