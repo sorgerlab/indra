@@ -408,7 +408,11 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
 
     if ids == 'all' or any([id_list for id_list in ids.values()]):
         if ids != 'all':
-            clauses += get_clauses(ids, db)
+            sub_clauses = get_clauses(ids, db)
+            if len(sub_clauses) > 1:
+                clauses.append(sql.or_(*sub_clauses))
+            else:
+                clauses.append(*sub_clauses)
 
         readings_query = db.filter_query(
             db.Readings,
@@ -644,6 +648,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
 
     # Sort out our priorities
     if prioritize:
+        logger.debug("Prioritizing...")
         tcids = get_priority_tcids(id_dict,
                                    ['pmc_oa', 'manuscripts', 'elsevier'],
                                    always_add=['pubmed'], db=db)
