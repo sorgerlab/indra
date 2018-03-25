@@ -136,7 +136,7 @@ import rdflib
 import logging
 from copy import deepcopy
 from collections import OrderedDict as _o
-from indra.util import unicode_strs, regularize_slashes
+from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
 
