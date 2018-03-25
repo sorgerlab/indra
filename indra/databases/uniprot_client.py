@@ -51,7 +51,7 @@ def query_protein(protein_id):
     url = uniprot_url + protein_id + '.rdf'
     g = rdflib.Graph()
     try:
-        g.parse(abspath(url))
+        g.parse(url)
     except HTTPError:
         logger.warning('Could not find protein with id %s' % protein_id)
         return None
@@ -631,3 +631,4 @@ def _build_uniprot_subcell_loc():
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
 uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()
+
