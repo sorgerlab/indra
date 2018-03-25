@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+from os.path import abspath
 import logging
 import rdflib
 import requests
@@ -50,7 +51,7 @@ def query_protein(protein_id):
     url = uniprot_url + protein_id + '.rdf'
     g = rdflib.Graph()
     try:
-        g.parse(url)
+        g.parse(abspath(url))
     except HTTPError:
         logger.warning('Could not find protein with id %s' % protein_id)
         return None

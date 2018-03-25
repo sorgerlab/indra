@@ -200,9 +200,3 @@ def flatMap(f, xs):
     """Map a function onto an iterable and flatten the result."""
     return flatten(lmap(f, xs))
 
-def regularize_slashes(file_name):
-    """For a filename input, replace multiple instances of / or \ with a
-    single instance."""
-    file_name = re.sub('/+', '/', file_name)
-    file_name = re.sub('\\\\+', '\\\\', file_name)
-    return file_name

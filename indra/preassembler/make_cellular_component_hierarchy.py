@@ -96,7 +96,7 @@ def main():
     g = rdflib.Graph()
     if not exists(pkl_file):
         print('Parsing %s' % go_owl_file)
-        g.parse(go_owl_file)
+        g.parse(abspath(go_owl_file))
         with open(pkl_file, 'wb') as fh:
             pickle.dump(g, fh, protocol=2)
     else:

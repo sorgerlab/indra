@@ -1,7 +1,7 @@
 import rdflib
 import logging
 from indra.sources.bbn import processor
-
+from os.path import abspath
 
 logger = logging.getLogger('bbn')
 
