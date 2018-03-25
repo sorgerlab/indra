@@ -3,7 +3,6 @@ from builtins import dict, str
 import os
 import rdflib
 import logging
-from os.path import abspath
 try:
     from functools import lru_cache
 except ImportError:
@@ -45,7 +44,7 @@ class HierarchyManager(object):
         self.build_closure = build_closure
         self.uri_as_name = uri_as_name
         self.graph = rdflib.Graph()
-        self.graph.parse(abspath(rdf_file), format='nt')
+        self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
         self.initialize()

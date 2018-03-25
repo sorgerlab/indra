@@ -27,6 +27,7 @@ def process_json_file(fname):
 
 
 def _load_graph(fname):
+    fname = abspath(fname)
     g = rdflib.Graph()
     with open(fname, 'rb') as fh:
         logger.info('Started loading graph from %s' % fname)

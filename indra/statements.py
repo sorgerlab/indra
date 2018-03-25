@@ -128,7 +128,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import os
-from os.path import abspath
 import abc
 import sys
 import uuid
@@ -2706,10 +2705,10 @@ def get_valid_location(location):
 def _read_activity_types():
     """Read types of valid activities from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    ac_file = this_dir + '/resources/activity_hierarchy.rdf'
+    ac_file = os.path.abspath(this_dir + '/resources/activity_hierarchy.rdf')
     g = rdflib.Graph()
     with open(ac_file, 'r'):
-        g.parse(abspath(ac_file), format='nt')
+        g.parse(ac_file, format='nt')
     act_types = set()
     for s, _, o in g:
         subj = s.rpartition('/')[-1]

@@ -6,7 +6,6 @@ import gzip
 import zlib
 from io import BytesIO
 import xml.etree.ElementTree as ET
-import re
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes

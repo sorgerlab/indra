@@ -4,7 +4,6 @@ import os
 import gzip
 import pandas
 import rdflib
-from os.path import abspath
 
 try:
     from urllib import urlretrieve
@@ -197,7 +196,7 @@ def update_cellular_components():
     fname = os.path.join(path, '../../data/go.owl')
     save_from_http(url, fname)
     g = rdflib.Graph()
-    g.parse(abspath(fname))
+    g.parse(os.path.abspath(fname))
     component_map, component_part_map = get_cellular_components(g)
     fname = os.path.join(path, 'cellular_components.tsv')
     logger.info('Saving into %s' % fname)
