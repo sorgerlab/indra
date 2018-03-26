@@ -23,7 +23,7 @@ def load_text(fname):
     with open(fname, 'r') as f:
         return f.read()
 
-def test_cwmsreader1():
+def test_cwmsreader_cause():
     # Test extraction of causal relations from the cwms reader service
     text = 'government causes agriculture.'
     cp = process_text(text)
@@ -41,6 +41,48 @@ def test_cwmsreader1():
     ev = s0.evidence[0]
     assert(ev.text == 'government causes agriculture.')
     assert(ev.source_api == 'cwmsreader')
+
+def test_cwmsreader_inhibit():
+    # Test extraction of inhibition relations from the cwms reader service
+    text = 'Persistent insecurity and armed conflict have disrupted ' + \
+        'livelihood activities.'
+    cp = process_text(text)
+    statements = cp.statements
+    print(statements)
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    print('Statement:', s0)
+    assert(isinstance(s0, Inhibition))
+    subj = s0.subj
+    assert(subj.db_refs['TEXT'] == 'Persistent insecurity and armed conflict')
+
+    obj = s0.obj
+    assert(obj.db_refs['TEXT'] == 'livelihood activities')
+
+    ev = s0.evidence[0]
+    assert(ev.text == text)
+    assert(ev.source_api == 'cwmsreader')
+
+def test_cwmsreader_influence():
+    # Test extraction of causal relations from the cwms reader service
+    text = 'government influences agriculture.'
+    cp = process_text(text)
+    statements = cp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, Influence))
+    subj = s0.subj
+    assert(subj.db_refs['TEXT'] == 'government')
+
+    obj = s0.obj
+    assert(obj.db_refs['TEXT'] == 'agriculture')
+
+    ev = s0.evidence[0]
+    assert(ev.text == 'government influences agriculture.')
+    assert(ev.source_api == 'cwmsreader')
+
 
 def test_rdf_example1():
     # Example: These impacts on livestock and crops have resulted in

@@ -67,6 +67,8 @@ class CWMSProcessor(object):
         # Extract statements
         self.statements = []
         self.extract_noun_causal_relations()
+        self.extract_noun_inhibit_relations()
+        self.extract_noun_influence_relations()
 
     def extract_noun_causal_relations(self):
         """Extracts causal relationships between two nouns/terms (as opposed to
@@ -78,34 +80,73 @@ class CWMSProcessor(object):
             # Each cause should involve a factor term and an outcome term
             factor = cc.find("arg/[@role=':FACTOR']")
             outcome = cc.find("arg/[@role=':OUTCOME']")
-            # If either the factor or the outcome is missing, skip
-            if factor is None or outcome is None:
-                continue
 
-            # Look up the factor term by id
-            factor_id = factor.attrib.get('id')
-            factor_term = self.tree.find("TERM/[@id='%s']" % factor_id)
-            factor_text = factor_term.find('text').text
-            factor_agent = Agent(factor_text, db_refs={'TEXT': factor_text})
+            self.make_statement_noun_cause_effect(cc, factor, outcome,
+                                                  Influence)
+    def extract_noun_inhibit_relations(self):
+        """Extracts relationships involving one term/noun inhibiting another
+        term/noun"""
+        events = self.tree.findall("EVENT/[type='ONT::INHIBIT']")
+        for event in events:
+            # Each inhibit event should involve an agent and an affected
+            agent = event.find("*[@role=':AGENT']")
+            affected = event.find("*[@role=':AFFECTED']")
 
-            # Look up the outcome term by id
-            outcome_id = outcome.attrib.get('id')
-            outcome_term = self.tree.find("TERM/[@id='%s']" % outcome_id)
-            outcome_text = outcome_term.find('text').text
-            outcome_agent = Agent(outcome_text, db_refs={'TEXT': outcome_text})
+            self.make_statement_noun_cause_effect(event, agent, affected,
+                    Inhibition)
 
-            # Do not process if either the factor or outcome is missing
-            if factor_term is None or outcome_term is None:
-                continue
+    def extract_noun_influence_relations(self):
+        """Extracts relationships with one term influencing another term."""
+        ccs = self.tree.findall("CC/[type='ONT::INFLUENCE']")
+        for cc in ccs:
+            # Each cause should involve a factor term and an outcome term
+            factor = cc.find("arg/[@role=':FACTOR']")
+            outcome = cc.find("arg/[@role=':OUTCOME']")
 
-            # Construct evidence
-            ev = self._get_evidence(cc)
-            ev.epistemics['direct'] = False
+            self.make_statement_noun_cause_effect(cc, factor, outcome,
+                                                  Influence)
 
-            # Make statement
-            st = Influence(factor_agent, outcome_agent, evidence=[ev])
-            self.statements.append(st)
-                
+    def make_statement_noun_cause_effect(self, event_element,
+            cause, affected, statement_type):
+
+        # Only process if both the cause and affected are present
+        if cause is None or affected is None:
+            return
+
+        # Get the term with the given cause id
+        cause_id = cause.attrib.get('id')
+        cause_term = self.tree.find("TERM/[@id='%s']" % cause_id)
+        if cause_term is None:
+            return
+
+        # Get the cause's text and use it to construct an Agent
+        cause_text_element = cause_term.find('text')
+        if cause_text_element is None:
+            return
+        cause_text = cause_text_element.text
+        cause_agent = Agent(cause_text, db_refs={'TEXT': cause_text})
+
+        # Get the term with the given affected id
+        affected_id = affected.attrib.get('id')
+        affected_term = self.tree.find("TERM/[@id='%s']" % affected_id)
+        if affected_term is None:
+            return
+
+        # Get the affected's text and use it to construct an Agent
+        affected_text_element = affected_term.find('text')
+        if affected_text_element is None:
+            return
+        affected_text = affected_text_element.text
+        affected_agent = Agent(affected_text, db_refs={'TEXT': affected_text})
+
+        # Construct evidence
+        ev = self._get_evidence(event_element)
+        ev.epistemics['direct'] = False
+
+        # Make statement
+        st = statement_type(cause_agent, affected_agent, evidence=[ev])
+        self.statements.append(st)
+
     def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
