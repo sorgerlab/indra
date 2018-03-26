@@ -18,7 +18,8 @@ logger = logging.getLogger('cwms')
 class CWMSProcessor(object):
     """The CWMSProcessor currently extracts causal relationships between
     terms (nouns) in EKB. In the future, this processor can be extended to
-    extract other types of relations.
+    extract other types of relations, or to extract relations involving
+    events.
     
     For more details on the TRIPS EKB XML format, see
     http://trips.ihmc.us/parser/cgi/drum
@@ -44,25 +45,27 @@ class CWMSProcessor(object):
         A map from paragraph IDs to their associated section types
     """
     def __init__(self, xml_string):
+        # Parse XML
         try:
             self.tree = ET.XML(xml_string, parser=UTB())
         except ET.ParseError:
             logger.error('Could not parse XML string')
             self.tree = None
             return
+
         # Get the document ID from the EKB tag.
         self.doc_id = self.tree.attrib.get('id')
+
         # Store all paragraphs and store all sentences in a data structure
         paragraph_tags = self.tree.findall('input/paragraphs/paragraph')
         sentence_tags = self.tree.findall('input/sentences/sentence')
-        #
         self.paragraphs = {p.attrib['id']: p.text for p in paragraph_tags}
         self.sentences = {s.attrib['id']: s.text for s in sentence_tags}
         self.par_to_sec = {p.attrib['id']: p.attrib.get('sec-type')
                            for p in paragraph_tags}
 
+        # Extract statements
         self.statements = []
-
         self.extract_noun_causal_relations()
 
     def extract_noun_causal_relations(self):
@@ -72,6 +75,7 @@ class CWMSProcessor(object):
         # Search for causal connectives of type ONT::CAUSE
         ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
         for cc in ccs:
+            # Each cause should involve a factor term and an outcome term
             factor = cc.find("arg/[@role=':FACTOR']")
             outcome = cc.find("arg/[@role=':OUTCOME']")
             # If either the factor or the outcome is missing, skip
