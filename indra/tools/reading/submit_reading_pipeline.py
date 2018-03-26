@@ -196,19 +196,23 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
                 f.write(log_str)
 
     for job_def_tpl in job_defs:
-        job_def = dict(job_def_tpl)
-        lines = get_job_log(job_def, write_file=False)
-        if lines is None:
-            logger.warning("No logs found for %s." % job_def['jobName'])
-            continue
-        log_str = ''.join(lines)
-        base_name = job_def['jobName']
-        if job_def['jobId'] in success_ids:
-            base_name += '_SUCCESS'
-        elif job_def['jobId'] in failure_ids:
-            base_name += '_FAILED'
-        logger.info('Stashing ' + base_name)
-        stash_log(log_str, base_name)
+        try:
+            job_def = dict(job_def_tpl)
+            lines = get_job_log(job_def, write_file=False)
+            if lines is None:
+                logger.warning("No logs found for %s." % job_def['jobName'])
+                continue
+            log_str = ''.join(lines)
+            base_name = job_def['jobName']
+            if job_def['jobId'] in success_ids:
+                base_name += '_SUCCESS'
+            elif job_def['jobId'] in failure_ids:
+                base_name += '_FAILED'
+            logger.info('Stashing ' + base_name)
+            stash_log(log_str, base_name)
+        except Exception as e:
+            logger.error("Failed to save logs for: %s" % str(job_def_tpl))
+            logger.exception(e)
     return
 
 
