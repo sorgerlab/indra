@@ -54,7 +54,7 @@ class BiogridProcessor(object):
             bg_row = BiogridRow(*filt_row)
 
             # Filter out non-physical interactions if desired
-            if self.physical_only and bg_row.exp_system_type == 'physical':
+            if self.physical_only and bg_row.exp_system_type != 'physical':
                 continue
 
             # Ground agents
