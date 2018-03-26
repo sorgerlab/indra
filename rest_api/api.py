@@ -78,7 +78,8 @@ def reach_process_text():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
-    rp = reach.process_text(text)
+    offline = True if body.get('offline') else False
+    rp = reach.process_text(text, offline=offline)
     if rp and rp.statements:
         stmts = stmts_to_json(rp.statements)
         res = {'statements': stmts}
