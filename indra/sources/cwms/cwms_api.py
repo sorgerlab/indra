@@ -27,8 +27,8 @@ def process_text(text):
     second_start = xml.find('<ekb', first_end) # Start of second EKB
     second_end = xml.find('</ekb>', second_start) # End of second EKB
     second_ekb = xml[second_start:second_end+len('</ekb>')] # Text of second EKB
-    
-    # print(second_ekb)
+
+    # Process EKB XML into statements
     cp = CWMSProcessor(second_ekb)
     return cp
 
@@ -51,12 +51,4 @@ def process_rdf_file(text, rdf_filename):
     """
     cp = CWMSRDFProcessor(text, rdf_filename)
     return cp
-
-if __name__ == '__main__':
-    # Temporary test for debugging
-    cp = process_text('Dog causes cat.')
-    print(cp.statements)
-    s0 = cp.statements[0]
-    print(s0.evidence[0])
-
 
