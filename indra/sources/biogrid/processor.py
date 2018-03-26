@@ -5,7 +5,7 @@ import re
 import logging
 import operator
 import itertools
-import collections
+from collections import namedtuple
 from indra.util import read_unicode_csv
 from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
@@ -13,50 +13,62 @@ import indra.databases.uniprot_client as up_client
 
 logger = logging.getLogger('biogrid')
 
+# The explanation for each column of the tsv file is here:
+# https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_2.0
+BiogridRow = namedtuple('BiogridRow',
+                        ['biogrid_int_id',
+                         'entrez_a', 'entrez_b',
+                         'biogrid_a', 'biogrid_b',
+                         'syst_name_a', 'syst_name_b',
+                         'hgnc_a', 'hgnc_b',
+                         'syn_a', 'syn_b',
+                         'exp_system', 'exp_system_type',
+                         'author', 'pmid',
+                         'organism_a', 'organism_b',
+                         'throughput', 'score', 'modification',
+                         'phenotypes', 'qualifications', 'tags',
+                         'source_db'])
 
 class BiogridProcessor(object):
-    """The BioGrid processor reads in a tab-seperated file with biogrid
-    interactions and produces a list of INDRA statements.
+    """Extracts INDRA Complex statements from Biogrid interaction data.
 
     Parameters
     ----------
-    filename: str
-        The filename of the biogrid data file
+    filename : str
+        The file containing the Biogrid data in .tab2 format.
 
     Attributes:
     -----------
-    statements: list[indra.statements.Statement]
-        Extracted INDRA statements
+    statements: list[indra.statements.Statements]
+        Extracted INDRA Complex statements.
     """
-    def __init__(self, filename):
+    def __init__(self, filename, physical_only=True):
         self.statements = []
+        self.physical_only = physical_only
 
-        rows = read_unicode_csv(filename, '\t')
+        # Read the file, skipping the header row
+        rows = read_unicode_csv(filename, '\t', skiprows=1)
         for row in rows:
-            # The explanation for each column of the tsv file is here:
-            # https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_2.0
-            source_id = row[0]
-            entrez_a = row[1]
-            entrez_b = row[2]
-            text_a = row[5]
-            text_b = row[6]
-            pmid = row[14]
-            system_type = row[12]
+            filt_row = [None if item == '-' else item
+                        for item in row]
+            bg_row = BiogridRow(*filt_row)
 
-            if system_type != 'physical':
+            # Filter out non-physical interactions if desired
+            if self.physical_only and bg_row.exp_system_type == 'physical':
                 continue
 
             # Ground agents
-            agent_a = self._make_agent(entrez_a, text_a)
-            agent_b = self._make_agent(entrez_b, text_b)
-
-            # Evidence
+            agent_a = self._make_agent(bg_row.entrez_a, bg_row.syst_name_a)
+            agent_b = self._make_agent(bg_row.entrez_b, bg_row.syst_name_b)
+            # Skip any agents with neither HGNC grounding or string name
+            if agent_a is None or agent_b is None:
+                continue
+            # Get evidence
             ev = Evidence(source_api='biogrid',
-                          source_id=source_id,
-                          pmid=pmid,
+                          source_id=bg_row.biogrid_int_id,
+                          pmid=bg_row.pmid,
                           text=None,
-                          annotations={'tsv_row': row})
-
+                          annotations=dict(bg_row._asdict()))
             # Make statement
             s = Complex([agent_a, agent_b], evidence=ev)
             self.statements.append(s)
@@ -66,41 +78,45 @@ class BiogridProcessor(object):
 
         Parameters
         ----------
-        entrez_id: str
+        entrez_id : str
             Entrez id number
-        text_id: str
-            A plain text systematic name, or - if not listed
+        text_id : str
+            A plain text systematic name, or None if not listed.
 
         Returns
         -------
-        agent: indra.statements.Agent
-            A grounded agent object
+        agent : indra.statements.Agent
+            A grounded agent object.
         """
         hgnc_name, db_refs = self._make_db_refs(entrez_id, text_id)
         if hgnc_name is not None:
             name = hgnc_name
-        else:
+        elif text_id is not None:
             name = text_id
+        # Handle case where the name is None
+        else:
+            return None
 
         return Agent(name, db_refs=db_refs)
 
     def _make_db_refs(self, entrez_id, text_id):
-        """Looks up the hgnc id and name, as well as the uniprot id.
+        """Looks up the HGNC ID  and name, as well as the Uniprot ID.
 
         Parameters
         ----------
-        entrez_id: str
-            Entrez id number
-        text_id:
-            A plain text systematic name, or - if not listed in biogrid
+        entrez_id : str
+            Entrez gene ID.
+        text_id : str or None
+            A plain text systematic name, or None if not listed in the
+            Biogrid data.
 
         Returns
         -------
-        hgnc_name: str
-            name from the HGNC database
-        db_refs: dict
+        hgnc_name : str
+            Official HGNC symbol for the gene.
+        db_refs : dict
             db_refs grounding dictionary, used when constructing the Agent
-            object
+            object.
         """
         db_refs = {}
         if text_id != '-':

@@ -14,16 +14,17 @@ biogrid_text_file = 'BIOGRID-ALL-3.4.158.tab2.txt'
 
 
 def process_file(filename=None):
-    """Processes a biogrid tab-separated filer.
+    """Processes a tab-separated Biogrid data in .tab2 format.
 
     Parameters:
     -----------
-    text: str
-        The filename of the biogrid file, if None downloaded from the web.
+    filename : str
+        The name of the biogrid file; if None, the latest dataset is
+        downloaded from the web.
 
     Returns
     -------
-    bp: indra.sources.cwms.BiogridProcessor
+    bp: indra.sources.BiogridProcessor
         A BiogridProcessor, which contains a list of INDRA statements in its
         statements attribute.
     """
