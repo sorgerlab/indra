@@ -1,12 +1,18 @@
-from flask import Flask, request, abort, jsonify, Response
-from indra.db.util import get_statements_by_gene_role_type
-import logging
 import re
+import sys
+import logging
+import json
+
+from flask import Flask, request, abort, jsonify, Response
+from flask_compress import Compress
+
+from indra.db.util import get_statements_by_gene_role_type
 from indra.statements import make_statement_camel
 
 logger = logging.getLogger("db-api")
 
 app = Flask(__name__)
+Compress(app)
 
 @app.route('/')
 def welcome():
@@ -89,8 +95,10 @@ def get_statments():
                      and agent in [ag.name for ag in s.agent_list()
                                    if ag is not None]]
 
-    logger.info("Exiting with %d statements." % len(stmts))
-    return jsonify([stmt.to_json() for stmt in stmts])
+    resp = jsonify([stmt.to_json() for stmt in stmts])
+    logger.info("Exiting with %d statements of nominal size %f MB."
+                % (len(stmts), sys.getsizeof(resp.data)/1e6))
+    return resp
 
 if __name__ == '__main__':
     app.run()
