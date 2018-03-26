@@ -11,6 +11,7 @@ PREFIX role: <http://www.cs.rochester.edu/research/trips/role#>
 PREFIX lf: <http://www.cs.rochester.edu/research/trips/LF#>
 """
 
+
 class CWMSRDFProcessor(object):
     """This processor extracts INDRA statements from CWMS RDF output.
 
@@ -33,7 +34,7 @@ class CWMSRDFProcessor(object):
         g = rdflib.Graph()
         with open(rdf_filename, 'rb') as f:
             logger.info('Started loading graph from %s' % rdf_filename)
-            g.parse(f, format='application/rdf+xml') #, format='json-ld')
+            g.parse(f, format='application/rdf+xml')
             logger.info('Finished loading graph')
         self.graph = g
 
@@ -82,7 +83,7 @@ class CWMSRDFProcessor(object):
         # Look for events that have an AGENT and an AFFECTED, and get the
         # start and ending text indices for each.
         query = prefixes + """
-        SELECT 
+        SELECT
             ?agent_start
             ?agent_end
             ?affected_start
@@ -108,5 +109,3 @@ class CWMSRDFProcessor(object):
         for res in results:
             # Make a statement for each query match
             self.extract_statement_from_query_result(res)
-
-

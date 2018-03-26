@@ -6,6 +6,7 @@ from indra.sources.cwms.processor import CWMSProcessor
 
 logger = logging.getLogger('cwms_rdf')
 
+
 def process_text(text):
     """Processes text using the CWMS web service.
 
@@ -23,14 +24,15 @@ def process_text(text):
     xml = trips_client.send_query(text, 'cwmsreader')
 
     # There are actually two EKBs in the xml document. Extract the second.
-    first_end = xml.find('</ekb>') # End of first EKB
-    second_start = xml.find('<ekb', first_end) # Start of second EKB
-    second_end = xml.find('</ekb>', second_start) # End of second EKB
-    second_ekb = xml[second_start:second_end+len('</ekb>')] # Text of second EKB
+    first_end = xml.find('</ekb>')  # End of first EKB
+    second_start = xml.find('<ekb', first_end)  # Start of second EKB
+    second_end = xml.find('</ekb>', second_start)  # End of second EKB
+    second_ekb = xml[second_start:second_end+len('</ekb>')]  # second EKB
 
     # Process EKB XML into statements
     cp = CWMSProcessor(second_ekb)
     return cp
+
 
 def process_rdf_file(text, rdf_filename):
     """Process CWMS's RDF output for the given statement and returns a
@@ -51,4 +53,3 @@ def process_rdf_file(text, rdf_filename):
     """
     cp = CWMSRDFProcessor(text, rdf_filename)
     return cp
-

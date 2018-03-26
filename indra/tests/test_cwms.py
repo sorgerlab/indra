@@ -19,9 +19,11 @@ example2_txt = os.path.join(data_folder, 'example_2_sentence_3.txt')
 example3_rdf = os.path.join(data_folder, 'example_2_sentence_4.rdf')
 example3_txt = os.path.join(data_folder, 'example_2_sentence_4.txt')
 
+
 def load_text(fname):
     with open(fname, 'r') as f:
         return f.read()
+
 
 def test_cwmsreader_cause():
     # Test extraction of causal relations from the cwms reader service
@@ -41,6 +43,7 @@ def test_cwmsreader_cause():
     ev = s0.evidence[0]
     assert(ev.text == 'government causes agriculture.')
     assert(ev.source_api == 'cwmsreader')
+
 
 def test_cwmsreader_inhibit():
     # Test extraction of inhibition relations from the cwms reader service
@@ -63,6 +66,7 @@ def test_cwmsreader_inhibit():
     ev = s0.evidence[0]
     assert(ev.text == text)
     assert(ev.source_api == 'cwmsreader')
+
 
 def test_cwmsreader_influence():
     # Test extraction of causal relations from the cwms reader service
@@ -93,10 +97,11 @@ def test_rdf_example1():
     assert(len(cp.statements) == 1)
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] == \
-            'These impacts on livestock and crops')
-    assert(statement0.obj.db_refs['TEXT'] == \
-            'in livelihoods being decimated')
+    assert(statement0.subj.db_refs['TEXT'] ==
+           'These impacts on livestock and crops')
+    assert(statement0.obj.db_refs['TEXT'] ==
+           'in livelihoods being decimated')
+
 
 def test_rdf_example2():
     # Conflict and economic decline have led to violence and displacement.
@@ -106,22 +111,22 @@ def test_rdf_example2():
     assert(len(cp.statements) == 1)
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] == \
-            'Conflict and economic decline')
-    assert(statement0.obj.db_refs['TEXT'] == \
-            'to violence and displacement')
+    assert(statement0.subj.db_refs['TEXT'] ==
+           'Conflict and economic decline')
+    assert(statement0.obj.db_refs['TEXT'] ==
+           'to violence and displacement')
+
 
 def test_rdf_example3():
     # Violence has caused livestock to be looted, killed and disease-prone and
     # crops destroyed, and displacement has caused delayed planting.
-    
+
     txt = load_text(example3_txt)
     cp = process_rdf_file(txt, example3_rdf)
     assert(len(cp.statements) == 1)
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] == \
-            'displacement')
-    assert(statement0.obj.db_refs['TEXT'] == \
-            'delayed planting')
-
+    assert(statement0.subj.db_refs['TEXT'] ==
+           'displacement')
+    assert(statement0.obj.db_refs['TEXT'] ==
+           'delayed planting')

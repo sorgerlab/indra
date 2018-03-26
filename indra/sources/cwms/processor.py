@@ -15,12 +15,13 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('cwms')
 
+
 class CWMSProcessor(object):
     """The CWMSProcessor currently extracts causal relationships between
     terms (nouns) in EKB. In the future, this processor can be extended to
     extract other types of relations, or to extract relations involving
     events.
-    
+
     For more details on the TRIPS EKB XML format, see
     http://trips.ihmc.us/parser/cgi/drum
 
@@ -83,6 +84,7 @@ class CWMSProcessor(object):
 
             self.make_statement_noun_cause_effect(cc, factor, outcome,
                                                   Influence)
+
     def extract_noun_inhibit_relations(self):
         """Extracts relationships involving one term/noun inhibiting another
         term/noun"""
@@ -93,7 +95,7 @@ class CWMSProcessor(object):
             affected = event.find("*[@role=':AFFECTED']")
 
             self.make_statement_noun_cause_effect(event, agent, affected,
-                    Inhibition)
+                                                  Inhibition)
 
     def extract_noun_influence_relations(self):
         """Extracts relationships with one term influencing another term."""
@@ -107,7 +109,7 @@ class CWMSProcessor(object):
                                                   Influence)
 
     def make_statement_noun_cause_effect(self, event_element,
-            cause, affected, statement_type):
+                                         cause, affected, statement_type):
 
         # Only process if both the cause and affected are present
         if cause is None or affected is None:
@@ -180,4 +182,3 @@ class CWMSProcessor(object):
         par_id = event_tag.attrib.get('paragraph')
         sec = self.par_to_sec.get(par_id)
         return sec
-
