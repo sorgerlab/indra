@@ -80,26 +80,30 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     def check_logs(job_defs):
         stalled_jobs = set()
         for job_def in job_defs:
-            log_lines = get_job_log(job_def, write_file=False)
-            jid = job_def['jobId']
-            now = datetime.now()
-            if jid not in job_log_dict.keys():
-                logger.info("Adding job %s to the log tracker at %s."
-                            % (jid, now))
-                job_log_dict[jid] = {'log': log_lines,
-                                     'check_time': now}
-            elif len(job_log_dict[jid]['log']) == len(log_lines):
-                check_dt = now - job_log_dict[jid]['check_time']
-                logger.warning(('Job \'%s\' has not produced output for '
-                                '%d seconds.')
-                               % (job_def['jobName'], check_dt.seconds))
-                if check_dt.seconds > idle_log_timeout:
-                    logger.warning("Job \'%s\' has stalled.")
-                    stalled_jobs.add(jid)
-            else:
-                old_log = job_log_dict[jid]['log']
-                old_log += log_lines[len(old_log):]
-                job_log_dict[jid]['check_time'] = now
+            try:
+                log_lines = get_job_log(job_def, write_file=False)
+                jid = job_def['jobId']
+                now = datetime.now()
+                if jid not in job_log_dict.keys():
+                    logger.info("Adding job %s to the log tracker at %s."
+                                % (jid, now))
+                    job_log_dict[jid] = {'log': log_lines,
+                                         'check_time': now}
+                elif len(job_log_dict[jid]['log']) == len(log_lines):
+                    check_dt = now - job_log_dict[jid]['check_time']
+                    logger.warning(('Job \'%s\' has not produced output for '
+                                    '%d seconds.')
+                                   % (job_def['jobName'], check_dt.seconds))
+                    if check_dt.seconds > idle_log_timeout:
+                        logger.warning("Job \'%s\' has stalled.")
+                        stalled_jobs.add(jid)
+                else:
+                    old_log = job_log_dict[jid]['log']
+                    old_log += log_lines[len(old_log):]
+                    job_log_dict[jid]['check_time'] = now
+            except Exception as e:
+                logger.error("Failed to check log for: %s" % str(job_def))
+                logger.exception(e)
         return stalled_jobs
 
     # Don't start watching jobs added after this command was initialized.
