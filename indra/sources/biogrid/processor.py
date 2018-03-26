@@ -13,6 +13,7 @@ import indra.databases.uniprot_client as up_client
 
 logger = logging.getLogger('biogrid')
 
+
 class BiogridProcessor(object):
     """The BioGrid processor reads in a tab-seperated file with biogrid
     interactions and produces a list of INDRA statements.
@@ -48,7 +49,7 @@ class BiogridProcessor(object):
             agent_b = self._make_agent(entrez_b, text_b)
 
             # Evidence
-            ev = Evidence(source_api='biogrid', 
+            ev = Evidence(source_api='biogrid',
                           source_id=source_id,
                           pmid=pmid,
                           text=None,
@@ -80,4 +81,3 @@ class BiogridProcessor(object):
             if up_id is not None:
                 db_refs['UP'] = up_id
         return (hgnc_name, db_refs)
-

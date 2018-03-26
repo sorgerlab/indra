@@ -6,11 +6,13 @@ from nose.plugins.attrib import attr
 from indra.sources.biogrid import process_file
 from indra.statements import Complex
 
+
 @attr('webservice', 'nonpublic')
 def test_biogrid_request():
     results = biogrid_client._send_request(['MAP2K1', 'MAPK1'])
     assert results is not None
     assert unicode_strs(results)
+
 
 def test_biogrid_tsv():
     # Download biogrid file form the web and process it
@@ -32,4 +34,3 @@ def test_biogrid_tsv():
     # The first statement in the file involves MAP2K4 and FLNC
     assert(str(s0.members[0]) == 'MAP2K4()')
     assert(str(s0.members[1]) == 'FLNC()')
-

@@ -12,6 +12,7 @@ biogrid_file_url = 'https://downloads.thebiogrid.org/Download/BioGRID/' + \
         'Release-Archive/BIOGRID-3.4.158/BIOGRID-ALL-3.4.158.tab2.zip'
 biogrid_text_file = 'BIOGRID-ALL-3.4.158.tab2.txt'
 
+
 def process_file(filename=None):
     """Processes a biogrid tab-separated filer.
 
@@ -27,7 +28,7 @@ def process_file(filename=None):
         statements attribute.
     """
     tmp_dir = None
-    if filename == None:
+    if filename is None:
         # Filename not specified, download from the web
         tmp_dir = tempfile.mkdtemp('indra_biogrid')
 
@@ -46,13 +47,10 @@ def process_file(filename=None):
         shutil.rmtree(tmp_dir)
     return bp
 
+
 def _download_file(url, target):
     """Downloads a file to the specified target, works in python 2 and
     python 3."""
     r = requests.get(url)
     with open(target, 'wb') as f:
         f.write(r.content)
-    
-if __name__ == '__main__':
-    fname = '/Users/daniel/Downloads/BIOGRID/BIOGRID-ALL-3.4.158.tab2.txt';bp = process_file(fname)
-
