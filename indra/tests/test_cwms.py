@@ -4,7 +4,7 @@ from os.path import join, dirname
 from nose.tools import raises
 
 from indra.statements import *
-from indra.sources.cwms import process_rdf_file
+from indra.sources.cwms import process_rdf_file, process_text
 
 # Path to the CWMS test/dummy data folder
 path_this = os.path.dirname(os.path.abspath(__file__))
@@ -22,6 +22,25 @@ example3_txt = os.path.join(data_folder, 'example_2_sentence_4.txt')
 def load_text(fname):
     with open(fname, 'r') as f:
         return f.read()
+
+def test_cwmsreader1():
+    # Test extraction of causal relations from the cwms reader service
+    text = 'government causes agriculture.'
+    cp = process_text(text)
+    statements = cp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, Influence))
+    subj = s0.subj
+    assert(subj.db_refs['TEXT'] == 'government')
+
+    obj = s0.obj
+    assert(obj.db_refs['TEXT'] == 'agriculture')
+
+    ev = s0.evidence[0]
+    assert(ev.text == 'government causes agriculture.')
+    assert(ev.source_api == 'cwmsreader')
 
 def test_rdf_example1():
     # Example: These impacts on livestock and crops have resulted in

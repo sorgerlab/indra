@@ -31,7 +31,7 @@ def send_query(text, service_endpoint='drum', query_args=None):
     html : str
         The HTML result returned by the web service.
     """
-    if service_endpoint in ['drum', 'drum-dev', 'cwms']:
+    if service_endpoint in ['drum', 'drum-dev', 'cwms', 'cwmsreader']:
         url = base_url + service_endpoint
     else:
         logger.error('Invalid service endpoint: %s' % service_endpoint)
