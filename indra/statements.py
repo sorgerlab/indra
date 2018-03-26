@@ -2705,7 +2705,7 @@ def get_valid_location(location):
 def _read_activity_types():
     """Read types of valid activities from a resource file."""
     this_dir = os.path.dirname(os.path.abspath(__file__))
-    ac_file = this_dir + '/resources/activity_hierarchy.rdf'
+    ac_file = os.path.abspath(this_dir + '/resources/activity_hierarchy.rdf')
     g = rdflib.Graph()
     with open(ac_file, 'r'):
         g.parse(ac_file, format='nt')

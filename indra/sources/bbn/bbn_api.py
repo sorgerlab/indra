@@ -1,7 +1,7 @@
 import rdflib
 import logging
 from indra.sources.bbn import processor
-
+from os.path import abspath
 
 logger = logging.getLogger('bbn')
 
@@ -27,6 +27,7 @@ def process_json_file(fname):
 
 
 def _load_graph(fname):
+    fname = abspath(fname)
     g = rdflib.Graph()
     with open(fname, 'rb') as fh:
         logger.info('Started loading graph from %s' % fname)
