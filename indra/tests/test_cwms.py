@@ -38,9 +38,11 @@ def test_cwmsreader_cause():
     assert(isinstance(s0, Influence))
     subj = s0.subj
     assert(subj.db_refs['TEXT'] == 'government')
+    assert(subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION')
 
     obj = s0.obj
     assert(obj.db_refs['TEXT'] == 'agriculture')
+    assert(obj.db_refs['CWMS'] == 'ONT::COMMERCIAL-ACTIVITY')
 
     ev = s0.evidence[0]
     assert(ev.text == 'government causes agriculture.')
@@ -83,9 +85,11 @@ def test_cwmsreader_influence():
     assert(isinstance(s0, Influence))
     subj = s0.subj
     assert(subj.db_refs['TEXT'] == 'government')
+    assert(subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION')
 
     obj = s0.obj
     assert(obj.db_refs['TEXT'] == 'agriculture')
+    assert(obj.db_refs['CWMS'] == 'ONT::COMMERCIAL-ACTIVITY')
 
     ev = s0.evidence[0]
     assert(ev.text == 'government influences agriculture.')
