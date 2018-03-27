@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, dirname
 from nose.tools import raises
+from nose.plugins.attrib import attr
 
 from indra.statements import *
 from indra.sources.cwms import process_rdf_file, process_text
@@ -25,6 +26,7 @@ def load_text(fname):
         return f.read()
 
 
+@attr('slow', 'webservice')
 def test_cwmsreader_cause():
     # Test extraction of causal relations from the cwms reader service
     text = 'government causes agriculture.'
@@ -45,6 +47,7 @@ def test_cwmsreader_cause():
     assert(ev.source_api == 'cwmsreader')
 
 
+@attr('slow', 'webservice')
 def test_cwmsreader_inhibit():
     # Test extraction of inhibition relations from the cwms reader service
     text = 'Persistent insecurity and armed conflict have disrupted ' + \
@@ -68,6 +71,7 @@ def test_cwmsreader_inhibit():
     assert(ev.source_api == 'cwmsreader')
 
 
+@attr('slow', 'webservice')
 def test_cwmsreader_influence():
     # Test extraction of causal relations from the cwms reader service
     text = 'government influences agriculture.'
