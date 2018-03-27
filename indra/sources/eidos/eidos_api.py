@@ -13,9 +13,8 @@ try:
     from .eidos_reader import EidosReader
     eidos_reader = EidosReader()
 except Exception as e:
-    logger.error('Could not instantiate Eidos reader, text reading '
-                 'will not be available.')
-    logger.exception(e)
+    logger.warning('Could not instantiate Eidos reader, text reading '
+                   'will not be available.')
     eidos_reader = None
 
 

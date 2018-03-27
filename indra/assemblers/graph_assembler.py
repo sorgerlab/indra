@@ -8,8 +8,8 @@ logger = logging.getLogger('graph_assembler')
 try:
     import pygraphviz
 except ImportError:
-    logger.error('Cannot use graph assembler because '
-                 'pygraphviz could not be imported.')
+    logger.warning('Cannot use graph assembler because '
+                   'pygraphviz could not be imported.')
 
 default_graph_properties = {
     'directed': True,
