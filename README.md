@@ -24,6 +24,7 @@ systems:
 - [Sparser](https://github.com/ddmcdonald/sparser) - for biology
 - [TEES](https://github.com/jbjorne/TEES) - for biology
 - [Eidos](https://github.com/clulab/eidos) - general purpose
+- [TRIPS/CWMS](http://trips.ihmc.us/parser/cgi/cwmsreader) - general purpose
 
 and can collect information from these databases:
 - [Pathway Commons database](http://pathwaycommons.org/) or any source

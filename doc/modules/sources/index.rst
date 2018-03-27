@@ -13,3 +13,4 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    geneways/index
    tees/index
    eidos/index
+   cwms/index
