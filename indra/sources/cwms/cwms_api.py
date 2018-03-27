@@ -7,17 +7,17 @@ from indra.sources.cwms.processor import CWMSProcessor
 logger = logging.getLogger('cwms_rdf')
 
 
-def process_text(text):
+def process_text(text, save_xml='cwms_output.xml'):
     """Processes text using the CWMS web service.
 
     Parameters:
     -----------
-    text: str
+    text : str
         Text to process
 
     Returns
     -------
-    cp: indra.sources.cwms.CWMSProcessor
+    cp : indra.sources.cwms.CWMSProcessor
         A CWMSProcessor, which contains a list of INDRA statements in its
         statements attribute.
     """
@@ -28,9 +28,28 @@ def process_text(text):
     second_start = xml.find('<ekb', first_end)  # Start of second EKB
     second_end = xml.find('</ekb>', second_start)  # End of second EKB
     second_ekb = xml[second_start:second_end+len('</ekb>')]  # second EKB
+    if save_xml:
+        with open(save_xml, 'wb') as fh:
+            fh.write(second_ekb)
+    return process_ekb(second_ekb)
 
+
+def process_ekb(ekb_str):
+    """Processes an EKB string produced by CWMS.
+
+    Parameters:
+    -----------
+    ekb_str : str
+        EKB string to process
+
+    Returns
+    -------
+    cp : indra.sources.cwms.CWMSProcessor
+        A CWMSProcessor, which contains a list of INDRA statements in its
+        statements attribute.
+    """
     # Process EKB XML into statements
-    cp = CWMSProcessor(second_ekb)
+    cp = CWMSProcessor(ekb_str)
     return cp
 
 
