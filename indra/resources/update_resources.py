@@ -35,7 +35,7 @@ def load_from_http(url):
     logger.info('Downloading %s' % url)
     res = requests.get(url)
     if res.status_code != 200:
-        logger.error('Failed to download %s' % url)
+        logger.error('Failed to download "%s"' % url)
         return
     return res.content
 
@@ -79,6 +79,8 @@ def update_uniprot_entries():
     if not((reviewed_entries is not None) and
             (unreviewed_human_entries is not None)):
             return
+    unreviewed_human_entries = unreviewed_human_entries.decode('utf-8')
+    reviewed_entries = reviewed_entries.decode('utf-8')
     lines = reviewed_entries.strip('\n').split('\n')
     lines += unreviewed_human_entries.strip('\n').split('\n')[1:]
     # At this point, we need to clean up the gene names.
@@ -97,7 +99,7 @@ def update_uniprot_entries():
     fname = os.path.join(path, 'uniprot_entries.tsv')
     logging.info('Saving into %s.' % fname)
     with open(fname, 'wb') as fh:
-        fh.write(full_table)
+        fh.write(full_table.encode('utf-8'))
 
 def update_uniprot_sec_ac():
     logger.info('--Updating UniProt secondary accession--')
@@ -123,14 +125,15 @@ def update_chebi_entries():
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        df = pandas.read_csv(fh, sep='\t', index_col=None,
+                             parse_dates=True, encoding='latin-1')
     # Save PubChem mapping
     fname = os.path.join(path, 'chebi_to_pubchem.tsv')
     logger.info('Saving into %s' % fname)
     df_pubchem = df[df['REFERENCE_DB_NAME']=='PubChem']
     df_pubchem.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                            inplace=True)
-    df_pubchem.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
+    df_pubchem.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'PUBCHEM'], index=False)
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
@@ -138,7 +141,7 @@ def update_chebi_entries():
     df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
-    df_chembl.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
+    df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
 
@@ -157,14 +160,14 @@ def update_cas_to_chebi():
     df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
                        inplace=True)
     # Here we need to map to primary ChEBI IDs
-    with open('chebi_to_primary.tsv', 'rb') as fh:
+    with open(os.path.join(path, 'chebi_to_primary.tsv'), 'rb') as fh:
         df_prim = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
         mapping = {s: p for s, p in zip(df_prim['Secondary'].tolist(),
                                         df_prim['Primary'].tolist())}
     df_cas.COMPOUND_ID.replace(mapping, inplace=True)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
-    df_cas.to_csv(fname, sep=b'\t',
+    df_cas.to_csv(fname, sep='\t',
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
 
@@ -180,12 +183,15 @@ def update_chebi_primary_map():
         df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
     fname = os.path.join(path, 'chebi_to_primary.tsv')
     logger.info('Saving into %s' % fname)
+    print('type(df):', type(df))
+    print('df["PARENT_ID"]:', df['PARENT_ID'])
     df = df[df['PARENT_ID'] != 'null']
     df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
     df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
                    inplace=True)
     df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
-    df.to_csv(fname, sep=b'\t',
+    print('Writing chebi map to', fname)
+    df.to_csv(fname, sep='\t',
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
 
@@ -344,7 +350,7 @@ def update_ncit_map():
     df_all = pandas.concat([df_chebi, df_go, df_hgnc, df_uniprot])
 
     fname = os.path.join(path, 'ncit_map.tsv')
-    df_all.to_csv(fname, sep=b'\t', columns=['Source Code',
+    df_all.to_csv(fname, sep='\t', columns=['Source Code',
                                         'Target Coding Scheme',
                                         'Target Code'],
               header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
@@ -362,7 +368,7 @@ def update_chebi_names():
     df = df[df['TYPE'] == 'NAME']
     df.sort_values(by='COMPOUND_ID', inplace=True)
     logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep=b'\t', header=True, index=False,
+    df.to_csv(fname, sep='\t', header=True, index=False,
               columns=['COMPOUND_ID', 'NAME'])
 
 
@@ -386,6 +392,7 @@ if __name__ == '__main__':
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_chebi_names()
+    update_chebi_primary_map()
     update_cas_to_chebi()
     update_cellular_components()
     update_bel_chebi_map()
@@ -395,4 +402,3 @@ if __name__ == '__main__':
     update_cellular_component_hierarchy()
     update_famplex_map()
     update_ncit_map()
-    update_chebi_primary_map()
