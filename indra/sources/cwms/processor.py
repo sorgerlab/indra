@@ -126,7 +126,13 @@ class CWMSProcessor(object):
         if cause_text_element is None:
             return
         cause_text = cause_text_element.text
-        cause_agent = Agent(cause_text, db_refs={'TEXT': cause_text})
+        cause_db_refs = {'TEXT': cause_text}
+        #
+        cause_type_element = cause_term.find('type')
+        if cause_type_element is not None:
+            cause_db_refs['CWMS'] = cause_type_element.text
+        #
+        cause_agent = Agent(cause_text, db_refs=cause_db_refs)
 
         # Get the term with the given affected id
         affected_id = affected.attrib.get('id')
@@ -134,12 +140,18 @@ class CWMSProcessor(object):
         if affected_term is None:
             return
 
-        # Get the affected's text and use it to construct an Agent
+        # Get the affected's text and type and use them to construct an Agent
         affected_text_element = affected_term.find('text')
         if affected_text_element is None:
             return
         affected_text = affected_text_element.text
-        affected_agent = Agent(affected_text, db_refs={'TEXT': affected_text})
+        affected_db_refs = {'TEXT': affected_text}
+        #
+        affected_type_element = affected_term.find('type')
+        if affected_type_element is not None:
+            affected_db_refs['CWMS'] = affected_type_element.text
+        #
+        affected_agent = Agent(affected_text, db_refs=affected_db_refs)
 
         # Construct evidence
         ev = self._get_evidence(event_element)

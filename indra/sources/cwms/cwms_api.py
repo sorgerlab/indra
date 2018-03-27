@@ -30,7 +30,7 @@ def process_text(text, save_xml='cwms_output.xml'):
     second_ekb = xml[second_start:second_end+len('</ekb>')]  # second EKB
     if save_xml:
         with open(save_xml, 'wb') as fh:
-            fh.write(second_ekb)
+            fh.write(second_ekb.encode('utf-8'))
     return process_ekb(second_ekb)
 
 
