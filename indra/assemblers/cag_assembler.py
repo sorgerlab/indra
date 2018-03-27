@@ -166,6 +166,6 @@ class CAGAssembler(object):
             and agent.db_refs['EIDOS'][0][1] != "0.0"
             # The grounding score is above the grounding threshold
             and agent.db_refs['EIDOS'][0][1] > self.grounding_threshold):
-                return best_match[0].split('/')[-1].replace('_', ' ').capitalize()
+                return agent.db_refs['EIDOS'][0][0].split('/')[-1].replace('_', ' ').capitalize()
         else:
             return agent.name.capitalize()
