@@ -78,7 +78,8 @@ def reach_process_text():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     text = body.get('text')
-    rp = reach.process_text(text)
+    offline = True if body.get('offline') else False
+    rp = reach.process_text(text, offline=offline)
     if rp and rp.statements:
         stmts = stmts_to_json(rp.statements)
         res = {'statements': stmts}
@@ -237,11 +238,19 @@ def assemble_pysb():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
+    export_format = body.get('export_format')
     stmts = stmts_from_json(stmts_json)
     pa = PysbAssembler()
     pa.add_statements(stmts)
     pa.make_model()
-    model_str = pa.print_model()
+    if not export_format:
+        model_str = pa.print_model()
+    else:
+        try:
+            model_str = pa.export_model(format=export_format)
+        except Exception as e:
+            logger.exception(e)
+            model_str = ''
     res = {'model': model_str}
     return res
 
@@ -472,7 +481,7 @@ def filter_grounded_only():
         res = {'statements': []}
     return res
 
+app = default_app()
 
 if __name__ == '__main__':
-    app = default_app()
     run(app, host='0.0.0.0', port='8080')
