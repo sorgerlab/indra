@@ -481,8 +481,12 @@ class SparserReader(Reader):
                         if log:
                             outbuf.write(b'Log for producing output %d/%d.\n'
                                          % (i, len(out_lists_and_buffs)))
-                            buff.seek(0)
-                            outbuf.write(buff.read() + b'\n')
+                            if buff is not None:
+                                buff.seek(0)
+                                outbuf.write(buff.read() + b'\n')
+                            else:
+                                outbuf.write(b'ERROR: no buffer was None. '
+                                             b'No logs available.\n')
                             outbuf.flush()
             finally:
                 if log:
