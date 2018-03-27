@@ -1,20 +1,20 @@
 [
     {
-        "@id": "http://worldmodelers.com/performers/bbn#REL-CausalAssertion-1",
+        "@id": "http://www.bbn.com/worldmodelers/data#REL-CausalAssertion-1",
         "@type": [
-            "http://worldmodelers.com/CauseEffect#CausalAssertion"
+            "http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#CausalAssertion"
         ],
-        "http://worldmodelers.com/CauseEffect#has_cause": [
+        "http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#has_catalyst": [
             {
-                "@id": "http://worldmodelers.com/performers/bbn#EV-Class-notCow-1"
+                "@id": "http://www.bbn.com/worldmodelers/data#EV-NotCow-1"
             }
         ],
-        "http://worldmodelers.com/CauseEffect#has_effect": [
+        "http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#has_effect": [
             {
-                "@id": "http://worldmodelers.com/performers/bbn#EV-Class-moo-1"
+                "@id": "http://www.bbn.com/worldmodelers/data#EV-Moo-1"
             }
         ],
-        "http://www.ontologyrepository.com/CommonCoreOntologies/has_text_value": [
+        "http://www.bbn.com/worldmodelers/ontology/wm/DataProvenance#has_text_value": [
             {
                 "@value": "Not cow causes moo."
             }
@@ -22,13 +22,13 @@
     },
 
 	{
-        "@id": "http://worldmodelers.com/performers/bbn#EV-Class-notCow-1",
-        "http://worldmodelers.com/Event#has_polarity": [
+        "@id": "http://www.bbn.com/worldmodelers/data#EV-NotCow-1",
+        "http://www.bbn.com/worldmodelers/ontology/wm/Event#has_polarity": [
             {
-                "@id": "http://worldmodelers.com/Event#Negative"
+                "@id": "http://www.bbn.com/worldmodelers/ontology/wm/Event#Negative"
             }
         ],
-        "http://www.ontologyrepository.com/CommonCoreOntologies/has_text_value": [
+        "http://www.bbn.com/worldmodelers/ontology/wm/DataProvenance#has_text_value": [
             {
                 "@value": "not cow"
             },
@@ -39,13 +39,13 @@
     },
 
 	{
-        "@id": "http://worldmodelers.com/performers/bbn#EV-Class-moo-1",
-        "http://worldmodelers.com/Event#has_polarity": [
+        "@id": "http://www.bbn.com/worldmodelers/data#EV-Moo-1",
+        "http://www.bbn.com/worldmodelers/ontology/wm/Event#has_polarity": [
             {
-                "@id": "http://worldmodelers.com/Event#Positive"
+                "@id": "http://www.bbn.com/worldmodelers/ontology/wm/Event#Positive"
             }
         ],
-        "http://www.ontologyrepository.com/CommonCoreOntologies/has_text_value": [
+        "http://www.bbn.com/worldmodelers/ontology/wm/DataProvenance#has_text_value": [
             {
                 "@value": "moo"
             },
