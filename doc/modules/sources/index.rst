@@ -14,3 +14,4 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    tees/index
    eidos/index
    cwms/index
+   biogrid/index
