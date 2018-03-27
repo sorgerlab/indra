@@ -23,6 +23,9 @@
 
 	{
         "@id": "http://www.bbn.com/worldmodelers/data#EV-Class-cow-1",
+        "@type": [
+            "http://www.bbn.com/worldmodelers/ontology/wm/Event#Bovine"
+        ],
         "http://www.bbn.com/worldmodelers/ontology/wm/Event#has_polarity": [
             {
                 "@id": "http://www.bbn.com/worldmodelers/ontology/wm/Event#Positive"
@@ -40,6 +43,9 @@
 
 	{
         "@id": "http://www.bbn.com/worldmodelers/data#EV-Class-moo-1",
+        "@type": [
+            "http://www.bbn.com/worldmodelers/ontology/wm/Event#MooSound"
+        ],
         "http://www.bbn.com/worldmodelers/ontology/wm/Event#has_polarity": [
             {
                 "@id": "http://www.bbn.com/worldmodelers/ontology/wm/Event#Positive"
