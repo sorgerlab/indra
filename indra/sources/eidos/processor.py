@@ -63,13 +63,15 @@ class EidosJsonLdProcessor(object):
                 return []
 
         def _get_eidos_groundings(entity):
-            """Return Eidos groundings are a list of tuples with
-            scores."""
-            if entity.get('grounding') is not None:
-                return [(g['ontologyConcept'], g['value'])
-                    for g in entity.get('grounding', [])]
-            else:
+            """Return Eidos groundings are a list of tuples with scores."""
+            grounding = entity.get('grounding')
+            # If no grounding at all, just return None
+            if grounding is None:
                 return None
+            # Otherwise get all the groundings that have non-zero score
+            grounding_tuples = [(g['ontologyConcept'], g['value'])
+                                for g in grounding if g['value'] > 0]
+            return grounding_tuples
 
         def _make_agent(entity):
             """Return an Agent from an Eidos entity."""
