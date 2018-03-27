@@ -8,9 +8,10 @@ logger = logging.getLogger('bbn')
 
 
 prefixes = """
-    PREFIX causal: <http://worldmodelers.com/CauseEffect#>
+    PREFIX causal: <http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#>
+    PREFIX ev: <http://www.bbn.com/worldmodelers/ontology/wm/Event#>
+    PREFIX prov: <http://www.bbn.com/worldmodelers/ontology/wm/DataProvenance#>
     PREFIX cco: <http://www.ontologyrepository.com/CommonCoreOntologies/>
-    PREFIX ev: <http://worldmodelers.com/Event#>
     """
 
 
@@ -46,9 +47,9 @@ class BBNProcessor(object):
                 ?rel a causal:CausalAssertion .
                 ?rel causal:has_cause ?cause .
                 ?rel causal:has_effect ?effect .
-                ?rel cco:has_text_value ?evtext .
-                ?cause cco:has_text_value ?causetext .
-                ?effect cco:has_text_value ?effecttext .
+                ?rel prov:has_text_value ?evtext .
+                ?cause prov:has_text_value ?causetext .
+                ?effect prov:has_text_value ?effecttext .
                 OPTIONAL
                     {?cause ev:has_polarity ?cause_polarity .
                     ?effect ev:has_polarity ?effect_polarity .}
@@ -82,7 +83,8 @@ class BBNProcessor(object):
                 not_positive = not_positive + 1
             else:
                 self.statements.append(statement)
-        print('%d statements skipped because of polarity' % not_positive)
+        if not_positive > 0:
+            print('%d statements skipped because of polarity' % not_positive)
 
 
 class CauseEffect(object):
