@@ -65,8 +65,11 @@ class EidosJsonLdProcessor(object):
         def _get_eidos_groundings(entity):
             """Return Eidos groundings are a list of tuples with
             scores."""
-            return [(g['ontologyConcept'], g['value'])
+            if entity.get('grounding') is not None:
+                return [(g['ontologyConcept'], g['value'])
                     for g in entity.get('grounding', [])]
+            else:
+                return None
 
         def _make_agent(entity):
             """Return an Agent from an Eidos entity."""
