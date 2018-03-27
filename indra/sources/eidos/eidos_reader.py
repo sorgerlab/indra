@@ -78,7 +78,7 @@ class EidosReader(object):
             ml = autoclass('scala.collection.mutable.MutableList')()
             ml.appendElem(annot_doc)
             jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
-            corpus = jc(ml, None)
+            corpus = jc(ml, self.eidos_reader)
             mentions_json = corpus.toJsonStr()
         json_dict = json.loads(mentions_json)
         return json_dict
