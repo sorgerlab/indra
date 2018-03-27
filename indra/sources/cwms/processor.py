@@ -46,6 +46,7 @@ class CWMSProcessor(object):
         A map from paragraph IDs to their associated section types
     """
     def __init__(self, xml_string):
+        self.statements = []
         # Parse XML
         try:
             self.tree = ET.XML(xml_string, parser=UTB())
@@ -66,7 +67,6 @@ class CWMSProcessor(object):
                            for p in paragraph_tags}
 
         # Extract statements
-        self.statements = []
         self.extract_noun_causal_relations()
         self.extract_noun_inhibit_relations()
         self.extract_noun_influence_relations()
