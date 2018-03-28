@@ -211,10 +211,10 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
                     agent_data.append((db_stmt.id, ns, ag_id, role))
 
         # Optionally print another tick on the progress bar.
-        if verbose and i % (num_stmts//25) == 0:
+        if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
             print('|', end='', flush=True)
 
-    if verbose:
+    if verbose and num_stmts > 25:
         print()
 
     cols = ('stmt_id', 'db_name', 'db_id', 'role')

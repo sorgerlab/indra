@@ -712,7 +712,9 @@ def upload_statements(stmt_data_list, db=None):
     logger.info("Uploading agents to the database.")
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     if len(reading_id_set):
-        insert_agents(db, db.Statements, db.Agents, verbose=True)
+        uuid_set = {s.statement.uuid for s in stmt_data_list}
+        insert_agents(db, db.Statements, db.Agents,
+                      db.Statements.uuid.in_(uuid_set), verbose=True)
     return
 
 
