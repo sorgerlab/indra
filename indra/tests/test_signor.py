@@ -291,6 +291,135 @@ def test_process_row_phos_nores_down():
     assert af.is_active == False
 
 
+def test_process_row_dephos_up():
+    test_row = SignorRow(ENTITYA='CHEK2', TYPEA='protein', IDA='O96017',
+            DATABASEA='UNIPROT', ENTITYB='CHEK2', TYPEB='protein', IDB='O96017',
+            DATABASEB='UNIPROT', EFFECT='up-regulates activity',
+            MECHANISM='dephosphorylation', RESIDUE='Thr387',
+            SEQUENCE='LMRTLCGtPTYLAPE', TAX_ID='9606', CELL_DATA='BTO:0000007',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
+            SENTENCE='', SIGNOR_ID='SIGNOR-116131')
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Dephosphorylation)
+    assert stmts[1].residue == 'T'
+    assert stmts[1].position == '387'
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue == 'T'
+    assert mc.position == '387'
+    assert af.is_active == False
+
+
+def test_process_row_dephos_down():
+    test_row = SignorRow(ENTITYA='PRKCD', TYPEA='protein', IDA='Q05655',
+            DATABASEA='UNIPROT', ENTITYB='PTPN22', TYPEB='protein',
+            IDB='Q9Y2R2', DATABASEB='UNIPROT', EFFECT='down-regulates',
+            MECHANISM='dephosphorylation', RESIDUE='Ser35',
+            SEQUENCE='FLKLKRQsTKYKADK', TAX_ID='9606', CELL_DATA='BTO:0000782',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
+            SENTENCE='', SIGNOR_ID='SIGNOR-159591')
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Inhibition)
+    assert isinstance(stmts[1], Dephosphorylation)
+    assert stmts[1].residue == 'S'
+    assert stmts[1].position == '35'
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue == 'S'
+    assert mc.position == '35'
+    assert af.is_active == True
+
+
+def test_mod_unknown_effect():
+    test_row = SignorRow(ENTITYA='JAK2', TYPEA='protein', IDA='O60674',
+            DATABASEA='UNIPROT', ENTITYB='JAK2', TYPEB='protein', IDB='O60674',
+            DATABASEB='UNIPROT', EFFECT='unknown', MECHANISM='phosphorylation',
+            RESIDUE='Tyr1007', SEQUENCE='VLPQDKEyYKVKEPG', TAX_ID='-1',
+            CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='9111318', DIRECT='YES', NOTES='', ANNOTATOR='',
+            SENTENCE='', SIGNOR_ID='SIGNOR-251358')
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], Phosphorylation)
+    assert stmts[0].residue == 'Y'
+    assert stmts[0].position == '1007'
+
+
+def test_process_row_dephos_nores_up():
+    test_row = SignorRow(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
+            DATABASEA='UNIPROT', ENTITYB='AMPK', TYPEB='complex',
+            IDB='SIGNOR-C15', DATABASEB='SIGNOR',
+            EFFECT='up-regulates activity', MECHANISM='dephosphorylation',
+            RESIDUE='', SEQUENCE='', TAX_ID='-1', CELL_DATA='', TISSUE_DATA='', 
+            MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
+            MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
+            DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
+            SENTENCE='', SIGNOR_ID='SIGNOR-242602')
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Activation)
+    assert isinstance(stmts[1], Dephosphorylation)
+    assert stmts[1].residue is None
+    assert stmts[1].position is None
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue is None
+    assert mc.position is None
+    assert af.is_active == False
+
+
+def test_process_row_dephos_nores_down():
+    test_row = SignorRow(ENTITYA='CSNK1D', TYPEA='protein', IDA='P48730',
+            DATABASEA='UNIPROT', ENTITYB='LEF1', TYPEB='protein', IDB='Q9UJU2',
+            DATABASEB='UNIPROT', EFFECT='down-regulates',
+            MECHANISM='dephosphorylation', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
+            ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
+    assert isinstance(stmts, list)
+    assert len(stmts) == 3
+    assert isinstance(stmts[0], Inhibition)
+    assert isinstance(stmts[1], Dephosphorylation)
+    assert stmts[1].residue is None
+    assert stmts[1].position is None
+    af = stmts[2]
+    assert isinstance(af, ActiveForm)
+    assert len(af.agent.mods) == 1
+    mc = af.agent.mods[0]
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.residue is None
+    assert mc.position is None
+    assert af.is_active == True
+
+
 def test_process_row_phos_multi_res():
     test_row = SignorRow(ENTITYA='RAF1', TYPEA='protein', IDA='P04049',
             DATABASEA='UNIPROT', ENTITYB='MAP2K2', TYPEB='protein',
@@ -413,4 +542,5 @@ def test_parse_residue_positions():
     assert residues[0][1] == '169'
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
+
 
