@@ -90,6 +90,10 @@ def map_grounding(stmts_in, **kwargs):
         A list of statements to map.
     do_rename : Optional[bool]
         If True, Agents are renamed based on their mapped grounding.
+    grounding_map : Optional[dict]
+        A user supplied grounding map which maps a string to a
+        dictionary of database IDs (in the format used by Agents'
+        db_refs).
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -100,9 +104,10 @@ def map_grounding(stmts_in, **kwargs):
     """
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename')
+    gm = kwargs.get('grounding_map', grounding_map)
     if do_rename is None:
         do_rename = True
-    gm = GroundingMapper(grounding_map, agent_map)
+    gm = GroundingMapper(gm, agent_map)
     stmts_out = gm.map_agents(stmts_in, do_rename=do_rename)
     dump_pkl = kwargs.get('save')
     if dump_pkl:
