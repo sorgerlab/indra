@@ -347,6 +347,24 @@ def test_process_row_dephos_down():
     assert af.is_active == True
 
 
+def test_mod_unknown_effect():
+    test_row = SignorRow(ENTITYA='JAK2', TYPEA='protein', IDA='O60674',
+            DATABASEA='UNIPROT', ENTITYB='JAK2', TYPEB='protein', IDB='O60674',
+            DATABASEB='UNIPROT', EFFECT='unknown', MECHANISM='phosphorylation',
+            RESIDUE='Tyr1007', SEQUENCE='VLPQDKEyYKVKEPG', TAX_ID='-1',
+            CELL_DATA='', TISSUE_DATA='', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='9111318', DIRECT='YES', NOTES='', ANNOTATOR='',
+            SENTENCE='', SIGNOR_ID='SIGNOR-251358')
+    stmts, no_mech = SignorProcessor._process_row(test_row)
+    assert not no_mech
+    assert isinstance(stmts, list)
+    assert len(stmts) == 1
+    assert isinstance(stmts[0], Phosphorylation)
+    assert stmts[0].residue == 'Y'
+    assert stmts[0].position == '1007'
+
+
 def test_process_row_dephos_nores_up():
     test_row = SignorRow(ENTITYA='STK11', TYPEA='protein', IDA='Q15831',
             DATABASEA='UNIPROT', ENTITYB='AMPK', TYPEB='complex',
@@ -525,10 +543,4 @@ def test_parse_residue_positions():
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
 
-
-if __name__ == '__main__':
-    test_process_row_dephos_up()
-    test_process_row_dephos_down()
-    test_process_row_dephos_nores_up()
-    test_process_row_dephos_nores_down()
 
