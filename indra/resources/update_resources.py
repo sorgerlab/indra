@@ -4,6 +4,7 @@ import os
 import gzip
 import pandas
 import rdflib
+from indra.util import read_unicode_csv, write_unicode_csv
 
 try:
     from urllib import urlretrieve
@@ -35,7 +36,7 @@ def load_from_http(url):
     logger.info('Downloading %s' % url)
     res = requests.get(url)
     if res.status_code != 200:
-        logger.error('Failed to download %s' % url)
+        logger.error('Failed to download "%s"' % url)
         return
     return res.content
 
@@ -79,6 +80,8 @@ def update_uniprot_entries():
     if not((reviewed_entries is not None) and
             (unreviewed_human_entries is not None)):
             return
+    unreviewed_human_entries = unreviewed_human_entries.decode('utf-8')
+    reviewed_entries = reviewed_entries.decode('utf-8')
     lines = reviewed_entries.strip('\n').split('\n')
     lines += unreviewed_human_entries.strip('\n').split('\n')[1:]
     # At this point, we need to clean up the gene names.
@@ -97,7 +100,7 @@ def update_uniprot_entries():
     fname = os.path.join(path, 'uniprot_entries.tsv')
     logging.info('Saving into %s.' % fname)
     with open(fname, 'wb') as fh:
-        fh.write(full_table)
+        fh.write(full_table.encode('utf-8'))
 
 def update_uniprot_sec_ac():
     logger.info('--Updating UniProt secondary accession--')
@@ -123,22 +126,43 @@ def update_chebi_entries():
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        df = pandas.read_csv(fh, sep='\t', index_col=None,
+                             parse_dates=True, encoding='latin-1')
     # Save PubChem mapping
     fname = os.path.join(path, 'chebi_to_pubchem.tsv')
     logger.info('Saving into %s' % fname)
     df_pubchem = df[df['REFERENCE_DB_NAME']=='PubChem']
     df_pubchem.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                            inplace=True)
-    df_pubchem.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
+    df_pubchem.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'PUBCHEM'], index=False)
+
+    # Process PubChem mapping to eliminate SID rows and strip CID: prefix
+    # If the second column of the row starts with SID:, ignore the row
+    # If the second column of the row starts with CID:, strip out the CID prefix
+    # Otherwise, include the row unchanged
+    original_rows = read_unicode_csv(fname, '\t')
+    new_rows = []
+    for original_row in original_rows:
+        if original_row[1].startswith('CID:'):
+            new_row = original_row
+            new_row[1] = new_row[1][5:] # Strip out CID:
+            new_rows.append(new_row)
+        elif original_row[1].startswith('SID:'):
+            # Skip SID rows
+            continue
+        else:
+            # Include other rows unchanges
+            new_rows.append(original_row)
+    write_unicode_csv(fname, new_rows, '\t')
+
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
     df_chembl = df[df['REFERENCE_DB_NAME']=='ChEMBL']
     df_chembl.sort_values(['COMPOUND_ID', 'REFERENCE_ID'], ascending=True,
                           inplace=True)
-    df_chembl.to_csv(fname, sep=b'\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
+    df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
 
@@ -157,14 +181,14 @@ def update_cas_to_chebi():
     df_cas.sort_values(['ACCESSION_NUMBER', 'COMPOUND_ID'], ascending=True,
                        inplace=True)
     # Here we need to map to primary ChEBI IDs
-    with open('chebi_to_primary.tsv', 'rb') as fh:
+    with open(os.path.join(path, 'chebi_to_primary.tsv'), 'rb') as fh:
         df_prim = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
         mapping = {s: p for s, p in zip(df_prim['Secondary'].tolist(),
                                         df_prim['Primary'].tolist())}
     df_cas.COMPOUND_ID.replace(mapping, inplace=True)
     df_cas.drop_duplicates(subset=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                            inplace=True)
-    df_cas.to_csv(fname, sep=b'\t',
+    df_cas.to_csv(fname, sep='\t',
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
 
@@ -177,15 +201,17 @@ def update_chebi_primary_map():
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        df = pandas.read_csv(fh, sep='\t', index_col=None,
+                parse_dates=True, dtype='str')
     fname = os.path.join(path, 'chebi_to_primary.tsv')
     logger.info('Saving into %s' % fname)
-    df = df[df['PARENT_ID'] != 'null']
+    df = df[df['PARENT_ID'].notna()]
     df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
     df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
                    inplace=True)
     df.drop_duplicates(subset=['CHEBI_ACCESSION', 'PARENT_ID'], inplace=True)
-    df.to_csv(fname, sep=b'\t',
+    print('Writing chebi map to', fname)
+    df.to_csv(fname, sep='\t',
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
 
@@ -201,40 +227,48 @@ def update_cellular_components():
     fname = os.path.join(path, 'cellular_components.tsv')
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
-        fh.write('id\tname\n')
+        fh.write('id\tname\n'.encode('utf-8'))
 
         for comp_id, comp_name in sorted(component_map.items(),
                                           key=lambda x: x[0]):
-            fh.write('%s\t%s\n' % (comp_id, comp_name))
+            fh.write(('%s\t%s\n' % (comp_id, comp_name)).encode('utf-8'))
 
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
     id_lines = []
     name_lines = []
-    for release in ('1.0', 'latest-release'):
-        url = 'http://resource.belframework.org/belframework/%s/' % release + \
-              'equivalence/'
-        url1 = url + 'chebi-ids.beleq'
-        if release == '1.0':
-            url2 = url + 'chebi-names.beleq'
-        else:
-            url2 = url + 'chebi.beleq'
-        res1 = load_from_http(url1)
-        res2 = load_from_http(url2)
-        id_lines1 = [lin.strip() for lin in res1.split('\n') if lin]
-        start = id_lines1.index('[Values]')
-        id_lines1 = id_lines1[start+1:]
-        id_lines += id_lines1
-        name_lines1 = [lin.strip() for lin in res2.split('\n') if lin]
-        start = name_lines1.index('[Values]')
-        name_lines1 = name_lines1[start + 1:]
-        name_lines += name_lines1
+
+    url = 'https://raw.githubusercontent.com/OpenBEL/' + \
+            'openbel-framework-resources/latest/equivalence/'
+    url1 = url + 'chebi-ids.beleq'
+    url2 = url + 'chebi.beleq'
+    res1 = load_from_http(url1).decode('utf-8')
+    res2 = load_from_http(url2).decode('utf-8')
+    id_lines1 = [lin.strip() for lin in res1.split('\n') if lin]
+    start = id_lines1.index('[Values]')
+    id_lines1 = id_lines1[start+1:]
+    id_lines += id_lines1
+    name_lines1 = [lin.strip() for lin in res2.split('\n') if lin]
+    start = name_lines1.index('[Values]')
+    name_lines1 = name_lines1[start + 1:]
+    name_lines += name_lines1
+
+    # Here we need to get the ChEBI to primary map to make sure we map
+    # to primary IDs
+    with open(os.path.join(path, 'chebi_to_primary.tsv'), 'r') as fh:
+        chebi_to_primary = {k: v for k, v in
+                            [l.strip().split('\t') for
+                             l in fh.readlines()][1:]}
+
     id_map = {}
     for id_line in id_lines:
         if id_line:
             # Instead of splitting on |, split using UUID fixed length
             chebi_id = id_line[:-37]
             uuid = id_line[-36:]
+            # Map secondary IDs to primary IDs before adding to the map
+            if chebi_id in chebi_to_primary:
+                chebi_id = chebi_to_primary[chebi_id]
             id_map[uuid] = chebi_id
 
     name_map = {}
@@ -261,7 +295,7 @@ def update_bel_chebi_map():
     with open(fname, 'wb') as fh:
         for chebi_name, chebi_id in sorted(name_to_id.items(),
                                            key=lambda x: x[0]):
-            fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
+            fh.write(('%s\tCHEBI:%s\n' % (chebi_name, chebi_id)).encode('utf-8'))
 
 def update_entity_hierarchy():
     logger.info('--Updating entity hierarchy----')
@@ -344,7 +378,7 @@ def update_ncit_map():
     df_all = pandas.concat([df_chebi, df_go, df_hgnc, df_uniprot])
 
     fname = os.path.join(path, 'ncit_map.tsv')
-    df_all.to_csv(fname, sep=b'\t', columns=['Source Code',
+    df_all.to_csv(fname, sep='\t', columns=['Source Code',
                                         'Target Coding Scheme',
                                         'Target Code'],
               header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
@@ -362,7 +396,7 @@ def update_chebi_names():
     df = df[df['TYPE'] == 'NAME']
     df.sort_values(by='COMPOUND_ID', inplace=True)
     logger.info('Saving into %s' % fname)
-    df.to_csv(fname, sep=b'\t', header=True, index=False,
+    df.to_csv(fname, sep='\t', header=True, index=False,
               columns=['COMPOUND_ID', 'NAME'])
 
 
@@ -374,11 +408,20 @@ def update_famplex():
                  'grounding_map', 'relations']
     for csv_name in csv_names:
         url = famplex_url_pattern % csv_name
-        save_from_http(url, 'famplex/%s.csv' % csv_name)
+        save_from_http(url, os.path.join(path,'famplex/%s.csv' % csv_name))
+
+def update_signor_complexes():
+    url = 'https://signor.uniroma2.it/download_complexes.php'
+    content = load_from_http(url)
+    to_file = os.path.join(path, 'SIGNOR_complexes.csv')
+    with open(to_file, 'w') as f:
+        f.write(content)
 
 
 if __name__ == '__main__':
+    update_signor_complexes()
     update_famplex()
+    update_famplex_map()
     update_hgnc_entries()
     update_kinases()
     update_uniprot_entries()
@@ -386,6 +429,7 @@ if __name__ == '__main__':
     update_uniprot_subcell_loc()
     update_chebi_entries()
     update_chebi_names()
+    update_chebi_primary_map()
     update_cas_to_chebi()
     update_cellular_components()
     update_bel_chebi_map()
@@ -393,6 +437,4 @@ if __name__ == '__main__':
     update_modification_hierarchy()
     update_activity_hierarchy()
     update_cellular_component_hierarchy()
-    update_famplex_map()
     update_ncit_map()
-    update_chebi_primary_map()

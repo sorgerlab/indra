@@ -7,8 +7,8 @@ from nose.plugins.attrib import attr
 
 def test_read_chebi_to_pubchem():
     (ctop, ptoc) = chebi_client._read_chebi_to_pubchem()
-    assert ctop['85673'] == '252150010'
-    assert ptoc['252150010'] == '85673'
+    assert ctop['85673'] == '91481662'
+    assert ptoc['91481662'] == '85673'
     assert unicode_strs((ctop, ptoc))
 
 
