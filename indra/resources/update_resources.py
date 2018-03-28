@@ -4,6 +4,7 @@ import os
 import gzip
 import pandas
 import rdflib
+from indra.util import read_unicode_csv, write_unicode_csv
 
 try:
     from urllib import urlretrieve
@@ -135,6 +136,26 @@ def update_chebi_entries():
                            inplace=True)
     df_pubchem.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'PUBCHEM'], index=False)
+
+    # Process PubChem mapping to eliminate SID rows and strip CID: prefix
+    # If the second column of the row starts with SID:, ignore the row
+    # If the second column of the row starts with CID:, strip out the CID prefix
+    # Otherwise, include the row unchanged
+    original_rows = read_unicode_csv(fname, '\t')
+    new_rows = []
+    for original_row in original_rows:
+        if original_row[1].startswith('CID:'):
+            new_row = original_row
+            new_row[1] = new_row[1][5:] # Strip out CID:
+            new_rows.append(new_row)
+        elif original_row[1].startswith('SID:'):
+            # Skip SID rows
+            continue
+        else:
+            # Include other rows unchanges
+            new_rows.append(original_row)
+    write_unicode_csv(fname, new_rows, '\t')
+
     # Save ChEMBL mapping
     fname = os.path.join(path, 'chebi_to_chembl.tsv')
     logger.info('Saving into %s' % fname)
@@ -390,8 +411,10 @@ def update_signor_complexes():
 
 
 if __name__ == '__main__':
-    update_signor_complexes()
+    update_chebi_entries()
     sys.exit(0)
+
+    update_signor_complexes()
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()
