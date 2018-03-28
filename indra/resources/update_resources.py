@@ -238,8 +238,6 @@ def update_bel_chebi_map():
     id_lines = []
     name_lines = []
 
-    # url = 'http://resource.belframework.org/belframework/%s/' % release + \
-    #       'equivalence/'
     url = 'https://raw.githubusercontent.com/OpenBEL/' + \
             'openbel-framework-resources/latest/equivalence/'
     url1 = url + 'chebi-ids.beleq'
@@ -255,12 +253,22 @@ def update_bel_chebi_map():
     name_lines1 = name_lines1[start + 1:]
     name_lines += name_lines1
 
+    # Here we need to get the ChEBI to primary map to make sure we map
+    # to primary IDs
+    with open(os.path.join(path, 'chebi_to_primary.tsv'), 'r') as fh:
+        chebi_to_primary = {k: v for k, v in
+                            [l.strip().split('\t') for
+                             l in fh.readlines()][1:]}
+
     id_map = {}
     for id_line in id_lines:
         if id_line:
             # Instead of splitting on |, split using UUID fixed length
             chebi_id = id_line[:-37]
             uuid = id_line[-36:]
+            # Map secondary IDs to primary IDs before adding to the map
+            if chebi_id in chebi_to_primary:
+                chebi_id = chebi_to_primary[chebi_id]
             id_map[uuid] = chebi_id
 
     name_map = {}
@@ -411,9 +419,6 @@ def update_signor_complexes():
 
 
 if __name__ == '__main__':
-    update_chebi_entries()
-    sys.exit(0)
-
     update_signor_complexes()
     update_famplex()
     update_famplex_map()
