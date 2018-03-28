@@ -111,6 +111,11 @@ class DbApiTestCase(unittest.TestCase):
         self.__check_good_query(subject='MAPK1@HGNC-SYMBOL',
                                 type='Phosphorylation')
 
+    def test_query_with_chebi_ns(self):
+        """Test specifying CHEBI as a namespace."""
+        self.__check_good_query(subject='CHEBI:6801@CHEBI')
+
+
 if __name__ == '__main__':
     unittest.main()
 
