@@ -52,6 +52,7 @@ AXIN
 BCKDC
 BIRC
 BMP
+BMP_receptor
 BMP_receptor_type_I
 BMP_receptor_type_II
 BRCA
@@ -245,6 +246,7 @@ Laminin_111
 Laminin_332
 LDH
 LH
+LPAR
 MAC
 MAF
 MAP1LC3
@@ -375,6 +377,7 @@ RHO
 RhoGDI
 RNApo_I
 RNApo_II
+ROBO
 ROCK
 ROR
 RPA
@@ -392,6 +395,7 @@ SLC2A
 SMAD
 SMAD2_3
 SMC1
+SMURF
 SNAI
 SOD
 SOS
@@ -404,8 +408,10 @@ STAT5
 Sulfonylurea_receptor
 SWI_SNF
 TAP
+TAOK
 TCF_LEF
 TCR
+TEAD
 TFAP2
 TFDP
 TGFB

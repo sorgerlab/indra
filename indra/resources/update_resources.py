@@ -180,12 +180,11 @@ def update_chebi_primary_map():
     urlretrieve(url, fname)
     with gzip.open(fname, 'rb') as fh:
         logger.info('Loading %s' % fname)
-        df = pandas.DataFrame.from_csv(fh, sep='\t', index_col=None)
+        df = pandas.read_csv(fh, sep='\t', index_col=None,
+                parse_dates=True, dtype='str')
     fname = os.path.join(path, 'chebi_to_primary.tsv')
     logger.info('Saving into %s' % fname)
-    print('type(df):', type(df))
-    print('df["PARENT_ID"]:', df['PARENT_ID'])
-    df = df[df['PARENT_ID'] != 'null']
+    df = df[df['PARENT_ID'].notna()]
     df.replace('CHEBI:([0-9]+)', r'\1', inplace=True, regex=True)
     df.sort_values(['CHEBI_ACCESSION', 'PARENT_ID'], ascending=True,
                    inplace=True)
@@ -207,34 +206,34 @@ def update_cellular_components():
     fname = os.path.join(path, 'cellular_components.tsv')
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
-        fh.write('id\tname\n')
+        fh.write('id\tname\n'.encode('utf-8'))
 
         for comp_id, comp_name in sorted(component_map.items(),
                                           key=lambda x: x[0]):
-            fh.write('%s\t%s\n' % (comp_id, comp_name))
+            fh.write(('%s\t%s\n' % (comp_id, comp_name)).encode('utf-8'))
 
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
     id_lines = []
     name_lines = []
-    for release in ('1.0', 'latest-release'):
-        url = 'http://resource.belframework.org/belframework/%s/' % release + \
-              'equivalence/'
-        url1 = url + 'chebi-ids.beleq'
-        if release == '1.0':
-            url2 = url + 'chebi-names.beleq'
-        else:
-            url2 = url + 'chebi.beleq'
-        res1 = load_from_http(url1)
-        res2 = load_from_http(url2)
-        id_lines1 = [lin.strip() for lin in res1.split('\n') if lin]
-        start = id_lines1.index('[Values]')
-        id_lines1 = id_lines1[start+1:]
-        id_lines += id_lines1
-        name_lines1 = [lin.strip() for lin in res2.split('\n') if lin]
-        start = name_lines1.index('[Values]')
-        name_lines1 = name_lines1[start + 1:]
-        name_lines += name_lines1
+
+    # url = 'http://resource.belframework.org/belframework/%s/' % release + \
+    #       'equivalence/'
+    url = 'https://raw.githubusercontent.com/OpenBEL/' + \
+            'openbel-framework-resources/latest/equivalence/'
+    url1 = url + 'chebi-ids.beleq'
+    url2 = url + 'chebi.beleq'
+    res1 = load_from_http(url1).decode('utf-8')
+    res2 = load_from_http(url2).decode('utf-8')
+    id_lines1 = [lin.strip() for lin in res1.split('\n') if lin]
+    start = id_lines1.index('[Values]')
+    id_lines1 = id_lines1[start+1:]
+    id_lines += id_lines1
+    name_lines1 = [lin.strip() for lin in res2.split('\n') if lin]
+    start = name_lines1.index('[Values]')
+    name_lines1 = name_lines1[start + 1:]
+    name_lines += name_lines1
+
     id_map = {}
     for id_line in id_lines:
         if id_line:
@@ -267,7 +266,7 @@ def update_bel_chebi_map():
     with open(fname, 'wb') as fh:
         for chebi_name, chebi_id in sorted(name_to_id.items(),
                                            key=lambda x: x[0]):
-            fh.write('%s\tCHEBI:%s\n' % (chebi_name, chebi_id))
+            fh.write(('%s\tCHEBI:%s\n' % (chebi_name, chebi_id)).encode('utf-8'))
 
 def update_entity_hierarchy():
     logger.info('--Updating entity hierarchy----')
@@ -380,11 +379,21 @@ def update_famplex():
                  'grounding_map', 'relations']
     for csv_name in csv_names:
         url = famplex_url_pattern % csv_name
-        save_from_http(url, 'famplex/%s.csv' % csv_name)
+        save_from_http(url, os.path.join(path,'famplex/%s.csv' % csv_name))
+
+def update_signor_complexes():
+    url = 'https://signor.uniroma2.it/download_complexes.php'
+    content = load_from_http(url)
+    to_file = os.path.join(path, 'SIGNOR_complexes.csv')
+    with open(to_file, 'w') as f:
+        f.write(content)
 
 
 if __name__ == '__main__':
+    update_signor_complexes()
+    sys.exit(0)
     update_famplex()
+    update_famplex_map()
     update_hgnc_entries()
     update_kinases()
     update_uniprot_entries()
@@ -400,5 +409,4 @@ if __name__ == '__main__':
     update_modification_hierarchy()
     update_activity_hierarchy()
     update_cellular_component_hierarchy()
-    update_famplex_map()
     update_ncit_map()
