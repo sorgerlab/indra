@@ -7,8 +7,8 @@ from datetime import datetime
 from indra.statements import stmts_from_json
 from itertools import combinations
 
-TIMELIMIT = 1
-SIZELIMIT = 5000000
+TIMELIMIT = 2
+SIZELIMIT = 4e7
 
 class DbApiTestCase(unittest.TestCase):
 
@@ -79,12 +79,26 @@ class DbApiTestCase(unittest.TestCase):
         self.__check_good_query(agent='MAPK1', type='ActiveForm')
 
     def test_bad_camel(self):
+        """Test that a type can be poorly formatted and resolve correctly."""
         self.__check_good_query(agent='MAPK1', type='acTivefOrm')
 
     def test_big_query(self):
+        """Load-test with several big queries."""
         self.__check_good_query(agent='AKT1', check_stmts=False)
         self.__check_good_query(agent='MAPK1', check_stmts=False)
         self.__check_good_query(agent='TP53', check_stmts=False)
+
+    def test_query_with_hgnc_ns(self):
+        """Test specifying HGNC as a namespace."""
+        self.__check_good_query(subject='6871@HGNC', type='Phosphorylation')
+
+    def test_query_with_text_ns(self):
+        """Test specifying TEXT as a namespace."""
+        self.__check_good_query(subject='ERK@TEXT', type='Phosphorylation')
+
+    def test_query_with_hgnc_symbol_ns(self):
+        """Test specifying HGNC-SYMBOL as a namespace."""
+        self.__check_good_query(subject='MAPK1@HGNC-SYMBOL', type='Phosphorylation')
         
 
 if __name__ == '__main__':
