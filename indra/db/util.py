@@ -333,9 +333,10 @@ def get_auth_xml_pmcids(db):
 # database at various levels of abstraction.
 #==============================================================================
 
-def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
-                                     stmt_type=None, count=1000, db=None,
-                                     do_stmt_count=True, preassembled=True):
+def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
+                                     role=None, stmt_type=None, count=1000,
+                                     db=None, do_stmt_count=True,
+                                     preassembled=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -343,8 +344,9 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
     agent_id : str
         String representing the identifier of the agent from the given
         namespace. Note: if the agent namespace argument, `agent_ns`, is set
-        to 'HGNC', this function will treat `agent_id` as an HGNC gene
+        to 'HGNC-SYMBOL', this function will treat `agent_id` as an HGNC gene
         symbol and perform an internal lookup of the corresponding HGNC ID.
+        Default is 'HGNC-SYMBOL'.
     agent_ns : str
         Namespace for the identifier given in `agent_id`.
     role : str
@@ -385,7 +387,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC', role=None,
         raise ValueError('At least one of agent_id, role, or stmt_type '
                          'must be specified.')
     clauses = []
-    if agent_id and agent_ns == 'HGNC':
+    if agent_id and agent_ns == 'HGNC-SYMBOL':
         hgnc_id = hgnc_client.get_hgnc_id(agent_id)
         if not hgnc_id:
             logger.warning('Invalid gene name: %s' % agent_id)
