@@ -1,4 +1,14 @@
+#Assembly parameters #####################
+# The belief threshold to apply to
+#    Statements that are made part of the
+#    model
 belief_threshold: 0.8
+# An optional path to specify a grounding
+#    map other than INDRA's built-in one
+# grounding_map_path: /path/to/gm.csv
+##########################################
+
+
 #PUBMED SEARCH TERMS ######################
 ## Generic search terms
 #search_terms:
