@@ -216,6 +216,9 @@ class SignorProcessor(object):
 
     @staticmethod
     def _get_agent(ent_name, ent_type, id, database):
+        # Returns a list of agents corresponding to this id
+        # (If it is a signor complex, returns Agent objects corresponding to
+        # each complex constituent)
         if database == 'SIGNOR' and id in complex_map:
             # This is actually a complex: return a list of agents, one for
             # each component of the complex
@@ -223,13 +226,14 @@ class SignorProcessor(object):
             agents = []
             for c in components:
                 db_refs = {}
-                db_refs['UP'] = id
 
                 name = uniprot_client.get_gene_name(c)
                 if not name:
                     print('Could not look up', c, '(maybe the signor ' + \
                             'complex component is not a UNIPROT id)')
+                    db_refs['SIGNOR'] = id
                 if name:
+                    db_refs['UP'] = id
                     hgnc_id = hgnc_client.get_hgnc_id(name)
                     if hgnc_id:
                         db_refs['HGNC'] = hgnc_id
