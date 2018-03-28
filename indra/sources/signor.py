@@ -225,7 +225,10 @@ class SignorProcessor(object):
                 db_refs = {}
                 db_refs['UP'] = id
 
-                name = uniprot_client.get_gene_name(id)
+                name = uniprot_client.get_gene_name(c)
+                if not name:
+                    print('Could not look up', c, '(maybe the signor ' + \
+                            'complex component is not a UNIPROT id)')
                 if name:
                     hgnc_id = hgnc_client.get_hgnc_id(name)
                     if hgnc_id:
