@@ -18,8 +18,6 @@ Compress(app)
 
 def __process_agent(agent_param):
     """Get the agent id and namespace from an input param."""
-    if agent_param is None:
-        return (None, None)
     if not agent_param.endswith('TEXT'):
         param_parts = agent_param.split('@')
         if len(param_parts) == 2:
@@ -97,23 +95,24 @@ def get_statments():
     logger.info("Getting statements...")
     for role, (agent, ns) in agents.items():
         logger.debug("Checking agent %s in namespace %s." % (agent, ns))
-        if agent is not None:
-            if not stmts:
-                # Get an initial list
-                stmts = get_statements_by_gene_role_type(agent_id=agent,
-                                                         agent_ns=ns,
-                                                         role=role.upper(),
-                                                         stmt_type=act,
-                                                         do_stmt_count=False)
-            elif role.lower() == 'subject':
-                stmts = [s for s in stmts if len(s.agent_list()) > 0
-                         and s.agent_list()[0].db_refs.get(ns) == agent]
-            elif role.lower() == 'object':
-                stmts = [s for s in stmts if len(s.agent_list()) > 1
-                         and s.agent_list()[1].db_refs.get(ns) == agent]
+        if not stmts:
+            # Get an initial list
+            stmts = get_statements_by_gene_role_type(agent_id=agent,
+                                                     agent_ns=ns,
+                                                     role=role.upper(),
+                                                     stmt_type=act,
+                                                     do_stmt_count=False)
+        elif role.lower() == 'subject':
+            stmts = [s for s in stmts if len(s.agent_list()) > 0
+                     and s.agent_list()[0].db_refs.get(ns) is not None
+                     and s.agent_list()[0].db_refs.get(ns) == agent]
+        elif role.lower() == 'object':
+            stmts = [s for s in stmts if len(s.agent_list()) > 1
+                     and s.agent_list()[1].db_refs.get(ns) is not None
+                     and s.agent_list()[1].db_refs.get(ns) == agent]
     for agent, ns in free_agents:
         logger.debug("Checking agent %s in namespace %s." % (agent, ns))
-        if not stmts and agent is not None:
+        if not stmts:
             # Get an initial list
             stmts = get_statements_by_gene_role_type(agent_id=agent,
                                                      agent_ns=ns,

@@ -7,7 +7,7 @@ from datetime import datetime
 from indra.statements import stmts_from_json
 from itertools import combinations
 
-TIMELIMIT = 2
+TIMELIMIT = 1
 SIZELIMIT = 4e7
 
 class DbApiTestCase(unittest.TestCase):
@@ -110,7 +110,6 @@ class DbApiTestCase(unittest.TestCase):
         """Test specifying HGNC-SYMBOL as a namespace."""
         self.__check_good_query(subject='MAPK1@HGNC-SYMBOL',
                                 type='Phosphorylation')
-        
 
 if __name__ == '__main__':
     unittest.main()
