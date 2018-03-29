@@ -157,13 +157,10 @@ class CAGAssembler(object):
 
     def _node_name(self, agent):
         """Return a standardized name for a node given an Agent name."""
-        # TODO: handle other types of grounding here
         if (# grounding threshold is specified
-            self.grounding_threshold
+            self.grounding_threshold is not None
             # Eidos groundings are present
             and agent.db_refs['EIDOS']
-            # Entity successfully grounded
-            and agent.db_refs['EIDOS'][0][1] != "0.0"
             # The grounding score is above the grounding threshold
             and agent.db_refs['EIDOS'][0][1] > self.grounding_threshold):
                 return agent.db_refs['EIDOS'][0][0].split('/')[-1].replace('_', ' ').capitalize()
