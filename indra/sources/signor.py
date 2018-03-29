@@ -240,7 +240,12 @@ class SignorProcessor(object):
 
                 a = Agent(c, db_refs=db_refs)
                 agents.append(a)
-            return agents
+
+            # Return the first agent with the remaining agents as a bound
+            # condition
+            a = agents[0]
+            a.bound_conditions = agents[1:]
+            return a
         else:
             gnd_type = _type_db_map[(ent_type, database)]
             if gnd_type == 'UP':
@@ -270,7 +275,7 @@ class SignorProcessor(object):
                 else:
                     db_refs['FPLX'] = famplex_map[key]
 
-            return [Agent(name, db_refs=db_refs)]
+            return Agent(name, db_refs=db_refs)
 
     @staticmethod
     def _get_evidence(row):
@@ -299,141 +304,136 @@ class SignorProcessor(object):
 
     @staticmethod
     def _process_row(row):
-        agents_a = SignorProcessor._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
+        agent_a = SignorProcessor._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
                                              row.DATABASEA)
-        agents_b = SignorProcessor._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
+        agent_b = SignorProcessor._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
                                              row.DATABASEB)
 
-        combinations = all_combinations(agents_a, agents_b)
         evidence = SignorProcessor._get_evidence(row)
         stmts = []
         no_mech = False
-        for combo in combinations:
-            num_statements_at_start = len(stmts)
-            agent_a = combo[0]
-            agent_b = combo[1]
 
-            # First, check for EFFECT/MECHANISM pairs giving rise to a single
-            # mechanism
-            # Transcriptional regulation + (up or down)
-            if row.MECHANISM == 'transcriptional regulation' and \
-               row.EFFECT in ('up-regulates', 'up-regulates quantity',
-                              'up-regulates quantity by expression',
-                              'down-regulates', 'down-regulates quantity',
-                              'down-regulates quantity by repression'):
-                stmt_type = IncreaseAmount if row.EFFECT.startswith('up') \
-                                           else DecreaseAmount
-                # Since this is a transcriptional regulation, apply a
-                # transcriptional activity condition to the subject
-                ac = ActivityCondition('transcription', True)
-                agent_a.activity = ac
-                # Create the statement
-                stmts.append(stmt_type(agent_a, agent_b, evidence=evidence))
-            # Stabilization + up
-            elif row.MECHANISM == 'stabilization' and \
-                 row.EFFECT in ('up-regulates', 'up-regulates quantity',
-                                'up-regulates quantity by stabilization'):
-                stmts.append(IncreaseAmount(agent_a, agent_b, evidence=evidence))
-            # Destabilization + down
-            elif row.MECHANISM == 'destabilization' and \
-                 row.EFFECT in ('down-regulates', 'down-regulates quantity',
-                                'down-regulates quantity by destabilization'):
-                stmts.append(DecreaseAmount(agent_a, agent_b, evidence=evidence))
-            # Chemical activation + up
-            elif row.MECHANISM == 'chemical activation' and \
-                 row.EFFECT in ('up-regulates', 'up-regulates activity'):
-                stmts.append(Activation(agent_a, agent_b, evidence=evidence))
-            # Chemical inhibition + down
-            elif row.MECHANISM == 'chemical inhibition' and \
-                 row.EFFECT in ('down-regulates', 'down-regulates activity'):
-                stmts.append(Inhibition(agent_a, agent_b, evidence=evidence))
-            # Binding + Form complex
-            elif row.MECHANISM == 'binding' and row.EFFECT == 'form complex':
-                stmts.append(Complex([agent_a, agent_b], evidence=evidence))
-            # The above mechanism/effect combinations should be the only types
-            # giving rise to statements of the same type with same args.
-            # They also can't give rise to any active form statements; therefore
-            # we have gotten all the statements we will get and can return.
-            if len(stmts) > num_statements_at_start:
-                continue
+        # First, check for EFFECT/MECHANISM pairs giving rise to a single
+        # mechanism
+        # Transcriptional regulation + (up or down)
+        if row.MECHANISM == 'transcriptional regulation' and \
+           row.EFFECT in ('up-regulates', 'up-regulates quantity',
+                          'up-regulates quantity by expression',
+                          'down-regulates', 'down-regulates quantity',
+                          'down-regulates quantity by repression'):
+            stmt_type = IncreaseAmount if row.EFFECT.startswith('up') \
+                                       else DecreaseAmount
+            # Since this is a transcriptional regulation, apply a
+            # transcriptional activity condition to the subject
+            ac = ActivityCondition('transcription', True)
+            agent_a.activity = ac
+            # Create the statement
+            stmts.append(stmt_type(agent_a, agent_b, evidence=evidence))
+        # Stabilization + up
+        elif row.MECHANISM == 'stabilization' and \
+             row.EFFECT in ('up-regulates', 'up-regulates quantity',
+                            'up-regulates quantity by stabilization'):
+            stmts.append(IncreaseAmount(agent_a, agent_b, evidence=evidence))
+        # Destabilization + down
+        elif row.MECHANISM == 'destabilization' and \
+             row.EFFECT in ('down-regulates', 'down-regulates quantity',
+                            'down-regulates quantity by destabilization'):
+            stmts.append(DecreaseAmount(agent_a, agent_b, evidence=evidence))
+        # Chemical activation + up
+        elif row.MECHANISM == 'chemical activation' and \
+             row.EFFECT in ('up-regulates', 'up-regulates activity'):
+            stmts.append(Activation(agent_a, agent_b, evidence=evidence))
+        # Chemical inhibition + down
+        elif row.MECHANISM == 'chemical inhibition' and \
+             row.EFFECT in ('down-regulates', 'down-regulates activity'):
+            stmts.append(Inhibition(agent_a, agent_b, evidence=evidence))
+        # Binding + Form complex
+        elif row.MECHANISM == 'binding' and row.EFFECT == 'form complex':
+            stmts.append(Complex([agent_a, agent_b], evidence=evidence))
+        # The above mechanism/effect combinations should be the only types
+        # giving rise to statements of the same type with same args.
+        # They also can't give rise to any active form statements; therefore
+        # we have gotten all the statements we will get and can return.
+        if stmts:
+            return (stmts, False)
 
-            # If we have a different effect/mechanism combination, we can now make
-            # them separately without risk of redundancy.
-            # Get the effect statement type:
-            effect_stmt_type = _effect_map[row.EFFECT]
-            # Get the mechanism statement type.
-            if row.MECHANISM:
-                mech_stmt_type = _mechanism_map[row.MECHANISM]
-            else:
-                mech_stmt_type = None
-            # (Note that either or both effect/mech stmt types may be None at this
-            # point.)
-            # First, create the effect statement:
-            if effect_stmt_type == Complex:
-                stmts.append(effect_stmt_type([agent_a, agent_b],
-                                              evidence=evidence))
-            elif effect_stmt_type:
-                stmts.append(effect_stmt_type(agent_a, agent_b, evidence=evidence))
+        # If we have a different effect/mechanism combination, we can now make
+        # them separately without risk of redundancy.
+        # Get the effect statement type:
+        effect_stmt_type = _effect_map[row.EFFECT]
+        # Get the mechanism statement type.
+        if row.MECHANISM:
+            mech_stmt_type = _mechanism_map[row.MECHANISM]
+        else:
+            mech_stmt_type = None
+        # (Note that either or both effect/mech stmt types may be None at this
+        # point.)
+        # First, create the effect statement:
+        if effect_stmt_type == Complex:
+            stmts.append(effect_stmt_type([agent_a, agent_b],
+                                          evidence=evidence))
+        elif effect_stmt_type:
+            stmts.append(effect_stmt_type(agent_a, agent_b, evidence=evidence))
 
-            # For modifications, we create the modification statement as well as
-            # the appropriate active form.
-            if mech_stmt_type and issubclass(mech_stmt_type, Modification):
-                if not row.RESIDUE:
-                    # Modification
-                    mod_stmt = mech_stmt_type(agent_a, agent_b, None, None,
-                                              evidence=evidence)
-                    stmts.append(mod_stmt)
-                    # ActiveForm
-                    af_agent = deepcopy(agent_b)
-                    af_agent.mods = [mod_stmt._get_mod_condition()]
-                    # TODO: Currently this turns any upregulation associated with
-                    # the modification into an ActiveForm (even up/down-regulations
-                    # associated with amounts). This should be updated once we have
-                    # a statement type relating Agent states to effects on amounts.
-                    if row.EFFECT.startswith('up'):
-                        stmts.append(ActiveForm(af_agent, 'activity', True,
-                                                evidence=evidence))
-                    elif row.EFFECT.startswith('down'):
-                        stmts.append(ActiveForm(af_agent, 'activity', False,
-                                                evidence=evidence))
-                else:
-                    # Modification
-                    residues = _parse_residue_positions(row.RESIDUE)
-                    mod_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
-                                                evidence=evidence)
-                                 for res in residues]
-                    stmts.extend(mod_stmts)
-                    # Active Form
-                    mcs = [ms._get_mod_condition() for ms in mod_stmts]
-                    af_agent = deepcopy(agent_b)
-                    af_agent.mods = mcs
-                    # TODO: See above.
-                    if row.EFFECT.startswith('up'):
-                        stmts.append(ActiveForm(af_agent, 'activity', True,
-                                                evidence=evidence))
-                    elif row.EFFECT.startswith('down'):
-                        stmts.append(ActiveForm(af_agent, 'activity', False,
-                                                evidence=evidence))
-            # For Complex statements, we create an ActiveForm with a BoundCondition.
-            elif mech_stmt_type == Complex:
-                # Complex
-                stmts.append(mech_stmt_type([agent_a, agent_b], evidence=evidence))
+        # For modifications, we create the modification statement as well as
+        # the appropriate active form.
+        if mech_stmt_type and issubclass(mech_stmt_type, Modification):
+            if not row.RESIDUE:
+                # Modification
+                mod_stmt = mech_stmt_type(agent_a, agent_b, None, None,
+                                          evidence=evidence)
+                stmts.append(mod_stmt)
                 # ActiveForm
                 af_agent = deepcopy(agent_b)
-                af_bc_agent = deepcopy(agent_a)
-                af_agent.bound_conditions = [BoundCondition(af_bc_agent, True)]
+                af_agent.mods = [mod_stmt._get_mod_condition()]
+                # TODO: Currently this turns any upregulation associated with
+                # the modification into an ActiveForm (even up/down-regulations
+                # associated with amounts). This should be updated once we have
+                # a statement type relating Agent states to effects on amounts.
                 if row.EFFECT.startswith('up'):
                     stmts.append(ActiveForm(af_agent, 'activity', True,
                                             evidence=evidence))
                 elif row.EFFECT.startswith('down'):
                     stmts.append(ActiveForm(af_agent, 'activity', False,
                                             evidence=evidence))
-            # Other mechanism statement types
-            elif mech_stmt_type:
-                stmts.append(mech_stmt_type(agent_a, agent_b, evidence=evidence))
-            # Mechanism statement type is None--marked as skipped
             else:
-                no_mech = True
+                # Modification
+                residues = _parse_residue_positions(row.RESIDUE)
+                mod_stmts = [mech_stmt_type(agent_a, agent_b, res[0], res[1],
+                                            evidence=evidence)
+                             for res in residues]
+                stmts.extend(mod_stmts)
+                # Active Form
+                mcs = [ms._get_mod_condition() for ms in mod_stmts]
+                af_agent = deepcopy(agent_b)
+                af_agent.mods = mcs
+                # TODO: See above.
+                if row.EFFECT.startswith('up'):
+                    stmts.append(ActiveForm(af_agent, 'activity', True,
+                                            evidence=evidence))
+                elif row.EFFECT.startswith('down'):
+                    stmts.append(ActiveForm(af_agent, 'activity', False,
+                                            evidence=evidence))
+        # For Complex statements, we create an ActiveForm with a BoundCondition.
+        elif mech_stmt_type == Complex:
+            # Complex
+            stmts.append(mech_stmt_type([agent_a, agent_b], evidence=evidence))
+            # ActiveForm
+            af_agent = deepcopy(agent_b)
+            af_bc_agent = deepcopy(agent_a)
+            af_agent.bound_conditions = [BoundCondition(af_bc_agent, True)]
+            if row.EFFECT.startswith('up'):
+                stmts.append(ActiveForm(af_agent, 'activity', True,
+                                        evidence=evidence))
+            elif row.EFFECT.startswith('down'):
+                stmts.append(ActiveForm(af_agent, 'activity', False,
+                                        evidence=evidence))
+        # Other mechanism statement types
+        elif mech_stmt_type:
+            stmts.append(mech_stmt_type(agent_a, agent_b, evidence=evidence))
+        # Mechanism statement type is None--marked as skipped
+        else:
+            no_mech = True
         return stmts, no_mech
 
 
