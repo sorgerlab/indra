@@ -5,7 +5,10 @@ from indra.util import unicode_strs
 from nose.plugins.attrib import attr
 from indra.sources.biogrid import process_file
 from indra.statements import Complex
+import os
 
+this_dir = os.path.dirname(__file__)
+test_file = os.path.join(this_dir, 'biogrid_tests_data/biogrid_test.txt')
 
 @attr('webservice', 'nonpublic')
 def test_biogrid_request():
@@ -16,11 +19,11 @@ def test_biogrid_request():
 
 def test_biogrid_tsv():
     # Download biogrid file form the web and process it
-    bp = process_file(None)
+    bp = process_file(test_file)
 
-    # We should have a lot of statementse
+    # There are 50 statements in that file
     statements = bp.statements
-    assert(len(statements) > 500000)
+    assert(len(statements) == 50)
 
     # Any given statement should be a complex, with appropriate evidence
     s0 = statements[0]
@@ -29,7 +32,6 @@ def test_biogrid_tsv():
     assert(ev.source_api == 'biogrid')
     assert(ev.text is None)
     assert(ev.pmid is not None)
-    assert('tsv_row' in ev.annotations)
 
     # The first statement in the file involves MAP2K4 and FLNC
     assert(str(s0.members[0]) == 'MAP2K4()')
