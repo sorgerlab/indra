@@ -167,7 +167,7 @@ def _get_complex_agents(complex_id):
             print('Could not look up', c, '(maybe the signor ' + \
                     'complex component is not a UNIPROT id)')
             db_refs['SIGNOR'] = id
-        if name:
+        else:
             db_refs['UP'] = id
             hgnc_id = hgnc_client.get_hgnc_id(name)
             if hgnc_id:
