@@ -282,14 +282,15 @@ def tag_instances(cluster_name, project='cwc'):
     ec2 = boto3.resource('ec2')
     for instance_id in ec2_instance_ids:
         instance = ec2.Instance(instance_id)
-        for tag in instance.tags:
-            if tag.get('Key') == 'project':
-                break
-        else:
-            logger.info('Adding project tag "%s" to instance %s' %
-                        (project, instance_id))
-            instance.create_tags(Tags=[{'Key': 'project',
-                                        'Value': project}])
+        if instance.tags is not None:
+            for tag in instance.tags:
+                if tag.get('Key') == 'project':
+                    break
+            else:
+                logger.info('Adding project tag "%s" to instance %s' %
+                            (project, instance_id))
+                instance.create_tags(Tags=[{'Key': 'project',
+                                            'Value': project}])
     return
 
 
