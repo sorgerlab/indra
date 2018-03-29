@@ -254,7 +254,7 @@ class SignorProcessor(object):
             # Return the first agent with the remaining agents as a bound
             # condition
             a = agents[0]
-            a.bound_conditions = agents[1:]
+            a.bound_conditions = [BoundCondition(a, True) for a in agents[1:]]
             return a
         else:
             gnd_type = _type_db_map[(ent_type, database)]
