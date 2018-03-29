@@ -83,6 +83,10 @@ cas_to_chebi.tsv
 - Manually curated based on common occurrences in Pathway Commons data. Could
 be replaced by a more comprehensive map.
 
+phosphatases.tsv
+- A list of human phospharases with their HGNC symbols and IDs
+- Compiled based on: http://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0049943.s009
+
 Files that don't need periodical updates
 ========================================
 amino_acids.tsv
