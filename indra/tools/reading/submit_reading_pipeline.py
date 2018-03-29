@@ -95,7 +95,8 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                                     '%d seconds.')
                                    % (job_def['jobName'], check_dt.seconds))
                     if check_dt.seconds > idle_log_timeout:
-                        logger.warning("Job \'%s\' has stalled.")
+                        logger.warning("Job \'%s\' has stalled."
+                                       % job_def['jobName'])
                         stalled_jobs.add(jid)
                 else:
                     old_log = job_log_dict[jid]['log']

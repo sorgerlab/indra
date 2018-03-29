@@ -1,8 +1,11 @@
 import re
 import boto3
 
-def kill_all(job_queue, reason='None given'):
+
+def kill_all(job_queue, reason='None given', states=None):
     """Terminates/cancels all RUNNING, RUNNABLE, and STARTING jobs."""
+    if states is None:
+        states = ['STARTING', 'RUNNABLE', 'RUNNING']
     batch = boto3.client('batch')
     runnable = batch.list_jobs(jobQueue=job_queue, jobStatus='RUNNABLE')
     job_info = runnable.get('jobSummaryList')
@@ -11,7 +14,8 @@ def kill_all(job_queue, reason='None given'):
         # Cancel jobs
         for job_id in job_ids:
             batch.cancel_job(jobId=job_id, reason=reason)
-    for status in ('STARTING', 'RUNNABLE', 'RUNNING'):
+    res_list = []
+    for status in states:
         running = batch.list_jobs(jobQueue=job_queue, jobStatus=status)
         job_info = running.get('jobSummaryList')
         if job_info:
@@ -19,6 +23,8 @@ def kill_all(job_queue, reason='None given'):
             for job_id in job_ids:
                 print('Killing %s' % job_id)
                 res = batch.terminate_job(jobId=job_id, reason=reason)
+                res_list.append(res)
+    return res_list
 
 
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):

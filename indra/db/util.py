@@ -134,8 +134,8 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
                   **kwargs):
     """Insert agents for statements that don't have any agents.
 
-    Note: This method currently works for both Statements and PAStatements and their
-    corresponding agents (Agents and PAAgents).
+    Note: This method currently works for both Statements and PAStatements and
+    their corresponding agents (Agents and PAAgents).
 
     Parameters:
     -----------
@@ -158,18 +158,23 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     """
     verbose = kwargs.pop('verbose', False)
     num_per_yield = kwargs.pop('num_per_yield', 100)
+    override_default_query = kwargs.pop('override_default_query', False)
     if len(kwargs):
         raise IndraDatabaseError("Unrecognized keyword argument(s): %s."
                                  % kwargs)
     # Build a dict mapping stmt UUIDs to statement IDs
     logger.info("Getting %s that lack %s in the database."
                 % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
-    stmts_w_agents_q = db.filter_query(
-        stmt_tbl_obj,
-        stmt_tbl_obj.id == agent_tbl_obj.stmt_id
-        )
-    stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-                         .except_(stmts_w_agents_q))
+    if not override_default_query:
+        stmts_w_agents_q = db.filter_query(
+            stmt_tbl_obj,
+            stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+            )
+        stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+                             .except_(stmts_w_agents_q))
+    else:
+        stmts_wo_agents_q = db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+    logger.debug("Getting stmts with query:\n%s" % str(stmts_wo_agents_q))
     if verbose:
         num_stmts = stmts_wo_agents_q.count()
         print("Adding agents for %d statements." % num_stmts)
