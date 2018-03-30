@@ -1639,5 +1639,3 @@ def test_concept_isa():
     c2 = Concept('b', db_refs={'EIDOS': [('events/human/conflict', 1.0)]})
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
-
-

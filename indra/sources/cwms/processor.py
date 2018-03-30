@@ -121,7 +121,7 @@ class CWMSProcessor(object):
         if cause_term is None:
             return
 
-        # Get the cause's text and use it to construct an Agent
+        # Get the cause's text and use it to construct a Concept
         cause_text_element = cause_term.find('text')
         if cause_text_element is None:
             return
@@ -132,7 +132,7 @@ class CWMSProcessor(object):
         if cause_type_element is not None:
             cause_db_refs['CWMS'] = cause_type_element.text
         #
-        cause_agent = Agent(cause_text, db_refs=cause_db_refs)
+        cause_concept = Concept(cause_text, db_refs=cause_db_refs)
 
         # Get the term with the given affected id
         affected_id = affected.attrib.get('id')
@@ -140,7 +140,7 @@ class CWMSProcessor(object):
         if affected_term is None:
             return
 
-        # Get the affected's text and type and use them to construct an Agent
+        # Get the affected's text and type and use them to construct a Concept
         affected_text_element = affected_term.find('text')
         if affected_text_element is None:
             return
@@ -151,14 +151,14 @@ class CWMSProcessor(object):
         if affected_type_element is not None:
             affected_db_refs['CWMS'] = affected_type_element.text
         #
-        affected_agent = Agent(affected_text, db_refs=affected_db_refs)
+        affected_concept = Concept(affected_text, db_refs=affected_db_refs)
 
         # Construct evidence
         ev = self._get_evidence(event_element)
         ev.epistemics['direct'] = False
 
         # Make statement
-        st = statement_type(cause_agent, affected_agent, evidence=[ev])
+        st = statement_type(cause_concept, affected_concept, evidence=[ev])
         self.statements.append(st)
 
     def _get_evidence(self, event_tag):
