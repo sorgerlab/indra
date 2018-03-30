@@ -193,6 +193,7 @@ def test_site_map_hgnc():
     assert len(valid) == 0
     assert len(mapped) == 1
 
+
 def test_site_map_within_bound_condition():
     # Here, we test to make sure that agents within a bound condition are
     # site-mapped
@@ -212,7 +213,6 @@ def test_site_map_within_bound_condition():
 
     # Verify that the agent in the object's bound condition got site-mapped
     validate_mapk1(mapped_s.obj.bound_conditions[0].agent)
-
 
 
 def get_invalid_mapks():
@@ -252,6 +252,7 @@ def check_validated_mapks(res, st1):
     assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
     assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '204'))
     assert unicode_strs((res, st1))
+
 
 def validate_mapk1(agent1):
     assert agent1.name == 'MAPK1'

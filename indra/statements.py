@@ -1044,6 +1044,15 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
+    def agent_list_with_bound_condition_agents(self):
+        # Returns the list of agents both directly participating in the
+        # statement and referenced through bound conditions.
+        l = self.agent_list()
+        for a in self.agent_list():
+            bc_agents = [bc.agent for bc in a.bound_conditions]
+            l.extend(bc_agents)
+        return l
+
     def entities_match(self, other):
         self_key = self.entities_match_key()
         other_key = other.entities_match_key()
