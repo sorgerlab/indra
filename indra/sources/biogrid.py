@@ -23,7 +23,7 @@ biogrid_file_url = 'https://downloads.thebiogrid.org/Download/BioGRID/' + \
 
 # The explanation for each column of the tsv file is here:
 # https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_2.0
-BiogridRow = namedtuple('BiogridRow',
+_BiogridRow = namedtuple('BiogridRow',
                         ['biogrid_int_id',
                          'entrez_a', 'entrez_b',
                          'biogrid_a', 'biogrid_b',
@@ -46,11 +46,17 @@ class BiogridProcessor(object):
     biogrid_file : str
         The file containing the Biogrid data in .tab2 format. If not provided,
         the BioGrid data is downloaded from the BioGrid website.
+    physical_only : boolean
+        If True, only physical interactions are included (e.g., genetic
+        interactions are excluded). If False, all interactions are included).
 
-    Attributes:
-    -----------
+    Attributes
+    ----------
     statements: list[indra.statements.Statements]
         Extracted INDRA Complex statements.
+    physical_only : boolean
+        Indicates whether only physical interactions were included during
+        statement processing.
     """
     def __init__(self, biogrid_file=None, physical_only=True):
         self.statements = []
@@ -68,7 +74,7 @@ class BiogridProcessor(object):
         # Process the rows into Statements
         for row in rows:
             filt_row = [None if item == '-' else item for item in row]
-            bg_row = BiogridRow(*filt_row)
+            bg_row = _BiogridRow(*filt_row)
             # Filter out non-physical interactions if desired
             if self.physical_only and bg_row.exp_system_type != 'physical':
                 continue
