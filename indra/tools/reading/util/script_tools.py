@@ -123,11 +123,11 @@ def get_stmts_safely(reading_data):
         return
     if stmts is not None:
         if not len(stmts):
-            logger.info("Got no statements for %d." % reading_data.reading_id)
+            logger.info("Got no statements for %s." % reading_data.reading_id)
         for stmt in stmts:
             stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
     else:
-        logger.warning("Got None statements for %d." % reading_data.reading_id)
+        logger.warning("Got None statements for %s." % reading_data.reading_id)
     return stmt_data_list
 
 
