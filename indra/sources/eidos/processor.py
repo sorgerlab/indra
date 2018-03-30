@@ -69,8 +69,14 @@ class EidosJsonLdProcessor(object):
             if grounding is None:
                 return None
             # Otherwise get all the groundings that have non-zero score
-            grounding_tuples = [(g['ontologyConcept'], g['value'])
-                                for g in grounding if g['value'] > 0]
+            grounding_tuples = []
+            for g in grounding:
+                if g['value'] > 0:
+                    if g['ontologyConcept'].startswith('/'):
+                        concept = g['ontologyConcept'][1:]
+                    else:
+                        concept = g['ontologyConcept']
+                    grounding_tuples.append(g['value'], concept)
             return grounding_tuples
 
         def _make_agent(entity):

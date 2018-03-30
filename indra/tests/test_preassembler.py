@@ -546,4 +546,5 @@ def test_conversion_refinement():
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
     toplevel_stmts = pa.combine_related()
     assert(len(toplevel_stmts) == 2)
-    
+
+
