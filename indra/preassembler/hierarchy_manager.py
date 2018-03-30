@@ -331,6 +331,9 @@ class HierarchyManager(object):
             return 'http://identifiers.org/uniprot/' + id
         elif ns == 'FPLX' or ns == 'INDRA':
             return 'http://sorger.med.harvard.edu/indra/entities/' + id
+        elif ns == 'EIDOS':
+            return \
+                'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
         else:
             return ns + id
 
