@@ -1,7 +1,7 @@
 import rdflib
 import logging
 import collections
-from indra.statements import Agent, Influence, Evidence
+from indra.statements import Concept, Influence, Evidence
 
 
 logger = logging.getLogger('bbn')
@@ -165,19 +165,19 @@ class CauseEffect(object):
         cause_text = str(cause_text)
         effect_text = str(effect_text)
 
-        # Make cause agent
+        # Make cause concept
         cause_db_refs = {'TEXT': cause_text}
         if self.cause_type is not None:
             cause_db_refs['BBN'] = self.cause_type
-        cause_agent = Agent(cause_text, db_refs=cause_db_refs)
+        cause_concept = Concept(cause_text, db_refs=cause_db_refs)
 
-        # Make effect agent
+        # Make effect concept
         effect_db_refs = {'TEXT': effect_text}
         if self.effect_type is not None:
             effect_db_refs['BBN'] = self.effect_type
-        effect_agent = Agent(effect_text, db_refs=effect_db_refs)
+        effect_concept = Concept(effect_text, db_refs=effect_db_refs)
 
-        return Influence(cause_agent, effect_agent, evidence=ev)
+        return Influence(cause_concept, effect_concept, evidence=ev)
 
 
 def shortest_string_in_list(string_list):
