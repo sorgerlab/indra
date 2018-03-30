@@ -116,6 +116,7 @@ class SiteMapper(object):
         # For all statements, replace agents with invalid modifications
         invalid_sites = []
         new_agent_list = []
+
         for agent in stmt.agent_list():
             if agent is not None:
                 agent_invalid_sites, new_agent = self._map_agent_sites(
@@ -125,6 +126,21 @@ class SiteMapper(object):
                     do_isoform_mapping=do_isoform_mapping
                     )
                 invalid_sites += agent_invalid_sites
+
+                # Site map agents in the bound conditions
+                for ind in range(len(new_agent.bound_conditions)):
+                    b = new_agent.bound_conditions[ind].agent
+                    agent_invalid_sites, new_b = self._map_agent_sites(
+                        b,
+                        do_methionine_offset=do_methionine_offset,
+                        do_orthology_mapping=do_orthology_mapping,
+                        do_isoform_mapping=do_isoform_mapping
+                        )
+                    invalid_sites += agent_invalid_sites
+                    new_agent.bound_conditions[ind].agent = new_b
+
+
+
                 new_agent_list.append(new_agent)
             else:
                 new_agent_list.append(agent)
