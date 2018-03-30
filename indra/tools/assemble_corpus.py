@@ -1051,22 +1051,37 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+
+    if 'remove_bound' in kwargs and kwargs['remove_bound']:
+        remove_bound = True
+    else:
+        remove_bound = False
+
+    def criterion(agent):
+        if agent is not None and agent.name in deletions:
+            return False
+        if agent is not None and agent.mutations:
+            muts = mutations.get(agent.name, [])
+            for mut in agent.mutations:
+                mut_tup = (mut.residue_from, mut.position, mut.residue_to)
+                if mut_tup not in muts:
+                    return False
+        return True
+
+
     logger.info('Filtering %d statements for mutation status...' %
                 len(stmts_in))
     stmts_out = []
     for stmt in stmts_in:
         skip = False
         for agent in stmt.agent_list():
-            if agent is not None and agent.name in deletions:
+            if not criterion(agent):
                 skip = True
                 break
-            if agent is not None and agent.mutations:
-                muts = mutations.get(agent.name, [])
-                for mut in agent.mutations:
-                    mut_tup = (mut.residue_from, mut.position, mut.residue_to)
-                    if mut_tup not in muts:
-                        skip = True
-            if skip:
+            if remove_bound:
+                _remove_bound_conditions(agent, criterion)
+            elif _any_bound_condition_fails_criterion(agent, criterion):
+                skip = True
                 break
         if not skip:
             stmts_out.append(stmt)

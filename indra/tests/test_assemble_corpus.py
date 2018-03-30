@@ -370,6 +370,34 @@ def test_filter_mutation_status():
     st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
     assert(len(st_out) == 0)
 
+    # Can we filter statements out based on bound conditions?
+    mutations = {'BRAF': [('V', '600', 'E')]}
+    deletions = []
+    braf_good_bound = deepcopy(braf_mut)
+    braf_good_bound.bound_conditions = [BoundCondition(braf_mut)]
+    #
+    braf_bad_bound = deepcopy(braf_mut)
+    braf_bad_bound.bound_conditions = [BoundCondition(braf_other_mut)]
+    #
+    st3 = Phosphorylation(braf_good_bound, Agent('a'))
+    st4 = Phosphorylation(braf_bad_bound, Agent('a'))
+    #
+    st_out = ac.filter_mutation_status([st3], mutations, deletions)
+    assert(len(st_out) == 1)
+    #
+    st_out = ac.filter_mutation_status([st4], mutations, deletions)
+    assert(len(st_out) == 0)
+
+    # Can we remove bound conditions based on our filter?
+    st_out = ac.filter_mutation_status([st3], mutations, deletions,
+                                       remove_bound=True)
+    assert(len(st_out[0].enz.bound_conditions) == 1)
+    #
+    st_out = ac.filter_mutation_status([st4], mutations, deletions,
+                                       remove_bound=True)
+    assert(len(st_out[0].enz.bound_conditions) == 0)
+
+
 def test_get_unreachable_mods():
     st1 = Phosphorylation(Agent('X'), Agent('Y'), 'S', '222')
     mcs = [ModCondition('phosphorylation', 'S', '218', True),
