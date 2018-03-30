@@ -642,11 +642,6 @@ class Agent(Concept):
         self.activity = activity
         self.location = get_valid_location(location)
 
-        if db_refs is None:
-            self.db_refs = {}
-        else:
-            self.db_refs = db_refs
-
     def matches_key(self):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
