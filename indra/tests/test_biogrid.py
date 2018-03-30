@@ -1,11 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
+from nose.plugins.attrib import attr
+from indra.statements import Complex
 from indra.databases import biogrid_client
 from indra.util import unicode_strs
-from nose.plugins.attrib import attr
-from indra.sources.biogrid import process_file
-from indra.statements import Complex
-import os
+from indra.sources.biogrid import BiogridProcessor
 
 this_dir = os.path.dirname(__file__)
 test_file = os.path.join(this_dir, 'biogrid_tests_data/biogrid_test.txt')
@@ -19,7 +19,7 @@ def test_biogrid_request():
 
 def test_biogrid_tsv():
     # Download biogrid file form the web and process it
-    bp = process_file(test_file)
+    bp = BiogridProcessor(test_file)
 
     # There are 50 statements in that file
     statements = bp.statements
