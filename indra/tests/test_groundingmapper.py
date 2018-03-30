@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.preassembler.grounding_mapper import *
-from indra.statements import Agent, Phosphorylation, Complex, Evidence
+from indra.statements import Agent, Phosphorylation, Complex, Evidence, \
+                             BoundCondition
 from indra.util import unicode_strs
 from nose.tools import raises
 
@@ -26,6 +27,30 @@ def test_simple_mapping():
     assert mapped_akt.db_refs['TEXT'] == 'Akt'
     assert mapped_akt.db_refs['FPLX'] == 'AKT'
     assert unicode_strs((akt, stmt, gm, mapped_akt))
+
+def test_bound_condition_mapping():
+    # Verify that the grounding mapper grounds the agents within a bound
+    # condition
+    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'XXXXXX'})
+    erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
+    akt.bound_conditions = [BoundCondition(erk)]
+
+    stmt = Phosphorylation(None, akt)
+
+    gm = GroundingMapper(default_grounding_map)
+    mapped_stmts = gm.map_agents([stmt])
+
+    s = mapped_stmts[0]
+    mapped_akt = mapped_stmts[0].sub
+    mapped_erk = mapped_akt.bound_conditions[0].agent
+
+    assert mapped_akt.db_refs['TEXT'] == 'Akt'
+    assert mapped_akt.db_refs['FPLX'] == 'AKT'
+
+    assert mapped_erk.db_refs['TEXT'] == 'ERK1'
+    assert mapped_erk.db_refs['HGNC'] == '6877'
+    assert mapped_erk.db_refs['UP'] == 'P27361'
+
 
 def test_ignore():
     agent = Agent('FA', db_refs={'TEXT': 'FA'})

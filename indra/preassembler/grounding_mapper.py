@@ -101,6 +101,13 @@ class GroundingMapper(object):
         mapped_stmt = deepcopy(stmt)
         # Iterate over the agents
         mapped_agent_list = mapped_stmt.agent_list()
+
+        # Add any agents in the bound condition to the agent list
+        for agent in mapped_agent_list:
+            if agent is not None:
+                bc_agents = [bc.agent for bc in agent.bound_conditions]
+                mapped_agent_list.extend(bc_agents)
+
         for idx, agent in enumerate(mapped_agent_list):
             if agent is None or agent.db_refs.get('TEXT') is None:
                 continue
