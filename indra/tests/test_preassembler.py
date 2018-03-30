@@ -569,3 +569,24 @@ def test_influence_duplicate():
     sources = [e.source_api for e in unique_stmts[1].evidence]
     assert set(sources) == set(['eidos1', 'eidos3'])
 
+
+def test_influence_refinement():
+    tran = 'entities/human/infrastructure/transportation'
+    truck = 'entities/human/infrastructure/transportation/transportation_methods/trucking'
+    agr = 'entities/human/livelihood/agriculture'
+    ctran = Concept('transportation', db_refs={'EIDOS': [(tran, 1.0)]})
+    ctruck = Concept('trucking', db_refs={'EIDOS': [(truck, 1.0)]})
+    cagr = Concept('agriculture', db_refs={'EIDOS': [(agr, 1.0)]})
+    stmt1 = Influence(ctran, cagr, evidence=[Evidence(source_api='eidos1')])
+    stmt2 = Influence(ctruck, cagr, evidence=[Evidence(source_api='eidos2')])
+    stmt3 = Influence(cagr, ctran, evidence=[Evidence(source_api='eidos3')])
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
+    rel_stmts = pa.combine_related()
+    assert len(rel_stmts) == 2
+    truck_stmt = [st for st in rel_stmts if st.subj.name == 'trucking'][0]
+    assert len(truck_stmt.supported_by) == 1
+    assert truck_stmt.supported_by[0].subj.name == 'transportation'
