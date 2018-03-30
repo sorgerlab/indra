@@ -63,9 +63,10 @@ while the :py:class:`RegulateAmount` abstract base class has subtypes
 - :py:class:`IncreaseAmount`
 - :py:class:`DecreaseAmount`
 
-Statements involve one or more biological *Agents*, typically proteins,
-represented by the class :py:class:`Agent`. Agents can have several types
-of context specified on them including
+Statements involve one or more *Concepts*, which, depending on the
+semantics of the Statement, are typically biological *Agents*,
+such as proteins, represented by the class :py:class:`Agent`.
+Agents can have several types of context specified on them including
 
 - a specific post-translational modification state (indicated by one or
   more instances of :py:class:`ModCondition`),
@@ -2437,9 +2438,9 @@ class Influence(IncreaseAmount):
 
     Parameters
     ----------
-    subj : :py:class:`indra.statement.Agent`
+    subj : :py:class:`indra.statement.Concept`
         The concept which acts as the influencer.
-    obj : :py:class:`indra.statement.Agent`
+    obj : :py:class:`indra.statement.Concept`
         The concept which acts as the influencee
     subj_delta : Optional[dict]
         A dictionary specifying the polarity and magnitude of
@@ -2509,7 +2510,7 @@ class Influence(IncreaseAmount):
             return self.__str__().encode('utf-8')
 
     def __str__(self):
-        def _influence_agent_str(agent, delta):
+        def _influence_concept_str(concept, delta):
             if delta is not None:
                 pol = delta.get('polarity')
                 if pol == 1:
@@ -2518,13 +2519,15 @@ class Influence(IncreaseAmount):
                     pol_str = 'negative'
                 else:
                     pol_str = ''
-                agent_str = '%s(%s)' % (agent.name, pol_str)
+                concept_str = '%s(%s)' % (concept.name, pol_str)
             else:
-                agent_str = agent.name
-            return agent_str
+                concept_str = concept.name
+            return concept_str
         s = ("%s(%s, %s)" % (type(self).__name__,
-                             _influence_agent_str(self.subj, self.subj_delta),
-                             _influence_agent_str(self.obj, self.obj_delta)))
+                             _influence_concept_str(self.subj,
+                                                    self.subj_delta),
+                             _influence_concept_str(self.obj,
+                                                    self.obj_delta)))
         return s
 
 
