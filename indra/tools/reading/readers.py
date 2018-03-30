@@ -17,6 +17,7 @@ from datetime import datetime
 from multiprocessing import Pool
 from platform import system
 
+import indra
 from indra.db import formats
 from indra.db import sql_expressions as sql
 from indra.util import zip_string
@@ -158,7 +159,7 @@ class ReachReader(Reader):
     def _check_reach_env(self):
         """Check that the environment supports runnig reach."""
         # Get the path to the REACH JAR
-        path_to_reach = environ.get('REACHPATH', None)
+        path_to_reach = indra.config['REACHPATH']
         if path_to_reach is None or not path.exists(path_to_reach):
             raise ReachError(
                 'Reach path unset or invalid. Check REACHPATH environment var.'
