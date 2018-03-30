@@ -527,17 +527,25 @@ class Concept(object):
                   (self.db_refs == other.db_refs)
         return matches
 
-    def isa(self, other, hierarchies):
-        # Get the namespaces for the comparison
-        (self_ns, self_id) = self.get_grounding()
-        (other_ns, other_id) = other.get_grounding()
-        # If one of the agents isn't grounded to a relevant namespace,
-        # there can't be an isa relationship
-        if not all((self_ns, self_id, other_ns, other_id)):
-            return False
-        # Check for isa relationship
-        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+    def get_grounding(self):
+        # TODO: implement this
+        return (None, None)
 
+    def isa(self, other, hierarchies):
+        # TODO: implement this
+        return False
+
+    def refinement_of(self, other, hierarchies):
+        # Make sure the Agent types match
+        if type(self) != type(other):
+            return False
+
+        # Check that the basic entity of the agent either matches or is related
+        # to the entity of the other agent. If not, no match.
+        # If the entities, match, then we can continue
+        if not (self.entity_matches(other) or self.isa(other, hierarchies)):
+            return False
+        return True
 
     def to_json(self):
         json_dict = _o({'name': self.name})
@@ -549,12 +557,10 @@ class Concept(object):
         name = json_dict.get('name')
         db_refs = json_dict.get('db_refs', {})
         if not name:
-            logger.error('Agent missing name.')
+            logger.error('Concept missing name.')
             return None
-        if not db_refs:
-            db_refs = {}
-        agent = Agent(name, db_refs=db_refs)
-        return agent
+        concept = Concept(name, db_refs=db_refs)
+        return concept
 
     def __str__(self):
         return self.name
@@ -589,7 +595,7 @@ class Agent(Concept):
     def __init__(self, name, mods=None, activity=None,
                  bound_conditions=None, mutations=None,
                  location=None, db_refs=None):
-        super(self, Agent).__init__(name, db_refs=db_refs)
+        super(Agent, self).__init__(name, db_refs=db_refs)
 
         if mods is None:
             self.mods = []

@@ -1591,3 +1591,25 @@ def test_influence_polarity():
     st.obj_delta['polarity'] = 1
     assert st.overall_polarity() == 1, st
 
+
+def test_concept_init():
+    c1 = Concept('x')
+    assert c1.name == 'x'
+    c2 = Concept('y', db_refs={'TEXT': 'y'})
+    assert c2.name == 'y'
+    assert c2.db_refs['TEXT'] == 'y'
+
+
+def test_concept_matches():
+    # matches
+    assert Concept('x').matches(Concept('x', db_refs={'TEXT': 'x'}))
+    assert not Concept('x').matches(Concept('y'))
+    # entity_matches
+    assert Concept('x').entity_matches(Concept('x', db_refs={'TEXT': 'x'}))
+    assert not Concept('x').entity_matches(Concept('y'))
+    # equals
+    assert Concept('x').equals(Concept('x'))
+    assert not Concept('x').quals(Concept('y'))
+    assert Concept('x', db_refs={'TEXT': 'x'}).equals(
+           Concept('x', db_refs={'TEXT': 'x'}))
+    assert not Concept('x').equals(Concept('x', db_refs={'TEXT': 'x'}))
