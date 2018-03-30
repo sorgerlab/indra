@@ -670,7 +670,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     return stmts_out
 
 def filter_human_only(stmts_in, **kwargs):
-    """Filter out statements that are not grounded to human genes.
+    """Filter out statements that are grounded, but not to a human gene.
 
     Parameters
     ----------
@@ -678,6 +678,10 @@ def filter_human_only(stmts_in, **kwargs):
         A list of statements to filter.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    remove_bound: Optional[bool]
+        If true, removes all bound conditions that are grounded but not to human
+        genes. If false (default), filters out statements with boundary
+        conditions that are grounded to non-human genes.
 
     Returns
     -------
@@ -685,16 +689,35 @@ def filter_human_only(stmts_in, **kwargs):
         A list of filtered statements.
 
     """
+
+    if 'remove_bound' in kwargs and kwargs['remove_bound']:
+        remove_bound = True
+    else:
+        remove_bound = False
+
     dump_pkl = kwargs.get('save')
     logger.info('Filtering %d statements for human genes only...' %
                 len(stmts_in))
     stmts_out = []
+
+    def criterion(agent):
+        upid = agent.db_refs.get('UP')
+        if upid and not uniprot_client.is_human(upid):
+            return False
+        else:
+            return True
+
+
     for st in stmts_in:
         human_genes = True
         for agent in st.agent_list():
             if agent is not None:
-                upid = agent.db_refs.get('UP')
-                if upid and not uniprot_client.is_human(upid):
+                if not criterion(agent):
+                    human_genes = False
+                    break
+                if remove_bound:
+                    _remove_bound_conditions(agent, criterion)
+                elif _any_bound_condition_fails_criterion(agent, criterion):
                     human_genes = False
                     break
         if human_genes:

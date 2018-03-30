@@ -18,6 +18,11 @@ i = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'},
           bound_conditions=[BoundCondition(d)])
 j = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'},
           bound_conditions=[BoundCondition(b)])
+k = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'},
+          bound_conditions=[BoundCondition(f)])
+l = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'},
+          bound_conditions=[BoundCondition(a)])
+
 mapk1 = Agent('MAPK1', db_refs={'HGNC':'6871', 'UP':'P28482'})
 erk = Agent('ERK', db_refs={'FPLX': 'ERK'})
 st1 = Phosphorylation(a, b)
@@ -41,6 +46,8 @@ st16 = Phosphorylation(a, mapk1)
 st17 = Phosphorylation(a, erk)
 st18 = Phosphorylation(a, i)
 st19 = Phosphorylation(a, j)
+st20 = Phosphorylation(a, k)
+st21 = Phosphorylation(a, l)
 st1.belief = 0.9
 st2.belief = 0.8
 st3.belief = 0.7
@@ -132,6 +139,27 @@ def test_filter_human_only():
     assert len(st_out) == 2
     st_out = ac.filter_human_only([st8, st9])
     assert len(st_out) == 0
+
+    # Can we filter out statements with bound conditions grounded to non-human
+    # genes?
+    st_out = ac.filter_human_only([st20], remove_bound=False)
+    assert(len(st_out) == 0)
+
+    # When we do such filtering, do we keep statements bounded to human genes?
+    st_out = ac.filter_human_only([st21], remove_bound=False)
+    assert(len(st_out) == 1)
+
+    # Can we remove bound conditions grounded to non-human genes?
+    st_out = ac.filter_human_only([st20], remove_bound=True)
+    assert(len(st_out) == 1)
+    assert(len(st_out[0].sub.bound_conditions) == 0)
+
+    # When we do so, do we keep bound conditions not grounded to non-human
+    # genes?
+    st_out = ac.filter_human_only([st21], remove_bound=True)
+    assert(len(st_out) == 1)
+    assert(len(st_out[0].sub.bound_conditions) == 1)
+
 
 def test_filter_gene_list_one():
     st_out = ac.filter_gene_list([st1, st2], ['a'], 'one')
