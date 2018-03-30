@@ -1613,3 +1613,14 @@ def test_concept_matches():
     assert Concept('x', db_refs={'TEXT': 'x'}).equals(
            Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').equals(Concept('x', db_refs={'TEXT': 'x'}))
+
+
+def test_concept_get_grounding():
+    d1 = {'TEXT': 'a'}
+    d2 = {'TEXT': 'b', 'EIDOS': 'c'}
+    d3 = {'TEXT': 'x', 'EIDOS': 'y', 'BBN': 'z'}
+    d4 = {'TEXT': 'b', 'BBN': 'a'}
+    assert Concept('a', db_refs=d1).get_grounding() == (None, None)
+    assert Concept('b', db_refs=d2).get_grounding() == ('EIDOS', 'c')
+    assert Concept('c', db_refs=d3).get_grounding() == ('BBN', 'z')
+    assert Concept('d', db_refs=d4).get_grounding() == ('BBN', 'a')

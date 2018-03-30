@@ -528,12 +528,22 @@ class Concept(object):
         return matches
 
     def get_grounding(self):
-        # TODO: implement this
-        return (None, None)
+        # Prioritize anything that is other than TEXT
+        db_names = sorted(list(set(self.db_refs.keys()) - set(['TEXT'])))
+        db_ns = db_names[0] if db_names else None
+        db_id = self.db_refs[db_ns] if db_ns else None
+        return (db_ns, db_id)
 
     def isa(self, other, hierarchies):
-        # TODO: implement this
-        return False
+        # Get the namespaces for the comparison
+        (self_ns, self_id) = self.get_grounding()
+        (other_ns, other_id) = other.get_grounding()
+        # If one of the agents isn't grounded to a relevant namespace,
+        # there can't be an isa relationship
+        if not all((self_ns, self_id, other_ns, other_id)):
+            return False
+        # Check for isa relationship
+        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
 
     def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match
