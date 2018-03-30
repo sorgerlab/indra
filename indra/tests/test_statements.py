@@ -1604,6 +1604,8 @@ def test_concept_matches():
     # matches
     assert Concept('x').matches(Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').matches(Concept('y'))
+    assert Concept('x', db_refs={'EIDOS': 'x'}).matches(
+        Concept('y', db_refs={'EIDOS': 'x'}))
     # entity_matches
     assert Concept('x').entity_matches(Concept('x', db_refs={'TEXT': 'x'}))
     assert not Concept('x').entity_matches(Concept('y'))

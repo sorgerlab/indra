@@ -520,7 +520,12 @@ class Concept(object):
         return self.entity_matches_key() == other.entity_matches_key()
 
     def entity_matches_key(self):
-        return self.name
+        # Get the grounding first
+        db_ns, db_id = self.get_grounding()
+        # If there's no grounding, just use the name as key
+        if not db_ns and not db_id:
+            return self.name
+        return str((db_ns, db_id))
 
     def equals(self, other):
         matches = (self.name == other.name) and \
