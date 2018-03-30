@@ -74,7 +74,7 @@ def process_pmc(pmc_id, offline=False, output_fname=default_output_fname):
 
 
 def process_pubmed_abstract(pubmed_id, offline=False,
-                            output_fname=default_output_fname):
+                            output_fname=default_output_fname, **kwargs):
     """Return a ReachProcessor by processing an abstract with a given Pubmed id.
 
     Uses the Pubmed client to get the abstract. If that fails, None is
@@ -93,6 +93,8 @@ def process_pubmed_abstract(pubmed_id, offline=False,
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
+    **kwargs : keyword arguments
+        All other keyword arguments are passed directly to `process_text`.
 
     Returns
     -------
@@ -104,7 +106,7 @@ def process_pubmed_abstract(pubmed_id, offline=False,
     if abs_txt is None:
         return None
     rp = process_text(abs_txt, citation=pubmed_id, offline=offline,
-                      output_fname=output_fname)
+                      output_fname=output_fname, **kwargs)
     if rp and rp.statements:
         for st in rp.statements:
             for ev in st.evidence:
@@ -113,7 +115,7 @@ def process_pubmed_abstract(pubmed_id, offline=False,
 
 
 def process_text(text, citation=None, offline=False,
-                 output_fname=default_output_fname):
+                 output_fname=default_output_fname, timeout=None):
     """Return a ReachProcessor by processing the given text.
 
     Parameters
@@ -130,6 +132,9 @@ def process_text(text, citation=None, offline=False,
     output_fname : Optional[str]
         The file to output the REACH JSON output to.
         Defaults to reach_output.json in current working directory.
+    timeout : Optional[float]
+        This only applies when reading online (`offline=False`). Only wait for
+        `timeout` seconds for the api to respond.
 
     Returns
     -------
@@ -162,7 +167,7 @@ def process_text(text, citation=None, offline=False,
     else:
         data = {'text': text.encode('utf-8')}
         try:
-            res = requests.post(reach_text_url, data)
+            res = requests.post(reach_text_url, data, timeout=timeout)
         except requests.exceptions.RequestException as e:
             logger.error('Could not connect to REACH service:')
             logger.error(e)
