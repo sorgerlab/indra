@@ -2,9 +2,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import re
+import csv
 import logging
-import operator
 import itertools
+import requests
+from io import BytesIO, StringIO
+from zipfile import ZipFile
 from collections import namedtuple
 from indra.util import read_unicode_csv
 from indra.statements import *
@@ -12,6 +15,11 @@ import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 
 logger = logging.getLogger('biogrid')
+
+
+biogrid_file_url = 'https://downloads.thebiogrid.org/Download/BioGRID/' + \
+        'Release-Archive/BIOGRID-3.4.158/BIOGRID-ALL-3.4.158.tab2.zip'
+
 
 # The explanation for each column of the tsv file is here:
 # https://wiki.thebiogrid.org/doku.php/biogrid_tab_version_2.0
@@ -29,34 +37,41 @@ BiogridRow = namedtuple('BiogridRow',
                          'phenotypes', 'qualifications', 'tags',
                          'source_db'])
 
+
 class BiogridProcessor(object):
     """Extracts INDRA Complex statements from Biogrid interaction data.
 
     Parameters
     ----------
-    filename : str
-        The file containing the Biogrid data in .tab2 format.
+    biogrid_file : str
+        The file containing the Biogrid data in .tab2 format. If not provided,
+        the BioGrid data is downloaded from the BioGrid website.
 
     Attributes:
     -----------
     statements: list[indra.statements.Statements]
         Extracted INDRA Complex statements.
     """
-    def __init__(self, filename, physical_only=True):
+    def __init__(self, biogrid_file=None, physical_only=True):
         self.statements = []
         self.physical_only = physical_only
 
-        # Read the file, skipping the header row
-        rows = read_unicode_csv(filename, '\t', skiprows=1)
-        for row in rows:
-            filt_row = [None if item == '-' else item
-                        for item in row]
-            bg_row = BiogridRow(*filt_row)
+        # If a path to the file is included, process it, skipping the header
+        if biogrid_file:
+            rows = read_unicode_csv(biogrid_file, '\t', skiprows=1)
+        # If no file is provided, download from web
+        else:
+            logger.info('No data file specified, downloading from BioGrid '
+                        'at %s' % biogrid_file_url)
+            rows = _download_biogrid_data(biogrid_file_url)
 
+        # Process the rows into Statements
+        for row in rows:
+            filt_row = [None if item == '-' else item for item in row]
+            bg_row = BiogridRow(*filt_row)
             # Filter out non-physical interactions if desired
             if self.physical_only and bg_row.exp_system_type != 'physical':
                 continue
-
             # Ground agents
             agent_a = self._make_agent(bg_row.entrez_a, bg_row.syst_name_a)
             agent_b = self._make_agent(bg_row.entrez_b, bg_row.syst_name_b)
@@ -130,3 +145,37 @@ class BiogridProcessor(object):
             if up_id is not None:
                 db_refs['UP'] = up_id
         return (hgnc_name, db_refs)
+
+
+def _download_biogrid_data(url):
+    """Downloads zipped, tab-separated Biogrid data in .tab2 format.
+
+    Parameters:
+    -----------
+    url : str
+        URL of the BioGrid zip file.
+
+    Returns
+    -------
+    csv.reader
+        A csv.reader object for iterating over the rows (header has already
+        been skipped).
+    """
+    res = requests.get(biogrid_file_url)
+    if res.status_code != 200:
+        raise Exception('Unable to download Biogrid data: status code %s'
+                        % res.status_code)
+    zip_bytes = BytesIO(res.content)
+    zip_file = ZipFile(zip_bytes)
+    zip_info_list = zip_file.infolist()
+    # There should be only one file in this zip archive
+    if len(zip_info_list) != 1:
+        raise Exception('There should be exactly zipfile in BioGrid zip '
+                        'archive: %s' % str(zip_info_list))
+    unzipped_bytes = zip_file.read(zip_info_list[0]) # Unzip the file
+    biogrid_str = StringIO(unzipped_bytes.decode('utf8')) # Make file-like obj
+    csv_reader = csv.reader(biogrid_str, delimiter='\t') # Get csv reader
+    next(csv_reader) # Skip the header
+    return csv_reader
+
+
