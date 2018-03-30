@@ -129,8 +129,9 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
         get_job_log(job, write_file=True)
 
 
-def analyze_reach_log(log):
+def analyze_reach_log(log_fname=None, log_str=None):
     """Return unifinished PMIDs given a log file name."""
+    assert bool(log_fname) ^ bool(log_str), 'Must specify log_fname OR log_str'
     def get_content_nums(txt):
         pat = 'Retrieved content for ([\d]+) / ([\d]+) papers to be read'
         res = re.match(pat, txt)
@@ -149,11 +150,12 @@ def analyze_reach_log(log):
         pmids = re.findall(pat, txt)
         return pmids
 
-    with open(log, 'r') as fh:
-        log = fh.read()
-    has_content, total = get_content_nums(log)
-    pmids_started = get_started(log)
-    pmids_finished = get_finished(log)
+    if log_fname:
+        with open(log_fname, 'r') as fh:
+            log_str = fh.read()
+    has_content, total = get_content_nums(log_str)
+    pmids_started = get_started(log_str)
+    pmids_finished = get_finished(log_str)
     pmids_not_done = set(pmids_started) - set(pmids_finished)
     return pmids_not_done
 
