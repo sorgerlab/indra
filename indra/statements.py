@@ -2496,9 +2496,9 @@ class Influence(IncreaseAmount):
         subj_delta = json_dict.get('subj_delta')
         obj_delta = json_dict.get('obj_delta')
         if subj:
-            subj = Agent._from_json(subj)
+            subj = Concept._from_json(subj)
         if obj:
-            obj = Agent._from_json(obj)
+            obj = Concept._from_json(obj)
         stmt = cls(subj, obj, subj_delta, obj_delta)
         return stmt
 
