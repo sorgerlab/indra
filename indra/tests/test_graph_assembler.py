@@ -3,6 +3,7 @@ from builtins import dict, str
 from indra.statements import *
 from indra.assemblers import GraphAssembler
 
+
 def test_phosphorylation():
     st = [Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'))]
     ga = GraphAssembler()
@@ -10,6 +11,7 @@ def test_phosphorylation():
     ga.make_model()
     assert(len(ga.graph.nodes()) == 2)
     assert(len(ga.graph.edges()) == 1)
+
 
 def test_phosphorylation_noenz():
     st = [Phosphorylation(None, Agent('MAPK1'))]
@@ -19,6 +21,7 @@ def test_phosphorylation_noenz():
     assert(len(ga.graph.nodes()) == 0)
     assert(len(ga.graph.edges()) == 0)
 
+
 def test_dephosphorylation():
     st = [Dephosphorylation(Agent('DUSP4'), Agent('MAPK1'))]
     ga = GraphAssembler()
@@ -26,6 +29,7 @@ def test_dephosphorylation():
     ga.make_model()
     assert(len(ga.graph.nodes()) == 2)
     assert(len(ga.graph.edges()) == 1)
+
 
 def test_dephosphorylation_noenz():
     st = [Dephosphorylation(None, Agent('MAPK1'))]
@@ -35,6 +39,7 @@ def test_dephosphorylation_noenz():
     assert(len(ga.graph.nodes()) == 0)
     assert(len(ga.graph.edges()) == 0)
 
+
 def test_activation():
     st = [Activation(Agent('MAP2K1'), Agent('MAPK1'))]
     ga = GraphAssembler()
@@ -42,6 +47,7 @@ def test_activation():
     ga.make_model()
     assert(len(ga.graph.nodes()) == 2)
     assert(len(ga.graph.edges()) == 1)
+
 
 def test_inactivation():
     st = [Inhibition(Agent('DUSP4'), Agent('MAPK1'))]
@@ -51,6 +57,7 @@ def test_inactivation():
     assert(len(ga.graph.nodes()) == 2)
     assert(len(ga.graph.edges()) == 1)
 
+
 def test_complex():
     st = [Complex([Agent('BRAF'), Agent('RAF1'), Agent('YWAH')])]
     ga = GraphAssembler()
@@ -58,6 +65,25 @@ def test_complex():
     ga.make_model()
     assert(len(ga.graph.nodes()) == 3)
     assert(len(ga.graph.edges()) == 3)
+
+
+def test_inactivation():
+    st = [Inhibition(Agent('DUSP4'), Agent('MAPK1'))]
+    ga = GraphAssembler()
+    ga.add_statements(st)
+    ga.make_model()
+    assert(len(ga.graph.nodes()) == 2)
+    assert(len(ga.graph.edges()) == 1)
+
+
+def test_influence():
+    st = [Influence(Concept('a'), Concept('b'))]
+    ga = GraphAssembler()
+    ga.add_statements(st)
+    ga.make_model()
+    assert(len(ga.graph.nodes()) == 2)
+    assert(len(ga.graph.edges()) == 1)
+
 
 def test_duplicates():
     st = [Complex([Agent('BRAF'), Agent('RAF1'), Agent('YWAH')])]
@@ -68,6 +94,7 @@ def test_duplicates():
     assert(len(ga.graph.nodes()) == 3)
     assert(len(ga.graph.edges()) == 3)
 
+
 def test_get_string():
     st = [Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'))]
     ga = GraphAssembler()
@@ -76,12 +103,14 @@ def test_get_string():
     graph_str = ga.get_string()
     assert(graph_str)
 
+
 def test_save_dot():
     st = [Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'))]
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
     ga.save_dot('/dev/null')
+
 
 def test_save_pdf():
     st = [Phosphorylation(Agent('MAP2K1'), Agent('MAPK1'))]

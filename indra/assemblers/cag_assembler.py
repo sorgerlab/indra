@@ -155,14 +155,14 @@ class CAGAssembler(object):
                            for e in self.CAG.edges(data=True, keys=True)]
                 }
 
-    def _node_name(self, agent):
-        """Return a standardized name for a node given an Agent name."""
+    def _node_name(self, concept):
+        """Return a standardized name for a node given a Concept."""
         if (# grounding threshold is specified
             self.grounding_threshold is not None
             # Eidos groundings are present
-            and agent.db_refs['EIDOS']
+            and concept.db_refs['EIDOS']
             # The grounding score is above the grounding threshold
-            and agent.db_refs['EIDOS'][0][1] > self.grounding_threshold):
-                return agent.db_refs['EIDOS'][0][0].split('/')[-1].replace('_', ' ').capitalize()
+            and concept.db_refs['EIDOS'][0][1] > self.grounding_threshold):
+                return concept.db_refs['EIDOS'][0][0].split('/')[-1].replace('_', ' ').capitalize()
         else:
-            return agent.name.capitalize()
+            return concept.name.capitalize()

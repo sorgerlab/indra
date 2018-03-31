@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from copy import deepcopy
-from indra.preassembler.hierarchy_manager import hierarchies
+from indra.preassembler.hierarchy_manager import hierarchies, HierarchyManager
 from indra.statements import get_valid_location, InvalidLocationError, Agent
 from indra.util import unicode_strs
 
@@ -140,3 +140,21 @@ def test_get_parents():
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
     assert(len(p3) == 1)
     assert (ampk in p3)
+
+def test_load_eidos_hierarchy():
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    eidos_ns = 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#'
+    hm = HierarchyManager(eidos_ont, True, True)
+    assert hm.isa_closure
+    eidos_isa = lambda a, b: hm.isa(eidos_ns, a, eidos_ns, b)
+    assert eidos_isa('events/human/conflict/war',
+                     'events/human/conflict')
+    assert not eidos_isa('events/human/conflict/war',
+                         'events/human/human_migration/migration')
+    assert eidos_isa('entities/measurement/distance/meter',
+                     'entities/measurement')
+    assert eidos_isa('events/natural/weather/storm/tornado',
+                     'events')
+    assert not eidos_isa('events',
+                         'events/natural/weather/storm/tornado')

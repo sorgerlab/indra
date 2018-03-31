@@ -3,7 +3,7 @@ from builtins import dict, str
 import json
 import logging
 import objectpath
-from indra.statements import Influence, Agent, Evidence
+from indra.statements import Influence, Concept, Evidence
 
 
 logger = logging.getLogger('eidos')
@@ -69,19 +69,25 @@ class EidosJsonLdProcessor(object):
             if grounding is None:
                 return None
             # Otherwise get all the groundings that have non-zero score
-            grounding_tuples = [(g['ontologyConcept'], g['value'])
-                                for g in grounding if g['value'] > 0]
+            grounding_tuples = []
+            for g in grounding:
+                if g['value'] > 0:
+                    if g['ontologyConcept'].startswith('/'):
+                        concept = g['ontologyConcept'][1:]
+                    else:
+                        concept = g['ontologyConcept']
+                    grounding_tuples.append((g['value'], concept))
             return grounding_tuples
 
-        def _make_agent(entity):
-            """Return an Agent from an Eidos entity."""
-            # For now we just use the text for the agent as the name
+        def _make_concept(entity):
+            """Return Concept from an Eidos entity."""
+            # For now we just use the text for the concept as the name
             name = entity['text']
             # Save raw text and Eidos scored groundings as db_refs
             db_refs = {'TEXT': entity['text'],
-                    'EIDOS': _get_eidos_groundings(entity)}
-            agent = Agent(name, db_refs=db_refs)
-            return agent
+                       'EIDOS': _get_eidos_groundings(entity)}
+            concept = Concept(name, db_refs=db_refs)
+            return concept
 
         for event in events:
             if 'Causal' in event['labels']:
@@ -97,8 +103,8 @@ class EidosJsonLdProcessor(object):
 
                 evidence = self._get_evidence(event)
 
-                st = Influence(_make_agent(subj), _make_agent(obj),
-                            subj_delta, obj_delta, evidence=evidence)
+                st = Influence(_make_concept(subj), _make_concept(obj),
+                               subj_delta, obj_delta, evidence=evidence)
 
                 self.statements.append(st)
 
@@ -161,8 +167,8 @@ class EidosJsonProcessor(object):
                 logger.warning('Could not classify event with labels: %s' %
                                ', '.join(event['labels']))
                 continue
-            subj_agent = self._get_agent(subj)
-            obj_agent = self._get_agent(obj)
+            subj_concept = self._get_concept(subj)
+            obj_concept = self._get_concept(obj)
             subj_mods = self._get_mods(subj)
             obj_mods = self._get_mods(obj)
             # The interpretation of multiple mods is not clear yet so we
@@ -172,7 +178,7 @@ class EidosJsonProcessor(object):
             obj_delta = obj_mods[0] if obj_mods else \
                 {'adjectives': [], 'polarity': None}
             evidence = self._get_evidence(event)
-            st = Influence(subj_agent, obj_agent, subj_delta, obj_delta,
+            st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
             self.statements.append(st)
 
@@ -206,7 +212,7 @@ class EidosJsonProcessor(object):
         return mods
 
     @staticmethod
-    def _get_agent(term):
+    def _get_concept(term):
         name = term.get('text')
-        agent = Agent(name)
-        return agent
+        concept = Concept(name)
+        return concept

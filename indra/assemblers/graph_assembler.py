@@ -180,9 +180,8 @@ class GraphAssembler():
         """Add an Agent as a node to the graph."""
         if agent is None:
             return
-        if not agent.bound_conditions:
-            node_label = _get_node_label(agent)
-        else:
+        node_label = _get_node_label(agent)
+        if isinstance(agent, Agent) and agent.bound_conditions:
             bound_agents = [bc.agent for bc in agent.bound_conditions if
                             bc.is_bound]
             if bound_agents:
@@ -197,8 +196,8 @@ class GraphAssembler():
             return
         self.existing_nodes.append(node_key)
         self.graph.add_node(node_key,
-                        label=node_label,
-                        **self.node_properties)
+                            label=node_label,
+                            **self.node_properties)
 
     def _add_stmt_edge(self, stmt):
         """Assemble a Modification statement."""

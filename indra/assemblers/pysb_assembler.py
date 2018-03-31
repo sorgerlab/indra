@@ -65,35 +65,37 @@ class _BaseAgentSet(object):
             base_agent = _BaseAgent(_n(agent.name))
             self.agents[_n(agent.name)] = base_agent
 
-        # Handle bound conditions
-        for bc in agent.bound_conditions:
-            bound_base_agent = self.get_create_base_agent(bc.agent)
-            bound_base_agent.create_site(get_binding_site_name(agent))
-            base_agent.create_site(get_binding_site_name(bc.agent))
+        # If it's a molecular agent
+        if isinstance(agent, ist.Agent):
+            # Handle bound conditions
+            for bc in agent.bound_conditions:
+                bound_base_agent = self.get_create_base_agent(bc.agent)
+                bound_base_agent.create_site(get_binding_site_name(agent))
+                base_agent.create_site(get_binding_site_name(bc.agent))
 
-        # Handle modification conditions
-        for mc in agent.mods:
-            base_agent.create_mod_site(mc)
+            # Handle modification conditions
+            for mc in agent.mods:
+                base_agent.create_mod_site(mc)
 
-        # Handle mutation conditions
-        for mc in agent.mutations:
-            res_from = mc.residue_from if mc.residue_from else 'mut'
-            res_to = mc.residue_to if mc.residue_to else 'X'
-            if mc.position is None:
-                mut_site_name = res_from
-            else:
-                mut_site_name = res_from + mc.position
+            # Handle mutation conditions
+            for mc in agent.mutations:
+                res_from = mc.residue_from if mc.residue_from else 'mut'
+                res_to = mc.residue_to if mc.residue_to else 'X'
+                if mc.position is None:
+                    mut_site_name = res_from
+                else:
+                    mut_site_name = res_from + mc.position
 
-            base_agent.create_site(mut_site_name, states=['WT', res_to])
+                base_agent.create_site(mut_site_name, states=['WT', res_to])
 
-        # Handle location condition
-        if agent.location is not None:
-            base_agent.create_site('loc', [_n(agent.location)])
+            # Handle location condition
+            if agent.location is not None:
+                base_agent.create_site('loc', [_n(agent.location)])
 
-        # Handle activity
-        if agent.activity is not None:
-            site_name = agent.activity.activity_type
-            base_agent.create_site(site_name, ['inactive', 'active'])
+            # Handle activity
+            if agent.activity is not None:
+                site_name = agent.activity.activity_type
+                base_agent.create_site(site_name, ['inactive', 'active'])
 
         # There might be overwrites here
         for db_name, db_ref in agent.db_refs.items():
@@ -291,30 +293,32 @@ def get_mod_site_name(mod_type, residue, position):
 def get_agent_rule_str(agent):
     """Construct a string from an Agent as part of a PySB rule name."""
     rule_str_list = [_n(agent.name)]
-    for mod in agent.mods:
-        mstr = abbrevs[mod.mod_type]
-        if mod.residue is not None:
-            mstr += mod.residue
-        if mod.position is not None:
-            mstr += mod.position
-        rule_str_list.append('%s' % mstr)
-    for mut in agent.mutations:
-        res_from = mut.residue_from if mut.residue_from else 'mut'
-        res_to = mut.residue_to if mut.residue_to else 'X'
-        if mut.position is None:
-            mut_site_name = res_from
-        else:
-            mut_site_name = res_from + mut.position
-        mstr = mut_site_name + res_to
-        rule_str_list.append(mstr)
-    if agent.bound_conditions:
-        for b in agent.bound_conditions:
-            if b.is_bound:
-                rule_str_list.append(_n(b.agent.name))
+    # If it's a molecular agent
+    if isinstance(agent, ist.Agent):
+        for mod in agent.mods:
+            mstr = abbrevs[mod.mod_type]
+            if mod.residue is not None:
+                mstr += mod.residue
+            if mod.position is not None:
+                mstr += mod.position
+            rule_str_list.append('%s' % mstr)
+        for mut in agent.mutations:
+            res_from = mut.residue_from if mut.residue_from else 'mut'
+            res_to = mut.residue_to if mut.residue_to else 'X'
+            if mut.position is None:
+                mut_site_name = res_from
             else:
-                rule_str_list.append('n' + _n(b.agent.name))
-    if agent.location is not None:
-        rule_str_list.append(_n(agent.location))
+                mut_site_name = res_from + mut.position
+            mstr = mut_site_name + res_to
+            rule_str_list.append(mstr)
+        if agent.bound_conditions:
+            for b in agent.bound_conditions:
+                if b.is_bound:
+                    rule_str_list.append(_n(b.agent.name))
+                else:
+                    rule_str_list.append('n' + _n(b.agent.name))
+        if agent.location is not None:
+            rule_str_list.append(_n(agent.location))
     rule_str = '_'.join(rule_str_list)
     return rule_str
 
@@ -403,8 +407,11 @@ def grounded_monomer_patterns(model, agent):
     if monomer is None:
         logger.info('No monomer found corresponding to agent %s' % agent)
         return
+    # If it's not a molecular agent
+    if not isinstance(agent, ist.Agent):
+        yield monomer()
     # Now that we have a monomer for the agent, look for site/state
-    # combinations corresponding to the state of the agent.  For every one of
+    # combinations corresponding to the state of the agent. For every one of
     # the modifications specified in the agent signature, check to see if it
     # can be satisfied based on the agent's annotations.  For every one we find
     # that is consistent, we yield it--there may be more than one.
@@ -518,6 +525,8 @@ def get_site_pattern(agent):
 
     This crates the mapping to the associated PySB monomer from an
     INDRA Agent object."""
+    if not isinstance(agent, ist.Agent):
+        return {}
     pattern = {}
     # Handle bound conditions
     for bc in agent.bound_conditions:
@@ -2466,7 +2475,8 @@ class PysbPreassembler(object):
                 # This is the case where there is an activity flag on an
                 # Agent which we will attempt to replace with an explicit
                 # active form
-                if agent is not None and agent.activity is not None:
+                if agent is not None and isinstance(agent, ist.Agent) and \
+                        agent.activity is not None:
                     base_agent = self.agent_set.get_create_base_agent(agent)
                     # If it is an "active" state
                     if agent.activity.is_active:
@@ -2542,9 +2552,9 @@ class PysbPreassembler(object):
 
     @staticmethod
     def _set_agent_context(from_agent, to_agent):
-        # TODO: what can we do about semantic conflicts here like the same
-        # bound condition with True/False is_bound appearing in the
-        # two contexts?
+        if not isinstance(from_agent, ist.Agent) or \
+            not isinstance(to_agent, ist.Agent):
+            return
         def add_no_duplicate(from_lst, to_lst):
             for fm in from_lst:
                 found = False
@@ -2555,6 +2565,9 @@ class PysbPreassembler(object):
                 if not found:
                     to_lst.append(fm)
             return to_lst
+        # TODO: what can we do about semantic conflicts here like the same
+        # bound condition with True/False is_bound appearing in the
+        # two contexts?
         to_agent.bound_conditions = \
             add_no_duplicate(to_agent.bound_conditions,
                              from_agent.bound_conditions)

@@ -63,9 +63,10 @@ while the :py:class:`RegulateAmount` abstract base class has subtypes
 - :py:class:`IncreaseAmount`
 - :py:class:`DecreaseAmount`
 
-Statements involve one or more biological *Agents*, typically proteins,
-represented by the class :py:class:`Agent`. Agents can have several types
-of context specified on them including
+Statements involve one or more *Concepts*, which, depending on the
+semantics of the Statement, are typically biological *Agents*,
+such as proteins, represented by the class :py:class:`Agent`.
+Agents can have several types of context specified on them including
 
 - a specific post-translational modification state (indicated by one or
   more instances of :py:class:`ModCondition`),
@@ -495,7 +496,101 @@ class ActivityCondition(object):
 
 
 @python_2_unicode_compatible
-class Agent(object):
+class Concept(object):
+    """A concept/entity of interest that is the argument of a Statement
+
+    Parameters
+    ----------
+    name : str
+        The name of the concept, possibly a canonicalized name.
+    db_refs : dict
+        Dictionary of database identifiers associated with this concept.
+    """
+    def __init__(self, name, db_refs=None):
+        self.name = name
+        self.db_refs = db_refs if db_refs else {}
+
+    def matches(self, other):
+        return self.matches_key() == other.matches_key()
+
+    def matches_key(self):
+        key = self.entity_matches_key()
+        return str(key)
+
+    def entity_matches(self, other):
+        return self.entity_matches_key() == other.entity_matches_key()
+
+    def entity_matches_key(self):
+        # Get the grounding first
+        db_ns, db_id = self.get_grounding()
+        # If there's no grounding, just use the name as key
+        if not db_ns and not db_id:
+            return self.name
+        return str((db_ns, db_id))
+
+    def equals(self, other):
+        matches = (self.name == other.name) and \
+                  (self.db_refs == other.db_refs)
+        return matches
+
+    def get_grounding(self):
+        # Prioritize anything that is other than TEXT
+        db_names = sorted(list(set(self.db_refs.keys()) - set(['TEXT'])))
+        db_ns = db_names[0] if db_names else None
+        db_id = self.db_refs[db_ns] if db_ns else None
+        # If the db_id is actually a list of scored groundings, we take the
+        # highest scoring one.
+        if isinstance(db_id, list):
+            db_id = sorted(db_id, key=lambda x: x[1], reverse=True)[0][0]
+        return (db_ns, db_id)
+
+    def isa(self, other, hierarchies):
+        # Get the namespaces for the comparison
+        (self_ns, self_id) = self.get_grounding()
+        (other_ns, other_id) = other.get_grounding()
+        # If one of the agents isn't grounded to a relevant namespace,
+        # there can't be an isa relationship
+        if not all((self_ns, self_id, other_ns, other_id)):
+            return False
+        # Check for isa relationship
+        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+
+    def refinement_of(self, other, hierarchies):
+        # Make sure the Agent types match
+        if type(self) != type(other):
+            return False
+
+        # Check that the basic entity of the agent either matches or is related
+        # to the entity of the other agent. If not, no match.
+        # If the entities, match, then we can continue
+        if not (self.entity_matches(other) or self.isa(other, hierarchies)):
+            return False
+        return True
+
+    def to_json(self):
+        json_dict = _o({'name': self.name})
+        json_dict['db_refs'] = self.db_refs
+        return json_dict
+
+    @classmethod
+    def _from_json(cls, json_dict):
+        name = json_dict.get('name')
+        db_refs = json_dict.get('db_refs', {})
+        if not name:
+            logger.error('Concept missing name.')
+            return None
+        concept = Concept(name, db_refs=db_refs)
+        return concept
+
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return str(self)
+
+
+@python_2_unicode_compatible
+class Agent(Concept):
     """A molecular entity, e.g., a protein.
 
     Parameters
@@ -520,7 +615,7 @@ class Agent(object):
     def __init__(self, name, mods=None, activity=None,
                  bound_conditions=None, mutations=None,
                  location=None, db_refs=None):
-        self.name = name
+        super(Agent, self).__init__(name, db_refs=db_refs)
 
         if mods is None:
             self.mods = []
@@ -548,14 +643,6 @@ class Agent(object):
         self.activity = activity
         self.location = get_valid_location(location)
 
-        if db_refs is None:
-            self.db_refs = {}
-        else:
-            self.db_refs = db_refs
-
-    def matches(self, other):
-        return self.matches_key() == other.matches_key()
-
     def matches_key(self):
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
@@ -570,9 +657,6 @@ class Agent(object):
                      for bc in sorted(self.bound_conditions,
                                       key=lambda x: x.agent.name)))
         return str(key)
-
-    def entity_matches(self, other):
-        return self.entity_matches_key() == other.entity_matches_key()
 
     def entity_matches_key(self):
         db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
@@ -820,9 +904,6 @@ class Agent(object):
         attr_str = ', '.join(attr_strs)
         agent_name = self.name
         return '%s(%s)' % (agent_name, attr_str)
-
-    def __repr__(self):
-        return str(self)
 
 
 @python_2_unicode_compatible
@@ -2357,9 +2438,9 @@ class Influence(IncreaseAmount):
 
     Parameters
     ----------
-    subj : :py:class:`indra.statement.Agent`
+    subj : :py:class:`indra.statement.Concept`
         The concept which acts as the influencer.
-    obj : :py:class:`indra.statement.Agent`
+    obj : :py:class:`indra.statement.Concept`
         The concept which acts as the influencee
     subj_delta : Optional[dict]
         A dictionary specifying the polarity and magnitude of
@@ -2415,9 +2496,9 @@ class Influence(IncreaseAmount):
         subj_delta = json_dict.get('subj_delta')
         obj_delta = json_dict.get('obj_delta')
         if subj:
-            subj = Agent._from_json(subj)
+            subj = Concept._from_json(subj)
         if obj:
-            obj = Agent._from_json(obj)
+            obj = Concept._from_json(obj)
         stmt = cls(subj, obj, subj_delta, obj_delta)
         return stmt
 
@@ -2429,7 +2510,7 @@ class Influence(IncreaseAmount):
             return self.__str__().encode('utf-8')
 
     def __str__(self):
-        def _influence_agent_str(agent, delta):
+        def _influence_concept_str(concept, delta):
             if delta is not None:
                 pol = delta.get('polarity')
                 if pol == 1:
@@ -2438,13 +2519,15 @@ class Influence(IncreaseAmount):
                     pol_str = 'negative'
                 else:
                     pol_str = ''
-                agent_str = '%s(%s)' % (agent.name, pol_str)
+                concept_str = '%s(%s)' % (concept.name, pol_str)
             else:
-                agent_str = agent.name
-            return agent_str
+                concept_str = concept.name
+            return concept_str
         s = ("%s(%s, %s)" % (type(self).__name__,
-                             _influence_agent_str(self.subj, self.subj_delta),
-                             _influence_agent_str(self.obj, self.obj_delta)))
+                             _influence_concept_str(self.subj,
+                                                    self.subj_delta),
+                             _influence_concept_str(self.obj,
+                                                    self.obj_delta)))
         return s
 
 

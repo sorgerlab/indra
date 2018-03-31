@@ -3,12 +3,13 @@ from builtins import dict, str
 import os
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
+from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.sources import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
                              Translocation, Activation, Inhibition, \
-                             Deacetylation, Conversion
+                             Deacetylation, Conversion, Concept, Influence
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -546,4 +547,47 @@ def test_conversion_refinement():
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
     toplevel_stmts = pa.combine_related()
     assert(len(toplevel_stmts) == 2)
-    
+
+
+def test_influence_duplicate():
+    gov = 'entities/human/nation/government'
+    agr = 'entities/human/livelihood/agriculture'
+    cgov = Concept('government', db_refs={'EIDOS': [(gov, 1.0)]})
+    cagr = Concept('agriculture', db_refs={'EIDOS': [(agr, 1.0)]})
+    stmt1 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos1')])
+    stmt2 = Influence(cagr, cgov, evidence=[Evidence(source_api='eidos2')])
+    stmt3 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos3')])
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
+    unique_stmts = pa.combine_duplicates()
+    assert len(unique_stmts) == 2
+    assert len(unique_stmts[0].evidence) == 1
+    assert len(unique_stmts[1].evidence) == 2
+    sources = [e.source_api for e in unique_stmts[1].evidence]
+    assert set(sources) == set(['eidos1', 'eidos3'])
+
+
+def test_influence_refinement():
+    tran = 'entities/human/infrastructure/transportation'
+    truck = 'entities/human/infrastructure/transportation/' + \
+        'transportation_methods/trucking'
+    agr = 'entities/human/livelihood/agriculture'
+    ctran = Concept('transportation', db_refs={'EIDOS': [(tran, 1.0)]})
+    ctruck = Concept('trucking', db_refs={'EIDOS': [(truck, 1.0)]})
+    cagr = Concept('agriculture', db_refs={'EIDOS': [(agr, 1.0)]})
+    stmt1 = Influence(ctran, cagr, evidence=[Evidence(source_api='eidos1')])
+    stmt2 = Influence(ctruck, cagr, evidence=[Evidence(source_api='eidos2')])
+    stmt3 = Influence(cagr, ctran, evidence=[Evidence(source_api='eidos3')])
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    hierarchies = {'entity': hm}
+    pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
+    rel_stmts = pa.combine_related()
+    assert len(rel_stmts) == 2
+    truck_stmt = [st for st in rel_stmts if st.subj.name == 'trucking'][0]
+    assert len(truck_stmt.supported_by) == 1
+    assert truck_stmt.supported_by[0].subj.name == 'transportation'
