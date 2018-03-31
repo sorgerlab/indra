@@ -110,7 +110,10 @@ class IncrementalModel(object):
         stmts = ac.filter_no_hypothesis(stmts)
 
         # Fix grounding
-        stmts = ac.map_grounding(stmts, grounding_map=grounding_map)
+        if grounding_map is not None:
+            stmts = ac.map_grounding(stmts, grounding_map=grounding_map)
+        else:
+            stmts = ac.map_grounding(stmts)
 
         if filters and ('grounding' in filters):
             stmts = ac.filter_grounded_only(stmts)
