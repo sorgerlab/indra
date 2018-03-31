@@ -35,14 +35,20 @@ query.
   - Example 2: if looking for Statements where MAP2K1 is the subject and
 MAPK1 is the object, add both `subject=MAP2K1` and `object=MAPK1` as
 query parameters.
+  - Example 3: you can specify the agent id namespace by appending
+  `@<namespace>` to the agent id in the parameter, e.g.
+  `subject=6871@HGNC`.
 - **`agent`**: This parameter is used if the specific role of the agent
 (subject or object) is irrelevant, or the distinction doesn't apply to the
 type of Statement of interest (e.g. Complex, Translocation, ActiveForm).
 **Note**: You can include as many `agent` queries as you like, however you
 will only get Statements that include all agents you query, in addition to
 those queried for `subject` and `object`.
-  - Example: To obtain Statements that
-involve SMAD2 in any role, add `agent=SMAD2` to the query.
+  - Example 1: To obtain Statements that involve SMAD2 in any role, add
+  `agent=SMAD2` to the query.
+  - Example 2: As with `subject` and `object`, you can specify the
+  namespace for an agent by appending `@<namespace>` to the agent's id, e.g.
+  `agent=ERK@TEXT`.
 - **`type`**: This parameter can be used to specify what type of Statement
 of interest (e.g. Phosphorylation, Activation, Complex).
   - Example: To answer the question "Does MAP2K1 phosphorylate MAPK1?"
