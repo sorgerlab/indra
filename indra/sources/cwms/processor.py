@@ -171,7 +171,7 @@ class CWMSProcessor(object):
         epi = {}
         if sec:
             epi['section_type'] = sec
-        ev = Evidence(source_api='cwmsreader', text=text, pmid=self.doc_id,
+        ev = Evidence(source_api='cwms', text=text, pmid=self.doc_id,
                       epistemics=epi)
         return ev
 
