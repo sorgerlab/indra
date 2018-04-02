@@ -1679,10 +1679,21 @@ def test_influence_refinement_of():
                I(pos_adj, nopol_noadj), hierarchies)
     assert not I(pos_adj2, nopol_noadj).refinement_of(
                I(pos_adj3, nopol_noadj), hierarchies)
-    pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
-    assert I(pos_adj3, nopol_noadj).equals(
-           I(pos_adj4, nopol_noadj))
+
+    # Equivalences
     assert not I(nopol_adj, neg_noadj).equals(
                I(nopol_adj, nopol_noadj))
     assert not I(nopol_adj, neg_noadj).equals(
                I(nopol_noadj, neg_noadj))
+    pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
+    assert I(pos_adj3, nopol_noadj).equals(
+           I(pos_adj4, nopol_noadj))
+
+    # Matches keys
+    assert I(nopol_adj, neg_noadj).matches_key() != \
+           I(nopol_adj, nopol_noadj).matches_key()
+    assert I(nopol_adj, neg_noadj).matches_key() != \
+           I(nopol_noadj, neg_noadj).matches_key()
+    pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
+    assert I(pos_adj3, nopol_noadj).matches_key() == \
+           I(pos_adj4, nopol_noadj).matches_key()

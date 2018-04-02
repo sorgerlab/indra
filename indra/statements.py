@@ -2506,6 +2506,15 @@ class Influence(IncreaseAmount):
             delta_equals(self.obj_delta, other.obj_delta)
         return matches
 
+    def matches_key(self):
+        key = (type(self), self.subj.matches_key(),
+               self.obj.matches_key(),
+               self.subj_delta['polarity'],
+               set(self.subj_delta['adjectives']),
+               self.obj_delta['polarity'],
+               set(self.obj_delta['adjectives']))
+        return str(key)
+
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity
         p1 = self.subj_delta['polarity']
