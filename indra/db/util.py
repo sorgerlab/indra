@@ -38,13 +38,13 @@ def get_defaults():
         raise IndraDatabaseError(
             "Cannot find default file or environment vars."
             )
-    elif 'primary' in config_file:
+    elif 'INDRA_DB_PRIMARY' in config_file:
         defaults_dict = {}
-        defaults_dict['primary'] = config_file['primary']
-        if 'test-1' in config_file:
-            defaults_dict['test-1'] = config_file['test-1']
-        if 'test-2' in config_file:
-            defaults_dict['test-2'] = config_file['test-2']
+        defaults_dict['INDRA_DB_PRIMARY'] = config_file['INDRA_DB_PRIMARY']
+        if 'INDRA_DB_TEST1' in config_file:
+            defaults_dict['INDRA_DB_TEST1'] = config_file['INDRA_DB_TEST1']
+        if 'INDRA_DB_TEST2' in config_file:
+            defaults_dict['INDRA_DB_TEST2'] = config_file['INDRA_DB_TEST2']
     else:
         defaults_dict = {
             purpose: env_val for purpose, my_env_key in env_key_dict.items()

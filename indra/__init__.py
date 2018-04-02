@@ -1,8 +1,12 @@
 from __future__ import print_function, unicode_literals
 import logging
 import os
-import json
 import shutil
+import sys
+if sys.version_info[0] == 3:
+    from configparser import RawConfigParser
+else:
+    from ConfigParser import RawConfigParser
 __version__ = '1.6.0'
 
 __all__ = ['assemblers', 'belief', 'databases', 'explanation', 'literature',
@@ -30,27 +34,42 @@ logger = logging.getLogger('indra')
 
 # If the configuration file does not exist, try to create it from the default
 config_dir = os.path.expanduser('~/.config/indra')
-config_path = os.path.join(config_dir, 'config.json')
+config_path = os.path.join(config_dir, 'config.ini')
 if not os.path.isfile(config_path):
-    os.mkdir(config_dir)
+    try:
+        os.mkdir(config_dir)
+    except:
+        logger.warning(config_dir + ' already exists')
     default_config = os.path.join(os.path.dirname(__file__),
-                                  'resources/default_config.json')
+                                  'resources/default_config.ini')
     shutil.copyfile(default_config, config_path)
 
-# Load the configuration file
-with open(config_path, 'r') as f:
-    config_contents = f.read()
-    config_file = json.loads(config_contents)
+# Load the configuration file into the config_file dictionary
+# A ConfigParser-style configuration file can have multiple sections
+# We ignore the section distinction  and load the key/value pairs from all
+# sectionts into a single key/value list.
 
-    # Expand ~ to the home directory
-    for key in config_file:
-        config_file[key] = os.path.expanduser(config_file[key])
+# Load key/value pairs from all sections into this dictionary
+config_file = {}
 
-    # Some logic in INDRA checks to see if the config file is None if
-    # omitted. Set config values to None if the empty string.
-    for key in config_file:
-        if config_file[key] == "":
-            config_file[key] = None
+parser = RawConfigParser()
+parser.optionxform = lambda x : x
+parser.read(config_path)
+sections = parser.sections()
+for section in sections:
+    options = parser.options(section)
+    for option in options:
+        config_file[option] = str(parser.get(section, option))
+
+# Expand ~ to the home directory
+for key in config_file:
+    config_file[key] = os.path.expanduser(config_file[key])
+
+# Some logic in INDRA checks to see if the config file is None if
+# omitted. Set config values to None if the empty string.
+for key in config_file:
+    if config_file[key] == "":
+        config_file[key] = None
 
 def get_config(key):
     """Returns the configuration value, first checking the environemnt
