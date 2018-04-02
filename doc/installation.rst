@@ -220,6 +220,8 @@ Configuration values include:
 - INDRA_DEFAULT_JAVA_MEM_LIMIT: maximum memory limit for Java virtual machines
   launched by INDRA
 
+- SPARSERPATH: location of the sparser parser
+
 - primary: primary database address
 
 - test-1, test-2: test database addresses
