@@ -1,16 +1,26 @@
 {
-    "REACHPATH": "~/workspace/lib/reach-82631d-biores-e9ee36.jar",
-    "EIDOSPATH": "~/software/eidos/target/scala-2.12/eidos-assembly-0.1.6-SNAPSHOT.jar",
-    "NDEX_USERNAME": "",
-    "NDEX_PASSWORD": "",
+    // Path to the REACH reading system's fat JAR
+    "REACHPATH": "",
+    // Version of REACH
     "REACH_VERSION": "",
+    // Path to the EIDOS reading system's fat JAR
+    "EIDOSPATH": "",
+    // Path to the Sparser reading system folder
+    "SPARSERPATH": "",
+    // The default memory limit for the Java/Scala interface
+    // (BioPAX, REACH, EIDOS)
+    "INDRA_DEFAULT_JAVA_MEM_LIMIT": "8g",
+    // API keys to access Elsevier content
     "ELSEVIER_API_KEY": "",
     "ELSEVIER_INST_KEY": "",
+    // API keys to access BioGRID content
     "BIOGRID_API_KEY": "",
+    // Credendials for ndexbio.org
+    "NDEX_USERNAME": "",
+    "NDEX_PASSWORD": "",
+    // Addresses to INDRA database instances
     "primary": "",
     "test-1": "",
-    "test-2": "sqlite:///indra_test.db",
-    "INDRA_DEFAULT_JAVA_MEM_LIMIT": "8g",
-    "SPARSERPATH": ""
+    "test-2": "sqlite:///indra_test.db"
 }
 
