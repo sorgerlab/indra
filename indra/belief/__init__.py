@@ -15,6 +15,8 @@ default_probs = {
         'trips': 0.3,
         'reach': 0.3,
         'eidos': 0.3,
+        'bbn': 0.3,
+        'cwms': 0.3,
         'biogrid': 0.01,
         'sparser': 0.3,
         'r3': 0.1,
@@ -29,6 +31,8 @@ default_probs = {
         'trips': 0.05,
         'reach': 0.05,
         'eidos': 0.05,
+        'bbn': 0.05,
+        'cwms': 0.05,
         'biogrid': 0.01,
         'sparser': 0.05,
         'r3': 0.05,
@@ -179,7 +183,7 @@ class BeliefEngine(object):
             for source in sources:
                 if source not in self.prior_probs[err_type]:
                     msg = 'BeliefEngine missing probability parameter' + \
-                        'for source: %s' % source
+                        ' for source: %s' % source
                     raise Exception(msg)
 
 
