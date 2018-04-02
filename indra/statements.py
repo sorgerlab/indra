@@ -2495,7 +2495,15 @@ class Influence(IncreaseAmount):
                 subjd_refinement and objd_refinement)
 
     def equals(self, other):
-        matches = super(RegulateAmount, self).equals(other)
+        def delta_equals(dself, dother):
+            if (dself['polarity'] == dother['polarity']) and \
+                (set(dself['adjectives']) == set(dother['adjectives'])):
+                return True
+            else:
+                return False
+        matches = super(Influence, self).equals(other) and \
+            delta_equals(self.subj_delta, other.subj_delta) and \
+            delta_equals(self.obj_delta, other.obj_delta)
         return matches
 
     def overall_polarity(self):
