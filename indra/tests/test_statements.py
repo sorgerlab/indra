@@ -1624,12 +1624,14 @@ def test_concept_get_grounding():
     d4 = {'TEXT': 'b', 'BBN': 'a'}
     d5 = {'EIDOS': [('a', 1.0), ('b', 0.8)]}
     d6 = {'EIDOS': [('b', 0.8), ('a', 1.0)]}
+    d7 = {'EIDOS': []}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
     assert Concept('b', db_refs=d2).get_grounding() == ('EIDOS', 'c')
     assert Concept('c', db_refs=d3).get_grounding() == ('BBN', 'z')
     assert Concept('d', db_refs=d4).get_grounding() == ('BBN', 'a')
     assert Concept('e', db_refs=d5).get_grounding() == ('EIDOS', 'a')
     assert Concept('f', db_refs=d6).get_grounding() == ('EIDOS', 'a')
+    assert Concept('g', db_refs=d7).get_grounding() == (None, None)
 
 
 def test_concept_isa():

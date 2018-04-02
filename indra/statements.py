@@ -545,6 +545,10 @@ class Concept(object):
                 db_id = None
             else:
                 db_id = sorted(db_id, key=lambda x: x[1], reverse=True)[0][0]
+        # If there is no db_id then we actually reset the db_ns to None
+        # to make sure we don't consider this a potential isa
+        if db_id is None:
+            db_ns = None
         return (db_ns, db_id)
 
     def isa(self, other, hierarchies):
