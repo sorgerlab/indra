@@ -14,7 +14,7 @@ test_json = os.path.join(path_this, 'eidos_test.json')
 
 def __get_remote_jsonld():
     res = requests.get('https://raw.githubusercontent.com/clulab/eidos/master/'
-                       'example_output/example_mar6.jsonld')
+                       'example_output/example-0.2.0.jsonld')
     assert res.status_code is 200, "Could not get example json from remote."
     example_json = json.loads(res.content.decode('utf-8'))
     return example_json
@@ -64,7 +64,7 @@ def test_process_text_json_ld():
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
     assert isinstance(stmt, Influence)
-    assert stmt.subj.name == 'cost of fuel'
+    assert stmt.subj.name == 'cost fuel'
     assert stmt.obj.name == 'water trucking'
     assert stmt.obj_delta.get('polarity') == -1
     assert(stmt.evidence[0].annotations['found_by']
