@@ -7,8 +7,8 @@
     "ELSEVIER_API_KEY": "",
     "ELSEVIER_INST_KEY": "",
     "BIOGRID_API_KEY": "",
-    "primary": "postgresql://indra_db_user:indra_db_pass@indradb.cwcetxbvbgrf.us-east-1.rds.amazonaws.com/indra_db",
-    "test-1": "postgresql://tester:hms_test_pass@indradb-test.cwcetxbvbgrf.us-east-1.rds.amazonaws.com/indradb_test",
+    "primary": "",
+    "test-1": "",
     "test-2": "sqlite:///indra_test.db",
     "INDRA_DEFAULT_JAVA_MEM_LIMIT": "8g",
     "SPARSERPATH": ""
