@@ -81,8 +81,8 @@ class EidosJsonLdProcessor(object):
 
         def _make_concept(entity):
             """Return Concept from an Eidos entity."""
-            # For now we just use the text for the concept as the name
-            name = entity['text']
+            # Use the canonical name as the name of the Concept
+            name = entity['canonicalName']
             # Save raw text and Eidos scored groundings as db_refs
             db_refs = {'TEXT': entity['text'],
                        'EIDOS': _get_eidos_groundings(entity)}
