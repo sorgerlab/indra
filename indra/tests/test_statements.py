@@ -1641,3 +1641,41 @@ def test_concept_isa():
     c2 = Concept('b', db_refs={'EIDOS': [('events/human/conflict', 1.0)]})
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
+
+
+def test_influence_refinement_of():
+    c1 = Concept('production')
+    c2 = Concept('price')
+    nopol_noadj = {'polarity': None, 'adjectives': []}
+    nopol_adj = {'polarity': None, 'adjectives': ['small']}
+    neg_noadj = {'polarity': -1, 'adjectives': []}
+    neg_adj = {'polarity': -1, 'adjectives': ['small']}
+    pos_noadj = {'polarity': 1, 'adjectives': []}
+    pos_adj = {'polarity': 1, 'adjectives': ['small']}
+    pos_adj2 = {'polarity': 1, 'adjectives': ['small', 'tiny']}
+    pos_adj3 = {'polarity': 1, 'adjectives': ['significant', 'large']}
+    I = lambda x, y: Influence(c1, c2, x, y)
+    # Has polarity vs doesn't have polarity
+    assert I(pos_adj, nopol_noadj).refinement_of(
+           I(nopol_adj, nopol_noadj), hierarchies)
+    assert I(nopol_adj, pos_noadj).refinement_of(
+           I(nopol_adj, nopol_noadj), hierarchies)
+    assert I(nopol_adj, neg_noadj).refinement_of(
+           I(nopol_adj, nopol_noadj), hierarchies)
+    # Has adjective vs doesn't have adjective
+    assert I(neg_adj, nopol_adj).refinement_of(
+           I(neg_noadj, nopol_adj), hierarchies)
+    assert I(pos_adj, nopol_adj).refinement_of(
+           I(pos_noadj, nopol_adj), hierarchies)
+    assert I(nopol_adj, nopol_adj).refinement_of(
+           I(nopol_noadj, nopol_adj), hierarchies)
+    # Opposite polarity
+    assert not I(neg_noadj, nopol_noadj).refinement_of(
+               I(pos_noadj, nopol_noadj), hierarchies)
+    # Adjective subsets
+    assert I(pos_adj2, nopol_noadj).refinement_of(
+           I(pos_adj, nopol_noadj), hierarchies)
+    assert not I(pos_adj3, nopol_noadj).refinement_of(
+               I(pos_adj, nopol_noadj), hierarchies)
+    assert not I(pos_adj2, nopol_noadj).refinement_of(
+               I(pos_adj3, nopol_noadj), hierarchies)

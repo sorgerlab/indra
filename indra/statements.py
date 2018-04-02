@@ -2464,6 +2464,40 @@ class Influence(IncreaseAmount):
         self.subj_delta = subj_delta
         self.obj_delta = obj_delta
 
+    def refinement_of(self, other, hierarchies):
+        def delta_refinement(dself, dother):
+            # Polarities are either equal
+            if dself['polarity'] == dother['polarity']:
+                pol_refinement = True
+            # Or this one has a polarity and the other doesn't
+            elif dself['polarity'] is not None and dother['polarity'] is None:
+                pol_refinement = True
+            else:
+                pol_refinement = False
+
+            # If other's adjectives are a subset of this
+            if set(dother['adjectives']).issubset(set(dself['adjectives'])):
+                adj_refinement = True
+            else:
+                adj_refinement = False
+            return pol_refinement and adj_refinement
+
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+
+        # Check agent arguments
+        subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
+        obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
+        subjd_refinement = delta_refinement(self.subj_delta, other.subj_delta)
+        objd_refinement = delta_refinement(self.obj_delta, other.obj_delta)
+        return (subj_refinement and obj_refinement and
+                subjd_refinement and objd_refinement)
+
+    def equals(self, other):
+        matches = super(RegulateAmount, self).equals(other)
+        return matches
+
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity
         p1 = self.subj_delta['polarity']
