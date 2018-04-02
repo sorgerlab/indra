@@ -9,13 +9,6 @@ from indra.statements import Influence, Concept, Evidence
 
 logger = logging.getLogger('eidos')
 
-def sanitize(text):
-    """ Sanitize the Eidos text field for human readability """
-
-    d = {'-LRB-': '(', '-RRB-': ')'}
-
-    return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
-
 class EidosJsonLdProcessor(object):
     """This processor extracts INDRA Statements from Eidos JSON-LD output.
 
@@ -115,18 +108,23 @@ class EidosJsonLdProcessor(object):
 
                 self.statements.append(st)
 
-
     @staticmethod
     def _get_evidence(event):
-        """ Construct the Evidence object for the INDRA statment """
-
-        text = sanitize(event.get('text'))
+        """Return the Evidence object for the INDRA Statment."""
+        text = EidosJsonLdProcessor._sanitize(event.get('text'))
         annotations = {
                 'found_by'   : event.get('rule'),
                 'provenance' : event.get('provenance'),
                 }
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]
+
+    @staticmethod
+    def _sanitize(text):
+        """Return sanitized Eidos text field for human readability."""
+        d = {'-LRB-': '(', '-RRB-': ')'}
+        return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+
 
 
 class EidosJsonProcessor(object):
