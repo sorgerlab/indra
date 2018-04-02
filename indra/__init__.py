@@ -46,6 +46,12 @@ with open(config_path, 'r') as f:
     for key in config_file:
         config_file[key] = os.path.expanduser(config_file[key])
 
+    # Some logic in INDRA checks to see if the config file is None if
+    # omitted. Set config values to None if the empty string.
+    for key in config_file:
+        if config_file[key] == "":
+            config_file[key] = None
+
 def get_config(key):
     """Returns the configuration value, first checking the environemnt
     variables and then, if it's not present there, checking the configuration
@@ -69,3 +75,18 @@ def get_config(key):
         logger.warning('Could not find ' + str(key) +
                            ' in environment variables or configuration file')
         return None
+
+def has_config(key):
+    """Returns whether the configuration value for the given kehy is present.
+
+    Parmeters
+    ---------
+    key: str
+        The key for the configuration value to fetch
+
+    Returns
+    -------
+    value: bool
+        Whether the configuration value is present
+    """
+    return get_config(key) is not None

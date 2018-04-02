@@ -20,6 +20,7 @@ from indra.tools.machine import twitter_client
 from indra.tools.gene_network import GeneNetwork
 from indra.tools.incremental_model import IncrementalModel
 from indra.literature import pubmed_client, get_full_text, elsevier_client
+from indra import get_config
 
 try:
     import boto3
@@ -404,10 +405,10 @@ def get_ndex_cred(config):
     ndex_cred = config.get('ndex')
     if not ndex_cred:
         return
-    elif not ndex_cred.get('user') and 'NDEX_USERNAME' not in os.environ:
+    elif not ndex_cred.get('user') and get_config('NDEX_USERNAME') is None:
         logger.info('NDEx user missing.')
         return
-    elif not ndex_cred.get('password')and 'NDEX_PASSWORD' not in os.environ:
+    elif not ndex_cred.get('password')and get_config('NDEX_PASSWORD') is None:
         logger.info('NDEx password missing.')
         return
     elif not ndex_cred.get('network'):

@@ -12,6 +12,7 @@ import textwrap
 import xml.etree.ElementTree as ET
 import requests
 from time import sleep
+from indra import has_config, get_config
 # Python3
 try:
     from functools import lru_cache
@@ -65,15 +66,15 @@ except IOError:
     # Try the environment variable for the api key. This one is optional,
     # so if it is not found then we just leave it out of the keys dict
     elsevier_keys = {}
-    if inst_key_env_name in os.environ:
-        elsevier_keys['X-ELS-Insttoken'] = os.environ.get(inst_key_env_name)
+    if has_config(inst_key_env_name):
+        elsevier_keys['X-ELS-Insttoken'] = get_config(inst_key_env_name)
     else:
         logger.debug('No Elsevier institution key found in environment '
                      'variable %s.' % inst_key_env_name)
     # Try the environment variable for the api key. This one is required, so
     # if it is not found then we set the keys dict to None
-    if api_key_env_name in os.environ:
-        elsevier_keys['X-ELS-APIKey'] = os.environ.get(api_key_env_name)
+    if has_config(api_key_env_name):
+        elsevier_keys['X-ELS-APIKey'] = get_config(api_key_env_name)
     else:
         logger.debug('No Elsevier API key found in environment variable '
                      '%s.' % api_key_env_name)

@@ -8,6 +8,7 @@ import requests
 import logging
 import ndex2.client
 from ndex2.niceCXNetwork import NiceCXNetwork
+from indra import get_config
 
 logger = logging.getLogger('ndex_client')
 
@@ -22,8 +23,8 @@ def get_default_ndex_cred(ndex_cred):
     if username is not None and password is not None:
         return username, password
 
-    username = os.environ.get('NDEX_USERNAME')
-    password = os.environ.get('NDEX_PASSWORD')
+    username = get_config('NDEX_USERNAME')
+    password = get_config('NDEX_PASSWORD')
 
     return username, password
 

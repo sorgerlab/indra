@@ -19,7 +19,7 @@ from datetime import datetime
 from collections import Counter
 from platform import system
 import logging
-
+from indra import get_config
 
 logger = logging.getLogger('runreader')
 
@@ -615,7 +615,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     logger.info('Running REACH with force_fulltext=%s' % force_fulltext)
 
     # Get the path to the REACH JAR
-    path_to_reach = os.environ.get('REACHPATH', None)
+    path_to_reach = get_config('REACHPATH')
     if path_to_reach is None or not os.path.exists(path_to_reach):
         logger.warning(
             'Reach path not set or invalid. Check REACHPATH environment var.'
@@ -625,7 +625,7 @@ def run_reach(pmid_list, base_dir, num_cores, start_index, end_index,
     logger.info('Using REACH jar at: %s' % path_to_reach)
 
     # Get the REACH version
-    reach_version = os.environ.get('REACH_VERSION', None)
+    reach_version = get_config('REACH_VERSION')
     if reach_version is None:
         logger.info('REACH version not set in REACH_VERSION')
         m = re.match('reach-(.*?)\.jar', os.path.basename(path_to_reach))

@@ -1,5 +1,12 @@
 {
     "REACHPATH": "~/workspace/lib/reach-82631d-biores-e9ee36.jar",
-    "EIDOSPATH": "~/software/eidos/target/scala-2.12/eidos-assembly-0.1.6-SNAPSHOT.jar"
+    "EIDOSPATH": "~/software/eidos/target/scala-2.12/eidos-assembly-0.1.6-SNAPSHOT.jar",
+    "NDEX_USERNAME": "",
+    "NDEX_PASSWORD": "",
+    "REACH_VERSION": "",
+    "TEST_FLAG": "",
+    "ELSEVIER_API_KEY": "",
+    "ELSEVIER_INST_KEY": ""
+
 }
 
