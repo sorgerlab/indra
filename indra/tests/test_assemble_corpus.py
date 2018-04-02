@@ -170,6 +170,19 @@ def test_map_grounding():
     assert(st_out[0].obj.db_refs.get('FPLX'))
     assert(st_out[0].obj.name == 'ERK')
 
+
+def test_map_grounding_user_map():
+    gm = {'MEK': {'XXX': 'YYY'}, 'ERK': {'FPLX': 'ERK'}}
+    a = Agent('MEK', db_refs={'TEXT': 'MEK'})
+    b = Agent('X', db_refs={'TEXT': 'ERK'})
+    st = Activation(a, b)
+    st_out = ac.map_grounding([st], grounding_map=gm, do_rename=True)
+    assert(len(st_out) == 1)
+    assert(st_out[0].subj.db_refs.get('XXX') == 'YYY')
+    assert(st_out[0].obj.db_refs.get('FPLX') == 'ERK')
+    assert(st_out[0].obj.name == 'ERK')
+
+
 def test_map_sequence():
     a = Agent('MAPK1', db_refs={'UP': 'P28482', 'HGNC': '6871'})
     st1 = Phosphorylation(None, a, 'T', '182')

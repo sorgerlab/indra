@@ -81,7 +81,7 @@ class IncrementalModel(object):
         logger.info('%d statements after relevance filter' % len(stmts))
         return stmts
 
-    def preassemble(self, filters=None):
+    def preassemble(self, filters=None, grounding_map=None):
         """Preassemble the Statements collected in the model.
 
         Use INDRA's GroundingMapper, Preassembler and BeliefEngine
@@ -99,6 +99,10 @@ class IncrementalModel(object):
         filters : Optional[list[str]]
             A list of filter options to apply when choosing the statements.
             See description above for more details. Default: None
+        grounding_map : Optional[dict]
+            A user supplied grounding map which maps a string to a
+            dictionary of database IDs (in the format used by Agents'
+            db_refs).
         """
         stmts = self.get_statements()
 
@@ -106,7 +110,10 @@ class IncrementalModel(object):
         stmts = ac.filter_no_hypothesis(stmts)
 
         # Fix grounding
-        stmts = ac.map_grounding(stmts)
+        if grounding_map is not None:
+            stmts = ac.map_grounding(stmts, grounding_map=grounding_map)
+        else:
+            stmts = ac.map_grounding(stmts)
 
         if filters and ('grounding' in filters):
             stmts = ac.filter_grounded_only(stmts)

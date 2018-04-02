@@ -417,7 +417,7 @@ def get_ndex_cred(config):
 
 
 def run_machine(model_path, pmids, belief_threshold, search_genes=None,
-                ndex_cred=None, twitter_cred=None):
+                ndex_cred=None, twitter_cred=None, grounding_map=None):
     start_time_local = datetime.datetime.now(tzlocal.get_localzone())
     date_str = make_date_str()
 
@@ -450,7 +450,7 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
     stats = {}
     logger.info(time.strftime('%c'))
     logger.info('Preassembling original model.')
-    model.preassemble(filters=global_filters)
+    model.preassemble(filters=global_filters, grounding_map=grounding_map)
     logger.info(time.strftime('%c'))
 
     # Original statistics
@@ -469,7 +469,7 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
     stats['new_papers'], stats['new_abstracts'], stats['existing'] = \
         extend_model(model_path, model, pmids, start_time_local)
     # Having added new statements, we preassemble the model
-    model.preassemble(filters=global_filters)
+    model.preassemble(filters=global_filters, grounding_map=grounding_map)
 
     # New statistics
     stats['new_stmts'] = len(model.get_statements())
@@ -594,6 +594,19 @@ def run_with_search_helper(model_path, config):
         logger.info('Collected %d PMIDs from PubMed search_terms.', num_pmids)
         pmids = _extend_dict(pmids, pmids_term)
 
+    # Get optional grounding map
+    gm_path = config.get('grounding_map_path')
+    if gm_path:
+        try:
+            from indra.preassembler.grounding_mapper import load_grounding_map
+            grounding_map = load_grounding_map(gm_path)
+        except Exception as e:
+            logger.error('Could not load grounding map from %s' % gm_path)
+            logger.error(e)
+            grounding_map = None
+    else:
+        grounding_map = None
+
     '''
     # Get PMIDs for search_genes
     # Temporarily removed because Entrez-based article searches
@@ -613,7 +626,8 @@ def run_with_search_helper(model_path, config):
         belief_threshold,
         search_genes=search_genes,
         ndex_cred=ndex_cred,
-        twitter_cred=twitter_cred
+        twitter_cred=twitter_cred,
+        grounding_map=grounding_map
     )
 
 
@@ -640,10 +654,24 @@ def run_with_pmids_helper(model_path, pmids):
     twitter_cred = get_twitter_cred(config)
     ndex_cred = get_ndex_cred(config)
 
+    # Get optional grounding map
+    gm_path = config.get('grounding_map_path')
+    if gm_path:
+        try:
+            from indra.preassembler.grounding_mapper import load_grounding_map
+            grounding_map = load_grounding_map(gm_path)
+        except Exception as e:
+            logger.error('Could not load grounding map from %s' % gm_path)
+            logger.error(e)
+            grounding_map = None
+    else:
+        grounding_map = None
+
     run_machine(
         model_path,
         {'enumerated': [pmid.strip() for pmid in pmids]},
         belief_threshold,
         ndex_cred=ndex_cred,
-        twitter_cred=twitter_cred
+        twitter_cred=twitter_cred,
+        grounding_map=grounding_map
     )
