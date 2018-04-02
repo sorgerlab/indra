@@ -81,9 +81,9 @@ class CWMSProcessor(object):
             # Each cause should involve a factor term and an outcome term
             factor = cc.find("arg/[@role=':FACTOR']")
             outcome = cc.find("arg/[@role=':OUTCOME']")
-
+            polarity = 1
             self.make_statement_noun_cause_effect(cc, factor, outcome,
-                                                  Influence)
+                                                  polarity)
 
     def extract_noun_inhibit_relations(self):
         """Extracts relationships involving one term/noun inhibiting another
@@ -93,9 +93,9 @@ class CWMSProcessor(object):
             # Each inhibit event should involve an agent and an affected
             agent = event.find("*[@role=':AGENT']")
             affected = event.find("*[@role=':AFFECTED']")
-
+            polarity = -1
             self.make_statement_noun_cause_effect(event, agent, affected,
-                                                  Inhibition)
+                                                  polarity)
 
     def extract_noun_influence_relations(self):
         """Extracts relationships with one term influencing another term."""
@@ -104,13 +104,12 @@ class CWMSProcessor(object):
             # Each cause should involve a factor term and an outcome term
             factor = cc.find("arg/[@role=':FACTOR']")
             outcome = cc.find("arg/[@role=':OUTCOME']")
-
+            polarity = 1
             self.make_statement_noun_cause_effect(cc, factor, outcome,
-                                                  Influence)
+                                                  polarity)
 
     def make_statement_noun_cause_effect(self, event_element,
-                                         cause, affected, statement_type):
-
+                                         cause, affected, polarity):
         # Only process if both the cause and affected are present
         if cause is None or affected is None:
             return
@@ -158,7 +157,12 @@ class CWMSProcessor(object):
         ev.epistemics['direct'] = False
 
         # Make statement
-        st = statement_type(cause_concept, affected_concept, evidence=[ev])
+        if polarity == -1:
+            obj_delta = {'polarity': -1, 'adjectives': []}
+        else:
+            obj_delta = None
+        st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
+                       evidence=[ev])
         self.statements.append(st)
 
     def _get_evidence(self, event_tag):
