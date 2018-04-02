@@ -8,6 +8,7 @@ import requests
 from collections import Counter
 from indra.statements import Complex, Agent, Evidence
 from indra.databases import hgnc_client
+from indra import has_config, get_config
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
@@ -28,8 +29,8 @@ except IOError:
                  'variable $%s.' % api_key_env_name)
     logger.error(api_key_file)
     # Try the environment variable
-    if api_key_env_name in os.environ:
-        api_key = os.environ.get(api_key_env_name)
+    if has_config(api_key_env_name):
+        api_key = get_config(api_key_env_name)
     else:
         logger.error('No BioGRID API key found in environment variable '
                      '%s.' % api_key_env_name)
