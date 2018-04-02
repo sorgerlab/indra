@@ -1,8 +1,11 @@
 import re
 import boto3
 
-def kill_all(job_queue, reason='None given'):
+
+def kill_all(job_queue, reason='None given', states=None):
     """Terminates/cancels all RUNNING, RUNNABLE, and STARTING jobs."""
+    if states is None:
+        states = ['STARTING', 'RUNNABLE', 'RUNNING']
     batch = boto3.client('batch')
     runnable = batch.list_jobs(jobQueue=job_queue, jobStatus='RUNNABLE')
     job_info = runnable.get('jobSummaryList')
@@ -11,7 +14,8 @@ def kill_all(job_queue, reason='None given'):
         # Cancel jobs
         for job_id in job_ids:
             batch.cancel_job(jobId=job_id, reason=reason)
-    for status in ('STARTING', 'RUNNABLE', 'RUNNING'):
+    res_list = []
+    for status in states:
         running = batch.list_jobs(jobQueue=job_queue, jobStatus=status)
         job_info = running.get('jobSummaryList')
         if job_info:
@@ -19,6 +23,8 @@ def kill_all(job_queue, reason='None given'):
             for job_id in job_ids:
                 print('Killing %s' % job_id)
                 res = batch.terminate_job(jobId=job_id, reason=reason)
+                res_list.append(res)
+    return res_list
 
 
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
@@ -123,8 +129,9 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
         get_job_log(job, write_file=True)
 
 
-def analyze_reach_log(log):
+def analyze_reach_log(log_fname=None, log_str=None):
     """Return unifinished PMIDs given a log file name."""
+    assert bool(log_fname) ^ bool(log_str), 'Must specify log_fname OR log_str'
     def get_content_nums(txt):
         pat = 'Retrieved content for ([\d]+) / ([\d]+) papers to be read'
         res = re.match(pat, txt)
@@ -143,11 +150,12 @@ def analyze_reach_log(log):
         pmids = re.findall(pat, txt)
         return pmids
 
-    with open(log, 'r') as fh:
-        log = fh.read()
-    has_content, total = get_content_nums(log)
-    pmids_started = get_started(log)
-    pmids_finished = get_finished(log)
+    if log_fname:
+        with open(log_fname, 'r') as fh:
+            log_str = fh.read()
+    has_content, total = get_content_nums(log_str)
+    pmids_started = get_started(log_str)
+    pmids_finished = get_finished(log_str)
     pmids_not_done = set(pmids_started) - set(pmids_finished)
     return pmids_not_done
 

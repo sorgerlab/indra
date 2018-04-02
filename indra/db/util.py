@@ -134,8 +134,8 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
                   **kwargs):
     """Insert agents for statements that don't have any agents.
 
-    Note: This method currently works for both Statements and PAStatements and their
-    corresponding agents (Agents and PAAgents).
+    Note: This method currently works for both Statements and PAStatements and
+    their corresponding agents (Agents and PAAgents).
 
     Parameters:
     -----------
@@ -158,18 +158,23 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     """
     verbose = kwargs.pop('verbose', False)
     num_per_yield = kwargs.pop('num_per_yield', 100)
+    override_default_query = kwargs.pop('override_default_query', False)
     if len(kwargs):
         raise IndraDatabaseError("Unrecognized keyword argument(s): %s."
                                  % kwargs)
     # Build a dict mapping stmt UUIDs to statement IDs
     logger.info("Getting %s that lack %s in the database."
                 % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
-    stmts_w_agents_q = db.filter_query(
-        stmt_tbl_obj,
-        stmt_tbl_obj.id == agent_tbl_obj.stmt_id
-        )
-    stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-                         .except_(stmts_w_agents_q))
+    if not override_default_query:
+        stmts_w_agents_q = db.filter_query(
+            stmt_tbl_obj,
+            stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+            )
+        stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+                             .except_(stmts_w_agents_q))
+    else:
+        stmts_wo_agents_q = db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+    logger.debug("Getting stmts with query:\n%s" % str(stmts_wo_agents_q))
     if verbose:
         num_stmts = stmts_wo_agents_q.count()
         print("Adding agents for %d statements." % num_stmts)
@@ -211,10 +216,10 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
                     agent_data.append((db_stmt.id, ns, ag_id, role))
 
         # Optionally print another tick on the progress bar.
-        if verbose and i % (num_stmts//25) == 0:
+        if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
             print('|', end='', flush=True)
 
-    if verbose:
+    if verbose and num_stmts > 25:
         print()
 
     cols = ('stmt_id', 'db_name', 'db_id', 'role')
@@ -598,7 +603,7 @@ def get_readings_stats(fname=None, db=None):
     return
 
 
-def get_statements_stats(fname=None, db=None):
+def get_statements_stats(fname=None, db=None, indra_version=None):
     if db is None:
         db = get_primary_db()
     tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
@@ -607,14 +612,15 @@ def get_statements_stats(fname=None, db=None):
     __report_stat('\nStatement Statistics:', fname)
     __report_stat('---------------------', fname)
     stmt_q = db.filter_query(db.Statements)
+    if indra_version is not None:
+        stmt_q = stmt_q.filter(db.Statements.indra_version == indra_version)
     __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
     readers = db.session.query(db.Readings.reader).distinct().all()
     sources = db.session.query(db.TextContent.source).distinct().all()
     stats = ''
     for reader, in readers:
         for src, in sources:
-            cnt = db.filter_query(
-                db.Statements,
+            cnt = stmt_q.filter(
                 stmt_rdng_link,
                 tc_rdng_link,
                 db.Readings.reader == reader,
@@ -624,29 +630,30 @@ def get_statements_stats(fname=None, db=None):
                       % (reader, src, cnt))
     __report_stat("Statements by reader and content source:\n%s" % stats,
                   fname)
-    statements_by_db_source = (
-        db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
-        .filter(db.Statements.db_ref == db.DBInfo.id)
-        .distinct()
-        .group_by(db.DBInfo.db_name)
-        .all()
-        )
-    __report_stat(("Statements by database:\n    %s"
-                   % '\n    '.join(['%s: %d' % (s, n)
-                                    for s, n in statements_by_db_source])),
-                  fname
-                  )
-    statements_produced_by_indra_version = (
-        db.session.query(db.Statements.indra_version,
-                         func.count(db.Statements.id))
-        .group_by(db.Statements.indra_version)
-        .all()
-        )
-    __report_stat(("Number of statements by indra version:\n    %s"
-                   % '\n    '.join(['%s: %d' % (s, n) for s, n
-                                    in statements_produced_by_indra_version])),
-                  fname
-                  )
+    if indra_version is None:
+        statements_by_db_source = (
+            db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
+            .filter(db.Statements.db_ref == db.DBInfo.id)
+            .distinct()
+            .group_by(db.DBInfo.db_name)
+            .all()
+            )
+        __report_stat(("Statements by database:\n    %s"
+                       % '\n    '.join(['%s: %d' % (s, n)
+                                        for s, n in statements_by_db_source])),
+                      fname
+                      )
+        statements_by_indra_version = (
+            db.session.query(db.Statements.indra_version,
+                             func.count(db.Statements.id))
+            .group_by(db.Statements.indra_version)
+            .all()
+            )
+        __report_stat(("Number of statements by indra version:\n    %s"
+                       % '\n    '.join(['%s: %d' % (s, n) for s, n
+                                        in statements_by_indra_version])),
+                      fname
+                      )
     return
 
 

@@ -54,9 +54,10 @@ def test_get_clauses():
     db = get_test_db()
     id_dict = {'pmid': '17399955', 'pmcid': 'PMC3199586'}
     clauses = rdb.get_clauses(id_dict, db)
-    assert len(clauses) == 1
+    assert len(clauses) == 2
     clause = clauses[0]
-    assert 'IN' in str(clause) and 'OR' in str(clause)
+    assert 'IN' in str(clause),\
+        "Unexpected form for clause: %s" % str(clause)
 
 
 @attr('nonpublic')
@@ -225,7 +226,8 @@ def test_produce_readings():
 
     # Test reading again, without read_mode='all'
     outputs_2 = rdb.produce_readings(id_dict, reader_list, verbose=True, db=db)
-    assert len(outputs_2) == N_exp
+    assert len(outputs_2) == N_exp, \
+        "Got %d readings, expected %d." % (len(outputs_2), N_exp)
     assert all([rd.reading_id is not None for rd in outputs_2])
 
     # Test with read_mode='none' again.

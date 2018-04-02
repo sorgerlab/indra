@@ -80,26 +80,31 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     def check_logs(job_defs):
         stalled_jobs = set()
         for job_def in job_defs:
-            log_lines = get_job_log(job_def, write_file=False)
-            jid = job_def['jobId']
-            now = datetime.now()
-            if jid not in job_log_dict.keys():
-                logger.info("Adding job %s to the log tracker at %s."
-                            % (jid, now))
-                job_log_dict[jid] = {'log': log_lines,
-                                     'check_time': now}
-            elif len(job_log_dict[jid]['log']) == len(log_lines):
-                check_dt = now - job_log_dict[jid]['check_time']
-                logger.warning(('Job \'%s\' has not produced output for '
-                                '%d seconds.')
-                               % (job_def['jobName'], check_dt.seconds))
-                if check_dt.seconds > idle_log_timeout:
-                    logger.warning("Job \'%s\' has stalled.")
-                    stalled_jobs.add(jid)
-            else:
-                old_log = job_log_dict[jid]['log']
-                old_log += log_lines[len(old_log):]
-                job_log_dict[jid]['check_time'] = now
+            try:
+                log_lines = get_job_log(job_def, write_file=False)
+                jid = job_def['jobId']
+                now = datetime.now()
+                if jid not in job_log_dict.keys():
+                    logger.info("Adding job %s to the log tracker at %s."
+                                % (jid, now))
+                    job_log_dict[jid] = {'log': log_lines,
+                                         'check_time': now}
+                elif len(job_log_dict[jid]['log']) == len(log_lines):
+                    check_dt = now - job_log_dict[jid]['check_time']
+                    logger.warning(('Job \'%s\' has not produced output for '
+                                    '%d seconds.')
+                                   % (job_def['jobName'], check_dt.seconds))
+                    if check_dt.seconds > idle_log_timeout:
+                        logger.warning("Job \'%s\' has stalled."
+                                       % job_def['jobName'])
+                        stalled_jobs.add(jid)
+                else:
+                    old_log = job_log_dict[jid]['log']
+                    old_log += log_lines[len(old_log):]
+                    job_log_dict[jid]['check_time'] = now
+            except Exception as e:
+                logger.error("Failed to check log for: %s" % str(job_def))
+                logger.exception(e)
         return stalled_jobs
 
     # Don't start watching jobs added after this command was initialized.
@@ -196,19 +201,23 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
                 f.write(log_str)
 
     for job_def_tpl in job_defs:
-        job_def = dict(job_def_tpl)
-        lines = get_job_log(job_def, write_file=False)
-        if lines is None:
-            logger.warning("No logs found for %s." % job_def['jobName'])
-            continue
-        log_str = ''.join(lines)
-        base_name = job_def['jobName']
-        if job_def['jobId'] in success_ids:
-            base_name += '_SUCCESS'
-        elif job_def['jobId'] in failure_ids:
-            base_name += '_FAILED'
-        logger.info('Stashing ' + base_name)
-        stash_log(log_str, base_name)
+        try:
+            job_def = dict(job_def_tpl)
+            lines = get_job_log(job_def, write_file=False)
+            if lines is None:
+                logger.warning("No logs found for %s." % job_def['jobName'])
+                continue
+            log_str = ''.join(lines)
+            base_name = job_def['jobName']
+            if job_def['jobId'] in success_ids:
+                base_name += '_SUCCESS'
+            elif job_def['jobId'] in failure_ids:
+                base_name += '_FAILED'
+            logger.info('Stashing ' + base_name)
+            stash_log(log_str, base_name)
+        except Exception as e:
+            logger.error("Failed to save logs for: %s" % str(job_def_tpl))
+            logger.exception(e)
     return
 
 
@@ -273,14 +282,15 @@ def tag_instances(cluster_name, project='cwc'):
     ec2 = boto3.resource('ec2')
     for instance_id in ec2_instance_ids:
         instance = ec2.Instance(instance_id)
-        for tag in instance.tags:
-            if tag.get('Key') == 'project':
-                break
-        else:
-            logger.info('Adding project tag "%s" to instance %s' %
-                        (project, instance_id))
-            instance.create_tags(Tags=[{'Key': 'project',
-                                        'Value': project}])
+        if instance.tags is not None:
+            for tag in instance.tags:
+                if tag.get('Key') == 'project':
+                    break
+            else:
+                logger.info('Adding project tag "%s" to instance %s' %
+                            (project, instance_id))
+                instance.create_tags(Tags=[{'Key': 'project',
+                                            'Value': project}])
     return
 
 

@@ -81,6 +81,11 @@ if __name__ == '__main__':
         help='Make the reader only read full text from the database.',
         action='store_true'
         )
+    parser.add_argument(
+        '--use-best-fulltext',
+        help='Use only the best full text available.',
+        action='store_true'
+        )
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
@@ -153,6 +158,41 @@ def get_id_dict(id_str_list):
     return id_dict
 
 
+def get_priority_tcids(id_dict, priorities, always_add=None, db=None):
+    """For all ids, besides tcids, choose best content available.
+
+    This function will convert all ids to tcids.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    def is_better(new, old):
+        if new in priorities and old in priorities:
+            return priorities.index(new) < priorities.index(old)
+        return False
+
+    logger.debug("Getting content prioritized by %s." % str(priorities))
+    tcids = set(id_dict.pop('tcid', []))
+    clauses = get_clauses(id_dict, db)
+    tcid_source = set()
+    for clause in clauses:
+        q = (db.session.query(db.TextRef.id, db.TextContent.id,
+                              db.TextContent.source)
+             .filter(db.TextContent.text_ref_id == db.TextRef.id, clause))
+        id_set = set(q.all())
+        logger.debug("Got %d more ids." % len(id_set))
+        tcid_source |= id_set
+    logger.debug("Got %d id's total." % len(tcid_source))
+    tr_best = {}
+    for trid, tcid, source in tcid_source:
+        if trid not in tr_best.keys() or is_better(source, tr_best[trid][0]):
+            tr_best[trid] = (source, tcid)
+        if always_add is not None and source in always_add:
+            tcids.add(tcid)
+    tcids |= {tcid for _, tcid in tr_best.values()}
+    return tcids
+
+
 def get_clauses(id_dict, db):
     """Get a list of clauses to be passed to a db query.
 
@@ -180,14 +220,17 @@ def get_clauses(id_dict, db):
         `db.filter_query(<table>, <other clauses>, *clause_list)`.
         If the id_dict has no ids, an effectively empty condition is returned.
     """
+    # Handle all id types besides text ref ids (trid) and text content ids (tcid).
     id_condition_list = [getattr(db.TextRef, id_type).in_(id_list)
                          for id_type, id_list in id_dict.items()
                          if len(id_list) and id_type not in ['tcid', 'trid']]
+
+    # Handle the special id types trid and tcid.
     for id_type, table in [('trid', db.TextRef), ('tcid', db.TextContent)]:
         if id_type in id_dict.keys() and len(id_dict[id_type]):
             int_id_list = [int(i) for i in id_dict[id_type]]
             id_condition_list.append(table.id.in_(int_id_list))
-    return [sql.or_(*id_condition_list)]
+    return id_condition_list
 
 
 def get_text_content_summary_string(q, db, num_ids=None):
@@ -281,7 +324,11 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
     # If we are actually getting anything, else we return None.
     if ids == 'all' or any([len(id_list) > 0 for id_list in ids.values()]):
         if ids is not 'all':
-            clauses += get_clauses(ids, db)
+            sub_clauses = get_clauses(ids, db)
+            if len(sub_clauses) > 1:
+                clauses.append(sql.or_(*sub_clauses))
+            else:
+                clauses.append(*sub_clauses)
 
         # Get the text content query object
         tc_query = db.filter_query(
@@ -361,7 +408,11 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
 
     if ids == 'all' or any([id_list for id_list in ids.values()]):
         if ids != 'all':
-            clauses += get_clauses(ids, db)
+            sub_clauses = get_clauses(ids, db)
+            if len(sub_clauses) > 1:
+                clauses.append(sql.or_(*sub_clauses))
+            else:
+                clauses.append(*sub_clauses)
 
         readings_query = db.filter_query(
             db.Readings,
@@ -544,7 +595,8 @@ def upload_readings(output_list, db=None):
 
 def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
                      force_fulltext=False, batch_size=1000, no_upload=False,
-                     pickle_file=None, db=None, log_readers=True):
+                     pickle_file=None, db=None, log_readers=True,
+                     prioritize=False):
     """Produce the reading output for the given ids, and upload them to db.
 
     This function will also retrieve pre-existing readings from the database,
@@ -593,6 +645,14 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
     logger.debug("Producing readings in %s mode." % read_mode)
     if db is None:
         db = get_primary_db()
+
+    # Sort out our priorities
+    if prioritize:
+        logger.debug("Prioritizing...")
+        tcids = get_priority_tcids(id_dict,
+                                   ['pmc_oa', 'manuscripts', 'elsevier'],
+                                   always_add=['pubmed'], db=db)
+        id_dict = {'tcid': list(tcids)}
 
     prev_readings = []
     skip_reader_tcid_dict = None
@@ -652,7 +712,10 @@ def upload_statements(stmt_data_list, db=None):
     logger.info("Uploading agents to the database.")
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     if len(reading_id_set):
-        insert_agents(db, db.Statements, db.Agents)
+        uuid_set = {s.statement.uuid for s in stmt_data_list}
+        insert_agents(db, db.Statements, db.Agents,
+                      db.Statements.uuid.in_(uuid_set), verbose=True,
+                      override_default_query=True)
     return
 
 
@@ -743,7 +806,8 @@ if __name__ == "__main__":
                                    read_mode=args.mode, batch_size=args.b_in,
                                    force_fulltext=args.force_fulltext,
                                    no_upload=args.no_reading_upload,
-                                   pickle_file=reading_pickle)
+                                   pickle_file=reading_pickle,
+                                   prioritize=args.prioritize)
 
         # Convert the outputs to statements ==================================
         produce_statements(outputs, no_upload=args.no_statement_upload,
