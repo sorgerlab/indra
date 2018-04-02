@@ -76,7 +76,7 @@ class EidosJsonLdProcessor(object):
                         concept = g['ontologyConcept'][1:]
                     else:
                         concept = g['ontologyConcept']
-                    grounding_tuples.append((g['value'], concept))
+                    grounding_tuples.append((concept, g['value']))
             return grounding_tuples
 
         def _make_concept(entity):
