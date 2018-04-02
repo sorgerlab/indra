@@ -192,3 +192,34 @@ such that they can be installed with ``pip``.
     pip install indra[machine]
 
 In other cases a specific `README` or `requirements.txt` is provided in the folder to guide the set up.
+
+Configuring INDRA
+----------------
+Various aspects of INDRA, including API keys, dependency locations, and
+Java memory limits, are parameterized by a configuration file that lives in
+~/.config/indra/config.json. The default
+configuration file is provided in indra/resources/default_config.json, and
+is copied to ~/.config/indra/config.json when INDRA starts if no configuration
+already exists. Every value in the configuration can also be set as an
+environment variable: for a given configuration key, INDRA will first check
+for an environment variable with that name and if not present, will use
+the value in the configuration file.
+
+Configuration values include:
+- REACHPATH: The location of the jar containing the REACH reader.
+
+- EIDOSPATH: The location of the jar containing the eidos reader.
+
+- NDEX_USERNAME, NDEX_PASSWORD: credentials for accessing the ndex web service
+
+- ELSEVIER_API_KEY, ELSEVIER_INST_KEY: Elsevier web service API keys
+
+- BIOGRID_API_KEY: API key for biogrid web service (see 
+  http://wiki.thebiogrid.org/doku.php/biogridrest)
+
+- INDRA_DEFAULT_JAVA_MEM_LIMIT: maximum memory limit for Java virtual machines
+  launched by INDRA
+
+- primary: primary database address
+
+- test-1, test-2: test database addresses
