@@ -77,6 +77,10 @@ def test_process_text_json_ld():
     # this should work
     # assert len(stmt.subj.db_refs['EIDOS']) > 5
     # assert len(stmt.obj.db_refs['EIDOS']) > 5
+    # Make sure sanitization works
+    sanitized = ep._sanitize('-LRB-something-RRB-')
+    assert sanitized == '(something)'
+
 
 
 def test_eidos_to_cag():

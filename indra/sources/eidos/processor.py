@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import re
 import json
 import logging
 import objectpath
@@ -7,7 +8,6 @@ from indra.statements import Influence, Concept, Evidence
 
 
 logger = logging.getLogger('eidos')
-
 
 class EidosJsonLdProcessor(object):
     """This processor extracts INDRA Statements from Eidos JSON-LD output.
@@ -110,13 +110,21 @@ class EidosJsonLdProcessor(object):
 
     @staticmethod
     def _get_evidence(event):
-        text = event.get('text')
+        """Return the Evidence object for the INDRA Statment."""
+        text = EidosJsonLdProcessor._sanitize(event.get('text'))
         annotations = {
                 'found_by'   : event.get('rule'),
                 'provenance' : event.get('provenance'),
                 }
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]
+
+    @staticmethod
+    def _sanitize(text):
+        """Return sanitized Eidos text field for human readability."""
+        d = {'-LRB-': '(', '-RRB-': ')'}
+        return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+
 
 
 class EidosJsonProcessor(object):
