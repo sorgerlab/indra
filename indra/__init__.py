@@ -26,6 +26,7 @@ class Lib2to3LoggingModuleShim(object):
 lib2to3.pgen2.driver.logging = Lib2to3LoggingModuleShim()
 logging.getLogger('lib2to3').setLevel(logging.ERROR)
 
+logger = logging.getLogger('indra')
 
 # If the configuration file does not exist, try to create it from the default
 config_dir = os.path.expanduser('~/.config/indra')
@@ -39,8 +40,32 @@ if not os.path.isfile(config_path):
 # Load the configuration file
 with open(config_path, 'r') as f:
     config_contents = f.read()
-    config = json.loads(config_contents)
+    config_file = json.loads(config_contents)
 
     # Expand ~ to the home directory
-    for key in config:
-        config[key] = os.path.expanduser(config[key])
+    for key in config_file:
+        config_file[key] = os.path.expanduser(config_file[key])
+
+def get_config(key):
+    """Returns the configuration value, first checking the environemnt
+    variables and then, if it's not present there, checking the configuration
+    file.
+
+    Parameters
+    ----------
+    key: str
+        The key for the configuration value to fetch
+
+    Returns
+    -------
+    value: str
+        The configuration value
+    """
+    if key in os.environ:
+        return os.environ[key]
+    elif key in config_file:
+        return config_file[key]
+    else:
+        logger.warning('Could not find ' + str(key) +
+                           ' in environment variables or configuration file')
+        return None
