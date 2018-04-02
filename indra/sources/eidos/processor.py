@@ -59,6 +59,8 @@ class EidosJsonLdProcessor(object):
                 if 'modifiers' in x['states'][0].keys():
                     return [mod['text'] for mod in
                             x['states'][0]['modifiers']]
+                else:
+                    return []
             else:
                 return []
 
@@ -97,9 +99,9 @@ class EidosJsonLdProcessor(object):
                 obj = entity_dict[event['destinations'][0]['@id']]
 
                 subj_delta = {'adjectives': get_adjectives(subj),
-                            'polarity': get_polarity(subj)}
+                              'polarity': get_polarity(subj)}
                 obj_delta = {'adjectives': get_adjectives(obj),
-                            'polarity': get_polarity(obj)}
+                             'polarity': get_polarity(obj)}
 
                 evidence = self._get_evidence(event)
 
