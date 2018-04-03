@@ -350,14 +350,22 @@ def filter_grounded_only(stmts_in, **kwargs):
         grounded = True
         for agent in st.agent_list():
             if agent is not None:
-                if (not agent.db_refs) or \
-                   ((len(agent.db_refs) == 1) and agent.db_refs.get('TEXT')):
+                db_names = list(set(agent.db_refs.keys()) - set(['TEXT']))
+                # If there are no entries at all other than possibly TEXT
+                if not db_names:
                     grounded = False
                     break
-                # Handle scored list of agents if we have a threshold
+                # If there are entries but they point to None / empty values
+                if not all([agent.db_refs[db_name] for db_name in db_names]):
+                    grounded = False
+                    break
+                # If we are looking for scored groundings with a threshold
                 if score_threshold:
-                    for key, val in agent.db_refs.items():
-                        if isinstance(val, list):
+                    for db_name in db_names:
+                        val = agent.db_refs[db_name]
+                        # If it's a list with some values, find the
+                        # highest scoring match and compare to threshold
+                        if isinstance(val, list) and val:
                             high_score = sorted(val, key=lambda x: x[1],
                                                 reverse=True)[0][1]
                             if high_score < score_threshold:

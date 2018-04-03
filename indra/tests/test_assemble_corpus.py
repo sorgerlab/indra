@@ -67,6 +67,9 @@ def test_filter_grounded_only_score():
     assert len(ac.filter_grounded_only([st1], score_threshold=0.6)) == 1
     assert len(ac.filter_grounded_only([st1], score_threshold=0.85)) == 0
     assert len(ac.filter_grounded_only([st1], score_threshold=0.95)) == 0
+    c3 = Concept('x', db_refs={'a': []})
+    st2 = Influence(c1, c3)
+    assert len(ac.filter_grounded_only([st2])) == 0
 
 
 def test_filter_uuid_list():
