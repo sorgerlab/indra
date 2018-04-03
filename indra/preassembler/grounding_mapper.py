@@ -102,40 +102,84 @@ class GroundingMapper(object):
         # Iterate over the agents
         mapped_agent_list = mapped_stmt.agent_list()
 
-        # Add any agents in the bound condition to the agent list
-        for agent in mapped_agent_list:
-            if agent is not None:
-                bc_agents = [bc.agent for bc in agent.bound_conditions]
-                mapped_agent_list.extend(bc_agents)
-
-        for idx, agent in enumerate(mapped_agent_list):
+        # Update agents directly participating in the statement
+        agent_list = mapped_stmt.agent_list()
+        for idx in range(len(agent_list)):
+            agent = agent_list[idx]
             if agent is None or agent.db_refs.get('TEXT') is None:
                 continue
-            agent_text = agent.db_refs.get('TEXT')
-            mapped_to_agent_json = self.agent_map.get(agent_text)
-            if mapped_to_agent_json:
-                mapped_to_agent = \
-                    Agent._from_json(mapped_to_agent_json['agent'])
-                mapped_agent_list[idx] = mapped_to_agent
-                mapped_stmt.set_agent_list(mapped_agent_list)
-            # Look this string up in the grounding map
-            # If not in the map, leave agent alone and continue
-            if agent_text in self.gm.keys():
-                map_db_refs = self.gm[agent_text]
-            else:
-                continue
-            # If it's in the map but it maps to None, then filter out
-            # this statement by skipping it
-            if map_db_refs is None:
-                # Increase counter if this statement has not already
-                # been skipped via another agent
-                logger.debug("Skipping %s" % agent_text)
+
+            new_agent, maps_to_none = self.map_agent(agent, do_rename)
+
+            if maps_to_none:
+                # Skip the entire statement if the agent maps to None in the
+                # grounding map
                 return None
-            # If it has a value that's not None, map it and add it
-            else:
-                # Otherwise, update the agent's db_refs field
-                self.update_agent_db_refs(agent, agent_text, do_rename)
+
+            # If the old agent had bound conditions, but the new agent does
+            # not, copy the bound conditions over
+            if new_agent is not None and len(new_agent.bound_conditions) == 0:
+                new_agent.bound_conditions = agent.bound_conditions
+
+            agent_list[idx] = new_agent
+
+        mapped_stmt.set_agent_list(agent_list)
+
+        # Update agents in the bound conditions
+        for agent in agent_list:
+            if agent is not None:
+                for bc in agent.bound_conditions:
+                    bc.agent, maps_to_none = self.map_agent(bc.agent, do_rename)
+                    if maps_to_none:
+                        # Skip the entire statement if the agent maps to None
+                        # in the grounding map
+                        return None
+
         return mapped_stmt
+
+    def map_agent(self, agent, do_rename):
+        """Grounds an agent; returns the new agent object (which might be
+        a different object if we load a new agent state from javascript).
+
+        Parameters
+        ----------
+        agent: indra.statements.Agent
+            The agent to map
+        do_rename: bool
+            Whether to rename the agent text
+
+        Returns
+        -------
+        grounded_agent: indra.statements.Agent
+            The grounded agent
+        maps_to_none: bool
+            Whether the agent is in the grounding map and maps to None
+        """
+
+        agent_text = agent.db_refs.get('TEXT')
+        mapped_to_agent_json = self.agent_map.get(agent_text)
+        if mapped_to_agent_json:
+            mapped_to_agent = \
+                Agent._from_json(mapped_to_agent_json['agent'])
+            return mapped_to_agent, False
+        # Look this string up in the grounding map
+        # If not in the map, leave agent alone and continue
+        if agent_text in self.gm.keys():
+            map_db_refs = self.gm[agent_text]
+        else:
+            return agent, False
+        # If it's in the map but it maps to None, then filter out
+        # this statement by skipping it
+        if map_db_refs is None:
+            # Increase counter if this statement has not already
+            # been skipped via another agent
+            logger.debug("Skipping %s" % agent_text)
+            return None, True
+        # If it has a value that's not None, map it and add it
+        else:
+            # Otherwise, update the agent's db_refs field
+            self.update_agent_db_refs(agent, agent_text, do_rename)
+        return agent, False
 
     def map_agents(self, stmts, do_rename=True):
         # Make a copy of the stmts

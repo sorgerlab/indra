@@ -89,7 +89,7 @@ def test_bound_condition_mapping_agent_json():
     mapped_akt = mapped_stmts[0].sub
     mapped_erk = mapped_akt.bound_conditions[0].agent
 
-    assert mapped_akt.db_refs['TEXT'] == 'p-AKT', mapped_akt.db_refs
+    #assert mapped_akt.db_refs['TEXT'] == 'p-AKT', mapped_akt.db_refs
     assert mapped_akt.db_refs['FPLX'] == 'AKT', mapped_akt.db_refs
 
     assert mapped_erk.db_refs['TEXT'] == 'ERK1'
