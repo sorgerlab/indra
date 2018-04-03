@@ -18,7 +18,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer kappy flask rdflib-jsonld
+  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@master
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
@@ -30,7 +30,7 @@ install:
   # Biopax/Paxtools dependencies
   - pip install jnius-indra
   # Download a number of useful resource files for testing purposes
-  - pip install .[machine]
+  - pip install .[all]
   - cd indra/benchmarks/assembly_eval/batch4
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz -nv
   - tar -xf trips_reach_batch4.gz

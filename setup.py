@@ -4,6 +4,8 @@ from setuptools import setup
 import sys
 
 
+
+
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
@@ -12,6 +14,15 @@ def main():
                     'networkx==1.11', 'pandas']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
+
+    extras_require = {'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
+                                  'pyyaml', 'click'],
+                      'explanation': ['kappy==4.0.0rc1'],
+                      'bbn': ['rdflib-jsonld'],
+                      'sofia': ['openpyxl']
+                      }
+    extras_require['all'] = list({dep for deps in extras_require.values()
+                                  for dep in deps})
 
     setup(name='indra',
           version='1.6.0',
@@ -43,6 +54,7 @@ def main():
                     'indra.tools.machine', 'indra.util'],
           install_requires=install_list,
           tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],
+          extras_require=extras_require,
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler',
                     'nlp', 'mechanism', 'biochemistry', 'network'],
@@ -58,10 +70,6 @@ def main():
             'Topic :: Scientific/Engineering :: Chemistry',
             'Topic :: Scientific/Engineering :: Mathematics',
             ],
-          extras_require={'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
-                                      'pyyaml', 'click'],
-                          'explanation': ['kappy==4.0.0rc1'],
-                          'bbn': ['rdflib-jsonld']},
           entry_points={'console_scripts':
                         ['indra-machine = indra.tools.machine.cli:main']}
         )
