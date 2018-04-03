@@ -3,6 +3,7 @@ from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import logging
 import numbers
+import textwrap
 import networkx as nx
 import itertools
 import numpy as np

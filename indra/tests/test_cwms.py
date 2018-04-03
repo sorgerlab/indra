@@ -46,7 +46,7 @@ def test_cwmsreader_cause():
 
     ev = s0.evidence[0]
     assert(ev.text == 'government causes agriculture.')
-    assert(ev.source_api == 'cwmsreader')
+    assert(ev.source_api == 'cwms')
 
 
 @attr('slow', 'webservice')
@@ -61,7 +61,7 @@ def test_cwmsreader_inhibit():
 
     s0 = statements[0]
     print('Statement:', s0)
-    assert(isinstance(s0, Inhibition))
+    assert(isinstance(s0, Influence))
     subj = s0.subj
     assert(subj.db_refs['TEXT'] == 'Persistent insecurity and armed conflict')
 
@@ -70,7 +70,7 @@ def test_cwmsreader_inhibit():
 
     ev = s0.evidence[0]
     assert(ev.text == text)
-    assert(ev.source_api == 'cwmsreader')
+    assert(ev.source_api == 'cwms')
 
 
 @attr('slow', 'webservice')
@@ -93,7 +93,7 @@ def test_cwmsreader_influence():
 
     ev = s0.evidence[0]
     assert(ev.text == 'government influences agriculture.')
-    assert(ev.source_api == 'cwmsreader')
+    assert(ev.source_api == 'cwms')
 
 
 def test_rdf_example1():

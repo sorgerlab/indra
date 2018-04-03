@@ -378,6 +378,12 @@ def get_uncond_agent(agent):
 def grounded_monomer_patterns(model, agent):
     """Get monomer patterns for the agent accounting for grounding information.
     """
+    # If it's not a molecular agent
+    if not isinstance(agent, ist.Agent):
+        monomer = model.monomers.get(agent.name)
+        if not monomer:
+            return
+        yield monomer()
     # Iterate over all model annotations to identify the monomer associated
     # with this agent
     monomer = None
@@ -407,9 +413,6 @@ def grounded_monomer_patterns(model, agent):
     if monomer is None:
         logger.info('No monomer found corresponding to agent %s' % agent)
         return
-    # If it's not a molecular agent
-    if not isinstance(agent, ist.Agent):
-        yield monomer()
     # Now that we have a monomer for the agent, look for site/state
     # combinations corresponding to the state of the agent. For every one of
     # the modifications specified in the agent signature, check to see if it
@@ -2309,6 +2312,8 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
         subj_pattern = get_monomer_pattern(model, stmt.subj)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+        if rule_name in [r.name for r in model.rules]:
+            return
         if not rate_law:
             param_name = 'kf_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
@@ -2326,7 +2331,8 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
             param_name = 'n_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
             n_hill = get_create_parameter(model, param_name, 1)
-            subj_obs = Observable(rule_name + '_subj_obs', subj_pattern)
+            obs_name = '%s_subj_obs' % rule_name
+            subj_obs = Observable(obs_name, subj_pattern)
             model.add_component(subj_obs)
             synth_rate = Expression(rule_name + '_rate',
                 kf * (subj_obs ** (n_hill-1)) / (Ka**n_hill + subj_obs**n_hill))
@@ -2354,7 +2360,7 @@ def influence_assemble_one_step(stmt, *args):
     if stmt.overall_polarity() == -1:
         return decreaseamount_assemble_one_step(stmt, *args)
     else:
-        return increaseamount_assemble_one_step(stmt, *args, rate_law='hill')
+        return increaseamount_assemble_one_step(stmt, *args)
 influence_monomers_default = influence_monomers_one_step
 influence_assemble_default = influence_assemble_one_step
 
