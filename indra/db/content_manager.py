@@ -538,6 +538,17 @@ class ContentManager(object):
             return completed
         return take_action
 
+    def _get_latest_update(self, db):
+        """Get the date of the latest update."""
+        update_list = db.select_all(db.Updates,
+                                    db.Updates.source == self.my_source)
+        if not len(update_list):
+            logger.error("The database has not had an initial upload, or else "
+                         "the updates table has not been populated.")
+            return False
+
+        return max([u.datetime for u in update_list])
+
     def populate(self, db):
         "A stub for the method used to initially populate the database."
         raise NotImplementedError(
@@ -1225,14 +1236,7 @@ class PmcOA(PmcManager):
 
     @ContentManager._record_for_review
     def update(self, db, n_procs=1):
-        update_list = db.select_all(db.Updates,
-                                    db.Updates.source == self.my_source)
-        if not len(update_list):
-            logger.error("The database has not had an initial upload, or else "
-                         "the updates table has not been populated.")
-            return False
-
-        min_datetime = max([u.datetime for u in update_list])
+        min_datetime = self._get_latest_update(db)
 
         # Search down through the oa_package directory. Below the first level,
         # the files are timestamped, so we can filter down each level
@@ -1413,20 +1417,10 @@ class Elsevier(ContentManager):
         self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
         return
 
-    @ContentManager._record_for_review
-    def populate(self, db, continuing=False):
-        """Load all available elsevier content for refs with no pmc content."""
-        # Note that we do not implement multiprocessing, because by the nature
-        # of the web API's used, we are limited by bandwidth from any one IP.
+    def _get_elsevier_content(self, db, tr_query, continuing=False):
+        """Get the elsevier content given a text ref query object."""
         pickle_stash_fname = path.join(THIS_DIR,
                                        'checked_elsevier_trid_stash.pkl')
-        tr_w_pmc_q = db.filter_query(
-            db.TextRef,
-            db.TextRef.id == db.TextContent.text_ref_id,
-            db.TextContent.source.in_([PmcOA.my_source, Manuscripts.my_source,
-                                       self.my_source])
-            )
-        tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
         tr_batch = set()
         if continuing:
             with open(pickle_stash_fname, 'rb') as f:
@@ -1437,7 +1431,7 @@ class Elsevier(ContentManager):
             tr_ids_checked = set()
         try:
             batch_num = 0
-            for tr in tr_wo_pmc_q.yield_per(1000):
+            for tr in tr_query.yield_per(1000):
                 # If we're continuing an earlier upload, don't check id's we've
                 # already checked.
                 if continuing and tr.id in tr_ids_checked:
@@ -1471,8 +1465,43 @@ class Elsevier(ContentManager):
         return True
 
     @ContentManager._record_for_review
-    def update(self, db, n_procs=1):
+    def populate(self, db, continuing=False):
+        """Load all available elsevier content for refs with no pmc content."""
+        # Note that we do not implement multiprocessing, because by the nature
+        # of the web API's used, we are limited by bandwidth from any one IP.
+        tr_w_pmc_q = db.filter_query(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.source.in_([PmcOA.my_source, Manuscripts.my_source,
+                                       self.my_source])
+            )
+        tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
+        return self._get_elsevier_content(db, tr_wo_pmc_q, continuing)
+
+    @ContentManager._record_for_review
+    def update(self, db, continuing=False):
         """Load all available new elsevier content from new pmids."""
+        latest_updatetime = self._get_latest_update(db)
+        new_trs = db.filter_query(
+            db.TextRef,
+            sql_exp.or_(
+                db.TextRef.last_updated > latest_updatetime,
+                db.TextRef.create_date > latest_updatetime,
+                sql_exp.and_(
+                    db.TextRef.id == db.TextContent.text_ref_id,
+                    db.TextContent.last_updated > latest_updatetime,
+                    db.TextContent.insert_date > latest_updatetime
+                    )
+                )
+            )
+        tr_w_pmc_q = db.filter_query(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.source.in_([PmcOA.my_source, Manuscripts.my_source,
+                                       self.my_source])
+            )
+        tr_query = new_trs.except_(tr_w_pmc_q)
+        return self._get_elsevier_content(db, tr_query, continuing)
 
 
 if __name__ == '__main__':
