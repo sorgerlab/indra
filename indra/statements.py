@@ -1092,6 +1092,10 @@ class Statement(object):
             return False
         return True
 
+    def contradicts(self, other, hierarchies):
+        # Placeholder for implementation in subclasses
+        return False
+
     def to_json(self):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
@@ -2518,6 +2522,16 @@ class Influence(IncreaseAmount):
                self.obj_delta['polarity'],
                set(self.obj_delta['adjectives']))
         return str(key)
+
+    def contradicts(self, other, hierarchies):
+        if self.entities_match(other) or \
+            self.refinement_of(other, hierarchies) or \
+            other.refinement_of(self, hierarchies):
+            sp = self.overall_polarity()
+            op = other.overall_polarity()
+            if sp and op and sp * op == -1:
+                return True
+        return False
 
     def overall_polarity(self):
         # Set p1 and p2 to None / 1 / -1 depending on polarity

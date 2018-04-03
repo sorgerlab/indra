@@ -1708,3 +1708,13 @@ def test_influence_refinement_of():
     pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
     assert I(pos_adj3, nopol_noadj).matches_key() == \
            I(pos_adj4, nopol_noadj).matches_key()
+
+    # Contradicts
+    assert I(pos_adj, neg_noadj).contradicts(
+           I(neg_adj, neg_noadj), hierarchies)
+    assert I(pos_adj, neg_noadj).contradicts(
+           I(pos_adj, pos_noadj), hierarchies)
+    assert not I(pos_adj, neg_noadj).contradicts(
+               I(pos_adj, neg_adj), hierarchies)
+    assert not I(pos_adj, neg_noadj).contradicts(
+               I(neg_adj, pos_adj), hierarchies)

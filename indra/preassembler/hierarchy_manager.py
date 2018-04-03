@@ -67,6 +67,18 @@ class HierarchyManager(object):
                 children_list.append(child)
                 self._children[parent] = children_list
 
+    def extend_with(self, rdf_file):
+        """Extend the RDF graph of this HierarchyManager with another RDF file.
+
+        Parameters
+        ----------
+        rdf_file : str
+            An RDF file which is parsed such that the current graph and the
+            graph described by the file are merged.
+        """
+        self.graph.parse(os.path.abspath(rdf_file), format='nt')
+        self.initialize()
+
     def build_transitive_closures(self):
         """Build the transitive closures of the hierarchy.
 
