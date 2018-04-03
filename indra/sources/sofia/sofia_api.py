@@ -45,6 +45,10 @@ def _process_row(header, row):
 
     subj_concept = Concept(subj)
     obj_concept = Concept(obj)
-    stmt = Influence(subj_concept, obj_concept)
+    text = row_dict.get('Sentence')
+    annot_keys = ['Relation', 'Event_Type', 'Location', 'Time']
+    annots = {k: row_dict.get(k) for k in annot_keys}
+    ev = Evidence(source_api='sofia', annotations=annots, text=text)
+    stmt = Influence(subj_concept, obj_concept, evidence=[ev])
     stmt.obj_delta['polarity'] = pol
     return stmt
