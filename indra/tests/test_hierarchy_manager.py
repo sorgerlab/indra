@@ -141,13 +141,14 @@ def test_get_parents():
     assert(len(p3) == 1)
     assert (ampk in p3)
 
+
 def test_load_eidos_hierarchy():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
     eidos_ns = 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#'
     hm = HierarchyManager(eidos_ont, True, True)
     assert hm.isa_closure
-    eidos_isa = lambda a, b: hm.isa(eidos_ns, a, eidos_ns, b)
+    eidos_isa = lambda a, b: hm.isa('EIDOS', a, 'EIDOS', b)
     assert eidos_isa('events/human/conflict/war',
                      'events/human/conflict')
     assert not eidos_isa('events/human/conflict/war',
@@ -158,3 +159,15 @@ def test_load_eidos_hierarchy():
                      'events')
     assert not eidos_isa('events',
                          'events/natural/weather/storm/tornado')
+
+
+def test_load_trips_hierarchy():
+    trips_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/cwms/trips_ontology.rdf')
+    hm = HierarchyManager(trips_ont, True, True)
+    assert hm.isa_closure
+    trips_isa = lambda a, b: hm.isa('CWMS', a, 'CWMS', b)
+    assert trips_isa('ONT::TRUCK', 'ONT::VEHICLE')
+    assert not trips_isa('ONT::VEHICLE', 'ONT::TRUCK')
+    assert trips_isa('ONT::MONEY', 'ONT::PHYS-OBJECT')
+    assert trips_isa('ONT::TABLE', 'ONT::MANUFACTURED-OBJECT')

@@ -1634,13 +1634,22 @@ def test_concept_get_grounding():
     assert Concept('g', db_refs=d7).get_grounding() == (None, None)
 
 
-def test_concept_isa():
+def test_concept_isa_eidos():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
-    eidos_ns = 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#'
     hm = HierarchyManager(eidos_ont, True, True)
     c1 = Concept('a', db_refs={'EIDOS': [('events/human/conflict/war', 1.0)]})
     c2 = Concept('b', db_refs={'EIDOS': [('events/human/conflict', 1.0)]})
+    assert c1.refinement_of(c2, {'entity': hm})
+    assert not c2.refinement_of(c1, {'entity': hm})
+
+
+def test_concept_isa_cwms():
+    trips_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/cwms/trips_ontology.rdf')
+    hm = HierarchyManager(trips_ont, True, True)
+    c1 = Concept('a', db_refs={'CWMS': 'ONT::TRUCK'})
+    c2 = Concept('b', db_refs={'CWMS': 'ONT::VEHICLE'})
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
 

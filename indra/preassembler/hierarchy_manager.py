@@ -334,6 +334,10 @@ class HierarchyManager(object):
         elif ns == 'EIDOS':
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
+        elif ns == 'CWMS':
+            if id.lower().startswith('ont::'):
+                id = id[5:]
+            return 'http://trips.ihmc.us/concepts/' + id.lower()
         else:
             return ns + id
 
