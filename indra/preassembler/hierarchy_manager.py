@@ -67,17 +67,16 @@ class HierarchyManager(object):
                 children_list.append(child)
                 self._children[parent] = children_list
 
-    def merge_with(self, other_hm):
-        """Merge this hierarchy manager with another one.
+    def extend_with(self, rdf_file):
+        """Extend the RDF graph of this HierarchyManager with another RDF file.
 
         Parameters
         ----------
-        other_hm : indra.preassembler.hierarchy_manager.HierarchyManager
-            Another HierarchyManager instance with which this one should
-            be merged. The two RDF graphs are combined and this
-            HierarchyManager is reinitialized.
+        rdf_file : str
+            An RDF file which is parsed such that the current graph and the
+            graph described by the file are merged.
         """
-        self.graph = self.graph + other_hm.graph
+        self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.initialize()
 
     def build_transitive_closures(self):
