@@ -331,6 +331,9 @@ def filter_grounded_only(stmts_in, **kwargs):
     ----------
     stmts_in : list[indra.statements.Statement]
         A list of statements to filter.
+    score_threshold : Optional[float]
+        If scored groundings are available in a list and the highest score
+        if below this threshold, the Statement is filtered out.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -342,6 +345,7 @@ def filter_grounded_only(stmts_in, **kwargs):
     logger.info('Filtering %d statements for grounded agents...' % 
                 len(stmts_in))
     stmts_out = []
+    score_threshold = kwargs.get('score_threshold')
     for st in stmts_in:
         grounded = True
         for agent in st.agent_list():
@@ -349,6 +353,16 @@ def filter_grounded_only(stmts_in, **kwargs):
                 if (not agent.db_refs) or \
                    ((len(agent.db_refs) == 1) and agent.db_refs.get('TEXT')):
                     grounded = False
+                    break
+                # Handle scored list of agents if we have a threshold
+                if score_threshold:
+                    for key, val in agent.db_refs.items():
+                        if isinstance(val, list):
+                            high_score = sorted(val, key=lambda x: x[1],
+                                                reverse=True)[0][1]
+                            if high_score < score_threshold:
+                                grounded = False
+                if not grounded:
                     break
         if grounded:
             stmts_out.append(st)

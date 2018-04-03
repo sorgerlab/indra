@@ -57,6 +57,18 @@ def test_filter_grounded_only():
     st_out = ac.filter_grounded_only([st3])
     assert len(st_out) == 0
 
+
+def test_filter_grounded_only_score():
+    c1 = Concept('x', db_refs={'a': [('x', 0.5), ('y', 0.8)]})
+    c2 = Concept('x', db_refs={'a': [('x', 0.7), ('y', 0.9)]})
+    st1 = Influence(c1, c2)
+    assert len(ac.filter_grounded_only([st1])) == 1
+    assert len(ac.filter_grounded_only([st1], score_threshold=0.4)) == 1
+    assert len(ac.filter_grounded_only([st1], score_threshold=0.6)) == 1
+    assert len(ac.filter_grounded_only([st1], score_threshold=0.85)) == 0
+    assert len(ac.filter_grounded_only([st1], score_threshold=0.95)) == 0
+
+
 def test_filter_uuid_list():
     st_out = ac.filter_uuid_list([st1, st4], [st1.uuid])
     assert len(st_out) == 1
