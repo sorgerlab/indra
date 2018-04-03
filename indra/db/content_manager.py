@@ -1348,7 +1348,7 @@ class Elsevier(ContentManager):
             title = title.replace(space_car, '')
         return title
 
-    def __select_elsevier_refs(self, tr_set):
+    def __select_elsevier_refs(self, tr_set, max_retries=2):
         """Try to check if this content is available on Elsevier."""
         elsevier_tr_set = set()
         for tr in tr_set.copy():
@@ -1362,7 +1362,22 @@ class Elsevier(ContentManager):
         if tr_set:
             pmid_set = {tr.pmid for tr in tr_set}
             tr_dict = {tr.pmid: tr for tr in tr_set}
-            meta_data_dict = get_metadata_for_ids(pmid_set)
+            num_retries = 0
+            while num_retries < max_retries:
+                try:
+                    meta_data_dict = get_metadata_for_ids(pmid_set)
+                    break
+                except Exception as e:
+                    num_retries += 1
+                    if num_retries < max_retries:
+                        logger.warning("Caught exception while getting "
+                                       "metadata. Retrying...")
+                    else:
+                        logger.error("No more tries for:\n%s" % str(pmid_set))
+                        logger.exception(e)
+                        meta_data_dict = None
+                        break
+
             if meta_data_dict is not None:
                 titles = {(pmid, meta['journal_title'])
                           for pmid, meta in meta_data_dict.items()}
