@@ -93,7 +93,8 @@ class CAGAssembler(object):
 
 
             # Add edge to the graph with metadata from statement
-            provenance = s.evidence[0].annotations.get('provenance', [])
+            if s.evidence:
+                provenance = s.evidence[0].annotations.get('provenance', [])
             if provenance:
                 provenance[0]['text'] = s.evidence[0].text
             self.CAG.add_edge(
