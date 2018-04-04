@@ -25,7 +25,7 @@ from indra.databases import hgnc_client, uniprot_client
 logger = logging.getLogger('signor')
 
 def _read_famplex_map():
-    fname = os.path.join(dirname(__file__), '../resources/famplex_map.tsv')
+    fname = os.path.join(dirname(__file__), '../../resources/famplex_map.tsv')
     raw_map = read_unicode_csv(fname, '\t')
 
     m = {}
@@ -34,52 +34,9 @@ def _read_famplex_map():
     return m
 famplex_map = _read_famplex_map()
 
-def _read_signor_complex_map():
-    fname = os.path.join(dirname(__file__), '../resources/SIGNOR_complexes.csv')
-    raw_map = read_unicode_csv(fname, ';')
 
-    m = {}
-    for row in raw_map:
-        m[row[0]] = row[2].split(',  ')
-    return m
-complex_map = _read_signor_complex_map()
-
-_default_csv_file = join(dirname(__file__), '..', '..', 'data',
+_default_csv_file = join(dirname(__file__), '..', '..', '..', 'data',
                          'all_data_23_09_17.csv')
-
-
-_signor_fields = [
-    'ENTITYA',
-    'TYPEA',
-    'IDA',
-    'DATABASEA',
-    'ENTITYB',
-    'TYPEB',
-    'IDB',
-    'DATABASEB',
-    'EFFECT',
-    'MECHANISM',
-    'RESIDUE',
-    'SEQUENCE',
-    'TAX_ID',
-    'CELL_DATA',
-    'TISSUE_DATA',
-    'MODULATOR_COMPLEX',
-    'TARGET_COMPLEX',
-    'MODIFICATIONA',
-    'MODASEQ',
-    'MODIFICATIONB',
-    'MODBSEQ',
-    'PMID',
-    'DIRECT',
-    'NOTES',
-    'ANNOTATOR',
-    'SENTENCE',
-    'SIGNOR_ID',
-]
-
-
-SignorRow = namedtuple('SignorRow', _signor_fields)
 
 
 _type_db_map = {
@@ -154,26 +111,6 @@ _effect_map = {
     'up-regulates quantity by stabilization': IncreaseAmount
 }
 
-def _get_complex_agents(complex_id):
-    # Returns a list of agents corresponding to each of the constituents
-    # in a SIGNOR complex
-    agents = []
-    components = complex_map[complex_id]
-    for c in components:
-        db_refs = {}
-
-        name = uniprot_client.get_gene_name(c)
-        if not name:
-            print('Could not look up', c, '(maybe the signor ' + \
-                    'complex component is not a UNIPROT id)')
-            db_refs['SIGNOR'] = id
-        else:
-            db_refs['UP'] = id
-            hgnc_id = hgnc_client.get_hgnc_id(name)
-            if hgnc_id:
-                db_refs['HGNC'] = hgnc_id
-        agents.append(Agent(c, db_refs=db_refs))
-    return agents
 
 
 class SignorProcessor(object):
@@ -196,32 +133,13 @@ class SignorProcessor(object):
         Counter listing the frequency of different MECHANISM types in the
         list of no-mechanism rows.
     """
-    def __init__(self, signor_csv=None, delimiter='\t'):
-        # Get generator over the CSV file
-        if signor_csv:
-            data_iter = read_unicode_csv(signor_csv, delimiter=delimiter,
-                                         skiprows=1)
-        # If no CSV given, download directly from web
+    def __init__(self, data, complex_map=None):
+        self._data = data
+        if complex_map is None:
+            self.complex_map = {}
         else:
-            url = 'https://signor.uniroma2.it/download_entity.php'
-            res = requests.post(url, data={'organism':'human',
-                                           'format':'csv',
-                                           'submit':'Download'})
-            if res.status_code == 200:
-                # Python 2 -- csv.reader will need bytes
-                if sys.version_info[0] < 3:
-                    csv_io = BytesIO(res.content)
-                # Python 3 -- csv.reader needs str
-                else:
-                    csv_io = StringIO(res.text)
-                data_iter = read_unicode_csv_fileobj(csv_io,
-                                                     delimiter=delimiter,
-                                                     skiprows=1)
-            else:
-                raise Exception('Could not download Signor data.')
-        # Process into a list of SignorRow namedtuples
-        # Strip off any funky \xa0 whitespace characters
-        self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
+            self.complex_map = complex_map
+
         # Process into statements
         self.statements = []
         self.no_mech_rows = []
@@ -236,20 +154,19 @@ class SignorProcessor(object):
                                   key=lambda x: x[1], reverse=True)
 
         # Add a Complex statement for each Signor complex
-        for complex_id in complex_map.keys():
-            agents = _get_complex_agents(complex_id)
+        for complex_id in self.complex_map.keys():
+            agents = self._get_complex_agents(complex_id)
             s = Complex(agents)
             self.statements.append(s)
 
 
-    @staticmethod
-    def _get_agent(ent_name, ent_type, id, database):
+    def _get_agent(self, ent_name, ent_type, id, database):
         # Returns a list of agents corresponding to this id
         # (If it is a signor complex, returns Agent objects corresponding to
         # each complex constituent)
-        if database == 'SIGNOR' and id in complex_map:
-            components = complex_map[id]
-            agents = _get_complex_agents(id)
+        if database == 'SIGNOR' and id in self.complex_map:
+            components = self.complex_map[id]
+            agents = self._get_complex_agents(id)
 
             # Return the first agent with the remaining agents as a bound
             # condition
@@ -287,6 +204,28 @@ class SignorProcessor(object):
 
             return Agent(name, db_refs=db_refs)
 
+    def _get_complex_agents(self, complex_id):
+        # Returns a list of agents corresponding to each of the constituents
+        # in a SIGNOR complex
+        agents = []
+        components = self.complex_map[complex_id]
+        for c in components:
+            db_refs = {}
+
+            name = uniprot_client.get_gene_name(c)
+            if not name:
+                print('Could not look up', c, '(maybe the signor ' + \
+                        'complex component is not a UNIPROT id)')
+                db_refs['SIGNOR'] = id
+            else:
+                db_refs['UP'] = id
+                hgnc_id = hgnc_client.get_hgnc_id(name)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+            agents.append(Agent(c, db_refs=db_refs))
+        return agents
+
+
     @staticmethod
     def _get_evidence(row):
         # Get epistemics (direct/indirect)
@@ -312,12 +251,11 @@ class SignorProcessor(object):
                         pmid=row.PMID, text=row.SENTENCE,
                         epistemics=epistemics, annotations=annotations)
 
-    @staticmethod
-    def _process_row(row):
-        agent_a = SignorProcessor._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
-                                             row.DATABASEA)
-        agent_b = SignorProcessor._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
-                                             row.DATABASEB)
+    def _process_row(self, row):
+        agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
+                                  row.DATABASEA)
+        agent_b = self._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
+                                  row.DATABASEB)
 
         evidence = SignorProcessor._get_evidence(row)
         stmts = []
