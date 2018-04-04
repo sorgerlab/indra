@@ -342,7 +342,8 @@ class ModCondition(object):
         if self.is_modified != other.is_modified:
             return False
         type_match = (self.mod_type == other.mod_type or
-            mod_hierarchy.isa('INDRA', self.mod_type, 'INDRA', other.mod_type))
+            mod_hierarchy.isa('INDRA_MODS', self.mod_type,
+                              'INDRA_MODS', other.mod_type))
         residue_match = (self.residue == other.residue or
             (self.residue is not None and other.residue is None))
         pos_match = (self.position == other.position or
@@ -447,8 +448,8 @@ class ActivityCondition(object):
             return False
         if self.activity_type == other.activity_type:
             return True
-        if activity_hierarchy.isa('INDRA', self.activity_type,
-                                  'INDRA', other.activity_type):
+        if activity_hierarchy.isa('INDRA_ACTIVITIES', self.activity_type,
+                                  'INDRA_ACTIVITIES', other.activity_type):
             return True
 
     def equals(self, other):
@@ -805,7 +806,8 @@ class Agent(Concept):
             # If the other location is part of this location then
             # self.location is not a refinement
             if not hierarchies['cellular_component'].partof(
-               'INDRA', self.location, 'INDRA', other.location):
+               'INDRA_LOCATIONS', self.location,
+               'INDRA_LOCATIONS', other.location):
                 return False
 
         # ACTIVITY
@@ -1664,8 +1666,10 @@ class RegulateActivity(Statement):
         if self.subj.refinement_of(other.subj, hierarchies) and \
            self.obj.refinement_of(other.obj, hierarchies):
             obj_act_match = (self.obj_activity == other.obj_activity) or \
-                hierarchies['activity'].isa('INDRA', self.obj_activity,
-                                            'INDRA', other.obj_activity)
+                hierarchies['activity'].isa('INDRA_ACTIVITIES',
+                                            self.obj_activity,
+                                            'INDRA_ACTIVITIES',
+                                            other.obj_activity)
             if obj_act_match:
                 return True
             else:
@@ -1862,8 +1866,8 @@ class ActiveForm(Statement):
         # Make sure that the relationships and activities match
         if (self.is_active == other.is_active) and \
             (self.activity == other.activity
-             or hierarchies['activity'].isa('INDRA', self.activity,
-                                            'INDRA', other.activity)):
+             or hierarchies['activity'].isa('INDRA_ACTIVITIES', self.activity,
+                                            'INDRA_ACTIVITIES', other.activity)):
                 return True
         else:
             return False
@@ -2288,12 +2292,12 @@ class Translocation(Statement):
         ref1 = self.agent.refinement_of(other.agent, hierarchies)
         ref2 = (other.from_location is None or
                 self.from_location == other.from_location or
-                ch.partof('INDRA', self.from_location,
-                          'INDRA', other.from_location))
+                ch.partof('INDRA_LOCATIONS', self.from_location,
+                          'INDRA_LOCATIONS', other.from_location))
         ref3 = (other.to_location is None or
                 self.to_location == other.to_location or
-                ch.partof('INDRA', self.to_location,
-                          'INDRA', other.to_location))
+                ch.partof('INDRA_LOCATIONS', self.to_location,
+                          'INDRA_LOCATIONS', other.to_location))
         return (ref1 and ref2 and ref3)
 
     def equals(self, other):
