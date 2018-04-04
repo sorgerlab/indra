@@ -43,6 +43,10 @@ def test_parse_csv_from_file():
     assert 'SIGNOR-C1' in sp.complex_map
     assert isinstance(sp.complex_map['SIGNOR-C1'], list)
     assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
+    # Make sure we don't error if Complexes data is not provided
+    sp = process_file(test_data_file)
+    assert isinstance(sp.statements[0], Statement)
+    assert sp.complex_map = {}
 
 
 def test_get_agent():
