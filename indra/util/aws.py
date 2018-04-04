@@ -215,10 +215,14 @@ def get_top_level_summary_of_db_reading(log_str_list):
     ret_dict['err_set'] = set()
     ret_dict['warn_set'] = set()
     ret_dict['unyielding_tcids'] = set()
+    ret_dict['num_failures'] = 0
     for log_str in log_str_list:
-        stat_dict = get_reading_stats(log_str)
-        ret_dict['total_stats'] = {k: ret_dict['total_stats'].get(k, 0) + v
-                                   for k, v in stat_dict.items()}
+        try:
+            stat_dict = get_reading_stats(log_str)
+            ret_dict['total_stats'] = {k: ret_dict['total_stats'].get(k, 0) + v
+                                       for k, v in stat_dict.items()}
+        except GetReadingStatsError:
+            ret_dict['num_failures'] += 1
         ret_dict['err_set'] |= set(get_indra_logs_by_priority(log_str,
                                                               'ERROR'))
         ret_dict['warn_set'] |= set(get_indra_logs_by_priority(log_str,
@@ -241,13 +245,17 @@ def get_unyielding_tcids(log_str):
     return {int(tcid_str) for tcid_str in tcid_strs}
 
 
+class GetReadingStatsError(Exception):
+    pass
+
+
 def get_reading_stats(log_str):
     def re_get_nums(patt_str):
         re_ret = re.search(patt_str, log_str)
         if re_ret is not None:
             nums = [int(num_str) for num_str in re_ret.groups()]
         else:
-            raise Exception("couldn't match patt \"%s\"" % patt_str)
+            raise GetReadingStatsError("couldn't match patt \"%s\"" % patt_str)
         return nums
     ret_dict = {}
     ret_dict['num_prex_readings'] = \
