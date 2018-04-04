@@ -161,6 +161,24 @@ def build_set(n, parent_dir):
         '24789704', '19058873', '10523313'
         ]
 
+    elsevier_pmids = [
+        "140233", "126700", "138421", "131864", "122916", "127363", "130834",
+        "135691", "147139", "142190", "124378", "132969", "127549", "131583",
+        "148910", "140686", "126304", "124909", "145863", "127687", "143909",
+        "134286", "144524", "145955", "125088", "122895", "144611", "152202",
+        "140767", "139895", "152644", "140057", "149561", "143963", "136992",
+        "137557", "144535", "148891", "145321", "133684", "126386", "148890",
+        "124210", "131711", "124967", "138753", "132192", "142510", "130244",
+        "123485", "126883", "151536", "126948", "137419", "141952", "130051",
+        "122816", "150450", "133686", "126866", "138748", "149542", "144038",
+        "145957", "136213", "148513", "141931", "140056", "139935", "123177",
+        "124593", "141942", "133729", "124598", "124252", "126303", "152671",
+        "141908", "124625", "152721", "150335", "133685", "150977", "124154",
+        "140713", "146095", "123742", "140478", "143938", "140806", "124600",
+        "123729", "127548", "145041", "139938", "143289", "131554", "125206",
+        "142661", "122933"
+        ]
+
     # Get the data from pmc oa (pmc_dicts)
     print("Getting pmc oa lists....")
     pmc = PmcOA()
@@ -178,9 +196,15 @@ def build_set(n, parent_dir):
         for _ in range(n):
             example = _get_example(case, med_pmid_list, pmc_dicts, man_dicts)
             examples.append(example)
+
     # Add a few pmids that probably include some statements.
     for pmid in random.sample(statementful_pmids, n):
         examples.append((pmid, '', ''))
+
+    # Add a few pmids that link to elsevier content
+    for pmid in random.sample(elsevier_pmids, n):
+        examples.append((pmid, '', ''))
+
     # Add a special article to check article info.
     double_doi_info = med.get_article_info('baseline/pubmed18n0343.xml.gz')
     pmids_w_double_doi = [

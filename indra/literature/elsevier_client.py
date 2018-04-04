@@ -11,6 +11,7 @@ import logging
 import textwrap
 import xml.etree.ElementTree as ET
 import requests
+from time import sleep
 # Python3
 try:
     from functools import lru_cache
@@ -25,7 +26,7 @@ logger = logging.getLogger('elsevier')
 
 # THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
 elsevier_api_url = 'https://api.elsevier.com/content' # <--- HTTPS
-elsevier_article_url = '%s/article/doi' % elsevier_api_url
+elsevier_article_url_fmt = '%s/article/%%s' % elsevier_api_url
 elsevier_search_url = '%s/search/scidir' % elsevier_api_url
 elsevier_entitlement_url = '%s/article/entitlement/doi' % elsevier_api_url
 
@@ -58,8 +59,8 @@ try:
         elsevier_keys = None
 except IOError:
     logger.debug('Elsevier API keys file could not be read, trying '
-                  'environment variables $%s and $%s.' %
-                  (api_key_env_name, inst_key_env_name))
+                 'environment variables $%s and $%s.' %
+                 (api_key_env_name, inst_key_env_name))
     logger.debug('Tried key file: %s' % api_key_file)
     # Try the environment variable for the api key. This one is optional,
     # so if it is not found then we just leave it out of the keys dict
@@ -95,23 +96,56 @@ def check_entitlement(doi):
         return False
 
 
-def download_article(doi):
-    """Download an article in XML format from Elsevier."""
+def download_article(id_val, id_type='doi', on_retry=False):
+    """Low level function to get an XML article for a particular id."""
     if elsevier_keys is None:
         logger.error('Missing API key, could not download article.')
         return None
-    if doi.lower().startswith('doi:'):
-        doi = doi[4:]
-    url = '%s/%s' % (elsevier_article_url, doi)
+    if id_type == 'pmid':
+        id_type = 'pubmed_id'
+    url = '%s/%s' % (elsevier_article_url_fmt % id_type, id_val)
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=elsevier_keys)
-    if not res.status_code == 200:
+    if res.status_code == 404:
+        logger.debug("Resource for %s not available on elsevier."
+                     % url)
+    elif res.status_code == 429:
+        if not on_retry:
+            logger.warning("Broke the speed limit. Waiting half a second then "
+                           "trying again...")
+            sleep(0.5)
+            return download_article(id_val, id_type, True)
+        else:
+            logger.error("Still breaking speed limit after waiting.")
+            logger.error("Elsevier response: %s" % res.text)
+            return None
+    elif not res.status_code == 200:
         logger.error('Could not download article %s: status code %d' %
-                     (doi, res.status_code))
+                     (url, res.status_code))
         logger.error('Elsevier response: %s' % res.text)
         return None
     # Return the XML content as a unicode string, assuming UTF-8 encoding
     return res.content.decode('utf-8')
+
+
+def download_article_from_ids(**id_dict):
+    """Download an article in XML format from Elsevier."""
+    valid_id_types = ['eid', 'doi', 'pmid', 'pii']
+    assert all([k in valid_id_types for k in id_dict.keys()]),\
+        ("One of these id keys is invalid: %s Valid keys are: %s."
+         % (list(id_dict.keys()), valid_id_types))
+    if 'doi' in id_dict.keys() and id_dict['doi'].lower().startswith('doi:'):
+        id_dict['doi'] = id_dict['doi'][4:]
+    content = None
+    for id_type in valid_id_types:
+        if id_type in id_dict.keys():
+            content = download_article(id_dict[id_type], id_type)
+            if content is not None:
+                break
+    else:
+        logger.error("Could not download article with any of the ids: %s."
+                     % str(id_dict))
+    return content
 
 
 def get_abstract(doi):

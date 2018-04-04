@@ -15,7 +15,7 @@ from indra.tools.reading.readers import get_readers as get_all_readers
 
 from indra.db import formats
 from indra.tests.test_db import get_db as get_test_db
-from indra.tests.test_db import get_db_with_content
+from indra.tests.test_db import get_db_with_pubmed_content
 
 
 # ==============================================================================
@@ -63,7 +63,7 @@ def test_get_clauses():
 @attr('nonpublic')
 def test_get_content():
     "Test that content querries are correctly formed."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     tr_list = db.select_all(db.TextRef)
     id_dict = get_id_dict(tr_list)
     readers = get_readers()
@@ -105,7 +105,7 @@ def test_get_reader_children():
 @attr('slow', 'nonpublic')
 def test_reading_content_insert():
     "Test the content primary through-put of make_db_readings."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
 
     print("Test reading")
     tc_list = db.select_all(db.TextContent)
@@ -153,7 +153,7 @@ def test_reading_content_insert():
 def test_read_db():
     "Test the low level make_db_readings functionality with various settings."
     # Prep the inputs.
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     complete_tr_list = db.select_all(db.TextRef)
     id_dict = get_id_dict(complete_tr_list)
     readers = get_readers('SPARSER')
@@ -190,7 +190,7 @@ def test_read_db():
 def test_produce_readings():
     "Comprehensive test of the high level production of readings."
     # Prep the inputs.
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     complete_tr_list = db.select_all(db.TextRef)
     id_dict = get_id_dict(complete_tr_list)
 
@@ -246,7 +246,7 @@ def test_produce_readings():
 @attr('slow', 'nonpublic')
 def test_read_files():
     "Test that the system can read files."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
 
     # Create the test files.
     test_file_fmt = 'test_reading_input.%s'
@@ -274,7 +274,7 @@ def test_read_files():
 @attr('nonpublic')
 def test_sparser_parallel():
     "Test running sparser in parallel."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
     result = sparser_reader.read(tc_list, verbose=True, log=True)
@@ -287,7 +287,7 @@ def test_sparser_parallel():
 @attr('nonpublic')
 def test_sparser_parallel_one_batch():
     "Test that sparser runs with multiple procs with batches of 1."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
     result = sparser_reader.read(tc_list, verbose=True, n_per_proc=1)
@@ -300,7 +300,7 @@ def test_sparser_parallel_one_batch():
 @attr('slow', 'nonpublic')
 def test_multi_batch_run():
     "Test that reading works properly with multiple batches run."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     readers = get_readers()
     tc_list = db.select_all(db.TextContent)
     id_dict = {'tcid': [tc.id for tc in tc_list]}
@@ -316,7 +316,7 @@ def test_multi_batch_run():
 @attr('slow', 'nonpublic')
 def test_multiproc_statements():
     "Test the multiprocessing creation of statements."
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     readers = get_readers()
     tc_list = db.select_all(db.TextContent)
     id_dict = {'tcid': [tc.id for tc in tc_list]}

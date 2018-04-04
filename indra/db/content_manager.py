@@ -13,11 +13,14 @@ import pickle
 import xml.etree.ElementTree as ET
 import multiprocessing as mp
 from os import path, remove, rename, listdir
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from ftplib import FTP
 from io import BytesIO
 from indra.util import _require_python3
+from indra.literature.elsevier_client import download_article_from_ids
+from indra.literature.crossref_client import get_publisher
+from indra.literature.pubmed_client import get_metadata_for_ids
 
 
 logger = logging.getLogger('content_manager')
@@ -60,6 +63,18 @@ if __name__ == '__main__':
         '-t', '--test',
         action='store_true',
         help='Run tests using one of the designated test databases.'
+        )
+    parser.add_argument(
+        '--elsevier',
+        choices=['included', 'only', 'excluded'],
+        help=('Choose if Elsevier content is included in the upload/update. '
+              'Default choice is "excluded". Note that the Elsevier upload is '
+              'can take weeks to complete. Therefore it is recommended that '
+              'you run with `--elsevier exluded` first, and then later run '
+              'with `--elsevier only`. Updates are less cumbersome and may be '
+              'run with `--elsevier included`. Note also that the Elsevier '
+              'upload only works if at least Pubmed has already been '
+              'uploaded.')
         )
     args = parser.parse_args()
     if args.debug:
@@ -534,6 +549,17 @@ class ContentManager(object):
                        review_fmt % utcnow.strftime('%Y%m%d-%H%M%S'))
             return completed
         return take_action
+
+    def _get_latest_update(self, db):
+        """Get the date of the latest update."""
+        update_list = db.select_all(db.Updates,
+                                    db.Updates.source == self.my_source)
+        if not len(update_list):
+            logger.error("The database has not had an initial upload, or else "
+                         "the updates table has not been populated.")
+            return False
+
+        return max([u.datetime for u in update_list])
 
     def populate(self, db):
         "A stub for the method used to initially populate the database."
@@ -1222,14 +1248,7 @@ class PmcOA(PmcManager):
 
     @ContentManager._record_for_review
     def update(self, db, n_procs=1):
-        update_list = db.select_all(db.Updates,
-                                    db.Updates.source == self.my_source)
-        if not len(update_list):
-            logger.error("The database has not had an initial upload, or else "
-                         "the updates table has not been populated.")
-            return False
-
-        min_datetime = max([u.datetime for u in update_list])
+        min_datetime = self._get_latest_update(db)
 
         # Search down through the oa_package directory. Below the first level,
         # the files are timestamped, so we can filter down each level
@@ -1323,6 +1342,182 @@ class Manuscripts(PmcManager):
         return True
 
 
+class Elsevier(ContentManager):
+    """Content manager for maintaining content from Elsevier."""
+    my_source = 'elsevier'
+    tc_cols = ('text_ref_id', 'source', 'format', 'text_type',
+               'content',)
+
+    def __init__(self, *args, **kwargs):
+        super(Elsevier, self).__init__(*args, **kwargs)
+        with open(path.join(THIS_DIR, 'elsevier_titles.txt'), 'r') as f:
+            self.__journal_set = {self.__regularize_title(t)
+                                  for t in f.read().splitlines()}
+        self.__found_journal_set = set()
+        self.__matched_journal_set = set()
+        return
+
+    @staticmethod
+    def __regularize_title(title):
+        title = title.lower()
+        for space_car in [' ', '_', '-', '.']:
+            title = title.replace(space_car, '')
+        return title
+
+    def __select_elsevier_refs(self, tr_set, max_retries=2):
+        """Try to check if this content is available on Elsevier."""
+        elsevier_tr_set = set()
+        for tr in tr_set.copy():
+            if tr.doi is not None:
+                publisher = get_publisher(tr.doi)
+                if publisher is not None and\
+                   publisher.lower() == self.my_source:
+                    tr_set.remove(tr)
+                    elsevier_tr_set.add(tr)
+
+        if tr_set:
+            pmid_set = {tr.pmid for tr in tr_set}
+            tr_dict = {tr.pmid: tr for tr in tr_set}
+            num_retries = 0
+            while num_retries < max_retries:
+                try:
+                    meta_data_dict = get_metadata_for_ids(pmid_set)
+                    break
+                except Exception as e:
+                    num_retries += 1
+                    if num_retries < max_retries:
+                        logger.warning("Caught exception while getting "
+                                       "metadata. Retrying...")
+                    else:
+                        logger.error("No more tries for:\n%s" % str(pmid_set))
+                        logger.exception(e)
+                        meta_data_dict = None
+                        break
+
+            if meta_data_dict is not None:
+                titles = {(pmid, meta['journal_title'])
+                          for pmid, meta in meta_data_dict.items()}
+                for pmid, title in titles:
+                    reg_title = self.__regularize_title(title)
+                    self.__found_journal_set.add(reg_title)
+                    if reg_title in self.__journal_set:
+                        self.__matched_journal_set.add(reg_title)
+                        elsevier_tr_set.add(tr_dict[pmid])
+        return elsevier_tr_set
+
+    def __get_content(self, trs):
+        """Get the content."""
+        article_tuples = set()
+        for tr in trs:
+            id_dict = {id_type: getattr(tr, id_type)
+                       for id_type in ['doi', 'pmid', 'pii']
+                       if getattr(tr, id_type) is not None}
+            if id_dict:
+                content_str = download_article_from_ids(**id_dict)
+                if content_str is not None:
+                    content_zip = zip_string(content_str)
+                    article_tuples.add((tr.id, self.my_source, formats.TEXT,
+                                        texttypes.FULLTEXT, content_zip))
+        return article_tuples
+
+    def __process_batch(self, db, tr_batch):
+        logger.info("Beginning to load batch of %d text refs." % len(tr_batch))
+        elsevier_trs = self.__select_elsevier_refs(tr_batch)
+        logger.debug("Found %d elsevier text refs." % len(elsevier_trs))
+        article_tuples = self.__get_content(elsevier_trs)
+        logger.debug("Got %d elsevier results." % len(article_tuples))
+        self.copy_into_db(db, 'text_content', article_tuples, self.tc_cols)
+        return
+
+    def _get_elsevier_content(self, db, tr_query, continuing=False):
+        """Get the elsevier content given a text ref query object."""
+        pickle_stash_fname = path.join(THIS_DIR,
+                                       'checked_elsevier_trid_stash.pkl')
+        tr_batch = set()
+        if continuing and path.exists(pickle_stash_fname):
+            with open(pickle_stash_fname, 'rb') as f:
+                tr_ids_checked = pickle.load(f)
+            logger.info("Continuing; %d text refs already checked."
+                        % len(tr_ids_checked))
+        else:
+            tr_ids_checked = set()
+        try:
+            batch_num = 0
+            for tr in tr_query.yield_per(1000):
+                # If we're continuing an earlier upload, don't check id's we've
+                # already checked.
+                if continuing and tr.id in tr_ids_checked:
+                    continue
+
+                tr_batch.add(tr)
+                if len(tr_batch) % 200 is 0:
+                    batch_num += 1
+                    logger.info('Beginning batch %d.' % batch_num)
+                    self.__process_batch(db, tr_batch)
+                    tr_ids_checked |= {tr.id for tr in tr_batch}
+                    tr_batch.clear()
+            if tr_batch:
+                logger.info('Loading final batch.')
+                self.__process_batch(db, tr_batch)
+                tr_ids_checked |= {tr.id for tr in tr_batch}
+        except BaseException as e:
+            logger.error("Caught exception while loading elsevier.")
+            logger.exception(e)
+            with open(pickle_stash_fname, 'wb') as f:
+                pickle.dump(tr_ids_checked, f)
+            logger.info("Stashed the set of checked text ref ids in: %s"
+                        % pickle_stash_fname)
+            return False
+        finally:
+            with open('journals.pkl', 'wb') as f:
+                pickle.dump({'elsevier': self.__journal_set,
+                             'found': self.__found_journal_set,
+                             'matched': self.__matched_journal_set}, f)
+        if path.exists(pickle_stash_fname):
+            remove(pickle_stash_fname)
+        return True
+
+    @ContentManager._record_for_review
+    def populate(self, db, continuing=False):
+        """Load all available elsevier content for refs with no pmc content."""
+        # Note that we do not implement multiprocessing, because by the nature
+        # of the web API's used, we are limited by bandwidth from any one IP.
+        tr_w_pmc_q = db.filter_query(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.source.in_([PmcOA.my_source, Manuscripts.my_source])
+            )
+        tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
+        return self._get_elsevier_content(db, tr_wo_pmc_q, continuing)
+
+    @ContentManager._record_for_review
+    def update(self, db, continuing=False, buffer_days=15):
+        """Load all available new elsevier content from new pmids."""
+        # There is the possibility that elsevier content will lag behind pubmed
+        # updates, so we go back a bit before the last update to make sure we
+        # didn't miss anything
+        latest_updatetime = self._get_latest_update(db)
+        start_datetime = latest_updatetime - timedelta(days=buffer_days)
+
+        # Construct a query for recently added (as defined above) text refs
+        # that do not already have text content.
+        new_trs = db.filter_query(
+            db.TextRef,
+            sql_exp.or_(
+                db.TextRef.last_updated > start_datetime,
+                db.TextRef.create_date > start_datetime,
+                )
+            )
+        tr_w_pmc_q = db.filter_query(
+            db.TextRef,
+            db.TextRef.id == db.TextContent.text_ref_id,
+            db.TextContent.text_type == 'fulltext'
+            )
+        tr_query = new_trs.except_(tr_w_pmc_q)
+
+        return self._get_elsevier_content(db, tr_query, continuing)
+
+
 if __name__ == '__main__':
     if args.test:
         defaults = get_defaults()
@@ -1350,6 +1545,15 @@ if __name__ == '__main__':
 
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
+        if args.elsevier == 'only':
+            pubmed_init = db.select_one(db.Update,
+                                        db.Update.source == Pubmed.my_source,
+                                        db.Update.init_upload.is_(True))
+            if pubmed_init is None:
+                raise UploadError('Cannot upload Elsevier content before '
+                                  'uploading Pubmed.')
+            Elsevier().populate(db, args.continuing)
+            sys.exit()
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
             clear_succeeded = db._clear([db.TextContent, db.TextRef,
@@ -1359,8 +1563,13 @@ if __name__ == '__main__':
         Pubmed().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
+        if args.elsevier == 'included':
+            Elsevier().populate(db, args.continuing)
     elif args.task == 'update':
+        if args.elsevier == 'only':
+            Elsevier().update(db, args.continuing)
         Pubmed().update(db, args.num_procs)
         PmcOA().update(db, args.num_procs)
         Manuscripts().update(db, args.num_procs)
-
+        if args.elsevier == 'included':
+            Elsevier().update(db, args.continuing)

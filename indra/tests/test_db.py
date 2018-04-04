@@ -16,7 +16,7 @@ IS_PY3 = True
 if version_info.major is not 3:
     IS_PY3 = False
 if IS_PY3:
-    from indra.db.content_manager import Pubmed, PmcOA, Manuscripts
+    from indra.db.content_manager import Pubmed, PmcOA, Manuscripts, Elsevier
 
 if '-a' in argv:
     attr_str = argv[argv.index('-a')+1]
@@ -100,10 +100,19 @@ def needs_py3(func):
 
 
 @needs_py3
-def get_db_with_content():
-    "Populate the database."
+def get_db_with_pubmed_content():
+    "Populate the database with sample content from pubmed."
     db = get_db()
     Pubmed(ftp_url=TEST_FTP, local=True).populate(db)
+    return db
+
+
+@needs_py3
+def get_db_with_ftp_content():
+    "Populate database with content from all the ftp services"
+    db = get_db_with_pubmed_content()
+    PmcOA(ftp_url=TEST_FTP, local=True).populate(db)
+    Manuscripts(ftp_url=TEST_FTP, local=True).populate(db)
     return db
 
 
@@ -247,7 +256,7 @@ def test_full_upload():
     # this test.
 
     # Test the medline/pubmed upload.
-    db = get_db_with_content()
+    db = get_db_with_pubmed_content()
     tr_list = db.select_all('text_ref')
     assert len(tr_list), "No text refs were added..."
     assert all([hasattr(tr, 'pmid') for tr in tr_list]),\
@@ -522,6 +531,28 @@ def test_medline_ref_checks():
                                                     num_orig_lines + 2)
     remove(med.review_fname)
     return
+
+
+@needs_py3
+@attr('nonpublic')
+def test_elsevier_upload():
+    "Test that we can upload elsevier content."
+    db = get_db_with_ftp_content()
+    Elsevier().populate(db)
+    up_q = db.filter_query(
+        db.Updates,
+        db.Updates.source == Elsevier.my_source
+        )
+    num_updates = up_q.count()
+    assert num_updates == 1, "Got %d updates, not 1." % num_updates
+    assert up_q.all()[0].init_upload, \
+        "Update entry not listed as initial upload."
+    tc_q = db.filter_query(
+        db.TextContent,
+        db.TextContent.source == Elsevier.my_source
+        )
+    num_elsevier = tc_q.count()
+    assert num_elsevier > 0, "Got no elsevier content."
 
 
 @needs_py3
