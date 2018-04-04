@@ -64,6 +64,18 @@ if __name__ == '__main__':
         action='store_true',
         help='Run tests using one of the designated test databases.'
         )
+    parser.add_argument(
+        '--elsevier',
+        choices=['included', 'only', 'excluded'],
+        help=('Choose if Elsevier content is included in the upload/update. '
+              'Default choice is "excluded". Note that the Elsevier upload is '
+              'can take weeks to complete. Therefore it is recommended that '
+              'you run with `--elsevier exluded` first, and then later run '
+              'with `--elsevier only`. Updates are less cumbersome and may be '
+              'run with `--elsevier included`. Note also that the Elsevier '
+              'upload only works if at least Pubmed has already been '
+              'uploaded.')
+        )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -1422,7 +1434,7 @@ class Elsevier(ContentManager):
         pickle_stash_fname = path.join(THIS_DIR,
                                        'checked_elsevier_trid_stash.pkl')
         tr_batch = set()
-        if continuing:
+        if continuing and path.exists(pickle_stash_fname):
             with open(pickle_stash_fname, 'rb') as f:
                 tr_ids_checked = pickle.load(f)
             logger.info("Continuing; %d text refs already checked."
@@ -1533,6 +1545,15 @@ if __name__ == '__main__':
 
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
+        if args.elsevier == 'only':
+            pubmed_init = db.select_one(db.Update,
+                                        db.Update.source == Pubmed.my_source,
+                                        db.Update.init_upload.is_(True))
+            if pubmed_init is None:
+                raise UploadError('Cannot upload Elsevier content before '
+                                  'uploading Pubmed.')
+            Elsevier().populate(db, args.continuing)
+            sys.exit()
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
             clear_succeeded = db._clear([db.TextContent, db.TextRef,
@@ -1542,8 +1563,13 @@ if __name__ == '__main__':
         Pubmed().populate(db, args.num_procs, args.continuing)
         PmcOA().populate(db, args.num_procs, args.continuing)
         Manuscripts().populate(db, args.num_procs, args.continuing)
+        if args.elsevier == 'included':
+            Elsevier().populate(db, args.continuing)
     elif args.task == 'update':
+        if args.elsevier == 'only':
+            Elsevier().update(db, args.continuing)
         Pubmed().update(db, args.num_procs)
         PmcOA().update(db, args.num_procs)
         Manuscripts().update(db, args.num_procs)
-
+        if args.elsevier == 'included':
+            Elsevier().update(db, args.continuing)
