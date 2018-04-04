@@ -216,9 +216,9 @@ class SignorProcessor(object):
             if not name:
                 print('Could not look up', c, '(maybe the signor ' + \
                         'complex component is not a UNIPROT id)')
-                db_refs['SIGNOR'] = id
+                db_refs['SIGNOR'] = c
             else:
-                db_refs['UP'] = id
+                db_refs['UP'] = c
                 hgnc_id = hgnc_client.get_hgnc_id(name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
