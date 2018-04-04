@@ -48,3 +48,9 @@ def test_export_to_cyjs():
     cyjs = ca.export_to_cytoscapejs()
     assert len(cyjs['nodes']) == 2
     assert len(cyjs['edges']) == 1
+
+
+def test_assemble_no_evidence():
+    ca = CAGAssembler([Influence(Concept('a'), Concept('b'))])
+    ca.make_model()
+    ca.export_to_cytoscapejs()
