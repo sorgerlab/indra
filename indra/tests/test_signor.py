@@ -46,37 +46,41 @@ def test_parse_csv_from_file():
     # Make sure we don't error if Complexes data is not provided
     sp = process_file(test_data_file)
     assert isinstance(sp.statements[0], Statement)
-    assert sp.complex_map = {}
+    assert sp.complex_map == {}
 
 
 def test_get_agent():
     # Protein/gene
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
     test_ag = Agent('RELA', db_refs={'HGNC': hgnc_client.get_hgnc_id('RELA'),
                                      'UP': 'Q04206'})
-    sp_ag = SignorProcessor._get_agent(test_row.ENTITYA, test_row.TYPEA,
+    sp_ag = sp._get_agent(test_row.ENTITYA, test_row.TYPEA,
                                        test_row.IDA, test_row.DATABASEA)
     assert test_ag.matches(sp_ag)
     # Chemical
     test_ag = Agent('AZD1480', db_refs={'PUBCHEM': 'CID:16659841'})
-    sp_ag = SignorProcessor._get_agent('AZD1480', 'chemical', 'CID:16659841',
+    sp_ag = sp._get_agent('AZD1480', 'chemical', 'CID:16659841',
                                        'PUBCHEM')
     assert test_ag.matches(sp_ag)
     # Signor phenotype
     test_ag = Agent('Cell cycle progr.', db_refs={'SIGNOR': 'SIGNOR-PH42'})
-    sp_ag = SignorProcessor._get_agent('Cell cycle progr.', 'phenotype',
+    sp_ag = sp._get_agent('Cell cycle progr.', 'phenotype',
                                        'SIGNOR-PH42', 'SIGNOR')
     assert test_ag.matches(sp_ag)
     # Ungrounded -- couldn't find a real example in the dataset
     test_ag = Agent('Foobar', db_refs={})
-    sp_ag = SignorProcessor._get_agent('Foobar', 'pathway', None, None)
+    sp_ag = sp._get_agent('Foobar', 'pathway', None, None)
     assert test_ag.matches(sp_ag)
-    sp_ag = SignorProcessor._get_agent('Foobar', 'antibody', None, None)
+    sp_ag = sp._get_agent('Foobar', 'antibody', None, None)
     assert test_ag.matches(sp_ag)
 
 
 @raises(KeyError)
 def test_get_agent_keyerror():
-    sp_ag = SignorProcessor._get_agent('foo', 'bar', None, None)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    sp_ag = sp._get_agent('foo', 'bar', None, None)
 
 
 def test_get_evidence():
@@ -106,7 +110,9 @@ def test_get_evidence():
 
 
 def test_process_row():
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -124,7 +130,9 @@ def test_process_row_chem_inh():
         MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
         NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
         SIGNOR_ID='SIGNOR-190245')
-    stmts, no_mech = SignorProcessor._process_row(test_row_chem_inh)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_chem_inh)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -140,7 +148,9 @@ def test_process_row_chem_act():
         MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
         MODIFICATIONB='', MODBSEQ='', PMID='16293724', DIRECT='YES', NOTES='',
         ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-141820')
-    stmts, no_mech = SignorProcessor._process_row(test_row_chem_act)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_chem_act)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -156,7 +166,9 @@ def test_process_row_stab():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='17052192', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-150135')
-    stmts, no_mech = SignorProcessor._process_row(test_row_stab)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_stab)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -174,7 +186,9 @@ def test_process_row_destab():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='23721961',
             DIRECT='NO', NOTES='', ANNOTATOR='miannu',
             SENTENCE='', SIGNOR_ID='SIGNOR-252114')
-    stmts, no_mech = SignorProcessor._process_row(test_row_destab)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_destab)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -190,7 +204,9 @@ def test_process_row_binding_complex():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='18321988', DIRECT='YES', NOTES='',
             ANNOTATOR='lperfetto', SENTENCE='', SIGNOR_ID='SIGNOR-226693')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -208,7 +224,9 @@ def test_process_row_phos_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
             SENTENCE='', SIGNOR_ID='SIGNOR-116131')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -236,7 +254,9 @@ def test_process_row_phos_down():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
             SENTENCE='', SIGNOR_ID='SIGNOR-159591')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -264,7 +284,9 @@ def test_process_row_phos_nores_up():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
             SENTENCE='', SIGNOR_ID='SIGNOR-242602')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -291,7 +313,9 @@ def test_process_row_phos_nores_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -449,7 +473,9 @@ def test_process_row_phos_multi_res():
             MODBSEQ='', PMID='8157000', DIRECT='YES',
             NOTES='', ANNOTATOR='gcesareni', SENTENCE='',
             SIGNOR_ID='SIGNOR-36553')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 4
@@ -481,7 +507,9 @@ def test_process_row_complex_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='9756848', DIRECT='YES', NOTES='', ANNOTATOR='miannu',
             SENTENCE='', SIGNOR_ID='SIGNOR-60557')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -510,7 +538,9 @@ def test_process_row_complex_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='10548111', DIRECT='YES', NOTES='',
             ANNOTATOR='amattioni', SENTENCE='', SIGNOR_ID='SIGNOR-71954')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -586,4 +616,5 @@ def test_signor_complexes():
 
 if __name__ == '__main__':
     test_parse_csv_from_file()
+    test_get_agent()
 
