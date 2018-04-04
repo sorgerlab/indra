@@ -341,7 +341,7 @@ class HierarchyManager(object):
             return 'http://identifiers.org/hgnc.symbol/' + id
         elif ns == 'UP':
             return 'http://identifiers.org/uniprot/' + id
-        elif ns == 'FPLX' or ns == 'INDRA':
+        elif ns == 'FPLX':
             return 'http://identifiers.org/fplx/' + id
         elif ns == 'EIDOS':
             return \
@@ -350,6 +350,12 @@ class HierarchyManager(object):
             if id.lower().startswith('ont::'):
                 id = id[5:]
             return 'http://trips.ihmc.us/concepts/' + id.lower()
+        elif ns == 'INDRA_ACTIVITIES':
+            return 'http://sorger.med.harvard.edu/indra/activities/' + id
+        elif ns == 'INDRA_MODS':
+            return 'http://sorger.med.harvard.edu/indra/modifications/' + id
+        elif ns == 'INDRA_LOCATIONS':
+            return 'http://sorger.med.harvard.edu/indra/locations/' + id
         else:
             return ns + id
 

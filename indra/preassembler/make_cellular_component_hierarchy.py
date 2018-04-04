@@ -73,16 +73,16 @@ def get_cellular_components(g):
 def make_component_hierarchy(component_map, component_part_map):
     g = rdflib.Graph()
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
-    en = Namespace(indra_ns + 'entities/')
+    ln = Namespace(indra_ns + 'locations/')
     rn = Namespace(indra_ns + 'relations/')
     part_of = rn.term('partof')
     has_name = rn.term('hasName')
     for comp_id, comp_name in component_map.items():
-        g.add((en.term(comp_id), has_name, Literal(comp_name)))
+        g.add((ln.term(comp_id), has_name, Literal(comp_name)))
         sups = component_part_map.get(comp_id)
         if sups is not None:
             for sup_id in sups:
-                g.add((en.term(comp_id), part_of, en.term(sup_id)))
+                g.add((ln.term(comp_id), part_of, ln.term(sup_id)))
     return g
 
 
