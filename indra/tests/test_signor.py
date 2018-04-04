@@ -619,16 +619,22 @@ def test_signor_family_famplex_mapping():
             SENTENCE='', SIGNOR_ID='SIGNOR-216310')
 
 def test_signor_complexes():
-    SignorRow(ENTITYA='MYOD/E12E47', TYPEA='complex', IDA='SIGNOR-C127',
-            DATABASEA='SIGNOR', ENTITYB='VEGFA', TYPEB='protein', IDB='P15692',
-            DATABASEB='UNIPROT', EFFECT='up-regulates quantity by expression',
-            MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
-            TAX_ID='10090', CELL_DATA='', TISSUE_DATA='BTO:0001103',
-            MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
-            MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='18094043',
-            DIRECT='YES', NOTES='', ANNOTATOR='lperfetto', SENTENCE='',
-            SIGNOR_ID='SIGNOR-241545')
+    test_row = SignorRow(ENTITYA='NFY',
+        TYPEA='complex', IDA='SIGNOR-C1', DATABASEA='SIGNOR', ENTITYB='ID1',
+        TYPEB='protein', IDB='P41134', DATABASEB='UNIPROT',
+        EFFECT='up-regulates quantity by expression',
+        MECHANISM='transcriptional activation', RESIDUE='', SEQUENCE='',
+        TAX_ID='9606', CELL_DATA='BTO:0000972', TISSUE_DATA='',
+        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
+        MODIFICATIONB='', MODBSEQ='', PMID='18025157', DIRECT='NO', NOTES='',
+        ANNOTATOR='', SENTENCE='', SIGNOR_ID='SIGNOR-255746')
+    complex_map = {'SIGNOR-C1': ['P23511', 'P25208', 'Q13952']}
+    sp = SignorProcessor([test_row], complex_map)
+    import ipdb; ipdb.set_trace()
+    assert isinstance(sp.statements, list)
+    assert len(stmts) == 4
+
 
 if __name__ == '__main__':
-    test_parse_csv_from_web()
+    test_signor_complexes()
 
