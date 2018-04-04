@@ -411,13 +411,3 @@ def _parse_residue_positions(residue_field):
         return (res, pos)
     return [_parse_respos(rp) for rp in res_strs]
 
-def all_combinations(list_a, list_b):
-    """Given a list of elements in list_a and a list of elements in list_b,
-    returns a list of two-element lists with all possible combinations of the
-    elements in list_a and the elements in list_b.
-    """
-    combinations = []
-    for a in list_a:
-        for b in list_b:
-            combinations.append([a, b])
-    return combinations
