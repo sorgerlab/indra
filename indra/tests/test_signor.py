@@ -5,9 +5,9 @@ from nose.tools import raises
 
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.sources.signor import SignorProcessor, SignorRow, \
-                                 _parse_residue_positions
-
+from indra.sources.signor.processor import SignorProcessor, \
+                                           _parse_residue_positions
+from indra.sources.signor.api import SignorRow, process_file
 
 test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         DATABASEA='UNIPROT', ENTITYB='MET', TYPEB='protein', IDB='P08581',
@@ -23,12 +23,26 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         SIGNOR_ID='SIGNOR-241929')
 
 
-def test_parse_csv():
-    sp = SignorProcessor()
+test_data_file = os.path.join(dirname(__file__), 'signor_test_data.csv')
+
+
+test_complexes_file = os.path.join(dirname(__file__),
+                                   'signor_test_complexes.csv')
+
+
+def test_parse_csv_from_file():
+    # Should work with both data file and complexes
+    sp = process_file(test_data_file, test_complexes_file)
     assert isinstance(sp._data, list)
     assert isinstance(sp._data[0], SignorRow)
     assert isinstance(sp.statements, list)
     assert isinstance(sp.statements[0], Statement)
+    # Test the complex map
+    assert isinstance(sp.complex_map, dict)
+    assert len(sp.complex_map) == 9
+    assert 'SIGNOR-C1' in sp.complex_map
+    assert isinstance(sp.complex_map['SIGNOR-C1'], list)
+    assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
 
 
 def test_get_agent():
@@ -543,4 +557,29 @@ def test_parse_residue_positions():
     assert residues[1][0] == 'Y'
     assert residues[1][1] == '171'
 
+
+def test_signor_family_famplex_mapping():
+    test_row = SignorRow(ENTITYA='TLRs', TYPEA='proteinfamily',
+            IDA='SIGNOR-PF20', DATABASEA='SIGNOR',
+            ENTITYB='Interferon Production', TYPEB='phenotype',
+            IDB='SIGNOR-PH16', DATABASEB='SIGNOR', EFFECT='up-regulates',
+            MECHANISM='', RESIDUE='', SEQUENCE='', TAX_ID='9606', CELL_DATA='',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='20404851', DIRECT='NO', NOTES='', ANNOTATOR='lperfetto',
+            SENTENCE='', SIGNOR_ID='SIGNOR-216310')
+
+def test_signor_complexes():
+    SignorRow(ENTITYA='MYOD/E12E47', TYPEA='complex', IDA='SIGNOR-C127',
+            DATABASEA='SIGNOR', ENTITYB='VEGFA', TYPEB='protein', IDB='P15692',
+            DATABASEB='UNIPROT', EFFECT='up-regulates quantity by expression',
+            MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
+            TAX_ID='10090', CELL_DATA='', TISSUE_DATA='BTO:0001103',
+            MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='',
+            MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='18094043',
+            DIRECT='YES', NOTES='', ANNOTATOR='lperfetto', SENTENCE='',
+            SIGNOR_ID='SIGNOR-241545')
+
+if __name__ == '__main__':
+    test_parse_csv_from_file()
 

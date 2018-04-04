@@ -41,7 +41,7 @@ _signor_fields = [
 SignorRow = namedtuple('SignorRow', _signor_fields)
 
 def _read_signor_complex_map(filename):
-    raw_map = read_unicode_csv(filename, ';')
+    raw_map = read_unicode_csv(filename, delimiter=';', skiprows=1)
     m = {}
     for row in raw_map:
         m[row[0]] = row[2].split(',  ')
@@ -66,6 +66,7 @@ def process_file(signor_data_file, signor_complexes_file=None):
     """
     # Get generator over the CSV file
     data_iter = read_unicode_csv(signor_data_file, delimiter=';', skiprows=1)
+    import ipdb; ipdb.set_trace()
     # Process into a list of SignorRow namedtuples
     # Strip off any funky \xa0 whitespace characters
     data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
