@@ -210,13 +210,24 @@ def get_top_level_summary_of_log(log_str):
 
 
 def get_top_level_summary_of_db_reading(log_str_list):
-    total_stat_dict = {}
+    ret_dict = {}
+    ret_dict['total_stats'] = {}
+    ret_dict['err_set'] = set()
+    ret_dict['warn_set'] = set()
+    ret_dict['unyielding_tcids'] = set()
     for log_str in log_str_list:
         stat_dict = get_reading_stats(log_str)
-        total_stat_dict = {k: total_stat_dict.get(k, 0) + v
-                           for k, v in stat_dict.items()
-                           if v is not None}
-    return total_stat_dict
+        ret_dict['total_stats'] = {k: ret_dict['total_stats'].get(k, 0) + v
+                                   for k, v in stat_dict.items()}
+        ret_dict['err_set'] |= set(get_indra_logs_by_priority(log_str,
+                                                              'ERROR'))
+        ret_dict['warn_set'] |= set(get_indra_logs_by_priority(log_str,
+                                                               'WARNING'))
+        ret_dict['unyielding_tcids'] |= get_unyielding_tcids(log_str)
+    ret_dict['err_tcids'] = {int(re.findall('(\d+)', err_str)[0])
+                             for err_str in ret_dict['err_set']
+                             if 'Got exception creating statements' in err_str}
+    return ret_dict
 
 
 def get_indra_logs_by_priority(log_str, priority='INFO'):
@@ -225,7 +236,7 @@ def get_indra_logs_by_priority(log_str, priority='INFO'):
 
 def get_unyielding_tcids(log_str):
     """Extract the set of tcids for which no statements were created."""
-    tcid_strs = re.findall('INFO: \[.*?\].*? - Got no statements for (\d+).*)',
+    tcid_strs = re.findall('INFO: \[.*?\].*? - Got no statements for (\d+).*',
                            log_str)
     return {int(tcid_str) for tcid_str in tcid_strs}
 
@@ -236,8 +247,7 @@ def get_reading_stats(log_str):
         if re_ret is not None:
             nums = [int(num_str) for num_str in re_ret.groups()]
         else:
-            print("WARNING: couldn't match patt \"%s\"" % patt_str)
-            nums = [0]*patt_str.count('(\d+)')
+            raise Exception("couldn't match patt \"%s\"" % patt_str)
         return nums
     ret_dict = {}
     ret_dict['num_prex_readings'] = \
