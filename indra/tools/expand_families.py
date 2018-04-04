@@ -4,7 +4,8 @@ import logging
 import itertools
 import rdflib.namespace
 from copy import deepcopy
-from indra.preassembler.hierarchy_manager import HierarchyManager
+from indra.preassembler.hierarchy_manager import HierarchyManager, \
+    UnknownNamespaceException
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
 
@@ -136,11 +137,3 @@ def _agent_from_ns_id(ag_ns, ag_id):
         if ag_id is not None:
             db_refs[ag_ns] = ag_id
     return Agent(ag_name, db_refs=db_refs)
-
-
-
-
-class UnknownNamespaceException(Exception):
-    pass
-
-

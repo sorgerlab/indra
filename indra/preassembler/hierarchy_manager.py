@@ -398,3 +398,7 @@ hierarchies = {'entity': entity_hierarchy,
                'modification': modification_hierarchy,
                'activity': activity_hierarchy,
                'cellular_component': ccomp_hierarchy}
+
+
+class UnknownNamespaceException(Exception):
+    pass

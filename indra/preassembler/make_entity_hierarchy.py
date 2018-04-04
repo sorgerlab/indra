@@ -17,7 +17,7 @@ up_ns = Namespace('http://identifiers.org/uniprot/')
 famplex_ns = Namespace('http://identifiers.org/fplx/')
 indra_rel_ns = Namespace('http://sorger.med.harvard.edu/indra/relations/')
 
-ns_map = {'http://identifiers.org/fplx': 'FPLX',
+ns_map = {'http://identifiers.org/fplx/': 'FPLX',
           'http://sorger.med.harvard.edu/indra/relations/': 'FPLX',
           'http://identifiers.org/hgnc.symbol/': 'HGNC',
           'http://identifiers.org/uniprot/': 'UP',}
