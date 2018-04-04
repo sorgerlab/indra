@@ -37,33 +37,40 @@ def test_partof_entity_not():
     assert not ent_hierarchy.partof('FPLX', 'HIF1', 'FPLX', 'HIF_alpha')
 
 def test_isa_mod():
-    assert(mod_hierarchy.isa('INDRA', 'phosphorylation',
-                             'INDRA', 'modification'))
+    assert(mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                             'INDRA_MODS', 'modification'))
 
 def test_isa_mod_not():
-    assert(not mod_hierarchy.isa('INDRA', 'phosphorylation',
-                                 'INDRA', 'ubiquitination'))
+    assert(not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                                 'INDRA_MODS', 'ubiquitination'))
 
 def test_isa_activity():
-    assert act_hierarchy.isa('INDRA', 'kinase', 'INDRA', 'activity')
+    assert act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
+                             'INDRA_ACTIVITIES', 'activity')
 
 def test_isa_activity_not():
-    assert not act_hierarchy.isa('INDRA', 'kinase', 'INDRA', 'phosphatase')
+    assert not act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
+                                 'INDRA_ACTIVITIES', 'phosphatase')
 
 def test_partof_comp():
-    assert comp_hierarchy.partof('INDRA', 'cytoplasm', 'INDRA', 'cell')
+    assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
+                                 'INDRA_LOCATIONS', 'cell')
 
 def test_partof_comp_not():
-    assert not comp_hierarchy.partof('INDRA', 'cell', 'INDRA', 'cytoplasm')
+    assert not comp_hierarchy.partof('INDRA_LOCATIONS', 'cell',
+                                     'INDRA_LOCATIONS', 'cytoplasm')
 
 def test_partof_comp_none():
-    assert comp_hierarchy.partof('INDRA', 'cytoplasm', 'INDRA', None)
+    assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
+                                 'INDRA_LOCATIONS', None)
 
 def test_partof_comp_none_none():
-    assert comp_hierarchy.partof('INDRA', None, 'INDRA', None)
+    assert comp_hierarchy.partof('INDRA_LOCATIONS', None,
+                                 'INDRA_LOCATIONS', None)
 
 def test_partof_comp_none_not():
-    assert not comp_hierarchy.partof('INDRA', None, 'INDRA', 'cytoplasm')
+    assert not comp_hierarchy.partof('INDRA_LOCATIONS', None,
+                                     'INDRA_LOCATIONS', 'cytoplasm')
 
 def test_get_children():
     raf = 'http://identifiers.org/fplx/RAF'

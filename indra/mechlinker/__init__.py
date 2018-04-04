@@ -604,9 +604,11 @@ class BaseAgent(object):
     def _make_activity_graph(self):
         self.activity_graph = networkx.DiGraph()
         for a1, a2 in itertools.combinations(self.activity_types, 2):
-            if hierarchies['activity'].isa('INDRA', a1, 'INDRA', a2):
+            if hierarchies['activity'].isa('INDRA_ACTIVITIES', a1,
+                                           'INDRA_ACTIVITIES', a2):
                 self.activity_graph.add_edge(a2, a1)
-            if hierarchies['activity'].isa('INDRA', a2, 'INDRA', a1):
+            if hierarchies['activity'].isa('INDRA_ACTIVITIES', a2,
+                                           'INDRA_ACTIVITIES', a1):
                 self.activity_graph.add_edge(a1, a2)
 
     def get_modification_reduction(self, mc):
