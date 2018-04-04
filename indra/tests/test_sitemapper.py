@@ -193,6 +193,28 @@ def test_site_map_hgnc():
     assert len(valid) == 0
     assert len(mapped) == 1
 
+
+def test_site_map_within_bound_condition():
+    # Here, we test to make sure that agents within a bound condition are
+    # site-mapped
+    (mapk1_invalid, mapk3_invalid) = get_invalid_mapks()
+
+    # Add an agent to the bound condition for the object of the statement
+    mapk3_invalid.bound_conditions = [BoundCondition(mapk1_invalid)]
+    st1 = Activation(mapk1_invalid, mapk3_invalid, 'kinase')
+
+    # Map sites
+    res = sm.map_sites([st1])
+
+    # Extract the mapped statement
+    mapped_statements = res[1]
+    assert(len(mapped_statements) == 1)
+    mapped_s = mapped_statements[0].mapped_stmt
+
+    # Verify that the agent in the object's bound condition got site-mapped
+    validate_mapk1(mapped_s.obj.bound_conditions[0].agent)
+
+
 def get_invalid_mapks():
     """A handy function for getting the invalid MAPK agents we want."""
     mapk1_invalid = Agent('MAPK1',
@@ -226,11 +248,14 @@ def check_validated_mapks(res, st1):
     assert len(agents) == 2
     agent1 = agents[0]
     agent2 = agents[1]
-    assert agent1.name == 'MAPK1'
-    assert len(agent1.mods) == 2
-    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
-    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+    validate_mapk1(agent1)
     assert agent2.mods[0].matches(ModCondition('phosphorylation', 'T', '202'))
     assert agent2.mods[1].matches(ModCondition('phosphorylation', 'Y', '204'))
     assert unicode_strs((res, st1))
 
+
+def validate_mapk1(agent1):
+    assert agent1.name == 'MAPK1'
+    assert len(agent1.mods) == 2
+    assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
+    assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))

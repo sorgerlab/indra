@@ -22,6 +22,7 @@ from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper import gm as grounding_map
 from indra.preassembler.grounding_mapper import default_agent_map as agent_map
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
+from copy import deepcopy
 
 logger = logging.getLogger('assemble_corpus')
 indra_logger = logging.getLogger('indra').setLevel(logging.DEBUG)
@@ -324,6 +325,71 @@ def filter_by_type(stmts_in, stmt_type, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
+def _agent_is_grounded(agent, score_threshold):
+    grounded = True
+    db_names = list(set(agent.db_refs.keys()) - set(['TEXT']))
+    # If there are no entries at all other than possibly TEXT
+    if not db_names:
+        grounded = False
+    # If there are entries but they point to None / empty values
+    if not all([agent.db_refs[db_name] for db_name in db_names]):
+        grounded = False
+    # If we are looking for scored groundings with a threshold
+    if score_threshold:
+        for db_name in db_names:
+            val = agent.db_refs[db_name]
+            # If it's a list with some values, find the
+            # highest scoring match and compare to threshold
+            if isinstance(val, list) and val:
+                high_score = sorted(val, key=lambda x: x[1],
+                                    reverse=True)[0][1]
+                if high_score < score_threshold:
+                    grounded = False
+    return grounded
+
+
+def _remove_bound_conditions(agent, keep_criterion):
+    """Removes bound conditions of agent such that keep_criterion is False.
+
+    Parameters
+    ----------
+    agent: Agent
+        The agent whose bound conditions we evaluate
+    keep_criterion: function
+        Evaluates removal_criterion(a) for each agent a in a bound condition
+        and if it evaluates to False, removes a from agent's bound_conditions
+    """
+    new_bc = []
+    for ind in range(len(agent.bound_conditions)):
+        if keep_criterion(agent.bound_conditions[ind].agent):
+            new_bc.append(agent.bound_conditions[ind])
+    agent.bound_conditions = new_bc
+
+def _any_bound_condition_fails_criterion(agent, criterion):
+    """Returns True if any bound condition fails to meet the specified
+    criterion.
+
+    Parameters
+    ----------
+    agent: Agent
+        The agent whose bound conditions we evaluate
+    criterion: function
+        Evaluates criterion(a) for each a in a bound condition and returns True
+        if any agents fail to meet the criterion.
+
+    Returns
+    -------
+    any_meets: bool
+        True if and only if any of the agents in a bound condition fail to match
+        the specified criteria
+    """
+    bc_agents = [bc.agent for bc in agent.bound_conditions]
+    for b in bc_agents:
+        if not criterion(b):
+            return True
+    return False
+
 def filter_grounded_only(stmts_in, **kwargs):
     """Filter to statements that have grounded agents.
 
@@ -336,12 +402,18 @@ def filter_grounded_only(stmts_in, **kwargs):
         if below this threshold, the Statement is filtered out.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    remove_bound: Optional[bool]
+        If true, removes ungrounded bound conditions from a statement.
+        If false (default), filters out statements with ungrounded bound
+        conditions.
 
     Returns
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+    remove_bound = kwargs.get('remove_bound', False)
+
     logger.info('Filtering %d statements for grounded agents...' % 
                 len(stmts_in))
     stmts_out = []
@@ -350,27 +422,16 @@ def filter_grounded_only(stmts_in, **kwargs):
         grounded = True
         for agent in st.agent_list():
             if agent is not None:
-                db_names = list(set(agent.db_refs.keys()) - set(['TEXT']))
-                # If there are no entries at all other than possibly TEXT
-                if not db_names:
+                criterion = lambda x: _agent_is_grounded(x, score_threshold)
+                if not criterion(agent):
                     grounded = False
                     break
-                # If there are entries but they point to None / empty values
-                if not all([agent.db_refs[db_name] for db_name in db_names]):
+                if not isinstance(agent, Agent):
+                    continue
+                if remove_bound:
+                    _remove_bound_conditions(agent, criterion)
+                elif _any_bound_condition_fails_criterion(agent, criterion):
                     grounded = False
-                    break
-                # If we are looking for scored groundings with a threshold
-                if score_threshold:
-                    for db_name in db_names:
-                        val = agent.db_refs[db_name]
-                        # If it's a list with some values, find the
-                        # highest scoring match and compare to threshold
-                        if isinstance(val, list) and val:
-                            high_score = sorted(val, key=lambda x: x[1],
-                                                reverse=True)[0][1]
-                            if high_score < score_threshold:
-                                grounded = False
-                if not grounded:
                     break
         if grounded:
             stmts_out.append(st)
@@ -379,6 +440,33 @@ def filter_grounded_only(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
+def _agent_is_gene(agent, specific_only):
+    """Returns whether an agent is for a gene.
+
+    Parameters
+    ----------
+    agent: Agent
+        The agent to evaluate
+    specific_only : Optional[bool]
+        If True, only elementary genes/proteins evaluate as genes and families
+        will be filtered out. If False, families are also included.
+
+    Returns
+    -------
+    is_gene: bool
+        Whether the agent is a gene
+    """
+    if not specific_only:
+        if not(agent.db_refs.get('HGNC') or \
+               agent.db_refs.get('UP') or \
+               agent.db_refs.get('FPLX')):
+            return False
+    else:
+        if not(agent.db_refs.get('HGNC') or \
+               agent.db_refs.get('UP')):
+            return False
+    return True
 
 def filter_genes_only(stmts_in, **kwargs):
     """Filter to statements containing genes only.
@@ -393,12 +481,22 @@ def filter_genes_only(stmts_in, **kwargs):
         output. Default: False
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    remove_bound: Optional[bool]
+        If true, removes bound conditions that are not genes
+        If false (default), filters out statements with non-gene bound
+        conditions
 
     Returns
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+
+    if 'remove_bound' in kwargs and kwargs['remove_bound']:
+        remove_bound = True
+    else:
+        remove_bound = False
+
     specific_only = kwargs.get('specific_only')
     logger.info('Filtering %d statements for ones containing genes only...' % 
                 len(stmts_in))
@@ -407,17 +505,17 @@ def filter_genes_only(stmts_in, **kwargs):
         genes_only = True
         for agent in st.agent_list():
             if agent is not None:
-                if not specific_only:
-                    if not(agent.db_refs.get('HGNC') or \
-                           agent.db_refs.get('UP') or \
-                           agent.db_refs.get('FPLX')):
-                        genes_only = False
-                        break
+                criterion = lambda a: _agent_is_gene(a, specific_only)
+                if not criterion(agent):
+                    genes_only = False
+                    break
+                if remove_bound:
+                    _remove_bound_conditions(agent, criterion)
                 else:
-                    if not(agent.db_refs.get('HGNC') or \
-                           agent.db_refs.get('UP')):
+                    if _any_bound_condition_fails_criterion(agent, criterion):
                         genes_only = False
                         break
+
         if genes_only:
             stmts_out.append(st)
     logger.info('%d statements after filter...' % len(stmts_out))
@@ -490,12 +588,23 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
         of the genes in the gene list. Default: False
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    remove_bound: Optional[str]
+        If true, removes bound conditions that are not genes in the list
+        If false (default), looks at agents in the bound conditions in addition
+        to those participating in the statement directly when applying the
+        specified policy.
 
     Returns
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+
+    if 'remove_bound' in kwargs and kwargs['remove_bound']:
+        remove_bound = True
+    else:
+        remove_bound = False
+
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     else:
@@ -513,10 +622,23 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                 ns, id = hierarchies['entity'].ns_id_from_uri(par_uri)
                 filter_list.append(id)
     stmts_out = []
+
+    if remove_bound:
+        # If requested, remove agents whose names are not in the list from
+        # all bound conditions
+        keep_criterion = lambda a: a.name in filter_list
+        for st in stmts_in:
+            for agent in st.agent_list():
+                _remove_bound_conditions(agent, keep_criterion)
+    
     if policy == 'one':
         for st in stmts_in:
             found_gene = False
-            for agent in st.agent_list():
+            if not remove_bound:
+                agent_list = st.agent_list_with_bound_condition_agents()
+            else:
+                agent_list = st.agent_list()
+            for agent in agent_list:
                 if agent is not None:
                     if agent.name in filter_list:
                         found_gene = True
@@ -526,7 +648,11 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     elif policy == 'all':
         for st in stmts_in:
             found_genes = True
-            for agent in st.agent_list():
+            if not remove_bound:
+                agent_list = st.agent_list_with_bound_condition_agents()
+            else:
+                agent_list = st.agent_list()
+            for agent in agent_list:
                 if agent is not None:
                     if agent.name not in filter_list:
                         found_genes = False
@@ -535,6 +661,8 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                 stmts_out.append(st)
     else:
         stmts_out = stmts_in
+
+
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
     if dump_pkl:
@@ -542,7 +670,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     return stmts_out
 
 def filter_human_only(stmts_in, **kwargs):
-    """Filter out statements that are not grounded to human genes.
+    """Filter out statements that are grounded, but not to a human gene.
 
     Parameters
     ----------
@@ -550,6 +678,10 @@ def filter_human_only(stmts_in, **kwargs):
         A list of statements to filter.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    remove_bound: Optional[bool]
+        If true, removes all bound conditions that are grounded but not to human
+        genes. If false (default), filters out statements with boundary
+        conditions that are grounded to non-human genes.
 
     Returns
     -------
@@ -557,16 +689,35 @@ def filter_human_only(stmts_in, **kwargs):
         A list of filtered statements.
 
     """
+
+    if 'remove_bound' in kwargs and kwargs['remove_bound']:
+        remove_bound = True
+    else:
+        remove_bound = False
+
     dump_pkl = kwargs.get('save')
     logger.info('Filtering %d statements for human genes only...' %
                 len(stmts_in))
     stmts_out = []
+
+    def criterion(agent):
+        upid = agent.db_refs.get('UP')
+        if upid and not uniprot_client.is_human(upid):
+            return False
+        else:
+            return True
+
+
     for st in stmts_in:
         human_genes = True
         for agent in st.agent_list():
             if agent is not None:
-                upid = agent.db_refs.get('UP')
-                if upid and not uniprot_client.is_human(upid):
+                if not criterion(agent):
+                    human_genes = False
+                    break
+                if remove_bound:
+                    _remove_bound_conditions(agent, criterion)
+                elif _any_bound_condition_fails_criterion(agent, criterion):
                     human_genes = False
                     break
         if human_genes:
@@ -900,22 +1051,37 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+
+    if 'remove_bound' in kwargs and kwargs['remove_bound']:
+        remove_bound = True
+    else:
+        remove_bound = False
+
+    def criterion(agent):
+        if agent is not None and agent.name in deletions:
+            return False
+        if agent is not None and agent.mutations:
+            muts = mutations.get(agent.name, [])
+            for mut in agent.mutations:
+                mut_tup = (mut.residue_from, mut.position, mut.residue_to)
+                if mut_tup not in muts:
+                    return False
+        return True
+
+
     logger.info('Filtering %d statements for mutation status...' %
                 len(stmts_in))
     stmts_out = []
     for stmt in stmts_in:
         skip = False
         for agent in stmt.agent_list():
-            if agent is not None and agent.name in deletions:
+            if not criterion(agent):
                 skip = True
                 break
-            if agent is not None and agent.mutations:
-                muts = mutations.get(agent.name, [])
-                for mut in agent.mutations:
-                    mut_tup = (mut.residue_from, mut.position, mut.residue_to)
-                    if mut_tup not in muts:
-                        skip = True
-            if skip:
+            if remove_bound:
+                _remove_bound_conditions(agent, criterion)
+            elif _any_bound_condition_fails_criterion(agent, criterion):
+                skip = True
                 break
         if not skip:
             stmts_out.append(stmt)
