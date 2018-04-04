@@ -26,7 +26,7 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         '-m', '--mode',
-        choices=['all', 'unread', 'none'],
+        choices=['all', 'unread-all', 'unread-unread', 'none'],
         default='unread',
         help=('Set the reading mode. If \'all\', read everything, if '
               '\'unread\', only read content that does not have pre-existing '
@@ -593,10 +593,10 @@ def upload_readings(output_list, db=None):
     return
 
 
-def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
-                     force_fulltext=False, batch_size=1000, no_upload=False,
-                     pickle_file=None, db=None, log_readers=True,
-                     prioritize=False):
+def produce_readings(id_dict, reader_list, verbose=False,
+                     read_mode='unread-all', force_fulltext=False,
+                     batch_size=1000, no_upload=False, pickle_file=None,
+                     db=None, log_readers=True, prioritize=False):
     """Produce the reading output for the given ids, and upload them to db.
 
     This function will also retrieve pre-existing readings from the database,
@@ -611,11 +611,13 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
     verbose : bool
         Optional, default False - If True, log and print the output of the
         commandline reader utilities, if False, don't.
-    read_mode : str : 'all', 'unread', or 'none'
-        Optional, default 'undread' - If 'all', read everything (generally
-        slow); if 'unread', only read things that were undread (as fast as you
-        can be while still getting everything); if 'none', don't read, and only
-        get existing readings.
+    read_mode : str : 'all', 'unread-all', 'unread-unread', or 'none'
+        Optional, default 'undread-all' - If 'all', read everything (generally
+        slow); if 'unread-all', only read things that were unread, but use the
+        cache of old readings to get everything (as fast as you can be while
+        still getting everything); if 'unread-unread', just like 'unread-all',
+        but only return the unread content; if 'none', don't read, and only get
+        existing readings.
     force_fulltext : bool
         Optional, default False - If True, only read fulltext article, ignoring
         abstracts.
@@ -656,7 +658,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
 
     prev_readings = []
     skip_reader_tcid_dict = None
-    if read_mode != 'all':
+    if read_mode not in ['all', 'unread-unread']:
         prev_readings = get_db_readings(id_dict, reader_list, force_fulltext,
                                         batch_size, db=db)
         skip_reader_tcid_dict = {r.name: [] for r in reader_list}

@@ -368,7 +368,8 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                       end_ix=None, pmids_per_job=3000, num_tries=2,
-                      force_read=False, force_fulltext=False):
+                      force_read=False, force_fulltext=False,
+                      read_all_fulltext=False):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
     s3_client = boto3.client('s3')
@@ -409,6 +410,8 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                         str(job_end_ix), '-r'] + readers
         if force_fulltext:
             command_list.append('--force_fulltext')
+        if read_all_fulltext:
+            command_list.append('--read_all_fulltext')
         print(command_list)
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -538,6 +541,11 @@ if __name__ == '__main__':
         help='Don\'t upload results to the database.'
         )
     '''
+    parent_db_parser.add_argument(
+        '--read_all_fulltext',
+        action='store_true',
+        help='Read all available fulltext for input ids, not just the best.'
+        )
 
     # Make non_db_parser and get subparsers
     non_db_parser = subparsers.add_parser(
@@ -618,5 +626,6 @@ if __name__ == '__main__':
             args.ids_per_job,
             2,
             args.force_read,
-            args.force_fulltext
+            args.force_fulltext,
+            args.read_all_fulltext
             )

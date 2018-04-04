@@ -64,6 +64,12 @@ if __name__ == '__main__':
         action='store_true',
         help='Require that content be fulltext, skip anything that isn\'t.'
         )
+    parser.add_argument(
+        '--read_all_fulltext',
+        action='store_true',
+        help=('Do not read only the \"best\" fulltext available for a given id, '
+              'read all of it.')
+        )
     args = parser.parse_args()
 
     logger = logging.getLogger('read_db_aws')
@@ -100,7 +106,7 @@ if __name__ == '__main__':
     outputs = produce_readings(id_dict, readers, verbose=True,
                                read_mode=args.mode,
                                force_fulltext=args.force_fulltext,
-                               prioritize=True)
+                               prioritize=(not args.read_all_fulltext))
 
     # Preserve the sparser logs
     contents = os.listdir('.')
