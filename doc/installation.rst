@@ -210,6 +210,8 @@ Configuration values include:
 
 - EIDOSPATH: The location of the jar containing the eidos reader.
 
+- SPARSERPATH: location of the sparser parser
+
 - NDEX_USERNAME, NDEX_PASSWORD: credentials for accessing the ndex web service
 
 - ELSEVIER_API_KEY, ELSEVIER_INST_KEY: Elsevier web service API keys
@@ -220,8 +222,6 @@ Configuration values include:
 - INDRA_DEFAULT_JAVA_MEM_LIMIT: maximum memory limit for Java virtual machines
   launched by INDRA
 
-- SPARSERPATH: location of the sparser parser
+- INDRA_DB_PRIMARY: primary database address
 
-- primary: primary database address
-
-- test-1, test-2: test database addresses
+- INDRA_DB_TEST1, INDRA_DB_TEST2: test database addresses
