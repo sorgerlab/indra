@@ -7,7 +7,8 @@ from indra.statements import *
 from indra.databases import hgnc_client
 from indra.sources.signor.processor import SignorProcessor, \
                                            _parse_residue_positions
-from indra.sources.signor.api import SignorRow, process_file
+from indra.sources.signor.api import SignorRow, process_from_file, \
+                                     process_from_web
 
 test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         DATABASEA='UNIPROT', ENTITYB='MET', TYPEB='protein', IDB='P08581',
@@ -32,7 +33,7 @@ test_complexes_file = os.path.join(dirname(__file__),
 
 def test_parse_csv_from_file():
     # Should work with both data file and complexes
-    sp = process_file(test_data_file, test_complexes_file)
+    sp = process_from_file(test_data_file, test_complexes_file)
     assert isinstance(sp._data, list)
     assert isinstance(sp._data[0], SignorRow)
     assert isinstance(sp.statements, list)
@@ -44,9 +45,23 @@ def test_parse_csv_from_file():
     assert isinstance(sp.complex_map['SIGNOR-C1'], list)
     assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
     # Make sure we don't error if Complexes data is not provided
-    sp = process_file(test_data_file)
+    sp = process_from_file(test_data_file)
     assert isinstance(sp.statements[0], Statement)
     assert sp.complex_map == {}
+
+
+def test_parse_csv_from_web():
+    sp = process_from_web()
+    assert isinstance(sp._data, list)
+    assert isinstance(sp._data[0], SignorRow)
+    assert isinstance(sp.statements, list)
+    assert isinstance(sp.statements[0], Statement)
+    # Test the complex map
+    assert isinstance(sp.complex_map, dict)
+    assert 'SIGNOR-C1' in sp.complex_map
+    assert isinstance(sp.complex_map['SIGNOR-C1'], list)
+    assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
+    # Make sure we don't error if Complexes data is not provided
 
 
 def test_get_agent():
@@ -615,6 +630,5 @@ def test_signor_complexes():
             SIGNOR_ID='SIGNOR-241545')
 
 if __name__ == '__main__':
-    test_parse_csv_from_file()
-    test_get_agent()
+    test_parse_csv_from_web()
 
