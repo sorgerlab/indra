@@ -13,7 +13,7 @@ import pickle
 import xml.etree.ElementTree as ET
 import multiprocessing as mp
 from os import path, remove, rename, listdir
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from ftplib import FTP
 from io import BytesIO
@@ -1436,6 +1436,7 @@ class Elsevier(ContentManager):
                 # already checked.
                 if continuing and tr.id in tr_ids_checked:
                     continue
+
                 tr_batch.add(tr)
                 if len(tr_batch) % 200 is 0:
                     batch_num += 1
@@ -1478,27 +1479,30 @@ class Elsevier(ContentManager):
         return self._get_elsevier_content(db, tr_wo_pmc_q, continuing)
 
     @ContentManager._record_for_review
-    def update(self, db, continuing=False):
+    def update(self, db, continuing=False, buffer_days=15):
         """Load all available new elsevier content from new pmids."""
+        # There is the possibility that elsevier content will lag behind pubmed
+        # updates, so we go back a bit before the last update to make sure we
+        # didn't miss anything
         latest_updatetime = self._get_latest_update(db)
+        start_datetime = latest_updatetime - timedelta(days=buffer_days)
+
+        # Construct a query for recently added (as defined above) text refs
+        # that do not already have text content.
         new_trs = db.filter_query(
             db.TextRef,
             sql_exp.or_(
-                db.TextRef.last_updated > latest_updatetime,
-                db.TextRef.create_date > latest_updatetime,
-                sql_exp.and_(
-                    db.TextRef.id == db.TextContent.text_ref_id,
-                    db.TextContent.last_updated > latest_updatetime,
-                    db.TextContent.insert_date > latest_updatetime
-                    )
+                db.TextRef.last_updated > start_datetime,
+                db.TextRef.create_date > start_datetime,
                 )
             )
         tr_w_pmc_q = db.filter_query(
             db.TextRef,
             db.TextRef.id == db.TextContent.text_ref_id,
-            db.TextContent.text_type == texttypes.FULLTEXT
+            db.TextContent.text_type == 'fulltext'
             )
         tr_query = new_trs.except_(tr_w_pmc_q)
+
         return self._get_elsevier_content(db, tr_query, continuing)
 
 
