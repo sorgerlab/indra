@@ -173,13 +173,13 @@ def get_logs_from_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
     return log_strs
 
 
-def extract_reach_logs(log_str):
+def separate_reach_logs(log_str):
     """Get the list of reach logs from the overall logs."""
     log_lines = log_str.splitlines()
     reach_logs = []
     reach_lines = []
     adding_reach_lines = False
-    for l in log_lines:
+    for l in log_lines[:]:
         if not adding_reach_lines and 'Beginning reach' in l:
             adding_reach_lines = True
         elif adding_reach_lines and 'Reach finished' in l:
@@ -188,20 +188,56 @@ def extract_reach_logs(log_str):
             reach_lines = []
         elif adding_reach_lines:
             reach_lines.append(l.split('readers - ')[1])
+            log_lines.remove(l)
     if adding_reach_lines:
         reach_logs.append(('FAILURE', '\n'.join(reach_lines)))
-    return reach_logs
+    return '\n'.join(log_lines), reach_logs
+
+
+def get_top_level_summary(log_str):
+    ret_str = 'Event Summary:'
+    ret_str += '\n' + '-'*len(ret_str)
+    ret_str += '\nUseful INFO:\n  '
+    ret_str += '\n  '.join(re.findall(
+        ('INFO: \[.*?\] indra/((?!readers).* - '
+         '(?!Got no statements|Saving sparser)(?=.*\d.*).*)'),
+        log_str))
+    ret_str += '\nWARNINGS that occured:\n  '
+    ret_str += '\n  '.join(set(get_indra_logs_by_priority(log_str, 'WARNING')))
+    ret_str += '\nERRORS that occured:\n  '
+    ret_str += '\n  '.join(set(get_indra_logs_by_priority(log_str, 'ERROR')))
+    return ret_str
+
+
+def get_indra_logs_by_priority(log_str, priority='INFO'):
+    return re.findall('%s: \[.*?\] indra/(.*)' % priority, log_str)
+
+
+def get_unyielding_tcids(log_str):
+    """Extract the set of tcids for which no statements were created."""
+    tcid_strs = re.findall('INFO: \[.*?\].*? - Got no statements for (\d+).*)',
+                           log_str)
+    return {int(tcid_str) for tcid_str in tcid_strs}
+
+
+def get_preexisting_readings(log_str):
+    pass
 
 
 def analyze_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
     """Run various analysis on a particular reading job."""
     # Analyze reach failures
     log_strs = get_logs_from_db_reading(job_prefix, reading_queue)
-    reach_logs = [extract_reach_logs(log_str) for log_str in log_strs]
-    failed_reach_logs = [reach_log_str for job_reach_logs in reach_logs
-                         for result, reach_log_str in job_reach_logs
+    indra_log_strs = []
+    all_reach_logs = []
+    for log_str in log_strs:
+        log_str, reach_logs = separate_reach_logs(log_str)
+        all_reach_logs.extend(reach_logs)
+        indra_log_strs.append(log_str)
+    failed_reach_logs = [reach_log_str
+                         for result, reach_log_str in all_reach_logs
                          if result == 'FAILURE']
     tcids_unfinished = {tcid for reach_log in failed_reach_logs
                         for tcid in analyze_reach_log(log_str=reach_log)}
     print("Found %d unfinished tcids." % len(tcids_unfinished))
-    return reach_logs, failed_reach_logs, tcids_unfinished
+    return tcids_unfinished
