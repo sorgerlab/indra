@@ -194,7 +194,7 @@ def separate_reach_logs(log_str):
     return '\n'.join(log_lines), reach_logs
 
 
-def get_top_level_summary(log_str):
+def get_top_level_summary_of_log(log_str):
     ret_str = 'Event Summary:'
     ret_str += '\n' + '-'*len(ret_str)
     ret_str += '\nUseful INFO:\n  '
@@ -209,6 +209,16 @@ def get_top_level_summary(log_str):
     return ret_str
 
 
+def get_top_level_summary_of_db_reading(log_str_list):
+    total_stat_dict = {}
+    for log_str in log_str_list:
+        stat_dict = get_reading_stats(log_str)
+        total_stat_dict = {k: total_stat_dict.get(k, 0) + v
+                           for k, v in stat_dict.items()
+                           if v is not None}
+    return total_stat_dict
+
+
 def get_indra_logs_by_priority(log_str, priority='INFO'):
     return re.findall('%s: \[.*?\] indra/(.*)' % priority, log_str)
 
@@ -220,8 +230,26 @@ def get_unyielding_tcids(log_str):
     return {int(tcid_str) for tcid_str in tcid_strs}
 
 
-def get_preexisting_readings(log_str):
-    pass
+def get_reading_stats(log_str):
+    def re_get_nums(patt_str):
+        re_ret = re.search(patt_str, log_str)
+        if re_ret is not None:
+            nums = [int(num_str) for num_str in re_ret.groups()]
+        else:
+            print("WARNING: couldn't match patt \"%s\"" % patt_str)
+            nums = [0]*patt_str.count('(\d+)')
+        return nums
+    ret_dict = {}
+    ret_dict['num_prex_readings'] = \
+        re_get_nums('Found (\d+) pre-existing readings')[0]
+    ret_dict['num_new_readings'] = re_get_nums('Made (\d+) new readings')[0]
+    ret_dict['num_succeeded'] = \
+        re_get_nums('Adding (\d+)/\d+ reading entries')[0]
+    ret_dict['num_stmts'], ret_dict['num_readings'] = \
+        re_get_nums('Found (\d+) statements from (\d+) readings')
+    ret_dict['num_agents'] = \
+        re_get_nums('Received request to copy (\d+) entries into agents')[0]
+    return ret_dict
 
 
 def analyze_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
