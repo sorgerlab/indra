@@ -198,7 +198,7 @@ Configuring INDRA
 Various aspects of INDRA, including API keys, dependency locations, and
 Java memory limits, are parameterized by a configuration file that lives in
 ~/.config/indra/config.ini. The default
-configuration file is provided in indra/resources/default_config.json, and
+configuration file is provided in indra/resources/default_config.ini, and
 is copied to ~/.config/indra/config.ini when INDRA starts if no configuration
 already exists. Every value in the configuration can also be set as an
 environment variable: for a given configuration key, INDRA will first check
