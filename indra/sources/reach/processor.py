@@ -7,9 +7,11 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client
 import indra.databases.uniprot_client as up_client
+from collections import namedtuple
 
 logger = logging.getLogger('reach')
 
+Site = namedtuple('Site', ['residue', 'position'])
 
 
 class ReachProcessor(object):
@@ -462,7 +464,8 @@ class ReachProcessor(object):
                 mc = ModCondition(mod_state[0], residue=mod_res,
                                   position=mod_pos, is_modified=mod_state[1])
                 mcs.append(mc)
-            logger.warning('Unhandled entity modification type: %s' % mod_type_str)
+            logger.warning('Unhandled entity modification type: %s'
+                           % mod_type_str)
         return mcs
 
     def _get_context(self, frame_term):
@@ -609,7 +612,20 @@ class ReachProcessor(object):
         else:
             texts = s.split('/')
 
-        return [ReachProcessor._parse_site_text_single(t) for t in texts]
+        sites = [ReachProcessor._parse_site_text_single(t) for t in texts]
+
+        # If the first site has a residue, and the remaining sites do not
+        # explicitly give a residue (example: Tyr-577/576), then apply the
+        # first site's residue to all sites in the site text.
+        only_first_site_has_residue = sites[0].residue is not None
+        for i in range(1, len(sites)):
+            if sites[i].residue is not None:
+                only_first_site_has_residue = False
+        if only_first_site_has_residue:
+            for i in range(1, len(sites)):
+                sites[i] = Site(sites[0].residue, sites[i].position)
+
+        return sites
 
     @staticmethod
     def _parse_site_text_single(s):
@@ -618,25 +634,26 @@ class ReachProcessor(object):
             if m is not None:
                 residue = get_valid_residue(m.groups()[0])
                 site = m.groups()[1]
-                return residue, site
+                return Site(residue, site)
         m = re.match(_site_pattern4, s.upper())
         if m is not None:
             site = m.groups()[0]
             residue = m.groups()[1]
-            return residue, site
+            return Site(residue, site)
         for p in (_site_pattern5, _site_pattern6, _site_pattern7):
             m = re.match(p, s.upper())
             if m is not None:
                 residue = get_valid_residue(m.groups()[0])
                 site = None
-                return residue, site
+                return Site(residue, site)
         m = re.match(_site_pattern8, s.upper())
         if m is not None:
             site = m.groups()[0]
             residue = None
-            return residue, site
+            return Site(residue, site)
         logger.warning('Could not parse site text %s' % s)
-        return None, None
+        return Site(None, None)
+
 
 _site_pattern1 = '([' + ''.join(list(amino_acids.keys())) + '])[-]?([0-9]+)$'
 _site_pattern2 = '(' + '|'.join([v['short_name'].upper() for

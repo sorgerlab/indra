@@ -23,6 +23,7 @@ def test_parse_site_text():
         assert(site == '185')
         assert unicode_strs((residue, site))
 
+
 def test_parse_site_text_number():
     t = '135'
     sites = ReachProcessor._parse_site_text(t)
@@ -31,6 +32,7 @@ def test_parse_site_text_number():
     assert(residue is None)
     assert(site == '135')
     assert(unicode_strs(site))
+
 
 def test_parse_site_text_number_first():
     t = '293T'
@@ -41,6 +43,7 @@ def test_parse_site_text_number_first():
     assert(site == '293')
     assert(unicode_strs((residue, site)))
 
+
 def test_parse_site_text_number_first_space():
     t = '293 T'
     sites = ReachProcessor._parse_site_text(t)
@@ -50,6 +53,7 @@ def test_parse_site_text_number_first_space():
     assert(site == '293')
     assert(unicode_strs((residue, site)))
 
+
 def test_parse_site_text_other_aa():
     t = 'A431'
     sites = ReachProcessor._parse_site_text(t)
@@ -58,6 +62,7 @@ def test_parse_site_text_other_aa():
     assert(residue == 'A')
     assert(site == '431')
     assert(unicode_strs((residue, site)))
+
 
 def test_parse_site_residue_only():
     text = ['serine residue', 'serine', 'a serine site', 's', 'ser']
@@ -70,33 +75,34 @@ def test_parse_site_residue_only():
         assert(residue == 'S')
         assert(site is None)
 
+
 def test_parse_site_multiple():
     sites = ReachProcessor._parse_site_text('638/641')
     assert(len(sites) == 2)
-    assert(sites[0][0] == None)
+    assert(sites[0][0] is None)
     assert(sites[0][1] == '638')
-    assert(sites[1][0] == None)
+    assert(sites[1][0] is None)
     assert(sites[1][1] == '641')
 
     sites = ReachProcessor._parse_site_text('992,1068')
     assert(len(sites) == 2)
-    assert(sites[0][0] == None)
+    assert(sites[0][0] is None)
     assert(sites[0][1] == '992')
-    assert(sites[1][0] == None)
+    assert(sites[1][0] is None)
     assert(sites[1][1] == '1068')
 
     sites = ReachProcessor._parse_site_text('Y1221/1222')
     assert(len(sites) == 2)
     assert(sites[0][0] == 'Y')
     assert(sites[0][1] == '1221')
-    assert(sites[1][0] == None)
+    assert(sites[1][0] == 'Y')
     assert(sites[1][1] == '1222')
 
     sites = ReachProcessor._parse_site_text('Tyr-577/576')
     assert(len(sites) == 2)
     assert(sites[0][0] == 'Y')
     assert(sites[0][1] == '577')
-    assert(sites[1][0] == None)
+    assert(sites[1][0] == 'Y')
     assert(sites[1][1] == '576')
 
     sites = ReachProcessor._parse_site_text('S199/S202/T205')
@@ -106,6 +112,24 @@ def test_parse_site_multiple():
     assert(sites[1][0] == 'S')
     assert(sites[1][1] == '202')
     assert(sites[2][0] == 'T')
+    assert(sites[2][1] == '205')
+
+    sites = ReachProcessor._parse_site_text('S199/202/T205')
+    assert(len(sites) == 3)
+    assert(sites[0][0] == 'S')
+    assert(sites[0][1] == '199')
+    assert(sites[1][0] is None)
+    assert(sites[1][1] == '202')
+    assert(sites[2][0] == 'T')
+    assert(sites[2][1] == '205')
+
+    sites = ReachProcessor._parse_site_text('S199/202/205')
+    assert(len(sites) == 3)
+    assert(sites[0][0] == 'S')
+    assert(sites[0][1] == '199')
+    assert(sites[1][0] == 'S')
+    assert(sites[1][1] == '202')
+    assert(sites[2][0] == 'S')
     assert(sites[2][1] == '205')
 
 
@@ -217,6 +241,7 @@ def test_mutation():
         assert(braf.mutations[0].residue_to == 'E')
         assert unicode_strs(rp.statements)
 
+
 def test_parse_mutation():
     mut = ReachProcessor._parse_mutation('V600E')
     assert(mut.residue_from == 'V')
@@ -232,6 +257,7 @@ def test_parse_mutation():
     assert(mut.residue_from == 'V')
     assert(mut.position == '34')
     assert(mut.residue_to == 'L')
+
 
 def test_process_unicode():
     for offline in offline_modes:
