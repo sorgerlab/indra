@@ -42,7 +42,10 @@ if not os.path.isfile(config_path):
         logger.warning(config_dir + ' already exists')
     default_config = os.path.join(os.path.dirname(__file__),
                                   'resources/default_config.ini')
-    shutil.copyfile(default_config, config_path)
+    try:
+        shutil.copyfile(default_config, config_path)
+    except:
+        logger.warning('Could not copy default config file.')
 
 # Load the configuration file into the config_file dictionary
 # A ConfigParser-style configuration file can have multiple sections
@@ -52,14 +55,19 @@ if not os.path.isfile(config_path):
 # Load key/value pairs from all sections into this dictionary
 config_file = {}
 
-parser = RawConfigParser()
-parser.optionxform = lambda x : x
-parser.read(config_path)
-sections = parser.sections()
-for section in sections:
-    options = parser.options(section)
-    for option in options:
-        config_file[option] = str(parser.get(section, option))
+try:
+    parser = RawConfigParser()
+    parser.optionxform = lambda x : x
+    parser.read(config_path)
+    sections = parser.sections()
+    for section in sections:
+        options = parser.options(section)
+        for option in options:
+            config_file[option] = str(parser.get(section, option))
+except:
+    logger.warning('Could not load configuration file, will check ' + 
+                   'environment variables only for configuration.')
+    config_file = {}
 
 # Expand ~ to the home directory
 for key in config_file:
