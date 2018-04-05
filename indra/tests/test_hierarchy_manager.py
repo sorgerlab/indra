@@ -37,39 +37,46 @@ def test_partof_entity_not():
     assert not ent_hierarchy.partof('FPLX', 'HIF1', 'FPLX', 'HIF_alpha')
 
 def test_isa_mod():
-    assert(mod_hierarchy.isa('INDRA', 'phosphorylation',
-                             'INDRA', 'modification'))
+    assert(mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                             'INDRA_MODS', 'modification'))
 
 def test_isa_mod_not():
-    assert(not mod_hierarchy.isa('INDRA', 'phosphorylation',
-                                 'INDRA', 'ubiquitination'))
+    assert(not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                                 'INDRA_MODS', 'ubiquitination'))
 
 def test_isa_activity():
-    assert act_hierarchy.isa('INDRA', 'kinase', 'INDRA', 'activity')
+    assert act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
+                             'INDRA_ACTIVITIES', 'activity')
 
 def test_isa_activity_not():
-    assert not act_hierarchy.isa('INDRA', 'kinase', 'INDRA', 'phosphatase')
+    assert not act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
+                                 'INDRA_ACTIVITIES', 'phosphatase')
 
 def test_partof_comp():
-    assert comp_hierarchy.partof('INDRA', 'cytoplasm', 'INDRA', 'cell')
+    assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
+                                 'INDRA_LOCATIONS', 'cell')
 
 def test_partof_comp_not():
-    assert not comp_hierarchy.partof('INDRA', 'cell', 'INDRA', 'cytoplasm')
+    assert not comp_hierarchy.partof('INDRA_LOCATIONS', 'cell',
+                                     'INDRA_LOCATIONS', 'cytoplasm')
 
 def test_partof_comp_none():
-    assert comp_hierarchy.partof('INDRA', 'cytoplasm', 'INDRA', None)
+    assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
+                                 'INDRA_LOCATIONS', None)
 
 def test_partof_comp_none_none():
-    assert comp_hierarchy.partof('INDRA', None, 'INDRA', None)
+    assert comp_hierarchy.partof('INDRA_LOCATIONS', None,
+                                 'INDRA_LOCATIONS', None)
 
 def test_partof_comp_none_not():
-    assert not comp_hierarchy.partof('INDRA', None, 'INDRA', 'cytoplasm')
+    assert not comp_hierarchy.partof('INDRA_LOCATIONS', None,
+                                     'INDRA_LOCATIONS', 'cytoplasm')
 
 def test_get_children():
-    raf = 'http://sorger.med.harvard.edu/indra/entities/RAF'
+    raf = 'http://identifiers.org/fplx/RAF'
     braf = 'http://identifiers.org/hgnc.symbol/BRAF'
-    mapk = 'http://sorger.med.harvard.edu/indra/entities/MAPK'
-    ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
+    mapk = 'http://identifiers.org/fplx/MAPK'
+    ampk = 'http://identifiers.org/fplx/AMPK'
     # Look up RAF
     rafs = ent_hierarchy.get_children(raf)
     # Should get three family members
@@ -95,8 +102,8 @@ def test_get_children():
     assert len(none_children) == 0
 
 def test_mtorc_children():
-    mtorc1 = 'http://sorger.med.harvard.edu/indra/entities/mTORC1'
-    mtorc2 = 'http://sorger.med.harvard.edu/indra/entities/mTORC2'
+    mtorc1 = 'http://identifiers.org/fplx/mTORC1'
+    mtorc2 = 'http://identifiers.org/fplx/mTORC2'
     ch1 = ent_hierarchy.get_children(mtorc1)
     ch2 = ent_hierarchy.get_children(mtorc2)
     assert('http://identifiers.org/hgnc.symbol/RICTOR' not in ch1)
@@ -106,13 +113,13 @@ def test_mtorc_get_parents():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.get_parents(rictor, 'all')
     assert(len(p) == 1)
-    assert(list(p)[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
+    assert(list(p)[0] == 'http://identifiers.org/fplx/mTORC2')
 
 def test_mtorc_transitive_closure():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.partof_closure.get(rictor)
     assert(len(p) == 1)
-    assert(p[0] == 'http://sorger.med.harvard.edu/indra/entities/mTORC2')
+    assert(p[0] == 'http://identifiers.org/fplx/mTORC2')
 
 def test_mtorc_partof_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
@@ -130,7 +137,7 @@ def test_erk_isa_no_tc():
 
 def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
-    ampk = 'http://sorger.med.harvard.edu/indra/entities/AMPK'
+    ampk = 'http://identifiers.org/fplx/AMPK'
     p1 = ent_hierarchy.get_parents(prkaa1, 'all')
     assert(len(p1) == 8)
     assert(ampk in p1)

@@ -23,7 +23,7 @@ def save_hierarchy(g, path):
 def main():
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
     rn = Namespace(indra_ns + 'relations/')
-    en = Namespace(indra_ns + 'entities/')
+    mn = Namespace(indra_ns + 'modifications/')
     g = Graph()
 
     isa = rn.term('isa')
@@ -31,7 +31,7 @@ def main():
     for modtype in sorted(modtype_conditions):
         if modtype == 'modification':
             continue
-        g.add((en.term(modtype), isa, en.term('modification')))
+        g.add((mn.term(modtype), isa, mn.term('modification')))
 
     save_hierarchy(g, hierarchy_path)
 

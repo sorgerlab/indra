@@ -20,18 +20,18 @@ def save_hierarchy(g, path):
 def main():
     indra_ns = 'http://sorger.med.harvard.edu/indra/'
     rn = Namespace(indra_ns + 'relations/')
-    en = Namespace(indra_ns + 'entities/')
+    act = Namespace(indra_ns + 'activities/')
     g = Graph()
 
     isa = rn.term('isa')
 
-    g.add((en.term('transcription'), isa, en.term('activity')))
-    g.add((en.term('catalytic'), isa, en.term('activity')))
-    g.add((en.term('gtpbound'), isa, en.term('activity')))
-    g.add((en.term('kinase'), isa, en.term('catalytic')))
-    g.add((en.term('phosphatase'), isa, en.term('catalytic')))
-    g.add((en.term('gef'), isa, en.term('catalytic')))
-    g.add((en.term('gap'), isa, en.term('catalytic')))
+    g.add((act.term('transcription'), isa, act.term('activity')))
+    g.add((act.term('catalytic'), isa, act.term('activity')))
+    g.add((act.term('gtpbound'), isa, act.term('activity')))
+    g.add((act.term('kinase'), isa, act.term('catalytic')))
+    g.add((act.term('phosphatase'), isa, act.term('catalytic')))
+    g.add((act.term('gef'), isa, act.term('catalytic')))
+    g.add((act.term('gap'), isa, act.term('catalytic')))
 
     save_hierarchy(g, hierarchy_path)
 

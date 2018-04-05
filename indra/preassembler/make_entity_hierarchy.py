@@ -12,13 +12,12 @@ hierarchy_path = join(dirname(abspath(__file__)),
 relations_file = join(dirname(abspath(__file__)),
                       '../resources/famplex/relations.csv')
 
-indra_ns = 'http://sorger.med.harvard.edu/indra/'
 hgnc_ns = Namespace('http://identifiers.org/hgnc.symbol/')
 up_ns = Namespace('http://identifiers.org/uniprot/')
-indra_ent_ns = Namespace(indra_ns + 'entities/')
-indra_rel_ns = Namespace(indra_ns + 'relations/')
+famplex_ns = Namespace('http://identifiers.org/fplx/')
+indra_rel_ns = Namespace('http://sorger.med.harvard.edu/indra/relations/')
 
-ns_map = {'http://sorger.med.harvard.edu/indra/entities/': 'FPLX',
+ns_map = {'http://identifiers.org/fplx/': 'FPLX',
           'http://sorger.med.harvard.edu/indra/relations/': 'FPLX',
           'http://identifiers.org/hgnc.symbol/': 'HGNC',
           'http://identifiers.org/uniprot/': 'UP',}
@@ -40,7 +39,7 @@ def make_term(ns_name, id):
     elif ns_name == 'UP':
         term = up_ns.term(id)
     elif ns_name == 'FPLX':
-        term = indra_ent_ns.term(id)
+        term = famplex_ns.term(id)
     else:
         raise ValueError("Unknown namespace %s" % ns_name)
     return term
