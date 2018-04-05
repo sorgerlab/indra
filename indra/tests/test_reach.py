@@ -166,6 +166,22 @@ def test_mutation():
         assert(braf.mutations[0].residue_to == 'E')
         assert unicode_strs(rp.statements)
 
+def test_parse_mutation():
+    mut = ReachProcessor._parse_mutation('V600E')
+    assert(mut.residue_from == 'V')
+    assert(mut.position == '600')
+    assert(mut.residue_to == 'E')
+
+    mut = ReachProcessor._parse_mutation('Leu174Arg')
+    assert(mut.residue_from == 'L')
+    assert(mut.position == '174')
+    assert(mut.residue_to == 'R')
+
+    mut = ReachProcessor._parse_mutation('val34leu')
+    assert(mut.residue_from == 'V')
+    assert(mut.position == '34')
+    assert(mut.residue_to == 'L')
+
 def test_process_unicode():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 binds ERK2\U0001F4A9.', offline=offline)

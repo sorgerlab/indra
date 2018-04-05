@@ -575,7 +575,7 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_mutation(s):
-        m = re.match(r'([A-Z])([0-9]+)([A-Z])', s.upper())
+        m = re.match(r'([A-Z]+)([0-9]+)([A-Z]+)', s.upper())
         if m is not None:
             parts = [str(g) for g in m.groups()]
             residue_from = get_valid_residue(parts[0])
