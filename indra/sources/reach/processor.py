@@ -116,7 +116,7 @@ class ReachProcessor(object):
             else:
                 # residue = None
                 # pos = None
-                mods = []
+                mods = [(None, None)]
 
             for mod in mods:
                 residue, pos = mod

@@ -255,6 +255,7 @@ def test_hgnc_from_up():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 phosphorylates ERK2.',
                                 offline=offline)
+        import ipdb;ipdb.set_trace()
         assert len(rp.statements) == 1
         st = rp.statements[0]
         (map2k1, mapk1) = st.agent_list()
