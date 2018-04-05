@@ -33,6 +33,9 @@ def test_isa_entity3():
 def test_partof_entity():
     assert ent_hierarchy.partof('FPLX', 'HIF_alpha', 'FPLX', 'HIF')
 
+def test_isa_or_partof_entity():
+    assert ent_hierarchy.isa_or_partof('HGNC', 'PRKAG1', 'FPLX', 'AMPK')
+
 def test_partof_entity_not():
     assert not ent_hierarchy.partof('FPLX', 'HIF1', 'FPLX', 'HIF_alpha')
 
