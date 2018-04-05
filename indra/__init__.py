@@ -7,7 +7,7 @@ if sys.version_info[0] == 3:
     from configparser import RawConfigParser
 else:
     from ConfigParser import RawConfigParser
-__version__ = '1.6.0'
+__version__ = '1.7.0'
 
 __all__ = ['assemblers', 'belief', 'databases', 'explanation', 'literature',
            'mechlinker', 'preassembler', 'sources', 'tools', 'util']

@@ -7,4 +7,5 @@ graft data
 graft doc
 graft models
 graft rest_api
+graft db_rest_api
 include indra/sources/biopax/jars/paxtools.jar

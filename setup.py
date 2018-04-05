@@ -3,9 +3,6 @@ use_setuptools()
 from setuptools import setup
 import sys
 
-
-
-
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
@@ -25,7 +22,7 @@ def main():
                                   for dep in deps})
 
     setup(name='indra',
-          version='1.6.0',
+          version='1.7.0',
           description='Integrated Network and Dynamical Reasoning Assembler',
           long_description='INDRA is a framework '
               'for assembling rule-based mathematical models and '
@@ -40,9 +37,11 @@ def main():
                     'indra.literature', 'indra.mechlinker',
                     'indra.preassembler', 'indra.sources',
                     'indra.sources.bbn', 'indra.sources.bel',
-                    'indra.sources.biopax', 'indra.sources.eidos',
+                    'indra.sources.biopax', 'indra.sources.cwms',
+                    'indra.sources.eidos',
                     'indra.sources.geneways', 'indra.sources.index_cards',
                     'indra.sources.ndex_cx', 'indra.sources.reach',
+                    'indra.sources.sofia',
                     'indra.sources.sparser', 'indra.sources.tees',
                     'indra.sources.trips', 'indra.resources',
                     'indra.resources.famplex', 'indra.tests',
