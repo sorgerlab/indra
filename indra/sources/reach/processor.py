@@ -111,56 +111,61 @@ class ReachProcessor(object):
                     site = a['text']
             theme_agent = self._get_agent_from_entity(theme)
             if site is not None:
-                residue, pos = self._parse_site_text(site)
+                # residue, pos = self._parse_site_text(site)
+                mods = self._parse_site_text(site)
             else:
-                residue = None
-                pos = None
+                # residue = None
+                # pos = None
+                mods = []
 
-            # Now we need to look for all regulation event to get to the
-            # enzymes (the "controller" here)
-            qstr = "$.events.frames[(@.type is 'regulation') and " + \
-                   "(@.arguments[0].arg is '%s')]" % frame_id
-            reg_res = self.tree.execute(qstr)
-            reg_res = list(reg_res)
-            for reg in reg_res:
-                controller_agent = None
-                for a in reg['arguments']:
-                    if self._get_arg_type(a) == 'controller':
-                        controller = a.get('arg')
-                        if controller is not None:
-                            controller_agent = \
-                                self._get_agent_from_entity(controller)
-                            break
-                # Check the polarity of the regulation and if negative,
-                # flip the modification type.
-                # For instance, negative-regulation of a phosphorylation
-                # will become an (indirect) dephosphorylation
-                reg_subtype = reg.get('subtype')
-                if reg_subtype == 'negative-regulation':
-                    modification_type = \
-                        modtype_to_inverse.get(modification_type)
-                    if not modification_type:
+            for mod in mods:
+                residue, pos = mod
+
+                # Now we need to look for all regulation event to get to the
+                # enzymes (the "controller" here)
+                qstr = "$.events.frames[(@.type is 'regulation') and " + \
+                       "(@.arguments[0].arg is '%s')]" % frame_id
+                reg_res = self.tree.execute(qstr)
+                reg_res = list(reg_res)
+                for reg in reg_res:
+                    controller_agent = None
+                    for a in reg['arguments']:
+                        if self._get_arg_type(a) == 'controller':
+                            controller = a.get('arg')
+                            if controller is not None:
+                                controller_agent = \
+                                    self._get_agent_from_entity(controller)
+                                break
+                    # Check the polarity of the regulation and if negative,
+                    # flip the modification type.
+                    # For instance, negative-regulation of a phosphorylation
+                    # will become an (indirect) dephosphorylation
+                    reg_subtype = reg.get('subtype')
+                    if reg_subtype == 'negative-regulation':
+                        modification_type = \
+                            modtype_to_inverse.get(modification_type)
+                        if not modification_type:
+                            logger.warning('Unhandled modification type: %s' %
+                                           modification_type)
+                            continue
+
+                    sentence = reg['verbose-text']
+                    ev = Evidence(source_api='reach', text=sentence,
+                                  annotations=context, pmid=self.citation,
+                                  epistemics=epistemics)
+                    args = [controller_agent, theme_agent, residue, pos, ev]
+
+                    # Here ModStmt is a sub-class of Modification
+                    ModStmt = modtype_to_modclass.get(modification_type)
+                    if ModStmt is None:
                         logger.warning('Unhandled modification type: %s' %
                                        modification_type)
-                        continue
-
-                sentence = reg['verbose-text']
-                ev = Evidence(source_api='reach', text=sentence,
-                              annotations=context, pmid=self.citation,
-                              epistemics=epistemics)
-                args = [controller_agent, theme_agent, residue, pos, ev]
-
-                # Here ModStmt is a sub-class of Modification
-                ModStmt = modtype_to_modclass.get(modification_type)
-                if ModStmt is None:
-                    logger.warning('Unhandled modification type: %s' %
-                                   modification_type)
-                else:
-                    # Handle this special case here because only
-                    # enzyme argument is needed
-                    if modification_type == 'autophosphorylation':
-                        args = [theme_agent, residue, pos, ev]
-                    self.statements.append(ModStmt(*args))
+                    else:
+                        # Handle this special case here because only
+                        # enzyme argument is needed
+                        if modification_type == 'autophosphorylation':
+                            args = [theme_agent, residue, pos, ev]
+                        self.statements.append(ModStmt(*args))
 
     def get_regulate_amounts(self):
         """Extract RegulateAmount INDRA Statements."""
@@ -437,28 +442,35 @@ class ReachProcessor(object):
                     if mut is not None:
                         muts.append(mut)
                 else:
-                    mc = self._get_mod_condition(m)
-                    if mc is not None:
-                        mods.append(mc)
+                    mcs = self._get_mod_conditions(ms)
+                    mods.extend(mcs)
 
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
 
-    def _get_mod_condition(self, mod_term):
+    def _get_mod_conditions(self, mod_term):
         site = mod_term.get('site')
         if site is not None:
-            mod_res, mod_pos = self._parse_site_text(site)
+            #mod_res, mod_pos = self._parse_site_text(site)
+            mods = self._parse_site_text(site)
         else:
-            mod_res = None
-            mod_pos = None
-        mod_type_str = mod_term['type'].lower()
-        mod_state = agent_mod_map.get(mod_type_str)
-        if mod_state is not None:
-            mc = ModCondition(mod_state[0], residue=mod_res, position=mod_pos,
-                              is_modified=mod_state[1])
-            return mc
-        logger.warning('Unhandled entity modification type: %s' % mod_type_str)
-        return None
+            mods = []
+            # mod_res = None
+            # mod_pos = None
+
+        mcs = []
+        for mod in mods:
+            mod_res, mod_pos = mod
+            mod_type_str = mod_term['type'].lower()
+            mod_state = agent_mod_map.get(mod_type_str)
+            if mod_state is not None:
+                mc = ModCondition(mod_state[0], residue=mod_res, position=mod_pos,
+                                  is_modified=mod_state[1])
+                #return mc
+                mcs.append(mc)
+            logger.warning('Unhandled entity modification type: %s' % mod_type_str)
+            #return None
+        return mcs
 
     def _get_context(self, frame_term):
         context = {}
@@ -593,6 +605,21 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_site_text(s):
+        has_comma = ',' in s
+        has_slash = '/' in s
+
+        has_both = has_comma and has_slash
+        assert(not has_both)
+
+        if has_comma:
+            texts = s.split(',')
+        else:
+            texts = s.split('/')
+
+        return [ReachProcessor._parse_site_text_single(t) for t in texts]
+
+    @staticmethod
+    def _parse_site_text_single(s):
         for p in (_site_pattern1, _site_pattern2, _site_pattern3):
             m = re.match(p, s.upper())
             if m is not None:
