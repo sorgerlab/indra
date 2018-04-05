@@ -194,7 +194,7 @@ such that they can be installed with ``pip``.
 In other cases a specific `README` or `requirements.txt` is provided in the folder to guide the set up.
 
 Configuring INDRA
-----------------
+-----------------
 Various aspects of INDRA, including API keys, dependency locations, and
 Java memory limits, are parameterized by a configuration file that lives in
 ~/.config/indra/config.ini. The default
