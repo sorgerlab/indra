@@ -53,6 +53,7 @@ class HierarchyManager(object):
     def initialize(self):
         self.isa_closure = {}
         self.partof_closure = {}
+        self.isa_or_partof_closure = {}
         self.components = {}
         if self.build_closure:
             self.build_transitive_closures()
@@ -86,13 +87,30 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
+
+        def isa_objects(node, g):
+            for o in g.objects(node,
+                    rdflib.term.URIRef(self.relations_prefix + 'isa')):
+                yield o
+
+        def partof_objects(node, g):
+            for o in g.objects(node,
+                    rdflib.term.URIRef(self.relations_prefix + 'partof')):
+                yield o
+
+        def isa_or_partof_objects(node, g):
+            for o in isa_objects(node, g):
+                yield o
+            for o in partof_objects(node, g):
+                yield o
+
         self.component_counter = 0
-        for rel, tc_dict in (('isa', self.isa_closure),
-                             ('partof', self.partof_closure)):
-            rel_uri = self.relations_prefix + rel
-            rel_ref = rdflib.term.URIRef(rel_uri)
+        for rel, tc_dict in ((isa_objects, self.isa_closure),
+                             (partof_objects, self.partof_closure),
+                             (isa_or_partof_objects,
+                                 self.isa_or_partof_closure)):
             for x in self.graph.all_nodes():
-                rel_closure = self.graph.transitive_objects(x, rel_ref)
+                rel_closure = self.graph.transitiveClosure(rel, x)
                 xs = x.toPython()
                 for y in rel_closure:
                     ys = y.toPython()
