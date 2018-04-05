@@ -21,23 +21,30 @@ def test_hierarchy_unicode():
     assert unicode_strs((act_hierarchy.isa_closure,
                          act_hierarchy.partof_closure))
 
+
 def test_isa_entity():
     assert(ent_hierarchy.isa('HGNC', 'BRAF', 'FPLX', 'RAF'))
+
 
 def test_isa_entity2():
     assert(not ent_hierarchy.isa('HGNC', 'BRAF', 'HGNC', 'ARAF'))
 
+
 def test_isa_entity3():
     assert(not ent_hierarchy.isa('FPLX', 'RAF', 'HGNC', 'BRAF'))
+
 
 def test_partof_entity():
     assert ent_hierarchy.partof('FPLX', 'HIF_alpha', 'FPLX', 'HIF')
 
+
 def test_isa_or_partof_entity():
     assert ent_hierarchy.isa_or_partof('HGNC', 'PRKAG1', 'FPLX', 'AMPK')
 
+
 def test_partof_entity_not():
     assert not ent_hierarchy.partof('FPLX', 'HIF1', 'FPLX', 'HIF_alpha')
+
 
 def test_isa_mod():
     assert(mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',

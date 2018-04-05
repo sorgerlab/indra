@@ -14,21 +14,25 @@ logger = logging.getLogger('hierarchy_manager')
 
 relations_prefix = 'http://sorger.med.harvard.edu/indra/relations/'
 
+
 def isa_objects(node, g):
     for o in g.objects(node,
-            rdflib.term.URIRef(relations_prefix + 'isa')):
+                       rdflib.term.URIRef(relations_prefix + 'isa')):
         yield o
+
 
 def partof_objects(node, g):
     for o in g.objects(node,
-            rdflib.term.URIRef(relations_prefix + 'partof')):
+                       rdflib.term.URIRef(relations_prefix + 'partof')):
         yield o
+
 
 def isa_or_partof_objects(node, g):
     for o in isa_objects(node, g):
         yield o
     for o in partof_objects(node, g):
         yield o
+
 
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
@@ -64,7 +68,6 @@ class HierarchyManager(object):
         self.graph = rdflib.Graph()
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.initialize()
-
 
     def initialize(self):
         self.isa_closure = {}
@@ -103,7 +106,7 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
- 
+
         self.component_counter = 0
         for rel, tc_dict in ((isa_objects, self.isa_closure),
                              (partof_objects, self.partof_closure),
@@ -179,7 +182,7 @@ class HierarchyManager(object):
             return None
 
     def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
-                relation_func): 
+                                       relation_func):
         """Indicate whether one entity has the speicified relationship with
         another, directly or indirectly.
 
@@ -194,18 +197,18 @@ class HierarchyManager(object):
             id2 : string
                 URI for an entity.
             closure_dict: dict
-                A dictionary mapping node names to nodes that have the specified
-                relationship, directly or indirectly. Empty if this has not been
-                precomputed.
+                A dictionary mapping node names to nodes that have the
+                specified relationship, directly or indirectly. Empty if this
+                has not been precomputed.
             relation_func: function
-                Function with arguments (node, graph) that generates objects with
-                some relationship with node on the given graph.
+                Function with arguments (node, graph) that generates objects
+                with some relationship with node on the given graph.
 
             Returns
             -------
             bool
-                True if t1 has the specified relationship with t2, either directly
-                or through a series of intermediates; False otherwise.
+                True if t1 has the specified relationship with t2, either
+                directly or through a series of intermediates; False otherwise.
         """
         # if id2 is None, or both are None, then it's by definition isa:
         if id2 is None or (id2 is None and id1 is None):
@@ -242,7 +245,6 @@ class HierarchyManager(object):
             else:
                 return False
 
-
     def isa(self, ns1, id1, ns2, id2):
         """Indicate whether one entity has an "isa" relationship to another.
 
@@ -266,7 +268,7 @@ class HierarchyManager(object):
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_closure,
                                                    isa_objects)
-        
+
     def partof(self, ns1, id1, ns2, id2):
         """Indicate whether one entity is physically part of another.
 
