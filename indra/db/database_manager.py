@@ -233,6 +233,16 @@ class DatabaseManager(object):
                     ),
                 )
 
+        class ReadingUpdates(self.Base):
+            __tablename__ = 'reading_updates'
+            id = Column(Integer, primary_key=True)
+            init_read = Column(Boolean, nullable=False)
+            reader = Column(String(250), nullable=False)
+            reader_version = Column(String(250), nullable=False)
+            run_datetime = Column(DateTime, default=func.now())
+            earliest_datetime = Column(DateTime, nullable=False)
+            latest_datetime = Column(DateTime, nullable=False)
+
         class DBInfo(self.Base):
             __tablename__ = 'db_info'
             id = Column(Integer, primary_key=True)
@@ -286,7 +296,8 @@ class DatabaseManager(object):
 
         self.tables = {}
         for tbl in [TextRef, TextContent, Readings, SourceFile, Updates,
-                    DBInfo, Statements, Agents, PAStatements, PAAgents]:
+                    DBInfo, Statements, Agents, PAStatements, PAAgents,
+                    ReadingUpdates]:
             self.tables[tbl.__tablename__] = tbl
             self.__setattr__(tbl.__name__, tbl)
         self.engine = create_engine(host)
