@@ -6,16 +6,25 @@ from os import path
 from functools import wraps
 from datetime import datetime
 
+from indra.tools.reading.db_reading import read_db as rdb
+from indra.tools.reading.readers import get_reader
+
 logger = logging.getLogger('reading_manager')
 THIS_DIR = path.dirname(path.abspath(__file__))
 
 
-class ReadingManager(object):
-    reader = NotImplemented
+class ReadingUpdateError(Exception):
+    pass
 
-    def __init__(self, buffer_days=1):
+
+class ReadingManager(object):
+    def __init__(self, reader_name, buffer_days=1):
+        self.reader = get_reader(reader_name)
+        if self.reader is None:
+            raise ReadingUpdateError('Name of reader was not matched to an '
+                                     'available reader.')
         self.buffer_days = buffer_days
-        self.reader_version = None
+        self.reader_version = self.reader.get_version()
         self.run_datetime = None
         self.begin_datetime = None
         self.end_datetime = None
@@ -28,9 +37,10 @@ class ReadingManager(object):
             self.run_datetime = datetime.utcnow()
             completed = func(self, db, *args, **kwargs)
             if completed:
-                is_init_upload = (func.__name__ == 'populate')
-                db.insert('reading_updates', init_upload=is_init_upload,
-                          source=self.my_source,
+                is_complete_read = (func.__name__ == 'read_all')
+                db.insert('reading_updates', complete_read=is_complete_read,
+                          reader=self.reader.name,
+                          reader_version=self.reader_version,
                           run_datetime=self.run_datetime,
                           earliest_datetime=self.begin_datetime,
                           latest_datetime=self.end_datetime)
@@ -39,8 +49,10 @@ class ReadingManager(object):
 
     def _get_latest_update(self, db):
         """Get the date of the latest update."""
-        update_list = db.select_all(db.ReadingUpdates,
-                                    db.ReadingUpdates.reader == self.reader)
+        update_list = db.select_all(
+            db.ReadingUpdates,
+            db.ReadingUpdates.reader == self.reader.name
+            )
         if not len(update_list):
             logger.error("The database has not had an initial upload, or else "
                          "the updates table has not been populated.")
@@ -48,18 +60,15 @@ class ReadingManager(object):
 
         return max([u.datetime for u in update_list])
 
+
+class BulkReadingManager(ReadingManager):
     @ReadingManager._handle_update_table
     def read_all(self, db, n_proc):
         """Read everything available on the database."""
+        self.end_datetime = self.run_datetime
+        return True
 
     @ReadingManager._handle_update_table
     def read_new(self, db, n_proc):
         """Update the readings and raw statements in the database."""
-
-
-class ReachManager(ReadingManager):
-    reader = 'reach'
-
-
-class SparserManager(ReadingManager):
-    reader = 'sparser'
+        return True

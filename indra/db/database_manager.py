@@ -236,11 +236,11 @@ class DatabaseManager(object):
         class ReadingUpdates(self.Base):
             __tablename__ = 'reading_updates'
             id = Column(Integer, primary_key=True)
-            init_read = Column(Boolean, nullable=False)
+            complete_read = Column(Boolean, nullable=False)
             reader = Column(String(250), nullable=False)
             reader_version = Column(String(250), nullable=False)
             run_datetime = Column(DateTime, default=func.now())
-            earliest_datetime = Column(DateTime, nullable=False)
+            earliest_datetime = Column(DateTime)
             latest_datetime = Column(DateTime, nullable=False)
 
         class DBInfo(self.Base):

@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from indra.db.database_manager import DatabaseManager
 from indra.db.util import get_abstracts_by_pmids, get_defaults
 from nose.plugins.attrib import attr
+from indra.db.reading_manager import BulkReadingManager
 
 IS_PY3 = True
 if version_info.major is not 3:
@@ -553,6 +554,17 @@ def test_elsevier_upload():
         )
     num_elsevier = tc_q.count()
     assert num_elsevier > 0, "Got no elsevier content."
+
+
+@needs_py3
+@attr('nonpublic', 'slow')
+def test_sparser_initial_reading():
+    "Test the initial reading of of sparser content"
+    db = get_db_with_ftp_content()
+    BulkReadingManager('sparser').read_all(db, n_proc=1)
+    sparser_updates_q = db.filter_query(db.ReadingUpdates,
+                                        db.ReadingUpdates.reader == 'SPARSER')
+    assert sparser_updates_q.count() == 1, "Update was not logged."
 
 
 @needs_py3
