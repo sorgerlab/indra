@@ -12,6 +12,24 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 
 logger = logging.getLogger('hierarchy_manager')
 
+relations_prefix = 'http://sorger.med.harvard.edu/indra/relations/'
+
+def isa_objects(node, g):
+    for o in g.objects(node,
+            rdflib.term.URIRef(relations_prefix + 'isa')):
+        yield o
+
+def partof_objects(node, g):
+    for o in g.objects(node,
+            rdflib.term.URIRef(relations_prefix + 'partof')):
+        yield o
+
+def isa_or_partof_objects(node, g):
+    for o in isa_objects(node, g):
+        yield o
+    for o in partof_objects(node, g):
+        yield o
+
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
 
@@ -45,8 +63,6 @@ class HierarchyManager(object):
         self.uri_as_name = uri_as_name
         self.graph = rdflib.Graph()
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
-        self.relations_prefix = \
-            'http://sorger.med.harvard.edu/indra/relations/'
         self.initialize()
 
 
@@ -87,23 +103,7 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
-
-        def isa_objects(node, g):
-            for o in g.objects(node,
-                    rdflib.term.URIRef(self.relations_prefix + 'isa')):
-                yield o
-
-        def partof_objects(node, g):
-            for o in g.objects(node,
-                    rdflib.term.URIRef(self.relations_prefix + 'partof')):
-                yield o
-
-        def isa_or_partof_objects(node, g):
-            for o in isa_objects(node, g):
-                yield o
-            for o in partof_objects(node, g):
-                yield o
-
+ 
         self.component_counter = 0
         for rel, tc_dict in ((isa_objects, self.isa_closure),
                              (partof_objects, self.partof_closure),
@@ -178,6 +178,70 @@ class HierarchyManager(object):
         else:
             return None
 
+    def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
+                relation_func): 
+        """Indicate whether one entity has the speicified relationship with
+        another, directly or indirectly.
+
+            Parameters
+            ----------
+            ns1 : string
+                Namespace code for an entity.
+            id1 : string
+                URI for an entity.
+            ns2 : string
+                Namespace code for an entity.
+            id2 : string
+                URI for an entity.
+            closure_dict: dict
+                A dictionary mapping node names to nodes that have the specified
+                relationship, directly or indirectly. Empty if this has not been
+                precomputed.
+            relation_func: function
+                Function with arguments (node, graph) that generates objects with
+                some relationship with node on the given graph.
+
+            Returns
+            -------
+            bool
+                True if t1 has the specified relationship with t2, either directly
+                or through a series of intermediates; False otherwise.
+        """
+        # if id2 is None, or both are None, then it's by definition isa:
+        if id2 is None or (id2 is None and id1 is None):
+            return True
+        # If only id1 is None, then it cannot be isa
+        elif id1 is None:
+            return False
+
+        if closure_dict:
+            term1 = self.get_uri(ns1, id1)
+            term2 = self.get_uri(ns2, id2)
+            ec = closure_dict.get(term1)
+            if ec is not None and term2 in ec:
+                return True
+            else:
+                return False
+        else:
+            if not self.uri_as_name:
+                e1 = self.find_entity(id1)
+                e2 = self.find_entity(id2)
+                if e1 is None or e2 is None:
+                    return False
+                t1 = rdflib.term.URIRef(e1)
+                t2 = rdflib.term.URIRef(e2)
+            else:
+                u1 = self.get_uri(ns1, id1)
+                u2 = self.get_uri(ns2, id2)
+                t1 = rdflib.term.URIRef(u1)
+                t2 = rdflib.term.URIRef(u2)
+
+            to = self.graph.transitiveClosure(relation_func, t1)
+            if t2 in to:
+                return True
+            else:
+                return False
+
 
     def isa(self, ns1, id1, ns2, id2):
         """Indicate whether one entity has an "isa" relationship to another.
@@ -199,43 +263,10 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        # if id2 is None, or both are None, then it's by definition isa:
-        if id2 is None or (id2 is None and id1 is None):
-            return True
-        # If only id1 is None, then it cannot be isa
-        elif id1 is None:
-            return False
-
-        if self.isa_closure:
-            term1 = self.get_uri(ns1, id1)
-            term2 = self.get_uri(ns2, id2)
-            ec = self.isa_closure.get(term1)
-            if ec is not None and term2 in ec:
-                return True
-            else:
-                return False
-        else:
-            if not self.uri_as_name:
-                e1 = self.find_entity(id1)
-                e2 = self.find_entity(id2)
-                if e1 is None or e2 is None:
-                    return False
-                t1 = rdflib.term.URIRef(e1)
-                t2 = rdflib.term.URIRef(e2)
-            else:
-                u1 = self.get_uri(ns1, id1)
-                u2 = self.get_uri(ns2, id2)
-                t1 = rdflib.term.URIRef(u1)
-                t2 = rdflib.term.URIRef(u2)
-
-            rel_uri = self.relations_prefix + 'isa'
-            rel_ref = rdflib.term.URIRef(rel_uri)
-            to = self.graph.transitive_objects(t1, rel_ref)
-            if t2 in to:
-                return True
-            else:
-                return False
-
+        return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
+                                                   self.isa_closure,
+                                                   isa_objects)
+        
     def partof(self, ns1, id1, ns2, id2):
         """Indicate whether one entity is physically part of another.
 
@@ -256,42 +287,34 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        # if id2 is None, or both are None, then it's by definition isa:
-        if id2 is None or (id2 is None and id1 is None):
-            return True
-        # If only id1 is None, then it cannot be isa
-        elif id1 is None:
-            return False
+        return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
+                                                   self.partof_closure,
+                                                   partof_objects)
 
-        if self.partof_closure:
-            term1 = self.get_uri(ns1, id1)
-            term2 = self.get_uri(ns2, id2)
-            ec = self.partof_closure.get(term1)
-            if ec is not None and term2 in ec:
-                return True
-            else:
-                return False
-        else:
-            if not self.uri_as_name:
-                e1 = self.find_entity(id1)
-                e2 = self.find_entity(id2)
-                if e1 is None or e2 is None:
-                    return False
-                t1 = rdflib.term.URIRef(e1)
-                t2 = rdflib.term.URIRef(e2)
-            else:
-                u1 = self.get_uri(ns1, id1)
-                u2 = self.get_uri(ns2, id2)
-                t1 = rdflib.term.URIRef(u1)
-                t2 = rdflib.term.URIRef(u2)
+    def isa_or_partof(self, ns1, id1, ns2, id2):
+        """Indicate whether one entity has an "isa" or "partof" relationship
+        with another.
 
-            rel_uri = self.relations_prefix + 'partof'
-            rel_ref = rdflib.term.URIRef(rel_uri)
-            to = self.graph.transitive_objects(t1, rel_ref)
-            if t2 in to:
-                return True
-            else:
-                return False
+        Parameters
+        ----------
+        ns1 : string
+            Namespace code for an entity.
+        id1 : string
+            URI for an entity.
+        ns2 : string
+            Namespace code for an entity.
+        id2 : string
+            URI for an entity.
+
+        Returns
+        -------
+        bool
+            True if t1 has a "isa" or "partof" relationship with t2, either
+            directly or through a series of intermediates; False otherwise.
+        """
+        return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
+                                                   self.isa_or_partof_closure,
+                                                   isa_or_partof_objects)
 
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
