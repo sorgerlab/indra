@@ -209,7 +209,7 @@ def get_top_level_summary_of_log(log_str):
     return ret_str
 
 
-def get_top_level_summary_of_db_reading(log_str_list):
+def get_top_level_summary_of_logs(log_str_list):
     ret_dict = {}
     ret_dict['total_stats'] = {}
     ret_dict['err_set'] = set()
@@ -250,16 +250,18 @@ class GetReadingStatsError(Exception):
 
 
 def get_reading_stats(log_str):
-    def re_get_nums(patt_str):
+    def re_get_nums(patt_str, default=None):
         re_ret = re.search(patt_str, log_str)
         if re_ret is not None:
             nums = [int(num_str) for num_str in re_ret.groups()]
-        else:
+        elif default is None:
             raise GetReadingStatsError("couldn't match patt \"%s\"" % patt_str)
+        else:
+            nums = [default]*patt_str.count('(\d+)')
         return nums
     ret_dict = {}
     ret_dict['num_prex_readings'] = \
-        re_get_nums('Found (\d+) pre-existing readings')[0]
+        re_get_nums('Found (\d+) pre-existing readings', 0)[0]
     ret_dict['num_new_readings'] = re_get_nums('Made (\d+) new readings')[0]
     ret_dict['num_succeeded'] = \
         re_get_nums('Adding (\d+)/\d+ reading entries')[0]

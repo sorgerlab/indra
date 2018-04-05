@@ -2790,28 +2790,29 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     Statement objects from the json, where possible. The method of handling
     missing support is controled by the `on_missing_support` key-word argument.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     json_in : json list
         A json list containing json dict representations of INDRA Statements,
         as produced by the `to_json` methods of subclasses of Statement, or
         equivalently by `stmts_to_json`.
-    on_missing_support : str
+    on_missing_support : Optional[str]
         Handles the behavior when a uuid reference in `supports` or
         `supported_by` attribute cannot be resolved. This happens because uuids
         can only be linked to Statements contained in the `json_in` list, and
         some may be missing if only some of all the Statements from pre-
         assembly are contained in the list.
 
-        Options are:
-            'handle' - (default) convert unresolved uuids into `Unresolved`
-                Statement objects.
-            'ignore' - Simply omit any uuids that cannot be linked to any
-                Statements in the list.
-            'error' - Raise an error upon hitting an un-linkable uuid.
+        Options:
 
-    Returns:
-    --------
+        - *'handle'* : (default) convert unresolved uuids into `Unresolved`
+          Statement objects.
+        - *'ignore'* : Simply omit any uuids that cannot be linked to any
+          Statements in the list.
+        - *'error'* : Raise an error upon hitting an un-linkable uuid.
+
+    Returns
+    -------
     stmts : list[:py:class:`Statement`]
         A list of INDRA Statements.
     """

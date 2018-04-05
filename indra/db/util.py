@@ -24,32 +24,29 @@ from indra import config_file
 logger = logging.getLogger('db_util')
 
 
-DEFAULTS_FILE = path.join(path.dirname(path.abspath(__file__)), 'defaults.txt')
 __PRIMARY_DB = None
 
 
 def get_defaults():
-    "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
-    default_default_file = DEFAULTS_FILE
-    env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
+    """Get the default database hosts from the config file or environment.
+
+    Databases may be specified in either the config file or the environment. In
+    the config file, they are listed as `INDRA_DB_<database role>`, for example
+    `INDRA_DB_PRIMARY` for the primary database. Similarly, a database may be
+    specified by environment variables of the form `INDRADB<datbase role>`, for
+    example `INDRADBPRIMARY`.
+
+    Note: The environment takes precedence.
+    """
     env = os.environ
-    available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}
-    if 'primary' not in config_file and not available_keys:
+    defaults_dict = {k[9:].lower(): v for k, v in config_file.items()
+                     if k.startswith('INDRA_DB_') and v}
+    defaults_dict.update({k[7:].lower(): v for k, v in env.items()
+                          if k.startswith('INDRADB')})
+    if not defaults_dict:
         raise IndraDatabaseError(
-            "Cannot find default file or environment vars."
+            "Faild to load defaults from config file or environment."
             )
-    elif 'INDRA_DB_PRIMARY' in config_file:
-        defaults_dict = {}
-        defaults_dict['INDRA_DB_PRIMARY'] = config_file['INDRA_DB_PRIMARY']
-        if 'INDRA_DB_TEST1' in config_file:
-            defaults_dict['INDRA_DB_TEST1'] = config_file['INDRA_DB_TEST1']
-        if 'INDRA_DB_TEST2' in config_file:
-            defaults_dict['INDRA_DB_TEST2'] = config_file['INDRA_DB_TEST2']
-    else:
-        defaults_dict = {
-            purpose: env_val for purpose, my_env_key in env_key_dict.items()
-            for env_key, env_val in env.items() if my_env_key == env_key
-            }
     return defaults_dict
 
 
@@ -89,7 +86,7 @@ def get_primary_db(force_new=False):
 
     Returns
     -------
-    primary_db : DatabaseManager instance
+    primary_db : :py:class:`DatabaseManager`
         An instance of the database manager that is attached to the primary
         database.
     """
@@ -137,14 +134,14 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     Note: This method currently works for both Statements and PAStatements and
     their corresponding agents (Agents and PAAgents).
 
-    Parameters:
-    -----------
-    db : indra.db.DatabaseManager
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
         The manager for the database into which you are adding agents.
-    stmt_tbl_obj : sqlalchemy table object
+    stmt_tbl_obj : :py:class:`sqlalchemy.Base` table object
         For example, `db.Statements`. The object corresponding to the
         statements column you creating agents for.
-    agent_tbl_obj : sqlalchemy table object
+    agent_tbl_obj : :py:class:`sqlalchemy.Base` table object
         That agent table corresponding to the statement table above.
     *other_stmt_clauses : sqlalchemy clauses
         Further arguments, such as `db.Statements.db_ref == 1' are used to
@@ -233,11 +230,11 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     Note that this method is for uploading statements that came from a
     database to our databse, not for inserting any statements to the database.
 
-    Parameters:
-    -----------
-    db : indra.db.DatabaseManager
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
         The manager for the database into which you are loading statements.
-    stmts : list [indra.statements.Statement]
+    stmts : list [:py:class:`indra.statements.Statement`]
         A list of un-assembled indra statements to be uploaded to the datbase.
     db_ref_id : int
         The id to the db_ref entry corresponding to these statements.
@@ -272,12 +269,12 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
 def insert_pa_stmts(db, stmts, verbose=False):
     """Insert pre-assembled statements, and any affiliated agents.
 
-    Parameters:
-    -----------
-    db : indra.db.DatabaseManager
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
         The manager for the database into which you are loading pre-assembled
         statements.
-    stmts : list [indra.statements.Statement]
+    stmts : list [:py:class:`indra.statements.Statement`]
         A list of pre-assembled indra statements to be uploaded to the datbase.
     verbose : bool
         If True, print extra information and a status bar while compiling
@@ -363,7 +360,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     count : int
         Number of statements to retrieve in each batch (passed to
         :py:func:`get_statements`).
-    db : indra.db.DatabaseManager object.
+    db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
     do_stmt_count : bool
@@ -426,7 +423,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     do_stmt_count : bool
         Whether or not to perform an initial statement counting step to give
         more meaningful progress messages.
-    db : indra.db.DatabaseManager object.
+    db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local database instance.
     preassembled : bool
