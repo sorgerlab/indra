@@ -86,7 +86,7 @@ def get_primary_db(force_new=False):
 
     Returns
     -------
-    primary_db : py:class:`DatabaseManager`
+    primary_db : :py:class:`DatabaseManager`
         An instance of the database manager that is attached to the primary
         database.
     """
@@ -136,12 +136,12 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
 
     Parameters
     ----------
-    db : py:class:`DatabaseManager`
+    db : :py:class:`DatabaseManager`
         The manager for the database into which you are adding agents.
-    stmt_tbl_obj : py:class:`sqlalchemy.Base` table object
+    stmt_tbl_obj : :py:class:`sqlalchemy.Base` table object
         For example, `db.Statements`. The object corresponding to the
         statements column you creating agents for.
-    agent_tbl_obj : py:class:`sqlalchemy.Base` table object
+    agent_tbl_obj : :py:class:`sqlalchemy.Base` table object
         That agent table corresponding to the statement table above.
     *other_stmt_clauses : sqlalchemy clauses
         Further arguments, such as `db.Statements.db_ref == 1' are used to
@@ -232,9 +232,9 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
 
     Parameters
     ----------
-    db : py:class:`DatabaseManager`
+    db : :py:class:`DatabaseManager`
         The manager for the database into which you are loading statements.
-    stmts : list [py:class`indra.statements.Statement`]
+    stmts : list [:py:class:`indra.statements.Statement`]
         A list of un-assembled indra statements to be uploaded to the datbase.
     db_ref_id : int
         The id to the db_ref entry corresponding to these statements.
@@ -271,10 +271,10 @@ def insert_pa_stmts(db, stmts, verbose=False):
 
     Parameters
     ----------
-    db : py:class:`DatabaseManager`
+    db : :py:class:`DatabaseManager`
         The manager for the database into which you are loading pre-assembled
         statements.
-    stmts : list [py:class`indra.statements.Statement`]
+    stmts : list [:py:class:`indra.statements.Statement`]
         A list of pre-assembled indra statements to be uploaded to the datbase.
     verbose : bool
         If True, print extra information and a status bar while compiling
@@ -360,7 +360,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     count : int
         Number of statements to retrieve in each batch (passed to
         :py:func:`get_statements`).
-    db : py:class:`DatabaseManager`
+    db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
     do_stmt_count : bool
@@ -423,7 +423,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     do_stmt_count : bool
         Whether or not to perform an initial statement counting step to give
         more meaningful progress messages.
-    db : py:class:`DatabaseManager`
+    db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local database instance.
     preassembled : bool
