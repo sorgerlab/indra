@@ -96,7 +96,7 @@ class ReadingManager(object):
                          "the updates table has not been populated.")
             return False
 
-        return max([u.datetime for u in update_list])
+        return max([u.latest_datetime for u in update_list])
 
 
 class BulkReadingManager(ReadingManager):

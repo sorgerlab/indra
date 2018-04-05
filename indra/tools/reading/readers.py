@@ -164,16 +164,21 @@ class ReachReader(Reader):
     def _check_reach_env():
         """Check that the environment supports runnig reach."""
         # Get the path to the REACH JAR
-        path_to_reach = get_config['REACHPATH']
+        path_to_reach = get_config('REACHPATH')
+        if path_to_reach is None:
+            path_to_reach = environ.get('REACHPATH', None)
         if path_to_reach is None or not path.exists(path_to_reach):
             raise ReachError(
-                'Reach path unset or invalid. Check REACHPATH environment var.'
+                'Reach path unset or invalid. Check REACHPATH environment var '
+                'and/or config file.'
                 )
 
         logger.debug('Using REACH jar at: %s' % path_to_reach)
 
         # Get the reach version.
-        reach_version = environ.get('REACH_VERSION', None)
+        reach_version = get_config('REACH_VERSION')
+        if reach_version is None:
+            reach_version = environ.get('REACH_VERSION', None)
         if reach_version is None:
             logger.debug('REACH version not set in REACH_VERSION')
             m = re.match('reach-(.*?)\.jar', path.basename(path_to_reach))
