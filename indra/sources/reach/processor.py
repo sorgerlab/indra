@@ -111,14 +111,12 @@ class ReachProcessor(object):
                     site = a['text']
             theme_agent = self._get_agent_from_entity(theme)
             if site is not None:
-                # residue, pos = self._parse_site_text(site)
                 mods = self._parse_site_text(site)
             else:
-                # residue = None
-                # pos = None
                 mods = [(None, None)]
 
             for mod in mods:
+                # Add up to one statement for each site
                 residue, pos = mod
 
                 # Now we need to look for all regulation event to get to the
@@ -451,12 +449,9 @@ class ReachProcessor(object):
     def _get_mod_conditions(self, mod_term):
         site = mod_term.get('site')
         if site is not None:
-            #mod_res, mod_pos = self._parse_site_text(site)
             mods = self._parse_site_text(site)
         else:
             mods = []
-            # mod_res = None
-            # mod_pos = None
 
         mcs = []
         for mod in mods:
@@ -464,12 +459,10 @@ class ReachProcessor(object):
             mod_type_str = mod_term['type'].lower()
             mod_state = agent_mod_map.get(mod_type_str)
             if mod_state is not None:
-                mc = ModCondition(mod_state[0], residue=mod_res, position=mod_pos,
-                                  is_modified=mod_state[1])
-                #return mc
+                mc = ModCondition(mod_state[0], residue=mod_res,
+                                  position=mod_pos, is_modified=mod_state[1])
                 mcs.append(mc)
             logger.warning('Unhandled entity modification type: %s' % mod_type_str)
-            #return None
         return mcs
 
     def _get_context(self, frame_term):
