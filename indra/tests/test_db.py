@@ -565,6 +565,13 @@ def test_sparser_initial_reading():
     sparser_updates_q = db.filter_query(db.ReadingUpdates,
                                         db.ReadingUpdates.reader == 'SPARSER')
     assert sparser_updates_q.count() == 1, "Update was not logged."
+    sparser_readings_q = db.filter_query(db.Readings,
+                                         db.Readings.reader == 'SPARSER')
+    assert sparser_readings_q.count() > 0, "Failed to produce readings."
+    sparser_stmts_q = db.filter_query(db.Statements,
+                                      db.Statements.reader_ref == db.Readings.id,
+                                      db.Readings.reader == 'SPARSER')
+    assert sparser_stmts_q.count() > 0
 
 
 @needs_py3
