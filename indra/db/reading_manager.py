@@ -5,6 +5,44 @@ import logging
 from os import path
 from functools import wraps
 from datetime import datetime, timedelta
+from indra.db.util import get_primary_db, get_test_db
+
+if __name__ == '__main__':
+    # NOTE: PEP8 will complain about this, however having the args parsed up
+    # here prevents a long wait just to fined out you entered a command wrong.
+    from argparse import ArgumentParser
+    parser = ArgumentParser(
+        description='Manage content on INDRA\'s database.'
+        )
+    parser.add_argument(
+        choices=['read_all', 'read_new'],
+        dest='task',
+        help=('Choose whether you want to read/reread everything, or only '
+              'read the content added since the last update. Note that content '
+              'from one day before the latests update will also be checked, to '
+              'avoid content update overlap errors.')
+        )
+    parser.add_argument(
+        '-n', '--num_procs',
+        dest='num_procs',
+        type=int,
+        default=1,
+        help=('Select the number of processors to use during this operation. '
+              'Default is 1.')
+        )
+    parser.add_argument(
+        '-t', '--test',
+        action='store_true',
+        help='Run tests using one of the designated test databases.'
+        )
+    parser.add_argument(
+        '-b', '--buffer',
+        type=int,
+        default=1,
+        help=('Set the number number of buffer days read prior to the most '
+              'recent update. The default is 1 day.')
+        )
+    args = parser.parse_args()
 
 from indra.tools.reading.db_reading import read_db as rdb
 from indra.tools.reading.readers import get_reader
@@ -99,3 +137,20 @@ class BulkReadingManager(ReadingManager):
                     % len(id_dict['trid']))
         self.run_reading(db, id_dict, n_proc, verbose)
         return True
+
+
+if __name__ == '__main__':
+    if args.test:
+        db = get_test_db()
+    else:
+        db = get_primary_db()
+
+    bulk_managers = [BulkReadingManager(reader_name, buffer_days=args.buffer)
+                     for reader_name in ['REACH', 'SPARSER']]
+
+    if args.task == 'read_all':
+        for bulk_manager in bulk_managers:
+            bulk_manager.read_all(db, n_proc=args.num_procs)
+    elif args.task == 'read_new':
+        for bulk_manager in bulk_managers:
+            bulk_manager.read_new(db, n_proc=args.num_procs)
