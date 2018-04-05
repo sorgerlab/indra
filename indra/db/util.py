@@ -24,32 +24,29 @@ from indra import config_file
 logger = logging.getLogger('db_util')
 
 
-DEFAULTS_FILE = path.join(path.dirname(path.abspath(__file__)), 'defaults.txt')
 __PRIMARY_DB = None
 
 
 def get_defaults():
-    "Get the default database hosts provided in the specified `DEFAULTS_FILE`."
-    default_default_file = DEFAULTS_FILE
-    env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
+    """Get the default database hosts from the config file or environment.
+
+    Databases may be specified in either the config file or the environment. In
+    the config file, they are listed as `INDRA_DB_<database role>`, for example
+    `INDRA_DB_PRIMARY` for the primary database. Similarly, a database may be
+    specified by environment variables of the form `INDRADB<datbase role>`, for
+    example `INDRADBPRIMARY`.
+
+    Note: The environment takes precedence.
+    """
     env = os.environ
-    available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}
-    if 'primary' not in config_file and not available_keys:
+    defaults_dict = {k[9:].lower(): v for k, v in config_file.items()
+                     if k.startswith('INDRA_DB_') and v}
+    defaults_dict.update({k[7:].lower(): v for k, v in env.items()
+                          if k.startswith('INDRADB')})
+    if not defaults_dict:
         raise IndraDatabaseError(
-            "Cannot find default file or environment vars."
+            "Faild to load defaults from config file or environment."
             )
-    elif 'INDRA_DB_PRIMARY' in config_file:
-        defaults_dict = {}
-        defaults_dict['INDRA_DB_PRIMARY'] = config_file['INDRA_DB_PRIMARY']
-        if 'INDRA_DB_TEST1' in config_file:
-            defaults_dict['INDRA_DB_TEST1'] = config_file['INDRA_DB_TEST1']
-        if 'INDRA_DB_TEST2' in config_file:
-            defaults_dict['INDRA_DB_TEST2'] = config_file['INDRA_DB_TEST2']
-    else:
-        defaults_dict = {
-            purpose: env_val for purpose, my_env_key in env_key_dict.items()
-            for env_key, env_val in env.items() if my_env_key == env_key
-            }
     return defaults_dict
 
 
