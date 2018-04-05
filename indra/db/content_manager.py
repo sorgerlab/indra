@@ -1473,8 +1473,6 @@ class Elsevier(ContentManager):
                 pickle.dump({'elsevier': self.__journal_set,
                              'found': self.__found_journal_set,
                              'matched': self.__matched_journal_set}, f)
-        if path.exists(pickle_stash_fname):
-            remove(pickle_stash_fname)
         return True
 
     @ContentManager._record_for_review
@@ -1546,9 +1544,9 @@ if __name__ == '__main__':
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
         if args.elsevier == 'only':
-            pubmed_init = db.select_one(db.Update,
-                                        db.Update.source == Pubmed.my_source,
-                                        db.Update.init_upload.is_(True))
+            pubmed_init = db.select_one(db.Updates,
+                                        db.Updates.source == Pubmed.my_source,
+                                        db.Updates.init_upload.is_(True))
             if pubmed_init is None:
                 raise UploadError('Cannot upload Elsevier content before '
                                   'uploading Pubmed.')
