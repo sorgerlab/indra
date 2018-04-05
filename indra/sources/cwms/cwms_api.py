@@ -10,8 +10,8 @@ logger = logging.getLogger('cwms_rdf')
 def process_text(text, save_xml='cwms_output.xml'):
     """Processes text using the CWMS web service.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     text : str
         Text to process
 
@@ -37,8 +37,8 @@ def process_text(text, save_xml='cwms_output.xml'):
 def process_ekb(ekb_str):
     """Processes an EKB string produced by CWMS.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     ekb_str : str
         EKB string to process
 
