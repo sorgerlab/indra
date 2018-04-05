@@ -19,7 +19,7 @@ from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
-
+from indra import config_file
 
 logger = logging.getLogger('db_util')
 
@@ -34,17 +34,17 @@ def get_defaults():
     env_key_dict = {'primary': 'INDRADBPRIMARY', 'test': 'INDRADBTEST'}
     env = os.environ
     available_keys = {k: v for k, v in env_key_dict.items() if v in env.keys()}
-    if not path.exists(default_default_file) and not available_keys:
+    if 'primary' not in config_file and not available_keys:
         raise IndraDatabaseError(
             "Cannot find default file or environment vars."
             )
-    elif path.exists(default_default_file):
-        with open(default_default_file, 'r') as f:
-            defaults_raw = f.read().splitlines()
+    elif 'INDRA_DB_PRIMARY' in config_file:
         defaults_dict = {}
-        for default_line in defaults_raw:
-            key, value = default_line.split('=')
-            defaults_dict[key.strip()] = value.strip()
+        defaults_dict['INDRA_DB_PRIMARY'] = config_file['INDRA_DB_PRIMARY']
+        if 'INDRA_DB_TEST1' in config_file:
+            defaults_dict['INDRA_DB_TEST1'] = config_file['INDRA_DB_TEST1']
+        if 'INDRA_DB_TEST2' in config_file:
+            defaults_dict['INDRA_DB_TEST2'] = config_file['INDRA_DB_TEST2']
     else:
         defaults_dict = {
             purpose: env_val for purpose, my_env_key in env_key_dict.items()

@@ -12,6 +12,7 @@ import textwrap
 import xml.etree.ElementTree as ET
 import requests
 from time import sleep
+from indra import has_config, get_config
 # Python3
 try:
     from functools import lru_cache
@@ -46,38 +47,19 @@ api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
 api_key_env_name = 'ELSEVIER_API_KEY'
 inst_key_env_name = 'ELSEVIER_INST_KEY'
 
-# Try to read the API key from a file
-try:
-    elsevier_keys = dict(read_unicode_csv(api_key_file))
-    # Check whether the institution key is present
-    if not elsevier_keys.get('X-ELS-Insttoken'):
-        logger.info('Optional institution key X-ELS-Insttoken not found in '
-                    'elsevier key file.')
-    # Check that the API key entry has the right name
-    if not elsevier_keys.get('X-ELS-APIKey'):
-        logger.error('API key X-ELS-APIKey not found in elsevier key file.')
-        elsevier_keys = None
-except IOError:
-    logger.debug('Elsevier API keys file could not be read, trying '
-                 'environment variables $%s and $%s.' %
-                 (api_key_env_name, inst_key_env_name))
-    logger.debug('Tried key file: %s' % api_key_file)
-    # Try the environment variable for the api key. This one is optional,
-    # so if it is not found then we just leave it out of the keys dict
-    elsevier_keys = {}
-    if inst_key_env_name in os.environ:
-        elsevier_keys['X-ELS-Insttoken'] = os.environ.get(inst_key_env_name)
-    else:
-        logger.debug('No Elsevier institution key found in environment '
-                     'variable %s.' % inst_key_env_name)
-    # Try the environment variable for the api key. This one is required, so
-    # if it is not found then we set the keys dict to None
-    if api_key_env_name in os.environ:
-        elsevier_keys['X-ELS-APIKey'] = os.environ.get(api_key_env_name)
-    else:
-        logger.debug('No Elsevier API key found in environment variable '
-                     '%s.' % api_key_env_name)
-        elsevier_keys = None
+# Try to read in Elsevier API keys. For each key, first check the environment
+# variables, then check the INDRA configuration file.
+elsevier_keys = {}
+if not has_config(inst_key_env_name):
+    logger.error('API key ' + inst_key_env_name + ' not found in ' + \
+                 'configuration file or environment variable.')
+elsevier_keys['X-ELS-Insttoken'] = get_config(inst_key_env_name)
+
+if not has_config(api_key_env_name):
+    logger.error('API key ' + api_key_env_name + ' not found in ' + \
+                 'configuration file or environment variable.')
+if has_config(api_key_env_name):
+    elsevier_keys['X-ELS-APIKey'] = get_config(api_key_env_name)
 
 
 def check_entitlement(doi):

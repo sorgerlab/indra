@@ -6,6 +6,7 @@ from builtins import dict, str
 import os
 import logging
 import jnius_config
+from indra import get_config
 
 logger = logging.getLogger('java_vm')
 
@@ -15,7 +16,10 @@ def _has_xmx(options):
             return True
     return False
 
-default_mem_limit = '8g'
+default_mem_limit = get_config("INDRA_DEFAULT_JAVA_MEM_LIMIT")
+if default_mem_limit is None:
+    # Set to 8g if not specified in the configuration
+    default_mem_limit = '8g'
 
 if not _has_xmx(jnius_config.get_options()):
     if not jnius_config.vm_running:

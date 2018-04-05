@@ -4,6 +4,7 @@ reading system.
 
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from indra import get_config
 
 __all__ = ['process_text', 'process_nxml_str', 'process_nxml_file',
            'process_sparser_output', 'process_json_dict', 'process_xml',
@@ -23,7 +24,7 @@ from .processor import SparserXMLProcessor, SparserJSONProcessor
 logger = logging.getLogger('sparser')
 
 sparser_path_var = 'SPARSERPATH'
-sparser_path = os.environ.get(sparser_path_var)
+sparser_path = get_config(sparser_path_var)
 
 
 def process_text(text, output_fmt='json', outbuf=None, cleanup=True, key=''):

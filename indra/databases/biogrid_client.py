@@ -8,33 +8,19 @@ import requests
 from collections import Counter
 from indra.statements import Complex, Agent, Evidence
 from indra.databases import hgnc_client
+from indra import has_config, get_config
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
 logger = logging.getLogger('biogrid')
 
-# THIS FILE IS NOT UNDER VERSION CONTROL
 # For more information see http://wiki.thebiogrid.org/doku.php/biogridrest
-api_key_file = os.path.dirname(os.path.realpath(__file__)) + '/' + \
-               'biogrid_api_key'
-api_key_env_name = 'BIOGRID_API_KEY'
-
 # Try to read the API key from a file
-try:
-    with open(api_key_file, 'rt') as fh:
-        api_key = fh.read().strip()
-except IOError:
-    logger.error('BioGRID API key could not be found, trying environment '
-                 'variable $%s.' % api_key_env_name)
-    logger.error(api_key_file)
-    # Try the environment variable
-    if api_key_env_name in os.environ:
-        api_key = os.environ.get(api_key_env_name)
-    else:
-        logger.error('No BioGRID API key found in environment variable '
-                     '%s.' % api_key_env_name)
-        api_key = None
-
+if not has_config('BIOGRID_API_KEY'):
+    logger.error('BioGRID API key could not be found in config file or ' + \
+                 'environment variable.')
+else:
+    api_key = get_config('BIOGRID_API_KEY')
 
 def get_interactors(gene_name):
     res_dict = _send_request([gene_name], include_interactors=True)
