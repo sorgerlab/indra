@@ -62,20 +62,27 @@ class ReadingManager(object):
 
 
 class BulkReadingManager(ReadingManager):
+    def run_reading(self, db, id_dict, n_proc, verbose):
+        base_dir = path.join(THIS_DIR, 'read_all_%s' % self.reader.name)
+        reader_inst = self.reader(base_dir=base_dir, n_proc=n_proc)
+
+        logger.info("Making readings...")
+        outputs = rdb.produce_readings(id_dict, [reader_inst], verbose=verbose,
+                                       read_mode='unread_unread', db=db,
+                                       prioritize=True)
+        logger.info("Made %d readings." % len(outputs))
+        logger.info("Making statements...")
+        rdb.produce_statements(outputs, n_proc=n_proc, db=db)
+        return
+
     @ReadingManager._handle_update_table
     def read_all(self, db, n_proc=1, verbose=True):
         """Read everything available on the database."""
         self.end_datetime = self.run_datetime
         trids = {trid for trid, in db.select_all(db.TextContent.text_ref_id)}
+        logger.info("Producing readings for %d text refs." % len(trids))
         id_dict = {'trid': trids}
-        base_dir = path.join(THIS_DIR, 'read_all_%s' % self.reader.name)
-        reader_inst = self.reader(base_dir=base_dir, n_proc=n_proc)
-
-        outputs = rdb.produce_readings(id_dict, [reader_inst], verbose=verbose,
-                                       read_mode='unread_unread', db=db,
-                                       prioritize=True)
-
-        rdb.produce_statements(outputs, n_proc=n_proc, db=db)
+        self.run_reading(db, id_dict, n_proc, verbose)
         return True
 
     @ReadingManager._handle_update_table
@@ -88,12 +95,7 @@ class BulkReadingManager(ReadingManager):
             db.TextContent.insert_date > self.begin_datetime
             )
         id_dict = {'trid': {trid for trid, in trid_q.all()}}
-        base_dir = path.join(THIS_DIR, 'read_new_%s' % self.reader.name)
-        reader_inst = self.reader(base_dir=base_dir, n_proc=n_proc)
-
-        outputs = rdb.produce_readings(id_dict, [reader_inst], verbose=verbose,
-                                       read_mode='unread_unread', db=db,
-                                       prioritize=True)
-
-        rdb.produce_statements(outputs, n_proc=n_proc, db=db)
+        logger.info("Producing readings for %d new text refs."
+                    % len(id_dict['trid']))
+        self.run_reading(db, id_dict, n_proc, verbose)
         return True
