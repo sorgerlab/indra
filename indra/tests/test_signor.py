@@ -617,6 +617,13 @@ def test_signor_family_famplex_mapping():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='20404851', DIRECT='NO', NOTES='', ANNOTATOR='lperfetto',
             SENTENCE='', SIGNOR_ID='SIGNOR-216310')
+    complex_map = {}
+    sp = SignorProcessor([test_row], complex_map)
+    statements = sp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(s0.subj.db_refs['FPLX'] == 'TLR')
 
 def test_signor_complexes():
     test_row = SignorRow(ENTITYA='NFY',
@@ -630,11 +637,21 @@ def test_signor_complexes():
         ANNOTATOR='', SENTENCE='', SIGNOR_ID='SIGNOR-255746')
     complex_map = {'SIGNOR-C1': ['P23511', 'P25208', 'Q13952']}
     sp = SignorProcessor([test_row], complex_map)
-    import ipdb; ipdb.set_trace()
     assert isinstance(sp.statements, list)
-    assert len(stmts) == 4
+    assert len(sp.statements) == 2
 
+    s0 = sp.statements[0]
+    assert(isinstance(s0, IncreaseAmount))
+    assert(s0.subj.db_refs['UP'] == 'P23511')
+    assert(s0.subj.bound_conditions[0].agent.db_refs['UP'] == 'P25208')
+    assert(s0.subj.bound_conditions[1].agent.db_refs['UP'] == 'Q13952')
 
-if __name__ == '__main__':
-    test_signor_complexes()
+    s1 = sp.statements[1]
+    assert(isinstance(s1, Complex))
+    correct_members = set(['P23511', 'Q13952', 'P25208'])
+    actual_members = set([m.db_refs['UP'] for m in s1.members])
+    print(correct_members)
+    print(actual_members)
+    assert(correct_members == actual_members)
+
 
