@@ -744,7 +744,7 @@ def flatten_evidence(stmts):
     """
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
-    copied_stmts = fast_deepcopy(stmts)
+    stmts = fast_deepcopy(stmts)
     for stmt in stmts:
         total_evidence = _flatten_evidence_for_stmt(stmt)
         stmt.evidence = total_evidence
