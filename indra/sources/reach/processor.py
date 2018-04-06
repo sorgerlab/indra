@@ -7,9 +7,11 @@ from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.databases import hgnc_client
 import indra.databases.uniprot_client as up_client
+from collections import namedtuple
 
 logger = logging.getLogger('reach')
 
+Site = namedtuple('Site', ['residue', 'position'])
 
 
 class ReachProcessor(object):
@@ -111,56 +113,59 @@ class ReachProcessor(object):
                     site = a['text']
             theme_agent = self._get_agent_from_entity(theme)
             if site is not None:
-                residue, pos = self._parse_site_text(site)
+                mods = self._parse_site_text(site)
             else:
-                residue = None
-                pos = None
+                mods = [(None, None)]
 
-            # Now we need to look for all regulation event to get to the
-            # enzymes (the "controller" here)
-            qstr = "$.events.frames[(@.type is 'regulation') and " + \
-                   "(@.arguments[0].arg is '%s')]" % frame_id
-            reg_res = self.tree.execute(qstr)
-            reg_res = list(reg_res)
-            for reg in reg_res:
-                controller_agent = None
-                for a in reg['arguments']:
-                    if self._get_arg_type(a) == 'controller':
-                        controller = a.get('arg')
-                        if controller is not None:
-                            controller_agent = \
-                                self._get_agent_from_entity(controller)
-                            break
-                # Check the polarity of the regulation and if negative,
-                # flip the modification type.
-                # For instance, negative-regulation of a phosphorylation
-                # will become an (indirect) dephosphorylation
-                reg_subtype = reg.get('subtype')
-                if reg_subtype == 'negative-regulation':
-                    modification_type = \
-                        modtype_to_inverse.get(modification_type)
-                    if not modification_type:
+            for mod in mods:
+                # Add up to one statement for each site
+                residue, pos = mod
+
+                # Now we need to look for all regulation event to get to the
+                # enzymes (the "controller" here)
+                qstr = "$.events.frames[(@.type is 'regulation') and " + \
+                       "(@.arguments[0].arg is '%s')]" % frame_id
+                reg_res = self.tree.execute(qstr)
+                reg_res = list(reg_res)
+                for reg in reg_res:
+                    controller_agent = None
+                    for a in reg['arguments']:
+                        if self._get_arg_type(a) == 'controller':
+                            controller = a.get('arg')
+                            if controller is not None:
+                                controller_agent = \
+                                    self._get_agent_from_entity(controller)
+                                break
+                    # Check the polarity of the regulation and if negative,
+                    # flip the modification type.
+                    # For instance, negative-regulation of a phosphorylation
+                    # will become an (indirect) dephosphorylation
+                    reg_subtype = reg.get('subtype')
+                    if reg_subtype == 'negative-regulation':
+                        modification_type = \
+                            modtype_to_inverse.get(modification_type)
+                        if not modification_type:
+                            logger.warning('Unhandled modification type: %s' %
+                                           modification_type)
+                            continue
+
+                    sentence = reg['verbose-text']
+                    ev = Evidence(source_api='reach', text=sentence,
+                                  annotations=context, pmid=self.citation,
+                                  epistemics=epistemics)
+                    args = [controller_agent, theme_agent, residue, pos, ev]
+
+                    # Here ModStmt is a sub-class of Modification
+                    ModStmt = modtype_to_modclass.get(modification_type)
+                    if ModStmt is None:
                         logger.warning('Unhandled modification type: %s' %
                                        modification_type)
-                        continue
-
-                sentence = reg['verbose-text']
-                ev = Evidence(source_api='reach', text=sentence,
-                              annotations=context, pmid=self.citation,
-                              epistemics=epistemics)
-                args = [controller_agent, theme_agent, residue, pos, ev]
-
-                # Here ModStmt is a sub-class of Modification
-                ModStmt = modtype_to_modclass.get(modification_type)
-                if ModStmt is None:
-                    logger.warning('Unhandled modification type: %s' %
-                                   modification_type)
-                else:
-                    # Handle this special case here because only
-                    # enzyme argument is needed
-                    if modification_type == 'autophosphorylation':
-                        args = [theme_agent, residue, pos, ev]
-                    self.statements.append(ModStmt(*args))
+                    else:
+                        # Handle this special case here because only
+                        # enzyme argument is needed
+                        if modification_type == 'autophosphorylation':
+                            args = [theme_agent, residue, pos, ev]
+                        self.statements.append(ModStmt(*args))
 
     def get_regulate_amounts(self):
         """Extract RegulateAmount INDRA Statements."""
@@ -437,28 +442,31 @@ class ReachProcessor(object):
                     if mut is not None:
                         muts.append(mut)
                 else:
-                    mc = self._get_mod_condition(m)
-                    if mc is not None:
-                        mods.append(mc)
+                    mcs = self._get_mod_conditions(ms)
+                    mods.extend(mcs)
 
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
 
-    def _get_mod_condition(self, mod_term):
+    def _get_mod_conditions(self, mod_term):
         site = mod_term.get('site')
         if site is not None:
-            mod_res, mod_pos = self._parse_site_text(site)
+            mods = self._parse_site_text(site)
         else:
-            mod_res = None
-            mod_pos = None
-        mod_type_str = mod_term['type'].lower()
-        mod_state = agent_mod_map.get(mod_type_str)
-        if mod_state is not None:
-            mc = ModCondition(mod_state[0], residue=mod_res, position=mod_pos,
-                              is_modified=mod_state[1])
-            return mc
-        logger.warning('Unhandled entity modification type: %s' % mod_type_str)
-        return None
+            mods = []
+
+        mcs = []
+        for mod in mods:
+            mod_res, mod_pos = mod
+            mod_type_str = mod_term['type'].lower()
+            mod_state = agent_mod_map.get(mod_type_str)
+            if mod_state is not None:
+                mc = ModCondition(mod_state[0], residue=mod_res,
+                                  position=mod_pos, is_modified=mod_state[1])
+                mcs.append(mc)
+            logger.warning('Unhandled entity modification type: %s'
+                           % mod_type_str)
+        return mcs
 
     def _get_context(self, frame_term):
         context = {}
@@ -575,7 +583,7 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_mutation(s):
-        m = re.match(r'([A-Z])([0-9]+)([A-Z])', s.upper())
+        m = re.match(r'([A-Z]+)([0-9]+)([A-Z]+)', s.upper())
         if m is not None:
             parts = [str(g) for g in m.groups()]
             residue_from = get_valid_residue(parts[0])
@@ -593,30 +601,59 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_site_text(s):
+        has_comma = ',' in s
+        has_slash = '/' in s
+
+        has_both = has_comma and has_slash
+        assert(not has_both)
+
+        if has_comma:
+            texts = s.split(',')
+        else:
+            texts = s.split('/')
+
+        sites = [ReachProcessor._parse_site_text_single(t) for t in texts]
+
+        # If the first site has a residue, and the remaining sites do not
+        # explicitly give a residue (example: Tyr-577/576), then apply the
+        # first site's residue to all sites in the site text.
+        only_first_site_has_residue = sites[0].residue is not None
+        for i in range(1, len(sites)):
+            if sites[i].residue is not None:
+                only_first_site_has_residue = False
+        if only_first_site_has_residue:
+            for i in range(1, len(sites)):
+                sites[i] = Site(sites[0].residue, sites[i].position)
+
+        return sites
+
+    @staticmethod
+    def _parse_site_text_single(s):
         for p in (_site_pattern1, _site_pattern2, _site_pattern3):
             m = re.match(p, s.upper())
             if m is not None:
                 residue = get_valid_residue(m.groups()[0])
                 site = m.groups()[1]
-                return residue, site
+                return Site(residue, site)
         m = re.match(_site_pattern4, s.upper())
         if m is not None:
             site = m.groups()[0]
             residue = m.groups()[1]
-            return residue, site
+            return Site(residue, site)
         for p in (_site_pattern5, _site_pattern6, _site_pattern7):
             m = re.match(p, s.upper())
             if m is not None:
                 residue = get_valid_residue(m.groups()[0])
                 site = None
-                return residue, site
+                return Site(residue, site)
         m = re.match(_site_pattern8, s.upper())
         if m is not None:
             site = m.groups()[0]
             residue = None
-            return residue, site
+            return Site(residue, site)
         logger.warning('Could not parse site text %s' % s)
-        return None, None
+        return Site(None, None)
+
 
 _site_pattern1 = '([' + ''.join(list(amino_acids.keys())) + '])[-]?([0-9]+)$'
 _site_pattern2 = '(' + '|'.join([v['short_name'].upper() for
