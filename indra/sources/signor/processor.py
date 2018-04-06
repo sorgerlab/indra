@@ -163,8 +163,8 @@ class SignorProcessor(object):
 
     def _get_agent(self, ent_name, ent_type, id, database):
         # Returns a list of agents corresponding to this id
-        # (If it is a signor complex, returns Agent objects corresponding to
-        # each complex constituent)
+        # (If it is a signor complex, returns an Agent object with complex
+        # constituents as BoundConditions
         if database == 'SIGNOR' and id in self.complex_map:
             components = self.complex_map[id]
             agents = self._get_complex_agents(id)
@@ -183,26 +183,29 @@ class SignorProcessor(object):
                 hgnc_id = hgnc_client.get_hgnc_id(name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
-            # Other possible groundings are PUBCHEM and SIGNOR
+            # Map SIGNOR protein families to FamPlex families
+            elif ent_type == 'proteinfamily':
+                db_refs = {database: id} # Keep the SIGNOR family ID in db_refs
+                key = (database, id)
+                # Use SIGNOR name unless we have a mapping in FamPlex
+                name = ent_name
+                famplex_id = famplex_map.get(key)
+                if famplex_id is None:
+                    logger.info('Could not find %s in FamPlex map' %
+                                str(key))
+                else:
+                    db_refs['FPLX'] = famplex_id
+                    name = famplex_id
+            # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
                     raise ValueError('Unexpected database %s' % database)
-                if database == 'ChEBI':
-                    database = 'CHEBI'
-                db_refs = {database: id}
+                db_refs = {gnd_type: id}
                 name = ent_name
             # If no grounding, include as an untyped/ungrounded node
             else:
                 name = ent_name
                 db_refs = {}
-
-            if ent_type == 'proteinfamily':
-                key = (database, id)
-                if key not in famplex_map:
-                    print('Could not find', key, 'in famplex map')
-                else:
-                    db_refs['FPLX'] = famplex_map[key]
-
             return Agent(name, db_refs=db_refs)
 
     def _get_complex_agents(self, complex_id):
@@ -214,8 +217,8 @@ class SignorProcessor(object):
             db_refs = {}
             name = uniprot_client.get_gene_name(c)
             if not name:
-                print('Could not look up', c, '(maybe the Signor ' + \
-                        'complex component is not a UNIPROT id)')
+                logger.info('Could not look up %s, (maybe the Signor '
+                            'complex component is not a UNIPROT id)' % c)
                 db_refs['SIGNOR'] = c
                 name = c
             else:
@@ -253,6 +256,8 @@ class SignorProcessor(object):
                         epistemics=epistemics, annotations=annotations)
 
     def _process_row(self, row):
+        if row.IDA == 'SIGNOR-C22' or row.IDB == 'SIGNOR-C22':
+            import ipdb; ipdb.set_trace()
         agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
                                   row.DATABASEA)
         agent_b = self._get_agent(row.ENTITYB, row.TYPEB, row.IDB,

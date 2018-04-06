@@ -631,9 +631,9 @@ def test_signor_family_famplex_mapping():
     sp = SignorProcessor([test_row], complex_map)
     statements = sp.statements
     assert(len(statements) == 1)
-
     s0 = statements[0]
     assert(s0.subj.db_refs['FPLX'] == 'TLR')
+    assert s0.subj.db_refs['SIGNOR'] == 'SIGNOR-PF20'
     assert(s0.subj.name == 'TLR')
 
 
@@ -681,7 +681,45 @@ def test_signor_complexes():
     assert(actual_names == correct_names)
     print(sp.statements)
 
-if __name__ == '__main__':
-    test_signor_complexes()
-    test_signor_family_famplex_mapping()
 
+def test_recursive_complexes():
+    test_row = SignorRow(ENTITYA='PAX7/MLL2 complex', TYPEA='complex',
+            IDA='SIGNOR-C91', DATABASEA='SIGNOR', ENTITYB='MYF5',
+            TYPEB='protein', IDB='P13349', DATABASEB='UNIPROT',
+            EFFECT='up-regulates quantity by expression',
+            MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='BTO:0002314',
+            TISSUE_DATA='BTO:0000887;BTO:0001103', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
+            ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
+    complex_map = {
+            'SIGNOR-C87': ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291'],
+            'SIGNOR-C88': ['SIGNOR-C87', 'O14686'],
+            'SIGNOR-C91': ['SIGNOR-C88', 'P23759']}
+    sp = SignorProcessor([test_row], complex_map)
+    assert isinstance(sp.statements, list)
+    assert len(sp.statements) == 4
+    # TODO: Produce complex statements for each subcomplex
+    # TODO: For the main statement, take the first gene-level member as the
+    # principal agent, with the subcomplex genes as bound conditions
+
+
+def test_complexes_with_families():
+    test_row = SignorRow(ENTITYA='MAPK1', TYPEA='protein',
+            IDA='P27361', DATABASEA='UNIPROT', ENTITYB='CDO/JLP/P38',
+            TYPEB='complex', IDB='SIGNOR-C22', DATABASEB='SIGNOR',
+            EFFECT='up-regulates quantity by expression',
+            MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='BTO:0002314',
+            TISSUE_DATA='BTO:0000887;BTO:0001103', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
+            ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
+    # TODO: Expect to get complex statements for SIGNOR-C22, should
+    # include a protein-family agent, with mappings to FamPlex.
+    # TODO: For IncreaseAmount statement, expect the obj to be an agent
+    # with a protein family as one of its BoundConditions
+
+if __name__ == '__main__':
+    test_recursive_complexes()
