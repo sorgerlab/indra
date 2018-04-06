@@ -325,6 +325,22 @@ class SignorProcessor(object):
 
         # For modifications, we create the modification statement as well as
         # the appropriate active form.
+        no_mech = False
+        # Utility function for getting the polarity of the active form
+        def af_is_activation(stmt, row):
+            assert isinstance(stmt, Modification)
+            # Get polarity of modification statement
+            if isinstance(stmt, RemoveModification):
+                stmt_polarity = -1
+            else:
+                stmt_polarity = 1
+            # Get polarity of the effect
+            if row.EFFECT.startswith('up'):
+                effect_polarity = 1
+            else:
+                effect_polarity = -1
+            return True if stmt_polarity * effect_polarity > 0 else False
+
         if mech_stmt_type and issubclass(mech_stmt_type, Modification):
             if not row.RESIDUE:
                 # Modification
@@ -332,17 +348,16 @@ class SignorProcessor(object):
                                           evidence=evidence)
                 stmts.append(mod_stmt)
                 # ActiveForm
-                af_agent = deepcopy(agent_b)
-                af_agent.mods = [mod_stmt._get_mod_condition()]
-                # TODO: Currently this turns any upregulation associated with
-                # the modification into an ActiveForm (even up/down-regulations
-                # associated with amounts). This should be updated once we have
-                # a statement type relating Agent states to effects on amounts.
-                if row.EFFECT.startswith('up'):
-                    stmts.append(ActiveForm(af_agent, 'activity', True,
-                                            evidence=evidence))
-                elif row.EFFECT.startswith('down'):
-                    stmts.append(ActiveForm(af_agent, 'activity', False,
+                if effect_stmt_type:
+                    af_agent = deepcopy(agent_b)
+                    af_agent.mods = [mod_stmt._get_mod_condition()]
+                    # TODO: Currently this turns any upregulation associated
+                    # with the modification into an ActiveForm (even
+                    # up/down-regulations associated with amounts). This should
+                    # be updated once we have a statement type relating Agent
+                    # states to effects on amounts.
+                    is_activation = af_is_activation(mod_stmt, row)
+                    stmts.append(ActiveForm(af_agent, 'activity', is_activation,
                                             evidence=evidence))
             else:
                 # Modification
@@ -352,15 +367,13 @@ class SignorProcessor(object):
                              for res in residues]
                 stmts.extend(mod_stmts)
                 # Active Form
-                mcs = [ms._get_mod_condition() for ms in mod_stmts]
-                af_agent = deepcopy(agent_b)
-                af_agent.mods = mcs
-                # TODO: See above.
-                if row.EFFECT.startswith('up'):
-                    stmts.append(ActiveForm(af_agent, 'activity', True,
-                                            evidence=evidence))
-                elif row.EFFECT.startswith('down'):
-                    stmts.append(ActiveForm(af_agent, 'activity', False,
+                if effect_stmt_type:
+                    mcs = [ms._get_mod_condition() for ms in mod_stmts]
+                    af_agent = deepcopy(agent_b)
+                    af_agent.mods = mcs
+                    # TODO: See above.
+                    is_activation = af_is_activation(mod_stmts[0], row)
+                    stmts.append(ActiveForm(af_agent, 'activity', is_activation,
                                             evidence=evidence))
         # For Complex statements, we create an ActiveForm with a BoundCondition.
         elif mech_stmt_type == Complex:
