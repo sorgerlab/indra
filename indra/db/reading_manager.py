@@ -6,6 +6,8 @@ from os import path
 from functools import wraps
 from datetime import datetime, timedelta
 from indra.db.util import get_primary_db, get_test_db
+from indra.tools.reading.submit_reading_pipeline import submit_db_reading,\
+    wait_for_complete
 
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
@@ -41,6 +43,12 @@ if __name__ == '__main__':
         default=1,
         help=('Set the number number of buffer days read prior to the most '
               'recent update. The default is 1 day.')
+        )
+    parser.add_argument(
+        '--use_batch',
+        action='store_true',
+        help=('Choose to run the update on amazon batch. Note that this '
+              'option will cause the -n/--num_procs option to be ignored.')
         )
     args = parser.parse_args()
 
@@ -100,31 +108,58 @@ class ReadingManager(object):
 
 
 class BulkReadingManager(ReadingManager):
-    def run_reading(self, db, id_dict, n_proc, verbose):
-        base_dir = path.join(THIS_DIR, 'read_all_%s' % self.reader.name)
-        reader_inst = self.reader(base_dir=base_dir, n_proc=n_proc)
+    def run_reading(self, db, trids, n_proc, verbose, max_refs=5000,
+                    use_batch=False):
+        if use_batch:
+            if len(trids)/max_refs >= 1000:
+                raise ReadingUpdateError("Too many id's for one submission. "
+                                         "Break it up and do it manually.")
 
-        logger.info("Making readings...")
-        outputs = rdb.produce_readings(id_dict, [reader_inst], verbose=verbose,
-                                       read_mode='unread_unread', db=db,
-                                       prioritize=True)
-        logger.info("Made %d readings." % len(outputs))
-        logger.info("Making statements...")
-        rdb.produce_statements(outputs, n_proc=n_proc, db=db)
+            logger.info("Producing readings on aws for %d new text refs."
+                        % len(trids))
+            job_prefix = ('%s_reading_%s'
+                          % (self.reader.name.lower(),
+                             self.run_datetime.strftime('%Y%m%d_%H%M%S')))
+            with open(job_prefix + '.txt', 'w') as f:
+                f.write('\n'.join(['trid:%s' % trid for trid in trids]))
+            logger.info("Submitting jobs...")
+            job_ids = submit_db_reading(job_prefix, job_prefix + '.txt',
+                                        [self.reader.name.lower()], 0, None,
+                                        max_refs, 2, False, False, False)
+            logger.info("Waiting for complete...")
+            wait_for_complete('run_db_reading_queue', job_list=job_ids,
+                              job_name_prefix=job_prefix,
+                              idle_log_timeout=1200,
+                              kill_on_log_timeout=True,
+                              stash_log_method='s3')
+        else:
+            if len(trids) > max_refs:
+                raise ReadingUpdateError("Too many id's to run locally. Try "
+                                         "running on batch (use_batch).")
+            logger.info("Producing readings locally for %d new text refs."
+                        % len(trids))
+            base_dir = path.join(THIS_DIR, 'read_all_%s' % self.reader.name)
+            reader_inst = self.reader(base_dir=base_dir, n_proc=n_proc)
+
+            logger.info("Making readings...")
+            outputs = rdb.produce_readings({'trid': trids}, [reader_inst],
+                                           read_mode='unread_unread', db=db,
+                                           prioritize=True, verbose=verbose)
+            logger.info("Made %d readings." % len(outputs))
+            logger.info("Making statements...")
+            rdb.produce_statements(outputs, n_proc=n_proc, db=db)
         return
 
     @ReadingManager._handle_update_table
-    def read_all(self, db, n_proc=1, verbose=True):
+    def read_all(self, db, n_proc=1, verbose=True, use_batch=False):
         """Read everything available on the database."""
         self.end_datetime = self.run_datetime
         trids = {trid for trid, in db.select_all(db.TextContent.text_ref_id)}
-        logger.info("Producing readings for %d text refs." % len(trids))
-        id_dict = {'trid': trids}
-        self.run_reading(db, id_dict, n_proc, verbose)
+        self.run_reading(db, trids, n_proc, verbose, use_batch=use_batch)
         return True
 
     @ReadingManager._handle_update_table
-    def read_new(self, db, n_proc=1, verbose=True):
+    def read_new(self, db, n_proc=1, verbose=True, use_batch=False):
         """Update the readings and raw statements in the database."""
         self.end_datetime = self.run_datetime
         self.begin_datetime = self._get_latest_updatetime(db) - self.buffer
@@ -132,10 +167,8 @@ class BulkReadingManager(ReadingManager):
             db.TextContent.text_ref_id,
             db.TextContent.insert_date > self.begin_datetime
             )
-        id_dict = {'trid': {trid for trid, in trid_q.all()}}
-        logger.info("Producing readings for %d new text refs."
-                    % len(id_dict['trid']))
-        self.run_reading(db, id_dict, n_proc, verbose)
+        trids = {trid for trid, in trid_q.all()}
+        self.run_reading(db, trids, n_proc, verbose, use_batch=use_batch)
         return True
 
 
@@ -146,11 +179,13 @@ if __name__ == '__main__':
         db = get_primary_db()
 
     bulk_managers = [BulkReadingManager(reader_name, buffer_days=args.buffer)
-                     for reader_name in ['REACH', 'SPARSER']]
+                     for reader_name in ['SPARSER', 'REACH']]
 
     if args.task == 'read_all':
         for bulk_manager in bulk_managers:
-            bulk_manager.read_all(db, n_proc=args.num_procs)
+            bulk_manager.read_all(db, n_proc=args.num_procs,
+                                  use_batch=args.use_batch)
     elif args.task == 'read_new':
         for bulk_manager in bulk_managers:
-            bulk_manager.read_new(db, n_proc=args.num_procs)
+            bulk_manager.read_new(db, n_proc=args.num_procs,
+                                  use_batch=args.use_batch)
