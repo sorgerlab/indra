@@ -667,6 +667,9 @@ def test_signor_complexes():
     s1 = sp.statements[1]
     assert(isinstance(s1, Complex))
     assert len(s1.evidence) == 1
+    assert s1.evidence[0].source_api == 'SIGNOR'
+    assert s1.evidence[0].source_id == 'SIGNOR-C1'
+    assert s1.evidence[0].text
     correct_up_ids = set(['P23511', 'Q13952', 'P25208'])
     correct_hgnc_ids = set(['7804', '7805', '7806'])
     correct_names = set(['NFYA', 'NFYC', 'NFYB'])

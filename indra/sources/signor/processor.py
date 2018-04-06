@@ -156,9 +156,10 @@ class SignorProcessor(object):
         # Add a Complex statement for each Signor complex
         for complex_id in self.complex_map.keys():
             agents = self._get_complex_agents(complex_id)
-            s = Complex(agents)
+            ev = Evidence(source_api='SIGNOR', source_id=complex_id,
+                          text='Inferred from SIGNOR complex %s' % complex_id)
+            s = Complex(agents, evidence=[ev])
             self.statements.append(s)
-
 
     def _get_agent(self, ent_name, ent_type, id, database):
         # Returns a list of agents corresponding to this id
