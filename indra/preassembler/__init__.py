@@ -654,7 +654,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
 def flatten_stmts(stmts):
     """Return the full set of unique stms in a pre-assembled stmt graph.
 
-    The flattened list of of statements returned by this function can be
+    The flattened list of statements returned by this function can be
     compared to the original set of unique statements to make sure no
     statements have been lost during the preassembly process.
 
