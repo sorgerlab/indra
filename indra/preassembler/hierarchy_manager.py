@@ -123,7 +123,8 @@ class HierarchyManager(object):
                         tc_dict[xs].append(ys)
                     except KeyError:
                         tc_dict[xs] = [ys]
-                    self._add_component(xs, ys)
+                    if rel == isa_or_partof_objects:
+                        self._add_component(xs, ys)
 
     def _add_component(self, xs, ys):
         xcomp = self.components.get(xs)

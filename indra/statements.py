@@ -704,7 +704,8 @@ class Agent(Concept):
         if not all((self_ns, self_id, other_ns, other_id)):
             return False
         # Check for isa relationship
-        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+        return hierarchies['entity'].isa_or_partof(self_ns, self_id, other_ns,
+                                                   other_id)
 
     def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match

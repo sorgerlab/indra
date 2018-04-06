@@ -188,3 +188,12 @@ def test_load_trips_hierarchy():
     assert not trips_isa('ONT::VEHICLE', 'ONT::TRUCK')
     assert trips_isa('ONT::MONEY', 'ONT::PHYS-OBJECT')
     assert trips_isa('ONT::TABLE', 'ONT::MANUFACTURED-OBJECT')
+
+
+def test_same_components():
+    uri_prkag1 = ent_hierarchy.get_uri('HGNC', 'PRKAG1')
+    uri_ampk = ent_hierarchy.get_uri('FPLX', 'AMPK')
+
+    c1 = ent_hierarchy.components[uri_prkag1]
+    c2 = ent_hierarchy.components[uri_ampk]
+    assert(c1 == c2)
