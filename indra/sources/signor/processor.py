@@ -208,11 +208,35 @@ class SignorProcessor(object):
                 db_refs = {}
             return Agent(name, db_refs=db_refs)
 
+    def _recursively_lookup_complex(self, complex_id):
+        """Looks up the constitutents of a complex. If any constituent is
+        itself a complex, recursively expands until all constituents are
+        not complexes."""
+        assert(complex_id in self.complex_map)
+
+        expanded_agent_strings = []
+        expand_these_next = [complex_id]
+        while len(expand_these_next) > 0:
+            # Pop next element
+            c = expand_these_next[0]
+            expand_these_next = expand_these_next[1:]
+
+            # If a complex, add expanding it to the end of the queue
+            # If an agent string, add it to the agent string list immediately
+            assert(c in self.complex_map)
+            for s in self.complex_map[c]:
+                if s in self.complex_map:
+                    expand_these_next.append(s)
+                else:
+                    expanded_agent_strings.append(s)
+        return expanded_agent_strings
+
     def _get_complex_agents(self, complex_id):
-        # Returns a list of agents corresponding to each of the constituents
-        # in a SIGNOR complex
+        """Returns a list of agents corresponding to each of the constituents
+        in a SIGNOR complex."""
         agents = []
-        components = self.complex_map[complex_id]
+        components = self._recursively_lookup_complex(complex_id)
+
         for c in components:
             db_refs = {}
             name = uniprot_client.get_gene_name(c)
@@ -226,6 +250,10 @@ class SignorProcessor(object):
                 hgnc_id = hgnc_client.get_hgnc_id(name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
+
+            famplex_key = ('SIGNOR', c)
+            if famplex_key in famplex_map:
+                db_refs['FPLX'] = famplex_map[famplex_key]
             agents.append(Agent(name, db_refs=db_refs))
         return agents
 
@@ -256,8 +284,6 @@ class SignorProcessor(object):
                         epistemics=epistemics, annotations=annotations)
 
     def _process_row(self, row):
-        if row.IDA == 'SIGNOR-C22' or row.IDB == 'SIGNOR-C22':
-            import ipdb; ipdb.set_trace()
         agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
                                   row.DATABASEA)
         agent_b = self._get_agent(row.ENTITYB, row.TYPEB, row.IDB,

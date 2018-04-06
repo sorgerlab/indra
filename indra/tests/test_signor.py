@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, dirname
 from nose.tools import raises
+import unittest
 
 from indra.statements import *
 from indra.databases import hgnc_client
@@ -48,7 +49,6 @@ def test_parse_csv_from_file():
     sp = process_from_file(test_data_file)
     assert isinstance(sp.statements[0], Statement)
     assert sp.complex_map == {}
-
 
 def test_parse_csv_from_web():
     sp = process_from_web()
@@ -700,9 +700,31 @@ def test_recursive_complexes():
     sp = SignorProcessor([test_row], complex_map)
     assert isinstance(sp.statements, list)
     assert len(sp.statements) == 4
-    # TODO: Produce complex statements for each subcomplex
-    # TODO: For the main statement, take the first gene-level member as the
-    # principal agent, with the subcomplex genes as bound conditions
+
+    s0 = sp.statements[0]
+    assert(isinstance(s0, IncreaseAmount))
+    bc = s0.subj.bound_conditions
+    assert(bc[0].agent.db_refs['UP'] == 'O14686')
+    assert(bc[1].agent.db_refs['UP'] == 'P61964')
+    assert(bc[2].agent.db_refs['UP'] == 'Q9UBL3')
+    assert(bc[3].agent.db_refs['UP'] == 'Q9C005')
+    assert(bc[4].agent.db_refs['UP'] == 'Q15291')
+
+    assert(isinstance(sp.statements[1], Complex))
+    correct_complex_ups_1 = ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291']
+    actual_complex_ups_1 = [m.db_refs['UP'] for m in sp.statements[1].members]
+    assert(correct_complex_ups_1 == actual_complex_ups_1)
+
+    assert(isinstance(sp.statements[2], Complex))
+    correct_complex_ups_2 = ['O14686', 'P61964', 'Q9UBL3', 'Q9C005', 'Q15291']
+    actual_complex_ups_2 = [m.db_refs['UP'] for m in sp.statements[2].members]
+    assert(correct_complex_ups_2 == actual_complex_ups_2)
+
+    assert(isinstance(sp.statements[3], Complex))
+    correct_complex_ups_3 = ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                             'Q15291']
+    actual_complex_ups_3 = [m.db_refs['UP'] for m in sp.statements[3].members]
+    assert(correct_complex_ups_3 == actual_complex_ups_3)
 
 
 def test_complexes_with_families():
@@ -716,10 +738,39 @@ def test_complexes_with_families():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
             ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
-    # TODO: Expect to get complex statements for SIGNOR-C22, should
-    # include a protein-family agent, with mappings to FamPlex.
-    # TODO: For IncreaseAmount statement, expect the obj to be an agent
-    # with a protein family as one of its BoundConditions
+    complex_map = {'SIGNOR-C22' : ['O60271', 'Q4KMG0', 'SIGNOR-PF14']}
+    sp = SignorProcessor([test_row], complex_map)
+    assert isinstance(sp.statements, list)
+    assert len(sp.statements) == 2
+    #import ipdb;ipdb.set_trace()
+
+    assert(isinstance(sp.statements[0], IncreaseAmount))
+    obj = sp.statements[0].obj
+    assert(obj.db_refs['UP'] == 'O60271')
+    assert(len(obj.bound_conditions) == 2)
+    assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')
+    assert(obj.bound_conditions[1].agent.db_refs['SIGNOR'] == 'SIGNOR-PF14')
+    print(obj.bound_conditions[1].agent.db_refs)
+    assert(obj.bound_conditions[1].agent.db_refs['FPLX'] == 'ROBO')
+
+    s1 = sp.statements[1]
+    assert(isinstance(s1, Complex))
+    members = s1.members
+    assert(members[0].db_refs['UP'] == 'O60271')
+    assert(members[1].db_refs['UP'] == 'Q4KMG0')
+    assert(members[2].db_refs['SIGNOR'] == 'SIGNOR-PF14')
+    assert(members[2].db_refs['FPLX'] == 'ROBO')
+
+
+def test_recursively_expand_complex_constituents():
+    complex_map = {
+            'SIGNOR-C87': ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291'],
+            'SIGNOR-C88': ['SIGNOR-C87', 'O14686'],
+            'SIGNOR-C91': ['SIGNOR-C88', 'P23759']}
+    sp = SignorProcessor([test_row], complex_map)
+    constituents = sp._recursively_lookup_complex('SIGNOR-C91')
+    assert(constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                            'Q15291'])
 
 if __name__ == '__main__':
     test_recursive_complexes()
