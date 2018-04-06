@@ -182,7 +182,7 @@ class Preassembler(object):
         return entities
 
     def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):
-        """Group Statements of `stmt_type` by their heirarchical relations."""
+        """Group Statements of `stmt_type` by their hierarchical relations."""
         # Dict of stmt group key tuples, indexed by their first Agent
         stmt_by_first = collections.defaultdict(lambda: [])
         # Dict of stmt group key tuples, indexed by their second Agent
