@@ -632,8 +632,12 @@ def test_signor_family_famplex_mapping():
     statements = sp.statements
     assert(len(statements) == 1)
 
+    import ipdb; ipdb.set_trace()
+
     s0 = statements[0]
     assert(s0.subj.db_refs['FPLX'] == 'TLR')
+    assert(s0.subj.name == 'TLR')
+
 
 def test_signor_complexes():
     test_row = SignorRow(ENTITYA='NFY',
@@ -653,21 +657,29 @@ def test_signor_complexes():
     s0 = sp.statements[0]
     assert(isinstance(s0, IncreaseAmount))
     assert(s0.subj.db_refs['UP'] == 'P23511')
+    assert(s0.subj.db_refs['HGNC'] == '7804')
+    assert(s0.subj.name == 'NFYA')
     assert(s0.subj.bound_conditions[0].agent.db_refs['UP'] == 'P25208')
+    assert(s0.subj.bound_conditions[0].agent.name == 'NFYB')
+    assert(s0.subj.bound_conditions[0].agent.db_refs['HGNC'] == '7805')
     assert(s0.subj.bound_conditions[1].agent.db_refs['UP'] == 'Q13952')
+    assert(s0.subj.bound_conditions[1].agent.name == 'NFYC')
+    assert(s0.subj.bound_conditions[1].agent.db_refs['HGNC'] == '7806')
 
     s1 = sp.statements[1]
     assert(isinstance(s1, Complex))
-    correct_members = set(['P23511', 'Q13952', 'P25208'])
-    actual_members = set([m.db_refs['UP'] for m in s1.members])
-    print(correct_members)
-    print(actual_members)
-    assert(correct_members == actual_members)
+    correct_up_ids = set(['P23511', 'Q13952', 'P25208'])
+    correct_hgnc_ids = set(['7804', '7805', '7806'])
+    correct_hgnc_names = set(['NFYA', 'NFYC', 'NFYB'])
+    actual_up_ids = set([m.db_refs['UP'] for m in s1.members])
+    actual_hgnc_ids = set([m.db_refs['HGNC'] for m in s1.members])
+    actual_names = set([m.name for m in s1.members])
+    assert(actual_up_ids == correct_up_ids)
+    assert(actual_hgnc_ids == correct_hgnc_ids)
+    assert(actual_names == correct_names)
+
 
 if __name__ == '__main__':
-    test_process_row_dephos_up()
-    test_process_row_dephos_down()
-    test_process_row_dephos_nores_up()
-    test_process_row_dephos_nores_down()
-    test_mod_unknown_effect()
+    test_signor_family_famplex_mapping()
+    test_signor_complexes()
 
