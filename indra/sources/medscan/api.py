@@ -3,8 +3,15 @@ import xml.etree.ElementTree as ET
 from collections import defaultdict, Counter
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import _require_python3
+import codecs
+import os
 
 logger = logging.getLogger('medscan')
+
+class MedscanRelation:
+    def __init__(self, pmid, tagged_sentence):
+        self.pmid = pmid
+        self.tagged_sentence = tagged_sentence
 
 
 def process_file(filename, num_documents=None):
@@ -36,14 +43,14 @@ def process_file(filename, num_documents=None):
     logger.info("Parsing %s to XML" % filename)
     pmid = None
     sec = None
-    sent = None
+    tagged_sent = None
     svo_list = []
     doc_counter = 0
     entities = {}
     match_text = None
     in_prop = False
     # TODO: Figure out what's going on with Unicode errors!
-    with open(filename, 'rt', encoding='utf-8', errors='ignore') as f:
+    with codecs.open(filename, 'r', encoding='latin_1') as f:
         for event, elem in ET.iterparse(f, events=('start', 'end')):
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
@@ -54,9 +61,7 @@ def process_file(filename, num_documents=None):
             # Set the sentence context
             elif event == 'start' and elem.tag == 'sent':
                 entities = {}
-                # TODO: Here we could normalize the sentence text to its
-                # raw form
-                sent = elem.attrib.get('msrc')
+                tagged_sent = elem.attrib.get('msrc')
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
             elif event == 'start' and elem.tag == 'entity' and not in_prop:
@@ -67,7 +72,7 @@ def process_file(filename, num_documents=None):
             elif event == 'start' and elem.tag == 'svo':
                 svo = {'uri': pmid,
                        'sec': sec,
-                       'text': sent,
+                       'text': tagged_sent,
                        'entities': entities}
                 svo.update(elem.attrib)
                 svo_list.append(svo)
@@ -90,3 +95,9 @@ def process_file(filename, num_documents=None):
     ctrl = [s for s in svo_list if s['type'] == 'CONTROL']
     return ctrl
 
+if __name__ == '__main__':
+    #fname = '~/Downloads/medscan/test_file.csxml'
+    fname = '~/Downloads/medscan/DARPAcorpus.csxml'
+    fname = os.path.expanduser(fname)
+    num_documents = None
+    p = process_file(fname, num_documents)
