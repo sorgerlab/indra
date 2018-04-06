@@ -1483,7 +1483,7 @@ class Elsevier(ContentManager):
         tr_w_pmc_q = db.filter_query(
             db.TextRef,
             db.TextRef.id == db.TextContent.text_ref_id,
-            db.TextContent.source.in_([PmcOA.my_source, Manuscripts.my_source])
+            db.TextContent.text_type == 'fulltext'
             )
         tr_wo_pmc_q = db.filter_query(db.TextRef).except_(tr_w_pmc_q)
         return self._get_elsevier_content(db, tr_wo_pmc_q, continuing)
