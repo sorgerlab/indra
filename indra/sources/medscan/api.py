@@ -11,7 +11,7 @@ def process_file(filename, num_documents=None):
     """Process a CSXML file for its relevant information.
 
     The CSXML format consists of a top-level `<batch>` root element containing
-    a series of `<doc>` (document) elements, in turn containin `<sec>`
+    a series of `<doc>` (document) elements, in turn containing `<sec>`
     (section) elements, and in turn containing `<sent>` (sentence) elements.
 
     Within the `<sent>` element, a series of additional elements appear
@@ -42,7 +42,7 @@ def process_file(filename, num_documents=None):
     entities = {}
     match_text = None
     in_prop = False
-    # Figure out what's going on with Unicode errors!
+    # TODO: Figure out what's going on with Unicode errors!
     with open(filename, 'rt', encoding='utf-8', errors='ignore') as f:
         for event, elem in ET.iterparse(f, events=('start', 'end')):
             # If opening up a new doc, set the PMID
@@ -54,6 +54,8 @@ def process_file(filename, num_documents=None):
             # Set the sentence context
             elif event == 'start' and elem.tag == 'sent':
                 entities = {}
+                # TODO: Here we could normalize the sentence text to its
+                # raw form
                 sent = elem.attrib.get('msrc')
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
@@ -69,6 +71,8 @@ def process_file(filename, num_documents=None):
                        'entities': entities}
                 svo.update(elem.attrib)
                 svo_list.append(svo)
+            # TODO: Figure out if there's something better we can do with
+            # properties
             elif event == 'start' and elem.tag == 'prop':
                 in_prop = True
             elif event == 'end' and elem.tag == 'prop':
