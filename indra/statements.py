@@ -2532,9 +2532,9 @@ class Influence(IncreaseAmount):
         key = (type(self), self.subj.matches_key(),
                self.obj.matches_key(),
                self.subj_delta['polarity'],
-               set(self.subj_delta['adjectives']),
+               sorted(list(set(self.subj_delta['adjectives']))),
                self.obj_delta['polarity'],
-               set(self.obj_delta['adjectives']))
+               sorted(list(set(self.obj_delta['adjectives']))))
         return str(key)
 
     def contradicts(self, other, hierarchies):
