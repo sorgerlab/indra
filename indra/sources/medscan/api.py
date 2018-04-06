@@ -4,7 +4,7 @@ from collections import defaultdict, Counter
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import _require_python3
 
-logger = logging.getLogger('csxml')
+logger = logging.getLogger('medscan')
 
 
 def process_file(filename, num_documents=None):
@@ -89,22 +89,4 @@ def process_file(filename, num_documents=None):
     # Filter to CONTROL events
     ctrl = [s for s in svo_list if s['type'] == 'CONTROL']
     return ctrl
-    """
-    with open(filename, 'rb') as f:
-        for 
-        et = ET.tparse(f, parser=UTB())
 
-    return CsxmlProcessor(et)
-    """
-
-class CsxmlProcessor(object):
-    def __init__(self):
-        self._tree = tree
-        self.entities = [(m.get('type'), m.get('name'), m.get('urn'),
-                          m.get('msid'))
-                          for m in tree.findall('./doc/sec/sent/match/entity')]
-        self.svo = [m.attrib for m in tree.findall('./doc/sec/sent/svo')]
-        self.entity_ctr = Counter([t[0] for t in self.entities])
-
-    # For each document
-        # For each 
