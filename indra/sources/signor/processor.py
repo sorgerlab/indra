@@ -211,18 +211,18 @@ class SignorProcessor(object):
         components = self.complex_map[complex_id]
         for c in components:
             db_refs = {}
-
             name = uniprot_client.get_gene_name(c)
             if not name:
-                print('Could not look up', c, '(maybe the signor ' + \
+                print('Could not look up', c, '(maybe the Signor ' + \
                         'complex component is not a UNIPROT id)')
                 db_refs['SIGNOR'] = c
+                name = c
             else:
                 db_refs['UP'] = c
                 hgnc_id = hgnc_client.get_hgnc_id(name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
-            agents.append(Agent(c, db_refs=db_refs))
+            agents.append(Agent(name, db_refs=db_refs))
         return agents
 
 

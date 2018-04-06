@@ -632,8 +632,6 @@ def test_signor_family_famplex_mapping():
     statements = sp.statements
     assert(len(statements) == 1)
 
-    import ipdb; ipdb.set_trace()
-
     s0 = statements[0]
     assert(s0.subj.db_refs['FPLX'] == 'TLR')
     assert(s0.subj.name == 'TLR')
@@ -668,18 +666,19 @@ def test_signor_complexes():
 
     s1 = sp.statements[1]
     assert(isinstance(s1, Complex))
+    assert len(s1.evidence) == 1
     correct_up_ids = set(['P23511', 'Q13952', 'P25208'])
     correct_hgnc_ids = set(['7804', '7805', '7806'])
-    correct_hgnc_names = set(['NFYA', 'NFYC', 'NFYB'])
+    correct_names = set(['NFYA', 'NFYC', 'NFYB'])
     actual_up_ids = set([m.db_refs['UP'] for m in s1.members])
     actual_hgnc_ids = set([m.db_refs['HGNC'] for m in s1.members])
     actual_names = set([m.name for m in s1.members])
     assert(actual_up_ids == correct_up_ids)
     assert(actual_hgnc_ids == correct_hgnc_ids)
     assert(actual_names == correct_names)
-
+    print(sp.statements)
 
 if __name__ == '__main__':
-    test_signor_family_famplex_mapping()
     test_signor_complexes()
+    test_signor_family_famplex_mapping()
 
