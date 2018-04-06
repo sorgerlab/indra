@@ -358,7 +358,9 @@ def test_process_row_dephos_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
             SENTENCE='', SIGNOR_ID='SIGNOR-116131')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -386,7 +388,9 @@ def test_process_row_dephos_down():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
             SENTENCE='', SIGNOR_ID='SIGNOR-159591')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -413,7 +417,9 @@ def test_mod_unknown_effect():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='9111318', DIRECT='YES', NOTES='', ANNOTATOR='',
             SENTENCE='', SIGNOR_ID='SIGNOR-251358')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -432,7 +438,9 @@ def test_process_row_dephos_nores_up():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
             SENTENCE='', SIGNOR_ID='SIGNOR-242602')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -459,7 +467,9 @@ def test_process_row_dephos_nores_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -654,4 +664,10 @@ def test_signor_complexes():
     print(actual_members)
     assert(correct_members == actual_members)
 
+if __name__ == '__main__':
+    test_process_row_dephos_up()
+    test_process_row_dephos_down()
+    test_process_row_dephos_nores_up()
+    test_process_row_dephos_nores_down()
+    test_mod_unknown_effect()
 
