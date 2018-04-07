@@ -182,7 +182,7 @@ class Preassembler(object):
         return entities
 
     def _get_stmt_by_group(self, stmt_type, stmts_this_type, eh):
-        """Group Statements of `stmt_type` by their heirarchical relations."""
+        """Group Statements of `stmt_type` by their hierarchical relations."""
         # Dict of stmt group key tuples, indexed by their first Agent
         stmt_by_first = collections.defaultdict(lambda: [])
         # Dict of stmt group key tuples, indexed by their second Agent
@@ -654,7 +654,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
 def flatten_stmts(stmts):
     """Return the full set of unique stms in a pre-assembled stmt graph.
 
-    The flattened list of of statements returned by this function can be
+    The flattened list of statements returned by this function can be
     compared to the original set of unique statements to make sure no
     statements have been lost during the preassembly process.
 
@@ -744,7 +744,7 @@ def flatten_evidence(stmts):
     """
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
-    copied_stmts = fast_deepcopy(stmts)
+    stmts = fast_deepcopy(stmts)
     for stmt in stmts:
         total_evidence = _flatten_evidence_for_stmt(stmt)
         stmt.evidence = total_evidence

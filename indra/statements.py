@@ -704,7 +704,8 @@ class Agent(Concept):
         if not all((self_ns, self_id, other_ns, other_id)):
             return False
         # Check for isa relationship
-        return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
+        return hierarchies['entity'].isa_or_partof(self_ns, self_id, other_ns,
+                                                   other_id)
 
     def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match
@@ -2531,9 +2532,9 @@ class Influence(IncreaseAmount):
         key = (type(self), self.subj.matches_key(),
                self.obj.matches_key(),
                self.subj_delta['polarity'],
-               set(self.subj_delta['adjectives']),
+               sorted(list(set(self.subj_delta['adjectives']))),
                self.obj_delta['polarity'],
-               set(self.obj_delta['adjectives']))
+               sorted(list(set(self.obj_delta['adjectives']))))
         return str(key)
 
     def contradicts(self, other, hierarchies):
