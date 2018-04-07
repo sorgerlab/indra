@@ -84,6 +84,10 @@ class Reader(object):
         self.input_dir = _get_dir(tmp_dir, 'input')
         return
 
+    @classmethod
+    def get_version(cls):
+        raise NotImplementedError()
+
     def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
         raise NotImplementedError()
@@ -156,19 +160,25 @@ class ReachReader(Reader):
             return None
         return json_dict
 
-    def _check_reach_env(self):
+    @staticmethod
+    def _check_reach_env():
         """Check that the environment supports runnig reach."""
         # Get the path to the REACH JAR
-        path_to_reach = get_config['REACHPATH']
+        path_to_reach = get_config('REACHPATH')
+        if path_to_reach is None:
+            path_to_reach = environ.get('REACHPATH', None)
         if path_to_reach is None or not path.exists(path_to_reach):
             raise ReachError(
-                'Reach path unset or invalid. Check REACHPATH environment var.'
+                'Reach path unset or invalid. Check REACHPATH environment var '
+                'and/or config file.'
                 )
 
         logger.debug('Using REACH jar at: %s' % path_to_reach)
 
         # Get the reach version.
-        reach_version = environ.get('REACH_VERSION', None)
+        reach_version = get_config('REACH_VERSION')
+        if reach_version is None:
+            reach_version = environ.get('REACH_VERSION', None)
         if reach_version is None:
             logger.debug('REACH version not set in REACH_VERSION')
             m = re.match('reach-(.*?)\.jar', path.basename(path_to_reach))
@@ -176,6 +186,11 @@ class ReachReader(Reader):
 
         logger.debug('Using REACH version: %s' % reach_version)
         return path_to_reach, reach_version
+
+    @classmethod
+    def get_version(cls):
+        _, version = cls._check_reach_env()
+        return version
 
     def write_content(self, text_content):
         def write_content_file(ext):
@@ -300,9 +315,13 @@ class SparserReader(Reader):
     name = 'SPARSER'
 
     def __init__(self, *args, **kwargs):
-        self.version = sparser.get_version()
+        self.version = self.get_version()
         super(SparserReader, self).__init__(*args, **kwargs)
         return
+
+    @classmethod
+    def get_version(cls):
+        return sparser.get_version()
 
     def prep_input(self, read_list):
         "Prepare the list of files or text content objects to be read."
@@ -509,6 +528,16 @@ def get_readers():
                     if isinstance(cls, type) and issubclass(cls, Reader)
                     and cls_name != 'Reader']
     return children
+
+
+def get_reader(reader_name):
+    """Get a particular reader by name."""
+    for reader_class in get_readers():
+        if reader_class.name.lower() == reader_name.lower():
+            return reader_class
+    else:
+        logger.error("No such reader: %s" % reader_name)
+        return None
 
 
 class ReadingData(object):

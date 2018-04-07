@@ -397,7 +397,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         mode = 'unread'
 
     # Iterate over the list of PMIDs and submit the job in chunks
-    batch_client = boto3.client('batch')
+    batch_client = boto3.client('batch', region_name='us-east-1')
     job_list = []
     for job_start_ix in range(start_ix, end_ix, pmids_per_job):
         job_end_ix = job_start_ix + pmids_per_job
