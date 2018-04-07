@@ -89,7 +89,7 @@ class CWMSProcessor(object):
         """Extracts relationships involving one term/noun inhibiting another
         term/noun"""
         events = self.tree.findall("EVENT/[type='ONT::INHIBIT']")
-        events = self.tree.findall("EVENT/[type='ONT::DECREASE']")
+        events += self.tree.findall("EVENT/[type='ONT::DECREASE']")
         for event in events:
             # Each inhibit event should involve an agent and an affected
             agent = event.find("*[@role=':AGENT']")
