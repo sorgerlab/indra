@@ -312,7 +312,10 @@ def get_environment():
         {'name': 'AWS_SECRET_ACCESS_KEY',
          'value': secret_key}
         ]
-    return environment_vars
+
+    # Only include values that are not empty.
+    return [var_dict for var_dict in environment_vars
+            if var_dict['value'] and var_dict['name']]
 
 
 def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
@@ -413,6 +416,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         if read_all_fulltext:
             command_list.append('--read_all_fulltext')
         print(command_list)
+        print(environment_vars)
         job_info = batch_client.submit_job(
             jobName=job_name,
             jobQueue='run_db_reading_queue',

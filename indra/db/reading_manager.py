@@ -124,8 +124,11 @@ class BulkReadingManager(ReadingManager):
                 f.write('\n'.join(['trid:%s' % trid for trid in trids]))
             logger.info("Submitting jobs...")
             job_ids = submit_db_reading(job_prefix, job_prefix + '.txt',
-                                        [self.reader.name.lower()], 0, None,
-                                        max_refs, 2, False, False, False)
+                                        readers=[self.reader.name.lower()],
+                                        start_ix=0, end_ix=None,
+                                        pmids_per_job=max_refs, num_tries=2,
+                                        force_read=False, force_fulltext=False,
+                                        force_all_fulltext=False)
             logger.info("Waiting for complete...")
             wait_for_complete('run_db_reading_queue', job_list=job_ids,
                               job_name_prefix=job_prefix,
