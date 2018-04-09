@@ -1,5 +1,7 @@
 import logging
 import xml.etree.ElementTree as ET
+import lxml
+import lxml.etree
 from collections import defaultdict, Counter
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import _require_python3
@@ -9,9 +11,31 @@ import os
 logger = logging.getLogger('medscan')
 
 class MedscanRelation:
-    def __init__(self, pmid, tagged_sentence):
-        self.pmid = pmid
+    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj, 
+                 svo_type):
+        self.uri = uri
+        self.sec = sec
+        self.entities = entities
         self.tagged_sentence = tagged_sentence
+
+        self.subj = subj
+        self.verb = verb
+        self.obj = obj
+
+        self.svo_type = svo_type
+
+    def __repr__(self):
+        s = 'svo: %s %s %s' % (self.subj, self.verb, self.obj)
+        s += '\n\turi: ' + self.uri
+        s += '\n\tsec: ' + self.sec
+        s += '\n\ttagged_sentence: ' + self.tagged_sentence
+        s += '\n\tsvo_type: ' + repr(self.svo_type)
+        s += '\n\tsubj: ' + repr(self.subj)
+        s += '\n\tverb: ' + repr(self.verb)
+        s += '\n\tobj: ' + repr(self.obj)
+        s += '\n\tentities: ' + repr(self.entities)
+
+        return s
 
 
 def process_file(filename, num_documents=None):
@@ -49,9 +73,12 @@ def process_file(filename, num_documents=None):
     entities = {}
     match_text = None
     in_prop = False
+    relation_types = set()
     # TODO: Figure out what's going on with Unicode errors!
-    with codecs.open(filename, 'r', encoding='latin_1') as f:
-        for event, elem in ET.iterparse(f, events=('start', 'end')):
+    # TODO: find extracted events with non-ascii characters and make sure they
+    # look okay
+    with codecs.open(filename, 'rb') as f: #, encoding='cp500', errors='ignore') as f:
+        for event, elem in lxml.etree.iterparse(f, events=('start', 'end'), encoding='utf-8', recover=True):
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
                 pmid = elem.attrib.get('uri')
@@ -70,12 +97,29 @@ def process_file(filename, num_documents=None):
                 ent_type = elem.attrib['type']
                 entities[ent_id] = (match_text, ent_urn, ent_type)
             elif event == 'start' and elem.tag == 'svo':
+                subj = elem.attrib.get('subj')
+                verb = elem.attrib.get('verb')
+                obj = elem.attrib.get('obj')
+                svo_type = elem.attrib.get('type')
                 svo = {'uri': pmid,
                        'sec': sec,
                        'text': tagged_sent,
                        'entities': entities}
                 svo.update(elem.attrib)
-                svo_list.append(svo)
+
+                relation = MedscanRelation(
+                                           uri=pmid,
+                                           sec=sec,
+                                           tagged_sentence=tagged_sent,
+                                           entities=entities,
+                                           subj=subj,
+                                           verb=verb,
+                                           obj=obj,
+                                           svo_type=svo_type
+                                          )
+                if svo_type == 'CONTROL':
+                    if verb is not None:
+                        relation_types.add(verb.encode('utf-8').decode('utf-8'))
             # TODO: Figure out if there's something better we can do with
             # properties
             elif event == 'start' and elem.tag == 'prop':
@@ -90,14 +134,19 @@ def process_file(filename, num_documents=None):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
+        print('# relation types:', len(relation_types))
+        for rt in relation_types:
+            print(rt)
+
     print("Done processing %d documents" % doc_counter)
     # Filter to CONTROL events
     ctrl = [s for s in svo_list if s['type'] == 'CONTROL']
     return ctrl
 
 if __name__ == '__main__':
+    fname = '~/Downloads/medscan/converted.csxml'
     #fname = '~/Downloads/medscan/test_file.csxml'
-    fname = '~/Downloads/medscan/DARPAcorpus.csxml'
     fname = os.path.expanduser(fname)
     num_documents = None
     p = process_file(fname, num_documents)
+

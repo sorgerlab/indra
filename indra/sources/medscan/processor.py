@@ -1,8 +1,10 @@
+from indra.sources.medscan.api import MedscanRelation
 
 class MedscanProcessor(object):
-    def __init__(self, data):
-        self._data = data
+    def __init__(self):
+        self.statements = []
 
-    # For each document
-        # For each 
+    def process_relation(self, relation):
+        pass
+
 
