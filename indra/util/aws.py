@@ -286,6 +286,7 @@ def analyze_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
                          for result, reach_log_str in all_reach_logs
                          if result == 'FAILURE']
     tcids_unfinished = {tcid for reach_log in failed_reach_logs
+                        if reach_log
                         for tcid in analyze_reach_log(log_str=reach_log)}
     print("Found %d unfinished tcids." % len(tcids_unfinished))
     return tcids_unfinished

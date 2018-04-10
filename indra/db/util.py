@@ -515,11 +515,14 @@ def get_reduced_stmt_corpus(db):
             num_unique_evidence += 1
         else:
             num_duplicate_evidence += 1
-        s_dict[ev_hash].add(sid)
+        if get_full_stmts:
+            s_dict[ev_hash].add(json.loads(sjson.decode('utf8')))
+        else:
+            s_dict[ev_hash].add(sid)
     print("Found %d relevant text refs with statements." % len(data_dict))
     print("number of statement exact duplicates: %d" % num_duplicate_evidence)
     print("number of unique statements: %d" % num_unique_evidence)
-    stmt_ids = set()
+    stmts = set()
     for trid, tc_dict in data_dict.items():
         while sum([k[0] != 'pubmed' for k in tc_dict.keys()]) > 1:
             worst_cont_id = min(tc_dict,
@@ -535,9 +538,14 @@ def get_reduced_stmt_corpus(db):
                     best_rv = max(rv_dict,
                                   key=lambda x: sparser_versions.index(x[0]))
                 # Take any one of the duplicates.
-                stmt_ids |= {ev_set.pop()
-                             for ev_set in rv_dict[best_rv].values()}
-    return data_dict, stmt_ids
+                stmts |= {ev_set.pop()
+                          for ev_set in rv_dict[best_rv].values()}
+    if get_full_stmts:
+        print("Making statement json into objects")
+        stmt_ret = stmts_from_json(list(stmts))
+    else:
+        stmt_ret = stmts
+    return data_dict, stmt_ret
 
 
 #==============================================================================
