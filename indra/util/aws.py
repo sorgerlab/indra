@@ -52,6 +52,14 @@ def tag_instance(instance_id, **tags):
     return
 
 
+def tag_myself(project='cwc', **other_tags):
+    """Function run when indra is used in an EC2 instance to apply tags."""
+    resp = requests.get("http://169.254.169.254/latest/meta-data/instance-id")
+    instance_id = resp.text
+    tag_instance(instance_id, project=project, **other_tags)
+    return
+
+
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
     """Returns a list of dicts with jobName and jobId for each job with the
     given status."""
