@@ -7,6 +7,8 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.util import _require_python3
 import codecs
 import os
+import numpy as np
+import pickle
 
 logger = logging.getLogger('medscan')
 
@@ -73,7 +75,8 @@ def process_file(filename, num_documents=None):
     entities = {}
     match_text = None
     in_prop = False
-    relation_types = set()
+    relation_types = defaultdict(int)
+    relation_examples = defaultdict(list)
     # TODO: Figure out what's going on with Unicode errors!
     # TODO: find extracted events with non-ascii characters and make sure they
     # look okay
@@ -119,7 +122,8 @@ def process_file(filename, num_documents=None):
                                           )
                 if svo_type == 'CONTROL':
                     if verb is not None:
-                        relation_types.add(verb.encode('utf-8').decode('utf-8'))
+                        relation_types[verb] = relation_types[verb] + 1
+                        relation_examples[verb].append((subj, verb, obj, tagged_sent))
             # TODO: Figure out if there's something better we can do with
             # properties
             elif event == 'start' and elem.tag == 'prop':
@@ -135,8 +139,13 @@ def process_file(filename, num_documents=None):
                     break
 
         print('# relation types:', len(relation_types))
-        for rt in relation_types:
-            print(rt)
+        relation_names = list(relation_types.keys())
+        relation_counts = [relation_types[k] for k in relation_names]
+        sorted_inds = np.argsort(relation_counts)
+        for i in range(len(sorted_inds)):
+            ind = sorted_inds[len(sorted_inds) - 1 - i]
+            print(relation_names[ind] + ',' + str(relation_counts[ind]))
+        pickle.dump([relation_examples, relation_types], open('relation_examples.pkl', 'wb'))
 
     print("Done processing %d documents" % doc_counter)
     # Filter to CONTROL events
