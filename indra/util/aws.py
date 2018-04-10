@@ -54,7 +54,13 @@ def tag_instance(instance_id, **tags):
 
 def tag_myself(project='cwc', **other_tags):
     """Function run when indra is used in an EC2 instance to apply tags."""
-    resp = requests.get("http://169.254.169.254/latest/meta-data/instance-id")
+    base_url = "http://169.254.169.254"
+    try:
+        resp = requests.get(base_url + "/latest/meta-data/instance-id")
+    except requests.exceptions.ConnectionError:
+        print("Could not connect to service. Note this should only be run "
+              "from within a batch job.")
+        return
     instance_id = resp.text
     tag_instance(instance_id, project=project, **other_tags)
     return
@@ -322,3 +328,66 @@ def analyze_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
                         for tcid in analyze_reach_log(log_str=reach_log)}
     print("Found %d unfinished tcids." % len(tcids_unfinished))
     return tcids_unfinished
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser(
+        'aws.py',
+        description=('Use some of INDRA\'s aws tools. For more specific help, '
+                     'select one of the Methods with the `-h` option.')
+        )
+    subparsers = parser.add_subparsers(title='Task')
+    subparsers.required = True
+    subparsers.dest = 'task'
+
+    # Create parent parser classes for second layer of options
+    parent_run_parser = ArgumentParser(add_help=False)
+    parent_run_parser.add_argument(
+        'command',
+        help=('Enter the command as a single string to be run as if in a '
+              'batch environment.')
+        )
+    parent_kill_parser = ArgumentParser(add_help=False)
+    parent_kill_parser.add_argument(
+        'queue_name',
+        help='Select the batch queue in which all jobs should be terminated.'
+        )
+    parent_kill_parser.add_argument(
+        '--reason', '-R',
+        help='Give a reason for killing all the jobs.'
+        )
+    # Make non_db_parser and get subparsers
+    run_parser = subparsers.add_parser(
+        'run',
+        parents=[parent_run_parser],
+        description='This should be called to run any command on aws batch.',
+        formatter_class=ArgumentDefaultsHelpFormatter
+        )
+
+    # Make db parser and get subparsers.
+    kill_parser = subparsers.add_parser(
+        'kill_all',
+        parents=[parent_kill_parser],
+        description='Kill all the jobs running in a given queue.',
+        formatter_class=ArgumentDefaultsHelpFormatter
+        )
+    args = parser.parse_args()
+
+    if args.task == 'run':
+        tag_myself('cwc')
+        from subprocess import run
+        print()
+        print(20*'=' + ' Begin Primary Command Output ' + 20*'=')
+        print()
+        ret = run(args.command.split(' '))
+        print()
+        print(21*'=' + ' End Primary Command Output ' + 21*'=')
+        print()
+        if ret.returncode is 0:
+            print('Job endend well.')
+        else:
+            print('Job failed!')
+            import sys
+            sys.exit(ret.returncode)
+    elif args.task == 'kill_all':
+        kill_all(args.queue_name, args.reason)
