@@ -8,7 +8,7 @@ import botocore.session
 from time import sleep
 from datetime import datetime
 from indra.literature import elsevier_client as ec
-from indra.util.aws import get_job_log, tag_instance
+from indra.util.aws import get_job_log, tag_instance, get_batch_command
 
 bucket_name = 'bigmech'
 
@@ -336,10 +336,11 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
         if job_end_ix > end_ix:
             job_end_ix = end_ix
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
-        command_list = ['python', '-m',
-                        'indra.tools.reading.pmid_reading.read_pmids_aws',
-                        basename, '/tmp', '16', str(job_start_ix),
-                        str(job_end_ix), '-r'] + readers
+        command_list = get_batch_command(
+            ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
+             basename, '/tmp', '16', str(job_start_ix), str(job_end_ix), '-r']
+            + readers
+            )
         if force_read:
             command_list.append('--force_read')
         if force_fulltext:
@@ -397,10 +398,11 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         if job_end_ix > end_ix:
             job_end_ix = end_ix
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
-        command_list = ['python', '-m',
-                        'indra.tools.reading.db_reading.read_db_aws',
-                        basename, '/tmp', mode, '32', str(job_start_ix),
-                        str(job_end_ix), '-r'] + readers
+        command_list = get_batch_command(
+            ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
+             basename, '/tmp', mode, '32', str(job_start_ix), str(job_end_ix),
+             '-r'] + readers
+            )
         if force_fulltext:
             command_list.append('--force_fulltext')
         if read_all_fulltext:
@@ -432,9 +434,10 @@ def submit_combine(basename, readers, job_ids=None):
     environment_vars = get_environment()
 
     job_name = '%s_combine_reading_results' % basename
-    command_list = ['python', '-m',
-                    'indra.tools.reading.assemble_reading_stmts_aws',
-                    basename, '-r'] + readers
+    command_list = get_batch_command(
+        ['python', '-m', 'indra.tools.reading.assemble_reading_stmts_aws',
+         basename, '-r'] + readers
+        )
     print(command_list)
     kwargs = {'jobName': job_name, 'jobQueue': 'run_reach_queue',
               'jobDefinition': 'run_reach_jobdef',

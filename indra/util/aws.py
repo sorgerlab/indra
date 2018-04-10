@@ -66,6 +66,12 @@ def tag_myself(project='cwc', **other_tags):
     return
 
 
+def get_batch_command(command_list):
+    """Get the command appropriate for running something on batch."""
+    command_str = ' '.join(command_list)
+    return ['python', '-m', 'indra.util.aws', 'run_on_batch', command_str]
+
+
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
     """Returns a list of dicts with jobName and jobId for each job with the
     given status."""
