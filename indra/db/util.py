@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.tools.machine.gmail_client import get_text
 
 __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
            'insert_db_stmts', 'get_abstracts_by_pmids', 'get_auth_xml_pmcids',
@@ -470,6 +469,60 @@ def make_stmts_from_db_list(db_stmt_objs):
     for st_obj in db_stmt_objs:
         stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
     return stmts_from_json(stmt_json_list)
+
+
+def get_reduced_stmt_corpus(db):
+    "Get a corpus of statements from clauses and filters duplicate evidence."
+    q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
+                          db.TextContent.source, db.Readings.id,
+                          db.Readings.reader_version, db.Statements.id)
+         .filter(db.TextContent.id == db.Readings.text_content_id,
+                 db.Readings.id == db.Statements.reader_ref))
+    full_text_content = ['manuscripts', 'pmc_oa', 'pubmed']
+    sparser_versions = ['sept14-linux\n', 'sept14-linux']
+    reach_versions = ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
+    meta_data = q.all()
+    data_dict = {}
+    for trid, tcid, src, rid, rv, sid in meta_data:
+        if trid not in data_dict.keys():
+            data_dict[trid] = {}
+        tc_dict = data_dict[trid]
+        cont_key = (src, tcid)
+        if cont_key not in tc_dict.keys():
+            tc_dict[cont_key] = {}
+        r_dict = tc_dict[cont_key]
+        if rv in sparser_versions:
+            reader = 'sparser'
+        elif rv in reach_versions:
+            reader = 'reach'
+        else:
+            print("ERROR: rv %s not recognized." % rv)
+            break
+        if reader not in r_dict.keys():
+            r_dict[reader] = {}
+        rv_dict = r_dict[reader]
+        rv_key = (rv, rid)
+        if rv_key not in rv_dict.keys():
+            rv_dict[rv_key] = set()
+        s_set = rv_dict[rv_key]
+        s_set.add(sid)
+    stmt_ids = set()
+    for trid, tc_dict in data_dict.items():
+        while sum([k[0] != 'pubmed' for k in tc_dict.keys()]) > 1:
+            worst_cont_id = min(tc_dict,
+                                key=lambda x: full_text_content.index(x[0]))
+            del tc_dict[worst_cont_id]
+        for cont_key, r_dict in tc_dict.items():
+            for reader, rv_dict in r_dict.items():
+                assert reader in ['reach', 'sparser']
+                if reader == 'reach':
+                    best_rv = max(rv_dict,
+                                  key=lambda x: reach_versions.index(x[0]))
+                elif reader == 'sparser':
+                    best_rv = max(rv_dict,
+                                  key=lambda x: sparser_versions.index(x[0]))
+                stmt_ids |= rv_dict[best_rv]
+    return data_dict, stmt_ids
 
 
 #==============================================================================
