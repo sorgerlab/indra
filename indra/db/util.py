@@ -16,7 +16,7 @@ from indra.databases import hgnc_client
 from indra.util.get_version import get_version
 from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
-    stmts_from_json, Conversion, Translocation
+    stmts_from_json, Conversion, Translocation, Evidence
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
 from indra import config_file
 
@@ -475,15 +475,17 @@ def get_reduced_stmt_corpus(db):
     "Get a corpus of statements from clauses and filters duplicate evidence."
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
                           db.TextContent.source, db.Readings.id,
-                          db.Readings.reader_version, db.Statements.id)
+                          db.Readings.reader_version, db.Statements.id,
+                          db.Statements.json)
          .filter(db.TextContent.id == db.Readings.text_content_id,
                  db.Readings.id == db.Statements.reader_ref))
     full_text_content = ['manuscripts', 'pmc_oa', 'pubmed']
     sparser_versions = ['sept14-linux\n', 'sept14-linux']
     reach_versions = ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
-    meta_data = q.all()
+    num_duplicate_evidence = 0
+    num_unique_evidence = 0
     data_dict = {}
-    for trid, tcid, src, rid, rv, sid in meta_data:
+    for trid, tcid, src, rid, rv, sid, sjson in q.yield_per(1000):
         if trid not in data_dict.keys():
             data_dict[trid] = {}
         tc_dict = data_dict[trid]
@@ -496,16 +498,27 @@ def get_reduced_stmt_corpus(db):
         elif rv in reach_versions:
             reader = 'reach'
         else:
-            print("ERROR: rv %s not recognized." % rv)
-            break
+            raise Exception("rv %s not recognized." % rv)
         if reader not in r_dict.keys():
             r_dict[reader] = {}
         rv_dict = r_dict[reader]
         rv_key = (rv, rid)
         if rv_key not in rv_dict.keys():
-            rv_dict[rv_key] = set()
-        s_set = rv_dict[rv_key]
-        s_set.add(sid)
+            rv_dict[rv_key] = {}
+        s_dict = rv_dict[rv_key]
+        json_str = sjson.decode('utf8')
+        ev = Evidence._from_json(json.loads(json_str)['evidence'][0])
+        ev_key = ev.matches_key()
+        ev_hash = hash(ev_key)
+        if ev_hash not in s_dict.keys():
+            s_dict[ev_hash] = set()
+            num_unique_evidence += 1
+        else:
+            num_duplicate_evidence += 1
+        s_dict[ev_hash].add(sid)
+    print("Found %d relevant text refs with statements." % len(data_dict))
+    print("number of statement exact duplicates: %d" % num_duplicate_evidence)
+    print("number of unique statements: %d" % num_unique_evidence)
     stmt_ids = set()
     for trid, tc_dict in data_dict.items():
         while sum([k[0] != 'pubmed' for k in tc_dict.keys()]) > 1:
@@ -521,7 +534,9 @@ def get_reduced_stmt_corpus(db):
                 elif reader == 'sparser':
                     best_rv = max(rv_dict,
                                   key=lambda x: sparser_versions.index(x[0]))
-                stmt_ids |= rv_dict[best_rv]
+                # Take any one of the duplicates.
+                stmt_ids |= {ev_set.pop()
+                             for ev_set in rv_dict[best_rv].values()}
     return data_dict, stmt_ids
 
 
