@@ -1,6 +1,8 @@
 import re
 import boto3
+import requests
 from os.path import join
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 
 def kill_all(job_queue, reason='None given', states=None):
@@ -26,6 +28,28 @@ def kill_all(job_queue, reason='None given', states=None):
                 res = batch.terminate_job(jobId=job_id, reason=reason)
                 res_list.append(res)
     return res_list
+
+
+def tag_instance(instance_id, **tags):
+    """Tag a single ec2 instance."""
+    ec2 = boto3.resource('ec2')
+    instance = ec2.Instance(instance_id)
+
+    # Remove None's from `tags`
+    filtered_tags = {k: v for k, v in tags.items() if v and k}
+
+    # Check for existing tags
+    if instance.tags is not None:
+        for tag in instance.tags:
+            filtered_tags.pop(tag.get('Key'), None)
+
+    # If we have new tags to add, add them.
+    if len(tags):
+        print('Adding project tags "%s" to instance %s' %
+              (tags, instance_id))
+        instance.create_tags(Tags=[{'Key': k, 'Value': v}
+                                   for k, v in filtered_tags])
+    return
 
 
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):

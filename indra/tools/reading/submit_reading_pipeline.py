@@ -8,7 +8,7 @@ import botocore.session
 from time import sleep
 from datetime import datetime
 from indra.literature import elsevier_client as ec
-from indra.util.aws import get_job_log
+from indra.util.aws import get_job_log, tag_instance
 
 bucket_name = 'bigmech'
 
@@ -160,7 +160,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 ret = 0
                 break
 
-        tag_instances(ecs_cluster_name)
+        tag_instances_on_cluster(ecs_cluster_name)
         sleep(poll_interval)
 
     # Stash the logs
@@ -255,7 +255,7 @@ def get_ecs_cluster_for_queue(queue_name, batch_client=None):
     return ecs_cluster_name
 
 
-def tag_instances(cluster_name, project='cwc'):
+def tag_instances_on_cluster(cluster_name, project='cwc'):
     """Adds project tag to untagged instances in a given cluster.
 
     Parameters
@@ -279,18 +279,8 @@ def tag_instances(cluster_name, project='cwc'):
     ec2_instance_ids = [ci['ec2InstanceId'] for ci in container_instances]
 
     # Instantiate each instance to tag as a resource and create project tag
-    ec2 = boto3.resource('ec2')
     for instance_id in ec2_instance_ids:
-        instance = ec2.Instance(instance_id)
-        if instance.tags is not None:
-            for tag in instance.tags:
-                if tag.get('Key') == 'project':
-                    break
-            else:
-                logger.info('Adding project tag "%s" to instance %s' %
-                            (project, instance_id))
-                instance.create_tags(Tags=[{'Key': 'project',
-                                            'Value': project}])
+        tag_instance(instance_id, project=project)
     return
 
 
