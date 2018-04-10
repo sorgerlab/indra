@@ -15,6 +15,35 @@ except:
 
 logger = logging.getLogger('cag_assembler')
 
+def _create_edge_data_dict(e):
+    """ Create a data dict from a networkx MultiDiGraph edge to export to
+    CytoscapeJS. """
+
+    # A hack to get rid of the redundant 'Provenance' label.
+    if e[3].get('provenance'):
+        tooltip = e[3]['provenance'][0]
+        del tooltip['@type']
+    else:
+        tooltip = None
+    edge_data_dict = {
+            'id'               : e[0]+'_'+e[1],
+            'source'           : e[0],
+            'target'           : e[1],
+            'linestyle'        : e[3]["linestyle"],
+            'linecolor'        : e[3]["linecolor"],
+            'targetArrowShape' : e[3]["targetArrowShape"],
+            'subj_adjectives'  : e[3]["subj_adjectives"],
+            'subj_polarity'    : e[3]["subj_polarity"],
+            'obj_adjectives'   : e[3]["obj_adjectives"],
+            'obj_polarity'     : e[3]["obj_polarity"],
+            'tooltip'          : tooltip,
+            'simulable'        : False if (
+                e[3]['obj_polarity'] is None or
+                e[3]['subj_polarity'] is None) else True,
+            }
+
+    return edge_data_dict
+
 
 class CAGAssembler(object):
     """Assembles a causal analysis graph from INDRA Statements.
@@ -32,6 +61,7 @@ class CAGAssembler(object):
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
+
     def __init__(self, stmts=None, grounding_threshold = None):
         if not stmts:
             self.statements = []
@@ -123,29 +153,6 @@ class CAGAssembler(object):
             A JSON-like dict representing the graph for use with
             CytoscapeJS.
         """
-        def _create_edge_data_dict(e):
-            # A hack to get rid of the redundant 'Provenance' label.
-            if e[3].get('provenance'):
-                tooltip = e[3]['provenance'][0]
-                del tooltip['@type']
-            else:
-                tooltip = None
-            return {
-                    'id'               : e[0]+'_'+e[1],
-                    'source'           : e[0],
-                    'target'           : e[1],
-                    'linestyle'        : e[3]["linestyle"],
-                    'linecolor'        : e[3]["linecolor"],
-                    'targetArrowShape' : e[3]["targetArrowShape"],
-                    'subj_adjectives'  : e[3]["subj_adjectives"],
-                    'subj_polarity'    : e[3]["subj_polarity"],
-                    'obj_adjectives'   : e[3]["obj_adjectives"],
-                    'obj_polarity'     : e[3]["obj_polarity"],
-                    'tooltip'          : tooltip,
-                    'simulable'        : False if (
-                        e[3]['obj_polarity'] is None or
-                        e[3]['subj_polarity'] is None) else True,
-                   }
         return {
                 'nodes': [{'data': {
                     'id': n[0],
