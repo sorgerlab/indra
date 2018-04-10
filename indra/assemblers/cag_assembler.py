@@ -87,7 +87,8 @@ def _create_edge_data_dict(e):
     # A hack to get rid of the redundant 'Provenance' label.
     if e[3].get('provenance'):
         tooltip = e[3]['provenance'][0]
-        del tooltip['@type']
+        if tooltip.get('@type'):
+            del tooltip['@type']
     else:
         tooltip = None
     edge_data_dict = {
