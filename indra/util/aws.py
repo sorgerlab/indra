@@ -358,9 +358,10 @@ if __name__ == '__main__':
         )
     # Make non_db_parser and get subparsers
     run_parser = subparsers.add_parser(
-        'run',
+        'run_in_batch',
         parents=[parent_run_parser],
-        description='This should be called to run any command on aws batch.',
+        description=('This should be called to run any command wtihin an aws '
+                     'batch job instance.'),
         formatter_class=ArgumentDefaultsHelpFormatter
         )
 
@@ -373,7 +374,7 @@ if __name__ == '__main__':
         )
     args = parser.parse_args()
 
-    if args.task == 'run':
+    if args.task == 'run_in_batch':
         tag_myself('cwc')
         from subprocess import run
         print()
