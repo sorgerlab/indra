@@ -49,7 +49,7 @@ def tag_instance(instance_id, **tags):
         print('Adding project tags "%s" to instance %s' %
               (tags, instance_id))
         instance.create_tags(Tags=[{'Key': k, 'Value': v}
-                                   for k, v in filtered_tags])
+                                   for k, v in filtered_tags.items()])
     return
 
 
