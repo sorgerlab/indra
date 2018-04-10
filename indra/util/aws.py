@@ -69,7 +69,7 @@ def tag_myself(project='untagged_indra_batch', **other_tags):
 
 def get_batch_command(command_list, project=None, purpose=None):
     """Get the command appropriate for running something on batch."""
-    command_str = ' '.join(command_list)
+    command_str = '\"%s\"' % ' '.join(command_list)
     ret = ['python', '-m', 'indra.util.aws', 'run_on_batch', command_str]
     if not project and has_config('DEFAULT_AWS_PROJECT'):
         project = get_config('DEFAULT_AWS_PROJECT')
@@ -361,6 +361,15 @@ if __name__ == '__main__':
         help=('Enter the command as a single string to be run as if in a '
               'batch environment.')
         )
+    parent_run_parser.add_argument(
+        '--project', '-P',
+        default='untagged_indra_batch',
+        help='Give a name for the project.'
+        )
+    parent_run_parser.add_argument(
+        '--purpose', '-p',
+        help='Give the task some meaning.'
+        )
     parent_kill_parser = ArgumentParser(add_help=False)
     parent_kill_parser.add_argument(
         'queue_name',
@@ -369,15 +378,6 @@ if __name__ == '__main__':
     parent_kill_parser.add_argument(
         '--reason', '-R',
         help='Give a reason for killing all the jobs.'
-        )
-    parent_kill_parser.add_argument(
-        '--project', '-P',
-        default='untagged_indra_batch',
-        help='Give a name for the project.'
-        )
-    parent_kill_parser.add_argument(
-        '--purpose', '-p',
-        help='Give the task some meaning.'
         )
     # Make non_db_parser and get subparsers
     run_parser = subparsers.add_parser(
