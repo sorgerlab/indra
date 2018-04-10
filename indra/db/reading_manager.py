@@ -128,7 +128,7 @@ class BulkReadingManager(ReadingManager):
                                         start_ix=0, end_ix=None,
                                         pmids_per_job=max_refs, num_tries=2,
                                         force_read=False, force_fulltext=False,
-                                        force_all_fulltext=False)
+                                        read_all_fulltext=False)
             logger.info("Waiting for complete...")
             wait_for_complete('run_db_reading_queue', job_list=job_ids,
                               job_name_prefix=job_prefix,

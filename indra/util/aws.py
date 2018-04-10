@@ -3,6 +3,7 @@ import boto3
 import requests
 from os.path import join
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from indra import get_config, has_config
 
 
 def kill_all(job_queue, reason='None given', states=None):
@@ -52,7 +53,7 @@ def tag_instance(instance_id, **tags):
     return
 
 
-def tag_myself(project='cwc', **other_tags):
+def tag_myself(project='untagged_indra_batch', **other_tags):
     """Function run when indra is used in an EC2 instance to apply tags."""
     base_url = "http://169.254.169.254"
     try:
@@ -66,10 +67,17 @@ def tag_myself(project='cwc', **other_tags):
     return
 
 
-def get_batch_command(command_list):
+def get_batch_command(command_list, project=None, purpose=None):
     """Get the command appropriate for running something on batch."""
     command_str = ' '.join(command_list)
-    return ['python', '-m', 'indra.util.aws', 'run_on_batch', command_str]
+    ret = ['python', '-m', 'indra.util.aws', 'run_on_batch', command_str]
+    if not project and has_config('DEFAULT_AWS_PROJECT'):
+        project = get_config('DEFAULT_AWS_PROJECT')
+    if project:
+        ret += ['--project', project]
+    if purpose:
+        ret += ['--purpose', purpose]
+    return ret
 
 
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
@@ -362,6 +370,15 @@ if __name__ == '__main__':
         '--reason', '-R',
         help='Give a reason for killing all the jobs.'
         )
+    parent_kill_parser.add_argument(
+        '--project', '-P',
+        default='untagged_indra_batch',
+        help='Give a name for the project.'
+        )
+    parent_kill_parser.add_argument(
+        '--purpose', '-p',
+        help='Give the task some meaning.'
+        )
     # Make non_db_parser and get subparsers
     run_parser = subparsers.add_parser(
         'run_in_batch',
@@ -381,7 +398,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.task == 'run_in_batch':
-        tag_myself('cwc')
+        tag_myself(args.project, purpose=args.purpose)
         from subprocess import run
         print()
         print(20*'=' + ' Begin Primary Command Output ' + 20*'=')

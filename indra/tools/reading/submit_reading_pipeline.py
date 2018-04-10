@@ -310,7 +310,7 @@ def get_environment():
 
 def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
                    end_ix=None, pmids_per_job=3000, num_tries=2,
-                   force_read=False, force_fulltext=False):
+                   force_read=False, force_fulltext=False, project_name=None):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_results/%s/pmids' % basename
     s3_client = boto3.client('s3')
@@ -339,7 +339,9 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
         command_list = get_batch_command(
             ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
              basename, '/tmp', '16', str(job_start_ix), str(job_end_ix), '-r']
-            + readers
+            + readers,
+            purpose='pmid_reading',
+            project=project_name
             )
         if force_read:
             command_list.append('--force_read')
@@ -363,7 +365,7 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                       end_ix=None, pmids_per_job=3000, num_tries=2,
                       force_read=False, force_fulltext=False,
-                      read_all_fulltext=False):
+                      read_all_fulltext=False, project_name=None):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
     s3_client = boto3.client('s3')
@@ -401,7 +403,9 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         command_list = get_batch_command(
             ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
              basename, '/tmp', mode, '32', str(job_start_ix), str(job_end_ix),
-             '-r'] + readers
+             '-r'] + readers,
+            purpose='db_reading',
+            project=project_name
             )
         if force_fulltext:
             command_list.append('--force_fulltext')
@@ -423,7 +427,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     return job_list
 
 
-def submit_combine(basename, readers, job_ids=None):
+def submit_combine(basename, readers, job_ids=None, project_name=None):
     if job_ids is not None and len(job_ids) > 20:
         print("WARNING: boto3 cannot support waiting for more than 20 jobs.")
         print("Please wait for the reading to finish, then run again with the")
@@ -436,7 +440,9 @@ def submit_combine(basename, readers, job_ids=None):
     job_name = '%s_combine_reading_results' % basename
     command_list = get_batch_command(
         ['python', '-m', 'indra.tools.reading.assemble_reading_stmts_aws',
-         basename, '-r'] + readers
+         basename, '-r'] + readers,
+        purpose='pmid_reading',
+        project=project_name
         )
     print(command_list)
     kwargs = {'jobName': job_name, 'jobQueue': 'run_reach_queue',
@@ -487,6 +493,11 @@ if __name__ == '__main__':
         default=['all'],
         nargs='+',
         help='Choose which reader(s) to use.'
+        )
+    parent_submit_parser.add_argument(
+        '--project',
+        help=('Set the project name. Default is DEFAULT_AWS_PROJECT in the '
+              'config.')
         )
     parent_read_parser = argparse.ArgumentParser(add_help=False)
     parent_read_parser.add_argument(
@@ -609,10 +620,11 @@ if __name__ == '__main__':
                 args.ids_per_job,
                 2,
                 args.force_read,
-                args.force_fulltext
+                args.force_fulltext,
+                args.project
                 )
         if args.job_type in ['combine', 'full']:
-            submit_combine(args.basename, args.readers, job_ids)
+            submit_combine(args.basename, args.readers, job_ids, args.project)
     elif args.method == 'with-db':
         job_ids = submit_db_reading(
             args.basename,
@@ -624,5 +636,6 @@ if __name__ == '__main__':
             2,
             args.force_read,
             args.force_fulltext,
-            args.read_all_fulltext
+            args.read_all_fulltext,
+            args.project
             )
