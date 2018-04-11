@@ -172,7 +172,17 @@ def test_binding():
     assert(m1.db_refs == {'HGNC': '9406', 'TEXT': 'PRK2'})
 
 def test_phosphorylate():
-    pass
+    fname = os.path.join(data_folder, 'test_Phosphorylate.csxml')
+    mp = process_file(fname, None, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, Phosphorylation))
+
+    assert(s0.enz.db_refs == {'HGNC': '1974', 'TEXT': 'IKK alpha'})
+    assert(s0.sub.db_refs == {'HGNC': '6120', 'TEXT': 'IRF-5'})
 
 def test_dephosphorylate():
     pass

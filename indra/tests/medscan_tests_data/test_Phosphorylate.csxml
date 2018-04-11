@@ -1,0 +1,38 @@
+ <?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+  
+
+<sent sn="3" msrc="ID{48110000=We now show that} ID{1147=IKK alpha} phosphorylates ID{3663=IRF-5} and induces formation of ID{3999999=IRF-5 dimers}, which have been indicative of ID{3663=IRF-5} activation. GLOSSARY{3999999={Member=3663}}">
+    <toks>ID{48110000=We now show that} ID{1147=IKK alpha} TK{W:V:phosphorylate=phosphorylates} ID{3663=IRF-5} TK{W:CONJ:and=and} TK{W:V:induce=induces} TK{W:N:formation=formation} TK{W:PREP:of=of} ID{3999999=IRF-5 dimers} TK{PCT:PCT:,=,} TK{W:WH:which=which} TK{W:V:have=have} TK{W:V:been=been} TK{W:V:indicative=indicative} TK{W:PREP:of=of} ID{3663=IRF-5} TK{W:N:activation=activation} TK{PCT:PCT:.=.}</toks>
+    <attr name="Discourse" value="ID{48110000}" />
+    <match coff="0" chars="We now show that" clen="16" type="Discourse">
+     <entity msid="48110000" type="Discourse" name="48110000" urn="urn:agi-discourse:48110000" />
+    </match>
+    <match coff="17" chars="IKK alpha" clen="9" type="Protein">
+     <entity msid="1147" type="Protein" name="CHUK" urn="urn:agi-llid:1147" />
+    </match>
+    <match coff="42" chars="IRF-5" clen="5" type="Protein">
+     <entity msid="3663" type="Protein" name="IRF5" urn="urn:agi-llid:3663" />
+    </match>
+    <match coff="73" chars="IRF-5 dimers" clen="12" type="Complex">
+     <entity msid="3999999" type="Complex" name="IRF5 complex" urn="urn:agi-complex:prophash-e09280fe6275de41b48445ba36878f36">
+      <prop name="Member">
+       <entity type="Protein" name="IRF5" urn="urn:agi-llid:3663" />
+      </prop>
+     </entity>
+    </match>
+    <match coff="117" chars="IRF-5" clen="5" type="Protein">
+     <entity msid="3663" type="Protein" name="IRF5" urn="urn:agi-llid:3663" />
+    </match>
+    <svo type="Main" subj="ID{48110000=We now show that} ID{1147=IKK alpha}" verb="TK{phosphorylate}" obj="ID{3663=IRF-5}" posinfo="0,29,30,18,49,14,64,14," />
+    <svo type="CONTROL" subj="ID{1147}" verb="ProtModification" obj="ID{3663}" />
+    <svo type="Main" subj="ID{48110000=We now show that} ID{1147=IKK alpha}" verb="TK{induce}" obj="ID{3999999=IRF-5 dimers} TK{formation}" posinfo="0,29,30,18,83,7,104,24,91,9," />
+    <svo type="CONTROL" subj="ID{1147}" verb="UnknownRegulation-positive" obj="ID{3999999}" />
+    <svo type="NPmod" subj="ID{3999999=IRF-5 dimers} TK{formation}" verb="TK{indicative}" obj="ID{3663=IRF-5} TK{activation}" posinfo="104,24,91,9,146,10,160,14,175,10," />
+   </sent>
+
+</sec>
+</doc>
+</batch>
