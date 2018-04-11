@@ -33,6 +33,8 @@ def kill_all(job_queue, reason='None given', states=None):
 
 def tag_instance(instance_id, **tags):
     """Tag a single ec2 instance."""
+    print("Got request to add tags %s to instance %s."
+          % (str(tags), instance_id))
     ec2 = boto3.resource('ec2')
     instance = ec2.Instance(instance_id)
 
@@ -41,15 +43,18 @@ def tag_instance(instance_id, **tags):
 
     # Check for existing tags
     if instance.tags is not None:
+        print("Removing existing tags; %s" % str(instance.tags))
         for tag in instance.tags:
             filtered_tags.pop(tag.get('Key'), None)
 
     # If we have new tags to add, add them.
-    if len(tags):
+    tag_list = [{'Key': k, 'Value': v} for k, v in filtered_tags.items()]
+    if len(tag_list):
         print('Adding project tags "%s" to instance %s' %
               (tags, instance_id))
-        instance.create_tags(Tags=[{'Key': k, 'Value': v}
-                                   for k, v in filtered_tags.items()])
+        instance.create_tags(Tags=tag_list)
+    else:
+        print('No new tags from: %s' % str(tags))
     return
 
 
@@ -69,7 +74,7 @@ def tag_myself(project='untagged_indra_batch', **other_tags):
 
 def get_batch_command(command_list, project=None, purpose=None):
     """Get the command appropriate for running something on batch."""
-    command_str = '%s' % (' '.join(command_list))
+    command_str = ' '.join(command_list)
     ret = ['python', '-m', 'indra.util.aws', 'run_in_batch', command_str]
     if not project and has_config('DEFAULT_AWS_PROJECT'):
         project = get_config('DEFAULT_AWS_PROJECT')
