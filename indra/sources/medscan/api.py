@@ -9,8 +9,12 @@ import codecs
 import os
 import numpy as np
 import pickle
+from indra.sources.medscan.processor import *
+from collections import namedtuple
+import os
 
 logger = logging.getLogger('medscan')
+MedscanEntity = namedtuple('MedscanEntity', ['match_text', 'urn', 'type'])
 
 class MedscanRelation:
     def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj, 
@@ -40,7 +44,7 @@ class MedscanRelation:
         return s
 
 
-def process_file(filename, num_documents=None):
+def process_file(filename, medscan_resource_dir, num_documents=None):
     """Process a CSXML file for its relevant information.
 
     The CSXML format consists of a top-level `<batch>` root element containing
@@ -65,6 +69,7 @@ def process_file(filename, num_documents=None):
       cases there can be a "CONTROL" SVO element without its parent immediately
       preceding it.
     """
+    mp = MedscanProcessor(medscan_resource_dir)
 
     logger.info("Parsing %s to XML" % filename)
     pmid = None
@@ -75,8 +80,6 @@ def process_file(filename, num_documents=None):
     entities = {}
     match_text = None
     in_prop = False
-    relation_types = defaultdict(int)
-    relation_examples = defaultdict(list)
     # TODO: Figure out what's going on with Unicode errors!
     # TODO: find extracted events with non-ascii characters and make sure they
     # look okay
@@ -90,15 +93,15 @@ def process_file(filename, num_documents=None):
                 sec = elem.attrib.get('type')
             # Set the sentence context
             elif event == 'start' and elem.tag == 'sent':
-                entities = {}
                 tagged_sent = elem.attrib.get('msrc')
+                entities = {}
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
             elif event == 'start' and elem.tag == 'entity' and not in_prop:
                 ent_id = elem.attrib['msid']
                 ent_urn = elem.attrib.get('urn')
                 ent_type = elem.attrib['type']
-                entities[ent_id] = (match_text, ent_urn, ent_type)
+                entities[ent_id] = MedscanEntity(match_text, ent_urn, ent_type)
             elif event == 'start' and elem.tag == 'svo':
                 subj = elem.attrib.get('subj')
                 verb = elem.attrib.get('verb')
@@ -110,7 +113,8 @@ def process_file(filename, num_documents=None):
                        'entities': entities}
                 svo.update(elem.attrib)
 
-                relation = MedscanRelation(
+                if svo_type == 'CONTROL':
+                    relation = MedscanRelation(
                                            uri=pmid,
                                            sec=sec,
                                            tagged_sentence=tagged_sent,
@@ -120,10 +124,7 @@ def process_file(filename, num_documents=None):
                                            obj=obj,
                                            svo_type=svo_type
                                           )
-                if svo_type == 'CONTROL':
-                    if verb is not None:
-                        relation_types[verb] = relation_types[verb] + 1
-                        relation_examples[verb].append((subj, verb, obj, tagged_sent))
+                    mp.process_relation(relation)
             # TODO: Figure out if there's something better we can do with
             # properties
             elif event == 'start' and elem.tag == 'prop':
@@ -138,24 +139,23 @@ def process_file(filename, num_documents=None):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
-        print('# relation types:', len(relation_types))
-        relation_names = list(relation_types.keys())
-        relation_counts = [relation_types[k] for k in relation_names]
-        sorted_inds = np.argsort(relation_counts)
-        for i in range(len(sorted_inds)):
-            ind = sorted_inds[len(sorted_inds) - 1 - i]
-            print(relation_names[ind] + ',' + str(relation_counts[ind]))
-        pickle.dump([relation_examples, relation_types], open('relation_examples.pkl', 'wb'))
 
     print("Done processing %d documents" % doc_counter)
     # Filter to CONTROL events
-    ctrl = [s for s in svo_list if s['type'] == 'CONTROL']
-    return ctrl
+    return mp
 
 if __name__ == '__main__':
     fname = '~/Downloads/medscan/converted.csxml'
     #fname = '~/Downloads/medscan/test_file.csxml'
+    resource_dir = os.path.expanduser('~/Downloads/medscan')
+
     fname = os.path.expanduser(fname)
     num_documents = None
-    p = process_file(fname, num_documents)
+    mp = process_file(fname, resource_dir, num_documents)
+    #print(mp.urn_types)
+    print('num entities not found:', mp.num_entities_not_found)
+    print('num entities:', mp.num_entities)
+
+    pickle.dump(mp.urn_examples, open('medscan_url_examples.pkl', 'wb'))
+
 
