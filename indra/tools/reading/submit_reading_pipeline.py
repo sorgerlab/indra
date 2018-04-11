@@ -21,7 +21,8 @@ class BatchReadingError(Exception):
 
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
-                      kill_on_log_timeout=False, stash_log_method=None):
+                      kill_on_log_timeout=False, stash_log_method=None,
+                      tag_instances=False):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -117,7 +118,8 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                     for job_def in job_defs}
 
     batch_client = boto3.client('batch')
-    ecs_cluster_name = get_ecs_cluster_for_queue(queue_name, batch_client)
+    if tag_instances:
+        ecs_cluster_name = get_ecs_cluster_for_queue(queue_name, batch_client)
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
@@ -160,7 +162,8 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                 ret = 0
                 break
 
-        tag_instances_on_cluster(ecs_cluster_name)
+        if tag_instances:
+            tag_instances_on_cluster(ecs_cluster_name)
         sleep(poll_interval)
 
     # Stash the logs
