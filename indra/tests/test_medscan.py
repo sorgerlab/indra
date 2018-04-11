@@ -11,6 +11,7 @@ from indra.sources.medscan.api import *
 path_this = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(path_this, 'medscan_tests_data')
 
+
 def test_urn_to_db_refs():
     # Test resolving a subset of the urns that are used for grounding
     # The processor adds the TEXT property to the generated db_refs after
@@ -51,10 +52,11 @@ def test_urn_to_db_refs():
     db_refs_7 = urn_to_db_refs(urn7)
     assert(db_refs_7 == {'GO': '0001515'})
 
-    #agi-ncimtissue
+    # agi-ncimtissue
     urn8 = 'urn:agi-ncimtissue:C0007807'
     db_refs_8 = urn_to_db_refs(urn8)
     assert(db_refs_8 == {'MESH': 'C0007807'})
+
 
 def test_agent_from_entity():
     mp = MedscanProcessor(None)
@@ -68,7 +70,7 @@ def test_agent_from_entity():
     tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
     relation = MedscanRelation(uri=None,
                                sec=None,
-                               entities={'123' : entity},
+                               entities={'123': entity},
                                tagged_sentence=tagged_sentence,
                                subj=None,
                                verb=None,
@@ -77,8 +79,7 @@ def test_agent_from_entity():
 
     # Test for when an entity is in the grounded entities list
     agent1 = mp.agent_from_entity(relation, 'ID{123}')
-    assert agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': '0016938'}, \
-           agent1.db_refs
+    assert(agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': '0016938'})
 
     # Test for when an entity is in the tagged sentence but not the entity list
     agent2 = mp.agent_from_entity(relation, 'ID{321}')
@@ -88,6 +89,7 @@ def test_agent_from_entity():
     # grounded entities list
     agent3 = mp.agent_from_entity(relation, 'ID{444}')
     assert(agent3 is None)
+
 
 def test_expressioncontrol_positive():
     fname = os.path.join(data_folder, 'test_ExpressionControl_positive.csxml')
@@ -99,6 +101,7 @@ def test_expressioncontrol_positive():
     s0 = statements[0]
     assert(s0.subj.db_refs == {'TEXT': 'hypoxia'})
     assert(s0.obj.db_refs == {'HGNC': '3415', 'TEXT': 'erythropoietin'})
+
 
 def test_evidence():
     # Test that evidence object is created correctly
@@ -114,7 +117,12 @@ def test_evidence():
     assert(s0.evidence[0].source_api == 'medscan')
     assert(s0.evidence[0].source_id == 'info:pmid/23455322')
     assert(s0.evidence[0].pmid == '23455322')
-    assert(s0.evidence[0].text == 'Finally, we show that parp-1(-/-) mice display a significant reduction in the circulating hypoxia-induced erythropoietin levels, number of red cells and hemoglobin concentration. ')
+    assert(s0.evidence[0].text == 'Finally, we show that parp-1(-/-) mice' +
+                                  ' display a significant reduction in the' +
+                                  ' circulating hypoxia-induced ' +
+                                  'erythropoietin levels, number of ' +
+                                  'red cells and hemoglobin concentration. ')
+
 
 def test_molsynthesis_positive():
     fname = os.path.join(data_folder, 'test_MolSynthesis-positive.csxml')
@@ -128,6 +136,7 @@ def test_molsynthesis_positive():
     assert(s0.subj.db_refs == {'HGNC': '19260', 'TEXT': 'BLT2'})
     assert(s0.obj.db_refs == {'TEXT': 'reactive oxygen species'})
 
+
 def test_expressioncontrol_negative():
     fname = os.path.join(data_folder, 'test_ExpressionControl_negative.csxml')
     mp = process_file(fname, None, None)
@@ -140,6 +149,7 @@ def test_expressioncontrol_negative():
     assert(s0.subj.db_refs == {'CHEBI': '6700', 'TEXT': 'matrine'})
     assert(s0.obj.db_refs == {'HGNC': '6364',
                               'TEXT': 'PSA and androgen receptor'})
+
 
 def test_molsynthesis_negative():
     fname = os.path.join(data_folder, 'test_MolSynthesis-negative.csxml')
@@ -171,6 +181,7 @@ def test_binding():
     assert(m0.db_refs == {'HGNC': '7664', 'TEXT': 'Both Nck and Grb4'})
     assert(m1.db_refs == {'HGNC': '9406', 'TEXT': 'PRK2'})
 
+
 def test_phosphorylate():
     fname = os.path.join(data_folder, 'test_Phosphorylate.csxml')
     mp = process_file(fname, None, None)
@@ -184,6 +195,7 @@ def test_phosphorylate():
     assert(s0.enz.db_refs == {'HGNC': '1974', 'TEXT': 'IKK alpha'})
     assert(s0.sub.db_refs == {'HGNC': '6120', 'TEXT': 'IRF-5'})
 
+
 def test_dephosphorylate():
     fname = os.path.join(data_folder, 'test_Dephosphorylate.csxml')
     mp = process_file(fname, None, None)
@@ -196,4 +208,3 @@ def test_dephosphorylate():
 
     assert(s0.enz.db_refs == {'HGNC': '30579', 'TEXT': 'Slingshot-1 (SSH1'})
     assert(s0.sub.db_refs == {'HGNC': '1874', 'TEXT': 'cofilin'})
-

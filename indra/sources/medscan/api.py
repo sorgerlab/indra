@@ -16,8 +16,9 @@ import os
 logger = logging.getLogger('medscan')
 MedscanEntity = namedtuple('MedscanEntity', ['match_text', 'urn', 'type'])
 
-class MedscanRelation:
-    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj, 
+
+class MedscanRelation(object):
+    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
                  svo_type):
         self.uri = uri
         self.sec = sec
@@ -83,8 +84,10 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     last_relation = None
     # TODO: find extracted events with non-ascii characters and make sure they
     # look okay
-    with codecs.open(filename, 'rb') as f: #, encoding='cp500', errors='ignore') as f:
-        for event, elem in lxml.etree.iterparse(f, events=('start', 'end'), encoding='utf-8', recover=True):
+    with codecs.open(filename, 'rb') as f:
+        for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
+                                                encoding='utf-8',
+                                                recover=True):
             # If opening up a new doc, set the PMID
             if event == 'start' and elem.tag == 'doc':
                 pmid = elem.attrib.get('uri')
@@ -145,18 +148,16 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
-
     print("Done processing %d documents" % doc_counter)
     # Filter to CONTROL events
     return mp
 
+
 if __name__ == '__main__':
     fname = '~/Downloads/medscan/converted.csxml'
-    #fname = '~/Downloads/medscan/test_file.csxml'
+    # fname = '~/Downloads/medscan/test_file.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
-
-
