@@ -5,7 +5,6 @@ import os
 import json
 import logging
 import networkx as nx
-from functools import partial
 from indra.statements import Influence
 
 # Python 2
@@ -34,7 +33,6 @@ class CAGAssembler(object):
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
-
     def __init__(self, stmts=None, grounding_threshold=None):
         if not stmts:
             self.statements = []
