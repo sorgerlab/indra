@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import object, dict, str
+import os
 import json
-import jinja2
 import logging
 import networkx as nx
 from functools import partial
@@ -182,12 +182,13 @@ class CAGAssembler(object):
         string
             A Javascript string to be rendered in a Jupyter notebook cell.
         """
-        to_json = partial(json.dumps, indent=2)
-        return jupyter_cyjs_template.render(
-            cyjs_elements=to_json(self.export_to_cytoscapejs()),
-            cyjs_style=to_json(cyjs_style),
-            cyjs_layout=to_json(cyjs_layout))
-
+        cyjs = self.export_to_cytoscapejs()
+        cyjs_str = json.dumps(cyjs, indent=2)
+        templatef = os.path.join(os.path.dirname(os.path.absfile(__file__)),
+                                 'cag_template.js')
+        with open('r') as fh:
+            template = fh.read().replace('{{elements}}', cyjs_str)
+        return template
 
     def _node_name(self, concept):
         """Return a standardized name for a node given a Concept."""
@@ -201,64 +202,3 @@ class CAGAssembler(object):
                 return entry.split('/')[-1].replace('_', ' ').capitalize()
         else:
             return concept.name.capitalize()
-
-
-jupyter_cyjs_template = jinja2.Template("""
-require.config({
-  paths: {
-    cytoscape: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.8/cytoscape',
-  }
-})
-
-require(['cytoscape'], function(cytoscape){
-  $("#cyDiv").remove();
-  element.append("<div id='cyDiv'></div>");
-  $("#cyDiv").height("300px");
-
-    var cy = cytoscape({
-      container : document.getElementById('cyDiv'),
-      elements  : {{ cyjs_elements | safe }},
-      style     : {{ cyjs_style    | safe }},
-      layout    : {{ cyjs_layout   | safe }},
-      maxZoom   : 10,
-      minZoom   : 0.1,
-    });
-});
-""")
-
-
-cyjs_style = [ {
-        'selector'             : 'node',
-        'style'                : {
-            "label"            : "data(id)",
-            "background-color" : "white",
-            "border-color"     : "maroon",
-            "border-width"     : "1px",
-            "font-family"      : "Arno Pro, Arial",
-            "text-halign"      : "center",
-            "text-valign"      : "center",
-            "padding"          : 10,
-            "width"            : "function( node ){ return 2*node.degree(); }",
-            "height"           : "function( node ){ return 2*node.degree(); }",
-            "shape"            : "ellipse",
-            "text-max-width"   : 80,
-            "text-wrap"        : True,
-        }
-    }, {
-        'selector'               : 'edge',
-        'style'                  : {
-            "curve-style"        : "bezier",
-            "line-color"         : "data(linecolor)",
-            "target-arrow-shape" : "data(targetArrowShape)",
-            "target-arrow-color" : "data(linecolor)",
-            "line-style"         : "data(linestyle)",
-            "width"              : "1",
-    }
-}]
-
-cyjs_layout = {'name': 'cose',
-               'nodeDimensionsIncludeLabels': True,
-               'componentSpacing': 1,
-               'nodeOverlap': 1000,
-               'nodeRepulsion': 500}
-
