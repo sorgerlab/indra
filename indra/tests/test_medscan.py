@@ -142,7 +142,17 @@ def test_expressioncontrol_negative():
                               'TEXT': 'PSA and androgen receptor'})
 
 def test_molsynthesis_negative():
-    pass
+    fname = os.path.join(data_folder, 'test_MolSynthesis-negative.csxml')
+    mp = process_file(fname, None, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, DecreaseAmount))
+    assert(s0.subj.db_refs == {'HGNC': '9070', 'TEXT': 'pleckstrin'})
+    assert(s0.obj.db_refs == {'CHEBI': '16595', 'TEXT': 'Ins(1,4,5)P3'})
+
 
 def test_binding():
     pass
