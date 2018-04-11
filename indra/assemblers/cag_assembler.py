@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import object, dict, str
+import os
+import json
 import logging
 import networkx as nx
 from indra.statements import Influence
-import json
 
 # Python 2
 try:
@@ -32,7 +33,7 @@ class CAGAssembler(object):
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
-    def __init__(self, stmts=None, grounding_threshold = None):
+    def __init__(self, stmts=None, grounding_threshold=None):
         if not stmts:
             self.statements = []
         else:
@@ -43,7 +44,7 @@ class CAGAssembler(object):
         """Add a list of Statements to the assembler."""
         self.statements += stmts
 
-    def make_model(self, grounding_threshold = None):
+    def make_model(self, grounding_threshold=None):
         """Return a networkx MultiDiGraph representing a causal analysis graph.
 
         Parameters
@@ -111,7 +112,6 @@ class CAGAssembler(object):
                     provenance=provenance,
                 )
 
-
         return self.CAG
 
     def export_to_cytoscapejs(self):
@@ -124,13 +124,15 @@ class CAGAssembler(object):
             CytoscapeJS.
         """
         def _create_edge_data_dict(e):
+            """Return a dict from a MultiDiGraph edge for CytoscapeJS export."""
             # A hack to get rid of the redundant 'Provenance' label.
             if e[3].get('provenance'):
                 tooltip = e[3]['provenance'][0]
-                del tooltip['@type']
+                if tooltip.get('@type'):
+                    del tooltip['@type']
             else:
                 tooltip = None
-            return {
+            edge_data_dict = {
                     'id'               : e[0]+'_'+e[1],
                     'source'           : e[0],
                     'target'           : e[1],
@@ -145,7 +147,9 @@ class CAGAssembler(object):
                     'simulable'        : False if (
                         e[3]['obj_polarity'] is None or
                         e[3]['subj_polarity'] is None) else True,
-                   }
+                    }
+            return edge_data_dict
+
         return {
                 'nodes': [{'data': {
                     'id': n[0],
@@ -157,6 +161,47 @@ class CAGAssembler(object):
                            for e in self.CAG.edges(data=True, keys=True)]
                 }
 
+    def generate_jupyter_js(self, cyjs_style=None, cyjs_layout=None):
+        """Generate Javascript from a template to run in Jupyter notebooks.
+
+        Parameters
+        ----------
+        cyjs_style : Optional[dict]
+            A dict that sets CytoscapeJS style as specified in
+            https://github.com/cytoscape/cytoscape.js/blob/master/documentation/md/style.md.
+
+        cyjs_layout : Optional[dict]
+            A dict that sets CytoscapeJS
+            `layout parameters <http://js.cytoscape.org/#core/layout>`_.
+
+        Returns
+        -------
+        str
+            A Javascript string to be rendered in a Jupyter notebook cell.
+        """
+        # First, export the CAG to CyJS
+        cyjs_elements = self.export_to_cytoscapejs()
+        # Load the Javascript template
+        tempf = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'cag_template.js')
+        with open(tempf, 'r') as fh:
+            template = fh.read()
+        # Load the default style and layout
+        stylef = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'cag_style.json')
+        with open(stylef, 'r') as fh:
+            style = json.load(fh)
+        # Apply style and layout only if arg wasn't passed in
+        if cyjs_style is None:
+            cyjs_style = style['style']
+        if cyjs_layout is None:
+            cyjs_layout = style['layout']
+        # Now fill in the template
+        formatted_args = tuple(json.dumps(x, indent=2) for x in
+                               (cyjs_elements, cyjs_style, cyjs_layout))
+        js_str = template % formatted_args
+        return js_str
+
     def _node_name(self, concept):
         """Return a standardized name for a node given a Concept."""
         if (# grounding threshold is specified
@@ -165,6 +210,7 @@ class CAGAssembler(object):
             and concept.db_refs['EIDOS']
             # The grounding score is above the grounding threshold
             and concept.db_refs['EIDOS'][0][1] > self.grounding_threshold):
-                return concept.db_refs['EIDOS'][0][0].split('/')[-1].replace('_', ' ').capitalize()
+                entry = concept.db_refs['EIDOS'][0][0]
+                return entry.split('/')[-1].replace('_', ' ').capitalize()
         else:
             return concept.name.capitalize()
