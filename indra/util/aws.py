@@ -46,15 +46,17 @@ def tag_instance(instance_id, **tags):
 
     # Check for existing tags
     if instance.tags is not None:
-        logger.info("Removing existing tags; %s" % str(instance.tags))
-        for tag in instance.tags:
-            filtered_tags.pop(tag.get('Key'), None)
+        existing_tags = {tag.get('Key'): tag.get('Value')
+                         for tag in instance.tags}
+        logger.info("Ignoring existing tags; %s" % str(existing_tags))
+        for tag_key in existing_tags.keys():
+            filtered_tags.pop(tag_key, None)
 
     # If we have new tags to add, add them.
     tag_list = [{'Key': k, 'Value': v} for k, v in filtered_tags.items()]
     if len(tag_list):
         logger.info('Adding project tags "%s" to instance %s'
-                    % (tags, instance_id))
+                    % (filtered_tags, instance_id))
         instance.create_tags(Tags=tag_list)
     else:
         logger.info('No new tags from: %s' % str(tags))
@@ -355,7 +357,7 @@ def analyze_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
                          for result, reach_log_str in all_reach_logs
                          if result == 'FAILURE']
     tcids_unfinished = {tcid for reach_log in failed_reach_logs
-                        if reach_log
+                        if bool(reach_log)
                         for tcid in analyze_reach_log(log_str=reach_log)}
     logger.info("Found %d unfinished tcids." % len(tcids_unfinished))
     return tcids_unfinished
