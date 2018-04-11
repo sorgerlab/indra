@@ -9,7 +9,8 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              Dephosphorylation, Evidence, ModCondition, \
                              ActiveForm, MutCondition, Complex, \
                              Translocation, Activation, Inhibition, \
-                             Deacetylation, Conversion, Concept, Influence
+                             Deacetylation, Conversion, Concept, Influence, \
+                             IncreaseAmount, DecreaseAmount
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def test_duplicates():
@@ -608,3 +609,17 @@ def test_influence_refinement():
     truck_stmt = [st for st in rel_stmts if st.subj.name == 'trucking'][0]
     assert len(truck_stmt.supported_by) == 1
     assert truck_stmt.supported_by[0].subj.name == 'transportation'
+
+
+def test_find_contradicts():
+    st1 = Inhibition(Agent('a'), Agent('b'))
+    st2 = Activation(Agent('a'), Agent('b'))
+    st3 = IncreaseAmount(Agent('a'), Agent('b'))
+    st4 = DecreaseAmount(Agent('a'), Agent('b'))
+    pa = Preassembler(hierarchies, [st1, st2, st3, st4])
+    contradicts = pa.find_contradicts()
+    assert len(contradicts) == 2
+    for s1, s2 in contradicts:
+        assert {s1.uuid, s2.uuid} in ({st1.uuid, st2.uuid},
+                                      {st3.uuid, st4.uuid})
+
