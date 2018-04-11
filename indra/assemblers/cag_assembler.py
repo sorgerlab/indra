@@ -163,32 +163,46 @@ class CAGAssembler(object):
                            for e in self.CAG.edges(data=True, keys=True)]
                 }
 
-    def generate_jupyter_js(self, cyjs_style=cyjs_style,
-                            cyjs_layout=cyjs_layout):
+    def generate_jupyter_js(self, cyjs_style=None, cyjs_layout=None):
         """Generate Javascript from a template to run in Jupyter notebooks.
 
         Parameters
         ----------
-        cyjs_style : dict
+        cyjs_style : Optional[dict]
             A dict that sets CytoscapeJS style as specified in
             https://github.com/cytoscape/cytoscape.js/blob/master/documentation/md/style.md.
 
-        cyjs_layout : dict
+        cyjs_layout : Optional[dict]
             A dict that sets CytoscapeJS
             `layout parameters <http://js.cytoscape.org/#core/layout>`_.
 
         Returns
         -------
-        string
+        str
             A Javascript string to be rendered in a Jupyter notebook cell.
         """
-        cyjs = self.export_to_cytoscapejs()
-        cyjs_str = json.dumps(cyjs, indent=2)
-        templatef = os.path.join(os.path.dirname(os.path.absfile(__file__)),
-                                 'cag_template.js')
-        with open('r') as fh:
-            template = fh.read().replace('{{elements}}', cyjs_str)
-        return template
+        # First, export the CAG to CyJS
+        cyjs_elements = self.export_to_cytoscapejs()
+        # Load the Javascript template
+        tempf = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             'cag_template.js')
+        with open(tempf, 'r') as fh:
+            template = fh.read()
+        # Load the default style and layout
+        stylef = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                              'cag_style.json')
+        with open(stylef, 'r') as fh:
+            style = json.load(fh)
+        # Apply style and layout only if arg wasn't passed in
+        if cyjs_style is None:
+            cyjs_style = style['style']
+        if cyjs_layout is None:
+            cyjs_layout = style['layout']
+        # Now fill in the template
+        formatted_args = tuple(json.dumps(x, indent=2) for x in
+                               (cyjs_elements, cyjs_style, cyjs_layout))
+        js_str = template % formatted_args
+        return js_str
 
     def _node_name(self, concept):
         """Return a standardized name for a node given a Concept."""
