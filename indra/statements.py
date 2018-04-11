@@ -1703,6 +1703,30 @@ class RegulateActivity(Statement):
         else:
             return False
 
+    def contradicts(self, other, hierarchies):
+        # If they aren't opposite classes, it's not a contradiction
+        if {self.__class__, other.__class__} != {Activation, Inhibition}:
+            return False
+
+        # If they aren't opposite classes, it's not a contradiction
+        if self.is_activation == other.is_activation:
+            return False
+        # Skip all instances of not fully specified statements
+        agents = (self.subj, self.obj, other.subj, other.obj)
+        if not all(a is not None for a in agents):
+            return False
+        # If the entities don't match, they can't be contradicting
+        # Here we check pairs of agents at each "position" and
+        # make sure they are the same or they are refinements of each other
+        for self_agent, other_agent in zip(self.agent_list(),
+                                           other.agent_list()):
+            if not (self_agent.entity_matches(other_agent) or \
+                    self_agent.refinement_of(other_agent, hierarchies) or \
+                    other_agent.refinement_of(self_agent, hierarchies)):
+                return False
+        # Otherwise they are contradicting
+        return True
+
     def to_json(self):
         generic = super(RegulateActivity, self).to_json()
         json_dict = _o({'type': generic['type']})

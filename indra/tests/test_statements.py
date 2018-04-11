@@ -1750,3 +1750,14 @@ def test_regulate_amount_contradicts():
     assert not st1.contradicts(st3, hierarchies)
     assert not st1.contradicts(st4, hierarchies)
     assert not st2.contradicts(st4, hierarchies)
+
+
+def test_regulate_activity_contradicts():
+    st1 = Activation(Agent('a'), Agent('b'))
+    st2 = Inhibition(Agent('a'), Agent('b'))
+    st3 = Inhibition(Agent('a'), Agent('c'))
+    st4 = Activation(Agent('b'), Agent('a'))
+    assert st1.contradicts(st2, hierarchies)
+    assert not st1.contradicts(st3, hierarchies)
+    assert not st1.contradicts(st4, hierarchies)
+    assert not st2.contradicts(st4, hierarchies)
