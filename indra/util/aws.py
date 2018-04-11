@@ -69,7 +69,7 @@ def tag_myself(project='untagged_indra_batch', **other_tags):
 
 def get_batch_command(command_list, project=None, purpose=None):
     """Get the command appropriate for running something on batch."""
-    command_str = '\"%s\"' % ' '.join(command_list)
+    command_str = '%s' % (' '.join(command_list))
     ret = ['python', '-m', 'indra.util.aws', 'run_in_batch', command_str]
     if not project and has_config('DEFAULT_AWS_PROJECT'):
         project = get_config('DEFAULT_AWS_PROJECT')
@@ -78,6 +78,15 @@ def get_batch_command(command_list, project=None, purpose=None):
     if purpose:
         ret += ['--purpose', purpose]
     return ret
+
+
+def run_in_batch(command_list, project, purpose):
+    from subprocess import call
+    tag_myself(project, purpose=purpose)
+    print('\n' + 20*'=' + ' Begin Primary Command Output ' + 20*'=' + '\n')
+    ret_code = call(command_list)
+    print('\n' + 21*'=' + ' End Primary Command Output ' + 21*'=' + '\n')
+    return ret_code
 
 
 def get_jobs(job_queue='run_reach_queue', job_status='RUNNING'):
@@ -398,20 +407,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.task == 'run_in_batch':
-        tag_myself(args.project, purpose=args.purpose)
-        from subprocess import run
-        print()
-        print(20*'=' + ' Begin Primary Command Output ' + 20*'=')
-        print()
-        ret = run(args.command.split(' '))
-        print()
-        print(21*'=' + ' End Primary Command Output ' + 21*'=')
-        print()
-        if ret.returncode is 0:
+        ret_code = run_in_batch(args.command.split(' '), args.project,
+                                args.purpose)
+        if ret_code is 0:
             print('Job endend well.')
         else:
             print('Job failed!')
             import sys
-            sys.exit(ret.returncode)
+            sys.exit(ret_code)
     elif args.task == 'kill_all':
         kill_all(args.queue_name, args.reason)
