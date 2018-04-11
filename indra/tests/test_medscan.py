@@ -55,3 +55,36 @@ def test_urn_to_db_refs():
     urn8 = 'urn:agi-ncimtissue:C0007807'
     db_refs_8 = urn_to_db_refs(urn8)
     assert(db_refs_8 == {'MESH': 'C0007807'})
+
+def test_agent_from_entity():
+    mp = MedscanProcessor(None)
+
+    # Test entity
+    entity = MedscanEntity(match_text='kinesin-I',
+                           urn='urn:agi-gocomplex:0016938',
+                           type=None)
+
+    # Test relation
+    tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
+    relation = MedscanRelation(uri=None,
+                               sec=None,
+                               entities={'123' : entity},
+                               tagged_sentence=tagged_sentence,
+                               subj=None,
+                               verb=None,
+                               obj=None,
+                               svo_type=None)
+
+    # Test for when an entity is in the grounded entities list
+    agent1 = mp.agent_from_entity(relation, 'ID{123}')
+    assert agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': '0016938'}, \
+           agent1.db_refs
+
+    # Test for when an entity is in the tagged sentence but not the entity list
+    agent2 = mp.agent_from_entity(relation, 'ID{321}')
+    assert(agent2.db_refs == {'TEXT': 'BRAF'})  # No grounding
+
+    # Test for when an entity is neither tagged in the sentence nor in the
+    # grounded entities list
+    agent3 = mp.agent_from_entity(relation, 'ID{444}')
+    assert(agent3 is None)

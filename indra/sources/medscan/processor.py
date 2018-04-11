@@ -89,28 +89,24 @@ class MedscanProcessor(object):
         self.unmapped_urns = set()
 
         # Read in and populate a list of unmapped urns
-        fname_unmapped_complexes = os.path.join(medscan_resource_dir,
-                                                'Unmapped Complexes.rnef')
-        fname_classes = os.path.join(medscan_resource_dir,
-                                     'Unmapped Functional classes.rnef')
-        for fname in [fname_unmapped_complexes, fname_classes]:
-            with codecs.open(fname, 'rb') as f:
-                for event, elem in lxml.etree.iterparse(f, 
-                                                        events=('start', 'end'),
-                                                        encoding='utf-8'):
-                    if event == 'start':
-                        urn = elem.attrib.get('urn')
-                        if urn is not None:
-                            self.unmapped_urns.add(urn)
-        print('# unmapped URNs:', len(self.unmapped_urns))
+        if medscan_resource_dir is not None:
+            fname_unmapped_complexes = os.path.join(medscan_resource_dir,
+                                                    'Unmapped Complexes.rnef')
+            fname_classes = os.path.join(medscan_resource_dir,
+                                         'Unmapped Functional classes.rnef')
+            for fname in [fname_unmapped_complexes, fname_classes]:
+                with codecs.open(fname, 'rb') as f:
+                    for event, elem in lxml.etree.iterparse(f, 
+                                                            events=('start',
+                                                                    'end'),
+                                                            encoding='utf-8'):
+                        if event == 'start':
+                            urn = elem.attrib.get('urn')
+                            if urn is not None:
+                                self.unmapped_urns.add(urn)
 
 
-    def process_relation(self, relation):
-        # Extract sentence tags mapping ids to the text. We refer to this
-        # mapping only if the entity doesn't appear in the grounded entity
-        # list
-        relation.tags = extract_sentence_tags(relation.tagged_sentence)
-
+    def process_relation(self, relation): 
         subj = self.agent_from_entity(relation, relation.subj)
         obj = self.agent_from_entity(relation, relation.subj)
         if subj is None or obj is None:
@@ -126,38 +122,36 @@ class MedscanProcessor(object):
             import ipdb; ipdb.set_trace()
 
     def agent_from_entity(self, relation, entity_id):
+        # Extract sentence tags mapping ids to the text. We refer to this
+        # mapping only if the entity doesn't appear in the grounded entity
+        # list
+        tags = extract_sentence_tags(relation.tagged_sentence)
+
         if entity_id is None:
             return None
         self.num_entities = self.num_entities + 1
 
         entity_id = extract_id(entity_id)
 
+        if entity_id not in relation.entities and \
+                entity_id not in tags:
+            # Could not find the entity in either the list of grounded
+            # entities of the items tagged in the sentence. Happens for
+            # a very small percentage of the dataset.
+            self.num_entities_not_found = self.num_entities_not_found + 1
+            return None
+
         if entity_id not in relation.entities:
             # The entity is not in the grounded entity list
-            # Instead, make an ungrounded entity, with entity text that
-            # appeared in the sentence
-
-            if entity_id not in relation.tags:
-                self.num_entities_not_found = self.num_entities_not_found + 1
-                print('Entity not found')
-                return None
-            entity_text = relation.tags[entity_id]
+            # Instead, make an ungrounded entity, with TEXT corresponding to
+            # the words with the given entity id tagged in the sentence.
+            entity_text = tags[entity_id]
             db_refs = {'TEXT': entity_text}
-            return Agent(entity_text, db_refs=db_refs)
         else:
+            # Convert the URN grounding to an INDRA grounding
             entity = relation.entities[entity_id]
-            db_refs = {}
+            db_refs = urn_to_db_refs(entity.urn)
             db_refs['TEXT'] = entity.match_text
-
-            # Parse the URN
-            if entity.urn is not None:
-                #print(entity.urn)
-                p = 'urn:([^:]+):([^:]+)'
-                m = re.match(p, entity.urn)
-                assert m is not None, m
-                if entity.urn not in self.unmapped_urns:
-                    self.urn_examples[m.group(1)].add(entity)
-            else:
-                # urn is None
-                pass
+            
+        return Agent(db_refs['TEXT'], db_refs=db_refs)
 
