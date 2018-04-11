@@ -1,9 +1,12 @@
 import re
 import boto3
+import logging
 import requests
 from os.path import join
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from indra import get_config, has_config
+
+logger = logging.getLogger('aws_utils')
 
 
 def kill_all(job_queue, reason='None given', states=None):
@@ -25,7 +28,7 @@ def kill_all(job_queue, reason='None given', states=None):
         if job_info:
             job_ids = [job['jobId'] for job in job_info]
             for job_id in job_ids:
-                print('Killing %s' % job_id)
+                logger.info('Killing %s' % job_id)
                 res = batch.terminate_job(jobId=job_id, reason=reason)
                 res_list.append(res)
     return res_list
@@ -33,8 +36,8 @@ def kill_all(job_queue, reason='None given', states=None):
 
 def tag_instance(instance_id, **tags):
     """Tag a single ec2 instance."""
-    print("Got request to add tags %s to instance %s."
-          % (str(tags), instance_id))
+    logger.info("Got request to add tags %s to instance %s."
+                % (str(tags), instance_id))
     ec2 = boto3.resource('ec2')
     instance = ec2.Instance(instance_id)
 
@@ -43,18 +46,18 @@ def tag_instance(instance_id, **tags):
 
     # Check for existing tags
     if instance.tags is not None:
-        print("Removing existing tags; %s" % str(instance.tags))
+        logger.info("Removing existing tags; %s" % str(instance.tags))
         for tag in instance.tags:
             filtered_tags.pop(tag.get('Key'), None)
 
     # If we have new tags to add, add them.
     tag_list = [{'Key': k, 'Value': v} for k, v in filtered_tags.items()]
     if len(tag_list):
-        print('Adding project tags "%s" to instance %s' %
-              (tags, instance_id))
+        logger.info('Adding project tags "%s" to instance %s'
+                    % (tags, instance_id))
         instance.create_tags(Tags=tag_list)
     else:
-        print('No new tags from: %s' % str(tags))
+        logger.info('No new tags from: %s' % str(tags))
     return
 
 
@@ -64,8 +67,8 @@ def tag_myself(project='untagged_indra_batch', **other_tags):
     try:
         resp = requests.get(base_url + "/latest/meta-data/instance-id")
     except requests.exceptions.ConnectionError:
-        print("Could not connect to service. Note this should only be run "
-              "from within a batch job.")
+        logger.warning("Could not connect to service. Note this should only "
+                       "be run from within a batch job.")
         return
     instance_id = resp.text
     tag_instance(instance_id, project=project, **other_tags)
@@ -88,9 +91,9 @@ def get_batch_command(command_list, project=None, purpose=None):
 def run_in_batch(command_list, project, purpose):
     from subprocess import call
     tag_myself(project, purpose=purpose)
-    print('\n' + 20*'=' + ' Begin Primary Command Output ' + 20*'=' + '\n')
+    logger.info('\n'+20*'='+' Begin Primary Command Output '+20*'='+'\n')
     ret_code = call(command_list)
-    print('\n' + 21*'=' + ' End Primary Command Output ' + 21*'=' + '\n')
+    logger.info('\n'+21*'='+' End Primary Command Output '+21*'='+'\n')
     return ret_code
 
 
@@ -134,13 +137,13 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
                             logStreamNamePrefix=log_stream_name)
     streams = stream_resp.get('logStreams')
     if not streams:
-        print('No streams for job')
+        logger.warning('No streams for job')
         return None
     elif len(streams) > 1:
-        print('More than 1 stream for job, returning first')
+        logger.warning('More than 1 stream for job, returning first')
     log_stream_name = streams[0]['logStreamName']
     if verbose:
-        print("Getting log for %s/%s" % (job_name, job_id))
+        logger.info("Getting log for %s/%s" % (job_name, job_id))
     out_file = ('%s_%s.log' % (job_name, job_id)) if write_file else None
     lines = get_log_by_name(log_group_name, log_stream_name, out_file, verbose)
     return lines
@@ -181,7 +184,7 @@ def get_log_by_name(log_group_name, log_stream_name, out_file=None,
                           for evt in events]
             kwargs['nextToken'] = response.get('nextForwardToken')
         if verbose:
-            print('%d %s' % (len(lines), lines[-1]))
+            logger.info('%d %s' % (len(lines), lines[-1]))
     if out_file:
         with open(out_file, 'wt') as f:
             for line in lines:
@@ -354,7 +357,7 @@ def analyze_db_reading(job_prefix, reading_queue='run_db_reading_queue'):
     tcids_unfinished = {tcid for reach_log in failed_reach_logs
                         if reach_log
                         for tcid in analyze_reach_log(log_str=reach_log)}
-    print("Found %d unfinished tcids." % len(tcids_unfinished))
+    logger.info("Found %d unfinished tcids." % len(tcids_unfinished))
     return tcids_unfinished
 
 
@@ -415,9 +418,9 @@ if __name__ == '__main__':
         ret_code = run_in_batch(args.command.split(' '), args.project,
                                 args.purpose)
         if ret_code is 0:
-            print('Job endend well.')
+            logger.info('Job endend well.')
         else:
-            print('Job failed!')
+            logger.error('Job failed!')
             import sys
             sys.exit(ret_code)
     elif args.task == 'kill_all':
