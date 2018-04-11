@@ -2,7 +2,8 @@
 #from indra.sources.medscan.api import *
 import re
 import sys
-from indra.statements import Agent, Complex
+from indra.statements import Agent, Complex, IncreaseAmount, DecreaseAmount, \
+                             Evidence, Phosphorylation, Dephosphorylation
 import lxml.etree
 import os
 import codecs
@@ -85,7 +86,7 @@ def extract_sentence_tags(tagged_sentence):
 class MedscanProcessor(object):
     def __init__(self, medscan_resource_dir):
         self.statements = []
-        self.urn_examples = collections.defaultdict(set)
+        self.modification_examples = collections.defaultdict(int)
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.unmapped_urns = set()
@@ -108,20 +109,53 @@ class MedscanProcessor(object):
                                 self.unmapped_urns.add(urn)
 
 
-    def process_relation(self, relation): 
+    def process_relation(self, relation, last_relation): 
         subj = self.agent_from_entity(relation, relation.subj)
         obj = self.agent_from_entity(relation, relation.obj)
         if subj is None or obj is None:
             # Don't extract a statement if the subject or object cannot
             # be resolved
             return
+
+        # Make evidence
+        untagged_sentence = untag_sentence(relation.tagged_sentence)
+        source_id = relation.uri
+        m = re.match('info:pmid/([0-9]+)', source_id)
+        assert(m is not None)
+        pmid = m.group(1)
+        annotations = None
+        ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
+                      text=untagged_sentence, annotations=None,
+                      epistemics=None)]
         
-        if relation.verb == 'UnknownRegulation-positive':
-            pass
-        elif relation.verb == 'ExpressionControl-positive':
-            pass
+        increase_amount_verbs = ['ExpressionControl-positive',
+                                 'MolSynthesis-positive']
+        decrease_amount_verbs = ['ExpressionControl-negative',
+                                 'MolSynthesis-negative']
+
+        if relation.verb in increase_amount_verbs:
+            self.statements.append( IncreaseAmount(subj, obj, evidence=ev) )
+        elif relation.verb in decrease_amount_verbs:
+            self.statements.append( DecreaseAmount(subj, obj, evidence=ev) )
+        elif relation.verb == 'ProtModification':
+            self.modification_examples[last_relation.verb] += 1
+
+            if last_relation is None:
+                # We cannot make a statement unless we have more fine-grained
+                # information on the relation type from a preceding
+                # unnormalized SVO
+                return
+
+            if last_relation.verb == 'TK{phosphorylate}':
+                self.statements.append( Phosphorylation(subj, obj,
+                                        evidence=ev ))
+            elif last_relation.verb == 'TK{dephosphorylate}':
+                self.statements.append( Dephosphorylation(subj, obj,
+                                                        evidence=ev) )
+
         elif relation.verb == 'Binding':
-            self.statements.append( Complex([subj, obj]) )
+            self.statements.append( Complex([subj, obj], evidence=ev ) )
+
 
     def agent_from_entity(self, relation, entity_id):
         # Extract sentence tags mapping ids to the text. We refer to this

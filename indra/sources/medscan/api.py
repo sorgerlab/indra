@@ -80,7 +80,7 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     entities = {}
     match_text = None
     in_prop = False
-    # TODO: Figure out what's going on with Unicode errors!
+    last_relation = None
     # TODO: find extracted events with non-ascii characters and make sure they
     # look okay
     with codecs.open(filename, 'rb') as f: #, encoding='cp500', errors='ignore') as f:
@@ -94,6 +94,7 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
             # Set the sentence context
             elif event == 'start' and elem.tag == 'sent':
                 tagged_sent = elem.attrib.get('msrc')
+                last_relation = None  # Only interested within sentences
                 entities = {}
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
@@ -113,18 +114,23 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
                        'entities': entities}
                 svo.update(elem.attrib)
 
+                relation = MedscanRelation(
+                                       uri=pmid,
+                                       sec=sec,
+                                       tagged_sentence=tagged_sent,
+                                       entities=entities,
+                                       subj=subj,
+                                       verb=verb,
+                                       obj=obj,
+                                       svo_type=svo_type,
+                                      )
                 if svo_type == 'CONTROL':
-                    relation = MedscanRelation(
-                                           uri=pmid,
-                                           sec=sec,
-                                           tagged_sentence=tagged_sent,
-                                           entities=entities,
-                                           subj=subj,
-                                           verb=verb,
-                                           obj=obj,
-                                           svo_type=svo_type
-                                          )
-                    mp.process_relation(relation)
+                    mp.process_relation(relation, last_relation)
+                else:
+                    # Sometimes a CONTROL SVO can be after an unnormalized SVO
+                    # that is a more specific but less uniform version of the
+                    # same extracted statement.
+                    last_relation = relation
             # TODO: Figure out if there's something better we can do with
             # properties
             elif event == 'start' and elem.tag == 'prop':
@@ -152,8 +158,6 @@ if __name__ == '__main__':
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
-    #print(mp.urn_types)
-    print('num entities not found:', mp.num_entities_not_found)
-    print('num entities:', mp.num_entities)
 
-    import ipdb;ipdb.set_trace()
+    pickle.dump(mp.modification_examples, open('medscan_modification_examples.pkl', 'wb'))
+
