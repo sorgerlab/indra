@@ -155,7 +155,21 @@ def test_molsynthesis_negative():
 
 
 def test_binding():
-    pass
+    fname = os.path.join(data_folder, 'test_Binding.csxml')
+    mp = process_file(fname, None, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, Complex))
+    members = s0.members
+    assert(len(members) == 2)
+    m0 = members[0]
+    m1 = members[1]
+
+    assert(m0.db_refs == {'HGNC': '7664', 'TEXT': 'Both Nck and Grb4'})
+    assert(m1.db_refs == {'HGNC': '9406', 'TEXT': 'PRK2'})
 
 def test_phosphorylate():
     pass
