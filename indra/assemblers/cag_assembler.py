@@ -35,7 +35,7 @@ class CAGAssembler(object):
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
 
-    def __init__(self, stmts=None, grounding_threshold = None):
+    def __init__(self, stmts=None, grounding_threshold=None):
         if not stmts:
             self.statements = []
         else:
@@ -46,7 +46,7 @@ class CAGAssembler(object):
         """Add a list of Statements to the assembler."""
         self.statements += stmts
 
-    def make_model(self, grounding_threshold = None):
+    def make_model(self, grounding_threshold=None):
         """Return a networkx MultiDiGraph representing a causal analysis graph.
 
         Parameters
