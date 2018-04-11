@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+      <sent sn="3" msrc="ID{48110000=We show that} downregulation of ID{56413=BLT2} using ID{31218226=RNA interference} or antisense oligonucleotides inhibits ID{1810338=reactive oxygen species} generation, and that Nox1 acts downstream of ID{56413=BLT2}. CONTEXT{10000151}">
+        <toks>ID{48110000=We show that} TK{W:N:downregulation=downregulation} TK{W:PREP:of=of} ID{56413=BLT2} TK{W:PREP:use=using} ID{31218226=RNA interference} TK{W:CONJ:or=or} TK{W:N:antisense=antisense} TK{W:N:=oligonucleotides} TK{W:V:inhibit=inhibits} ID{1810338=reactive oxygen species} TK{W:N:generation=generation} TK{PCT:PCT:,=,} TK{W:CONJ:and=and} TK{W:PREP:that=that} TK{W:N:=Nox1} TK{W:V:act=acts} TK{W:J:downstream=downstream} TK{W:PREP:of=of} ID{56413=BLT2} TK{PCT:PCT:.=.}</toks>
+        <textmods osrc="We show that downregulation of BLT2 using RNA interference or antisense oligonucleotides inhibits ROS generation, and that Nox1 acts downstream of BLT2.">
+          <tm coff="98" from="ROS " to="reactive oxygen species "/>
+        </textmods>
+        <attr name="TextMods" value="98: 'ROS ' -&gt; 'reactive oxygen species '"/>
+        <attr name="Discourse" value="ID{48110000}"/>
+        <match coff="0" chars="We show that" clen="12" type="Discourse">
+          <entity msid="48110000" type="Discourse" name="48110000" urn="urn:agi-discourse:48110000"/>
+        </match>
+        <match coff="31" chars="BLT2" clen="4" type="Protein">
+          <entity msid="56413" type="Protein" name="LTB4R2" urn="urn:agi-llid:56413"/>
+        </match>
+        <match coff="42" chars="RNA interference" clen="16" type="User8">
+          <entity msid="31218226" type="User8" name="RNA interference" urn="urn:agi-semconcept:RNA%20interference"/>
+        </match>
+        <match coff="98" chars="reactive oxygen species" clen="23" type="SmallMol">
+          <entity msid="1810338" type="SmallMol" name="ROS" urn="urn:agi-smol:ROS"/>
+        </match>
+        <match coff="167" chars="BLT2" clen="4" type="Protein">
+          <entity msid="56413" type="Protein" name="LTB4R2" urn="urn:agi-llid:56413"/>
+        </match>
+        <context>
+          <entity msid="10000151" type="CellType" name="fibroblast" urn="urn:agi-ncimcelltype:C1550637"/>
+        </context>
+        <svo type="Main" subj="ID{56413=BLT2} TK{downregulation}" verb="TK{inhibit}" obj="ID{1810338=reactive oxygen species} TK{generation}" posinfo="44,14,26,14,125,8,134,35,170,10,"/>
+        <svo type="CONTROL" subj="ID{56413}" verb="MolSynthesis-positive" obj="ID{1810338}"/>
+</sent>
+</sec>
+</doc>
+</batch>

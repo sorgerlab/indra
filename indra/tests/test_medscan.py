@@ -110,13 +110,23 @@ def test_evidence():
     s0 = statements[0]
 
     assert(len(s0.evidence) == 1)
+    assert(isinstance(s0, IncreaseAmount))
     assert(s0.evidence[0].source_api == 'medscan')
     assert(s0.evidence[0].source_id == 'info:pmid/23455322')
     assert(s0.evidence[0].pmid == '23455322')
     assert(s0.evidence[0].text == 'Finally, we show that parp-1(-/-) mice display a significant reduction in the circulating hypoxia-induced erythropoietin levels, number of red cells and hemoglobin concentration. ')
 
 def test_molsynthesis_positive():
-    pass
+    fname = os.path.join(data_folder, 'test_MolSynthesis-positive.csxml')
+    mp = process_file(fname, None, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, IncreaseAmount))
+    assert(s0.subj.db_refs == {'HGNC': '19260', 'TEXT': 'BLT2'})
+    assert(s0.obj.db_refs == {'TEXT': 'reactive oxygen species'})
 
 def test_expressioncontrol_negative():
     pass

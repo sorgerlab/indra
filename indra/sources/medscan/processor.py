@@ -138,7 +138,8 @@ class MedscanProcessor(object):
         elif relation.verb in decrease_amount_verbs:
             self.statements.append( DecreaseAmount(subj, obj, evidence=ev) )
         elif relation.verb == 'ProtModification':
-            self.modification_examples[last_relation.verb] += 1
+            if last_relation is not None:
+                self.modification_examples[last_relation.verb] += 1
 
             if last_relation is None:
                 # We cannot make a statement unless we have more fine-grained

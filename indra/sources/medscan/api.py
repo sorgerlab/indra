@@ -151,13 +151,12 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     return mp
 
 if __name__ == '__main__':
-    #fname = '~/Downloads/medscan/converted.csxml'
-    fname = '~/Downloads/medscan/test_file.csxml'
+    fname = '~/Downloads/medscan/converted.csxml'
+    #fname = '~/Downloads/medscan/test_file.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
 
-    pickle.dump(mp.modification_examples, open('medscan_modification_examples.pkl', 'wb'))
 
