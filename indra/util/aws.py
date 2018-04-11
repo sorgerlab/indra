@@ -36,8 +36,8 @@ def kill_all(job_queue, reason='None given', states=None):
 
 def tag_instance(instance_id, **tags):
     """Tag a single ec2 instance."""
-    logger.info("Got request to add tags %s to instance %s."
-                % (str(tags), instance_id))
+    logger.debug("Got request to add tags %s to instance %s."
+                 % (str(tags), instance_id))
     ec2 = boto3.resource('ec2')
     instance = ec2.Instance(instance_id)
 
@@ -48,7 +48,7 @@ def tag_instance(instance_id, **tags):
     if instance.tags is not None:
         existing_tags = {tag.get('Key'): tag.get('Value')
                          for tag in instance.tags}
-        logger.info("Ignoring existing tags; %s" % str(existing_tags))
+        logger.debug("Ignoring existing tags; %s" % str(existing_tags))
         for tag_key in existing_tags.keys():
             filtered_tags.pop(tag_key, None)
 
