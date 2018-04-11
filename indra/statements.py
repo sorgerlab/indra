@@ -652,12 +652,25 @@ class Agent(Concept):
         self.location = get_valid_location(location)
 
     def matches_key(self):
+        """Return a key to identify the identity and state of the Agent."""
+        key = (self.entity_matches_key(),
+               self.state_matches_key())
+        return str(key)
+
+    def entity_matches_key(self):
+        """Return a key to identify the identity of the Agent not its state."""
+        db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
+                                                 self.db_refs.get('UP'),
+                                                 self.db_refs.get('HGNC'))
+        return str((self.name, db_refs_key))
+
+    def state_matches_key(self):
+        """Return a key to identify the state of the Agent."""
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
         act_key = (self.activity.matches_key() if self.activity else None)
-        key = (self.entity_matches_key(),
-               sorted([m.matches_key() for m in self.mods]),
+        key = (sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
                act_key, self.location,
                len(self.bound_conditions),
@@ -665,12 +678,6 @@ class Agent(Concept):
                      for bc in sorted(self.bound_conditions,
                                       key=lambda x: x.agent.name)))
         return str(key)
-
-    def entity_matches_key(self):
-        db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
-                                                 self.db_refs.get('UP'),
-                                                 self.db_refs.get('HGNC'))
-        return str((self.name, db_refs_key))
 
     # Function to get the namespace to look in
     def get_grounding(self):
