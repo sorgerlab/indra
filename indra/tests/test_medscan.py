@@ -129,7 +129,17 @@ def test_molsynthesis_positive():
     assert(s0.obj.db_refs == {'TEXT': 'reactive oxygen species'})
 
 def test_expressioncontrol_negative():
-    pass
+    fname = os.path.join(data_folder, 'test_ExpressionControl_negative.csxml')
+    mp = process_file(fname, None, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, DecreaseAmount))
+    assert(s0.subj.db_refs == {'CHEBI': '6700', 'TEXT': 'matrine'})
+    assert(s0.obj.db_refs == {'HGNC': '6364',
+                              'TEXT': 'PSA and androgen receptor'})
 
 def test_molsynthesis_negative():
     pass
