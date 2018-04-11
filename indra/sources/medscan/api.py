@@ -145,8 +145,8 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     return mp
 
 if __name__ == '__main__':
-    fname = '~/Downloads/medscan/converted.csxml'
-    #fname = '~/Downloads/medscan/test_file.csxml'
+    #fname = '~/Downloads/medscan/converted.csxml'
+    fname = '~/Downloads/medscan/test_file.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
@@ -156,6 +156,4 @@ if __name__ == '__main__':
     print('num entities not found:', mp.num_entities_not_found)
     print('num entities:', mp.num_entities)
 
-    pickle.dump(mp.urn_examples, open('medscan_url_examples.pkl', 'wb'))
-
-
+    import ipdb;ipdb.set_trace()

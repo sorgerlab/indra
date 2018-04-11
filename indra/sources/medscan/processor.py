@@ -2,7 +2,7 @@
 #from indra.sources.medscan.api import *
 import re
 import sys
-from indra.statements import Agent
+from indra.statements import Agent, Complex
 import lxml.etree
 import os
 import codecs
@@ -30,7 +30,9 @@ def urn_to_db_refs(urn):
         db_refs['CHEBI'] = get_chebi_id_from_cas(urn_id)
     elif urn_type == 'agi-llid':
         # This is an Entrez ID, convert to HGNC
-        db_refs['HGNC'] = get_hgnc_from_entrez(urn_id)
+        hgnc_id = get_hgnc_from_entrez(urn_id)
+        if hgnc_id is not None:
+            db_refs['HGNC'] = hgnc_id
     elif urn_type == 'agi-ncimorgan':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
@@ -108,7 +110,7 @@ class MedscanProcessor(object):
 
     def process_relation(self, relation): 
         subj = self.agent_from_entity(relation, relation.subj)
-        obj = self.agent_from_entity(relation, relation.subj)
+        obj = self.agent_from_entity(relation, relation.obj)
         if subj is None or obj is None:
             # Don't extract a statement if the subject or object cannot
             # be resolved
@@ -119,7 +121,7 @@ class MedscanProcessor(object):
         elif relation.verb == 'ExpressionControl-positive':
             pass
         elif relation.verb == 'Binding':
-            import ipdb; ipdb.set_trace()
+            self.statements.append( Complex([subj, obj]) )
 
     def agent_from_entity(self, relation, entity_id):
         # Extract sentence tags mapping ids to the text. We refer to this
