@@ -1,7 +1,6 @@
 import re
 import sys
-from indra.statements import Agent, Complex, IncreaseAmount, DecreaseAmount, \
-                             Evidence, Phosphorylation, Dephosphorylation
+from indra.statements import *
 import lxml.etree
 import os
 import codecs
@@ -92,6 +91,7 @@ class MedscanProcessor(object):
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.unmapped_urns = set()
+        self.unmapped_modifications = set()
 
         # Read in and populate a list of unmapped urns
         if medscan_resource_dir is not None:
@@ -152,15 +152,51 @@ class MedscanProcessor(object):
                 # unnormalized SVO
                 return
 
+            statement_type = None
             if last_relation.verb == 'TK{phosphorylate}':
-                self.statements.append(
-                                       Phosphorylation(subj, obj, evidence=ev)
-                                      )
+                statement_type = Phosphorylation
             elif last_relation.verb == 'TK{dephosphorylate}':
-                self.statements.append(
-                                       Dephosphorylation(subj, obj,
-                                                         evidence=ev)
-                                      )
+                statement_type = Dephosphorylation
+            elif last_relation.verb == 'TK{ubiquitinate}':
+                statement_type = Ubiquitination
+            elif last_relation.verb == 'TK{acetylate}':
+                statement_type = Acetylation
+            elif last_relation.verb == 'TK{methylate}':
+                statement_type = Methylation
+            elif last_relation.verb == 'TK{deacetylate}':
+                statement_type = Deacetylation
+            elif last_relation.verb == 'TK{demethylate}':
+                statement_type = Demethylation
+            elif last_relation.verb == 'TK{hyperphosphorylate}':
+                statement_type = Phosphorylation
+            elif last_relation.verb == 'TK{hydroxylate}':
+                statement_type = Hydroxylation
+            elif last_relation.verb == 'TK{sumoylate}':
+                statement_type = Sumoylation
+            elif last_relation.verb == 'TK{palmitoylate}':
+                statement_type = Palmitoylation
+            elif last_relation.verb == 'TK{glycosylate}':
+                statement_type = Glycosylation
+            elif last_relation.verb == 'TK{ribosylate}':
+                statement_type = Ribosylation
+            elif last_relation.verb == 'TK{deglycosylate}':
+                statement_type = Deglycosylation
+            elif last_relation.verb == 'TK{myristylate}':
+                statement_type = Myristoylation
+            elif last_relation.verb == 'TK{farnesylate}':
+                statement_type = Farnesylation
+            elif last_relation.verb == 'TK{desumoylate}':
+                statement_type = Desumoylation
+            elif last_relation.verb == 'TK{geranylgeranylate}':
+                statement_type = Geranylgeranylation
+            elif last_relation.verb == 'TK{deacylate}':
+                statement_type = Deacetylation
+            else:
+                # This verb is not handled
+                self.unmapped_modifications.add(last_relation.verb)
+                return
+
+            self.statements.append(statement_type(subj, obj, evidence=ev))
 
         elif relation.verb == 'Binding':
             self.statements.append(

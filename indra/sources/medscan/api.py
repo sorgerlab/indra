@@ -155,9 +155,13 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
 if __name__ == '__main__':
     fname = '~/Downloads/medscan/converted.csxml'
-    # fname = '~/Downloads/medscan/test_file.csxml'
+    #fname = '~/Downloads/medscan/test_file.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
+
+    print('Unmapped modifications:')
+    for um in mp.unmapped_modifications:
+        print(um)
