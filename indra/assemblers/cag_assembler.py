@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import object, dict, str
+import json
 import jinja2
 import logging
 import networkx as nx
-from indra.statements import Influence
 from functools import partial
-import json
+from indra.statements import Influence
 
 # Python 2
 try:
@@ -16,99 +16,6 @@ except:
     basestring = str
 
 logger = logging.getLogger('cag_assembler')
-
-toJSON = partial(json.dumps, indent = 2)
-
-jupyter_cyjs_template = jinja2.Template("""
-require.config({
-  paths: {
-    cytoscape: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.8/cytoscape',
-  }
-})
-
-require(['cytoscape'], function(cytoscape){
-  $("#cyDiv").remove();
-  element.append("<div id='cyDiv'></div>");
-  $("#cyDiv").height("300px");
-
-    var cy = cytoscape({
-      container : document.getElementById('cyDiv'),
-      elements  : {{ cyjs_elements | safe }},
-      style     : {{ cyjs_style    | safe }},
-      layout    : {{ cyjs_layout   | safe }},
-      maxZoom   : 10,
-      minZoom   : 0.1,
-    });
-});
-""")
-
-
-cyjs_style = [ {
-        'selector'             : 'node',
-        'style'                : {
-            "label"            : "data(id)",
-            "background-color" : "white",
-            "border-color"     : "maroon",
-            "border-width"     : "1px",
-            "font-family"      : "Arno Pro, Arial",
-            "text-halign"      : "center",
-            "text-valign"      : "center",
-            "padding"          : 10,
-            "width"            : "function( node ){ return 2*node.degree(); }",
-            "height"           : "function( node ){ return 2*node.degree(); }",
-            "shape"            : "ellipse",
-            "text-max-width"   : 80,
-            "text-wrap"        : True,
-        }
-    }, {
-        'selector'               : 'edge',
-        'style'                  : {
-            "curve-style"        : "bezier",
-            "line-color"         : "data(linecolor)",
-            "target-arrow-shape" : "data(targetArrowShape)",
-            "target-arrow-color" : "data(linecolor)",
-            "line-style"         : "data(linestyle)",
-            "width"              : "1",
-    }
-}]
-
-cyjs_layout = {
-    'name'                        : 'cose',
-    'nodeDimensionsIncludeLabels' : True,
-    'componentSpacing'            : 1,
-    'nodeOverlap'                 : 1000,
-    'nodeRepulsion'               : 500,
-}
-
-def _create_edge_data_dict(e):
-    """ Create a data dict from a networkx MultiDiGraph edge to export to
-    CytoscapeJS. """
-
-    # A hack to get rid of the redundant 'Provenance' label.
-    if e[3].get('provenance'):
-        tooltip = e[3]['provenance'][0]
-        if tooltip.get('@type'):
-            del tooltip['@type']
-    else:
-        tooltip = None
-    edge_data_dict = {
-            'id'               : e[0]+'_'+e[1],
-            'source'           : e[0],
-            'target'           : e[1],
-            'linestyle'        : e[3]["linestyle"],
-            'linecolor'        : e[3]["linecolor"],
-            'targetArrowShape' : e[3]["targetArrowShape"],
-            'subj_adjectives'  : e[3]["subj_adjectives"],
-            'subj_polarity'    : e[3]["subj_polarity"],
-            'obj_adjectives'   : e[3]["obj_adjectives"],
-            'obj_polarity'     : e[3]["obj_polarity"],
-            'tooltip'          : tooltip,
-            'simulable'        : False if (
-                e[3]['obj_polarity'] is None or
-                e[3]['subj_polarity'] is None) else True,
-            }
-
-    return edge_data_dict
 
 
 class CAGAssembler(object):
@@ -207,7 +114,6 @@ class CAGAssembler(object):
                     provenance=provenance,
                 )
 
-
         return self.CAG
 
     def export_to_cytoscapejs(self):
@@ -219,6 +125,33 @@ class CAGAssembler(object):
             A JSON-like dict representing the graph for use with
             CytoscapeJS.
         """
+        def _create_edge_data_dict(e):
+            """Return a dict from a MultiDiGraph edge for CytoscapeJS export."""
+            # A hack to get rid of the redundant 'Provenance' label.
+            if e[3].get('provenance'):
+                tooltip = e[3]['provenance'][0]
+                if tooltip.get('@type'):
+                    del tooltip['@type']
+            else:
+                tooltip = None
+            edge_data_dict = {
+                    'id'               : e[0]+'_'+e[1],
+                    'source'           : e[0],
+                    'target'           : e[1],
+                    'linestyle'        : e[3]["linestyle"],
+                    'linecolor'        : e[3]["linecolor"],
+                    'targetArrowShape' : e[3]["targetArrowShape"],
+                    'subj_adjectives'  : e[3]["subj_adjectives"],
+                    'subj_polarity'    : e[3]["subj_polarity"],
+                    'obj_adjectives'   : e[3]["obj_adjectives"],
+                    'obj_polarity'     : e[3]["obj_polarity"],
+                    'tooltip'          : tooltip,
+                    'simulable'        : False if (
+                        e[3]['obj_polarity'] is None or
+                        e[3]['subj_polarity'] is None) else True,
+                    }
+            return edge_data_dict
+
         return {
                 'nodes': [{'data': {
                     'id': n[0],
@@ -230,33 +163,30 @@ class CAGAssembler(object):
                            for e in self.CAG.edges(data=True, keys=True)]
                 }
 
-    def generate_jupyter_js(self, cyjs_style = cyjs_style,
-            cyjs_layout = cyjs_layout):
+    def generate_jupyter_js(self, cyjs_style=cyjs_style,
+                            cyjs_layout=cyjs_layout):
+        """Generate Javascript from a template to run in Jupyter notebooks.
 
-        """ Generate Javascript from a template to run in Jupyter notebooks. 
-
-	Parameters
-	----------
-
-        cyjs_style: dict
+        Parameters
+        ----------
+        cyjs_style : dict
             A dict that sets CytoscapeJS style as specified in
             https://github.com/cytoscape/cytoscape.js/blob/master/documentation/md/style.md.
 
-        cyjs_layout: dict
-            A dict that sets CytoscapeJS 
+        cyjs_layout : dict
+            A dict that sets CytoscapeJS
             `layout parameters <http://js.cytoscape.org/#core/layout>`_.
 
         Returns
         -------
         string
             A Javascript string to be rendered in a Jupyter notebook cell.
-
-
-	"""
+        """
+        to_json = partial(json.dumps, indent=2)
         return jupyter_cyjs_template.render(
-                cyjs_elements = toJSON(self.export_to_cytoscapejs()),
-                cyjs_style=toJSON(cyjs_style),
-                cyjs_layout = toJSON(cyjs_layout))
+            cyjs_elements=to_json(self.export_to_cytoscapejs()),
+            cyjs_style=to_json(cyjs_style),
+            cyjs_layout=to_json(cyjs_layout))
 
 
     def _node_name(self, concept):
@@ -267,6 +197,68 @@ class CAGAssembler(object):
             and concept.db_refs['EIDOS']
             # The grounding score is above the grounding threshold
             and concept.db_refs['EIDOS'][0][1] > self.grounding_threshold):
-                return concept.db_refs['EIDOS'][0][0].split('/')[-1].replace('_', ' ').capitalize()
+                entry = concept.db_refs['EIDOS'][0][0]
+                return entry.split('/')[-1].replace('_', ' ').capitalize()
         else:
             return concept.name.capitalize()
+
+
+jupyter_cyjs_template = jinja2.Template("""
+require.config({
+  paths: {
+    cytoscape: 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.2.8/cytoscape',
+  }
+})
+
+require(['cytoscape'], function(cytoscape){
+  $("#cyDiv").remove();
+  element.append("<div id='cyDiv'></div>");
+  $("#cyDiv").height("300px");
+
+    var cy = cytoscape({
+      container : document.getElementById('cyDiv'),
+      elements  : {{ cyjs_elements | safe }},
+      style     : {{ cyjs_style    | safe }},
+      layout    : {{ cyjs_layout   | safe }},
+      maxZoom   : 10,
+      minZoom   : 0.1,
+    });
+});
+""")
+
+
+cyjs_style = [ {
+        'selector'             : 'node',
+        'style'                : {
+            "label"            : "data(id)",
+            "background-color" : "white",
+            "border-color"     : "maroon",
+            "border-width"     : "1px",
+            "font-family"      : "Arno Pro, Arial",
+            "text-halign"      : "center",
+            "text-valign"      : "center",
+            "padding"          : 10,
+            "width"            : "function( node ){ return 2*node.degree(); }",
+            "height"           : "function( node ){ return 2*node.degree(); }",
+            "shape"            : "ellipse",
+            "text-max-width"   : 80,
+            "text-wrap"        : True,
+        }
+    }, {
+        'selector'               : 'edge',
+        'style'                  : {
+            "curve-style"        : "bezier",
+            "line-color"         : "data(linecolor)",
+            "target-arrow-shape" : "data(targetArrowShape)",
+            "target-arrow-color" : "data(linecolor)",
+            "line-style"         : "data(linestyle)",
+            "width"              : "1",
+    }
+}]
+
+cyjs_layout = {'name': 'cose',
+               'nodeDimensionsIncludeLabels': True,
+               'componentSpacing': 1,
+               'nodeOverlap': 1000,
+               'nodeRepulsion': 500}
+
