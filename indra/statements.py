@@ -1310,12 +1310,14 @@ class Modification(Statement):
         if not all(a is not None for a in agents):
             return False
         # If the entities don't match, they can't be contradicting
-        if not self.entities_match(other) and \
-            not (self.enz.refinement_of(other.enz, hierarchies) or
-                 other.enz.refinement_of(self.enz, hierarchies)) and \
-            not (self.sub.refinement_of(other.sub, hierarchies) or
-                 other.sub.refinement_of(self.sub, hierarchies)):
-            return False
+        # Here we check pairs of agents at each "position" and
+        # make sure they are the same or they are refinements of each other
+        for self_agent, other_agent in zip(self.agent_list(),
+                                           other.agent_list()):
+            if not (self_agent.entity_matches(other_agent) or \
+                    self_agent.refinement_of(other_agent, hierarchies) or \
+                    other_agent.refinement_of(self_agent, hierarchies)):
+                return False
         # At this point the entities definitely match so we need to
         # check the specific site that is being modified
         if self.residue == other.residue and self.position == other.position:
@@ -2453,12 +2455,14 @@ class RegulateAmount(Statement):
         if not all(a is not None for a in agents):
             return False
         # If the entities don't match, they can't be contradicting
-        if not self.entities_match(other) and \
-            not (self.subj.refinement_of(other.subj, hierarchies) or
-                 other.subj.refinement_of(self.subj, hierarchies)) and \
-            not (self.obj.refinement_of(other.obj, hierarchies) or
-                 other.obj.refinement_of(self.obj, hierarchies)):
-            return False
+        # Here we check pairs of agents at each "position" and
+        # make sure they are the same or they are refinements of each other
+        for self_agent, other_agent in zip(self.agent_list(),
+                                           other.agent_list()):
+            if not (self_agent.entity_matches(other_agent) or \
+                    self_agent.refinement_of(other_agent, hierarchies) or \
+                    other_agent.refinement_of(self_agent, hierarchies)):
+                return False
         # Otherwise they are contradicting
         return True
 
