@@ -1929,6 +1929,33 @@ class ActiveForm(Statement):
         else:
             return False
 
+    def contradicts(self, other, hierarchies):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check that the polarity is constradicting up front
+        # TODO: we could also check for cases where the polarities are
+        # the same but some of the state conditions have opposite
+        # polarities, for instance, if the presence/lack of the
+        # same modification activates a given agent, that could be
+        # considered a contradiction.
+        if self.is_active == other.is_active:
+            return False
+        # Check that the activity types are the same
+        # TODO: we could check for refinements here
+        if self.activity != other.activity:
+            return False
+        # If the agents are exactly the same, this is a contradiction
+        if self.agent.matches_key() == other.agent.matches_key():
+            return True
+        # Otherwise, if the two agents are related at the level of entities
+        # and their state is exactly the same, then they contradict
+        if self.agent.state_matches_key() == other.agent.state_matches_key():
+            if self.agent.isa(other.agent, hierarchies) or \
+                other.agent.isa(self.agent, hierarchies):
+                return True
+        return False
+
     def to_json(self):
         generic = super(ActiveForm, self).to_json()
         json_dict = _o({'type': generic['type']})

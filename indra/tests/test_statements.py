@@ -1761,3 +1761,16 @@ def test_regulate_activity_contradicts():
     assert not st1.contradicts(st3, hierarchies)
     assert not st1.contradicts(st4, hierarchies)
     assert not st2.contradicts(st4, hierarchies)
+
+
+def test_active_form_contradicts():
+    mc1 = ModCondition('phosphorylation', 'S', None, True)
+    mc2 = ModCondition('phosphorylation', 'S', None, False)
+    st1 = ActiveForm(Agent('a', mods=[mc1]), 'kinase', True)
+    st2 = ActiveForm(Agent('a', mods=[mc1]), 'kinase', False)
+    st3 = ActiveForm(Agent('a', mods=[mc1]), 'activity', False)
+    st4 = ActiveForm(Agent('a', mods=[mc2]), 'activity', False)
+    assert st1.contradicts(st2, hierarchies)
+    assert not st1.contradicts(st3, hierarchies)
+    assert not st3.contradicts(st4, hierarchies)
+    assert not st1.contradicts(st4, hierarchies)
