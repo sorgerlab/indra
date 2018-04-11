@@ -1300,6 +1300,29 @@ class Modification(Statement):
                    and (self.position == other.position))
         return matches
 
+    def contradicts(self, other, hierarchies):
+        # If the modifications are not the opposite polarity of the
+        # same subtype
+        if not modclass_to_inverse[self.__class__] == other.__class__:
+            return False
+        # Skip all instances of not fully specified modifications
+        agents = (self.enz, self.sub, other.enz, other.sub)
+        if not all(a is not None for a in agents):
+            return False
+        # If the entities don't match, they can't be contradicting
+        if not self.entities_match(other) and \
+            not (self.enz.refinement_of(other.enz, hierarchies) or
+                 other.enz.refinement_of(self.enz, hierarchies)) and \
+            not (self.sub.refinement_of(other.sub, hierarchies) or
+                 other.sub.refinement_of(self.sub, hierarchies)):
+            return False
+        # At this point the entities definitely match so we need to
+        # check the specific site that is being modified
+        if self.residue == other.residue and self.position == other.position:
+            return True
+        else:
+            return False
+
     def _get_mod_condition(self):
         """Return a ModCondition corresponding to this Modification."""
         mod_type = modclass_to_modtype[self.__class__]
@@ -2419,6 +2442,25 @@ class RegulateAmount(Statement):
     def equals(self, other):
         matches = super(RegulateAmount, self).equals(other)
         return matches
+
+    def contradicts(self, other, hierarchies):
+        # If they aren't opposite classes, it's not a contradiction
+        if {self.__class__, other.__class__} != \
+            {IncreaseAmount, DecreaseAmount}:
+            return False
+        # Skip all instances of not fully specified statements
+        agents = (self.subj, self.obj, other.subj, other.obj)
+        if not all(a is not None for a in agents):
+            return False
+        # If the entities don't match, they can't be contradicting
+        if not self.entities_match(other) and \
+            not (self.subj.refinement_of(other.subj, hierarchies) or
+                 other.subj.refinement_of(self.subj, hierarchies)) and \
+            not (self.obj.refinement_of(other.obj, hierarchies) or
+                 other.obj.refinement_of(self.obj, hierarchies)):
+            return False
+        # Otherwise they are contradicting
+        return True
 
     def __str__(self):
         s = ("%s(%s, %s)" % (type(self).__name__, self.subj, self.obj))

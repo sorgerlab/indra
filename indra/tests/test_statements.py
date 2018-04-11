@@ -1718,3 +1718,35 @@ def test_influence_refinement_of():
                I(pos_adj, neg_adj), hierarchies)
     assert not I(pos_adj, neg_noadj).contradicts(
                I(neg_adj, pos_adj), hierarchies)
+
+
+def test_modification_contradicts():
+    st1 = Phosphorylation(Agent('a'), Agent('b'))
+    st2 = Dephosphorylation(Agent('a'), Agent('b'))
+    st3 = Dephosphorylation(Agent('a'), Agent('b'), 'S')
+    st4 = Dephosphorylation(Agent('a'), Agent('b'), 'S', '123')
+    st5 = Phosphorylation(Agent('a'), Agent('b'), 'S', '123')
+    st6 = Phosphorylation(Agent('a'), Agent('b'), 'T', '234')
+    st7 = Phosphorylation(None, Agent('b'))
+    st8 = Dephosphorylation(Agent('a'), Agent('c'))
+
+    assert st1.contradicts(st2, hierarchies)
+    assert not st1.contradicts(st7, hierarchies)
+    assert not st1.contradicts(st5, hierarchies)
+    assert not st4.contradicts(st6, hierarchies)
+    assert st4.contradicts(st5, hierarchies)
+    assert not st3.contradicts(st6, hierarchies)
+    assert not st1.contradicts(st8, hierarchies)
+    # TODO: add tests with Agent refinement
+    # TODO: add tests with other Modification types
+
+
+def test_regulate_amount_contradicts():
+    st1 = IncreaseAmount(Agent('a'), Agent('b'))
+    st2 = DecreaseAmount(Agent('a'), Agent('b'))
+    st3 = DecreaseAmount(Agent('a'), Agent('c'))
+    st4 = IncreaseAmount(Agent('b'), Agent('a'))
+    assert st1.contradicts(st2, hierarchies)
+    assert not st1.contradicts(st3, hierarchies)
+    assert not st1.contradicts(st4, hierarchies)
+    assert not st2.contradicts(st4, hierarchies)
