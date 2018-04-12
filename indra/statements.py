@@ -652,12 +652,25 @@ class Agent(Concept):
         self.location = get_valid_location(location)
 
     def matches_key(self):
+        """Return a key to identify the identity and state of the Agent."""
+        key = (self.entity_matches_key(),
+               self.state_matches_key())
+        return str(key)
+
+    def entity_matches_key(self):
+        """Return a key to identify the identity of the Agent not its state."""
+        db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
+                                                 self.db_refs.get('UP'),
+                                                 self.db_refs.get('HGNC'))
+        return str((self.name, db_refs_key))
+
+    def state_matches_key(self):
+        """Return a key to identify the state of the Agent."""
         # NOTE: Making a set of the mod matches_keys might break if
         # you have an agent with two phosphorylations at serine
         # with unknown sites.
         act_key = (self.activity.matches_key() if self.activity else None)
-        key = (self.entity_matches_key(),
-               sorted([m.matches_key() for m in self.mods]),
+        key = (sorted([m.matches_key() for m in self.mods]),
                sorted([m.matches_key() for m in self.mutations]),
                act_key, self.location,
                len(self.bound_conditions),
@@ -665,12 +678,6 @@ class Agent(Concept):
                      for bc in sorted(self.bound_conditions,
                                       key=lambda x: x.agent.name)))
         return str(key)
-
-    def entity_matches_key(self):
-        db_refs_key = 'FPLX:%s;UP:%s;HGNC:%s' % (self.db_refs.get('FPLX'),
-                                                 self.db_refs.get('UP'),
-                                                 self.db_refs.get('HGNC'))
-        return str((self.name, db_refs_key))
 
     # Function to get the namespace to look in
     def get_grounding(self):
@@ -1300,6 +1307,31 @@ class Modification(Statement):
                    and (self.position == other.position))
         return matches
 
+    def contradicts(self, other, hierarchies):
+        # If the modifications are not the opposite polarity of the
+        # same subtype
+        if not modclass_to_inverse[self.__class__] == other.__class__:
+            return False
+        # Skip all instances of not fully specified modifications
+        agents = (self.enz, self.sub, other.enz, other.sub)
+        if not all(a is not None for a in agents):
+            return False
+        # If the entities don't match, they can't be contradicting
+        # Here we check pairs of agents at each "position" and
+        # make sure they are the same or they are refinements of each other
+        for self_agent, other_agent in zip(self.agent_list(),
+                                           other.agent_list()):
+            if not (self_agent.entity_matches(other_agent) or \
+                    self_agent.refinement_of(other_agent, hierarchies) or \
+                    other_agent.refinement_of(self_agent, hierarchies)):
+                return False
+        # At this point the entities definitely match so we need to
+        # check the specific site that is being modified
+        if self.residue == other.residue and self.position == other.position:
+            return True
+        else:
+            return False
+
     def _get_mod_condition(self):
         """Return a ModCondition corresponding to this Modification."""
         mod_type = modclass_to_modtype[self.__class__]
@@ -1678,6 +1710,30 @@ class RegulateActivity(Statement):
         else:
             return False
 
+    def contradicts(self, other, hierarchies):
+        # If they aren't opposite classes, it's not a contradiction
+        if {self.__class__, other.__class__} != {Activation, Inhibition}:
+            return False
+
+        # If they aren't opposite classes, it's not a contradiction
+        if self.is_activation == other.is_activation:
+            return False
+        # Skip all instances of not fully specified statements
+        agents = (self.subj, self.obj, other.subj, other.obj)
+        if not all(a is not None for a in agents):
+            return False
+        # If the entities don't match, they can't be contradicting
+        # Here we check pairs of agents at each "position" and
+        # make sure they are the same or they are refinements of each other
+        for self_agent, other_agent in zip(self.agent_list(),
+                                           other.agent_list()):
+            if not (self_agent.entity_matches(other_agent) or \
+                    self_agent.refinement_of(other_agent, hierarchies) or \
+                    other_agent.refinement_of(self_agent, hierarchies)):
+                return False
+        # Otherwise they are contradicting
+        return True
+
     def to_json(self):
         generic = super(RegulateActivity, self).to_json()
         json_dict = _o({'type': generic['type']})
@@ -1872,6 +1928,33 @@ class ActiveForm(Statement):
                 return True
         else:
             return False
+
+    def contradicts(self, other, hierarchies):
+        # Make sure the statement types match
+        if type(self) != type(other):
+            return False
+        # Check that the polarity is constradicting up front
+        # TODO: we could also check for cases where the polarities are
+        # the same but some of the state conditions have opposite
+        # polarities, for instance, if the presence/lack of the
+        # same modification activates a given agent, that could be
+        # considered a contradiction.
+        if self.is_active == other.is_active:
+            return False
+        # Check that the activity types are the same
+        # TODO: we could check for refinements here
+        if self.activity != other.activity:
+            return False
+        # If the agents are exactly the same, this is a contradiction
+        if self.agent.matches_key() == other.agent.matches_key():
+            return True
+        # Otherwise, if the two agents are related at the level of entities
+        # and their state is exactly the same, then they contradict
+        if self.agent.state_matches_key() == other.agent.state_matches_key():
+            if self.agent.isa(other.agent, hierarchies) or \
+                other.agent.isa(self.agent, hierarchies):
+                return True
+        return False
 
     def to_json(self):
         generic = super(ActiveForm, self).to_json()
@@ -2419,6 +2502,27 @@ class RegulateAmount(Statement):
     def equals(self, other):
         matches = super(RegulateAmount, self).equals(other)
         return matches
+
+    def contradicts(self, other, hierarchies):
+        # If they aren't opposite classes, it's not a contradiction
+        if {self.__class__, other.__class__} != \
+            {IncreaseAmount, DecreaseAmount}:
+            return False
+        # Skip all instances of not fully specified statements
+        agents = (self.subj, self.obj, other.subj, other.obj)
+        if not all(a is not None for a in agents):
+            return False
+        # If the entities don't match, they can't be contradicting
+        # Here we check pairs of agents at each "position" and
+        # make sure they are the same or they are refinements of each other
+        for self_agent, other_agent in zip(self.agent_list(),
+                                           other.agent_list()):
+            if not (self_agent.entity_matches(other_agent) or \
+                    self_agent.refinement_of(other_agent, hierarchies) or \
+                    other_agent.refinement_of(self_agent, hierarchies)):
+                return False
+        # Otherwise they are contradicting
+        return True
 
     def __str__(self):
         s = ("%s(%s, %s)" % (type(self).__name__, self.subj, self.obj))

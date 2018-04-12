@@ -517,6 +517,20 @@ class Preassembler(object):
         else:
             return unique_stmts
 
+    def find_contradicts(self):
+        """Return pairs of contradicting Statements.
+
+        Returns
+        -------
+        contradicts : list(tuple(Statement, Statement))
+            A list of Statement pairs that are contradicting.
+        """
+        contradicts = []
+        for st1, st2 in itertools.combinations(self.stmts, 2):
+            if st1.contradicts(st2, self.hierarchies):
+                contradicts.append((st1, st2))
+        return contradicts
+
 
 def _set_supports_stmt_pairs(stmt_tuples, hierarchies=None,
                              check_entities_match=False):
