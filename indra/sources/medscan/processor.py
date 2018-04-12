@@ -9,12 +9,7 @@ import collections
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id
 from indra.databases.chebi_client import get_chebi_id_from_cas
 
-verbs_always_handled = ['ExpressionControl-positive', 'MolSynthesis-positive',
-                        'ExpressionControl-negative', 'MolSynthesis-negative',
-                        'Binding']
-
 logger = logging.getLogger('medscan')
-
 
 def parse_mod_string(s):
     """Parses a string referring to a protein modification of the form
@@ -60,6 +55,8 @@ def parse_mut_string(s):
     """
     m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
     if m is None:
+        # Mutation string does fit this pattern, other patterns not currently
+        # supported
         return None, None, None
     else:
         return (m.group(1), m.group(2), m.group(3))
@@ -94,6 +91,7 @@ def urn_to_db_refs(urn):
 
     db_refs = {}
 
+    # TODO: support more types of URNs
     if urn_type == 'agi-cas':
         # Identifier is CAS, convert to CHEBI
         db_refs['CHEBI'] = get_chebi_id_from_cas(urn_id)
@@ -166,7 +164,7 @@ def untag_sentence(s):
     """
     p = 'ID{[0-9,]+=([^}]+)}'
     s = re.sub(p, '\\1', s)
-    #
+
     s = re.sub('CONTEXT{[^}]+}', '', s)
     s = re.sub('GLOSSARY{[^}]+}', '', s)
     return s
@@ -189,6 +187,7 @@ def extract_sentence_tags(tagged_sentence):
     p = re.compile('ID{([0-9,]+)=([^}]+)}')
     tags = {}
 
+    # Iteratively look for all matches of this pattern
     endpos = 0
     while True:
         match = p.search(tagged_sentence, pos=endpos)
@@ -263,37 +262,51 @@ class MedscanProcessor(object):
             # be resolved
             return
 
-        # Make evidence
+        # Make evidence object
         untagged_sentence = untag_sentence(relation.tagged_sentence)
         source_id = relation.uri
         m = re.match('info:pmid/([0-9]+)', source_id)
-        assert(m is not None)
-        pmid = m.group(1)
+        if m is not None:
+            # Extract the pmid from the URI if the URI refers to a pmid
+            pmid = m.group(1)
         annotations = None
         ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
                        text=untagged_sentence, annotations=None,
                        epistemics=None)]
 
+        # These normalized verbs are mapped to IncreaseAmount statements
         increase_amount_verbs = ['ExpressionControl-positive',
                                  'MolSynthesis-positive']
+
+        # These normalized verbs are mapped to DecreaseAmount statements
         decrease_amount_verbs = ['ExpressionControl-negative',
                                  'MolSynthesis-negative']
 
         if relation.verb in increase_amount_verbs:
+            # If the normalized verb corresponds to an IncreaseAmount statement
+            # then make one
             self.statements.append(
                                    IncreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb in decrease_amount_verbs:
+            # If the normalized verb corresponds to a DecreaseAmount statement
+            # then make one
             self.statements.append(
                                    DecreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb == 'ProtModification':
+            # The normalized verb 'ProtModification' is too vague to make
+            # an INDRA statement. We look at the unnormalized verb in the
+            # previous svo element, if available, to decide what type of
+            # INDRA statement to construct.
+
             if last_relation is None:
                 # We cannot make a statement unless we have more fine-grained
                 # information on the relation type from a preceding
                 # unnormalized SVO
                 return
 
+            # Map the unnormalized verb to an INDRA statement type
             statement_type = None
             if last_relation.verb == 'TK{phosphorylate}':
                 statement_type = Phosphorylation
@@ -334,12 +347,15 @@ class MedscanProcessor(object):
             elif last_relation.verb == 'TK{deacylate}':
                 statement_type = Deacetylation
             else:
-                # This verb is not handled
+                # This unnormalized verb is not handled, do not extract an
+                # INDRA statement
                 return
 
             self.statements.append(statement_type(subj, obj, evidence=ev))
 
         elif relation.verb == 'Binding':
+            # The Binding normalized verb corresponds to the INDRA Complex
+            # statement.
             self.statements.append(
                                    Complex([subj, obj], evidence=ev)
                                   )
@@ -347,6 +363,13 @@ class MedscanProcessor(object):
     def agent_from_entity(self, relation, entity_id):
         """Create a (potentially grounded) INDRA Agent object from a given a
         Medscan entity describing the subject or object.
+        
+        Uses helper functions to convert a Medscan URN to an INDRA db_refs
+        grounding dictionary.
+
+        If the entity has properties indicating that it is a protein with
+        a mutation or modification, then constructs the needed ModCondition
+        or MutCondition.
 
         Parameters
         ----------
@@ -406,12 +429,18 @@ class MedscanProcessor(object):
                 db_refs = urn_to_db_refs(protein.urn)
                 db_refs['TEXT'] = protein.name
 
+                # Check mutation.type. Only some types correspond to situations
+                # that can be represented in INDRA; return None if we cannot
+                # map to an INDRA statement (which will block processing of
+                # the statement in process_relation).
                 if mutation.type == 'AASite':
                     # Do not handle this
+                    # Example:
                     # MedscanEntity(name='D1', urn='urn:agi-aa:D1',
                     # type='AASite', properties=None)
                     return None
                 elif mutation.type == 'Mutation':
+                    # Convert mutation properties to an INDRA MutCondition
                     r_old, pos, r_new = parse_mut_string(mutation.name)
                     if r_old is None:
                         logger.warning('Could not parse mutation string: ' +
@@ -428,23 +457,30 @@ class MedscanProcessor(object):
                                            'string: ' + mutation.name)
                             return None
                 elif mutation.type == 'MethSite':
+                    # Convert methylation site information to an INDRA
+                    # ModCondition
                     res, pos = parse_mod_string(mutation.name)
                     if res is None:
                         return None
                     cond = ModCondition('methylation', res, pos)
                     return Agent(db_refs['TEXT'], db_refs=db_refs,
                                  mods=[cond])
+
+                    # Example:
                     # MedscanEntity(name='R457',
                     # urn='urn:agi-s-llid:R457-2185', type='MethSite',
                     # properties=None)
-                    pass
                 elif mutation.type == 'PhosphoSite':
+                    # Convert phosphorylation site information to an INDRA
+                    # ModCondition
                     res, pos = parse_mod_string(mutation.name)
                     if res is None:
                         return None
                     cond = ModCondition('phosphorylation', res, pos)
                     return Agent(db_refs['TEXT'], db_refs=db_refs,
                                  mods=[cond])
+
+                    # Example:
                     # MedscanEntity(name='S455',
                     # urn='urn:agi-s-llid:S455-47', type='PhosphoSite',
                     # properties=None)
@@ -452,6 +488,8 @@ class MedscanProcessor(object):
                 elif mutation.type == 'Lysine':
                     # Ambiguous whether this is a methylation or
                     # demethylation; skip
+
+                    # Example:
                     # MedscanEntity(name='K150',
                     # urn='urn:agi-s-llid:K150-5624', type='Lysine',
                     # properties=None)
@@ -459,9 +497,9 @@ class MedscanProcessor(object):
                 else:
                     logger.warning('Processor currently cannot process ' +
                                    'mutations of type ' + mutation.type)
-
-            # Handle the more common case where we just ground the entity
-            # without mutation or modification information
-            db_refs = urn_to_db_refs(entity.urn)
-            db_refs['TEXT'] = entity.name
-            return Agent(db_refs['TEXT'], db_refs=db_refs)
+            else:
+                # Handle the more common case where we just ground the entity
+                # without mutation or modification information
+                db_refs = urn_to_db_refs(entity.urn)
+                db_refs['TEXT'] = entity.name
+                return Agent(db_refs['TEXT'], db_refs=db_refs)
