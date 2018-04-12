@@ -520,8 +520,8 @@ class Preassembler(object):
     def find_contradicts(self):
         """Return pairs of contradicting Statements.
 
-        Return
-        ------
+        Returns
+        -------
         contradicts : list(tuple(Statement, Statement))
             A list of Statement pairs that are contradicting.
         """
