@@ -19,6 +19,31 @@ MedscanEntity = namedtuple('MedscanEntity', ['name', 'urn', 'type',
 MedscanProperty = namedtuple('MedscanProperty', ['type', 'name', 'urn'])
 
 class MedscanRelation(object):
+    """A structure representing the information contained in a Medscan
+    SVO xml element as well as associated entities and properties.
+
+    Attribues
+    ----------
+    uri: str
+        The URI of the current document (such as a PMID)
+    sec: str
+        The section of the document the relation occurs in
+    entities: dict
+        A dictionary mapping entity IDs from the same sentence to MedscanEntity
+        objects.
+    tagged_sentence: str
+        The sentence from which the relation was extracted, with some tagged
+        phrases and annotations.
+    subj: str
+        The entity ID of the subject
+    verb: str
+        The verb in the relationship between the subject and the object
+    obj: str
+        The entity ID of the object
+    svo_type: str
+        The type of SVO relationship (for example, CONTROL indicates
+        that the verb is normalized)
+    """
     def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
                  svo_type):
         self.uri = uri
@@ -31,19 +56,6 @@ class MedscanRelation(object):
         self.obj = obj
 
         self.svo_type = svo_type
-
-    def __repr__(self):
-        s = 'svo: %s %s %s' % (self.subj, self.verb, self.obj)
-        s += '\n\turi: ' + self.uri
-        s += '\n\tsec: ' + self.sec
-        s += '\n\ttagged_sentence: ' + self.tagged_sentence
-        s += '\n\tsvo_type: ' + repr(self.svo_type)
-        s += '\n\tsubj: ' + repr(self.subj)
-        s += '\n\tverb: ' + repr(self.verb)
-        s += '\n\tobj: ' + repr(self.obj)
-        s += '\n\tentities: ' + repr(self.entities)
-
-        return s
 
 
 def process_file(filename, medscan_resource_dir, num_documents=None):
@@ -145,8 +157,6 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
                     # that is a more specific but less uniform version of the
                     # same extracted statement.
                     last_relation = relation
-            # TODO: Figure out if there's something better we can do with
-            # properties
             elif event == 'start' and elem.tag == 'prop':
                 in_prop = True
                 property_name = elem.attrib.get('name')
@@ -164,16 +174,4 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
                     break
 
     print("Done processing %d documents" % doc_counter)
-    # Filter to CONTROL events
     return mp
-
-
-if __name__ == '__main__':
-    #fname = '~/Downloads/medscan/test_file.csxml'
-    fname = '~/Downloads/medscan/converted.csxml'
-    resource_dir = os.path.expanduser('~/Downloads/medscan')
-
-    fname = os.path.expanduser(fname)
-    num_documents = None
-    mp = process_file(fname, resource_dir, num_documents)
-

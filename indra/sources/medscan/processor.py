@@ -344,6 +344,21 @@ class MedscanProcessor(object):
                                   )
 
     def agent_from_entity(self, relation, entity_id):
+        """Create a (potentially grounded) INDRA Agent object from a given a
+        Medscan entity describing the subject or object.
+
+        Parameters
+        ----------
+        relation: MedscanRelation
+            The current relation being processed
+        entity_id: str
+            The ID of the entity to process
+
+        Returns
+        -------
+        agent: indra.statements.Agent
+            A potentially grounded INDRA agent representing this entity
+        """
         # Extract sentence tags mapping ids to the text. We refer to this
         # mapping only if the entity doesn't appear in the grounded entity
         # list
@@ -369,14 +384,16 @@ class MedscanProcessor(object):
             # the words with the given entity id tagged in the sentence.
             entity_text = tags[entity_id]
             db_refs = {'TEXT': entity_text}
+            return Agent(db_refs['TEXT'], db_refs=db_refs)
         else:
             entity = relation.entities[entity_id]
 
             prop = entity.properties
             if len(prop.keys()) == 2 and 'Protein' in prop \
                and 'Mutation' in prop:
-                    # Handle the special case where the entity is a protein with
-                    # a mutation
+                   # Handle the special case where the entity is a protein
+                   # with a mutation or modification, with those details
+                   # described in the entity properties
                    protein = prop['Protein']
                    assert(len(protein) == 1)
                    protein = protein[0]
@@ -443,7 +460,7 @@ class MedscanProcessor(object):
                                       'mutations of type ' + mutation.type)
 
             # Handle the more common case where we just ground the entity
+            # without mutation or modification information
             db_refs = urn_to_db_refs(entity.urn)
             db_refs['TEXT'] = entity.name
-
-        return Agent(db_refs['TEXT'], db_refs=db_refs)
+            return Agent(db_refs['TEXT'], db_refs=db_refs)
