@@ -11,6 +11,7 @@ from indra.databases.chebi_client import get_chebi_id_from_cas
 
 logger = logging.getLogger('medscan')
 
+
 def parse_mod_string(s):
     """Parses a string referring to a protein modification of the form
     (residue)(position), such as T47.
@@ -363,7 +364,7 @@ class MedscanProcessor(object):
     def agent_from_entity(self, relation, entity_id):
         """Create a (potentially grounded) INDRA Agent object from a given a
         Medscan entity describing the subject or object.
-        
+
         Uses helper functions to convert a Medscan URN to an INDRA db_refs
         grounding dictionary.
 

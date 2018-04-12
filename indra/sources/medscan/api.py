@@ -83,6 +83,23 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
       immediately preceding (but unnormalized SVO element). However, in some
       cases there can be a "CONTROL" SVO element without its parent immediately
       preceding it.
+
+    Attributes
+    ----------
+    filename: str
+        The csxml file, containing Medscan XML, to process
+    medscan_resource_dir: str
+        A directory containing Unmapped Complexes.rnef and
+        Unmapped Functional classes.rnef which describe unmapped URNs, or None
+        if not available. These files are currently parsed but not used.
+    num_documents: int
+        The number of documents to process, or None to process all of the
+        documents within the csxml file.
+
+    Returns
+    -------
+    mp: MedscanProcessor
+        A MedscanProcessor object containing extracted statements
     """
     mp = MedscanProcessor(medscan_resource_dir)
 
@@ -113,7 +130,12 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
             # Set the sentence context
             elif event == 'start' and elem.tag == 'sent':
                 tagged_sent = elem.attrib.get('msrc')
-                last_relation = None  # Only interested within sentences
+
+                # Reset last_relation between sentences, since we will only be
+                # interested in the relation immediately preceding a CONTROL
+                # statement but within the same sentence.
+                last_relation = None
+
                 entities = {}
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
