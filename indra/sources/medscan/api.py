@@ -82,8 +82,6 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     match_text = None
     in_prop = False
     last_relation = None
-    # TODO: find extracted events with non-ascii characters and make sure they
-    # look okay
     with codecs.open(filename, 'rb') as f:
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
                                                 encoding='utf-8',
@@ -154,14 +152,11 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
 
 if __name__ == '__main__':
-    fname = '~/Downloads/medscan/converted.csxml'
     #fname = '~/Downloads/medscan/test_file.csxml'
+    fname = '~/Downloads/medscan/converted.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
 
-    print('Unmapped modifications:')
-    for um in mp.unmapped_modifications:
-        print(um)

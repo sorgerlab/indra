@@ -9,7 +9,6 @@ import collections
 from indra.databases.hgnc_client import get_hgnc_from_entrez
 from indra.databases.chebi_client import get_chebi_id_from_cas
 
-
 def urn_to_db_refs(urn):
     # Convert a urn to a db_refs dictionary
     if urn is None:
@@ -91,7 +90,6 @@ class MedscanProcessor(object):
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.unmapped_urns = set()
-        self.unmapped_modifications = set()
 
         # Read in and populate a list of unmapped urns
         if medscan_resource_dir is not None:
@@ -193,7 +191,6 @@ class MedscanProcessor(object):
                 statement_type = Deacetylation
             else:
                 # This verb is not handled
-                self.unmapped_modifications.add(last_relation.verb)
                 return
 
             self.statements.append(statement_type(subj, obj, evidence=ev))
