@@ -220,10 +220,11 @@ def test_dephosphorylate():
     assert(s0.sub.db_refs == {'HGNC': '1874', 'TEXT': 'cofilin',
                               'UP': 'P23528'})
 
+
 def test_protein_mutation():
     fname = os.path.join(data_folder, 'test_Protein_Mutation.csxml')
     mp = process_file(fname, None, None)
-    
+
     statements = mp.statements
     assert(len(statements) == 1)
 
@@ -239,7 +240,6 @@ def test_protein_mutation():
     assert(len(m0.mods) == 0)
     assert(len(m0.mutations) == 0)
 
-
     assert(m1.db_refs == {'HGNC': '25994', 'UP': 'Q08J23', 'TEXT': 'NSUN2'})
     assert(len(m1.mods) == 0)
     assert(len(m1.mutations) == 1)
@@ -248,10 +248,11 @@ def test_protein_mutation():
     assert(mut.residue_from == 'S')
     assert(mut.residue_to == 'A')
 
+
 def test_protein_methsite():
     fname = os.path.join(data_folder, 'test_Protein_MethSite.csxml')
     mp = process_file(fname, None, None)
-    
+
     statements = mp.statements
     assert(len(statements) == 1)
 
@@ -274,10 +275,11 @@ def test_protein_methsite():
     assert(len(m1.mutations) == 0)
     assert(len(m1.mods) == 0)
 
+
 def test_protein_phosphosite():
     fname = os.path.join(data_folder, 'test_Protein_PhosphoSite.csxml')
     mp = process_file(fname, None, None)
-    
+
     statements = mp.statements
     assert(len(statements) == 1)
 

@@ -18,6 +18,7 @@ MedscanEntity = namedtuple('MedscanEntity', ['name', 'urn', 'type',
                            'properties'])
 MedscanProperty = namedtuple('MedscanProperty', ['type', 'name', 'urn'])
 
+
 class MedscanRelation(object):
     """A structure representing the information contained in a Medscan
     SVO xml element as well as associated entities and properties.
@@ -128,7 +129,7 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
                     ent_urn = elem.attrib['urn']
                     ent_name = elem.attrib['name']
                     property_entities.append(MedscanEntity(ent_name, ent_urn,
-                                                          ent_type, None))
+                                                           ent_type, None))
             elif event == 'start' and elem.tag == 'svo':
                 subj = elem.attrib.get('subj')
                 verb = elem.attrib.get('verb')

@@ -15,6 +15,7 @@ verbs_always_handled = ['ExpressionControl-positive', 'MolSynthesis-positive',
 
 logger = logging.getLogger('medscan')
 
+
 def parse_mod_string(s):
     """Parses a string referring to a protein modification of the form
     (residue)(position), such as T47.
@@ -391,73 +392,73 @@ class MedscanProcessor(object):
             prop = entity.properties
             if len(prop.keys()) == 2 and 'Protein' in prop \
                and 'Mutation' in prop:
-                   # Handle the special case where the entity is a protein
-                   # with a mutation or modification, with those details
-                   # described in the entity properties
-                   protein = prop['Protein']
-                   assert(len(protein) == 1)
-                   protein = protein[0]
+                # Handle the special case where the entity is a protein
+                # with a mutation or modification, with those details
+                # described in the entity properties
+                protein = prop['Protein']
+                assert(len(protein) == 1)
+                protein = protein[0]
 
-                   mutation = prop['Mutation']
-                   assert(len(mutation) == 1)
-                   mutation = mutation[0]
-                   
-                   db_refs = urn_to_db_refs(protein.urn)
-                   db_refs['TEXT'] = protein.name
+                mutation = prop['Mutation']
+                assert(len(mutation) == 1)
+                mutation = mutation[0]
 
-                   if mutation.type == 'AASite':
-                       # Do not handle this
-                       # MedscanEntity(name='D1', urn='urn:agi-aa:D1',
-                       # type='AASite', properties=None)
-                       return None
-                   elif mutation.type == 'Mutation':
-                       r_old, pos, r_new = parse_mut_string(mutation.name)
-                       if r_old is None:
-                           logger.warning('Could not parse mutation string: ' +
-                                 mutation.name)
-                           # Don't create an agent
-                           return None
-                       else:
-                           try:
-                               cond = MutCondition(pos, r_old, r_new)
-                               return Agent(db_refs['TEXT'], db_refs=db_refs,
-                                            mutations=[cond])
-                           except:
-                               logger.warning('Could not parse mutation ' + 
-                                     'string: ' + mutation.name)
-                               return None
-                   elif mutation.type == 'MethSite':
-                       res, pos = parse_mod_string(mutation.name)
-                       if res is None:
-                           return None
-                       cond = ModCondition('methylation', res, pos)
-                       return Agent(db_refs['TEXT'], db_refs=db_refs,
-                                    mods=[cond])
-                       # MedscanEntity(name='R457',
-                       # urn='urn:agi-s-llid:R457-2185', type='MethSite',
-                       # properties=None)
-                       pass
-                   elif mutation.type == 'PhosphoSite':
-                       res, pos = parse_mod_string(mutation.name)
-                       if res is None:
-                           return None
-                       cond = ModCondition('phosphorylation', res, pos)
-                       return Agent(db_refs['TEXT'], db_refs=db_refs,
-                                    mods=[cond])
-                       #MedscanEntity(name='S455',
-                       # urn='urn:agi-s-llid:S455-47', type='PhosphoSite',
-                       # properties=None)
-                       pass
-                   elif mutation.type == 'Lysine':
-                       # Ambiguous whether this is a methylation or
-                       # demethylation; skip
-                       # MedscanEntity(name='K150',
-                       # urn='urn:agi-s-llid:K150-5624', type='Lysine',
-                       # properties=None)
-                       return None
-                   else:
-                       logger.warning('Processor currently cannot process ' +
-                                      'mutations of type ' + mutation.type)
+                db_refs = urn_to_db_refs(protein.urn)
+                db_refs['TEXT'] = protein.name
+
+                if mutation.type == 'AASite':
+                    # Do not handle this
+                    # MedscanEntity(name='D1', urn='urn:agi-aa:D1',
+                    # type='AASite', properties=None)
+                    return None
+                elif mutation.type == 'Mutation':
+                    r_old, pos, r_new = parse_mut_string(mutation.name)
+                    if r_old is None:
+                        logger.warning('Could not parse mutation string: ' +
+                                       mutation.name)
+                        # Don't create an agent
+                        return None
+                    else:
+                        try:
+                            cond = MutCondition(pos, r_old, r_new)
+                            return Agent(db_refs['TEXT'], db_refs=db_refs,
+                                         mutations=[cond])
+                        except BaseException:
+                            logger.warning('Could not parse mutation ' +
+                                           'string: ' + mutation.name)
+                            return None
+                elif mutation.type == 'MethSite':
+                    res, pos = parse_mod_string(mutation.name)
+                    if res is None:
+                        return None
+                    cond = ModCondition('methylation', res, pos)
+                    return Agent(db_refs['TEXT'], db_refs=db_refs,
+                                 mods=[cond])
+                    # MedscanEntity(name='R457',
+                    # urn='urn:agi-s-llid:R457-2185', type='MethSite',
+                    # properties=None)
+                    pass
+                elif mutation.type == 'PhosphoSite':
+                    res, pos = parse_mod_string(mutation.name)
+                    if res is None:
+                        return None
+                    cond = ModCondition('phosphorylation', res, pos)
+                    return Agent(db_refs['TEXT'], db_refs=db_refs,
+                                 mods=[cond])
+                    # MedscanEntity(name='S455',
+                    # urn='urn:agi-s-llid:S455-47', type='PhosphoSite',
+                    # properties=None)
+                    pass
+                elif mutation.type == 'Lysine':
+                    # Ambiguous whether this is a methylation or
+                    # demethylation; skip
+                    # MedscanEntity(name='K150',
+                    # urn='urn:agi-s-llid:K150-5624', type='Lysine',
+                    # properties=None)
+                    return None
+                else:
+                    logger.warning('Processor currently cannot process ' +
+                                   'mutations of type ' + mutation.type)
 
             # Handle the more common case where we just ground the entity
             # without mutation or modification information
