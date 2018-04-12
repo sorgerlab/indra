@@ -18,13 +18,6 @@ if __name__ == '__main__':
         )
     parent_read_parser = ArgumentParser(add_help=False)
     parent_read_parser.add_argument(
-        'input_file',
-        help=('Path to file containing input ids of content to read. For the '
-              'no-db options, this is simply a file with each line being a '
-              'pmid. For the with-db options, this is a file where each line '
-              'is of the form \'<id type>:<id>\', for example \'pmid:12345\'')
-        )
-    parent_read_parser.add_argument(
         choices=['read_all', 'read_new'],
         dest='task',
         help=('Choose whether you want to read/reread everything, or only '
@@ -136,9 +129,9 @@ class ReadingManager(object):
             db.ReadingUpdates.reader == self.reader.name
             )
         if not len(update_list):
-            logger.error("The database has not had an initial upload, or else "
-                         "the updates table has not been populated.")
-            return False
+            logger.warning("The database has not had an initial upload, or "
+                           "else the updates table has not been populated.")
+            return None
 
         return max([u.latest_datetime for u in update_list])
 
@@ -159,7 +152,12 @@ class BulkReadingManager(ReadingManager):
     def read_new(self, db):
         """Update the readings and raw statements in the database."""
         self.end_datetime = self.run_datetime
-        self.begin_datetime = self._get_latest_updatetime(db) - self.buffer
+        latest_updatetime = self._get_latest_updatetime(db)
+        if latest_updatetime is not None:
+            self.begin_datetime = latest_updatetime - self.buffer
+        else:
+            raise ReadingUpdateError("There are no previous updates. "
+                                     "Please run_all.")
         trid_q = db.filter_query(
             db.TextContent.text_ref_id,
             db.TextContent.insert_date > self.begin_datetime
@@ -180,8 +178,8 @@ class BulkAwsReadingManager(BulkReadingManager):
             raise ReadingUpdateError("Too many id's for one submission. "
                                      "Break it up and do it manually.")
 
-        logger.info("Producing readings on aws for %d new text refs."
-                    % len(trids))
+        logger.info("Producing readings on aws for %d text refs with new "
+                    "content not read by %s." % (len(trids), self.reader.name))
         job_prefix = ('%s_reading_%s'
                       % (self.reader.name.lower(),
                          self.run_datetime.strftime('%Y%m%d_%H%M%S')))
@@ -206,9 +204,9 @@ class BulkAwsReadingManager(BulkReadingManager):
 
 class BulkLocalReadingManager(BulkReadingManager):
     def __init__(self, *args, **kwargs):
-        super(BulkLocalReadingManager, self).__init__(*args, **kwargs)
         self.n_proc = kwargs.pop('n_proc', 1)
         self.verbose = kwargs.pop('verbose', False)
+        super(BulkLocalReadingManager, self).__init__(*args, **kwargs)
         return
 
     def _run_reading(self, db, trids, max_refs=5000):
