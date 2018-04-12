@@ -6,8 +6,9 @@ import os
 import codecs
 import collections
 
-from indra.databases.hgnc_client import get_hgnc_from_entrez
+from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id
 from indra.databases.chebi_client import get_chebi_id_from_cas
+
 
 def urn_to_db_refs(urn):
     # Convert a urn to a db_refs dictionary
@@ -31,6 +32,10 @@ def urn_to_db_refs(urn):
         hgnc_id = get_hgnc_from_entrez(urn_id)
         if hgnc_id is not None:
             db_refs['HGNC'] = hgnc_id
+
+            # Convert the HGNC ID to a Uniprot ID
+            uniprot_id = get_uniprot_id(hgnc_id)
+            db_refs['UP'] = uniprot_id
     elif urn_type == 'agi-ncimorgan':
         # Identifier is MESH
         db_refs['MESH'] = urn_id

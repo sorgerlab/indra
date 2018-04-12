@@ -152,11 +152,10 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
 
 if __name__ == '__main__':
-    #fname = '~/Downloads/medscan/test_file.csxml'
+    # fname = '~/Downloads/medscan/test_file.csxml'
     fname = '~/Downloads/medscan/converted.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
-

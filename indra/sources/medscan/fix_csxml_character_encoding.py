@@ -4,12 +4,14 @@ import codecs
 # codec_options = ['latin_1', 'utf-8']
 codec_options = ['utf-8', 'latin_1']
 
+
 def try_decode(byte_string, codec):
     try:
         s = byte_string.decode(codec)
         return s
     except:
         return None
+
 
 def shortest_string(strings):
     best_string = None
@@ -20,6 +22,7 @@ def shortest_string(strings):
             best_string = s
             best_length = len(s)
     return best_string
+
 
 if __name__ == '__main__':
     args = sys.argv[1:]
@@ -47,13 +50,5 @@ if __name__ == '__main__':
                     # length
                     chosen_string = shortest_string(decoded)
 
-                    # Remove characters that are not in the latin 1 alphabet
-                    #as_latin1 = chosen_string.encode('latin_1', errors='ignore')
-
-                    # Convert result to a string
-                    #str_latin1 = as_latin1.decode('latin_1')
-
                     # Write result as ascii, with non-ascii characters escaped
-                    #f_out.write(str_latin1.encode('utf-8'))
                     f_out.write(chosen_string.encode('utf-8'))
-
