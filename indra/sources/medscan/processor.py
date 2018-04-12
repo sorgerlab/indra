@@ -9,8 +9,77 @@ import collections
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id
 from indra.databases.chebi_client import get_chebi_id_from_cas
 
+verbs_always_handled = ['ExpressionControl-positive', 'MolSynthesis-positive',
+                        'ExpressionControl-negative', 'MolSynthesis-negative',
+                        'Binding']
+
+logger = logging.getLogger('medscan')
+
+def parse_mod_string(s):
+    """Parses a string referring to a protein modification of the form
+    (residue)(position), such as T47.
+
+    Parameters
+    ----------
+    s: str
+        A string representation of a protein residue and position being
+        modified
+
+    Returns
+    -------
+    residue: str
+        The residue being modified (example: T)
+    position: str
+        The position at which the modification is happening (example: 47)
+    """
+    m = re.match('([A-Za-z])+([0-9]+)', s)
+    assert(m is not None)
+    return (m.group(1), m.group(2))
+
+
+def parse_mut_string(s):
+    """
+    A string representation of a protein mutation of the form
+    (old residue)(position)(new residue). Example: T34U.
+
+    Parameters
+    ----------
+    s: str
+        The string representation of the protein mutation
+
+    Returns
+    -------
+    old_residue: str
+        The old residue, or None of the mutation string cannot be parsed
+    position: str
+        The position at which the mutation occurs, or None if the mutation
+        string cannot be parsed
+    new_residue: str
+        The new residue, or None if the mutation string cannot be parsed
+    """
+    m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
+    if m is None:
+        return None, None, None
+    else:
+        return (m.group(1), m.group(2), m.group(3))
+
 
 def urn_to_db_refs(urn):
+    """Converts a Medscan URN to an INDRA db_refs dictionary with grounding
+    information.
+
+    Parameters
+    ----------
+    url: str
+        A Medscan URN
+
+    Returns
+    -------
+    db_refs: dict
+        A dictionary with grounding information, mapping databases to database
+        identifiers. If the Medscan URN is not recognized, returns an empty
+        dictionary.
+    """
     # Convert a urn to a db_refs dictionary
     if urn is None:
         return {}
@@ -58,6 +127,22 @@ def urn_to_db_refs(urn):
 
 
 def extract_id(id_string):
+    """Extracts the numeric ID from the representation of the subject or
+    object ID that appears as an attribute of the svo element in the Medscna
+    XML document.
+
+    Parameters
+    ----------
+    id_string: str
+        The ID representation that appears in the svo element in the XML
+        document (example: ID{123})
+
+    Returns
+    -------
+    id: str
+        The numeric ID, extracted from the svo element's attribute
+        (example: 123)
+    """
     p = 'ID\\{([0-9]+)\\}'
     matches = re.match(p, id_string)
     assert(matches is not None)
@@ -65,6 +150,19 @@ def extract_id(id_string):
 
 
 def untag_sentence(s):
+    """Removes all tags in the sentence, returning the original sentence
+    without Medscan annotations.
+
+    Parameters
+    ----------
+    s: str
+        The tagged sentence
+
+    Returns
+    -------
+    untagged_sentence: str
+        Sentence with tags and annotations stripped out
+    """
     p = 'ID{[0-9,]+=([^}]+)}'
     s = re.sub(p, '\\1', s)
     #
@@ -74,6 +172,19 @@ def untag_sentence(s):
 
 
 def extract_sentence_tags(tagged_sentence):
+    """Given a tagged sentence, extracts a dictionary mapping tags to the words
+    or phrases that they tag.
+
+    Parameters
+    ----------
+    tagged_sentence: str
+        The sentence with Medscan annotations and tags
+
+    Returns
+    -------
+    tags: dict
+        A dictionary mapping tags to the words or phrases that they tag.
+    """
     p = re.compile('ID{([0-9,]+)=([^}]+)}')
     tags = {}
 
@@ -89,9 +200,25 @@ def extract_sentence_tags(tagged_sentence):
 
 
 class MedscanProcessor(object):
+    """Processes Medscan data into INDRA statements.
+
+    Attributes
+    ----------
+    statements: list<str>
+        A list of extracted INDRA statements
+    num_entities: int
+        The total number of subject or object entities the processor attempted
+        to resolve
+    num_entities_not_found: int
+        The number of subject or object IDs which could not be resolved by
+        looking in the list of entities or tagged phrases.
+    unmapped_urns: set of str
+        The list of URNs that are not mapped to any external database,
+        optionally extracted from rnef files provided by the Medscan
+        developers. Currently unused.
+    """
     def __init__(self, medscan_resource_dir):
         self.statements = []
-        self.modification_examples = collections.defaultdict(int)
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.unmapped_urns = set()
@@ -114,6 +241,20 @@ class MedscanProcessor(object):
                                 self.unmapped_urns.add(urn)
 
     def process_relation(self, relation, last_relation):
+        """Process a relation into an INDRA statement.
+
+        Parameters
+        ----------
+        relation: MedscanRelation
+            The relation to process (a CONTROL svo with normalized verb)
+        last_relation: MedscanRelation
+            The relation immediately proceding the relation to process within
+            the same sentence, or None if there are no preceding relations
+            within the same sentence. This proceeding relation, if available,
+            will refer to the same interaction but with an unnormalized
+            (potentially more specific) verb, and is used when processing
+            protein modification events.
+        """
         subj = self.agent_from_entity(relation, relation.subj)
         obj = self.agent_from_entity(relation, relation.obj)
         if subj is None or obj is None:
@@ -146,9 +287,6 @@ class MedscanProcessor(object):
                                    DecreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb == 'ProtModification':
-            if last_relation is not None:
-                self.modification_examples[last_relation.verb] += 1
-
             if last_relation is None:
                 # We cannot make a statement unless we have more fine-grained
                 # information on the relation type from a preceding
@@ -232,9 +370,80 @@ class MedscanProcessor(object):
             entity_text = tags[entity_id]
             db_refs = {'TEXT': entity_text}
         else:
-            # Convert the URN grounding to an INDRA grounding
             entity = relation.entities[entity_id]
+
+            prop = entity.properties
+            if len(prop.keys()) == 2 and 'Protein' in prop \
+               and 'Mutation' in prop:
+                    # Handle the special case where the entity is a protein with
+                    # a mutation
+                   protein = prop['Protein']
+                   assert(len(protein) == 1)
+                   protein = protein[0]
+
+                   mutation = prop['Mutation']
+                   assert(len(mutation) == 1)
+                   mutation = mutation[0]
+                   
+                   db_refs = urn_to_db_refs(protein.urn)
+                   db_refs['TEXT'] = protein.name
+
+                   if mutation.type == 'AASite':
+                       # Do not handle this
+                       # MedscanEntity(name='D1', urn='urn:agi-aa:D1',
+                       # type='AASite', properties=None)
+                       return None
+                   elif mutation.type == 'Mutation':
+                       r_old, pos, r_new = parse_mut_string(mutation.name)
+                       if r_old is None:
+                           logger.warning('Could not parse mutation string: ' +
+                                 mutation.name)
+                           # Don't create an agent
+                           return None
+                       else:
+                           try:
+                               cond = MutCondition(pos, r_old, r_new)
+                               return Agent(db_refs['TEXT'], db_refs=db_refs,
+                                            mutations=[cond])
+                           except:
+                               logger.warning('Could not parse mutation ' + 
+                                     'string: ' + mutation.name)
+                               return None
+                   elif mutation.type == 'MethSite':
+                       res, pos = parse_mod_string(mutation.name)
+                       if res is None:
+                           return None
+                       cond = ModCondition('methylation', res, pos)
+                       return Agent(db_refs['TEXT'], db_refs=db_refs,
+                                    mods=[cond])
+                       # MedscanEntity(name='R457',
+                       # urn='urn:agi-s-llid:R457-2185', type='MethSite',
+                       # properties=None)
+                       pass
+                   elif mutation.type == 'PhosphoSite':
+                       res, pos = parse_mod_string(mutation.name)
+                       if res is None:
+                           return None
+                       cond = ModCondition('phosphorylation', res, pos)
+                       return Agent(db_refs['TEXT'], db_refs=db_refs,
+                                    mods=[cond])
+                       #MedscanEntity(name='S455',
+                       # urn='urn:agi-s-llid:S455-47', type='PhosphoSite',
+                       # properties=None)
+                       pass
+                   elif mutation.type == 'Lysine':
+                       # Ambiguous whether this is a methylation or
+                       # demethylation; skip
+                       # MedscanEntity(name='K150',
+                       # urn='urn:agi-s-llid:K150-5624', type='Lysine',
+                       # properties=None)
+                       return None
+                   else:
+                       logger.warning('Processor currently cannot process ' +
+                                      'mutations of type ' + mutation.type)
+
+            # Handle the more common case where we just ground the entity
             db_refs = urn_to_db_refs(entity.urn)
-            db_refs['TEXT'] = entity.match_text
+            db_refs['TEXT'] = entity.name
 
         return Agent(db_refs['TEXT'], db_refs=db_refs)

@@ -14,8 +14,9 @@ from collections import namedtuple
 import os
 
 logger = logging.getLogger('medscan')
-MedscanEntity = namedtuple('MedscanEntity', ['match_text', 'urn', 'type'])
-
+MedscanEntity = namedtuple('MedscanEntity', ['name', 'urn', 'type',
+                           'properties'])
+MedscanProperty = namedtuple('MedscanProperty', ['type', 'name', 'urn'])
 
 class MedscanRelation(object):
     def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
@@ -82,6 +83,10 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     match_text = None
     in_prop = False
     last_relation = None
+    property_entities = []
+    property_name = None
+
+    # Got through the document again and extract statements
     with codecs.open(filename, 'rb') as f:
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
                                                 encoding='utf-8',
@@ -99,11 +104,19 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
                 entities = {}
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
-            elif event == 'start' and elem.tag == 'entity' and not in_prop:
-                ent_id = elem.attrib['msid']
-                ent_urn = elem.attrib.get('urn')
-                ent_type = elem.attrib['type']
-                entities[ent_id] = MedscanEntity(match_text, ent_urn, ent_type)
+            elif event == 'start' and elem.tag == 'entity':
+                if not in_prop:
+                    ent_id = elem.attrib['msid']
+                    ent_urn = elem.attrib.get('urn')
+                    ent_type = elem.attrib['type']
+                    entities[ent_id] = MedscanEntity(match_text, ent_urn,
+                                                     ent_type, {})
+                else:
+                    ent_type = elem.attrib['type']
+                    ent_urn = elem.attrib['urn']
+                    ent_name = elem.attrib['name']
+                    property_entities.append(MedscanEntity(ent_name, ent_urn,
+                                                          ent_type, None))
             elif event == 'start' and elem.tag == 'svo':
                 subj = elem.attrib.get('subj')
                 verb = elem.attrib.get('verb')
@@ -136,13 +149,17 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
             # properties
             elif event == 'start' and elem.tag == 'prop':
                 in_prop = True
+                property_name = elem.attrib.get('name')
+                property_entities = []
             elif event == 'end' and elem.tag == 'prop':
                 in_prop = False
+                entities[ent_id].properties[property_name] = property_entities
             elif event == 'end' and elem.tag == 'doc':
                 doc_counter += 1
                 # Give a status update
                 if doc_counter % 100 == 0:
-                    print("Processed %d documents" % doc_counter)
+                    print("Processed %d documents"
+                          % doc_counter)
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
@@ -152,10 +169,11 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
 
 if __name__ == '__main__':
-    # fname = '~/Downloads/medscan/test_file.csxml'
+    #fname = '~/Downloads/medscan/test_file.csxml'
     fname = '~/Downloads/medscan/converted.csxml'
     resource_dir = os.path.expanduser('~/Downloads/medscan')
 
     fname = os.path.expanduser(fname)
     num_documents = None
     mp = process_file(fname, resource_dir, num_documents)
+

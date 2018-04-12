@@ -62,9 +62,9 @@ def test_agent_from_entity():
     mp = MedscanProcessor(None)
 
     # Test entity
-    entity = MedscanEntity(match_text='kinesin-I',
+    entity = MedscanEntity(name='kinesin-I',
                            urn='urn:agi-gocomplex:0016938',
-                           type=None)
+                           type=None, properties={})
 
     # Test relation
     tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
@@ -219,3 +219,81 @@ def test_dephosphorylate():
                               'UP': 'Q8WYL5'})
     assert(s0.sub.db_refs == {'HGNC': '1874', 'TEXT': 'cofilin',
                               'UP': 'P23528'})
+
+def test_protein_mutation():
+    fname = os.path.join(data_folder, 'test_Protein_Mutation.csxml')
+    mp = process_file(fname, None, None)
+    
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, Complex))
+
+    members = s0.members
+    assert(len(members) == 2)
+    m0 = members[0]
+    m1 = members[1]
+
+    assert(m0.db_refs == {'HGNC': '7910', 'UP': 'P06748', 'TEXT': 'NPM1'})
+    assert(len(m0.mods) == 0)
+    assert(len(m0.mutations) == 0)
+
+
+    assert(m1.db_refs == {'HGNC': '25994', 'UP': 'Q08J23', 'TEXT': 'NSUN2'})
+    assert(len(m1.mods) == 0)
+    assert(len(m1.mutations) == 1)
+    mut = m1.mutations[0]
+    assert(mut.position == '139')
+    assert(mut.residue_from == 'S')
+    assert(mut.residue_to == 'A')
+
+def test_protein_methsite():
+    fname = os.path.join(data_folder, 'test_Protein_MethSite.csxml')
+    mp = process_file(fname, None, None)
+    
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, Complex))
+
+    members = s0.members
+    assert(len(members) == 2)
+    m0 = members[0]
+    m1 = members[1]
+
+    assert(m0.db_refs == {'HGNC': '2978', 'UP': 'Q9Y6K1', 'TEXT': 'DNMT3A'})
+    assert(len(m0.mutations) == 0)
+    assert(len(m0.mods) == 1)
+    mod = m0.mods[0]
+    assert(mod.mod_type == 'methylation')
+    assert(mod.residue == 'R')
+    assert(mod.position == '882')
+
+    assert(len(m1.mutations) == 0)
+    assert(len(m1.mods) == 0)
+
+def test_protein_phosphosite():
+    fname = os.path.join(data_folder, 'test_Protein_PhosphoSite.csxml')
+    mp = process_file(fname, None, None)
+    
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(isinstance(s0, DecreaseAmount))
+
+    subj = s0.subj
+    assert(subj.db_refs == {'HGNC': '115', 'UP': 'P53396', 'TEXT': 'ACLY'})
+    assert(len(subj.mutations) == 0)
+    assert(len(subj.mods) == 1)
+    mod = subj.mods[0]
+    assert(mod.residue == 'S')
+    assert(mod.position == '455')
+    assert(mod.mod_type == 'phosphorylation')
+
+    obj = s0.obj
+    assert(obj.db_refs == {'CHEBI': '15351', 'TEXT': 'acetyl-CoA'})
+    assert(len(obj.mutations) == 0)
+    assert(len(obj.mods) == 0)

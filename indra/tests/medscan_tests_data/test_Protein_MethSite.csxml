@@ -1,0 +1,37 @@
+ <?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+
+  
+
+
+<sent sn="1" msrc="ID{999998=DNMT3A R882 mutants} interact with ID{3000137=polycomb} proteins to block haematopoietic stem and leukaemic ID{4130154=cell differentiation}. GLOSSARY{999998={Protein=1788 Mutation=41999999} 41999999=&quot;R882&quot;}">
+    <toks>ID{999998=DNMT3A R882 mutants} TK{W:V:interact=interact} TK{W:PREP:with=with} ID{3000137=polycomb} TK{W:N:protein=proteins} TK{W:PREP:to=to} TK{W:V:block=block} TK{W:J:haematopoietic=haematopoietic} TK{W:N:stem=stem} TK{W:CONJ:and=and} TK{W:J:leukaemic=leukaemic} ID{4130154=cell differentiation} TK{PCT:PCT:.=.}</toks>
+    <match coff="0" chars="DNMT3A R882 mutants" clen="19" type="Protein">
+     <entity msid="999998" type="Protein" name="DNMT3A(R882)" urn="urn:agi-protein:prophash-30e13c263c00fe93c4d05b418029a7e5">
+      <prop name="Protein">
+       <entity type="Protein" name="DNMT3A" urn="urn:agi-llid:1788" />
+      </prop>
+      <prop name="Mutation">
+       <entity type="MethSite" name="R882" urn="urn:agi-s-llid:R882-1788" />
+      </prop>
+     </entity>
+    </match>
+    <match coff="34" chars="polycomb" clen="8" type="Complex">
+     <entity msid="3000137" type="Complex" name="polycomb complex" urn="urn:agi-complex:polycomb%20complex" />
+    </match>
+    <match coff="95" chars="cell differentiation" clen="20" type="CellProcess">
+     <entity msid="4130154" type="CellProcess" name="cell differentiation" urn="urn:agi-gocellproc:0030154" />
+    </match>
+    <svo type="Main" subj="ID{999998=DNMT3A R882 mutants}" verb="TK{interact}" obj="ID{3000137=polycomb} TK{proteins}" posinfo="0,30,31,8,45,20,66,8," />
+    <svo type="CONTROL" subj="ID{999998}" verb="Binding" obj="ID{3000137}" />
+    <svo type="VPmod" subj="ID{999998=DNMT3A R882 mutants}" verb="TK{block}" obj="TK{haematopoietic} TK{stem}" posinfo="0,30,78,5,84,14,99,4," />
+    <svo type="VPmod" subj="ID{999998=DNMT3A R882 mutants}" verb="TK{block}" obj="TK{leukaemic} ID{4130154=cell differentiation}" posinfo="0,30,78,5,108,9,118,32," />
+    <svo type="CONTROL" subj="ID{999998}" verb="UnknownRegulation-negative" obj="ID{4130154}" />
+   </sent>
+
+</sec>
+</doc>
+</batch>
+

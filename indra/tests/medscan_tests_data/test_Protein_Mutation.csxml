@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+
+
+   <sent sn="7" msrc="In ID{4000000,4000869=mitotic cells}, association between ID{0,4869,54888=NPM1 and NSUN2} was inhibited, but ID{999998=NSUN2-S139A} was constitutively associated with ID{4869=NPM1}. GLOSSARY{999998={Protein=54888 Mutation=46999999} 46999999=&quot;S139A&quot;}">
+    <toks>TK{W:PREP:in=In} ID{4000000,4000869=mitotic cells} TK{PCT:PCT:,=,} TK{W:N:association=association} TK{W:PREP:between=between} ID{0,4869,54888=NPM1 and NSUN2} TK{W:V:was=was} TK{W:V:inhibit=inhibited} TK{PCT:PCT:,=,} TK{W:CONJ:but=but} ID{999998=NSUN2-S139A} TK{W:V:was=was} TK{W:D:constitutively=constitutively} TK{W:V:associate=associated} TK{W:PREP:with=with} ID{4869=NPM1} TK{PCT:PCT:.=.}</toks>
+    <match coff="3" chars="mitotic cells" clen="13" type="CellProcess">
+     <entity msid="4000869" type="CellProcess" name="mitosis" urn="urn:agi-gocellproc:0007067" />
+    </match>
+    <match coff="38" chars="NPM1 and NSUN2" clen="14" type="Protein">
+     <entity msid="4869" type="Protein" name="NPM1" urn="urn:agi-llid:4869" />
+     <entity msid="54888" type="Protein" name="NSUN2" urn="urn:agi-llid:54888" />
+    </match>
+    <match coff="72" chars="NSUN2-S139A" clen="11" type="Protein">
+     <entity msid="999998" type="Protein" name="NSUN2(S139A)" urn="urn:agi-protein:prophash-0c6a9dc506579ceac7d783c3e726409c">
+      <prop name="Protein">
+       <entity type="Protein" name="NSUN2" urn="urn:agi-llid:54888" />
+      </prop>
+      <prop name="Mutation">
+       <entity type="Mutation" name="S139A" urn="urn:agi-mutation:S139A" />
+      </prop>
+     </entity>
+    </match>
+    <match coff="119" chars="NPM1" clen="4" type="Protein">
+     <entity msid="4869" type="Protein" name="NPM1" urn="urn:agi-llid:4869" />
+    </match>
+    <svo type="Main" subj="" verb="TK{inhibit}" obj="ID{4000000,4000869=mitotic cells}" posinfo="94,9,3,33,-1,0," />
+    <svo type="Main" subj="" verb="TK{inhibit}" obj="ID{0,4869,54888=NPM1 and NSUN2} TK{association}" posinfo="94,9,58,31,38,11,-1,0," />
+    <svo type="Main" subj="ID{4869=NPM1}" verb="TK{associate}" obj="ID{999998=NSUN2-S139A}" posinfo="167,13,151,10,109,22," />
+    <svo type="CONTROL" subj="ID{4869}" verb="Binding" obj="ID{999998}" />
+   </sent>
+
+
+
+</sec>
+</doc>
+</batch>
