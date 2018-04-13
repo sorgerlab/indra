@@ -471,7 +471,7 @@ def make_stmts_from_db_list(db_stmt_objs):
     return stmts_from_json(stmt_json_list)
 
 
-class NestedDict(object):
+class NestedDict(dict):
     """A dict-like object that recursively populates elements of a dict."""
 
     def __getitem__(self, key):

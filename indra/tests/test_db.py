@@ -9,7 +9,7 @@ from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db.database_manager import DatabaseManager
-from indra.db.util import get_abstracts_by_pmids, get_defaults
+from indra.db.util import get_abstracts_by_pmids, get_defaults, NestedDict
 from nose.plugins.attrib import attr
 from indra.db.reading_manager import BulkReadingManager
 
@@ -572,6 +572,26 @@ def test_sparser_initial_reading():
                                       db.Statements.reader_ref == db.Readings.id,
                                       db.Readings.reader == 'SPARSER')
     assert sparser_stmts_q.count() > 0
+
+
+def test_nested_dict():
+    d = NestedDict()
+    print(d)
+    d['A']['B']['C'] = 3
+    d['B']['C'] = {'D': 2}
+    print(d)
+    assert d['A']['B']['C'] == 3
+    assert d.get('A') == d['A']
+    assert d.gets('A') == [d['A']]
+    assert d.get('C') in [3, {'D': 2}]
+    assert d.get('D') == 2
+    assert d.get_path('C') in [(('A', 'B', 'C'), 3), (('B', 'C'), {'D': 2})]
+    assert_contents_equal([str(v) for v in d.gets('C')],
+                          ['3', str(d['B']['C'])])
+    d.export_dict()  # Should probably test for matching contents
+    assert_contents_equal([str(v) for v in d.get_paths('C')],
+                          [str((('A', 'B', 'C'), 3)),
+                           str((('B', 'C'), d['B']['C']))])
 
 
 @needs_py3
