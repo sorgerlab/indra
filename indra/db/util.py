@@ -563,8 +563,10 @@ class NestedDict(object):
         return result_list
 
 
-def get_reduced_stmt_corpus(db, get_full_stmts=False):
+def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     """Get a corpus of statements from clauses and filters duplicate evidence.
+
+    Note that this will only get statements from reading.
 
     Parameters
     ----------
@@ -575,14 +577,19 @@ def get_reduced_stmt_corpus(db, get_full_stmts=False):
         on the database) are returned. However, if set to True, serialized
         INDRA Statements will be returned. Note that this will in general be
         VERY large in memory, and therefore should be used with caution.
+    clauses : None or list of sqlalchemy clauses
+        By default None. Specify sqlalchemy clauses to reduce the scope of
+        statements, e.g. `clauses=[db.Statements.type == 'Phosphorylation']` or
+        `clauses=[db.Statements.uuid.in_([<uuids>])]`.
 
     Returns
     -------
-    data_dict : dict
-        A deeply nested dictionary, carrying the metadata for the statements.
-    stmt_ret : list
-        A flat list of either statement ids or serialized statements, depending
-        on `get_full_stmts`.
+    stmt_dn : NestedDict
+        A deeply nested recursive dictionary, carrying the metadata for the
+        Statements.
+    stmt_ret : set
+        A set of either statement ids or serialized statements, depending on
+        `get_full_stmts`.
     """
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
@@ -591,6 +598,8 @@ def get_reduced_stmt_corpus(db, get_full_stmts=False):
                           db.Statements.json)
          .filter(db.TextContent.id == db.Readings.text_content_id,
                  db.Readings.id == db.Statements.reader_ref))
+    if clauses:
+        q.filter(*clauses)
 
     # Specify sources of fulltext content, and order priorities.
     full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
