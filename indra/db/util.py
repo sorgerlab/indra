@@ -16,7 +16,7 @@ from indra.databases import hgnc_client
 from indra.util.get_version import get_version
 from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
-    stmts_from_json, Conversion, Translocation, Evidence
+    stmts_from_json, Conversion, Translocation, Evidence, Statement
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
 from indra import config_file
 
@@ -471,64 +471,194 @@ def make_stmts_from_db_list(db_stmt_objs):
     return stmts_from_json(stmt_json_list)
 
 
-def get_reduced_stmt_corpus(db):
-    "Get a corpus of statements from clauses and filters duplicate evidence."
+class NestedDict(object):
+    """A dict-like object that recursively populates elements of a dict."""
+    def __init__(self):
+        self.__dict = dict()
+        return
+
+    def __getattribute__(self, attr_name):
+        if attr_name in ['items', 'keys', 'values', '__setitem__']:
+            return getattr(self.__dict, attr_name)
+        return object.__getattribute__(self, attr_name)
+
+    def __getitem__(self, key):
+        if key not in self.keys():
+            self.__dict[key] = self.__class__()
+        return self.__dict[key]
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        sub_str = str(self.__dict)[1:-1]
+        if not sub_str:
+            return self.__class__.__name__ + '()'
+        # This does not completely generalize, but it works for most cases.
+        for old, new in [('), ', '),\n'), ('\n', '\n  ')]:
+            sub_str = sub_str.replace(old, new)
+        return'%s(\n  %s\n)' % (self.__class__.__name__, sub_str)
+
+    def export_dict(self):
+        "Convert this into an ordinary dict (of dicts)."
+        return {k: v.export_dict() if isinstance(v, self.__class__) else v
+                for k, v in self.items()}
+
+    def get(self, key):
+        "Find the first value within the tree which has the key."
+        if key in self.keys():
+            return self[key]
+        else:
+            res = None
+            for v in self.values():
+                # This could get weird if the actual expected returned value
+                # is None, especially in teh case of overlap. Any ambiguity
+                # would be resolved by get_path(s).
+                if hasattr(v, 'get'):
+                    res = v.get(key)
+                if res is not None:
+                    break
+            return res
+
+    def get_path(self, key):
+        "Like `get`, but also return the path taken to the value."
+        if key in self.keys():
+            return (key,), self[key]
+        else:
+            key_path, res = (None, None)
+            for sub_key, v in self.items():
+                if isinstance(v, self.__class__):
+                    key_path, res = v.get_path(key)
+                elif hasattr(v, 'get'):
+                    res = v.get(key)
+                    key_path = (key,) if res is not None else None
+                if res is not None and key_path is not None:
+                    key_path = (sub_key,) + key_path
+                    break
+            return key_path, res
+
+    def gets(self, key):
+        "Like `get`, but return all matches, not just the first."
+        result_list = []
+        if key in self.keys():
+            result_list.append(self[key])
+        for v in self.values():
+            if isinstance(v, self.__class__):
+                sub_res_list = v.get_paths(key)
+                for res in sub_res_list:
+                    result_list.append(res)
+            elif isinstance(v, dict):
+                if key in v.keys():
+                    result_list.append(v[key])
+        return result_list
+
+    def get_paths(self, key):
+        "Like `gets`, but include the paths, like `get_path` for all matches."
+        result_list = []
+        if key in self.keys():
+            result_list.append(((key,), self[key]))
+        for sub_key, v in self.items():
+            if isinstance(v, self.__class__):
+                sub_res_list = v.get_paths(key)
+                for key_path, res in sub_res_list:
+                    result_list.append(((sub_key,) + key_path, res))
+            elif isinstance(v, dict):
+                if key in v.keys():
+                    result_list.append(((sub_key, key), v[key]))
+        return result_list
+
+
+def get_reduced_stmt_corpus(db, get_full_stmts=False):
+    """Get a corpus of statements from clauses and filters duplicate evidence.
+
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
+        A database manager instance to access the database.
+    get_full_stmts : bool
+        By default (False), only Statement ids (the primary index of Statements
+        on the database) are returned. However, if set to True, serialized
+        INDRA Statements will be returned. Note that this will in general be
+        VERY large in memory, and therefore should be used with caution.
+
+    Return
+    ------
+    data_dict : dict
+        A deeply nested dictionary, carrying the metadata for the statements.
+    stmt_ret : list
+        A flat list of either statement ids or serialized statements, depending
+        on `get_full_stmts`.
+    """
+    # Construct the query for metadata from the database.
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
                           db.TextContent.source, db.Readings.id,
                           db.Readings.reader_version, db.Statements.id,
                           db.Statements.json)
          .filter(db.TextContent.id == db.Readings.text_content_id,
                  db.Readings.id == db.Statements.reader_ref))
-    full_text_content = ['manuscripts', 'pmc_oa', 'pubmed']
+
+    # Specify sources of fulltext content, and order priorities.
+    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
+
+    # Specify versions of readers, and preference.
     sparser_versions = ['sept14-linux\n', 'sept14-linux']
     reach_versions = ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
+
+    # Prime some counters.
     num_duplicate_evidence = 0
     num_unique_evidence = 0
-    data_dict = {}
+
+    # Populate a dict with all the data.
+    stmt_nd = NestedDict()
     for trid, tcid, src, rid, rv, sid, sjson in q.yield_per(1000):
-        if trid not in data_dict.keys():
-            data_dict[trid] = {}
-        tc_dict = data_dict[trid]
-        cont_key = (src, tcid)
-        if cont_key not in tc_dict.keys():
-            tc_dict[cont_key] = {}
-        r_dict = tc_dict[cont_key]
+        # Back out the reader name.
         if rv in sparser_versions:
             reader = 'sparser'
         elif rv in reach_versions:
             reader = 'reach'
         else:
             raise Exception("rv %s not recognized." % rv)
-        if reader not in r_dict.keys():
-            r_dict[reader] = {}
-        rv_dict = r_dict[reader]
-        rv_key = (rv, rid)
-        if rv_key not in rv_dict.keys():
-            rv_dict[rv_key] = {}
-        s_dict = rv_dict[rv_key]
-        json_str = sjson.decode('utf8')
-        ev = Evidence._from_json(json.loads(json_str)['evidence'][0])
-        ev_key = ev.matches_key()
-        ev_hash = hash(ev_key)
-        if ev_hash not in s_dict.keys():
-            s_dict[ev_hash] = set()
+
+        # Get the json for comparison and/or storage
+        stmt_json = json.loads(sjson.decode('utf8'))
+        stmt = Statement._from_json(stmt_json)
+
+        # Hash the compbined stmt and evidence matches key.
+        m_key = stmt.matches_key() + stmt.evidence[0].matches_key()
+        stmt_hash = hash(m_key)
+
+        # For convenience get the endpoint statement dict
+        s_dict = stmt_nd[trid][(src, tcid)][reader][(rv, rid)]
+
+        # Initialize the value to a set, and count duplicates
+        if stmt_hash not in s_dict.keys():
+            s_dict[stmt_hash] = set()
             num_unique_evidence += 1
         else:
             num_duplicate_evidence += 1
+
+        # Either store the statement, or the statement id.
         if get_full_stmts:
-            s_dict[ev_hash].add(json.loads(sjson.decode('utf8')))
+            s_dict[stmt_hash].add(stmt)
         else:
-            s_dict[ev_hash].add(sid)
-    print("Found %d relevant text refs with statements." % len(data_dict))
+            s_dict[stmt_hash].add(sid)
+
+    # Report on the results.
+    print("Found %d relevant text refs with statements." % len(stmt_nd))
     print("number of statement exact duplicates: %d" % num_duplicate_evidence)
     print("number of unique statements: %d" % num_unique_evidence)
+
+    # Now we filter and get the set of statements/statement ids.
     stmts = set()
-    for trid, tc_dict in data_dict.items():
+    for trid, tc_dict in stmt_nd.items():
+        # Filter out unneeded fulltext.
         while sum([k[0] != 'pubmed' for k in tc_dict.keys()]) > 1:
             worst_cont_id = min(tc_dict,
                                 key=lambda x: full_text_content.index(x[0]))
             del tc_dict[worst_cont_id]
-        for cont_key, r_dict in tc_dict.items():
+
+        # Filter out the older reader versions
+        for r_dict in tc_dict.values():
             for reader, rv_dict in r_dict.items():
                 assert reader in ['reach', 'sparser']
                 if reader == 'reach':
@@ -537,15 +667,15 @@ def get_reduced_stmt_corpus(db):
                 elif reader == 'sparser':
                     best_rv = max(rv_dict,
                                   key=lambda x: sparser_versions.index(x[0]))
-                # Take any one of the duplicates.
+
+                # Take any one of the duplicates. Statements/Statement ids are
+                # already grouped into sets of duplicates keyed by the
+                # Statement and Evidence matches key hashes. We only want one
+                # of each.
                 stmts |= {ev_set.pop()
                           for ev_set in rv_dict[best_rv].values()}
-    if get_full_stmts:
-        print("Making statement json into objects")
-        stmt_ret = stmts_from_json(list(stmts))
-    else:
-        stmt_ret = stmts
-    return data_dict, stmt_ret
+
+    return stmt_nd, stmts
 
 
 #==============================================================================
