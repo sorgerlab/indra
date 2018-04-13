@@ -581,8 +581,8 @@ def get_reduced_stmt_corpus(db, get_full_stmts=False):
         INDRA Statements will be returned. Note that this will in general be
         VERY large in memory, and therefore should be used with caution.
 
-    Return
-    ------
+    Returns
+    -------
     data_dict : dict
         A deeply nested dictionary, carrying the metadata for the statements.
     stmt_ret : list
