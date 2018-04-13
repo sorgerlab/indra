@@ -473,31 +473,26 @@ def make_stmts_from_db_list(db_stmt_objs):
 
 class NestedDict(object):
     """A dict-like object that recursively populates elements of a dict."""
-    def __init__(self):
-        self.__dict = dict()
-        return
-
-    def __getattribute__(self, attr_name):
-        if attr_name in ['items', 'keys', 'values', '__setitem__']:
-            return getattr(self.__dict, attr_name)
-        return object.__getattribute__(self, attr_name)
 
     def __getitem__(self, key):
         if key not in self.keys():
-            self.__dict[key] = self.__class__()
-        return self.__dict[key]
+            val = self.__class__()
+            self.__setitem__(key, val)
+        else:
+            val = dict.__getitem__(self, key)
+        return val
 
     def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        sub_str = str(self.__dict)[1:-1]
+        sub_str = dict.__repr__(self)[1:-1]
         if not sub_str:
             return self.__class__.__name__ + '()'
         # This does not completely generalize, but it works for most cases.
         for old, new in [('), ', '),\n'), ('\n', '\n  ')]:
             sub_str = sub_str.replace(old, new)
         return'%s(\n  %s\n)' % (self.__class__.__name__, sub_str)
+
+    def __str__(self):
+        return self.__repr__()
 
     def export_dict(self):
         "Convert this into an ordinary dict (of dicts)."
@@ -544,7 +539,7 @@ class NestedDict(object):
             result_list.append(self[key])
         for v in self.values():
             if isinstance(v, self.__class__):
-                sub_res_list = v.get_paths(key)
+                sub_res_list = v.gets(key)
                 for res in sub_res_list:
                     result_list.append(res)
             elif isinstance(v, dict):
@@ -628,7 +623,7 @@ def get_reduced_stmt_corpus(db, get_full_stmts=False):
         stmt_hash = hash(m_key)
 
         # For convenience get the endpoint statement dict
-        s_dict = stmt_nd[trid][(src, tcid)][reader][(rv, rid)]
+        s_dict = stmt_nd[trid][src][tcid][reader][rv][rid]
 
         # Initialize the value to a set, and count duplicates
         if stmt_hash not in s_dict.keys():
@@ -650,30 +645,25 @@ def get_reduced_stmt_corpus(db, get_full_stmts=False):
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
-    for trid, tc_dict in stmt_nd.items():
+    for trid, src_dict in stmt_nd.items():
         # Filter out unneeded fulltext.
-        while sum([k[0] != 'pubmed' for k in tc_dict.keys()]) > 1:
-            worst_cont_id = min(tc_dict,
-                                key=lambda x: full_text_content.index(x[0]))
-            del tc_dict[worst_cont_id]
+        while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
+            worst_src = min(src_dict,
+                            key=lambda x: full_text_content.index(x[0]))
+            del src_dict[worst_src]
 
         # Filter out the older reader versions
-        for r_dict in tc_dict.values():
-            for reader, rv_dict in r_dict.items():
-                assert reader in ['reach', 'sparser']
-                if reader == 'reach':
-                    best_rv = max(rv_dict,
-                                  key=lambda x: reach_versions.index(x[0]))
-                elif reader == 'sparser':
-                    best_rv = max(rv_dict,
-                                  key=lambda x: sparser_versions.index(x[0]))
+        for reader, rv_list in [('reach', reach_versions),
+                                ('sparser', sparser_versions)]:
+            for rv_dict in src_dict.gets(reader):
+                best_rv = max(rv_dict, key=lambda x: rv_list.index(x))
 
                 # Take any one of the duplicates. Statements/Statement ids are
                 # already grouped into sets of duplicates keyed by the
                 # Statement and Evidence matches key hashes. We only want one
                 # of each.
-                stmts |= {ev_set.pop()
-                          for ev_set in rv_dict[best_rv].values()}
+                stmts |= {(ev_hash, list(ev_set)[0])
+                          for ev_hash, ev_set in rv_dict[best_rv].items()}
 
     return stmt_nd, stmts
 
