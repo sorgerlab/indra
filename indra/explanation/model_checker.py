@@ -738,9 +738,13 @@ class ModelChecker(object):
         succ_dict = {}
         for node in im.nodes():
             succ_dict[node] = set(successors(node))
-        # Group nodes by number of successors
-        groups = itertools.groupby(im.nodes(), key=lambda x: len(succ_dict[x]))
+        # Sort and then group nodes by number of successors
         logger.info('Compare combinations of successors')
+        group_key_fun = lambda x: len(succ_dict[x])
+        nodes_sorted = sorted(im.nodes(), key=group_key_fun)
+        groups = itertools.groupby(nodes_sorted, key=group_key_fun)
+        # Now iterate over each group and then construct combinations
+        # within the group to check for shared sucessors
         edges_to_remove = []
         for gix, group in groups:
             combos = itertools.combinations(group, 2)
