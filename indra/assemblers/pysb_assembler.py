@@ -2466,12 +2466,25 @@ class PysbPreassembler(object):
                 base_agent.add_activity_form(agent_to_add, stmt.is_active)
 
     def replace_activities(self):
+        logger.info('Running PySB Preassembler replace activities')
         # TODO: handle activity hierarchies
+        new_stmts = []
+        def has_agent_activity(stmt):
+            """Return True if any agents in the Statement have activity."""
+            for agent in stmt.agent_list():
+                if isinstance(agent, ist.Agent) and agent.activity is not None:
+                    return True
+            return False
         # First collect all explicit active forms
         self._gather_active_forms()
-        new_stmts = []
         # Iterate over all statements
-        for stmt in self.statements:
+        for j, stmt in enumerate(self.statements):
+            logger.debug('%d/%d %s' % (j, len(self.statements), stmt))
+            # If the Statement doesn't have any activities, we can just
+            # keep it and move on
+            if not has_agent_activity(stmt):
+                new_stmts.append(stmt)
+                continue
             stmt_agents = stmt.agent_list()
             num_agents = len(stmt_agents)
             # Make a list with an empty list for each Agent so that later
