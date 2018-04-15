@@ -722,30 +722,37 @@ class ModelChecker(object):
         """
         logger.info('Removing self loops')
         im = self.get_im()
+
         # First, remove all self-loops
         for e in im.edges():
             if e[0] == e[1]:
                 logger.info('Removing self loop: %s', e)
                 im.remove_edge(e[0], e[1])
+
         # Remove parameter nodes from influence map
         remove_im_params(self.model, im)
+
         # Now compare nodes pairwise and look for overlap between child nodes
+        logger.info('Get successorts of each node')
         successors = im.successors_iter
         succ_dict = {}
-        logger.info('Get successorts of each node')
         for node in im.nodes():
             succ_dict[node] = set(successors(node))
+        # Group nodes by number of successors
+        groups = itertools.groupby(im.nodes(), key=lambda x: len(succ_dict[x]))
         logger.info('Compare combinations of successors')
-        combos = itertools.combinations(im.nodes(), 2)
         edges_to_remove = []
-        for ix, (p1, p2) in enumerate(combos):
-            # Children are identical except for mutual relationship
-            if succ_dict[p1].difference(succ_dict[p2]) == set([p2]) and \
-               succ_dict[p2].difference(succ_dict[p1]) == set([p1]):
-                for u, v in ((p1, p2), (p2, p1)):
-                    edges_to_remove.append((u, v))
-                    logger.debug('Will remove edge (%s, %s) with polarity %s',
-                                 u, v, _get_edge_sign(im, (u, v)))
+        for gix, group in groups:
+            combos = itertools.combinations(group, 2)
+            for ix, (p1, p2) in enumerate(combos):
+                # Children are identical except for mutual relationship
+                if succ_dict[p1].difference(succ_dict[p2]) == set([p2]) and \
+                   succ_dict[p2].difference(succ_dict[p1]) == set([p1]):
+                    for u, v in ((p1, p2), (p2, p1)):
+                        edges_to_remove.append((u, v))
+                        logger.debug(('Will remove edge (%s, %s) with '
+                                      'polarity %s'),
+                                     u, v, _get_edge_sign(im, (u, v)))
         for edge in im.edges():
             if edge in edges_to_remove:
                 im.remove_edge(edge[0], edge[1])
