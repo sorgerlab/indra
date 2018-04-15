@@ -2472,7 +2472,7 @@ class PysbPreassembler(object):
         def has_agent_activity(stmt):
             """Return True if any agents in the Statement have activity."""
             for agent in stmt.agent_list():
-                if agent is not None and agent.activity is not None:
+                if isinstance(agent, ist.Agent) and agent.activity is not None:
                     return True
             return False
         # First collect all explicit active forms
