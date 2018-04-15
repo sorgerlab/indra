@@ -720,10 +720,10 @@ class ModelChecker(object):
         removal from affecting the lists of rule children during the comparison
         process.
         """
-        logger.info('Removing self loops')
         im = self.get_im()
 
         # First, remove all self-loops
+        logger.info('Removing self loops')
         for e in im.edges():
             if e[0] == e[1]:
                 logger.info('Removing self loop: %s', e)
