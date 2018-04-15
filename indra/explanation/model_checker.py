@@ -754,12 +754,12 @@ class ModelChecker(object):
                    succ_dict[p2].difference(succ_dict[p1]) == set([p1]):
                     for u, v in ((p1, p2), (p2, p1)):
                         edges_to_remove.append((u, v))
-                        logger.debug(('Will remove edge (%s, %s) with '
-                                      'polarity %s'),
-                                     u, v, _get_edge_sign(im, (u, v)))
-        for edge in im.edges():
-            if edge in edges_to_remove:
-                im.remove_edge(edge[0], edge[1])
+                        logger.debug('Will remove edge (%s, %s)', u, v)
+        logger.info('Removing %d edges from influence map' %
+                    len(edges_to_remove))
+        # Now remove all the edges to be removed with a single call
+        im.remove_edges_from(edges_to_remove)
+
 
 def _find_sources_sample(im, target, sources, polarity, rule_obs_dict,
                          agent_to_obs, agents_values):
