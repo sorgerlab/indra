@@ -40,7 +40,7 @@ def test_urn_to_db_refs():
     # agi-meshdist
     urn5 = 'urn:agi-meshdis:Paramyotonia%20Congenita'
     db_refs_5 = urn_to_db_refs(urn5)
-    assert(db_refs_5 == {'MESH': 'Paramyotonia%20Congenita'})
+    assert(db_refs_5 == {'MESHDIS': 'Paramyotonia%20Congenita'})
 
     # agi-gocomplex
     urn6 = 'urn:agi-gocomplex:0005610'

@@ -161,7 +161,7 @@ def urn_to_db_refs(urn):
         db_refs['MESH'] = urn_id
     elif urn_type == 'agi-meshdis':
         # Identifier is MESH
-        db_refs['MESH'] = urn_id
+        db_refs['MESHDIS'] = urn_id
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
         db_refs['GO'] = 'GO:%s' % urn_id
