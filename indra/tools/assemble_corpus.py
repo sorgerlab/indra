@@ -602,20 +602,16 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-
-    if 'remove_bound' in kwargs and kwargs['remove_bound']:
-        remove_bound = True
-    else:
-        remove_bound = False
+    invert = kwargs.get('invert', False)
+    remove_bound = kwargs.get('remove_bound', False)
 
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     else:
         genes_str = ', '.join(gene_list)
-        logger.info('Filtering %d statements for ones containing "%s" of: '
-                    '%s...' % (len(stmts_in), policy, genes_str))
-
-    invert = kwargs.get('invert', False)
+        inv_str = 'not ' if invert else ''
+        logger.info(('Filtering %d statements for ones %scontaining "%s" of: '
+                     '%s...') % (len(stmts_in), inv_str, policy, genes_str))
 
     # If we're allowing families, make a list of all FamPlex IDs that
     # contain members of the gene list, and add them to the filter list
