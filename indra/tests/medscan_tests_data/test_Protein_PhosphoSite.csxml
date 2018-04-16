@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+
+
+
+
+
+   <sent sn="9" msrc="Moreover, ID{999996=ATP citrate lyase Ser-455 mutants} ID{46999998=S455E} (phosphomimetic) and ID{46999997=S455A} (non-phosphorylatable) each increased or decreased, respectively, the ID{1247411=acetyl-CoA} production, ID{2000000,2000929=mitochondrial} homeostasis and survival in ID{47=ATP citrate lyase}-depleted ID{11013488=MDA453 cells}. CONTEXT{11013488} GLOSSARY{999996={Protein=47 Mutation=32999999} 32999999=&quot;S455&quot; 46999997=&quot;S455A&quot; 46999998=&quot;S455E&quot;}">
+    <toks>TK{W:D:moreover=Moreover} TK{PCT:PCT:,=,} ID{999996=ATP citrate lyase Ser-455 mutants} ID{46999998=S455E} TK{W:N:=(phosphomimetic)} TK{W:CONJ:and=and} ID{46999997=S455A} TK{W:N:=(non-phosphorylatable)} TK{W:UNK:each=each} TK{W:J:increase=increased} TK{W:CONJ:or=or} TK{W:V:decrease=decreased} TK{PCT:PCT:,=,} TK{W:D:respectively=respectively} TK{PCT:PCT:,=,} TK{W:DET:the=the} ID{1247411=acetyl-CoA} TK{W:N:production=production} TK{PCT:PCT:,=,} ID{2000000,2000929=mitochondrial} TK{W:N:homeostasis=homeostasis} TK{W:CONJ:and=and} TK{W:N:survival=survival} TK{W:PREP:in=in} ID{47=ATP citrate lyase} TK{PCT:PCT:-=-} TK{W:VA:deplete=depleted} ID{11013488=MDA453 cells} TK{PCT:PCT:.=.}</toks>
+    <textmods osrc="Moreover, ACL Ser-455 mutants S455E (phosphomimetic) and S455A (non-phosphorylatable) each increased or decreased, respectively, the acetyl-CoA production, mitochondrial homeostasis and survival in ACL-depleted MDA453 cells.">
+     <tm coff="10" from="ACL " to="ATP citrate lyase " />
+     <tm coff="212" from="ACL" to="ATP citrate lyase" />
+    </textmods>
+    <attr name="TextMods" value="10: 'ACL ' -&gt; 'ATP citrate lyase ' 212: 'ACL' -&gt; 'ATP citrate lyase'" />
+    <attr name="mutation" value="ID{S455E}" />
+    <match coff="10" chars="ATP citrate lyase Ser-455 mutants" clen="33" type="Protein">
+     <entity msid="999996" type="Protein" name="ACLY(S455)" urn="urn:agi-protein:prophash-0ca272f7fb863842c82cb151832f3a7f">
+      <prop name="Protein">
+       <entity type="Protein" name="ACLY" urn="urn:agi-llid:47" />
+      </prop>
+      <prop name="Mutation">
+       <entity type="PhosphoSite" name="S455" urn="urn:agi-s-llid:S455-47" />
+      </prop>
+     </entity>
+    </match>
+    <match coff="44" chars="S455E" clen="5" type="Mutation">
+     <entity msid="46999998" type="Mutation" name="S455E" urn="urn:agi-mutation:S455E" />
+    </match>
+    <match coff="71" chars="S455A" clen="5" type="Mutation">
+     <entity msid="46999997" type="Mutation" name="S455A" urn="urn:agi-mutation:S455A" />
+    </match>
+    <match coff="147" chars="acetyl-CoA" clen="10" type="SmallMol">
+     <entity msid="1247411" type="SmallMol" name="acetyl-CoA" urn="urn:agi-cas:72-89-9" />
+    </match>
+    <match coff="170" chars="mitochondrial" clen="13" type="CellObject">
+     <entity msid="2000929" type="CellObject" name="mitochondria" urn="urn:agi-gocellobj:0005739" />
+    </match>
+    <match coff="212" chars="ATP citrate lyase" clen="17" type="Protein">
+     <entity msid="47" type="Protein" name="ACLY" urn="urn:agi-llid:47" />
+    </match>
+    <match coff="239" chars="MDA453 cells" clen="12" type="CellLine">
+     <entity msid="11013488" type="CellLine" name="MDA-MB-453" urn="urn:agi-cellline:MDA-MB-453" />
+    </match>
+    <context>
+     <entity msid="11013488" type="CellLine" name="MDA-MB-453" urn="urn:agi-cellline:MDA-MB-453" />
+    </context>
+    <svo type="Main" subj="ID{999996=ATP citrate lyase Ser-455 mutants} ID{46999998=S455E} TK{(phosphomimetic)}" verb="TK{decrease}" obj="ID{1247411=acetyl-CoA} TK{production}" posinfo="10,44,55,18,74,16,155,9,184,22,207,10," />
+    <svo type="CONTROL" subj="ID{999996}" verb="MolSynthesis-negative" obj="ID{1247411}" />
+    <svo type="Main" subj="ID{999996=ATP citrate lyase Ser-455 mutants} ID{46999998=S455E} TK{(phosphomimetic)}" verb="TK{decrease}" obj="ID{2000000,2000929=mitochondrial} TK{homeostasis}" posinfo="10,44,55,18,74,16,155,9,219,33,253,11," />
+    <svo type="Main" subj="ID{999996=ATP citrate lyase Ser-455 mutants} ID{46999998=S455E} TK{(phosphomimetic)}" verb="TK{decrease}" obj="ID{11013488=MDA453 cells} TK{survival}" posinfo="10,44,55,18,74,16,155,9,315,25,269,8," />
+    <svo type="Main" subj="ID{46999997=S455A} TK{(non-phosphorylatable)}" verb="TK{decrease}" obj="ID{1247411=acetyl-CoA} TK{production}" posinfo="95,18,114,22,155,9,184,22,207,10," />
+    <svo type="Main" subj="ID{46999997=S455A} TK{(non-phosphorylatable)}" verb="TK{decrease}" obj="ID{2000000,2000929=mitochondrial} TK{homeostasis}" posinfo="95,18,114,22,155,9,219,33,253,11," />
+    <svo type="Main" subj="ID{46999997=S455A} TK{(non-phosphorylatable)}" verb="TK{decrease}" obj="ID{11013488=MDA453 cells} TK{survival}" posinfo="95,18,114,22,155,9,315,25,269,8," />
+    <svo type="NPRel" posinfo="281,24,306,8,315,25," />
+   </sent>
+
+
+</sec>
+</doc>
+</batch>
+

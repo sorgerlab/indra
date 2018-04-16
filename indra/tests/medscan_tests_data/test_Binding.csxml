@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+
+
+      <sent sn="4" msrc="ID{0,4690,8440=Both Nck and Grb4} proteins could associate with ID{12027101=receptor tyrosine kinases} and the ID{6714=Src} homology3-binding proteins PAK, Sos1, and ID{5586=PRK2}, and they synergized with ID{25=v-Abl} and Sos to induce gene expression via the ID{2002=transcription factor Elk-1}.">
+        <toks>ID{0,4690,8440=Both Nck and Grb4} TK{W:N:protein=proteins} TK{W:V:could=could} TK{W:V:associate=associate} TK{W:PREP:with=with} ID{12027101=receptor tyrosine kinases} TK{W:CONJ:and=and} TK{W:DET:the=the} ID{6714=Src} TK{W:N:=homology3} TK{PCT:PCT:-=-} TK{W:VA:bind=binding} TK{W:N:protein=proteins} TK{W:N:=PAK} TK{PCT:PCT:,=,} TK{W:N:=Sos1} TK{PCT:PCT:,=,} TK{W:CONJ:and=and} ID{5586=PRK2} TK{PCT:PCT:,=,} TK{W:CONJ:and=and} TK{W:PR:they=they} TK{W:V:synergize=synergized} TK{W:PREP:with=with} ID{25=v-Abl} TK{W:CONJ:and=and} TK{W:N:=Sos} TK{W:PREP:to=to} TK{W:V:induce=induce} TK{W:N:gene expression=gene expression} TK{W:PREP:via=via} TK{W:DET:the=the} ID{2002=transcription factor Elk-1} TK{PCT:PCT:.=.}</toks>
+        <textmods osrc="Both Nck and Grb4 proteins could associate with receptor tyrosine kinases and the SH3-binding proteins PAK, Sos1, and PRK2, and they synergized with v-Abl and Sos to induce gene expression via the transcription factor Elk-1.">
+          <tm coff="82" from="SH" to="Src homology"/>
+        </textmods>
+        <attr name="TextMods" value="82: 'SH' -&gt; 'Src homology'"/>
+        <match coff="0" chars="Both Nck and Grb4" clen="17" type="Protein">
+          <entity msid="4690" type="Protein" name="NCK1" urn="urn:agi-llid:4690"/>
+          <entity msid="8440" type="Protein" name="NCK2" urn="urn:agi-llid:8440"/>
+        </match>
+        <match coff="48" chars="receptor tyrosine kinases" clen="25" type="FunctionalClass">
+          <entity msid="12027101" type="FunctionalClass" name="receptor protein-tyrosine kinase" urn="urn:agi-enz:2.7.10.1"/>
+        </match>
+        <match coff="82" chars="Src" clen="3" type="Protein">
+          <entity msid="6714" type="Protein" name="SRC" urn="urn:agi-llid:6714"/>
+        </match>
+        <match coff="128" chars="PRK2" clen="4" type="Protein">
+          <entity msid="5586" type="Protein" name="PKN2" urn="urn:agi-llid:5586"/>
+        </match>
+        <match coff="159" chars="v-Abl" clen="5" type="Protein">
+          <entity msid="25" type="Protein" name="ABL1" urn="urn:agi-llid:25"/>
+        </match>
+        <match coff="207" chars="transcription factor Elk-1" clen="26" type="Protein">
+          <entity msid="2002" type="Protein" name="ELK1" urn="urn:agi-llid:2002"/>
+        </match>
+        <svo type="Main" subj="ID{0,4690,8440=Both Nck and Grb4} TK{proteins}" verb="TK{associate}" obj="ID{5586=PRK2}" posinfo="0,33,34,8,49,9,166,13,"/>
+        <svo type="CONTROL" subj="ID{4690}" verb="Binding" obj="ID{5586}"/>
+      </sent>
+
+</sec>
+</doc>
+</batch>

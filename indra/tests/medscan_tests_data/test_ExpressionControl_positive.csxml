@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<batch>
+  <doc uri="info:pmid/23455322">
+    <sec type="abs">
+      <sent sn="12" msrc="ID{48110000=Finally, we show that} parp-1ID{48110000=(-/-) mice display} a significant reduction in the circulating ID{13000941=hypoxia}-induced ID{2056=erythropoietin} levels, ID{4000537=number} of ID{10000000,10000152=red cells} and ID{12001126=hemoglobin} concentration. CONTEXT{10000152}">
+        <toks>ID{48110000=Finally, we show that} TK{W:N:=parp} TK{PCT:PCT:-=-} TK{NUM:N:1=1} ID{48110000=(-/-) mice display} TK{W:DET:a=a} TK{W:J:significant=significant} TK{W:N:reduction=reduction} TK{W:PREP:in=in} TK{W:DET:the=the} TK{W:N:circulate=circulating} ID{13000941=hypoxia} TK{PCT:PCT:-=-} TK{W:VA:induce=induced} ID{2056=erythropoietin} TK{W:N:level=levels} TK{PCT:PCT:,=,} ID{4000537=number} TK{W:PREP:of=of} ID{10000000,10000152=red cells} TK{W:CONJ:and=and} ID{12001126=hemoglobin} TK{W:N:concentration=concentration} TK{PCT:PCT:.=.}</toks>
+        <textmods osrc="Finally, we show that parp-1(-/-) mice display a significant reduction in the circulating hypoxia-induced EPO levels, number of red cells and hemoglobin concentration.">
+          <tm coff="106" from="EPO " to="erythropoietin "/>
+        </textmods>
+        <attr name="TextMods" value="106: 'EPO ' -&gt; 'erythropoietin '"/>
+        <attr name="Discourse" value="ID{48110000}"/>
+        <match coff="0" chars="Finally, we show that" clen="21" type="Discourse">
+          <entity msid="48110000" type="Discourse" name="48110000" urn="urn:agi-discourse:48110000"/>
+        </match>
+        <match coff="28" chars="(-/-) mice display" clen="18" type="Discourse">
+          <entity msid="48110000" type="Discourse" name="48110000" urn="urn:agi-discourse:48110000"/>
+        </match>
+        <match coff="90" chars="hypoxia" clen="7" type="Treatment">
+          <entity msid="13000941" type="Treatment" name="hypoxia" urn="urn:agi-treatment:hypoxia"/>
+        </match>
+        <match coff="106" chars="erythropoietin" clen="14" type="Protein">
+          <entity msid="2056" type="Protein" name="EPO" urn="urn:agi-llid:2056"/>
+        </match>
+        <match coff="129" chars="number" clen="6" type="CellProcess">
+          <entity msid="4000537" type="CellProcess"/>
+        </match>
+        <match coff="139" chars="red cells" clen="9" type="CellType">
+          <entity msid="10000152" type="CellType" name="erythrocyte" urn="urn:agi-ncimcelltype:C0014792"/>
+        </match>
+        <match coff="153" chars="hemoglobin" clen="10" type="FunctionalClass">
+          <entity msid="12001126" type="FunctionalClass" name="hemoglobin" urn="urn:agi-protfc:hemoglobin"/>
+        </match>
+        <context>
+          <entity msid="10000152" type="CellType" name="erythrocyte" urn="urn:agi-ncimcelltype:C0014792"/>
+        </context>
+        <svo type="NPRel" posinfo="104,11,116,20,137,7,145,23,169,6,"/>
+        <svo type="CONTROL" subj="ID{13000941}" verb="ExpressionControl-positive" obj="ID{2056}"/>
+        <svo type="NPRel" posinfo="104,11,116,20,137,7,199,31,177,18,"/>
+        <svo type="NPRel" posinfo="104,11,116,20,137,7,235,23,259,13,"/>
+        <svo type="CONTROL" subj="ID{13000941}" verb="ExpressionControl-positive" obj="ID{12001126}"/>
+      </sent>
+  </sec>
+</doc>
+</batch>

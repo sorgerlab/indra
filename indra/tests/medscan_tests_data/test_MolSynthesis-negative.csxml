@@ -1,0 +1,32 @@
+ <?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+  
+<sent sn="2" msrc="ID{48110000=Recent studies have shown that} the ID{10000134=platelet} protein ID{5341=pleckstrin} forms a complex with the ID{34000000,34000017=43 kDa} 5-phosphatase and activates ID{1215308=Ins(1,4,5)P3} hydrolysis 2-fold [Auethavekiat, V., Abrams, C. S., &amp; Majerus, P. W. (1997) J. Biol. Chem. 272, 1786-1790]. CONTEXT{10000134}">
+    <toks>ID{48110000=Recent studies have shown that} TK{W:DET:the=the} ID{10000134=platelet} TK{W:N:protein=protein} ID{5341=pleckstrin} TK{W:V:form=forms} TK{W:DET:a=a} TK{W:N:complex=complex} TK{W:PREP:with=with} TK{W:DET:the=the} ID{34000000,34000017=43 kDa} TK{W:N:=5-phosphatase} TK{W:CONJ:and=and} TK{W:V:activate=activates} ID{1215308=Ins(1,4,5)P3} TK{W:N:hydrolysis=hydrolysis} TK{W:N:=2-fold} TK{W:N:=[Auethavekiat} TK{PCT:PCT:,=,} TK{W:N:=V} TK{PCT:PCT:.=.} TK{PCT:PCT:,=,} TK{W:N:=Abrams} TK{PCT:PCT:,=,} TK{W:N:c=C} TK{PCT:PCT:.=.} TK{W:N:=S} TK{PCT:PCT:.=.} TK{PCT:PCT:,=,} TK{PCT:PCT:&amp;=&amp;} TK{W:N:=Majerus} TK{PCT:PCT:,=,} TK{W:N:p=P} TK{PCT:PCT:.=.} TK{W:N:=W} TK{PCT:PCT:.=.} TK{W:N:=(1997)} TK{W:N:=J} TK{PCT:PCT:.=.} TK{W:N:=Biol} TK{PCT:PCT:.=.} TK{W:N:=Chem} TK{PCT:PCT:.=.} TK{NUM:N:=272} TK{PCT:PCT:,=,} TK{W:N:=1786-1790]} TK{PCT:PCT:.=.}</toks>
+    <attr name="Discourse" value="ID{48110000}" />
+    <match coff="0" chars="Recent studies have shown that" clen="30" type="Discourse">
+     <entity msid="48110000" type="Discourse" name="48110000" urn="urn:agi-discourse:48110000" />
+    </match>
+    <match coff="35" chars="platelet" clen="8" type="CellType">
+     <entity msid="10000134" type="CellType" name="blood platelet" urn="urn:agi-ncimcelltype:C0005821" />
+    </match>
+    <match coff="52" chars="pleckstrin" clen="10" type="Protein">
+     <entity msid="5341" type="Protein" name="PLEK" urn="urn:agi-llid:5341" />
+    </match>
+    <match coff="88" chars="43 kDa" clen="6" type="Measurement">
+     <entity msid="34000017" type="Measurement" />
+    </match>
+    <match coff="123" chars="Ins(1,4,5)P3" clen="12" type="SmallMol">
+     <entity msid="1215308" type="SmallMol" name="inositol (1,4,5)P3" urn="urn:agi-cas:85166-31-0" />
+    </match>
+    <context>
+     <entity msid="10000134" type="CellType" name="blood platelet" urn="urn:agi-ncimcelltype:C0005821" />
+    </context>
+    <svo type="Main" subj="ID{48110000=Recent studies have shown that} ID{10000134=platelet} TK{protein} ID{5341=pleckstrin}" verb="TK{activate}" obj="ID{1215308=Ins(1,4,5)P3} TK{hydrolysis} TK{2-fold} TK{[Auethavekiat} TK{V}" posinfo="0,43,48,21,70,7,78,19,170,9,180,24,205,10,216,6,223,13,238,1," />
+    <svo type="CONTROL" subj="ID{5341}" verb="MolSynthesis-negative" obj="ID{1215308}" />
+   </sent>
+</sec>
+</doc>
+</batch>

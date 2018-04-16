@@ -1,0 +1,31 @@
+ <?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+ <sent sn="2" msrc="ID{0,54434,54434=Slingshot-1 (SSH1}) is a ID{12622772=protein phosphatase} that plays a crucial role in regulating ID{4000000,4160185=actin dynamics} by dephosphorylating and reactivating ID{1072=cofilin}.">
+    <toks>ID{0,54434=Slingshot-1 (SSH1} TK{PCT:PCT:)=)} TK{W:V:is=is} TK{W:DET:a=a} ID{12622772=protein phosphatase} TK{W:PREP:that=that} TK{W:V:play=plays} TK{W:DET:a=a} TK{W:J:crucial=crucial} TK{W:N:role=role} TK{W:PREP:in=in} TK{W:N:regulate=regulating} ID{4000000,4160185=actin dynamics} TK{W:PREP:by=by} TK{W:V:dephosphorylate=dephosphorylating} TK{W:CONJ:and=and} TK{W:V:reactivate=reactivating} ID{1072=cofilin} TK{PCT:PCT:.=.}</toks>
+    <match coff="0" chars="Slingshot-1 (SSH1" clen="17" type="Protein">
+     <entity msid="54434" type="Protein" name="SSH1" urn="urn:agi-llid:54434" />
+     <entity msid="54434" type="Protein" name="SSH1" urn="urn:agi-llid:54434" />
+    </match>
+    <match coff="24" chars="protein phosphatase" clen="19" type="FunctionalClass">
+     <entity msid="12622772" type="FunctionalClass" name="Protein Phosphatases" urn="urn:agi-go:0004721" />
+    </match>
+    <match coff="84" chars="actin dynamics" clen="14" type="CellProcess">
+     <entity msid="4160185" type="CellProcess" name="actin organization" urn="urn:agi-aocellp:0000347" />
+    </match>
+    <match coff="137" chars="cofilin" clen="7" type="Protein">
+     <entity msid="1072" type="Protein" name="CFL1" urn="urn:agi-llid:1072" />
+    </match>
+    <svo type="Main" subj="ID{0,54434=Slingshot-1 (SSH1} TK{)}" verb="TK{is}" obj="ID{12622772=protein phosphatase}" posinfo="0,35,35,1,37,2,42,32," />
+    <svo type="NPmod" subj="ID{12622772=protein phosphatase}" verb="TK{play}" obj="TK{regulating} ID{4000000,4160185=actin dynamics} TK{crucial} TK{role}" posinfo="42,32,80,5,104,10,115,34,88,7,96,4," />
+    <svo type="CONTROL" subj="ID{12622772}" verb="UnknownRegulation-unknown" obj="ID{4160185}" />
+    <svo type="VPmod" subj="ID{0,54434=Slingshot-1 (SSH1} TK{)}" verb="TK{dephosphorylate}" obj="ID{1072=cofilin}" posinfo="0,35,35,1,153,17,188,16," />
+    <svo type="CONTROL" subj="ID{54434}" verb="ProtModification" obj="ID{1072}" />
+    <svo type="VPmod" subj="ID{0,54434=Slingshot-1 (SSH1} TK{)}" verb="TK{reactivate}" obj="ID{1072=cofilin}" posinfo="0,35,35,1,175,12,188,16," />
+   </sent>
+
+</sec>
+</doc>
+</batch>
+

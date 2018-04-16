@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/19107370">
+    <sec type="abs">
+      <sent sn="7" msrc="ID{48710000=It was concluded that} ID{1254337=matrine} could significantly suppress the growth of ID{11023746=LNCaP cells} and inhibit the expression of ID{0,354,367=PSA and androgen receptor} of ID{9017834=prostate cancer} cells. CONTEXT{11023746}">
+        <toks>ID{48710000=It was concluded that} ID{1254337=matrine} TK{W:V:could=could} TK{W:D:significantly=significantly} TK{W:V:suppress=suppress} TK{W:DET:the=the} TK{W:N:growth=growth} TK{W:PREP:of=of} ID{11023746=LNCaP cells} TK{W:CONJ:and=and} TK{W:V:inhibit=inhibit} TK{W:DET:the=the} TK{W:N:expression=expression} TK{W:PREP:of=of} ID{0,354,367=PSA and androgen receptor} TK{W:PREP:of=of} ID{9017834=prostate cancer} TK{W:N:cell=cells} TK{PCT:PCT:.=.}</toks>
+        <textmods osrc="It was concluded that matrine could significantly suppress the growth of LNCaP cells and inhibit the expression of PSA and AR of prostate cancer cells.">
+          <tm coff="123" from="AR " to="androgen receptor "/>
+        </textmods>
+        <attr name="TextMods" value="123: 'AR ' -&gt; 'androgen receptor '"/>
+        <attr name="Discourse" value="ID{48710000}"/>
+        <match coff="0" chars="It was concluded that" clen="21" type="Discourse">
+          <entity msid="48710000" type="Discourse" name="48710000" urn="urn:agi-discourse:48710000"/>
+        </match>
+        <match coff="22" chars="matrine" clen="7" type="SmallMol">
+          <entity msid="1254337" type="SmallMol" name="matrine" urn="urn:agi-cas:519-02-8"/>
+        </match>
+        <match coff="73" chars="LNCaP cells" clen="11" type="CellLine">
+          <entity msid="11023746" type="CellLine" name="LN-CAP" urn="urn:agi-cellline:LN-CAP"/>
+        </match>
+        <match coff="115" chars="PSA and androgen receptor" clen="25" type="Protein">
+          <entity msid="354" type="Protein" name="KLK3" urn="urn:agi-llid:354"/>
+          <entity msid="367" type="Protein" name="AR" urn="urn:agi-llid:367"/>
+        </match>
+        <match coff="144" chars="prostate cancer" clen="15" type="Disease">
+          <entity msid="9017834" type="Disease" name="Prostate Cancer" urn="urn:agi-meshdis:Prostate%20Cancer"/>
+        </match>
+        <context>
+          <entity msid="11023746" type="CellLine" name="LN-CAP" urn="urn:agi-cellline:LN-CAP"/>
+        </context>
+        <svo type="Main" subj="ID{48710000=It was concluded that} ID{1254337=matrine}" verb="TK{inhibit}" obj="ID{9017834=prostate cancer} TK{cells} ID{0,354,367=PSA and androgen receptor} TK{expression}" posinfo="0,34,35,19,127,7,196,27,224,5,153,39,139,10,"/>
+        <svo type="CONTROL" subj="ID{1254337}" verb="ExpressionControl-negative" obj="ID{354}"/>
+      </sent>
+</doc>
+</batch>
