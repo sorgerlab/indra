@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
+import math
 import logging
 import itertools
 from indra.util import fast_deepcopy
@@ -828,8 +829,54 @@ class PysbAssembler(object):
         for m in self.model.monomers:
             set_base_initial_condition(self.model, m, value_num)
 
+    def set_expression(self, expression_dict):
+        """Set protein expression amounts as initial conditions
+
+        Parameters
+        ----------
+        expression_dict : dict
+            A dictionary in which the keys are gene names and the
+            values are numbers representing the absolute amount
+            (count per cell) of proteins expressed. Proteins that
+            are not expressed can be represented as nan. Entries
+            that are not in the dict or are in there but resolve
+            to None, are set to the default initial amount.
+            Example: {'EGFR': 12345, 'BRAF': 4567, 'ESR1': nan}
+        """
+        if self.model is None:
+            return
+
+        monomers_found = []
+        monomers_notfound = []
+        # Iterate over all the monomers
+        for m in self.model.monomers:
+            if (m.name in expression_dict and
+                expression_dict[m.name] is not None):
+                # Try to get the expression amount from the dict
+                init = expression_dict[m.name]
+                # We interpret nan and None as not expressed
+                if math.isnan(init):
+                    init = 0
+                init_round = round(init)
+                set_base_initial_condition(self.model, m, init_round)
+                monomers_found.append(m.name)
+            else:
+                set_base_initial_condition(self.model, m,
+                                           self.default_initial_amount)
+                monomers_notfound.append(m.name)
+        logger.info('Monomers set to given context')
+        logger.info('-----------------------------')
+        for m in monomers_found:
+            logger.info('%s' % m)
+        if monomers_notfound:
+            logger.info('')
+            logger.info('Monomers not found in given context')
+            logger.info('-----------------------------------')
+            for m in monomers_notfound:
+                logger.info('%s' % m)
+
     def set_context(self, cell_type):
-        """Set protein expression data as initial conditions.
+        """Set protein expression amounts from CCLE as initial conditions.
 
         This method uses :py:mod:`indra.databases.context_client` to get
         protein expression levels for a given cell type and set initial
@@ -853,28 +900,7 @@ class PysbAssembler(object):
                            cell_type)
             self.add_default_initial_conditions()
             return
-        monomers_found = []
-        monomers_notfound = []
-        for m in self.model.monomers:
-            init = amounts.get(m.name)
-            if init is not None:
-                init_round = round(init)
-                set_base_initial_condition(self.model, m, init_round)
-                monomers_found.append(m.name)
-            else:
-                set_base_initial_condition(self.model, m,
-                                           self.default_initial_amount)
-                monomers_notfound.append(m.name)
-        logger.info('Monomers set to %s context' % cell_type)
-        logger.info('--------------------------------')
-        for m in monomers_found:
-            logger.info('%s' % m)
-        if monomers_notfound:
-            logger.info('')
-            logger.info('Monomers not found in %s context' % cell_type)
-            logger.info('-----------------------------------------')
-            for m in monomers_notfound:
-                logger.info('%s' % m)
+        self.set_expression(amounts)
 
     def print_model(self):
         """Print the assembled model as a PySB program string.
