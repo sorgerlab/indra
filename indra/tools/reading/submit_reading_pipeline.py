@@ -350,7 +350,7 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
             command_list.append('--force_read')
         if force_fulltext:
             command_list.append('--force_fulltext')
-        print(command_list)
+        logger.info('Commands list: %s' % str(command_list))
         job_info = batch_client.submit_job(
             jobName=job_name,
             jobQueue='run_reach_queue',
@@ -360,7 +360,7 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
                 'command': command_list},
             retryStrategy={'attempts': num_tries}
             )
-        print("submitted...")
+        logger.info("submitted...")
         job_list.append({'jobId': job_info['jobId']})
     return job_list
 
@@ -414,8 +414,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
             command_list.append('--force_fulltext')
         if read_all_fulltext:
             command_list.append('--read_all_fulltext')
-        print(command_list)
-        print(environment_vars)
+        logger.info('Command list: %s' % str(command_list))
         job_info = batch_client.submit_job(
             jobName=job_name,
             jobQueue='run_db_reading_queue',
@@ -425,7 +424,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                 'command': command_list},
             retryStrategy={'attempts': num_tries}
             )
-        print("submitted...")
+        logger.info("submitted...")
         job_list.append({'jobId': job_info['jobId']})
     return job_list
 
@@ -447,7 +446,7 @@ def submit_combine(basename, readers, job_ids=None, project_name=None):
         purpose='pmid_reading',
         project=project_name
         )
-    print(command_list)
+    logger.info('Command list: %s' % str(command_list))
     kwargs = {'jobName': job_name, 'jobQueue': 'run_reach_queue',
               'jobDefinition': 'run_reach_jobdef',
               'containerOverrides': {'environment': environment_vars,
@@ -457,7 +456,7 @@ def submit_combine(basename, readers, job_ids=None, project_name=None):
         kwargs['dependsOn'] = job_ids
     batch_client = boto3.client('batch')
     batch_client.submit_job(**kwargs)
-    print("submitted...")
+    logger.info("submitted...")
 
 
 if __name__ == '__main__':
