@@ -10,6 +10,53 @@ from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id
 
 logger = logging.getLogger('medscan')
 
+MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
+                           'properties'])
+
+
+MedscanProperty = collections.namedtuple('MedscanProperty',
+                                         ['type', 'name', 'urn'])
+
+
+class MedscanRelation(object):
+    """A structure representing the information contained in a Medscan
+    SVO xml element as well as associated entities and properties.
+
+    Attribues
+    ----------
+    uri : str
+        The URI of the current document (such as a PMID)
+    sec : str
+        The section of the document the relation occurs in
+    entities : dict
+        A dictionary mapping entity IDs from the same sentence to MedscanEntity
+        objects.
+    tagged_sentence : str
+        The sentence from which the relation was extracted, with some tagged
+        phrases and annotations.
+    subj : str
+        The entity ID of the subject
+    verb : str
+        The verb in the relationship between the subject and the object
+    obj : str
+        The entity ID of the object
+    svo_type : str
+        The type of SVO relationship (for example, CONTROL indicates
+        that the verb is normalized)
+    """
+    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
+                 svo_type):
+        self.uri = uri
+        self.sec = sec
+        self.entities = entities
+        self.tagged_sentence = tagged_sentence
+
+        self.subj = subj
+        self.verb = verb
+        self.obj = obj
+
+        self.svo_type = svo_type
+
 
 def parse_mod_string(s):
     """Parses a string referring to a protein modification of the form
@@ -222,6 +269,7 @@ class MedscanProcessor(object):
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.unmapped_urns = set()
+        self.relations = []
 
         # Read in and populate a list of unmapped urns
         if medscan_resource_dir is not None:
@@ -239,6 +287,113 @@ class MedscanProcessor(object):
                             urn = elem.attrib.get('urn')
                             if urn is not None:
                                 self.unmapped_urns.add(urn)
+
+    def process_csxml_from_file_handle(self, f, num_documents):
+        """Processes a filehandle to MedScan csxml input into INDRA
+        statements.
+
+        Parameters
+        ----------
+        f: file object
+            A filehandle to a source of MedScan csxml data
+        num_documents: int
+            The number of documents to process, or None to process all
+            documents in the input stream
+        """
+        pmid = None
+        sec = None
+        tagged_sent = None
+        svo_list = []
+        doc_counter = 0
+        entities = {}
+        match_text = None
+        in_prop = False
+        last_relation = None
+        property_entities = []
+        property_name = None
+
+        # Go through the document again and extract statements
+        for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
+                                                encoding='utf-8',
+                                                recover=True):
+            # If opening up a new doc, set the PMID
+            if event == 'start' and elem.tag == 'doc':
+                pmid = elem.attrib.get('uri')
+            # If getting a section, set the section type
+            elif event == 'start' and elem.tag == 'sec':
+                sec = elem.attrib.get('type')
+            # Set the sentence context
+            elif event == 'start' and elem.tag == 'sent':
+                tagged_sent = elem.attrib.get('msrc')
+
+                # Reset last_relation between sentences, since we will only be
+                # interested in the relation immediately preceding a CONTROL
+                # statement but within the same sentence.
+                last_relation = None
+
+                entities = {}
+            elif event == 'start' and elem.tag == 'match':
+                match_text = elem.attrib.get('chars')
+            elif event == 'start' and elem.tag == 'entity':
+                if not in_prop:
+                    ent_id = elem.attrib['msid']
+                    ent_urn = elem.attrib.get('urn')
+                    ent_type = elem.attrib['type']
+                    entities[ent_id] = MedscanEntity(match_text, ent_urn,
+                                                     ent_type, {})
+                else:
+                    ent_type = elem.attrib['type']
+                    ent_urn = elem.attrib['urn']
+                    ent_name = elem.attrib['name']
+                    property_entities.append(MedscanEntity(ent_name, ent_urn,
+                                                           ent_type, None))
+            elif event == 'start' and elem.tag == 'svo':
+                subj = elem.attrib.get('subj')
+                verb = elem.attrib.get('verb')
+                obj = elem.attrib.get('obj')
+                svo_type = elem.attrib.get('type')
+                svo = {'uri': pmid,
+                       'sec': sec,
+                       'text': tagged_sent,
+                       'entities': entities}
+                svo.update(elem.attrib)
+
+                relation = MedscanRelation(
+                                       uri=pmid,
+                                       sec=sec,
+                                       tagged_sentence=tagged_sent,
+                                       entities=entities,
+                                       subj=subj,
+                                       verb=verb,
+                                       obj=obj,
+                                       svo_type=svo_type,
+                                      )
+                self.relations.append(relation)
+                if svo_type == 'CONTROL':
+                    self.process_relation(relation, last_relation)
+                else:
+                    # Sometimes a CONTROL SVO can be after an unnormalized SVO
+                    # that is a more specific but less uniform version of the
+                    # same extracted statement.
+                    last_relation = relation
+            elif event == 'start' and elem.tag == 'prop':
+                in_prop = True
+                property_name = elem.attrib.get('name')
+                property_entities = []
+            elif event == 'end' and elem.tag == 'prop':
+                in_prop = False
+                entities[ent_id].properties[property_name] = property_entities
+            elif event == 'end' and elem.tag == 'doc':
+                doc_counter += 1
+                # Give a status update
+                if doc_counter % 100 == 0:
+                    print("Processed %d documents"
+                          % doc_counter)
+                if num_documents is not None and doc_counter >= num_documents:
+                    break
+
+        print("Done processing %d documents" % doc_counter)
+
 
     def process_relation(self, relation, last_relation):
         """Process a relation into an INDRA statement.
