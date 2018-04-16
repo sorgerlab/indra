@@ -1,61 +1,10 @@
-import logging
-import xml.etree.ElementTree as ET
-import lxml
-import lxml.etree
-from collections import defaultdict, Counter
-from indra.util import UnicodeXMLTreeBuilder as UTB
 import codecs
-import os
-import numpy as np
-import pickle
-from indra.sources.medscan.processor import *
+import logging
+import lxml.etree
 from collections import namedtuple
-import os
+from indra.sources.medscan.processor import *
 
 logger = logging.getLogger('medscan')
-MedscanEntity = namedtuple('MedscanEntity', ['name', 'urn', 'type',
-                           'properties'])
-MedscanProperty = namedtuple('MedscanProperty', ['type', 'name', 'urn'])
-
-
-class MedscanRelation(object):
-    """A structure representing the information contained in a Medscan
-    SVO xml element as well as associated entities and properties.
-
-    Attribues
-    ----------
-    uri : str
-        The URI of the current document (such as a PMID)
-    sec : str
-        The section of the document the relation occurs in
-    entities : dict
-        A dictionary mapping entity IDs from the same sentence to MedscanEntity
-        objects.
-    tagged_sentence : str
-        The sentence from which the relation was extracted, with some tagged
-        phrases and annotations.
-    subj : str
-        The entity ID of the subject
-    verb : str
-        The verb in the relationship between the subject and the object
-    obj : str
-        The entity ID of the object
-    svo_type : str
-        The type of SVO relationship (for example, CONTROL indicates
-        that the verb is normalized)
-    """
-    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
-                 svo_type):
-        self.uri = uri
-        self.sec = sec
-        self.entities = entities
-        self.tagged_sentence = tagged_sentence
-
-        self.subj = subj
-        self.verb = verb
-        self.obj = obj
-
-        self.svo_type = svo_type
 
 
 def process_file(filename, medscan_resource_dir, num_documents=None):
@@ -197,3 +146,50 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
     print("Done processing %d documents" % doc_counter)
     return mp
+
+
+MedscanEntity = namedtuple('MedscanEntity', ['name', 'urn', 'type',
+                           'properties'])
+
+
+MedscanProperty = namedtuple('MedscanProperty', ['type', 'name', 'urn'])
+
+
+class MedscanRelation(object):
+    """A structure representing the information contained in a Medscan
+    SVO xml element as well as associated entities and properties.
+
+    Attribues
+    ----------
+    uri : str
+        The URI of the current document (such as a PMID)
+    sec : str
+        The section of the document the relation occurs in
+    entities : dict
+        A dictionary mapping entity IDs from the same sentence to MedscanEntity
+        objects.
+    tagged_sentence : str
+        The sentence from which the relation was extracted, with some tagged
+        phrases and annotations.
+    subj : str
+        The entity ID of the subject
+    verb : str
+        The verb in the relationship between the subject and the object
+    obj : str
+        The entity ID of the object
+    svo_type : str
+        The type of SVO relationship (for example, CONTROL indicates
+        that the verb is normalized)
+    """
+    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
+                 svo_type):
+        self.uri = uri
+        self.sec = sec
+        self.entities = entities
+        self.tagged_sentence = tagged_sentence
+
+        self.subj = subj
+        self.verb = verb
+        self.obj = obj
+
+        self.svo_type = svo_type
