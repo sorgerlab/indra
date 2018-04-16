@@ -1,54 +1,24 @@
 import openpyxl
-from indra.statements import Influence, Concept, Evidence
-
-pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop']
-neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
-            'decreas', 'hinder', 'deplet', 'reduce', 'hamper']
-neu_rels = ['affect']
+from .processor import SofiaProcessor
 
 def process_table(fname, sheet_name):
+    """Return processor by processing a given sheet of a spreadsheet file.
+
+    Parameters
+    ----------
+    fname : str
+        The name of the Excel file (typically .xlsx extension) to process
+    sheet_name : str
+        The name of the sheet in the Excel file that has extractions
+
+    Returns
+    -------
+    sp : indra.sources.sofia.processor.SofiaProcessor
+        A SofiaProcessor object which has a list of extracted INDRA
+        Statements as its statements attribute
+    """
     book = openpyxl.load_workbook(fname, read_only=True)
     sheet = book[sheet_name]
     rows = sheet.rows
-    header = [cell.value for cell in next(rows)]
-
-    stmts = []
-    for row in rows:
-        stmt = _process_row(header, [r.value for r in row])
-        if stmt:
-            stmts.append(stmt)
-    return stmts
-
-
-def _in_rels(value, rels):
-    for rel in rels:
-        if value.startswith(rel):
-            return True
-    return False
-
-
-def _process_row(header, row):
-    row_dict = {h: v for h, v in zip(header, row)}
-    subj = row_dict.get('Agent')
-    obj = row_dict.get('Patient')
-    if not obj or not subj:
-        return None
-    rel = row_dict.get('Relation')
-    if _in_rels(rel, pos_rels):
-        pol = 1
-    elif _in_rels(rel, neg_rels):
-        pol = -1
-    elif _in_rels(rel, neu_rels):
-        pol = None
-    else:
-        return None
-
-    subj_concept = Concept(subj)
-    obj_concept = Concept(obj)
-    text = row_dict.get('Sentence')
-    annot_keys = ['Relation', 'Event_Type', 'Location', 'Time']
-    annots = {k: row_dict.get(k) for k in annot_keys}
-    ev = Evidence(source_api='sofia', annotations=annots, text=text)
-    stmt = Influence(subj_concept, obj_concept, evidence=[ev])
-    stmt.obj_delta['polarity'] = pol
-    return stmt
+    sp = SofiaProcessor(rows)
+    return sp
