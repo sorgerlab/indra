@@ -1,1 +1,1 @@
-from .api import process_file
+from indra.sources.medscan.api import process_file

@@ -4,7 +4,6 @@ import lxml
 import lxml.etree
 from collections import defaultdict, Counter
 from indra.util import UnicodeXMLTreeBuilder as UTB
-from indra.util import _require_python3
 import codecs
 import os
 import numpy as np
