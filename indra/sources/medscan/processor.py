@@ -18,15 +18,15 @@ def parse_mod_string(s):
 
     Parameters
     ----------
-    s: str
+    s : str
         A string representation of a protein residue and position being
         modified
 
     Returns
     -------
-    residue: str
+    residue : str
         The residue being modified (example: T)
-    position: str
+    position : str
         The position at which the modification is happening (example: 47)
     """
     m = re.match('([A-Za-z])+([0-9]+)', s)
@@ -41,17 +41,17 @@ def parse_mut_string(s):
 
     Parameters
     ----------
-    s: str
+    s : str
         The string representation of the protein mutation
 
     Returns
     -------
-    old_residue: str
+    old_residue : str
         The old residue, or None of the mutation string cannot be parsed
-    position: str
+    position : str
         The position at which the mutation occurs, or None if the mutation
         string cannot be parsed
-    new_residue: str
+    new_residue : str
         The new residue, or None if the mutation string cannot be parsed
     """
     m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
@@ -69,12 +69,12 @@ def urn_to_db_refs(urn):
 
     Parameters
     ----------
-    url: str
+    url : str
         A Medscan URN
 
     Returns
     -------
-    db_refs: dict
+    db_refs : dict
         A dictionary with grounding information, mapping databases to database
         identifiers. If the Medscan URN is not recognized, returns an empty
         dictionary.
@@ -133,13 +133,13 @@ def extract_id(id_string):
 
     Parameters
     ----------
-    id_string: str
+    id_string : str
         The ID representation that appears in the svo element in the XML
         document (example: ID{123})
 
     Returns
     -------
-    id: str
+    id : str
         The numeric ID, extracted from the svo element's attribute
         (example: 123)
     """
@@ -155,12 +155,12 @@ def untag_sentence(s):
 
     Parameters
     ----------
-    s: str
+    s : str
         The tagged sentence
 
     Returns
     -------
-    untagged_sentence: str
+    untagged_sentence : str
         Sentence with tags and annotations stripped out
     """
     p = 'ID{[0-9,]+=([^}]+)}'
@@ -177,12 +177,12 @@ def extract_sentence_tags(tagged_sentence):
 
     Parameters
     ----------
-    tagged_sentence: str
+    tagged_sentence : str
         The sentence with Medscan annotations and tags
 
     Returns
     -------
-    tags: dict
+    tags : dict
         A dictionary mapping tags to the words or phrases that they tag.
     """
     p = re.compile('ID{([0-9,]+)=([^}]+)}')
@@ -205,15 +205,15 @@ class MedscanProcessor(object):
 
     Attributes
     ----------
-    statements: list<str>
+    statements : list<str>
         A list of extracted INDRA statements
-    num_entities: int
+    num_entities : int
         The total number of subject or object entities the processor attempted
         to resolve
-    num_entities_not_found: int
+    num_entities_not_found : int
         The number of subject or object IDs which could not be resolved by
         looking in the list of entities or tagged phrases.
-    unmapped_urns: set of str
+    unmapped_urns : set of str
         The list of URNs that are not mapped to any external database,
         optionally extracted from rnef files provided by the Medscan
         developers. Currently unused.
@@ -246,9 +246,9 @@ class MedscanProcessor(object):
 
         Parameters
         ----------
-        relation: MedscanRelation
+        relation : MedscanRelation
             The relation to process (a CONTROL svo with normalized verb)
-        last_relation: MedscanRelation
+        last_relation : MedscanRelation
             The relation immediately proceding the relation to process within
             the same sentence, or None if there are no preceding relations
             within the same sentence. This proceeding relation, if available,
@@ -374,14 +374,14 @@ class MedscanProcessor(object):
 
         Parameters
         ----------
-        relation: MedscanRelation
+        relation : MedscanRelation
             The current relation being processed
-        entity_id: str
+        entity_id : str
             The ID of the entity to process
 
         Returns
         -------
-        agent: indra.statements.Agent
+        agent : indra.statements.Agent
             A potentially grounded INDRA agent representing this entity
         """
         # Extract sentence tags mapping ids to the text. We refer to this

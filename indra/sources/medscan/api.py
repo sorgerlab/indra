@@ -25,23 +25,23 @@ class MedscanRelation(object):
 
     Attribues
     ----------
-    uri: str
+    uri : str
         The URI of the current document (such as a PMID)
-    sec: str
+    sec : str
         The section of the document the relation occurs in
-    entities: dict
+    entities : dict
         A dictionary mapping entity IDs from the same sentence to MedscanEntity
         objects.
-    tagged_sentence: str
+    tagged_sentence : str
         The sentence from which the relation was extracted, with some tagged
         phrases and annotations.
-    subj: str
+    subj : str
         The entity ID of the subject
-    verb: str
+    verb : str
         The verb in the relationship between the subject and the object
-    obj: str
+    obj : str
         The entity ID of the object
-    svo_type: str
+    svo_type : str
         The type of SVO relationship (for example, CONTROL indicates
         that the verb is normalized)
     """
@@ -86,19 +86,19 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
     Attributes
     ----------
-    filename: str
+    filename : str
         The csxml file, containing Medscan XML, to process
-    medscan_resource_dir: str
+    medscan_resource_dir : str
         A directory containing Unmapped Complexes.rnef and
         Unmapped Functional classes.rnef which describe unmapped URNs, or None
         if not available. These files are currently parsed but not used.
-    num_documents: int
+    num_documents : int
         The number of documents to process, or None to process all of the
         documents within the csxml file.
 
     Returns
     -------
-    mp: MedscanProcessor
+    mp : MedscanProcessor
         A MedscanProcessor object containing extracted statements
     """
     mp = MedscanProcessor(medscan_resource_dir)
