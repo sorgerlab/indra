@@ -16,3 +16,4 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    cwms/index
    biogrid/index
    medscan/index
+   sofia/index
