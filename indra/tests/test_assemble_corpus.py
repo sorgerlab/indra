@@ -194,6 +194,20 @@ def test_filter_gene_list_one():
                                  remove_bound=True)
     assert(len(st_out[0].sub.bound_conditions) == 0)
 
+
+def test_filter_gene_list_invert():
+    st_out = ac.filter_gene_list([st1, st2], ['a'], 'one', invert=True)
+    assert len(st_out) == 0
+    st_out = ac.filter_gene_list([st1, st2], ['d'], 'one', invert=True)
+    assert len(st_out) == 1
+    assert st_out[0].sub.name == 'b'
+    st_out = ac.filter_gene_list([st1, st2], ['a', 'd'], 'all', invert=True)
+    assert len(st_out) == 1
+    assert st_out[0].sub.name == 'b'
+    st_out = ac.filter_gene_list([st1, st2], ['a', 'b', 'd'], 'all',
+                                 invert=True)
+    assert len(st_out) == 0
+
 def test_filter_gene_list_families():
     stmts_out = ac.filter_gene_list([st16, st17], ['MAPK1'], 'one',
                                     allow_families=False)
