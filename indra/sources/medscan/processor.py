@@ -22,7 +22,7 @@ class MedscanRelation(object):
     """A structure representing the information contained in a Medscan
     SVO xml element as well as associated entities and properties.
 
-    Attribues
+    Attributes
     ----------
     uri : str
         The URI of the current document (such as a PMID)
@@ -294,9 +294,9 @@ class MedscanProcessor(object):
 
         Parameters
         ----------
-        f: file object
+        f : file object
             A filehandle to a source of MedScan csxml data
-        num_documents: int
+        num_documents : int
             The number of documents to process, or None to process all
             documents in the input stream
         """

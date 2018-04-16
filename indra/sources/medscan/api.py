@@ -20,6 +20,7 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
 
     Within the `<sent>` element, a series of additional elements appear
     in the following order:
+
     * `<toks>`, which contains a tokenized form of the sentence in its
       text attribute
     * `<textmods>`, which describes any preprocessing/normalization done to
