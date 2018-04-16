@@ -1,6 +1,9 @@
 MedScan (:py:mod:`indra.sources.medscan`)
 =========================================
 
+.. automodule:: indra.sources.medscan
+    :members:
+
 MedScan API (:py:mod:`indra.sources.medscan.api`)
 -------------------------------------------------
 
