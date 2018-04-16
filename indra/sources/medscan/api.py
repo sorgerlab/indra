@@ -10,6 +10,10 @@ logger = logging.getLogger('medscan')
 def process_file(filename, medscan_resource_dir, num_documents=None):
     """Process a CSXML file for its relevant information.
 
+    Consider running the fix_csxml_character_encoding.py script in
+    indra/sources/medscan to fix any encoding issues in the input file before
+    processing.
+
     The CSXML format consists of a top-level `<batch>` root element containing
     a series of `<doc>` (document) elements, in turn containing `<sec>`
     (section) elements, and in turn containing `<sent>` (sentence) elements.
