@@ -20,7 +20,7 @@ def test_urn_to_db_refs():
     # agi-cas
     urn1 = 'urn:agi-cas:89-73-6'
     db_refs_1 = urn_to_db_refs(urn1)
-    assert(db_refs_1 == {'CHEBI': '45615'})
+    assert(db_refs_1 == {'CHEBI': 'CHEBI:45615'})
 
     # agi-llid
     urn2 = 'urn:agi-llid:9451'
@@ -45,12 +45,12 @@ def test_urn_to_db_refs():
     # agi-gocomplex
     urn6 = 'urn:agi-gocomplex:0005610'
     db_refs_6 = urn_to_db_refs(urn6)
-    assert(db_refs_6 == {'GO': '0005610'})
+    assert(db_refs_6 == {'GO': 'GO:0005610'})
 
     # agi-go
     urn7 = 'urn:agi-go:0001515'
     db_refs_7 = urn_to_db_refs(urn7)
-    assert(db_refs_7 == {'GO': '0001515'})
+    assert(db_refs_7 == {'GO': 'GO:0001515'})
 
     # agi-ncimtissue
     urn8 = 'urn:agi-ncimtissue:C0007807'
@@ -79,7 +79,7 @@ def test_agent_from_entity():
 
     # Test for when an entity is in the grounded entities list
     agent1 = mp.agent_from_entity(relation, 'ID{123}')
-    assert(agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': '0016938'})
+    assert(agent1.db_refs == {'TEXT': 'kinesin-I', 'GO': 'GO:0016938'})
 
     # Test for when an entity is in the tagged sentence but not the entity list
     agent2 = mp.agent_from_entity(relation, 'ID{321}')
@@ -150,7 +150,7 @@ def test_expressioncontrol_negative():
 
     s0 = statements[0]
     assert(isinstance(s0, DecreaseAmount))
-    assert(s0.subj.db_refs == {'CHEBI': '6700', 'TEXT': 'matrine'})
+    assert(s0.subj.db_refs == {'CHEBI': 'CHEBI:6700', 'TEXT': 'matrine'})
     assert(s0.obj.db_refs == {'HGNC': '6364',
                               'TEXT': 'PSA and androgen receptor',
                               'UP': 'P07288'})
@@ -168,7 +168,7 @@ def test_molsynthesis_negative():
 
     assert(s0.subj.db_refs == {'HGNC': '9070', 'TEXT': 'pleckstrin',
                                'UP': 'P08567'})
-    assert(s0.obj.db_refs == {'CHEBI': '16595', 'TEXT': 'Ins(1,4,5)P3'})
+    assert(s0.obj.db_refs == {'CHEBI': 'CHEBI:16595', 'TEXT': 'Ins(1,4,5)P3'})
 
 
 def test_binding():
@@ -296,6 +296,6 @@ def test_protein_phosphosite():
     assert(mod.mod_type == 'phosphorylation')
 
     obj = s0.obj
-    assert(obj.db_refs == {'CHEBI': '15351', 'TEXT': 'acetyl-CoA'})
+    assert(obj.db_refs == {'CHEBI': 'CHEBI:15351', 'TEXT': 'acetyl-CoA'})
     assert(len(obj.mutations) == 0)
     assert(len(obj.mods) == 0)

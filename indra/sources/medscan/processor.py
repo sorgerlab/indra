@@ -141,7 +141,9 @@ def urn_to_db_refs(urn):
     # TODO: support more types of URNs
     if urn_type == 'agi-cas':
         # Identifier is CAS, convert to CHEBI
-        db_refs['CHEBI'] = get_chebi_id_from_cas(urn_id)
+        chebi_id = get_chebi_id_from_cas(urn_id)
+        if chebi_id:
+            db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
     elif urn_type == 'agi-llid':
         # This is an Entrez ID, convert to HGNC
         hgnc_id = get_hgnc_from_entrez(urn_id)
@@ -162,10 +164,10 @@ def urn_to_db_refs(urn):
         db_refs['MESH'] = urn_id
     elif urn_type == 'agi-gocomplex':
         # Identifier is GO
-        db_refs['GO'] = urn_id
+        db_refs['GO'] = 'GO:%s' % urn_id
     elif urn_type == 'agi-go':
         # Identifier is GO
-        db_refs['GO'] = urn_id
+        db_refs['GO'] = 'GO:%s' % urn_id
     elif urn_type == 'agi-ncimtissue':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
