@@ -575,6 +575,15 @@ class ReadingData(object):
         return
 
     @classmethod
+    def from_db_reading(cls, db_reading):
+        return cls(db_reading.text_content_id, db_reading.reader,
+                   db_reading.reader_version, db_reading.format,
+                   json.loads(zlib.decompress(db_reading.bytes,
+                                              16+zlib.MAX_WBITS)
+                              .decode('utf8')),
+                   db_reading.id)
+
+    @classmethod
     def get_cols(self):
         """Get the columns for the tuple returned by `make_tuple`."""
         return ('text_content_id', 'reader', 'reader_version', 'format',

@@ -11,6 +11,7 @@ from indra.statements import IncreaseAmount, DecreaseAmount, Dephosphorylation
 # reading are enabled in tests
 offline_modes = [True]
 
+
 def test_parse_site_text():
     text = ['threonine 185', 'thr 185', 'thr-185',
             'threonine residue 185', 'T185']
@@ -141,6 +142,7 @@ def test_valid_name():
     assert(ReachProcessor._get_valid_name('PI3 Kinase') == 'PI3_Kinase')
     assert(ReachProcessor._get_valid_name('14-3-3') == 'p14_3_3')
 
+
 def test_phosphorylate():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 phosphorylates ERK2.', offline=offline)
@@ -160,7 +162,7 @@ def test_indirect_phosphorylate():
         assert isinstance(s, Dephosphorylation)
         assert s.enz.name == 'DUSP'
         assert s.sub.name == 'ERK'
-        assert s.evidence[0].epistemics.get('direct') == False
+        assert s.evidence[0].epistemics.get('direct') is False
 
 
 def test_regulate_amount():
@@ -182,6 +184,7 @@ def test_regulate_amount():
         assert (s.obj.name == 'DUSP')
         assert unicode_strs(rp.statements)
 
+
 def test_multiple_enzymes():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 and MEK2 phosphorylate ERK1.',
@@ -197,6 +200,7 @@ def test_multiple_enzymes():
         assert (s.sub.name == 'MAPK3')
         assert unicode_strs(rp.statements)
 
+
 def test_activate():
     for offline in offline_modes:
         rp = reach.process_text('HRAS activates BRAF.', offline=offline)
@@ -206,27 +210,31 @@ def test_activate():
         assert (s.obj.name == 'BRAF')
         assert unicode_strs(rp.statements)
 
+
 def test_bind():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 binds ERK2.', offline=offline)
         assert(len(rp.statements) == 1)
         assert unicode_strs(rp.statements)
 
+
 def test_be_grounding():
     for offline in offline_modes:
         rp = reach.process_text('MEK activates ERK.', offline=offline)
         assert(len(rp.statements) == 1)
         assert unicode_strs(rp.statements)
-        if offline == True:
+        if offline is True:
             st = rp.statements[0]
             assert(st.subj.db_refs.get('FPLX') == 'MEK')
             assert(st.obj.db_refs.get('FPLX') == 'ERK')
+
 
 def test_activity():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 activates ERK2.', offline=offline)
         assert(len(rp.statements) == 1)
         assert unicode_strs(rp.statements)
+
 
 def test_mutation():
     for offline in offline_modes:
@@ -264,6 +272,7 @@ def test_process_unicode():
         rp = reach.process_text('MEK1 binds ERK2\U0001F4A9.', offline=offline)
         assert unicode_strs(rp.statements)
 
+
 @attr('slow')
 def test_process_pmc():
     for offline in offline_modes:
@@ -272,10 +281,12 @@ def test_process_pmc():
             assert_pmid(stmt)
         assert unicode_strs(rp.statements)
 
+
 def test_process_unicode_abstract():
     for offline in offline_modes:
         rp = reach.process_pubmed_abstract('27749056', offline=offline)
         assert unicode_strs(rp.statements)
+
 
 def test_hgnc_from_up():
     for offline in offline_modes:
@@ -292,9 +303,31 @@ def test_hgnc_from_up():
         assert mapk1.db_refs['UP'] == 'P28482'
         assert unicode_strs(rp.statements)
 
+
 def assert_pmid(stmt):
     for ev in stmt.evidence:
         assert(ev.pmid is not None)
         assert(not ev.pmid.startswith('api'))
         assert(not ev.pmid.startswith('PMID'))
 
+
+def test_process_mod_condition1():
+    test_cases = [
+        ('MEK1 activates ERK1 that is phosphorylated.',
+         'phosphorylation', None, None, True),
+        ('MEK1 activates ERK1 that is phosphorylated on tyrosine.',
+         'phosphorylation', 'Y', None, True),
+        ('MEK1 activates ERK1 that is phosphorylated on Y185.',
+         'phosphorylation', 'Y', '185', True),
+        ]
+    for offline in offline_modes:
+        for sentence, mod_type, residue, position, is_modified in test_cases:
+            rp = reach.process_text(sentence)
+            assert rp is not None
+            assert len(rp.statements) == 1
+            mcs = rp.statements[0].obj.mods
+            assert len(mcs) == 1
+            assert mcs[0].mod_type == mod_type
+            assert mcs[0].residue == residue
+            assert mcs[0].position == position
+            assert mcs[0].is_modified == is_modified

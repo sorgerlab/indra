@@ -220,7 +220,6 @@ class ReachProcessor(object):
                     st = DecreaseAmount(*args)
                 self.statements.append(st)
 
-
     def get_complexes(self):
         """Extract INDRA Complex Statements."""
         qstr = "$.events.frames[@.type is 'complex-assembly']"
@@ -268,12 +267,12 @@ class ReachProcessor(object):
                             controllers = list(a.get('args').values())
                             controller_agent =\
                                 self._get_agent_from_entity(controllers[0])
-                            bound_agents = [self._get_agent_from_entity(c) 
+                            bound_agents = [self._get_agent_from_entity(c)
                                             for c in controllers[1:]]
                             bound_conditions = [BoundCondition(ba, True) for
                                                 ba in bound_agents]
                             controller_agent.bound_conditions = \
-                                    bound_conditions
+                                bound_conditions
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)
@@ -360,8 +359,18 @@ class ReachProcessor(object):
         except StopIteration:
             logger.debug(' %s is not an entity' % entity_id)
             return None
-        # This is the default name, which can be overwritten 
+
+        # This is the default name, which can be overwritten
         # below for specific database entries
+        agent_name, db_refs = self._get_db_refs(entity_term)
+
+        mod_terms = entity_term.get('modifications')
+        mods, muts = self._get_mods_and_muts_from_mod_terms(mod_terms)
+
+        agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
+        return agent
+
+    def _get_db_refs(self, entity_term):
         agent_name = self._get_valid_name(entity_term['text'])
         db_refs = {}
         for xr in entity_term['xrefs']:
@@ -423,8 +432,9 @@ class ReachProcessor(object):
             else:
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
+        return agent_name, db_refs
 
-        mod_terms = entity_term.get('modifications')
+    def _get_mods_and_muts_from_mod_terms(self, mod_terms):
         mods = []
         muts = []
         if mod_terms is not None:
@@ -442,18 +452,17 @@ class ReachProcessor(object):
                     if mut is not None:
                         muts.append(mut)
                 else:
-                    mcs = self._get_mod_conditions(ms)
+                    mcs = self._get_mod_conditions(m)
                     mods.extend(mcs)
-
-        agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
-        return agent
+        return mods, muts
 
     def _get_mod_conditions(self, mod_term):
+        """Return a list of ModConditions given a mod term dict."""
         site = mod_term.get('site')
         if site is not None:
             mods = self._parse_site_text(site)
         else:
-            mods = []
+            mods = [Site(None, None)]
 
         mcs = []
         for mod in mods:
@@ -464,8 +473,9 @@ class ReachProcessor(object):
                 mc = ModCondition(mod_state[0], residue=mod_res,
                                   position=mod_pos, is_modified=mod_state[1])
                 mcs.append(mc)
-            logger.warning('Unhandled entity modification type: %s'
-                           % mod_type_str)
+            else:
+                logger.warning('Unhandled entity modification type: %s'
+                               % mod_type_str)
         return mcs
 
     def _get_context(self, frame_term):
@@ -667,7 +677,7 @@ _site_pattern5 = '^([' + ''.join(list(amino_acids.keys())) + '])$'
 _site_pattern6 = '^(' + '|'.join([v['short_name'].upper() for
                                  v in amino_acids.values()]) + ')$'
 _site_pattern7 = '.*(' + '|'.join([v['indra_name'].upper() for
-                                 v in amino_acids.values()]) + ').*'
+                                   v in amino_acids.values()]) + ').*'
 _site_pattern8 = '([0-9]+)$'
 
 # Subtypes that exist but we don't handle: hydrolysis
@@ -694,6 +704,7 @@ agent_mod_map = {
     'unknown': ('modification', True),
 }
 
+
 def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '../../resources/famplex_map.tsv')
@@ -705,6 +716,7 @@ def _read_famplex_map():
         be_id = row[2]
         famplex_map[(source_ns, source_id)] = be_id
     return famplex_map
+
 
 famplex_map = _read_famplex_map()
 
