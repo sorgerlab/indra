@@ -56,20 +56,24 @@ def populate_config_dict(config_path):
     return config_dict
 
 
+def _check_config_dict():
+    # Check the keys against the default.
+    default_CONFIG_DICT = populate_config_dict(default_config_path)
+    for key in default_CONFIG_DICT.keys():
+        if key not in CONFIG_DICT:
+            logger.warning("Key %s found in default config but not in %s."
+                           % (key, config_path))
+    for key in CONFIG_DICT.keys():
+        if key not in default_CONFIG_DICT:
+            logger.warning("Key %s found in %s but not in default config."
+                           % (key, config_path))
+
+
 CONFIG_DICT = populate_config_dict(config_path)
 if CONFIG_DICT is None:
     CONFIG_DICT = {}
 else:
-    # Check the keys against the default.
-    default_CONFIG_DICT = populate_config_dict(default_config_path)
-    for key in default_CONFIG_DICT.keys():
-        if key not in CONFIG_DICT.keys():
-            logger.warning("Key %s found in default config but not in %s."
-                           % (key, config_path))
-    for key in CONFIG_DICT.keys():
-        if key not in default_CONFIG_DICT.keys():
-            logger.warning("Key %s found in %s but not in default config."
-                           % (key, config_path))
+    _check_config_dict()
 
 
 def get_config(key):
