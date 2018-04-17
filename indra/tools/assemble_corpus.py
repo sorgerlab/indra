@@ -593,24 +593,26 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
         If false (default), looks at agents in the bound conditions in addition
         to those participating in the statement directly when applying the
         specified policy.
+    invert : Optional[bool]
+        If True, the statements that do not match according to the policy
+        are returned. Default: False
 
     Returns
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-
-    if 'remove_bound' in kwargs and kwargs['remove_bound']:
-        remove_bound = True
-    else:
-        remove_bound = False
+    invert = kwargs.get('invert', False)
+    remove_bound = kwargs.get('remove_bound', False)
 
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
     else:
         genes_str = ', '.join(gene_list)
-        logger.info('Filtering %d statements for ones containing "%s" of: '
-                    '%s...' % (len(stmts_in), policy, genes_str))
+        inv_str = 'not ' if invert else ''
+        logger.info(('Filtering %d statements for ones %scontaining "%s" of: '
+                     '%s...') % (len(stmts_in), inv_str, policy, genes_str))
+
     # If we're allowing families, make a list of all FamPlex IDs that
     # contain members of the gene list, and add them to the filter list
     filter_list = copy(gene_list)
@@ -626,11 +628,15 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     if remove_bound:
         # If requested, remove agents whose names are not in the list from
         # all bound conditions
-        keep_criterion = lambda a: a.name in filter_list
+        if not invert:
+            keep_criterion = lambda a: a.name in filter_list
+        else:
+            keep_criterion = lambda a: a.name not in filter_list
+
         for st in stmts_in:
             for agent in st.agent_list():
                 _remove_bound_conditions(agent, keep_criterion)
-    
+
     if policy == 'one':
         for st in stmts_in:
             found_gene = False
@@ -643,7 +649,7 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                     if agent.name in filter_list:
                         found_gene = True
                         break
-            if found_gene:
+            if (found_gene and not invert) or (not found_gene and invert):
                 stmts_out.append(st)
     elif policy == 'all':
         for st in stmts_in:
@@ -657,17 +663,17 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                     if agent.name not in filter_list:
                         found_genes = False
                         break
-            if found_genes:
+            if (found_genes and not invert) or (not found_genes and invert):
                 stmts_out.append(st)
     else:
         stmts_out = stmts_in
-
 
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are grounded, but not to a human gene.
