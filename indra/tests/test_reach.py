@@ -309,3 +309,12 @@ def assert_pmid(stmt):
         assert(ev.pmid is not None)
         assert(not ev.pmid.startswith('api'))
         assert(not ev.pmid.startswith('PMID'))
+
+
+def test_process_mod_conditions():
+    rp = reach.process_text('The over-expression of CYP24A1 negatively '
+                            'regulates the vitamin D level, which is the '
+                            'causative agent of chronic kidney disease, '
+                            'osteoporosis, and several types of cancers.')
+    assert rp is not None
+    assert rp.statements
