@@ -35,16 +35,16 @@ logger = logging.getLogger('indra')
 # If the configuration file does not exist, try to create it from the default
 config_dir = os.path.expanduser('~/.config/indra')
 config_path = os.path.join(config_dir, 'config.ini')
+default_config_path = os.path.join(os.path.dirname(__file__),
+                                   'resources/default_config.ini')
 if not os.path.isfile(config_path):
     try:
         os.mkdir(config_dir)
-    except:
+    except Exception:
         logger.warning(config_dir + ' already exists')
-    default_config = os.path.join(os.path.dirname(__file__),
-                                  'resources/default_config.ini')
     try:
-        shutil.copyfile(default_config, config_path)
-    except:
+        shutil.copyfile(default_config_path, config_path)
+    except Exception:
         logger.warning('Could not copy default config file.')
 
 # Load the configuration file into the config_file dictionary
@@ -57,15 +57,15 @@ config_file = {}
 
 try:
     parser = RawConfigParser()
-    parser.optionxform = lambda x : x
+    parser.optionxform = lambda x: x
     parser.read(config_path)
     sections = parser.sections()
     for section in sections:
         options = parser.options(section)
         for option in options:
             config_file[option] = str(parser.get(section, option))
-except:
-    logger.warning('Could not load configuration file, will check ' + 
+except Exception:
+    logger.warning('Could not load configuration file, will check ' +
                    'environment variables only for configuration.')
     config_file = {}
 
@@ -78,6 +78,7 @@ for key in config_file:
 for key in config_file:
     if config_file[key] == "":
         config_file[key] = None
+
 
 def get_config(key):
     """Returns the configuration value, first checking the environemnt
@@ -100,8 +101,9 @@ def get_config(key):
         return config_file[key]
     else:
         logger.warning('Could not find ' + str(key) +
-                           ' in environment variables or configuration file')
+                       ' in environment variables or configuration file')
         return None
+
 
 def has_config(key):
     """Returns whether the configuration value for the given kehy is present.
