@@ -312,9 +312,7 @@ def assert_pmid(stmt):
 
 
 def test_process_mod_conditions():
-    rp = reach.process_text('The over-expression of CYP24A1 negatively '
-                            'regulates the vitamin D level, which is the '
-                            'causative agent of chronic kidney disease, '
-                            'osteoporosis, and several types of cancers.')
+    rp = reach.process_text('the expression of CYP24A1 negatively regulates '
+                            'vitamin D levels')
     assert rp is not None
     assert rp.statements
