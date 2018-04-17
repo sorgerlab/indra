@@ -362,6 +362,15 @@ class ReachProcessor(object):
 
         # This is the default name, which can be overwritten
         # below for specific database entries
+        agent_name, db_refs = self._get_db_refs(entity_term)
+
+        mod_terms = entity_term.get('modifications')
+        mods, muts = self._get_mods_and_muts_from_mod_terms(mod_terms)
+
+        agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
+        return agent
+
+    def _get_db_refs(self, entity_term):
         agent_name = self._get_valid_name(entity_term['text'])
         db_refs = {}
         for xr in entity_term['xrefs']:
@@ -423,8 +432,9 @@ class ReachProcessor(object):
             else:
                 logger.warning('Unhandled xref namespace: %s' % ns)
         db_refs['TEXT'] = entity_term['text']
+        return agent_name, db_refs
 
-        mod_terms = entity_term.get('modifications')
+    def _get_mods_and_muts_from_mod_terms(self, mod_terms):
         mods = []
         muts = []
         if mod_terms is not None:
@@ -442,11 +452,9 @@ class ReachProcessor(object):
                     if mut is not None:
                         muts.append(mut)
                 else:
-                    mcs = self._get_mod_conditions(ms)
+                    mcs = self._get_mod_conditions(m)
                     mods.extend(mcs)
-
-        agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
-        return agent
+        return mods, muts
 
     def _get_mod_conditions(self, mod_term):
         site = mod_term.get('site')
