@@ -311,8 +311,23 @@ def assert_pmid(stmt):
         assert(not ev.pmid.startswith('PMID'))
 
 
-def test_process_mod_conditions():
-    rp = reach.process_text('the expression of CYP24A1 negatively regulates '
-                            'vitamin D levels')
-    assert rp is not None
-    assert rp.statements
+def test_process_mod_condition1():
+    for offline in offline_modes:
+        rp = reach.process_text('the expression of CYP24A1 negatively '
+                                'regulates vitamin D levels')
+        assert rp is not None
+        assert rp.statements
+        mcs = rp.statements[0].obj.mod_conditions
+
+
+def test_process_mod_condition2():
+    for offline in offline_modes:
+        rp = reach.process_text('MEK1 activates ERK1 that is phosphorylated.')
+        assert rp is not None
+        assert len(rp.statements) == 1
+        mcs = rp.statements[0].obj.mod_conditions
+        assert len(mcs) == 1
+        assert mcs[0].mod_type == 'phosphorylation'
+        assert mcs[0].residue is None
+        assert mcs[0].position is None
+        assert mcs[0].is_modified is True

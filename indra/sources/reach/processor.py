@@ -461,7 +461,7 @@ class ReachProcessor(object):
         if site is not None:
             mods = self._parse_site_text(site)
         else:
-            mods = []
+            mods = [(None, None)]
 
         mcs = []
         for mod in mods:
@@ -472,8 +472,9 @@ class ReachProcessor(object):
                 mc = ModCondition(mod_state[0], residue=mod_res,
                                   position=mod_pos, is_modified=mod_state[1])
                 mcs.append(mc)
-            logger.warning('Unhandled entity modification type: %s'
-                           % mod_type_str)
+            else:
+                logger.warning('Unhandled entity modification type: %s'
+                               % mod_type_str)
         return mcs
 
     def _get_context(self, frame_term):
