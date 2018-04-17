@@ -220,7 +220,6 @@ class ReachProcessor(object):
                     st = DecreaseAmount(*args)
                 self.statements.append(st)
 
-
     def get_complexes(self):
         """Extract INDRA Complex Statements."""
         qstr = "$.events.frames[@.type is 'complex-assembly']"
@@ -268,12 +267,12 @@ class ReachProcessor(object):
                             controllers = list(a.get('args').values())
                             controller_agent =\
                                 self._get_agent_from_entity(controllers[0])
-                            bound_agents = [self._get_agent_from_entity(c) 
+                            bound_agents = [self._get_agent_from_entity(c)
                                             for c in controllers[1:]]
                             bound_conditions = [BoundCondition(ba, True) for
                                                 ba in bound_agents]
                             controller_agent.bound_conditions = \
-                                    bound_conditions
+                                bound_conditions
                     else:
                         controller_agent =\
                             self._get_agent_from_entity(controller)
@@ -360,7 +359,8 @@ class ReachProcessor(object):
         except StopIteration:
             logger.debug(' %s is not an entity' % entity_id)
             return None
-        # This is the default name, which can be overwritten 
+
+        # This is the default name, which can be overwritten
         # below for specific database entries
         agent_name = self._get_valid_name(entity_term['text'])
         db_refs = {}
@@ -667,7 +667,7 @@ _site_pattern5 = '^([' + ''.join(list(amino_acids.keys())) + '])$'
 _site_pattern6 = '^(' + '|'.join([v['short_name'].upper() for
                                  v in amino_acids.values()]) + ')$'
 _site_pattern7 = '.*(' + '|'.join([v['indra_name'].upper() for
-                                 v in amino_acids.values()]) + ').*'
+                                   v in amino_acids.values()]) + ').*'
 _site_pattern8 = '([0-9]+)$'
 
 # Subtypes that exist but we don't handle: hydrolysis
@@ -694,6 +694,7 @@ agent_mod_map = {
     'unknown': ('modification', True),
 }
 
+
 def _read_famplex_map():
     fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                          '../../resources/famplex_map.tsv')
@@ -705,6 +706,7 @@ def _read_famplex_map():
         be_id = row[2]
         famplex_map[(source_ns, source_id)] = be_id
     return famplex_map
+
 
 famplex_map = _read_famplex_map()
 
