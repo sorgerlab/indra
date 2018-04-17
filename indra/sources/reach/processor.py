@@ -457,11 +457,12 @@ class ReachProcessor(object):
         return mods, muts
 
     def _get_mod_conditions(self, mod_term):
+        """Return a list of ModConditions given a mod term dict."""
         site = mod_term.get('site')
         if site is not None:
             mods = self._parse_site_text(site)
         else:
-            mods = [(None, None)]
+            mods = [Site(None, None)]
 
         mcs = []
         for mod in mods:

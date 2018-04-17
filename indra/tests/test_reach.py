@@ -312,22 +312,22 @@ def assert_pmid(stmt):
 
 
 def test_process_mod_condition1():
+    test_cases = [
+        ('MEK1 activates ERK1 that is phosphorylated.',
+         'phosphorylation', None, None, True),
+        ('MEK1 activates ERK1 that is phosphorylated on tyrosine.',
+         'phosphorylation', 'Y', None, True),
+        ('MEK1 activates ERK1 that is phosphorylated on Y185.',
+         'phosphorylation', 'Y', '185', True),
+        ]
     for offline in offline_modes:
-        rp = reach.process_text('the expression of CYP24A1 negatively '
-                                'regulates vitamin D levels')
-        assert rp is not None
-        assert rp.statements
-        mcs = rp.statements[0].obj.mod_conditions
-
-
-def test_process_mod_condition2():
-    for offline in offline_modes:
-        rp = reach.process_text('MEK1 activates ERK1 that is phosphorylated.')
-        assert rp is not None
-        assert len(rp.statements) == 1
-        mcs = rp.statements[0].obj.mod_conditions
-        assert len(mcs) == 1
-        assert mcs[0].mod_type == 'phosphorylation'
-        assert mcs[0].residue is None
-        assert mcs[0].position is None
-        assert mcs[0].is_modified is True
+        for sentence, mod_type, residue, position, is_modified in test_cases:
+            rp = reach.process_text(sentence)
+            assert rp is not None
+            assert len(rp.statements) == 1
+            mcs = rp.statements[0].obj.mods
+            assert len(mcs) == 1
+            assert mcs[0].mod_type == mod_type
+            assert mcs[0].residue == residue
+            assert mcs[0].position == position
+            assert mcs[0].is_modified == is_modified
