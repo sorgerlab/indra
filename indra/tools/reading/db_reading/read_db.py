@@ -6,12 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 import random
-import zlib
 import pickle
-import json
 from math import log10, floor, ceil
 from datetime import datetime
-from indra.tools.reading.util.script_tools import get_parser, make_statements, \
+from indra.tools.reading.util.script_tools import get_parser, make_statements,\
                                              StatementData
 
 logger = logging.getLogger('make_db_readings')
@@ -545,15 +543,7 @@ def get_db_readings(id_dict, readers, force_fulltext=False, batch_size=1000,
         )
     if previous_readings_query is not None:
         prev_readings = [
-            ReadingData(
-                r.text_content_id,
-                r.reader,
-                r.reader_version,
-                r.format,
-                json.loads(zlib.decompress(r.bytes, 16+zlib.MAX_WBITS)
-                           .decode('utf8')),
-                r.id
-                )
+            ReadingData.from_db_reading(r)
             for r in previous_readings_query.yield_per(batch_size)
             ]
     else:
@@ -681,7 +671,7 @@ def produce_readings(id_dict, reader_list, verbose=False,
         except Exception as e:
             logger.exception(e)
             if pickle_file is None:
-                pickle_file = ("failure_reading_dump_%s.pkl" 
+                pickle_file = ("failure_reading_dump_%s.pkl"
                                % datetime.now().strftime('%Y%m%d_%H%M%S'))
             logger.error("Cound not upload readings. Results are pickled in: "
                          + pickle_file)
