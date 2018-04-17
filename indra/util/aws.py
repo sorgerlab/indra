@@ -61,7 +61,7 @@ def tag_instance(instance_id, **tags):
     return
 
 
-def tag_myself(project='untagged_indra_batch', **other_tags):
+def tag_myself(project='cwc', **other_tags):
     """Function run when indra is used in an EC2 instance to apply tags."""
     base_url = "http://169.254.169.254"
     try:
@@ -218,7 +218,7 @@ if __name__ == '__main__':
         )
     parent_run_parser.add_argument(
         '--project', '-P',
-        default='untagged_indra_batch',
+        default='cwc',
         help='Give a name for the project.'
         )
     parent_run_parser.add_argument(
