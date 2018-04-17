@@ -53,21 +53,40 @@ if not os.path.isfile(config_path):
 # sectionts into a single key/value list.
 
 # Load key/value pairs from all sections into this dictionary
-config_file = {}
 
-try:
-    parser = RawConfigParser()
-    parser.optionxform = lambda x: x
-    parser.read(config_path)
-    sections = parser.sections()
-    for section in sections:
-        options = parser.options(section)
-        for option in options:
-            config_file[option] = str(parser.get(section, option))
-except Exception:
-    logger.warning('Could not load configuration file, will check ' +
-                   'environment variables only for configuration.')
+
+def populate_config_dict(config_path):
+    try:
+        config_dict = {}
+        parser = RawConfigParser()
+        parser.optionxform = lambda x: x
+        parser.read(config_path)
+        sections = parser.sections()
+        for section in sections:
+            options = parser.options(section)
+            for option in options:
+                config_dict[option] = str(parser.get(section, option))
+    except Exception as e:
+        logger.warning("Could not load configuration file due to exception. "
+                       "Only environment variable equivalents will be used.")
+        return None
+    return config_dict
+
+
+config_file = populate_config_dict(config_path)
+if config_file is None:
     config_file = {}
+else:
+    # Check the keys against the default.
+    default_config_file = populate_config_dict(default_config_path)
+    for key in default_config_file.keys():
+        if key not in config_file.keys():
+            logger.warning("Key %s found in default config but not in %s."
+                           % (key, config_path))
+    for key in config_file.keys():
+        if key not in default_config_file.keys():
+            logger.warning("Key %s found in %s but not in default config."
+                           % (key, config_path))
 
 # Expand ~ to the home directory
 for key in config_file:
