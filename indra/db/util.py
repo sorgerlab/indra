@@ -18,7 +18,7 @@ from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Evidence, Statement
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
-from indra import config_file
+from indra.config import CONFIG_DICT
 
 logger = logging.getLogger('db_util')
 
@@ -38,7 +38,7 @@ def get_defaults():
     Note: The environment takes precedence.
     """
     env = os.environ
-    defaults_dict = {k[9:].lower(): v for k, v in config_file.items()
+    defaults_dict = {k[9:].lower(): v for k, v in CONFIG_DICT.items()
                      if k.startswith('INDRA_DB_') and v}
     defaults_dict.update({k[7:].lower(): v for k, v in env.items()
                           if k.startswith('INDRADB')})
