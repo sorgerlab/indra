@@ -15,10 +15,10 @@ from time import sleep
 from indra import has_config, get_config
 # Python3
 try:
-    from functools import lru_cache
+    from functools import lru_cache, wraps
 # Python2
 except ImportError:
-    from functools32 import lru_cache
+    from functools32 import lru_cache, wraps
 from indra.util import read_unicode_csv
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
@@ -39,38 +39,49 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'common': 'http://www.elsevier.com/xml/common/dtd',
                'atom': 'http://www.w3.org/2005/Atom',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
-
-# THE API KEY IS NOT UNDER VERSION CONTROL FOR SECURITY
-# For more information see http://dev.elsevier.com/
-api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            'elsevier_api_keys')
-api_key_env_name = 'ELSEVIER_API_KEY'
-inst_key_env_name = 'ELSEVIER_INST_KEY'
-
-# Try to read in Elsevier API keys. For each key, first check the environment
-# variables, then check the INDRA configuration file.
-elsevier_keys = {}
-if not has_config(inst_key_env_name):
-    logger.error('API key ' + inst_key_env_name + ' not found in ' + \
-                 'configuration file or environment variable.')
-elsevier_keys['X-ELS-Insttoken'] = get_config(inst_key_env_name)
-
-if not has_config(api_key_env_name):
-    logger.error('API key ' + api_key_env_name + ' not found in ' + \
-                 'configuration file or environment variable.')
-if has_config(api_key_env_name):
-    elsevier_keys['X-ELS-APIKey'] = get_config(api_key_env_name)
+ELSEVIER_KEYS = None
 
 
+def ensure_api_keys(func):
+    @wraps(func)
+    def check_api_keys(*args, **kwargs):
+        global ELSEVIER_KEYS
+        if ELSEVIER_KEYS is None:
+            ELSEVIER_KEYS = {}
+            # THE API KEY IS NOT UNDER VERSION CONTROL FOR SECURITY
+            # For more information see http://dev.elsevier.com/
+            global API_KEY_FILE
+            API_KEY_FILE = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                        'elsevier_api_keys')
+            api_key_env_name = 'ELSEVIER_API_KEY'
+            inst_key_env_name = 'ELSEVIER_INST_KEY'
+
+            # Try to read in Elsevier API keys. For each key, first check the
+            # environment variables, then check the INDRA configuration file.
+            if not has_config(inst_key_env_name):
+                logger.error('API key %s not found in configuration file or '
+                             'environment variable.' % inst_key_env_name)
+            ELSEVIER_KEYS['X-ELS-Insttoken'] = get_config(inst_key_env_name)
+
+            if not has_config(api_key_env_name):
+                logger.error('API key %s not found in configuration file or '
+                             'environment variable.' % api_key_env_name)
+            if has_config(api_key_env_name):
+                ELSEVIER_KEYS['X-ELS-APIKey'] = get_config(api_key_env_name)
+        return func(*args, **kwargs)
+    return check_api_keys
+
+
+@ensure_api_keys
 def check_entitlement(doi):
-    if elsevier_keys is None:
+    if ELSEVIER_KEYS is None:
         logger.error('Missing API key, could not check article entitlement.')
         return False
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_entitlement_url, doi)
     params = {'httpAccept': 'text/xml'}
-    res = requests.get(url, params, headers=elsevier_keys)
+    res = requests.get(url, params, headers=ELSEVIER_KEYS)
     if not res.status_code == 200:
         logger.error('Could not check entitlements for article %s: '
                      'status code %d' % (doi, res.status_code))
@@ -78,16 +89,17 @@ def check_entitlement(doi):
         return False
 
 
+@ensure_api_keys
 def download_article(id_val, id_type='doi', on_retry=False):
     """Low level function to get an XML article for a particular id."""
-    if elsevier_keys is None:
+    if ELSEVIER_KEYS is None:
         logger.error('Missing API key, could not download article.')
         return None
     if id_type == 'pmid':
         id_type = 'pubmed_id'
     url = '%s/%s' % (elsevier_article_url_fmt % id_type, id_val)
     params = {'httpAccept': 'text/xml'}
-    res = requests.get(url, params, headers=elsevier_keys)
+    res = requests.get(url, params, headers=ELSEVIER_KEYS)
     if res.status_code == 404:
         logger.debug("Resource for %s not available on elsevier."
                      % url)
@@ -265,6 +277,7 @@ def _get_raw_text(full_text_elem):
 
 
 @lru_cache(maxsize=100)
+@ensure_api_keys
 def get_dois(query_str, count=100):
     """Search ScienceDirect through the API for articles.
 
@@ -273,9 +286,9 @@ def get_dois(query_str, count=100):
     cancer")'
     """
     url = '%s/%s' % (elsevier_search_url, query_str)
-    if elsevier_keys is None:
+    if ELSEVIER_KEYS is None:
         logger.error('Missing API key at %s, could not perform search.' %
-                      api_key_file)
+                      API_KEY_FILE)
         return None
     params = {'query': query_str,
               'count': count,
