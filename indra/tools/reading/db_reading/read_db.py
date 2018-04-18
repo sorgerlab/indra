@@ -799,7 +799,7 @@ if __name__ == "__main__":
                                    force_fulltext=args.force_fulltext,
                                    no_upload=args.no_reading_upload,
                                    pickle_file=reading_pickle,
-                                   prioritize=args.prioritize)
+                                   prioritize=args.use_best_fulltext)
 
         # Convert the outputs to statements ==================================
         produce_statements(outputs, no_upload=args.no_statement_upload,
