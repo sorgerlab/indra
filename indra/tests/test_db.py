@@ -561,7 +561,7 @@ def test_elsevier_upload():
 def test_sparser_initial_reading():
     "Test the initial reading of of sparser content"
     db = get_db_with_ftp_content()
-    BulkLocalReadingManager('sparser').read_all(db, n_proc=1)
+    BulkLocalReadingManager('sparser', n_proc=1).read_all(db)
     sparser_updates_q = db.filter_query(db.ReadingUpdates,
                                         db.ReadingUpdates.reader == 'SPARSER')
     assert sparser_updates_q.count() == 1, "Update was not logged."
