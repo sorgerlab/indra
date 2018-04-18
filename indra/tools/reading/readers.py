@@ -192,15 +192,28 @@ class ReachReader(Reader):
         _, version = cls._check_reach_env()
         return version
 
-    def write_content(self, text_content):
+    def _check_content(self, content_str):
+        """Check if the content is likely to be successfully read."""
+        space_ratio = content_str.count(' ')/len(content_str)
+        max_space_ratio = float(get_config('REACH_MAX_SPACE_RATIO'))
+        if space_ratio > max_space_ratio:
+            return "space-ratio: %f > %f" % (space_ratio, max_space_ratio)
+        max_len = float(get_config('REACH_CHARACTER_LIMIT'))
+        if len(content_str) > max_len:
+            return "too long: %d > %d" % (len(content_str), max_len)
+        return None
+
+    def _write_content(self, text_content):
         def write_content_file(ext):
             fname = '%s.%s' % (text_content.id, ext)
+            cont_str = zlib.decompress(text_content.content, 16+zlib.MAX_WBITS)
+
+            quality_issue = self._check_content(cont_str)
+            if quality_issue is not None:
+                logger.warning("Skipping %d due to: %s"
+                                % (text_content.id, quality_issue))
             with open(path.join(self.input_dir, fname), 'wb') as f:
-                f.write(
-                    zlib.decompress(
-                        text_content.content, 16+zlib.MAX_WBITS
-                        )
-                    )
+                f.write(cont_str)
             logger.debug('%s saved for reading by reach.' % fname)
         if text_content.format == formats.XML:
             write_content_file('nxml')
@@ -208,19 +221,27 @@ class ReachReader(Reader):
             write_content_file('txt')
         else:
             raise ReachError("Unrecognized format %s." % text_content.format)
+        return
+
+    def _move_content(self, text_content):
+        fname = text_content.strip()
+        with open(fname) as f:
+            quality_issue = self._check_content(f.read())
+        if quality_issue is not None:
+            logger.warning("Skipping %s due to: %s"
+                           % (fname, quality_issue))
+        new_fname = path.join(self.input_dir, path.basename(fname))
+        shutil.copy(fname, new_fname)
+        return
 
     def prep_input(self, read_list):
         """Apply the readers to the content."""
         logger.info("Prepping input.")
         for text_content in read_list:
             if isinstance(text_content, str):
-                fname = text_content.strip()
-                shutil.copy(
-                    fname,
-                    path.join(self.input_dir, path.basename(fname))
-                    )
+                self._move_content(text_content)
             else:
-                self.write_content(text_content)
+                self._write_content(text_content)
         return
 
     def get_output(self):
