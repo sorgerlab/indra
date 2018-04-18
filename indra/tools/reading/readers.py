@@ -106,6 +106,7 @@ class ReachReader(Reader):
 
     def __init__(self, *args, **kwargs):
         self.exec_path, self.version = self._check_reach_env()
+        self.do_content_check = kwargs.pop("check_content", True)
         super(ReachReader, self).__init__(*args, **kwargs)
         conf_fmt_fname = path.join(path.dirname(__file__),
                                    'util/reach_conf_fmt.txt')
@@ -194,13 +195,14 @@ class ReachReader(Reader):
 
     def _check_content(self, content_str):
         """Check if the content is likely to be successfully read."""
-        space_ratio = content_str.count(' ')/len(content_str)
-        max_space_ratio = float(get_config('REACH_MAX_SPACE_RATIO'))
-        if space_ratio > max_space_ratio:
-            return "space-ratio: %f > %f" % (space_ratio, max_space_ratio)
-        max_len = float(get_config('REACH_CHARACTER_LIMIT'))
-        if len(content_str) > max_len:
-            return "too long: %d > %d" % (len(content_str), max_len)
+        if self.do_content_check:
+            space_ratio = content_str.count(' ')/len(content_str)
+            max_space_ratio = float(get_config('REACH_MAX_SPACE_RATIO'))
+            if space_ratio > max_space_ratio:
+                return "space-ratio: %f > %f" % (space_ratio, max_space_ratio)
+            max_len = float(get_config('REACH_CHARACTER_LIMIT'))
+            if len(content_str) > max_len:
+                return "too long: %d > %d" % (len(content_str), max_len)
         return None
 
     def _write_content(self, text_content):
@@ -208,7 +210,7 @@ class ReachReader(Reader):
             fname = '%s.%s' % (text_content.id, ext)
             cont_str = zlib.decompress(text_content.content, 16+zlib.MAX_WBITS)
 
-            quality_issue = self._check_content(cont_str)
+            quality_issue = self._check_content(cont_str.decode('utf8'))
             if quality_issue is not None:
                 logger.warning("Skipping %d due to: %s"
                                 % (text_content.id, quality_issue))
@@ -440,9 +442,9 @@ class SparserReader(Reader):
                 content
                 ))
             if clear:
+                input_path = outpath.replace('-semantics.json', '.nxml')
                 try:
                     remove(outpath)
-                    input_path = outpath.replace('-semantics.json', '.nxml')
                     remove(input_path)
                 except Exception as e:
                     logger.exception(e)
