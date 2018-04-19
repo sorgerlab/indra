@@ -400,7 +400,8 @@ class DatabaseManager(object):
         if not force:
             # Build the message
             if tbl_list is None:
-                msg = "Do you really want to clear the primary database? [y/N]: "
+                msg = ("Do you really want to clear the %s database? [y/N]: "
+                       % self.label)
             else:
                 msg = "You are going to clear the following tables:\n"
                 msg += str([tbl.__tablename__ for tbl in tbl_objs]) + '\n'
