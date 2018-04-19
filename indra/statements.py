@@ -1079,8 +1079,15 @@ class Statement(object):
         self.belief = 1
         self.uuid = '%s' % uuid.uuid4()
 
+    def matches_key(self):
+        raise NotImplementedError("Method must be implemented in child class.")
+
     def matches(self, other):
         return self.matches_key() == other.matches_key()
+
+    def get_hash(self):
+        ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
+        return hash(self.matches_key() + str(ev_matches_key_list))
 
     def agent_list_with_bound_condition_agents(self):
         # Returns the list of agents both directly participating in the
