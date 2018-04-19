@@ -42,7 +42,13 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
 ELSEVIER_KEYS = None
 
 
-def ensure_api_keys(task_desc, failure_ret=None):
+def _ensure_api_keys(task_desc, failure_ret=None):
+    """Wrap Elsevier methods which directly use the API keys.
+
+    Ensure that the keys are retrieved from the environment or config file when
+    first called, and store global scope. Subsequently use globally stashed
+    results and check for required ids.
+    """
     def check_func_wrapper(func):
         @wraps(func)
         def check_api_keys(*args, **kwargs):
@@ -64,7 +70,7 @@ def ensure_api_keys(task_desc, failure_ret=None):
                 if not has_config(inst_key_env_name):
                     logger.warning('Institution API key %s not found in config '
                                    'file or environment variable: this will '
-                                   'limit ability to %s'
+                                   'limit access for %s'
                                    % (inst_key_env_name, task_desc))
                 ELSEVIER_KEYS['X-ELS-Insttoken'] = get_config(inst_key_env_name)
 
@@ -83,8 +89,13 @@ def ensure_api_keys(task_desc, failure_ret=None):
     return check_func_wrapper
 
 
-@ensure_api_keys('check article entitlement', False)
+@_ensure_api_keys('check article entitlement', False)
 def check_entitlement(doi):
+    """Check whether IP and credentials enable access to content for a doi.
+
+    WARNING - DEPRECATED
+    """
+    # TODO: Make this doe what it says it does or remove it
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_entitlement_url, doi)
@@ -95,11 +106,28 @@ def check_entitlement(doi):
                      'status code %d' % (doi, res.status_code))
         logger.error('Response content: %s' % res.text)
         return False
+    return True
 
 
-@ensure_api_keys('download article')
+@_ensure_api_keys('download article')
 def download_article(id_val, id_type='doi', on_retry=False):
-    """Low level function to get an XML article for a particular id."""
+    """Low level function to get an XML article for a particular id.
+
+    Parameters
+    ----------
+    id_val : str
+        The value of the id.
+    id_type : str
+        The type of id, such as pmid (a.k.a. pubmed_id), doi, or eid.
+    on_retry : bool
+        This function has a recursive retry feature, and this is the only time
+        this parameter should be used.
+
+    Returns
+    -------
+    content : str or None
+        If found, the content string is returned, otherwise, None is returned.
+    """
     if id_type == 'pmid':
         id_type = 'pubmed_id'
     url = '%s/%s' % (elsevier_article_url_fmt % id_type, id_val)
@@ -128,7 +156,21 @@ def download_article(id_val, id_type='doi', on_retry=False):
 
 
 def download_article_from_ids(**id_dict):
-    """Download an article in XML format from Elsevier."""
+    """Download an article in XML format from Elsevier matching the set of ids.
+
+    Parameters
+    ----------
+    <id_type> : str
+        You can enter any combination of eid, doi, pmid, and/or pii. Ids will be
+        checked in that order, until either content has been found or all ids
+        have been checked.
+
+    Returns
+    -------
+    content : str or None
+        If found, the content is returned as a string, otherwise None is
+        returned.
+    """
     valid_id_types = ['eid', 'doi', 'pmid', 'pii']
     assert all([k in valid_id_types for k in id_dict.keys()]),\
         ("One of these id keys is invalid: %s Valid keys are: %s."
@@ -148,12 +190,11 @@ def download_article_from_ids(**id_dict):
 
 
 def get_abstract(doi):
-    """Get the abstract of an article from Elsevier."""
+    """Get the abstract text of an article from Elsevier given a doi."""
     xml_string = download_article(doi)
     if xml_string is None:
         return None
     assert isinstance(xml_string, str)
-    # Build XML ElementTree
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
     if xml_tree is None:
         return None
@@ -163,26 +204,36 @@ def get_abstract(doi):
     return abs_text
 
 
-def get_article(doi, output='txt'):
-    """Get the full body of an article from Elsevier. There are two output
-    modes: 'txt' strips all xml tags and joins the pieces of text in the main
-    text, while 'xml' simply takes the tag containing the body of the article
-    and returns it as is . In the latter case, downstream code needs to be
-    able to interpret Elsever's XML format. """
+def get_article(doi, output_format='txt'):
+    """Get the full body of an article from Elsevier.
+
+    Parameters
+    ----------
+    doi : str
+        The doi for the desired article.
+    output_format : 'txt' or 'xml'
+        The desired format for the output. Selecting 'txt' (default) strips all
+        xml tags and joins the pieces of text in the main text, while 'xml'
+        simply takes the tag containing the body of the article and returns it
+        as is . In the latter case, downstream code needs to be able to
+        interpret Elsever's XML format.
+
+    Returns
+    -------
+    content : str
+        Either text content or xml, as described above, for the given doi.
+    """
     xml_string = download_article(doi)
-    text = extract_text(xml_string)
-    return text
+    if output_format == 'txt' and xml_string is not None:
+        text = extract_text(xml_string)
+        return text
+    return xml_string
 
 
 def extract_text(xml_string):
-    if xml_string is None:
-        return None
-    #with open('/Users/johnbachman/Desktop/elsevier.xml', 'wb') as f:
-    #    f.write(xml_string.encode('utf-8'))
+    """Get text from the body of the given Elsevier xml."""
     assert isinstance(xml_string, str)
-    # Build XML ElementTree
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
-    # Look for full text element
     full_text = xml_tree.find('article:originalText', elsevier_ns)
     if full_text is None:
         logger.info('Could not find full text element article:originalText')
@@ -193,10 +244,31 @@ def extract_text(xml_string):
     raw_text = _get_raw_text(full_text)
     if raw_text:
         return raw_text
-    #pdf = _get_pdf_attachment(full_text)
-    #if pdf:
-    #    return pdf
     return None
+
+
+@lru_cache(maxsize=100)
+@_ensure_api_keys('perform search')
+def get_dois(query_str, count=100):
+    """Search ScienceDirect through the API for articles.
+
+    See http://api.elsevier.com/content/search/fields/scidir for constructing a
+    query string to pass here.  Example: 'abstract(BRAF) AND all("colorectal
+    cancer")'
+    """
+    url = '%s/%s' % (elsevier_search_url, query_str)
+    params = {'query': query_str,
+              'count': count,
+              'httpAccept': 'application/xml',
+              'sort': '-coverdate',
+              'field': 'doi'}
+    res = requests.get(url, params)
+    if not res.status_code == 200:
+        return None
+    tree = ET.XML(res.content, parser=UTB())
+    doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
+    dois = [dt.text for dt in doi_tags]
+    return dois
 
 
 def _get_pdf_attachment(full_text_elem):
@@ -279,27 +351,3 @@ def _get_raw_text(full_text_elem):
     else:
         logger.info("Found rawtext element xocs:doc/xocs:rawtext")
         return textwrap.fill(raw_text.text)
-
-
-@lru_cache(maxsize=100)
-@ensure_api_keys('perform search')
-def get_dois(query_str, count=100):
-    """Search ScienceDirect through the API for articles.
-
-    See http://api.elsevier.com/content/search/fields/scidir for constructing a
-    query string to pass here.  Example: 'abstract(BRAF) AND all("colorectal
-    cancer")'
-    """
-    url = '%s/%s' % (elsevier_search_url, query_str)
-    params = {'query': query_str,
-              'count': count,
-              'httpAccept': 'application/xml',
-              'sort': '-coverdate',
-              'field': 'doi'}
-    res = requests.get(url, params)
-    if not res.status_code == 200:
-        return None
-    tree = ET.XML(res.content, parser=UTB())
-    doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
-    dois = [dt.text for dt in doi_tags]
-    return dois
