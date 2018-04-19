@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
+import random
 from builtins import dict, str
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -587,7 +589,7 @@ class DatabaseManager(object):
         """Select the first value that matches requirements.
 
         Requirements are given in kwargs from table indicated by tbl_name. See
-        *select_all*.
+        `select_all`.
 
         Note that if your specification yields multiple results, this method
         will just return the first result without exception.
@@ -604,7 +606,7 @@ class DatabaseManager(object):
 
             db.select_all('text_ref', db.TextRef.pmid == '10532205')
 
-        Note that double equals are required, not a single equal. Eqivalently
+        Note that double equals are required, not a single equal. Equivalently
         you could call:
 
         .. code-block:: python
@@ -624,6 +626,47 @@ class DatabaseManager(object):
                )
         """
         return self.filter_query(tbls, *args).all()
+
+    def select_sample_from_table(self, number, table, *args, **kwargs):
+        """Select a number of random samples from the given table.
+
+        Parameters
+        ----------
+        number : int
+            The number of samples to return
+        table : str, table class, or column attribute of table class
+            The table or table column to be sampled.
+        *args, **kwargs :
+            All other arguments are passed to `select_all`, including any and
+            all filtering clauses.
+
+        Returns
+        -------
+        A list of sqlalchemy orm objects
+        """
+        # Get the base set of tables needed.
+        if isinstance(table, str) and table in self.tables.keys():
+            true_table = getattr(self, table)
+        elif hasattr(table, 'class_'):
+            true_table = table.class_
+        elif table in self.tables.values():
+            true_table = table
+        else:
+            raise IndraDatabaseError("Unrecognized table: %s of type %s"
+                                     % (table, type(table)))
+
+        # Get all ids for this table given query filters
+        logger.info("Getting all relevant ids.")
+        id_tuples = self.select_all(true_table.id, *args, **kwargs)
+        id_list = list({entry_id for entry_id, in id_tuples})
+
+        # Sample from the list of ids
+        logger.info("Getting sample.")
+        id_sample = random.sample(id_list, number)
+        if hasattr(table, 'key') and table.key == 'id':
+            return [(entry_id,) for entry_id in id_sample]
+
+        return self.select_all(table, table.id.in_(id_sample))
 
     def has_entry(self, tbls, *args):
         "Check whether an entry/entries matching given specs live in the db."
