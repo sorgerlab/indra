@@ -6,8 +6,10 @@ __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
 
 import re
 import json
-import logging
 import zlib
+import logging
+from sqlalchemy import func
+from indra.databases import hgnc_client
 from indra.util.get_version import get_version
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
@@ -79,9 +81,13 @@ def get_test_db():
     test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
     key_list = list(test_defaults.keys())
     key_list.sort()
+    db = None
     for k in key_list:
         test_name = test_defaults[k]
         m = re.match('(\w+)://.*?/([\w.]+)', test_name)
+        if m is None:
+            logger.warning("Non-matching db name: %s" % test_name)
+            continue
         sqltype = m.groups()[0]
         try:
             db = DatabaseManager(test_name, sqltype=sqltype)
@@ -92,9 +98,8 @@ def get_test_db():
             continue  # Clearly this test database won't work.
         logger.info("Using test database %s." % k)
         break
-    else:
-        logger.error("Could not load a test database!")
-        return None
+    if db is None:
+        logger.error("Could not find any test database names.")
     return db
 
 
@@ -231,9 +236,9 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
             print('|', end='', flush=True)
     if verbose:
         print(" Done loading %d statements." % len(stmts))
-    db.copy('statements', stmt_data, cols)
-    insert_agents(db, db.Statements, db.Agents,
-                  db.Statements.db_ref == db_ref_id)
+    db.copy('raw_statements', stmt_data, cols)
+    insert_agents(db, db.RawStatements, db.RawAgents,
+                  db.RawStatements.db_ref == db_ref_id)
     return
 
 
@@ -272,6 +277,243 @@ def insert_pa_stmts(db, stmts, verbose=False):
     db.copy('pa_statements', stmt_data, cols)
     insert_agents(db, db.PAStatements, db.PAAgents, verbose=verbose)
     return
+
+
+def get_abstracts_by_pmids(db, pmid_list, unzip=True):
+    """Return abstracts given a list of PMIDs from the database
+
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
+        Reference to the DB to query
+    pmid_list : list[str]
+        A list of PMIDs whose abstracts are to be returned
+    unzip : Optional[bool]
+        If True, the compressed output is decompressed into clear text.
+        Default: True
+
+    Returns
+    -------
+    abstracts : dict
+        A dictionary whose keys are PMIDs with each value being the
+        the corresponding abstract
+    """
+    abst_list = db.filter_query(
+        [db.TextRef, db.TextContent],
+        db.TextContent.text_ref_id == db.TextRef.id,
+        db.TextContent.text_type == 'abstract',
+        db.TextRef.pmid.in_(pmid_list)
+        ).all()
+    if unzip:
+        def unzip_func(s):
+            return zlib.decompress(s, zlib.MAX_WBITS + 16).decode('utf-8')
+    else:
+        def unzip_func(s):
+            return s
+    abstracts = {r.pmid: unzip_func(c.content) for (r, c) in abst_list}
+    return abstracts
+
+
+def get_auth_xml_pmcids(db):
+    tref_list = db.filter_query(
+        [db.TextRef, db.TextContent],
+        db.TextRef.id == db.TextContent.text_ref_id,
+        db.TextContent.text_type == texttypes.FULLTEXT,
+        db.TextContent.source == 'pmc_auth'
+        )
+    return [tref.pmcid for tref in tref_list]
+
+
+#==============================================================================
+# Below are some functions that are useful for getting raw statements from the
+# database at various levels of abstraction.
+#==============================================================================
+
+def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
+                                     role=None, stmt_type=None, count=1000,
+                                     db=None, do_stmt_count=True,
+                                     preassembled=True):
+    """Get statements from the DB by stmt type, agent, and/or agent role.
+
+    Parameters
+    ----------
+    agent_id : str
+        String representing the identifier of the agent from the given
+        namespace. Note: if the agent namespace argument, `agent_ns`, is set
+        to 'HGNC-SYMBOL', this function will treat `agent_id` as an HGNC gene
+        symbol and perform an internal lookup of the corresponding HGNC ID.
+        Default is 'HGNC-SYMBOL'.
+    agent_ns : str
+        Namespace for the identifier given in `agent_id`.
+    role : str
+        String corresponding to the role of the agent in the statement.
+        Options are 'SUBJECT', 'OBJECT', or 'OTHER' (in the case of `Complex`,
+        `SelfModification`, and `ActiveForm` Statements).
+    stmt_type : str
+        Name of the Statement class.
+    count : int
+        Number of statements to retrieve in each batch (passed to
+        :py:func:`get_statements`).
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local databse instance.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
+    preassembled : bool
+        If true, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
+
+    Returns
+    -------
+    list of Statements from the database corresponding to the query.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    if preassembled:
+        Statements = db.PAStatements
+        Agents = db.PAAgents
+    else:
+        Statements = db.RawStatements
+        Agents = db.RawAgents
+
+    if not (agent_id or role or stmt_type):
+        raise ValueError('At least one of agent_id, role, or stmt_type '
+                         'must be specified.')
+    clauses = []
+    if agent_id and agent_ns == 'HGNC-SYMBOL':
+        hgnc_id = hgnc_client.get_hgnc_id(agent_id)
+        if not hgnc_id:
+            logger.warning('Invalid gene name: %s' % agent_id)
+            return []
+        clauses.extend([Agents.db_name.like('HGNC'),
+                        Agents.db_id.like(hgnc_id)])
+    elif agent_id:
+        clauses.extend([Agents.db_name.like(agent_ns),
+                        Agents.db_id.like(agent_id)])
+    if role:
+        clauses.append(Agents.role == role)
+    if agent_id or role:
+        clauses.append(Agents.stmt_id == Statements.id)
+    if stmt_type:
+        clauses.append(Statements.type == stmt_type)
+    stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
+                           db=db, preassembled=preassembled)
+    return stmts
+
+
+def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
+                            do_stmt_count=True):
+    """Get the statements from a particular paper.
+
+    Note: currently this can only retrieve raw statements, because of the
+    partially implemented configuration of the pre-assembled Statement table.
+
+    Parameters
+    ----------
+    id_val : int or str
+        The value of the id for the paper whose statements you wish to retrieve.
+    id_type : str
+        The type of id used (default is pmid). Options include pmid, pmcid, doi,
+        pii, url, or manuscript_id. Note that pmid is generally the best means
+        of getting a paper.
+    count : int
+        Number of statements to retrieve in each batch (passed to
+        :py:func:`get_statements`).
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local databse instance.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
+
+    Returns
+    -------
+    A list of Statements from the database corresponding to the paper id given.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    # Get the text ref id(s)
+    if id_type in ['trid']:
+        trid_list = [int(id_val)]
+    else:
+        id_types = ['pmid', 'pmcid', 'doi', 'pii', 'url', 'manuscript_id']
+        if id_type not in id_types:
+            raise ValueError('id_type must be one of: %s' % str(id_types))
+        constraint = (getattr(db.TextRef, id_type) == id_val)
+        trid_list = [trid for trid, in db.select_all(db.TextRef.id, constraint)]
+
+    if not trid_list:
+        return None
+
+    stmts = []
+    for trid in trid_list:
+        clauses = [
+            db.TextContent.text_ref_id == trid,
+            db.Readings.text_content_id == db.TextContent.id,
+            db.Statements.reader_ref == db.Readings.id
+        ]
+        stmts.extend(get_statements(clauses, count=count, preassembled=False,
+                                    do_stmt_count=do_stmt_count, db=db))
+    return stmts
+
+
+def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
+                   preassembled=True):
+    """Select statements according to a given set of clauses.
+
+    Parameters
+    ----------
+    clauses : list
+        list of sqlalchemy WHERE clauses to pass to the filter query.
+    count : int
+        Number of statements to retrieve and process in each batch.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local database instance.
+    preassembled : bool
+        If true, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
+
+    Returns
+    -------
+    list of Statements from the database corresponding to the query.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    stmts_tblname = 'pa_statements' if preassembled else 'raw_statements'
+
+    stmts = []
+    q = db.filter_query(stmts_tblname, *clauses)
+    if do_stmt_count:
+        logger.info("Counting statements...")
+        num_stmts = q.count()
+        logger.info("Total of %d statements" % num_stmts)
+    db_stmts = q.yield_per(count)
+    subset = []
+    total_counter = 0
+    for stmt in db_stmts:
+        subset.append(stmt)
+        if len(subset) == count:
+            stmts.extend(make_stmts_from_db_list(subset))
+            subset = []
+        total_counter += 1
+        if total_counter % count == 0:
+            if do_stmt_count:
+                logger.info("%d of %d statements" % (total_counter, num_stmts))
+            else:
+                logger.info("%d statements" % total_counter)
+
+    stmts.extend(make_stmts_from_db_list(subset))
+    return stmts
 
 
 def make_stmts_from_db_list(db_stmt_objs):
@@ -403,11 +645,11 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     """
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
-                          db.TextContent.source, db.Readings.id,
-                          db.Readings.reader_version, db.Statements.id,
-                          db.Statements.json)
-         .filter(db.TextContent.id == db.Readings.text_content_id,
-                 db.Readings.id == db.Statements.reader_ref))
+                          db.TextContent.source, db.Reading.id,
+                          db.Reading.reader_version, db.RawStatements.id,
+                          db.RawStatements.json)
+         .filter(db.TextContent.id == db.Reading.text_content_id,
+                 db.Reading.id == db.RawStatements.reader_ref))
     if clauses:
         q.filter(*clauses)
 
@@ -485,6 +727,233 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                           for ev_hash, ev_set in rv_dict[best_rv].items()}
 
     return stmt_nd, stmts
+
+
+#==============================================================================
+# Below are functions used for getting statistics on tables in the database.
+#==============================================================================
+
+
+def __report_stat(report_str, fname=None, do_print=True):
+    if do_print:
+        print(report_str)
+    if fname is not None:
+        with open(fname, 'a+') as f:
+            f.write(report_str + '\n')
+    return
+
+
+def get_text_ref_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    tr_tc_link = db.TextRef.id == db.TextContent.text_ref_id
+    tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
+    __report_stat("Text ref statistics:", fname)
+    __report_stat("--------------------", fname)
+    tr_q = db.filter_query(db.TextRef)
+    total_refs = tr_q.count()
+    __report_stat('Total number of text refs: %d' % total_refs, fname)
+    tr_w_cont_q = tr_q.filter(tr_tc_link)
+    refs_with_content = tr_w_cont_q.distinct().count()
+    __report_stat('Total number of refs with content: %d' % refs_with_content,
+                  fname)
+    tr_w_fulltext_q = tr_w_cont_q.filter(db.TextContent.text_type == 'fulltext')
+    refs_with_fulltext = tr_w_fulltext_q.distinct().count()
+    __report_stat('Number of refs with fulltext: %d' % refs_with_fulltext,
+                  fname)
+    tr_w_abstract_q = tr_w_cont_q.filter(db.TextContent.text_type == 'abstract')
+    refs_with_abstract = tr_w_abstract_q.distinct().count()
+    __report_stat('Number of refs with abstract: %d' % refs_with_abstract,
+                  fname)
+    __report_stat(('Number of refs with only abstract: %d'
+                   % (refs_with_content-refs_with_fulltext)), fname)
+    tr_w_read_content_q = tr_w_cont_q.filter(tc_rdng_link)
+    refs_with_reading = tr_w_read_content_q.distinct().count()
+    __report_stat('Number of refs that have been read: %d' % refs_with_reading,
+                  fname)
+    tr_w_fulltext_read_q = tr_w_fulltext_q.filter(tc_rdng_link)
+    refs_with_fulltext_read = tr_w_fulltext_read_q.distinct().count()
+    __report_stat(('Number of refs with fulltext read: %d'
+                   % refs_with_fulltext_read), fname)
+    return
+
+
+def get_text_content_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
+    __report_stat("\nText Content statistics:", fname)
+    __report_stat('------------------------', fname)
+    tc_q = db.filter_query(db.TextContent)
+    total_content = tc_q.count()
+    __report_stat("Total number of text content entries: %d" % total_content)
+    latest_updates = (db.session.query(db.Updates.source,
+                                       func.max(db.Updates.datetime))
+                      .group_by(db.Updates.source)
+                      .all())
+    __report_stat(("Latest updates:\n    %s"
+                   % '\n    '.join(['%s: %s' % (s, d)
+                                    for s, d in latest_updates])),
+                  fname
+                  )
+    tc_w_reading_q = tc_q.filter(tc_rdng_link)
+    content_read = tc_w_reading_q.distinct().count()
+    __report_stat("Total content read: %d" % content_read, fname)
+    tc_fulltext_q = tc_q.filter(db.TextContent.text_type == 'fulltext')
+    fulltext_content = tc_fulltext_q.distinct().count()
+    __report_stat("Number of fulltext entries: %d" % fulltext_content, fname)
+    tc_fulltext_read_q = tc_fulltext_q.filter(tc_rdng_link)
+    fulltext_read = tc_fulltext_read_q.distinct().count()
+    __report_stat("Number of fulltext entries read: %d" % fulltext_read, fname)
+    content_by_source = (db.session.query(db.TextContent.source,
+                                          func.count(db.TextContent.id))
+                         .distinct()
+                         .group_by(db.TextContent.source)
+                         .all())
+    __report_stat(("Content by source:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n)
+                                    for s, n in content_by_source])),
+                  fname
+                  )
+    content_read_by_source = (db.session.query(db.TextContent.source,
+                                               func.count(db.TextContent.id))
+                              .filter(tc_rdng_link)
+                              .distinct()
+                              .group_by(db.TextContent.source)
+                              .all())
+    __report_stat(("Content read by source:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n)
+                                    for s, n in content_read_by_source])),
+                  fname
+                  )
+    return
+
+
+def get_readings_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+
+    __report_stat('\nReading statistics:', fname)
+    __report_stat('-------------------', fname)
+    rdg_q = db.filter_query(db.Reading)
+    __report_stat('Total number or readings: %d' % rdg_q.count(), fname)
+    # There may be a way to do this more neatly with a group_by clause, however
+    # the naive way of doing it leaves us with a miscount due to indistinct.
+    reader_versions = (db.session.query(db.Reading.reader_version)
+                       .distinct().all())
+    sources = db.session.query(db.TextContent.source).distinct().all()
+    stats = ''
+    for rv, in reader_versions:
+        for src, in sources:
+            cnt = db.filter_query(
+                db.Reading,
+                db.TextContent.id == db.Reading.text_content_id,
+                db.TextContent.source == src,
+                db.Reading.reader_version == rv
+                ).distinct().count()
+            stats += '    Readings by %s from %s: %d\n' % (rv, src, cnt)
+    __report_stat("Readings by reader version and content source:\n%s" % stats,
+                  fname)
+    return
+
+
+def get_statements_stats(fname=None, db=None, indra_version=None):
+    if db is None:
+        db = get_primary_db()
+    tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
+    stmt_rdng_link = db.Reading.id == db.RawStatements.reader_ref
+
+    __report_stat('\nStatement Statistics:', fname)
+    __report_stat('---------------------', fname)
+    stmt_q = db.filter_query(db.RawStatements)
+    if indra_version is not None:
+        stmt_q = stmt_q.filter(db.RawStatements.indra_version == indra_version)
+    __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
+    readers = db.session.query(db.Reading.reader).distinct().all()
+    sources = db.session.query(db.TextContent.source).distinct().all()
+    stats = ''
+    for reader, in readers:
+        for src, in sources:
+            cnt = stmt_q.filter(
+                stmt_rdng_link,
+                tc_rdng_link,
+                db.Reading.reader == reader,
+                db.TextContent.source == src
+                ).distinct().count()
+            stats += ('    Statements from %s reading %s: %d\n'
+                      % (reader, src, cnt))
+    __report_stat("Statements by reader and content source:\n%s" % stats,
+                  fname)
+    if indra_version is None:
+        statements_by_db_source = (
+            db.session.query(db.DBInfo.db_name, func.count(db.RawStatements.id))
+            .filter(db.RawStatements.db_ref == db.DBInfo.id)
+            .distinct()
+            .group_by(db.DBInfo.db_name)
+            .all()
+            )
+        __report_stat(("Statements by database:\n    %s"
+                       % '\n    '.join(['%s: %d' % (s, n)
+                                        for s, n in statements_by_db_source])),
+                      fname
+                      )
+        statements_by_indra_version = (
+            db.session.query(db.RawStatements.indra_version,
+                             func.count(db.RawStatements.id))
+            .group_by(db.RawStatements.indra_version)
+            .all()
+            )
+        __report_stat(("Number of statements by indra version:\n    %s"
+                       % '\n    '.join(['%s: %d' % (s, n) for s, n
+                                        in statements_by_indra_version])),
+                      fname
+                      )
+    return
+
+
+def get_pa_statement_stats(fname=None, db=None):
+    if db is None:
+        db = get_primary_db()
+    __report_stat('\nStatement Statistics:', fname)
+    __report_stat('---------------------', fname)
+    stmt_q = db.filter_query(db.PAStatements)
+    __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
+    statements_produced_by_indra_version = (
+        db.session.query(db.PAStatements.indra_version,
+                         func.count(db.PAStatements.id))
+        .group_by(db.PAStatements.indra_version)
+        .all()
+        )
+    __report_stat(("Number of statements by indra version:\n    %s"
+                   % '\n    '.join(['%s: %d' % (s, n) for s, n
+                                    in statements_produced_by_indra_version])),
+                  fname
+                  )
+    return
+
+
+def get_db_statistics(fname=None, db=None, tables=None):
+    """Get statistics on the contents of the database"""
+    if db is None:
+        db = get_primary_db()
+
+    task_dict = {
+        'text_ref': get_text_ref_stats,
+        'text_content': get_text_content_stats,
+        'readings': get_readings_stats,
+        'statements': get_statements_stats,
+        'pa_statements': get_pa_statement_stats
+        }
+
+    # Get the statistics
+    if tables is None:
+        for stat_meth in task_dict.values():
+            stat_meth(fname, db)
+    else:
+        for table_key in set(tables):
+            task_dict[table_key](fname, db)
+
+    return
 
 
 def unpack(bts, decode=True):

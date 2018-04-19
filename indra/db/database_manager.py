@@ -19,8 +19,9 @@ from sqlalchemy.schema import DropTable
 from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
-    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime, func
+from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
+    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime, func, \
+    BigInteger
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 
@@ -157,6 +158,7 @@ class DatabaseManager(object):
         self.Base = declarative_base()
         self.sqltype = sqltype
         self.label = label
+        self.tables = {}
 
         if sqltype is sqltypes.POSTGRESQL:
             Bytea = BYTEA
@@ -178,6 +180,8 @@ class DatabaseManager(object):
                 UniqueConstraint('pmid', 'doi'),
                 UniqueConstraint('pmcid', 'doi')
                 )
+        self.TextRef = TextRef
+        self.tables[TextRef.__tablename__] = TextRef
 
         class SourceFile(self.Base):
             __tablename__ = 'source_file'
@@ -188,6 +192,8 @@ class DatabaseManager(object):
             __table_args__ = (
                 UniqueConstraint('source', 'name'),
                 )
+        self.SourceFile = SourceFile
+        self.tables[SourceFile.__tablename__] = SourceFile
 
         class Updates(self.Base):
             __tablename__ = 'updates'
@@ -196,6 +202,8 @@ class DatabaseManager(object):
             source = Column(String(250), nullable=False)
             unresolved_conflicts_file = Column(Bytea)
             datetime = Column(DateTime, default=func.now())
+        self.Updates = Updates
+        self.tables[Updates.__tablename__] = Updates
 
         class TextContent(self.Base):
             __tablename__ = 'text_content'
@@ -215,9 +223,11 @@ class DatabaseManager(object):
                     'text_ref_id', 'source', 'format', 'text_type'
                     ),
                 )
+        self.TextContent = TextContent
+        self.tables[TextContent.__tablename__] = TextContent
 
-        class Readings(self.Base):
-            __tablename__ = 'readings'
+        class Reading(self.Base):
+            __tablename__ = 'reading'
             id = Column(Integer, primary_key=True)
             text_content_id = Column(Integer,
                                      ForeignKey('text_content.id'),
@@ -234,6 +244,8 @@ class DatabaseManager(object):
                     'text_content_id', 'reader', 'reader_version'
                     ),
                 )
+        self.Reading = Reading
+        self.tables[Reading.__tablename__] = Reading
 
         class ReadingUpdates(self.Base):
             __tablename__ = 'reading_updates'
@@ -244,6 +256,8 @@ class DatabaseManager(object):
             run_datetime = Column(DateTime, default=func.now())
             earliest_datetime = Column(DateTime)
             latest_datetime = Column(DateTime, nullable=False)
+        self.ReadingUpdates = ReadingUpdates
+        self.tables[ReadingUpdates.__tablename__] = ReadingUpdates
 
         class DBInfo(self.Base):
             __tablename__ = 'db_info'
@@ -251,30 +265,47 @@ class DatabaseManager(object):
             db_name = Column(String(20), nullable=False)
             create_date = Column(DateTime, default=func.now())
             last_updated = Column(DateTime, onupdate=func.now())
+        self.DBInfo = DBInfo
+        self.tables[DBInfo.__tablename__] = DBInfo
 
-        class Statements(self.Base):
-            __tablename__ = 'statements'
+        class RawStatements(self.Base):
+            __tablename__ = 'raw_statements'
             id = Column(Integer, primary_key=True)
+            mk_hash = Column(BigInteger, nullable=False)
             uuid = Column(String(40), unique=True, nullable=False)
-            db_ref = Column(Integer, ForeignKey('db_info.id'))
+            db_info_id = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
-            reader_ref = Column(Integer, ForeignKey('readings.id'))
-            readings = relationship(Readings)
+            reading_id = Column(Integer, ForeignKey('reading.id'))
+            reading = relationship(Reading)
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
             create_date = Column(DateTime, default=func.now())
+        self.RawStatements = RawStatements
+        self.tables[RawStatements.__tablename__] = RawStatements
 
-        class Agents(self.Base):
-            __tablename__ = 'agents'
+        class RawAgents(self.Base):
+            __tablename__ = 'raw_agents'
             id = Column(Integer, primary_key=True)
             stmt_id = Column(Integer,
-                             ForeignKey('statements.id'),
+                             ForeignKey('raw_statements.id'),
                              nullable=False)
-            statements = relationship(Statements)
+            statements = relationship(RawStatements)
             db_name = Column(String(40), nullable=False)
             db_id = Column(String, nullable=False)
             role = Column(String(20), nullable=False)
+        self.RawAgents = RawAgents
+        self.tables[RawAgents.__tablename__] = RawAgents
+
+        class RawUniqueLinks(self.Base):
+            __tablename__ = 'raw_unique_links'
+            id = Column(Integer, primary_key=True)
+            raw_stmt_id = Column(Integer, ForeignKey('raw_statements.id'),
+                                 nullable=False)
+            pa_stmt_id = Column(Integer, ForeignKey('pa_statements.id'),
+                                nullable=False)
+        self.RawUniqueLinks = RawUniqueLinks
+        self.tables[RawUniqueLinks.__tablename__] = RawUniqueLinks
 
         class PAStatements(self.Base):
             __tablename__ = 'pa_statements'
@@ -284,6 +315,8 @@ class DatabaseManager(object):
             indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
             create_date = Column(DateTime, default=func.now())
+        self.PAStatements = PAStatements
+        self.tables[PAStatements.__tablename__] = PAStatements
 
         class PAAgents(self.Base):
             __tablename__ = 'pa_agents'
@@ -295,14 +328,21 @@ class DatabaseManager(object):
             db_name = Column(String(40), nullable=False)
             db_id = Column(String, nullable=False)
             role = Column(String(20), nullable=False)
+        self.PAAgents = PAAgents
+        self.tables[PAAgents.__tablename__] = PAAgents
 
-        self.tables = {}
-        for tbl in [TextRef, TextContent, Readings, SourceFile, Updates,
-                    DBInfo, Statements, Agents, PAStatements, PAAgents,
-                    ReadingUpdates]:
-            self.tables[tbl.__tablename__] = tbl
-            self.__setattr__(tbl.__name__, tbl)
+        class PASupportLinks(self.Base):
+            __tablename__ = 'pa_support_links'
+            id = Column(Integer, primary_key=True)
+            supporting_id = Column(Integer, ForeignKey('pa_statements.id'),
+                                   nullable=False)
+            supported_id = Column(Integer, ForeignKey('pa_statements.id'),
+                                  nullable=False)
+        self.PASupportLinks = PASupportLinks
+        self.tables[PASupportLinks.__tablename__] = PASupportLinks
+
         self.engine = create_engine(host)
+        return
 
     def __del__(self, *args, **kwargs):
         try:

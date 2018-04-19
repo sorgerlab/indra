@@ -138,9 +138,9 @@ def _enrich_reading_data(reading_data_iter, db=None):
     if db is None:
         db = get_primary_db()
     possible_matches = db.select_all(
-        'readings',
-        db.Readings.text_content_id.in_([rd.tcid for rd in reading_data_iter
-                                         if rd.reading_id is None])
+        'reading',
+        db.Reading.text_content_id.in_([rd.tcid for rd in reading_data_iter
+                                        if rd.reading_id is None])
         )
     for rdata in reading_data_iter:
         for reading in possible_matches:
@@ -323,7 +323,7 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
     # These allow conditions on different tables to equal conditions on the
     # dependent tables.
     tc_tr_binding = db.TextContent.text_ref_id == db.TextRef.id
-    rd_tc_binding = db.Readings.text_content_id == db.TextContent.id
+    rd_tc_binding = db.Reading.text_content_id == db.TextContent.id
 
     # Begin the list of clauses with the binding between text content and
     # text refs.
@@ -407,7 +407,7 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
         db = get_primary_db()
     clauses = [
         # Bind conditions on readings to conditions on content.
-        db.Readings.text_content_id == db.TextContent.id,
+        db.Reading.text_content_id == db.TextContent.id,
 
         # Bind text content to text refs
         db.TextContent.text_ref_id == db.TextRef.id,
@@ -427,10 +427,10 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
                 clauses.append(*sub_clauses)
 
         readings_query = db.filter_query(
-            db.Readings,
+            db.Reading,
 
             # Bind conditions on readings to conditions on content.
-            db.Readings.text_content_id == db.TextContent.id,
+            db.Reading.text_content_id == db.TextContent.id,
 
             # Bind text content to text refs
             db.TextContent.text_ref_id == db.TextRef.id,
@@ -537,8 +537,8 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                     else:
                         # Try to get a previous reading from this reader.
                         reading = db.select_one(
-                            db.Readings,
-                            db.Readings.text_content_id == text_content.id,
+                            db.Reading,
+                            db.Reading.text_content_id == text_content.id,
                             r.matches_clause(db)
                             )
                         if reading is not None:
@@ -597,8 +597,8 @@ def upload_readings(output_list, db=None):
 
     # Create the list of records to be copied, ensuring no uniqueness conflicts
     r_list = db.select_all(
-        db.Readings,
-        db.Readings.text_content_id.in_([rd.tcid for rd in output_list])
+        db.Reading,
+        db.Reading.text_content_id.in_([rd.tcid for rd in output_list])
         )
     exisiting_tcid_set = set([r.text_content_id for r in r_list])
     upload_list = []
@@ -618,7 +618,7 @@ def upload_readings(output_list, db=None):
     # Copy into the database.
     logger.info("Adding %d/%d reading entries to the database." %
                 (len(upload_list), len(output_list)))
-    db.copy('readings', upload_list, ReadingData.get_cols())
+    db.copy('reading', upload_list, ReadingData.get_cols())
     return
 
 
@@ -737,15 +737,15 @@ def upload_statements(stmt_data_list, db=None):
 
     logger.info("Uploading %d statements to the database." %
                 len(stmt_data_list))
-    db.copy('statements', [s.make_tuple() for s in stmt_data_list],
+    db.copy('raw_statements', [s.make_tuple() for s in stmt_data_list],
             StatementData.get_cols())
 
     logger.info("Uploading agents to the database.")
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     if len(reading_id_set):
         uuid_set = {s.statement.uuid for s in stmt_data_list}
-        insert_agents(db, db.Statements, db.Agents,
-                      db.Statements.uuid.in_(uuid_set), verbose=True,
+        insert_agents(db, db.RawStatements, db.RawAgents,
+                      db.RawStatements.uuid.in_(uuid_set), verbose=True,
                       override_default_query=True)
     return
 

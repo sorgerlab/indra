@@ -122,7 +122,7 @@ def test_reading_content_insert():
 
     print("Test reading insert")
     rdb.upload_readings(reading_output, db=db)
-    r_list = db.select_all(db.Readings)
+    r_list = db.select_all(db.Reading)
 
     def is_complete_match(r_list, reading_output):
         return all([any([rd.matches(r) for r in r_list])
@@ -144,10 +144,10 @@ def test_reading_content_insert():
     print("Test making statements")
     stmts = rdb.produce_statements(reading_output, db=db)
     assert len(stmts), 'No statements created.'
-    db_stmts = db.select_all(db.Statements)
+    db_stmts = db.select_all(db.RawStatements)
     assert len(db_stmts) == len(stmts), \
         "Only %d/%d statements added." % (len(db_stmts), len(stmts))
-    assert len(db.select_all(db.Agents)), "No agents added."
+    assert len(db.select_all(db.RawAgents)), "No agents added."
 
 
 @attr('nonpublic')
@@ -167,7 +167,7 @@ def test_read_db():
     assert N1 == N1_exp, \
         'Expected %d readings, but got %d.' % (N1_exp, N1)
     rdb.upload_readings(reading_output_1, db=db)  # setup for later test.
-    N1_db = len(db.select_all(db.Readings))
+    N1_db = len(db.select_all(db.Reading))
     assert N1_db == N1, \
         'Expected %d readings to be copied to db, only %d found.' % (N1, N1_db)
 
@@ -216,13 +216,13 @@ def test_produce_readings():
         N_pkl = len(pickle.load(f))
     assert N_pkl == N_exp, \
         "Expected %d readings in pickle, got %d." % (N_exp, N_out)
-    N_readings = db.filter_query(db.Readings).count()
+    N_readings = db.filter_query(db.Reading).count()
     assert N_readings == 0, \
         "There shouldn't be any readings yet, but found %d." % N_readings
 
     # Test reading and insert to the database.
     rdb.produce_readings(id_dict, reader_list, verbose=True, db=db)
-    N_db = db.filter_query(db.Readings).count()
+    N_db = db.filter_query(db.Reading).count()
     assert N_db == N_exp, "Excpected %d readings, got %d." % (N_exp, N_db)
 
     # Test reading again, without read_mode='all'
@@ -312,7 +312,7 @@ def test_multi_batch_run():
                                    batch_size=len(tc_list)//2, db=db)
     # This should catch any repeated readings.
     rdb.upload_readings(outputs, db=db)
-    num_readings = db.filter_query(db.Readings).count()
+    num_readings = db.filter_query(db.Reading).count()
     assert num_readings == 2*len(tc_list), \
         "Expected %d readings, only found %d." % (2*len(tc_list), num_readings)
 

@@ -274,15 +274,15 @@ if __name__ == '__main__':
         db = get_primary_db()
         clauses = []
         if args.indra_version:
-            clauses.append(db.Statements.indra_version == args.indra_version)
+            clauses.append(db.RawStatements.indra_version == args.indra_version)
         if args.date_range:
             min_date_str, max_date_str = args.date_range.split(':')
             if min_date_str:
                 min_date = datetime.strptime(min_date_str, '%Y%m%d%H%M%S')
-                clauses.add(db.Statements.create_date > min_date)
+                clauses.add(db.RawStatements.create_date > min_date)
             if max_date_str:
                 max_date = datetime.strptime(max_date_str, '%Y%m%d%H%M%S')
-                clauses.add(db.Statements.create_date < max_date)
+                clauses.add(db.RawStatements.create_date < max_date)
 
         all_stmts, results = load_stmts_from_db(clauses, db)
 
