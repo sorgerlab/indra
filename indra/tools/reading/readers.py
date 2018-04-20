@@ -26,6 +26,10 @@ from indra.sources import sparser, reach
 
 logger = logging.getLogger('readers')
 
+# Set a character limit for reach reading
+REACH_CHARACTER_LIMIT = 5e5
+REACH_MAX_SPACE_RATIO = 0.5
+
 
 def _get_dir(*args):
     dirname = path.join(*args)
@@ -107,6 +111,10 @@ class ReachReader(Reader):
     def __init__(self, *args, **kwargs):
         self.exec_path, self.version = self._check_reach_env()
         self.do_content_check = kwargs.pop("check_content", True)
+        self.input_character_limit = kwargs.pop('input_character_limit',
+                                                REACH_CHARACTER_LIMIT)
+        self.max_space_ratio = kwargs.pop('max_space_ratio',
+                                          REACH_MAX_SPACE_RATIO)
         super(ReachReader, self).__init__(*args, **kwargs)
         conf_fmt_fname = path.join(path.dirname(__file__),
                                    'util/reach_conf_fmt.txt')
@@ -197,12 +205,12 @@ class ReachReader(Reader):
         """Check if the content is likely to be successfully read."""
         if self.do_content_check:
             space_ratio = content_str.count(' ')/len(content_str)
-            max_space_ratio = float(get_config('REACH_MAX_SPACE_RATIO'))
-            if space_ratio > max_space_ratio:
-                return "space-ratio: %f > %f" % (space_ratio, max_space_ratio)
-            max_len = float(get_config('REACH_CHARACTER_LIMIT'))
-            if len(content_str) > max_len:
-                return "too long: %d > %d" % (len(content_str), max_len)
+            if space_ratio > self.max_space_ratio:
+                return "space-ratio: %f > %f" % (space_ratio,
+                                                 self.max_space_ratio)
+            if len(content_str) > self.input_character_limit:
+                return "too long: %d > %d" % (len(content_str),
+                                              self.input_character_limit)
         return None
 
     def _write_content(self, text_content):

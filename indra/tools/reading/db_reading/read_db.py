@@ -80,10 +80,22 @@ if __name__ == '__main__':
         action='store_true'
         )
     parser.add_argument(
-        '--use-best-fulltext',
+        '--use_best_fulltext',
         help='Use only the best full text available.',
         action='store_true'
         )
+    parser.add_argumet(
+        '--max_reach_space_ratio',
+        type=int,
+        help='Set the maximum ratio of spaces to non-spaces for REACH input.',
+        default=None
+    )
+    parser.add_argument(
+        '--max_reach_input_len',
+        type=int,
+        help='Set the maximum length of content that REACH will read.',
+        default=None
+    )
     args = parser.parse_args()
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
@@ -91,7 +103,7 @@ if __name__ == '__main__':
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
 from indra.db.util import insert_agents
-from indra.tools.reading.readers import get_readers, ReadingData, _get_dir
+from indra.tools.reading.readers import ReadingData, _get_dir, get_reader
 
 
 class ReadDBError(Exception):
@@ -772,9 +784,18 @@ if __name__ == "__main__":
     base_dir = _get_dir(args.temp, 'run_%s' % ('_and_'.join(args.readers)))
 
     # Get the readers objects.
-    readers = [reader_class(base_dir=base_dir, n_proc=args.n_proc)
-               for reader_class in get_readers()
-               if reader_class.name.lower() in args.readers]
+    special_reach_args_dict = {
+        'input_character_limit': args.max_reach_space_ratio,
+        'max_space_ratio': args.max_reach_input_len
+    }
+    readers = []
+    for reader_name in args.readers:
+        kwargs = {'base_dir': base_dir, 'n_proc': args.n_proc}
+        if reader_name == 'REACH':
+            for key_name, reach_arg in special_reach_args_dict.items():
+                if reach_arg is not None:
+                    kwargs[key_name] = reach_arg
+        readers.append(get_reader(reader_name)(**kwargs))
 
     # Set the verbosity. The quiet argument overrides the verbose argument.
     verbose = args.verbose and not args.quiet

@@ -368,7 +368,8 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                       end_ix=None, pmids_per_job=3000, num_tries=2,
                       force_read=False, force_fulltext=False,
-                      read_all_fulltext=False, project_name=None):
+                      read_all_fulltext=False, project_name=None,
+                      max_reach_input_len=None, max_reach_space_ratio=None):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
     s3_client = boto3.client('s3')
@@ -414,6 +415,10 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
             command_list.append('--force_fulltext')
         if read_all_fulltext:
             command_list.append('--read_all_fulltext')
+        if max_reach_input_len is not None:
+            command_list += ['--max_reach_input_len', max_reach_input_len]
+        if max_reach_space_ratio is not None:
+            command_list += ['--max_reach_space_ratio', max_reach_space_ratio]
         logger.info('Command list: %s' % str(command_list))
         job_info = batch_client.submit_job(
             jobName=job_name,
@@ -556,6 +561,18 @@ if __name__ == '__main__':
         action='store_true',
         help='Read all available fulltext for input ids, not just the best.'
         )
+    parent_db_parser.add_argumet(
+        '--max_reach_space_ratio',
+        type=int,
+        help='Set the maximum ratio of spaces to non-spaces for REACH input.',
+        default=None
+    )
+    parent_db_parser.add_argument(
+        '--max_reach_input_len',
+        type=int,
+        help='Set the maximum length of content that REACH will read.',
+        default=None
+    )
 
     # Make non_db_parser and get subparsers
     non_db_parser = subparsers.add_parser(
@@ -639,5 +656,7 @@ if __name__ == '__main__':
             args.force_read,
             args.force_fulltext,
             args.read_all_fulltext,
-            args.project
+            args.project,
+            args.max_reach_input_len,
+            args.max_reach_space_ratio
             )
