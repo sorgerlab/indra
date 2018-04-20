@@ -1078,6 +1078,9 @@ class Statement(object):
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
         self.uuid = '%s' % uuid.uuid4()
+        self.hash = None
+        self.shallow_hash = None
+        return
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -1085,9 +1088,16 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
-    def get_hash(self):
-        ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
-        return hash(self.matches_key() + str(ev_matches_key_list))
+    def get_hash(self, refresh=False):
+        if self.hash is None or refresh:
+            ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
+            self.hash = hash(self.matches_key() + str(ev_matches_key_list))
+        return self.hash
+
+    def get_shallow_hash(self, refresh=False):
+        if self.shallow_hash is None or refresh:
+            self.shallow_hash = hash(self.matches_key())
+        return self.shallow_hash
 
     def agent_list_with_bound_condition_agents(self):
         # Returns the list of agents both directly participating in the
@@ -1262,7 +1272,13 @@ class Statement(object):
         for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
-        return self.__class__(**kwargs)
+        for attr in ['hash', 'shallow_hash']:
+            my_hash = kwargs.pop(attr, None)
+            my_shallow_hash = kwargs.pop(attr, None)
+        new_instance = self.__class__(**kwargs)
+        new_instance.hash = my_hash
+        new_instance.shallow_hash = my_shallow_hash
+        return new_instance
 
 
 @python_2_unicode_compatible
