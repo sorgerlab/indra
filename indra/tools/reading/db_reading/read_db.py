@@ -795,7 +795,7 @@ if __name__ == "__main__":
             for key_name, reach_arg in special_reach_args_dict.items():
                 if reach_arg is not None:
                     kwargs[key_name] = reach_arg
-        readers.append(get_reader(reader_name)(**kwargs))
+        readers.append(get_reader(reader_name, **kwargs))
 
     # Set the verbosity. The quiet argument overrides the verbose argument.
     verbose = args.verbose and not args.quiet

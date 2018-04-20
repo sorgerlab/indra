@@ -561,14 +561,19 @@ def get_readers():
     return children
 
 
-def get_reader(reader_name):
-    """Get a particular reader by name."""
+def get_reader_class(reader_name):
+    """Get a particular reader class by name."""
     for reader_class in get_readers():
         if reader_class.name.lower() == reader_name.lower():
             return reader_class
     else:
         logger.error("No such reader: %s" % reader_name)
         return None
+
+
+def get_reader(reader_name, *args, **kwargs):
+    """Get an instantiated reader by name."""
+    return get_reader_class(reader_name)(*args, **kwargs)
 
 
 class ReadingData(object):
