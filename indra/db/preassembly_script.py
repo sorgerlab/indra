@@ -1,3 +1,6 @@
+from copy import deepcopy
+from collections import defaultdict
+
 import indra.tools.assemble_corpus as ac
 from indra.db.util import insert_pa_stmts
 from indra.db.client import get_statements
@@ -8,23 +11,24 @@ from indra.preassembler.hierarchy_manager import hierarchies
 def make_unique_statement_set(preassembler, stmts):
     stmt_groups = preassembler._get_stmt_matching_groups(stmts)
     unique_stmts = []
+    evidence_links = defaultdict(lambda: set())
     for _, duplicates in stmt_groups:
         # Get the first statement and add the evidence of all subsequent
         # Statements to it
         for stmt_ix, stmt in enumerate(duplicates):
             if stmt_ix == 0:
                 first_stmt = stmt.make_generic_copy()
-            first_stmt.evidence.append(stmt.uuid)
+            evidence_links[first_stmt.get_shallow_hash()].add(stmt.uuid)
         # This should never be None or anything else
         assert isinstance(first_stmt, type(stmt))
         unique_stmts.append(first_stmt)
-    return unique_stmts
+    return unique_stmts, evidence_links
 
 
 def get_match_key_maps(preassembler, unique_stmts, **generate_id_map_kwargs):
     id_maps = preassembler._generate_id_maps(unique_stmts,
                                              **generate_id_map_kwargs)
-    return {tuple([unique_stmts[idx].matches_key() for idx in idx_pair])
+    return {tuple([unique_stmts[idx].get_shallow_hash() for idx in idx_pair])
             for idx_pair in id_maps}
 
 
@@ -32,10 +36,42 @@ def process_statements(stmts, **generate_id_map_kwargs):
     stmts = ac.map_grounding(stmts)
     stmts = ac.map_sequence(stmts)
     pa = Preassembler(hierarchies)
-    unique_stmts = make_unique_statement_set(pa, stmts)
+    unique_stmts, evidence_links = make_unique_statement_set(pa, stmts)
     match_key_maps = get_match_key_maps(pa, unique_stmts,
                                         **generate_id_map_kwargs)
-    return unique_stmts, match_key_maps
+    unique_stmt_dict = {stmt.get_shallow_hash(): stmt for stmt in unique_stmts}
+    return unique_stmt_dict, evidence_links, match_key_maps
+
+
+def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
+                     new_stmts, optimize=False, **kwargs):
+    new_unique_stmt_dict, new_evidence_links, new_match_key_maps = \
+        process_statements(new_stmts, **kwargs)
+    pa = Preassembler(hierarchies)
+    if optimize:
+        old_stmt_hash_set = set(unique_stmt_dict.keys())
+        new_stmt_hash_set = set(new_unique_stmt_dict.keys())
+        only_old_stmts = [unique_stmt_dict[mk_hash]
+                          for mk_hash in old_stmt_hash_set - new_stmt_hash_set]
+        only_new_stmts = [new_unique_stmt_dict[mk_hash]
+                          for mk_hash in new_stmt_hash_set - old_stmt_hash_set]
+        split_idx = len(only_old_stmts) + 1
+        merge_stmts = only_old_stmts + only_new_stmts
+    else:
+        raise Exception("Bad")
+        split_idx = len(unique_stmt_dict) + 1
+        merge_stmts = list(unique_stmt_dict.values())\
+                      + list(new_unique_stmt_dict.values())
+    merge_match_key_maps = get_match_key_maps(pa, merge_stmts,
+                                              split_idx=split_idx, **kwargs)
+    new_match_key_maps |= merge_match_key_maps
+    full_match_key_maps = match_key_maps | new_match_key_maps
+    full_evidence_links = deepcopy(evidence_links)
+    for mk_hash, evidence_set in new_evidence_links.items():
+        evidence_links[mk_hash] |= evidence_set
+    full_unique_stmt_dict = deepcopy(new_unique_stmt_dict)
+    full_unique_stmt_dict.update(unique_stmt_dict)
+    return full_unique_stmt_dict, full_evidence_links, full_match_key_maps
 
 
 def preassemble_db_stmts(db, num_proc, *clauses):
