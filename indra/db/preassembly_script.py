@@ -45,9 +45,12 @@ def process_statements(stmts, **generate_id_map_kwargs):
 
 def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
                      new_stmts, optimize=False, **kwargs):
+    # Pre-assemble the new statements.
     new_unique_stmt_dict, new_evidence_links, new_match_key_maps = \
         process_statements(new_stmts, **kwargs)
-    pa = Preassembler(hierarchies)
+
+    # Now get the list of statements the need to be compared between the
+    # existing and new corpora
     if optimize:
         old_stmt_hash_set = set(unique_stmt_dict.keys())
         new_stmt_hash_set = set(new_unique_stmt_dict.keys())
@@ -62,15 +65,22 @@ def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
         split_idx = len(unique_stmt_dict) + 1
         merge_stmts = list(unique_stmt_dict.values())\
                       + list(new_unique_stmt_dict.values())
+
+    # Find the support links between the new corpora
+    pa = Preassembler(hierarchies)
     merge_match_key_maps = get_match_key_maps(pa, merge_stmts,
                                               split_idx=split_idx, **kwargs)
-    new_match_key_maps |= merge_match_key_maps
-    full_match_key_maps = match_key_maps | new_match_key_maps
+
+    # Update the old parameters.
+    full_unique_stmt_dict = deepcopy(new_unique_stmt_dict)
+    full_unique_stmt_dict.update(unique_stmt_dict)
+
     full_evidence_links = deepcopy(evidence_links)
     for mk_hash, evidence_set in new_evidence_links.items():
         evidence_links[mk_hash] |= evidence_set
-    full_unique_stmt_dict = deepcopy(new_unique_stmt_dict)
-    full_unique_stmt_dict.update(unique_stmt_dict)
+
+    new_match_key_maps |= merge_match_key_maps
+    full_match_key_maps = match_key_maps | new_match_key_maps
     return full_unique_stmt_dict, full_evidence_links, full_match_key_maps
 
 
@@ -97,3 +107,9 @@ def make_graph(unique_stmts, match_key_maps):
         g.add_edge(unique_stmts_dict[k1], unique_stmts_dict[k2])
 
     return g
+
+
+def flatten_evidence_dict(ev_dict):
+    return {(u_stmt_key, ev_stmt_uuid)
+            for u_stmt_key, ev_stmt_uuid_set in ev_dict.items()
+            for ev_stmt_uuid in ev_stmt_uuid_set}
