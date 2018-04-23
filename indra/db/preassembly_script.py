@@ -88,7 +88,9 @@ def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
 
     full_evidence_links = deepcopy(evidence_links)
     for mk_hash, evidence_set in new_evidence_links.items():
-        evidence_links[mk_hash] |= evidence_set
+        full_evidence_links[mk_hash] |= evidence_set
+    logger.info("There are now %d evidence links."
+                % len(flatten_evidence_dict(full_evidence_links)))
 
     new_match_key_maps |= merge_match_key_maps
     full_match_key_maps = match_key_maps | new_match_key_maps

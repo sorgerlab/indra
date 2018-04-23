@@ -61,8 +61,9 @@ def test_preassembly_without_database():
         pas.process_statements(stmts)
     assert len(unique_stmt_dict)
     total_evidence = len(pas.flatten_evidence_dict(evidence_links))
-    assert total_evidence == len(stmts), \
-        "Got %d ev links for %d stmts." % (total_evidence, len(stmts))
+    assert len(unique_stmt_dict) <= total_evidence <= len(stmts), \
+        ("Got %d ev links for %d stmts and %d unique statements (should be "
+         "between)." % (total_evidence, len(stmts), len(unique_stmt_dict)))
     assert len(evidence_links) == len(unique_stmt_dict), \
         ("Got %d ev sets for %d unique stmts."
          % (len(evidence_links), len(unique_stmt_dict)))
