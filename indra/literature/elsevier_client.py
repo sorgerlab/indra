@@ -40,6 +40,8 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'atom': 'http://www.w3.org/2005/Atom',
                'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
 ELSEVIER_KEYS = None
+API_KEY_ENV_NAME = 'ELSEVIER_API_KEY'
+INST_KEY_ENV_NAME = 'ELSEVIER_INST_KEY'
 
 
 def _ensure_api_keys(task_desc, failure_ret=None):
@@ -52,8 +54,6 @@ def _ensure_api_keys(task_desc, failure_ret=None):
     def check_func_wrapper(func):
         @wraps(func)
         def check_api_keys(*args, **kwargs):
-            api_key_env_name = 'ELSEVIER_API_KEY'
-            inst_key_env_name = 'ELSEVIER_INST_KEY'
             global ELSEVIER_KEYS
             if ELSEVIER_KEYS is None:
                 ELSEVIER_KEYS = {}
@@ -67,22 +67,22 @@ def _ensure_api_keys(task_desc, failure_ret=None):
 
                 # Try to read in Elsevier API keys. For each key, first check
                 # the environment variables, then check the INDRA config file.
-                if not has_config(inst_key_env_name):
+                if not has_config(INST_KEY_ENV_NAME):
                     logger.warning('Institution API key %s not found in config '
                                    'file or environment variable: this will '
                                    'limit access for %s'
-                                   % (inst_key_env_name, task_desc))
-                ELSEVIER_KEYS['X-ELS-Insttoken'] = get_config(inst_key_env_name)
+                                   % (INST_KEY_ENV_NAME, task_desc))
+                ELSEVIER_KEYS['X-ELS-Insttoken'] = get_config(INST_KEY_ENV_NAME)
 
-                if not has_config(api_key_env_name):
+                if not has_config(API_KEY_ENV_NAME):
                     logger.error('API key %s not found in configuration file '
                                  'or environment variable: cannot %s'
-                                 % (api_key_env_name, task_desc))
+                                 % (API_KEY_ENV_NAME, task_desc))
                     return failure_ret
-                ELSEVIER_KEYS['X-ELS-APIKey'] = get_config(api_key_env_name)
+                ELSEVIER_KEYS['X-ELS-APIKey'] = get_config(API_KEY_ENV_NAME)
             elif 'X-ELS-APIKey' not in ELSEVIER_KEYS.keys():
                 logger.error('No Elsevier API key %s found: cannot %s'
-                             % (api_key_env_name, task_desc))
+                             % (API_KEY_ENV_NAME, task_desc))
                 return failure_ret
             return func(*args, **kwargs)
         return check_api_keys
