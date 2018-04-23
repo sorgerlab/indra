@@ -679,7 +679,6 @@ def test_signor_complexes():
     assert(actual_up_ids == correct_up_ids)
     assert(actual_hgnc_ids == correct_hgnc_ids)
     assert(actual_names == correct_names)
-    print(sp.statements)
 
 
 def test_recursive_complexes():
@@ -750,7 +749,6 @@ def test_complexes_with_families():
     assert(len(obj.bound_conditions) == 2)
     assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')
     assert(obj.bound_conditions[1].agent.db_refs['SIGNOR'] == 'SIGNOR-PF14')
-    print(obj.bound_conditions[1].agent.db_refs)
     assert(obj.bound_conditions[1].agent.db_refs['FPLX'] == 'ROBO')
 
     s1 = sp.statements[1]

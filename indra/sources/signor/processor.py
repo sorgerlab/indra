@@ -241,10 +241,7 @@ class SignorProcessor(object):
             db_refs = {}
             name = uniprot_client.get_gene_name(c)
             if not name:
-                logger.info('Could not look up %s, (maybe the Signor '
-                            'complex component is not a UNIPROT id)' % c)
                 db_refs['SIGNOR'] = c
-                name = c
             else:
                 db_refs['UP'] = c
                 hgnc_id = hgnc_client.get_hgnc_id(name)
@@ -254,6 +251,10 @@ class SignorProcessor(object):
             famplex_key = ('SIGNOR', c)
             if famplex_key in famplex_map:
                 db_refs['FPLX'] = famplex_map[famplex_key]
+            elif not name:
+                # We neither have a Uniprot nor Famplex grounding
+                logger.info('Have neither a Uniprot nor Famplex grounding ' + \
+                            'for ' + c)
             agents.append(Agent(name, db_refs=db_refs))
         return agents
 
