@@ -1,11 +1,16 @@
 from copy import deepcopy
 from collections import defaultdict
 
+import logging
+
 import indra.tools.assemble_corpus as ac
 from indra.db.util import insert_pa_stmts
 from indra.db.client import get_statements
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
+
+
+logger = logging.getLogger('db_preassembly')
 
 
 def make_unique_statement_set(preassembler, stmts):
@@ -48,32 +53,38 @@ def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
     # Pre-assemble the new statements.
     new_unique_stmt_dict, new_evidence_links, new_match_key_maps = \
         process_statements(new_stmts, **kwargs)
+    logger.info("Got %d new unique statments." % len(new_unique_stmt_dict))
+    logger.info("Got %d new evidence links."
+                % len(flatten_evidence_dict(new_evidence_links)))
+    logger.info("Got %d new support links." % len(new_match_key_maps))
 
     # Now get the list of statements the need to be compared between the
     # existing and new corpora
-    if optimize:
-        old_stmt_hash_set = set(unique_stmt_dict.keys())
-        new_stmt_hash_set = set(new_unique_stmt_dict.keys())
-        only_old_stmts = [unique_stmt_dict[mk_hash]
-                          for mk_hash in old_stmt_hash_set - new_stmt_hash_set]
-        only_new_stmts = [new_unique_stmt_dict[mk_hash]
-                          for mk_hash in new_stmt_hash_set - old_stmt_hash_set]
-        split_idx = len(only_old_stmts) + 1
-        merge_stmts = only_old_stmts + only_new_stmts
-    else:
-        raise Exception("Bad")
-        split_idx = len(unique_stmt_dict) + 1
-        merge_stmts = list(unique_stmt_dict.values())\
-                      + list(new_unique_stmt_dict.values())
+    old_stmt_hash_set = set(unique_stmt_dict.keys())
+    new_stmt_hash_set = set(new_unique_stmt_dict.keys())
+    only_old_stmts = [unique_stmt_dict[mk_hash]
+                      for mk_hash in old_stmt_hash_set - new_stmt_hash_set]
+    only_new_stmts = [new_unique_stmt_dict[mk_hash]
+                      for mk_hash in new_stmt_hash_set - old_stmt_hash_set]
+    logger.info("There were %d exclusively old statements and we are adding %d "
+                "exclusively new statements. There were %d overlapping "
+                "statements." % (len(only_old_stmts), len(only_new_stmts),
+                                 len(new_stmt_hash_set & old_stmt_hash_set)))
+    split_idx = len(only_old_stmts) + 1
+    merge_stmts = only_old_stmts + only_new_stmts
 
     # Find the support links between the new corpora
     pa = Preassembler(hierarchies)
     merge_match_key_maps = get_match_key_maps(pa, merge_stmts,
                                               split_idx=split_idx, **kwargs)
+    logger.info("Found %d links between old and new corpora."
+                % len(merge_match_key_maps))
 
     # Update the old parameters.
     full_unique_stmt_dict = deepcopy(new_unique_stmt_dict)
     full_unique_stmt_dict.update(unique_stmt_dict)
+    logger.info("There are now %d unique statements."
+                % len(full_unique_stmt_dict))
 
     full_evidence_links = deepcopy(evidence_links)
     for mk_hash, evidence_set in new_evidence_links.items():
@@ -81,6 +92,9 @@ def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
 
     new_match_key_maps |= merge_match_key_maps
     full_match_key_maps = match_key_maps | new_match_key_maps
+    logger.info("There are now %d support relations."
+                % len(full_match_key_maps))
+
     return full_unique_stmt_dict, full_evidence_links, full_match_key_maps
 
 
