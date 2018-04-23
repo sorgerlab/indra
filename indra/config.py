@@ -74,8 +74,15 @@ if CONFIG_DICT is None:
 else:
     _check_config_dict()
 
-def get_config(key):
-    """Returns the configuration value, first checking the environemnt
+
+class IndraConfigError(Exception):
+    pass
+
+
+def get_config(key, failure_ok=True):
+    """Get value by key from config file or environment.
+
+    Returns the configuration value, first checking the environemnt
     variables and then, if it's not present there, checking the configuration
     file.
 
@@ -89,13 +96,15 @@ def get_config(key):
     value: str
         The configuration value
     """
+    err_msg = "Key %s not in environemtn or config file." % key
     if key in os.environ:
         return os.environ[key]
     elif key in CONFIG_DICT:
         return CONFIG_DICT[key]
+    elif not failure_ok:
+        raise IndraConfigError(err_msg)
     else:
-        logger.warning('Could not find ' + str(key) +
-                       ' in environment variables or configuration file')
+        logger.warning(err_msg)
         return None
 
 
