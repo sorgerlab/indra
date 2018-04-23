@@ -93,9 +93,10 @@ def _ensure_api_keys(task_desc, failure_ret=None):
 def check_entitlement(doi):
     """Check whether IP and credentials enable access to content for a doi.
 
-    WARNING - DEPRECATED
+    This function uses the entitlement endpoint of the Elsevier API to check
+    whether an article is available to a given institution. Note that this
+    feature of the API is itself not available for all institution keys.
     """
-    # TODO: Make this doe what it says it does or remove it
     if doi.lower().startswith('doi:'):
         doi = doi[4:]
     url = '%s/%s' % (elsevier_entitlement_url, doi)
@@ -269,27 +270,6 @@ def get_dois(query_str, count=100):
     doi_tags = tree.findall('atom:entry/prism:doi', elsevier_ns)
     dois = [dt.text for dt in doi_tags]
     return dois
-
-
-def _get_pdf_attachment(full_text_elem):
-    attachments = full_text_elem.findall('xocs:doc/xocs:meta/'
-                                         'xocs:attachment-metadata-doc/'
-                                         'xocs:attachments', elsevier_ns)
-    for att_elem in attachments:
-        web_pdf = att_elem.find('xocs:web-pdf', elsevier_ns)
-        if web_pdf is None:
-            continue
-        # Check for a MAIN pdf
-        pdf_purpose = web_pdf.find('xocs:web-pdf-purpose', elsevier_ns)
-        if not pdf_purpose.text == 'MAIN':
-            continue
-        else:
-            return 'pdf'
-        #locations = web_pdf.findall('xocs:ucs-locator', elsevier_ns)
-        #for loc in locations:
-        #    logger.info("PDF location: %s" % loc.text)
-    #logger.info('Could not find PDF attachment.')
-    return None
 
 
 def _get_article_body(full_text_elem):
