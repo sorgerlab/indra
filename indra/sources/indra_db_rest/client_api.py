@@ -1,12 +1,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_statements']
+__all__ = ['get_statements', 'IndraDBRestError']
 
 import requests
 
 from indra import get_config
 from indra.statements import stmts_from_json
+
+
+class IndraDBRestError(Exception):
+    pass
 
 
 def get_statements(subject=None, object=None, agents=None, stmt_type=None):
@@ -48,7 +52,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
         supported Statement was not included in your query, it will simply be
         instantiated as an `Unresolved` statement, with `uuid` of the statement.
     """
-    agent_strs = ['agent=%s' % agent_str for agent_str in agents]
+    if subject is None and object is None and agents is None:
+        raise IndraDBRestError("At least one agent must be specified, or else "
+                               "the scope will be too large.")
+    if agents is not None:
+        agent_strs = ['agent=%s' % agent_str for agent_str in agents]
+    else:
+        agent_strs = []
     params = {}
     for param_key, param_val in [('subject', subject), ('object', object),
                                  ('type', stmt_type)]:
@@ -67,4 +77,8 @@ def _submit_request(*args, **kwargs):
     api_key = get_config('INDRADB_REST_API_KEY', failure_ok=False)
     resp = requests.get(url + '/statements/' + query_str,
                         headers={'x-api-key': api_key})
-    return resp
+    if resp.status_code == 200:
+        return resp
+    else:
+        raise IndraDBRestError("Got bad return code %d: %s"
+                               % (resp.status_code, resp.reason))
