@@ -186,7 +186,13 @@ def test_statement_distillation():
     stmt_nd, stmts = db_util.distill_stmts_from_reading(db, get_full_stmts=True)
     assert len(stmt_nd.keys()), "Got no nested dict."
     assert len(stmts), "Got zero statements."
-    # TODO: test more thoroughly.
+    assert isinstance(list(stmts)[0], Statement), type(list(stmts)[0])
+    stmt_id_nd, stmt_ids = db_util.distill_stmts_from_reading(db)
+    assert len(stmt_id_nd) == len(stmt_nd), \
+        "stmt_id_nd: %d, stmt_nd: %d" % (len(stmt_id_nd), len(stmt_nd))
+    assert len(stmts) == len(stmt_ids), \
+        "stmts: %d, stmt_ids: %d" % (len(stmts), len(stmt_ids))
+    assert isinstance(list(stmt_ids)[0], str), type(list(stmt_ids)[0])
 
 
 def test_preassembly_with_database():
