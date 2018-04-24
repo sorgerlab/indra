@@ -646,10 +646,10 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
                           db.TextContent.source, db.Reading.id,
-                          db.Reading.reader_version, db.RawStatements.id,
+                          db.Reading.reader_version, db.RawStatements.uuid,
                           db.RawStatements.json)
          .filter(db.TextContent.id == db.Reading.text_content_id,
-                 db.Reading.id == db.RawStatements.reader_ref))
+                 db.Reading.id == db.RawStatements.reading_id))
     if clauses:
         q.filter(*clauses)
 

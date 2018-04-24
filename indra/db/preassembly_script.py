@@ -49,7 +49,7 @@ def process_statements(stmts, **generate_id_map_kwargs):
 
 
 def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
-                     new_stmts, optimize=False, **kwargs):
+                     new_stmts, **kwargs):
     # Pre-assemble the new statements.
     new_unique_stmt_dict, new_evidence_links, new_match_key_maps = \
         process_statements(new_stmts, **kwargs)
