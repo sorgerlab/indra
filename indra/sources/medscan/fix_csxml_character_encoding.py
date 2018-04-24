@@ -23,15 +23,7 @@ def shortest_string(strings):
             best_length = len(s)
     return best_string
 
-
-if __name__ == '__main__':
-    args = sys.argv[1:]
-    if len(args) != 2:
-        print('Expected two arguments: the input file and the output file')
-        sys.exit(1)
-    input_file = args[0]
-    output_file = args[1]
-
+def fix_character_encoding(input_file, output_file):
     with open(input_file, 'rb') as f_in:
         with open(output_file, 'wb') as f_out:
             for line in f_in:
@@ -52,3 +44,14 @@ if __name__ == '__main__':
 
                     # Write result as ascii, with non-ascii characters escaped
                     f_out.write(chosen_string.encode('utf-8'))
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    if len(args) != 2:
+        print('Expected two arguments: the input file and the output file')
+        sys.exit(1)
+    input_file = args[0]
+    output_file = args[1]
+
+    fix_character_encoding(input_file, output_file)
+

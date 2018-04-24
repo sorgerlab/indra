@@ -3,11 +3,92 @@ import logging
 import lxml.etree
 from collections import namedtuple
 from indra.sources.medscan.processor import *
+import os
+import glob
+import tempfile
+import shutil
+from math import floor
+from .fix_csxml_character_encoding import fix_character_encoding
+import time
 
 logger = logging.getLogger('medscan')
 
+def process_directory_statements_sorted_by_pmid(directory_name,
+                                                medscan_resource_dir):
+    """Processes a directory filled with CSXML files. For each file, first
+    normalizes the character encoding to utf-8, and then processes into
+    INDRA statements. Returns a dictionary mapping pmids to a list of
+    statements corresponding to that pmid."""
+    s_dict = defaultdict(list)
+    mp = process_directory(directory_name, medscan_resource_dir)
 
-def process_file(filename, medscan_resource_dir, num_documents=None):
+    for statement in mp.statements:
+        s_dict[statement.evidence[0].pmid].append(statement)
+    return s_dict
+
+def process_directory(directory_name, medscan_resource_dir):
+    """Processes a directory filled with CSXML files. For each file, first
+    normalizes the character encoding to utf-8, and then processes into
+    INDRA statements."""
+
+    # Parent Medscan processor containing extractions from all files
+    mp = MedscanProcessor(medscan_resource_dir)
+
+    # Create temporary directory into which to put the csxml files with
+    # normalized character encodings
+    tmp_dir = tempfile.mkdtemp('indra_medscan_processor')
+    tmp_file = os.path.join(tmp_dir, 'fixed_char_encoding')
+
+    # Process each file
+    glob_pattern = os.path.join(directory_name, '*.csxml')
+    files = glob.glob(glob_pattern)
+    num_files = float(len(files))
+    print(int(num_files), 'files to read')
+    percent_done = 0
+    files_processed = 0
+    start_time_s = time.time()
+
+    for filename in files:
+        fix_character_encoding(filename, tmp_file)
+        mp_file = process_file(tmp_file, medscan_resource_dir, None, False)
+
+        mp.statements.extend(mp_file.statements)
+        mp.num_entities += mp_file.num_entities
+        mp.num_entities_not_found += mp_file.num_entities_not_found
+        if mp.unmapped_urns is None:
+            mp.unmapped_urns = mp_file.unmapped_urns
+        else:
+            mp.unmapped_urns = mp.unmapped_urns.update(mp_file.unmapped_urns)
+
+        percent_done_now = floor(100.0 * files_processed / num_files)
+        if percent_done_now > percent_done:
+            percent_done = percent_done_now
+            ellapsed_s = time.time() - start_time_s
+            ellapsed_min = ellapsed_s / 60.0
+
+            msg = 'Processed %d of %d files (%f%% complete, %f minutes)' % \
+                    (files_processed, num_files, percent_done, ellapsed_min)
+            print(msg)
+        files_processed += 1
+
+    # Delete the temporary directory
+    shutil.rmtree(tmp_dir)
+
+    return mp
+
+def process_file_sorted_by_pmid(file_name, medscan_resource_dir):
+    """Processed a file and returns a dictionary mapping pmids to a list of
+    statements corresponding to that pmid."""
+    s_dict = defaultdict(list)
+    mp = process_file(file_name, medscan_resource_dir)
+
+    for statement in mp.statements:
+        s_dict[statement.evidence[0].pmid].append(statement)
+    return s_dict
+
+
+def process_file(filename, medscan_resource_dir, num_documents=None,
+                 progress_updates=True):
     """Process a CSXML file for its relevant information.
 
     Consider running the fix_csxml_character_encoding.py script in
@@ -48,6 +129,8 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
     num_documents : int
         The number of documents to process, or None to process all of the
         documents within the csxml file.
+    progress_updates: bool
+        Whether to print progress updates to the console
 
     Returns
     -------
@@ -55,7 +138,9 @@ def process_file(filename, medscan_resource_dir, num_documents=None):
         A MedscanProcessor object containing extracted statements
     """
     mp = MedscanProcessor(medscan_resource_dir)
-    logger.info("Parsing %s to XML" % filename)
+
+    if progress_updates:
+        logger.info("Parsing %s to XML" % filename)
     with open(filename, 'rb') as f:
         mp.process_csxml_from_file_handle(f, num_documents)
     return mp

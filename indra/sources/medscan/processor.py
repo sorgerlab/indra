@@ -131,7 +131,8 @@ def urn_to_db_refs(urn):
 
     p = 'urn:([^:]+):([^:]+)'
     m = re.match(p, urn)
-    assert m is not None, m
+    if m is None:
+        return None
 
     urn_type = m.group(1)
     urn_id = m.group(2)
@@ -584,6 +585,8 @@ class MedscanProcessor(object):
                 mutation = mutation[0]
 
                 db_refs = urn_to_db_refs(protein.urn)
+                if db_refs is None:
+                    return None
                 db_refs['TEXT'] = protein.name
 
                 # Check mutation.type. Only some types correspond to situations
@@ -658,5 +661,7 @@ class MedscanProcessor(object):
                 # Handle the more common case where we just ground the entity
                 # without mutation or modification information
                 db_refs = urn_to_db_refs(entity.urn)
+                if db_refs is None:
+                    return None
                 db_refs['TEXT'] = entity.name
                 return Agent(db_refs['TEXT'], db_refs=db_refs)
