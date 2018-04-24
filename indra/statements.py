@@ -1091,12 +1091,13 @@ class Statement(object):
     def get_hash(self, refresh=False):
         if self.hash is None or refresh:
             ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
-            self.hash = hash(self.matches_key() + str(ev_matches_key_list))
+            full_key = self.matches_key() + str(ev_matches_key_list)
+            self.hash = full_key.replace('\\', '')
         return self.hash
 
     def get_shallow_hash(self, refresh=False):
         if self.shallow_hash is None or refresh:
-            self.shallow_hash = hash(self.matches_key())
+            self.shallow_hash = self.matches_key().replace('\\', '')
         return self.shallow_hash
 
     def agent_list_with_bound_condition_agents(self):
