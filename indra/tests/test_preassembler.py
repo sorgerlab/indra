@@ -551,7 +551,7 @@ def test_multiprocessing():
     # and one locally
     toplevel = pa.combine_related(return_toplevel=True, poolsize=1,
                                   size_cutoff=2)
-    assert len(toplevel) == 3
+    assert len(toplevel) == 3, 'Got %d toplevel statements.' % len(toplevel)
 
 def test_conversion_refinement():
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
