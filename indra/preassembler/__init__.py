@@ -289,8 +289,8 @@ class Preassembler(object):
                     stmt_by_group[first_arg_key] += stmts
         return stmt_by_group
 
-    def _generate_id_maps(self, unique_stmts, split_idx=None, poolsize=None,
-                          size_cutoff=100):
+    def _generate_id_maps(self, unique_stmts, poolsize=None,
+                          size_cutoff=100, split_idx=None):
         """Connect statements using their refinement relationships."""
         # Check arguments relating to multiprocessing
         if poolsize is None:
