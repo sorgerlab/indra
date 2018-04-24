@@ -147,10 +147,14 @@ def download_article(id_val, id_type='doi', on_retry=False):
             logger.error("Still breaking speed limit after waiting.")
             logger.error("Elsevier response: %s" % res.text)
             return None
-    elif not res.status_code == 200:
+    elif res.status_code != 200:
         logger.error('Could not download article %s: status code %d' %
                      (url, res.status_code))
         logger.error('Elsevier response: %s' % res.text)
+        return None
+    elif res.content.decode('utf-8').startswith('<service-error>'):
+        logger.error('Got a service error with 200 status: %s'
+                     % res.content.decode('utf-8'))
         return None
     # Return the XML content as a unicode string, assuming UTF-8 encoding
     return res.content.decode('utf-8')
