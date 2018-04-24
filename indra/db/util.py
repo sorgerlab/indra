@@ -103,8 +103,7 @@ def get_test_db():
     return db
 
 
-def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
-                  **kwargs):
+def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
     """Insert agents for statements that don't have any agents.
 
     Note: This method currently works for both Statements and PAStatements and
@@ -114,11 +113,10 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     ----------
     db : :py:class:`DatabaseManager`
         The manager for the database into which you are adding agents.
-    stmt_tbl_obj : :py:class:`sqlalchemy.Base` table object
-        For example, `db.Statements`. The object corresponding to the
-        statements column you creating agents for.
-    agent_tbl_obj : :py:class:`sqlalchemy.Base` table object
-        That agent table corresponding to the statement table above.
+    prefix : str
+        Select which stage of statements for which you wish to insert agents.
+        The choices are 'pa' for preassembled statements or 'raw' for raw
+        statements.
     *other_stmt_clauses : sqlalchemy clauses
         Further arguments, such as `db.Statements.db_ref == 1' are used to
         restrict the scope of statements whose agents may be added.
@@ -130,6 +128,8 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
         using the `yeild_per` feature of sqlalchemy queries.
     """
     verbose = kwargs.pop('verbose', False)
+    stmt_tbl_obj = db.tables[prefix + '_statements']
+    agent_tbl_obj = db.tables[prefix + '_agents']
     num_per_yield = kwargs.pop('num_per_yield', 100)
     override_default_query = kwargs.pop('override_default_query', False)
     if len(kwargs):
@@ -139,10 +139,16 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     logger.info("Getting %s that lack %s in the database."
                 % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
     if not override_default_query:
-        stmts_w_agents_q = db.filter_query(
-            stmt_tbl_obj,
-            stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+        if prefix == 'pa':
+            stmts_w_agents_q = db.filter_query(
+                stmt_tbl_obj,
+                stmt_tbl_obj.mk_hash == agent_tbl_obj.stmt_mk_hash
             )
+        elif prefix == 'raw':
+            stmts_w_agents_q = db.filter_query(
+                stmt_tbl_obj,
+                stmt_tbl_obj.uuid == agent_tbl_obj.stmt_uuid
+                )
         stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
                              .except_(stmts_w_agents_q))
     else:
@@ -182,11 +188,15 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
             if ag is None or ag.db_refs is None:
                 continue
             for ns, ag_id in ag.db_refs.items():
+                if prefix == 'pa':
+                    stmt_id = db_stmt.mk_hash
+                elif prefix == 'raw':
+                    stmt_id = db_stmt.uuid
                 if isinstance(ag_id, list):
                     for sub_id in ag_id:
-                        agent_data.append((db_stmt.id, ns, sub_id, role))
+                        agent_data.append((stmt_id, ns, sub_id, role))
                 else:
-                    agent_data.append((db_stmt.id, ns, ag_id, role))
+                    agent_data.append((stmt_id, ns, ag_id, role))
 
         # Optionally print another tick on the progress bar.
         if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
@@ -195,7 +205,10 @@ def insert_agents(db, stmt_tbl_obj, agent_tbl_obj, *other_stmt_clauses,
     if verbose and num_stmts > 25:
         print()
 
-    cols = ('stmt_id', 'db_name', 'db_id', 'role')
+    if prefix == 'pa':
+        cols = ('stmt_mk_hash', 'db_name', 'db_id', 'role')
+    elif prefix == 'raw':
+        cols = ('stmt_uuid', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
 
@@ -220,12 +233,13 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     """
     # Preparing the statements for copying
     stmt_data = []
-    cols = ('uuid', 'db_ref', 'type', 'json', 'indra_version')
+    cols = ('uuid', 'mk_hash', 'db_ref', 'type', 'json', 'indra_version')
     if verbose:
         print("Loading:", end='', flush=True)
     for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
+            stmt.get_hash(),
             db_ref_id,
             stmt.__class__.__name__,
             json.dumps(stmt.to_json()).encode('utf8'),
@@ -237,8 +251,7 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('raw_statements', stmt_data, cols)
-    insert_agents(db, db.RawStatements, db.RawAgents,
-                  db.RawStatements.db_ref == db_ref_id)
+    insert_agents(db, 'raw', db.RawStatements.db_ref == db_ref_id)
     return
 
 
@@ -250,7 +263,7 @@ def insert_pa_stmts(db, stmts, verbose=False):
     db : :py:class:`DatabaseManager`
         The manager for the database into which you are loading pre-assembled
         statements.
-    stmts : list [:py:class:`indra.statements.Statement`]
+    stmts : iterable [:py:class:`indra.statements.Statement`]
         A list of pre-assembled indra statements to be uploaded to the datbase.
     verbose : bool
         If True, print extra information and a status bar while compiling
@@ -259,12 +272,13 @@ def insert_pa_stmts(db, stmts, verbose=False):
     logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
     indra_version = get_version()
-    cols = ('uuid', 'type', 'json', 'indra_version')
+    cols = ('uuid', 'mk_hash', 'type', 'json', 'indra_version')
     if verbose:
         print("Loading:", end='', flush=True)
     for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
+            stmt.get_shallow_hash(),
             stmt.__class__.__name__,
             json.dumps(stmt.to_json()).encode('utf8'),
             indra_version
@@ -275,7 +289,7 @@ def insert_pa_stmts(db, stmts, verbose=False):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('pa_statements', stmt_data, cols)
-    insert_agents(db, db.PAStatements, db.PAAgents, verbose=verbose)
+    insert_agents(db, 'pa', verbose=verbose)
     return
 
 
@@ -680,8 +694,7 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
         stmt = Statement._from_json(stmt_json)
 
         # Hash the compbined stmt and evidence matches key.
-        m_key = stmt.matches_key() + stmt.evidence[0].matches_key()
-        stmt_hash = hash(m_key)
+        stmt_hash = stmt.get_hash()
 
         # For convenience get the endpoint statement dict
         s_dict = stmt_nd[trid][src][tcid][reader][rv][rid]
@@ -723,8 +736,9 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                 # already grouped into sets of duplicates keyed by the
                 # Statement and Evidence matches key hashes. We only want one
                 # of each.
-                stmts |= {(ev_hash, list(ev_set)[0])
-                          for ev_hash, ev_set in rv_dict[best_rv].items()}
+                stmts |= {list(stmt_set)[0]
+                          for r_dict in rv_dict[best_rv].values()
+                          for stmt_set in r_dict.values()}
 
     return stmt_nd, stmts
 

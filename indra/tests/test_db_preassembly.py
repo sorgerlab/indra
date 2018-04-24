@@ -187,3 +187,9 @@ def test_statement_distillation():
     assert len(stmt_nd.keys()), "Got no nested dict."
     assert len(stmts), "Got zero statements."
     # TODO: test more thoroughly.
+
+
+def test_preassembly_with_database():
+    db = _get_loaded_db()
+    pa_manager = pas.PreassemblyManager()
+    pa_manager.create_corpus(db)

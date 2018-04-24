@@ -4,13 +4,34 @@ from collections import defaultdict
 import logging
 
 import indra.tools.assemble_corpus as ac
-from indra.db.util import insert_pa_stmts
-from indra.db.client import get_statements
+from indra.db.util import get_statements, insert_pa_stmts, \
+    distill_stmts_from_reading
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
 
 logger = logging.getLogger('db_preassembly')
+
+
+class PreassemblyManager(object):
+    """Class used to manage the preassembly pipeline"""
+    def __init__(self, n_proc=1):
+        self.n_proc = n_proc
+        return
+
+    def create_corpus(self, db):
+        _, stmts = distill_stmts_from_reading(db, get_full_stmts=True)
+        unique_stmt_dict, evidence_links, support_links = \
+            process_statements(stmts, poolsize=self.n_proc)
+        insert_pa_stmts(db, unique_stmt_dict.values())
+        db.copy('raw_unique_links', flatten_evidence_dict(evidence_links),
+                ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        db.copy('pa_support_links', support_links,
+                ('supported_mk_hash', 'supporting_mk_hash'))
+        return
+
+    def supplement_corpus(self, db):
+        pass
 
 
 def make_unique_statement_set(preassembler, stmts):
@@ -103,9 +124,9 @@ def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
 def preassemble_db_stmts(db, num_proc, *clauses):
     """Run pre-assembly on a set of statements in the database."""
     stmts = get_statements(clauses, db=db, do_stmt_count=False)
-    unique_stmts, match_key_maps = process_statements(stmts, poolsize=num_proc)
-    insert_pa_stmts(db, unique_stmts)
-    return unique_stmts, match_key_maps
+    unique_stmts, evidence_links, support_links = process_statements(stmts, poolsize=num_proc)
+    insert_pa_stmts(db, unique_stmts.values())
+    return unique_stmts, evidence_links, support_links
 
 
 def make_graph(unique_stmts, match_key_maps):
