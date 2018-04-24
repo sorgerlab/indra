@@ -197,5 +197,17 @@ def test_statement_distillation():
 
 def test_preassembly_with_database():
     db = _get_loaded_db()
+    raw_stmt_list = db.select_all(db.RawStatements)
+    all_raw_uuids = {raw_stmt.uuid for raw_stmt in raw_stmt_list}
+    assert len(raw_stmt_list)
     pa_manager = pas.PreassemblyManager()
     pa_manager.create_corpus(db)
+    pa_stmt_list = db.select_all(db.PAStatements)
+    assert 0 < len(pa_stmt_list) < len(raw_stmt_list)
+    raw_unique_link_list = db.select_all(db.RawUniqueLinks)
+    assert len(raw_unique_link_list)
+    all_link_uuids = {ru.raw_stmt_uuid for ru in raw_unique_link_list}
+    all_link_mk_hashes = {ru.pa_stmt_mk_hash for ru in raw_unique_link_list}
+    assert len(all_link_uuids - all_raw_uuids) is 0
+    assert all([pa_stmt.mk_hash in all_link_mk_hashes
+                for pa_stmt in pa_stmt_list])

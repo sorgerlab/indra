@@ -722,9 +722,13 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     for trid, src_dict in stmt_nd.items():
         # Filter out unneeded fulltext.
         while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
-            worst_src = min(src_dict,
-                            key=lambda x: full_text_content.index(x[0]))
-            del src_dict[worst_src]
+            try:
+                worst_src = min(src_dict,
+                                key=lambda x: full_text_content.index(x[0]))
+                del src_dict[worst_src]
+            except:
+                print(src_dict)
+                raise
 
         # Filter out the older reader versions
         for reader, rv_list in [('reach', reach_versions),
