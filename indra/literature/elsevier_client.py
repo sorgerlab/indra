@@ -57,14 +57,6 @@ def _ensure_api_keys(task_desc, failure_ret=None):
             global ELSEVIER_KEYS
             if ELSEVIER_KEYS is None:
                 ELSEVIER_KEYS = {}
-                # THE API KEY IS NOT UNDER VERSION CONTROL FOR SECURITY
-                # For more information see http://dev.elsevier.com/
-
-                # Using this file is deprecated.
-                # global API_KEY_FILE
-                # path_to_here = os.path.dirname(os.path.realpath(__file__))
-                # API_KEY_FILE = os.path.join(path_to_here, 'elsevier_api_keys')
-
                 # Try to read in Elsevier API keys. For each key, first check
                 # the environment variables, then check the INDRA config file.
                 if not has_config(INST_KEY_ENV_NAME):
