@@ -20,7 +20,7 @@ from indra.tools.machine import twitter_client
 from indra.tools.gene_network import GeneNetwork
 from indra.tools.incremental_model import IncrementalModel
 from indra.literature import pubmed_client, get_full_text, elsevier_client
-from indra import get_config
+from indra import get_config, has_config
 
 try:
     import boto3
@@ -266,7 +266,7 @@ class InvalidConfigurationError(Exception):
     pass
 
 
-def get_config(config_fname):
+def get_machine_config(config_fname):
     try:
         fh = open(config_fname, 'rt')
     except IOError as e:
@@ -405,10 +405,10 @@ def get_ndex_cred(config):
     ndex_cred = config.get('ndex')
     if not ndex_cred:
         return
-    elif not ndex_cred.get('user') and get_config('NDEX_USERNAME') is None:
+    elif not ndex_cred.get('user') and not has_config('NDEX_USERNAME'):
         logger.info('NDEx user missing.')
         return
-    elif not ndex_cred.get('password')and get_config('NDEX_PASSWORD') is None:
+    elif not ndex_cred.get('password')and not has_config('NDEX_PASSWORD'):
         logger.info('NDEx password missing.')
         return
     elif not ndex_cred.get('network'):
@@ -529,11 +529,11 @@ def run_with_search_helper(model_path, config):
     default_config_fname = os.path.join(model_path, 'config.yaml')
 
     if config:
-        config = get_config(config)
+        config = get_machine_config(config)
     elif os.path.exists(default_config_fname):
         logger.info('Loading default configuration from %s',
                     default_config_fname)
-        config = get_config(default_config_fname)
+        config = get_machine_config(default_config_fname)
     else:
         logger.error('Configuration file argument missing.')
         sys.exit()
@@ -649,7 +649,7 @@ def summarize_helper(model_path):
 
 def run_with_pmids_helper(model_path, pmids):
     default_config_fname = os.path.join(model_path, 'config.yaml')
-    config = get_config(default_config_fname)
+    config = get_machine_config(default_config_fname)
 
     belief_threshold = config.get('belief_threshold', 0.95)
     twitter_cred = get_twitter_cred(config)
