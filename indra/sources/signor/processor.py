@@ -22,46 +22,21 @@ from indra.statements import *
 from indra.util import read_unicode_csv, read_unicode_csv_fileobj
 from indra.databases import hgnc_client, uniprot_client
 
-
 logger = logging.getLogger('signor')
 
+def _read_famplex_map():
+    fname = os.path.join(dirname(__file__), '../../resources/famplex_map.tsv')
+    raw_map = read_unicode_csv(fname, '\t')
 
-_default_csv_file = join(dirname(__file__), '..', '..', 'data',
+    m = {}
+    for row in raw_map:
+        m[(row[0], row[1])] = row[2]
+    return m
+famplex_map = _read_famplex_map()
+
+
+_default_csv_file = join(dirname(__file__), '..', '..', '..', 'data',
                          'all_data_23_09_17.csv')
-
-
-_signor_fields = [
-    'ENTITYA',
-    'TYPEA',
-    'IDA',
-    'DATABASEA',
-    'ENTITYB',
-    'TYPEB',
-    'IDB',
-    'DATABASEB',
-    'EFFECT',
-    'MECHANISM',
-    'RESIDUE',
-    'SEQUENCE',
-    'TAX_ID',
-    'CELL_DATA',
-    'TISSUE_DATA',
-    'MODULATOR_COMPLEX',
-    'TARGET_COMPLEX',
-    'MODIFICATIONA',
-    'MODASEQ',
-    'MODIFICATIONB',
-    'MODBSEQ',
-    'PMID',
-    'DIRECT',
-    'NOTES',
-    'ANNOTATOR',
-    'SENTENCE',
-    'SIGNOR_ID',
-]
-
-
-SignorRow = namedtuple('SignorRow', _signor_fields)
 
 
 _type_db_map = {
@@ -137,6 +112,7 @@ _effect_map = {
 }
 
 
+
 class SignorProcessor(object):
     """Processor for Signor dataset, available at http://signor.uniroma2.it.
 
@@ -157,32 +133,13 @@ class SignorProcessor(object):
         Counter listing the frequency of different MECHANISM types in the
         list of no-mechanism rows.
     """
-    def __init__(self, signor_csv=None, delimiter='\t'):
-        # Get generator over the CSV file
-        if signor_csv:
-            data_iter = read_unicode_csv(signor_csv, delimiter=delimiter,
-                                         skiprows=1)
-        # If no CSV given, download directly from web
+    def __init__(self, data, complex_map=None):
+        self._data = data
+        if complex_map is None:
+            self.complex_map = {}
         else:
-            url = 'https://signor.uniroma2.it/download_entity.php'
-            res = requests.post(url, data={'organism':'human',
-                                           'format':'csv',
-                                           'submit':'Download'})
-            if res.status_code == 200:
-                # Python 2 -- csv.reader will need bytes
-                if sys.version_info[0] < 3:
-                    csv_io = BytesIO(res.content)
-                # Python 3 -- csv.reader needs str
-                else:
-                    csv_io = StringIO(res.text)
-                data_iter = read_unicode_csv_fileobj(csv_io,
-                                                     delimiter=delimiter,
-                                                     skiprows=1)
-            else:
-                raise Exception('Could not download Signor data.')
-        # Process into a list of SignorRow namedtuples
-        # Strip off any funky \xa0 whitespace characters
-        self._data = [SignorRow(*[f.strip() for f in r]) for r in data_iter]
+            self.complex_map = complex_map
+
         # Process into statements
         self.statements = []
         self.no_mech_rows = []
@@ -196,29 +153,111 @@ class SignorProcessor(object):
         self.no_mech_ctr = sorted([(k, v) for k, v in no_mech_ctr.items()],
                                   key=lambda x: x[1], reverse=True)
 
-    @staticmethod
-    def _get_agent(ent_name, ent_type, id, database):
-        gnd_type = _type_db_map[(ent_type, database)]
-        if gnd_type == 'UP':
-            up_id = id
-            db_refs = {'UP': up_id}
-            name = uniprot_client.get_gene_name(up_id)
-            hgnc_id = hgnc_client.get_hgnc_id(name)
-            if hgnc_id:
-                db_refs['HGNC'] = hgnc_id
-        # Other possible groundings are PUBCHEM and SIGNOR
-        elif gnd_type is not None:
-            if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
-                raise ValueError('Unexpected database %s' % database)
-            if database == 'ChEBI':
-                database = 'CHEBI'
-            db_refs = {database: id}
-            name = ent_name
-        # If no grounding, include as an untyped/ungrounded node
+        # Add a Complex statement for each Signor complex
+        for complex_id in self.complex_map.keys():
+            agents = self._get_complex_agents(complex_id)
+            ev = Evidence(source_api='SIGNOR', source_id=complex_id,
+                          text='Inferred from SIGNOR complex %s' % complex_id)
+            s = Complex(agents, evidence=[ev])
+            self.statements.append(s)
+
+    def _get_agent(self, ent_name, ent_type, id, database):
+        # Returns a list of agents corresponding to this id
+        # (If it is a signor complex, returns an Agent object with complex
+        # constituents as BoundConditions
+        if database == 'SIGNOR' and id in self.complex_map:
+            components = self.complex_map[id]
+            agents = self._get_complex_agents(id)
+
+            # Return the first agent with the remaining agents as a bound
+            # condition
+            a = agents[0]
+            a.bound_conditions = [BoundCondition(a, True) for a in agents[1:]]
+            return a
         else:
-            name = ent_name
+            gnd_type = _type_db_map[(ent_type, database)]
+            if gnd_type == 'UP':
+                up_id = id
+                db_refs = {'UP': up_id}
+                name = uniprot_client.get_gene_name(up_id)
+                hgnc_id = hgnc_client.get_hgnc_id(name)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+            # Map SIGNOR protein families to FamPlex families
+            elif ent_type == 'proteinfamily':
+                db_refs = {database: id} # Keep the SIGNOR family ID in db_refs
+                key = (database, id)
+                # Use SIGNOR name unless we have a mapping in FamPlex
+                name = ent_name
+                famplex_id = famplex_map.get(key)
+                if famplex_id is None:
+                    logger.info('Could not find %s in FamPlex map' %
+                                str(key))
+                else:
+                    db_refs['FPLX'] = famplex_id
+                    name = famplex_id
+            # Other possible groundings are PUBCHEM, SIGNOR, etc.
+            elif gnd_type is not None:
+                if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
+                    raise ValueError('Unexpected database %s' % database)
+                db_refs = {gnd_type: id}
+                name = ent_name
+            # If no grounding, include as an untyped/ungrounded node
+            else:
+                name = ent_name
+                db_refs = {}
+            return Agent(name, db_refs=db_refs)
+
+    def _recursively_lookup_complex(self, complex_id):
+        """Looks up the constitutents of a complex. If any constituent is
+        itself a complex, recursively expands until all constituents are
+        not complexes."""
+        assert(complex_id in self.complex_map)
+
+        expanded_agent_strings = []
+        expand_these_next = [complex_id]
+        while len(expand_these_next) > 0:
+            # Pop next element
+            c = expand_these_next[0]
+            expand_these_next = expand_these_next[1:]
+
+            # If a complex, add expanding it to the end of the queue
+            # If an agent string, add it to the agent string list immediately
+            assert(c in self.complex_map)
+            for s in self.complex_map[c]:
+                if s in self.complex_map:
+                    expand_these_next.append(s)
+                else:
+                    expanded_agent_strings.append(s)
+        return expanded_agent_strings
+
+    def _get_complex_agents(self, complex_id):
+        """Returns a list of agents corresponding to each of the constituents
+        in a SIGNOR complex."""
+        agents = []
+        components = self._recursively_lookup_complex(complex_id)
+
+        for c in components:
             db_refs = {}
-        return Agent(name, db_refs=db_refs)
+            name = uniprot_client.get_gene_name(c)
+            if not name:
+                db_refs['SIGNOR'] = c
+            else:
+                db_refs['UP'] = c
+                hgnc_id = hgnc_client.get_hgnc_id(name)
+                if hgnc_id:
+                    db_refs['HGNC'] = hgnc_id
+
+            famplex_key = ('SIGNOR', c)
+            if famplex_key in famplex_map:
+                db_refs['FPLX'] = famplex_map[famplex_key]
+            elif not name:
+                # We neither have a Uniprot nor Famplex grounding
+                logger.info('Have neither a Uniprot nor Famplex grounding ' + \
+                            'for ' + c)
+            agents.append(Agent(name, db_refs=db_refs))
+        return agents
+
 
     @staticmethod
     def _get_evidence(row):
@@ -245,14 +284,16 @@ class SignorProcessor(object):
                         pmid=row.PMID, text=row.SENTENCE,
                         epistemics=epistemics, annotations=annotations)
 
-    @staticmethod
-    def _process_row(row):
-        agent_a = SignorProcessor._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
-                                             row.DATABASEA)
-        agent_b = SignorProcessor._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
-                                             row.DATABASEB)
+    def _process_row(self, row):
+        agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
+                                  row.DATABASEA)
+        agent_b = self._get_agent(row.ENTITYB, row.TYPEB, row.IDB,
+                                  row.DATABASEB)
+
         evidence = SignorProcessor._get_evidence(row)
         stmts = []
+        no_mech = False
+
         # First, check for EFFECT/MECHANISM pairs giving rise to a single
         # mechanism
         # Transcriptional regulation + (up or down)

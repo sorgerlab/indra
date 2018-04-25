@@ -2,12 +2,14 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from os.path import join, dirname
 from nose.tools import raises
+import unittest
 
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.sources.signor import SignorProcessor, SignorRow, \
-                                 _parse_residue_positions
-
+from indra.sources.signor.processor import SignorProcessor, \
+                                           _parse_residue_positions
+from indra.sources.signor.api import SignorRow, process_from_file, \
+                                     process_from_web
 
 test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         DATABASEA='UNIPROT', ENTITYB='MET', TYPEB='protein', IDB='P08581',
@@ -23,42 +25,77 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         SIGNOR_ID='SIGNOR-241929')
 
 
-def test_parse_csv():
-    sp = SignorProcessor()
+test_data_file = os.path.join(dirname(__file__), 'signor_test_data.csv')
+
+
+test_complexes_file = os.path.join(dirname(__file__),
+                                   'signor_test_complexes.csv')
+
+
+def test_parse_csv_from_file():
+    # Should work with both data file and complexes
+    sp = process_from_file(test_data_file, test_complexes_file)
     assert isinstance(sp._data, list)
     assert isinstance(sp._data[0], SignorRow)
     assert isinstance(sp.statements, list)
     assert isinstance(sp.statements[0], Statement)
+    # Test the complex map
+    assert isinstance(sp.complex_map, dict)
+    assert len(sp.complex_map) == 9
+    assert 'SIGNOR-C1' in sp.complex_map
+    assert isinstance(sp.complex_map['SIGNOR-C1'], list)
+    assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
+    # Make sure we don't error if Complexes data is not provided
+    sp = process_from_file(test_data_file)
+    assert isinstance(sp.statements[0], Statement)
+    assert sp.complex_map == {}
+
+def test_parse_csv_from_web():
+    sp = process_from_web()
+    assert isinstance(sp._data, list)
+    assert isinstance(sp._data[0], SignorRow)
+    assert isinstance(sp.statements, list)
+    assert isinstance(sp.statements[0], Statement)
+    # Test the complex map
+    assert isinstance(sp.complex_map, dict)
+    assert 'SIGNOR-C1' in sp.complex_map
+    assert isinstance(sp.complex_map['SIGNOR-C1'], list)
+    assert sp.complex_map['SIGNOR-C1'] == ['P23511', 'P25208', 'Q13952']
+    # Make sure we don't error if Complexes data is not provided
 
 
 def test_get_agent():
     # Protein/gene
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
     test_ag = Agent('RELA', db_refs={'HGNC': hgnc_client.get_hgnc_id('RELA'),
                                      'UP': 'Q04206'})
-    sp_ag = SignorProcessor._get_agent(test_row.ENTITYA, test_row.TYPEA,
+    sp_ag = sp._get_agent(test_row.ENTITYA, test_row.TYPEA,
                                        test_row.IDA, test_row.DATABASEA)
     assert test_ag.matches(sp_ag)
     # Chemical
     test_ag = Agent('AZD1480', db_refs={'PUBCHEM': 'CID:16659841'})
-    sp_ag = SignorProcessor._get_agent('AZD1480', 'chemical', 'CID:16659841',
+    sp_ag = sp._get_agent('AZD1480', 'chemical', 'CID:16659841',
                                        'PUBCHEM')
     assert test_ag.matches(sp_ag)
     # Signor phenotype
     test_ag = Agent('Cell cycle progr.', db_refs={'SIGNOR': 'SIGNOR-PH42'})
-    sp_ag = SignorProcessor._get_agent('Cell cycle progr.', 'phenotype',
+    sp_ag = sp._get_agent('Cell cycle progr.', 'phenotype',
                                        'SIGNOR-PH42', 'SIGNOR')
     assert test_ag.matches(sp_ag)
     # Ungrounded -- couldn't find a real example in the dataset
     test_ag = Agent('Foobar', db_refs={})
-    sp_ag = SignorProcessor._get_agent('Foobar', 'pathway', None, None)
+    sp_ag = sp._get_agent('Foobar', 'pathway', None, None)
     assert test_ag.matches(sp_ag)
-    sp_ag = SignorProcessor._get_agent('Foobar', 'antibody', None, None)
+    sp_ag = sp._get_agent('Foobar', 'antibody', None, None)
     assert test_ag.matches(sp_ag)
 
 
 @raises(KeyError)
 def test_get_agent_keyerror():
-    sp_ag = SignorProcessor._get_agent('foo', 'bar', None, None)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    sp_ag = sp._get_agent('foo', 'bar', None, None)
 
 
 def test_get_evidence():
@@ -88,7 +125,9 @@ def test_get_evidence():
 
 
 def test_process_row():
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -106,7 +145,9 @@ def test_process_row_chem_inh():
         MODIFICATIONB='', MODBSEQ='', PMID='Other', DIRECT='YES',
         NOTES='Selleck', ANNOTATOR='gcesareni', SENTENCE='',
         SIGNOR_ID='SIGNOR-190245')
-    stmts, no_mech = SignorProcessor._process_row(test_row_chem_inh)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_chem_inh)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -122,7 +163,9 @@ def test_process_row_chem_act():
         MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
         MODIFICATIONB='', MODBSEQ='', PMID='16293724', DIRECT='YES', NOTES='',
         ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-141820')
-    stmts, no_mech = SignorProcessor._process_row(test_row_chem_act)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_chem_act)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -138,7 +181,9 @@ def test_process_row_stab():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='17052192', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-150135')
-    stmts, no_mech = SignorProcessor._process_row(test_row_stab)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_stab)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -156,7 +201,9 @@ def test_process_row_destab():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='23721961',
             DIRECT='NO', NOTES='', ANNOTATOR='miannu',
             SENTENCE='', SIGNOR_ID='SIGNOR-252114')
-    stmts, no_mech = SignorProcessor._process_row(test_row_destab)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row_destab)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -172,7 +219,9 @@ def test_process_row_binding_complex():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='18321988', DIRECT='YES', NOTES='',
             ANNOTATOR='lperfetto', SENTENCE='', SIGNOR_ID='SIGNOR-226693')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -190,7 +239,9 @@ def test_process_row_phos_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
             SENTENCE='', SIGNOR_ID='SIGNOR-116131')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -218,7 +269,9 @@ def test_process_row_phos_down():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
             SENTENCE='', SIGNOR_ID='SIGNOR-159591')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -246,7 +299,9 @@ def test_process_row_phos_nores_up():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
             SENTENCE='', SIGNOR_ID='SIGNOR-242602')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -273,7 +328,9 @@ def test_process_row_phos_nores_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -301,7 +358,9 @@ def test_process_row_dephos_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='11901158', DIRECT='YES', NOTES='', ANNOTATOR='gcesareni',
             SENTENCE='', SIGNOR_ID='SIGNOR-116131')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -329,7 +388,9 @@ def test_process_row_dephos_down():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='18056643', DIRECT='YES', NOTES='', ANNOTATOR='llicata',
             SENTENCE='', SIGNOR_ID='SIGNOR-159591')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -356,7 +417,9 @@ def test_mod_unknown_effect():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='9111318', DIRECT='YES', NOTES='', ANNOTATOR='',
             SENTENCE='', SIGNOR_ID='SIGNOR-251358')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 1
@@ -375,7 +438,9 @@ def test_process_row_dephos_nores_up():
             MODASEQ='', MODIFICATIONB='', MODBSEQ='', PMID='14976552',
             DIRECT='YES', NOTES='', ANNOTATOR='lperfetto',
             SENTENCE='', SIGNOR_ID='SIGNOR-242602')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -402,7 +467,9 @@ def test_process_row_dephos_nores_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='15747065', DIRECT='YES', NOTES='',
             ANNOTATOR='gcesareni', SENTENCE='', SIGNOR_ID='SIGNOR-134494')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -431,7 +498,9 @@ def test_process_row_phos_multi_res():
             MODBSEQ='', PMID='8157000', DIRECT='YES',
             NOTES='', ANNOTATOR='gcesareni', SENTENCE='',
             SIGNOR_ID='SIGNOR-36553')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 4
@@ -463,7 +532,9 @@ def test_process_row_complex_up():
             MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
             PMID='9756848', DIRECT='YES', NOTES='', ANNOTATOR='miannu',
             SENTENCE='', SIGNOR_ID='SIGNOR-60557')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -492,7 +563,9 @@ def test_process_row_complex_down():
             TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
             MODBSEQ='', PMID='10548111', DIRECT='YES', NOTES='',
             ANNOTATOR='amattioni', SENTENCE='', SIGNOR_ID='SIGNOR-71954')
-    stmts, no_mech = SignorProcessor._process_row(test_row)
+    # Create an empty Signor processor
+    sp = SignorProcessor([])
+    stmts, no_mech = sp._process_row(test_row)
     assert not no_mech
     assert isinstance(stmts, list)
     assert len(stmts) == 3
@@ -544,3 +617,158 @@ def test_parse_residue_positions():
     assert residues[1][1] == '171'
 
 
+def test_signor_family_famplex_mapping():
+    test_row = SignorRow(ENTITYA='TLRs', TYPEA='proteinfamily',
+            IDA='SIGNOR-PF20', DATABASEA='SIGNOR',
+            ENTITYB='Interferon Production', TYPEB='phenotype',
+            IDB='SIGNOR-PH16', DATABASEB='SIGNOR', EFFECT='up-regulates',
+            MECHANISM='', RESIDUE='', SEQUENCE='', TAX_ID='9606', CELL_DATA='',
+            TISSUE_DATA='', MODULATOR_COMPLEX='', TARGET_COMPLEX='',
+            MODIFICATIONA='', MODASEQ='', MODIFICATIONB='', MODBSEQ='',
+            PMID='20404851', DIRECT='NO', NOTES='', ANNOTATOR='lperfetto',
+            SENTENCE='', SIGNOR_ID='SIGNOR-216310')
+    complex_map = {}
+    sp = SignorProcessor([test_row], complex_map)
+    statements = sp.statements
+    assert(len(statements) == 1)
+    s0 = statements[0]
+    assert(s0.subj.db_refs['FPLX'] == 'TLR')
+    assert s0.subj.db_refs['SIGNOR'] == 'SIGNOR-PF20'
+    assert(s0.subj.name == 'TLR')
+
+
+def test_signor_complexes():
+    test_row = SignorRow(ENTITYA='NFY',
+        TYPEA='complex', IDA='SIGNOR-C1', DATABASEA='SIGNOR', ENTITYB='ID1',
+        TYPEB='protein', IDB='P41134', DATABASEB='UNIPROT',
+        EFFECT='up-regulates quantity by expression',
+        MECHANISM='transcriptional activation', RESIDUE='', SEQUENCE='',
+        TAX_ID='9606', CELL_DATA='BTO:0000972', TISSUE_DATA='',
+        MODULATOR_COMPLEX='', TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='',
+        MODIFICATIONB='', MODBSEQ='', PMID='18025157', DIRECT='NO', NOTES='',
+        ANNOTATOR='', SENTENCE='', SIGNOR_ID='SIGNOR-255746')
+    complex_map = {'SIGNOR-C1': ['P23511', 'P25208', 'Q13952']}
+    sp = SignorProcessor([test_row], complex_map)
+    assert isinstance(sp.statements, list)
+    assert len(sp.statements) == 2
+
+    s0 = sp.statements[0]
+    assert(isinstance(s0, IncreaseAmount))
+    assert(s0.subj.db_refs['UP'] == 'P23511')
+    assert(s0.subj.db_refs['HGNC'] == '7804')
+    assert(s0.subj.name == 'NFYA')
+    assert(s0.subj.bound_conditions[0].agent.db_refs['UP'] == 'P25208')
+    assert(s0.subj.bound_conditions[0].agent.name == 'NFYB')
+    assert(s0.subj.bound_conditions[0].agent.db_refs['HGNC'] == '7805')
+    assert(s0.subj.bound_conditions[1].agent.db_refs['UP'] == 'Q13952')
+    assert(s0.subj.bound_conditions[1].agent.name == 'NFYC')
+    assert(s0.subj.bound_conditions[1].agent.db_refs['HGNC'] == '7806')
+
+    s1 = sp.statements[1]
+    assert(isinstance(s1, Complex))
+    assert len(s1.evidence) == 1
+    assert s1.evidence[0].source_api == 'SIGNOR'
+    assert s1.evidence[0].source_id == 'SIGNOR-C1'
+    assert s1.evidence[0].text
+    correct_up_ids = set(['P23511', 'Q13952', 'P25208'])
+    correct_hgnc_ids = set(['7804', '7805', '7806'])
+    correct_names = set(['NFYA', 'NFYC', 'NFYB'])
+    actual_up_ids = set([m.db_refs['UP'] for m in s1.members])
+    actual_hgnc_ids = set([m.db_refs['HGNC'] for m in s1.members])
+    actual_names = set([m.name for m in s1.members])
+    assert(actual_up_ids == correct_up_ids)
+    assert(actual_hgnc_ids == correct_hgnc_ids)
+    assert(actual_names == correct_names)
+
+
+def test_recursive_complexes():
+    test_row = SignorRow(ENTITYA='PAX7/MLL2 complex', TYPEA='complex',
+            IDA='SIGNOR-C91', DATABASEA='SIGNOR', ENTITYB='MYF5',
+            TYPEB='protein', IDB='P13349', DATABASEB='UNIPROT',
+            EFFECT='up-regulates quantity by expression',
+            MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='BTO:0002314',
+            TISSUE_DATA='BTO:0000887;BTO:0001103', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
+            ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
+    complex_map = {
+            'SIGNOR-C87': ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291'],
+            'SIGNOR-C88': ['SIGNOR-C87', 'O14686'],
+            'SIGNOR-C91': ['SIGNOR-C88', 'P23759']}
+    sp = SignorProcessor([test_row], complex_map)
+    assert isinstance(sp.statements, list)
+    assert len(sp.statements) == 4
+
+    s0 = sp.statements[0]
+    assert(isinstance(s0, IncreaseAmount))
+    bc = s0.subj.bound_conditions
+    assert(bc[0].agent.db_refs['UP'] == 'O14686')
+    assert(bc[1].agent.db_refs['UP'] == 'P61964')
+    assert(bc[2].agent.db_refs['UP'] == 'Q9UBL3')
+    assert(bc[3].agent.db_refs['UP'] == 'Q9C005')
+    assert(bc[4].agent.db_refs['UP'] == 'Q15291')
+
+    assert(isinstance(sp.statements[1], Complex))
+    correct_complex_ups_1 = ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291']
+    actual_complex_ups_1 = [m.db_refs['UP'] for m in sp.statements[1].members]
+    assert(correct_complex_ups_1 == actual_complex_ups_1)
+
+    assert(isinstance(sp.statements[2], Complex))
+    correct_complex_ups_2 = ['O14686', 'P61964', 'Q9UBL3', 'Q9C005', 'Q15291']
+    actual_complex_ups_2 = [m.db_refs['UP'] for m in sp.statements[2].members]
+    assert(correct_complex_ups_2 == actual_complex_ups_2)
+
+    assert(isinstance(sp.statements[3], Complex))
+    correct_complex_ups_3 = ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                             'Q15291']
+    actual_complex_ups_3 = [m.db_refs['UP'] for m in sp.statements[3].members]
+    assert(correct_complex_ups_3 == actual_complex_ups_3)
+
+
+def test_complexes_with_families():
+    test_row = SignorRow(ENTITYA='MAPK1', TYPEA='protein',
+            IDA='P27361', DATABASEA='UNIPROT', ENTITYB='CDO/JLP/P38',
+            TYPEB='complex', IDB='SIGNOR-C22', DATABASEB='SIGNOR',
+            EFFECT='up-regulates quantity by expression',
+            MECHANISM='transcriptional regulation', RESIDUE='', SEQUENCE='',
+            TAX_ID='9606', CELL_DATA='BTO:0002314',
+            TISSUE_DATA='BTO:0000887;BTO:0001103', MODULATOR_COMPLEX='',
+            TARGET_COMPLEX='', MODIFICATIONA='', MODASEQ='', MODIFICATIONB='',
+            MODBSEQ='', PMID='22863532', DIRECT='NO', NOTES='',
+            ANNOTATOR='miannu', SENTENCE='', SIGNOR_ID='SIGNOR-198641')
+    complex_map = {'SIGNOR-C22' : ['O60271', 'Q4KMG0', 'SIGNOR-PF14']}
+    sp = SignorProcessor([test_row], complex_map)
+    assert isinstance(sp.statements, list)
+    assert len(sp.statements) == 2
+    #import ipdb;ipdb.set_trace()
+
+    assert(isinstance(sp.statements[0], IncreaseAmount))
+    obj = sp.statements[0].obj
+    assert(obj.db_refs['UP'] == 'O60271')
+    assert(len(obj.bound_conditions) == 2)
+    assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')
+    assert(obj.bound_conditions[1].agent.db_refs['SIGNOR'] == 'SIGNOR-PF14')
+    assert(obj.bound_conditions[1].agent.db_refs['FPLX'] == 'ROBO')
+
+    s1 = sp.statements[1]
+    assert(isinstance(s1, Complex))
+    members = s1.members
+    assert(members[0].db_refs['UP'] == 'O60271')
+    assert(members[1].db_refs['UP'] == 'Q4KMG0')
+    assert(members[2].db_refs['SIGNOR'] == 'SIGNOR-PF14')
+    assert(members[2].db_refs['FPLX'] == 'ROBO')
+
+
+def test_recursively_expand_complex_constituents():
+    complex_map = {
+            'SIGNOR-C87': ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291'],
+            'SIGNOR-C88': ['SIGNOR-C87', 'O14686'],
+            'SIGNOR-C91': ['SIGNOR-C88', 'P23759']}
+    sp = SignorProcessor([test_row], complex_map)
+    constituents = sp._recursively_lookup_complex('SIGNOR-C91')
+    assert(constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                            'Q15291'])
+
+if __name__ == '__main__':
+    test_recursive_complexes()
