@@ -1,0 +1,17 @@
+ISI (:py:mod:`indra.sources.isi`)
+===================================
+
+For the ISI reader to run, set the Docker memory and swap space to the maximum.
+
+ISI API (:py:mod:`indra.sources.isi.api`)
+------------------------------------------------
+
+.. automodule:: indra.sources.isi.api
+    :members:
+
+ISI Processor (:py:mod:`indra.sources.isi.processor`)
+-------------------------------------------------------
+
+.. automodule:: indra.sources.isi.processor
+    :members:
+
