@@ -21,7 +21,9 @@ class IsiProcessor(object):
     statements: list[indra.statements.Statement]
         Extracted statements
     """
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, pmid=None):
+        self.pmid = pmid
+
         # Load grounding information
         path_this = os.path.dirname(os.path.abspath(__file__))
         gm_fname = os.path.join(path_this, '../../resources/',
@@ -86,6 +88,13 @@ class IsiProcessor(object):
         subj = self._make_agent(subj)
         obj = self._make_agent(obj)
 
+        # Make an evidence object
+        ev = Evidence(source_api='isi',
+                      source_id=source_id,
+                      pmid=self.pmid,
+                      text=text,
+                      annotations={'interaction': interaction})
+
         # For binding time interactions, it is said that a catayst might be
         # specified. We don't use this for now, but extract in case we want
         # to in the future
@@ -100,11 +109,11 @@ class IsiProcessor(object):
         if verb == 'transcription':
             pass
         elif verb == 'binding':
-            statement = Complex([subj, obj])
+            statement = Complex([subj, obj], evidence=ev)
         elif verb == 'complexed':
-            statement = Complex([subj, obj])
+            statement = Complex([subj, obj], evidence=ev)
         elif verb == 'binds':
-            statement = Complex([subj, obj])
+            statement = Complex([subj, obj], evidence=ev)
         elif verb == 'formation':
             pass
         elif verb == 'dimer':
@@ -114,9 +123,9 @@ class IsiProcessor(object):
         elif verb == 'form':
             pass
         elif verb == 'bound':
-            statement = Complex([subj, obj])
+            statement = Complex([subj, obj], evidence=ev)
         elif verb == 'complex':
-            statement = Complex([subj, obj])
+            statement = Complex([subj, obj], evidence=ev)
         elif verb == 'association':
             pass
         elif verb == 'forms':
@@ -126,15 +135,15 @@ class IsiProcessor(object):
         elif verb == 'associate':
             pass
         elif verb == 'phosphorylation':
-            statement = Phosphorylation(subj, obj)
+            statement = Phosphorylation(subj, obj, evidence=ev)
         elif verb == 'phosphorylates':
-            statement = Phosphorylation(subj, obj)
+            statement = Phosphorylation(subj, obj, evidence=ev)
         elif verb == 'complexes':
             pass
         elif verb == 'inhibition':
             pass
         elif verb == 'bind':
-            statement = Complex([subj, obj])
+            statement = Complex([subj, obj], evidence=ev)
         elif verb == 'expressing':
             pass
         elif verb == 'associated':
@@ -142,7 +151,7 @@ class IsiProcessor(object):
         elif verb == 'hydrolysis':
             pass
         elif verb == 'phosphorylated':
-            statement = Phosphorylation(subj, obj)
+            statement = Phosphorylation(subj, obj, evidence=ev)
         elif verb == 'interact':
             pass
         elif verb == 'interaction':
@@ -154,6 +163,19 @@ class IsiProcessor(object):
             self.statements.append(statement)
 
     def _make_agent(self, agent_str):
+        """Makes an ungrounded Agent object from a string specifying an
+        entity.
+
+        Parameters
+        ----------
+        agent_str: str
+            A string specifying the agent
+
+        Returns
+        -------
+        agent: indra.statements.Agent
+            An ungrounded Agent object referring to the specified text
+        """
         return Agent(agent_str, db_refs={'TEXT': agent_str})
 
 
