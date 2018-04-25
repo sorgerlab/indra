@@ -33,9 +33,9 @@ def get_primary_db(force_new=False):
     Note: by default, calling this function twice will return the same
     `DatabaseManager` instance. In other words:
 
-    > db1 = get_primary_db()
-    > db2 = get_primary_db()
-    > db1 is db2
+    >>> db1 = get_primary_db()
+    >>> db2 = get_primary_db()
+    >>> db1 is db2
     True
 
     This means also that, for example `db1.select_one(db2.TextRef)` will work,
@@ -86,11 +86,11 @@ def get_test_db():
         test_name = test_defaults[k]
         m = re.match('(\w+)://.*?/([\w.]+)', test_name)
         if m is None:
-            logger.warning("Non-matching db name: %s" % test_name)
+            logger.warning("Poorly formed db name: %s" % test_name)
             continue
         sqltype = m.groups()[0]
         try:
-            db = DatabaseManager(test_name, sqltype=sqltype)
+            db = DatabaseManager(test_name, sqltype=sqltype, label=k)
             db.grab_session()
         except Exception as e:
             logger.error("%s didn't work" % test_name)
@@ -101,6 +101,18 @@ def get_test_db():
     if db is None:
         logger.error("Could not find any test database names.")
     return db
+
+
+def get_db(db_label):
+    """Get a db instance base on it's name in the config or env."""
+    defaults = get_defaults()
+    db_name = defaults[db_label]
+    m = re.match('(\w+)://.*?/([\w.]+)', db_name)
+    if m is None:
+        logger.error("Poorly formed db name: %s" % db_name)
+        return
+    sqltype = m.groups()[0]
+    return DatabaseManager(db_name, sqltype=sqltype, label=db_label)
 
 
 def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):

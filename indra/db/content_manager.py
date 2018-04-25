@@ -71,7 +71,15 @@ if __name__ == '__main__':
         default=['pubmed', 'pmc_oa', 'manuscripts'],
         help=('Specify which sources are to be uploaded. Defaults are pubmed, '
               'pmc_oa, and manuscripts.')
-    )
+        )
+    parser.add_argument(
+        '-D', '--database',
+        default='primary',
+        help=('Select a database from the names given in the config or '
+              'environment, for example primary is INDRA_DB_PRIMAY in the '
+              'config file and INDRADBPRIMARY in the environment. The default '
+              'is \'primary\'.')
+        )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -100,7 +108,7 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 
-from indra.db.util import get_primary_db, get_defaults
+from indra.db.util import get_primary_db, get_defaults, get_db
 from indra.db.database_manager import texttypes, formats, DatabaseManager
 from indra.db.database_manager import sql_expressions as sql_exp
 
@@ -1534,8 +1542,10 @@ if __name__ == '__main__':
         else:
             logger.error("Could not load a test database!")
             sys.exit(1)
-    else:
+    elif args.database == 'primary':
         db = get_primary_db()
+    else:
+        db = get_db(args.database)
 
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
