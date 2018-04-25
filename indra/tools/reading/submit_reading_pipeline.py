@@ -296,10 +296,10 @@ def get_environment():
 
     # Get the Elsevier keys from the Elsevier client
     environment_vars = [
-        {'name': ec.api_key_env_name,
-         'value': ec.elsevier_keys.get('X-ELS-APIKey', '')},
-        {'name': ec.inst_key_env_name,
-         'value': ec.elsevier_keys.get('X-ELS-Insttoken', '')},
+        {'name': ec.API_KEY_ENV_NAME,
+         'value': ec.ELSEVIER_KEYS.get('X-ELS-APIKey', '')},
+        {'name': ec.INST_KEY_ENV_NAME,
+         'value': ec.ELSEVIER_KEYS.get('X-ELS-Insttoken', '')},
         {'name': 'AWS_ACCESS_KEY_ID',
          'value': access_key},
         {'name': 'AWS_SECRET_ACCESS_KEY',
