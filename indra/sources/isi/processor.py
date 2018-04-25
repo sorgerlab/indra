@@ -1,6 +1,8 @@
 import os
 import json
 import logging
+import re
+from copy import deepcopy
 
 from indra.statements import *
 from indra.preassembler.grounding_mapper import load_grounding_map,\
@@ -18,11 +20,17 @@ class IsiProcessor(object):
         The output directory of the ISI reader, with one file per input file.
     verbs: set[str]
         A list of verbs that have appeared in the processed ISI output
+    pmids: dict
+        Dictionary mapping preprocessed text file ids to pmids
+    extra_annotations: dict
+        Dictionary mapping preprocessed text file ids to a associated
+        annotations to be included with each statement from the document
     statements: list[indra.statements.Statement]
         Extracted statements
     """
-    def __init__(self, output_dir, pmid=None):
-        self.pmid = pmid
+    def __init__(self, output_dir, preprocessor):
+        self.pmids = preprocessor.pmids
+        self.extra_annotations_for_each_doc = preprocessor.extra_annotations
 
         # Load grounding information
         path_this = os.path.dirname(os.path.abspath(__file__))
@@ -57,17 +65,40 @@ class IsiProcessor(object):
             full_entry_path = os.path.join(dir_name, entry)
 
             if os.path.isdir(full_entry_path):
+                logger.warning('ISI processor: did not expect any ' + 
+                               'subdirectories in the output directory.')
                 self.process_directory(full_entry_path)
             elif entry.endswith('.json'):
-                self.process_file(full_entry_path)
+                # Extract the corresponding file id
+                m = re.match('[0-9]+\.json', entry)
+                if m is None:
+                    logger.warning('ISI processor:', entry, ' does not ' + 
+                                   ' match expected format for output files.')
+                    pmid = None
+                    extra_annotations = {}
+                else:
+                    doc_id = int(m.group(1))
+                    pmid = self.pmids.get(doc_id)
+                    extra_annotations = extra_annotations_for_each_doc.get(
+                            doc_id)
+                self.process_file(full_entry_path, pmid, extra_annotations)
+            else:
+                logger.warning('ISI processor: did not expect any non-json ' +
+                               'files in the output directory')
 
-    def process_file(self, filename):
+    def process_file(self, filename, pmid, extra_annotations):
         """Extracts statements from the given ISI output file.
 
         Parameters
         ----------
         filename: str
             The ISI output file from which to extract statements
+        pmid: int
+            The PMID of the document being preprocessed, or None if not
+            specified
+        extra_annotations: dict
+            Extra annotations to be added to each statement from this document
+            (can be the empty dictionary)
         """
         print('Extracting from', filename)
         with open(filename, 'r') as f:
@@ -76,9 +107,11 @@ class IsiProcessor(object):
                 text = j[k]['text']
                 interactions = j[k]['interactions']
                 for interaction in interactions:
-                    self.process_interaction(k, interaction, text)
+                    self.process_interaction(k, interaction, text, pmid,
+                                             extra_annotations)
 
-    def process_interaction(self, source_id, interaction, text):
+    def process_interaction(self, source_id, interaction, text, pmid,
+                            extra_annotations):
         verb = interaction[0].lower()
         subj = interaction[-2]
         obj = interaction[-1]
@@ -89,11 +122,13 @@ class IsiProcessor(object):
         obj = self._make_agent(obj)
 
         # Make an evidence object
+        annotations = deepcopy(extra_annotations)
+        annotations['interaction'] = interaction
         ev = Evidence(source_api='isi',
                       source_id=source_id,
-                      pmid=self.pmid,
+                      pmid=pmid,
                       text=text,
-                      annotations={'interaction': interaction})
+                      annotations=annotations)
 
         # For binding time interactions, it is said that a catayst might be
         # specified. We don't use this for now, but extract in case we want

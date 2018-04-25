@@ -1,5 +1,6 @@
 import logging
 import nltk
+import os
 
 logger = logging.getLogger('isi')
 
@@ -24,7 +25,7 @@ class IsiPreprocessor(object):
         document
     """
 
-    def __init__(preprocessed_dir):
+    def __init__(self, preprocessed_dir):
         self.preprocessed_dir = preprocessed_dir
         self.next_file_id = 1
         self.pmids = {}
@@ -61,7 +62,7 @@ class IsiPreprocessor(object):
     def preprocess_plain_text_file(self, filename, pmid, extra_annotations):
         with open(filename, 'r') as f:
             content = f.read()
-            self.preprocess_plain_text_string(filename, pmid,
+            self.preprocess_plain_text_string(content, pmid,
                                               extra_annotations)
 
     def preprocess_nxml_string(self, nxml, pmid, extra_annotations):
