@@ -1,8 +1,10 @@
 import logging
 import nltk
 import os
+import zlib
 
 logger = logging.getLogger('isi')
+
 
 class IsiPreprocessor(object):
     """Preprocesses a set of documents, one by one, and adds the preprocessed
@@ -40,7 +42,19 @@ class IsiPreprocessor(object):
     def preprocess_plain_text_string(self, text, pmid, extra_annotations):
         """Preprocesses plain text by tokenizing into sentences and writing
         each sentence on its own line in a plain text file. All other
-        preprocessing functions ultimately call this one."""
+        preprocessing functions ultimately call this one.
+        
+        Parameters
+        ----------
+        text: str
+            The plain text of the article of abstract
+        pmid: str
+            The pmid from which it comes, or None if not specified
+        extra_annotations: dict
+            Extra annotations to be added to each statement, possibly including
+            metadata about the source (annotations with the key "interaction"
+            will be overridden)
+        """
         output_file = str(self.next_file_id) + '.txt'
         output_file = os.path.join(self.preprocessed_dir, output_file)
 
@@ -55,18 +69,93 @@ class IsiPreprocessor(object):
         # Store annotations
         self.pmids[self.next_file_id] = pmid
         self.extra_annotations[self.next_file_id] = extra_annotations
-        
+
         # Increment file id
         self.next_file_id += 1
 
     def preprocess_plain_text_file(self, filename, pmid, extra_annotations):
+        """
+        Preprocess a plain text file for use with ISI, by creating a new text
+        file with one sentence per line.
+
+        Parameters
+        ----------
+        text: str
+            The plain text of the article of abstract
+        pmid: str
+            The pmid from which it comes, or None if not specified
+        extra_annotations: dict
+            Extra annotations to be added to each statement, possibly including
+            metadata about the source (annotations with the key "interaction"
+            will be overridden)
+        """
         with open(filename, 'r') as f:
             content = f.read()
             self.preprocess_plain_text_string(content, pmid,
                                               extra_annotations)
 
     def preprocess_nxml_string(self, nxml, pmid, extra_annotations):
+        """Preprocess nxml as a string for use with ISI, by creating a plain
+        text file with one sentence per line. Not yet implemented.
+
+        Parameters
+        ----------
+        text: str
+            The plain text of the article of abstract
+        pmid: str
+            The pmid from which it comes, or None if not specified
+        extra_annotations: dict
+            Extra annotations to be added to each statement, possibly including
+            metadata about the source (annotations with the key "interaction"
+            will be overridden)
+        """
         raise NotImplementedError()
 
     def preprocess_nxml_file(self, filename, pmid, extra_annotations):
+        """Preprocess an nxml file for use with ISI, by creating a plain
+        text file with one sentence per line. Not yet implemented.
+
+        Parameters
+        ----------
+        text: str
+            The plain text of the article of abstract
+        pmid: str
+            The pmid from which it comes, or None if not specified
+        extra_annotations: dict
+            Extra annotations to be added to each statement, possibly including
+            metadata about the source (annotations with the key "interaction"
+            will be overridden)
+        """
+
         raise NotImplementedError()
+
+    def preprocess_abstract_list(self, abstract_list):
+        """Preprocess a list of abstracts in database pickle dump format.
+        For each abstract, creates a plain text file with one sentence per
+        line, and stores metadata to be included with each statement from
+        that abstract.
+
+        Parameters
+        ----------
+        abstract_list: list[dict]
+            Compressed abstracts with corresopnding metadata in INDRA database
+            pickle dump format.
+        """
+        for abstract_struct in abstract_list:
+            abs_format = abstract_struct['format']
+            content_type = abstract_struct['text_type']
+            content_zipped = abstract_struct['content']
+            tcid = abstract_struct['tcid']
+            trid = abstract_struct['trid']
+
+            assert(abs_format == 'text')
+            assert(content_type == 'abstract')
+
+            pmid = None  # Don't worry about pmid for now
+            extra_annotations = {'tcid': tcid, 'trid': trid}
+
+            # Uncompress content
+            content = zlib.decompress(content_zipped,
+                                      zlib.MAX_WBITS+16).decode('utf-8')
+
+            self.preprocess_plain_text_string(content, pmid, extra_annotations)

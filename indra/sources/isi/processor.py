@@ -30,7 +30,7 @@ class IsiProcessor(object):
     """
     def __init__(self, output_dir, preprocessor):
         self.pmids = preprocessor.pmids
-        self.extra_annotations_for_each_doc = preprocessor.extra_annotations
+        self.extra_annotations_each_doc = preprocessor.extra_annotations
 
         # Load grounding information
         path_this = os.path.dirname(os.path.abspath(__file__))
@@ -65,21 +65,21 @@ class IsiProcessor(object):
             full_entry_path = os.path.join(dir_name, entry)
 
             if os.path.isdir(full_entry_path):
-                logger.warning('ISI processor: did not expect any ' + 
+                logger.warning('ISI processor: did not expect any ' +
                                'subdirectories in the output directory.')
                 self.process_directory(full_entry_path)
             elif entry.endswith('.json'):
                 # Extract the corresponding file id
-                m = re.match('[0-9]+\.json', entry)
+                m = re.match('([0-9]+)\.json', entry)
                 if m is None:
-                    logger.warning('ISI processor:', entry, ' does not ' + 
+                    logger.warning('ISI processor:', entry, ' does not ' +
                                    ' match expected format for output files.')
                     pmid = None
                     extra_annotations = {}
                 else:
                     doc_id = int(m.group(1))
                     pmid = self.pmids.get(doc_id)
-                    extra_annotations = extra_annotations_for_each_doc.get(
+                    extra_annotations = self.extra_annotations_each_doc.get(
                             doc_id)
                 self.process_file(full_entry_path, pmid, extra_annotations)
             else:
@@ -112,6 +112,25 @@ class IsiProcessor(object):
 
     def process_interaction(self, source_id, interaction, text, pmid,
                             extra_annotations):
+        """Process an interaction JSON tuple from the ISI output, and adds up
+        to one statement to the list of extracted statements.
+
+        Parameters
+        ----------
+        source_id: str
+            the JSON key corresponding to the sentence in the ISI output
+            interaction: the JSON list with subject/verb/object information
+            about the event in the ISI output
+        text: str
+            the text of the sentence
+        pmid: int
+            the PMID of the article from which the information was extracted
+        extra_annotations: dict
+            Additional annotations to add to the statement's evidence,
+            potentially containing metadata about the source. Annotations
+            with the key "interaction" will be overridden by the JSON
+            interaction tuple from the ISI output
+        """
         verb = interaction[0].lower()
         subj = interaction[-2]
         obj = interaction[-1]

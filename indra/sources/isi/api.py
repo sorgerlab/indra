@@ -12,8 +12,8 @@ logger = logging.getLogger('isi')
 
 
 def process_directory(isi_preprocessor):
-    """Process a directory filled with text files (it is sufficient for them
-    to have extension .txt and be in the top level.
+    """Process a directory of abstracts and/or papers preprocessed using the
+    specified IsiPreprocessor, to produce a list of extracted INDRA statements.
 
     Parameters
     ----------
@@ -56,6 +56,7 @@ def process_directory(isi_preprocessor):
 
     return ip
 
+
 def test_api():
     preprocessed_dir = tempfile.mkdtemp('indra_isi_preprocessed')
     preprocessor = IsiPreprocessor(preprocessed_dir)
@@ -63,10 +64,12 @@ def test_api():
     input_dir = '/Users/daniel/workspace/isi/test_input'
     for filename in os.listdir(input_dir):
         path = os.path.join(input_dir, filename)
-        preprocessor.preprocess_plain_text_file(path, 12, {'foo': 'bar'})
+        preprocessor.preprocess_plain_text_file(path, 12,
+                                                {'foo': 'bar',
+                                                 'original_file': filename})
 
     ip = process_directory(preprocessor)
 
-    #shutil.rmtree(preprocessed_dir)
+    # shutil.rmtree(preprocessed_dir)
     print(preprocessed_dir)
     return ip
