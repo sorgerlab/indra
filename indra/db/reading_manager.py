@@ -5,7 +5,7 @@ import logging
 from os import path
 from functools import wraps
 from datetime import datetime, timedelta
-from indra.db.util import get_primary_db, get_test_db
+from indra.db.util import get_primary_db, get_test_db, get_db
 from indra.tools.reading.submit_reading_pipeline import submit_db_reading,\
     wait_for_complete
 
@@ -51,6 +51,15 @@ if __name__ == '__main__':
         action='store_true',
         help=('Choose to run the update on amazon batch. Note that this '
               'option will cause the -n/--num_procs option to be ignored.')
+        )
+    parser.add_argument(
+        '--database',
+        default='primary',
+        help=('Select a database from the names given in the config or '
+              'environment, for example primary is INDRA_DB_PRIMAY in the '
+              'config file and INDRADBPRIMARY in the environment. The default '
+              'is \'primary\'. Note that this is overwridden by use of the '
+              '--test flag if \'test\' is not a part of the name given.')
         )
     aws_read_parser = ArgumentParser(add_help=False)
     aws_read_parser.add_argument(
@@ -285,9 +294,14 @@ class BulkLocalReadingManager(BulkReadingManager):
 
 if __name__ == '__main__':
     if args.test:
-        db = get_test_db()
-    else:
+        if 'test' not in args.database:
+            db = get_test_db()
+        else:
+            db = get_db(args.database)
+    elif args.database == 'primary':
         db = get_primary_db()
+    else:
+        db = get_db(args.database)
 
     if args.method == 'local':
         bulk_managers = [BulkLocalReadingManager(reader_name,
