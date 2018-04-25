@@ -306,6 +306,14 @@ class DatabaseManager(object):
         self.RawUniqueLinks = RawUniqueLinks
         self.tables[RawUniqueLinks.__tablename__] = RawUniqueLinks
 
+        class PreassemblyUpdates(self.Base):
+            __tablename__ = 'preassembly_updates'
+            id = Column(Integer, primary_key=True)
+            corpus_init = Column(Boolean, nullable=False)
+            run_datetime = Column(DateTime, default=func.now())
+        self.PreassemblyUpdates = PreassemblyUpdates
+        self.tables[PreassemblyUpdates.__tablename__] = PreassemblyUpdates
+
         class PAStatements(self.Base):
             __tablename__ = 'pa_statements'
             mk_hash = Column(String, primary_key=True)

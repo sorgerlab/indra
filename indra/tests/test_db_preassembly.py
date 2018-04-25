@@ -211,3 +211,17 @@ def test_preassembly_with_database():
     assert len(all_link_uuids - all_raw_uuids) is 0
     assert all([pa_stmt.mk_hash in all_link_mk_hashes
                 for pa_stmt in pa_stmt_list])
+
+
+def test_incremental_preassembly_with_database():
+    db = _get_loaded_db(split=0.8)
+    split_datetime = datetime.now() - timedelta(days=1)
+    init_stmt_list = db.select_all(db.RawStatements,
+                                  db.RawStatements.create_date < split_datetime)
+    new_stmt_list = db.select_all(db.RawStatements,
+                                  db.RawStatements.create_date > split_datetime)
+    assert len(init_stmt_list)
+    assert len(new_stmt_list)
+    pa_manager = pas.PreassemblyManager()
+    pa_manager.create_corpus(db)
+    pa_manager.supplement_corpus(db)

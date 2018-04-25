@@ -1,16 +1,32 @@
+import json
 from copy import deepcopy
 from collections import defaultdict
 
 import logging
+from datetime import datetime, timedelta
+from functools import wraps
 
 import indra.tools.assemble_corpus as ac
-from indra.db.util import get_statements, insert_pa_stmts, \
-    distill_stmts_from_reading
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-
+from indra.db.util import get_statements, insert_pa_stmts, \
+    distill_stmts_from_reading
+from indra.statements import stmts_from_json
 
 logger = logging.getLogger('db_preassembly')
+
+
+def _handle_update_table(func):
+    @wraps(func)
+    def run_and_record_update(cls, db, *args, **kwargs):
+        run_datetime = datetime.utcnow()
+        completed = func(cls, db, *args, **kwargs)
+        if completed:
+            is_corpus_init = (func.__name__ == 'create_corpus')
+            db.insert('preassembly_updates', corpus_init=is_corpus_init,
+                      run_datetime=run_datetime)
+        return completed
+    return run_and_record_update
 
 
 class PreassemblyManager(object):
@@ -19,6 +35,21 @@ class PreassemblyManager(object):
         self.n_proc = n_proc
         return
 
+    def _get_latest_updatetime(self, db):
+        """Get the date of the latest update."""
+        update_list = db.select_all(db.PreassemblyUpdates)
+        if not len(update_list):
+            logger.warning("The preassembled corpus has not been initialized, "
+                           "or else the updates table has not been populated.")
+            return None
+        return max([u.run_datetime for u in update_list])
+
+    def _get_existing_pa_stmts(self, db):
+        stmt_list = db.select_all(db.PAStatements)
+        return stmts_from_json([json.loads(s.json.decode('utf-8'))
+                                for s in stmt_list])
+
+    @_handle_update_table
     def create_corpus(self, db):
         _, stmts = distill_stmts_from_reading(db, get_full_stmts=True)
         unique_stmt_dict, evidence_links, support_links = \
@@ -28,10 +59,16 @@ class PreassemblyManager(object):
                 ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
         db.copy('pa_support_links', support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
-        return
+        return True
 
+    @_handle_update_table
     def supplement_corpus(self, db):
-        pass
+        last_update = self._get_latest_updatetime(db)
+        check_from_datetime = last_update - timedelta(hours=6)
+        _, new_stmts = distill_stmts_from_reading(db, get_full_stmts=True,
+                   clauses=[db.RawStatements.create_date > check_from_datetime])
+        existing_stmts = self._get_existing_pa_stmts(db)
+        return False
 
 
 def make_unique_statement_set(preassembler, stmts):
