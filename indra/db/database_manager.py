@@ -414,7 +414,8 @@ class DatabaseManager(object):
             else:
                 msg = "You are going to clear the following tables:\n"
                 msg += str([tbl.__tablename__ for tbl in tbl_objs]) + '\n'
-                msg += "Do you really want to clear these tables? [y/N]: "
+                msg += ("Do you really want to clear these tables from %s? "
+                        "[y/N]: " % self.label)
             # Check to make sure.
             try:
                 resp = raw_input(msg)
