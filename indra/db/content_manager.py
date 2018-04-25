@@ -78,7 +78,8 @@ if __name__ == '__main__':
         help=('Select a database from the names given in the config or '
               'environment, for example primary is INDRA_DB_PRIMAY in the '
               'config file and INDRADBPRIMARY in the environment. The default '
-              'is \'primary\'.')
+              'is \'primary\'. Note that this is overwridden by use of the '
+              '--test flag if \'test\' is not a part of the name given.')
         )
     args = parser.parse_args()
     if args.debug:
@@ -108,7 +109,7 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 
-from indra.db.util import get_primary_db, get_defaults, get_db
+from indra.db.util import get_primary_db, get_defaults, get_db, get_test_db
 from indra.db.database_manager import texttypes, formats, DatabaseManager
 from indra.db.database_manager import sql_expressions as sql_exp
 
@@ -1522,26 +1523,10 @@ class Elsevier(ContentManager):
 
 if __name__ == '__main__':
     if args.test:
-        defaults = get_defaults()
-        test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
-        key_list = list(test_defaults.keys())
-        key_list.sort()
-        for k in key_list:
-            test_name = test_defaults[k]
-            m = re.match('(\w+)://.*?/([\w.]+)', test_name)
-            sqltype = m.groups()[0]
-            try:
-                db = DatabaseManager(test_name, sqltype=sqltype)
-                db.grab_session()
-            except Exception as e:
-                logger.debug("Tried to use %s, but failed due to:\n%s\n"
-                             % (k, e))
-                continue  # Clearly this test database won't work.
-            print("Using test database %s." % k)
-            break
+        if 'test' not in args.database:
+            db = get_test_db()
         else:
-            logger.error("Could not load a test database!")
-            sys.exit(1)
+            db = get_db(args.database)
     elif args.database == 'primary':
         db = get_primary_db()
     else:
