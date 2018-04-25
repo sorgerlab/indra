@@ -513,29 +513,56 @@ class DatabaseManager(object):
                 ret.append(getattr(entry, col_names))
         return ret
 
-    def insert(self, tbl_name, ret_info='id', **input_dict):
+    def insert(self, table, ret_info=None, **input_dict):
         "Insert a an entry into specified table, and return id."
         self.grab_session()
-        inputs = dict.fromkeys(self.get_column_names(tbl_name))
+        # Resolve the table instance
+        if isinstance(table, str):
+            inputs = dict.fromkeys(self.get_column_names(table))
+            table = self.tables[table]
+        else:
+            inputs = dict.fromkeys(self.get_column_names(table.__tablename__))
+
+        # Get the default return info
+        if ret_info is None:
+            ret_info = inspect(table).primary_key[0].name
+
+        # Do the insert
         inputs.update(input_dict)
-        new_entry = self.tables[tbl_name](**inputs)
+        new_entry = table(**inputs)
         self.session.add(new_entry)
         self.commit("Excepted while trying to insert %s into %s" %
-                    (inputs, tbl_name))
+                    (inputs, table.__tablename__))
         return self.get_values([new_entry], ret_info)[0]
 
-    def insert_many(self, tbl_name, input_dict_list, ret_info='id'):
+    def insert_many(self, table, input_data_list, ret_info=None, cols=None):
         "Insert many records into the table given by table_name."
         self.grab_session()
-        inputs = dict.fromkeys(self.get_column_names(tbl_name))
+
+        # Resolve the table instance
+        if isinstance(table, str):
+            inputs = dict.fromkeys(self.get_column_names(table))
+            table = self.tables[table]
+        else:
+            inputs = dict.fromkeys(self.get_column_names(table.__tablename__))
+
+        # Set the default return info
+        if ret_info is None:
+            ret_info = inspect(table).primary_key[0].name
+
+        # Prepare and insert the data
         entry_list = []
-        for input_dict in input_dict_list:
+        for input_data in input_data_list:
+            if cols:
+                input_dict = zip(cols, input_data)
+            else:
+                input_dict = input_data
             inputs.update(input_dict)
-            entry_list.append(self.tables[tbl_name](**inputs))
+            entry_list.append(table(**inputs))
             inputs = inputs.fromkeys(inputs)  # Clear the values of the dict.
         self.session.add_all(entry_list)
         self.commit("Excepted while trying to insert:\n%s,\ninto %s" %
-                    (input_dict_list, tbl_name))
+                    (input_data_list, table.__tablename__))
         return self.get_values(entry_list, ret_info)
 
     def delete_all(self, entry_list):

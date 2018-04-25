@@ -255,7 +255,7 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     return
 
 
-def insert_pa_stmts(db, stmts, verbose=False):
+def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
     """Insert pre-assembled statements, and any affiliated agents.
 
     Parameters
@@ -288,7 +288,10 @@ def insert_pa_stmts(db, stmts, verbose=False):
             print('|', end='', flush=True)
     if verbose:
         print(" Done loading %d statements." % len(stmts))
-    db.copy('pa_statements', stmt_data, cols)
+    if do_copy:
+        db.copy('pa_statements', stmt_data, cols)
+    else:
+        db.insert_many('pa_statements', stmt_data, cols=cols)
     insert_agents(db, 'pa', verbose=verbose)
     return
 
@@ -665,7 +668,7 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
          .filter(db.TextContent.id == db.Reading.text_content_id,
                  db.Reading.id == db.RawStatements.reading_id))
     if clauses:
-        q.filter(*clauses)
+        q = q.filter(*clauses)
 
     # Specify sources of fulltext content, and order priorities.
     full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']

@@ -46,12 +46,14 @@ def _get_stmt_tuples():
     return stmt_tuples, col_names
 
 
-def _get_loaded_db(split=None):
+def _get_loaded_db(split=None, with_init_corpus=False):
+    print("Creating and filling a test database:")
     db = db_util.get_test_db()
     db._clear(force=True)
     stmt_tuples, col_names = _get_stmt_tuples()
 
     # Get and load the provenance for the statements.
+    print("\tLoading background metadata...")
     db.copy('text_ref', _load_tuples('test_text_ref_tuples.pkl'),
             ('id', 'pmid', 'pmcid', 'doi'))
     tc_tuples = [t + (b'',)
@@ -66,6 +68,7 @@ def _get_loaded_db(split=None):
 
     # Now load the statements. Much of this processing is the result of active
     # development, and once that is done, TODO: Format pickle to match
+    print("\tPrepping the raw statements...")
     copy_col_names = ('uuid', 'mk_hash', 'type', 'indra_version', 'json',
                       'reading_id', 'db_info_id')
     copy_stmt_tuples = []
@@ -76,8 +79,14 @@ def _get_loaded_db(split=None):
         entry_dict['mk_hash'] = stmt.get_hash()
         ret_tpl = tuple([entry_dict[col] for col in copy_col_names])
         copy_stmt_tuples.append(ret_tpl)
+
+    print("\tInserting the raw statements...")
     if split is None:
         db.copy('raw_statements', copy_stmt_tuples, copy_col_names)
+        if with_init_corpus:
+            print("\tAdding a preassembled corpus...")
+            pa_manager = pas.PreassemblyManager()
+            pa_manager.create_corpus(db)
     else:
         num_initial = int(split*len(copy_stmt_tuples))
         stmt_tuples_initial = random.sample(copy_stmt_tuples, num_initial)
@@ -86,11 +95,17 @@ def _get_loaded_db(split=None):
         db.copy('raw_statements', [t + (initial_datetime,)
                                    for t in stmt_tuples_initial],
                 copy_col_names + ('create_date',))
-        db_util.insert_agents(db, db.RawStatements, db.RawAgents)
+        if with_init_corpus:
+            print("\tAdding a preassembled corpus from first batch of raw "
+                  "stmts...")
+            pa_manager = pas.PreassemblyManager()
+            pa_manager.create_corpus(db)
+        print("\tInserting the rest of the raw statements...")
         new_datetime = datetime.now()
-        db.copy('raw_statments', [t + (new_datetime,) for t in stmt_tuples_new],
+        db.copy('raw_statements', [t + (new_datetime,) for t in stmt_tuples_new],
                 copy_col_names + ('create_date',))
-        db_util.insert_agents(db, db.RawStatements, db.RawAgents)
+    print("\tAdding agents...")
+    db_util.insert_agents(db, 'raw')
     return db
 
 
@@ -118,13 +133,14 @@ def test_preassembly_without_database():
     unique_stmt_dict, evidence_links, support_links = \
         pas.process_statements(stmts)
     assert len(unique_stmt_dict)
-    total_evidence = len(pas.flatten_evidence_dict(evidence_links))
+    total_evidence = len(evidence_links)
     assert len(unique_stmt_dict) <= total_evidence <= len(stmts), \
         ("Got %d ev links for %d stmts and %d unique statements (should be "
          "between)." % (total_evidence, len(stmts), len(unique_stmt_dict)))
-    assert len(evidence_links) == len(unique_stmt_dict), \
+    num_unique_stmt_keys = len({t[0] for t in evidence_links})
+    assert num_unique_stmt_keys == len(unique_stmt_dict), \
         ("Got %d ev sets for %d unique stmts."
-         % (len(evidence_links), len(unique_stmt_dict)))
+         % (num_unique_stmt_keys, len(unique_stmt_dict)))
     assert len(support_links)
     return
 
@@ -141,7 +157,7 @@ def test_incremental_preassmbly_without_database():
     new_stmts = list(set(stmts) - set(init_stmts))
 
     # Run preassmbly on the "init" corpus (the 80)
-    init_unique_stmts, orignal_evidence_links, init_support_links = \
+    init_unique_stmts, init_evidence_links, init_support_links = \
         pas.process_statements(init_stmts)
     assert len(init_support_links)
 
@@ -152,9 +168,12 @@ def test_incremental_preassmbly_without_database():
     print("Support links from new stmts:", len(new_only_mk_links))
 
     # Now merge in the "new" statements (the 20)
+    new_unique_stmt_dict, new_evidence_links, new_support_links = \
+        pas.get_increment_links(init_unique_stmts, new_stmts)
     updated_unique_stmts, updated_evidence_links, updated_support_links = \
-        pas.merge_statements(init_unique_stmts, orignal_evidence_links,
-                             init_support_links, new_stmts)
+        pas.merge_statements(init_unique_stmts, init_evidence_links,
+                             init_support_links, new_unique_stmt_dict,
+                             new_evidence_links, new_support_links)
 
     # Check that we got all the same statements (trivial)
     assert len(updated_unique_stmts) == len(full_unique_stmts), \
@@ -162,10 +181,10 @@ def test_incremental_preassmbly_without_database():
          "stmts." % (len(updated_unique_stmts), len(full_unique_stmts)))
 
     # Check that the evidence matches up (easy)
-    fevl_set = pas.flatten_evidence_dict(full_evidence_links)
-    uevl_set = pas.flatten_evidence_dict(updated_evidence_links)
-    missed_evidence_links = fevl_set - uevl_set
-    extra_evidence_links = uevl_set - fevl_set
+    # fevl_set = pas.flatten_evidence_dict(full_evidence_links)
+    # uevl_set = pas.flatten_evidence_dict(updated_evidence_links)
+    missed_evidence_links = full_evidence_links - updated_evidence_links
+    extra_evidence_links = updated_evidence_links - full_evidence_links
     assert not len(missed_evidence_links) and not len(extra_evidence_links), \
         ("Some evidence links missed: %s, and/or some evidence links added: %s"
          % (_str_large_set(missed_evidence_links, 5),
@@ -214,14 +233,7 @@ def test_preassembly_with_database():
 
 
 def test_incremental_preassembly_with_database():
-    db = _get_loaded_db(split=0.8)
-    split_datetime = datetime.now() - timedelta(days=1)
-    init_stmt_list = db.select_all(db.RawStatements,
-                                  db.RawStatements.create_date < split_datetime)
-    new_stmt_list = db.select_all(db.RawStatements,
-                                  db.RawStatements.create_date > split_datetime)
-    assert len(init_stmt_list)
-    assert len(new_stmt_list)
+    db = _get_loaded_db(split=0.8, with_init_corpus=True)
     pa_manager = pas.PreassemblyManager()
-    pa_manager.create_corpus(db)
+    print("Beginning supplement...")
     pa_manager.supplement_corpus(db)

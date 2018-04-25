@@ -11,7 +11,7 @@ from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.db.util import get_statements, insert_pa_stmts, \
     distill_stmts_from_reading
-from indra.statements import stmts_from_json
+from indra.statements import stmts_from_json, Statement
 
 logger = logging.getLogger('db_preassembly')
 
@@ -29,6 +29,10 @@ def _handle_update_table(func):
     return run_and_record_update
 
 
+def _stmt_from_json(stmt_json_bytes):
+    return Statement._from_json(json.loads(stmt_json_bytes.decode('utf-8')))
+
+
 class PreassemblyManager(object):
     """Class used to manage the preassembly pipeline"""
     def __init__(self, n_proc=1):
@@ -44,10 +48,9 @@ class PreassemblyManager(object):
             return None
         return max([u.run_datetime for u in update_list])
 
-    def _get_existing_pa_stmts(self, db):
+    def _get_existing_pa_stmt_dict(self, db):
         stmt_list = db.select_all(db.PAStatements)
-        return stmts_from_json([json.loads(s.json.decode('utf-8'))
-                                for s in stmt_list])
+        return {s.mk_hash: _stmt_from_json(s.json) for s in stmt_list}
 
     @_handle_update_table
     def create_corpus(self, db):
@@ -55,7 +58,7 @@ class PreassemblyManager(object):
         unique_stmt_dict, evidence_links, support_links = \
             process_statements(stmts, poolsize=self.n_proc)
         insert_pa_stmts(db, unique_stmt_dict.values())
-        db.copy('raw_unique_links', flatten_evidence_dict(evidence_links),
+        db.copy('raw_unique_links', evidence_links,
                 ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
         db.copy('pa_support_links', support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
@@ -64,11 +67,26 @@ class PreassemblyManager(object):
     @_handle_update_table
     def supplement_corpus(self, db):
         last_update = self._get_latest_updatetime(db)
+        logger.info("Latest update was: %s" % last_update)
         check_from_datetime = last_update - timedelta(hours=6)
+        logger.info("Updating with statements more recent than %s."
+                    % check_from_datetime)
         _, new_stmts = distill_stmts_from_reading(db, get_full_stmts=True,
                    clauses=[db.RawStatements.create_date > check_from_datetime])
-        existing_stmts = self._get_existing_pa_stmts(db)
-        return False
+        existing_stmt_dict = self._get_existing_pa_stmt_dict(db)
+        new_unique_stmt_dict, new_evidence_links, new_support_links = \
+            get_increment_links(existing_stmt_dict, new_stmts,
+                                poolsize=self.n_proc)
+        logger.info("Found %d new unique statements."
+                    % len(new_unique_stmt_dict))
+        only_new_hashes = set(new_unique_stmt_dict.keys()) \
+                          - set(existing_stmt_dict.keys())
+        insert_pa_stmts(db, [new_unique_stmt_dict[k] for k in only_new_hashes])
+        db.copy('raw_unique_links', new_evidence_links,
+                cols=('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        db.copy('pa_support_links', new_support_links,
+                cols=('supported_mk_hash', 'supporting_mk_hash'))
+        return True
 
 
 def make_unique_statement_set(preassembler, stmts):
@@ -85,10 +103,10 @@ def make_unique_statement_set(preassembler, stmts):
         # This should never be None or anything else
         assert isinstance(first_stmt, type(stmt))
         unique_stmts.append(first_stmt)
-    return unique_stmts, evidence_links
+    return unique_stmts, flatten_evidence_dict(evidence_links)
 
 
-def get_match_key_maps(preassembler, unique_stmts, **generate_id_map_kwargs):
+def get_support_links(preassembler, unique_stmts, **generate_id_map_kwargs):
     id_maps = preassembler._generate_id_maps(unique_stmts,
                                              **generate_id_map_kwargs)
     return {tuple([unique_stmts[idx].get_shallow_hash() for idx in idx_pair])
@@ -100,24 +118,24 @@ def process_statements(stmts, **generate_id_map_kwargs):
     stmts = ac.map_sequence(stmts)
     pa = Preassembler(hierarchies)
     unique_stmts, evidence_links = make_unique_statement_set(pa, stmts)
-    match_key_maps = get_match_key_maps(pa, unique_stmts,
-                                        **generate_id_map_kwargs)
+    match_key_maps = get_support_links(pa, unique_stmts,
+                                       **generate_id_map_kwargs)
     unique_stmt_dict = {stmt.get_shallow_hash(): stmt for stmt in unique_stmts}
     return unique_stmt_dict, evidence_links, match_key_maps
 
 
-def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
-                     new_stmts, **kwargs):
+def get_increment_links(unique_stmt_dict, new_stmts, **kwargs):
     # Pre-assemble the new statements.
-    new_unique_stmt_dict, new_evidence_links, new_match_key_maps = \
+    new_unique_stmt_dict, new_evidence_links, new_support_links = \
         process_statements(new_stmts, **kwargs)
     logger.info("Got %d new unique statments." % len(new_unique_stmt_dict))
     logger.info("Got %d new evidence links."
-                % len(flatten_evidence_dict(new_evidence_links)))
-    logger.info("Got %d new support links." % len(new_match_key_maps))
+                % len(new_evidence_links))
+    logger.info("Got %d new support links." % len(new_support_links))
 
     # Now get the list of statements the need to be compared between the
     # existing and new corpora
+
     old_stmt_hash_set = set(unique_stmt_dict.keys())
     new_stmt_hash_set = set(new_unique_stmt_dict.keys())
     only_old_stmts = [unique_stmt_dict[mk_hash]
@@ -133,29 +151,36 @@ def merge_statements(unique_stmt_dict, evidence_links, match_key_maps,
 
     # Find the support links between the new corpora
     pa = Preassembler(hierarchies)
-    merge_match_key_maps = get_match_key_maps(pa, merge_stmts,
-                                              split_idx=split_idx, **kwargs)
+    merge_support_links = get_support_links(pa, merge_stmts,
+                                            split_idx=split_idx, **kwargs)
     logger.info("Found %d links between old and new corpora."
-                % len(merge_match_key_maps))
+                % len(merge_support_links))
 
+    new_support_links |= merge_support_links
+    return new_unique_stmt_dict, new_evidence_links, new_support_links
+
+
+def merge_statements(unique_stmt_dict, evidence_links, support_links,
+                     new_unique_stmt_dict, new_evidence_links,
+                     new_support_links):
     # Update the old parameters.
-    full_unique_stmt_dict = deepcopy(new_unique_stmt_dict)
+    full_unique_stmt_dict = new_unique_stmt_dict.copy()
     full_unique_stmt_dict.update(unique_stmt_dict)
     logger.info("There are now %d unique statements."
                 % len(full_unique_stmt_dict))
 
-    full_evidence_links = deepcopy(evidence_links)
-    for mk_hash, evidence_set in new_evidence_links.items():
-        full_evidence_links[mk_hash] |= evidence_set
+    # full_evidence_links = deepcopy(evidence_links)
+    # for mk_hash, evidence_set in new_evidence_links.items():
+    #     full_evidence_links[mk_hash] |= evidence_set
+    full_evidence_links = evidence_links | new_evidence_links
     logger.info("There are now %d evidence links."
-                % len(flatten_evidence_dict(full_evidence_links)))
+                % len(full_evidence_links))
 
-    new_match_key_maps |= merge_match_key_maps
-    full_match_key_maps = match_key_maps | new_match_key_maps
+    full_support_links = support_links | new_support_links
     logger.info("There are now %d support relations."
-                % len(full_match_key_maps))
+                % len(full_support_links))
 
-    return full_unique_stmt_dict, full_evidence_links, full_match_key_maps
+    return full_unique_stmt_dict, full_evidence_links, full_support_links
 
 
 def preassemble_db_stmts(db, num_proc, *clauses):
