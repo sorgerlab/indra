@@ -28,6 +28,7 @@ class IsiPreprocessor(object):
     """
 
     def __init__(self, preprocessed_dir):
+        preprocessed_dir = os.path.abspath(preprocessed_dir)
         self.preprocessed_dir = preprocessed_dir
         self.next_file_id = 1
         self.pmids = {}

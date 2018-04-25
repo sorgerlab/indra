@@ -11,7 +11,7 @@ import os
 logger = logging.getLogger('isi')
 
 
-def process_directory(isi_preprocessor):
+def process_preprocessed(isi_preprocessor, specified_output_dir=None):
     """Process a directory of abstracts and/or papers preprocessed using the
     specified IsiPreprocessor, to produce a list of extracted INDRA statements.
 
@@ -20,6 +20,9 @@ def process_directory(isi_preprocessor):
     isi_preprocessor: indra.sources.isi.preprocessor.IsiPreprocessor
         Preprocessor object that has already preprocessed the documents we
         want to read and process with the ISI reader
+    specified_output_dir: str
+        The directory into which to put reader output; if omitted or None,
+        uses a temporary directory.
 
     Returns
     -------
@@ -28,7 +31,10 @@ def process_directory(isi_preprocessor):
     """
 
     # Create a temporary directory to store the output
-    output_dir = tempfile.mkdtemp('indra_isi_processor_output')
+    if specified_output_dir is None:
+        output_dir = tempfile.mkdtemp('indra_isi_processor_output')
+    else:
+        output_dir = os.path.abspath(specified_output_dir)
     tmp_dir = tempfile.mkdtemp('indra_isi_processor_tmp')
 
     # Form the command to invoke the ISI reader via Docker
@@ -51,7 +57,8 @@ def process_directory(isi_preprocessor):
     ip = IsiProcessor(output_dir, isi_preprocessor)
 
     # Remove the temporary output directory
-    shutil.rmtree(output_dir)
+    if specified_output_dir is None:
+        shutil.rmtree(output_dir)
     shutil.rmtree(tmp_dir)
 
     return ip
