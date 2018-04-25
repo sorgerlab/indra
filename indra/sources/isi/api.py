@@ -8,10 +8,11 @@ import logging
 
 logger = logging.getLogger('isi')
 
+
 def process_directory(dir_name):
     """Process a directory filled with text files (it is sufficient for them
     to have extension .txt and be in the top level.
-    
+
     Parameters
     ----------
     dir_name: str

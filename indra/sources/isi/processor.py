@@ -8,6 +8,7 @@ from indra.preassembler.grounding_mapper import load_grounding_map,\
 
 logger = logging.getLogger('isi')
 
+
 class IsiProcessor(object):
     """Processes the output of the ISI reader.
 
@@ -29,7 +30,7 @@ class IsiProcessor(object):
             gm = load_grounding_map(gm_fname)
         except BaseException:
             raise Exception('Could not load the grounding map from ' +
-                    gm_fname)
+                            gm_fname)
         mapper = GroundingMapper(gm)
 
         # Extract statements
@@ -92,10 +93,8 @@ class IsiProcessor(object):
         if len(interaction) == 4:
             catalyst = interaction[1]
             if catalyst is not None:
-                cataylst_specified=True
-                print(catalyst)
+                cataylst_specified = True
         self.verbs.add(verb)
-        #print(subj, verb, obj)
 
         statement = None
         if verb == 'transcription':
@@ -153,9 +152,10 @@ class IsiProcessor(object):
 
         if statement is not None:
             self.statements.append(statement)
-    
+
     def _make_agent(self, agent_str):
         return Agent(agent_str, db_refs={'TEXT': agent_str})
+
 
 if __name__ == '__main__':
     f = '/Users/daniel/workspace/isi/output/test1.json'
