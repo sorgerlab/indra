@@ -16,7 +16,14 @@ def main():
                                   'pyyaml', 'click'],
                       'explanation': ['kappy==4.0.0rc1'],
                       'bbn': ['rdflib-jsonld'],
-                      'sofia': ['openpyxl']
+                      'sofia': ['openpyxl'],
+                      'bel': ['pybel'],
+                      'biopax': ['pyjnius'],
+                      'eidos': ['yaml', 'objectpath', 'pyjnius'],
+                      'geneways': ['stemming', 'nltk'],
+                      'index_cards': ['objectpath'],
+                      'ndex_cx': ['objectpath'],
+                      'reach': ['objectpath'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
