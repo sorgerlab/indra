@@ -74,8 +74,8 @@ def parse_a1(a1_text):
 
     Parameters
     ----------
-    a1_filename: str
-        File with the list of entities.
+    a1_text: str
+        Text of the TEES a1 output file, specifying the entities
 
     Returns
     -------
@@ -112,12 +112,12 @@ def parse_a1(a1_text):
 
 
 def parse_a2(a2_text, entities, tees_sentences):
-    """Extracts events from a TEES a2 files into a networkx directed graph.
+    """Extracts events from a TEES a2 output into a networkx directed graph.
 
     Parameters
     ----------
-    a2_file: str
-        Filename with the list of entities.
+    a2_text: str
+        Text of the TEES a2 file output, specifying the event graph
     sentences_xml_gz: str
         Filename with the TEES sentence segmentation in a gzipped xml format
 
@@ -257,13 +257,17 @@ class TEESSentences:
 
 
 def parse_tees_output_files(a1_text, a2_text, sentence_segmentations):
-    """Parses the files in the TEES output directory. And returns a networkx
-    graph.
+    """Parses the output of the TEES reader and returns a networkx graph
+    with the event information.
 
     Parameters
     ----------
-    output_dir: str
-        Directory containing the output of the TEES system
+    a1_text: str
+        Contents of the TEES a1 output, specifying the entities
+    a1_text: str
+        Contents of the TEES a2 output, specifying the event graph
+    sentence_segmentations: str
+        Concents of the TEES sentence segmentation output XML
 
     Returns
     -------
