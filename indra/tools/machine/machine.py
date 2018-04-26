@@ -518,7 +518,7 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
             twitter_client.update_status(msg_str, twitter_cred)
 
 
-def run_with_search_helper(model_path, config):
+def run_with_search_helper(model_path, config, num_days=None):
     logger.info('-------------------------')
     logger.info(time.strftime('%c'))
 
@@ -588,8 +588,11 @@ def run_with_search_helper(model_path, config):
         if search_genes is not None:
             search_terms += search_genes
         logger.info('Using search terms: %s' % ', '.join(search_terms))
-        num_days = int(config.get('search_terms_num_days', 5))
+
+        if num_days is None:
+            num_days = int(config.get('search_terms_num_days', 5))
         logger.info('Searching the last %d days', num_days)
+
         pmids_term = get_searchterm_pmids(search_terms, num_days=num_days)
         num_pmids = len(set(itt.chain.from_iterable(pmids_term.values())))
         logger.info('Collected %d PMIDs from PubMed search_terms.', num_pmids)

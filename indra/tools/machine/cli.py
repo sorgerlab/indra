@@ -46,10 +46,11 @@ def make(directory):
 @click.argument('model_path')
 @click.option('--config', help='Specify configuration file path, otherwise '
                                'looks for config.yaml in model path')
-def run_with_search(model_path, config):
+@click.option('-d', '--num-days', type=int)
+def run_with_search(model_path, config, num_days):
     """Run with PubMed search for new papers."""
     from indra.tools.machine.machine import run_with_search_helper
-    run_with_search_helper(model_path, config)
+    run_with_search_helper(model_path, config, num_days=num_days)
 
 
 @main.command()
