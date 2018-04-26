@@ -16,7 +16,7 @@ from future.utils import python_2_unicode_compatible
 
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
         IncreaseAmount, DecreaseAmount, Agent, Evidence
-from indra.sources.tees.parse_tees import run_and_parse_tees
+from indra.sources.tees.parse_tees import parse_tees_output_files
 from indra.preassembler.grounding_mapper import load_grounding_map,\
         GroundingMapper
 from networkx.algorithms import dag
@@ -24,27 +24,27 @@ import os.path
 
 
 class TEESProcessor(object):
-    """Converts the specified text into a series of INDRA statmenets.
+    """Converts the output of the TEES reader to INDRA statements.
 
     Only extracts a subset of INDRA statements. Currently supported
     statements are:
     * Phosphorylation
+    * Dephosphorylation
+    * Binding
+    * IncreaseAmount
+    * DecreaseAmount
 
     Parameters
     ----------
-    text: str
-        Plain text from biomedical publications from which to extract
-        INDRA statements.
+    a1_text: str
+        The TEES a1 output file, with entity information
+    a2_test: str
+        The TEES a2 output file, with the event graph
+    sentence_segmentations: str
+        The TEES sentence segmentation XML output
     pmid: int
         The pmid which the text comes from, or None if we don't want to specify
         at the moment. Stored in the Evidence object for each statement.
-    tees_path: str
-        Path to the directory containing the TEES installation, in
-        particular containing TEES' classify.py.
-    python2_path: str
-        Absolute path to a python 2 interpreter. This is needed to run
-        TEES because TEES is only compatabile with python 2. If None then
-        searches for an executable named python2 in the path.
 
     Attributes
     ----------
@@ -52,7 +52,7 @@ class TEESProcessor(object):
         A list of INDRA statements extracted from the provided text via TEES
     """
 
-    def __init__(self, text, pmid, tees_path, python2_path):
+    def __init__(self, a1_text, a2_text, sentence_segmentations, pmid):
         # Store pmid
         self.pmid = pmid
 
@@ -68,7 +68,8 @@ class TEESProcessor(object):
         mapper = GroundingMapper(gm)
 
         # Run TEES and parse into networkx graph
-        self.G = run_and_parse_tees(text, tees_path, python2_path)
+        self.G = parse_tees_output_files(a1_text, a2_text,
+                                         sentence_segmentations)
 
         # Extract statements from the TEES graph
         self.statements = []
