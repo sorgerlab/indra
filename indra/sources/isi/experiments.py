@@ -11,14 +11,19 @@ def abstracts_runtime():
     all_abstracts = dump['pubmed']
 
     # abstract_counts = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
-    abstract_counts = [20, 40, 60, 80, 100]
+    # abstract_counts = [20, 40, 60, 80, 100]
+    # abstract_counts = [100, 1000, None]
+    abstract_counts = [20]
     times = []
     for count in abstract_counts:
         with open('isi_experiment_log.txt', 'a') as f:
             f.write('Reading and processing ' + str(count) +  'abstracts\n')
         start_time = time.time()
-        
-        abstract_subset = all_abstracts[:count]
+
+        if count is None:
+            abstract_subset = all_abstracts
+        else:
+            abstract_subset = all_abstracts[:count]
         assert(len(abstract_subset) == count)
 
         preprocessed_dir = 'preprocessed_' + str(count)

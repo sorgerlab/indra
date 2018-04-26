@@ -63,13 +63,13 @@ class IsiPreprocessor(object):
         sentences = nltk.sent_tokenize(text)
 
         # Write sentences to text file
-        first_sentence = False
+        first_sentence = True
         with open(output_file, 'w') as f:
             for sentence in sentences:
                 if not first_sentence:
                     f.write('\n')
-                f.write(sentence)
-                first_sentence = True
+                f.write(sentence.rstrip())
+                first_sentence = False
 
         # Store annotations
         self.pmids[self.next_file_id] = pmid
