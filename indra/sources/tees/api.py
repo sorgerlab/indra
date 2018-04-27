@@ -14,6 +14,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from indra.sources.tees.processor import TEESProcessor
+from indra import get_config
 
 import os.path
 import logging
@@ -40,9 +41,12 @@ tees_installation_files = ['batch.py', 'classify.py', 'train.py',
 tees_installation_dirs = ['Classifiers', 'Detectors', 'Evaluators', 'Core']
 
 
-def process_text(text, pmid=None, tees_path=None, python2_path=None):
+def process_text(text, pmid=None, python2_path=None):
     """Processes the specified plain text with TEES and converts output to
-    supported INDRA statements.
+    supported INDRA statements. Check for the TEES installation is the
+    TEES_PATH environment variable, and configuration file; if not found,
+    checks candidate paths in tees_candidate_paths. Raises an exception if
+    TEES cannot be found in any of these places.
 
     Parameters
     ----------
@@ -51,9 +55,6 @@ def process_text(text, pmid=None, tees_path=None, python2_path=None):
     pmid: str
         The PMID from which the paper comes from, to be stored in the Evidence
         object of statements. Set to None if this is unspecified.
-    tees_path: str
-        The path of the TEES installation directory containing classify.py.
-        If None, searches several common paths.
     python2_path: str
         TEES is only compatible with python 2. This processor invokes this
         external python 2 interpreter so that the processor can be run in
@@ -67,31 +68,35 @@ def process_text(text, pmid=None, tees_path=None, python2_path=None):
         extracted from TEES extractions
     """
 
-    # If TEES directory is not specifies, see if any of the candidate paths
-    # exist and contain all of the files expected for a TEES installation.
-    for cpath in tees_candidate_paths:
-        cpath = os.path.expanduser(cpath)
-        if os.path.isdir(cpath):
-            # Check to see if it has all of the expected files and directories
-            has_expected_files = True
-            for f in tees_installation_files:
-                fpath = os.path.join(cpath, f)
-                present = os.path.isfile(fpath)
-                has_expected_files = has_expected_files and present
+    tees_path = get_config('TEES_PATH')
 
-            has_expected_dirs = True
-            for d in tees_installation_dirs:
-                dpath = os.path.join(cpath, d)
-                present = os.path.isdir(dpath)
-                has_expected_dirs = has_expected_dirs and present
+    if tees_path is None:
+        # If TEES directory is not specifies, see if any of the candidate paths
+        # exist and contain all of the files expected for a TEES installation.
+        for cpath in tees_candidate_paths:
+            cpath = os.path.expanduser(cpath)
+            if os.path.isdir(cpath):
+                # Check to see if it has all of the expected files and
+                # directories
+                has_expected_files = True
+                for f in tees_installation_files:
+                    fpath = os.path.join(cpath, f)
+                    present = os.path.isfile(fpath)
+                    has_expected_files = has_expected_files and present
 
-            if has_expected_files and has_expected_dirs:
-                # We found a directory with all of the files and directories
-                # we expected in a TEES installation - let's assume it's a
-                # TEES installation
-                tees_path = cpath
-                print('Found TEES installation at ' + cpath)
-                break
+                has_expected_dirs = True
+                for d in tees_installation_dirs:
+                    dpath = os.path.join(cpath, d)
+                    present = os.path.isdir(dpath)
+                    has_expected_dirs = has_expected_dirs and present
+
+                if has_expected_files and has_expected_dirs:
+                    # We found a directory with all of the files and
+                    # directories  we expected in a TEES installation - let's
+                    # assume it's a TEES installation
+                    tees_path = cpath
+                    print('Found TEES installation at ' + cpath)
+                    break
 
     # If tees_path is None then we didn't find any installations
     if tees_path is None:
