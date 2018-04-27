@@ -24,15 +24,14 @@ if not os.path.isfile(config_path):
     except Exception:
         logger.warning('Could not copy default config file.')
 
-# Load the configuration file into the config_file dictionary
-# A ConfigParser-style configuration file can have multiple sections
-# We ignore the section distinction  and load the key/value pairs from all
-# sectionts into a single key/value list.
-
-# Load key/value pairs from all sections into this dictionary
-
 
 def populate_config_dict(config_path):
+    """Load the configuration file into the config_file dictionary
+
+    A ConfigParser-style configuration file can have multiple sections, but
+    we ignore the section distinction  and load the key/value pairs from all
+    sections into a single key/value list.
+    """
     try:
         config_dict = {}
         parser = RawConfigParser()
