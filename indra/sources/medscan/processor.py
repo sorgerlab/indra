@@ -315,6 +315,8 @@ class MedscanProcessor(object):
         property_entities = []
         property_name = None
 
+        self.log_entities = collections.defaultdict(int)
+
         # Go through the document again and extract statements
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
                                                 encoding='utf-8',
@@ -344,6 +346,10 @@ class MedscanProcessor(object):
                     ent_type = elem.attrib['type']
                     entities[ent_id] = MedscanEntity(match_text, ent_urn,
                                                      ent_type, {})
+
+                    tuple_key = (ent_type, elem.attrib.get('name'), ent_urn)
+                    if ent_type == 'Complex' or ent_type == 'FunctionalClass':
+                        self.log_entities[tuple_key] = self.log_entities[tuple_key] + 1
                 else:
                     ent_type = elem.attrib['type']
                     ent_urn = elem.attrib['urn']
@@ -395,7 +401,7 @@ class MedscanProcessor(object):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
-        print("Done processing %d documents" % doc_counter)
+        # print("Done processing %d documents" % doc_counter)
 
 
     def process_relation(self, relation, last_relation):

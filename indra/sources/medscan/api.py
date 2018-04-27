@@ -1,14 +1,16 @@
 import codecs
 import logging
 import lxml.etree
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from indra.sources.medscan.processor import *
 import os
 import glob
 import tempfile
 import shutil
 from math import floor
-from .fix_csxml_character_encoding import fix_character_encoding
+import pickle
+from indra.sources.medscan.fix_csxml_character_encoding import \
+        fix_character_encoding
 import time
 
 logger = logging.getLogger('medscan')
@@ -33,6 +35,7 @@ def process_directory(directory_name, medscan_resource_dir):
 
     # Parent Medscan processor containing extractions from all files
     mp = MedscanProcessor(medscan_resource_dir)
+    mp.log_entities = defaultdict(int)
 
     # Create temporary directory into which to put the csxml files with
     # normalized character encodings
@@ -60,6 +63,9 @@ def process_directory(directory_name, medscan_resource_dir):
         else:
             mp.unmapped_urns = mp.unmapped_urns.update(mp_file.unmapped_urns)
 
+        for k in mp_file.log_entities:
+            mp.log_entities[k] = mp.log_entities[k] + mp_file.log_entities[k]
+
         percent_done_now = floor(100.0 * files_processed / num_files)
         if percent_done_now > percent_done:
             percent_done = percent_done_now
@@ -73,6 +79,7 @@ def process_directory(directory_name, medscan_resource_dir):
 
     # Delete the temporary directory
     shutil.rmtree(tmp_dir)
+
 
     return mp
 
@@ -144,3 +151,10 @@ def process_file(filename, medscan_resource_dir, num_documents=None,
     with open(filename, 'rb') as f:
         mp.process_csxml_from_file_handle(f, num_documents)
     return mp
+
+if __name__ == '__main__':
+    dname = '/Users/daniel/Downloads/medscan_full/HARVARD_CSXML'
+    mp = process_directory(dname, None)
+
+    log_entities = mp.log_entities
+    pickle.dump(log_entities, open('log_entities.pkl', 'wb'))
