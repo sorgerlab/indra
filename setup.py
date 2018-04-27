@@ -9,6 +9,7 @@ def main():
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx==1.11', 'pandas']
+    # We implicitly require numpy since pandas depends on numpy
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
@@ -24,6 +25,12 @@ def main():
                       'index_cards': ['objectpath'],
                       'ndex_cx': ['objectpath'],
                       'reach': ['objectpath'],
+                      'pybel_assembler': ['pybel'],
+                      'db': ['sqlalchemy', 'boto3'],
+                      's3_client': ['boto3', 'botocore'],
+                      'aws': ['boto3'],
+                      'kappa_util': ['pygraphviz'],
+                      'plot_formatting': ['matplotlib'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
