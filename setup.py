@@ -30,7 +30,7 @@ def main():
 
                       # sources
                       'biopax': ['jnius-indra'],
-                      'eidos': ['yaml', 'jnius-indra'],
+                      'eidos': ['pyyaml', 'jnius-indra'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'bbn': ['rdflib-jsonld'],
