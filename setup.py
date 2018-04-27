@@ -16,12 +16,8 @@ def main():
     extras_require = {'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                   'pyyaml', 'click'],
                        
-                      # Assemblers
-                      'pybel_assembler': ['pybel'],
-
-                      # Databases
-                      'chembl_client': ['sympy'],
-                      'ndex_client': ['ndex2'],
+                      'ndex': ['ndex2'],
+                      'bel': ['pybel'],
 
                       # db
                       'db': ['sqlalchemy', 'boto3'],
@@ -33,13 +29,9 @@ def main():
                       's3_client': ['boto3', 'botocore'],
 
                       # sources
-                      'bel': ['pybel'],
-                      'biopax': ['pyjnius'],
-                      'eidos': ['yaml', 'objectpath', 'pyjnius'],
+                      'biopax': ['jnius-indra'],
+                      'eidos': ['yaml', 'jnius-indra'],
                       'geneways': ['stemming', 'nltk'],
-                      'index_cards': ['objectpath'],
-                      'ndex_cx': ['objectpath'],
-                      'reach': ['objectpath'],
                       'sofia': ['openpyxl'],
                       'bbn': ['rdflib-jsonld'],
 
