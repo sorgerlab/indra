@@ -15,9 +15,24 @@ def main():
 
     extras_require = {'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                   'pyyaml', 'click'],
+                       
+                      # Assemblers
+                      'pybel_assembler': ['pybel'],
+
+                      # Databases
+                      'chembl_client': ['sympy'],
+                      'ndex_client': ['ndex2'],
+
+                      # db
+                      'db': ['sqlalchemy', 'boto3'],
+
+                      # explanation
                       'explanation': ['kappy==4.0.0rc1'],
-                      'bbn': ['rdflib-jsonld'],
-                      'sofia': ['openpyxl'],
+
+                      # literature
+                      's3_client': ['boto3', 'botocore'],
+
+                      # sources
                       'bel': ['pybel'],
                       'biopax': ['pyjnius'],
                       'eidos': ['yaml', 'objectpath', 'pyjnius'],
@@ -25,12 +40,13 @@ def main():
                       'index_cards': ['objectpath'],
                       'ndex_cx': ['objectpath'],
                       'reach': ['objectpath'],
-                      'pybel_assembler': ['pybel'],
-                      'db': ['sqlalchemy', 'boto3'],
-                      's3_client': ['boto3', 'botocore'],
-                      'aws': ['boto3'],
+                      'sofia': ['openpyxl'],
+                      'bbn': ['rdflib-jsonld'],
+
+                      # util
                       'kappa_util': ['pygraphviz'],
                       'plot_formatting': ['matplotlib'],
+                      'aws': ['boto3'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
