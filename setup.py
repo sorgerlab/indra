@@ -32,7 +32,7 @@ def main():
                       's3_client': ['boto3', 'botocore'],
 
                       # sources
-                      'biopax': ['jnius-indra', 'functools'],
+                      'biopax': ['jnius-indra', 'functools32'],
                       'eidos': ['pyyaml', 'jnius-indra'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
