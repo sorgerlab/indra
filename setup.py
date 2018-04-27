@@ -25,6 +25,9 @@ def main():
                       # assemblers
                       'graph_assembler': ['pygraphviz'],
 
+                      # preassemblers
+                      'backup_preassembler': ['pygraphviz'],
+
                       # explanation
                       'explanation': ['kappy==4.0.0rc1'],
 
@@ -32,7 +35,7 @@ def main():
                       's3_client': ['boto3', 'botocore'],
 
                       # sources
-                      'biopax': ['jnius-indra', 'functools32'],
+                      'biopax': ['jnius-indra'],
                       'eidos': ['pyyaml', 'jnius-indra'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
