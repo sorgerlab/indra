@@ -10,9 +10,6 @@ from nose.plugins.attrib import attr
 
 test_small_file = join(dirname(__file__), 'test_small.xml')
 
-from nose import SkipTest
-raise SkipTest('TRIPS webservice is down')
-
 def assert_if_hgnc_then_up(st):
     agents = st.agent_list()
     for a in agents:

@@ -1088,7 +1088,7 @@ class TripsProcessor(object):
             if assoc_with is not None:
                 assoc_id = assoc_with.attrib.get('id')
                 if assoc_id is not None:
-                    name = _find_in_term(assoc_id, 'name')
+                    name = self._find_in_term(assoc_id, 'name')
                     if name is not None and name.text is not None and \
                         name.text.upper() not in generics:
                         agent = self._get_agent_by_id(assoc_id, event_id)

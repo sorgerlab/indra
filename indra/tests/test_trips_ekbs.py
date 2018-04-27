@@ -719,3 +719,12 @@ def test_56():
     assert tgfbr1.activity is not None
     assert tgfbr1.activity.activity_type == 'activity'
     assert tgfbr1.activity.is_active == True
+
+
+def test_assoc_with():
+    fname = os.path.join(path_this, 'trips_ekbs', 'ekb_assoc.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    assert len(tp.statements) == 1
+    assert len(tp.statements[0].members) == 2
+    names = {m.name for m in tp.statements[0].members}
+    assert names == {'EGF', 'EGFR'}
