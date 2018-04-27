@@ -710,19 +710,19 @@ def test_recursive_complexes():
     assert(bc[4].agent.db_refs['UP'] == 'Q15291')
 
     assert(isinstance(sp.statements[1], Complex))
-    correct_complex_ups_1 = ['P61964', 'Q9UBL3', 'Q9C005', 'Q15291']
-    actual_complex_ups_1 = [m.db_refs['UP'] for m in sp.statements[1].members]
+    correct_complex_ups_1 = {'P61964', 'Q9UBL3', 'Q9C005', 'Q15291'}
+    actual_complex_ups_1 = {m.db_refs['UP'] for m in sp.statements[1].members}
     assert(correct_complex_ups_1 == actual_complex_ups_1)
 
     assert(isinstance(sp.statements[2], Complex))
-    correct_complex_ups_2 = ['O14686', 'P61964', 'Q9UBL3', 'Q9C005', 'Q15291']
-    actual_complex_ups_2 = [m.db_refs['UP'] for m in sp.statements[2].members]
+    correct_complex_ups_2 = {'O14686', 'P61964', 'Q9UBL3', 'Q9C005', 'Q15291'}
+    actual_complex_ups_2 = {m.db_refs['UP'] for m in sp.statements[2].members}
     assert(correct_complex_ups_2 == actual_complex_ups_2)
 
     assert(isinstance(sp.statements[3], Complex))
-    correct_complex_ups_3 = ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
-                             'Q15291']
-    actual_complex_ups_3 = [m.db_refs['UP'] for m in sp.statements[3].members]
+    correct_complex_ups_3 = {'P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                             'Q15291'}
+    actual_complex_ups_3 = {m.db_refs['UP'] for m in sp.statements[3].members}
     assert(correct_complex_ups_3 == actual_complex_ups_3)
 
 
