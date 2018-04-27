@@ -22,6 +22,9 @@ def main():
                       # db
                       'db': ['sqlalchemy', 'boto3'],
 
+                      # assemblers
+                      'graph_assembler': ['pygraphviz'],
+
                       # explanation
                       'explanation': ['kappy==4.0.0rc1'],
 
