@@ -58,13 +58,13 @@ def populate_config_dict(config_path):
 
 def _check_config_dict():
     # Check the keys against the default.
-    default_CONFIG_DICT = populate_config_dict(default_config_path)
-    for key in default_CONFIG_DICT.keys():
+    default_config_dict = populate_config_dict(default_config_path)
+    for key in default_config_dict.keys():
         if key not in CONFIG_DICT:
             logger.debug("Key %s found in default config but not in %s."
                          % (key, config_path))
     for key in CONFIG_DICT.keys():
-        if key not in default_CONFIG_DICT:
+        if key not in default_config_dict:
             logger.debug("Key %s found in %s but not in default config."
                          % (key, config_path))
 
@@ -72,8 +72,6 @@ def _check_config_dict():
 CONFIG_DICT = populate_config_dict(config_path)
 if CONFIG_DICT is None:
     CONFIG_DICT = {}
-else:
-    _check_config_dict()
 
 
 def get_config(key):
