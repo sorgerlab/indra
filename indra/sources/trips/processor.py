@@ -1080,12 +1080,19 @@ class TripsProcessor(object):
         # can be assoc-with a GENE-PROTEIN with the same components
         # listed. Following these assoc-withs should be avoided.
         if not _is_type(term, 'ONT::MACROMOLECULAR-COMPLEX'):
+            # This is a list of generic terms that should be avoided when
+            # following assoc-with links
+            generics = ['GROWTH-FACTOR', 'LIGAND', 'KINASE', 'PROTEIN',
+                        'TRANSCRIPTION-FACTOR']
             assoc_with = term.find('assoc-with')
             if assoc_with is not None:
                 assoc_id = assoc_with.attrib.get('id')
                 if assoc_id is not None:
-                    agent = self._get_agent_by_id(assoc_id, event_id)
-                    return agent
+                    name = self._find_in_term(assoc_id, 'name')
+                    if name is not None and name.text is not None and \
+                        name.text.upper() not in generics:
+                        agent = self._get_agent_by_id(assoc_id, event_id)
+                        return agent
 
         # If the entity is a complex
         # NOTE: sometimes other ONT types like GENE-PROTEIN also
