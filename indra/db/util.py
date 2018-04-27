@@ -6,11 +6,9 @@ __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
            'get_statements_by_gene_role_type', 'get_statements',
            'make_stmts_from_db_list']
 
-import os
 import re
 import json
 import logging
-from os import path
 from sqlalchemy import func
 from indra.databases import hgnc_client
 from indra.util.get_version import get_version
@@ -18,35 +16,12 @@ from indra.util import unzip_string
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Evidence, Statement
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
-from indra.config import CONFIG_DICT
+from .config import get_databases as get_defaults
 
 logger = logging.getLogger('db_util')
 
 
 __PRIMARY_DB = None
-
-
-def get_defaults():
-    """Get the default database hosts from the config file or environment.
-
-    Databases may be specified in either the config file or the environment. In
-    the config file, they are listed as `INDRA_DB_<database role>`, for example
-    `INDRA_DB_PRIMARY` for the primary database. Similarly, a database may be
-    specified by environment variables of the form `INDRADB<datbase role>`, for
-    example `INDRADBPRIMARY`.
-
-    Note: The environment takes precedence.
-    """
-    env = os.environ
-    defaults_dict = {k[9:].lower(): v for k, v in CONFIG_DICT.items()
-                     if k.startswith('INDRA_DB_') and v}
-    defaults_dict.update({k[7:].lower(): v for k, v in env.items()
-                          if k.startswith('INDRADB')})
-    if not defaults_dict:
-        raise IndraDatabaseError(
-            "Faild to load defaults from config file or environment."
-            )
-    return defaults_dict
 
 
 def get_primary_db(force_new=False):
@@ -123,6 +98,7 @@ def get_test_db():
         break
     else:
         logger.error("Could not load a test database!")
+        return None
     return db
 
 
