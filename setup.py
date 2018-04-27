@@ -32,11 +32,12 @@ def main():
                       's3_client': ['boto3', 'botocore'],
 
                       # sources
-                      'biopax': ['jnius-indra'],
+                      'biopax': ['jnius-indra', 'functools'],
                       'eidos': ['pyyaml', 'jnius-indra'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'bbn': ['rdflib-jsonld'],
+                      'trips': ['pykqml'],
 
                       # util
                       'kappa_util': ['pygraphviz'],
