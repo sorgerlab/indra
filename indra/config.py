@@ -82,7 +82,7 @@ class IndraConfigError(Exception):
 def get_config(key, failure_ok=True):
     """Get value by key from config file or environment.
 
-    Returns the configuration value, first checking the environemnt
+    Returns the configuration value, first checking the environment
     variables and then, if it's not present there, checking the configuration
     file.
 
@@ -96,7 +96,7 @@ def get_config(key, failure_ok=True):
     value: str
         The configuration value
     """
-    err_msg = "Key %s not in environemtn or config file." % key
+    err_msg = "Key %s not in environment or config file." % key
     if key in os.environ:
         return os.environ[key]
     elif key in CONFIG_DICT:
