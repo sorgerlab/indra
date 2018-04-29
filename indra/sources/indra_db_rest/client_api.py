@@ -22,7 +22,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
     direct access to the entire database.
 
     Such access will require you have both a URL (`INDRA_DB_REST_URL`) and
-    possibly an API key (`INDRADB_REST_API_KEY`), both of which may be placed in
+    possibly an API key (`INDRA_DB_REST_API_KEY`), both of which may be placed in
     your config file or as environment variables.
 
     If you do not have these, but would like to access the database rest api,
@@ -74,7 +74,7 @@ def _submit_request(*args, **kwargs):
     query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                                + list(args))
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
-    api_key = get_config('INDRADB_REST_API_KEY', failure_ok=False)
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
     resp = requests.get(url + '/statements/' + query_str,
                         headers={'x-api-key': api_key})
     if resp.status_code == 200:
