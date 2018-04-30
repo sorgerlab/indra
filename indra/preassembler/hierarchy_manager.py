@@ -183,32 +183,34 @@ class HierarchyManager(object):
 
     def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
                                        relation_func):
-        """Indicate whether one entity has the speicified relationship with
-        another, directly or indirectly.
+        """Return True if two entities have the speicified relationship.
 
-            Parameters
-            ----------
-            ns1 : string
-                Namespace code for an entity.
-            id1 : string
-                URI for an entity.
-            ns2 : string
-                Namespace code for an entity.
-            id2 : string
-                URI for an entity.
-            closure_dict: dict
-                A dictionary mapping node names to nodes that have the
-                specified relationship, directly or indirectly. Empty if this
-                has not been precomputed.
-            relation_func: function
-                Function with arguments (node, graph) that generates objects
-                with some relationship with node on the given graph.
+        This relation is constructed possibly through multiple links connecting
+        the two entities directly or indirectly.
 
-            Returns
-            -------
-            bool
-                True if t1 has the specified relationship with t2, either
-                directly or through a series of intermediates; False otherwise.
+        Parameters
+        ----------
+        ns1 : str
+            Namespace code for an entity.
+        id1 : str
+            URI for an entity.
+        ns2 : str
+            Namespace code for an entity.
+        id2 : str
+            URI for an entity.
+        closure_dict: dict
+            A dictionary mapping node names to nodes that have the
+            specified relationship, directly or indirectly. Empty if this
+            has not been precomputed.
+        relation_func: function
+            Function with arguments (node, graph) that generates objects
+            with some relationship with node on the given graph.
+
+        Returns
+        -------
+        bool
+            True if t1 has the specified relationship with t2, either
+            directly or through a series of intermediates; False otherwise.
         """
         # if id2 is None, or both are None, then it's by definition isa:
         if id2 is None or (id2 is None and id1 is None):
@@ -246,17 +248,17 @@ class HierarchyManager(object):
                 return False
 
     def isa(self, ns1, id1, ns2, id2):
-        """Indicate whether one entity has an "isa" relationship to another.
+        """Return True if one entity has an "isa" relationship to another.
 
         Parameters
         ----------
-        ns1 : string
+        ns1 : str
             Namespace code for an entity.
         id1 : string
             URI for an entity.
-        ns2 : string
+        ns2 : str
             Namespace code for an entity.
-        id2 : string
+        id2 : str
             URI for an entity.
 
         Returns
@@ -270,17 +272,17 @@ class HierarchyManager(object):
                                                    isa_objects)
 
     def partof(self, ns1, id1, ns2, id2):
-        """Indicate whether one entity is physically part of another.
+        """Return True if one entity is "partof" another.
 
         Parameters
         ----------
-        ns1 : string
+        ns1 : str
             Namespace code for an entity.
-        id1 : string
+        id1 : str
             URI for an entity.
-        ns2 : string
+        ns2 : str
             Namespace code for an entity.
-        id2 : string
+        id2 : str
             URI for an entity.
 
         Returns
@@ -294,18 +296,17 @@ class HierarchyManager(object):
                                                    partof_objects)
 
     def isa_or_partof(self, ns1, id1, ns2, id2):
-        """Indicate whether one entity has an "isa" or "partof" relationship
-        with another.
+        """Return True if two entities are in an "isa" or "partof" relationship
 
         Parameters
         ----------
-        ns1 : string
+        ns1 : str
             Namespace code for an entity.
-        id1 : string
+        id1 : str
             URI for an entity.
-        ns2 : string
+        ns2 : str
             Namespace code for an entity.
-        id2 : string
+        id2 : str
             URI for an entity.
 
         Returns
