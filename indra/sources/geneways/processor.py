@@ -113,7 +113,7 @@ class GenewaysProcessor(object):
                     sentences = ftm.find_matching_sentences()
                     if len(sentences) == 1:
                         text = sentences[0]
-            except:
+            except Exception:
                 logger.warning('Could not fetch full text for PMID ' +
                                mention.pmid)
 
