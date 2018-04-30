@@ -22,12 +22,12 @@ def process_directory_statements_sorted_by_pmid(directory_name):
 
     Parameters
     ----------
-    directory_name: str
+    directory_name : str
         The name of a directory filled with csxml files to process
 
     Returns
     -------
-    pmid_dict: dict
+    pmid_dict : dict
         A dictionary mapping pmids to a list of statements corresponding to
         that pmid
     """
@@ -45,12 +45,12 @@ def process_directory(directory_name):
 
     Parameters
     ----------
-    directory_name: str
+    directory_name : str
         The name of a directory filled with csxml files to process
 
     Returns
     -------
-    mp: indra.sources.medscan.processor.MedscanProcessor
+    mp : indra.sources.medscan.processor.MedscanProcessor
         A MedscanProcessor populated with INDRA statements extracted from the
         csxml files
     """
@@ -110,12 +110,12 @@ def process_file_sorted_by_pmid(file_name):
 
     Parameters
     ----------
-    file_name: str
+    file_name : str
         A csxml file to process
 
     Returns
     -------
-    s_dict: dict
+    s_dict : dict
         Dictionary mapping pmids to a list of statements corresponding to
         that pmid
     """

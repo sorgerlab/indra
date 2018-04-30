@@ -125,7 +125,7 @@ def urn_to_db_refs(urn):
         A dictionary with grounding information, mapping databases to database
         identifiers. If the Medscan URN is not recognized, returns an empty
         dictionary.
-    hgnc_name: str
+    hgnc_name : str
         The HGNC name, if available, otherwise None
     """
     # Convert a urn to a db_refs dictionary
@@ -185,7 +185,7 @@ def urn_to_db_refs(urn):
 
 def extract_id(id_string):
     """Extracts the numeric ID from the representation of the subject or
-    object ID that appears as an attribute of the svo element in the Medscna
+    object ID that appears as an attribute of the svo element in the Medscan
     XML document.
 
     Parameters
@@ -335,7 +335,8 @@ class MedscanProcessor(object):
 
                     tuple_key = (ent_type, elem.attrib.get('name'), ent_urn)
                     if ent_type == 'Complex' or ent_type == 'FunctionalClass':
-                        self.log_entities[tuple_key] = self.log_entities[tuple_key] + 1
+                        self.log_entities[tuple_key] = \
+                                self.log_entities[tuple_key] + 1
                 else:
                     ent_type = elem.attrib['type']
                     ent_urn = elem.attrib['urn']
