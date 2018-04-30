@@ -9,14 +9,31 @@ def main():
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx==1.11', 'pandas']
+    # We implicitly require numpy since pandas depends on numpy
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
-    extras_require = {'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
+    extras_require = {
+                      # Inputs and outputs
+                      'biopax': ['jnius-indra'],
+                      'trips_offline': ['pykqml'],
+                      'reach_offline': ['jnius-indra'],
+                      'eidos_offline': ['pyyaml', 'jnius-indra'],
+                      'geneways': ['stemming', 'nltk'],
+                      'sofia': ['openpyxl'],
+                      'bbn': ['rdflib-jsonld'],
+                      'ndex': ['ndex2'],
+                      'bel': ['pybel'],
+                      # Tools and analysis
+                      'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                   'pyyaml', 'click'],
                       'explanation': ['kappy==4.0.0rc1'],
-                      'bbn': ['rdflib-jsonld'],
-                      'sofia': ['openpyxl']
+                      # AWS interface and database
+                      'aws': ['boto3'],
+                      'db': ['sqlalchemy', 'boto3'],
+                      # Utilities
+                      'graph': ['pygraphviz'],
+                      'plot': ['matplotlib'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
