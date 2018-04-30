@@ -12,25 +12,21 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 
 logger = logging.getLogger('hierarchy_manager')
 
-relations_prefix = 'http://sorger.med.harvard.edu/indra/relations/'
 
-
-def isa_objects(node, g):
-    for o in g.objects(node,
-                       rdflib.term.URIRef(relations_prefix + 'isa')):
+def isa_objects(node, g, rel):
+    for o in g.objects(node, rdflib.term.URIRef(rel + 'isa')):
         yield o
 
 
-def partof_objects(node, g):
-    for o in g.objects(node,
-                       rdflib.term.URIRef(relations_prefix + 'partof')):
+def partof_objects(node, g, rel):
+    for o in g.objects(node, rdflib.term.URIRef(rel + 'partof')):
         yield o
 
 
-def isa_or_partof_objects(node, g):
-    for o in isa_objects(node, g):
+def isa_or_partof_objects(node, g, rel):
+    for o in isa_objects(node, g, rel):
         yield o
-    for o in partof_objects(node, g):
+    for o in partof_objects(node, g, rel):
         yield o
 
 
@@ -67,6 +63,8 @@ class HierarchyManager(object):
         self.uri_as_name = uri_as_name
         self.graph = rdflib.Graph()
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
+        self.relations_prefix = \
+            'http://sorger.med.harvard.edu/indra/relations/'
         self.initialize()
 
     def initialize(self):
@@ -106,14 +104,15 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
-
         self.component_counter = 0
         for rel, tc_dict in ((isa_objects, self.isa_closure),
                              (partof_objects, self.partof_closure),
                              (isa_or_partof_objects,
                                  self.isa_or_partof_closure)):
+            # Make a function with the right relation prefix
+            rel_fun = lambda a, b: rel(a, b, self.relations_prefix)
             for x in self.graph.all_nodes():
-                rel_closure = self.graph.transitiveClosure(rel, x)
+                rel_closure = self.graph.transitiveClosure(rel_fun, x)
                 xs = x.toPython()
                 for y in rel_closure:
                     ys = y.toPython()
@@ -184,32 +183,34 @@ class HierarchyManager(object):
 
     def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
                                        relation_func):
-        """Indicate whether one entity has the speicified relationship with
-        another, directly or indirectly.
+        """Return True if two entities have the speicified relationship.
 
-            Parameters
-            ----------
-            ns1 : string
-                Namespace code for an entity.
-            id1 : string
-                URI for an entity.
-            ns2 : string
-                Namespace code for an entity.
-            id2 : string
-                URI for an entity.
-            closure_dict: dict
-                A dictionary mapping node names to nodes that have the
-                specified relationship, directly or indirectly. Empty if this
-                has not been precomputed.
-            relation_func: function
-                Function with arguments (node, graph) that generates objects
-                with some relationship with node on the given graph.
+        This relation is constructed possibly through multiple links connecting
+        the two entities directly or indirectly.
 
-            Returns
-            -------
-            bool
-                True if t1 has the specified relationship with t2, either
-                directly or through a series of intermediates; False otherwise.
+        Parameters
+        ----------
+        ns1 : str
+            Namespace code for an entity.
+        id1 : str
+            URI for an entity.
+        ns2 : str
+            Namespace code for an entity.
+        id2 : str
+            URI for an entity.
+        closure_dict: dict
+            A dictionary mapping node names to nodes that have the
+            specified relationship, directly or indirectly. Empty if this
+            has not been precomputed.
+        relation_func: function
+            Function with arguments (node, graph) that generates objects
+            with some relationship with node on the given graph.
+
+        Returns
+        -------
+        bool
+            True if t1 has the specified relationship with t2, either
+            directly or through a series of intermediates; False otherwise.
         """
         # if id2 is None, or both are None, then it's by definition isa:
         if id2 is None or (id2 is None and id1 is None):
@@ -247,17 +248,17 @@ class HierarchyManager(object):
                 return False
 
     def isa(self, ns1, id1, ns2, id2):
-        """Indicate whether one entity has an "isa" relationship to another.
+        """Return True if one entity has an "isa" relationship to another.
 
         Parameters
         ----------
-        ns1 : string
+        ns1 : str
             Namespace code for an entity.
         id1 : string
             URI for an entity.
-        ns2 : string
+        ns2 : str
             Namespace code for an entity.
-        id2 : string
+        id2 : str
             URI for an entity.
 
         Returns
@@ -266,22 +267,23 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
+        rel_fun = lambda a, b: isa_objects(a, b, self.relations_prefix)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_closure,
-                                                   isa_objects)
+                                                   rel_fun)
 
     def partof(self, ns1, id1, ns2, id2):
-        """Indicate whether one entity is physically part of another.
+        """Return True if one entity is "partof" another.
 
         Parameters
         ----------
-        ns1 : string
+        ns1 : str
             Namespace code for an entity.
-        id1 : string
+        id1 : str
             URI for an entity.
-        ns2 : string
+        ns2 : str
             Namespace code for an entity.
-        id2 : string
+        id2 : str
             URI for an entity.
 
         Returns
@@ -290,23 +292,23 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
+        rel_fun = lambda a, b: partof_objects(a, b, self.relations_prefix)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.partof_closure,
-                                                   partof_objects)
+                                                   rel_fun)
 
     def isa_or_partof(self, ns1, id1, ns2, id2):
-        """Indicate whether one entity has an "isa" or "partof" relationship
-        with another.
+        """Return True if two entities are in an "isa" or "partof" relationship
 
         Parameters
         ----------
-        ns1 : string
+        ns1 : str
             Namespace code for an entity.
-        id1 : string
+        id1 : str
             URI for an entity.
-        ns2 : string
+        ns2 : str
             Namespace code for an entity.
-        id2 : string
+        id2 : str
             URI for an entity.
 
         Returns
@@ -315,9 +317,10 @@ class HierarchyManager(object):
             True if t1 has a "isa" or "partof" relationship with t2, either
             directly or through a series of intermediates; False otherwise.
         """
+        rel_fun = lambda a, b: isa_or_partof_objects(a, b, self.relations_prefix)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_or_partof_closure,
-                                                   isa_or_partof_objects)
+                                                   rel_fun)
 
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
