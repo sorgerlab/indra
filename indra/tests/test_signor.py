@@ -745,6 +745,9 @@ def test_complexes_with_families():
 
     assert(isinstance(sp.statements[0], IncreaseAmount))
     obj = sp.statements[0].obj
+
+    print("obj.db_refs:", obj.db_refs)  # DEBUG
+
     assert(obj.db_refs['UP'] == 'O60271')
     assert(len(obj.bound_conditions) == 2)
     assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')
