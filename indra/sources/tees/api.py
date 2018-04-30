@@ -67,7 +67,47 @@ def process_text(text, pmid=None, python2_path=None):
         A TEESProcessor object which contains a list of INDRA statements
         extracted from TEES extractions
     """
+ 
+    # Try to locate python2 in one of the directories of the PATH environment
+    # variable if it is not provided
+    if python2_path is None:
+        for path in os.environ["PATH"].split(os.pathsep):
+            proposed_python2_path = os.path.join(path, 'python2.7')
+            if os.path.isfile(proposed_python2_path):
+                python2_path = proposed_python2_path
+                print('Found python 2 interpreter at', python2_path)
+                break
+    if python2_path is None:
+        raise Exception('Could not find python2 in the directories ' +
+                        'listed in the PATH environment variable. ' +
+                        'Need python2 to run TEES.')
 
+    # Run TEES
+    a1_text, a2_text, sentence_segmentations = run_tees_on_text(text,
+                                                                python2_path)
+
+    # Run the TEES processor
+    tp = TEESProcessor(a1_text, a2_text, sentence_segmentations, pmid)
+    return tp
+
+def run_tees_on_text(text, python2_path):
+    """Runs TEES on the given text in a temporary directory and returns a
+    temporary directory with TEES output. The caller should delete this
+    directory when done with it.
+
+    Parameters
+    ----------
+    text : str
+        Text from which to extract relationships
+    python2_path : str
+        The path to the python 2 interpreter
+
+    Returns
+    -------
+    output_dir : str
+        Temporary directory with TEES output. The caller should delete this
+        directgory when done with it.
+    """
     tees_path = get_config('TEES_PATH')
 
     if tees_path is None:
@@ -98,53 +138,6 @@ def process_text(text, pmid=None, python2_path=None):
                     print('Found TEES installation at ' + cpath)
                     break
 
-    # If tees_path is None then we didn't find any installations
-    if tees_path is None:
-        raise Exception('Could not find TEES installation')
-
-    # Try to locate python2 in one of the directories of the PATH environment
-    # variable if it is not provided
-    if python2_path is None:
-        for path in os.environ["PATH"].split(os.pathsep):
-            proposed_python2_path = os.path.join(path, 'python2.7')
-            if os.path.isfile(proposed_python2_path):
-                python2_path = proposed_python2_path
-                print('Found python 2 interpreter at', python2_path)
-                break
-    if python2_path is None:
-        raise Exception('Could not find python2 in the directories ' +
-                        'listed in the PATH environment variable. ' +
-                        'Need python2 to run TEES.')
-
-    # Run TEES
-    a1_text, a2_text, sentence_segmentations = run_tees_on_text(text,
-                                                                tees_path,
-                                                                python2_path)
-
-    # Run the TEES processor
-    tp = TEESProcessor(a1_text, a2_text, sentence_segmentations, pmid)
-    return tp
-
-def run_tees_on_text(text, tees_path, python2_path):
-    """Runs TEES on the given text in a temporary directory and returns a
-    temporary directory with TEES output. The caller should delete this
-    directory when done with it.
-
-    Parameters
-    ----------
-    text : str
-        Text from which to extract relationships
-    tees_path : str
-        Path to the TEES directory
-    python2_path : str
-        The path to the python 2 interpreter
-
-    Returns
-    -------
-    output_dir : str
-        Temporary directory with TEES output. The caller should delete this
-        directgory when done with it.
-    """
     # Make sure the provided TEES directory exists
     if not os.path.isdir(tees_path):
         raise Exception('Provided TEES directory does not exist.')
