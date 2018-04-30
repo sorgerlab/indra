@@ -7,8 +7,10 @@ from datetime import datetime
 from indra.statements import stmts_from_json
 from itertools import combinations
 
+
 TIMELIMIT = 1
 SIZELIMIT = 4e7
+
 
 class DbApiTestCase(unittest.TestCase):
 
@@ -114,6 +116,13 @@ class DbApiTestCase(unittest.TestCase):
     def test_query_with_chebi_ns(self):
         """Test specifying CHEBI as a namespace."""
         self.__check_good_query(subject='CHEBI:6801@CHEBI')
+
+    def test_query_with_bad_hgnc(self):
+        resp, dt, size = self.__time_get_query('subject=MEK&object=ERK'
+                                               '&type=Phosphorylation')
+        assert resp.status_code != 200, "Got good status code."
+        assert dt <= TIMELIMIT, dt.seconds
+        assert size <= SIZELIMIT, size
 
 
 if __name__ == '__main__':
