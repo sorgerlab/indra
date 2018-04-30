@@ -387,8 +387,6 @@ class MedscanProcessor(object):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
-        # print("Done processing %d documents" % doc_counter)
-
 
     def process_relation(self, relation, last_relation):
         """Process a relation into an INDRA statement.

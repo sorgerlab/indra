@@ -102,7 +102,6 @@ def process_directory(directory_name):
     # Delete the temporary directory
     shutil.rmtree(tmp_dir)
 
-
     return mp
 
 def process_file_sorted_by_pmid(file_name):
@@ -113,6 +112,12 @@ def process_file_sorted_by_pmid(file_name):
     ----------
     file_name: str
         A csxml file to process
+
+    Returns
+    -------
+    s_dict: dict
+        Dictionary mapping pmids to a list of statements corresponding to
+        that pmid
     """
     s_dict = defaultdict(list)
     mp = process_file(file_name)
