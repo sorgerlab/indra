@@ -36,19 +36,19 @@ class TEESProcessor(object):
 
     Parameters
     ----------
-    a1_text: str
+    a1_text : str
         The TEES a1 output file, with entity information
-    a2_test: str
+    a2_test : str
         The TEES a2 output file, with the event graph
-    sentence_segmentations: str
+    sentence_segmentations : str
         The TEES sentence segmentation XML output
-    pmid: int
+    pmid : int
         The pmid which the text comes from, or None if we don't want to specify
         at the moment. Stored in the Evidence object for each statement.
 
     Attributes
     ----------
-    statements: list[indra.statements.Statement]
+    statements : list[indra.statements.Statement]
         A list of INDRA statements extracted from the provided text via TEES
     """
 
@@ -88,11 +88,11 @@ class TEESProcessor(object):
 
         Parameters
         ----------
-        G:
+        G :
             The graph object
-        node_name:
+        node_name :
             Node that the edge starts at
-        edge_label:
+        edge_label :
             The text in the relation property of the edge
         """
         G = self.G
@@ -158,15 +158,15 @@ class TEESProcessor(object):
 
         Parameters
         ----------
-        event_name: str
+        event_name : str
             Look for event nodes with this name
-        desired_relations: list[str]
+        desired_relations : list[str]
             Look for event nodes with outgoing edges annotated with each of
             these relations
 
         Returns
         -------
-        event_nodes: list[str]
+        event_nodes : list[str]
             Event nodes that fit the desired criteria
         """
 
@@ -187,8 +187,8 @@ class TEESProcessor(object):
         return desired_event_nodes
 
     def get_related_node(self, node, relation):
-        """Looks for an edge from node to some other node, such that the edge is
-        annotated with the given relation. If there exists such an edge,
+        """Looks for an edge from node to some other node, such that the edge
+        is annotated with the given relation. If there exists such an edge,
         returns the name of the node it points to. Otherwise, returns None."""
         G = self.G
         for edge in G.edges(node):
@@ -381,12 +381,12 @@ class TEESProcessor(object):
 
         Parameters
         ----------
-        node: str
+        node : str
             We want to create the subgraph containing this node.
 
         Returns
         -------
-        subgraph: networkx.DiGraph
+        subgraph : networkx.DiGraph
             The subgraph containing the specified node.
         """
         G = self.G

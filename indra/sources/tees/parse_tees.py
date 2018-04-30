@@ -44,13 +44,13 @@ class TEESEntity:
 
     Attributes
     ----------
-    identifier: str
+    identifier : str
         The unique tag for each entity, starting with T (ex. T28)
-    entity_type: str
+    entity_type : str
         The type of entity (ex. Protein)
-    entity_name: str
+    entity_name : str
         The name of the entity, as listed in the text
-    offsets: list[int]
+    offsets : list[int]
         The lower and upper offsets where the entity was mentioned in the text
     """
     def __init__(self, identifier, entity_type, entity_name, offsets):
@@ -74,12 +74,12 @@ def parse_a1(a1_text):
 
     Parameters
     ----------
-    a1_text: str
+    a1_text : str
         Text of the TEES a1 output file, specifying the entities
 
     Returns
     -------
-    entities: Dictionary mapping TEES identifiers to TEESEntity objects
+    entities : Dictionary mapping TEES identifiers to TEESEntity objects
         describing each entity. Each row of the .a1 file corresponds to one
         TEESEntity object.
     """
@@ -116,14 +116,14 @@ def parse_a2(a2_text, entities, tees_sentences):
 
     Parameters
     ----------
-    a2_text: str
+    a2_text : str
         Text of the TEES a2 file output, specifying the event graph
-    sentences_xml_gz: str
+    sentences_xml_gz : str
         Filename with the TEES sentence segmentation in a gzipped xml format
 
     Returns
     -------
-    events:
+    events :
         A networkx graph of events. Node names are entity and event labels
         in the original A2 file (such as "E2" or "T1") and edges between nodes
         are the various properties. Text nodes (ex. "T1") have a text node
@@ -241,12 +241,12 @@ class TEESSentences:
 
         Parameters
         ----------
-        index: int
+        index : int
             Looks up a sentence with this index
 
         Returns
         -------
-        text: str
+        text : str
             A sentence corresponding to the given document index, or None
             if none can be found
         """
@@ -262,16 +262,16 @@ def parse_tees_output_files(a1_text, a2_text, sentence_segmentations):
 
     Parameters
     ----------
-    a1_text: str
+    a1_text : str
         Contents of the TEES a1 output, specifying the entities
-    a1_text: str
+    a1_text : str
         Contents of the TEES a2 output, specifying the event graph
-    sentence_segmentations: str
+    sentence_segmentations : str
         Concents of the TEES sentence segmentation output XML
 
     Returns
     -------
-    events: networkx.DiGraph
+    events : networkx.DiGraph
         networkx graph with the entities, events, and relationship between
         extracted by TEES
     """
@@ -293,11 +293,11 @@ def tees_parse_networkx_to_dot(G, output_file, subgraph_nodes):
 
     Parameters
     ----------
-    G: networkx.DiGraph
+    G : networkx.DiGraph
         Graph with TEES extractions returned by run_and_parse_tees
-    output_file: str
+    output_file : str
         Output file to which to write .dot file
-    subgraph_nodes: list[str]
+    subgraph_nodes : list[str]
         Only convert the connected graph that includes these ndoes
     """
 

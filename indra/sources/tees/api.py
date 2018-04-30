@@ -50,12 +50,12 @@ def process_text(text, pmid=None, python2_path=None):
 
     Parameters
     ----------
-    text: str
+    text : str
         Plain text to process with TEES
-    pmid: str
+    pmid : str
         The PMID from which the paper comes from, to be stored in the Evidence
         object of statements. Set to None if this is unspecified.
-    python2_path: str
+    python2_path : str
         TEES is only compatible with python 2. This processor invokes this
         external python 2 interpreter so that the processor can be run in
         either python 2 or python 3. If None, searches for an executible named
@@ -63,7 +63,7 @@ def process_text(text, pmid=None, python2_path=None):
 
     Returns
     -------
-    tp: TEESProcessor
+    tp : TEESProcessor
         A TEESProcessor object which contains a list of INDRA statements
         extracted from TEES extractions
     """
@@ -132,16 +132,16 @@ def run_tees_on_text(text, tees_path, python2_path):
 
     Parameters
     ----------
-    text: str
+    text : str
         Text from which to extract relationships
-    tees_path: str
+    tees_path : str
         Path to the TEES directory
-    python2_path: str
+    python2_path : str
         The path to the python 2 interpreter
 
     Returns
     -------
-    output_dir: str
+    output_dir : str
         Temporary directory with TEES output. The caller should delete this
         directgory when done with it.
     """
@@ -213,16 +213,16 @@ def extract_relevant_tees_output(output_dir):
 
     Parameters
     ----------
-    output_dir: str
+    output_dir : str
         Directory containing the output of the TEES system
 
     Returns
     -------
-    a1_text: str
+    a1_text : str
         The text of the TEES a1 file (specifying the entities)
-    a2_text: str
+    a2_text : str
         The text of the TEES a2 file (specifying the event graph)
-    sentence_segmentations: str
+    sentence_segmentations : str
         The text of the XML file specifying the sentence segmentation
     """
 
