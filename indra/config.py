@@ -71,7 +71,8 @@ def _check_config_dict():
 CONFIG_DICT = populate_config_dict(config_path)
 if CONFIG_DICT is None:
     CONFIG_DICT = {}
-
+else:
+    _check_config_dict()
 
 def get_config(key):
     """Returns the configuration value, first checking the environemnt
@@ -112,3 +113,4 @@ def has_config(key):
         Whether the configuration value is present
     """
     return get_config(key) is not None
+
