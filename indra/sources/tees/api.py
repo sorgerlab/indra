@@ -83,17 +83,20 @@ def process_text(text, pmid=None, python2_path=None):
                         'Need python2 to run TEES.')
 
     # Run TEES
-    a1_text, a2_text, sentence_segmentations = run_tees_on_text(text,
+    a1_text, a2_text, sentence_segmentations = run_on_text(text,
                                                                 python2_path)
 
     # Run the TEES processor
     tp = TEESProcessor(a1_text, a2_text, sentence_segmentations, pmid)
     return tp
 
-def run_tees_on_text(text, python2_path):
+def run_on_text(text, python2_path):
     """Runs TEES on the given text in a temporary directory and returns a
-    temporary directory with TEES output. The caller should delete this
-    directory when done with it.
+    temporary directory with TEES output.
+    
+    The caller should delete this directory when done with it. This function
+    runs TEES and produces TEES output files but does not process TEES output
+    into INDRA statements.
 
     Parameters
     ----------
@@ -196,11 +199,11 @@ def run_tees_on_text(text, python2_path):
         shutil.rmtree(tmp_dir)
         raise e
     # Return the temporary directory with the TEES output
-    output_tuple = extract_relevant_tees_output(tmp_dir)
+    output_tuple = extract_output(tmp_dir)
     shutil.rmtree(tmp_dir)
     return output_tuple
 
-def extract_relevant_tees_output(output_dir):
+def extract_output(output_dir):
     """Extract the text of the a1, a2, and sentence segmentation files from the
     TEES output directory. These files are located within a compressed archive.
 
@@ -284,11 +287,13 @@ def extract_relevant_tees_output(output_dir):
         tar_file.extractall(path=tmp_dir, members=extract_these)
 
         # Read the text of the a1 (entities) file
-        with open(os.path.join(tmp_dir, a1_file), 'r') as f:
+        with codecs.open(os.path.join(tmp_dir, a1_file), 'r',
+                         encoding='utf-8') as f:
             a1_text = f.read()
 
         # Read the text of the a2 (events) file
-        with open(os.path.join(tmp_dir, a2_file), 'r') as f:
+        with codecs.open(os.path.join(tmp_dir, a2_file), 'r',
+                         encoding='utf-8') as f:
             a2_text = f.read()
 
         # Now that we're done, remove the temporary directory

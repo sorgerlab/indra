@@ -16,7 +16,7 @@ from future.utils import python_2_unicode_compatible
 
 from indra.statements import Phosphorylation, Dephosphorylation, Complex, \
         IncreaseAmount, DecreaseAmount, Agent, Evidence
-from indra.sources.tees.parse_tees import parse_tees_output_files
+from indra.sources.tees.parse_tees import parse_output
 from indra.preassembler.grounding_mapper import load_grounding_map,\
         GroundingMapper
 from networkx.algorithms import dag
@@ -38,7 +38,7 @@ class TEESProcessor(object):
     ----------
     a1_text : str
         The TEES a1 output file, with entity information
-    a2_test : str
+    a2_text : str
         The TEES a2 output file, with the event graph
     sentence_segmentations : str
         The TEES sentence segmentation XML output
@@ -68,8 +68,7 @@ class TEESProcessor(object):
         mapper = GroundingMapper(gm)
 
         # Run TEES and parse into networkx graph
-        self.G = parse_tees_output_files(a1_text, a2_text,
-                                         sentence_segmentations)
+        self.G = parse_output(a1_text, a2_text, sentence_segmentations)
 
         # Extract statements from the TEES graph
         self.statements = []

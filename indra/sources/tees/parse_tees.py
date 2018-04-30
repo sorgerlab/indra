@@ -89,14 +89,18 @@ def parse_a1(a1_text):
         if len(line) == 0:
             continue
         tokens = line.rstrip().split('\t')
-        assert(len(tokens) == 3)
+        if len(tokens) != 3:
+            raise Exception('Expected three tab-seperated tokens per line ' +
+                            'in the a1 file output from TEES.')
 
         identifier = tokens[0]
         entity_info = tokens[1]
         entity_name = tokens[2]
 
         info_tokens = entity_info.split()
-        assert(len(info_tokens) == 3)
+        if len(info_tokens) != 3:
+            raise Exception('Expected three space-seperated tokens in the ' + 
+                            'second column of the a2 file output from TEES.')
         entity_type = info_tokens[0]
         first_offset = int(info_tokens[1])
         second_offset = int(info_tokens[2])
@@ -154,7 +158,9 @@ def parse_a2(a2_text, entities, tees_sentences):
 
         elif line[0] == 'E':  # New event
             tokens = line.rstrip().split('\t')
-            assert(len(tokens) == 2)
+            if len(tokens) != 2:
+                raise Exception('Expected two tab-separated tokens per line ' +
+                                'in TEES a2 file.')
 
             event_identifier = tokens[0]
 
@@ -165,7 +171,10 @@ def parse_a2(a2_text, entities, tees_sentences):
             properties = dict()
             for pair in key_value_pairs:
                 key_and_value = pair.split(':')
-                assert(len(key_and_value) == 2)
+                if len(key_and_value) != 2:
+                    raise Exception('Expected two colon-separated tokens ' + 
+                                    'in the second column of the a2 file ' + 
+                                    'output from TEES.')
                 properties[key_and_value[0]] = key_and_value[1]
 
             # Add event to the graph if we haven't added it yet
@@ -188,10 +197,14 @@ def parse_a2(a2_text, entities, tees_sentences):
 
         elif line[0] == 'M':  # Event modification
             tokens = line.split('\t')
-            assert(len(tokens) == 2)
+            if len(tokens) == 2:
+                raise Exception('Expected two tab-separated tokens per line ' +
+                                'in the a2 file output from TEES.')
 
             tokens2 = tokens[1].split()
-            assert(len(tokens2) == 2)
+            if len(tokens2) == 2:
+                raise Exception('Expected two space-separated tokens per ' + 
+                                'line in the a2 file output from TEES.')
             modification_type = tokens2[0]
             modified = tokens2[1]
 
@@ -256,7 +269,7 @@ class TEESSentences:
             return None
 
 
-def parse_tees_output_files(a1_text, a2_text, sentence_segmentations):
+def parse_output(a1_text, a2_text, sentence_segmentations):
     """Parses the output of the TEES reader and returns a networkx graph
     with the event information.
 
