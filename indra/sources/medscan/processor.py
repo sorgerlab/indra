@@ -5,7 +5,8 @@ import lxml.etree
 import collections
 from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
-from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id
+from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
+        get_hgnc_name
 
 
 logger = logging.getLogger('medscan')
@@ -124,20 +125,23 @@ def urn_to_db_refs(urn):
         A dictionary with grounding information, mapping databases to database
         identifiers. If the Medscan URN is not recognized, returns an empty
         dictionary.
+    hgnc_name: str
+        The HGNC name, if available, otherwise None
     """
     # Convert a urn to a db_refs dictionary
     if urn is None:
-        return {}
+        return {}, None
 
     p = 'urn:([^:]+):([^:]+)'
     m = re.match(p, urn)
     if m is None:
-        return None
+        return None, None
 
     urn_type = m.group(1)
     urn_id = m.group(2)
 
     db_refs = {}
+    hgnc_name = None
 
     # TODO: support more types of URNs
     if urn_type == 'agi-cas':
@@ -154,6 +158,10 @@ def urn_to_db_refs(urn):
             # Convert the HGNC ID to a Uniprot ID
             uniprot_id = get_uniprot_id(hgnc_id)
             db_refs['UP'] = uniprot_id
+
+            # Try to lookup HGNC name; if it's available, set it to the
+            # agent name
+            hgnc_name = get_hgnc_name(hgnc_id)
     elif urn_type == 'agi-ncimorgan':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
@@ -172,7 +180,7 @@ def urn_to_db_refs(urn):
     elif urn_type == 'agi-ncimtissue':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
-    return db_refs
+    return db_refs, hgnc_name
 
 
 def extract_id(id_string):
@@ -590,10 +598,16 @@ class MedscanProcessor(object):
                 assert(len(mutation) == 1)
                 mutation = mutation[0]
 
-                db_refs = urn_to_db_refs(protein.urn)
+                db_refs, hgnc_name = urn_to_db_refs(protein.urn)
+
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = protein.name
+
+                if hgnc_name is None:
+                    agent_name = db_refs['TEXT']
+                else:
+                    agent_name = hgnc_name
 
                 # Check mutation.type. Only some types correspond to situations
                 # that can be represented in INDRA; return None if we cannot
@@ -616,7 +630,7 @@ class MedscanProcessor(object):
                     else:
                         try:
                             cond = MutCondition(pos, r_old, r_new)
-                            return Agent(db_refs['TEXT'], db_refs=db_refs,
+                            return Agent(agent_name, db_refs=db_refs,
                                          mutations=[cond])
                         except BaseException:
                             logger.warning('Could not parse mutation ' +
@@ -629,7 +643,7 @@ class MedscanProcessor(object):
                     if res is None:
                         return None
                     cond = ModCondition('methylation', res, pos)
-                    return Agent(db_refs['TEXT'], db_refs=db_refs,
+                    return Agent(agent_name, db_refs=db_refs,
                                  mods=[cond])
 
                     # Example:
@@ -643,7 +657,7 @@ class MedscanProcessor(object):
                     if res is None:
                         return None
                     cond = ModCondition('phosphorylation', res, pos)
-                    return Agent(db_refs['TEXT'], db_refs=db_refs,
+                    return Agent(agent_name, db_refs=db_refs,
                                  mods=[cond])
 
                     # Example:
@@ -666,8 +680,14 @@ class MedscanProcessor(object):
             else:
                 # Handle the more common case where we just ground the entity
                 # without mutation or modification information
-                db_refs = urn_to_db_refs(entity.urn)
+                db_refs, hgnc_name = urn_to_db_refs(entity.urn)
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = entity.name
-                return Agent(db_refs['TEXT'], db_refs=db_refs)
+
+                if hgnc_name is None:
+                    agent_name = db_refs['TEXT']
+                else:
+                    agent_name = hgnc_name
+
+                return Agent(agent_name, db_refs=db_refs)

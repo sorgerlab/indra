@@ -151,10 +151,3 @@ def process_file(filename, medscan_resource_dir, num_documents=None,
     with open(filename, 'rb') as f:
         mp.process_csxml_from_file_handle(f, num_documents)
     return mp
-
-if __name__ == '__main__':
-    dname = '/Users/daniel/Downloads/medscan_full/HARVARD_CSXML'
-    mp = process_directory(dname, None)
-
-    log_entities = mp.log_entities
-    pickle.dump(log_entities, open('log_entities.pkl', 'wb'))
