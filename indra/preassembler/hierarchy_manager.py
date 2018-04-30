@@ -12,25 +12,21 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 
 logger = logging.getLogger('hierarchy_manager')
 
-relations_prefix = 'http://sorger.med.harvard.edu/indra/relations/'
 
-
-def isa_objects(node, g):
-    for o in g.objects(node,
-                       rdflib.term.URIRef(relations_prefix + 'isa')):
+def isa_objects(node, g, rel):
+    for o in g.objects(node, rdflib.term.URIRef(rel + 'isa')):
         yield o
 
 
-def partof_objects(node, g):
-    for o in g.objects(node,
-                       rdflib.term.URIRef(relations_prefix + 'partof')):
+def partof_objects(node, g, rel):
+    for o in g.objects(node, rdflib.term.URIRef(rel + 'partof')):
         yield o
 
 
-def isa_or_partof_objects(node, g):
-    for o in isa_objects(node, g):
+def isa_or_partof_objects(node, g, rel):
+    for o in isa_objects(node, g, rel):
         yield o
-    for o in partof_objects(node, g):
+    for o in partof_objects(node, g, rel):
         yield o
 
 
@@ -67,6 +63,8 @@ class HierarchyManager(object):
         self.uri_as_name = uri_as_name
         self.graph = rdflib.Graph()
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
+        self.relations_prefix = \
+            'http://sorger.med.harvard.edu/indra/relations/'
         self.initialize()
 
     def initialize(self):
@@ -106,14 +104,15 @@ class HierarchyManager(object):
         hierarchy as keys and either all the "isa+" or "partof+" related terms
         as values.
         """
-
         self.component_counter = 0
         for rel, tc_dict in ((isa_objects, self.isa_closure),
                              (partof_objects, self.partof_closure),
                              (isa_or_partof_objects,
                                  self.isa_or_partof_closure)):
+            # Make a function with the right relation prefix
+            rel_fun = lambda a, b: rel(a, b, self.relations_prefix)
             for x in self.graph.all_nodes():
-                rel_closure = self.graph.transitiveClosure(rel, x)
+                rel_closure = self.graph.transitiveClosure(rel_fun, x)
                 xs = x.toPython()
                 for y in rel_closure:
                     ys = y.toPython()
