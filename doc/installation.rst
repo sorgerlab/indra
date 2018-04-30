@@ -84,11 +84,13 @@ released version of INDRA as
 INDRA dependencies
 ------------------
 
-INDRA depends on a few standard Python packages (e.g. rdflib, requests, pysb).
+INDRA depends on a few standard Python packages (e.g. rdflib, requests,
+objectpath).
 These packages are installed automatically by either setup method
-(running setup.py install or using pip). Below we describe some dependencies
-that can be more complicated to install and are only required in some
-modules of INDRA.
+(running setup.py install or using pip). 
+
+Below we provide a detailed description of some extra dependencies that may
+require special steps to install.
 
 PySB and BioNetGen
 ``````````````````
@@ -182,17 +184,71 @@ rely on it. It can be installed as
 
 Optional additional dependencies
 ````````````````````````````````
-Some applications built on top of INDRA (for instance The RAS Machine) have
-additional dependencies that are encoded as
-`extras in setup.py <https://setuptools.readthedocs.io/en/latest/setuptools.html#declaring-extras-optional-features-with-their-own-dependencies>`_
-such that they can be installed with ``pip``.
+Some dependencies of INDRA are only needed by certain submodules or are only
+used in specialized use cases. These are not installed by default but are
+listed as "extra" requirements, and can be installed separately using pip.
+An extra dependency list (e.g. one called extra_list) can be
+installed as
 
 .. code-block:: bash
 
-    pip install indra[machine]
+    pip install indra[extra_list]
 
-In other cases a specific `README` or `requirements.txt` is provided in the folder to guide the set up.
+You can also install all extra dependencies by doing
 
+.. code-block:: bash
+
+   pip install indra --install-option="complete"
+
+or 
+
+.. code-block:: bash
+
+   pip install indra[all]
+
+In all of the above, you may replace `indra` with `.` (if you're in a local
+copy of the `indra` folder or with the Github URL of the INDRA repo, depending
+on your installation method.
+See also the corresponding
+`pip documentation <https://packaging.python.org/tutorials/installing-packages/#installing-setuptools-extras>`_
+for more information.
+
+The table below provides the name and the description of each "extra" list
+of dependencies.
+
++-----------------+------------------------------------------------------+
+|Extra list name  |Purpose                                               |
++=================+======================================================+
+|biopax           |BioPAX input processing and Pathway Commons queries   |
++-----------------+------------------------------------------------------+
+|bel              |BEL input processing and output assembly              |
++-----------------+------------------------------------------------------+
+|trips_offline    |Offline reading with local instance of TRIPS system   |
++-----------------+------------------------------------------------------+
+|reach_offline    |Offline reading with local instance of REACH system   |
++-----------------+------------------------------------------------------+
+|eidos_offline    |Offline reading with local instance of Eidos system   |
++-----------------+------------------------------------------------------+
+|geneways         |Genewayas reader input processing                     |
++-----------------+------------------------------------------------------+
+|sofia            |SOFIA reader input processing                         |
++-----------------+------------------------------------------------------+
+|bbn              |BBN reader input processing                           |
++-----------------+------------------------------------------------------+
+|ndex             |NDEx client for network input processing and CX upload|
++-----------------+------------------------------------------------------+
+|machine          |Running a local instance of a "RAS machine"           |
++-----------------+------------------------------------------------------+
+|explanation      |Finding explanatory paths in rule-based models        |
++-----------------+------------------------------------------------------+
+|aws              |Accessing AWS compute and storage resources           |
++-----------------+------------------------------------------------------+
+|db               |Setting up and using a DB instance to store Statements|
++-----------------+------------------------------------------------------+
+|graph            |Assembling into a visualizing Graphviz graphs         |
++-----------------+------------------------------------------------------+
+|plot             |Create and display plots                              |
++-----------------+------------------------------------------------------+
 Configuring INDRA
 -----------------
 Various aspects of INDRA, including API keys, dependency locations, and

@@ -24,7 +24,6 @@ def main():
                       'bbn': ['rdflib-jsonld'],
                       'ndex': ['ndex2'],
                       'bel': ['pybel'],
-                      'graph_assembler': ['pygraphviz'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                   'pyyaml', 'click'],
@@ -32,6 +31,9 @@ def main():
                       # AWS interface and database
                       'aws': ['boto3'],
                       'db': ['sqlalchemy', 'boto3'],
+                      # Utilities
+                      'graph': ['pygraphviz'],
+                      'plot': ['matplotlib'],
                       }
     extras_require['all'] = list({dep for deps in extras_require.values()
                                   for dep in deps})
