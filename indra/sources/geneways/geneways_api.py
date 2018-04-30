@@ -21,7 +21,7 @@ path_this = os.path.dirname(os.path.abspath(__file__))
 data_folder = os.path.join(path_this, '../../../data')
 
 
-def process_geneways_files(input_folder=data_folder):
+def process_geneways_files(input_folder=data_folder, get_evidence=True):
     """Reads in Geneways data and returns a list of statements.
 
     Parameters
@@ -32,6 +32,10 @@ def process_geneways_files(input_folder=data_folder):
         human_actionmention.txt, human_symbols.txt.
         Omit this parameter to use the default input folder which is
         indra/data.
+    get_evidence : Optional[bool]
+        Attempt to find the evidence text for an extraction by downloading
+        the corresponding text content and searching for the given offset
+        in the text to get the evidence sentence. Default: True
 
     Returns
     -------
@@ -39,5 +43,5 @@ def process_geneways_files(input_folder=data_folder):
         A GenewaysProcessor object which contains a list of INDRA statements
         generated from the Geneways action mentions.
     """
-    gp = GenewaysProcessor(input_folder)
+    gp = GenewaysProcessor(input_folder, get_evidence)
     return gp

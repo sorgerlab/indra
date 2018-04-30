@@ -137,7 +137,7 @@ def test_geneways_action_parser():
     assert(len(action2.action_mentions) == 1)
 
 def test_geneways_processor():
-    processor = process_geneways_files(data_folder)
+    processor = process_geneways_files(data_folder, get_evidence=False)
 
     statements = processor.statements
     assert(len(statements) == 3)

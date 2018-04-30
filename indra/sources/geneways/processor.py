@@ -46,7 +46,12 @@ class GenewaysProcessor(object):
         A list of INDRA statements converted from Geneways action
         mentions, populated by calling the constructor
     """
-    def __init__(self, search_path):
+    def __init__(self, search_path, get_evidence=True):
+        if get_evidence and get_ft_mention:
+            self.get_ft_mention = True
+        else:
+            self.get_ft_mention = False
+
         # Parse Geneways data. Will give an error if it can't find
         # the Geneways data
         logger.info('Loading Geneways extractions')
@@ -99,7 +104,7 @@ class GenewaysProcessor(object):
         # This code looks for sentences with the subject, object, and verb
         # listed by the Geneways action mention table and only includes
         # it in the evidence if there is exactly one such sentence
-        if get_ft_mention:
+        if self.get_ft_mention:
             try:
                 content, content_type = get_full_text(mention.pmid, 'pmid')
                 if content is not None:
