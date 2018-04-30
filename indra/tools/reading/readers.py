@@ -204,7 +204,7 @@ class ReachReader(Reader):
     def _check_content(self, content_str):
         """Check if the content is likely to be successfully read."""
         if self.do_content_check:
-            space_ratio = content_str.count(' ')/len(content_str)
+            space_ratio = float(content_str.count(' '))/len(content_str)
             if space_ratio > self.max_space_ratio:
                 return "space-ratio: %f > %f" % (space_ratio,
                                                  self.max_space_ratio)

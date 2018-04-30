@@ -563,7 +563,7 @@ if __name__ == '__main__':
         )
     parent_db_parser.add_argumet(
         '--max_reach_space_ratio',
-        type=int,
+        type=float,
         help='Set the maximum ratio of spaces to non-spaces for REACH input.',
         default=None
     )
