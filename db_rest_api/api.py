@@ -91,6 +91,7 @@ def get_statements():
     except DbAPIError as e:
         logger.exception(e)
         abort(Response('Failed to make agents from names: %s\n' % str(e), 400))
+        return
     act_uncamelled = query_dict.pop('type', None)
     if act_uncamelled is not None:
         act = make_statement_camel(act_uncamelled)
@@ -100,6 +101,7 @@ def get_statements():
         abort(Response("Unrecognized query options; %s." %
                        list(query_dict.keys()),
                        400))
+        return
 
     if not any(agents.values()) and not free_agents:
         logger.error("No agents.")

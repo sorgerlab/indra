@@ -2,10 +2,12 @@ import unittest
 import json
 import sys
 
-from db_rest_api import api
-from datetime import datetime
-from indra.statements import stmts_from_json
 from itertools import combinations
+from datetime import datetime
+
+from indra.statements import stmts_from_json
+
+from db_rest_api import api
 
 
 TIMELIMIT = 1
@@ -121,7 +123,7 @@ class DbApiTestCase(unittest.TestCase):
         resp, dt, size = self.__time_get_query('subject=MEK&object=ERK'
                                                '&type=Phosphorylation')
         assert resp.status_code != 200, "Got good status code."
-        assert dt <= TIMELIMIT, dt.seconds
+        assert dt <= TIMELIMIT, dt
         assert size <= SIZELIMIT, size
 
 
