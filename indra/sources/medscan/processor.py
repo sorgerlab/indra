@@ -270,34 +270,12 @@ class MedscanProcessor(object):
     num_entities_not_found : int
         The number of subject or object IDs which could not be resolved by
         looking in the list of entities or tagged phrases.
-    unmapped_urns : set of str
-        The list of URNs that are not mapped to any external database,
-        optionally extracted from rnef files provided by the Medscan
-        developers. Currently unused.
     """
-    def __init__(self, medscan_resource_dir):
+    def __init__(self):
         self.statements = []
         self.num_entities_not_found = 0
         self.num_entities = 0
-        self.unmapped_urns = set()
         self.relations = []
-
-        # Read in and populate a list of unmapped urns
-        if medscan_resource_dir is not None:
-            fname_unmapped_complexes = os.path.join(medscan_resource_dir,
-                                                    'Unmapped Complexes.rnef')
-            fname_classes = os.path.join(medscan_resource_dir,
-                                         'Unmapped Functional classes.rnef')
-            for fname in [fname_unmapped_complexes, fname_classes]:
-                with codecs.open(fname, 'rb') as f:
-                    for event, elem in lxml.etree.iterparse(f,
-                                                            events=('start',
-                                                                    'end'),
-                                                            encoding='utf-8'):
-                        if event == 'start':
-                            urn = elem.attrib.get('urn')
-                            if urn is not None:
-                                self.unmapped_urns.add(urn)
 
     def process_csxml_from_file_handle(self, f, num_documents):
         """Processes a filehandle to MedScan csxml input into INDRA

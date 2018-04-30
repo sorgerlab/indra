@@ -60,7 +60,7 @@ def test_urn_to_db_refs():
 
 
 def test_agent_from_entity():
-    mp = MedscanProcessor(None)
+    mp = MedscanProcessor()
 
     # Test entity
     entity = MedscanEntity(name='kinesin-I',
@@ -94,7 +94,7 @@ def test_agent_from_entity():
 
 def test_expressioncontrol_positive():
     fname = os.path.join(data_folder, 'test_ExpressionControl_positive.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 2)
@@ -109,7 +109,7 @@ def test_expressioncontrol_positive():
 def test_evidence():
     # Test that evidence object is created correctly
     fname = os.path.join(data_folder, 'test_ExpressionControl_positive.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 2)
@@ -129,7 +129,7 @@ def test_evidence():
 
 def test_molsynthesis_positive():
     fname = os.path.join(data_folder, 'test_MolSynthesis-positive.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -144,7 +144,7 @@ def test_molsynthesis_positive():
 
 def test_expressioncontrol_negative():
     fname = os.path.join(data_folder, 'test_ExpressionControl_negative.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -159,7 +159,7 @@ def test_expressioncontrol_negative():
 
 def test_molsynthesis_negative():
     fname = os.path.join(data_folder, 'test_MolSynthesis-negative.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -174,7 +174,7 @@ def test_molsynthesis_negative():
 
 def test_binding():
     fname = os.path.join(data_folder, 'test_Binding.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -193,7 +193,7 @@ def test_binding():
 
 def test_phosphorylate():
     fname = os.path.join(data_folder, 'test_Phosphorylate.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -208,7 +208,7 @@ def test_phosphorylate():
 
 def test_dephosphorylate():
     fname = os.path.join(data_folder, 'test_Dephosphorylate.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -224,7 +224,7 @@ def test_dephosphorylate():
 
 def test_protein_mutation():
     fname = os.path.join(data_folder, 'test_Protein_Mutation.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -252,7 +252,7 @@ def test_protein_mutation():
 
 def test_protein_methsite():
     fname = os.path.join(data_folder, 'test_Protein_MethSite.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)
@@ -279,7 +279,7 @@ def test_protein_methsite():
 
 def test_protein_phosphosite():
     fname = os.path.join(data_folder, 'test_Protein_PhosphoSite.csxml')
-    mp = process_file(fname, None, None)
+    mp = process_file(fname, None)
 
     statements = mp.statements
     assert(len(statements) == 1)

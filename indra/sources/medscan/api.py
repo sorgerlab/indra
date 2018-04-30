@@ -15,26 +15,48 @@ import time
 
 logger = logging.getLogger('medscan')
 
-def process_directory_statements_sorted_by_pmid(directory_name,
-                                                medscan_resource_dir):
-    """Processes a directory filled with CSXML files. For each file, first
-    normalizes the character encoding to utf-8, and then processes into
-    INDRA statements. Returns a dictionary mapping pmids to a list of
-    statements corresponding to that pmid."""
+def process_directory_statements_sorted_by_pmid(directory_name):
+    """Processes a directory filled with CSXML files, first normalizing the
+    character encoding to utf-8, and then processing into INDRA statements
+    sorted by pmid.
+
+    Parameters
+    ----------
+    directory_name: str
+        The name of a directory filled with csxml files to process
+
+    Returns
+    -------
+    pmid_dict: dict
+        A dictionary mapping pmids to a list of statements corresponding to
+        that pmid
+    """
     s_dict = defaultdict(list)
-    mp = process_directory(directory_name, medscan_resource_dir)
+    mp = process_directory(directory_name)
 
     for statement in mp.statements:
         s_dict[statement.evidence[0].pmid].append(statement)
     return s_dict
 
-def process_directory(directory_name, medscan_resource_dir):
-    """Processes a directory filled with CSXML files. For each file, first
-    normalizes the character encoding to utf-8, and then processes into
-    INDRA statements."""
+def process_directory(directory_name):
+    """Processes a directory filled with CSXML files, first normalizing the
+    character encodings to utf-8, and then processing into a list of INDRA
+    statements.
+
+    Parameters
+    ----------
+    directory_name: str
+        The name of a directory filled with csxml files to process
+
+    Returns
+    -------
+    mp: indra.sources.medscan.processor.MedscanProcessor
+        A MedscanProcessor populated with INDRA statements extracted from the
+        csxml files
+    """
 
     # Parent Medscan processor containing extractions from all files
-    mp = MedscanProcessor(medscan_resource_dir)
+    mp = MedscanProcessor()
     mp.log_entities = defaultdict(int)
 
     # Create temporary directory into which to put the csxml files with
@@ -53,7 +75,7 @@ def process_directory(directory_name, medscan_resource_dir):
 
     for filename in files:
         fix_character_encoding(filename, tmp_file)
-        mp_file = process_file(tmp_file, medscan_resource_dir, None, False)
+        mp_file = process_file(tmp_file, None)
 
         mp.statements.extend(mp_file.statements)
         mp.num_entities += mp_file.num_entities
@@ -83,19 +105,24 @@ def process_directory(directory_name, medscan_resource_dir):
 
     return mp
 
-def process_file_sorted_by_pmid(file_name, medscan_resource_dir):
-    """Processed a file and returns a dictionary mapping pmids to a list of
-    statements corresponding to that pmid."""
+def process_file_sorted_by_pmid(file_name):
+    """Processes a file and returns a dictionary mapping pmids to a list of
+    statements corresponding to that pmid.
+
+    Parameters
+    ----------
+    file_name: str
+        A csxml file to process
+    """
     s_dict = defaultdict(list)
-    mp = process_file(file_name, medscan_resource_dir)
+    mp = process_file(file_name)
 
     for statement in mp.statements:
         s_dict[statement.evidence[0].pmid].append(statement)
     return s_dict
 
 
-def process_file(filename, medscan_resource_dir, num_documents=None,
-                 progress_updates=True):
+def process_file(filename, num_documents=None):
     """Process a CSXML file for its relevant information.
 
     Consider running the fix_csxml_character_encoding.py script in
@@ -129,25 +156,17 @@ def process_file(filename, medscan_resource_dir, num_documents=None,
     ----------
     filename : str
         The csxml file, containing Medscan XML, to process
-    medscan_resource_dir : str
-        A directory containing Unmapped Complexes.rnef and
-        Unmapped Functional classes.rnef which describe unmapped URNs, or None
-        if not available. These files are currently parsed but not used.
     num_documents : int
         The number of documents to process, or None to process all of the
         documents within the csxml file.
-    progress_updates: bool
-        Whether to print progress updates to the console
 
     Returns
     -------
     mp : MedscanProcessor
         A MedscanProcessor object containing extracted statements
     """
-    mp = MedscanProcessor(medscan_resource_dir)
+    mp = MedscanProcessor()
 
-    if progress_updates:
-        logger.info("Parsing %s to XML" % filename)
     with open(filename, 'rb') as f:
         mp.process_csxml_from_file_handle(f, num_documents)
     return mp
