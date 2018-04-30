@@ -267,9 +267,10 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
+        rel_fun = lambda a, b: isa_objects(a, b, self.relations_prefix)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_closure,
-                                                   isa_objects)
+                                                   rel_fun)
 
     def partof(self, ns1, id1, ns2, id2):
         """Return True if one entity is "partof" another.
@@ -291,9 +292,10 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
+        rel_fun = lambda a, b: partof_objects(a, b, self.relations_prefix)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.partof_closure,
-                                                   partof_objects)
+                                                   rel_fun)
 
     def isa_or_partof(self, ns1, id1, ns2, id2):
         """Return True if two entities are in an "isa" or "partof" relationship
@@ -315,9 +317,10 @@ class HierarchyManager(object):
             True if t1 has a "isa" or "partof" relationship with t2, either
             directly or through a series of intermediates; False otherwise.
         """
+        rel_fun = lambda a, b: isa_or_partof_objects(a, b, self.relations_prefix)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_or_partof_closure,
-                                                   isa_or_partof_objects)
+                                                   rel_fun)
 
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
