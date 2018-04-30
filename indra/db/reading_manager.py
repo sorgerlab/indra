@@ -82,7 +82,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 from indra.tools.reading.db_reading import read_db as rdb
-from indra.tools.reading.readers import get_reader
+from indra.tools.reading.readers import get_reader_class
 
 logger = logging.getLogger('reading_manager')
 THIS_DIR = path.dirname(path.abspath(__file__))
@@ -94,7 +94,7 @@ class ReadingUpdateError(Exception):
 
 class ReadingManager(object):
     def __init__(self, reader_name, buffer_days=1, project_name=None):
-        self.reader = get_reader(reader_name)
+        self.reader = get_reader_class(reader_name)
         if self.reader is None:
             raise ReadingUpdateError('Name of reader was not matched to an '
                                      'available reader.')
