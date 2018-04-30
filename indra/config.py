@@ -24,15 +24,14 @@ if not os.path.isfile(config_path):
     except Exception:
         logger.warning('Could not copy default config file.')
 
-# Load the configuration file into the config_file dictionary
-# A ConfigParser-style configuration file can have multiple sections
-# We ignore the section distinction  and load the key/value pairs from all
-# sectionts into a single key/value list.
-
-# Load key/value pairs from all sections into this dictionary
-
 
 def populate_config_dict(config_path):
+    """Load the configuration file into the config_file dictionary
+
+    A ConfigParser-style configuration file can have multiple sections, but
+    we ignore the section distinction  and load the key/value pairs from all
+    sections into a single key/value list.
+    """
     try:
         config_dict = {}
         parser = RawConfigParser()
@@ -58,13 +57,13 @@ def populate_config_dict(config_path):
 
 def _check_config_dict():
     # Check the keys against the default.
-    default_CONFIG_DICT = populate_config_dict(default_config_path)
-    for key in default_CONFIG_DICT.keys():
+    default_config_dict = populate_config_dict(default_config_path)
+    for key in default_config_dict.keys():
         if key not in CONFIG_DICT:
             logger.debug("Key %s found in default config but not in %s."
                          % (key, config_path))
     for key in CONFIG_DICT.keys():
-        if key not in default_CONFIG_DICT:
+        if key not in default_config_dict:
             logger.debug("Key %s found in %s but not in default config."
                          % (key, config_path))
 
@@ -74,7 +73,6 @@ if CONFIG_DICT is None:
     CONFIG_DICT = {}
 else:
     _check_config_dict()
-
 
 def get_config(key):
     """Returns the configuration value, first checking the environemnt
@@ -115,3 +113,4 @@ def has_config(key):
         Whether the configuration value is present
     """
     return get_config(key) is not None
+
