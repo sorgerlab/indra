@@ -746,12 +746,6 @@ def test_complexes_with_families():
     assert(isinstance(sp.statements[0], IncreaseAmount))
     obj = sp.statements[0].obj
 
-    print("obj.db_refs:", obj.db_refs)  # DEBUG
-    print('sp.statements[0]:', sp.statements[0])  # DEBUG
-    print('sp.statements[0].subj:', sp.statements[0].subj)  # DEBUG
-    print('sp.statements[0].obj:', sp.statements[0].obj)  # DEBUG
-
-    #import ipdb;ipdb.set_trace()
     assert(obj.db_refs['UP'] == 'O60271')
     assert(len(obj.bound_conditions) == 2)
     assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')

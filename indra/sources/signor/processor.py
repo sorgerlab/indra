@@ -171,9 +171,10 @@ class SignorProcessor(object):
 
             # Return the first agent with the remaining agents as a bound
             # condition
-            a = agents[0]
-            a.bound_conditions = [BoundCondition(a, True) for a in agents[1:]]
-            return a
+            agent = agents[0]
+            agent.bound_conditions = \
+                    [BoundCondition(a, True) for a in agents[1:]]
+            return agent
         else:
             gnd_type = _type_db_map[(ent_type, database)]
             if gnd_type == 'UP':
@@ -189,7 +190,6 @@ class SignorProcessor(object):
                 key = (database, id)
                 # Use SIGNOR name unless we have a mapping in FamPlex
                 name = ent_name
-                print('Agent name set to', name)  # DEBUG
                 famplex_id = famplex_map.get(key)
                 if famplex_id is None:
                     logger.info('Could not find %s in FamPlex map' %
@@ -197,7 +197,6 @@ class SignorProcessor(object):
                 else:
                     db_refs['FPLX'] = famplex_id
                     name = famplex_id
-                    print('Agent name reset set to', name)  # DEBUG
             # Other possible groundings are PUBCHEM, SIGNOR, etc.
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
@@ -242,12 +241,10 @@ class SignorProcessor(object):
         for c in components:
             db_refs = {}
             name = uniprot_client.get_gene_name(c)
-            print('_get_complex_agents: uniprot_client.get_gene_name(',c,') is:', name)
-            if not name:
+            if name is None:
                 db_refs['SIGNOR'] = c
             else:
                 db_refs['UP'] = c
-                print('\tdb_refs["UP"] =', c)
                 hgnc_id = hgnc_client.get_hgnc_id(name)
                 if hgnc_id:
                     db_refs['HGNC'] = hgnc_id
@@ -255,12 +252,20 @@ class SignorProcessor(object):
             famplex_key = ('SIGNOR', c)
             if famplex_key in famplex_map:
                 db_refs['FPLX'] = famplex_map[famplex_key]
+                if not name:
+                    name = db_refs['FPLX']  # Set agent name to Famplex name if
+                                            # the Uniprot name is not available
             elif not name:
                 # We neither have a Uniprot nor Famplex grounding
                 logger.info('Have neither a Uniprot nor Famplex grounding ' + \
                             'for ' + c)
+                if not name:
+                    name = db_refs['SIGNOR']  # Set the agent name to the
+                                              # Signor name if neither the
+                                              # Uniprot nor Famplex names are
+                                              # available
+            assert(name is not None)
             agents.append(Agent(name, db_refs=db_refs))
-        print('Agents list:', agents)
         return agents
 
 
