@@ -1,7 +1,5 @@
-import re
 import sys
 import logging
-import json
 
 from flask import Flask, request, abort, jsonify, Response
 from flask_compress import Compress
@@ -16,6 +14,10 @@ app = Flask(__name__)
 Compress(app)
 
 
+class DbAPIError(Exception):
+    pass
+
+
 def __process_agent(agent_param):
     """Get the agent id and namespace from an input param."""
     if not agent_param.endswith('TEXT'):
@@ -25,12 +27,17 @@ def __process_agent(agent_param):
         elif len(param_parts) == 1:
             ag = agent_param
             ns = 'HGNC-SYMBOL'
+        else:
+            raise DbAPIError('Unrecognized agent spec: \"%s\"' % agent_param)
     else:
         ag = agent_param[:-5]
         ns = 'TEXT'
 
     if ns == 'HGNC-SYMBOL':
-        ag = hgnc_client.get_hgnc_id(ag)
+        original_ag = ag
+        ag = hgnc_client.get_hgnc_id(original_ag)
+        if ag is None and 'None' not in agent_param:
+            raise DbAPIError('Invalid agent name: \"%s\"' % original_ag)
         ns = 'HGNC'
 
     return ag, ns
@@ -50,12 +57,14 @@ def welcome():
                     "jsons."
                     "\n")
 
+
 @app.route('/statements', methods=['GET'])
 def get_statements_query_format():
     return Response('To get a list of statements, include a query after '
                     '/statements/ with the following keys:\n\n'
                     'type : the type of interaction (e.g. Phosphorylation)\n'
-                    'namespace : select the namespace in which agents are identified.\n'
+                    'namespace : select the namespace in which agents are '
+                    'identified.\n'
                     '[subject, object, agent] : the agents, indicated by '
                     'their role. Note that at least one agent is needed in '
                     'a query. If agent is use, that agent will be matched to '
@@ -66,16 +75,23 @@ def get_statements_query_format():
                     'and n-ary statements should have agents specified by '
                     '\"other\".')
 
+
 @app.route('/statements/', methods=['GET'])
-def get_statments():
+def get_statements():
     """Get some statements constrained by query."""
     logger.info("Got query for statements!")
     query_dict = request.args.copy()
 
     logger.info("Getting query details.")
-    free_agents = [__process_agent(ag) for ag in query_dict.poplist('agent')]
-    agents = {role: __process_agent(query_dict.pop(role, None)) for role
-              in ['subject', 'object'] if query_dict.get(role) is not None}
+    try:
+        free_agents = [__process_agent(ag)
+                       for ag in query_dict.poplist('agent')]
+        agents = {role: __process_agent(query_dict.pop(role, None)) for role
+                  in ['subject', 'object'] if query_dict.get(role) is not None}
+    except DbAPIError as e:
+        logger.exception(e)
+        abort(Response('Failed to make agents from names: %s\n' % str(e), 400))
+        return
     act_uncamelled = query_dict.pop('type', None)
     if act_uncamelled is not None:
         act = make_statement_camel(act_uncamelled)
@@ -85,6 +101,7 @@ def get_statments():
         abort(Response("Unrecognized query options; %s." %
                        list(query_dict.keys()),
                        400))
+        return
 
     if not any(agents.values()) and not free_agents:
         logger.error("No agents.")
@@ -132,6 +149,7 @@ def get_statments():
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
     return resp
+
 
 if __name__ == '__main__':
     app.run()
