@@ -15,21 +15,14 @@ config_path = os.path.join(config_dir, 'config.ini')
 default_config_path = os.path.join(os.path.dirname(__file__),
                                    'resources/default_config.ini')
 if not os.path.isfile(config_path):
-    config_root = os.path.expanduser('~/.config')
-    if not os.path.isdir(config_root):
-        try:
-            os.mkdir(config_dir)
-        except Exception:
-            logger.warning('Could not make configuration folder.')
-    if os.path.isdir(config_root):
-        try:
-            os.mkdir(config_dir)
-        except Exception:
-            logger.warning(config_dir + ' already exists')
-        try:
-            shutil.copyfile(default_config_path, config_path)
-        except Exception:
-            logger.warning('Could not copy default config file.')
+    try:
+        os.mkdirs(config_dir)
+    except Exception:
+        logger.warning(config_dir + ' already exists')
+    try:
+        shutil.copyfile(default_config_path, config_path)
+    except Exception:
+        logger.warning('Could not copy default config file.')
 
 
 def populate_config_dict(config_path):
