@@ -154,7 +154,7 @@ class SignorProcessor(object):
                                   key=lambda x: x[1], reverse=True)
 
         # Add a Complex statement for each Signor complex
-        for complex_id in self.complex_map.keys():
+        for complex_id in sorted(self.complex_map.keys()):
             agents = self._get_complex_agents(complex_id)
             ev = Evidence(source_api='SIGNOR', source_id=complex_id,
                           text='Inferred from SIGNOR complex %s' % complex_id)
@@ -171,9 +171,10 @@ class SignorProcessor(object):
 
             # Return the first agent with the remaining agents as a bound
             # condition
-            a = agents[0]
-            a.bound_conditions = [BoundCondition(a, True) for a in agents[1:]]
-            return a
+            agent = agents[0]
+            agent.bound_conditions = \
+                    [BoundCondition(a, True) for a in agents[1:]]
+            return agent
         else:
             gnd_type = _type_db_map[(ent_type, database)]
             if gnd_type == 'UP':
@@ -240,7 +241,7 @@ class SignorProcessor(object):
         for c in components:
             db_refs = {}
             name = uniprot_client.get_gene_name(c)
-            if not name:
+            if name is None:
                 db_refs['SIGNOR'] = c
             else:
                 db_refs['UP'] = c
@@ -251,10 +252,19 @@ class SignorProcessor(object):
             famplex_key = ('SIGNOR', c)
             if famplex_key in famplex_map:
                 db_refs['FPLX'] = famplex_map[famplex_key]
+                if not name:
+                    name = db_refs['FPLX']  # Set agent name to Famplex name if
+                                            # the Uniprot name is not available
             elif not name:
                 # We neither have a Uniprot nor Famplex grounding
                 logger.info('Have neither a Uniprot nor Famplex grounding ' + \
                             'for ' + c)
+                if not name:
+                    name = db_refs['SIGNOR']  # Set the agent name to the
+                                              # Signor name if neither the
+                                              # Uniprot nor Famplex names are
+                                              # available
+            assert(name is not None)
             agents.append(Agent(name, db_refs=db_refs))
         return agents
 

@@ -741,7 +741,6 @@ def test_complexes_with_families():
     sp = SignorProcessor([test_row], complex_map)
     assert isinstance(sp.statements, list)
     assert len(sp.statements) == 2
-    #import ipdb;ipdb.set_trace()
 
     assert(isinstance(sp.statements[0], IncreaseAmount))
     obj = sp.statements[0].obj
