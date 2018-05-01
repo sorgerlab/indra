@@ -154,7 +154,7 @@ class SignorProcessor(object):
                                   key=lambda x: x[1], reverse=True)
 
         # Add a Complex statement for each Signor complex
-        for complex_id in self.complex_map.keys():
+        for complex_id in sorted(self.complex_map.keys()):
             agents = self._get_complex_agents(complex_id)
             ev = Evidence(source_api='SIGNOR', source_id=complex_id,
                           text='Inferred from SIGNOR complex %s' % complex_id)

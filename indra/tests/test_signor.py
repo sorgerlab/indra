@@ -741,11 +741,9 @@ def test_complexes_with_families():
     sp = SignorProcessor([test_row], complex_map)
     assert isinstance(sp.statements, list)
     assert len(sp.statements) == 2
-    #import ipdb;ipdb.set_trace()
 
     assert(isinstance(sp.statements[0], IncreaseAmount))
     obj = sp.statements[0].obj
-
     assert(obj.db_refs['UP'] == 'O60271')
     assert(len(obj.bound_conditions) == 2)
     assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')
