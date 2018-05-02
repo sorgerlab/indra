@@ -65,8 +65,8 @@ ontological information (e.g. UniProt, HGNC), and other resources.
 
 ## Citation
 
-[From word models to executable models of signal transduction
-using automated assembly](http://msb.embopress.org/content/13/11/954),
+[From word models to executable models of signaling networks using automated
+assembly](http://msb.embopress.org/content/13/11/954),
 Molecular Systems Biology (2017)
 
 ## Documentation
