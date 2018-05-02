@@ -251,13 +251,16 @@ def _get_node_label(agent):
     # If the agent doesn't have grounding in a known
     # database, try to use the original text as a node name.
     # otherwise return the agent name.
-    if not (agent.db_refs.get('UP') or
-            agent.db_refs.get('HGNC') or
-            agent.db_refs.get('CHEBI')):
-        if agent.db_refs.get('FPLX'):
+    if ('UP' not in agent.db_refs and
+        'HGNC' not in agent.db_refs and
+        'CHEBI' not in agent.db_refs):
+        if 'FPLX' in agent.db_refs:
             name_for_node = agent.db_refs['FPLX']
             return name_for_node
-        if agent.db_refs.get('TEXT'):
+        elif 'BE' in agent.db_refs:
+            name_for_node = agent.db_refs['BE']
+            return name_for_node
+        elif 'TEXT' in agent.db_refs:
             name_for_node = agent.db_refs['TEXT']
             return name_for_node
     name_for_node = agent.name
