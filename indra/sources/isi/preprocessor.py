@@ -2,6 +2,7 @@ import logging
 import nltk
 import os
 import zlib
+import codecs
 
 logger = logging.getLogger('isi')
 
@@ -56,7 +57,7 @@ class IsiPreprocessor(object):
             metadata about the source (annotations with the key "interaction"
             will be overridden)
         """
-        output_file = str(self.next_file_id) + '.txt'
+        output_file = 'file' + str(self.next_file_id) + '.txt'
         output_file = os.path.join(self.preprocessed_dir, output_file)
 
         # Tokenize sentence
@@ -64,7 +65,7 @@ class IsiPreprocessor(object):
 
         # Write sentences to text file
         first_sentence = True
-        with open(output_file, 'w') as f:
+        with codecs.open(output_file, 'w', encoding='utf-8') as f:
             for sentence in sentences:
                 if not first_sentence:
                     f.write('\n')
@@ -94,7 +95,7 @@ class IsiPreprocessor(object):
             metadata about the source (annotations with the key "interaction"
             will be overridden)
         """
-        with open(filename, 'r') as f:
+        with codecs.open(filename, 'r', encoding='utf-8') as f:
             content = f.read()
             self.preprocess_plain_text_string(content, pmid,
                                               extra_annotations)
