@@ -43,7 +43,7 @@ class EidosJsonLdProcessor(object):
         # The first state corresponds to increase/decrease
         def get_polarity(x):
             # x is either subj or obj
-            if 'states' in x.keys():
+            if 'states' in x:
                 if x['states'][0]['type'] == 'DEC':
                     return -1
                 elif x['states'][0]['type'] == 'INC':
@@ -55,8 +55,8 @@ class EidosJsonLdProcessor(object):
 
         def get_adjectives(x):
             # x is either subj or obj
-            if 'states' in x.keys():
-                if 'modifiers' in x['states'][0].keys():
+            if 'states' in x:
+                if 'modifiers' in x['states'][0]:
                     return [mod['text'] for mod in
                             x['states'][0]['modifiers']]
                 else:
