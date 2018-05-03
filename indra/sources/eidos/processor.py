@@ -43,7 +43,7 @@ class EidosJsonLdProcessor(object):
         # The first state corresponds to increase/decrease
         def get_polarity(x):
             # x is either subj or obj
-            if 'states' in x.keys():
+            if 'states' in x:
                 if x['states'][0]['type'] == 'DEC':
                     return -1
                 elif x['states'][0]['type'] == 'INC':
@@ -55,8 +55,8 @@ class EidosJsonLdProcessor(object):
 
         def get_adjectives(x):
             # x is either subj or obj
-            if 'states' in x.keys():
-                if 'modifiers' in x['states'][0].keys():
+            if 'states' in x:
+                if 'modifiers' in x['states'][0]:
                     return [mod['text'] for mod in
                             x['states'][0]['modifiers']]
                 else:
@@ -66,13 +66,18 @@ class EidosJsonLdProcessor(object):
 
         def _get_eidos_groundings(entity):
             """Return Eidos groundings are a list of tuples with scores."""
-            grounding = entity.get('grounding')
+            grounding_tag = entity.get('groundings')
             # If no grounding at all, just return None
-            if grounding is None:
+            if not grounding_tag:
                 return None
+            # The grounding dict can still be empty
+            grounding_dict = grounding_tag[0]
+            if not grounding_dict or 'values' not in grounding_dict:
+                return None
+            grounding_values = grounding_dict.get('values', [])
             # Otherwise get all the groundings that have non-zero score
             grounding_tuples = []
-            for g in grounding:
+            for g in grounding_values:
                 if g['value'] > 0:
                     if g['ontologyConcept'].startswith('/'):
                         concept = g['ontologyConcept'][1:]
