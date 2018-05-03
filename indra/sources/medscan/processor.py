@@ -19,6 +19,29 @@ MedscanProperty = collections.namedtuple('MedscanProperty',
                                          ['type', 'name', 'urn'])
 
 
+def normalize_medscan_name(name):
+    """Removes the "complex" and "complex complex" suffixes from a medscan
+    agent name so that it better corresponds with the grounding map.
+
+    Parameters
+    ----------
+    name: str
+        The Medscan agent name
+
+    Returns
+    -------
+    norm_name: str
+        The Medscan agent name with the "complex" and "complex complex"
+        suffixes removed.
+    """
+    suffix = ' complex'
+
+    for i in range(2):
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+    return name
+
+
 class MedscanRelation(object):
     """A structure representing the information contained in a Medscan
     SVO xml element as well as associated entities and properties.
@@ -557,7 +580,8 @@ class MedscanProcessor(object):
             # the words with the given entity id tagged in the sentence.
             entity_text = tags[entity_id]
             db_refs = {'TEXT': entity_text}
-            return Agent(db_refs['TEXT'], db_refs=db_refs)
+            return Agent(normalize_medscan_name(db_refs['TEXT']),
+                         db_refs=db_refs)
         else:
             entity = relation.entities[entity_id]
 
@@ -607,8 +631,8 @@ class MedscanProcessor(object):
                     else:
                         try:
                             cond = MutCondition(pos, r_old, r_new)
-                            return Agent(agent_name, db_refs=db_refs,
-                                         mutations=[cond])
+                            return Agent(normalize_medscan_name(agent_name),
+                                         db_refs=db_refs, mutations=[cond])
                         except BaseException:
                             logger.warning('Could not parse mutation ' +
                                            'string: ' + mutation.name)
@@ -620,8 +644,8 @@ class MedscanProcessor(object):
                     if res is None:
                         return None
                     cond = ModCondition('methylation', res, pos)
-                    return Agent(agent_name, db_refs=db_refs,
-                                 mods=[cond])
+                    return Agent(normalize_medscan_name(agent_name),
+                                 db_refs=db_refs, mods=[cond])
 
                     # Example:
                     # MedscanEntity(name='R457',
@@ -634,8 +658,8 @@ class MedscanProcessor(object):
                     if res is None:
                         return None
                     cond = ModCondition('phosphorylation', res, pos)
-                    return Agent(agent_name, db_refs=db_refs,
-                                 mods=[cond])
+                    return Agent(normalize_medscan_name(agent_name),
+                                 db_refs=db_refs, mods=[cond])
 
                     # Example:
                     # MedscanEntity(name='S455',
@@ -667,4 +691,5 @@ class MedscanProcessor(object):
                 else:
                     agent_name = hgnc_name
 
-                return Agent(agent_name, db_refs=db_refs)
+                return Agent(normalize_medscan_name(agent_name),
+                             db_refs=db_refs)
