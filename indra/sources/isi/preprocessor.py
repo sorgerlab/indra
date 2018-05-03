@@ -57,7 +57,7 @@ class IsiPreprocessor(object):
             metadata about the source (annotations with the key "interaction"
             will be overridden)
         """
-        output_file = 'file' + str(self.next_file_id) + '.txt'
+        output_file = str(self.next_file_id) + '.txt'
         output_file = os.path.join(self.preprocessed_dir, output_file)
 
         # Tokenize sentence
@@ -67,9 +67,11 @@ class IsiPreprocessor(object):
         first_sentence = True
         with codecs.open(output_file, 'w', encoding='utf-8') as f:
             for sentence in sentences:
+                sentence_latin1 = sentence.encode('latin-1', errors='ignore')
+                sentence_latin1_chars = sentence_latin1.decode('latin-1')
                 if not first_sentence:
                     f.write('\n')
-                f.write(sentence.rstrip())
+                f.write(sentence_latin1_chars.rstrip())
                 first_sentence = False
 
         # Store annotations

@@ -12,10 +12,13 @@ def abstracts_runtime():
 
     # abstract_counts = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # abstract_counts = [20, 40, 60, 80, 100]
-    # abstract_counts = [100, 1000, None]
-    abstract_counts = [20]
+    # abstract_counts = [20, 50, 100, 1000, None]
+    abstract_counts = [1000]
     times = []
     for count in abstract_counts:
+        print('==============================================================')
+        print('Count:', count)
+        print('==============================================================')
         with open('isi_experiment_log.txt', 'a') as f:
             f.write('Reading and processing ' + str(count) +  'abstracts\n')
         start_time = time.time()
@@ -24,7 +27,7 @@ def abstracts_runtime():
             abstract_subset = all_abstracts
         else:
             abstract_subset = all_abstracts[:count]
-        assert(len(abstract_subset) == count)
+            assert(len(abstract_subset) == count)
 
         preprocessed_dir = 'preprocessed_' + str(count)
         os.mkdir(preprocessed_dir)
@@ -34,6 +37,7 @@ def abstracts_runtime():
         output_dir = 'output_' + str(count)
         os.mkdir(output_dir)
         ip = process_preprocessed(preprocessor, output_dir)
+        print('Statements:', ip.statements)
 
         output_pickle = 'isi_processed_abstracts_' + str(count) + '.pkl'
         pickle.dump(ip, open(output_pickle, 'wb'))
