@@ -1,11 +1,180 @@
 import rdflib
 import logging
+import objectpath
 import collections
 from indra.statements import Concept, Influence, Evidence
 
 
 logger = logging.getLogger('bbn')
 
+
+class BBNJsonLdProcessor(object):
+    """This processor extracts INDRA Statements from BBN JSON-LD output.
+
+    Parameters
+    ----------
+    json_dict : dict
+        A JSON dictionary containing the BBN extractions in JSON-LD format.
+
+    Attributes
+    ----------
+    tree : objectpath.Tree
+        The objectpath Tree object representing the extractions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    """
+    def __init__(self, json_dict):
+        self.tree = objectpath.Tree(json_dict)
+        self.statements = []
+        self.sentence_dict = {}
+        self.entity_dict = {}
+
+    def get_events(self):
+        events = \
+            list(self.tree.execute("$.extractions[(@.@type is 'Event')]"))
+        if not events:
+            return
+        self.event_dict = {ev['@id']: ev for ev in events}
+
+        # TODO: are there other event types we can use?
+        extract_types = ['Cause-Effect']
+        # Restrict to known event types
+        events = [e for e in events if e.get('type') in extract_types]
+        logger.info('%d events of types %s found' % (len(events),
+                                                     ', '.join(extract_types)))
+
+        # Build a dictionary of entities and sentences by ID for convenient
+        # lookup
+        entities = \
+            self.tree.execute("$.extractions[(@.@type is 'Entity')]")
+        self.entity_dict = {entity['@id']: entity for entity in entities}
+
+
+        sentences = \
+            self.tree.execute("$.extractions[(@.@type is 'Sentence')]")
+        self.sentence_dict = {sent['@id']: sent for sent in sentences}
+
+        # The first state corresponds to increase/decrease
+        def get_polarity(x):
+            # x is either subj or obj
+            if 'states' in x:
+                if x['states'][0]['type'] == 'DEC':
+                    return -1
+                elif x['states'][0]['type'] == 'INC':
+                    return 1
+                else:
+                    return None
+            else:
+                return None
+
+        def get_adjectives(x):
+            # x is either subj or obj
+            if 'states' in x:
+                if 'modifiers' in x['states'][0]:
+                    return [mod['text'] for mod in
+                            x['states'][0]['modifiers']]
+                else:
+                    return []
+            else:
+                return []
+
+        def _get_bbn_grounding(entity):
+            """Return BBN grounding."""
+            grounding_tag = entity.get('groundings')
+            # If no grounding at all, just return None
+            if not grounding_tag:
+                return None
+            # The grounding dict can still be empty
+            grounding_dict = grounding_tag[0]
+            if not grounding_dict or 'values' not in grounding_dict:
+                return None
+            grounding_values = grounding_dict.get('values', [])
+            # Otherwise get all the groundings that have non-zero score
+            grounding_tuples = []
+            for g in grounding_values:
+                if g['value'] > 0:
+                    if g['ontologyConcept'].startswith('/'):
+                        concept = g['ontologyConcept'][1:]
+                    else:
+                        concept = g['ontologyConcept']
+                    grounding_tuples.append((concept, g['value']))
+            return grounding_tuples
+
+        def _make_concept(entity):
+            """Return Concept from an BBN entity."""
+            # Use the canonical name as the name of the Concept
+            name = entity['canonicalName']
+            # Save raw text and BBN scored groundings as db_refs
+            db_refs = {'TEXT': entity['text'],
+                       'BBN': _get_bbn_grounding(entity)}
+            concept = Concept(name, db_refs=db_refs)
+            return concept
+
+        for event in events:
+            args = event.get('arguments', {})
+            subj_tag = [arg for arg in args if arg['type'] == 'has_cause']
+            if subj_tag:
+                subj_id = subj_tag[0]['value']['@id']
+            else:
+                subj_id = None
+            obj_tag = [arg for arg in args if arg['type'] == 'has_effect']
+            if obj_tag:
+                obj_id = obj_tag[0]['value']['@id']
+            else:
+                obj_id = None
+
+            # Skip event if either argument is missing
+            if not subj_id or not obj_id:
+                continue
+
+            subj = _make_concept(self.event_dict[subj_id])
+            obj = _make_concept(self.event_dict[obj_id])
+
+            subj_delta = {'adjectives': get_adjectives(subj),
+                          'polarity': get_polarity(subj)}
+            obj_delta = {'adjectives': get_adjectives(obj),
+                         'polarity': get_polarity(obj)}
+
+            evidence = self._get_evidence(event)
+
+            st = Influence(_make_concept(subj), _make_concept(obj),
+                           subj_delta, obj_delta, evidence=evidence)
+
+            self.statements.append(st)
+
+    def _get_evidence(self, event):
+        """Return the Evidence object for the INDRA Statment."""
+        provenance = event.get('provenance')
+
+        # First try looking up the full sentence through provenance
+        text = None
+        if provenance:
+            sentence_tag = provenance[0].get('sentence')
+            if sentence_tag and '@id' in sentence_tag:
+                sentence_id = sentence_tag['@id']
+                sentence = self.sentence_dict.get(sentence_id)
+                if sentence is not None:
+                    text = self._sanitize(sentence)
+        # If that fails, we can still get the text of the event
+        if text is None:
+            text = self._sanitize(event.get('text'))
+
+        annotations = {
+                'found_by'   : event.get('rule'),
+                'provenance' : provenance,
+                }
+        ev = Evidence(source_api='bbn', text=text, annotations=annotations)
+        return [ev]
+
+    @staticmethod
+    def _sanitize(text):
+        """Return sanitized BBN text field for human readability."""
+        d = {'-LRB-': '(', '-RRB-': ')'}
+        return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+
+
+
+# OLD BBN PROCESSOR
 
 prefixes = """
     PREFIX causal: <http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#>
