@@ -4,7 +4,8 @@ import logging
 from flask import Flask, request, abort, jsonify, Response
 from flask_compress import Compress
 
-from indra.db.util import get_statements_by_gene_role_type
+from indra.db.util import get_statements_by_gene_role_type, \
+    get_statements_by_paper
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 
@@ -148,6 +149,27 @@ def get_statements():
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
+    return resp
+
+
+@app.route('/papers/', methods=['GET'])
+def get_paper_statements():
+    """Get and preassemble statements from a paper given by pmid."""
+    logger.info("Got query for statements from a paper!")
+    query_dict = request.args.copy()
+    id_val = query_dict.get('id')
+    if id_val is None:
+        logger.error("No id provided!")
+        abort(Response("No id in request!", 400))
+    id_type = query_dict.get('type', 'pmid')
+    stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
+    if stmts is None:
+        msg = "Invalid id %s=%s!" % (id_type, id)
+        logger.error(msg)
+        abort(Response(msg, 400))
+
+    resp = jsonify([stmt.to_json() for stmt in stmts])
+    logger.info("Exiting with %d statements." % len(stmts))
     return resp
 
 

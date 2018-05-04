@@ -23,9 +23,9 @@ class DbApiTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def __time_get_query(self, query_str):
+    def __time_get_query(self, end_point, query_str):
         start_time = datetime.now()
-        resp = self.app.get('/statements/?%s' % query_str)
+        resp = self.app.get('/%s/?%s' % (end_point, query_str))
         t_delta = datetime.now() - start_time
         dt = t_delta.seconds + t_delta.microseconds/1e6
         print(dt)
@@ -34,12 +34,12 @@ class DbApiTestCase(unittest.TestCase):
         print("Raw size: %f, Compressed size: %f." % (raw_size/1e6, size/1e6))
         return resp, dt, size
 
-    def __check_good_query(self, *args, **kwargs):
+    def __check_good_statement_query(self, *args, **kwargs):
         check_stmts = kwargs.pop('check_stmts', True)
         time_limit = kwargs.pop('time_limit', TIMELIMIT)
         query_str = '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                              + list(args))
-        resp, dt, size = self.__time_get_query(query_str)
+        resp, dt, size = self.__time_get_query('statements', query_str)
         assert resp.status_code == 200, \
             ('Got error code %d: \"%s\".'
              % (resp.status_code, resp.data.decode()))
@@ -66,7 +66,7 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_blank_response(self):
         """Test the response to an empty request."""
-        resp, dt, size = self.__time_get_query('')
+        resp, dt, size = self.__time_get_query('statements', '')
         assert resp.status_code == 400, \
             ('Got unexpected response with code %d: %s.'
              % (resp.status_code, resp.data.decode()))
@@ -79,50 +79,56 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_specific_query(self):
         """Test whether we can get a "fully" specified statement."""
-        self.__check_good_query(object='MAP2K1', subject='MAPK1',
-                                type='Phosphorylation')
+        self.__check_good_statement_query(object='MAP2K1', subject='MAPK1',
+                                          type='Phosphorylation')
 
     def test_query_with_two_agents(self):
         """Test a query were the roles of the agents are not given."""
-        self.__check_good_query('agent=MAP2K1', 'agent=MAPK1',
-                                type='Phosphorylation')
+        self.__check_good_statement_query('agent=MAP2K1', 'agent=MAPK1',
+                                          type='Phosphorylation')
 
     def test_query_with_other(self):
         """Test that we can get an ActiveForm."""
-        self.__check_good_query(agent='MAPK1', type='ActiveForm')
+        self.__check_good_statement_query(agent='MAPK1', type='ActiveForm')
 
     def test_bad_camel(self):
         """Test that a type can be poorly formatted and resolve correctly."""
-        self.__check_good_query(agent='MAPK1', type='acTivefOrm')
+        self.__check_good_statement_query(agent='MAPK1', type='acTivefOrm')
 
     def test_big_query(self):
         """Load-test with several big queries."""
-        self.__check_good_query(agent='AKT1', check_stmts=False)
-        self.__check_good_query(agent='MAPK1', check_stmts=False)
-        self.__check_good_query(agent='TP53', check_stmts=False)
+        self.__check_good_statement_query(agent='AKT1', check_stmts=False)
+        self.__check_good_statement_query(agent='MAPK1', check_stmts=False)
+        self.__check_good_statement_query(agent='TP53', check_stmts=False)
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
-        self.__check_good_query(subject='6871@HGNC', object='MAP2K1',
-                                type='Phosphorylation')
+        self.__check_good_statement_query(subject='6871@HGNC', object='MAP2K1',
+                                          type='Phosphorylation')
 
     def test_query_with_text_ns(self):
         """Test specifying TEXT as a namespace."""
-        self.__check_good_query(subject='ERK@TEXT', type='Phosphorylation')
+        self.__check_good_statement_query(subject='ERK@TEXT', type='Phosphorylation')
 
     def test_query_with_hgnc_symbol_ns(self):
         """Test specifying HGNC-SYMBOL as a namespace."""
-        self.__check_good_query(subject='MAPK1@HGNC-SYMBOL',
-                                type='Phosphorylation')
+        self.__check_good_statement_query(subject='MAPK1@HGNC-SYMBOL',
+                                          type='Phosphorylation')
 
     def test_query_with_chebi_ns(self):
         """Test specifying CHEBI as a namespace."""
-        self.__check_good_query(subject='CHEBI:6801@CHEBI')
+        self.__check_good_statement_query(subject='CHEBI:6801@CHEBI')
 
     def test_query_with_bad_hgnc(self):
-        resp, dt, size = self.__time_get_query('subject=MEK&object=ERK'
-                                               '&type=Phosphorylation')
+        resp, dt, size = self.__time_get_query('statements',
+                                               ('subject=MEK&object=ERK'
+                                                '&type=Phosphorylation'))
         assert resp.status_code != 200, "Got good status code."
+        assert dt <= TIMELIMIT, dt
+        assert size <= SIZELIMIT, size
+
+    def test_basic_paper_query(self):
+        resp, dt, size = self.__time_get_query('papers', '8436299&id_type=pmid')
         assert dt <= TIMELIMIT, dt
         assert size <= SIZELIMIT, size
 
