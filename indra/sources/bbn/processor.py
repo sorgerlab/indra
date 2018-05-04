@@ -1,3 +1,4 @@
+import re
 import rdflib
 import logging
 import objectpath
@@ -103,7 +104,7 @@ class BBNJsonLdProcessor(object):
         def _make_concept(entity):
             """Return Concept from an BBN entity."""
             # Use the canonical name as the name of the Concept
-            name = entity['canonicalName']
+            name = self._sanitize(entity['canonicalName'])
             # Save raw text and BBN scored groundings as db_refs
             db_refs = {'TEXT': entity['text'],
                        'BBN': _get_bbn_grounding(entity)}
@@ -127,8 +128,11 @@ class BBNJsonLdProcessor(object):
             if not subj_id or not obj_id:
                 continue
 
-            subj = _make_concept(self.event_dict[subj_id])
-            obj = _make_concept(self.event_dict[obj_id])
+            subj = self.event_dict[subj_id]
+            obj = self.event_dict[obj_id]
+
+            subj_concept = _make_concept(subj)
+            obj_concept = _make_concept(obj)
 
             subj_delta = {'adjectives': get_adjectives(subj),
                           'polarity': get_polarity(subj)}
@@ -137,7 +141,7 @@ class BBNJsonLdProcessor(object):
 
             evidence = self._get_evidence(event)
 
-            st = Influence(_make_concept(subj), _make_concept(obj),
+            st = Influence(subj_concept, obj_concept,
                            subj_delta, obj_delta, evidence=evidence)
 
             self.statements.append(st)
@@ -169,8 +173,11 @@ class BBNJsonLdProcessor(object):
     @staticmethod
     def _sanitize(text):
         """Return sanitized BBN text field for human readability."""
-        d = {'-LRB-': '(', '-RRB-': ')'}
-        return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+        # TODO: any cleanup needed here?
+        if text is None:
+            return None
+        text = text.replace('\n', ' ')
+        return text
 
 
 
