@@ -18,7 +18,7 @@ except Exception as e:
     eidos_reader = None
 
 
-def process_text(text, out_format='json', save_json='eidos_output.json'):
+def process_text(text, out_format='json_ld', save_json='eidos_output.json'):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -31,7 +31,7 @@ def process_text(text, out_format='json', save_json='eidos_output.json'):
         The text to be processed.
     out_format : str
         The type of Eidos output to read into and process. Can be one of
-        "json" or "json_ld". Default: "json"
+        "json" or "json_ld". Default: "json_ld"
     save_json : Optional[str]
         The name of a file in which to dump the JSON output of Eidos.
 
