@@ -31,6 +31,14 @@ class BBNJsonLdProcessor(object):
         self.entity_dict = {}
         self.event_dict = {}
 
+    def get_sentences(self):
+        """Populate the sentences attribute with a dict keyed by document id."""
+        documents = self.tree.execute("$.documents")
+        for doc in documents:
+            self.sentence_dict[doc['@id']] = {s['@id']: s['text']
+                                              for s in doc.get('sentences', [])}
+        return
+
     def get_events(self):
         events = \
             list(self.tree.execute("$.extractions[(@.@type is 'Event')]"))
@@ -51,9 +59,7 @@ class BBNJsonLdProcessor(object):
             self.tree.execute("$.extractions[(@.@type is 'Entity')]")
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
-        sentences = \
-            self.tree.execute("$.extractions[(@.@type is 'Sentence')]")
-        self.sentence_dict = {sent['@id']: sent for sent in sentences}
+        self.get_sentences()
 
         # The first state corresponds to increase/decrease
         def get_polarity(event):
@@ -64,38 +70,17 @@ class BBNJsonLdProcessor(object):
                         return pol_map[state_property['text']]
             return None
 
-        def get_adjectives(x):
-            # x is either subj or obj
-            if 'states' in x:
-                if 'modifiers' in x['states'][0]:
-                    return [mod['text'] for mod in
-                            x['states'][0]['modifiers']]
-                else:
-                    return []
-            else:
-                return []
+        def get_adjectives(event):
+            ret_list = []
+            if 'states' in event:
+                for state_property in event['states']:
+                    if state_property['type'] != 'polarity':
+                        ret_list.append(state_property['text'])
+            return ret_list
 
         def _get_bbn_grounding(entity):
             """Return BBN grounding."""
-            grounding_tag = entity.get('groundings')
-            # If no grounding at all, just return None
-            if not grounding_tag:
-                return None
-            # The grounding dict can still be empty
-            grounding_dict = grounding_tag[0]
-            if not grounding_dict or 'values' not in grounding_dict:
-                return None
-            grounding_values = grounding_dict.get('values', [])
-            # Otherwise get all the groundings that have non-zero score
-            grounding_tuples = []
-            for g in grounding_values:
-                if g['value'] > 0:
-                    if g['ontologyConcept'].startswith('/'):
-                        concept = g['ontologyConcept'][1:]
-                    else:
-                        concept = g['ontologyConcept']
-                    grounding_tuples.append((concept, g['value']))
-            return grounding_tuples
+            return entity['type']
 
         def _make_concept(entity):
             """Return Concept from an BBN entity."""
@@ -130,34 +115,36 @@ class BBNJsonLdProcessor(object):
             subj_concept = _make_concept(subj)
             obj_concept = _make_concept(obj)
 
-            subj_delta = {'adjectives': get_adjectives(subj),
+            subj_delta = {'adjectives': get_adjectives(event),
                           'polarity': get_polarity(event)}
-            obj_delta = {'adjectives': get_adjectives(obj),
+            obj_delta = {'adjectives': get_adjectives(event),
                          'polarity': get_polarity(event)}
 
-            evidence = self._get_evidence(event)
+            evidence = self._get_evidence(event, subj_concept, obj_concept)
 
             st = Influence(subj_concept, obj_concept,
                            subj_delta, obj_delta, evidence=evidence)
 
             self.statements.append(st)
 
-    def _get_evidence(self, event):
-        """Return the Evidence object for the INDRA Statment."""
+    def _get_evidence(self, event, subj_concept, obj_concept):
+        """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
         # First try looking up the full sentence through provenance
+        doc_info = provenance[0].get('document')
+        doc_id = doc_info['@id']
+        agent_strs = [ag.db_refs['TEXT'] for ag in [subj_concept, obj_concept]]
         text = None
-        if provenance:
-            sentence_tag = provenance[0].get('sentence')
-            if sentence_tag and '@id' in sentence_tag:
-                sentence_id = sentence_tag['@id']
-                sentence = self.sentence_dict.get(sentence_id)
-                if sentence is not None:
-                    text = self._sanitize(sentence)
-        # If that fails, we can still get the text of the event
-        if text is None:
-            text = self._sanitize(event.get('text'))
+        for sent in self.sentence_dict[doc_id].values():
+            # We take the first match, which _might_ be wrong sometimes. Perhaps
+            # refine further later.
+            if all([agent_text in sent for agent_text in agent_strs]):
+                text = self._sanitize(sent)
+                break
+        else:
+            logger.warning("Could not find sentence in document %s for event "
+                           "with agents: %s" % (doc_id, str(agent_strs)))
 
         annotations = {
                 'found_by'   : event.get('rule'),
