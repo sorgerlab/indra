@@ -29,6 +29,7 @@ class BBNJsonLdProcessor(object):
         self.statements = []
         self.sentence_dict = {}
         self.entity_dict = {}
+        self.event_dict = {}
 
     def get_events(self):
         events = \
@@ -50,23 +51,18 @@ class BBNJsonLdProcessor(object):
             self.tree.execute("$.extractions[(@.@type is 'Entity')]")
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
-
         sentences = \
             self.tree.execute("$.extractions[(@.@type is 'Sentence')]")
         self.sentence_dict = {sent['@id']: sent for sent in sentences}
 
         # The first state corresponds to increase/decrease
-        def get_polarity(x):
-            # x is either subj or obj
-            if 'states' in x:
-                if x['states'][0]['type'] == 'DEC':
-                    return -1
-                elif x['states'][0]['type'] == 'INC':
-                    return 1
-                else:
-                    return None
-            else:
-                return None
+        def get_polarity(event):
+            pol_map = {'Positive': 1, 'Negative': -1}
+            if 'states' in event:
+                for state_property in event['states']:
+                    if state_property['type'] == 'polarity':
+                        return pol_map[state_property['text']]
+            return None
 
         def get_adjectives(x):
             # x is either subj or obj
@@ -135,9 +131,9 @@ class BBNJsonLdProcessor(object):
             obj_concept = _make_concept(obj)
 
             subj_delta = {'adjectives': get_adjectives(subj),
-                          'polarity': get_polarity(subj)}
+                          'polarity': get_polarity(event)}
             obj_delta = {'adjectives': get_adjectives(obj),
-                         'polarity': get_polarity(obj)}
+                         'polarity': get_polarity(event)}
 
             evidence = self._get_evidence(event)
 
