@@ -27,16 +27,17 @@ class BBNJsonLdProcessor(object):
     def __init__(self, json_dict):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
-        self.sentence_dict = {}
+        self.document_dict = {}
         self.entity_dict = {}
         self.event_dict = {}
 
-    def get_sentences(self):
+    def get_documents(self):
         """Populate the sentences attribute with a dict keyed by document id."""
         documents = self.tree.execute("$.documents")
         for doc in documents:
-            self.sentence_dict[doc['@id']] = {s['@id']: s['text']
-                                              for s in doc.get('sentences', [])}
+            sentences = {s['@id']: s['text'] for s in doc.get('sentences', [])}
+            self.document_dict[doc['@id']] = {'sentences': sentences,
+                                              'location': doc['location']}
         return
 
     def get_events(self):
@@ -59,7 +60,7 @@ class BBNJsonLdProcessor(object):
             self.tree.execute("$.extractions[(@.@type is 'Entity')]")
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
-        self.get_sentences()
+        self.get_documents()
 
         # The first state corresponds to increase/decrease
         def get_polarity(event):
@@ -136,7 +137,7 @@ class BBNJsonLdProcessor(object):
         doc_id = doc_info['@id']
         agent_strs = [ag.db_refs['TEXT'] for ag in [subj_concept, obj_concept]]
         text = None
-        for sent in self.sentence_dict[doc_id].values():
+        for sent in self.document_dict[doc_id]['sentences'].values():
             # We take the first match, which _might_ be wrong sometimes. Perhaps
             # refine further later.
             if all([agent_text in sent for agent_text in agent_strs]):
@@ -150,7 +151,9 @@ class BBNJsonLdProcessor(object):
                 'found_by'   : event.get('rule'),
                 'provenance' : provenance,
                 }
-        ev = Evidence(source_api='bbn', text=text, annotations=annotations)
+        location = self.document_dict[doc_id]['location']
+        ev = Evidence(source_api='bbn', text=text, annotations=annotations,
+                      pmid=location)
         return [ev]
 
     @staticmethod
