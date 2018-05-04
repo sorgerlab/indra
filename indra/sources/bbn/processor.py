@@ -81,7 +81,10 @@ class BBNJsonLdProcessor(object):
 
         def _get_bbn_grounding(entity):
             """Return BBN grounding."""
-            return entity['type']
+            grounding = entity['type']
+            if grounding.startswith('/'):
+                grounding = grounding[1:]
+            return grounding
 
         def _make_concept(entity):
             """Return Concept from an BBN entity."""
