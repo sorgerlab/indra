@@ -114,6 +114,24 @@ class CAGAssembler(object):
 
         return self.CAG
 
+    def print_tsv(self):
+        # Filter to Influence Statements which are currently supported
+        statements = [stmt for stmt in self.statements if
+                      isinstance(stmt, Influence)]
+        for stmt in statements:
+            source = ''
+            sentence_id = ''
+            evidence = stmt.evidence[0]
+            system = evidence.source_api
+            factor_a = stmt.subj.name
+            factor_a_ref = stmt.subj.db_refs['EIDOS'][0][1]
+            factor_b = stmt.obj.name
+            factor_b_ref = stmt.obj.db_refs['EIDOS'][0][1]
+            pol_a = stmt.subj_delta.get('polarity', '')
+            pol_b = stmt.obj_delta.get('polarity', '')
+            
+
+
     def export_to_cytoscapejs(self):
         """Return CAG in format readable by CytoscapeJS.
 
