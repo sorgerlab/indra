@@ -114,23 +114,64 @@ class CAGAssembler(object):
 
         return self.CAG
 
-    def print_tsv(self):
+    def print_tsv(self, file_name):
+        def _get_factor(stmt, concept, evidence):
+            if evidence.source_api == 'eidos':
+                factor_norm = concept.db_refs['EIDOS'][0][1]
+            elif evidence.source_api == 'bbn':
+                factor_norm = concept.db_refs['BBN']
+            elif evidence.source_api == 'cwms':
+                factor_norm = concept.db_refs['CWMS']
+            elif evidence.source_api == 'sofia':
+                # TODO extract ontology catgory here
+                factor_norm = concept.name
+            mods = ', '.join(stmt.subj_delta.get('adjectives', []))
+            pol = 'increase' if stmt.subj_delta.get('polarity') == 1 else \
+                'decrease'
+            return concept.name, factor_norm, mods, pol 
+
+        def _get_evidence(evidence):
+            # TODO: add sentence ID
+            sent_id = ''
+            location = ''
+            time = ''
+            return evidence.pmid, evidence.source_api, sent_id, location, \
+                time, evidence.text
+
+
+        header = ['Source', 'System', 'Sentence ID',
+                  'Factor A Text', 'Factor A Normalization', 'Factor A Modifiers'
+                  'Factor A Polarity', 'Relation Text',
+                  'Relation Normalization', 'Relation Modifiers',
+                  'Factor B Text', 'Factor B Normalization', 'Factor B Modifiers',
+                  'Factor B Polarity', 'Location', 'Time', 'Evidence',
+                  'Relation ID']
+
+        fh = open(file_name, 'w')
+        fh.write('\t'.join(header) + '\n')
+
         # Filter to Influence Statements which are currently supported
         statements = [stmt for stmt in self.statements if
                       isinstance(stmt, Influence)]
-        for stmt in statements:
-            source = ''
-            sentence_id = ''
-            evidence = stmt.evidence[0]
-            system = evidence.source_api
-            factor_a = stmt.subj.name
-            factor_a_ref = stmt.subj.db_refs['EIDOS'][0][1]
-            factor_b = stmt.obj.name
-            factor_b_ref = stmt.obj.db_refs['EIDOS'][0][1]
-            pol_a = stmt.subj_delta.get('polarity', '')
-            pol_b = stmt.obj_delta.get('polarity', '')
-            
-
+        for idx, stmt in enumerate(statements):
+            for evidence in stmt.evidence:
+                source, system, sent_id, location, time, text = \
+                    _get_evidence(evidence)
+                factor_a, factor_a_norm, mod_a, pol_a = \
+                    _get_factor(stmt, stmt.subj, evidence)
+                factor_b, factor_b_norm, mod_b, pol_b = \
+                    _get_factor(stmt, stmt.obj, evidence)
+                relation_text = 'influences'
+                # Can we get a more specific relation type here?
+                relation_norm = ''
+                relation_mod = ''
+                row = [source, system, sent_id,
+                       factor_a, factor_a_norm, mod_a, pol_a,
+                       'influence', '', '',
+                       factor_b, factor_b_norm, mod_b, pol_b,
+                       location, time, text, idx]
+                fh.write('\t'.join(row) + '\n')
+        fh.close()
 
     def export_to_cytoscapejs(self):
         """Return CAG in format readable by CytoscapeJS.
