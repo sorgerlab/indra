@@ -116,10 +116,12 @@ class BBNJsonLdProcessor(object):
             subj_concept = _make_concept(subj)
             obj_concept = _make_concept(obj)
 
-            subj_delta = {'adjectives': get_adjectives(event),
-                          'polarity': get_polarity(event)}
-            obj_delta = {'adjectives': get_adjectives(event),
-                         'polarity': get_polarity(event)}
+            # Adjectives are not extracted for now, in the case of BBN
+            # they are things like 'Asserted', 'Specific', 'Generic'
+            subj_delta = {'adjectives': [],
+                          'polarity': get_polarity(subj)}
+            obj_delta = {'adjectives': [],
+                         'polarity': get_polarity(obj)}
 
             evidence = self._get_evidence(event, subj_concept, obj_concept)
 
