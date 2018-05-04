@@ -27,6 +27,8 @@ class EidosJsonLdProcessor(object):
     def __init__(self, json_dict):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
+        self.sentence_dict = {}
+        self.entity_dict = {}
 
     def get_events(self):
         events = \
@@ -34,11 +36,15 @@ class EidosJsonLdProcessor(object):
         if not events:
             return
 
+        # Build a dictionary of entities and sentences by ID for convenient
+        # lookup
         entities = \
             self.tree.execute("$.extractions[(@.@type is 'Entity')]")
-        entity_ids = \
-            self.tree.execute("$.extractions[(@.@type is 'Entity')].@id")
-        entity_dict = {id:entity for id, entity in zip(entity_ids, entities)}
+        self.entity_dict = {entity['@id']: entity for entity in entities}
+
+        sentences = \
+            self.tree.execute("$.extractions[(@.@type is 'Sentence')]")
+        self.sentence_dict = {sent['@id']: sent for sent in sentences}
 
         # The first state corresponds to increase/decrease
         def get_polarity(x):
@@ -100,8 +106,8 @@ class EidosJsonLdProcessor(object):
             if 'Causal' in event['labels']:
                 # For now, just take the first source and first destination.
                 # Later, might deal with hypergraph representation.
-                subj = entity_dict[event['sources'][0]['@id']]
-                obj = entity_dict[event['destinations'][0]['@id']]
+                subj = self.entity_dict[event['sources'][0]['@id']]
+                obj = self.entity_dict[event['destinations'][0]['@id']]
 
                 subj_delta = {'adjectives': get_adjectives(subj),
                               'polarity': get_polarity(subj)}
@@ -115,13 +121,26 @@ class EidosJsonLdProcessor(object):
 
                 self.statements.append(st)
 
-    @staticmethod
-    def _get_evidence(event):
+    def _get_evidence(self, event):
         """Return the Evidence object for the INDRA Statment."""
-        text = EidosJsonLdProcessor._sanitize(event.get('text'))
+        provenance = event.get('provenance')
+
+        # First try looking up the full sentence through provenance
+        text = None
+        if provenance:
+            sentence_tag = provenance[0].get('sentence')
+            if sentence_tag and '@id' in sentence_tag:
+                sentence_id = sentence_tag['@id']
+                sentence = self.sentence_dict.get(sentence_id)
+                if sentence is not None:
+                    text = self._sanitize(sentence)
+        # If that fails, we can still get the text of the event
+        if text is None:
+            text = self._sanitize(event.get('text'))
+
         annotations = {
                 'found_by'   : event.get('rule'),
-                'provenance' : event.get('provenance'),
+                'provenance' : provenance,
                 }
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]

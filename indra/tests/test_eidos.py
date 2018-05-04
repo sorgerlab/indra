@@ -45,12 +45,13 @@ def test_process_json():
 
 
 def test_process_text():
-    ep = eidos.process_text('The cost of fuel decreases water trucking.')
+    ep = eidos.process_text('The cost of fuel decreases water trucking.',
+                            out_format='json_ld')
     assert ep is not None
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
     assert isinstance(stmt, Influence)
-    assert stmt.subj.name == 'cost of fuel'
+    assert stmt.subj.name == 'cost fuel'
     assert stmt.obj.name == 'water trucking'
     assert stmt.obj_delta.get('polarity') == -1
     assert(stmt.evidence[0].annotations['found_by']
