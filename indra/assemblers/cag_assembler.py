@@ -115,9 +115,12 @@ class CAGAssembler(object):
         return self.CAG
 
     def print_tsv(self, file_name):
-        def _get_factor(stmt, concept, evidence):
+        def _get_factor(stmt, concept, delta, evidence):
             if evidence.source_api == 'eidos':
-                factor_norm = concept.db_refs['EIDOS'][0][1]
+                if concept.db_refs['EIDOS']:
+                    factor_norm = concept.db_refs['EIDOS'][0][0]
+                else:
+                    factor_norm = ''
             elif evidence.source_api == 'bbn':
                 factor_norm = concept.db_refs['BBN']
             elif evidence.source_api == 'cwms':
@@ -125,10 +128,14 @@ class CAGAssembler(object):
             elif evidence.source_api == 'sofia':
                 # TODO extract ontology catgory here
                 factor_norm = concept.name
-            mods = ', '.join(stmt.subj_delta.get('adjectives', []))
-            pol = 'increase' if stmt.subj_delta.get('polarity') == 1 else \
-                'decrease'
-            return concept.name, factor_norm, mods, pol 
+            mods = ', '.join(delta.get('adjectives', []))
+            if delta.get('polarity') == -1:
+                pol = 'decrease'
+            elif delta.get('polarity') == 1:
+                pol = 'increase'
+            else:
+                pol = ''
+            return concept.name, factor_norm, mods, pol
 
         def _get_evidence(evidence):
             # TODO: add sentence ID
@@ -140,11 +147,13 @@ class CAGAssembler(object):
 
 
         header = ['Source', 'System', 'Sentence ID',
-                  'Factor A Text', 'Factor A Normalization', 'Factor A Modifiers'
-                  'Factor A Polarity', 'Relation Text',
-                  'Relation Normalization', 'Relation Modifiers',
-                  'Factor B Text', 'Factor B Normalization', 'Factor B Modifiers',
-                  'Factor B Polarity', 'Location', 'Time', 'Evidence',
+                  'Factor A Text', 'Factor A Normalization',
+                  'Factor A Modifiers', 'Factor A Polarity',
+                  'Relation Text', 'Relation Normalization',
+                  'Relation Modifiers',
+                  'Factor B Text', 'Factor B Normalization',
+                  'Factor B Modifiers', 'Factor B Polarity',
+                  'Location', 'Time', 'Evidence',
                   'Relation ID']
 
         fh = open(file_name, 'w')
@@ -158,9 +167,9 @@ class CAGAssembler(object):
                 source, system, sent_id, location, time, text = \
                     _get_evidence(evidence)
                 factor_a, factor_a_norm, mod_a, pol_a = \
-                    _get_factor(stmt, stmt.subj, evidence)
+                    _get_factor(stmt, stmt.subj, stmt.subj_delta, evidence)
                 factor_b, factor_b_norm, mod_b, pol_b = \
-                    _get_factor(stmt, stmt.obj, evidence)
+                    _get_factor(stmt, stmt.obj, stmt.obj_delta, evidence)
                 relation_text = 'influences'
                 # Can we get a more specific relation type here?
                 relation_norm = ''
@@ -169,7 +178,7 @@ class CAGAssembler(object):
                        factor_a, factor_a_norm, mod_a, pol_a,
                        'influence', '', '',
                        factor_b, factor_b_norm, mod_b, pol_b,
-                       location, time, text, idx]
+                       location, time, text, str(idx)]
                 fh.write('\t'.join(row) + '\n')
         fh.close()
 
