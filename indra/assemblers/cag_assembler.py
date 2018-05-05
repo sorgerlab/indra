@@ -115,7 +115,7 @@ class CAGAssembler(object):
         return self.CAG
 
     def print_tsv(self, file_name):
-        def _get_factor(stmt, concept, delta, evidence):
+        def _get_factor(stmt, concept, delta, evidence, raw_name):
             if evidence.source_api == 'eidos':
                 if concept.db_refs['EIDOS']:
                     factor_norm = concept.db_refs['EIDOS'][0][0]
@@ -135,14 +135,18 @@ class CAGAssembler(object):
                 pol = 'increase'
             else:
                 pol = ''
-            return concept.name, factor_norm, mods, pol
+            name = raw_name if raw_name else concept.name
+            return name, factor_norm, mods, pol
 
         def _get_evidence(evidence):
             # TODO: add sentence ID
             sent_id = ''
-            location = ''
-            time = ''
-            return evidence.pmid, evidence.source_api, sent_id, location, \
+            location = evidence.annotations.get('Location')
+            location = location if location is not None else ''
+            time = evidence.annotations.get('Time')
+            time = time if time is not None else ''
+            ref = evidence.pmid if evidence.pmid is not None else ''
+            return ref, evidence.source_api, sent_id, location, \
                 time, evidence.text
 
 
@@ -162,14 +166,17 @@ class CAGAssembler(object):
         # Filter to Influence Statements which are currently supported
         statements = [stmt for stmt in self.statements if
                       isinstance(stmt, Influence)]
+        all_rows = []
         for idx, stmt in enumerate(statements):
             for evidence in stmt.evidence:
                 source, system, sent_id, location, time, text = \
                     _get_evidence(evidence)
                 factor_a, factor_a_norm, mod_a, pol_a = \
-                    _get_factor(stmt, stmt.subj, stmt.subj_delta, evidence)
+                    _get_factor(stmt, stmt.subj, stmt.subj_delta, evidence,
+                                evidence.annotations['subj_text'])
                 factor_b, factor_b_norm, mod_b, pol_b = \
-                    _get_factor(stmt, stmt.obj, stmt.obj_delta, evidence)
+                    _get_factor(stmt, stmt.obj, stmt.obj_delta, evidence,
+                                evidence.annotations['obj_text'])
                 relation_text = 'influences'
                 # Can we get a more specific relation type here?
                 relation_norm = ''
@@ -179,7 +186,10 @@ class CAGAssembler(object):
                        'influence', '', '',
                        factor_b, factor_b_norm, mod_b, pol_b,
                        location, time, text, str(idx)]
-                fh.write('\t'.join(row) + '\n')
+                if row not in all_rows:
+                    all_rows.append(row)
+        for row in sorted(all_rows, key=lambda x: x[0]):
+            fh.write('\t'.join(row) + '\n')
         fh.close()
 
     def export_to_cytoscapejs(self):
