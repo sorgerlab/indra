@@ -32,12 +32,14 @@ class SofiaProcessor(object):
         else:
             return None
 
-        subj_concept = Concept(subj)
-        obj_concept = Concept(obj)
+        subj_concept = Concept(subj, db_refs={'TEXT': subj, 'SOFIA': subj})
+        obj_concept = Concept(obj, db_refs={'TEXT': subj, 'SOFIA': subj})
         text = row_dict.get('Sentence')
         annot_keys = ['Relation', 'Event_Type', 'Location', 'Time']
         annots = {k: row_dict.get(k) for k in annot_keys}
-        ev = Evidence(source_api='sofia', annotations=annots, text=text)
+        ref = row_dict.get('Source_File')
+        ev = Evidence(source_api='sofia', pmid=ref, annotations=annots,
+                      text=text)
         stmt = Influence(subj_concept, obj_concept, evidence=[ev])
         stmt.obj_delta['polarity'] = pol
         return stmt
