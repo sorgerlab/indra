@@ -114,6 +114,84 @@ class CAGAssembler(object):
 
         return self.CAG
 
+    def print_tsv(self, file_name):
+        def _get_factor(stmt, concept, delta, evidence, raw_name):
+            if evidence.source_api == 'eidos':
+                if concept.db_refs['EIDOS']:
+                    factor_norm = concept.db_refs['EIDOS'][0][0]
+                else:
+                    factor_norm = ''
+            elif evidence.source_api == 'bbn':
+                factor_norm = concept.db_refs['BBN']
+            elif evidence.source_api == 'cwms':
+                factor_norm = concept.db_refs['CWMS']
+            elif evidence.source_api == 'sofia':
+                # TODO extract ontology catgory here
+                factor_norm = concept.name
+            mods = ', '.join(delta.get('adjectives', []))
+            if delta.get('polarity') == -1:
+                pol = 'decrease'
+            elif delta.get('polarity') == 1:
+                pol = 'increase'
+            else:
+                pol = ''
+            name = raw_name if raw_name else concept.name
+            return name, factor_norm, mods, pol
+
+        def _get_evidence(evidence):
+            # TODO: add sentence ID
+            sent_id = ''
+            location = evidence.annotations.get('Location')
+            location = location if location is not None else ''
+            time = evidence.annotations.get('Time')
+            time = time if time is not None else ''
+            ref = evidence.pmid if evidence.pmid is not None else ''
+            return ref, evidence.source_api, sent_id, location, \
+                time, evidence.text
+
+
+        header = ['Source', 'System', 'Sentence ID',
+                  'Factor A Text', 'Factor A Normalization',
+                  'Factor A Modifiers', 'Factor A Polarity',
+                  'Relation Text', 'Relation Normalization',
+                  'Relation Modifiers',
+                  'Factor B Text', 'Factor B Normalization',
+                  'Factor B Modifiers', 'Factor B Polarity',
+                  'Location', 'Time', 'Evidence',
+                  'Relation ID']
+
+        fh = open(file_name, 'w')
+        fh.write('\t'.join(header) + '\n')
+
+        # Filter to Influence Statements which are currently supported
+        statements = [stmt for stmt in self.statements if
+                      isinstance(stmt, Influence)]
+        all_rows = []
+        for idx, stmt in enumerate(statements):
+            for evidence in stmt.evidence:
+                source, system, sent_id, location, time, text = \
+                    _get_evidence(evidence)
+                factor_a, factor_a_norm, mod_a, pol_a = \
+                    _get_factor(stmt, stmt.subj, stmt.subj_delta, evidence,
+                                evidence.annotations['subj_text'])
+                factor_b, factor_b_norm, mod_b, pol_b = \
+                    _get_factor(stmt, stmt.obj, stmt.obj_delta, evidence,
+                                evidence.annotations['obj_text'])
+                relation_text = 'influences'
+                # Can we get a more specific relation type here?
+                relation_norm = ''
+                relation_mod = ''
+                row = [source, system, sent_id,
+                       factor_a, factor_a_norm, mod_a, pol_a,
+                       'influence', '', '',
+                       factor_b, factor_b_norm, mod_b, pol_b,
+                       location, time, text, str(idx)]
+                if row not in all_rows:
+                    all_rows.append(row)
+        for row in sorted(all_rows, key=lambda x: x[0]):
+            fh.write('\t'.join(row) + '\n')
+        fh.close()
+
     def export_to_cytoscapejs(self):
         """Return CAG in format readable by CytoscapeJS.
 
