@@ -539,6 +539,8 @@ class Concept(object):
         db_names = sorted(list(set(self.db_refs.keys()) - set(['TEXT'])))
         db_ns = db_names[0] if db_names else None
         db_id = self.db_refs[db_ns] if db_ns else None
+        if db_ns == 'BBN' and db_id in ('Factor', 'Entities/Factor'):
+            return (None, None)
         # If the db_id is actually a list of scored groundings, we take the
         # highest scoring one.
         if isinstance(db_id, list):
