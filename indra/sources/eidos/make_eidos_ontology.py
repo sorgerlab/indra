@@ -5,6 +5,8 @@ from rdflib import Graph, Namespace, Literal
 
 eidos_ont_url = 'https://raw.githubusercontent.com/clulab/eidos/master/' + \
                 'src/main/resources/org/clulab/wm/eidos/toy_ontology.yml'
+eidos_ont_url = 'https://raw.githubusercontent.com/clulab/eidos/master/' + \
+                'src/main/resources/org/clulab/wm/eidos/un_ontology.yml'
 
 eidos_ns = Namespace('https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#')
 indra_ns = 'http://sorger.med.harvard.edu/indra/'
