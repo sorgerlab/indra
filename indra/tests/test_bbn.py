@@ -17,7 +17,7 @@ test_file_negatedEffect = os.path.join(path_this,
 def test_simple_extraction():
     """Verify that processor extracts a simple causal assertion correctly from
     a JSON-LD file."""
-    bp = process_json_file(test_file_simple)
+    bp = process_json_file_old(test_file_simple)
     statements = bp.statements
 
     assert(len(statements) == 1)
@@ -38,12 +38,12 @@ def test_simple_extraction():
 def test_negated_cause():
     """We only want to extract causal relations between two positive events.
     The processor should give no statements for a negated cause."""
-    bp = process_json_file(test_file_negatedCause)
+    bp = process_json_file_old(test_file_negatedCause)
     assert(len(bp.statements) == 0)
 
 
 def test_negated_effect():
     """We only want to extract causal relations between two positive events.
     The processor should give no statements for a negated effect."""
-    bp = process_json_file(test_file_negatedEffect)
+    bp = process_json_file_old(test_file_negatedEffect)
     assert(len(bp.statements) == 0)
