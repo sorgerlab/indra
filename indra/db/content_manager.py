@@ -68,7 +68,9 @@ if __name__ == '__main__':
         '-s', '--sources',
         nargs='+',
         choices=['pubmed', 'pmc_oa', 'manuscripts', 'elsevier'],
-        help='Specify which sources are to be uploaded.'
+        default=['pubmed', 'pmc_oa', 'manuscripts'],
+        help=('Specify which sources are to be uploaded. Defaults are pubmed, '
+              'pmc_oa, and manuscripts.')
     )
     args = parser.parse_args()
     if args.debug:
