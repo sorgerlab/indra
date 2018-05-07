@@ -65,17 +65,13 @@ if __name__ == '__main__':
         help='Run tests using one of the designated test databases.'
         )
     parser.add_argument(
-        '--elsevier',
-        choices=['included', 'only', 'excluded'],
-        help=('Choose if Elsevier content is included in the upload/update. '
-              'Default choice is "excluded". Note that the Elsevier upload is '
-              'can take weeks to complete. Therefore it is recommended that '
-              'you run with `--elsevier exluded` first, and then later run '
-              'with `--elsevier only`. Updates are less cumbersome and may be '
-              'run with `--elsevier included`. Note also that the Elsevier '
-              'upload only works if at least Pubmed has already been '
-              'uploaded.')
-        )
+        '-s', '--sources',
+        nargs='+',
+        choices=['pubmed', 'pmc_oa', 'manuscripts', 'elsevier'],
+        default=['pubmed', 'pmc_oa', 'manuscripts'],
+        help=('Specify which sources are to be uploaded. Defaults are pubmed, '
+              'pmc_oa, and manuscripts.')
+    )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -99,7 +95,7 @@ if __name__ == '__main__':
             print ("Aborting...")
             sys.exit()
 
-from indra.util import zip_string, unzip_string
+from indra.util import zip_string
 from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
@@ -1476,7 +1472,7 @@ class Elsevier(ContentManager):
         return True
 
     @ContentManager._record_for_review
-    def populate(self, db, continuing=False):
+    def populate(self, db, n_procs=1, continuing=False):
         """Load all available elsevier content for refs with no pmc content."""
         # Note that we do not implement multiprocessing, because by the nature
         # of the web API's used, we are limited by bandwidth from any one IP.
@@ -1489,7 +1485,7 @@ class Elsevier(ContentManager):
         return self._get_elsevier_content(db, tr_wo_pmc_q, continuing)
 
     @ContentManager._record_for_review
-    def update(self, db, continuing=False, buffer_days=15):
+    def update(self, db, n_procs=1, buffer_days=15):
         """Load all available new elsevier content from new pmids."""
         # There is the possibility that elsevier content will lag behind pubmed
         # updates, so we go back a bit before the last update to make sure we
@@ -1513,7 +1509,7 @@ class Elsevier(ContentManager):
             )
         tr_query = new_trs.except_(tr_w_pmc_q)
 
-        return self._get_elsevier_content(db, tr_query, continuing)
+        return self._get_elsevier_content(db, tr_query, False)
 
 
 if __name__ == '__main__':
@@ -1558,16 +1554,12 @@ if __name__ == '__main__':
                                          db.SourceFile, db.Updates])
             if not clear_succeeded:
                 sys.exit()
-        Pubmed().populate(db, args.num_procs, args.continuing)
-        PmcOA().populate(db, args.num_procs, args.continuing)
-        Manuscripts().populate(db, args.num_procs, args.continuing)
-        if args.elsevier == 'included':
-            Elsevier().populate(db, args.continuing)
+        for Updater in [Pubmed, PmcOA, Manuscripts, Elsevier]:
+            if Updater.my_source in args.sources:
+                logger.info("Populating %s." % Updater.my_source)
+                Updater().populate(db, args.num_procs, args.continuing)
     elif args.task == 'update':
-        if args.elsevier == 'only':
-            Elsevier().update(db, args.continuing)
-        Pubmed().update(db, args.num_procs)
-        PmcOA().update(db, args.num_procs)
-        Manuscripts().update(db, args.num_procs)
-        if args.elsevier == 'included':
-            Elsevier().update(db, args.continuing)
+        for Updater in [Pubmed, PmcOA, Manuscripts, Elsevier]:
+            if Updater.my_source in args.sources:
+                logger.info("Updating %s." % Updater.my_source)
+                Updater().update(db, args.num_procs)
