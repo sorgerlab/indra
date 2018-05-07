@@ -127,10 +127,30 @@ class DbApiTestCase(unittest.TestCase):
         assert dt <= TIMELIMIT, dt
         assert size <= SIZELIMIT, size
 
-    def test_basic_paper_query(self):
-        resp, dt, size = self.__time_get_query('papers', '8436299&id_type=pmid')
+    def __test_basic_paper_query(self, id_val, id_type, min_num_results=1):
+        query_str = 'id=%s&type=%s' % (id_val, id_type)
+        resp, dt, size = self.__time_get_query('papers', query_str)
         assert dt <= TIMELIMIT, dt
         assert size <= SIZELIMIT, size
+        assert resp.status_code == 200, str(resp)
+        json_str = resp.data.decode('utf-8')
+        json_list = json.loads(json_str)
+        assert len(json_list) >= min_num_results, (min_num_results,
+                                                   len(json_list))
+        return
+
+    def test_pmid_paper_query(self):
+        self.__test_basic_paper_query('8436299', 'pmid')
+
+        # Now check without pmid specified (should be assumed.)
+        resp, _, _ = self.__time_get_query('papers', 'id=8436299')
+        assert resp.status_code == 200, str(resp)
+
+    def test_pmcid_paper_query(self):
+        self.__test_basic_paper_query('PMC5770457', 'pmcid')
+
+    def test_trid_paper_query(self):
+        self.__test_basic_paper_query('28145129', 'trid')
 
 
 if __name__ == '__main__':
