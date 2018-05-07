@@ -8,6 +8,7 @@ import botocore.session
 from time import sleep
 from datetime import datetime
 from indra.literature import elsevier_client as ec
+from indra.literature.elsevier_client import _ensure_api_keys
 from indra.util.aws import get_job_log, tag_instance, get_batch_command
 
 bucket_name = 'bigmech'
@@ -287,6 +288,16 @@ def tag_instances_on_cluster(cluster_name, project='cwc'):
     return
 
 
+@_ensure_api_keys('remote batch reading', [])
+def get_elsevier_api_keys():
+    return [
+        {'name': ec.API_KEY_ENV_NAME,
+         'value': ec.ELSEVIER_KEYS.get('X-ELS-APIKey', '')},
+        {'name': ec.INST_KEY_ENV_NAME,
+         'value': ec.ELSEVIER_KEYS.get('X-ELS-Insttoken', '')},
+        ]
+
+
 def get_environment():
     # Get AWS credentials
     # http://stackoverflow.com/questions/36287720/boto3-get-credentials-dynamically
@@ -296,15 +307,12 @@ def get_environment():
 
     # Get the Elsevier keys from the Elsevier client
     environment_vars = [
-        {'name': ec.API_KEY_ENV_NAME,
-         'value': ec.ELSEVIER_KEYS.get('X-ELS-APIKey', '')},
-        {'name': ec.INST_KEY_ENV_NAME,
-         'value': ec.ELSEVIER_KEYS.get('X-ELS-Insttoken', '')},
         {'name': 'AWS_ACCESS_KEY_ID',
          'value': access_key},
         {'name': 'AWS_SECRET_ACCESS_KEY',
          'value': secret_key}
         ]
+    environment_vars += get_elsevier_api_keys()
 
     # Only include values that are not empty.
     return [var_dict for var_dict in environment_vars
