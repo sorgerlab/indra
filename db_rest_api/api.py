@@ -164,9 +164,9 @@ def get_paper_statements():
     id_type = query_dict.get('type', 'pmid')
     stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
     if stmts is None:
-        msg = "Invalid id %s=%s!" % (id_type, id)
+        msg = "Invalid or unavailable id %s=%s!" % (id_type, id)
         logger.error(msg)
-        abort(Response(msg, 400))
+        abort(Response(msg, 404))
 
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements." % len(stmts))
