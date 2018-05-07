@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_statements', 'IndraDBRestError']
+__all__ = ['get_statements', 'get_statements_for_paper', 'IndraDBRestError']
 
 import requests
 
