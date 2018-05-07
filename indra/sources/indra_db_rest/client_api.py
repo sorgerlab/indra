@@ -10,7 +10,12 @@ from indra.statements import stmts_from_json
 
 
 class IndraDBRestError(Exception):
-    pass
+    def __init__(self, status_code, reason):
+        self.status_code = status_code
+        self.reason = reason
+        super(IndraDBRestError, self).__init__('Got bad return code %d: %s'
+                                               % (status_code, reason))
+        return
 
 
 def get_statements(subject=None, object=None, agents=None, stmt_type=None):
@@ -53,8 +58,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
         instantiated as an `Unresolved` statement, with `uuid` of the statement.
     """
     if subject is None and object is None and agents is None:
-        raise IndraDBRestError("At least one agent must be specified, or else "
-                               "the scope will be too large.")
+        raise ValueError("At least one agent must be specified, or else "
+                         "the scope will be too large.")
     if agents is not None:
         agent_strs = ['agent=%s' % agent_str for agent_str in agents]
     else:
@@ -104,5 +109,4 @@ def _submit_request(end_point, *args, **kwargs):
     if resp.status_code == 200:
         return resp
     else:
-        raise IndraDBRestError("Got bad return code %d: %s"
-                               % (resp.status_code, resp.reason))
+        raise IndraDBRestError(resp.status_code, resp.reason)
