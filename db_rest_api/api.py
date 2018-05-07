@@ -164,7 +164,7 @@ def get_paper_statements():
     id_type = query_dict.get('type', 'pmid')
     stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
     if stmts is None:
-        msg = "Invalid or unavailable id %s=%s!" % (id_type, id)
+        msg = "Invalid or unavailable id %s=%s!" % (id_type, id_val)
         logger.error(msg)
         abort(Response(msg, 404))
 

@@ -109,4 +109,7 @@ def _submit_request(end_point, *args, **kwargs):
     if resp.status_code == 200:
         return resp
     else:
-        raise IndraDBRestError(resp.status_code, resp.reason)
+        if hasattr(resp, 'text') and resp.text:
+            raise IndraDBRestError(resp.status_code, resp.text)
+        else:
+            raise IndraDBRestError(resp.status_code, resp.reason)
