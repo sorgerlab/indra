@@ -128,4 +128,4 @@ If a new submodule is added, that submodule needs to be
 New non-python resource files
 -----------------------------
 If a new non-python file is added to the repository, it needs to be listed
-In MANIFEST.in to make sure it is added to the documentation.
+in MANIFEST.in to make sure it is added to the documentation.
