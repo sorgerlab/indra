@@ -1096,6 +1096,8 @@ class Statement(object):
             return str(self).encode('utf-8')
 
     def equals(self, other):
+        if type(self) != type(other):
+            return False
         if len(self.agent_list()) == len(other.agent_list()):
             for s, o in zip(self.agent_list(), other.agent_list()):
                 if (s is None and o is not None) or \
