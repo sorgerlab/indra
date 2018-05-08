@@ -11,6 +11,7 @@ from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
 
 logger = logging.getLogger('medscan')
 
+
 MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
                            'properties'])
 
@@ -406,8 +407,7 @@ class MedscanProcessor(object):
                 doc_counter += 1
                 # Give a status update
                 if doc_counter % 100 == 0:
-                    print("Processed %d documents"
-                          % doc_counter)
+                    logger.info("Processed %d documents" % doc_counter)
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 

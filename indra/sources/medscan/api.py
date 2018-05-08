@@ -67,7 +67,7 @@ def process_directory(directory_name):
     glob_pattern = os.path.join(directory_name, '*.csxml')
     files = glob.glob(glob_pattern)
     num_files = float(len(files))
-    print(int(num_files), 'files to read')
+    logger.info("%d files to read" % int(num_files))
     percent_done = 0
     files_processed = 0
     start_time_s = time.time()
@@ -95,7 +95,7 @@ def process_directory(directory_name):
 
             msg = 'Processed %d of %d files (%f%% complete, %f minutes)' % \
                     (files_processed, num_files, percent_done, ellapsed_min)
-            print(msg)
+            logger.info(msg)
         files_processed += 1
 
     # Delete the temporary directory

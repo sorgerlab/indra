@@ -1,8 +1,12 @@
 import sys
 import codecs
+import logging
 
-# codec_options = ['latin_1', 'utf-8']
+
 codec_options = ['utf-8', 'latin_1']
+
+
+logger = logging.getLogger('fix_csxml_character_encoding')
 
 
 def try_decode(byte_string, codec):
@@ -23,6 +27,7 @@ def shortest_string(strings):
             best_length = len(s)
     return best_string
 
+
 def fix_character_encoding(input_file, output_file):
     with open(input_file, 'rb') as f_in:
         with open(output_file, 'wb') as f_out:
@@ -34,8 +39,7 @@ def fix_character_encoding(input_file, output_file):
 
                 if len(decoded) == 0:
                     # Hopefully at least one codec worked
-                    print('Could not decode:')
-                    print(line)
+                    logger.info('Could not decode: %s' % line)
                     sys.exit(1)
                 else:
                     # If more than one, choose the codec that gives the best
@@ -44,6 +48,7 @@ def fix_character_encoding(input_file, output_file):
 
                     # Write result as ascii, with non-ascii characters escaped
                     f_out.write(chosen_string.encode('utf-8'))
+
 
 if __name__ == '__main__':
     args = sys.argv[1:]
