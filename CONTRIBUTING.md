@@ -89,6 +89,10 @@ extended summary,
 
 Testing
 -------
+INDRA is tested using the `nosetests` script and `nose`/`unittest` tools.
+See the [nose documentation](http://nose.readthedocs.io/en/latest/) for more
+details.
+
 All new functionalities added should also be tested unless special
 circumstances prevent testing. Similarly, fixed bugs should have regression
 tests added. Normally, any test file with `test` in its
