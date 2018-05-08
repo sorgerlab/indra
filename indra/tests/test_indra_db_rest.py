@@ -52,3 +52,11 @@ def test_too_big_request():
             assert False, 'Unexpected error occured: %s' % str(e)
     except BaseException as e:
         assert False, 'A very unexpected error occured: %s' % str(e)
+
+
+@attr('nonpublic')
+def test_paper_query():
+    stmts_1 = dbr.get_statements_for_paper('PMC5770457', 'pmcid')
+    assert len(stmts_1)
+    stmts_2 = dbr.get_statements_for_paper('8436299')
+    assert len(stmts_2)

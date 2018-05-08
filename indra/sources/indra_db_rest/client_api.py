@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_statements', 'IndraDBRestError']
+__all__ = ['get_statements', 'get_statements_for_paper', 'IndraDBRestError']
 
 import requests
 
@@ -10,7 +10,12 @@ from indra.statements import stmts_from_json
 
 
 class IndraDBRestError(Exception):
-    pass
+    def __init__(self, status_code, reason):
+        self.status_code = status_code
+        self.reason = reason
+        super(IndraDBRestError, self).__init__('Got bad return code %d: %s'
+                                               % (status_code, reason))
+        return
 
 
 def get_statements(subject=None, object=None, agents=None, stmt_type=None):
@@ -53,8 +58,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
         instantiated as an `Unresolved` statement, with `uuid` of the statement.
     """
     if subject is None and object is None and agents is None:
-        raise IndraDBRestError("At least one agent must be specified, or else "
-                               "the scope will be too large.")
+        raise ValueError("At least one agent must be specified, or else "
+                         "the scope will be too large.")
     if agents is not None:
         agent_strs = ['agent=%s' % agent_str for agent_str in agents]
     else:
@@ -64,21 +69,47 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
                                  ('type', stmt_type)]:
         if param_val is not None:
             params[param_key] = param_val
-    resp = _submit_request(*agent_strs, **params)
+    resp = _submit_request('statements', *agent_strs, **params)
     stmts_json = resp.json()
     return stmts_from_json(stmts_json)
 
 
-def _submit_request(*args, **kwargs):
+def get_statements_for_paper(id_val, id_type='pmid'):
+    """Get the set of raw Statements extracted from a paper given by the id.
+
+    Note that in the future this will draw upon preassembled Statements.
+
+    Parameters
+    ----------
+    id_val : str or int
+        The value of the id of the paper of interest.
+    id_type : str
+        This may be one of 'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or
+        'trid', which is the primary key id of the text references in the
+        database. The default is 'pmid'.
+
+    Returns
+    -------
+    stmts : list[:pyclass:`indra.statements.Statement`]
+        A list of INDRA Statement instances.
+    """
+    resp = _submit_request('papers', id=id_val, type=id_type)
+    stmts_json = resp.json()
+    return stmts_from_json(stmts_json)
+
+
+def _submit_request(end_point, *args, **kwargs):
     """Low level function to make the request to the rest API."""
     query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                                + list(args))
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
-    resp = requests.get(url + '/statements/' + query_str,
+    resp = requests.get(url + ('/%s/' % end_point) + query_str,
                         headers={'x-api-key': api_key})
     if resp.status_code == 200:
         return resp
     else:
-        raise IndraDBRestError("Got bad return code %d: %s"
-                               % (resp.status_code, resp.reason))
+        if hasattr(resp, 'text') and resp.text:
+            raise IndraDBRestError(resp.status_code, resp.text)
+        else:
+            raise IndraDBRestError(resp.status_code, resp.reason)
