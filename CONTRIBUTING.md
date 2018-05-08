@@ -51,7 +51,7 @@ code changes. Any stylistic changes should be submitted in a separate PR.
 The most important stylistic requirements are:
 - use 4 spaces for indentation instead of tabs
 - wrap lines to max 80 characters
-- name variables all lowercase and underscore as a separator
+- name variables and functions all lowercase with underscore as a separator
 (e.g. `some_variable`)
 - name classes with starting letters capitalized and no separator
 (e.g. `SomeClass`)
