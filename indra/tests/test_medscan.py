@@ -71,6 +71,12 @@ def test_urn_to_db_refs():
     db_refs_10, _ = _urn_to_db_refs(urn10)
     assert(db_refs_10 == {'MESH': 'D000199', 'FPLX': 'Actin'})
 
+    # If the urn corresponds to an eccode, do we ground to famplex if that
+    # eccode is in the Famplex equivalences table?
+    urn11 = 'urn:agi-enz:1.1.1.1'
+    db_refs_11, _ = _urn_to_db_refs(urn11)
+    assert(db_refs_11 == {'FPLX': 'ADH'})
+
     # Do we check the Famplex equivalences table to see if a raw Medscan URN
     # maps to a Famplex ID?
     urn11 = 'urn:agi-aopfc:0000105'

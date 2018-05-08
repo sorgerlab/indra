@@ -669,6 +669,15 @@ def _urn_to_db_refs(urn):
             if key in famplex_map:
                 db_refs['FPLX'] = famplex_map[key]
 
+    # If the urn corresponds to an eccode, groudn to famplex if that eccode
+    # is in the Famplex equivalences table
+    if urn.startswith('urn:agi-enz'):
+        tokens = urn.split(':')
+        eccode = tokens[2]
+        key = ('ECCODE', eccode)
+        if key in famplex_map:
+            db_refs['FPLX'] = famplex_map[key]
+
     # If the Medscan URN itself maps to a Famplex id, add a Famplex grounding
     key = ('MEDSCAN', urn)
     if key in famplex_map:
