@@ -12,7 +12,9 @@ from collections import namedtuple, defaultdict
 from .processor import *
 from .fix_csxml_character_encoding import fix_character_encoding
 
+
 logger = logging.getLogger('medscan')
+
 
 def process_directory_statements_sorted_by_pmid(directory_name):
     """Processes a directory filled with CSXML files, first normalizing the
@@ -36,6 +38,7 @@ def process_directory_statements_sorted_by_pmid(directory_name):
     for statement in mp.statements:
         s_dict[statement.evidence[0].pmid].append(statement)
     return s_dict
+
 
 def process_directory(directory_name):
     """Processes a directory filled with CSXML files, first normalizing the
@@ -102,6 +105,7 @@ def process_directory(directory_name):
     shutil.rmtree(tmp_dir)
 
     return mp
+
 
 def process_file_sorted_by_pmid(file_name):
     """Processes a file and returns a dictionary mapping pmids to a list of
