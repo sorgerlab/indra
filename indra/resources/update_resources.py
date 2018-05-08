@@ -165,7 +165,6 @@ def update_chebi_entries():
     df_chembl.to_csv(fname, sep='\t', columns=['COMPOUND_ID', 'REFERENCE_ID'],
                       header=['CHEBI', 'CHEMBL'], index=False)
 
-
 def update_cas_to_chebi():
     logger.info('--Updating CAS to ChEBI entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
@@ -192,7 +191,6 @@ def update_cas_to_chebi():
                   columns=['ACCESSION_NUMBER', 'COMPOUND_ID'],
                   header=['CAS', 'CHEBI'], index=False)
 
-
 def update_chebi_primary_map():
     logger.info('--Updating ChEBI primary map entries----')
     url = 'ftp://ftp.ebi.ac.uk/pub/databases/chebi/' + \
@@ -214,7 +212,6 @@ def update_chebi_primary_map():
     df.to_csv(fname, sep='\t',
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
-
 
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
@@ -410,16 +407,8 @@ def update_famplex():
         url = famplex_url_pattern % csv_name
         save_from_http(url, os.path.join(path,'famplex/%s.csv' % csv_name))
 
-def update_signor_complexes():
-    url = 'https://signor.uniroma2.it/download_complexes.php'
-    content = load_from_http(url)
-    to_file = os.path.join(path, 'SIGNOR_complexes.csv')
-    with open(to_file, 'w') as f:
-        f.write(content)
-
 
 if __name__ == '__main__':
-    update_signor_complexes()
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()
