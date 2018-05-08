@@ -7,7 +7,7 @@ from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
         get_hgnc_name
-
+from indra.util import read_unicode_csv
 
 logger = logging.getLogger('medscan')
 
@@ -18,6 +18,21 @@ MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
 
 MedscanProperty = collections.namedtuple('MedscanProperty',
                                          ['type', 'name', 'urn'])
+
+def _read_famplex_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../../resources/famplex_map.tsv')
+    famplex_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        famplex_map[(source_ns, source_id)] = be_id
+    return famplex_map
+
+
+famplex_map = _read_famplex_map()
 
 
 class MedscanProcessor(object):
@@ -644,6 +659,14 @@ def _urn_to_db_refs(urn):
     elif urn_type == 'agi-ncimtissue':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
+
+    # If we have a GO grounding, see if there is a corresponding Famplex
+    # grounding
+    if 'GO' in db_refs:
+        key = ('GO', db_refs['GO'])
+        if key in famplex_map:
+            db_refs['FPLX'] = famplex_map[key]
+
     return db_refs, hgnc_name
 
 

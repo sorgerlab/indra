@@ -5,6 +5,7 @@ from nose.tools import raises
 
 from indra.statements import *
 from indra.sources.medscan.processor import *
+from indra.sources.medscan.processor import _urn_to_db_refs
 from indra.sources.medscan.api import *
 
 # Path to the Medscan test/dummy data folder
@@ -19,44 +20,50 @@ def test_urn_to_db_refs():
 
     # agi-cas
     urn1 = 'urn:agi-cas:89-73-6'
-    db_refs_1, _ = urn_to_db_refs(urn1)
+    db_refs_1, _ = _urn_to_db_refs(urn1)
     assert(db_refs_1 == {'CHEBI': 'CHEBI:45615'})
 
     # agi-llid
     urn2 = 'urn:agi-llid:9451'
-    db_refs_2, hgnc_name = urn_to_db_refs(urn2)
+    db_refs_2, hgnc_name = _urn_to_db_refs(urn2)
     assert(db_refs_2 == {'HGNC': '3255', 'UP': 'Q9NZJ5'})
     assert(hgnc_name == 'EIF2AK3')
 
     # agi-ncimorgan
     urn3 = 'urn:agi-ncimorgan:C0012144'
-    db_refs_3, _ = urn_to_db_refs(urn3)
+    db_refs_3, _ = _urn_to_db_refs(urn3)
     assert(db_refs_3 == {'MESH': 'C0012144'})
 
     # agi-nicmcelltype
     urn4 = 'urn:agi-ncimcelltype:C0242633'
-    db_refs_4, _ = urn_to_db_refs(urn4)
+    db_refs_4, _ = _urn_to_db_refs(urn4)
     assert(db_refs_4 == {'MESH': 'C0242633'})
 
     # agi-meshdist
     urn5 = 'urn:agi-meshdis:Paramyotonia%20Congenita'
-    db_refs_5, _ = urn_to_db_refs(urn5)
+    db_refs_5, _ = _urn_to_db_refs(urn5)
     assert(db_refs_5 == {'MESHDIS': 'Paramyotonia%20Congenita'})
 
     # agi-gocomplex
     urn6 = 'urn:agi-gocomplex:0005610'
-    db_refs_6, _ = urn_to_db_refs(urn6)
+    db_refs_6, _ = _urn_to_db_refs(urn6)
     assert(db_refs_6 == {'GO': 'GO:0005610'})
 
     # agi-go
     urn7 = 'urn:agi-go:0001515'
-    db_refs_7, _ = urn_to_db_refs(urn7)
+    db_refs_7, _ = _urn_to_db_refs(urn7)
     assert(db_refs_7 == {'GO': 'GO:0001515'})
 
     # agi-ncimtissue
     urn8 = 'urn:agi-ncimtissue:C0007807'
-    db_refs_8, _ = urn_to_db_refs(urn8)
+    db_refs_8, _ = _urn_to_db_refs(urn8)
     assert(db_refs_8 == {'MESH': 'C0007807'})
+
+    # Do we ground to Famplex when there is a correspondence between a GO
+    # id and a Famplex id?
+    urn9 = 'urn:agi-go:0000776'
+    db_refs_9, _ = _urn_to_db_refs(urn9)
+    assert(db_refs_9 == {'GO': 'GO:0000776', 'FPLX': 'Kinetochore'})
 
 
 def test_agent_from_entity():
