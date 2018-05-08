@@ -31,6 +31,8 @@ what the PR does. You should give more details in the description, pointing
 out the important changes made and any additional remarks that are relevant.
 If the PR fixes any issues, you can add "Fixes #xxx" to the text of the PR,
 which, when merged, will also automatically close the issue.
+The branch itself should have a short but recognizable name related to the
+feature it adds ot fixes rather than a generic name (e.g. patch, fix).
 
 Commit messages
 ---------------
@@ -53,6 +55,22 @@ The most important stylistic requirements are:
 (e.g. `some_variable`)
 - name classes with starting letters capitalized and no separator
 (e.g. `SomeClass`)
+
+Python 2/3 compatibility and unicode
+------------------------------------
+The core modules of INDRA (i.e. anything inside the `indra` module)
+are Python 2/3 cross-compatible, and should be maintained as such, unless
+special circumstances apply.
+A good description of techniques to maintain compatibility
+can be found here: http://johnbachman.net/building-a-python-23-compatible-unicode-sandwich.html. Some of the code outside the `indra` module is Python 3-only,
+and typically if such code is added, and is not cross-compatible, it should
+work with Python 3 instead of 2.
+
+A related requirement is that all strings within INDRA be represented,
+manipulated and passed around as `unicode` in Python 2 or simply `str`
+in Python 3. Whenever a string is read from a source or written to some
+output, it should be decoded and encoded, respectively. This concept is also
+called the "unicode sandwich".
 
 Documentation
 -------------
