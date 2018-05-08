@@ -1,6 +1,6 @@
 Git fork/PR workflow
 --------------------
-This repository uses the forking model (https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow)
+This repository uses the [forking model](https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow)
 for collaboration. In this model,
 each developer forks the main (sorgerlab/indra) repository, pushes code
 only to branches in their own fork, and then submits pull requests to
@@ -43,7 +43,7 @@ changes.
 
 Code style
 ----------
-Please follow PEP8 guidelines (https://www.python.org/dev/peps/pep-0008/)
+Please follow [PEP8 guidelines](https://www.python.org/dev/peps/pep-0008/)
 when implementing new code. If modifying existing
 code, we ask that you do not mix extensive stylistic changes with meaningful
 code changes. Any stylistic changes should be submitted in a separate PR.
@@ -61,8 +61,7 @@ Python 2/3 compatibility and unicode
 The core modules of INDRA (i.e. anything inside the `indra` module)
 are Python 2/3 cross-compatible, and should be maintained as such, unless
 special circumstances apply. A good description of techniques to maintain
-compatibility can be found here:
-http://johnbachman.net/building-a-python-23-compatible-unicode-sandwich.html.
+compatibility can be found [here](http://johnbachman.net/building-a-python-23-compatible-unicode-sandwich.html).
 Some of the code outside the `indra` module is Python 3-only,
 and typically if such code is added, and is not cross-compatible, it should
 work with Python 3 instead of 2.
