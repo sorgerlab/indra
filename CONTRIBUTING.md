@@ -107,6 +107,16 @@ work. Generally, PRs will not be merged unless all Travis tests are passing. In
 some cases the PR will be merged if tests are failing, if the failures are
 confirmed to be unrelated to the PR.
 
+Logging
+-------
+Instead of using `print` for printing information to stdout, use the `logging`
+module to first create an approproately named logger,
+as for instance `logger = logging.getLogger('my_submodule') and then use the
+appropriate level of logging (typically debug, info, warning or error) with
+the logger object to print messages. The configuration of the logging format
+is uniform across INDRA without further configuration needed for each
+individual logger instance.
+
 New dependencies
 ----------------
 When adding new functionalities, using built-in Python libraries or
