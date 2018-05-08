@@ -92,6 +92,12 @@ extended summary,
 - lists all arguments, their types and descriptions in a Parameters block
 - lists all returned values, their types and descriptions in a Returns block
 
+To verify that the documentation build is working, go into the `doc` folder
+and run `make html`. Warnings and errors indicate any issues during the build
+process. The resulting HTML documentation can be opened with a browser from
+`doc/_build/html/index.html` and inspected to verify that it looks as
+intended.
+
 Testing
 -------
 INDRA is tested using the `nosetests` script and `nose`/`unittest` tools.
