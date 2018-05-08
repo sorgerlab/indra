@@ -32,7 +32,7 @@ out the important changes made and any additional remarks that are relevant.
 If the PR fixes any issues, you can add "Fixes #xxx" to the text of the PR,
 which, when merged, will also automatically close the issue.
 The branch itself should have a short but recognizable name related to the
-feature it adds ot fixes rather than a generic name (e.g. patch, fix).
+feature it adds or fixes rather than a generic name (e.g. patch, fix).
 
 Commit messages
 ---------------
@@ -60,9 +60,10 @@ Python 2/3 compatibility and unicode
 ------------------------------------
 The core modules of INDRA (i.e. anything inside the `indra` module)
 are Python 2/3 cross-compatible, and should be maintained as such, unless
-special circumstances apply.
-A good description of techniques to maintain compatibility
-can be found here: http://johnbachman.net/building-a-python-23-compatible-unicode-sandwich.html. Some of the code outside the `indra` module is Python 3-only,
+special circumstances apply. A good description of techniques to maintain
+compatibility can be found here:
+http://johnbachman.net/building-a-python-23-compatible-unicode-sandwich.html.
+Some of the code outside the `indra` module is Python 3-only,
 and typically if such code is added, and is not cross-compatible, it should
 work with Python 3 instead of 2.
 
@@ -90,15 +91,18 @@ extended summary,
 Testing
 -------
 All new functionalities added should also be tested unless special
-circumstances prevent testing. Similarly fixed bugs should have regression
-tests added. Normally any test file with `test` in its
+circumstances prevent testing. Similarly, fixed bugs should have regression
+tests added. Normally, any test file with `test` in its
 name and any functions/classes that have `test/Test` in their names in these
-files will be automatically discovered and tested. If the newly added
-test requires special dependencies or other preliminary setup, the
-.travis.yml configuration for Travis CI needs to be updated to make the test
-work. Generally, PRs will not be merged unless all Travis tests are passing.
-In some cases the PR will be merged if tests are failing, if the failures
-are confirmed to be unrelated to the PR.
+files will be automatically discovered and tested. Tests should generally be
+included in `indra/tests`, and new tests should be placed in the appropriate
+existing file, if possible. Otherwise, a new file using the `test_a_module.py`
+naming convention. Where possible, tests should be short and focused. If the
+newly added test requires special dependencies or other preliminary setup, the
+`.travis.yml` configuration for Travis CI needs to be updated to make the test
+work. Generally, PRs will not be merged unless all Travis tests are passing. In
+some cases the PR will be merged if tests are failing, if the failures are
+confirmed to be unrelated to the PR.
 
 New dependencies
 ----------------
@@ -121,4 +125,4 @@ If a new submodule is added, that submodule needs to be
 New non-python resource files
 -----------------------------
 If a new non-python file is added to the repository, it needs to be listed
-in MANIFEST.in to make sure it is added to the documentation.
+In MANIFEST.in to make sure it is added to the documentation.
