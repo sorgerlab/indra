@@ -13,272 +13,11 @@ logger = logging.getLogger('medscan')
 
 
 MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
-                           'properties'])
+                                                         'properties'])
 
 
 MedscanProperty = collections.namedtuple('MedscanProperty',
                                          ['type', 'name', 'urn'])
-
-
-def normalize_medscan_name(name):
-    """Removes the "complex" and "complex complex" suffixes from a medscan
-    agent name so that it better corresponds with the grounding map.
-
-    Parameters
-    ----------
-    name: str
-        The Medscan agent name
-
-    Returns
-    -------
-    norm_name: str
-        The Medscan agent name with the "complex" and "complex complex"
-        suffixes removed.
-    """
-    suffix = ' complex'
-
-    for i in range(2):
-        if name.endswith(suffix):
-            name = name[:-len(suffix)]
-    return name
-
-
-class MedscanRelation(object):
-    """A structure representing the information contained in a Medscan
-    SVO xml element as well as associated entities and properties.
-
-    Attributes
-    ----------
-    uri : str
-        The URI of the current document (such as a PMID)
-    sec : str
-        The section of the document the relation occurs in
-    entities : dict
-        A dictionary mapping entity IDs from the same sentence to MedscanEntity
-        objects.
-    tagged_sentence : str
-        The sentence from which the relation was extracted, with some tagged
-        phrases and annotations.
-    subj : str
-        The entity ID of the subject
-    verb : str
-        The verb in the relationship between the subject and the object
-    obj : str
-        The entity ID of the object
-    svo_type : str
-        The type of SVO relationship (for example, CONTROL indicates
-        that the verb is normalized)
-    """
-    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
-                 svo_type):
-        self.uri = uri
-        self.sec = sec
-        self.entities = entities
-        self.tagged_sentence = tagged_sentence
-
-        self.subj = subj
-        self.verb = verb
-        self.obj = obj
-
-        self.svo_type = svo_type
-
-
-def parse_mod_string(s):
-    """Parses a string referring to a protein modification of the form
-    (residue)(position), such as T47.
-
-    Parameters
-    ----------
-    s : str
-        A string representation of a protein residue and position being
-        modified
-
-    Returns
-    -------
-    residue : str
-        The residue being modified (example: T)
-    position : str
-        The position at which the modification is happening (example: 47)
-    """
-    m = re.match('([A-Za-z])+([0-9]+)', s)
-    assert(m is not None)
-    return (m.group(1), m.group(2))
-
-
-def parse_mut_string(s):
-    """
-    A string representation of a protein mutation of the form
-    (old residue)(position)(new residue). Example: T34U.
-
-    Parameters
-    ----------
-    s : str
-        The string representation of the protein mutation
-
-    Returns
-    -------
-    old_residue : str
-        The old residue, or None of the mutation string cannot be parsed
-    position : str
-        The position at which the mutation occurs, or None if the mutation
-        string cannot be parsed
-    new_residue : str
-        The new residue, or None if the mutation string cannot be parsed
-    """
-    m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
-    if m is None:
-        # Mutation string does fit this pattern, other patterns not currently
-        # supported
-        return None, None, None
-    else:
-        return (m.group(1), m.group(2), m.group(3))
-
-
-def urn_to_db_refs(urn):
-    """Converts a Medscan URN to an INDRA db_refs dictionary with grounding
-    information.
-
-    Parameters
-    ----------
-    url : str
-        A Medscan URN
-
-    Returns
-    -------
-    db_refs : dict
-        A dictionary with grounding information, mapping databases to database
-        identifiers. If the Medscan URN is not recognized, returns an empty
-        dictionary.
-    hgnc_name : str
-        The HGNC name, if available, otherwise None
-    """
-    # Convert a urn to a db_refs dictionary
-    if urn is None:
-        return {}, None
-
-    p = 'urn:([^:]+):([^:]+)'
-    m = re.match(p, urn)
-    if m is None:
-        return None, None
-
-    urn_type = m.group(1)
-    urn_id = m.group(2)
-
-    db_refs = {}
-    hgnc_name = None
-
-    # TODO: support more types of URNs
-    if urn_type == 'agi-cas':
-        # Identifier is CAS, convert to CHEBI
-        chebi_id = get_chebi_id_from_cas(urn_id)
-        if chebi_id:
-            db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
-    elif urn_type == 'agi-llid':
-        # This is an Entrez ID, convert to HGNC
-        hgnc_id = get_hgnc_from_entrez(urn_id)
-        if hgnc_id is not None:
-            db_refs['HGNC'] = hgnc_id
-
-            # Convert the HGNC ID to a Uniprot ID
-            uniprot_id = get_uniprot_id(hgnc_id)
-            db_refs['UP'] = uniprot_id
-
-            # Try to lookup HGNC name; if it's available, set it to the
-            # agent name
-            hgnc_name = get_hgnc_name(hgnc_id)
-    elif urn_type == 'agi-ncimorgan':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
-    elif urn_type == 'agi-ncimcelltype':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
-    elif urn_type == 'agi-meshdis':
-        # Identifier is MESH
-        db_refs['MESHDIS'] = urn_id
-    elif urn_type == 'agi-gocomplex':
-        # Identifier is GO
-        db_refs['GO'] = 'GO:%s' % urn_id
-    elif urn_type == 'agi-go':
-        # Identifier is GO
-        db_refs['GO'] = 'GO:%s' % urn_id
-    elif urn_type == 'agi-ncimtissue':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
-    return db_refs, hgnc_name
-
-
-def extract_id(id_string):
-    """Extracts the numeric ID from the representation of the subject or
-    object ID that appears as an attribute of the svo element in the Medscan
-    XML document.
-
-    Parameters
-    ----------
-    id_string : str
-        The ID representation that appears in the svo element in the XML
-        document (example: ID{123})
-
-    Returns
-    -------
-    id : str
-        The numeric ID, extracted from the svo element's attribute
-        (example: 123)
-    """
-    p = 'ID\\{([0-9]+)\\}'
-    matches = re.match(p, id_string)
-    assert(matches is not None)
-    return matches.group(1)
-
-
-def untag_sentence(s):
-    """Removes all tags in the sentence, returning the original sentence
-    without Medscan annotations.
-
-    Parameters
-    ----------
-    s : str
-        The tagged sentence
-
-    Returns
-    -------
-    untagged_sentence : str
-        Sentence with tags and annotations stripped out
-    """
-    p = 'ID{[0-9,]+=([^}]+)}'
-    s = re.sub(p, '\\1', s)
-
-    s = re.sub('CONTEXT{[^}]+}', '', s)
-    s = re.sub('GLOSSARY{[^}]+}', '', s)
-    return s
-
-
-def extract_sentence_tags(tagged_sentence):
-    """Given a tagged sentence, extracts a dictionary mapping tags to the words
-    or phrases that they tag.
-
-    Parameters
-    ----------
-    tagged_sentence : str
-        The sentence with Medscan annotations and tags
-
-    Returns
-    -------
-    tags : dict
-        A dictionary mapping tags to the words or phrases that they tag.
-    """
-    p = re.compile('ID{([0-9,]+)=([^}]+)}')
-    tags = {}
-
-    # Iteratively look for all matches of this pattern
-    endpos = 0
-    while True:
-        match = p.search(tagged_sentence, pos=endpos)
-        if not match:
-            break
-        endpos = match.end()
-
-        tags[match.group(1)] = match.group(2)
-    return tags
 
 
 class MedscanProcessor(object):
@@ -402,6 +141,7 @@ class MedscanProcessor(object):
                        'entities': entities}
                 svo.update(elem.attrib)
 
+                # Aggregate information about the relation
                 relation = MedscanRelation(
                                        uri=pmid,
                                        sec=sec,
@@ -459,7 +199,7 @@ class MedscanProcessor(object):
             return
 
         # Make evidence object
-        untagged_sentence = untag_sentence(relation.tagged_sentence)
+        untagged_sentence = _untag_sentence(relation.tagged_sentence)
         source_id = relation.uri
         m = re.match('info:pmid/([0-9]+)', source_id)
         if m is not None:
@@ -582,13 +322,13 @@ class MedscanProcessor(object):
         # Extract sentence tags mapping ids to the text. We refer to this
         # mapping only if the entity doesn't appear in the grounded entity
         # list
-        tags = extract_sentence_tags(relation.tagged_sentence)
+        tags = _extract_sentence_tags(relation.tagged_sentence)
 
         if entity_id is None:
             return None
         self.num_entities = self.num_entities + 1
 
-        entity_id = extract_id(entity_id)
+        entity_id = _extract_id(entity_id)
 
         if entity_id not in relation.entities and \
                 entity_id not in tags:
@@ -623,7 +363,7 @@ class MedscanProcessor(object):
                 assert(len(mutation) == 1)
                 mutation = mutation[0]
 
-                db_refs, hgnc_name = urn_to_db_refs(protein.urn)
+                db_refs, hgnc_name = _urn_to_db_refs(protein.urn)
 
                 if db_refs is None:
                     return None
@@ -646,7 +386,7 @@ class MedscanProcessor(object):
                     return None
                 elif mutation.type == 'Mutation':
                     # Convert mutation properties to an INDRA MutCondition
-                    r_old, pos, r_new = parse_mut_string(mutation.name)
+                    r_old, pos, r_new = _parse_mut_string(mutation.name)
                     if r_old is None:
                         logger.warning('Could not parse mutation string: ' +
                                        mutation.name)
@@ -664,7 +404,7 @@ class MedscanProcessor(object):
                 elif mutation.type == 'MethSite':
                     # Convert methylation site information to an INDRA
                     # ModCondition
-                    res, pos = parse_mod_string(mutation.name)
+                    res, pos = _parse_mod_string(mutation.name)
                     if res is None:
                         return None
                     cond = ModCondition('methylation', res, pos)
@@ -678,7 +418,7 @@ class MedscanProcessor(object):
                 elif mutation.type == 'PhosphoSite':
                     # Convert phosphorylation site information to an INDRA
                     # ModCondition
-                    res, pos = parse_mod_string(mutation.name)
+                    res, pos = _parse_mod_string(mutation.name)
                     if res is None:
                         return None
                     cond = ModCondition('phosphorylation', res, pos)
@@ -705,7 +445,7 @@ class MedscanProcessor(object):
             else:
                 # Handle the more common case where we just ground the entity
                 # without mutation or modification information
-                db_refs, hgnc_name = urn_to_db_refs(entity.urn)
+                db_refs, hgnc_name = _urn_to_db_refs(entity.urn)
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = entity.name
@@ -717,3 +457,267 @@ class MedscanProcessor(object):
 
                 return Agent(normalize_medscan_name(agent_name),
                              db_refs=db_refs)
+
+
+class MedscanRelation(object):
+    """A structure representing the information contained in a Medscan
+    SVO xml element as well as associated entities and properties.
+
+    Attributes
+    ----------
+    uri : str
+        The URI of the current document (such as a PMID)
+    sec : str
+        The section of the document the relation occurs in
+    entities : dict
+        A dictionary mapping entity IDs from the same sentence to MedscanEntity
+        objects.
+    tagged_sentence : str
+        The sentence from which the relation was extracted, with some tagged
+        phrases and annotations.
+    subj : str
+        The entity ID of the subject
+    verb : str
+        The verb in the relationship between the subject and the object
+    obj : str
+        The entity ID of the object
+    svo_type : str
+        The type of SVO relationship (for example, CONTROL indicates
+        that the verb is normalized)
+    """
+    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
+                 svo_type):
+        self.uri = uri
+        self.sec = sec
+        self.entities = entities
+        self.tagged_sentence = tagged_sentence
+
+        self.subj = subj
+        self.verb = verb
+        self.obj = obj
+
+        self.svo_type = svo_type
+
+
+def normalize_medscan_name(name):
+    """Removes the "complex" and "complex complex" suffixes from a medscan
+    agent name so that it better corresponds with the grounding map.
+
+    Parameters
+    ----------
+    name: str
+        The Medscan agent name
+
+    Returns
+    -------
+    norm_name: str
+        The Medscan agent name with the "complex" and "complex complex"
+        suffixes removed.
+    """
+    suffix = ' complex'
+
+    for i in range(2):
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+    return name
+
+
+
+def _parse_mod_string(s):
+    """Parses a string referring to a protein modification of the form
+    (residue)(position), such as T47.
+
+    Parameters
+    ----------
+    s : str
+        A string representation of a protein residue and position being
+        modified
+
+    Returns
+    -------
+    residue : str
+        The residue being modified (example: T)
+    position : str
+        The position at which the modification is happening (example: 47)
+    """
+    m = re.match('([A-Za-z])+([0-9]+)', s)
+    assert(m is not None)
+    return (m.group(1), m.group(2))
+
+
+def _parse_mut_string(s):
+    """
+    A string representation of a protein mutation of the form
+    (old residue)(position)(new residue). Example: T34U.
+
+    Parameters
+    ----------
+    s : str
+        The string representation of the protein mutation
+
+    Returns
+    -------
+    old_residue : str
+        The old residue, or None of the mutation string cannot be parsed
+    position : str
+        The position at which the mutation occurs, or None if the mutation
+        string cannot be parsed
+    new_residue : str
+        The new residue, or None if the mutation string cannot be parsed
+    """
+    m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
+    if m is None:
+        # Mutation string does not fit this pattern, other patterns not
+        # currently supported
+        return None, None, None
+    else:
+        return (m.group(1), m.group(2), m.group(3))
+
+
+def _urn_to_db_refs(urn):
+    """Converts a Medscan URN to an INDRA db_refs dictionary with grounding
+    information.
+
+    Parameters
+    ----------
+    url : str
+        A Medscan URN
+
+    Returns
+    -------
+    db_refs : dict
+        A dictionary with grounding information, mapping databases to database
+        identifiers. If the Medscan URN is not recognized, returns an empty
+        dictionary.
+    hgnc_name : str
+        The HGNC name, if available, otherwise None
+    """
+    # Convert a urn to a db_refs dictionary
+    if urn is None:
+        return {}, None
+
+    p = 'urn:([^:]+):([^:]+)'
+    m = re.match(p, urn)
+    if m is None:
+        return None, None
+
+    urn_type = m.group(1)
+    urn_id = m.group(2)
+
+    db_refs = {}
+    hgnc_name = None
+
+    # TODO: support more types of URNs
+    if urn_type == 'agi-cas':
+        # Identifier is CAS, convert to CHEBI
+        chebi_id = get_chebi_id_from_cas(urn_id)
+        if chebi_id:
+            db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
+    elif urn_type == 'agi-llid':
+        # This is an Entrez ID, convert to HGNC
+        hgnc_id = get_hgnc_from_entrez(urn_id)
+        if hgnc_id is not None:
+            db_refs['HGNC'] = hgnc_id
+
+            # Convert the HGNC ID to a Uniprot ID
+            uniprot_id = get_uniprot_id(hgnc_id)
+            db_refs['UP'] = uniprot_id
+
+            # Try to lookup HGNC name; if it's available, set it to the
+            # agent name
+            hgnc_name = get_hgnc_name(hgnc_id)
+    elif urn_type == 'agi-ncimorgan':
+        # Identifier is MESH
+        db_refs['MESH'] = urn_id
+    elif urn_type == 'agi-ncimcelltype':
+        # Identifier is MESH
+        db_refs['MESH'] = urn_id
+    elif urn_type == 'agi-meshdis':
+        # Identifier is MESH
+        db_refs['MESHDIS'] = urn_id
+    elif urn_type == 'agi-gocomplex':
+        # Identifier is GO
+        db_refs['GO'] = 'GO:%s' % urn_id
+    elif urn_type == 'agi-go':
+        # Identifier is GO
+        db_refs['GO'] = 'GO:%s' % urn_id
+    elif urn_type == 'agi-ncimtissue':
+        # Identifier is MESH
+        db_refs['MESH'] = urn_id
+    return db_refs, hgnc_name
+
+
+def _extract_id(id_string):
+    """Extracts the numeric ID from the representation of the subject or
+    object ID that appears as an attribute of the svo element in the Medscan
+    XML document.
+
+    Parameters
+    ----------
+    id_string : str
+        The ID representation that appears in the svo element in the XML
+        document (example: ID{123})
+
+    Returns
+    -------
+    id : str
+        The numeric ID, extracted from the svo element's attribute
+        (example: 123)
+    """
+    p = 'ID\\{([0-9]+)\\}'
+    matches = re.match(p, id_string)
+    assert(matches is not None)
+    return matches.group(1)
+
+
+def _untag_sentence(s):
+    """Removes all tags in the sentence, returning the original sentence
+    without Medscan annotations.
+
+    Parameters
+    ----------
+    s : str
+        The tagged sentence
+
+    Returns
+    -------
+    untagged_sentence : str
+        Sentence with tags and annotations stripped out
+    """
+    p = 'ID{[0-9,]+=([^}]+)}'
+    s = re.sub(p, '\\1', s)
+
+    s = re.sub('CONTEXT{[^}]+}', '', s)
+    s = re.sub('GLOSSARY{[^}]+}', '', s)
+    return s
+
+
+def _extract_sentence_tags(tagged_sentence):
+    """Given a tagged sentence, extracts a dictionary mapping tags to the words
+    or phrases that they tag.
+
+    Parameters
+    ----------
+    tagged_sentence : str
+        The sentence with Medscan annotations and tags
+
+    Returns
+    -------
+    tags : dict
+        A dictionary mapping tags to the words or phrases that they tag.
+    """
+    p = re.compile('ID{([0-9,]+)=([^}]+)}')
+    tags = {}
+
+    # Iteratively look for all matches of this pattern
+    endpos = 0
+    while True:
+        match = p.search(tagged_sentence, pos=endpos)
+        if not match:
+            break
+        endpos = match.end()
+
+        tags[match.group(1)] = match.group(2)
+    return tags
+
+
