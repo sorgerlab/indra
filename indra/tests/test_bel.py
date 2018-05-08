@@ -24,6 +24,7 @@ def assert_pmids(stmts):
 @attr('webservice')
 def test_bel_ndex_query():
     bp = bel.process_ndex_neighborhood(['NFKB1'])
+    assert bp.statements
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
 
