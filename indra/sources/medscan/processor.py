@@ -305,6 +305,30 @@ class MedscanProcessor(object):
         """Processes a filehandle to MedScan csxml input into INDRA
         statements.
 
+        The CSXML format consists of a top-level `<batch>` root element
+        containing a series of `<doc>` (document) elements, in turn containing
+        `<sec>` (section) elements, and in turn containing `<sent>` (sentence)
+        elements.
+
+        Within the `<sent>` element, a series of additional elements appear in
+        the following order:
+
+        * `<toks>`, which contains a tokenized form of the sentence in its text
+          attribute
+        * `<textmods>`, which describes any preprocessing/normalization done to
+          the underlying text
+        * `<match>` elements, each of which contains one of more `<entity>`
+          elements, describing entities in the text with their identifiers.
+          The local IDs of each entities are given in the `msid` attribute of
+          this element; these IDs are then referenced in any subsequent SVO
+          elements.
+        * `<svo>` elements, representing subject-verb-object triples. SVO
+          elements with a `type` attribute of `CONTROL` represent normalized
+          regulation relationships; they often represent the normalized
+          extraction of the immediately preceding (but unnormalized SVO
+          element). However, in some cases there can be a "CONTROL" SVO
+          element without its parent immediately preceding it.
+
         Parameters
         ----------
         f : file object
