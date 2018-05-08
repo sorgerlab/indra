@@ -1,17 +1,16 @@
-import codecs
-import logging
-import lxml.etree
-from collections import namedtuple, defaultdict
-from indra.sources.medscan.processor import *
 import os
 import glob
-import tempfile
-import shutil
-from math import floor
-import pickle
-from indra.sources.medscan.fix_csxml_character_encoding import \
-        fix_character_encoding
 import time
+import shutil
+import codecs
+import pickle
+import tempfile
+import logging
+import lxml.etree
+from math import floor
+from collections import namedtuple, defaultdict
+from .processor import *
+from .fix_csxml_character_encoding import fix_character_encoding
 
 logger = logging.getLogger('medscan')
 
