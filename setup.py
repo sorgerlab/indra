@@ -57,6 +57,7 @@ def main():
                     'indra.sources.biopax', 'indra.sources.cwms',
                     'indra.sources.eidos',
                     'indra.sources.geneways', 'indra.sources.index_cards',
+                    'indra.sources.indra_db_rest',
                     'indra.sources.ndex_cx', 'indra.sources.reach',
                     'indra.sources.sofia',
                     'indra.sources.sparser', 'indra.sources.tees',
