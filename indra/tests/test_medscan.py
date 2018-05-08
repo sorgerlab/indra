@@ -47,7 +47,7 @@ def test_urn_to_db_refs():
     # agi-gocomplex
     urn6 = 'urn:agi-gocomplex:0005610'
     db_refs_6, _ = _urn_to_db_refs(urn6)
-    assert(db_refs_6 == {'GO': 'GO:0005610'})
+    assert(db_refs_6 == {'GO': 'GO:0005610', 'FPLX': 'Laminin_332'})
 
     # agi-go
     urn7 = 'urn:agi-go:0001515'
@@ -64,6 +64,18 @@ def test_urn_to_db_refs():
     urn9 = 'urn:agi-go:0000776'
     db_refs_9, _ = _urn_to_db_refs(urn9)
     assert(db_refs_9 == {'GO': 'GO:0000776', 'FPLX': 'Kinetochore'})
+
+    # Do we ground to Famplex when there is a correspondence between a MESH
+    # id and a Famplex id?
+    urn10 = 'urn:agi-ncimcelltype:D000199'
+    db_refs_10, _ = _urn_to_db_refs(urn10)
+    assert(db_refs_10 == {'MESH': 'D000199', 'FPLX': 'Actin'})
+
+    # Do we check the Famplex equivalences table to see if a raw Medscan URN
+    # maps to a Famplex ID?
+    urn11 = 'urn:agi-aopfc:0000105'
+    db_refs_11, _ = _urn_to_db_refs(urn11)
+    assert(db_refs_11 == {'FPLX': 'GATA'})
 
 
 def test_agent_from_entity():

@@ -660,12 +660,19 @@ def _urn_to_db_refs(urn):
         # Identifier is MESH
         db_refs['MESH'] = urn_id
 
-    # If we have a GO grounding, see if there is a corresponding Famplex
-    # grounding
-    if 'GO' in db_refs:
-        key = ('GO', db_refs['GO'])
-        if key in famplex_map:
-            db_refs['FPLX'] = famplex_map[key]
+    # If we have a GO or MESH grounding, see if there is a corresponding
+    # Famplex grounding
+    db_sometimes_maps_to_famplex = ['GO', 'MESH']
+    for db in db_sometimes_maps_to_famplex:
+        if db in db_refs:
+            key = (db, db_refs[db])
+            if key in famplex_map:
+                db_refs['FPLX'] = famplex_map[key]
+
+    # If the Medscan URN itself maps to a Famplex id, add a Famplex grounding
+    key = ('MEDSCAN', urn)
+    if key in famplex_map:
+        db_refs['FPLX'] = famplex_map[key]
 
     return db_refs, hgnc_name
 
