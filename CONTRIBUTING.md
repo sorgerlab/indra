@@ -75,8 +75,8 @@ called the "unicode sandwich".
 Documentation
 -------------
 All API functions (i.e. functions that a user can call) and classes need to be
-documented via docstrings. Please follow the NumPy documentation style
-(https://numpydoc.readthedocs.io/en/latest/format.html)
+documented via docstrings. Please follow the
+[NumPy documentation style](https://numpydoc.readthedocs.io/en/latest/format.html)
 when adding docstrings to functions and classes.
 
 The docstring
