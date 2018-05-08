@@ -56,6 +56,11 @@ The most important stylistic requirements are:
 - name classes with starting letters capitalized and no separator
 (e.g. `SomeClass`)
 
+In addition, functions or classes that are not meant to be part of the API
+of the given module (for instance helper functions that a user wouldn't
+directly call) should be prefixed with an underscore. These then won't show
+up and clutter the auto-generated API documentation.
+
 Python 2/3 compatibility and unicode
 ------------------------------------
 The core modules of INDRA (i.e. anything inside the `indra` module)
