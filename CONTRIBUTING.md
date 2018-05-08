@@ -12,7 +12,7 @@ allowing the maintainers of the repo to make changes to the PR.
 In addition, as a convention, we only merge PRs whose branches are rebased
 on top of the latest sorgerlab/master. This means that instead of merging
 sorgerlab/master into your own branch to resolve conflicts, you should always
-rebase on top of sorgerlab/master instead and force push your branches if
+rebase on top of sorgerlab/master and force push your branches if
 needed (you can do this even if a PR from that branch is already open).
 Consistent with this convention, in general, you should not use `git pull`
 to update your local fork. Rather, use `git fetch`,
@@ -51,8 +51,8 @@ The most important stylistic requirements are:
 - wrap lines to max 80 characters
 - name variables all lowercase and underscore as a separator
 (e.g. `some_variable`)
-- name classes with starting letters upper case and no separator
-(e.g. SomeClass)
+- name classes with starting letters capitalized and no separator
+(e.g. `SomeClass`)
 
 Documentation
 -------------
@@ -74,7 +74,7 @@ Testing
 All new functionalities added should also be tested unless special
 circumstances prevent testing. Similarly fixed bugs should have regression
 tests added. Normally any test file with `test` in its
-name and any functions/classes that have test/Test in their names in these
+name and any functions/classes that have `test/Test` in their names in these
 files will be automatically discovered and tested. If the newly added
 test requires special dependencies or other preliminary setup, the
 .travis.yml configuration for Travis CI needs to be updated to make the test
@@ -84,7 +84,7 @@ are confirmed to be unrelated to the PR.
 
 New dependencies
 ----------------
-In general, when adding new functionalities, built-in Python libraries or
+When adding new functionalities, using built-in Python libraries or
 packages that are already standard dependencies of INDRA are preferred.
 In case a new dependency needs to be used, that dependency needs to be
 - added to the install list or one of the extras list in setup.py
