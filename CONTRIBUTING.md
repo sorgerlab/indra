@@ -1,0 +1,106 @@
+Git fork/PR workflow
+--------------------
+This repository uses the forking model (https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow)
+for collaboration. In this model,
+each developer forks the main (sorgerlab/indra) repository, pushes code
+only to branches in their own fork, and then submits pull requests to
+sorgerlab. When a PR is submitted from a branch, any further changes can be pushed
+to that same branch even after the PR has been opened, and those changes
+are automatically appended to the PR. Please always check the box on Github
+allowing the maintainers of the repo to make changes to the PR.
+
+In addition, as a convention, we only merge PRs whose branches are rebased
+on top of the latest sorgerlab/master. This means that instead of merging
+sorgerlab/master into your own branch to resolve conflicts, you should always
+rebase on top of sorgerlab/master instead and force push your branches if
+needed (you can do this even if a PR from that branch is already open).
+Consistent with this convention, in general, you should not use `git pull`
+to update your local fork. Rather, use `git fetch`,
+`git merge --ff-only`, `git rebase` or `git reset --hard` as needed to
+get to the desired state. PRs are always merged using a separate merge commit,
+ensuring that merges clearly correspond to the inclusion of a specific
+feature or the fixing of a specific issue. In some cases, for instance, if
+a branch includes many trial and error commits, the maintainers may squash
+some commits before merging.
+
+Pull requests
+-------------
+Always submit PRs via the sorgerlab repository.
+Give your PR a concise and clear title that describes without excessive detail
+what the PR does. You should give more details in the description, pointing
+out the important changes made and any additional remarks that are relevant.
+If the PR fixes any issues, you can add "Fixes #xxx" to the text of the PR,
+which, when merged, will also automatically close the issue.
+
+Commit messages
+---------------
+The commit message should typically consist of a single line describing what
+the commit does. A good commit is one for which a clear and concise commit
+message is necessary and sufficient - irrespective of how much code the commit
+changes.
+
+Code style
+----------
+Please follow PEP8 guidelines (https://www.python.org/dev/peps/pep-0008/)
+when implementing new code. If modifying existing
+code, we ask that you do not mix extensive stylistic changes with meaningful
+code changes. Any stylistic changes should be submitted in a separate PR.
+
+The most important stylistic requirements are:
+- use 4 spaces for indentation instead of tabs
+- wrap lines to max 80 characters
+- name variables all lowercase and underscore as a separator
+(e.g. `some_variable`)
+- name classes with starting letters upper case and no separator
+(e.g. SomeClass)
+
+Documentation
+-------------
+All API functions (i.e. functions that a user can call) and classes need to be
+documented via docstrings. Please follow the NumPy documentation style
+(https://numpydoc.readthedocs.io/en/latest/format.html)
+when adding docstrings to functions and classes.
+
+The docstring
+- is surrounded by triple double-quotes,
+- starts with a one line short summary on the same line as the starting quotes,
+- after the short summary and an empty line, can contain an arbitrary length
+extended summary,
+- lists all arguments, their types and descriptions in a Parameters block
+- lists all returned values, their types and descriptions in a Returns block
+
+Testing
+-------
+All new functionalities added should also be tested unless special
+circumstances prevent testing. Similarly fixed bugs should have regression
+tests added. Normally any test file with `test` in its
+name and any functions/classes that have test/Test in their names in these
+files will be automatically discovered and tested. If the newly added
+test requires special dependencies or other preliminary setup, the
+.travis.yml configuration for Travis CI needs to be updated to make the test
+work. Generally, PRs will not be merged unless all Travis tests are passing.
+In some cases the PR will be merged if tests are failing, if the failures
+are confirmed to be unrelated to the PR.
+
+New dependencies
+----------------
+In general, when adding new functionalities, built-in Python libraries or
+packages that are already standard dependencies of INDRA are preferred.
+In case a new dependency needs to be used, that dependency needs to be
+- added to the install list or one of the extras list in setup.py
+- added to the installation instructions in the documentation if any special
+instructions are needed for setup
+- either added to doc/conf.py as an installed dependency or mocked to make doc
+builds on readthedocs.io pass
+- added to .travis.yml unless installed on Travis via setup.py
+
+New modules
+-----------
+If a new submodule is added, that submodule needs to be
+- listed in setup.py under packages to make sure it is included in installs
+- referred to in the documentation explicitly to be included
+
+New non-python resource files
+-----------------------------
+If a new non-python file is added to the repository, it needs to be listed
+in MANIFEST.in to make sure it is added to the documentation.
