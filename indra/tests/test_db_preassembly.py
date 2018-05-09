@@ -230,6 +230,8 @@ def test_preassembly_with_database():
     assert len(all_link_uuids - all_raw_uuids) is 0
     assert all([pa_stmt.mk_hash in all_link_mk_hashes
                 for pa_stmt in pa_stmt_list])
+    num_support_links = db.filter_query(db.PASupportLinks).count()
+    assert num_support_links
 
 
 def test_incremental_preassembly_with_database():
