@@ -2,6 +2,7 @@ language: python
 cache:
   directories:
     - $HOME/.cache/pip
+    - $HOME/.pybel
 python:
   - "2.7"
   - "3.5"
