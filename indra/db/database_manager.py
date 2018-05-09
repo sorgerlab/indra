@@ -25,6 +25,12 @@ from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
 
+try:
+    import networkx as nx
+    WITH_NX = True
+except ImportError:
+    WITH_NX = False
+
 
 logger = logging.getLogger('db_manager')
 
@@ -351,6 +357,23 @@ class DatabaseManager(object):
         self.tables[PASupportLinks.__tablename__] = PASupportLinks
 
         self.engine = create_engine(host)
+
+        if WITH_NX:
+            G = nx.Graph()
+            G.add_edges_from([
+                ('pa_agents', 'pa_statements'),
+                ('raw_unique_links', 'pa_statements'),
+                ('raw_unique_links', 'raw_statements'),
+                ('raw_statements', 'reading'),
+                ('raw_agents', 'raw_statements'),
+                ('raw_statements', 'db_info'),
+                ('reading', 'text_content'),
+                ('text_content', 'text_ref')
+                ])
+            self.__foreign_key_graph = G
+        else:
+            self.__foreign_key_graph = None
+
         return
 
     def __del__(self, *args, **kwargs):
@@ -498,6 +521,45 @@ class DatabaseManager(object):
             logger.exception(e)
             logger.error(err_msg)
             raise
+
+    def _get_foreign_key_constraint(self, table_name_1, table_name_2):
+        cols = self.get_column_objects(self.tables[table_name_1])
+        ret = None
+        for col in cols:
+            for fk in col.foreign_keys:
+                target_table_name, target_col = fk.target_fullname.split('.')
+                if table_name_2 == target_table_name:
+                    ret = (col == getattr(self.tables[table_name_2],
+                                          target_col))
+                    break
+        return ret
+
+    def join(self, table_1, table_2):
+        """Get the joining clause between two tables, if one exists.
+
+        If no link exists, an exception will be raised. Note that this only
+        works for directly links.
+        """
+        table_name_1 = table_1.__tablename__
+        table_name_2 = table_2.__tablename__
+        if WITH_NX:
+            fk_path = nx.shortest_path(self.__foreign_key_graph, table_name_1,
+                                       table_name_2)
+        else:
+            fk_path = [table_name_1, table_name_2]
+
+        links = []
+        for i in range(len(fk_path) - 1):
+            link = self._get_foreign_key_constraint(fk_path[i], fk_path[i+1])
+            if link is None:
+                link = self._get_foreign_key_constraint(fk_path[i+1],
+                                                        fk_path[i])
+            if link is None:
+                raise IndraDatabaseError("There is no foreign key in %s "
+                                         "pointing to %s."
+                                         % (table_name_1, table_name_2))
+            links.append(link)
+        return links
 
     def get_values(self, entry_list, col_names=None, keyed=False):
         "Get the column values from the entries in entry_list"
@@ -663,6 +725,10 @@ class DatabaseManager(object):
 
         return self.session.query(*query_args).filter(*args)
 
+    def count(self, tbls, *args):
+        """Get a count of the results to a query."""
+        return self.filter_query(tbls, *args).distinct().count()
+
     def select_one(self, tbls, *args):
         """Select the first value that matches requirements.
 
@@ -674,7 +740,7 @@ class DatabaseManager(object):
         """
         return self.filter_query(tbls, *args).first()
 
-    def select_all(self, tbls, *args):
+    def select_all(self, tbls, *args, yield_per=None):
         """Select any and all entries from table given by tbl_name.
 
         The results will be filtered by your keyword arguments. For example if
@@ -702,7 +768,23 @@ class DatabaseManager(object):
                db.TextContent.source == 'pmc_oa',
                db.TextContent.text_type == 'fulltext'
                )
+
+        Parameters
+        ----------
+        tbls, *args
+            See above for usage.
+        yield_per : int or None
+            If the result to your query is expected to be large, you can choose
+            to only load `yield_per` items at a time, using the eponymous
+            feature of sqlalchemy queries. Default is None, meaning all results
+            will be loaded simultaneously.
+
+        Returns
+        -------
+
         """
+        if yield_per is not None:
+            return self.filter_query(tbls, *args).yield_per(yield_per)
         return self.filter_query(tbls, *args).all()
 
     def select_sample_from_table(self, number, table, *args, **kwargs):
