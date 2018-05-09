@@ -193,13 +193,13 @@ var api_spec = {
         }
       }
     },
-    "/bel/process_ndex_neighborhood": {
+    "/bel/process_pybel_neighborhood": {
       "post": {
         "tags": [
           "BEL"
         ],
         "summary": "Process BEL Large Corpus neighborhood and return INDRA Statements.",
-        "operationId": "ndexNeighborhood",
+        "operationId": "pybelNeighborhood",
         "description": "Takes in a list of genes and returns an object with a key of \"statements\" referencing a list of INDRA statements.",
         "consumes": [
           "application/json"
@@ -219,7 +219,7 @@ var api_spec = {
         ],
         "responses": {
           "200": {
-            "description": "BEL neighborhood extracted from NDEx.",
+            "description": "BEL neighborhood extracted from Large Corpus via PyBEL.",
             "schema": {
               "$ref": "#/definitions/statementsObj"
             }
