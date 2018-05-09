@@ -8,6 +8,8 @@ import random
 import logging
 from datetime import timedelta, datetime
 
+from indra.db.util import get_statements, make_stmts_from_db_list
+
 gm_logger = logging.getLogger('grounding_mapper')
 gm_logger.setLevel(logging.WARNING)
 
@@ -232,6 +234,11 @@ def test_preassembly_with_database():
                 for pa_stmt in pa_stmt_list])
     num_support_links = db.filter_query(db.PASupportLinks).count()
     assert num_support_links
+
+    # Try to get all the preassembled statements from the table.
+    pa_stmts = get_statements([], preassembled=True, db=db)
+    assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
+                                                len(pa_stmt_list))
 
 
 def test_incremental_preassembly_with_database():

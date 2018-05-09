@@ -8,9 +8,11 @@ import re
 import json
 import zlib
 import logging
-from sqlalchemy import func
+from sqlalchemy import func, or_
+from itertools import groupby
 from indra.databases import hgnc_client
 from indra.util.get_version import get_version
+from indra.util import batch_iter
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
 from .database_manager import DatabaseManager, IndraDatabaseError, texttypes
@@ -520,28 +522,44 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
 
     stmts_tblname = 'pa_statements' if preassembled else 'raw_statements'
 
-    stmts = []
-    q = db.filter_query(stmts_tblname, *clauses)
-    if do_stmt_count:
-        logger.info("Counting statements...")
-        num_stmts = q.count()
-        logger.info("Total of %d statements" % num_stmts)
-    db_stmts = q.yield_per(count)
-    subset = []
-    total_counter = 0
-    for stmt in db_stmts:
-        subset.append(stmt)
-        if len(subset) == count:
+    if not preassembled:
+        stmts = []
+        q = db.filter_query(stmts_tblname, *clauses)
+        if do_stmt_count:
+            logger.info("Counting statements...")
+            num_stmts = q.count()
+            logger.info("Total of %d statements" % num_stmts)
+        db_stmts = q.yield_per(count)
+        for subset in batch_iter(db_stmts, count):
             stmts.extend(make_stmts_from_db_list(subset))
-            subset = []
-        total_counter += 1
-        if total_counter % count == 0:
             if do_stmt_count:
-                logger.info("%d of %d statements" % (total_counter, num_stmts))
+                logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
-                logger.info("%d statements" % total_counter)
+                logger.info("%d statements" % len(stmts))
+    else:
+        clauses += db.join(db.PAStatements, db.RawStatements)
+        pa_raw_stmt_pairs = db.filter_query([db.PAStatements, db.RawStatements],
+                                            *clauses)\
+            .order_by(db.PAStatements.mk_hash).yield_per(count)
+        stmt_dict = {}
+        for k, grp in groupby(pa_raw_stmt_pairs, key=lambda x: x[0].mk_hash):
+            some_stmts = make_pa_stmts_from_db_list(grp)
+            assert len(some_stmts) == 1, len(some_stmts)
+            stmt_dict[k] = some_stmts[0]
 
-    stmts.extend(make_stmts_from_db_list(subset))
+        # Now populate the supports/supported by fields.
+        support_links = db.filter_query(
+            [db.PASupportLinks.supported_mk_hash,
+             db.PASupportLinks.supporting_mk_hash],
+            or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
+                db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
+            ).distinct().yield_per(count)
+        for supped_hash, supping_hash in support_links:
+            stmt_dict[supping_hash].supported_by.append(stmt_dict[supped_hash])
+            stmt_dict[supped_hash].supports.append(stmt_dict[supping_hash])
+
+        stmts = list(stmt_dict.values())
+
     return stmts
 
 
@@ -550,6 +568,30 @@ def make_stmts_from_db_list(db_stmt_objs):
     for st_obj in db_stmt_objs:
         stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
     return stmts_from_json(stmt_json_list)
+
+
+def make_pa_stmts_from_db_list(db_stmt_tuples):
+    """Reconstruct the preassembled statements from db data.
+
+    Note: this does NOT repopulate `supports` and `supported_by` lists.
+    """
+    # Get the set of unique statements.
+    pa_stmt_dict = {}
+    for pa_stmt_obj, raw_stmt_obj in db_stmt_tuples:
+        # Add a statement to the dict if we haven't seen it before.
+        if pa_stmt_obj.mk_hash not in pa_stmt_dict:
+            stmt_json = json.loads(pa_stmt_obj.json.decode('utf-8'))
+            pa_stmt = Statement._from_json(stmt_json)
+            pa_stmt.shallow_hash = pa_stmt_obj.mk_hash
+            pa_stmt_dict[pa_stmt_obj.mk_hash] = pa_stmt
+        else:
+            pa_stmt = pa_stmt_dict[pa_stmt_obj.mk_hash]
+
+        # Add the evidence from the raw statement.
+        raw_stmt_json = json.loads(raw_stmt_obj.json.decode('utf-8'))
+        raw_stmt = Statement._from_json(raw_stmt_json)
+        pa_stmt.evidence += raw_stmt.evidence
+    return list(pa_stmt_dict.values())
 
 
 class NestedDict(dict):
@@ -731,6 +773,9 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     print("Found %d relevant text refs with statements." % len(stmt_nd))
     print("number of statement exact duplicates: %d" % num_duplicate_evidence)
     print("number of unique statements: %d" % num_unique_evidence)
+    def better_func(element):
+        print(element)
+        return full_text_content.index(element)
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
@@ -738,8 +783,7 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
         # Filter out unneeded fulltext.
         while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
             try:
-                worst_src = min(src_dict,
-                                key=lambda x: full_text_content.index(x[0]))
+                worst_src = min(src_dict, key=better_func)
                 del src_dict[worst_src]
             except:
                 print(src_dict)
