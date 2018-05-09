@@ -6,6 +6,11 @@ import gzip
 import zlib
 from io import BytesIO
 import xml.etree.ElementTree as ET
+try:
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
 
 if sys.version_info[0] >= 3:
     non_unicode = bytes
@@ -13,6 +18,7 @@ if sys.version_info[0] >= 3:
 else:
     non_unicode = str
     import cPickle as pickle
+
 
 def unicode_strs(obj, attr_filter=None):
     if isinstance(obj, non_unicode):
@@ -147,6 +153,7 @@ def write_unicode_csv(filename, rows, delimiter=',', quotechar='"',
                 csv_writer.writerow([unicode(cell).encode(encoding)
                                      for cell in row])
 
+
 def zip_string(content, name='gzipped_object'):
     buf = BytesIO()
     gzf = gzip.GzipFile(name, 'wb', 6, buf)
@@ -186,16 +193,48 @@ def fast_deepcopy(obj):
         obj_new = pickle.load(buf)
     return obj_new
 
+
 def lmap(f, xs):
     """A non-lazy version of map."""
     return list(map(f, xs))
+
 
 def flatten(l):
     """Flatten a nested list."""
     return sum(map(flatten, l), []) \
         if isinstance(l, list) or isinstance(l, tuple) else [l]
 
+
 def flatMap(f, xs):
     """Map a function onto an iterable and flatten the result."""
     return flatten(lmap(f, xs))
 
+
+def batch_iter(iterator, batch_size, padding=None, return_lists=False):
+    """Break an iterable into batches of size batch_size
+
+    Note that `padding` should be set to something (anything) which is NOT a
+    valid member of the iterator. For example, None works for [0,1,2,...10], but
+    not for ['a', None, 'c', 'd'].
+
+    Parameters
+    ----------
+    iterator : iterable
+        A python object which is iterable.
+    batch_size : int
+        The size of batches you wish to produce from the iterator.
+    padding : anything
+        This is used internally to ensure that the remainder of the list is
+        included. This MUST NOT be a valid element of the iterator.
+    return_lists : bool
+        Choose to return batches as lists, rather than generators.
+
+    Returns
+    -------
+    An iterator over lists or generators, depending on `return_lists`.
+    """
+    for batch in zip_longest(*[iter(iterator)]*batch_size, fillvalue=padding):
+        if return_lists:
+            yield [thing for thing in batch if thing is not padding]
+        else:
+            yield (thing for thing in batch if thing is not padding)
