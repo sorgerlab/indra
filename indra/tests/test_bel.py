@@ -30,7 +30,8 @@ def test_bel_ndex_query():
 
 @attr('webservice')
 def test_pybel_neighborhood_query():
-    bp = bel.process_pybel_neighborhood(['NFKB1'])
+    corpus = path_this + '/../../data/small_corpus.bel'
+    bp = bel.process_pybel_neighborhood(['TP63'], corpus)
     assert bp.statements
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
