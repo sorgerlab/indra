@@ -325,3 +325,11 @@ def test_protein_phosphosite():
     assert(obj.db_refs == {'CHEBI': 'CHEBI:15351', 'TEXT': 'acetyl-CoA'})
     assert(len(obj.mutations) == 0)
     assert(len(obj.mods) == 0)
+
+def test_handle_duplicates():
+    # Does the processor detect duplicate SVOs within the same sentence?
+    fname = os.path.join(data_folder, 'test_duplicate_SVO.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)

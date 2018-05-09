@@ -35,6 +35,29 @@ def _read_famplex_map():
 famplex_map = _read_famplex_map()
 
 
+def is_statement_in_list(statement, statement_list):
+    """Determines whether the statement is equivalent to any statement in the
+    given list of statements, with equivalency determined by Statement's
+    equals method.
+
+    Parameters
+    ----------
+    statement: indra.statements.Statement
+        The statement to compare with
+    statement_list: list<indra.statements.Statement>
+        The statement list whose entries we compare with statement
+
+    Returns
+    -------
+    in_list: bool
+        Whether statement is equivalent to any statements in the list
+    """
+    for s in statement_list:
+        if s.equals(statement):
+            return True
+    return False
+
+
 class MedscanProcessor(object):
     """Processes Medscan data into INDRA statements.
 
@@ -42,6 +65,10 @@ class MedscanProcessor(object):
     ----------
     statements : list<str>
         A list of extracted INDRA statements
+    sentence_statements : list<str>
+        A list of statements for the sentence we are currently processing.
+        Deduplicated and added to the main statement list when we finish
+        processing a sentence.
     num_entities : int
         The total number of subject or object entities the processor attempted
         to resolve
@@ -51,6 +78,7 @@ class MedscanProcessor(object):
     """
     def __init__(self):
         self.statements = []
+        self.sentence_statements = []
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.relations = []
@@ -125,6 +153,23 @@ class MedscanProcessor(object):
                 last_relation = None
 
                 entities = {}
+            elif event == 'end' and elem.tag == 'sent':
+                # End of sentence; deduplicate and copy statements from this
+                # sentence to the main statements list
+
+                # Make a list of those statments in sentence_statements sans
+                # duplicates
+                statements_to_add = []
+                for s in self.sentence_statements:
+                    if not is_statement_in_list(s, statements_to_add):
+                        statements_to_add.append(s)
+
+                # Add deduplicated statements to the main statements list
+                self.statements.extend(statements_to_add)
+
+                # Reset sentence statements list to prepare for processing the
+                # next sentence
+                self.sentence_statements = []
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
             elif event == 'start' and elem.tag == 'entity':
@@ -236,13 +281,13 @@ class MedscanProcessor(object):
         if relation.verb in increase_amount_verbs:
             # If the normalized verb corresponds to an IncreaseAmount statement
             # then make one
-            self.statements.append(
+            self.sentence_statements.append(
                                    IncreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb in decrease_amount_verbs:
             # If the normalized verb corresponds to a DecreaseAmount statement
             # then make one
-            self.statements.append(
+            self.sentence_statements.append(
                                    DecreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb == 'ProtModification':
@@ -302,12 +347,12 @@ class MedscanProcessor(object):
                 # INDRA statement
                 return
 
-            self.statements.append(statement_type(subj, obj, evidence=ev))
+            self.sentence_statements.append(statement_type(subj, obj, evidence=ev))
 
         elif relation.verb == 'Binding':
             # The Binding normalized verb corresponds to the INDRA Complex
             # statement.
-            self.statements.append(
+            self.sentence_statements.append(
                                    Complex([subj, obj], evidence=ev)
                                   )
 

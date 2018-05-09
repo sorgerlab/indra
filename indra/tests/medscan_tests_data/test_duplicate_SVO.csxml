@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/3258865">
+    <sec type="abs">
+
+
+<sent sn="5" msrc="ID{1003142=Phytohemagglutinin} stimulation results in 30-, 60-, and 370-fold increases in cytoplasmic ID{3002=SECT} mRNA with respect to unstimulated cells after 6-, 24-, and 72-h cultures, respectively. CONTEXT{6800017,7000389,10000091,10004131}">
+<toks>ID{1003142=Phytohemagglutinin} TK{W:N:stimulation=stimulation} TK{W:V:result=results} TK{W:PREP:in=in} TK{W:N:=30-} TK{PCT:PCT:,=,} TK{W:N:=60-} TK{PCT:PCT:,=,} TK{W:CONJ:and=and} TK{W:N:=370-fold} TK{W:VA:increase=increases} TK{W:PREP:in=in} TK{W:J:cytoplasmic=cytoplasmic} ID{3002=SECT} TK{W:N:mRNA=mRNA} TK{W:PREP:with=with} TK{W:N:respect=respect} TK{W:PREP:to=to} TK{W:J:unstimulated=unstimulated} TK{W:N:cell=cells} TK{W:PREP:aft=after} TK{W:N:=6-} TK{PCT:PCT:,=,} TK{W:N:=24-} TK{PCT:PCT:,=,} TK{W:CONJ:and=and} TK{W:N:=72-h} TK{W:VA:culture=cultures} TK{PCT:PCT:,=,} TK{W:D:respectively=respectively} TK{PCT:PCT:.=.}</toks>
+<match coff="0" chars="Phytohemagglutinin" clen="18" type="SmallMol">
+ <entity msid="1003142" type="SmallMol" name="phytohemagglutinin" urn="urn:agi-smol:phytohemagglutinin" />
+</match>
+<match coff="90" chars="SECT" clen="4" type="Protein">
+ <entity msid="3002" type="Protein" name="GZMB" urn="urn:agi-llid:3002" />
+</match>
+<context>
+ <entity msid="6800017" type="Tissue" name="Blood" urn="urn:agi-ncimtissue:C0851353" />
+ <entity msid="7000389" type="Organism" name="Mus musculus" urn="urn:agi-taxid:10090" />
+ <entity msid="10000091" type="CellType" name="lymphocyte" urn="urn:agi-ncimcelltype:C1550651" />
+ <entity msid="10004131" type="CellType" name="cytotoxic T-cell" urn="urn:agi-ncimcelltype:C0039195" />
+</context>
+<svo type="Main" subj="ID{1003142=Phytohemagglutinin} TK{stimulation}" verb="TK{result}" obj="TK{30-}" posinfo="0,30,31,11,43,7,54,3," />
+<svo type="Main" subj="ID{1003142=Phytohemagglutinin} TK{stimulation}" verb="TK{result}" obj="TK{60-}" posinfo="0,30,31,11,43,7,59,3," />
+<svo type="Main" subj="ID{1003142=Phytohemagglutinin} TK{stimulation}" verb="TK{result}" obj="TK{6-} TK{unstimulated} TK{cells} TK{respect} TK{cytoplasmic} ID{3002=SECT} TK{mRNA} TK{370-fold} TK{increases}" posinfo="0,30,31,11,43,7,162,2,137,12,150,5,126,7,90,11,102,13,116,4,68,8,77,9," />
+<svo type="CONTROL" subj="ID{1003142}" verb="ExpressionControl-positive" obj="ID{3002}" />
+<svo type="CONTROL" subj="ID{1003142}" verb="ExpressionControl-unknown" obj="ID{3002}" />
+<svo type="Main" subj="ID{1003142=Phytohemagglutinin} TK{stimulation}" verb="TK{result}" obj="TK{24-} TK{unstimulated} TK{cells} TK{respect} TK{cytoplasmic} ID{3002=SECT} TK{mRNA} TK{370-fold} TK{increases}" posinfo="0,30,31,11,43,7,166,3,137,12,150,5,126,7,90,11,102,13,116,4,68,8,77,9," />
+<svo type="CONTROL" subj="ID{1003142}" verb="ExpressionControl-positive" obj="ID{3002}" />
+<svo type="CONTROL" subj="ID{1003142}" verb="ExpressionControl-unknown" obj="ID{3002}" />
+<svo type="Main" subj="ID{1003142=Phytohemagglutinin} TK{stimulation}" verb="TK{result}" obj="TK{72-h} TK{cultures} TK{unstimulated} TK{cells} TK{respect} TK{cytoplasmic} ID{3002=SECT} TK{mRNA} TK{370-fold} TK{increases}" posinfo="0,30,31,11,43,7,175,4,180,8,137,12,150,5,126,7,90,11,102,13,116,4,68,8,77,9," />
+<svo type="CONTROL" subj="ID{1003142}" verb="ExpressionControl-positive" obj="ID{3002}" />
+<svo type="CONTROL" subj="ID{1003142}" verb="ExpressionControl-unknown" obj="ID{3002}" />
+</sent>
+
+
+</sec>
+</doc>
+</batch>
