@@ -451,11 +451,15 @@ def _get_evidence(u_data, v_data, edge_data):
         cit_ref = ev_citation[pc.CITATION_REFERENCE]
         if cit_type == pc.CITATION_TYPE_PUBMED:
             ev_pmid = cit_ref
+            ev_ref = None
         else:
-            ev_pmid = '%s: %s' % (cit_type, cit_ref)
+            ev_pmid = None
+            ev_ref = '%s: %s' % (cit_type, cit_ref)
     epistemics = {'direct': _rel_is_direct(edge_data)}
     annotations = edge_data.get(pc.ANNOTATIONS, {})
     annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
+    if ev_ref:
+        annotations['citation_ref'] = ev_ref
 
     text_location = annotations.pop('TextLocation', None)
     if text_location:

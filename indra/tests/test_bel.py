@@ -19,7 +19,7 @@ def assert_pmids(stmts):
     for stmt in stmts:
         for ev in stmt.evidence:
             if ev.pmid is not None:
-                assert(ev.pmid.isdigit())
+                assert ev.pmid.isdigit(), ev.pmid 
 
 @attr('webservice')
 def test_bel_ndex_query():
