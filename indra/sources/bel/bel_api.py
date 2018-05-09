@@ -76,6 +76,27 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
 def process_pybel_neighborhood(gene_names, network_file=None,
                                network_type='belscript'):
+    """Return PybelProcessor around neighborhood of given genes in a network.
+
+    This function processes the given network file and filters the returned
+    Statements to ones that contain genes in the given list.
+
+    Parameters
+    ----------
+    network_file : Optional[str]
+        Path to the network file to process. If not given, by default, the
+        BEL Large Corpus is used.
+    network_type : Optional[str]
+        This function allows processing both BEL Script files and JSON files.
+        This argument controls which type is assumed to be processed, and the
+        value can be either 'belscript' or 'json'. Default: bel_script
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
     if network_file is None:
         # Use large corpus as base network
         network_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -89,7 +110,7 @@ def process_pybel_neighborhood(gene_names, network_file=None,
     filtered_stmts = []
     for stmt in bp.statements:
         found = False
-        for agent in stmt.agent_list:
+        for agent in stmt.agent_list():
             if agent is not None:
                 if agent.name in gene_names:
                     found = True
