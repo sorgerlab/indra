@@ -24,6 +24,8 @@ install:
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@master
+  - mkdir -p $HOME/.pybel/data
+  - wget -nv http://sorger.med.harvard.edu/data/bgyori/pybel_cache.db --directory-prefix=$HOME/.pybel/data
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
   # PySB and dependencies
   - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz -nv
