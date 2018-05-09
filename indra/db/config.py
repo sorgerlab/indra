@@ -13,7 +13,7 @@ DEFAULT_DB_CONFIG_PATH = path.join(FILE_PATH, 'default_db_config.ini')
 DB_CONFIG_DIR = path.expanduser('~/.config/indra')
 DB_CONFIG_PATH = path.join(DB_CONFIG_DIR, 'db_config.ini')
 
-DB_STR_FMT = "{prefix}://{username}:{password}{host}{port}/{name}"
+DB_STR_FMT = "{prefix}://{username}{password}{host}{port}/{name}"
 ENV_PREFIX = 'INDRADB'
 
 
@@ -56,7 +56,9 @@ def get_databases(force_update=False, include_config=True):
                 if def_dict['driver']:
                     def_dict['prefix'] += def_dict['driver']
                 if def_dict['port']:
-                    def_dict['port'] += ':' + def_dict['port']
+                    def_dict['port'] = ':' + def_dict['port']
+                if def_dict['password']:
+                    def_dict['password'] = ':' + def_dict['password']
                 DATABASES[db_name] = DB_STR_FMT.format(**def_dict)
         DATABASES.update({k[len(ENV_PREFIX):].lower(): v
                           for k, v in environ.items()
