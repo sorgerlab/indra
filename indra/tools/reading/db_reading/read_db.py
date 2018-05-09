@@ -744,9 +744,8 @@ def upload_statements(stmt_data_list, db=None):
     reading_id_set = set([sd.reading_id for sd in stmt_data_list])
     if len(reading_id_set):
         uuid_set = {s.statement.uuid for s in stmt_data_list}
-        insert_agents(db, db.RawStatements, db.RawAgents,
-                      db.RawStatements.uuid.in_(uuid_set), verbose=True,
-                      override_default_query=True)
+        insert_agents(db, 'raw', db.RawStatements.uuid.in_(uuid_set),
+                      verbose=True, override_default_query=True)
     return
 
 
