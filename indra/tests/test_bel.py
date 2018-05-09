@@ -24,9 +24,17 @@ def assert_pmids(stmts):
 @attr('webservice')
 def test_bel_ndex_query():
     bp = bel.process_ndex_neighborhood(['NFKB1'])
+    assert_pmids(bp.statements)
+    unicode_strs(bp.statements)
+
+
+@attr('webservice')
+def test_pybel_neighborhood_query():
+    bp = bel.process_pybel_neighborhood(['NFKB1'])
     assert bp.statements
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
+
 
 def test_process_belrdf():
     with open(test_rdf_nfkb, 'rb') as fh:

@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import rdflib
 import logging
 from rdflib.plugins.parsers.ntriples import ParseError
@@ -8,6 +9,12 @@ from indra.databases import ndex_client
 from .belrdf_processor import BelRdfProcessor
 from .pybel_processor import PybelProcessor
 import pybel
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
+
 
 logger = logging.getLogger('bel')
 
@@ -40,6 +47,9 @@ def process_ndex_neighborhood(gene_names, network_id=None,
     This function calls process_belrdf to the returned RDF string from the
     webservice.
     """
+    logger.warning('This method is deprecated and the results are not '
+                   'guaranteed to be correct. Please use '
+                   'process_pybel_neighborhood instead.')
     if network_id is None:
         network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
     url = ndex_bel2rdf + '/network/%s/asBELRDF/query' % network_id
@@ -61,6 +71,33 @@ def process_ndex_neighborhood(gene_names, network_id=None,
     with open(rdf_out, 'wb') as fh:
         fh.write(rdf.encode('utf-8'))
     bp = process_belrdf(rdf, print_output=print_output)
+    return bp
+
+
+def process_pybel_neighborhood(gene_names, network_file=None,
+                               network_type='belscript'):
+    if network_file is None:
+        # Use large corpus as base network
+        network_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    '../../..',
+                                    'data', 'large_corpus.bel')
+    if network_type == 'belscript':
+        bp = process_belscript(network_file)
+    elif network_type == 'json':
+        bp = process_json_file(network_file)
+
+    filtered_stmts = []
+    for stmt in bp.statements:
+        found = False
+        for agent in stmt.agent_list:
+            if agent is not None:
+                if agent.name in gene_names:
+                    found = True
+        if found:
+            filtered_stmts.append(stmt)
+
+    bp.statements = filtered_stmts
+
     return bp
 
 
@@ -108,6 +145,7 @@ def process_belrdf(rdf_str, print_output=True):
     return bp
 
 
+@lru_cache(maxsize=100)
 def process_pybel_graph(graph):
     """Return a PybelProcessor by processing a PyBEL graph.
 
