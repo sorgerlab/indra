@@ -10,6 +10,7 @@ import os
 
 logger = logging.getLogger('isi')
 
+
 def process_text(text, pmid=None):
     """Processes a string using the ISI reader, performing processing and
     extracting.
@@ -20,7 +21,7 @@ def process_text(text, pmid=None):
         A string of biomedical information to process
     pmid: str
         The pmid associated with this text (or None if not specified)
-    
+
     Returns
     -------
     ip: indra.sources.isi.processor.IsiProcessor
@@ -40,6 +41,7 @@ def process_text(text, pmid=None):
     shutil.rmtree(pp_dir)
 
     return ip
+
 
 def process_preprocessed(isi_preprocessor, num_processes=1,
                          specified_output_dir=None):

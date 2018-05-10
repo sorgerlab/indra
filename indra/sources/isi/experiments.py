@@ -5,6 +5,7 @@ import os
 from indra.sources.isi.api import process_preprocessed
 from indra.sources.isi.preprocessor import IsiPreprocessor
 
+
 def abstracts_runtime():
     pfile = '/Users/daniel/Downloads/text_content_sample.pkl'
     dump = pickle.load(open(pfile, 'rb'))
@@ -21,7 +22,7 @@ def abstracts_runtime():
         print('Count:', count)
         print('==============================================================')
         with open('isi_experiment_log.txt', 'a') as f:
-            f.write('Reading and processing ' + str(count) +  'abstracts\n')
+            f.write('Reading and processing ' + str(count) + 'abstracts\n')
         start_time = time.time()
 
         if count is None:

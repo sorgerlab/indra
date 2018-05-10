@@ -11,6 +11,7 @@ from indra.preassembler.grounding_mapper import load_grounding_map,\
 
 logger = logging.getLogger('isi')
 
+
 # Load the mapping between ISI verb and INDRA statement type
 def _build_verb_statement_mapping():
     """Build the mapping between ISI verb strings and INDRA statement classes.
@@ -45,7 +46,9 @@ def _build_verb_statement_mapping():
                 first_line = False
     return verb_to_statement_type
 
+
 verb_to_statement_type = _build_verb_statement_mapping()
+
 
 class IsiProcessor(object):
     """Processes the output of the ISI reader.
@@ -203,7 +206,7 @@ class IsiProcessor(object):
                 statement = Complex([subj, obj], evidence=ev)
             else:
                 statement = statement_class(subj, obj, evidence=ev)
-        
+
         if statement is not None:
             # For Complex statements, the ISI reader produces two events:
             # binds(A, B) and binds(B, A)
@@ -220,8 +223,8 @@ class IsiProcessor(object):
                                 [m.db_refs['TEXT'] for m in old_s.members]
                         old_statement_members = sorted(old_statement_members)
 
-                        new_statement_members = \
-                                [m.db_refs['TEXT'] for m in statement.members]
+                        new_statement_members = [m.db_refs['TEXT']
+                                                 for m in statement.members]
                         new_statement_members = sorted(new_statement_members)
 
                         if old_statement_members == new_statement_members:

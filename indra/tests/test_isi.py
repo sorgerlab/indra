@@ -3,6 +3,7 @@ from builtins import dict, str
 from indra.sources.isi.api import process_text
 from indra.statements import Complex, Phosphorylation
 
+
 def test_process_complex():
     ip = process_text('Ras binds to Raf.', '42')
 

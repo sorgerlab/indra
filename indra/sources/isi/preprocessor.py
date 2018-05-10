@@ -45,7 +45,7 @@ class IsiPreprocessor(object):
         """Preprocesses plain text by tokenizing into sentences and writing
         each sentence on its own line in a plain text file. All other
         preprocessing functions ultimately call this one.
-        
+
         Parameters
         ----------
         text: str
