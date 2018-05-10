@@ -327,6 +327,7 @@ def test_protein_phosphosite():
     assert(len(obj.mutations) == 0)
     assert(len(obj.mods) == 0)
 
+
 def test_handle_duplicates():
     # Does the processor detect duplicate SVOs within the same sentence?
     fname = os.path.join(data_folder, 'test_duplicate_SVO.csxml')
@@ -334,3 +335,17 @@ def test_handle_duplicates():
 
     statements = mp.statements
     assert(len(statements) == 1)
+
+
+def test_modification_site():
+    # Can we detect the modification site and residue in a modification
+    # event?
+    fname = os.path.join(data_folder, 'test_modification_site.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(s0.residue == 'K')
+    assert(s0.position == '8')

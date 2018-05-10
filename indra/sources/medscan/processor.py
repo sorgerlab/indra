@@ -8,6 +8,7 @@ from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
         get_hgnc_name
 from indra.util import read_unicode_csv
+from indra.sources.reach.processor import ReachProcessor, Site
 
 logger = logging.getLogger('medscan')
 
@@ -58,8 +59,41 @@ def is_statement_in_list(statement, statement_list):
     return False
 
 
+class ProteinSiteInfo(object):
+    """Represents a site on a protein, extracted from a StateEffect event.
+
+    Parameters
+    ----------
+    site_text: str
+        The site as a string (ex. S22)
+    object_text: str
+        The protein being modified, as the string that appeared in the original
+        sentence
+    """
+    def __init__(self, site_text, object_text):
+        self.site_text = site_text
+        self.object_text = object_text
+
+    def get_sites(self):
+        """Parse the site-text string and return a list of sites.
+
+        Returns
+        -------
+        sites: list<Site>
+            A list of position-residue pairs corresponding to the site-text
+        """
+        return ReachProcessor._parse_site_text(self.site_text)
+
+
 class MedscanProcessor(object):
     """Processes Medscan data into INDRA statements.
+
+    The special StateEffect event conveys information about the binding
+    site of a protein modification. Sometimes this is paired with additional
+    event information in a seperate SVO. When we encounter a StateEffect, we
+    don't process into an INDRA statement right away, but instead store
+    the site information and use it if we encounter a ProtModification
+    event within the same sentence.
 
     Attributes
     ----------
@@ -75,6 +109,11 @@ class MedscanProcessor(object):
     num_entities_not_found : int
         The number of subject or object IDs which could not be resolved by
         looking in the list of entities or tagged phrases.
+    last_site_info_in_sentence: SiteInfo
+        Stored protein site info from the last StateEffect event within the
+        sentence, allowing us to combine information from StateEffect and
+        ProtModification events within a single sentence in a single INDRA
+        statement. This is reset at the end of each sentence
     """
     def __init__(self):
         self.statements = []
@@ -82,6 +121,7 @@ class MedscanProcessor(object):
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.relations = []
+        self.last_site_info_in_sentence = None
 
     def process_csxml_from_file_handle(self, f, num_documents):
         """Processes a filehandle to MedScan csxml input into INDRA
@@ -170,6 +210,9 @@ class MedscanProcessor(object):
                 # Reset sentence statements list to prepare for processing the
                 # next sentence
                 self.sentence_statements = []
+
+                # Reset site info
+                self.last_site_info_in_sentence = None
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
             elif event == 'start' and elem.tag == 'entity':
@@ -364,7 +407,18 @@ class MedscanProcessor(object):
                 # INDRA statement
                 return
 
-            self.sentence_statements.append(statement_type(subj, obj, evidence=ev))
+            obj_text = obj.db_refs['TEXT']
+            last_info = self.last_site_info_in_sentence
+            if last_info is not None and obj_text == last_info.object_text:
+                for site in self.last_site_info_in_sentence.get_sites():
+                    r = site.residue
+                    p = site.position
+
+                    s = statement_type(subj, obj, residue=r, position=p)
+                    self.sentence_statements.append(s)
+            else:
+                self.sentence_statements.append(statement_type(subj, obj,
+                                                evidence=ev))
 
         elif relation.verb == 'Binding':
             # The Binding normalized verb corresponds to the INDRA Complex
@@ -389,16 +443,21 @@ class MedscanProcessor(object):
                                    Activation(subj, obj, evidence=ev)
                                   )
         elif relation.verb == 'ProtModification-negative':
-            pass  #TODO
+            pass  # TODO
         elif relation.verb == 'Regulation-unknown':
-            pass  #TODO
+            pass  # TODO
         elif relation.verb == 'Regulation-negative':
             self.sentence_statements.append(
                                    Inhibition(subj, obj, evidence=ev)
                                   )
-
-
-
+        elif relation.verb == 'StateEffect-positive':
+            self.sentence_statements.append(
+                                   ActiveForm(subj, obj, evidence=ev)
+                                  )
+        elif relation.verb == 'StateEffect':
+            self.last_site_info_in_sentence = \
+                    ProteinSiteInfo(site_text=subj.name,
+                                    object_text=obj.db_refs['TEXT'])
 
     def agent_from_entity(self, relation, entity_id):
         """Create a (potentially grounded) INDRA Agent object from a given a
