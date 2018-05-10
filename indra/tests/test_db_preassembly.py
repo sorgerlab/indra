@@ -167,8 +167,9 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
 
 def test_preassembly_without_database():
     stmts = _get_stmts()
+    pam = pas.PreassemblyManager()
     unique_stmt_dict, evidence_links, support_links = \
-        pas.process_statements(stmts)
+        pam._process_statements(stmts)
     assert len(unique_stmt_dict)
     total_evidence = len(evidence_links)
     assert len(unique_stmt_dict) <= total_evidence <= len(stmts), \
@@ -190,10 +191,11 @@ def test_preassembly_without_database():
 
 def test_incremental_preassmbly_without_database():
     stmts = _get_stmts()
+    pam = pas.PreassemblyManager()
 
     # For comparison, preassemble the entire corpus.
     full_unique_stmts, full_evidence_links, full_support_links = \
-        pas.process_statements(stmts)
+        pam._process_statements(stmts)
 
     # Randomly split the sample 80-20
     init_stmts = random.sample(stmts, int(0.8*len(stmts)))
@@ -201,18 +203,18 @@ def test_incremental_preassmbly_without_database():
 
     # Run preassmbly on the "init" corpus (the 80)
     init_unique_stmts, init_evidence_links, init_support_links = \
-        pas.process_statements(init_stmts)
+        pam._process_statements(init_stmts)
     assert len(init_support_links)
 
     # Make sure the "new" statements actually have at least some links to add
-    _, new_only_ev_links, new_only_mk_links = pas.process_statements(new_stmts)
+    _, new_only_ev_links, new_only_mk_links = pam._process_statements(new_stmts)
     assert len(new_only_mk_links), "Test not useful without new matches."
     print("Evidence links from new stmts:", len(new_only_ev_links))
     print("Support links from new stmts:", len(new_only_mk_links))
 
     # Now merge in the "new" statements (the 20)
     new_unique_stmt_dict, new_evidence_links, new_support_links = \
-        pas.get_increment_links(init_unique_stmts, new_stmts)
+        pam._get_increment_links(init_unique_stmts, new_stmts)
     updated_unique_stmts, updated_evidence_links, updated_support_links = \
         pas.merge_statements(init_unique_stmts, init_evidence_links,
                              init_support_links, new_unique_stmt_dict,
