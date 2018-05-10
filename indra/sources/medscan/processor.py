@@ -5,247 +5,57 @@ import lxml.etree
 import collections
 from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
-from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id
-
+from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
+        get_hgnc_name
+from indra.util import read_unicode_csv
 
 logger = logging.getLogger('medscan')
 
+
 MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
-                           'properties'])
+                                                         'properties'])
 
 
 MedscanProperty = collections.namedtuple('MedscanProperty',
                                          ['type', 'name', 'urn'])
 
-
-class MedscanRelation(object):
-    """A structure representing the information contained in a Medscan
-    SVO xml element as well as associated entities and properties.
-
-    Attributes
-    ----------
-    uri : str
-        The URI of the current document (such as a PMID)
-    sec : str
-        The section of the document the relation occurs in
-    entities : dict
-        A dictionary mapping entity IDs from the same sentence to MedscanEntity
-        objects.
-    tagged_sentence : str
-        The sentence from which the relation was extracted, with some tagged
-        phrases and annotations.
-    subj : str
-        The entity ID of the subject
-    verb : str
-        The verb in the relationship between the subject and the object
-    obj : str
-        The entity ID of the object
-    svo_type : str
-        The type of SVO relationship (for example, CONTROL indicates
-        that the verb is normalized)
-    """
-    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
-                 svo_type):
-        self.uri = uri
-        self.sec = sec
-        self.entities = entities
-        self.tagged_sentence = tagged_sentence
-
-        self.subj = subj
-        self.verb = verb
-        self.obj = obj
-
-        self.svo_type = svo_type
+def _read_famplex_map():
+    fname = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         '../../resources/famplex_map.tsv')
+    famplex_map = {}
+    csv_rows = read_unicode_csv(fname, delimiter='\t')
+    for row in csv_rows:
+        source_ns = row[0]
+        source_id = row[1]
+        be_id = row[2]
+        famplex_map[(source_ns, source_id)] = be_id
+    return famplex_map
 
 
-def parse_mod_string(s):
-    """Parses a string referring to a protein modification of the form
-    (residue)(position), such as T47.
+famplex_map = _read_famplex_map()
+
+
+def is_statement_in_list(statement, statement_list):
+    """Determines whether the statement is equivalent to any statement in the
+    given list of statements, with equivalency determined by Statement's
+    equals method.
 
     Parameters
     ----------
-    s : str
-        A string representation of a protein residue and position being
-        modified
+    statement: indra.statements.Statement
+        The statement to compare with
+    statement_list: list<indra.statements.Statement>
+        The statement list whose entries we compare with statement
 
     Returns
     -------
-    residue : str
-        The residue being modified (example: T)
-    position : str
-        The position at which the modification is happening (example: 47)
+    in_list: bool
+        Whether statement is equivalent to any statements in the list
     """
-    m = re.match('([A-Za-z])+([0-9]+)', s)
-    assert(m is not None)
-    return (m.group(1), m.group(2))
-
-
-def parse_mut_string(s):
-    """
-    A string representation of a protein mutation of the form
-    (old residue)(position)(new residue). Example: T34U.
-
-    Parameters
-    ----------
-    s : str
-        The string representation of the protein mutation
-
-    Returns
-    -------
-    old_residue : str
-        The old residue, or None of the mutation string cannot be parsed
-    position : str
-        The position at which the mutation occurs, or None if the mutation
-        string cannot be parsed
-    new_residue : str
-        The new residue, or None if the mutation string cannot be parsed
-    """
-    m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
-    if m is None:
-        # Mutation string does fit this pattern, other patterns not currently
-        # supported
-        return None, None, None
-    else:
-        return (m.group(1), m.group(2), m.group(3))
-
-
-def urn_to_db_refs(urn):
-    """Converts a Medscan URN to an INDRA db_refs dictionary with grounding
-    information.
-
-    Parameters
-    ----------
-    url : str
-        A Medscan URN
-
-    Returns
-    -------
-    db_refs : dict
-        A dictionary with grounding information, mapping databases to database
-        identifiers. If the Medscan URN is not recognized, returns an empty
-        dictionary.
-    """
-    # Convert a urn to a db_refs dictionary
-    if urn is None:
-        return {}
-
-    p = 'urn:([^:]+):([^:]+)'
-    m = re.match(p, urn)
-    assert m is not None, m
-
-    urn_type = m.group(1)
-    urn_id = m.group(2)
-
-    db_refs = {}
-
-    # TODO: support more types of URNs
-    if urn_type == 'agi-cas':
-        # Identifier is CAS, convert to CHEBI
-        chebi_id = get_chebi_id_from_cas(urn_id)
-        if chebi_id:
-            db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
-    elif urn_type == 'agi-llid':
-        # This is an Entrez ID, convert to HGNC
-        hgnc_id = get_hgnc_from_entrez(urn_id)
-        if hgnc_id is not None:
-            db_refs['HGNC'] = hgnc_id
-
-            # Convert the HGNC ID to a Uniprot ID
-            uniprot_id = get_uniprot_id(hgnc_id)
-            db_refs['UP'] = uniprot_id
-    elif urn_type == 'agi-ncimorgan':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
-    elif urn_type == 'agi-ncimcelltype':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
-    elif urn_type == 'agi-meshdis':
-        # Identifier is MESH
-        db_refs['MESHDIS'] = urn_id
-    elif urn_type == 'agi-gocomplex':
-        # Identifier is GO
-        db_refs['GO'] = 'GO:%s' % urn_id
-    elif urn_type == 'agi-go':
-        # Identifier is GO
-        db_refs['GO'] = 'GO:%s' % urn_id
-    elif urn_type == 'agi-ncimtissue':
-        # Identifier is MESH
-        db_refs['MESH'] = urn_id
-    return db_refs
-
-
-def extract_id(id_string):
-    """Extracts the numeric ID from the representation of the subject or
-    object ID that appears as an attribute of the svo element in the Medscna
-    XML document.
-
-    Parameters
-    ----------
-    id_string : str
-        The ID representation that appears in the svo element in the XML
-        document (example: ID{123})
-
-    Returns
-    -------
-    id : str
-        The numeric ID, extracted from the svo element's attribute
-        (example: 123)
-    """
-    p = 'ID\\{([0-9]+)\\}'
-    matches = re.match(p, id_string)
-    assert(matches is not None)
-    return matches.group(1)
-
-
-def untag_sentence(s):
-    """Removes all tags in the sentence, returning the original sentence
-    without Medscan annotations.
-
-    Parameters
-    ----------
-    s : str
-        The tagged sentence
-
-    Returns
-    -------
-    untagged_sentence : str
-        Sentence with tags and annotations stripped out
-    """
-    p = 'ID{[0-9,]+=([^}]+)}'
-    s = re.sub(p, '\\1', s)
-
-    s = re.sub('CONTEXT{[^}]+}', '', s)
-    s = re.sub('GLOSSARY{[^}]+}', '', s)
-    return s
-
-
-def extract_sentence_tags(tagged_sentence):
-    """Given a tagged sentence, extracts a dictionary mapping tags to the words
-    or phrases that they tag.
-
-    Parameters
-    ----------
-    tagged_sentence : str
-        The sentence with Medscan annotations and tags
-
-    Returns
-    -------
-    tags : dict
-        A dictionary mapping tags to the words or phrases that they tag.
-    """
-    p = re.compile('ID{([0-9,]+)=([^}]+)}')
-    tags = {}
-
-    # Iteratively look for all matches of this pattern
-    endpos = 0
-    while True:
-        match = p.search(tagged_sentence, pos=endpos)
-        if not match:
-            break
-        endpos = match.end()
-
-        tags[match.group(1)] = match.group(2)
-    return tags
+    for s in statement_list:
+        if s.equals(statement):
+            return True
+    return False
 
 
 class MedscanProcessor(object):
@@ -255,44 +65,51 @@ class MedscanProcessor(object):
     ----------
     statements : list<str>
         A list of extracted INDRA statements
+    sentence_statements : list<str>
+        A list of statements for the sentence we are currently processing.
+        Deduplicated and added to the main statement list when we finish
+        processing a sentence.
     num_entities : int
         The total number of subject or object entities the processor attempted
         to resolve
     num_entities_not_found : int
         The number of subject or object IDs which could not be resolved by
         looking in the list of entities or tagged phrases.
-    unmapped_urns : set of str
-        The list of URNs that are not mapped to any external database,
-        optionally extracted from rnef files provided by the Medscan
-        developers. Currently unused.
     """
-    def __init__(self, medscan_resource_dir):
+    def __init__(self):
         self.statements = []
+        self.sentence_statements = []
         self.num_entities_not_found = 0
         self.num_entities = 0
-        self.unmapped_urns = set()
         self.relations = []
-
-        # Read in and populate a list of unmapped urns
-        if medscan_resource_dir is not None:
-            fname_unmapped_complexes = os.path.join(medscan_resource_dir,
-                                                    'Unmapped Complexes.rnef')
-            fname_classes = os.path.join(medscan_resource_dir,
-                                         'Unmapped Functional classes.rnef')
-            for fname in [fname_unmapped_complexes, fname_classes]:
-                with codecs.open(fname, 'rb') as f:
-                    for event, elem in lxml.etree.iterparse(f,
-                                                            events=('start',
-                                                                    'end'),
-                                                            encoding='utf-8'):
-                        if event == 'start':
-                            urn = elem.attrib.get('urn')
-                            if urn is not None:
-                                self.unmapped_urns.add(urn)
 
     def process_csxml_from_file_handle(self, f, num_documents):
         """Processes a filehandle to MedScan csxml input into INDRA
         statements.
+
+        The CSXML format consists of a top-level `<batch>` root element
+        containing a series of `<doc>` (document) elements, in turn containing
+        `<sec>` (section) elements, and in turn containing `<sent>` (sentence)
+        elements.
+
+        Within the `<sent>` element, a series of additional elements appear in
+        the following order:
+
+        * `<toks>`, which contains a tokenized form of the sentence in its text
+          attribute
+        * `<textmods>`, which describes any preprocessing/normalization done to
+          the underlying text
+        * `<match>` elements, each of which contains one of more `<entity>`
+          elements, describing entities in the text with their identifiers.
+          The local IDs of each entities are given in the `msid` attribute of
+          this element; these IDs are then referenced in any subsequent SVO
+          elements.
+        * `<svo>` elements, representing subject-verb-object triples. SVO
+          elements with a `type` attribute of `CONTROL` represent normalized
+          regulation relationships; they often represent the normalized
+          extraction of the immediately preceding (but unnormalized SVO
+          element). However, in some cases there can be a "CONTROL" SVO
+          element without its parent immediately preceding it.
 
         Parameters
         ----------
@@ -314,6 +131,8 @@ class MedscanProcessor(object):
         property_entities = []
         property_name = None
 
+        self.log_entities = collections.defaultdict(int)
+
         # Go through the document again and extract statements
         for event, elem in lxml.etree.iterparse(f, events=('start', 'end'),
                                                 encoding='utf-8',
@@ -334,6 +153,23 @@ class MedscanProcessor(object):
                 last_relation = None
 
                 entities = {}
+            elif event == 'end' and elem.tag == 'sent':
+                # End of sentence; deduplicate and copy statements from this
+                # sentence to the main statements list
+
+                # Make a list of those statments in sentence_statements sans
+                # duplicates
+                statements_to_add = []
+                for s in self.sentence_statements:
+                    if not is_statement_in_list(s, statements_to_add):
+                        statements_to_add.append(s)
+
+                # Add deduplicated statements to the main statements list
+                self.statements.extend(statements_to_add)
+
+                # Reset sentence statements list to prepare for processing the
+                # next sentence
+                self.sentence_statements = []
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
             elif event == 'start' and elem.tag == 'entity':
@@ -343,6 +179,11 @@ class MedscanProcessor(object):
                     ent_type = elem.attrib['type']
                     entities[ent_id] = MedscanEntity(match_text, ent_urn,
                                                      ent_type, {})
+
+                    tuple_key = (ent_type, elem.attrib.get('name'), ent_urn)
+                    if ent_type == 'Complex' or ent_type == 'FunctionalClass':
+                        self.log_entities[tuple_key] = \
+                                self.log_entities[tuple_key] + 1
                 else:
                     ent_type = elem.attrib['type']
                     ent_urn = elem.attrib['urn']
@@ -360,6 +201,7 @@ class MedscanProcessor(object):
                        'entities': entities}
                 svo.update(elem.attrib)
 
+                # Aggregate information about the relation
                 relation = MedscanRelation(
                                        uri=pmid,
                                        sec=sec,
@@ -389,12 +231,9 @@ class MedscanProcessor(object):
                 doc_counter += 1
                 # Give a status update
                 if doc_counter % 100 == 0:
-                    print("Processed %d documents"
-                          % doc_counter)
+                    logger.info("Processed %d documents" % doc_counter)
                 if num_documents is not None and doc_counter >= num_documents:
                     break
-
-        print("Done processing %d documents" % doc_counter)
 
 
     def process_relation(self, relation, last_relation):
@@ -420,7 +259,7 @@ class MedscanProcessor(object):
             return
 
         # Make evidence object
-        untagged_sentence = untag_sentence(relation.tagged_sentence)
+        untagged_sentence = _untag_sentence(relation.tagged_sentence)
         source_id = relation.uri
         m = re.match('info:pmid/([0-9]+)', source_id)
         if m is not None:
@@ -442,13 +281,13 @@ class MedscanProcessor(object):
         if relation.verb in increase_amount_verbs:
             # If the normalized verb corresponds to an IncreaseAmount statement
             # then make one
-            self.statements.append(
+            self.sentence_statements.append(
                                    IncreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb in decrease_amount_verbs:
             # If the normalized verb corresponds to a DecreaseAmount statement
             # then make one
-            self.statements.append(
+            self.sentence_statements.append(
                                    DecreaseAmount(subj, obj, evidence=ev)
                                   )
         elif relation.verb == 'ProtModification':
@@ -508,12 +347,12 @@ class MedscanProcessor(object):
                 # INDRA statement
                 return
 
-            self.statements.append(statement_type(subj, obj, evidence=ev))
+            self.sentence_statements.append(statement_type(subj, obj, evidence=ev))
 
         elif relation.verb == 'Binding':
             # The Binding normalized verb corresponds to the INDRA Complex
             # statement.
-            self.statements.append(
+            self.sentence_statements.append(
                                    Complex([subj, obj], evidence=ev)
                                   )
 
@@ -543,13 +382,13 @@ class MedscanProcessor(object):
         # Extract sentence tags mapping ids to the text. We refer to this
         # mapping only if the entity doesn't appear in the grounded entity
         # list
-        tags = extract_sentence_tags(relation.tagged_sentence)
+        tags = _extract_sentence_tags(relation.tagged_sentence)
 
         if entity_id is None:
             return None
         self.num_entities = self.num_entities + 1
 
-        entity_id = extract_id(entity_id)
+        entity_id = _extract_id(entity_id)
 
         if entity_id not in relation.entities and \
                 entity_id not in tags:
@@ -565,7 +404,8 @@ class MedscanProcessor(object):
             # the words with the given entity id tagged in the sentence.
             entity_text = tags[entity_id]
             db_refs = {'TEXT': entity_text}
-            return Agent(db_refs['TEXT'], db_refs=db_refs)
+            return Agent(normalize_medscan_name(db_refs['TEXT']),
+                         db_refs=db_refs)
         else:
             entity = relation.entities[entity_id]
 
@@ -583,8 +423,16 @@ class MedscanProcessor(object):
                 assert(len(mutation) == 1)
                 mutation = mutation[0]
 
-                db_refs = urn_to_db_refs(protein.urn)
+                db_refs, hgnc_name = _urn_to_db_refs(protein.urn)
+
+                if db_refs is None:
+                    return None
                 db_refs['TEXT'] = protein.name
+
+                if hgnc_name is None:
+                    agent_name = db_refs['TEXT']
+                else:
+                    agent_name = hgnc_name
 
                 # Check mutation.type. Only some types correspond to situations
                 # that can be represented in INDRA; return None if we cannot
@@ -598,7 +446,7 @@ class MedscanProcessor(object):
                     return None
                 elif mutation.type == 'Mutation':
                     # Convert mutation properties to an INDRA MutCondition
-                    r_old, pos, r_new = parse_mut_string(mutation.name)
+                    r_old, pos, r_new = _parse_mut_string(mutation.name)
                     if r_old is None:
                         logger.warning('Could not parse mutation string: ' +
                                        mutation.name)
@@ -607,8 +455,8 @@ class MedscanProcessor(object):
                     else:
                         try:
                             cond = MutCondition(pos, r_old, r_new)
-                            return Agent(db_refs['TEXT'], db_refs=db_refs,
-                                         mutations=[cond])
+                            return Agent(normalize_medscan_name(agent_name),
+                                         db_refs=db_refs, mutations=[cond])
                         except BaseException:
                             logger.warning('Could not parse mutation ' +
                                            'string: ' + mutation.name)
@@ -616,12 +464,12 @@ class MedscanProcessor(object):
                 elif mutation.type == 'MethSite':
                     # Convert methylation site information to an INDRA
                     # ModCondition
-                    res, pos = parse_mod_string(mutation.name)
+                    res, pos = _parse_mod_string(mutation.name)
                     if res is None:
                         return None
                     cond = ModCondition('methylation', res, pos)
-                    return Agent(db_refs['TEXT'], db_refs=db_refs,
-                                 mods=[cond])
+                    return Agent(normalize_medscan_name(agent_name),
+                                 db_refs=db_refs, mods=[cond])
 
                     # Example:
                     # MedscanEntity(name='R457',
@@ -630,12 +478,12 @@ class MedscanProcessor(object):
                 elif mutation.type == 'PhosphoSite':
                     # Convert phosphorylation site information to an INDRA
                     # ModCondition
-                    res, pos = parse_mod_string(mutation.name)
+                    res, pos = _parse_mod_string(mutation.name)
                     if res is None:
                         return None
                     cond = ModCondition('phosphorylation', res, pos)
-                    return Agent(db_refs['TEXT'], db_refs=db_refs,
-                                 mods=[cond])
+                    return Agent(normalize_medscan_name(agent_name),
+                                 db_refs=db_refs, mods=[cond])
 
                     # Example:
                     # MedscanEntity(name='S455',
@@ -657,6 +505,303 @@ class MedscanProcessor(object):
             else:
                 # Handle the more common case where we just ground the entity
                 # without mutation or modification information
-                db_refs = urn_to_db_refs(entity.urn)
+                db_refs, hgnc_name = _urn_to_db_refs(entity.urn)
+                if db_refs is None:
+                    return None
                 db_refs['TEXT'] = entity.name
-                return Agent(db_refs['TEXT'], db_refs=db_refs)
+
+                if hgnc_name is None:
+                    agent_name = db_refs['TEXT']
+                else:
+                    agent_name = hgnc_name
+
+                return Agent(normalize_medscan_name(agent_name),
+                             db_refs=db_refs)
+
+
+class MedscanRelation(object):
+    """A structure representing the information contained in a Medscan
+    SVO xml element as well as associated entities and properties.
+
+    Attributes
+    ----------
+    uri : str
+        The URI of the current document (such as a PMID)
+    sec : str
+        The section of the document the relation occurs in
+    entities : dict
+        A dictionary mapping entity IDs from the same sentence to MedscanEntity
+        objects.
+    tagged_sentence : str
+        The sentence from which the relation was extracted, with some tagged
+        phrases and annotations.
+    subj : str
+        The entity ID of the subject
+    verb : str
+        The verb in the relationship between the subject and the object
+    obj : str
+        The entity ID of the object
+    svo_type : str
+        The type of SVO relationship (for example, CONTROL indicates
+        that the verb is normalized)
+    """
+    def __init__(self, uri, sec, entities, tagged_sentence, subj, verb, obj,
+                 svo_type):
+        self.uri = uri
+        self.sec = sec
+        self.entities = entities
+        self.tagged_sentence = tagged_sentence
+
+        self.subj = subj
+        self.verb = verb
+        self.obj = obj
+
+        self.svo_type = svo_type
+
+
+def normalize_medscan_name(name):
+    """Removes the "complex" and "complex complex" suffixes from a medscan
+    agent name so that it better corresponds with the grounding map.
+
+    Parameters
+    ----------
+    name: str
+        The Medscan agent name
+
+    Returns
+    -------
+    norm_name: str
+        The Medscan agent name with the "complex" and "complex complex"
+        suffixes removed.
+    """
+    suffix = ' complex'
+
+    for i in range(2):
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+    return name
+
+
+
+def _parse_mod_string(s):
+    """Parses a string referring to a protein modification of the form
+    (residue)(position), such as T47.
+
+    Parameters
+    ----------
+    s : str
+        A string representation of a protein residue and position being
+        modified
+
+    Returns
+    -------
+    residue : str
+        The residue being modified (example: T)
+    position : str
+        The position at which the modification is happening (example: 47)
+    """
+    m = re.match('([A-Za-z])+([0-9]+)', s)
+    assert(m is not None)
+    return (m.group(1), m.group(2))
+
+
+def _parse_mut_string(s):
+    """
+    A string representation of a protein mutation of the form
+    (old residue)(position)(new residue). Example: T34U.
+
+    Parameters
+    ----------
+    s : str
+        The string representation of the protein mutation
+
+    Returns
+    -------
+    old_residue : str
+        The old residue, or None of the mutation string cannot be parsed
+    position : str
+        The position at which the mutation occurs, or None if the mutation
+        string cannot be parsed
+    new_residue : str
+        The new residue, or None if the mutation string cannot be parsed
+    """
+    m = re.match('([A-Za-z]+)([0-9]+)([A-Za-z]+)', s)
+    if m is None:
+        # Mutation string does not fit this pattern, other patterns not
+        # currently supported
+        return None, None, None
+    else:
+        return (m.group(1), m.group(2), m.group(3))
+
+
+def _urn_to_db_refs(urn):
+    """Converts a Medscan URN to an INDRA db_refs dictionary with grounding
+    information.
+
+    Parameters
+    ----------
+    url : str
+        A Medscan URN
+
+    Returns
+    -------
+    db_refs : dict
+        A dictionary with grounding information, mapping databases to database
+        identifiers. If the Medscan URN is not recognized, returns an empty
+        dictionary.
+    hgnc_name : str
+        The HGNC name, if available, otherwise None
+    """
+    # Convert a urn to a db_refs dictionary
+    if urn is None:
+        return {}, None
+
+    p = 'urn:([^:]+):([^:]+)'
+    m = re.match(p, urn)
+    if m is None:
+        return None, None
+
+    urn_type = m.group(1)
+    urn_id = m.group(2)
+
+    db_refs = {}
+    hgnc_name = None
+
+    # TODO: support more types of URNs
+    if urn_type == 'agi-cas':
+        # Identifier is CAS, convert to CHEBI
+        chebi_id = get_chebi_id_from_cas(urn_id)
+        if chebi_id:
+            db_refs['CHEBI'] = 'CHEBI:%s' % chebi_id
+    elif urn_type == 'agi-llid':
+        # This is an Entrez ID, convert to HGNC
+        hgnc_id = get_hgnc_from_entrez(urn_id)
+        if hgnc_id is not None:
+            db_refs['HGNC'] = hgnc_id
+
+            # Convert the HGNC ID to a Uniprot ID
+            uniprot_id = get_uniprot_id(hgnc_id)
+            db_refs['UP'] = uniprot_id
+
+            # Try to lookup HGNC name; if it's available, set it to the
+            # agent name
+            hgnc_name = get_hgnc_name(hgnc_id)
+    elif urn_type == 'agi-ncimorgan':
+        # Identifier is MESH
+        db_refs['MESH'] = urn_id
+    elif urn_type == 'agi-ncimcelltype':
+        # Identifier is MESH
+        db_refs['MESH'] = urn_id
+    elif urn_type == 'agi-meshdis':
+        # Identifier is MESH
+        db_refs['MESHDIS'] = urn_id
+    elif urn_type == 'agi-gocomplex':
+        # Identifier is GO
+        db_refs['GO'] = 'GO:%s' % urn_id
+    elif urn_type == 'agi-go':
+        # Identifier is GO
+        db_refs['GO'] = 'GO:%s' % urn_id
+    elif urn_type == 'agi-ncimtissue':
+        # Identifier is MESH
+        db_refs['MESH'] = urn_id
+
+    # If we have a GO or MESH grounding, see if there is a corresponding
+    # Famplex grounding
+    db_sometimes_maps_to_famplex = ['GO', 'MESH']
+    for db in db_sometimes_maps_to_famplex:
+        if db in db_refs:
+            key = (db, db_refs[db])
+            if key in famplex_map:
+                db_refs['FPLX'] = famplex_map[key]
+
+    # If the urn corresponds to an eccode, groudn to famplex if that eccode
+    # is in the Famplex equivalences table
+    if urn.startswith('urn:agi-enz'):
+        tokens = urn.split(':')
+        eccode = tokens[2]
+        key = ('ECCODE', eccode)
+        if key in famplex_map:
+            db_refs['FPLX'] = famplex_map[key]
+
+    # If the Medscan URN itself maps to a Famplex id, add a Famplex grounding
+    key = ('MEDSCAN', urn)
+    if key in famplex_map:
+        db_refs['FPLX'] = famplex_map[key]
+
+    return db_refs, hgnc_name
+
+
+def _extract_id(id_string):
+    """Extracts the numeric ID from the representation of the subject or
+    object ID that appears as an attribute of the svo element in the Medscan
+    XML document.
+
+    Parameters
+    ----------
+    id_string : str
+        The ID representation that appears in the svo element in the XML
+        document (example: ID{123})
+
+    Returns
+    -------
+    id : str
+        The numeric ID, extracted from the svo element's attribute
+        (example: 123)
+    """
+    p = 'ID\\{([0-9]+)\\}'
+    matches = re.match(p, id_string)
+    assert(matches is not None)
+    return matches.group(1)
+
+
+def _untag_sentence(s):
+    """Removes all tags in the sentence, returning the original sentence
+    without Medscan annotations.
+
+    Parameters
+    ----------
+    s : str
+        The tagged sentence
+
+    Returns
+    -------
+    untagged_sentence : str
+        Sentence with tags and annotations stripped out
+    """
+    p = 'ID{[0-9,]+=([^}]+)}'
+    s = re.sub(p, '\\1', s)
+
+    s = re.sub('CONTEXT{[^}]+}', '', s)
+    s = re.sub('GLOSSARY{[^}]+}', '', s)
+    return s
+
+
+def _extract_sentence_tags(tagged_sentence):
+    """Given a tagged sentence, extracts a dictionary mapping tags to the words
+    or phrases that they tag.
+
+    Parameters
+    ----------
+    tagged_sentence : str
+        The sentence with Medscan annotations and tags
+
+    Returns
+    -------
+    tags : dict
+        A dictionary mapping tags to the words or phrases that they tag.
+    """
+    p = re.compile('ID{([0-9,]+)=([^}]+)}')
+    tags = {}
+
+    # Iteratively look for all matches of this pattern
+    endpos = 0
+    while True:
+        match = p.search(tagged_sentence, pos=endpos)
+        if not match:
+            break
+        endpos = match.end()
+
+        tags[match.group(1)] = match.group(2)
+    return tags
+
+

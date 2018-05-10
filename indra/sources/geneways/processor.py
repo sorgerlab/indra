@@ -104,7 +104,8 @@ class GenewaysProcessor(object):
         # This code looks for sentences with the subject, object, and verb
         # listed by the Geneways action mention table and only includes
         # it in the evidence if there is exactly one such sentence
-        if self.get_ft_mention:
+        text = None
+        if get_ft_mention:
             try:
                 content, content_type = get_full_text(mention.pmid, 'pmid')
                 if content is not None:
@@ -112,15 +113,9 @@ class GenewaysProcessor(object):
                     sentences = ftm.find_matching_sentences()
                     if len(sentences) == 1:
                         text = sentences[0]
-                    else:
-                        text = None
-                else:
-                    text = None
-            except:
+            except Exception:
                 logger.warning('Could not fetch full text for PMID ' +
                                mention.pmid)
-        else:
-            text = None
 
         # Make an evidence object
         epistemics = dict()
