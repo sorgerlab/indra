@@ -12,8 +12,7 @@ logger = logging.getLogger('isi')
 
 
 def process_text(text, pmid=None):
-    """Processes a string using the ISI reader, performing processing and
-    extracting.
+    """Processes a string using the ISI reader and extracts INDRA statements.
 
     Parameters
     ----------
@@ -33,6 +32,45 @@ def process_text(text, pmid=None):
     pp = IsiPreprocessor(pp_dir)
     extra_annotations = {}
     pp.preprocess_plain_text_string(text, pmid, extra_annotations)
+
+    # Run the ISI reader and extract statements
+    ip = process_preprocessed(pp)
+
+    # Remove temporary directory with processed input
+    shutil.rmtree(pp_dir)
+
+    return ip
+
+
+def process_nxml(nxml_filename, pmid=None, extra_annotations={}):
+    """Processes an nxml file using the ISI reader, first converting to plain
+    text and preprocessing, then running the ISI reader and extracting
+    statements.
+
+    Parameters
+    ----------
+    nxml_filename: str
+        nxml file to process
+    pmid: str
+        pmid of this nxml file, to be added to the Evidence object of the
+        extracted INDRA statements
+    extra_annotations: dict
+        Additional annotations to add to the Evidence object of all extracted
+        INDRA statements. Extra annotations called 'interaction' are ignored
+        since this is used by the processor to store the corresponding
+        raw ISI output.
+
+    Returns
+    -------
+    ip: indra.sources.isi.processor.IsiProcessor
+        A processor containing extracted statements
+    """
+    # Create a temporary directory to store the proprocessed input
+    pp_dir = tempfile.mkdtemp('indra_isi_pp_output')
+
+    pp = IsiPreprocessor(pp_dir)
+    extra_annotations = {}
+    pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
     ip = process_preprocessed(pp)

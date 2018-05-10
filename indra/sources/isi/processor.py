@@ -11,7 +11,6 @@ from indra.preassembler.grounding_mapper import load_grounding_map,\
 
 logger = logging.getLogger('isi')
 
-
 # Load the mapping between ISI verb and INDRA statement type
 def _build_verb_statement_mapping():
     """Build the mapping between ISI verb strings and INDRA statement classes.
@@ -181,6 +180,10 @@ class IsiProcessor(object):
 
         # Make an evidence object
         annotations = deepcopy(extra_annotations)
+        if 'interaction' in extra_annotations:
+            logger.warning("'interaction' key of extra_annotations ignored" +
+                           " since this is reserved for storing the raw ISI " +
+                           "input.")
         annotations['interaction'] = interaction
         ev = Evidence(source_api='isi',
                       source_id=source_id,

@@ -3,9 +3,14 @@ import nltk
 import os
 import zlib
 import codecs
+from indra import get_config
+import shutil
+import subprocess
+import tempfile
 
 logger = logging.getLogger('isi')
 
+nxml2txt_path = get_config('NXML2TXT_PATH')
 
 class IsiPreprocessor(object):
     """Preprocesses a set of documents, one by one, and adds the preprocessed
@@ -100,22 +105,6 @@ class IsiPreprocessor(object):
             self.preprocess_plain_text_string(content, pmid,
                                               extra_annotations)
 
-    def preprocess_nxml_string(self, nxml, pmid, extra_annotations):
-        """Preprocess nxml as a string for use with ISI, by creating a plain
-        text file with one sentence per line. Not yet implemented.
-
-        Parameters
-        ----------
-        text: str
-            The plain text of the article of abstract
-        pmid: str
-            The pmid from which it comes, or None if not specified
-        extra_annotations: dict
-            Extra annotations to be added to each statement, possibly including
-            metadata about the source (annotations with the key "interaction"
-            will be overridden)
-        """
-        raise NotImplementedError()
 
     def preprocess_nxml_file(self, filename, pmid, extra_annotations):
         """Preprocess an nxml file for use with ISI, by creating a plain
@@ -123,8 +112,8 @@ class IsiPreprocessor(object):
 
         Parameters
         ----------
-        text: str
-            The plain text of the article of abstract
+        filename: str
+            Filename of an nxml file to process
         pmid: str
             The pmid from which it comes, or None if not specified
         extra_annotations: dict
@@ -132,8 +121,34 @@ class IsiPreprocessor(object):
             metadata about the source (annotations with the key "interaction"
             will be overridden)
         """
+        # Create a temporary directory
+        tmp_dir = tempfile.mkdtemp('indra_isi_nxml2txt_output')
 
-        raise NotImplementedError()
+        # Run nxml2txt
+        if nxml2txt_path is None:
+            logger.error('NXML2TXT_PATH not specified in config file or ' + 
+                         'environment variable')
+            return
+        else:
+            txt_out = os.path.join(tmp_dir, 'out.txt')
+            so_out = os.path.join(tmp_dir, 'out.so')
+            command = ['python2.7',
+                       os.path.join(nxml2txt_path, 'nxml2txt'),
+                       filename,
+                       txt_out,
+                       so_out]
+            ret = subprocess.call(command)
+            if ret != 0:
+                logger.warning('nxml2txt returned non-zero error code')
+
+            with open(txt_out, 'r') as f:
+                txt_content = txt_out.read()
+
+        # Remote temporary directory
+        shutil.rmtree(tmp_dir)
+
+        # Process text extracted from nxml
+        self.process_plain_text_string(txt_content, pmid, extra_annotations)
 
     def preprocess_abstract_list(self, abstract_list):
         """Preprocess a list of abstracts in database pickle dump format.
