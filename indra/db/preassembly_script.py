@@ -10,7 +10,7 @@ import indra.tools.assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.db.util import get_statements, insert_pa_stmts, \
-    distill_stmts_from_reading
+    distill_stmts_from_reading, make_stmts_from_db_list
 from indra.statements import stmts_from_json, Statement
 
 logger = logging.getLogger('db_preassembly')
@@ -76,8 +76,15 @@ class PreassemblyManager(object):
         check_from_datetime = last_update - timedelta(hours=6)
         logger.info("Updating with statements more recent than %s."
                     % check_from_datetime)
-        _, new_stmts = distill_stmts_from_reading(db, get_full_stmts=True,
-                   clauses=[db.RawStatements.create_date > check_from_datetime])
+        # _, new_stmts = distill_stmts_from_reading(db, get_full_stmts=True,
+        #          clauses=[db.RawStatements.create_date > check_from_datetime])
+        old_stmt_q = db.filter_query(
+            db.RawStatements,
+            db.RawStatements.uuid == db.RawUniqueLinks.raw_stmt_uuid
+            )
+        new_stmts = make_stmts_from_db_list(
+            db.filter_query(db.RawStatements).except_(old_stmt_q).all()
+            )
         existing_stmt_dict = self._get_existing_pa_stmt_dict(db)
         new_unique_stmt_dict, new_evidence_links, new_support_links = \
             get_increment_links(existing_stmt_dict, new_stmts,

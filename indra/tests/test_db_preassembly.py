@@ -137,6 +137,34 @@ def _do_old_fashioned_preassembly(stmts):
     return opa_stmts
 
 
+def _check_against_opa_stmts(raw_stmts, pa_stmts):
+    opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
+
+    old_stmt_dict = {s.get_shallow_hash(): s for s in opa_stmts}
+    new_stmt_dict = {s.get_shallow_hash(): s for s in pa_stmts}
+
+    new_hash_set = set(new_stmt_dict.keys())
+    old_hash_set = set(old_stmt_dict.keys())
+    assert new_hash_set == old_hash_set, \
+        (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
+    mismatched_evidence_texts = []
+    for mk_hash in new_hash_set:
+        new_ev_texts = [ev.text for ev in new_stmt_dict[mk_hash].evidence]
+        old_ev_texts = []
+        for ev in old_stmt_dict[mk_hash].evidence:
+            if ev.text in new_ev_texts:
+                new_ev_texts.remove(ev.text)
+            else:
+                old_ev_texts.append(ev.text)
+        if len(old_ev_texts) or len(new_ev_texts):
+            print("Found mismatched evidence: old: %s, new: %s."
+                  % (old_ev_texts, new_ev_texts))
+            mismatched_evidence_texts.append({'old': old_ev_texts,
+                                              'new': new_ev_texts})
+    assert not len(mismatched_evidence_texts), \
+        "Found %d mismatched evidence." % len(mismatched_evidence_texts)
+
+
 def test_preassembly_without_database():
     stmts = _get_stmts()
     unique_stmt_dict, evidence_links, support_links = \
@@ -260,31 +288,7 @@ def test_preassembly_with_database():
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
     raw_stmts = db_util.make_stmts_from_db_list(raw_stmt_list)
-    opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
-
-    old_stmt_dict = {s.get_shallow_hash(): s for s in opa_stmts}
-    new_stmt_dict = {s.get_shallow_hash(): s for s in pa_stmts}
-
-    new_hash_set = set(new_stmt_dict.keys())
-    old_hash_set = set(old_stmt_dict.keys())
-    assert new_hash_set == old_hash_set, \
-        (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
-    mismatched_evidence_texts = []
-    for mk_hash in new_hash_set:
-        new_ev_texts = [ev.text for ev in new_stmt_dict[mk_hash].evidence]
-        old_ev_texts = []
-        for ev in old_stmt_dict[mk_hash].evidence:
-            if ev.text in new_ev_texts:
-                new_ev_texts.remove(ev.text)
-            else:
-                old_ev_texts.append(ev.text)
-        if len(old_ev_texts) or len(new_ev_texts):
-            print("Found mismatched evidence: old: %s, new: %s."
-                  % (old_ev_texts, new_ev_texts))
-            mismatched_evidence_texts.append({'old': old_ev_texts,
-                                              'new': new_ev_texts})
-    assert not len(mismatched_evidence_texts),\
-        "Found %d mismatched evidence." % len(mismatched_evidence_texts)
+    _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
 def test_incremental_preassembly_with_database():
@@ -292,3 +296,7 @@ def test_incremental_preassembly_with_database():
     pa_manager = pas.PreassemblyManager()
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
+
+    raw_stmts = db_util.get_statements([], preassembled=False, db=db)
+    pa_stmts = db_util.get_statements([], preassembled=True, db=db)
+    _check_against_opa_stmts(raw_stmts, pa_stmts)
