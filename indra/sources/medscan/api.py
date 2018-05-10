@@ -82,10 +82,6 @@ def process_directory(directory_name):
         mp.statements.extend(mp_file.statements)
         mp.num_entities += mp_file.num_entities
         mp.num_entities_not_found += mp_file.num_entities_not_found
-        if mp.unmapped_urns is None:
-            mp.unmapped_urns = mp_file.unmapped_urns
-        else:
-            mp.unmapped_urns = mp.unmapped_urns.update(mp_file.unmapped_urns)
 
         for k in mp_file.log_entities:
             mp.log_entities[k] = mp.log_entities[k] + mp_file.log_entities[k]
