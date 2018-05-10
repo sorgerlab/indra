@@ -4,7 +4,14 @@ This repository uses the [forking model](https://www.atlassian.com/git/tutorials
 for collaboration. In this model,
 each developer forks the main (sorgerlab/indra) repository, pushes code
 only to branches in their own fork, and then submits pull requests to
-sorgerlab. When a PR is submitted from a branch, any further changes can be pushed
+sorgerlab. After cloning your own fork of `indra`, you should add `sorgerlab`
+as a remote to be able to track the latest changes by doing
+
+```
+git remote add sorgerlab https://github.com/sorgerlab/indra.git
+```
+
+When a PR is submitted from a branch, any further changes can be pushed
 to that same branch even after the PR has been opened, and those changes
 are automatically appended to the PR. Please always check the box on Github
 allowing the maintainers of the repo to make changes to the PR.
@@ -15,7 +22,7 @@ sorgerlab/master into your own branch to resolve conflicts, you should always
 rebase on top of sorgerlab/master and force push your branches if
 needed (you can do this even if a PR from that branch is already open).
 Consistent with this convention, in general, you should not use `git pull`
-to update your local fork. Rather, use `git fetch`,
+to update your local fork. Rather, use `git fetch --all`,
 `git merge --ff-only`, `git rebase` or `git reset --hard` as needed to
 get to the desired state. PRs are always merged using a separate merge commit,
 ensuring that merges clearly correspond to the inclusion of a specific
