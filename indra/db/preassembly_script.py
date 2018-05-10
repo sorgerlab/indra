@@ -54,7 +54,12 @@ class PreassemblyManager(object):
 
     @_handle_update_table
     def create_corpus(self, db):
-        _, stmts = distill_stmts_from_reading(db, get_full_stmts=True)
+        # TODO: this was causing a failure when comparing to the old preassembly
+        # Work out how to resolve those issues, either by controlling what gets
+        # into the raw statements table or by fixing the distillation process.
+        # _, stmts = distill_stmts_from_reading(db, get_full_stmts=True)
+        stmts = get_statements([], preassembled=False, do_stmt_count=False,
+                               db=db)
         unique_stmt_dict, evidence_links, support_links = \
             process_statements(stmts, poolsize=self.n_proc)
         insert_pa_stmts(db, unique_stmt_dict.values())

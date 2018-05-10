@@ -8,7 +8,6 @@ import random
 import logging
 from datetime import timedelta, datetime
 
-from indra.db.util import get_statements, make_stmts_from_db_list
 
 gm_logger = logging.getLogger('grounding_mapper')
 gm_logger.setLevel(logging.WARNING)
@@ -26,6 +25,7 @@ pa_logger.setLevel(logging.WARNING)
 from indra.db import util as db_util
 from indra.db import preassembly_script as pas
 from indra.statements import stmts_from_json, Statement
+from indra.tools import assemble_corpus as ac
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 STMT_PICKLE_FILE = os.path.join(THIS_DIR, 'test_stmts_tuples.pkl')
@@ -130,6 +130,13 @@ def _str_large_set(s, max_num):
     return ret_str
 
 
+def _do_old_fashioned_preassembly(stmts):
+    grounded_stmts = ac.map_grounding(stmts)
+    ms_stmts = ac.map_sequence(grounded_stmts)
+    opa_stmts = ac.run_preassembly(ms_stmts, return_toplevel=False)
+    return opa_stmts
+
+
 def test_preassembly_without_database():
     stmts = _get_stmts()
     unique_stmt_dict, evidence_links, support_links = \
@@ -144,6 +151,12 @@ def test_preassembly_without_database():
         ("Got %d ev sets for %d unique stmts."
          % (num_unique_stmt_keys, len(unique_stmt_dict)))
     assert len(support_links)
+
+    opa_stmts = _do_old_fashioned_preassembly(stmts)
+    new_hash_set = set(unique_stmt_dict.keys())
+    old_hash_set = {s.get_shallow_hash() for s in opa_stmts}
+    assert new_hash_set == old_hash_set, \
+        (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
     return
 
 
@@ -218,9 +231,13 @@ def test_statement_distillation():
 
 def test_preassembly_with_database():
     db = _get_loaded_db()
+
+    # Get the set of raw statements.
     raw_stmt_list = db.select_all(db.RawStatements)
     all_raw_uuids = {raw_stmt.uuid for raw_stmt in raw_stmt_list}
     assert len(raw_stmt_list)
+
+    # Run the preassembly initialization.
     pa_manager = pas.PreassemblyManager()
     pa_manager.create_corpus(db)
     pa_stmt_list = db.select_all(db.PAStatements)
@@ -236,9 +253,38 @@ def test_preassembly_with_database():
     assert num_support_links
 
     # Try to get all the preassembled statements from the table.
-    pa_stmts = get_statements([], preassembled=True, db=db)
+    pa_stmts = db_util.get_statements([], preassembled=True, db=db)
     assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
                                                 len(pa_stmt_list))
+
+    # Now test the set of preassembled (pa) statements from the database against
+    # what we get from old-fashioned preassembly (opa).
+    raw_stmts = db_util.make_stmts_from_db_list(raw_stmt_list)
+    opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
+
+    old_stmt_dict = {s.get_shallow_hash(): s for s in opa_stmts}
+    new_stmt_dict = {s.get_shallow_hash(): s for s in pa_stmts}
+
+    new_hash_set = set(new_stmt_dict.keys())
+    old_hash_set = set(old_stmt_dict.keys())
+    assert new_hash_set == old_hash_set, \
+        (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
+    mismatched_evidence_texts = []
+    for mk_hash in new_hash_set:
+        new_ev_texts = [ev.text for ev in new_stmt_dict[mk_hash].evidence]
+        old_ev_texts = []
+        for ev in old_stmt_dict[mk_hash].evidence:
+            if ev.text in new_ev_texts:
+                new_ev_texts.remove(ev.text)
+            else:
+                old_ev_texts.append(ev.text)
+        if len(old_ev_texts) or len(new_ev_texts):
+            print("Found mismatched evidence: old: %s, new: %s."
+                  % (old_ev_texts, new_ev_texts))
+            mismatched_evidence_texts.append({'old': old_ev_texts,
+                                              'new': new_ev_texts})
+    assert not len(mismatched_evidence_texts),\
+        "Found %d mismatched evidence." % len(mismatched_evidence_texts)
 
 
 def test_incremental_preassembly_with_database():
