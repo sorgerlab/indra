@@ -123,7 +123,7 @@ Logging
 -------
 Instead of using `print` for printing information to stdout, use the `logging`
 module to first create an approproately named logger,
-as for instance `logger = logging.getLogger('my_submodule') and then use the
+as for instance `logger = logging.getLogger('my_submodule')` and then use the
 appropriate level of logging (typically debug, info, warning or error) with
 the logger object to print messages. The configuration of the logging format
 is uniform across INDRA without further configuration needed for each
