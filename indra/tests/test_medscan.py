@@ -232,6 +232,32 @@ def test_phosphorylate():
     assert(s0.sub.db_refs == {'HGNC': '6120', 'TEXT': 'IRF-5', 'UP': 'Q13568'})
 
 
+def test_activation():
+    fname = os.path.join(data_folder, 'test_Activation.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(type(s0) == Activation)
+    assert(s0.subj.name == 'Laminin_332')
+    assert(s0.obj.name == 'IRF-5 dimers')
+
+
+def test_inhibition():
+    fname = os.path.join(data_folder, 'test_Inhibition.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(type(s0) == Inhibition)
+    assert(repr(s0.subj) == 'DNMT3A(mods: (methylation, R, 882))')
+    assert(repr(s0.obj) == 'cell differentiation()')
+
+
 def test_dephosphorylate():
     fname = os.path.join(data_folder, 'test_Dephosphorylate.csxml')
     mp = process_file(fname, None)

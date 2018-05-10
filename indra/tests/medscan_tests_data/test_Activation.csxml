@@ -27,8 +27,8 @@
      <entity msid="3663" type="Protein" name="IRF5" urn="urn:agi-llid:3663" />
     </match>
     <svo type="Main" subj="ID{48110000=We now show that} ID{1147=IKK alpha}" verb="TK{phosphorylate}" obj="ID{3663=IRF-5}" posinfo="0,29,30,18,49,14,64,14," />
-    <svo type="CONTROL" subj="ID{1147}" verb="ProtModification" obj="ID{3663}" />
     <svo type="Main" subj="ID{48110000=We now show that} ID{1147=IKK alpha}" verb="TK{induce}" obj="ID{3999999=IRF-5 dimers} TK{formation}" posinfo="0,29,30,18,83,7,104,24,91,9," />
+    <svo type="CONTROL" subj="ID{1147}" verb="UnknownRegulation-positive" obj="ID{3999999}" />
     <svo type="NPmod" subj="ID{3999999=IRF-5 dimers} TK{formation}" verb="TK{indicative}" obj="ID{3663=IRF-5} TK{activation}" posinfo="104,24,91,9,146,10,160,14,175,10," />
    </sent>
 

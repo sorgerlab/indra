@@ -25,9 +25,9 @@
      <entity msid="4130154" type="CellProcess" name="cell differentiation" urn="urn:agi-gocellproc:0030154" />
     </match>
     <svo type="Main" subj="ID{999998=DNMT3A R882 mutants}" verb="TK{interact}" obj="ID{3000137=polycomb} TK{proteins}" posinfo="0,30,31,8,45,20,66,8," />
-    <svo type="CONTROL" subj="ID{999998}" verb="Binding" obj="ID{3000137}" />
     <svo type="VPmod" subj="ID{999998=DNMT3A R882 mutants}" verb="TK{block}" obj="TK{haematopoietic} TK{stem}" posinfo="0,30,78,5,84,14,99,4," />
     <svo type="VPmod" subj="ID{999998=DNMT3A R882 mutants}" verb="TK{block}" obj="TK{leukaemic} ID{4130154=cell differentiation}" posinfo="0,30,78,5,108,9,118,32," />
+    <svo type="CONTROL" subj="ID{999998}" verb="UnknownRegulation-negative" obj="ID{4130154}" />
    </sent>
 
 </sec>

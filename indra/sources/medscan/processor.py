@@ -332,11 +332,25 @@ class MedscanProcessor(object):
                                  'miRNAEffect-negative',
                                  'QuantitativeChange-negative']
 
-        # These normalized verbs are mapped to Activation statements
-        activation_verbs = ['UnknownRegulation-positive']
+        # These normalized verbs are mapped to Activation statements (indirect)
+        activation_verbs = ['UnknownRegulation-positive',
+                            'Regulation-positive']
+        # These normalized verbs are mapped to Activation statements (direct)
+        d_activation_verbs = ['DirectRegulation-positive', 
+                              'DirectRegulation-positive--direct interaction']
+        # All activation verbs
+        all_activation_verbs = list(activation_verbs)
+        all_activation_verbs.extend(d_activation_verbs)
 
-        # These normalized vers are mapped to Inhibition statements
-        inhibition_verbs = ['UnknownRegulation-negative']
+        # These normalized verbs are mapped to Inhibition statements (indirect)
+        inhibition_verbs = ['UnknownRegulation-negative',
+                            'Regulation-negative']
+        # These normalized verbs are mapped to Inhibition statements (direct)
+        d_inhibition_verbs = ['DirectRegulation-negative',
+                              'DirectRegulation-negative--direct interaction']
+        # All inhibition verbs
+        all_inhibition_verbs = list(inhibition_verbs)
+        all_inhibition_verbs.extend(d_inhibition_verbs)
 
         if relation.verb in increase_amount_verbs:
             # If the normalized verb corresponds to an IncreaseAmount statement
@@ -350,6 +364,23 @@ class MedscanProcessor(object):
             self.sentence_statements.append(
                                    DecreaseAmount(subj, obj, evidence=ev)
                                   )
+        elif relation.verb in all_activation_verbs:
+            # If the normalized verb corresponds to an Activation statement,
+            # then make one
+            if relation.verb in d_activation_verbs:
+                ev.epistemics['direction'] = True
+            self.sentence_statements.append(
+                    Activation(subj, obj, evidence=ev)
+                    )
+        elif relation.verb in all_inhibition_verbs:
+            # If the normalized verb corresponds to an Inhibition statement,
+            # then make one
+            if relation.verb in d_inhibition_verbs:
+                ev.epistemics['direct'] = True
+            self.sentence_statements.append(
+                    Inhibition(subj, obj, evidence=ev)
+                    )
+
         elif relation.verb == 'ProtModification':
             # The normalized verb 'ProtModification' is too vague to make
             # an INDRA statement. We look at the unnormalized verb in the
@@ -426,30 +457,10 @@ class MedscanProcessor(object):
             self.sentence_statements.append(
                                    Complex([subj, obj], evidence=ev)
                                   )
-        elif relation.verb == 'DirectRegulation-negative' or \
-             relation.verb == 'DirectRegulation-negative--direct interaction':
-            ev.epistemics['direct'] = True
-            self.sentence_statements.append(
-                                   Inhibition(subj, obj, evidence=ev)
-                                  )
-        elif relation.verb == 'DirectRegulation-positive' or \
-             relation.verb == 'DirectRegulation-positive--direct interaction':
-            ev.epistemics['direct'] = True
-            self.sentence_statements.append(
-                                   Activation(subj, obj, evidence=ev)
-                                  )
-        elif relation.verb == 'Regulation-positive':
-            self.sentence_statements.append(
-                                   Activation(subj, obj, evidence=ev)
-                                  )
         elif relation.verb == 'ProtModification-negative':
-            pass  # TODO
+            pass  # TODO?
         elif relation.verb == 'Regulation-unknown':
-            pass  # TODO
-        elif relation.verb == 'Regulation-negative':
-            self.sentence_statements.append(
-                                   Inhibition(subj, obj, evidence=ev)
-                                  )
+            pass  # TODO?
         elif relation.verb == 'StateEffect-positive':
             self.sentence_statements.append(
                                    ActiveForm(subj, obj, evidence=ev)
