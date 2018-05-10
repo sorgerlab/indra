@@ -336,7 +336,7 @@ class MedscanProcessor(object):
         activation_verbs = ['UnknownRegulation-positive',
                             'Regulation-positive']
         # These normalized verbs are mapped to Activation statements (direct)
-        d_activation_verbs = ['DirectRegulation-positive', 
+        d_activation_verbs = ['DirectRegulation-positive',
                               'DirectRegulation-positive--direct interaction']
         # All activation verbs
         all_activation_verbs = list(activation_verbs)
@@ -368,7 +368,7 @@ class MedscanProcessor(object):
             # If the normalized verb corresponds to an Activation statement,
             # then make one
             if relation.verb in d_activation_verbs:
-                ev.epistemics['direction'] = True
+                ev[0].epistemics['direction'] = True
             self.sentence_statements.append(
                     Activation(subj, obj, evidence=ev)
                     )
@@ -376,7 +376,7 @@ class MedscanProcessor(object):
             # If the normalized verb corresponds to an Inhibition statement,
             # then make one
             if relation.verb in d_inhibition_verbs:
-                ev.epistemics['direct'] = True
+                ev[0].epistemics['direct'] = True
             self.sentence_statements.append(
                     Inhibition(subj, obj, evidence=ev)
                     )
