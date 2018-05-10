@@ -265,18 +265,35 @@ class MedscanProcessor(object):
         if m is not None:
             # Extract the pmid from the URI if the URI refers to a pmid
             pmid = m.group(1)
-        annotations = None
+        if last_relation:
+            last_verb = last_relation.verb
+        else:
+            last_verb = None
+        annotations = {'verb': relation.verb, 'last_verb': last_verb}
+        epistemics = dict()
+        epistemics['direct'] = False  # Overridden later if needed
         ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
-                       text=untagged_sentence, annotations=None,
-                       epistemics=None)]
+                       text=untagged_sentence, annotations=annotations,
+                       epistemics=epistemics)]
 
         # These normalized verbs are mapped to IncreaseAmount statements
         increase_amount_verbs = ['ExpressionControl-positive',
-                                 'MolSynthesis-positive']
+                                 'MolSynthesis-positive',
+                                 'CellExpression',
+                                 'QuantitativeChange-positive',
+                                 'PromoterBinding']
 
         # These normalized verbs are mapped to DecreaseAmount statements
         decrease_amount_verbs = ['ExpressionControl-negative',
-                                 'MolSynthesis-negative']
+                                 'MolSynthesis-negative',
+                                 'miRNAEffect-negative',
+                                 'QuantitativeChange-negative']
+
+        # These normalized verbs are mapped to Activation statements
+        activation_verbs = ['UnknownRegulation-positive']
+
+        # These normalized vers are mapped to Inhibition statements
+        inhibition_verbs = ['UnknownRegulation-negative']
 
         if relation.verb in increase_amount_verbs:
             # If the normalized verb corresponds to an IncreaseAmount statement
@@ -355,6 +372,33 @@ class MedscanProcessor(object):
             self.sentence_statements.append(
                                    Complex([subj, obj], evidence=ev)
                                   )
+        elif relation.verb == 'DirectRegulation-negative' or \
+             relation.verb == 'DirectRegulation-negative--direct interaction':
+            ev.epistemics['direct'] = True
+            self.sentence_statements.append(
+                                   Inhibition(subj, obj, evidence=ev)
+                                  )
+        elif relation.verb == 'DirectRegulation-positive' or \
+             relation.verb == 'DirectRegulation-positive--direct interaction':
+            ev.epistemics['direct'] = True
+            self.sentence_statements.append(
+                                   Activation(subj, obj, evidence=ev)
+                                  )
+        elif relation.verb == 'Regulation-positive':
+            self.sentence_statements.append(
+                                   Activation(subj, obj, evidence=ev)
+                                  )
+        elif relation.verb == 'ProtModification-negative':
+            pass  #TODO
+        elif relation.verb == 'Regulation-unknown':
+            pass  #TODO
+        elif relation.verb == 'Regulation-negative':
+            self.sentence_statements.append(
+                                   Inhibition(subj, obj, evidence=ev)
+                                  )
+
+
+
 
     def agent_from_entity(self, relation, entity_id):
         """Create a (potentially grounded) INDRA Agent object from a given a
