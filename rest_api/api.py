@@ -129,16 +129,16 @@ def reach_process_pmc():
 
 
 #   BEL   #
-@route('/bel/process_ndex_neighborhood', method=['POST', 'OPTIONS'])
+@route('/bel/process_pybel_neighborhood', method=['POST', 'OPTIONS'])
 @allow_cors
-def bel_process_ndex_neighborhood():
+def bel_process_pybel_neighborhood():
     """Process BEL Large Corpus neighborhood and return INDRA Statements."""
     if request.method == 'OPTIONS':
         return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     genes = body.get('genes')
-    bp = bel.process_ndex_neighborhood(genes)
+    bp = bel.process_pybel_neighborhood(genes)
     if bp and bp.statements:
         stmts = stmts_to_json(bp.statements)
         res = {'statements': stmts}

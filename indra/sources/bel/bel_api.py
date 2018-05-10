@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import os
 import rdflib
 import logging
 from rdflib.plugins.parsers.ntriples import ParseError
@@ -8,6 +9,12 @@ from indra.databases import ndex_client
 from .belrdf_processor import BelRdfProcessor
 from .pybel_processor import PybelProcessor
 import pybel
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
+
 
 logger = logging.getLogger('bel')
 
@@ -40,6 +47,9 @@ def process_ndex_neighborhood(gene_names, network_id=None,
     This function calls process_belrdf to the returned RDF string from the
     webservice.
     """
+    logger.warning('This method is deprecated and the results are not '
+                   'guaranteed to be correct. Please use '
+                   'process_pybel_neighborhood instead.')
     if network_id is None:
         network_id = '9ea3c170-01ad-11e5-ac0f-000c29cb28fb'
     url = ndex_bel2rdf + '/network/%s/asBELRDF/query' % network_id
@@ -61,6 +71,54 @@ def process_ndex_neighborhood(gene_names, network_id=None,
     with open(rdf_out, 'wb') as fh:
         fh.write(rdf.encode('utf-8'))
     bp = process_belrdf(rdf, print_output=print_output)
+    return bp
+
+
+def process_pybel_neighborhood(gene_names, network_file=None,
+                               network_type='belscript'):
+    """Return PybelProcessor around neighborhood of given genes in a network.
+
+    This function processes the given network file and filters the returned
+    Statements to ones that contain genes in the given list.
+
+    Parameters
+    ----------
+    network_file : Optional[str]
+        Path to the network file to process. If not given, by default, the
+        BEL Large Corpus is used.
+    network_type : Optional[str]
+        This function allows processing both BEL Script files and JSON files.
+        This argument controls which type is assumed to be processed, and the
+        value can be either 'belscript' or 'json'. Default: bel_script
+
+    Returns
+    -------
+    bp : PybelProcessor
+        A PybelProcessor object which contains INDRA Statements in
+        bp.statements.
+    """
+    if network_file is None:
+        # Use large corpus as base network
+        network_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    '../../..',
+                                    'data', 'large_corpus.bel')
+    if network_type == 'belscript':
+        bp = process_belscript(network_file)
+    elif network_type == 'json':
+        bp = process_json_file(network_file)
+
+    filtered_stmts = []
+    for stmt in bp.statements:
+        found = False
+        for agent in stmt.agent_list():
+            if agent is not None:
+                if agent.name in gene_names:
+                    found = True
+        if found:
+            filtered_stmts.append(stmt)
+
+    bp.statements = filtered_stmts
+
     return bp
 
 
@@ -108,6 +166,7 @@ def process_belrdf(rdf_str, print_output=True):
     return bp
 
 
+@lru_cache(maxsize=100)
 def process_pybel_graph(graph):
     """Return a PybelProcessor by processing a PyBEL graph.
 
@@ -133,6 +192,9 @@ def process_belscript(file_name, **kwargs):
     Key word arguments are passed directly to pybel.from_path,
     for further information, see
     pybel.readthedocs.io/en/latest/io.html#pybel.from_path
+    Some keyword arguments we use here differ from the defaults
+    of PyBel, namely we set `citation_clearing` to False
+    and `identifier_validation` to False.
 
     Parameters
     ----------
@@ -145,6 +207,10 @@ def process_belscript(file_name, **kwargs):
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
+    citation_clearing = kwargs.get('citation_clearing', False)
+    kwargs['citation_clearing'] = citation_clearing
+    identifier_validation = kwargs.get('identifier_validation', False)
+    kwargs['identifier_validation'] = identifier_validation
     pybel_graph = pybel.from_path(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 

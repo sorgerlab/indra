@@ -70,12 +70,8 @@ class GeneNetwork(object):
                 bel_statements = pickle.load(f)
         # No cache, so perform the queries
         else:
-            bel_statements = []
-            for gene in self.gene_list:
-                logger.info("Getting BEL statements for gene %s" % gene)
-                bel_proc = bel.process_ndex_neighborhood([gene])
-                if bel_proc is not None:
-                    bel_statements += bel_proc.statements
+            bel_proc = bel.process_pybel_neighborhood(self.gene_list)
+            bel_statements = bel_proc.statements
             # Save to pickle file if we're caching
             if self.basename is not None:
                 with open(bel_stmt_path, 'wb') as f:
@@ -83,9 +79,6 @@ class GeneNetwork(object):
         # Optionally filter out statements not involving only our gene set
         if filter:
             if len(self.gene_list) > 1:
-                bel_statements = ac.filter_gene_list(bel_statements,
-                                                     self.gene_list, 'one')
-            else:
                 bel_statements = ac.filter_gene_list(bel_statements,
                                                      self.gene_list, 'all')
         return bel_statements

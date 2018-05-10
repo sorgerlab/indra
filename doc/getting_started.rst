@@ -65,7 +65,7 @@ the BEL Large Corpus.
 .. code:: python
 
     from indra.sources import bel
-    bel_processor = bel.process_ndex_neighborhood(['KRAS', 'BRAF'])
+    bel_processor = bel.process_pybel_neighborhood(['KRAS', 'BRAF'])
 
 The `bel_processor` object has a `statements` attribute which contains a list
 of INDRA Statements extracted from the queried neighborhood.
