@@ -39,7 +39,8 @@ Commit messages
 The commit message should typically consist of a single line describing what
 the commit does. A good commit is one for which a clear and concise commit
 message is necessary and sufficient - irrespective of how much code the commit
-changes.
+changes. A good set of guidelines can be found
+[here](https://chris.beams.io/posts/git-commit/).
 
 Code style
 ----------
@@ -75,7 +76,7 @@ A related requirement is that all strings within INDRA be represented,
 manipulated and passed around as `unicode` in Python 2 or simply `str`
 in Python 3. Whenever a string is read from a source or written to some
 output, it should be decoded and encoded, respectively. This concept is also
-called the "unicode sandwich".
+called the ["unicode sandwich"](https://nedbatchelder.com/text/unipain/unipain.html#1).
 
 Documentation
 -------------
