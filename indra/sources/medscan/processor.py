@@ -423,16 +423,16 @@ class MedscanProcessor(object):
                 assert(len(mutation) == 1)
                 mutation = mutation[0]
 
-                db_refs, hgnc_name = _urn_to_db_refs(protein.urn)
+                db_refs, db_name = _urn_to_db_refs(protein.urn)
 
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = protein.name
 
-                if hgnc_name is None:
+                if db_name is None:
                     agent_name = db_refs['TEXT']
                 else:
-                    agent_name = hgnc_name
+                    agent_name = db_name
 
                 # Check mutation.type. Only some types correspond to situations
                 # that can be represented in INDRA; return None if we cannot
@@ -505,15 +505,15 @@ class MedscanProcessor(object):
             else:
                 # Handle the more common case where we just ground the entity
                 # without mutation or modification information
-                db_refs, hgnc_name = _urn_to_db_refs(entity.urn)
+                db_refs, db_name = _urn_to_db_refs(entity.urn)
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = entity.name
 
-                if hgnc_name is None:
+                if db_name is None:
                     agent_name = db_refs['TEXT']
                 else:
-                    agent_name = hgnc_name
+                    agent_name = db_name
 
                 return Agent(normalize_medscan_name(agent_name),
                              db_refs=db_refs)
@@ -649,8 +649,9 @@ def _urn_to_db_refs(urn):
         A dictionary with grounding information, mapping databases to database
         identifiers. If the Medscan URN is not recognized, returns an empty
         dictionary.
-    hgnc_name : str
-        The HGNC name, if available, otherwise None
+    db_name : str
+        The Famplex name, if available; otherwise the HGNC name if available;
+        otherwise None
     """
     # Convert a urn to a db_refs dictionary
     if urn is None:
@@ -665,7 +666,7 @@ def _urn_to_db_refs(urn):
     urn_id = m.group(2)
 
     db_refs = {}
-    hgnc_name = None
+    db_name = None
 
     # TODO: support more types of URNs
     if urn_type == 'agi-cas':
@@ -685,7 +686,7 @@ def _urn_to_db_refs(urn):
 
             # Try to lookup HGNC name; if it's available, set it to the
             # agent name
-            hgnc_name = get_hgnc_name(hgnc_id)
+            db_name = get_hgnc_name(hgnc_id)
     elif urn_type == 'agi-ncimorgan':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
@@ -728,7 +729,11 @@ def _urn_to_db_refs(urn):
     if key in famplex_map:
         db_refs['FPLX'] = famplex_map[key]
 
-    return db_refs, hgnc_name
+    # If there is a Famplex grounding, use Famplex for entity name
+    if 'FPLX' in db_refs:
+        db_name = db_refs['FPLX']
+
+    return db_refs, db_name
 
 
 def _extract_id(id_string):

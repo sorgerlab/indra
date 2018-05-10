@@ -11,7 +11,7 @@
      <entity msid="48110000" type="Discourse" name="48110000" urn="urn:agi-discourse:48110000" />
     </match>
     <match coff="17" chars="IKK alpha" clen="9" type="Protein">
-     <entity msid="1147" type="Protein" name="CHUK" urn="urn:agi-llid:1147" />
+     <entity msid="1147" type="Protein" name="CHUK" urn="urn:agi-gocomplex:0005610" />
     </match>
     <match coff="42" chars="IRF-5" clen="5" type="Protein">
      <entity msid="3663" type="Protein" name="IRF5" urn="urn:agi-llid:3663" />

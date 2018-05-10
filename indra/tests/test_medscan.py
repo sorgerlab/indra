@@ -226,8 +226,9 @@ def test_phosphorylate():
     s0 = statements[0]
     assert(isinstance(s0, Phosphorylation))
 
-    assert(s0.enz.db_refs == {'HGNC': '1974', 'TEXT': 'IKK alpha',
-                              'UP': 'O15111'})
+    assert(s0.enz.db_refs == {'GO': 'GO:0005610', 'FPLX': 'Laminin_332',
+                              'TEXT': 'IKK alpha'})
+    assert(s0.enz.name == 'Laminin_332')  # agent name is FPLX when available
     assert(s0.sub.db_refs == {'HGNC': '6120', 'TEXT': 'IRF-5', 'UP': 'Q13568'})
 
 
