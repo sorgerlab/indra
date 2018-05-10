@@ -21,21 +21,9 @@ class IndraDBRestError(Exception):
 def get_statements(subject=None, object=None, agents=None, stmt_type=None):
     """Get statements from INDRA's database using the web api.
 
-    This tool is intended for those that wish to use the cumulative database
-    of pre-assembled INDRA Statements compiled from all our input databases and
-    from reading all of the available medical literature, but who do not have
-    direct access to the entire database.
-
-    Such access will require you have both a URL (`INDRA_DB_REST_URL`) and
-    possibly an API key (`INDRA_DB_REST_API_KEY`), both of which may be placed in
-    your config file or as environment variables.
-
-    If you do not have these, but would like to access the database rest api,
-    you may contact the developers to request a URL and key.
-
     Parameters
     ----------
-    subject, object : str
+    subject/object : str
         Optionally specify the subject and/or object of the statements in
         you wish to get from the database. By default, the namespace is assumed
         to be HGNC gene names, however you may specify another namespace by
@@ -52,7 +40,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
 
     Returns
     -------
-    stmts : list[:pyclass:`indra.statements.Statement`]
+    stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances. Note that if a supporting or
         supported Statement was not included in your query, it will simply be
         instantiated as an `Unresolved` statement, with `uuid` of the statement.
@@ -90,7 +78,7 @@ def get_statements_for_paper(id_val, id_type='pmid'):
 
     Returns
     -------
-    stmts : list[:pyclass:`indra.statements.Statement`]
+    stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
     resp = _submit_request('papers', id=id_val, type=id_type)

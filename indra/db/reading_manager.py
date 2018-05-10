@@ -93,7 +93,18 @@ class ReadingUpdateError(Exception):
 
 
 class ReadingManager(object):
-    def __init__(self, reader_name, buffer_days=1, project_name=None):
+    """Abstract class for managing the readings of the database.
+
+    Parameters
+    ----------
+    reader_name : str
+        The name of the reader to be used in a given run of reading.
+    buffer_days : int
+        The number of days before the previous update/initial upload to look for
+        "new" content to be read. This prevents any issues with overlaps between
+        the content upload pipeline and the reading pipeline.
+    """
+    def __init__(self, reader_name, buffer_days=1):
         self.reader = get_reader_class(reader_name)
         if self.reader is None:
             raise ReadingUpdateError('Name of reader was not matched to an '
@@ -135,8 +146,26 @@ class ReadingManager(object):
 
         return max([u.latest_datetime for u in update_list])
 
+    def read_all(self, db):
+        """Perform an initial reading all content in the database (populate).
+
+        This must be defined in a child class.
+        """
+        raise NotImplementedError
+
+    def read_new(self, db):
+        """Read only new content (update).
+
+        This must be defined in a child class.
+        """
+        raise NotImplementedError
+
 
 class BulkReadingManager(ReadingManager):
+    """An abstract class which defines methods required for reading in bulk.
+
+    This takes exactly the parameters used by :py:class:`ReadingManager`.
+    """
     def _run_reading(self, db, trids, max_refs=5000):
         raise NotImplementedError("_run_reading must be defined in child.")
 
@@ -168,6 +197,19 @@ class BulkReadingManager(ReadingManager):
 
 
 class BulkAwsReadingManager(BulkReadingManager):
+    """This is the reading manager when updating using AWS Batch.
+
+    This takes all the parameters used by :py:class:`BulkReadingManager`, and
+    in addition:
+
+    Parameters
+    ----------
+    project_name : str
+        You can select a name for the project for which this reading is being
+        run. This name has a default value set in your config file. The batch
+        jobs used in reading will be tagged with this project name, for
+        accounting purposes.
+    """
     def __init__(self, *args, **kwargs):
         self.project_name = kwargs.pop('project_name', None)
         super(BulkAwsReadingManager, self).__init__(*args, **kwargs)
@@ -203,6 +245,19 @@ class BulkAwsReadingManager(BulkReadingManager):
 
 
 class BulkLocalReadingManager(BulkReadingManager):
+    """This is the reading manager to be used when running reading locally.
+
+    This takes all the parameters used by :py:class:`BulkReadingManager`, and
+    in addition:
+
+    Parameters
+    ----------
+    n_proc : int
+        The number of processed to dedicate to reading. Note the some of the
+        readers (e.g. REACH) do not always obey these restrictions.
+    verbose : bool
+        If True, more detailed logs will be printed. Default is False.
+    """
     def __init__(self, *args, **kwargs):
         self.n_proc = kwargs.pop('n_proc', 1)
         self.verbose = kwargs.pop('verbose', False)
