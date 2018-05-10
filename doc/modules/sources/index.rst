@@ -17,3 +17,4 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    biogrid/index
    medscan/index
    sofia/index
+   indra_db_rest/index

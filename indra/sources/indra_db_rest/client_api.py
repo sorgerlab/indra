@@ -35,7 +35,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
 
     Parameters
     ----------
-    subject, object : str
+    subject/object : str
         Optionally specify the subject and/or object of the statements in
         you wish to get from the database. By default, the namespace is assumed
         to be HGNC gene names, however you may specify another namespace by
@@ -52,7 +52,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None):
 
     Returns
     -------
-    stmts : list[:pyclass:`indra.statements.Statement`]
+    stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances. Note that if a supporting or
         supported Statement was not included in your query, it will simply be
         instantiated as an `Unresolved` statement, with `uuid` of the statement.
@@ -90,7 +90,7 @@ def get_statements_for_paper(id_val, id_type='pmid'):
 
     Returns
     -------
-    stmts : list[:pyclass:`indra.statements.Statement`]
+    stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
     resp = _submit_request('papers', id=id_val, type=id_type)
