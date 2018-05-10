@@ -23,7 +23,7 @@ install:
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask
   - pip install doctest-ignore-unicode
-  - pip install git+https://github.com/pybel/pybel.git@master
+  - pip install git+https://github.com/pybel/pybel.git@develop
   - mkdir -p $HOME/.pybel/data
   - wget -nv http://sorger.med.harvard.edu/data/bgyori/pybel_cache.db --directory-prefix=$HOME/.pybel/data
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
