@@ -13,7 +13,8 @@ def abstracts_runtime():
     # abstract_counts = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     # abstract_counts = [20, 40, 60, 80, 100]
     # abstract_counts = [20, 50, 100, 1000, None]
-    abstract_counts = [1000]
+    # abstract_counts = [20, 50, 100, 200, 300, 400, 500]
+    abstract_counts = [10]
     times = []
     for count in abstract_counts:
         print('==============================================================')
@@ -36,7 +37,7 @@ def abstracts_runtime():
 
         output_dir = 'output_' + str(count)
         os.mkdir(output_dir)
-        ip = process_preprocessed(preprocessor, output_dir)
+        ip = process_preprocessed(preprocessor, 8, output_dir)
         print('Statements:', ip.statements)
 
         output_pickle = 'isi_processed_abstracts_' + str(count) + '.pkl'

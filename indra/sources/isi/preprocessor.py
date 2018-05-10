@@ -67,11 +67,9 @@ class IsiPreprocessor(object):
         first_sentence = True
         with codecs.open(output_file, 'w', encoding='utf-8') as f:
             for sentence in sentences:
-                sentence_latin1 = sentence.encode('latin-1', errors='ignore')
-                sentence_latin1_chars = sentence_latin1.decode('latin-1')
                 if not first_sentence:
                     f.write('\n')
-                f.write(sentence_latin1_chars.rstrip())
+                f.write(sentence.rstrip())
                 first_sentence = False
 
         # Store annotations

@@ -10,8 +10,39 @@ import os
 
 logger = logging.getLogger('isi')
 
+def process_text(text, pmid=None):
+    """Processes a string using the ISI reader, performing processing and
+    extracting.
 
-def process_preprocessed(isi_preprocessor, specified_output_dir=None):
+    Parameters
+    ----------
+    text: str
+        A string of biomedical information to process
+    pmid: str
+        The pmid associated with this text (or None if not specified)
+    
+    Returns
+    -------
+    ip: indra.sources.isi.processor.IsiProcessor
+        A processor containing statements
+    """
+    # Create a temporary directory to store the proprocessed input
+    pp_dir = tempfile.mkdtemp('indra_isi_pp_output')
+
+    pp = IsiPreprocessor(pp_dir)
+    extra_annotations = {}
+    pp.preprocess_plain_text_string(text, pmid, extra_annotations)
+
+    # Run the ISI reader and extract statements
+    ip = process_preprocessed(pp)
+
+    # Remove temporary directory with processed input
+    shutil.rmtree(pp_dir)
+
+    return ip
+
+def process_preprocessed(isi_preprocessor, num_processes=1,
+                         specified_output_dir=None):
     """Process a directory of abstracts and/or papers preprocessed using the
     specified IsiPreprocessor, to produce a list of extracted INDRA statements.
 
@@ -20,6 +51,8 @@ def process_preprocessed(isi_preprocessor, specified_output_dir=None):
     isi_preprocessor: indra.sources.isi.preprocessor.IsiPreprocessor
         Preprocessor object that has already preprocessed the documents we
         want to read and process with the ISI reader
+    num_processes: int
+        Number of processes to parallelize over
     specified_output_dir: str
         The directory into which to put reader output; if omitted or None,
         uses a temporary directory.
@@ -44,7 +77,8 @@ def process_preprocessed(isi_preprocessor, specified_output_dir=None):
     tmp_binding = tmp_dir + ':/temp:rw'
     command = ['docker', 'run', '-it', '--rm',
                '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
-               'sahilgar/bigmechisi', './myprocesspapers.sh']
+               'sahilgar/bigmechisi', './myprocesspapers.sh',
+               '-c', str(num_processes)]
 
     # Invoke the ISI reader
     print('Running command:')

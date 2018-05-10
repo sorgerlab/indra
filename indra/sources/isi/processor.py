@@ -4,12 +4,48 @@ import logging
 import re
 from copy import deepcopy
 
+import indra.statements
 from indra.statements import *
 from indra.preassembler.grounding_mapper import load_grounding_map,\
         GroundingMapper
 
 logger = logging.getLogger('isi')
 
+# Load the mapping between ISI verb and INDRA statement type
+def _build_verb_statement_mapping():
+    """Build the mapping between ISI verb strings and INDRA statement classes.
+
+    Looks up the INDRA statement class name, if any, in a resource file,
+    and resolves this class name to a class.
+
+    Returns
+    -------
+    verb_to_statement_type: dict
+        Dictionary mapping verb name to an INDRA statment class
+    """
+    path = os.path.join('indra', 'resources',
+                        'isi_verb_to_indra_statement_type.tsv')
+    with open(path, 'r') as f:
+        first_line = True
+        verb_to_statement_type = {}
+        for line in f:
+            if not first_line:
+                line = line[:-1]
+                tokens = line.split('\t')
+
+                if len(tokens) == 2 and len(tokens[1]) > 0:
+                    verb = tokens[0]
+                    s_type = tokens[1]
+                    try:
+                        statement_class = getattr(indra.statements, s_type)
+                        verb_to_statement_type[verb] = statement_class
+                    except Exception:
+                        pass
+            else:
+                first_line = False
+    return verb_to_statement_type
+
+verb_to_statement_type = _build_verb_statement_mapping()
 
 class IsiProcessor(object):
     """Processes the output of the ISI reader.
@@ -146,7 +182,7 @@ class IsiProcessor(object):
         ev = Evidence(source_api='isi',
                       source_id=source_id,
                       pmid=pmid,
-                      text=text,
+                      text=text.rstrip(),
                       annotations=annotations)
 
         # For binding time interactions, it is said that a catayst might be
@@ -160,61 +196,40 @@ class IsiProcessor(object):
         self.verbs.add(verb)
 
         statement = None
-        if verb == 'transcription':
-            pass
-        elif verb == 'binding':
-            statement = Complex([subj, obj], evidence=ev)
-        elif verb == 'complexed':
-            statement = Complex([subj, obj], evidence=ev)
-        elif verb == 'binds':
-            statement = Complex([subj, obj], evidence=ev)
-        elif verb == 'formation':
-            pass
-        elif verb == 'dimer':
-            pass
-        elif verb == 'dissociation':
-            pass
-        elif verb == 'form':
-            pass
-        elif verb == 'bound':
-            statement = Complex([subj, obj], evidence=ev)
-        elif verb == 'complex':
-            statement = Complex([subj, obj], evidence=ev)
-        elif verb == 'association':
-            pass
-        elif verb == 'forms':
-            pass
-        elif verb == 'interacts':
-            pass
-        elif verb == 'associate':
-            pass
-        elif verb == 'phosphorylation':
-            statement = Phosphorylation(subj, obj, evidence=ev)
-        elif verb == 'phosphorylates':
-            statement = Phosphorylation(subj, obj, evidence=ev)
-        elif verb == 'complexes':
-            pass
-        elif verb == 'inhibition':
-            pass
-        elif verb == 'bind':
-            statement = Complex([subj, obj], evidence=ev)
-        elif verb == 'expressing':
-            pass
-        elif verb == 'associated':
-            pass
-        elif verb == 'hydrolysis':
-            pass
-        elif verb == 'phosphorylated':
-            statement = Phosphorylation(subj, obj, evidence=ev)
-        elif verb == 'interact':
-            pass
-        elif verb == 'interaction':
-            pass
-        else:
-            logger.error('Do not know how to process verb:', verb)
+        if verb in verb_to_statement_type:
+            statement_class = verb_to_statement_type[verb]
 
+            if statement_class == Complex:
+                statement = Complex([subj, obj], evidence=ev)
+            else:
+                statement = statement_class(subj, obj, evidence=ev)
+        
         if statement is not None:
-            self.statements.append(statement)
+            # For Complex statements, the ISI reader produces two events:
+            # binds(A, B) and binds(B, A)
+            # We want only one Complex statement for each sentence, so check
+            # to see if we already have a Complex for this source_id with the
+            # same members
+            already_have = False
+            if type(statement) == Complex:
+                for old_s in self.statements:
+                    old_id = statement.evidence[0].source_id
+                    new_id = old_s.evidence[0].source_id
+                    if type(old_s) == Complex and old_id == new_id:
+                        old_statement_members = \
+                                [m.db_refs['TEXT'] for m in old_s.members]
+                        old_statement_members = sorted(old_statement_members)
+
+                        new_statement_members = \
+                                [m.db_refs['TEXT'] for m in statement.members]
+                        new_statement_members = sorted(new_statement_members)
+
+                        if old_statement_members == new_statement_members:
+                            already_have = True
+                            break
+
+            if not already_have:
+                self.statements.append(statement)
 
     def _make_agent(self, agent_str):
         """Makes an ungrounded Agent object from a string specifying an
@@ -231,11 +246,3 @@ class IsiProcessor(object):
             An ungrounded Agent object referring to the specified text
         """
         return Agent(agent_str, db_refs={'TEXT': agent_str})
-
-
-if __name__ == '__main__':
-    f = '/Users/daniel/workspace/isi/output/test1.json'
-    d = '/Users/daniel/workspace/isi/output'
-    ip = IsiProcessor(d)
-    print('Verbs:', ip.verbs)
-    print(ip.statements)

@@ -87,7 +87,7 @@ script:
   - nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
   # Now run all INDRA tests
   - nosetests indra -v -a $NOSEATTR
-        --exclude='.*tees.*' --exclude='.*eidos.*'
+        --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode
         --with-timer --timer-top-n 10
