@@ -268,8 +268,11 @@ def test_preassembly_with_database():
     assert len(raw_stmt_list)
 
     # Run the preassembly initialization.
-    pa_manager = pas.PreassemblyManager()
+    start = datetime.now()
+    pa_manager = pas.PreassemblyManager(batch_size=1000)
     pa_manager.create_corpus(db)
+    end = datetime.now()
+    print("Duration:", end-start)
     pa_stmt_list = db.select_all(db.PAStatements)
     assert 0 < len(pa_stmt_list) < len(raw_stmt_list)
     raw_unique_link_list = db.select_all(db.RawUniqueLinks)
@@ -289,13 +292,15 @@ def test_preassembly_with_database():
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
-    raw_stmts = db_util.make_stmts_from_db_list(raw_stmt_list)
+    _, stmt_ids = db_util.distill_stmts_from_reading(db)
+    raw_stmts = db_util.make_stmts_from_db_list([s for s in raw_stmt_list
+                                                 if s.uuid in stmt_ids])
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
 def test_incremental_preassembly_with_database():
     db = _get_loaded_db(split=0.8, with_init_corpus=True)
-    pa_manager = pas.PreassemblyManager()
+    pa_manager = pas.PreassemblyManager(batch_size=1000)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
