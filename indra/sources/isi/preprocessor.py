@@ -7,6 +7,7 @@ from indra import get_config
 import shutil
 import subprocess
 import tempfile
+import re
 
 logger = logging.getLogger('isi')
 
@@ -142,13 +143,24 @@ class IsiPreprocessor(object):
                 logger.warning('nxml2txt returned non-zero error code')
 
             with open(txt_out, 'r') as f:
-                txt_content = txt_out.read()
+                txt_content = f.read()
 
         # Remote temporary directory
         shutil.rmtree(tmp_dir)
 
-        # Process text extracted from nxml
-        self.process_plain_text_string(txt_content, pmid, extra_annotations)
+        # We need to remove some common LaTEX commands from the converted text
+        # or the reader will get confused
+        cmd1 = '[^ \{\}]+\{[^\{\}]+\}\{[^\{\}]+\}'
+        cmd2 = '[^ \{\}]+\{[^\{\}]+\}'
+        txt_content = re.sub(cmd1, '', txt_content)
+        txt_content = re.sub(cmd2, '', txt_content)
+
+        with open('tmp.txt', 'w') as f:
+            f.write(txt_content)
+
+        # Prepocess text extracted from nxml
+        self.preprocess_plain_text_string(txt_content, pmid, extra_annotations)
+
 
     def preprocess_abstract_list(self, abstract_list):
         """Preprocess a list of abstracts in database pickle dump format.
