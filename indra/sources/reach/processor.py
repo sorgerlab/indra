@@ -637,7 +637,6 @@ class ReachProcessor(object):
             for i in range(1, len(sites)):
                 sites[i] = Site(sites[0].residue, sites[i].position)
 
-        print('Sites:', sites)
         return sites
 
     @staticmethod

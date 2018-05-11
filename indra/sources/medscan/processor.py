@@ -99,7 +99,6 @@ class ProteinSiteInfo(object):
         for part in parts:
             if part.endswith(','):
                 part = part[:-1]
-            logger.error('Part:' + part)
             if len(part.strip()) > 0:
                 sites.extend(ReachProcessor._parse_site_text(part.strip()))
         return sites
@@ -479,13 +478,15 @@ class MedscanProcessor(object):
                                    Complex([subj, obj], evidence=ev)
                                   )
         elif relation.verb == 'ProtModification-negative':
-            pass  # TODO?
+            pass  # TODO? These occur so infrequently so maybe not worth it
         elif relation.verb == 'Regulation-unknown':
-            pass  # TODO?
+            pass  # TODO? These occur so infrequently so maybe not worth it
         elif relation.verb == 'StateEffect-positive':
-            self.sentence_statements.append(
-                                   ActiveForm(subj, obj, evidence=ev)
-                                  )
+            # self.sentence_statements.append(
+            #                       ActiveForm(subj, obj, evidence=ev)
+            #                      )
+            # TODO: disabling for now, since not sure whether we should set
+            # the is_active flag
         elif relation.verb == 'StateEffect':
             self.last_site_info_in_sentence = \
                     ProteinSiteInfo(site_text=subj.name,
