@@ -2,8 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import sys
+import time
 import random
 import logging
+import subprocess
+from indra.config import get_config
 try:
     from kqml import KQMLModule, KQMLPerformative, KQMLList
     have_kqml = True
@@ -43,6 +46,15 @@ class DrumReader(KQMLModule):
         if not have_kqml:
             raise ImportError('Install the `pykqml` package to use ' +
                               'the DrumReader')
+        run_drum = kwargs.pop('run_drum', None)
+        if not run_drum:
+            self.drum_system = None
+        else:
+            host = kwargs.get('host', None)
+            port = kwargs.get('port', None)
+            self.drum_system = self._run_drum(host, port)
+            time.sleep(30)
+
         super(DrumReader, self).__init__(name='DrumReader', **kwargs)
         self.msg_counter = random.randint(1, 100000)
         self.ready()
@@ -96,6 +108,27 @@ class DrumReader(KQMLModule):
         if self.reply_counter == 0:
             self.exit(0)
 
+    def _run_drum(self, host, port):
+        drum_path = get_config('DRUMPATH')
+        cmd_path = os.path.join(drum_path, 'bin', 'trips-drum')
+        options = ['-nouser']
+        if host:
+            options += ['-host', host]
+        if port:
+            options += ['-port', port]
+        cmd = [cmd_path] + options
+        drum_proc = subprocess.Popen(cmd)
+
+    def _kill_drum(self):
+        ps_command = subprocess.Popen("ps -o pid --ppid %d --noheaders" %
+                                      drum_system.pid, shell=True,
+                                      stdout=subprocess.PIPE)
+        # TODO: this needs to be recursive
+        ps_output = ps_command.stdout.read().decode('utf-8')
+        retcode = ps_command.wait()
+        children = ps_output.split('\n')
+        for pid_str in children:
+            os.kill(int(pid_str), signal.SIGTERM)
 
 def _get_perf(text, msg_id):
     """Return a request message for a given text."""
