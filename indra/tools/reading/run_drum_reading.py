@@ -58,9 +58,8 @@ def read_text(text, **drum_args):
 
     Parameters
     ----------
-    pmid_sentences : dict[str, list[str]]
-        A dictonary where each key is a PMID pointing to a list of sentences
-        to be read.
+    text : str
+        A block of text to run DRUM on
 
     **drum_args
         Keyword arguments passed directly to the DrumReader. Typical
@@ -68,15 +67,15 @@ def read_text(text, **drum_args):
 
     Returns
     -------
-    all_statements : list[indra.statement.Statement]
+    statements : list[indra.statement.Statement]
         A list of INDRA Statements resulting from the reading
     """
-
+    return read_pmid_sentences({'PMID': text}, **drum_args)
 
 
 def read_pmc(pmcid, **drum_args):
-    
-
+    # TODO: run DRUM in PMC reading mode here
+    return
 
 def save_results(statements, out_fname):
     with open(out_fname, 'wb') as fh:
