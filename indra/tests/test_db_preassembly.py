@@ -140,8 +140,8 @@ def _do_old_fashioned_preassembly(stmts):
 def _check_against_opa_stmts(raw_stmts, pa_stmts):
     opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
 
-    old_stmt_dict = {s.get_shallow_hash(): s for s in opa_stmts}
-    new_stmt_dict = {s.get_shallow_hash(): s for s in pa_stmts}
+    old_stmt_dict = {s.get_hash(shallow=True): s for s in opa_stmts}
+    new_stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmts}
 
     new_hash_set = set(new_stmt_dict.keys())
     old_hash_set = set(old_stmt_dict.keys())
@@ -183,7 +183,7 @@ def test_preassembly_without_database():
 
     opa_stmts = _do_old_fashioned_preassembly(stmts)
     new_hash_set = set(unique_stmt_dict.keys())
-    old_hash_set = {s.get_shallow_hash() for s in opa_stmts}
+    old_hash_set = {s.get_hash(shallow=True) for s in opa_stmts}
     assert new_hash_set == old_hash_set, \
         (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
     return

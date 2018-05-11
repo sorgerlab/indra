@@ -1088,17 +1088,21 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
-    def get_hash(self, refresh=False):
-        if self.hash is None or refresh:
-            ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
-            full_key = self.matches_key() + str(ev_matches_key_list)
-            self.hash = full_key.replace('\\', '')
-        return self.hash
-
-    def get_shallow_hash(self, refresh=False):
-        if self.shallow_hash is None or refresh:
-            self.shallow_hash = self.matches_key().replace('\\', '')
-        return self.shallow_hash
+    def get_hash(self, refresh=False, shallow=False):
+        def clean(rep):
+            return (rep.replace('\\', '').replace('class', '')
+                    .replace('indra.statements.', '').replace('None', '~')
+                    .replace('\'', '').replace('\"', '').replace(' ', ''))
+        if not shallow:
+            if self.hash is None or refresh:
+                ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
+                self.hash = clean(self.matches_key() + str(ev_matches_key_list))
+            ret = self.hash
+        else:
+            if self.shallow_hash is None or refresh:
+                self.shallow_hash = clean(self.matches_key())
+            ret = self.shallow_hash
+        return ret
 
     def agent_list_with_bound_condition_agents(self):
         # Returns the list of agents both directly participating in the

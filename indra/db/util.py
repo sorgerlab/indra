@@ -167,7 +167,7 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
                              .except_(stmts_w_agents_q))
     else:
         stmts_wo_agents_q = db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-    logger.debug("Getting stmts with query:\n%s" % str(stmts_wo_agents_q))
+    #logger.debug("Getting stmts with query:\n%s" % str(stmts_wo_agents_q))
     if verbose:
         num_stmts = stmts_wo_agents_q.count()
         print("Adding agents for %d statements." % num_stmts)
@@ -292,7 +292,7 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
     for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
-            stmt.get_shallow_hash(),
+            stmt.get_hash(shallow=True),
             stmt.__class__.__name__,
             json.dumps(stmt.to_json()).encode('utf8'),
             indra_version

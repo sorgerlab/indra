@@ -83,7 +83,7 @@ class PreassemblyManager(object):
                 self._make_unique_statement_set(stmt_batch)
             new_unique_stmts = []
             for s in unique_stmts:
-                s_hash = s.get_shallow_hash()
+                s_hash = s.get_hash(shallow=True)
                 if s_hash not in hash_set:
                     hash_set.add(s_hash)
                     new_unique_stmts.append(s)
@@ -145,7 +145,7 @@ class PreassemblyManager(object):
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix == 0:
                     first_stmt = stmt.make_generic_copy()
-                evidence_links[first_stmt.get_shallow_hash()].add(stmt.uuid)
+                evidence_links[first_stmt.get_hash(shallow=True)].add(stmt.uuid)
             # This should never be None or anything else
             assert isinstance(first_stmt, type(stmt))
             unique_stmts.append(first_stmt)
@@ -155,13 +155,14 @@ class PreassemblyManager(object):
         unique_stmts, evidence_links = self._make_unique_statement_set(stmts)
         match_key_maps = self._get_support_links(unique_stmts,
                                                  **generate_id_map_kwargs)
-        unique_stmt_dict = {stmt.get_shallow_hash(): stmt for stmt in unique_stmts}
+        unique_stmt_dict = {stmt.get_hash(shallow=True): stmt for stmt in unique_stmts}
         return unique_stmt_dict, evidence_links, match_key_maps
 
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
         id_maps = self.pa._generate_id_maps(unique_stmts,
                                             **generate_id_map_kwargs)
-        return {tuple([unique_stmts[idx].get_shallow_hash() for idx in idx_pair])
+        return {tuple([unique_stmts[idx].get_hash(shallow=True)
+                       for idx in idx_pair])
                 for idx_pair in id_maps}
 
     def _get_increment_links(self, unique_stmt_dict, new_stmts, **kwargs):
