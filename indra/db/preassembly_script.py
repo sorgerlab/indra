@@ -1,5 +1,4 @@
 import json
-from copy import deepcopy
 from collections import defaultdict
 
 import logging
@@ -9,9 +8,8 @@ from functools import wraps
 import indra.tools.assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.db.util import get_statements, insert_pa_stmts, \
-    distill_stmts_from_reading, make_stmts_from_db_list
-from indra.statements import stmts_from_json, Statement
+from indra.db.util import insert_pa_stmts, distill_stmts_from_reading
+from indra.statements import Statement
 from indra.util import batch_iter
 
 logger = logging.getLogger('db_preassembly')
@@ -55,27 +53,27 @@ class PreassemblyManager(object):
         stmt_list = db.select_all(db.PAStatements)
         return {s.mk_hash: _stmt_from_json(s.json) for s in stmt_list}
 
-    def _convert_stmt_json(self, db_json):
-        return Statement._from_json(json.loads(db_json.decode('utf-8')))
-
-    def _pa_batch_iter(self, db):
-        pa_stmts = (self._convert_stmt_json(s_json)
-                    for s_json, in db.select_all(db.PAStatements.json,
-                                                 yield_per=self.batch_size))
+    def _pa_batch_iter(self, db, mk_set=None):
+        if mk_set is None:
+            db_stmt_iter = db.select_all(db.PAStatements.json,
+                                         yield_per=self.batch_size)
+        else:
+            db_stmt_iter = db.select_all(db.PAStatements.json,
+                                         db.PAStatements.mk_hash.in_(mk_set),
+                                         yield_per=self.batch_size)
+        pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_lists=True)
 
     @_handle_update_table
     def create_corpus(self, db):
-        # TODO: this was causing a failure when comparing to the old preassembly
-        # Work out how to resolve those issues, either by controlling what gets
-        # into the raw statements table or by fixing the distillation process.
+        # Get the statements
         _, stmt_ids = distill_stmts_from_reading(db)
-        support_links = set()
-        stmts = (self._convert_stmt_json(s_json)
-                 for s_json,
+        stmts = (_stmt_from_json(s_json) for s_json,
                  in db.select_all(db.RawStatements.json,
                                   db.RawStatements.uuid.in_(stmt_ids),
                                   yield_per=self.batch_size))
+
+        # Get the set of unique statements
         hash_set = set()
         for stmt_batch in batch_iter(stmts, self.batch_size, return_lists=True):
             logger.info("Processing batch of %d statements." % len(stmt_batch))
@@ -90,14 +88,18 @@ class PreassemblyManager(object):
             insert_pa_stmts(db, new_unique_stmts)
             db.copy('raw_unique_links', evidence_links,
                     ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
-            support_links |= self._get_support_links(new_unique_stmts)
 
         # Now get the support links between all batches.
-        for outer_batch in self._pa_batch_iter(db):
-            for inner_batch in self._pa_batch_iter(db):
-                split_idx = len(inner_batch)
-                support_links |= self._get_support_links(outer_batch+inner_batch,
-                                                         split_idx=split_idx)
+        support_links = set()
+        for i, outer_batch in enumerate(self._pa_batch_iter(db)):
+            for j, inner_batch in enumerate(self._pa_batch_iter(db)):
+                if i != j:
+                    split_idx = len(inner_batch)
+                    full_list = inner_batch + outer_batch
+                    support_links |= \
+                        self._get_support_links(full_list, split_idx=split_idx)
+                else:
+                    support_links |= self._get_support_links(inner_batch)
         db.copy('pa_support_links', support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
         return True
@@ -106,31 +108,64 @@ class PreassemblyManager(object):
     def supplement_corpus(self, db):
         last_update = self._get_latest_updatetime(db)
         logger.info("Latest update was: %s" % last_update)
-        check_from_datetime = last_update - timedelta(hours=6)
-        logger.info("Updating with statements more recent than %s."
-                    % check_from_datetime)
-        # _, new_stmts = distill_stmts_from_reading(db, get_full_stmts=True,
-        #          clauses=[db.RawStatements.create_date > check_from_datetime])
+
+        # Get the new statements
         old_stmt_q = db.filter_query(
-            db.RawStatements,
+            db.RawStatements.uuid,
             db.RawStatements.uuid == db.RawUniqueLinks.raw_stmt_uuid
-            )
-        new_stmts = make_stmts_from_db_list(
-            db.filter_query(db.RawStatements).except_(old_stmt_q).all()
-            )
-        existing_stmt_dict = self._get_existing_pa_stmt_dict(db)
-        new_unique_stmt_dict, new_evidence_links, new_support_links = \
-            self._get_increment_links(existing_stmt_dict, new_stmts,
-                                      poolsize=self.n_proc)
-        logger.info("Found %d new unique statements."
-                    % len(new_unique_stmt_dict))
-        only_new_hashes = set(new_unique_stmt_dict.keys()) \
-                          - set(existing_stmt_dict.keys())
-        insert_pa_stmts(db, [new_unique_stmt_dict[k] for k in only_new_hashes])
-        db.copy('raw_unique_links', new_evidence_links,
-                cols=('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        )
+        all_new_stmt_ids = (db.filter_query(db.RawStatements.uuid)
+                            .except_(old_stmt_q).all())
+        _, new_stmt_ids = distill_stmts_from_reading(db,
+            clauses=[db.RawStatements.uuid.in_(all_new_stmt_ids)])
+        new_stmts = (_stmt_from_json(s_json) for s_json,
+                     in db.select_all(db.RawStatements.json,
+                                      db.RawStatements.uuid.in_(new_stmt_ids),
+                                      yield_per=self.batch_size))
+
+        # Get the set of new unique statements.
+        old_mk_set = {mk for mk, in db.select_all(db.PAStatements.mk_hash)}
+        new_mk_set = set()
+        for new_stmt_batch in batch_iter(new_stmts, self.batch_size,
+                                         return_lists=True):
+            logger.info("Processing batch of %d new statements."
+                        % len(new_stmt_batch))
+            new_unique_stmts, new_evidence_links = \
+                self._make_unique_statement_set(new_stmt_batch)
+            truly_new_unique_stmts = []
+            for s in new_unique_stmts:
+                s_hash = s.get_hash(shallow=True)
+                if s_hash not in (old_mk_set | new_mk_set):
+                    new_mk_set.add(s_hash)
+                    truly_new_unique_stmts.append(s)
+            insert_pa_stmts(db, truly_new_unique_stmts)
+            db.copy('raw_unique_links', new_evidence_links,
+                    ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+
+        # Now find the new support links that need to be added.
+        new_support_links = set()
+        for npa_batch in self._pa_batch_iter(db, mk_set=new_mk_set):
+            # Compare internally
+            new_support_links |= self._get_support_links(npa_batch)
+
+            # Compare against the other new batch statements.
+            diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
+                                         for s in npa_batch}
+            for diff_npa_batch in self._pa_batch_iter(db, mk_set=diff_new_mks):
+                split_idx = len(npa_batch)
+                full_list = npa_batch + diff_npa_batch
+                new_support_links |= \
+                    self._get_support_links(full_list, split_idx=split_idx)
+
+            # Compare against the existing statements.
+            for opa_batch in self._pa_batch_iter(db, mk_set=old_mk_set):
+                split_idx = len(npa_batch)
+                full_list = npa_batch + opa_batch
+                new_support_links |= \
+                    self._get_support_links(full_list, split_idx=split_idx)
+
         db.copy('pa_support_links', new_support_links,
-                cols=('supported_mk_hash', 'supporting_mk_hash'))
+                ('supported_mk_hash', 'supporting_mk_hash'))
         return True
 
     def _make_unique_statement_set(self, stmts):
@@ -165,18 +200,12 @@ class PreassemblyManager(object):
                        for idx in idx_pair])
                 for idx_pair in id_maps}
 
-    def _get_increment_links(self, unique_stmt_dict, new_stmts, **kwargs):
-        # Pre-assemble the new statements.
-        new_unique_stmt_dict, new_evidence_links, new_support_links = \
-            self._process_statements(new_stmts, **kwargs)
-        logger.info("Got %d new unique statments." % len(new_unique_stmt_dict))
-        logger.info("Got %d new evidence links."
-                    % len(new_evidence_links))
-        logger.info("Got %d new support links." % len(new_support_links))
+    def _get_increment_links(self, unique_stmt_dict, new_unique_stmt_dict,
+                             **kwargs):
 
+        new_support_links = set()
         # Now get the list of statements the need to be compared between the
         # existing and new corpora
-
         old_stmt_hash_set = set(unique_stmt_dict.keys())
         new_stmt_hash_set = set(new_unique_stmt_dict.keys())
         only_old_stmts = [unique_stmt_dict[mk_hash]
@@ -199,7 +228,7 @@ class PreassemblyManager(object):
                     % len(merge_support_links))
 
         new_support_links |= merge_support_links
-        return new_unique_stmt_dict, new_evidence_links, new_support_links
+        return new_support_links
 
 
 def merge_statements(unique_stmt_dict, evidence_links, support_links,

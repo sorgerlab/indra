@@ -99,7 +99,7 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         if with_init_corpus:
             print("\tAdding a preassembled corpus from first batch of raw "
                   "stmts...")
-            pa_manager = pas.PreassemblyManager()
+            pa_manager = pas.PreassemblyManager(batch_size=1000)
             pa_manager.create_corpus(db)
         print("\tInserting the rest of the raw statements...")
         new_datetime = datetime.now()
@@ -332,6 +332,6 @@ def test_incremental_preassembly_with_database():
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
-    raw_stmts = db_util.get_statements([], preassembled=False, db=db)
+    _, raw_stmts = pas.distill_stmts_from_reading(db, get_full_stmts=True)
     pa_stmts = db_util.get_statements([], preassembled=True, db=db)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
