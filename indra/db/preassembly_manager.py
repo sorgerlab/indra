@@ -33,7 +33,18 @@ def _stmt_from_json(stmt_json_bytes):
 
 
 class PreassemblyManager(object):
-    """Class used to manage the preassembly pipeline"""
+    """Class used to manage the preassembly pipeline
+
+    Parameters
+    ----------
+    n_proc : int
+        Select the number of processes that will be used when performing
+        preassembly. Default is 1.
+    batch_size : int
+        Select the maximum number of statements you wish to be handled at a
+        time. In general, a larger batch size will somewhat be faster, but
+        require much more memory.
+    """
     def __init__(self, n_proc=1, batch_size=10000):
         self.n_proc = n_proc
         self.batch_size = batch_size
@@ -49,11 +60,15 @@ class PreassemblyManager(object):
             return None
         return max([u.run_datetime for u in update_list])
 
-    def _get_existing_pa_stmt_dict(self, db):
-        stmt_list = db.select_all(db.PAStatements)
-        return {s.mk_hash: _stmt_from_json(s.json) for s in stmt_list}
-
     def _pa_batch_iter(self, db, mk_set=None):
+        """Return an iterator over batches of preassembled statements.
+
+        This avoids the need to load all such statements from the database into
+        RAM at the same time (as this can be quite large).
+
+        You may limit the set of pa_statements loaded by providing a set/list of
+        matches-keys of the statements you wish to include.
+        """
         if mk_set is None:
             db_stmt_iter = db.select_all(db.PAStatements.json,
                                          yield_per=self.batch_size)
@@ -66,6 +81,17 @@ class PreassemblyManager(object):
 
     @_handle_update_table
     def create_corpus(self, db):
+        """Initialize the table of preassembled statements.
+
+        This method will find the set of unique knowledge represented in the
+        table of raw statements, and it will populate the table of preassembled
+        statements (PAStatements/pa_statements), while maintaining links between
+        the raw statements and their unique (pa) counterparts. Furthermore, the
+        refinement/support relationships between unique statements will be found
+        and recorded in the PASupportLinks/pa_support_links table.
+
+        For more detail on preassembly, see indra/preassembler/__init__.py
+        """
         # Get the statements
         _, stmt_ids = distill_stmts_from_reading(db)
         stmts = (_stmt_from_json(s_json) for s_json,
@@ -106,6 +132,16 @@ class PreassemblyManager(object):
 
     @_handle_update_table
     def supplement_corpus(self, db):
+        """Update the table of preassembled statements.
+
+        This method will take any new raw statements that have not yet been
+        incorporated into the preassembled table, and use them to augment the
+        preassembled table.
+
+        The resulting updated table is indistinguishable from the result you
+        would achieve if you had simply re-run preassembly on _all_ the
+        raw statements.
+        """
         last_update = self._get_latest_updatetime(db)
         logger.info("Latest update was: %s" % last_update)
 
@@ -169,6 +205,12 @@ class PreassemblyManager(object):
         return True
 
     def _make_unique_statement_set(self, stmts):
+        """Perform grounding, sequence mapping, and find unique set from stmts.
+
+        This method returns a list of statement objects, as well as a set of
+        tuples of the form (uuid, matches_key) which represent the links between
+        raw (evidence) statements and their unique/preassembled counterparts.
+        """
         stmts = ac.map_grounding(stmts)
         stmts = ac.map_sequence(stmts)
         stmt_groups = self.pa._get_stmt_matching_groups(stmts)
@@ -187,6 +229,8 @@ class PreassemblyManager(object):
         return unique_stmts, flatten_evidence_dict(evidence_links)
 
     def _process_statements(self, stmts, **generate_id_map_kwargs):
+        """Perform the full process pipeline. (Currently only used in tests)"""
+        # TODO: This should probably be somehow placed in canonical preassembly.
         unique_stmts, evidence_links = self._make_unique_statement_set(stmts)
         match_key_maps = self._get_support_links(unique_stmts,
                                                  **generate_id_map_kwargs)
@@ -194,6 +238,7 @@ class PreassemblyManager(object):
         return unique_stmt_dict, evidence_links, match_key_maps
 
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
+        """Find the links of refinement/support between statements."""
         id_maps = self.pa._generate_id_maps(unique_stmts,
                                             **generate_id_map_kwargs)
         return {tuple([unique_stmts[idx].get_hash(shallow=True)
@@ -202,7 +247,7 @@ class PreassemblyManager(object):
 
     def _get_increment_links(self, unique_stmt_dict, new_unique_stmt_dict,
                              **kwargs):
-
+        """Perform the update process. (Currently only used in tests)"""
         new_support_links = set()
         # Now get the list of statements the need to be compared between the
         # existing and new corpora
