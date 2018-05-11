@@ -555,8 +555,8 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                 db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
             ).distinct().yield_per(count)
         for supped_hash, supping_hash in support_links:
-            stmt_dict[supping_hash].supported_by.append(stmt_dict[supped_hash])
-            stmt_dict[supped_hash].supports.append(stmt_dict[supping_hash])
+            stmt_dict[supped_hash].supported_by.append(stmt_dict[supping_hash])
+            stmt_dict[supping_hash].supports.append(stmt_dict[supped_hash])
 
         stmts = list(stmt_dict.values())
 
