@@ -82,7 +82,17 @@ class ProteinSiteInfo(object):
         sites: list<Site>
             A list of position-residue pairs corresponding to the site-text
         """
-        return ReachProcessor._parse_site_text(self.site_text)
+        st = self.site_text
+        suffixes = [' residue', ' residues']
+        for suffix in suffixes:
+            if st.endswith(suffix):
+                st = st[:-len(suffix)]
+
+        sites = []
+        parts = st.split(' and ')
+        for part in parts:
+            sites.extend(ReachProcessor._parse_site_text(part))
+        return sites
 
 
 class MedscanProcessor(object):

@@ -615,7 +615,9 @@ class ReachProcessor(object):
         has_slash = '/' in s
 
         has_both = has_comma and has_slash
-        assert(not has_both)
+        if has_both:
+            logger.error(s + ' is not a valid site text string')
+            return []
 
         if has_comma:
             texts = s.split(',')
@@ -635,6 +637,7 @@ class ReachProcessor(object):
             for i in range(1, len(sites)):
                 sites[i] = Site(sites[0].residue, sites[i].position)
 
+        print('Sites:', sites)
         return sites
 
     @staticmethod
