@@ -18,7 +18,6 @@ sm_logger.setLevel(logging.WARNING)
 ps_logger = logging.getLogger('phosphosite')
 ps_logger.setLevel(logging.WARNING)
 
-
 pa_logger = logging.getLogger('preassembler')
 pa_logger.setLevel(logging.WARNING)
 
@@ -138,6 +137,22 @@ def _do_old_fashioned_preassembly(stmts):
 
 
 def _check_against_opa_stmts(raw_stmts, pa_stmts):
+    def _compare_list_elements(label, list_func, comp_func, **stmts):
+        (stmt_1_name, stmt_1), (stmt_2_name, stmt_2) = list(stmts.items())
+        vals_1 = [comp_func(elem) for elem in list_func(stmt_1)]
+        vals_2 = []
+        for element in list_func(stmt_2):
+            val = comp_func(element)
+            if val in vals_1:
+                vals_1.remove(val)
+            else:
+                vals_2.append(val)
+        if len(vals_1) or len(vals_2):
+            print("Found mismatched %s: %s=%s vs. %s=%s."
+                  % (label, stmt_1_name, vals_1, stmt_2_name, vals_2))
+            return {stmt_1_name: vals_1, stmt_2_name: vals_2}
+        return None
+
     opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
 
     old_stmt_dict = {s.get_hash(shallow=True): s for s in opa_stmts}
@@ -147,22 +162,35 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
     old_hash_set = set(old_stmt_dict.keys())
     assert new_hash_set == old_hash_set, \
         (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
-    mismatched_evidence_texts = []
+    tests = [{'funcs': {'list': lambda s: s.evidence,
+                        'comp': lambda ev: ev.text},
+              'label': 'evidence text',
+              'results': []},
+             {'funcs': {'list': lambda s: s.supports,
+                        'comp': lambda s: s.get_hash(shallow=True)},
+              'label': 'supports matches keys',
+              'results': []},
+             {'funcs': {'list': lambda s: s.supported_by,
+                        'comp': lambda s: s.get_hash(shallow=True)},
+              'label': 'supported-by matches keys',
+              'results': []}]
     for mk_hash in new_hash_set:
-        new_ev_texts = [ev.text for ev in new_stmt_dict[mk_hash].evidence]
-        old_ev_texts = []
-        for ev in old_stmt_dict[mk_hash].evidence:
-            if ev.text in new_ev_texts:
-                new_ev_texts.remove(ev.text)
-            else:
-                old_ev_texts.append(ev.text)
-        if len(old_ev_texts) or len(new_ev_texts):
-            print("Found mismatched evidence: old: %s, new: %s."
-                  % (old_ev_texts, new_ev_texts))
-            mismatched_evidence_texts.append({'old': old_ev_texts,
-                                              'new': new_ev_texts})
-    assert not len(mismatched_evidence_texts), \
-        "Found %d mismatched evidence." % len(mismatched_evidence_texts)
+        for test_dict in tests:
+            res = _compare_list_elements(test_dict['label'],
+                                         test_dict['funcs']['list'],
+                                         test_dict['funcs']['comp'],
+                                         new_stmt=new_stmt_dict[mk_hash],
+                                         old_stmt=old_stmt_dict[mk_hash])
+            if res is not None:
+                test_dict['results'].append(res)
+
+    # Now evaluate the results for exceptions
+    assert all([len(mismatch_res) is 0
+                for mismatch_res in [test_dict['results']
+                                     for test_dict in tests]]),\
+        ('\n'.join(['Found %d mismatches in %s.' % (len(td['results']),
+                                                    td['label'])
+                    for td in tests]))
 
 
 def test_preassembly_without_database():
