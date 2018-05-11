@@ -2,8 +2,12 @@ import sys
 import json
 import time
 import pickle
+import logging
 from indra.sources.trips import process_xml
 from indra.sources.trips.drum_reader import DrumReader
+
+
+logger = logging.getLogger('run_drum_reading')
 
 
 def read_pmid_sentences(pmid_sentences, **drum_args):
@@ -29,10 +33,10 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
             for evidence in stmt.evidence:
                 evidence.pmid = pmid
 
-    all_statements = []
+    all_statements = {}
     for pmid, sentences in pmid_sentences.items():
-        print('================================')
-        print('Processing %d sentences for %s' % (len(sentences), pmid))
+        logger.info('================================')
+        logger.info('Processing %d sentences for %s' % (len(sentences), pmid))
         ts = time.time()
         dr = DrumReader(**drum_args)
         for sentence in sentences:
@@ -47,9 +51,9 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
             statements += tp.statements
         _set_pmid(statements, pmid)
         te = time.time()
-        print('Reading took %d seconds and produced %d Statements.' %
-              (te-ts, len(statements)))
-        all_statements += statements
+        logger.info('Reading took %d seconds and produced %d Statements.' %
+                    (te-ts, len(statements)))
+        all_statements[pmid] = statements
     return all_statements
 
 
@@ -83,9 +87,10 @@ def save_results(statements, out_fname):
 
 
 if __name__ == '__main__':
+    file_name = sys.argv[0]
     host = sys.argv[1]
-    file_name = sys.argv[2]
+    port = sys.argv[2]
     with open(file_name, 'rt') as fh:
         content = json.load(fh)
-    statements = read_content(content, host=host, port=port)
+    statements = read_pmid_sentences(content, host=host, port=port)
     save_results(statements, 'results.pkl')
