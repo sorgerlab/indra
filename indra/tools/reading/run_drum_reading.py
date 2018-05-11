@@ -33,12 +33,18 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
             for evidence in stmt.evidence:
                 evidence.pmid = pmid
 
+    run_drum = drum_args.get('run_drum', False)
+    drum_process = None
     all_statements = {}
     for pmid, sentences in pmid_sentences.items():
         logger.info('================================')
         logger.info('Processing %d sentences for %s' % (len(sentences), pmid))
         ts = time.time()
         dr = DrumReader(**drum_args)
+        if run_drum and drum_process is None:
+            drum_args.pop('run_drum', None)
+            drum_process = dr.drum_system
+            drum_args['drum_system'] = drum_process
         for sentence in sentences:
             dr.read_text(sentence)
         try:

@@ -38,17 +38,38 @@ class DrumReader(KQMLModule):
     Once finished, the list of EKB XML extractions can be accessed via
     `dr.extractions`.
 
+    Parameters
+    ----------
+    run_drum : Optional[bool]
+        If True, the DRUM reading system is launched as a subprocess for
+        reading. If False, DRUM is expected to be running independently.
+        Default: False
+    drum_system : Optional[subproces.Popen]
+        A handle to the subprocess of a running DRUM system instance. This
+        can be passed in in case the instance is to be reused rather than
+        restarted. Default: None
+    **kwargs
+        All other keyword arguments are passed through to the DrumReader
+        KQML module's constructor.
+
     Attributes
     ----------
     extractions : list[str]
         A list of EKB XML extractions corresponding to the input text list.
+    drum_system : subprocess.Popen
+        A subprocess handle that points to a running instance of the
+        DRUM reading system. In case the DRUM system is running independently,
+        this is None.
     """
     def __init__(self, **kwargs):
         if not have_kqml:
             raise ImportError('Install the `pykqml` package to use ' +
                               'the DrumReader')
         run_drum = kwargs.pop('run_drum', None)
-        if not run_drum:
+        drum_system = kwargs.pop('drum_system', None)
+        if drum_system:
+            self.drum_system = drum_system
+        elif not run_drum:
             self.drum_system = None
         else:
             host = kwargs.get('host', None)
