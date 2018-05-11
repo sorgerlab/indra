@@ -814,8 +814,15 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     bad_stmts = db.select_all(db.RawStatements,
                               db.RawStatements.uuid.notin_(stmt_uuids),
                               *del_clauses)
-    print("Deleting %d redundant raw statements." % len(bad_stmts))
-    db.delete_all(bad_stmts)
+    if len(bad_stmts):
+        bad_uuid_set = {s.uuid for s in bad_stmts}
+        bad_agents = db.select_all(db.RawAgents,
+                                   db.RawAgents.stmt_uuid.in_(bad_uuid_set))
+        print("Deleting %d agents associated with redundant raw statements."
+              % len(bad_agents))
+        db.delete_all(bad_agents)
+        print("Deleting %d redundant raw statements." % len(bad_stmts))
+        db.delete_all(bad_stmts)
 
     return stmt_nd, stmts
 
