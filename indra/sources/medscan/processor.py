@@ -88,10 +88,15 @@ class ProteinSiteInfo(object):
             if st.endswith(suffix):
                 st = st[:-len(suffix)]
 
+        # Strip parentheses
+        st = st.replace('(', '')
+        st = st.replace(')', '')
+        st = st.replace(' or ', ' and ')  # Treat end and or the same
+
         sites = []
         parts = st.split(' and ')
         for part in parts:
-            sites.extend(ReachProcessor._parse_site_text(part))
+            sites.extend(ReachProcessor._parse_site_text(part.strip()))
         return sites
 
 
