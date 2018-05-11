@@ -719,8 +719,7 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                           db.TextContent.source, db.Reading.id,
                           db.Reading.reader_version, db.RawStatements.uuid,
                           db.RawStatements.json)
-         .filter(db.TextContent.id == db.Reading.text_content_id,
-                 db.Reading.id == db.RawStatements.reading_id))
+         .filter(*db.join(db.RawStatements, db.TextContent)))
     if clauses:
         q = q.filter(*clauses)
 
@@ -802,6 +801,21 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                 stmts |= {list(stmt_set)[0]
                           for r_dict in rv_dict[best_rv].values()
                           for stmt_set in r_dict.values()}
+
+    # Get rid of the repetative statements.
+    if get_full_stmts:
+        stmt_uuids = {s.uuid for s in stmts}
+    else:
+        stmt_uuids = stmts
+
+    del_clauses = db.join(db.RawStatements, db.Reading)
+    if clauses is not None:
+        del_clauses += clauses
+    bad_stmts = db.select_all(db.RawStatements,
+                              db.RawStatements.uuid.notin_(stmt_uuids),
+                              *del_clauses)
+    print("Deleting %d redundant raw statements." % len(bad_stmts))
+    db.delete_all(bad_stmts)
 
     return stmt_nd, stmts
 
