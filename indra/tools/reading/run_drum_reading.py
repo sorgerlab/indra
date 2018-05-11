@@ -60,6 +60,8 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
         logger.info('Reading took %d seconds and produced %d Statements.' %
                     (te-ts, len(statements)))
         all_statements[pmid] = statements
+    if dr.drum_system:
+        dt._kill_drum()
     return all_statements
 
 
