@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import random
+import signal
 import logging
 import subprocess
 from indra.config import get_config
@@ -53,7 +54,6 @@ class DrumReader(KQMLModule):
             host = kwargs.get('host', None)
             port = kwargs.get('port', None)
             self.drum_system = self._run_drum(host, port)
-            time.sleep(30)
 
         super(DrumReader, self).__init__(name='DrumReader', **kwargs)
         self.msg_counter = random.randint(1, 100000)
@@ -118,17 +118,23 @@ class DrumReader(KQMLModule):
             options += ['-port', port]
         cmd = [cmd_path] + options
         drum_proc = subprocess.Popen(cmd)
+        # TODO: Here we could monitor the stdout and wait for the "Ready" line
+        time.sleep(20)
+        return drum_proc
 
     def _kill_drum(self):
         ps_command = subprocess.Popen("ps -o pid --ppid %d --noheaders" %
-                                      drum_system.pid, shell=True,
+                                      self.drum_system.pid, shell=True,
                                       stdout=subprocess.PIPE)
         # TODO: this needs to be recursive
         ps_output = ps_command.stdout.read().decode('utf-8')
         retcode = ps_command.wait()
-        children = ps_output.split('\n')
+        children = ps_output.split('\n')[:-1]
+        # Kill the child processes
         for pid_str in children:
             os.kill(int(pid_str), signal.SIGTERM)
+        # Kill the process itself
+        os.kill(int(self.drum_system.pid), signal.SIGTERM)
 
 def _get_perf(text, msg_id):
     """Return a request message for a given text."""
