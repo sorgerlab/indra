@@ -22,7 +22,7 @@ pa_logger = logging.getLogger('preassembler')
 pa_logger.setLevel(logging.WARNING)
 
 from indra.db import util as db_util
-from indra.db import preassembly_script as pas
+from indra.db import preassembly_manager as pm
 from indra.statements import stmts_from_json, Statement
 from indra.tools import assemble_corpus as ac
 
@@ -86,7 +86,7 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         db.copy('raw_statements', copy_stmt_tuples, copy_col_names)
         if with_init_corpus:
             print("\tAdding a preassembled corpus...")
-            pa_manager = pas.PreassemblyManager()
+            pa_manager = pm.PreassemblyManager()
             pa_manager.create_corpus(db)
     else:
         num_initial = int(split*len(copy_stmt_tuples))
@@ -99,7 +99,7 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         if with_init_corpus:
             print("\tAdding a preassembled corpus from first batch of raw "
                   "stmts...")
-            pa_manager = pas.PreassemblyManager(batch_size=1000)
+            pa_manager = pm.PreassemblyManager(batch_size=1000)
             pa_manager.create_corpus(db)
         print("\tInserting the rest of the raw statements...")
         new_datetime = datetime.now()
@@ -195,7 +195,7 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
 
 def test_preassembly_without_database():
     stmts = _get_stmts()
-    pam = pas.PreassemblyManager()
+    pam = pm.PreassemblyManager()
     unique_stmt_dict, evidence_links, support_links = \
         pam._process_statements(stmts)
     assert len(unique_stmt_dict)
@@ -219,7 +219,7 @@ def test_preassembly_without_database():
 
 def test_incremental_preassmbly_without_database():
     stmts = _get_stmts()
-    pam = pas.PreassemblyManager()
+    pam = pm.PreassemblyManager()
 
     # For comparison, preassemble the entire corpus.
     full_unique_stmts, full_evidence_links, full_support_links = \
@@ -244,9 +244,9 @@ def test_incremental_preassmbly_without_database():
     new_unique_stmt_dict, new_evidence_links, new_support_links = \
         pam._get_increment_links(init_unique_stmts, new_stmts)
     updated_unique_stmts, updated_evidence_links, updated_support_links = \
-        pas.merge_statements(init_unique_stmts, init_evidence_links,
-                             init_support_links, new_unique_stmt_dict,
-                             new_evidence_links, new_support_links)
+        pm.merge_statements(init_unique_stmts, init_evidence_links,
+                            init_support_links, new_unique_stmt_dict,
+                            new_evidence_links, new_support_links)
 
     # Check that we got all the same statements (trivial)
     assert len(updated_unique_stmts) == len(full_unique_stmts), \
@@ -297,7 +297,7 @@ def test_preassembly_with_database():
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pas.PreassemblyManager(batch_size=1000)
+    pa_manager = pm.PreassemblyManager(batch_size=1000)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
@@ -328,10 +328,10 @@ def test_preassembly_with_database():
 
 def test_incremental_preassembly_with_database():
     db = _get_loaded_db(split=0.8, with_init_corpus=True)
-    pa_manager = pas.PreassemblyManager(batch_size=1000)
+    pa_manager = pm.PreassemblyManager(batch_size=1000)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
-    _, raw_stmts = pas.distill_stmts_from_reading(db, get_full_stmts=True)
+    _, raw_stmts = pm.distill_stmts_from_reading(db, get_full_stmts=True)
     pa_stmts = db_util.get_statements([], preassembled=True, db=db)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
