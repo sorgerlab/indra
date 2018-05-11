@@ -22,6 +22,12 @@ Reading Manager (:py:mod:`indra.db.reading_manager`)
 .. automodule:: indra.db.reading_manager
     :members:
 
+Client (:py:mod:`indra.db.util`)
+--------------------------------
+
+.. automodule:: indra.db.client
+    :members:
+
 Utilities (:py:mod:`indra.db.util`)
 -----------------------------------
 

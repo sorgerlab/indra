@@ -9,7 +9,8 @@ from nose.tools import assert_equal
 from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db.database_manager import DatabaseManager
-from indra.db.util import get_abstracts_by_pmids, get_defaults, NestedDict
+from indra.db.util import get_defaults, NestedDict
+from indra.db.client import get_abstracts_by_pmids
 from nose.plugins.attrib import attr
 from indra.db.reading_manager import BulkReadingManager, BulkLocalReadingManager
 
