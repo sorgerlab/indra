@@ -83,10 +83,11 @@ class ProteinSiteInfo(object):
             A list of position-residue pairs corresponding to the site-text
         """
         st = self.site_text
-        suffixes = [' residue', ' residues']
+        suffixes = [' residue', ' residues', ',', '/']
         for suffix in suffixes:
             if st.endswith(suffix):
                 st = st[:-len(suffix)]
+        assert(not st.endswith(','))
 
         # Strip parentheses
         st = st.replace('(', '')
@@ -96,7 +97,11 @@ class ProteinSiteInfo(object):
         sites = []
         parts = st.split(' and ')
         for part in parts:
-            sites.extend(ReachProcessor._parse_site_text(part.strip()))
+            if part.endswith(','):
+                part = part[:-1]
+            logger.error('Part:' + part)
+            if len(part.strip()) > 0:
+                sites.extend(ReachProcessor._parse_site_text(part.strip()))
         return sites
 
 
@@ -460,7 +465,8 @@ class MedscanProcessor(object):
                     r = site.residue
                     p = site.position
 
-                    s = statement_type(subj, obj, residue=r, position=p)
+                    s = statement_type(subj, obj, residue=r, position=p,
+                                       evidence=ev)
                     self.sentence_statements.append(s)
             else:
                 self.sentence_statements.append(statement_type(subj, obj,
