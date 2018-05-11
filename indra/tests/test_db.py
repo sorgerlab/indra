@@ -228,8 +228,8 @@ def test_get_abstracts():
             ]
         )
 
-    expected = [(pmid, (found_abst_fmt % pmid).encode('utf8'))
-                for pmid in ['1234', '5678']]
+    expected = {pmid: (found_abst_fmt % pmid).encode('utf8')
+                for pmid in ['1234', '5678']}
     received = get_abstracts_by_pmids(db, ['1234', '5678', '1357'],
                                       unzip=False)
     assert_contents_equal(expected, received, "Didn't get expected abstracts.")
