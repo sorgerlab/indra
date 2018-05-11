@@ -8,6 +8,7 @@ __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
 
 import re
 import json
+import zlib
 import logging
 from sqlalchemy import func
 from indra.databases import hgnc_client
@@ -279,7 +280,24 @@ def insert_pa_stmts(db, stmts, verbose=False):
 
 
 def get_abstracts_by_pmids(db, pmid_list, unzip=True):
-    "Get abstracts using the pmids in pmid_list."
+    """Return abstracts given a list of PMIDs from the database
+
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
+        Reference to the DB to query
+    pmid_list : list[str]
+        A list of PMIDs whose abstracts are to be returned
+    unzip : Optional[bool]
+        If True, the compressed output is decompressed into clear text.
+        Default: True
+
+    Returns
+    -------
+    abstracts : dict
+        A dictionary whose keys are PMIDs with each value being the
+        the corresponding abstract
+    """
     abst_list = db.filter_query(
         [db.TextRef, db.TextContent],
         db.TextContent.text_ref_id == db.TextRef.id,
@@ -288,11 +306,12 @@ def get_abstracts_by_pmids(db, pmid_list, unzip=True):
         ).all()
     if unzip:
         def unzip_func(s):
-            return unzip_string(s.tobytes())
+            return zlib.decompress(s, zlib.MAX_WBITS + 16).decode('utf-8')
     else:
         def unzip_func(s):
             return s
-    return [(r.pmid, unzip_func(c.content)) for (r, c) in abst_list]
+    abstracts = {r.pmid: unzip_func(c.content) for (r, c) in abst_list}
+    return abstracts
 
 
 def get_auth_xml_pmcids(db):
