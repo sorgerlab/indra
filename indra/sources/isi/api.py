@@ -116,9 +116,11 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
 
     # Form the command to invoke the ISI reader via Docker
     dir_name = isi_preprocessor.preprocessed_dir
-    input_binding = dir_name + ':/input:ro'
-    output_binding = output_dir + ':/output:rw'
-    tmp_binding = tmp_dir + ':/temp:rw'
+    # We call realpath on all these paths so that any symbolic links
+    # are generated out - this is needed on Mac
+    input_binding = os.path.realpath(dir_name) + ':/input:ro'
+    output_binding = os.path.realpath(output_dir) + ':/output:rw'
+    tmp_binding = os.path.realpath(tmp_dir) + ':/temp:rw'
     command = ['docker', 'run', '-it', '--rm',
                '-v', input_binding, '-v', output_binding, '-v', tmp_binding,
                'sahilgar/bigmechisi', './myprocesspapers.sh',
