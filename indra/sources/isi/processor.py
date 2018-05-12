@@ -6,7 +6,7 @@ from copy import deepcopy
 
 import indra.statements
 from indra.statements import *
-from indra.preassembler.grounding_mapper import load_grounding_map,\
+from indra.preassembler.grounding_mapper import load_grounding_map, \
         GroundingMapper
 
 logger = logging.getLogger('isi')
@@ -20,12 +20,12 @@ def _build_verb_statement_mapping():
 
     Returns
     -------
-    verb_to_statement_type: dict
+    verb_to_statement_type : dict
         Dictionary mapping verb name to an INDRA statment class
     """
-    path = os.path.join('indra', 'resources',
-                        'isi_verb_to_indra_statement_type.tsv')
-    with open(path, 'r') as f:
+    path_this = os.path.dirname(os.path.abspath(__file__))
+    map_path = os.path.join(path_this, 'isi_verb_to_indra_statement_type.tsv')
+    with open(map_path, 'r') as f:
         first_line = True
         verb_to_statement_type = {}
         for line in f:
@@ -54,16 +54,16 @@ class IsiProcessor(object):
 
     Attributes
     ----------
-    output_dir: str
+    output_dir : str
         The output directory of the ISI reader, with one file per input file.
-    verbs: set[str]
+    verbs : set[str]
         A list of verbs that have appeared in the processed ISI output
-    pmids: dict
+    pmids : dict
         Dictionary mapping preprocessed text file ids to pmids
-    extra_annotations: dict
+    extra_annotations : dict
         Dictionary mapping preprocessed text file ids to a associated
         annotations to be included with each statement from the document
-    statements: list[indra.statements.Statement]
+    statements : list[indra.statements.Statement]
         Extracted statements
     """
     def __init__(self, output_dir, preprocessor):
@@ -96,7 +96,7 @@ class IsiProcessor(object):
 
         Parameters
         ----------
-        dir_name: str
+        dir_name : str
             The directory to traverse
         """
         for entry in os.listdir(dir_name):
@@ -129,12 +129,12 @@ class IsiProcessor(object):
 
         Parameters
         ----------
-        filename: str
+        filename : str
             The ISI output file from which to extract statements
-        pmid: int
+        pmid : int
             The PMID of the document being preprocessed, or None if not
             specified
-        extra_annotations: dict
+        extra_annotations : dict
             Extra annotations to be added to each statement from this document
             (can be the empty dictionary)
         """
@@ -155,15 +155,15 @@ class IsiProcessor(object):
 
         Parameters
         ----------
-        source_id: str
+        source_id : str
             the JSON key corresponding to the sentence in the ISI output
             interaction: the JSON list with subject/verb/object information
             about the event in the ISI output
-        text: str
+        text : str
             the text of the sentence
-        pmid: int
+        pmid : int
             the PMID of the article from which the information was extracted
-        extra_annotations: dict
+        extra_annotations : dict
             Additional annotations to add to the statement's evidence,
             potentially containing metadata about the source. Annotations
             with the key "interaction" will be overridden by the JSON
@@ -243,12 +243,12 @@ class IsiProcessor(object):
 
         Parameters
         ----------
-        agent_str: str
+        agent_str : str
             A string specifying the agent
 
         Returns
         -------
-        agent: indra.statements.Agent
+        agent : indra.statements.Agent
             An ungrounded Agent object referring to the specified text
         """
         return Agent(agent_str, db_refs={'TEXT': agent_str})
