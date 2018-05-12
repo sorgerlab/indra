@@ -482,6 +482,7 @@ class MedscanProcessor(object):
         elif relation.verb == 'Regulation-unknown':
             pass  # TODO? These occur so infrequently so maybe not worth it
         elif relation.verb == 'StateEffect-positive':
+            pass
             # self.sentence_statements.append(
             #                       ActiveForm(subj, obj, evidence=ev)
             #                      )
