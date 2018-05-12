@@ -12,6 +12,7 @@ import re
 logger = logging.getLogger('isi')
 
 nxml2txt_path = get_config('NXML2TXT_PATH')
+python2_path = get_config('PYTHON2_PATH')
 
 class IsiPreprocessor(object):
     """Preprocesses a set of documents, one by one, and adds the preprocessed
@@ -130,10 +131,13 @@ class IsiPreprocessor(object):
             logger.error('NXML2TXT_PATH not specified in config file or ' + 
                          'environment variable')
             return
+        if python2_path is None:
+            logger.error('PYTHON2_PATH not specified in config file or ' + 
+                         'environment variable')
         else:
             txt_out = os.path.join(tmp_dir, 'out.txt')
             so_out = os.path.join(tmp_dir, 'out.so')
-            command = ['python2.7',
+            command = [python2_path,
                        os.path.join(nxml2txt_path, 'nxml2txt'),
                        filename,
                        txt_out,
