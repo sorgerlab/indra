@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import logging
 import nltk
 import os
@@ -15,21 +17,21 @@ nxml2txt_path = get_config('NXML2TXT_PATH')
 python2_path = get_config('PYTHON2_PATH')
 
 class IsiPreprocessor(object):
-    """Preprocesses a set of documents, one by one, and adds the preprocessed
+    """Preprocess a set of documents, one by one, and add the preprocessed
     text to a temporary directory in a format suitable for the ISI reader.
     The ISI reader requires plain text with one sentence per line.
 
     Attributes
     ----------
-    preprocessed_dir: str
+    preprocessed_dir : str
         The directory holding the literature text preprocessed and sentence
         tokenized in a format suitable for the ISI reader
-    next_file_id: int
+    next_file_id : int
         The next file with preprocessed text will be named next_file_id.txt
-    pmids: dict
+    pmids : dict
         A dictionary mapping file ids to the pmid of the text corresponding
         to that file, can be None if unknown
-    extra_annotations: dict
+    extra_annotations : dict
         A dictionary mapping file ids to a (possibly empty) dictionary with
         additional annotations to include for statements extracted from this
         document
@@ -48,23 +50,52 @@ class IsiPreprocessor(object):
             logger.warning('IsiPreprocessor should get an empty directory in' +
                            ' which to store preprocessed files.')
 
+    def register_preprocessed_file(self, infile, pmid, extra_annotations):
+        """Set up already preprocessed text file for reading with ISI reader.
+
+        This is essentially a mock function to "register" already preprocessed
+        files and get an IsiPreprocessor object that can be passed to
+        the IsiProcessor.
+
+        Parameters
+        ----------
+        infile : str
+            Path to an already preprocessed text file (i.e. one ready to
+            be sent for reading to ISI reader).
+        pmid : str
+            The PMID corresponding to the file
+        extra_annotations : dict
+            Extra annotations to be added to each statement, possibly including
+            metadata about the source (annotations with the key "interaction"
+            will be overridden)
+        """
+        infile_base = os.path.basename(infile)
+        outfile = os.path.join(self.preprocessed_dir, infile_base)
+        shutil.copyfile(infile, outfile)
+
+        self.pmids[self.next_file_id] = pmid
+        self.extra_annotations[self.next_file_id] = extra_annotations
+        self.next_file_id += 1
+
     def preprocess_plain_text_string(self, text, pmid, extra_annotations):
-        """Preprocesses plain text by tokenizing into sentences and writing
+        """Preprocess plain text string for use by ISI reader.
+
+        Preprocessing is done by tokenizing into sentences and writing
         each sentence on its own line in a plain text file. All other
         preprocessing functions ultimately call this one.
 
         Parameters
         ----------
-        text: str
+        text : str
             The plain text of the article of abstract
-        pmid: str
-            The pmid from which it comes, or None if not specified
-        extra_annotations: dict
+        pmid : str
+            The PMID from which it comes, or None if not specified
+        extra_annotations : dict
             Extra annotations to be added to each statement, possibly including
             metadata about the source (annotations with the key "interaction"
             will be overridden)
         """
-        output_file = str(self.next_file_id) + '.txt'
+        output_file = '%s.txt' % self.next_file_id
         output_file = os.path.join(self.preprocessed_dir, output_file)
 
         # Tokenize sentence
@@ -87,17 +118,18 @@ class IsiPreprocessor(object):
         self.next_file_id += 1
 
     def preprocess_plain_text_file(self, filename, pmid, extra_annotations):
-        """
-        Preprocess a plain text file for use with ISI, by creating a new text
-        file with one sentence per line.
+        """Preprocess a plain text file for use with ISI reder.
+
+        Preprocessing results in a new text file with one sentence
+        per line.
 
         Parameters
         ----------
-        text: str
+        text : str
             The plain text of the article of abstract
-        pmid: str
-            The pmid from which it comes, or None if not specified
-        extra_annotations: dict
+        pmid : str
+            The PMID from which it comes, or None if not specified
+        extra_annotations : dict
             Extra annotations to be added to each statement, possibly including
             metadata about the source (annotations with the key "interaction"
             will be overridden)
@@ -109,16 +141,18 @@ class IsiPreprocessor(object):
 
 
     def preprocess_nxml_file(self, filename, pmid, extra_annotations):
-        """Preprocess an nxml file for use with ISI, by creating a plain
-        text file with one sentence per line. Not yet implemented.
+        """Preprocess an NXML file for use with the ISI reader.
+
+        Preprocessing is done by extracting plain text from NXML and then
+        creating a text file with one sentence per line.
 
         Parameters
         ----------
-        filename: str
+        filename : str
             Filename of an nxml file to process
-        pmid: str
-            The pmid from which it comes, or None if not specified
-        extra_annotations: dict
+        pmid : str
+            The PMID from which it comes, or None if not specified
+        extra_annotations : dict
             Extra annotations to be added to each statement, possibly including
             metadata about the source (annotations with the key "interaction"
             will be overridden)
@@ -167,14 +201,15 @@ class IsiPreprocessor(object):
 
 
     def preprocess_abstract_list(self, abstract_list):
-        """Preprocess a list of abstracts in database pickle dump format.
+        """Preprocess abstracts in database pickle dump format for ISI reader.
+
         For each abstract, creates a plain text file with one sentence per
         line, and stores metadata to be included with each statement from
         that abstract.
 
         Parameters
         ----------
-        abstract_list: list[dict]
+        abstract_list : list[dict]
             Compressed abstracts with corresopnding metadata in INDRA database
             pickle dump format.
         """
