@@ -1,0 +1,32 @@
+ <?xml version="1.0"?>
+<batch>
+<doc uri="info:pmid/18082638">
+    <sec type="abs">
+  
+<sent sn="200" msrc="ID{10524=Tip60} acetylates ID{40999999=K8} in ID{7000363=human} ID{28953=FoxP3} ( ). CONTEXT{10004137} GLOSSARY{40999999=&quot;K8&quot;}">
+    <toks>ID{10524=Tip60} TK{W:V:acetylate=acetylates} ID{40999999=K8} TK{W:PREP:in=in} ID{7000363=human} ID{28953=FoxP3} TK{W:N:=( )} TK{PCT:PCT:.=.}</toks>
+    <match coff="0" chars="Tip60" clen="5" type="Protein">
+     <entity msid="10524" type="Protein" name="KAT5" urn="urn:agi-llid:10524" />
+    </match>
+    <match coff="17" chars="K8" clen="2" type="Lysine">
+     <entity msid="40999999" type="Lysine" name="K8" urn="urn:agi-s-llid:K8-10524" />
+    </match>
+    <match coff="23" chars="human" clen="5" type="Organism">
+     <entity msid="7000363" type="Organism" name="Homo sapiens" urn="urn:agi-taxid:9606" />
+    </match>
+    <match coff="29" chars="FoxP3" clen="5" type="Protein">
+     <entity msid="28953" type="Protein" name="FOXP3" urn="urn:agi-llid:28953" />
+    </match>
+    <context>
+     <entity msid="10004137" type="CellType" name="regulatory T-cell" urn="urn:agi-ncimcelltype:C0039198" />
+    </context>
+    <svo type="CONTROL" subj="ID{40999999}" verb="StateEffect" obj="ID{28953}" />
+    <svo type="CONTROL" subj="ID{10524}" verb="ProtModification" obj="ID{40999999}" />
+    <svo type="Main" subj="ID{10524=Tip60}" verb="TK{acetylate}" obj="ID{7000363=human} ID{28953=FoxP3} TK{( )} ID{40999999=K8}" posinfo="0,15,16,10,46,17,64,15,80,3,27,15," />
+    <svo type="CONTROL" subj="ID{10524}" verb="ProtModification" obj="ID{28953}" />
+   </sent>
+
+
+</sec>
+</doc>
+</batch>

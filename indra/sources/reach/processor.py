@@ -615,7 +615,9 @@ class ReachProcessor(object):
         has_slash = '/' in s
 
         has_both = has_comma and has_slash
-        assert(not has_both)
+        if has_both:
+            logger.error(s + ' is not a valid site text string')
+            return []
 
         if has_comma:
             texts = s.split(',')
@@ -639,6 +641,7 @@ class ReachProcessor(object):
 
     @staticmethod
     def _parse_site_text_single(s):
+        s = s.strip()
         for p in (_site_pattern1, _site_pattern2, _site_pattern3):
             m = re.match(p, s.upper())
             if m is not None:

@@ -7,6 +7,7 @@ from indra.statements import *
 from indra.sources.medscan.processor import *
 from indra.sources.medscan.processor import _urn_to_db_refs
 from indra.sources.medscan.api import *
+from indra.sources.medscan.processor import ProteinSiteInfo
 
 # Path to the Medscan test/dummy data folder
 path_this = os.path.dirname(os.path.abspath(__file__))
@@ -226,9 +227,36 @@ def test_phosphorylate():
     s0 = statements[0]
     assert(isinstance(s0, Phosphorylation))
 
-    assert(s0.enz.db_refs == {'HGNC': '1974', 'TEXT': 'IKK alpha',
-                              'UP': 'O15111'})
+    assert(s0.enz.db_refs == {'GO': 'GO:0005610', 'FPLX': 'Laminin_332',
+                              'TEXT': 'IKK alpha'})
+    assert(s0.enz.name == 'Laminin_332')  # agent name is FPLX when available
     assert(s0.sub.db_refs == {'HGNC': '6120', 'TEXT': 'IRF-5', 'UP': 'Q13568'})
+
+
+def test_activation():
+    fname = os.path.join(data_folder, 'test_Activation.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(type(s0) == Activation)
+    assert(s0.subj.name == 'Laminin_332')
+    assert(s0.obj.name == 'IRF-5 dimers')
+
+
+def test_inhibition():
+    fname = os.path.join(data_folder, 'test_Inhibition.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(type(s0) == Inhibition)
+    assert(repr(s0.subj) == 'DNMT3A(mods: (methylation, R, 882))')
+    assert(repr(s0.obj) == 'cell differentiation()')
 
 
 def test_dephosphorylate():
@@ -326,6 +354,7 @@ def test_protein_phosphosite():
     assert(len(obj.mutations) == 0)
     assert(len(obj.mods) == 0)
 
+
 def test_handle_duplicates():
     # Does the processor detect duplicate SVOs within the same sentence?
     fname = os.path.join(data_folder, 'test_duplicate_SVO.csxml')
@@ -333,3 +362,27 @@ def test_handle_duplicates():
 
     statements = mp.statements
     assert(len(statements) == 1)
+
+
+def test_modification_site():
+    # Can we detect the modification site and residue in a modification
+    # event?
+    fname = os.path.join(data_folder, 'test_modification_site.csxml')
+    mp = process_file(fname, None)
+
+    statements = mp.statements
+    assert(len(statements) == 1)
+
+    s0 = statements[0]
+    assert(s0.residue == 'K')
+    assert(s0.position == '8')
+
+
+def test_site_text_parser():
+    si = ProteinSiteInfo('S10 and S20 residues', None)
+    sites = si.get_sites()
+    assert(len(sites) == 2)
+    assert(sites[0].residue == 'S')
+    assert(sites[0].position == '10')
+    assert(sites[1].residue == 'S')
+    assert(sites[1].position == '20')

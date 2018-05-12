@@ -8,6 +8,7 @@ from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
         get_hgnc_name
 from indra.util import read_unicode_csv
+from indra.sources.reach.processor import ReachProcessor, Site
 
 logger = logging.getLogger('medscan')
 
@@ -36,21 +37,23 @@ famplex_map = _read_famplex_map()
 
 
 def is_statement_in_list(statement, statement_list):
-    """Determines whether the statement is equivalent to any statement in the
+    """Return True of given statement is equivalent to on in a list
+
+    Determines whether the statement is equivalent to any statement in the
     given list of statements, with equivalency determined by Statement's
     equals method.
 
     Parameters
     ----------
-    statement: indra.statements.Statement
+    statement : indra.statements.Statement
         The statement to compare with
-    statement_list: list<indra.statements.Statement>
+    statement_list : list[indra.statements.Statement]
         The statement list whose entries we compare with statement
 
     Returns
     -------
-    in_list: bool
-        Whether statement is equivalent to any statements in the list
+    in_list : bool
+        True if statement is equivalent to any statements in the list
     """
     for s in statement_list:
         if s.equals(statement):
@@ -58,8 +61,60 @@ def is_statement_in_list(statement, statement_list):
     return False
 
 
+class ProteinSiteInfo(object):
+    """Represent a site on a protein, extracted from a StateEffect event.
+
+    Parameters
+    ----------
+    site_text : str
+        The site as a string (ex. S22)
+    object_text : str
+        The protein being modified, as the string that appeared in the original
+        sentence
+    """
+    def __init__(self, site_text, object_text):
+        self.site_text = site_text
+        self.object_text = object_text
+
+    def get_sites(self):
+        """Parse the site-text string and return a list of sites.
+
+        Returns
+        -------
+        sites : list[Site]
+            A list of position-residue pairs corresponding to the site-text
+        """
+        st = self.site_text
+        suffixes = [' residue', ' residues', ',', '/']
+        for suffix in suffixes:
+            if st.endswith(suffix):
+                st = st[:-len(suffix)]
+        assert(not st.endswith(','))
+
+        # Strip parentheses
+        st = st.replace('(', '')
+        st = st.replace(')', '')
+        st = st.replace(' or ', ' and ')  # Treat end and or the same
+
+        sites = []
+        parts = st.split(' and ')
+        for part in parts:
+            if part.endswith(','):
+                part = part[:-1]
+            if len(part.strip()) > 0:
+                sites.extend(ReachProcessor._parse_site_text(part.strip()))
+        return sites
+
+
 class MedscanProcessor(object):
     """Processes Medscan data into INDRA statements.
+
+    The special StateEffect event conveys information about the binding
+    site of a protein modification. Sometimes this is paired with additional
+    event information in a seperate SVO. When we encounter a StateEffect, we
+    don't process into an INDRA statement right away, but instead store
+    the site information and use it if we encounter a ProtModification
+    event within the same sentence.
 
     Attributes
     ----------
@@ -75,6 +130,11 @@ class MedscanProcessor(object):
     num_entities_not_found : int
         The number of subject or object IDs which could not be resolved by
         looking in the list of entities or tagged phrases.
+    last_site_info_in_sentence : SiteInfo
+        Stored protein site info from the last StateEffect event within the
+        sentence, allowing us to combine information from StateEffect and
+        ProtModification events within a single sentence in a single INDRA
+        statement. This is reset at the end of each sentence
     """
     def __init__(self):
         self.statements = []
@@ -82,6 +142,7 @@ class MedscanProcessor(object):
         self.num_entities_not_found = 0
         self.num_entities = 0
         self.relations = []
+        self.last_site_info_in_sentence = None
 
     def process_csxml_from_file_handle(self, f, num_documents):
         """Processes a filehandle to MedScan csxml input into INDRA
@@ -170,6 +231,9 @@ class MedscanProcessor(object):
                 # Reset sentence statements list to prepare for processing the
                 # next sentence
                 self.sentence_statements = []
+
+                # Reset site info
+                self.last_site_info_in_sentence = None
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
             elif event == 'start' and elem.tag == 'entity':
@@ -265,18 +329,49 @@ class MedscanProcessor(object):
         if m is not None:
             # Extract the pmid from the URI if the URI refers to a pmid
             pmid = m.group(1)
-        annotations = None
+        if last_relation:
+            last_verb = last_relation.verb
+        else:
+            last_verb = None
+        annotations = {'verb': relation.verb, 'last_verb': last_verb}
+        epistemics = dict()
+        epistemics['direct'] = False  # Overridden later if needed
         ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
-                       text=untagged_sentence, annotations=None,
-                       epistemics=None)]
+                       text=untagged_sentence, annotations=annotations,
+                       epistemics=epistemics)]
 
         # These normalized verbs are mapped to IncreaseAmount statements
         increase_amount_verbs = ['ExpressionControl-positive',
-                                 'MolSynthesis-positive']
+                                 'MolSynthesis-positive',
+                                 'CellExpression',
+                                 'QuantitativeChange-positive',
+                                 'PromoterBinding']
 
         # These normalized verbs are mapped to DecreaseAmount statements
         decrease_amount_verbs = ['ExpressionControl-negative',
-                                 'MolSynthesis-negative']
+                                 'MolSynthesis-negative',
+                                 'miRNAEffect-negative',
+                                 'QuantitativeChange-negative']
+
+        # These normalized verbs are mapped to Activation statements (indirect)
+        activation_verbs = ['UnknownRegulation-positive',
+                            'Regulation-positive']
+        # These normalized verbs are mapped to Activation statements (direct)
+        d_activation_verbs = ['DirectRegulation-positive',
+                              'DirectRegulation-positive--direct interaction']
+        # All activation verbs
+        all_activation_verbs = list(activation_verbs)
+        all_activation_verbs.extend(d_activation_verbs)
+
+        # These normalized verbs are mapped to Inhibition statements (indirect)
+        inhibition_verbs = ['UnknownRegulation-negative',
+                            'Regulation-negative']
+        # These normalized verbs are mapped to Inhibition statements (direct)
+        d_inhibition_verbs = ['DirectRegulation-negative',
+                              'DirectRegulation-negative--direct interaction']
+        # All inhibition verbs
+        all_inhibition_verbs = list(inhibition_verbs)
+        all_inhibition_verbs.extend(d_inhibition_verbs)
 
         if relation.verb in increase_amount_verbs:
             # If the normalized verb corresponds to an IncreaseAmount statement
@@ -290,6 +385,23 @@ class MedscanProcessor(object):
             self.sentence_statements.append(
                                    DecreaseAmount(subj, obj, evidence=ev)
                                   )
+        elif relation.verb in all_activation_verbs:
+            # If the normalized verb corresponds to an Activation statement,
+            # then make one
+            if relation.verb in d_activation_verbs:
+                ev[0].epistemics['direction'] = True
+            self.sentence_statements.append(
+                    Activation(subj, obj, evidence=ev)
+                    )
+        elif relation.verb in all_inhibition_verbs:
+            # If the normalized verb corresponds to an Inhibition statement,
+            # then make one
+            if relation.verb in d_inhibition_verbs:
+                ev[0].epistemics['direct'] = True
+            self.sentence_statements.append(
+                    Inhibition(subj, obj, evidence=ev)
+                    )
+
         elif relation.verb == 'ProtModification':
             # The normalized verb 'ProtModification' is too vague to make
             # an INDRA statement. We look at the unnormalized verb in the
@@ -347,7 +459,19 @@ class MedscanProcessor(object):
                 # INDRA statement
                 return
 
-            self.sentence_statements.append(statement_type(subj, obj, evidence=ev))
+            obj_text = obj.db_refs['TEXT']
+            last_info = self.last_site_info_in_sentence
+            if last_info is not None and obj_text == last_info.object_text:
+                for site in self.last_site_info_in_sentence.get_sites():
+                    r = site.residue
+                    p = site.position
+
+                    s = statement_type(subj, obj, residue=r, position=p,
+                                       evidence=ev)
+                    self.sentence_statements.append(s)
+            else:
+                self.sentence_statements.append(statement_type(subj, obj,
+                                                evidence=ev))
 
         elif relation.verb == 'Binding':
             # The Binding normalized verb corresponds to the INDRA Complex
@@ -355,6 +479,21 @@ class MedscanProcessor(object):
             self.sentence_statements.append(
                                    Complex([subj, obj], evidence=ev)
                                   )
+        elif relation.verb == 'ProtModification-negative':
+            pass  # TODO? These occur so infrequently so maybe not worth it
+        elif relation.verb == 'Regulation-unknown':
+            pass  # TODO? These occur so infrequently so maybe not worth it
+        elif relation.verb == 'StateEffect-positive':
+            pass
+            # self.sentence_statements.append(
+            #                       ActiveForm(subj, obj, evidence=ev)
+            #                      )
+            # TODO: disabling for now, since not sure whether we should set
+            # the is_active flag
+        elif relation.verb == 'StateEffect':
+            self.last_site_info_in_sentence = \
+                    ProteinSiteInfo(site_text=subj.name,
+                                    object_text=obj.db_refs['TEXT'])
 
     def agent_from_entity(self, relation, entity_id):
         """Create a (potentially grounded) INDRA Agent object from a given a
@@ -423,16 +562,16 @@ class MedscanProcessor(object):
                 assert(len(mutation) == 1)
                 mutation = mutation[0]
 
-                db_refs, hgnc_name = _urn_to_db_refs(protein.urn)
+                db_refs, db_name = _urn_to_db_refs(protein.urn)
 
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = protein.name
 
-                if hgnc_name is None:
+                if db_name is None:
                     agent_name = db_refs['TEXT']
                 else:
-                    agent_name = hgnc_name
+                    agent_name = db_name
 
                 # Check mutation.type. Only some types correspond to situations
                 # that can be represented in INDRA; return None if we cannot
@@ -505,15 +644,15 @@ class MedscanProcessor(object):
             else:
                 # Handle the more common case where we just ground the entity
                 # without mutation or modification information
-                db_refs, hgnc_name = _urn_to_db_refs(entity.urn)
+                db_refs, db_name = _urn_to_db_refs(entity.urn)
                 if db_refs is None:
                     return None
                 db_refs['TEXT'] = entity.name
 
-                if hgnc_name is None:
+                if db_name is None:
                     agent_name = db_refs['TEXT']
                 else:
-                    agent_name = hgnc_name
+                    agent_name = db_name
 
                 return Agent(normalize_medscan_name(agent_name),
                              db_refs=db_refs)
@@ -649,8 +788,9 @@ def _urn_to_db_refs(urn):
         A dictionary with grounding information, mapping databases to database
         identifiers. If the Medscan URN is not recognized, returns an empty
         dictionary.
-    hgnc_name : str
-        The HGNC name, if available, otherwise None
+    db_name : str
+        The Famplex name, if available; otherwise the HGNC name if available;
+        otherwise None
     """
     # Convert a urn to a db_refs dictionary
     if urn is None:
@@ -665,7 +805,7 @@ def _urn_to_db_refs(urn):
     urn_id = m.group(2)
 
     db_refs = {}
-    hgnc_name = None
+    db_name = None
 
     # TODO: support more types of URNs
     if urn_type == 'agi-cas':
@@ -685,7 +825,7 @@ def _urn_to_db_refs(urn):
 
             # Try to lookup HGNC name; if it's available, set it to the
             # agent name
-            hgnc_name = get_hgnc_name(hgnc_id)
+            db_name = get_hgnc_name(hgnc_id)
     elif urn_type == 'agi-ncimorgan':
         # Identifier is MESH
         db_refs['MESH'] = urn_id
@@ -728,7 +868,11 @@ def _urn_to_db_refs(urn):
     if key in famplex_map:
         db_refs['FPLX'] = famplex_map[key]
 
-    return db_refs, hgnc_name
+    # If there is a Famplex grounding, use Famplex for entity name
+    if 'FPLX' in db_refs:
+        db_name = db_refs['FPLX']
+
+    return db_refs, db_name
 
 
 def _extract_id(id_string):
@@ -803,5 +947,3 @@ def _extract_sentence_tags(tagged_sentence):
 
         tags[match.group(1)] = match.group(2)
     return tags
-
-

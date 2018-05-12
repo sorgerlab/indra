@@ -53,7 +53,8 @@ def fix_character_encoding(input_file, output_file):
 if __name__ == '__main__':
     args = sys.argv[1:]
     if len(args) != 2:
-        print('Expected two arguments: the input file and the output file')
+        logger.error('Expected two arguments: the input file'
+                     ' and the output file')
         sys.exit(1)
     input_file = args[0]
     output_file = args[1]
