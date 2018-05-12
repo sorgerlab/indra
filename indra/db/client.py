@@ -8,6 +8,35 @@ from indra.databases import hgnc_client
 logger = logging.getLogger('db_client')
 
 
+def get_reader_output(db, tcid, reader=None, reader_version=None):
+    """Return reader output for a given text content.
+
+    Parameters
+    ----------
+    tcid : int
+        The text content ID whose reader output should be returned
+    reader : Optional[str]
+        The name of the reader whose output is of interest
+    reader_version : Optional[str]
+        The specific version of the reader
+
+    Returns
+    -------
+    contents : list[str]
+        A list of reader outputs that match the query criteria
+    """
+    clauses = [db.Readings.text_content_id == tcid]
+    if reader:
+        clauses.append(db.Readings.reader == reader.capitalize())
+    if reader_version:
+        clauses.append(db.Readings.reader_version == reader_version)
+
+    res = db.filter_query(db.Readings, *clauses).all()
+    contents = [zlib.decompress(r.bytes, zlib.MAX_WBITS + 16).decode('utf-8')
+                for r in res]
+    return contents
+
+
 def get_abstracts_by_pmids(db, pmid_list, unzip=True):
     """Return abstracts given a list of PMIDs from the database
 
