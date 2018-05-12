@@ -1,29 +1,29 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import subprocess
+import logging
+import os
 import tempfile
 import shutil
 from indra.sources.isi.processor import IsiProcessor
 from indra.sources.isi.preprocessor import IsiPreprocessor
-import subprocess
-import logging
-import os
 
 logger = logging.getLogger('isi')
 
 
 def process_text(text, pmid=None):
-    """Processes a string using the ISI reader and extracts INDRA statements.
+    """Process a string using the ISI reader and extracts INDRA statements.
 
     Parameters
     ----------
-    text: str
+    text : str
         A string of biomedical information to process
-    pmid: str
+    pmid : Optional[str]
         The pmid associated with this text (or None if not specified)
 
     Returns
     -------
-    ip: indra.sources.isi.processor.IsiProcessor
+    ip : indra.sources.isi.processor.IsiProcessor
         A processor containing statements
     """
     # Create a temporary directory to store the proprocessed input
@@ -42,19 +42,20 @@ def process_text(text, pmid=None):
     return ip
 
 
-def process_nxml(nxml_filename, pmid=None, extra_annotations={}):
-    """Processes an nxml file using the ISI reader, first converting to plain
-    text and preprocessing, then running the ISI reader and extracting
-    statements.
+def process_nxml(nxml_filename, pmid=None, extra_annotations=None):
+    """Process an NXML file using the ISI reader
+
+    First converts NXML to plain text and preprocesses it, then runs the ISI
+    reader, and processes the output to extract INDRA Statements.
 
     Parameters
     ----------
-    nxml_filename: str
+    nxml_filename : str
         nxml file to process
-    pmid: str
+    pmid : Optional[str]
         pmid of this nxml file, to be added to the Evidence object of the
         extracted INDRA statements
-    extra_annotations: dict
+    extra_annotations : Optional[dict]
         Additional annotations to add to the Evidence object of all extracted
         INDRA statements. Extra annotations called 'interaction' are ignored
         since this is used by the processor to store the corresponding
@@ -62,9 +63,12 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations={}):
 
     Returns
     -------
-    ip: indra.sources.isi.processor.IsiProcessor
-        A processor containing extracted statements
+    ip : indra.sources.isi.processor.IsiProcessor
+        A processor containing extracted Statements
     """
+    if extra_annotations is None:
+        extra_annotations = {}
+
     # Create a temporary directory to store the proprocessed input
     pp_dir = tempfile.mkdtemp('indra_isi_pp_output')
 
@@ -88,18 +92,18 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
 
     Parameters
     ----------
-    isi_preprocessor: indra.sources.isi.preprocessor.IsiPreprocessor
+    isi_preprocessor : indra.sources.isi.preprocessor.IsiPreprocessor
         Preprocessor object that has already preprocessed the documents we
         want to read and process with the ISI reader
-    num_processes: int
+    num_processes : Optional[int]
         Number of processes to parallelize over
-    specified_output_dir: str
+    specified_output_dir : Optional[str]
         The directory into which to put reader output; if omitted or None,
         uses a temporary directory.
 
     Returns
     -------
-    ip: indra.sources.isi.processor.IsiProcessor
+    ip : indra.sources.isi.processor.IsiProcessor
         A processor containing extracted statements
     """
 
@@ -121,8 +125,8 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
                '-c', str(num_processes)]
 
     # Invoke the ISI reader
-    print('Running command:')
-    print(' '.join(command))
+    logger.info('Running command:')
+    logger.info(' '.join(command))
     ret = subprocess.call(command)
     if ret != 0:
         logger.error('Docker returned non-zero status code')
@@ -135,22 +139,4 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         shutil.rmtree(output_dir)
     shutil.rmtree(tmp_dir)
 
-    return ip
-
-
-def test_api():
-    preprocessed_dir = tempfile.mkdtemp('indra_isi_preprocessed')
-    preprocessor = IsiPreprocessor(preprocessed_dir)
-
-    input_dir = '/Users/daniel/workspace/isi/test_input'
-    for filename in os.listdir(input_dir):
-        path = os.path.join(input_dir, filename)
-        preprocessor.preprocess_plain_text_file(path, 12,
-                                                {'foo': 'bar',
-                                                 'original_file': filename})
-
-    ip = process_directory(preprocessor)
-
-    # shutil.rmtree(preprocessed_dir)
-    print(preprocessed_dir)
     return ip
