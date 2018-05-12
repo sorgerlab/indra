@@ -37,21 +37,23 @@ famplex_map = _read_famplex_map()
 
 
 def is_statement_in_list(statement, statement_list):
-    """Determines whether the statement is equivalent to any statement in the
+    """Return True of given statement is equivalent to on in a list
+
+    Determines whether the statement is equivalent to any statement in the
     given list of statements, with equivalency determined by Statement's
     equals method.
 
     Parameters
     ----------
-    statement: indra.statements.Statement
+    statement : indra.statements.Statement
         The statement to compare with
-    statement_list: list<indra.statements.Statement>
+    statement_list : list[indra.statements.Statement]
         The statement list whose entries we compare with statement
 
     Returns
     -------
-    in_list: bool
-        Whether statement is equivalent to any statements in the list
+    in_list : bool
+        True if statement is equivalent to any statements in the list
     """
     for s in statement_list:
         if s.equals(statement):
@@ -60,13 +62,13 @@ def is_statement_in_list(statement, statement_list):
 
 
 class ProteinSiteInfo(object):
-    """Represents a site on a protein, extracted from a StateEffect event.
+    """Represent a site on a protein, extracted from a StateEffect event.
 
     Parameters
     ----------
-    site_text: str
+    site_text : str
         The site as a string (ex. S22)
-    object_text: str
+    object_text : str
         The protein being modified, as the string that appeared in the original
         sentence
     """
@@ -79,7 +81,7 @@ class ProteinSiteInfo(object):
 
         Returns
         -------
-        sites: list<Site>
+        sites : list[Site]
             A list of position-residue pairs corresponding to the site-text
         """
         st = self.site_text
@@ -128,7 +130,7 @@ class MedscanProcessor(object):
     num_entities_not_found : int
         The number of subject or object IDs which could not be resolved by
         looking in the list of entities or tagged phrases.
-    last_site_info_in_sentence: SiteInfo
+    last_site_info_in_sentence : SiteInfo
         Stored protein site info from the last StateEffect event within the
         sentence, allowing us to combine information from StateEffect and
         ProtModification events within a single sentence in a single INDRA
@@ -945,5 +947,3 @@ def _extract_sentence_tags(tagged_sentence):
 
         tags[match.group(1)] = match.group(2)
     return tags
-
-
