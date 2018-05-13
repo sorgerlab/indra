@@ -8,13 +8,19 @@ from indra.databases import hgnc_client
 logger = logging.getLogger('db_client')
 
 
-def get_reader_output(db, tcid, reader=None, reader_version=None):
+def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
+                      reader_version=None):
     """Return reader output for a given text content.
 
     Parameters
     ----------
-    tcid : int
-        The text content ID whose reader output should be returned
+    ref_id : int
+        The text reference ID whose reader output should be returned
+    ref_type : Optional[str]
+        The type of ID to look for, options include
+        'tcid' for the database's internal unique text content ID,
+        or 'pmid', 'pmcid', 'doi, 'pii', 'manuscript_id'
+        Default: 'tcid'
     reader : Optional[str]
         The name of the reader whose output is of interest
     reader_version : Optional[str]
@@ -25,7 +31,17 @@ def get_reader_output(db, tcid, reader=None, reader_version=None):
     contents : list[str]
         A list of reader outputs that match the query criteria
     """
-    clauses = [db.Readings.text_content_id == tcid]
+    if ref_type == 'tcid':
+        clauses = [db.Readings.text_content_id == tcid]
+    else:
+        clauses = [db.TextContent.text_ref_id == db.TextRef.id,
+                   db.Readings.text_content_id == db.TextContent.id]
+        if ref_type == 'pmid':
+            ref_col = db.TextRef.pmid
+        elif ref_type == 'pmcid':
+            ref_col = db.TextRef.pmcid
+        # TODO: complete the list here
+        clauses.append(ref_col.like(ref_id))
     if reader:
         clauses.append(db.Readings.reader == reader.capitalize())
     if reader_version:
