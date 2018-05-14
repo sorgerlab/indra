@@ -5,7 +5,7 @@ import logging
 import lxml.etree
 import lxml.builder
 from indra.statements import *
-from indra.assemblers.pysb_assembler import PysbPreassembler
+from indra.assemblers.pysb.assembler import PysbPreassembler
 
 logger = logging.getLogger('sbgn_assembler')
 

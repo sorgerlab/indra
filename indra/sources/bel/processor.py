@@ -7,7 +7,7 @@ from pybel.canonicalize import edge_to_bel
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client
-from indra.assemblers.pybel_assembler import _pybel_indra_act_map
+from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
 
 logger = logging.getLogger('pybel_processor')

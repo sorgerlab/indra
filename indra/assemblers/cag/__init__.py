@@ -1,1 +1,1 @@
-from .assembler import CagAssembler
+from .assembler import CAGAssembler
