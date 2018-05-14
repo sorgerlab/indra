@@ -303,6 +303,7 @@ class ReachReader(Reader):
             if quality_issue is not None:
                 logger.warning("Skipping %d due to: %s"
                                % (content.id, quality_issue))
+                continue
             new_fpath = content.copy_to(self.input_dir)
             logger.debug('%s saved for reading by reach.'
                          % new_fpath)
