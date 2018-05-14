@@ -1,6 +1,6 @@
-SBGN output (:py:mod:`indra.assemblers.sbgn_assembler`)
+SBGN output (:py:mod:`indra.assemblers.sbgn.assembler`)
 =======================================================
 
-.. automodule:: indra.assemblers.sbgn_assembler
+.. automodule:: indra.assemblers.sbgn.assembler
     :members:
 

@@ -120,7 +120,7 @@ Assemble the statements into a network model
 
 .. code-block:: python
 
-    from indra.assemblers import CxAssembler
+    from indra.assemblers.cx import CxAssembler
     from indra.databases import ndex_client
 
     cxa = CxAssembler(stmts)
