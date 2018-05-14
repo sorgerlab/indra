@@ -16,8 +16,8 @@ include indra/sources/reach/reach_rule_regexps.txt
 include indra/sources/isi/isi_verb_to_indra_statement_type.tsv
 include indra/tools/machine/default-config.yaml
 include indra/tools/reading/util/reach_conf_fmt.txt
-include indra/assemblers/cag_style.json
-include indra/assemblers/cag_template.js
+include indra/assemblers/cag/cag_style.json
+include indra/assemblers/cag/cag_template.js
 include indra/db/default_db_config.ini
 include indra/db/elsevier_titles.txt
 include indra/literature/pmids_auth_xml.txt
