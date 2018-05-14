@@ -524,6 +524,9 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                                       text_content.format,
                                       text_content.content,
                                       compressed=True, encoded=True)
+                if text_content.source == 'elsevier':
+                    content = ContentText(content.id, 'txt',
+                                          process_elsevier(content.get_text()))
                 batch_list_dict[r.name].append(content)
 
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
