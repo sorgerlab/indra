@@ -18,3 +18,4 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    medscan/index
    sofia/index
    indra_db_rest/index
+   isi/index
