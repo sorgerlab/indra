@@ -16,7 +16,7 @@ except ImportError:
 from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.databases import uniprot_client
-from indra.assemblers.english_assembler import EnglishAssembler
+from indra.assemblers.english import EnglishAssembler
 
 logger = logging.getLogger('preassembler')
 
