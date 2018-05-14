@@ -8,6 +8,7 @@ from os import path
 from nose.plugins.attrib import attr
 
 from indra.tools.reading.db_reading import read_db as rdb
+from indra.tools.reading.db_reading.read_db import process_content
 from indra.tools.reading.read_files import read_files
 from indra.tools.reading.util.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
@@ -112,7 +113,8 @@ def test_reading_content_insert():
     readers = get_readers()
     reading_output = []
     for reader in readers:
-        reading_output += reader.read(tc_list, verbose=True)
+        reading_output += reader.read([process_content(tc) for tc in tc_list],
+                                      verbose=True)
     expected_output_len = len(tc_list)*len(readers)
     assert len(reading_output) == expected_output_len, \
         ("Not all text content successfully read."
@@ -249,19 +251,27 @@ def test_read_files():
     db = get_db_with_pubmed_content()
 
     # Create the test files.
-    test_file_fmt = 'test_reading_input.%s'
+    test_file_fmt = 'test_reading_{fmt}_file.{fmt}'
     example_files = []
-    for fmt in [formats.TEXT, formats.XML]:
-        tc = db.select_one(db.TextContent, db.TextContent.format == fmt)
+
+    def add_content(tc, fmt):
         if tc is None:
             print("Could not find %s content for testing." % fmt)
-            continue
-        suffix = fmt
-        if fmt is formats.XML:
-            suffix = 'n' + fmt
-        with open(test_file_fmt % suffix, 'wb') as f:
-            f.write(zlib.decompress(tc.content, 16+zlib.MAX_WBITS))
-        example_files.append(test_file_fmt % suffix)
+        else:
+            with open(test_file_fmt.format(fmt=fmt), 'wb') as f:
+                f.write(zlib.decompress(tc.content, zlib.MAX_WBITS+16))
+            example_files.append(test_file_fmt.format(fmt=fmt))
+
+    # Get txt content
+    tc_text = db.select_one(db.TextContent, db.TextContent.source == 'pubmed')
+    add_content(tc_text, 'txt')
+
+    # Get nxml content
+    tc_nxml = db.select_one(db.TextContent,
+                            db.TextContent.source.in_(['pmc_oa', 'manuscripts']))
+    add_content(tc_nxml, 'nxml')
+
+    assert len(example_files), "No content available to test."
 
     # Now read them.
     readers = get_readers()
@@ -277,7 +287,8 @@ def test_sparser_parallel():
     db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
-    result = sparser_reader.read(tc_list, verbose=True, log=True)
+    result = sparser_reader.read([process_content(tc) for tc in tc_list],
+                                 verbose=True, log=True)
     N_exp = len(tc_list)
     N_res = len(result)
     assert N_exp == N_res, \
@@ -290,7 +301,8 @@ def test_sparser_parallel_one_batch():
     db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
-    result = sparser_reader.read(tc_list, verbose=True, n_per_proc=1)
+    result = sparser_reader.read([process_content(tc) for tc in tc_list],
+                                 verbose=True, n_per_proc=1)
     N_exp = len(tc_list)
     N_res = len(result)
     assert N_exp == N_res, \

@@ -89,7 +89,7 @@ class Content(object):
     def get_filepath(self):
         if self._location is None:
             self._location = '.'
-        return path.join(self._location, self._fname)
+        return path.join(self._location, self.get_filename())
 
     def copy_to(self, location, fname=None):
         if fname is None:
@@ -106,12 +106,12 @@ class Content(object):
 
 
 class ContentFile(Content):
-    def __init__(self, file_name):
-        file_id = '.'.join(path.basename(file_name).split('.')[:-1])
-        file_format = file_name.split('.')[-1]
+    def __init__(self, file_path):
+        file_id = '.'.join(path.basename(file_path).split('.')[:-1])
+        file_format = file_path.split('.')[-1]
         super(ContentFile, self).__init__(file_id, file_format)
         self.file_exists = True
-        self._location = path.dirname(file_name)
+        self._location = path.dirname(file_path)
         return
 
     def get_text(self):

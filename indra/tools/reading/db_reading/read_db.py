@@ -448,6 +448,25 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
     return readings_query.distinct()
 
 
+def process_content(text_content):
+    """Get the appropriate content object from the text content."""
+    if text_content.format == formats.TEXT:
+        cont_fmt = 'txt'
+    elif (text_content.source in ['pmc_oa', 'manuscripts']
+          and text_content.format == formats.XML):
+        cont_fmt = 'nxml'
+    else:
+        cont_fmt = text_content.format
+    content = ContentText(text_content.id,
+                          cont_fmt,
+                          text_content.content,
+                          compressed=True, encoded=True)
+    if text_content.source == 'elsevier':
+        content = ContentText(content.id, 'txt',
+                              process_elsevier(content.get_text()))
+    return content
+
+
 # =============================================================================
 # Core Reading Functions
 # =============================================================================
@@ -520,21 +539,7 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                             )
                         if reading is not None:
                             continue
-                if text_content.format == formats.TEXT:
-                    cont_fmt = 'txt'
-                elif (text_content.source in ['pmc_oa', 'manuscripts']
-                      and text_content.format == formats.XML):
-                    cont_fmt = 'nxml'
-                else:
-                    cont_fmt = text_content.format
-                content = ContentText(text_content.id,
-                                      cont_fmt,
-                                      text_content.content,
-                                      compressed=True, encoded=True)
-                if text_content.source == 'elsevier':
-                    content = ContentText(content.id, 'txt',
-                                          process_elsevier(content.get_text()))
-                batch_list_dict[r.name].append(content)
+                batch_list_dict[r.name].append(process_content(text_content))
 
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
                     # TODO: this is a bit cludgy...maybe do this better?
