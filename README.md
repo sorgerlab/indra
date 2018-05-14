@@ -123,7 +123,7 @@ service](http://trips.ihmc.us/parser/cgi/drum).
 
 ```python
 from indra.sources import trips
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 pa = PysbAssembler()
 # Process a natural language description of a mechanism
 trips_processor = trips.process_text('MEK2 phosphorylates ERK1 at Thr-202 and Tyr-204')
