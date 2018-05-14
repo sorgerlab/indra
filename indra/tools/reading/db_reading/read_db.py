@@ -100,10 +100,12 @@ if __name__ == '__main__':
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
 
+from indra.literature.elsevier_client import extract_text as process_elsevier
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
 from indra.db.util import insert_agents
-from indra.tools.reading.readers import ReadingData, _get_dir, get_reader
+from indra.tools.reading.readers import ReadingData, _get_dir, get_reader,\
+    ContentText
 
 
 class ReadDBError(Exception):
@@ -503,7 +505,7 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
         for text_content in tc_read_q.yield_per(batch_size):
             # The get_content function returns an iterator which yields
             # results in batches, so as not to overwhelm RAM. We need to read
-            # in batches for much the same reaason.
+            # in batches for much the same reason.
             for r in readers:
                 if not force_read:
                     if skip_dict is not None:
@@ -518,7 +520,11 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                             )
                         if reading is not None:
                             continue
-                batch_list_dict[r.name].append(text_content)
+                content = ContentText(text_content.id,
+                                      text_content.format,
+                                      text_content.content,
+                                      compressed=True, encoded=True)
+                batch_list_dict[r.name].append(content)
 
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
                     # TODO: this is a bit cludgy...maybe do this better?
