@@ -263,8 +263,30 @@ def test_read_files():
             example_files.append(test_file_fmt.format(fmt=fmt))
 
     # Get txt content
-    tc_text = db.select_one(db.TextContent, db.TextContent.source == 'pubmed')
-    add_content(tc_text, 'txt')
+    abstract_txt = \
+        ("Bleaching gravid <i>C. elegans</i> followed by a short period of "
+         "starvation of the L1 larvae is a routine method performed by worm "
+         "researchers for generating synchronous populations for experiments. "
+         "During the process of investigating dietary effects on gene "
+         "regulation in L1 stage worms by single-worm RNA-Seq, we found that "
+         "the density of resuspended L1 larvae affects expression of many "
+         "mRNAs. Specifically, a number of genes related to metabolism and "
+         "signalling are highly expressed in worms arrested at low density, "
+         "but are repressed at higher arrest densities. We generated a GFP "
+         "reporter strain based on one of the most density-dependent genes in "
+         "our dataset - <i>lips-15</i> - and confirmed that this reporter was "
+         "expressed specifically in worms arrested at relatively low density. "
+         "Finally, we show that conditioned media from high density L1 "
+         "cultures was able to downregulate <i>lips-15</i> even in L1 animals "
+         "arrested at low density, and experiments using <i>daf-22</i> mutant "
+         "animals demonstrated that this effect is not mediated by the "
+         "ascaroside family of signalling pheromones. Together, our data "
+         "implicate a soluble signalling molecule in density sensing by L1 "
+         "stage <i>C. elegans</i>, and provide guidance for design of "
+         "experiments focused on early developmental gene regulation.")
+    with open(test_file_fmt.format(fmt='text'), 'w') as f:
+        f.write(abstract_txt)
+    example_files.append(test_file_fmt.format(fmt='text'))
 
     # Get nxml content
     tc_nxml = db.select_one(db.TextContent,

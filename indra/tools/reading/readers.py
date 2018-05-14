@@ -433,7 +433,7 @@ class SparserReader(Reader):
                         content.id = 'PMC' + str(content.id)
                     fpath = content.copy_to(self.tmp_dir)
                     self.file_list.append(fpath)
-            elif content.format == 'txt':
+            elif content.format in ['txt', 'text']:
                 # Otherwise we need to frame the content in xml and put it
                 # in a new file with the appropriate name.
                 nxml_str = sparser.make_nxml_from_text(content.get_text())
