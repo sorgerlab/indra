@@ -596,8 +596,14 @@ class ReachProcessor(object):
         m = re.match(r'([A-Z]+)([0-9]+)([A-Z]+)', s.upper())
         if m is not None:
             parts = [str(g) for g in m.groups()]
-            residue_from = get_valid_residue(parts[0])
-            residue_to = get_valid_residue(parts[2])
+            try:
+                residue_from = get_valid_residue(parts[0])
+            except Exception as e:
+                return None
+            try:
+                residue_to = get_valid_residue(parts[2])
+            except Exception as e:
+                return None
             position = parts[1]
             mut = MutCondition(position, residue_from, residue_to)
             return mut
