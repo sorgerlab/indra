@@ -263,11 +263,17 @@ the value in the configuration file. In other words, an environment variable,
 when set, takes precedence over the value set in the config file.
 
 Configuration values include:
-- REACHPATH: The location of the jar containing the REACH reader
+- REACHPATH: The location of the JAR file containing a local instance of the
+REACH reading system
 
-- EIDOSPATH: The location of the jar containing the Eidos reader
+- EIDOSPATH: The location of the JAR file containing a local instance of the
+Eidos reading system
 
-- SPARSERPATH: The location of the Sparser reading system (path to a folder)
+- SPARSERPATH: The location of a local instance of the Sparser
+reading system (path to a folder)
+
+- DRUMPATH: The location of a local installation of the DRUM reading system
+(path to a folder)
 
 - NDEX_USERNAME, NDEX_PASSWORD: Credentials for accessing the NDEx web service
 
@@ -278,7 +284,3 @@ Configuration values include:
 
 - INDRA_DEFAULT_JAVA_MEM_LIMIT: Maximum memory limit for Java virtual machines
   launched by INDRA
-
-- INDRA_DB_PRIMARY: Primary database address
-
-- INDRA_DB_TEST1, INDRA_DB_TEST2: Test database addresses

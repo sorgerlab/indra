@@ -49,7 +49,7 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
     else:
         if offline_reading:
             try:
-                dr = DrumReader(to_read=[text])
+                dr = DrumReader()
                 if dr is None:
                     raise Exception('DrumReader could not be instantiated.')
             except BaseException as e:
@@ -58,6 +58,7 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
                               ' a separate process')
                 return None
             try:
+                dr.read_text(text)
                 dr.start()
             except SystemExit:
                 pass
