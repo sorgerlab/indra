@@ -14,7 +14,9 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
 
     Parameters
     ----------
-    ref_id : int
+    db : :py:class:`DatabaseManager`
+        Reference to the DB to query
+    ref_id : int or str
         The text reference ID whose reader output should be returned
     ref_type : Optional[str]
         The type of ID to look for, options include
@@ -34,16 +36,14 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
     if ref_type == 'tcid':
         clauses = [db.Readings.text_content_id == tcid]
     else:
-        clauses = [db.TextContent.text_ref_id == db.TextRef.id,
+        trids = _get_trids(db, ref_id, ref_type)
+        if not trids:
+            return []
+        print(trids)
+        clauses = [db.TextContent.text_ref_id.in_(trids),
                    db.Readings.text_content_id == db.TextContent.id]
-        if ref_type == 'pmid':
-            ref_col = db.TextRef.pmid
-        elif ref_type == 'pmcid':
-            ref_col = db.TextRef.pmcid
-        # TODO: complete the list here
-        clauses.append(ref_col.like(ref_id))
     if reader:
-        clauses.append(db.Readings.reader == reader.capitalize())
+        clauses.append(db.Readings.reader == reader.upper())
     if reader_version:
         clauses.append(db.Readings.reader_version == reader_version)
 
@@ -200,16 +200,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     if db is None:
         db = get_primary_db()
 
-    # Get the text ref id(s)
-    if id_type in ['trid']:
-        trid_list = [int(id_val)]
-    else:
-        id_types = ['pmid', 'pmcid', 'doi', 'pii', 'url', 'manuscript_id']
-        if id_type not in id_types:
-            raise ValueError('id_type must be one of: %s' % str(id_types))
-        constraint = (getattr(db.TextRef, id_type) == id_val)
-        trid_list = [trid for trid, in db.select_all(db.TextRef.id, constraint)]
-
+    trid_list = _get_trids(db, id_val, id_type)
     if not trid_list:
         return None
 
@@ -278,3 +269,17 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
 
     stmts.extend(make_stmts_from_db_list(subset))
     return stmts
+
+
+def _get_trids(db, id_val, id_type):
+    """Return text ref IDs corresponding to any ID type and value."""
+    # Get the text ref id(s)
+    if id_type in ['trid']:
+        trid_list = [int(id_val)]
+    else:
+        id_types = ['pmid', 'pmcid', 'doi', 'pii', 'url', 'manuscript_id']
+        if id_type not in id_types:
+            raise ValueError('id_type must be one of: %s' % str(id_types))
+        constraint = (getattr(db.TextRef, id_type) == id_val)
+        trid_list = [trid for trid, in db.select_all(db.TextRef.id, constraint)]
+    return trid_list
