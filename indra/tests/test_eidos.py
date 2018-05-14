@@ -3,9 +3,9 @@ from indra.sources import eidos
 from indra.statements import Influence
 import requests
 import json
-from indra.assemblers.cag_assembler import CAGAssembler
-from indra.assemblers.cx_assembler import CxAssembler
-from indra.assemblers.pysb_assembler import PysbAssembler
+from indra.assemblers.cag import CAGAssembler
+from indra.assemblers.cx import CxAssembler
+from indra.assemblers.pysb import PysbAssembler
 
 
 path_this = os.path.dirname(os.path.abspath(__file__))

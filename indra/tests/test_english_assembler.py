@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import indra.assemblers.english_assembler as ea
+import indra.assemblers.english.assembler as ea
 from indra.statements import *
 
 def test_agent_basic():

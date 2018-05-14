@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.statements import *
-from indra.assemblers import CxAssembler
+from indra.assemblers.cx import CxAssembler
 
 mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})
 erk = Agent('MAPK1', db_refs={'UP': 'P28482'})
