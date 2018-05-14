@@ -3,7 +3,7 @@ from builtins import dict, str
 import json
 import jsonschema
 from indra.statements import *
-from indra.assemblers.index_card_assembler import *
+from indra.assemblers.index_card.assembler import *
 from os.path import dirname, abspath, join
 
 schema_path = join(dirname(abspath(__file__)),

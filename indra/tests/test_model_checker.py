@@ -15,7 +15,7 @@ from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
                                       stmt_from_rule, PathResult, \
                                       remove_im_params
-from indra.assemblers.pysb_assembler import PysbAssembler, \
+from indra.assemblers.pysb.assembler import PysbAssembler, \
                                             set_base_initial_condition
 from pysb.tools import species_graph
 from pysb.bng import generate_equations

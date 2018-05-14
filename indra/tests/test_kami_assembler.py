@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import json
 from builtins import dict, str
 from indra.statements import *
-from indra.assemblers.kami_assembler import KamiAssembler
+from indra.assemblers.kami import KamiAssembler
 
 
 mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.statements import *
-from indra.assemblers import GraphAssembler
+from indra.assemblers.graph import GraphAssembler
 
 
 def test_phosphorylation():
