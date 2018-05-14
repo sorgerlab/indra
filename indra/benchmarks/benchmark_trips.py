@@ -4,7 +4,7 @@ from os.path import dirname, join
 import sys
 import indra.statements
 from indra.sources import trips
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 
 def test_bind():
     fname = sys._getframe().f_code.co_name + '.xml'
