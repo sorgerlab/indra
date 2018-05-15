@@ -127,6 +127,19 @@ class DbApiTestCase(unittest.TestCase):
         assert dt <= TIMELIMIT, dt
         assert size <= SIZELIMIT, size
 
+    def test_famplex_query(self):
+        resp, dt, size = self.__time_get_query('statements',
+                                               ('subject=PDGF@FPLX'
+                                                '&object=FOS'
+                                                '&type=Phosphorylation'))
+        stmts = stmts_from_json(json.loads(resp.data.decode('utf-8')))
+        assert len(stmts)
+        assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF'
+                    for s in stmts]),\
+            'Not all subjects match.'
+        assert dt <= TIMELIMIT, dt
+        assert size <= SIZELIMIT, size
+
     def __test_basic_paper_query(self, id_val, id_type, min_num_results=1):
         query_str = 'id=%s&type=%s' % (id_val, id_type)
         resp, dt, size = self.__time_get_query('papers', query_str)

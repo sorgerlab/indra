@@ -113,6 +113,10 @@ def get_statements():
     logger.info("Getting statements...")
     for role, (agent, ns) in agents.items():
         logger.debug("Checking agent %s in namespace %s." % (agent, ns))
+        # TODO: This is a temporary measure, remove ASAP.
+        if ns == 'FPLX':
+            ns = 'BE'
+
         if not stmts:
             # Get an initial list
             stmts = get_statements_by_gene_role_type(agent_id=agent,
@@ -128,7 +132,13 @@ def get_statements():
             stmts = [s for s in stmts if len(s.agent_list()) > 1
                      and s.agent_list()[1].db_refs.get(ns) is not None
                      and s.agent_list()[1].db_refs.get(ns) == agent]
+        else:
+            abort(Response("Unrecognized role: %s." % role.lower(), 400))
+        if not len(stmts):
+            break
     for agent, ns in free_agents:
+        if ns == 'FPLX':
+            ns = 'BE'
         logger.debug("Checking agent %s in namespace %s." % (agent, ns))
         if not stmts:
             # Get an initial list
@@ -145,6 +155,14 @@ def get_statements():
                     ag for ag in s.agent_list() if ag is None
                     ]
                 ]
+        if not len(stmts):
+            break
+
+    # TODO: remove this too
+    for s in stmts:
+        for ag in s.agent_list():
+            if 'BE' in ag.db_refs.keys():
+                ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
 
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements of nominal size %f MB."
