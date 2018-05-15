@@ -54,6 +54,7 @@ def test_too_big_request():
         assert False, 'A very unexpected error occured: %s' % str(e)
 
 
+@attr('nonpublic')
 def test_famplex_namespace():
     stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
     print(len(stmts))
