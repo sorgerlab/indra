@@ -180,8 +180,9 @@ def _abstract_from_article_element(article, prepend_title=False):
     abstract = article.findall('Abstract/AbstractText')
     if abstract is None:
         return None
-    abstract_text = ' '.join([' ' if abst.text is None
-                                  else abst.text for abst in abstract])
+    abstract_text = ' '.join(['' if abst.text is None
+                              else ' '.join([text for text in abst.itertext()])
+                              for abst in abstract])
     title_tag = article.find('ArticleTitle')
     if title_tag is not None and prepend_title:
         title = title_tag.text

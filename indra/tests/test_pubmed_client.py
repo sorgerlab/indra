@@ -104,3 +104,9 @@ def test_get_metadata_for_ids():
 def test_send_request_invalid():
     res = pubmed_client.send_request('http://xxxxxxx', data={})
     assert res is None
+
+
+@attr('webservice')
+def test_abstract_with_html_embedded():
+    res = pubmed_client.get_abstract('25484845')
+    assert len(res) > 4, res
