@@ -54,6 +54,14 @@ def test_too_big_request():
         assert False, 'A very unexpected error occured: %s' % str(e)
 
 
+def test_famplex_namespace():
+    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
+    assert all([s.agent_list()[0].db_refs['FPLX'] == 'PDGF' for s in stmts]),\
+        'Not all subjects match.'
+    assert all([s.agent_list()[1].name == 'FOS' for s in stmts]),\
+        'Not all objects match.'
+
+
 @attr('nonpublic')
 def test_paper_query():
     stmts_1 = dbr.get_statements_for_paper('PMC5770457', 'pmcid')
