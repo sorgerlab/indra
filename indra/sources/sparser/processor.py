@@ -75,6 +75,10 @@ class SparserJSONProcessor(object):
             if isinstance(stmt, Modification):
                 if stmt.sub is None:
                     continue
+            # Skip Complexes with less than 2 members
+            if isinstance(stmt, Complex):
+                if len(stmt.members) < 2:
+                    continue
 
             # Step 4: Fix Agent names and grounding
             for agent in stmt.agent_list():
