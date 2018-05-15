@@ -1,0 +1,129 @@
+<?xml version="1.0" ?>
+<!DOCTYPE article
+  PUBLIC '-//NLM//DTD JATS (Z39.96) Journal Archiving and Interchange DTD v1.0 20120330//EN'
+  'JATS-archivearticle1.dtd'>
+  <article article-type="review-article"
+      xmlns:mml="http://www.w3.org/1998/Math/MathML"
+      xmlns:xlink="http://www.w3.org/1999/xlink">
+  <?properties open_access?>
+  <front>
+    <journal-meta>
+      <journal-id journal-id-type="iso-abbrev">the pmc test</journal-id>
+      <journal-id journal-id-type="publisher-id">tptj</journal-id>
+      <journal-title-group>
+        <journal-title>ThePMCTestJournal</journal-title>
+      </journal-title-group>
+      <publisher>
+        <publisher-name>INDRA</publisher-name>
+      </publisher>
+    </journal-meta>
+    <article-meta>
+      <article-id pub-id-type="pmid">12345</article-id>
+      <article-id pub-id-type="pmc">246810</article-id>
+      <article-categories>
+        <subj-group subj-group-type="heading">
+          <subject>Test</subject>
+        </subj-group>
+      </article-categories>
+      <title-group>
+          <article-title>
+              This is a test, containing no meaningful content.
+          </article-title>
+      </title-group>
+      <contrib-group>
+        <contrib contrib-type="author">
+          <name>
+            <surname>Bar</surname>
+            <given-names>Foo</given-names>
+          </name>
+        </contrib>
+      </contrib-group>
+      <aff id="nowhere">
+          Harvard Medical School
+      </aff>
+      <pub-date pub-type="epub">
+        <day>15</day>
+        <month>5</month>
+        <year>2018</year>
+      </pub-date>
+      <pub-date pub-type="collection">
+        <month>5</month>
+        <year>2018</year>
+      </pub-date>
+      <volume>1</volume>
+      <issue>1</issue>
+      <fpage>1</fpage>
+      <lpage>314159</lpage>
+      <history>
+        <date date-type="received">
+          <day>15</day>
+          <month>5</month>
+          <year>2018</year>
+        </date>
+      </history>
+      <permissions>
+        <copyright-statement>It's a total free-for-all.</copyright-statement>
+      </permissions>
+      <abstract>
+        <p>
+            Finding a suitable test file is hard. So I made one, which says things
+            like MEK phoshporylates ERK, in the hopes of triggering our readers
+            and producing statements.
+        </p>
+      </abstract>
+      <kwd-group>
+        <kwd>testing</kwd>
+      </kwd-group>
+    </article-meta>
+  </front>
+  <body>
+    <sec>
+      <title>1. Introduction</title>
+      <p>
+          As I said, creating a test document is hard. But this really doesn't
+          need to be verbose. But again, saying that MAP2K1 phosphorylates
+          MAPK1 will generate some more statements, although the one in the
+          abstract was probably enough.
+      </p>
+    </sec>
+    <sec>
+      <title>2. Discussion</title>
+      <p>
+          This is not intended to test the readers themselves, but just the
+          architecture around them, hence it is not necessary, and would in fact
+          complicate things, by trying to trip up the readers with tables, or
+          anything like that.
+      </p>
+    </sec>
+    <sec>
+      <title>3. Conclusions</title>
+      <p>
+          This should be enough to stand in place of an entire article for the
+          sake of these tests.
+      </p>
+    </sec>
+  </body>
+  <back>
+    <ack>
+      <title>Acknowledgments</title>
+    </ack>
+    <ref-list>
+      <title>References</title>
+      <ref id="BS101">
+        <label>1.</label>
+        <element-citation publication-type="journal">
+          <person-group person-group-type="author">
+            <name>
+              <surname>Baz</surname>
+              <given-names>F.B.</given-names>
+            </name>
+          </person-group>
+          <article-title>This is a reference.</article-title>
+          <source>NaN</source>
+          <year>2018</year>
+          <pub-id pub-id-type="pmid">222222222</pub-id>
+        </element-citation>
+      </ref>
+    </ref-list>
+  </back>
+</article>
