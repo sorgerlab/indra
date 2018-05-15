@@ -104,8 +104,8 @@ from indra.literature.elsevier_client import extract_text as process_elsevier
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
 from indra.db.util import insert_agents
-from indra.tools.reading.readers import ReadingData, _get_dir, get_reader,\
-    ContentText
+from indra.tools.reading.readers import ReadingData, _get_dir, get_reader, \
+    Content
 
 
 class ReadDBError(Exception):
@@ -457,13 +457,12 @@ def process_content(text_content):
         cont_fmt = 'nxml'
     else:
         cont_fmt = text_content.format
-    content = ContentText(text_content.id,
-                          cont_fmt,
-                          text_content.content,
-                          compressed=True, encoded=True)
+    content = Content.from_string(text_content.id, cont_fmt,
+                                  text_content.content, compressed=True,
+                                  encoded=True)
     if text_content.source == 'elsevier':
-        content = ContentText(content.id, 'txt',
-                              process_elsevier(content.get_text()))
+        content = Content.from_string(content.id, 'text',
+                                      process_elsevier(content.get_text()))
     return content
 
 

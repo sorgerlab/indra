@@ -72,73 +72,70 @@ class SparserError(ReadingError):
 
 
 class Content(object):
-    def __init__(self, id, format):
+    """An object to regularize the content passed to the readers.
+
+    To use this class, use one of the two constructor methods:
+     - `from_file` : use content from a file on the filesystem.
+     - `from_string` : Pass a string (or bytes) directly as content.
+
+    This class also regularizes the handling of id's and formats, as well as
+    allowing for decompression and decoding, in the manner standard in the INDRA
+    project.
+    """
+    def __init__(self, id, format, compressed=False, encoded=False):
         self.id = id
         self.format = format
         self.file_exists = False
+        self.compressed = compressed
+        self.encoded = encoded
         self._text = None
         self._fname = None
         self._location = None
+        self._raw_content = None
         return
 
-    def get_filename(self):
-        if self._fname is None:
-            self._fname = '%s.%s' % (self.id, self.format)
-        return self._fname
-
-    def get_filepath(self):
-        if self._location is None:
-            self._location = '.'
-        return path.join(self._location, self.get_filename())
-
-    def copy_to(self, location, fname=None):
-        if fname is None:
-            fname = self.get_filename()
-        fpath = path.join(location, fname)
-        self._make_the_file(fpath)
-        self._fname = fname
-        self._location = location
-        self.file_exists = True
-        return fpath
-
-    def _make_the_file(self, fpath):
-        raise NotImplementedError
-
-
-class ContentFile(Content):
-    def __init__(self, file_path):
+    @classmethod
+    def from_file(cls, file_path, compressed=False, encoded=False):
+        """Create a content object from a file path."""
         file_id = '.'.join(path.basename(file_path).split('.')[:-1])
         file_format = file_path.split('.')[-1]
-        super(ContentFile, self).__init__(file_id, file_format)
-        self.file_exists = True
-        self._location = path.dirname(file_path)
+        content = cls(file_id, file_format, compressed, encoded)
+        content.file_exists = True
+        content._location = path.dirname(file_path)
+        return content
+
+    @classmethod
+    def from_string(cls, id, format, raw_content, compressed=False,
+                    encoded=False):
+        """Create a Content object from string/bytes content."""
+        content = cls(id, format, compressed, encoded)
+        content._raw_content = raw_content
+        return content
+
+    def change_id(self, new_id):
+        """Change the id of this content."""
+        self.id = new_id
+        self.get_filename()
+        self.get_filepath()
+        return
+
+    def set_location(self, new_location):
+        """Set/change the location of this content.
+
+        Note that this does NOT change the actual location of the file. To do
+        so, use the `copy_to` method.
+        """
+        self._location = new_location
+        self.get_filepath()
         return
 
     def get_text(self):
-        if self._text is None:
+        """Get the loaded, decompressed, and decoded text of this content."""
+        if self._raw_content is None:
             with open(self.get_filepath(), 'r') as f:
-                self._text = f.read()
-        return self._text
-
-    def _make_the_file(self, fpath):
-        shutil.copy(self.get_filepath(), fpath)
-        return
-
-
-class ContentText(Content):
-    """This object is used to store the content for reading."""
-    def __init__(self, id, format, content, compressed=False,
-                 encoded=False):
-        super(ContentText, self).__init__(id, format)
-        self.content = content
-        self.compressed = compressed
-        self.encoded = encoded
-        return
-
-    def get_text(self):
-        """Get the content stored, decompressing and decoding, as needed."""
+                self._raw_content = f.read()
         if self._text is None:
-            ret_cont = self.content
+            ret_cont = self._raw_content
             if self.compressed:
                 ret_cont = zlib.decompress(ret_cont, zlib.MAX_WBITS+16)
             if self.encoded:
@@ -146,10 +143,38 @@ class ContentText(Content):
             self._text = ret_cont
         return self._text
 
-    def _make_the_file(self, fpath):
-        with open(fpath, 'w') as f:
-            f.write(self.get_text())
-        return
+    def get_filename(self):
+        """Get the filename of this content.
+
+        If the file name doesn't already exist, we created it as {id}.{format}.
+        """
+        if self._fname is None:
+            self._fname = '%s.%s' % (self.id, self.format)
+        return self._fname
+
+    def get_filepath(self):
+        """Get the file path, joining the name and location for this file.
+
+        If no location is given, it is assumed to be "here", e.g. ".".
+        """
+        if self._location is None:
+            self._location = '.'
+        return path.join(self._location, self.get_filename())
+
+    def copy_to(self, location, fname=None):
+
+        if fname is None:
+            fname = self.get_filename()
+        fpath = path.join(location, fname)
+        if self.file_exists:
+            shutil.copy(self.get_filepath(), fpath)
+        else:
+            with open(fpath, 'w') as f:
+                f.write(self.get_text())
+        self._fname = fname
+        self._location = location
+        self.file_exists = True
+        return fpath
 
 
 class Reader(object):
@@ -418,27 +443,18 @@ class SparserReader(Reader):
 
         for content in read_list:
             if content.format == 'nxml':
-                # This implies that it is a file path
-                if isinstance(content, ContentFile):
-                    # If it is already an nxml, we just need to adjust the
-                    # name a bit, if anything.
-                    if str(content.id).startswith('PMC'):
-                        self.file_list.append(content.get_filepath())
-                    else:
-                        new_fpath = content.copy_to(self.tmp_dir,
-                                                    'PMC' + str(content.id))
-                        self.file_list.append(new_fpath)
-                elif isinstance(content, ContentText):
-                    if not str(content.id).startswith('PMC'):
-                        content.id = 'PMC' + str(content.id)
-                    fpath = content.copy_to(self.tmp_dir)
-                    self.file_list.append(fpath)
+                # If it is already an nxml, we just need to adjust the
+                # name a bit, if anything.
+                if not str(content.id).startswith('PMC'):
+                    content.change_id('PMC' + str(content.id))
+                fpath = content.copy_to(self.tmp_dir)
+                self.file_list.append(fpath)
             elif content.format in ['txt', 'text']:
                 # Otherwise we need to frame the content in xml and put it
                 # in a new file with the appropriate name.
                 nxml_str = sparser.make_nxml_from_text(content.get_text())
-                new_content = ContentText('PMC' + str(content.id), 'nxml',
-                                          nxml_str)
+                new_content = Content.from_string('PMC' + str(content.id),
+                                                  'nxml', nxml_str)
                 fpath = new_content.copy_to(self.tmp_dir)
                 self.file_list.append(fpath)
             else:
@@ -524,7 +540,8 @@ class SparserReader(Reader):
         "Perform the actual reading."
         ret = []
         self.prep_input(read_list)
-        if len(self.file_list) > 0:
+        L = len(self.file_list)
+        if L > 0:
             logger.info("Beginning to run sparser.")
             output_file_list = []
             if log:
@@ -540,7 +557,6 @@ class SparserReader(Reader):
                             output_file_list.append(outpath)
                 else:
                     if n_per_proc is None:
-                        L = len(self.file_list)
                         n_per_proc = max(1, min(1000, L//self.n_proc//2))
                     pool = None
                     try:

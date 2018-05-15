@@ -14,7 +14,6 @@ from indra.tools.reading.util.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 
-from indra.db import formats
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_pubmed_content
 
