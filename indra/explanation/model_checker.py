@@ -16,7 +16,7 @@ from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
-from indra.explanation import paths_graph as pg
+import paths_graph as pg
 from collections import Counter
 from indra.util.kappa_util import im_json_to_graph
 
