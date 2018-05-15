@@ -248,7 +248,6 @@ def test_produce_readings():
 def test_read_files():
     "Test that the system can read files."
     # Create the test files.
-    test_file_fmt = 'test_.{fmt}'
     example_files = []
 
     # Get txt content
@@ -259,8 +258,10 @@ def test_read_files():
     example_files.append('test_abstract.txt')
 
     # Get nxml content
-    if path.exists('pmc_cont_example.nxml'):
-        example_files.append('pmc_cont_example.nxml')
+    pmc_test_fpath = path.join(path.dirname(path.abspath(__file__)),
+                               'pmc_cont_example.nxml')
+    if path.exists(pmc_test_fpath):
+        example_files.append(pmc_test_fpath)
 
     assert len(example_files), "No content available to test."
 
@@ -268,7 +269,7 @@ def test_read_files():
     readers = get_readers()
     outputs = read_files(example_files, readers)
     N_out = len(outputs)
-    N_exp = len(example_files)
+    N_exp = 2*len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
 
 
