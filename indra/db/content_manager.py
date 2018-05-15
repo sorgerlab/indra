@@ -1534,15 +1534,6 @@ if __name__ == '__main__':
 
     logger.info("Performing %s." % args.task)
     if args.task == 'upload':
-        if args.elsevier == 'only':
-            pubmed_init = db.select_one(db.Updates,
-                                        db.Updates.source == Pubmed.my_source,
-                                        db.Updates.init_upload.is_(True))
-            if pubmed_init is None:
-                raise UploadError('Cannot upload Elsevier content before '
-                                  'uploading Pubmed.')
-            Elsevier().populate(db, args.continuing)
-            sys.exit()
         if not args.continuing:
             logger.info("Clearing TextContent and TextRef tables.")
             clear_succeeded = db._clear([db.TextContent, db.TextRef,
