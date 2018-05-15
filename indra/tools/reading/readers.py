@@ -83,11 +83,11 @@ class Content(object):
     project.
     """
     def __init__(self, id, format, compressed=False, encoded=False):
-        self.id = id
-        self.format = format
         self.file_exists = False
         self.compressed = compressed
         self.encoded = encoded
+        self._id = id
+        self._format = format
         self._text = None
         self._fname = None
         self._location = None
@@ -112,11 +112,30 @@ class Content(object):
         content._raw_content = raw_content
         return content
 
+    def _load_raw_content(self):
+        if self.file_exists and self._raw_content is None:
+            with open(self.get_filepath(), 'r') as f:
+                self._raw_content = f.read()
+        return
+
     def change_id(self, new_id):
         """Change the id of this content."""
-        self.id = new_id
-        self.get_filename()
-        self.get_filepath()
+        self._load_raw_content()
+        self._id = new_id
+        self.get_filename(renew=True)
+        self.get_filepath(renew=True)
+        return
+
+    def change_format(self, new_format):
+        """Change the format label of this content.
+
+        Note that this does NOT actually alter the format of the content, only
+        the label.
+        """
+        self._load_raw_content()
+        self._format = new_format
+        self.get_filename(renew=True)
+        self.get_filepath(renew=True)
         return
 
     def set_location(self, new_location):
@@ -125,15 +144,24 @@ class Content(object):
         Note that this does NOT change the actual location of the file. To do
         so, use the `copy_to` method.
         """
+        self._load_raw_content()
         self._location = new_location
-        self.get_filepath()
+        self.get_filepath(renew=True)
         return
+
+    def is_format(self, *formats):
+        """Check the format of this content."""
+        return any([self._format == fmt for fmt in formats])
+
+    def get_id(self):
+        return self._id
+
+    def get_format(self):
+        return self._format
 
     def get_text(self):
         """Get the loaded, decompressed, and decoded text of this content."""
-        if self._raw_content is None:
-            with open(self.get_filepath(), 'r') as f:
-                self._raw_content = f.read()
+        self._load_raw_content()
         if self._text is None:
             ret_cont = self._raw_content
             if self.compressed:
@@ -143,30 +171,29 @@ class Content(object):
             self._text = ret_cont
         return self._text
 
-    def get_filename(self):
+    def get_filename(self, renew=False):
         """Get the filename of this content.
 
         If the file name doesn't already exist, we created it as {id}.{format}.
         """
-        if self._fname is None:
-            self._fname = '%s.%s' % (self.id, self.format)
+        if self._fname is None or renew:
+            self._fname = '%s.%s' % (self._id, self._format)
         return self._fname
 
-    def get_filepath(self):
+    def get_filepath(self, renew=False):
         """Get the file path, joining the name and location for this file.
 
         If no location is given, it is assumed to be "here", e.g. ".".
         """
-        if self._location is None:
+        if self._location is None or renew:
             self._location = '.'
         return path.join(self._location, self.get_filename())
 
     def copy_to(self, location, fname=None):
-
         if fname is None:
             fname = self.get_filename()
         fpath = path.join(location, fname)
-        if self.file_exists:
+        if self.file_exists and not self._raw_content:
             shutil.copy(self.get_filepath(), fpath)
         else:
             with open(fpath, 'w') as f:
@@ -192,6 +219,7 @@ class Reader(object):
             )
         self.tmp_dir = tmp_dir
         self.input_dir = _get_dir(tmp_dir, 'input')
+        self.id_maps = {}
         return
 
     @classmethod
@@ -323,13 +351,24 @@ class ReachReader(Reader):
     def prep_input(self, read_list):
         """Apply the readers to the content."""
         logger.info("Prepping input.")
+        i = 0
         for content in read_list:
+            # Check the quality of the text, and skip if there are any issues.
             quality_issue = self._check_content(content.get_text())
             if quality_issue is not None:
                 logger.warning("Skipping %d due to: %s"
-                               % (content.id, quality_issue))
+                               % (content.get_id(), quality_issue))
                 continue
-            new_fpath = content.copy_to(self.input_dir)
+
+            if re.match('^\w+?\d+$', content.get_id()) is None:
+                new_id = 'FILE%06d' % i
+                i += 1
+                self.id_maps[new_id] = content.get_id()
+                content.change_id(new_id)
+                new_fpath = content.copy_to(self.input_dir)
+            else:
+                # Put the content in the appropriate directory.
+                new_fpath = content.copy_to(self.input_dir)
             logger.debug('%s saved for reading by reach.'
                          % new_fpath)
         return
@@ -351,6 +390,8 @@ class ReachReader(Reader):
             base_prefix = path.basename(prefix)
             if base_prefix.isdecimal():
                 base_prefix = int(base_prefix)
+            elif base_prefix in self.id_maps.keys():
+                base_prefix = self.id_maps[base_prefix]
             try:
                 content = self._join_json_files(prefix, clear=True)
             except Exception as e:
@@ -442,18 +483,18 @@ class SparserReader(Reader):
         self.file_list = []
 
         for content in read_list:
-            if content.format == 'nxml':
+            if content.is_format('nxml'):
                 # If it is already an nxml, we just need to adjust the
                 # name a bit, if anything.
-                if not str(content.id).startswith('PMC'):
-                    content.change_id('PMC' + str(content.id))
+                if not content.get_filename().startswith('PMC'):
+                    content.change_id('PMC' + str(content.get_id()))
                 fpath = content.copy_to(self.tmp_dir)
                 self.file_list.append(fpath)
-            elif content.format in ['txt', 'text']:
+            elif content.is_format('txt', 'text'):
                 # Otherwise we need to frame the content in xml and put it
                 # in a new file with the appropriate name.
                 nxml_str = sparser.make_nxml_from_text(content.get_text())
-                new_content = Content.from_string('PMC' + str(content.id),
+                new_content = Content.from_string('PMC' + str(content.get_id()),
                                                   'nxml', nxml_str)
                 fpath = new_content.copy_to(self.tmp_dir)
                 self.file_list.append(fpath)
