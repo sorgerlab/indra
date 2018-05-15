@@ -56,7 +56,8 @@ def test_too_big_request():
 
 def test_famplex_namespace():
     stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
-    assert all([s.agent_list()[0].db_refs['FPLX'] == 'PDGF' for s in stmts]),\
+    print(len(stmts))
+    assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF' for s in stmts]),\
         'Not all subjects match.'
     assert all([s.agent_list()[1].name == 'FOS' for s in stmts]),\
         'Not all objects match.'
