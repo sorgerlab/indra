@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
-           'insert_db_stmts', 'get_auth_xml_pmcids', 'make_stmts_from_db_list']
+           'insert_db_stmts', 'make_stmts_from_db_list']
 
 import re
 import json
@@ -272,16 +272,6 @@ def insert_pa_stmts(db, stmts, verbose=False):
     db.copy('pa_statements', stmt_data, cols)
     insert_agents(db, db.PAStatements, db.PAAgents, verbose=verbose)
     return
-
-
-def get_auth_xml_pmcids(db):
-    tref_list = db.filter_query(
-        [db.TextRef, db.TextContent],
-        db.TextRef.id == db.TextContent.text_ref_id,
-        db.TextContent.text_type == texttypes.FULLTEXT,
-        db.TextContent.source == 'pmc_auth'
-        )
-    return [tref.pmcid for tref in tref_list]
 
 
 def make_stmts_from_db_list(db_stmt_objs):
