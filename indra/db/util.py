@@ -7,6 +7,7 @@ __all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
 import re
 import json
 import logging
+import zlib
 from indra.util.get_version import get_version
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
@@ -494,3 +495,10 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                           for ev_hash, ev_set in rv_dict[best_rv].items()}
 
     return stmt_nd, stmts
+
+
+def unpack(bts, decode=True):
+    ret = zlib.decompress(bts, zlib.MAX_WBITS+16)
+    if decode:
+        ret = ret.decode('utf-8')
+    return ret

@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-import zlib
 import logging
 from indra.databases import hgnc_client
 from indra.db import util as db_util
@@ -35,12 +34,12 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
         A list of reader outputs that match the query criteria
     """
     if ref_type == 'tcid':
-        clauses = [db.Readings.text_content_id == tcid]
+        clauses = [db.Readings.text_content_id == ref_id]
     else:
         trids = _get_trids(db, ref_id, ref_type)
         if not trids:
             return []
-        print(trids)
+        logger.debug("Found %d text ref ids." % len(trids))
         clauses = [db.TextContent.text_ref_id.in_(trids),
                    db.Readings.text_content_id == db.TextContent.id]
     if reader:
@@ -49,8 +48,7 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
         clauses.append(db.Readings.reader_version == reader_version)
 
     res = db.filter_query(db.Readings, *clauses).all()
-    contents = [zlib.decompress(r.bytes, zlib.MAX_WBITS + 16).decode('utf-8')
-                for r in res]
+    contents = [db_util.unpack(r) for r in res]
     return contents
 
 
@@ -80,8 +78,7 @@ def get_abstracts_by_pmids(db, pmid_list, unzip=True):
         db.TextRef.pmid.in_(pmid_list)
         ).all()
     if unzip:
-        def unzip_func(s):
-            return zlib.decompress(s, zlib.MAX_WBITS + 16).decode('utf-8')
+        unzip_func = db_util.unpack
     else:
         def unzip_func(s):
             return s
