@@ -4,6 +4,7 @@ from builtins import dict, str
 import zlib
 import logging
 from indra.databases import hgnc_client
+from indra.db import util as db_util
 
 logger = logging.getLogger('db_client')
 
@@ -134,7 +135,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     list of Statements from the database corresponding to the query.
     """
     if db is None:
-        db = get_primary_db()
+        db = db_util.get_primary_db()
 
     if preassembled:
         Statements = db.PAStatements
@@ -198,7 +199,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     A list of Statements from the database corresponding to the paper id given.
     """
     if db is None:
-        db = get_primary_db()
+        db = db_util.get_primary_db()
 
     trid_list = _get_trids(db, id_val, id_type)
     if not trid_list:
@@ -242,7 +243,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     list of Statements from the database corresponding to the query.
     """
     if db is None:
-        db = get_primary_db()
+        db = db_util.get_primary_db()
 
     stmts_tblname = 'pa_statements' if preassembled else 'statements'
 
@@ -258,7 +259,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     for stmt in db_stmts:
         subset.append(stmt)
         if len(subset) == count:
-            stmts.extend(make_stmts_from_db_list(subset))
+            stmts.extend(db_util.make_stmts_from_db_list(subset))
             subset = []
         total_counter += 1
         if total_counter % count == 0:
@@ -267,7 +268,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             else:
                 logger.info("%d statements" % total_counter)
 
-    stmts.extend(make_stmts_from_db_list(subset))
+    stmts.extend(db_util.make_stmts_from_db_list(subset))
     return stmts
 
 
