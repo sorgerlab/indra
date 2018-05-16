@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import logging
+from collections import defaultdict
+
 from indra.databases import hgnc_client
 from indra.db import util as db_util
 
@@ -30,8 +32,9 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
 
     Returns
     -------
-    contents : list[str]
-        A list of reader outputs that match the query criteria
+    reading_results : dict{dict{list[str]}}
+        A dict of reader outputs that match the query criteria, indexed first
+        by text content id, then by reader.
     """
     if ref_type == 'tcid':
         clauses = [db.Readings.text_content_id == ref_id]
@@ -47,9 +50,12 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
     if reader_version:
         clauses.append(db.Readings.reader_version == reader_version)
 
-    res = db.filter_query(db.Readings, *clauses).all()
-    contents = [db_util.unpack(r) for r in res]
-    return contents
+    res = db.select_all([db.Readings.text_content_id, db.Readings.reader,
+                         db.Readings.bytes], *clauses)
+    reading_dict = defaultdict(lambda: defaultdict(lambda: []))
+    for tcid, reader, result in res:
+        reading_dict[tcid][reader].append(db_util.unpack(result))
+    return reading_dict
 
 
 def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
