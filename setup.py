@@ -27,7 +27,7 @@ def main():
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                   'pyyaml', 'click'],
-                      'explanation': ['kappy==4.0.0rc1'],
+                      'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       # AWS interface and database
                       'aws': ['boto3'],
                       'db': ['sqlalchemy', 'boto3'],
@@ -51,7 +51,7 @@ def main():
           url='http://github.com/sorgerlab/indra',
           packages=['indra', 'indra.assemblers', 'indra.belief',
                     'indra.benchmarks', 'indra.databases', 'indra.db',
-                    'indra.explanation', 'indra.explanation.paths_graph',
+                    'indra.explanation',
                     'indra.literature', 'indra.mechlinker',
                     'indra.preassembler', 'indra.sources',
                     'indra.sources.bbn', 'indra.sources.bel',

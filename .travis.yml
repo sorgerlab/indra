@@ -22,6 +22,7 @@ install:
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask nltk
+  - pip install paths-graph
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@develop
   - mkdir -p $HOME/.pybel/data
