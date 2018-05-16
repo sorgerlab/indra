@@ -52,38 +52,74 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
     return contents
 
 
-def get_abstracts_by_pmids(db, pmid_list, unzip=True):
-    """Return abstracts given a list of PMIDs from the database
+def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
+                        formats=None, content_type='abstract', unzip=True):
+    """Return content from the database given a list of PMIDs or text ref ids.
+
+    Note that either pmid_list OR trid_list must be set, and only one can be
+    set at a time.
 
     Parameters
     ----------
     db : :py:class:`DatabaseManager`
         Reference to the DB to query
-    pmid_list : list[str]
-        A list of PMIDs whose abstracts are to be returned
+    pmid_list : list[str] or None
+        A list of pmids. Default is None, in which case trid_list must be given.
+    trid_list : list[int] or None
+        A list of text ref ids. Default is None, in which case pmid list must be
+        given.
+    sources : list[str] or None
+        A list of sources to include (e.g. 'pmc_oa', or 'pubmed'). Default is
+        None, indicating that all sources will be included.
+    formats : list[str]
+        A list of the formats to be included ('xml', 'text'). Default is None,
+        indicating that all formats will be included.
+    content_type : str
+        Select the type of content to load ('abstract' or 'fulltext'). Note that
+        not all refs will have any, or both, types of content.
     unzip : Optional[bool]
         If True, the compressed output is decompressed into clear text.
         Default: True
 
     Returns
     -------
-    abstracts : dict
-        A dictionary whose keys are PMIDs with each value being the
-        the corresponding abstract
+    content_dict : dict
+        A dictionary whose keys are text ref ids, with each value being the
+        the corresponding content.
     """
-    abst_list = db.filter_query(
-        [db.TextRef, db.TextContent],
-        db.TextContent.text_ref_id == db.TextRef.id,
-        db.TextContent.text_type == 'abstract',
-        db.TextRef.pmid.in_(pmid_list)
-        ).all()
-    if unzip:
-        unzip_func = db_util.unpack
+    # Make sure we only get one type of list.
+    if not pmid_list or trid_list:
+        raise ValueError("One of `pmid_list` or `trid_list` must be defined.")
+    if pmid_list and trid_list:
+        raise ValueError("Only one of `pmid_list` or `trid_list` may be used.")
+
+    # Put together the clauses for the general constraints.
+    clauses = []
+    if sources is not None:
+        clauses.append(db.TextContent.source.in_(sources))
+    if formats is not None:
+        clauses.append(db.TextContent.format.in_(formats))
+    if content_type not in ['abstract', 'fulltext']:
+        raise ValueError("Unrecognized content type: %s" % content_type)
     else:
-        def unzip_func(s):
-            return s
-    abstracts = {r.pmid: unzip_func(c.content) for (r, c) in abst_list}
-    return abstracts
+        clauses.append(db.TextContent.text_type == content_type)
+
+    # Do the query to get the content.
+    if pmid_list is not None:
+        content_list = db.select_all([db.TextRef.pmid, db.TextContent.content],
+                                     db.TextRef.id == db.TextContent.text_ref_id,
+                                     db.TextRef.pmid.in_(pmid_list),
+                                     *clauses)
+    else:
+        content_list = db.select_all([db.TextRef.id, db.TextContent.content],
+                                     db.TextContent.text_ref_id.in_(trid_list),
+                                     *clauses)
+    if unzip:
+        content_dict = {id_val: db_util.unpack(content)
+                        for id_val, content in content_list}
+    else:
+        content_dict = {id_val: content for id_val, content in content_list}
+    return content_dict
 
 
 #==============================================================================

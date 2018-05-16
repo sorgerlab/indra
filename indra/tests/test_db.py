@@ -10,9 +10,9 @@ from functools import wraps
 from sqlalchemy.exc import IntegrityError
 from indra.db.database_manager import DatabaseManager
 from indra.db.util import get_defaults, NestedDict
-from indra.db.client import get_abstracts_by_pmids
+from indra.db.client import get_content_by_refs
 from nose.plugins.attrib import attr
-from indra.db.reading_manager import BulkReadingManager, BulkLocalReadingManager
+from indra.db.reading_manager import BulkLocalReadingManager
 
 IS_PY3 = True
 if version_info.major is not 3:
@@ -231,8 +231,7 @@ def test_get_abstracts():
 
     expected = {pmid: (found_abst_fmt % pmid).encode('utf8')
                 for pmid in ['1234', '5678']}
-    received = get_abstracts_by_pmids(db, ['1234', '5678', '1357'],
-                                      unzip=False)
+    received = get_content_by_refs(db, ['1234', '5678', '1357'], unzip=False)
     assert_contents_equal(expected, received, "Didn't get expected abstracts.")
 
 
