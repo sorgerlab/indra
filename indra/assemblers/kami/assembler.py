@@ -4,7 +4,7 @@ import logging
 import itertools
 from collections import defaultdict
 import indra.statements as ist
-from indra.assemblers.pysb_assembler import \
+from indra.assemblers.pysb.assembler import \
         PysbAssembler, _is_whitelisted, \
         UnknownPolicyError, \
         get_binding_site_name, PysbPreassembler, \

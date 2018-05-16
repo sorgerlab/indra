@@ -3,7 +3,7 @@ import pybel
 import pybel.constants as pc
 from indra.statements import *
 from indra.databases import hgnc_client
-from indra.assemblers import pybel_assembler as pa
+from indra.assemblers.pybel import assembler as pa
 from indra.preassembler.hierarchy_manager import hierarchies
 
 def id(gene_name):

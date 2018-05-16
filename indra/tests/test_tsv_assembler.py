@@ -1,6 +1,6 @@
 import os
 from indra.sources import signor
-from indra.assemblers.tsv_assembler import TsvAssembler
+from indra.assemblers.tsv import TsvAssembler
 
 # Get some statements from Signor
 from .test_signor import test_data_file, test_complexes_file

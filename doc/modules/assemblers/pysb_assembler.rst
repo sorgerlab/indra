@@ -1,6 +1,6 @@
-Executable PySB models (:py:mod:`indra.assemblers.pysb_assembler`)
+Executable PySB models (:py:mod:`indra.assemblers.pysb.assembler`)
 ==================================================================
 
-.. automodule:: indra.assemblers.pysb_assembler
+.. automodule:: indra.assemblers.pysb.assembler
     :members:
 

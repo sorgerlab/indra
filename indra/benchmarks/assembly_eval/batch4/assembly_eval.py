@@ -8,8 +8,9 @@ from indra.preassembler import Preassembler, render_stmt_graph,\
 from indra.preassembler.grounding_mapper import GroundingMapper, \
                                 default_grounding_map, load_grounding_map
 from indra.mechlinker import MechLinker
-from indra.assemblers import PysbAssembler, IndexCardAssembler,\
-                             EnglishAssembler
+from indra.assemblers.pysb import PysbAssembler
+from indra.assemblers.index_card import IndexCardAssembler
+from indra.assemblers.english import EnglishAssembler
 from indra.belief import BeliefEngine
 from indra.util import write_unicode_csv
 

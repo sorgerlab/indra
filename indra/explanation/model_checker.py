@@ -14,7 +14,7 @@ import kappy
 from pysb import WILD, export, Observable, ComponentSet
 from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
-from indra.assemblers import pysb_assembler as pa
+from indra.assemblers.pysb import assembler as pa
 from indra.tools.expand_families import _agent_from_uri
 import paths_graph as pg
 from collections import Counter

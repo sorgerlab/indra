@@ -4,7 +4,7 @@ import sys
 from os.path import dirname, join
 import indra.statements as ist
 from indra.sources import trips
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 from indra.util import unicode_strs
 from nose.plugins.attrib import attr
 

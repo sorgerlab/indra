@@ -1,9 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import xml.etree.ElementTree as ET
-from indra.assemblers import PysbAssembler
-from indra.assemblers import pysb_assembler as pa
-from indra.assemblers.pysb_assembler import PysbPreassembler
+from indra.assemblers.pysb import PysbAssembler
+import indra.assemblers.pysb.assembler as pa
+from indra.assemblers.pysb.assembler import PysbPreassembler
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
