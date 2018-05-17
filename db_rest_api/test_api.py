@@ -82,6 +82,11 @@ class DbApiTestCase(unittest.TestCase):
         self.__check_good_statement_query(object='MAP2K1', subject='MAPK1',
                                           type='Phosphorylation')
 
+    def test_object_only_query(self):
+        """Test whether we can get an object only statement."""
+        self.__check_good_statement_query(object='GLUL',
+                                          type='IncreaseAmount')
+
     def test_query_with_two_agents(self):
         """Test a query were the roles of the agents are not given."""
         self.__check_good_statement_query('agent=MAP2K1', 'agent=MAPK1',
