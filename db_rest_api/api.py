@@ -77,6 +77,25 @@ def get_statements_query_format():
                     '\"other\".')
 
 
+def _filter_statements(stmts_in, agent_pos, ns, value):
+    stmts_out = []
+    for stmt in stmts_in:
+        # Make sure the statement has enough agents to get the one at the
+        # position of interest
+        agents = stmt.agent_list()
+        if len(agents) < agent_pos:
+            continue
+        # Get the agent at the position of interest and make sure it's an
+        # actual Agent
+        agent = agents[agent_pos]
+        if agent is not None:
+            # Check if the db_refs for the namespace of interest matches the
+            # value
+            if agent.db_refs.get(ns) == value:
+                stmts_out.append(stmt)
+    return stmts_out
+
+
 @app.route('/statements/', methods=['GET'])
 def get_statements():
     """Get some statements constrained by query."""
@@ -125,13 +144,9 @@ def get_statements():
                                                      stmt_type=act,
                                                      do_stmt_count=False)
         elif role.lower() == 'subject':
-            stmts = [s for s in stmts if len(s.agent_list()) > 0
-                     and s.agent_list()[0].db_refs.get(ns) is not None
-                     and s.agent_list()[0].db_refs.get(ns) == agent]
+            stmts = _filter_statements(stmts, 0, ns, agent)
         elif role.lower() == 'object':
-            stmts = [s for s in stmts if len(s.agent_list()) > 1
-                     and s.agent_list()[1].db_refs.get(ns) is not None
-                     and s.agent_list()[1].db_refs.get(ns) == agent]
+            stmts = _filter_statements(stmts, 1, ns, agent)
         else:
             abort(Response("Unrecognized role: %s." % role.lower(), 400))
         if not len(stmts):
@@ -161,8 +176,9 @@ def get_statements():
     # TODO: remove this too
     for s in stmts:
         for ag in s.agent_list():
-            if 'BE' in ag.db_refs.keys():
-                ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
+            if ag is not None:
+                if 'BE' in ag.db_refs.keys():
+                    ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
 
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements of nominal size %f MB."
