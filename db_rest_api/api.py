@@ -78,12 +78,13 @@ def get_statements_query_format():
 
 
 def _filter_statements(stmts_in, agent_pos, ns, value):
+    """Return statements filtered to ones where agent is at given position."""
     stmts_out = []
     for stmt in stmts_in:
         # Make sure the statement has enough agents to get the one at the
-        # position of interest
+        # position of interest e.g. has only 1 agent but the agent_pos is not 0
         agents = stmt.agent_list()
-        if len(agents) < agent_pos:
+        if len(agents) <= agent_pos:
             continue
         # Get the agent at the position of interest and make sure it's an
         # actual Agent
