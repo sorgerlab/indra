@@ -1061,8 +1061,9 @@ class Statement(object):
         # statement and referenced through bound conditions.
         l = self.agent_list()
         for a in self.agent_list():
-            bc_agents = [bc.agent for bc in a.bound_conditions]
-            l.extend(bc_agents)
+            if a is not None:
+                bc_agents = [bc.agent for bc in a.bound_conditions]
+                l.extend(bc_agents)
         return l
 
     def entities_match(self, other):
