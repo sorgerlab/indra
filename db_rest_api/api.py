@@ -15,6 +15,9 @@ app = Flask(__name__)
 Compress(app)
 
 
+MAX_STATEMENTS = int(1e4)
+
+
 class DbAPIError(Exception):
     pass
 
@@ -203,6 +206,12 @@ def get_statements():
             stmts = _get_relevant_statements(stmts, ag_id, ns, act)
             if not len(stmts):
                 break
+
+    # Check to make sure we didn't get too many statements
+    if len(stmts) > MAX_STATEMENTS:
+        abort(Response("This query yielded too many statements (more than"
+                       "{:,}!). Please make a more specific query."
+                       .format(MAX_STATEMENTS), 413))
 
     # TODO: This is a temporary patch. Remove ASAP.
     # Fix the names from BE to FPLX
