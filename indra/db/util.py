@@ -251,21 +251,25 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     if verbose:
         print("Loading:", end='', flush=True)
     for i, stmt in enumerate(stmts):
-        stmt_rec = (
-            stmt.uuid,
-            stmt.get_hash(),
-            db_ref_id,
-            stmt.__class__.__name__,
-            json.dumps(stmt.to_json()).encode('utf8'),
-            get_version()
-        )
-        stmt_data.append(stmt_rec)
+        # Only one evidence is allowed for each statement.
+        for ev in stmt.evidence:
+            new_stmt = stmt.make_generic_copy()
+            new_stmt.evidence.append(ev)
+            stmt_rec = (
+                new_stmt.uuid,
+                new_stmt.get_hash(),
+                db_ref_id,
+                new_stmt.__class__.__name__,
+                json.dumps(new_stmt.to_json()).encode('utf8'),
+                get_version()
+            )
+            stmt_data.append(stmt_rec)
         if verbose and i % (len(stmts)//25) == 0:
             print('|', end='', flush=True)
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('raw_statements', stmt_data, cols)
-    insert_agents(db, 'raw', db.RawStatements.db_ref == db_ref_id)
+    insert_agents(db, 'raw', db.RawStatements.db_info_id == db_ref_id)
     return
 
 
