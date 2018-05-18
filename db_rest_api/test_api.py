@@ -31,7 +31,8 @@ class DbApiTestCase(unittest.TestCase):
         print(dt)
         size = int(resp.headers['Content-Length'])
         raw_size = sys.getsizeof(resp.data)
-        print("Raw size: %f, Compressed size: %f." % (raw_size/1e6, size/1e6))
+        print("Raw size: {raw:f}/{lim:f}, Compressed size: {comp:f}/{lim:f}."
+              .format(raw=raw_size/1e6, lim=SIZELIMIT/1e6, comp=size/1e6))
         return resp, dt, size
 
     def __check_good_statement_query(self, *args, **kwargs):
@@ -82,6 +83,11 @@ class DbApiTestCase(unittest.TestCase):
         self.__check_good_statement_query(object='MAP2K1', subject='MAPK1',
                                           type='Phosphorylation')
 
+    def test_object_only_query(self):
+        """Test whether we can get an object only statement."""
+        self.__check_good_statement_query(object='GLUL',
+                                          type='IncreaseAmount')
+
     def test_query_with_two_agents(self):
         """Test a query were the roles of the agents are not given."""
         self.__check_good_statement_query('agent=MAP2K1', 'agent=MAPK1',
@@ -97,9 +103,16 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_big_query(self):
         """Load-test with several big queries."""
-        self.__check_good_statement_query(agent='AKT1', check_stmts=False)
-        self.__check_good_statement_query(agent='MAPK1', check_stmts=False)
-        self.__check_good_statement_query(agent='TP53', check_stmts=False)
+        self.__check_good_statement_query(agent='AKT1', check_stmts=False,
+                                          time_limit=5)
+        self.__check_good_statement_query(agent='MAPK1', check_stmts=False,
+                                          time_limit=10)
+
+    def test_query_with_too_many_stmts(self):
+        """Test our check of statement length and the response."""
+        resp, dt, size = self.__time_get_query('statements', 'agent=TP53')
+        assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
+        assert dt < 30, "Query took too long: %d" % dt
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""

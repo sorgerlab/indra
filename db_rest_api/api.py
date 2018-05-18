@@ -15,6 +15,9 @@ app = Flask(__name__)
 Compress(app)
 
 
+MAX_STATEMENTS = int(1e4)
+
+
 class DbAPIError(Exception):
     pass
 
@@ -42,6 +45,68 @@ def __process_agent(agent_param):
         ns = 'HGNC'
 
     return ag, ns
+
+
+def _filter_statements(stmts_in, ns, ag_id, role=None):
+    """Return statements filtered to ones where agent is at given position."""
+    # Make sure the role is good.
+    assert role in ['SUBJECT', 'OBJECT', None], \
+        "The value of role must be either 'SUBJECT', 'OBJECT', or None."
+
+    # Map the role to an index:
+    agent_pos = 0 if role == 'SUBJECT' else 1 if role == 'OBJECT' else None
+
+    # Filter the statements.
+    stmts_out = []
+    for stmt in stmts_in:
+        # Make sure the statement has enough agents to get the one at the
+        # position of interest e.g. has only 1 agent but the agent_pos is not 0
+        agents = stmt.agent_list()
+        if agent_pos is not None:
+            if len(agents) <= agent_pos:
+                continue
+            # Get the agent at the position of interest and make sure it's an
+            # actual Agent
+            agent = agents[agent_pos]
+            if agent is not None:
+                # Check if the db_refs for the namespace of interest matches the
+                # value
+                if agent.db_refs.get(ns) == ag_id:
+                    stmts_out.append(stmt)
+        else:
+            # Search through all the agents looking for an agent with a matching
+            # db ref.
+            for agent in agents:
+                if agent is not None and agent.db_refs.get(ns) == ag_id:
+                    stmts_out.append(stmt)
+                    break
+    return stmts_out
+
+
+def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
+    """Get statements that are relevant to the criteria included.
+
+    If stmts is an empty list or None (bool evaluates to False), then get a
+    matching set of statements from the database. Otherwise, filter down the
+    existing list of statements.
+    """
+    logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
+    # TODO: This is a temporary measure, remove ASAP.
+    if ns == 'FPLX':
+        ns = 'BE'
+
+    if role:
+        role = role.upper()
+
+    if not stmts:
+        # Get an initial list
+        stmts = get_statements_by_gene_role_type(agent_id=ag_id, agent_ns=ns,
+                                                 role=role, stmt_type=stmt_type,
+                                                 do_stmt_count=False)
+    else:
+        stmts = _filter_statements(stmts, ns, ag_id, role)
+
+    return stmts
 
 
 @app.route('/')
@@ -85,85 +150,78 @@ def get_statements():
 
     logger.info("Getting query details.")
     try:
+        # Get the agents without specified locations (subject or object).
         free_agents = [__process_agent(ag)
                        for ag in query_dict.poplist('agent')]
-        agents = {role: __process_agent(query_dict.pop(role, None)) for role
-                  in ['subject', 'object'] if query_dict.get(role) is not None}
+
+        # Get the agents with specified roles.
+        roled_agents = {role: __process_agent(query_dict.pop(role))
+                        for role in ['subject', 'object']
+                        if query_dict.get(role) is not None}
     except DbAPIError as e:
         logger.exception(e)
         abort(Response('Failed to make agents from names: %s\n' % str(e), 400))
         return
+
+    # Get the raw name of the statement type (we allow for variation in case).
     act_uncamelled = query_dict.pop('type', None)
+
+    # Fix the case, if we got a statement type.
     if act_uncamelled is not None:
         act = make_statement_camel(act_uncamelled)
     else:
         act = None
+
+    # If there was something else in the query, there shouldn't be, so someone's
+    # probably confused.
     if query_dict:
         abort(Response("Unrecognized query options; %s." %
                        list(query_dict.keys()),
                        400))
         return
 
-    if not any(agents.values()) and not free_agents:
+    # Make sure we got SOME agents. We will not simply return all
+    # phosphorylations, or all activations.
+    if not any(roled_agents.values()) and not free_agents:
         logger.error("No agents.")
         abort(Response(("No agents. Must have 'subject', 'object', or "
                         "'other'!\n"), 400))
 
+    # Check to make sure none of the agents are None.
+    assert None not in roled_agents.values() and None not in free_agents, \
+        "None agents found. No agents should be None."
+
+    # Now find the statements.
     stmts = []
     logger.info("Getting statements...")
-    for role, (agent, ns) in agents.items():
-        logger.debug("Checking agent %s in namespace %s." % (agent, ns))
-        # TODO: This is a temporary measure, remove ASAP.
-        if ns == 'FPLX':
-            ns = 'BE'
 
-        if not stmts:
-            # Get an initial list
-            stmts = get_statements_by_gene_role_type(agent_id=agent,
-                                                     agent_ns=ns,
-                                                     role=role.upper(),
-                                                     stmt_type=act,
-                                                     do_stmt_count=False)
-        elif role.lower() == 'subject':
-            stmts = [s for s in stmts if len(s.agent_list()) > 0
-                     and s.agent_list()[0].db_refs.get(ns) is not None
-                     and s.agent_list()[0].db_refs.get(ns) == agent]
-        elif role.lower() == 'object':
-            stmts = [s for s in stmts if len(s.agent_list()) > 1
-                     and s.agent_list()[1].db_refs.get(ns) is not None
-                     and s.agent_list()[1].db_refs.get(ns) == agent]
-        else:
-            abort(Response("Unrecognized role: %s." % role.lower(), 400))
+    # First look for statements matching the role'd agents.
+    for role, (ag_id, ns) in roled_agents.items():
+        stmts = _get_relevant_statements(stmts, ag_id, ns, act, role)
         if not len(stmts):
             break
-    for agent, ns in free_agents:
-        if ns == 'FPLX':
-            ns = 'BE'
-        logger.debug("Checking agent %s in namespace %s." % (agent, ns))
-        if not stmts:
-            # Get an initial list
-            stmts = get_statements_by_gene_role_type(agent_id=agent,
-                                                     agent_ns=ns,
-                                                     stmt_type=act,
-                                                     do_stmt_count=False)
-        else:
-            stmts = [
-                s for s in stmts if len(s.agent_list()) > 0 and agent in [
-                    ag for other_agent in s.agent_list() if other_agent is not None
-                    for ag in other_agent.db_refs.values()
-                    ] + [
-                    ag for ag in s.agent_list() if ag is None
-                    ]
-                ]
-        if not len(stmts):
-            break
+    else:
+        # Second (if we're still looking), look for statements from free agents.
+        for ag_id, ns in free_agents:
+            stmts = _get_relevant_statements(stmts, ag_id, ns, act)
+            if not len(stmts):
+                break
 
-    # TODO: remove this too
+    # Check to make sure we didn't get too many statements
+    if len(stmts) > MAX_STATEMENTS:
+        abort(Response("This query yielded too many statements (more than "
+                       "{:,}!). Please make a more specific query."
+                       .format(MAX_STATEMENTS), 413))
+
+    # TODO: This is a temporary patch. Remove ASAP.
+    # Fix the names from BE to FPLX
     for s in stmts:
         for ag in s.agent_list():
-            if 'BE' in ag.db_refs.keys():
-                ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
+            if ag is not None:
+                if 'BE' in ag.db_refs.keys():
+                    ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
 
+    # Create the json response, and send off.
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
@@ -175,16 +233,24 @@ def get_paper_statements():
     """Get and preassemble statements from a paper given by pmid."""
     logger.info("Got query for statements from a paper!")
     query_dict = request.args.copy()
+
+    # Get the paper id.
     id_val = query_dict.get('id')
     if id_val is None:
         logger.error("No id provided!")
         abort(Response("No id in request!", 400))
+
+    # Get the id type, if given.
     id_type = query_dict.get('type', 'pmid')
+
+    # Now get the statements.
+    logger.info('Getting statements for %s=%s...' % (id_type, id_val))
     stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
     if stmts is None:
         msg = "Invalid or unavailable id %s=%s!" % (id_type, id_val)
         logger.error(msg)
         abort(Response(msg, 404))
+    logger.info("Found %d statements." % len(stmts))
 
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements." % len(stmts))
