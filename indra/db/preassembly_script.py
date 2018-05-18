@@ -1,5 +1,6 @@
 import indra.tools.assemble_corpus as ac
-from indra.db.util import get_statements, insert_pa_stmts
+from indra.db.util import insert_pa_stmts
+from indra.db.client import get_statements
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
