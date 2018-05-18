@@ -209,7 +209,7 @@ def get_statements():
 
     # Check to make sure we didn't get too many statements
     if len(stmts) > MAX_STATEMENTS:
-        abort(Response("This query yielded too many statements (more than"
+        abort(Response("This query yielded too many statements (more than "
                        "{:,}!). Please make a more specific query."
                        .format(MAX_STATEMENTS), 413))
 
