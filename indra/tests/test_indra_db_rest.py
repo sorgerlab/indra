@@ -24,7 +24,7 @@ def test_simple_request():
 def test_null_request():
     try:
         dbr.get_statements()
-    except dbr.IndraDBRestError:
+    except ValueError:
         return
     except BaseException as e:
         assert False, "Raised wrong exception: " + str(e)
@@ -44,14 +44,14 @@ def test_bigger_request():
 @attr('nonpublic')
 def test_too_big_request():
     try:
-        __check_request(30, agents=['TP53'])
+        dbr.get_statements(agents=['TP53'])
     except dbr.IndraDBRestError as e:
-        if '502: Bad Gateway' in str(e):
-            pass  # This is the error that indicates the too much data.
+        if e.status_code == 413:
+            pass
         else:
-            assert False, 'Unexpected error occured: %s' % str(e)
+            assert False, 'Unexpected error occurred: %s' % str(e)
     except BaseException as e:
-        assert False, 'A very unexpected error occured: %s' % str(e)
+        assert False, 'A very unexpected error occurred: %s' % str(e)
 
 
 @attr('nonpublic')
