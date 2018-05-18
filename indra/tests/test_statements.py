@@ -1774,3 +1774,12 @@ def test_active_form_contradicts():
     assert not st1.contradicts(st3, hierarchies)
     assert not st3.contradicts(st4, hierarchies)
     assert not st1.contradicts(st4, hierarchies)
+
+
+def test_agent_list_with_bound_condition_agents():
+    eg = Agent('EGFR', bound_conditions=[BoundCondition(Agent('EGF'), True)])
+    stmt = Phosphorylation(None, eg)
+    agents = stmt.agent_list_with_bound_condition_agents()
+    assert agents[0] is None
+    assert agents[1].name == 'EGFR'
+    assert agents[2].name == 'EGF'
