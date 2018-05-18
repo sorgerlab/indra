@@ -44,8 +44,16 @@ def __process_agent(agent_param):
     return ag, ns
 
 
-def _filter_statements(stmts_in, ns, ag_id, agent_pos=None):
+def _filter_statements(stmts_in, ns, ag_id, role=None):
     """Return statements filtered to ones where agent is at given position."""
+    # Make sure the role is good.
+    assert role in ['SUBJECT', 'OBJECT', None], \
+        "The value of role must be either 'SUBJECT', 'OBJECT', or None."
+
+    # Map the role to an index:
+    agent_pos = 0 if role == 'SUBJECT' else 1 if role == 'OBJECT' else None
+
+    # Filter the statements.
     stmts_out = []
     for stmt in stmts_in:
         # Make sure the statement has enough agents to get the one at the
@@ -70,6 +78,32 @@ def _filter_statements(stmts_in, ns, ag_id, agent_pos=None):
                     stmts_out.append(stmt)
                     break
     return stmts_out
+
+
+def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
+    """Get statements that are relevant to the criteria included.
+
+    If stmts is an empty list or None (bool evaluates to False), then get a
+    matching set of statements from the database. Otherwise, filter down the
+    existing list of statements.
+    """
+    logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
+    # TODO: This is a temporary measure, remove ASAP.
+    if ns == 'FPLX':
+        ns = 'BE'
+
+    if role:
+        role = role.upper()
+
+    if not stmts:
+        # Get an initial list
+        stmts = get_statements_by_gene_role_type(agent_id=ag_id, agent_ns=ns,
+                                                 role=role, stmt_type=stmt_type,
+                                                 do_stmt_count=False)
+    else:
+        stmts = _filter_statements(stmts, ns, ag_id, role)
+
+    return stmts
 
 
 @app.route('/')
@@ -160,48 +194,17 @@ def get_statements():
 
     # First look for statements matching the role'd agents.
     for role, (ag_id, ns) in roled_agents.items():
-        logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
-        # TODO: This is a temporary measure, remove ASAP.
-        if ns == 'FPLX':
-            ns = 'BE'
-
-        if not stmts:
-            # Get an initial list
-            stmts = get_statements_by_gene_role_type(agent_id=ag_id,
-                                                     agent_ns=ns,
-                                                     role=role.upper(),
-                                                     stmt_type=act,
-                                                     do_stmt_count=False)
-        elif role.lower() == 'subject':
-            stmts = _filter_statements(stmts, ns, ag_id, 0)
-        elif role.lower() == 'object':
-            stmts = _filter_statements(stmts, ns, ag_id, 1)
-        else:
-            # If this happens, it means the code is broken.
-            abort(Response("Unrecognized role: %s." % role.lower(), 500))
-
-        # If there are no more statements, that means there are no matches, we
-        # can stop looking.
+        stmts = _get_relevant_statements(stmts, ag_id, ns, act, role)
         if not len(stmts):
             break
+    else:
+        # Second (if we're still looking), look for statements from free agents.
+        for ag_id, ns in free_agents:
+            stmts = _get_relevant_statements(stmts, ag_id, ns, act)
+            if not len(stmts):
+                break
 
-    # Second, look for statements from free agents.
-    for ag_id, ns in free_agents:
-        if ns == 'FPLX':
-            ns = 'BE'
-        logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
-        if not stmts:
-            # Get an initial list
-            stmts = get_statements_by_gene_role_type(agent_id=ag_id,
-                                                     agent_ns=ns,
-                                                     stmt_type=act,
-                                                     do_stmt_count=False)
-        else:
-            stmts = _filter_statements(stmts, ns, ag_id)
-        if not len(stmts):
-            break
-
-    # TODO: remove this too
+    # TODO: This is a temporary patch. Remove ASAP.
     # Fix the names from BE to FPLX
     for s in stmts:
         for ag in s.agent_list():
