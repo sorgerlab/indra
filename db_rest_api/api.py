@@ -221,16 +221,24 @@ def get_paper_statements():
     """Get and preassemble statements from a paper given by pmid."""
     logger.info("Got query for statements from a paper!")
     query_dict = request.args.copy()
+
+    # Get the paper id.
     id_val = query_dict.get('id')
     if id_val is None:
         logger.error("No id provided!")
         abort(Response("No id in request!", 400))
+
+    # Get the id type, if given.
     id_type = query_dict.get('type', 'pmid')
+
+    # Now get the statements.
+    logger.info('Getting statements for %s=%s...' % (id_type, id_val))
     stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
     if stmts is None:
         msg = "Invalid or unavailable id %s=%s!" % (id_type, id_val)
         logger.error(msg)
         abort(Response(msg, 404))
+    logger.info("Found %d statements." % len(stmts))
 
     resp = jsonify([stmt.to_json() for stmt in stmts])
     logger.info("Exiting with %d statements." % len(stmts))
