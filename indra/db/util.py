@@ -247,7 +247,7 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     """
     # Preparing the statements for copying
     stmt_data = []
-    cols = ('uuid', 'mk_hash', 'db_ref', 'type', 'json', 'indra_version')
+    cols = ('uuid', 'mk_hash', 'db_info_id', 'type', 'json', 'indra_version')
     if verbose:
         print("Loading:", end='', flush=True)
     for i, stmt in enumerate(stmts):
