@@ -224,9 +224,7 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
         extra_annotation = extra_annotations.get(entry_key)
         ip = process_json_file(entry, pmid, extra_annotation, False)
         ips.append(ip)
-    else:
-        logger.warning('ISI processor: did not expect any non-json ' +
-                       'files in the output directory')
+
     if len(ips) > 1:
         for ip in ips[1:]:
             ips[0].statements += ip.statements
