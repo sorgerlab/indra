@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+import uuid
 import logging
 import networkx as nx
 from copy import deepcopy, copy
@@ -8,7 +9,6 @@ import pybel.constants as pc
 from pybel.language import pmod_namespace
 from indra.statements import *
 from indra.databases import hgnc_client
-
 
 logger = logging.getLogger('pybel_assembler')
 
@@ -43,6 +43,16 @@ class PybelAssembler(object):
         Description of the assembled PyBEL network.
     version : str
         Version of the assembled PyBEL network.
+    authors : str
+        Author(s) of the network.
+    contact : str
+        Contact information (email) of the responsible author.
+    license : str
+        License information for the network.
+    copyright : str
+        Copyright information for the network.
+    disclaimer : str
+        Any disclaimers for the network.
 
     Examples
     --------
@@ -60,19 +70,46 @@ class PybelAssembler(object):
     2
     """
     def __init__(self, stmts=None, name=None, description=None, version=None,
-                 **kwargs):
+                 authors=None, contact=None, license=None, copyright=None,
+                 disclaimer=None):
         if stmts is None:
             self.statements = []
         else:
             self.statements = stmts
-
+        if name is None:
+            name = 'indra'
+        if version is None:
+            version = str(uuid.uuid4())
         # Create the model and assign metadata
         self.model = pybel.BELGraph(
             name=name,
-            version=version,
             description=description,
-            **kwargs
+            version=version,
+            authors=authors,
+            contact=contact,
+            license=license,
+            copyright=copyright,
+            disclaimer=disclaimer,
         )
+        ns_dict = {
+            'HGNC': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
+                    'namespace/hgnc-human-genes/hgnc-human-genes-20170725.belns',
+            'UP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
+                  'namespace/swissprot/swissprot-20170725.belns',
+            'IP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
+                  'namespace/interpro/interpro-20170731.belns',
+            #'FPLX':
+            #'PFAM':
+            #'NXPFA':
+            'CHEBI': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
+                     'namespace/chebi-ids/chebi-ids-20170725.belns',
+            'GO': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
+                  'namespace/go/go-20180109.belns',
+            'MESH': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
+                    'namespace/mesh-processes/mesh-processes-20170725.belns'
+        }
+        self.model.namespace_url.update(ns_dict)
+        self.model.namespace_pattern['PUBCHEM'] = '\d+'
 
     def add_statements(self, stmts_to_add):
         self.statements += stmts_to_add
@@ -107,7 +144,7 @@ class PybelAssembler(object):
             else:
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
- 
+
     def save_model(self, path, output_format=None):
         """Saves the :class:`pybel.BELGraph` using one of the outputs from 
         :py:mod:`pybel`
@@ -374,7 +411,8 @@ def _get_agent_grounding(agent):
         return id
     hgnc_id = _get_id(agent, 'HGNC')
     uniprot_id = _get_id(agent, 'UP')
-    be_id = _get_id(agent, 'FPLX')
+    fplx_id = _get_id(agent, 'FPLX')
+    ip_id = _get_id(agent, 'IP')
     pfam_id = _get_id(agent, 'PF')
     fa_id = _get_id(agent, 'FA')
     chebi_id = _get_id(agent, 'CHEBI')
@@ -390,13 +428,17 @@ def _get_agent_grounding(agent):
         return (pc.PROTEIN, 'HGNC', hgnc_name)
     elif uniprot_id:
         return (pc.PROTEIN, 'UP', uniprot_id)
-    elif be_id:
-        return (pc.PROTEIN, 'FPLX', be_id)
+    elif fplx_id:
+        return (pc.PROTEIN, 'FPLX', fplx_id)
     elif pfam_id:
-        return (pc.PROTEIN, 'PFAM', be_id)
+        return (pc.PROTEIN, 'PFAM', pfam_id)
+    elif ip_id:
+        return (pc.PROTEIN, 'IP', ip_id)
     elif fa_id:
-        return (pc.PROTEIN, 'NXPFA', be_id)
+        return (pc.PROTEIN, 'NXPFA', fa_id)
     elif chebi_id:
+        if chebi_id.startswith('CHEBI:'):
+            chebi_id = chebi_id[len('CHEBI:'):]
         return (pc.ABUNDANCE, 'CHEBI', chebi_id)
     elif pubchem_id:
         return (pc.ABUNDANCE, 'PUBCHEM', pubchem_id)
