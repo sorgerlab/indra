@@ -241,9 +241,12 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         if res is None:
             return
+
         for r in res:
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
+                continue
+            if not epistemics.get('direct'):
                 continue
             context = self._get_context(r)
             args = r['arguments']
@@ -255,7 +258,8 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
-            self.statements.append(Complex(members, ev))
+            stmt = Complex(members, ev)
+            self.statements.append(stmt)
 
     def get_activation(self):
         """Extract INDRA Activation Statements."""
