@@ -202,25 +202,7 @@ class ReachProcessor(object):
                 controller_agent = None
                 for a in reg['arguments']:
                     if self._get_arg_type(a) == 'controller':
-                        controller = a.get('arg')
-                        controllers = a.get('args')
-                        # There is either a single controller here
-                        if controller is not None:
-                            controller_agent = \
-                                    self._get_agent_from_entity(controller)
-                        # Or the controller is a complex
-                        elif controllers is not None and len(controllers) >= 2:
-                            # This is actually a dict and we need to get the
-                            # values
-                            controllers = list(controllers.values())
-                            controller_agent = \
-                                self._get_agent_from_entity(controllers[0])
-                            for controller in controllers[1:]:
-                                controller_bound = \
-                                    self._get_agent_from_entity(controller)
-                                if controller_bound:
-                                    bc = BoundCondition(controller_bound, True)
-                                    controller_agent.bound_conditions.append(bc)
+                        controller_agent = self._get_controller_agent(a)
 
                 sentence = reg['verbose-text']
 
@@ -246,6 +228,11 @@ class ReachProcessor(object):
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
                 continue
+            # Due to an issue with the REACH output serialization
+            # (though seemingly not with the raw mentions), sometimes
+            # a redundant complex-assembly event is reported which can
+            # be recignized by the missing direct flag, which we can filter
+            # for here
             if not epistemics.get('direct'):
                 continue
             context = self._get_context(r)
@@ -279,22 +266,7 @@ class ReachProcessor(object):
             args = r['arguments']
             for a in args:
                 if self._get_arg_type(a) == 'controller':
-                    controller = a.get('arg')
-                    # When the controller is not a simple entity
-                    if controller is None:
-                        if a['argument-type'] == 'complex':
-                            controllers = list(a.get('args').values())
-                            controller_agent =\
-                                self._get_agent_from_entity(controllers[0])
-                            bound_agents = [self._get_agent_from_entity(c)
-                                            for c in controllers[1:]]
-                            bound_conditions = [BoundCondition(ba, True) for
-                                                ba in bound_agents]
-                            controller_agent.bound_conditions = \
-                                bound_conditions
-                    else:
-                        controller_agent =\
-                            self._get_agent_from_entity(controller)
+                    controller_agent = self._get_controller_agent(a)
                 if self._get_arg_type(a) == 'controlled':
                     controlled = a['arg']
             controlled_agent = self._get_agent_from_entity(controlled)
@@ -595,6 +567,24 @@ class ReachProcessor(object):
             return 'introduction'
         else:
             return None
+
+    def _get_controller_agent(self, arg):
+        """Return a single or a complex controller agent."""
+        controller_agent = None
+        controller = arg.get('arg')
+        # There is either a single controller here
+        if controller is not None:
+            controller_agent = self._get_agent_from_entity(controller)
+        # Or the controller is a complex
+        elif arg['argument-type'] == 'complex':
+            controllers = list(arg.get('args').values())
+            controller_agent = self._get_agent_from_entity(controllers[0])
+            bound_agents = [self._get_agent_from_entity(c)
+                            for c in controllers[1:]]
+            bound_conditions = [BoundCondition(ba, True) for
+                                ba in bound_agents]
+            controller_agent.bound_conditions = bound_conditions
+        return controller_agent
 
     @staticmethod
     def _get_arg_type(arg):
