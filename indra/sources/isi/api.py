@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import subprocess
-import logging
+import re
 import os
-import tempfile
 import shutil
+import logging
+import tempfile
+import subprocess
 from indra.sources.isi.processor import IsiProcessor
 from indra.sources.isi.preprocessor import IsiPreprocessor
 
@@ -143,3 +144,57 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     shutil.rmtree(tmp_dir)
 
     return ip
+
+
+def process_output_folder(folder_path, pmids=None, extra_annotations=None):
+    """Recursively extracts statements from all ISI output files in the
+    given directory and subdirectories.
+
+    Parameters
+    ----------
+    folder_path : str
+        The directory to traverse
+    """
+    for entry in os.listdir(folder_path):
+        full_entry_path = os.path.join(folder_path, entry)
+
+        if os.path.isdir(full_entry_path):
+            logger.warning('ISI processor: did not expect any ' +
+                           'subdirectories in the output directory.')
+            process_output_folder(full_entry_path)
+        elif entry.endswith('.json'):
+            # Extract the corresponding file id
+            m = re.match('([0-9]+)\.json', entry)
+            if m is None:
+                logger.warning('ISI processor:', entry, ' does not ' +
+                               ' match expected format for output files.')
+                pmid = None
+                extra_annotations = {}
+            else:
+                doc_id = int(m.group(1))
+                pmid = pmids.get(doc_id)
+                extra_annotations = extra_annotations.get(doc_id)
+            ip = process_json_file(full_entry_path, pmid, extra_annotations)
+        else:
+            logger.warning('ISI processor: did not expect any non-json ' +
+                           'files in the output directory')
+
+
+
+def process_json_file(filename, pmid=None, extra_annotations=None):
+    """Extracts statements from the given ISI output file.
+
+    Parameters
+    ----------
+    filename : str
+        The ISI output file from which to extract statements
+    pmid : int
+        The PMID of the document being preprocessed, or None if not
+        specified
+    extra_annotations : dict
+        Extra annotations to be added to each statement from this document
+        (can be the empty dictionary)
+    """
+    print('Extracting from', filename)
+    with open(filename, 'r') as f:
+        j = json.load(f)
