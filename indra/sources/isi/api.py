@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import os
+import glob
 import json
 import shutil
 import logging
@@ -188,32 +189,20 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None):
     folder_path : str
         The directory to traverse
     """
+    pmids = pmids if pmids is not None else {}
+    extra_annotations = extra_annotations if \
+        extra_annotations is not None else {}
     ips = []
-    for entry in os.listdir(folder_path):
-        full_entry_path = os.path.join(folder_path, entry)
-
-        if os.path.isdir(full_entry_path):
-            logger.warning('ISI processor: did not expect any ' +
-                           'subdirectories in the output directory.')
-            ip = process_output_folder(full_entry_path)
-            ips.append(ip)
-        elif entry.endswith('.json'):
-            # Extract the corresponding file id
-            m = re.match('([0-9]+)\.json', entry)
-            if m is None:
-                logger.warning('ISI processor:', entry, ' does not ' +
-                               ' match expected format for output files.')
-                pmid = None
-                extra_annotations = {}
-            else:
-                doc_id = int(m.group(1))
-                pmid = pmids.get(doc_id)
-                extra_annotations = extra_annotations.get(doc_id)
-            ip = process_json_file(full_entry_path, pmid, extra_annotations)
-            ips.append(ip)
-        else:
-            logger.warning('ISI processor: did not expect any non-json ' +
-                           'files in the output directory')
+    for entry in glob.glob(os.path.join(folder_path, '*.json')):
+        entry_key = os.path.splitext(os.path.basename(entry))[0]
+        # Extract the corresponding file id
+        pmid = pmids.get(entry_key)
+        extra_annotation = extra_annotations.get(entry_key)
+        ip = process_json_file(entry, pmid, extra_annotation)
+        ips.append(ip)
+    else:
+        logger.warning('ISI processor: did not expect any non-json ' +
+                       'files in the output directory')
     if len(ips) > 1:
         for ip in ips[1:]:
             ips[0].statements += ip.statements
