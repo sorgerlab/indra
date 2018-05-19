@@ -13,7 +13,7 @@ from indra.sources.isi.preprocessor import IsiPreprocessor
 logger = logging.getLogger('isi')
 
 
-def preprocess_text(text, pmid=None, cleanup=True):
+def process_text(text, pmid=None, cleanup=True):
     """Process a string using the ISI reader and extract INDRA statements.
 
     Parameters
@@ -22,6 +22,9 @@ def preprocess_text(text, pmid=None, cleanup=True):
         A text string to process
     pmid : Optional[str]
         The PMID associated with this text (or None if not specified)
+    cleanup : Optional[bool]
+        If True, the temporary folders created for preprocessed reading input
+        and output are removed. Default: True
 
     Returns
     -------
@@ -66,6 +69,9 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
         INDRA statements. Extra annotations called 'interaction' are ignored
         since this is used by the processor to store the corresponding
         raw ISI output.
+    cleanup : Optional[bool]
+        If True, the temporary folders created for preprocessed reading input
+        and output are removed. Default: True
 
     Returns
     -------
@@ -109,6 +115,9 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     output_dir : Optional[str]
         The directory into which to put reader output; if omitted or None,
         uses a temporary directory.
+    cleanup : Optional[bool]
+        If True, the temporary folders created for preprocessed reading input
+        and output are removed. Default: True
 
     Returns
     -------
@@ -143,7 +152,8 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         logger.error('Docker returned non-zero status code')
 
     ips = []
-    for fname, pmid in isi_preprocessor.pmids.items():
+    for basename, pmid in isi_preprocessor.pmids.items():
+        fname = os.path.join(output_dir, '%s.json' % basename)
         ip = process_json_file(fname, pmid=pmid,
             extra_annotations=isi_preprocessor.extra_annotations.get(fname, {}))
         ips.append(ip)
@@ -232,4 +242,5 @@ def process_json_file(file_path, pmid=None, extra_annotations=None):
     with open(file_path, 'rb') as fh:
         jd = json.load(fh)
         ip = IsiProcessor(jd, pmid, extra_annotations)
+        ip.get_statements()
         return ip

@@ -74,9 +74,10 @@ class IsiPreprocessor(object):
         outfile = os.path.join(self.preprocessed_dir, infile_base)
         shutil.copyfile(infile, outfile)
 
-        self.pmids[self.next_file_id] = pmid
-        self.extra_annotations[self.next_file_id] = extra_annotations
-        self.next_file_id += 1
+        infile_key = os.path.splitext(infile_base)[0]
+
+        self.pmids[infile_key] = pmid
+        self.extra_annotations[infile_key] = extra_annotations
 
     def preprocess_plain_text_string(self, text, pmid, extra_annotations):
         """Preprocess plain text string for use by ISI reader.
@@ -112,8 +113,8 @@ class IsiPreprocessor(object):
                 first_sentence = False
 
         # Store annotations
-        self.pmids[self.next_file_id] = pmid
-        self.extra_annotations[self.next_file_id] = extra_annotations
+        self.pmids[str(self.next_file_id)] = pmid
+        self.extra_annotations[str(self.next_file_id)] = extra_annotations
 
         # Increment file id
         self.next_file_id += 1
@@ -199,7 +200,6 @@ class IsiPreprocessor(object):
 
         # Prepocess text extracted from nxml
         self.preprocess_plain_text_string(txt_content, pmid, extra_annotations)
-
 
     def preprocess_abstract_list(self, abstract_list):
         """Preprocess abstracts in database pickle dump format for ISI reader.
