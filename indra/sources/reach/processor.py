@@ -203,10 +203,25 @@ class ReachProcessor(object):
                 for a in reg['arguments']:
                     if self._get_arg_type(a) == 'controller':
                         controller = a.get('arg')
+                        controllers = a.get('args')
+                        # There is either a single controller here
                         if controller is not None:
                             controller_agent = \
                                     self._get_agent_from_entity(controller)
-                            break
+                        # Or the controller is a complex
+                        elif controllers is not None and len(controllers) >= 2:
+                            # This is actually a dict and we need to get the
+                            # values
+                            controllers = list(controllers.values())
+                            controller_agent = \
+                                self._get_agent_from_entity(controllers[0])
+                            for controller in controllers[1:]:
+                                controller_bound = \
+                                    self._get_agent_from_entity(controller)
+                                if controller_bound:
+                                    bc = BoundCondition(controller_bound, True)
+                                    controller_agent.bound_conditions.append(bc)
+
                 sentence = reg['verbose-text']
 
                 ev = Evidence(source_api='reach', text=sentence,
