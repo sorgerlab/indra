@@ -145,6 +145,21 @@ class PybelAssembler(object):
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
 
+    def to_web(self, host=None, user=None, password=None):
+        """Send the model to BEL Commons by wrapping :py:func:`pybel.to_web`. 
+
+
+        Parameters
+        ----------
+        host : str
+            The host name to use. Checks environment variable ``PYBEL_REMOTE_HOST`` if none.
+        user : str
+            The username (email) to use. Checks environment variable ``PYBEL_REMOTE_USER`` if none.
+        password : str
+            The password to use. Checks environment variable ``PYBEL_REMOTE_PASSWORD`` if none.
+        """
+        return pybel.to_web(self.model, host=host, user=user, password=password)
+
     def save_model(self, path, output_format=None):
         """Saves the :class:`pybel.BELGraph` using one of the outputs from 
         :py:mod:`pybel`
