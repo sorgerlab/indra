@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import os
+import json
 import shutil
 import logging
 import tempfile
@@ -12,15 +13,15 @@ from indra.sources.isi.preprocessor import IsiPreprocessor
 logger = logging.getLogger('isi')
 
 
-def process_text(text, pmid=None):
+def preprocess_text(text, pmid=None, cleanup=True):
     """Process a string using the ISI reader and extract INDRA statements.
 
     Parameters
     ----------
     text : str
-        A string of biomedical information to process
+        A text string to process
     pmid : Optional[str]
-        The pmid associated with this text (or None if not specified)
+        The PMID associated with this text (or None if not specified)
 
     Returns
     -------
@@ -37,13 +38,17 @@ def process_text(text, pmid=None):
     # Run the ISI reader and extract statements
     ip = process_preprocessed(pp)
 
-    # Remove temporary directory with processed input
-    shutil.rmtree(pp_dir)
+    if cleanup:
+        # Remove temporary directory with processed input
+        shutil.rmtree(pp_dir)
+    else:
+        logger.info('Not cleaning up %s' % pp_dir)
 
     return ip
 
 
-def process_nxml(nxml_filename, pmid=None, extra_annotations=None):
+def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
+                 cleanup=True):
     """Process an NXML file using the ISI reader
 
     First converts NXML to plain text and preprocesses it, then runs the ISI
@@ -80,14 +85,17 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None):
     # Run the ISI reader and extract statements
     ip = process_preprocessed(pp)
 
-    # Remove temporary directory with processed input
-    shutil.rmtree(pp_dir)
+    if cleanup:
+        # Remove temporary directory with processed input
+        shutil.rmtree(pp_dir)
+    else:
+        logger.info('Not cleaning up %s' % pp_dir)
 
     return ip
 
 
 def process_preprocessed(isi_preprocessor, num_processes=1,
-                         specified_output_dir=None):
+                         output_dir=None, cleanup=True):
     """Process a directory of abstracts and/or papers preprocessed using the
     specified IsiPreprocessor, to produce a list of extracted INDRA statements.
 
@@ -98,7 +106,7 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         want to read and process with the ISI reader
     num_processes : Optional[int]
         Number of processes to parallelize over
-    specified_output_dir : Optional[str]
+    output_dir : Optional[str]
         The directory into which to put reader output; if omitted or None,
         uses a temporary directory.
 
@@ -109,10 +117,10 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     """
 
     # Create a temporary directory to store the output
-    if specified_output_dir is None:
+    if output_dir is None:
         output_dir = tempfile.mkdtemp('indra_isi_processor_output')
     else:
-        output_dir = os.path.abspath(specified_output_dir)
+        output_dir = os.path.abspath(output_dir)
     tmp_dir = tempfile.mkdtemp('indra_isi_processor_tmp')
 
     # Form the command to invoke the ISI reader via Docker
@@ -134,16 +142,31 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     if ret != 0:
         logger.error('Docker returned non-zero status code')
 
-    # Process ISI output
-    ip = IsiProcessor(output_dir, isi_preprocessor.pmids,
-                      isi_preprocessor.extra_annotations)
+    ips = []
+    for fname, pmid in isi_preprocessor.pmids.items():
+        ip = process_json_file(fname, pmid=pmid,
+            extra_annotations=isi_preprocessor.extra_annotations.get(fname, {}))
+        ips.append(ip)
 
     # Remove the temporary output directory
-    if specified_output_dir is None:
-        shutil.rmtree(output_dir)
-    shutil.rmtree(tmp_dir)
+    if output_dir is None:
+        if cleanup:
+            shutil.rmtree(output_dir)
+        else:
+            logger.info('Not cleaning up %s' % output_dir)
+    if cleanup:
+        shutil.rmtree(tmp_dir)
+    else:
+        logger.info('Not cleaning up %s' % output_dir)
 
-    return ip
+    if len(ips) > 1:
+        for ip in ips[1:]:
+            ips[0].statements += ip.statements
+
+    if ips:
+        return ips[0]
+    else:
+        return None
 
 
 def process_output_folder(folder_path, pmids=None, extra_annotations=None):
@@ -155,13 +178,15 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None):
     folder_path : str
         The directory to traverse
     """
+    ips = []
     for entry in os.listdir(folder_path):
         full_entry_path = os.path.join(folder_path, entry)
 
         if os.path.isdir(full_entry_path):
             logger.warning('ISI processor: did not expect any ' +
                            'subdirectories in the output directory.')
-            process_output_folder(full_entry_path)
+            ip = process_output_folder(full_entry_path)
+            ips.append(ip)
         elif entry.endswith('.json'):
             # Extract the corresponding file id
             m = re.match('([0-9]+)\.json', entry)
@@ -175,18 +200,26 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None):
                 pmid = pmids.get(doc_id)
                 extra_annotations = extra_annotations.get(doc_id)
             ip = process_json_file(full_entry_path, pmid, extra_annotations)
+            ips.append(ip)
         else:
             logger.warning('ISI processor: did not expect any non-json ' +
                            'files in the output directory')
+    if len(ips) > 1:
+        for ip in ips[1:]:
+            ips[0].statements += ip.statements
+
+    if ips:
+        return ips[0]
+    else:
+        return None
 
 
-
-def process_json_file(filename, pmid=None, extra_annotations=None):
+def process_json_file(file_path, pmid=None, extra_annotations=None):
     """Extracts statements from the given ISI output file.
 
     Parameters
     ----------
-    filename : str
+    file_path : str
         The ISI output file from which to extract statements
     pmid : int
         The PMID of the document being preprocessed, or None if not
@@ -195,6 +228,8 @@ def process_json_file(filename, pmid=None, extra_annotations=None):
         Extra annotations to be added to each statement from this document
         (can be the empty dictionary)
     """
-    print('Extracting from', filename)
-    with open(filename, 'r') as f:
-        j = json.load(f)
+    logger.info('Extracting from %s' % file_path)
+    with open(file_path, 'rb') as fh:
+        jd = json.load(fh)
+        ip = IsiProcessor(jd, pmid, extra_annotations)
+        return ip

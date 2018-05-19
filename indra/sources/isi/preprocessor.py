@@ -1,20 +1,21 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import logging
-import nltk
+import re
 import os
+import nltk
 import zlib
 import codecs
-from indra import get_config
 import shutil
-import subprocess
+import logging
 import tempfile
-import re
+import subprocess
+from indra import get_config
 
 logger = logging.getLogger('isi')
 
 nxml2txt_path = get_config('NXML2TXT_PATH')
 python2_path = get_config('PYTHON2_PATH')
+
 
 class IsiPreprocessor(object):
     """Preprocess a set of documents, one by one, and add the preprocessed
@@ -125,8 +126,8 @@ class IsiPreprocessor(object):
 
         Parameters
         ----------
-        text : str
-            The plain text of the article of abstract
+        filename : str
+            The name of the plain text file
         pmid : str
             The PMID from which it comes, or None if not specified
         extra_annotations : dict
@@ -138,7 +139,6 @@ class IsiPreprocessor(object):
             content = f.read()
             self.preprocess_plain_text_string(content, pmid,
                                               extra_annotations)
-
 
     def preprocess_nxml_file(self, filename, pmid, extra_annotations):
         """Preprocess an NXML file for use with the ISI reader.
@@ -168,6 +168,7 @@ class IsiPreprocessor(object):
         if python2_path is None:
             logger.error('PYTHON2_PATH not specified in config file or ' + 
                          'environment variable')
+            return
         else:
             txt_out = os.path.join(tmp_dir, 'out.txt')
             so_out = os.path.join(tmp_dir, 'out.so')

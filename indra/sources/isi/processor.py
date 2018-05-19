@@ -2,9 +2,7 @@ import os
 import json
 import logging
 from copy import deepcopy
-
-import indra.statements
-from indra.statements import *
+import indra.statements as ist
 from indra.preassembler.grounding_mapper import load_grounding_map, \
         GroundingMapper
 
@@ -92,10 +90,10 @@ class IsiProcessor(object):
                            "input.")
         annotations['source_id'] = source_id
         annotations['interaction'] = interaction
-        ev = Evidence(source_api='isi',
-                      pmid=pmid,
-                      text=text.rstrip(),
-                      annotations=annotations)
+        ev = ist.Evidence(source_api='isi',
+                          pmid=pmid,
+                          text=text.rstrip(),
+                          annotations=annotations)
 
         # For binding time interactions, it is said that a catayst might be
         # specified. We don't use this for now, but extract in case we want
@@ -111,8 +109,8 @@ class IsiProcessor(object):
         if verb in verb_to_statement_type:
             statement_class = verb_to_statement_type[verb]
 
-            if statement_class == Complex:
-                statement = Complex([subj, obj], evidence=ev)
+            if statement_class == ist.Complex:
+                statement = ist.Complex([subj, obj], evidence=ev)
             else:
                 statement = statement_class(subj, obj, evidence=ev)
 
@@ -123,11 +121,11 @@ class IsiProcessor(object):
             # to see if we already have a Complex for this source_id with the
             # same members
             already_have = False
-            if type(statement) == Complex:
+            if type(statement) == ist.Complex:
                 for old_s in self.statements:
                     old_id = statement.evidence[0].source_id
                     new_id = old_s.evidence[0].source_id
-                    if type(old_s) == Complex and old_id == new_id:
+                    if type(old_s) == ist.Complex and old_id == new_id:
                         old_statement_members = \
                                 [m.db_refs['TEXT'] for m in old_s.members]
                         old_statement_members = sorted(old_statement_members)
@@ -158,7 +156,7 @@ class IsiProcessor(object):
         agent : indra.statements.Agent
             An ungrounded Agent object referring to the specified text
         """
-        return Agent(agent_str, db_refs={'TEXT': agent_str})
+        return ist.Agent(agent_str, db_refs={'TEXT': agent_str})
 
 
 # Load the mapping between ISI verb and INDRA statement type
@@ -187,7 +185,7 @@ def _build_verb_statement_mapping():
                     verb = tokens[0]
                     s_type = tokens[1]
                     try:
-                        statement_class = getattr(indra.statements, s_type)
+                        statement_class = getattr(ist, s_type)
                         verb_to_statement_type[verb] = statement_class
                     except Exception:
                         pass
