@@ -363,7 +363,7 @@ class ReachProcessor(object):
 
     @staticmethod
     def _get_db_refs(entity_term):
-        agent_name = ReachProcessor._get_valid_name(entity_term['text'])
+        agent_name = entity_term['text']
         db_refs = {}
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
@@ -373,7 +373,7 @@ class ReachProcessor(object):
                 # Look up official names in UniProt
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name is not None:
-                    agent_name = ReachProcessor._get_valid_name(gene_name)
+                    agent_name = gene_name
                     # If the gene name corresponds to an HGNC ID, add it to the
                     # db_refs
                     if up_client.is_human(up_id):
@@ -593,14 +593,6 @@ class ReachProcessor(object):
             return arg.get('argument_label')
         else:
             return arg.get('type')
-
-    @staticmethod
-    def _get_valid_name(txt):
-        """Produce valid agent name from string."""
-        name = ''.join(ch if ch.isalnum() else '_' for ch in txt)
-        if name and name[0].isdigit():
-            name = 'p' + name
-        return name
 
     @staticmethod
     def _parse_mutation(s):
