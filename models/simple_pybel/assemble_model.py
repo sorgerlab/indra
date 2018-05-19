@@ -34,6 +34,10 @@ p38_tab1 = Agent('MAPK14', bound_conditions=[BoundCondition(tab1)],
 egfr_dimer = Agent('EGFR', bound_conditions=[BoundCondition(egfr)],
                    db_refs=gnd('EGFR'))
 
+sos1_bound = Agent('SOS1',
+                   bound_conditions=[BoundCondition(egfr),
+                                     BoundCondition(grb2)],
+                   db_refs=gnd('SOS1'))
 stmts = [
     Gef(sos1, kras),
     Gap(rasa1, kras),
@@ -45,6 +49,7 @@ stmts = [
     IncreaseAmount(elk1_tscript, fos),
     Conversion(hk1, [glu], [g6p]),
     Complex([egfr, grb2, sos1]),
+    ActiveForm(sos1_bound, 'gef', True),
     Autophosphorylation(p38_tab1, 'Y', '100'),
     Transphosphorylation(egfr_dimer, 'Y', '1173'),
 ]
@@ -57,15 +62,21 @@ model_description = 'Test of INDRA Statement assembly into PyBEL.'
 print("Assembling to PyBEL...")
 
 pba = PybelAssembler(stmts, name='INDRA_PyBEL_test',
-                     description=model_description, version='0.0.22')
+                     description=model_description,
+                     authors='John Bachman',
+                     )
 belgraph = pba.make_model()
 
 # Write to BEL file
-pybel.to_bel_path(belgraph, 'simple_pybel.bel')
+#pybel.to_bel_path(belgraph, 'simple_pybel.bel')
 
 # Upload to PyBEL web
-with open('pybel_model.json', 'wt') as f:
-    pybel.to_json_file(pba.model, f)
-url =  'https://pybel.scai.fraunhofer.de/api/receive'
-headers = {'content-type': 'application/json'}
-requests.post(url, json=pybel.to_json(pba.model), headers=headers)
+#with open('pybel_model.json', 'wt') as f:
+#    pybel.to_json_file(pba.model, f)
+#url =  'https://pybel.scai.fraunhofer.de/api/receive'
+#headers = {'content-type': 'application/json'}
+#requests.post(url, json=pybel.to_json(pba.model), headers=headers)
+
+# Put in local database
+pybel.to_database(pba.model)
+
