@@ -1,20 +1,21 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import logging
-import nltk
+import re
 import os
+import nltk
 import zlib
 import codecs
-from indra import get_config
 import shutil
-import subprocess
+import logging
 import tempfile
-import re
+import subprocess
+from indra import get_config
 
 logger = logging.getLogger('isi')
 
 nxml2txt_path = get_config('NXML2TXT_PATH')
 python2_path = get_config('PYTHON2_PATH')
+
 
 class IsiPreprocessor(object):
     """Preprocess a set of documents, one by one, and add the preprocessed
@@ -73,9 +74,10 @@ class IsiPreprocessor(object):
         outfile = os.path.join(self.preprocessed_dir, infile_base)
         shutil.copyfile(infile, outfile)
 
-        self.pmids[self.next_file_id] = pmid
-        self.extra_annotations[self.next_file_id] = extra_annotations
-        self.next_file_id += 1
+        infile_key = os.path.splitext(infile_base)[0]
+
+        self.pmids[infile_key] = pmid
+        self.extra_annotations[infile_key] = extra_annotations
 
     def preprocess_plain_text_string(self, text, pmid, extra_annotations):
         """Preprocess plain text string for use by ISI reader.
@@ -111,8 +113,8 @@ class IsiPreprocessor(object):
                 first_sentence = False
 
         # Store annotations
-        self.pmids[self.next_file_id] = pmid
-        self.extra_annotations[self.next_file_id] = extra_annotations
+        self.pmids[str(self.next_file_id)] = pmid
+        self.extra_annotations[str(self.next_file_id)] = extra_annotations
 
         # Increment file id
         self.next_file_id += 1
@@ -125,8 +127,8 @@ class IsiPreprocessor(object):
 
         Parameters
         ----------
-        text : str
-            The plain text of the article of abstract
+        filename : str
+            The name of the plain text file
         pmid : str
             The PMID from which it comes, or None if not specified
         extra_annotations : dict
@@ -138,7 +140,6 @@ class IsiPreprocessor(object):
             content = f.read()
             self.preprocess_plain_text_string(content, pmid,
                                               extra_annotations)
-
 
     def preprocess_nxml_file(self, filename, pmid, extra_annotations):
         """Preprocess an NXML file for use with the ISI reader.
@@ -168,6 +169,7 @@ class IsiPreprocessor(object):
         if python2_path is None:
             logger.error('PYTHON2_PATH not specified in config file or ' + 
                          'environment variable')
+            return
         else:
             txt_out = os.path.join(tmp_dir, 'out.txt')
             so_out = os.path.join(tmp_dir, 'out.so')
@@ -198,7 +200,6 @@ class IsiPreprocessor(object):
 
         # Prepocess text extracted from nxml
         self.preprocess_plain_text_string(txt_content, pmid, extra_annotations)
-
 
     def preprocess_abstract_list(self, abstract_list):
         """Preprocess abstracts in database pickle dump format for ISI reader.

@@ -11,4 +11,5 @@ Python 2 only, make sure PYTHON2_PATH is set in your config file or
 environment and points to a Python 2 executable.
 """
 
-from .api import process_text, process_nxml, process_preprocessed
+from .api import process_text, process_nxml, process_preprocessed, \
+    process_output_folder, process_json_file
