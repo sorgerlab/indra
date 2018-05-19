@@ -370,8 +370,9 @@ class ReachProcessor(object):
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
 
-    def _get_db_refs(self, entity_term):
-        agent_name = self._get_valid_name(entity_term['text'])
+    @staticmethod
+    def _get_db_refs(entity_term):
+        agent_name = ReachProcessor._get_valid_name(entity_term['text'])
         db_refs = {}
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
@@ -381,12 +382,13 @@ class ReachProcessor(object):
                 # Look up official names in UniProt
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name is not None:
-                    agent_name = self._get_valid_name(gene_name)
+                    agent_name = ReachProcessor._get_valid_name(gene_name)
                     # If the gene name corresponds to an HGNC ID, add it to the
                     # db_refs
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_refs['HGNC'] = hgnc_id
+                    if up_client.is_human(up_id):
+                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                        if hgnc_id:
+                            db_refs['HGNC'] = hgnc_id
             elif ns == 'hgnc':
                 hgnc_id = xr['id']
                 db_refs['HGNC'] = hgnc_id
