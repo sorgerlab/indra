@@ -12,7 +12,7 @@ logger = logging.getLogger('isi')
 
 
 def process_text(text, pmid=None):
-    """Process a string using the ISI reader and extracts INDRA statements.
+    """Process a string using the ISI reader and extract INDRA statements.
 
     Parameters
     ----------
@@ -134,7 +134,8 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
         logger.error('Docker returned non-zero status code')
 
     # Process ISI output
-    ip = IsiProcessor(output_dir, isi_preprocessor)
+    ip = IsiProcessor(output_dir, isi_preprocessor.pmids,
+                      isi_preprocessor.extra_annotations)
 
     # Remove the temporary output directory
     if specified_output_dir is None:

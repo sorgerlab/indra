@@ -66,9 +66,10 @@ class IsiProcessor(object):
     statements : list[indra.statements.Statement]
         Extracted statements
     """
-    def __init__(self, output_dir, preprocessor):
-        self.pmids = preprocessor.pmids
-        self.extra_annotations_each_doc = preprocessor.extra_annotations
+    def __init__(self, output_dir, pmids=None, extra_annotations=None):
+        self.pmids = pmids if pmids is not None else {}
+        self.extra_annotations_each_doc = extra_annotations if \
+            extra_annotations is not None else {}
 
         # Load grounding information
         path_this = os.path.dirname(os.path.abspath(__file__))
