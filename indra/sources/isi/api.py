@@ -14,7 +14,7 @@ from indra.sources.isi.preprocessor import IsiPreprocessor
 logger = logging.getLogger('isi')
 
 
-def process_text(text, pmid=None, cleanup=True):
+def process_text(text, pmid=None, cleanup=True, add_grounding=True):
     """Process a string using the ISI reader and extract INDRA statements.
 
     Parameters
@@ -26,6 +26,8 @@ def process_text(text, pmid=None, cleanup=True):
     cleanup : Optional[bool]
         If True, the temporary folders created for preprocessed reading input
         and output are removed. Default: True
+    add_grounding : Optional[bool]
+        If True the extracted Statements' grounding is mapped
 
     Returns
     -------
@@ -41,6 +43,8 @@ def process_text(text, pmid=None, cleanup=True):
 
     # Run the ISI reader and extract statements
     ip = process_preprocessed(pp)
+    if add_grounding:
+        ip.add_grounding()
 
     if cleanup:
         # Remove temporary directory with processed input
@@ -52,7 +56,7 @@ def process_text(text, pmid=None, cleanup=True):
 
 
 def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
-                 cleanup=True):
+                 cleanup=True, add_grounding=True):
     """Process an NXML file using the ISI reader
 
     First converts NXML to plain text and preprocesses it, then runs the ISI
@@ -73,6 +77,8 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
     cleanup : Optional[bool]
         If True, the temporary folders created for preprocessed reading input
         and output are removed. Default: True
+    add_grounding : Optional[bool]
+        If True the extracted Statements' grounding is mapped
 
     Returns
     -------
@@ -87,10 +93,12 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
 
     pp = IsiPreprocessor(pp_dir)
     extra_annotations = {}
-    pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations)
+    pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations, False)
 
     # Run the ISI reader and extract statements
     ip = process_preprocessed(pp)
+    if add_grounding:
+        ip.add_grounding()
 
     if cleanup:
         # Remove temporary directory with processed input
@@ -102,7 +110,7 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
 
 
 def process_preprocessed(isi_preprocessor, num_processes=1,
-                         output_dir=None, cleanup=True):
+                         output_dir=None, cleanup=True, add_grounding=True):
     """Process a directory of abstracts and/or papers preprocessed using the
     specified IsiPreprocessor, to produce a list of extracted INDRA statements.
 
@@ -119,6 +127,8 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     cleanup : Optional[bool]
         If True, the temporary folders created for preprocessed reading input
         and output are removed. Default: True
+    add_grounding : Optional[bool]
+        If True the extracted Statements' grounding is mapped
 
     Returns
     -------
@@ -156,7 +166,8 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
     for basename, pmid in isi_preprocessor.pmids.items():
         fname = os.path.join(output_dir, '%s.json' % basename)
         ip = process_json_file(fname, pmid=pmid,
-            extra_annotations=isi_preprocessor.extra_annotations.get(fname, {}))
+            extra_annotations=isi_preprocessor.extra_annotations.get(fname, {}),
+            add_grounding=False)
         ips.append(ip)
 
     # Remove the temporary output directory
@@ -175,12 +186,15 @@ def process_preprocessed(isi_preprocessor, num_processes=1,
             ips[0].statements += ip.statements
 
     if ips:
+        if add_grounding:
+            ips[0].add_grounding()
         return ips[0]
     else:
         return None
 
 
-def process_output_folder(folder_path, pmids=None, extra_annotations=None):
+def process_output_folder(folder_path, pmids=None, extra_annotations=None,
+                          add_grounding=True):
     """Recursively extracts statements from all ISI output files in the
     given directory and subdirectories.
 
@@ -188,6 +202,16 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None):
     ----------
     folder_path : str
         The directory to traverse
+    pmid : Optional[str]
+        pmid of this nxml file, to be added to the Evidence object of the
+        extracted INDRA statements
+    extra_annotations : Optional[dict]
+        Additional annotations to add to the Evidence object of all extracted
+        INDRA statements. Extra annotations called 'interaction' are ignored
+        since this is used by the processor to store the corresponding
+        raw ISI output.
+    add_grounding : Optional[bool]
+        If True the extracted Statements' grounding is mapped
     """
     pmids = pmids if pmids is not None else {}
     extra_annotations = extra_annotations if \
@@ -198,7 +222,7 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None):
         # Extract the corresponding file id
         pmid = pmids.get(entry_key)
         extra_annotation = extra_annotations.get(entry_key)
-        ip = process_json_file(entry, pmid, extra_annotation)
+        ip = process_json_file(entry, pmid, extra_annotation, False)
         ips.append(ip)
     else:
         logger.warning('ISI processor: did not expect any non-json ' +
@@ -208,12 +232,15 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None):
             ips[0].statements += ip.statements
 
     if ips:
+        if add_grounding:
+            ips[0].add_grounding()
         return ips[0]
     else:
         return None
 
 
-def process_json_file(file_path, pmid=None, extra_annotations=None):
+def process_json_file(file_path, pmid=None, extra_annotations=None,
+                      add_grounding=True):
     """Extracts statements from the given ISI output file.
 
     Parameters
@@ -226,10 +253,14 @@ def process_json_file(file_path, pmid=None, extra_annotations=None):
     extra_annotations : dict
         Extra annotations to be added to each statement from this document
         (can be the empty dictionary)
+    add_grounding : Optional[bool]
+        If True the extracted Statements' grounding is mapped
     """
     logger.info('Extracting from %s' % file_path)
     with open(file_path, 'rb') as fh:
         jd = json.load(fh)
         ip = IsiProcessor(jd, pmid, extra_annotations)
         ip.get_statements()
+        if add_grounding:
+            ip.add_grounding()
         return ip

@@ -25,13 +25,24 @@ class IsiProcessor(object):
     statements : list[indra.statements.Statement]
         Extracted statements
     """
-    def __init__(self, reader_output, pmid=None, extra_annotations=None):
+    def __init__(self, reader_output, pmid=None, extra_annotations=None,
+                 add_grounding=True):
         self.reader_output = reader_output
         self.pmid = pmid
         self.extra_annotations = extra_annotations if \
             extra_annotations is not None else {}
         self.verbs = set()
 
+        self.statements = []
+
+    def get_statements(self):
+        """Process reader output to produce INDRA Statements."""
+        for k, v in self.reader_output.items():
+            for interaction in v['interactions']:
+                self._process_interaction(k, interaction, v['text'], self.pmid,
+                                          self.extra_annotations)
+
+    def add_grounding(self):
         # Load grounding information
         path_this = os.path.dirname(os.path.abspath(__file__))
         gm_fname = os.path.join(path_this, '../../resources/',
@@ -41,16 +52,9 @@ class IsiProcessor(object):
         except BaseException:
             raise Exception('Could not load the grounding map from ' +
                             gm_fname)
-        self.mapper = GroundingMapper(gm)
-        self.statements = []
+        mapper = GroundingMapper(gm)
+        self.statements = mapper.map_agents(self.statements)
 
-    def get_statements(self):
-        """Process reader output to produce INDRA Statements."""
-        for k, v in self.reader_output.items():
-            for interaction in v['interactions']:
-                self._process_interaction(k, interaction, v['text'], self.pmid,
-                                          self.extra_annotations)
-        self.statements = self.mapper.map_agents(self.statements)
 
     def _process_interaction(self, source_id, interaction, text, pmid,
                              extra_annotations):
