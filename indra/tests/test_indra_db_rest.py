@@ -70,3 +70,12 @@ def test_paper_query():
     assert len(stmts_1)
     stmts_2 = dbr.get_statements_for_paper('8436299')
     assert len(stmts_2)
+
+
+@attr('nonpublic')
+def test_regulate_amount():
+    stmts = dbr.get_statements('FOS', stmt_type='RegulateAmount')
+    print(len(stmts))
+    stmt_types = {type(s).__name__ for s in stmts}
+    print(stmt_types)
+    assert {'IncreaseAmount', 'DecreaseAmount'}.issubset(stmt_types), stmt_types
