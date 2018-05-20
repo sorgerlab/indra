@@ -210,15 +210,12 @@ def get_statements():
     # Check to make sure we didn't get too many statements
     if len(stmts) > MAX_STATEMENTS:
         # Divide the statements up by type, and get counts of each type.
-        stmts_dict = {}
         stmt_counts = {}
         for stmt in stmts:
             stmt_type = type(stmt).__name__
             if stmt_type not in stmt_counts:
                 stmt_counts[stmt_type] = {'count': 0}
-                stmts_dict[stmt_type] = []
             stmt_counts[stmt_type]['count'] += 1
-            stmts_dict[stmt_type].append(stmt)
 
         return jsonify(stmt_counts), 413
 
