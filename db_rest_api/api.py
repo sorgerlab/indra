@@ -1,7 +1,7 @@
 import sys
 import logging
 
-from flask import Flask, request, abort, jsonify, Response
+from flask import Flask, request, abort, jsonify, Response, make_response
 from flask_compress import Compress
 
 from indra.db.client import get_statements_by_gene_role_type, \
@@ -209,9 +209,18 @@ def get_statements():
 
     # Check to make sure we didn't get too many statements
     if len(stmts) > MAX_STATEMENTS:
-        abort(Response("This query yielded too many statements (more than "
-                       "{:,}!). Please make a more specific query."
-                       .format(MAX_STATEMENTS), 413))
+        # Divide the statements up by type, and get counts of each type.
+        stmts_dict = {}
+        stmt_counts = {}
+        for stmt in stmts:
+            stmt_type = type(stmt).__name__
+            if stmt_type not in stmt_counts:
+                stmt_counts[stmt_type] = {'count': 0}
+                stmts_dict[stmt_type] = []
+            stmt_counts[stmt_type]['count'] += 1
+            stmts_dict[stmt_type].append(stmt)
+
+        return jsonify(stmt_counts), 413
 
     # TODO: This is a temporary patch. Remove ASAP.
     # Fix the names from BE to FPLX
