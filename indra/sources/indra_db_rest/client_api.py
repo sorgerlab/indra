@@ -3,27 +3,55 @@ from builtins import dict, str
 
 __all__ = ['get_statements', 'get_statements_for_paper', 'IndraDBRestError']
 
+import logging
 import requests
 
 from indra import get_config
 from indra.statements import stmts_from_json, get_statement_by_name, \
-    get_all_descendants, make_statement_camel
+    get_all_descendants
+
+
+logger = logging.getLogger('db_rest_client')
 
 
 class IndraDBRestError(Exception):
-    def __init__(self, status_code, reason):
-        self.status_code = status_code
-        self.reason = reason
-        super(IndraDBRestError, self).__init__('Got bad return code %d: %s'
-                                               % (status_code, reason))
+    def __init__(self, resp):
+        self.status_code = resp.status_code
+        if hasattr(resp, 'text'):
+            self.reason = resp.text
+        else:
+            self.reason = resp.reason
+        self.resp = resp
+        Exception.__init__(self, ('Got bad return code %d: %s'
+                                  % (self.status_code, self.reason)))
         return
 
 
 def _make_stmts_query(agent_strs, params):
     """Slightly lower level function to get statements from the REST API."""
-    resp = _submit_request('statements', *agent_strs, **params)
+    try:
+        resp = _submit_request('statements', *agent_strs, **params)
+    except IndraDBRestError as e:
+        if e.status_code == 413:
+            logger.info("Original query was too big, breaking up by stmt_type.")
+            stmt_types = e.resp.json().keys()
+            params.pop('type', None)
+            return _query_stmt_types(agent_strs, params, stmt_types)
+        else:
+            raise e
     stmts_json = resp.json()
     return stmts_from_json(stmts_json)
+
+
+def _query_stmt_types(agent_strs, params, stmt_types):
+    """Low-level function to query multiple different statement types."""
+    stmts = []
+    for stmt_type in stmt_types:
+        params['type'] = stmt_type
+        new_stmts = _make_stmts_query(agent_strs, params)
+        logger.info("Found %d %s statements." % (len(new_stmts), stmt_type))
+        stmts.extend(new_stmts)
+    return stmts
 
 
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
@@ -78,13 +106,11 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
             params['type'] = stmt_type
             stmts = _make_stmts_query(agent_strs, params)
         else:
-            stmts = []
             stmt_class = get_statement_by_name(stmt_type)
             descendant_classes = get_all_descendants(stmt_class)
-            search_classes = descendant_classes + [stmt_class]
-            for stmt_class in search_classes:
-                params['type'] = stmt_class.__name__
-                stmts.extend(_make_stmts_query(agent_strs, params))
+            stmt_types = [cls.__name__ for cls in descendant_classes] \
+                + [stmt_type]
+            stmts = _query_stmt_types(agent_strs, params, stmt_types)
     else:
         stmts = _make_stmts_query(agent_strs, params)
     return stmts
@@ -125,7 +151,4 @@ def _submit_request(end_point, *args, **kwargs):
     if resp.status_code == 200:
         return resp
     else:
-        if hasattr(resp, 'text') and resp.text:
-            raise IndraDBRestError(resp.status_code, resp.text)
-        else:
-            raise IndraDBRestError(resp.status_code, resp.reason)
+        raise IndraDBRestError(resp)

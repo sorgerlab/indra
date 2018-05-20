@@ -12,7 +12,7 @@ def __check_request(seconds, *args, **kwargs):
     stmts = dbr.get_statements(*args, **kwargs)
     assert stmts, "Got no statements."
     time_taken = datetime.now() - now
-    assert time_taken.seconds < seconds
+    assert time_taken.seconds < seconds, time_taken.seconds
 
 
 @attr('nonpublic')
@@ -43,15 +43,7 @@ def test_bigger_request():
 
 @attr('nonpublic')
 def test_too_big_request():
-    try:
-        dbr.get_statements(agents=['TP53'])
-    except dbr.IndraDBRestError as e:
-        if e.status_code == 413:
-            pass
-        else:
-            assert False, 'Unexpected error occurred: %s' % str(e)
-    except BaseException as e:
-        assert False, 'A very unexpected error occurred: %s' % str(e)
+    __check_request(60, agents=['TP53'])
 
 
 @attr('nonpublic')
