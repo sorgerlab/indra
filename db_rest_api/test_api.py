@@ -113,6 +113,7 @@ class DbApiTestCase(unittest.TestCase):
         resp, dt, size = self.__time_get_query('statements', 'agent=TP53')
         assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
         assert dt < 30, "Query took too long: %d" % dt
+        assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
