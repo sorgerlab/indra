@@ -141,6 +141,28 @@ class PreassemblyManager(object):
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_lists=True)
 
+    def _get_unique_statements(self, db, stmts, num_stmts, mk_done=None):
+        """Get the unique Statements from the raw statements."""
+        if mk_done is None:
+            mk_done = set()
+
+        new_mk_set = set()
+        for stmt_batch in batch_iter(stmts, self.batch_size, return_lists=True):
+            logger.info("Processing batch of %d/%d statements."
+                        % (len(stmt_batch), num_stmts))
+            unique_stmts, evidence_links = \
+                self._make_unique_statement_set(stmt_batch)
+            new_unique_stmts = []
+            for s in unique_stmts:
+                s_hash = s.get_hash(shallow=True)
+                if s_hash not in (mk_done | new_mk_set):
+                    new_mk_set.add(s_hash)
+                    new_unique_stmts.append(s)
+            insert_pa_stmts(db, new_unique_stmts)
+            db.copy('raw_unique_links', evidence_links,
+                    ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        return new_mk_set
+
     @_handle_update_table
     def create_corpus(self, db):
         """Initialize the table of preassembled statements.
@@ -155,27 +177,20 @@ class PreassemblyManager(object):
         For more detail on preassembly, see indra/preassembler/__init__.py
         """
         # Get the statements
-        _, stmt_ids = distill_stmts_from_reading(db)
+        _, rdg_stmt_ids = distill_stmts_from_reading(db)
+        logger.info("Found %d statement ids from reading." % len(rdg_stmt_ids))
+        db_stmt_ids = db.select_all(db.RawStatements.uuid,
+                                    db.RawStatements.db_info_id.isnot(None))
+        logger.info("Found %d statement ids from databases." % len(db_stmt_ids))
+        stmt_ids = rdg_stmt_ids | {uuid for uuid, in db_stmt_ids}
         stmts = (_stmt_from_json(s_json) for s_json,
                  in db.select_all(db.RawStatements.json,
                                   db.RawStatements.uuid.in_(stmt_ids),
                                   yield_per=self.batch_size))
+        logger.info("Found %d statements in all." % len(stmt_ids))
 
         # Get the set of unique statements
-        hash_set = set()
-        for stmt_batch in batch_iter(stmts, self.batch_size, return_lists=True):
-            logger.info("Processing batch of %d statements." % len(stmt_batch))
-            unique_stmts, evidence_links = \
-                self._make_unique_statement_set(stmt_batch)
-            new_unique_stmts = []
-            for s in unique_stmts:
-                s_hash = s.get_hash(shallow=True)
-                if s_hash not in hash_set:
-                    hash_set.add(s_hash)
-                    new_unique_stmts.append(s)
-            insert_pa_stmts(db, new_unique_stmts)
-            db.copy('raw_unique_links', evidence_links,
-                    ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        self._get_unique_statements(db, stmts, len(stmt_ids))
 
         # Now get the support links between all batches.
         support_links = set()
@@ -207,38 +222,39 @@ class PreassemblyManager(object):
         last_update = self._get_latest_updatetime(db)
         logger.info("Latest update was: %s" % last_update)
 
-        # Get the new statements
-        old_stmt_q = db.filter_query(
+        # Get the new statements...
+        old_uuid_q = db.filter_query(
             db.RawStatements.uuid,
             db.RawStatements.uuid == db.RawUniqueLinks.raw_stmt_uuid
         )
-        all_new_stmt_ids = (db.filter_query(db.RawStatements.uuid)
-                            .except_(old_stmt_q).all())
-        _, new_stmt_ids = distill_stmts_from_reading(db,
-            clauses=[db.RawStatements.uuid.in_(all_new_stmt_ids)])
+        new_uuid_q = db.filter_query(db.RawStatements.uuid).except_(old_uuid_q)
+        all_new_stmt_ids = {uuid for uuid, in new_uuid_q.all()}
+
+        # from reading...
+        _, rdg_stmt_ids = distill_stmts_from_reading(db)
+        new_rdg_stmt_ids = all_new_stmt_ids & rdg_stmt_ids
+        logger.info("Found %d new statement ids from readings."
+                    % len(new_rdg_stmt_ids))
+
+        # and from databases....
+        db_stmt_ids = db.select_all(db.RawStatements.uuid,
+                                    db.RawStatements.db_info_id.isnot(None))
+        new_db_stmt_ids = {uuid for uuid, in db_stmt_ids} & all_new_stmt_ids
+        logger.info("Found %d new statement ids from databases."
+                    % len(new_db_stmt_ids))
+
+        # And put them together.
+        new_stmt_ids = new_db_stmt_ids | new_rdg_stmt_ids
         new_stmts = (_stmt_from_json(s_json) for s_json,
                      in db.select_all(db.RawStatements.json,
                                       db.RawStatements.uuid.in_(new_stmt_ids),
                                       yield_per=self.batch_size))
+        logger.info("Found %d new statements in all." % len(new_stmt_ids))
 
         # Get the set of new unique statements.
         old_mk_set = {mk for mk, in db.select_all(db.PAStatements.mk_hash)}
-        new_mk_set = set()
-        for new_stmt_batch in batch_iter(new_stmts, self.batch_size,
-                                         return_lists=True):
-            logger.info("Processing batch of %d new statements."
-                        % len(new_stmt_batch))
-            new_unique_stmts, new_evidence_links = \
-                self._make_unique_statement_set(new_stmt_batch)
-            truly_new_unique_stmts = []
-            for s in new_unique_stmts:
-                s_hash = s.get_hash(shallow=True)
-                if s_hash not in (old_mk_set | new_mk_set):
-                    new_mk_set.add(s_hash)
-                    truly_new_unique_stmts.append(s)
-            insert_pa_stmts(db, truly_new_unique_stmts)
-            db.copy('raw_unique_links', new_evidence_links,
-                    ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        new_mk_set = self._get_unique_statements(db, new_stmts,
+                                                 len(new_stmt_ids), old_mk_set)
 
         # Now find the new support links that need to be added.
         new_support_links = set()
@@ -296,7 +312,8 @@ class PreassemblyManager(object):
         unique_stmts, evidence_links = self._make_unique_statement_set(stmts)
         match_key_maps = self._get_support_links(unique_stmts,
                                                  **generate_id_map_kwargs)
-        unique_stmt_dict = {stmt.get_hash(shallow=True): stmt for stmt in unique_stmts}
+        unique_stmt_dict = {stmt.get_hash(shallow=True): stmt
+                            for stmt in unique_stmts}
         return unique_stmt_dict, evidence_links, match_key_maps
 
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
@@ -338,29 +355,6 @@ class PreassemblyManager(object):
         return new_support_links
 
 
-def merge_statements(unique_stmt_dict, evidence_links, support_links,
-                     new_unique_stmt_dict, new_evidence_links,
-                     new_support_links):
-    # Update the old parameters.
-    full_unique_stmt_dict = new_unique_stmt_dict.copy()
-    full_unique_stmt_dict.update(unique_stmt_dict)
-    logger.info("There are now %d unique statements."
-                % len(full_unique_stmt_dict))
-
-    # full_evidence_links = deepcopy(evidence_links)
-    # for mk_hash, evidence_set in new_evidence_links.items():
-    #     full_evidence_links[mk_hash] |= evidence_set
-    full_evidence_links = evidence_links | new_evidence_links
-    logger.info("There are now %d evidence links."
-                % len(full_evidence_links))
-
-    full_support_links = support_links | new_support_links
-    logger.info("There are now %d support relations."
-                % len(full_support_links))
-
-    return full_unique_stmt_dict, full_evidence_links, full_support_links
-
-
 def make_graph(unique_stmts, match_key_maps):
     """Create a networkx graph of the statement and their links."""
     import networkx as nx
@@ -387,6 +381,8 @@ def flatten_evidence_dict(ev_dict):
 if __name__ == '__main__':
     print("Getting %s database." % args.database)
     db = get_db(args.database)
+    assert db is not None
+    db.grab_session()
     pm = PreassemblyManager(args.num_procs, args.batch)
 
     print("Beginning to %s preassembled corpus." % args.task)

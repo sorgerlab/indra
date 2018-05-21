@@ -806,7 +806,7 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                           for r_dict in rv_dict[best_rv].values()
                           for stmt_set in r_dict.values()}
 
-    # Get rid of the repetative statements.
+    # Get rid of the repetitive statements.
     if get_full_stmts:
         stmt_uuids = {s.uuid for s in stmts}
     else:
