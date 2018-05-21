@@ -4,7 +4,8 @@ from nose.tools import raises
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.belief import _get_belief_package, default_probs, \
-        sample_statements, evidence_random_noise_prior, tag_evidence_subtype
+        sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
+        SimpleScorer
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
@@ -13,8 +14,8 @@ ev3 = Evidence(source_api='assertion')
 
 def test_prior_prob_one():
     be = BeliefEngine()
-    prob = 1 - (be.prior_probs['rand']['reach'] +
-                be.prior_probs['syst']['reach'])
+    prob = 1 - (default_probs['rand']['reach'] +
+                default_probs['syst']['reach'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1])
     assert(st.belief == 1)
     be.set_prior_probs([st])
@@ -23,8 +24,8 @@ def test_prior_prob_one():
 
 def test_prior_prob_two_same():
     be = BeliefEngine()
-    prob = 1 - (be.prior_probs['rand']['reach']**2 +
-                be.prior_probs['syst']['reach'])
+    prob = 1 - (default_probs['rand']['reach']**2 +
+                default_probs['syst']['reach'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1])
     assert(st.belief == 1)
     be.set_prior_probs([st])
@@ -33,10 +34,10 @@ def test_prior_prob_two_same():
 
 def test_prior_prob_two_different():
     be = BeliefEngine()
-    prob = 1 - (be.prior_probs['rand']['reach'] +
-                 be.prior_probs['syst']['reach']) * \
-               (be.prior_probs['rand']['trips'] +
-                 be.prior_probs['syst']['trips'])
+    prob = 1 - (default_probs['rand']['reach'] +
+                 default_probs['syst']['reach']) * \
+               (default_probs['rand']['trips'] +
+                 default_probs['syst']['trips'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev2])
     assert(st.belief == 1)
     be.set_prior_probs([st])
@@ -45,10 +46,10 @@ def test_prior_prob_two_different():
 
 def test_prior_prob_one_two():
     be = BeliefEngine()
-    prob = 1 - (be.prior_probs['rand']['reach']**2 +
-                 be.prior_probs['syst']['reach']) * \
-               (be.prior_probs['rand']['trips'] +
-                 be.prior_probs['syst']['trips'])
+    prob = 1 - (default_probs['rand']['reach']**2 +
+                 default_probs['syst']['reach']) * \
+               (default_probs['rand']['trips'] +
+                 default_probs['syst']['trips'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1, ev2])
     assert(st.belief == 1)
     be.set_prior_probs([st])
@@ -187,14 +188,17 @@ def test_default_probs():
     """Make sure default probs are set with empty constructor."""
     be = BeliefEngine()
     for err_type in ('rand', 'syst'):
-        for k, v in be.prior_probs[err_type].items():
+        for k, v in default_probs[err_type].items():
             assert default_probs[err_type][k] == v
 
 def test_default_probs_override():
     """Make sure default probs are overriden by constructor argument."""
-    be = BeliefEngine(prior_probs={'rand': {'assertion': 0.5}})
+    prior_probs={'rand': {'assertion': 0.5}}
+    scorer = SimpleScorer(prior_probs)
+
+    be = BeliefEngine(scorer)
     for err_type in ('rand', 'syst'):
-        for k, v in be.prior_probs[err_type].items():
+        for k, v in scorer.prior_probs[err_type].items():
             if err_type == 'rand' and k == 'assertion':
                 assert v == 0.5
             else:
@@ -202,11 +206,14 @@ def test_default_probs_override():
 
 def test_default_probs_extend():
     """Make sure default probs are extended by constructor argument."""
-    be = BeliefEngine(prior_probs={'rand': {'new_source': 0.1},
-                                   'syst': {'new_source': 0.05}})
+    prior_probs={'rand': {'new_source': 0.1},
+                                   'syst': {'new_source': 0.05}}
+    scorer = SimpleScorer(prior_probs)
+
+    be = BeliefEngine(scorer)
     for err_type in ('rand', 'syst'):
-        assert 'new_source' in be.prior_probs[err_type]
-        for k, v in be.prior_probs[err_type].items():
+        assert 'new_source' in scorer.prior_probs[err_type]
+        for k, v in scorer.prior_probs[err_type].items():
             if err_type == 'rand' and k == 'new_source':
                 assert v == 0.1
             elif err_type == 'syst' and k == 'new_source':
@@ -317,7 +324,9 @@ def test_evidence_random_noise_prior():
     statements.append( Complex(members, evidence=ev_biopax_reactome) )
     statements.append( Complex(members, evidence=ev_biopax_pid) )
     p = {'rand': type_probs, 'syst': {'biopax':0, 'geneways':0}}
-    engine = BeliefEngine(p, subtype_probs)
+
+    scorer = SimpleScorer(p, subtype_probs)
+    engine = BeliefEngine(scorer)
     engine.set_prior_probs(statements)
     assert(statements[0].belief == 1 - 0.7)
     assert(statements[1].belief == 1 - 0.4)
