@@ -35,9 +35,9 @@ def test_prior_prob_two_same():
 def test_prior_prob_two_different():
     be = BeliefEngine()
     prob = 1 - (default_probs['rand']['reach'] +
-                 default_probs['syst']['reach']) * \
+                default_probs['syst']['reach']) * \
                (default_probs['rand']['trips'] +
-                 default_probs['syst']['trips'])
+                default_probs['syst']['trips'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev2])
     assert(st.belief == 1)
     be.set_prior_probs([st])
@@ -47,9 +47,9 @@ def test_prior_prob_two_different():
 def test_prior_prob_one_two():
     be = BeliefEngine()
     prob = 1 - (default_probs['rand']['reach']**2 +
-                 default_probs['syst']['reach']) * \
+                default_probs['syst']['reach']) * \
                (default_probs['rand']['trips'] +
-                 default_probs['syst']['trips'])
+                default_probs['syst']['trips'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1, ev2])
     assert(st.belief == 1)
     be.set_prior_probs([st])
@@ -194,7 +194,7 @@ def test_default_probs():
 
 def test_default_probs_override():
     """Make sure default probs are overriden by constructor argument."""
-    prior_probs={'rand': {'assertion': 0.5}}
+    prior_probs = {'rand': {'assertion': 0.5}}
     scorer = SimpleScorer(prior_probs)
 
     be = BeliefEngine(scorer)
@@ -208,8 +208,8 @@ def test_default_probs_override():
 
 def test_default_probs_extend():
     """Make sure default probs are extended by constructor argument."""
-    prior_probs={'rand': {'new_source': 0.1},
-                                   'syst': {'new_source': 0.05}}
+    prior_probs = {'rand': {'new_source': 0.1},
+                   'syst': {'new_source': 0.05}}
     scorer = SimpleScorer(prior_probs)
 
     be = BeliefEngine(scorer)
@@ -282,50 +282,50 @@ def test_evidence_subtype_tagger():
     assert(stype == 'donald_duck')
     assert(subtype is None)
 
+
 def test_evidence_random_noise_prior():
     type_probs = {'biopax': 0.9, 'geneways': 0.2}
     biopax_subtype_probs = {
-            'reactome' : 0.4,
-            'biogrid' : 0.2}
+            'reactome': 0.4,
+            'biogrid': 0.2}
     geneways_subtype_probs = {
             'phosphorylate': 0.5,
-            'bind' : 0.7}
-    subtype_probs = {
-        'biopax' : biopax_subtype_probs,
-        'geneways' : geneways_subtype_probs }
+            'bind': 0.7}
+    subtype_probs = {'biopax': biopax_subtype_probs,
+                     'geneways': geneways_subtype_probs}
 
     ev_geneways_bind = Evidence(source_api='geneways', source_id=0,
-            pmid=0, text=None, epistemics={},
-            annotations={'actiontype': 'bind'})
+                                pmid=0, text=None, epistemics={},
+                                annotations={'actiontype': 'bind'})
     ev_biopax_reactome = Evidence(source_api='biopax', source_id=0,
-            pmid=0, text=None, epistemics={},
-            annotations={'source_sub_id': 'reactome'})
+                                  pmid=0, text=None, epistemics={},
+                                  annotations={'source_sub_id': 'reactome'})
     ev_biopax_pid = Evidence(source_api='biopax', source_id=0,
-            pmid=0, text=None, epistemics={},
-            annotations={'source_sub_id': 'pid'})
+                             pmid=0, text=None, epistemics={},
+                             annotations={'source_sub_id': 'pid'})
 
-    #Random noise prior for geneways bind evidence is the subtype prior,
-    #since we specified it
+    # Random noise prior for geneways bind evidence is the subtype prior,
+    # since we specified it
     assert(evidence_random_noise_prior(ev_geneways_bind,
-        type_probs, subtype_probs) == 0.7)
+           type_probs, subtype_probs) == 0.7)
 
-    #Random noise prior for reactome biopax evidence is the subtype prior,
-    #since we specified it
+    # Random noise prior for reactome biopax evidence is the subtype prior,
+    # since we specified it
     assert(evidence_random_noise_prior(ev_biopax_reactome,
-        type_probs, subtype_probs) == 0.4)
+           type_probs, subtype_probs) == 0.4)
 
-    #Random noise prior for pid evidence is the subtype prior,
-    #since we specified it
+    # Random noise prior for pid evidence is the subtype prior,
+    # since we specified it
     assert(evidence_random_noise_prior(ev_biopax_pid,
-        type_probs, subtype_probs) == 0.9)
+           type_probs, subtype_probs) == 0.9)
 
-    #Make sure this all still works when we go through the belief engine
+    # Make sure this all still works when we go through the belief engine
     statements = []
     members = [Agent('a'), Agent('b')]
-    statements.append( Complex(members, evidence=ev_geneways_bind) )
-    statements.append( Complex(members, evidence=ev_biopax_reactome) )
-    statements.append( Complex(members, evidence=ev_biopax_pid) )
-    p = {'rand': type_probs, 'syst': {'biopax':0, 'geneways':0}}
+    statements.append(Complex(members, evidence=ev_geneways_bind))
+    statements.append(Complex(members, evidence=ev_biopax_reactome))
+    statements.append(Complex(members, evidence=ev_biopax_pid))
+    p = {'rand': type_probs, 'syst': {'biopax': 0, 'geneways': 0}}
 
     scorer = SimpleScorer(p, subtype_probs)
     engine = BeliefEngine(scorer)
