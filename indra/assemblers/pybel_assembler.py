@@ -172,13 +172,13 @@ class PybelAssembler(object):
 
         Parameters
         ----------
-        host : str
+        host : Optional[str]
             The host name to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_HOST``, then the
             environment variable ``PYBEL_REMOTE_HOST``. Finally, defaults to https://bel-commons.scai.fraunhofer.de.
-        user : str
+        user : Optional[str]
             The username (email) to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_USER``,
             then the environment variable ``PYBEL_REMOTE_USER``.
-        password : str
+        password : Optional[str]
             The password to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_PASSWORD``, then
             the environment variable ``PYBEL_REMOTE_PASSWORD``.
 
