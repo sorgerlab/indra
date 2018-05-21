@@ -52,7 +52,50 @@ default_probs = {
     }
 
 
-class SimpleScorer(object):
+class BeliefScorer(object):
+    """Base class for a belief engine scorer, which computes the
+    prior probability of a statement given its type and evidence.
+
+    To use with the belief engine, make a subclass with methods implemented.
+    """
+    def score_statement(self, st):
+        """Computes the prior belief probability for an INDRA Statement.
+
+        The Statement is assumed to be de-duplicated. In other words,
+        the Statement is assumed to have
+        a list of Evidence objects that supports it. The prior probability of
+        the Statement is calculated based on the number of Evidences it has
+        and their sources.
+
+        Parameters
+        ----------
+        statement : indra.statements.Statement
+            An INDRA Statements whose belief scores are to
+            be calculated.
+
+        Returns
+        -------
+        belief_score : float
+            The computed prior probability for the statement
+        """
+        raise NotImplementedError('Need to subclass BeliefScorer and '
+                                  'implement methods.')
+
+    def check_prior_probs(self, statements):
+        """Make sure the scorer has all the information needed to compute
+        belief scores of each statement in the provided list, and raises an
+        exception otherwise.
+
+        Parameters
+        ----------
+        statements : list<indra.statements.Statement>
+            List of statements to check
+        """
+        raise NotImplementedError('Need to subclass BeliefScorer and '
+                                  'implement methods.')
+
+
+class SimpleScorer(BeliefScorer):
     """Computes the prior probability of a statement given its type and
     evidence.
 
@@ -69,7 +112,7 @@ class SimpleScorer(object):
         ps1 ... psn are error probabilities.
         Examples: {'rand': {'some_source': 0.1}} sets the random error rate
         for some_source to 0.1; {'rand': {''}}
-    subtype_probs: dict[dict]
+    subtype_probs : dict[dict]
         A dictionary of random error probabilities for knowledge sources.
         When a subtype random error probability is not specified, will just
         use the overall type prior in prior_probs. If None, will
@@ -97,7 +140,7 @@ class SimpleScorer(object):
 
         Returns
         -------
-        belief_score: float
+        belief_score : float
             The computed prior probability for the statement
         """
 
@@ -121,7 +164,15 @@ class SimpleScorer(object):
         return prob_prior
 
     def check_prior_probs(self, statements):
-        """Check that we have probabilities  for sources in statements."""
+        """Make sure the scorer has all the information needed to compute
+        belief scores of each statement in the provided list, and raises an
+        exception otherwise.
+
+        Parameters
+        ----------
+        statements : list<indra.statements.Statement>
+            List of statements to check
+        """
         sources = set()
         for stmt in statements:
             sources |= set([ev.source_api for ev in stmt.evidence])
@@ -151,6 +202,7 @@ class BeliefEngine(object):
             every statement in the list, and raises an exception if not
     """
     def __init__(self, scorer=default_scorer):
+        assert(isinstance(scorer, BeliefScorer))
         self.scorer = scorer
 
     def set_prior_probs(self, statements):
