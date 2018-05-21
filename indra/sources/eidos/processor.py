@@ -90,6 +90,16 @@ class EidosJsonLdProcessor(object):
                     else:
                         concept = g['ontologyConcept']
                     grounding_tuples.append((concept, g['value']))
+            # For some versions of eidos, groundings may erroneously have
+            # the /examples suffix; strip that off if present
+            for ind in range(len(grounding_tuples)):
+                t = grounding_tuples[ind]
+                assert(len(t) == 2)
+                if t[0].endswith('/examples'):
+                    name = t[0]
+                    name = name[:-len('/examples')]
+                    score = t[1]
+                    grounding_tuples[ind] = (name, score)
             return grounding_tuples
 
         def _make_concept(entity):
