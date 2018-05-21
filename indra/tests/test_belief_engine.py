@@ -191,6 +191,7 @@ def test_default_probs():
         for k, v in default_probs[err_type].items():
             assert default_probs[err_type][k] == v
 
+
 def test_default_probs_override():
     """Make sure default probs are overriden by constructor argument."""
     prior_probs={'rand': {'assertion': 0.5}}
@@ -203,6 +204,7 @@ def test_default_probs_override():
                 assert v == 0.5
             else:
                 assert default_probs[err_type][k] == v
+
 
 def test_default_probs_extend():
     """Make sure default probs are extended by constructor argument."""
