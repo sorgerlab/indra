@@ -109,6 +109,7 @@ class GraphAssembler():
         for stmt in self.statements:
             # Skip SelfModification (self loops) -- has one node
             if isinstance(stmt, SelfModification) or \
+               isinstance(stmt, Translocation) or \
                isinstance(stmt, ActiveForm):
                 continue
             # Special handling for Complexes -- more than 1 node
@@ -117,13 +118,17 @@ class GraphAssembler():
                     self._add_node(m)
             # All else should have exactly 2 nodes
             elif all([ag is not None for ag in stmt.agent_list()]):
-                assert len(stmt.agent_list()) == 2
+                if not len(stmt.agent_list()) == 2:
+                    logger.warning(
+                        '%s has less/more than the expected 2 agents.' % stmt)
+                    continue
                 for ag in stmt.agent_list():
                     self._add_node(ag)
         # Second, create the edges of the graph
         for stmt in self.statements:
             # Skip SelfModification (self loops) -- has one node
             if isinstance(stmt, SelfModification) or \
+               isinstance(stmt, Translocation) or \
                isinstance(stmt, ActiveForm):
                 continue
             elif isinstance(stmt, Complex):
