@@ -146,54 +146,64 @@ class PybelAssembler(object):
         return self.model
 
     def to_database(self, connection=None):
-        """Sends the model to the PyBEL database by wrapping :py:func:`pybel.to_database`.
+        """Send the model to the PyBEL database
+
+        This function wraps :py:func:`pybel.to_database`.
 
         Parameters
         ----------
         connection : Optional[str or pybel.manager.Manager]
-            An RFC-1738 database connection string to the PyBEL SQL database or a PyBEL manager. If none, first checks
-            the PyBEL configuration for ``PYBEL_CONNECTION`` then checks the environment variable ``PYBEL_REMOTE_HOST``.
-            Finally, defaults to using SQLite database in PyBEL data directory (automatically configured by PyBEL)
+            An RFC-1738 database connection string to the PyBEL SQL database
+            or a PyBEL manager. If none, first checks the PyBEL configuration
+            for ``PYBEL_CONNECTION`` then checks the environment variable
+            ``PYBEL_REMOTE_HOST``. Finally, defaults to using SQLite
+            database in PyBEL data directory (automatically configured
+            by PyBEL)
 
         Returns
         -------
         network : Optional[pybel.manager.models.Network]
-            The SQLAlchemy model representing the network that was uploaded. Returns none if upload fails.
+            The SQLAlchemy model representing the network that was uploaded.
+            Returns None if upload fails.
         """
         network = pybel.to_database(self.model, connection=connection)
         return network
 
     def to_web(self, host=None, user=None, password=None):
-        """Send the model to BEL Commons by wrapping :py:func:`pybel.to_web`. 
+        """Send the model to BEL Commons by wrapping :py:func:`pybel.to_web`
 
-        The parameters ``host``, ``user``, and ``password`` all check the PyBEL configuration, which is located at
+        The parameters ``host``, ``user``, and ``password`` all check the
+        PyBEL configuration, which is located at
         ``~/.config/pybel/config.json`` by default
-
 
         Parameters
         ----------
         host : Optional[str]
-            The host name to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_HOST``, then the
-            environment variable ``PYBEL_REMOTE_HOST``. Finally, defaults to https://bel-commons.scai.fraunhofer.de.
+            The host name to use. If none, first checks the PyBEL
+            configuration entry ``PYBEL_REMOTE_HOST``, then the
+            environment variable ``PYBEL_REMOTE_HOST``. Finally, defaults
+            to https://bel-commons.scai.fraunhofer.de.
         user : Optional[str]
-            The username (email) to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_USER``,
+            The username (email) to use. If none, first checks the
+            PyBEL configuration entry ``PYBEL_REMOTE_USER``,
             then the environment variable ``PYBEL_REMOTE_USER``.
         password : Optional[str]
-            The password to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_PASSWORD``, then
-            the environment variable ``PYBEL_REMOTE_PASSWORD``.
+            The password to use. If none, first checks the PyBEL configuration
+            entry ``PYBEL_REMOTE_PASSWORD``, then the environment variable
+            ``PYBEL_REMOTE_PASSWORD``.
 
         Returns
         -------
         response : requests.Response
             The response from the BEL Commons network upload endpoint.
         """
-        response = pybel.to_web(self.model, host=host, user=user, password=password)
+        response = pybel.to_web(self.model, host=host, user=user,
+                                password=password)
         return response
 
     def save_model(self, path, output_format=None):
-        """Saves the :class:`pybel.BELGraph` using one of the outputs from 
+        """Save the :class:`pybel.BELGraph` using one of the outputs from
         :py:mod:`pybel`
-
 
         Parameters
         ----------
