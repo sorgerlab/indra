@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_defaults', 'get_primary_db', 'insert_agents', 'insert_pa_stmts',
-           'insert_db_stmts', 'make_stmts_from_db_list']
+__all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
+           'insert_pa_stmts', 'insert_db_stmts', 'make_stmts_from_db_list']
 
 import re
 import json

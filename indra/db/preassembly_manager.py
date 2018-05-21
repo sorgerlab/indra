@@ -2,17 +2,75 @@ import json
 from collections import defaultdict
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
+
+
+logger = logging.getLogger('db_preassembly')
+
+
+if __name__ == '__main__':
+    # NOTE: PEP8 will complain about this, however having the args parsed up
+    # here prevents a long wait just to fined out you entered a command wrong.
+    from argparse import ArgumentParser
+    parser = ArgumentParser(
+        description='Manage content on INDRA\'s database.'
+        )
+    parser.add_argument(
+        choices=['create', 'update'],
+        dest='task',
+        help=('Choose whether you want to perform an initial upload or update '
+              'the existing content on the database.')
+        )
+    parser.add_argument(
+        '-c', '--continue',
+        dest='continuing',
+        action='store_true',
+        help='Continue uploading or updating, picking up where you left off.'
+        )
+    parser.add_argument(
+        '-n', '--num_procs',
+        dest='num_procs',
+        type=int,
+        default=1,
+        help=('Select the number of processors to use during this operation. '
+              'Default is 1.')
+        )
+    parser.add_argument(
+        '-b', '--batch',
+        type=int,
+        default=10000,
+        help=("Select the number of statements loaded at a time. More "
+              "statements at a time will run faster, but require more memory.")
+    )
+    parser.add_argument(
+        '-d', '--debug',
+        dest='debug',
+        action='store_true',
+        help='Run with debugging level output.'
+        )
+    parser.add_argument(
+        '-D', '--database',
+        default='primary',
+        help=('Select a database from the names given in the config or '
+              'environment, for example primary is INDRA_DB_PRIMAY in the '
+              'config file and INDRADBPRIMARY in the environment. The default '
+              'is \'primary\'. Note that this is overwridden by use of the '
+              '--test flag if \'test\' is not a part of the name given.')
+        )
+    args = parser.parse_args()
+    if args.debug:
+        logger.setLevel(logging.DEBUG)
+        from indra.db.database_manager import logger as db_logger
+        db_logger.setLevel(logging.DEBUG)
+
 
 import indra.tools.assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.db.util import insert_pa_stmts, distill_stmts_from_reading
+from indra.db.util import insert_pa_stmts, distill_stmts_from_reading, get_db
 from indra.statements import Statement
 from indra.util import batch_iter
-
-logger = logging.getLogger('db_preassembly')
 
 
 def _handle_update_table(func):
@@ -30,6 +88,10 @@ def _handle_update_table(func):
 
 def _stmt_from_json(stmt_json_bytes):
     return Statement._from_json(json.loads(stmt_json_bytes.decode('utf-8')))
+
+
+class IndraDBPreassemblyError(Exception):
+    pass
 
 
 class PreassemblyManager(object):
@@ -320,3 +382,17 @@ def flatten_evidence_dict(ev_dict):
     return {(u_stmt_key, ev_stmt_uuid)
             for u_stmt_key, ev_stmt_uuid_set in ev_dict.items()
             for ev_stmt_uuid in ev_stmt_uuid_set}
+
+
+if __name__ == '__main__':
+    print("Getting %s database." % args.database)
+    db = get_db(args.database)
+    pm = PreassemblyManager(args.num_procs, args.batch)
+
+    print("Beginning to %s preassembled corpus." % args.task)
+    if args.task == 'create':
+        pm.create_corpus(db)
+    elif args.task == 'update':
+        pm.supplement_corpus(db)
+    else:
+        raise IndraDBPreassemblyError('Unrecognized task: %s.' % args.task)
