@@ -148,17 +148,29 @@ class PybelAssembler(object):
     def to_web(self, host=None, user=None, password=None):
         """Send the model to BEL Commons by wrapping :py:func:`pybel.to_web`. 
 
+        The parameters ``host``, ``user``, and ``password`` all check the PyBEL configuration, which is located at
+        ``~/.config/pybel/config.json`` by default
+
 
         Parameters
         ----------
         host : str
-            The host name to use. Checks environment variable ``PYBEL_REMOTE_HOST`` if none.
+            The host name to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_HOST``, then the
+            environment variable ``PYBEL_REMOTE_HOST``. Finally, defaults to https://bel-commons.scai.fraunhofer.de.
         user : str
-            The username (email) to use. Checks environment variable ``PYBEL_REMOTE_USER`` if none.
+            The username (email) to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_USER``,
+            then the environment variable ``PYBEL_REMOTE_USER``.
         password : str
-            The password to use. Checks environment variable ``PYBEL_REMOTE_PASSWORD`` if none.
+            The password to use. If none, first checks the PyBEL configuration entry ``PYBEL_REMOTE_PASSWORD``, then
+            the environment variable ``PYBEL_REMOTE_PASSWORD``.
+
+        Returns
+        -------
+        response : requests.Response
+            The response from the BEL Commons network upload endpoint.
         """
-        return pybel.to_web(self.model, host=host, user=user, password=password)
+        response = pybel.to_web(self.model, host=host, user=user, password=password)
+        return response
 
     def save_model(self, path, output_format=None):
         """Saves the :class:`pybel.BELGraph` using one of the outputs from 
