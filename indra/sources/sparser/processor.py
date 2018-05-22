@@ -215,6 +215,12 @@ def _fix_agent(agent):
         target = ncit_map.get(agent.db_refs['NCIT'])
         if target:
             agent.db_refs[target[0]] = target[1]
+    # If the name is an UP ID, change it
+    if agent.name and 'UP' not in agent.db_refs \
+        and 'FPLX' not in agent.db_refs:
+        if uniprot_client.get_gene_name(agent.name):
+            agent.db_refs['UP'] = agent.name
+
     # Check what entries we have
     up_id = agent.db_refs.get('UP')
     hgnc_id = agent.db_refs.get('HGNC')
