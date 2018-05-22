@@ -8,7 +8,7 @@ from indra.databases import hgnc_client, uniprot_client, chebi_client
 
 logger = logging.getLogger('index_card_assembler')
 
-global_submitter = 'cure'
+global_submitter = 'indra'
 
 class IndexCardAssembler(object):
     """Assembler creating index cards from a set of INDRA Statements.
