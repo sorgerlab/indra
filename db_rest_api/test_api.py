@@ -5,6 +5,7 @@ import sys
 from itertools import combinations
 from datetime import datetime
 
+from db_rest_api.api import MAX_STATEMENTS
 from indra.statements import stmts_from_json
 
 from db_rest_api import api
@@ -44,7 +45,9 @@ class DbApiTestCase(unittest.TestCase):
         assert resp.status_code == 200, \
             ('Got error code %d: \"%s\".'
              % (resp.status_code, resp.data.decode()))
-        json_stmts = json.loads(resp.data.decode('utf8'))
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        assert not resp_dict['limited']
+        json_stmts = resp_dict['statements']
         assert len(json_stmts) is not 0, \
             'Did not get any statements.'
         assert size <= SIZELIMIT, \
@@ -110,10 +113,19 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_query_with_too_many_stmts(self):
         """Test our check of statement length and the response."""
-        resp, dt, size = self.__time_get_query('statements', 'agent=TP53')
+        resp, dt, size = self.__time_get_query('statements',
+                                               'agent=TP53&on_limit=error')
         assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
         assert dt < 30, "Query took too long: %d" % dt
-        assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))
+        assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))['statements']
+        resp, dt, size = self.__time_get_query('statements',
+                                               'agent=TP53&on_limit=sample')
+        assert resp.status_code == 200, str(resp)
+        assert dt < 30, dt
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        assert len(resp_dict['statements']) == MAX_STATEMENTS
+        resp, dt, size = self.__time_get_query('statements',
+                                               'agent=TP53&on_limit=truncate')
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
@@ -146,7 +158,8 @@ class DbApiTestCase(unittest.TestCase):
                                                ('subject=PDGF@FPLX'
                                                 '&object=FOS'
                                                 '&type=Phosphorylation'))
-        stmts = stmts_from_json(json.loads(resp.data.decode('utf-8')))
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        stmts = stmts_from_json(resp_dict['statements'])
         assert len(stmts)
         assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF'
                     for s in stmts]),\
@@ -161,7 +174,7 @@ class DbApiTestCase(unittest.TestCase):
         assert size <= SIZELIMIT, size
         assert resp.status_code == 200, str(resp)
         json_str = resp.data.decode('utf-8')
-        json_list = json.loads(json_str)
+        json_list = json.loads(json_str)['statements']
         assert len(json_list) >= min_num_results, (min_num_results,
                                                    len(json_list))
         return

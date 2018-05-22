@@ -147,6 +147,10 @@ def get_statements():
     """Get some statements constrained by query."""
     logger.info("Got query for statements!")
     query_dict = request.args.copy()
+    limit_behavior = query_dict.pop('on_limit', 'sample')
+    if limit_behavior not in ['sample', 'truncate', 'error']:
+        abort(Response('Unrecognized value for on_limit: %s' % limit_behavior,
+                       400))
 
     logger.info("Getting query details.")
     try:
@@ -208,16 +212,23 @@ def get_statements():
                 break
 
     # Check to make sure we didn't get too many statements
-    if len(stmts) > MAX_STATEMENTS:
-        # Divide the statements up by type, and get counts of each type.
-        stmt_counts = {}
-        for stmt in stmts:
-            stmt_type = type(stmt).__name__
-            if stmt_type not in stmt_counts:
-                stmt_counts[stmt_type] = {'count': 0}
-            stmt_counts[stmt_type]['count'] += 1
+    hit_limit = (len(stmts) > MAX_STATEMENTS)
+    if hit_limit:
+        if limit_behavior == 'error':
+            # Divide the statements up by type, and get counts of each type.
+            stmt_counts = {}
+            for stmt in stmts:
+                stmt_type = type(stmt).__name__
+                if stmt_type not in stmt_counts:
+                    stmt_counts[stmt_type] = {'count': 0}
+                stmt_counts[stmt_type]['count'] += 1
 
-        return jsonify(stmt_counts), 413
+            return jsonify({'limited': True, 'statements': stmt_counts}), 413
+        elif limit_behavior == 'truncate':
+            stmts = stmts[:MAX_STATEMENTS]
+        elif limit_behavior == 'sample':
+            from random import sample
+            stmts = sample(stmts, MAX_STATEMENTS)
 
     # TODO: This is a temporary patch. Remove ASAP.
     # Fix the names from BE to FPLX
@@ -228,7 +239,8 @@ def get_statements():
                     ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
 
     # Create the json response, and send off.
-    resp = jsonify([stmt.to_json() for stmt in stmts])
+    resp = jsonify({'limited': hit_limit,
+                    'statements':[stmt.to_json() for stmt in stmts]})
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
     return resp
@@ -258,7 +270,7 @@ def get_paper_statements():
         abort(Response(msg, 404))
     logger.info("Found %d statements." % len(stmts))
 
-    resp = jsonify([stmt.to_json() for stmt in stmts])
+    resp = jsonify({'statements': [stmt.to_json() for stmt in stmts]})
     logger.info("Exiting with %d statements." % len(stmts))
     return resp
 
