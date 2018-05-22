@@ -586,7 +586,10 @@ def set_base_initial_condition(model, monomer, value):
     sites_dict = {}
     for site in monomer.sites:
         if site in monomer.site_states:
-            sites_dict[site] = monomer.site_states[site][0]
+            if site == 'loc' and 'cytoplasm' in monomer.site_states['loc']:
+                sites_dict['loc'] = 'cytoplasm'
+            else:
+                sites_dict[site] = monomer.site_states[site][0]
         else:
             sites_dict[site] = None
     mp = monomer(**sites_dict)
