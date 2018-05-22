@@ -231,9 +231,9 @@ class ReachProcessor(object):
             # Due to an issue with the REACH output serialization
             # (though seemingly not with the raw mentions), sometimes
             # a redundant complex-assembly event is reported which can
-            # be recignized by the missing direct flag, which we can filter
+            # be recognized by the missing direct flag, which we can filter
             # for here
-            if not epistemics.get('direct'):
+            if epistemics.get('direct') is None:
                 continue
             context = self._get_context(r)
             args = r['arguments']
