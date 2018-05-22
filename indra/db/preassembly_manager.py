@@ -164,7 +164,7 @@ class PreassemblyManager(object):
         return new_mk_set
 
     @_handle_update_table
-    def create_corpus(self, db):
+    def create_corpus(self, db, continuing=False):
         """Initialize the table of preassembled statements.
 
         This method will find the set of unique knowledge represented in the
@@ -178,6 +178,14 @@ class PreassemblyManager(object):
         """
         # Get the statements
         stmt_ids = distill_stmts(db)
+        if continuing:
+            checked_raw_stmt_ids, pa_stmt_hashes = \
+                zip(*db.select_all([db.RawUniqueLinks.raw_stmt_uuid,
+                                    db.RawUniqueLinks.pa_stmt_mk_hash]))
+            stmt_ids -= set(checked_raw_stmt_ids)
+            done_pa_ids = set(pa_stmt_hashes)
+        else:
+            done_pa_ids = set()
         stmts = (_stmt_from_json(s_json) for s_json,
                  in db.select_all(db.RawStatements.json,
                                   db.RawStatements.uuid.in_(stmt_ids),
@@ -185,7 +193,8 @@ class PreassemblyManager(object):
         logger.info("Found %d statements in all." % len(stmt_ids))
 
         # Get the set of unique statements
-        self._get_unique_statements(db, stmts, len(stmt_ids))
+        if stmt_ids:
+            self._get_unique_statements(db, stmts, len(stmt_ids), done_pa_ids)
 
         # Now get the support links between all batches.
         support_links = set()
@@ -195,9 +204,12 @@ class PreassemblyManager(object):
                     split_idx = len(inner_batch)
                     full_list = inner_batch + outer_batch
                     support_links |= \
-                        self._get_support_links(full_list, split_idx=split_idx)
+                        self._get_support_links(full_list, split_idx=split_idx,
+                                                poolsize=self.n_proc)
                 else:
-                    support_links |= self._get_support_links(inner_batch)
+                    support_links |= \
+                        self._get_support_links(inner_batch,
+                                                poolsize=self.n_proc)
         db.copy('pa_support_links', support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
         return True
@@ -251,14 +263,16 @@ class PreassemblyManager(object):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + diff_npa_batch
                 new_support_links |= \
-                    self._get_support_links(full_list, split_idx=split_idx)
+                    self._get_support_links(full_list, split_idx=split_idx,
+                                            poolsize=self.n_proc)
 
             # Compare against the existing statements.
             for opa_batch in self._pa_batch_iter(db, mk_set=old_mk_set):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + opa_batch
                 new_support_links |= \
-                    self._get_support_links(full_list, split_idx=split_idx)
+                    self._get_support_links(full_list, split_idx=split_idx,
+                                            poolsize=self.n_proc)
 
         db.copy('pa_support_links', new_support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
@@ -369,7 +383,7 @@ if __name__ == '__main__':
 
     print("Beginning to %s preassembled corpus." % args.task)
     if args.task == 'create':
-        pm.create_corpus(db)
+        pm.create_corpus(db, args.continuing)
     elif args.task == 'update':
         pm.supplement_corpus(db)
     else:
