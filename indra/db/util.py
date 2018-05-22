@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
-           'insert_pa_stmts', 'insert_db_stmts', 'make_stmts_from_db_list']
+           'insert_pa_stmts', 'insert_db_stmts', 'make_stmts_from_db_list',
+           'distill_stmts']
 
 import re
 import json
@@ -690,10 +691,9 @@ class NestedDict(dict):
         return result_list
 
 
-def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
+def distill_stmts(db, get_full_stmts=False, clauses=None,
+                  delete_duplicates=True):
     """Get a corpus of statements from clauses and filters duplicate evidence.
-
-    Note that this will only get statements from reading.
 
     Parameters
     ----------
@@ -708,16 +708,19 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
         By default None. Specify sqlalchemy clauses to reduce the scope of
         statements, e.g. `clauses=[db.Statements.type == 'Phosphorylation']` or
         `clauses=[db.Statements.uuid.in_([<uuids>])]`.
+    delete_duplicates : bool
+        Choose whether you want to delete the statements that are found to be
+        duplicates.
 
     Returns
     -------
-    stmt_dn : NestedDict
-        A deeply nested recursive dictionary, carrying the metadata for the
-        Statements.
     stmt_ret : set
         A set of either statement ids or serialized statements, depending on
         `get_full_stmts`.
     """
+    # Handle statements from reading
+    # ------------------------------
+
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
                           db.TextContent.source, db.Reading.id,
@@ -776,12 +779,14 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
     print("Found %d relevant text refs with statements." % len(stmt_nd))
     print("number of statement exact duplicates: %d" % num_duplicate_evidence)
     print("number of unique statements: %d" % num_unique_evidence)
+
     def better_func(element):
         print(element)
         return full_text_content.index(element)
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
+    duplicate_ids = set()
     for trid, src_dict in stmt_nd.items():
         # Filter out unneeded fulltext.
         while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
@@ -802,23 +807,46 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
                 # already grouped into sets of duplicates keyed by the
                 # Statement and Evidence matches key hashes. We only want one
                 # of each.
-                stmts |= {list(stmt_set)[0]
+                stmts |= {stmt_set.pop()
                           for r_dict in rv_dict[best_rv].values()
                           for stmt_set in r_dict.values()}
+                duplicate_stmts = {s for r_dict in rv_dict[best_rv].values()
+                                   for stmt_set in r_dict.values()
+                                   for s in stmt_set}
+                if get_full_stmts:
+                    duplicate_ids |= {s.uuid for s in duplicate_stmts}
+                else:
+                    duplicate_ids |= duplicate_stmts
 
-    # Get rid of the repetitive statements.
-    if get_full_stmts:
-        stmt_uuids = {s.uuid for s in stmts}
-    else:
-        stmt_uuids = stmts
+    print("After filtering reading: %d unique statements, %d duplicates."
+          % (len(stmts), len(duplicate_ids)))
 
-    del_clauses = db.join(db.RawStatements, db.Reading)
-    if clauses is not None:
-        del_clauses += clauses
-    bad_stmts = db.select_all(db.RawStatements,
-                              db.RawStatements.uuid.notin_(stmt_uuids),
-                              *del_clauses)
-    if len(bad_stmts):
+    # Handle statements from databases
+    # --------------------------------
+    db_s_q = db.filter_query([db.RawStatements.mk_hash,
+                              db.RawStatements.uuid,
+                              db.RawStatements.json],
+                             db.RawStatements.db_info_id.isnot(None))
+    if clauses:
+        db_s_q = db_s_q.filter(*clauses)
+    db_stmt_data = db_s_q.order_by(db.RawStatements.mk_hash).yield_per(10000)
+    for mk_hash, stmt_grp in groupby(db_stmt_data, key=lambda x: x[0]):
+        stmt_list = list(stmt_grp)
+        if get_full_stmts:
+            stmt_json = json.loads(stmt_list.pop(0)[2].decode('utf-8'))
+            stmts.add(Statement._from_json(stmt_json))
+        else:
+            stmts.add(stmt_list.pop(0)[1])
+        duplicate_ids |= {s[1] for s in stmt_list}
+
+    print("After filtering database statements: %d unique, %d duplicates."
+          % (len(stmts), len(duplicate_ids)))
+
+    # Delete duplicates
+    # -----------------
+    if len(duplicate_ids) and delete_duplicates:
+        bad_stmts = db.select_all(db.RawStatements,
+                                  db.RawStatements.uuid.in_(duplicate_ids))
         bad_uuid_set = {s.uuid for s in bad_stmts}
         bad_agents = db.select_all(db.RawAgents,
                                    db.RawAgents.stmt_uuid.in_(bad_uuid_set))
@@ -828,7 +856,7 @@ def distill_stmts_from_reading(db, get_full_stmts=False, clauses=None):
         print("Deleting %d redundant raw statements." % len(bad_stmts))
         db.delete_all(bad_stmts)
 
-    return stmt_nd, stmts
+    return stmts
 
 
 #==============================================================================

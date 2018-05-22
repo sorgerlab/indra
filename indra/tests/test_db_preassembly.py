@@ -163,7 +163,7 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
     assert new_hash_set == old_hash_set, \
         (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
     tests = [{'funcs': {'list': lambda s: s.evidence,
-                        'comp': lambda ev: ev.text},
+                        'comp': lambda ev: ev.matches_key()},
               'label': 'evidence text',
               'results': []},
              {'funcs': {'list': lambda s: s.supports,
@@ -277,13 +277,10 @@ def test_incremental_preassmbly_without_database():
 def test_statement_distillation():
     db = _get_loaded_db()
     assert db is not None, "Test was broken. Got None instead of db insance."
-    stmt_nd, stmts = db_util.distill_stmts_from_reading(db, get_full_stmts=True)
-    assert len(stmt_nd.keys()), "Got no nested dict."
+    stmts = db_util.distill_stmts(db, get_full_stmts=True)
     assert len(stmts), "Got zero statements."
     assert isinstance(list(stmts)[0], Statement), type(list(stmts)[0])
-    stmt_id_nd, stmt_ids = db_util.distill_stmts_from_reading(db)
-    assert len(stmt_id_nd) == len(stmt_nd), \
-        "stmt_id_nd: %d, stmt_nd: %d" % (len(stmt_id_nd), len(stmt_nd))
+    stmt_ids = db_util.distill_stmts(db)
     assert len(stmts) == len(stmt_ids), \
         "stmts: %d, stmt_ids: %d" % (len(stmts), len(stmt_ids))
     assert isinstance(list(stmt_ids)[0], str), type(list(stmt_ids)[0])
@@ -322,7 +319,7 @@ def test_preassembly_with_database():
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
-    _, rdg_stmt_ids = db_util.distill_stmts_from_reading(db)
+    rdg_stmt_ids = db_util.distill_stmts(db)
     db_stmt_ids = db.select_all(db.RawStatements.uuid,
                                 db.RawStatements.uuid.in_(all_raw_uuids),
                                 db.RawStatements.db_info_id.isnot(None))
@@ -338,7 +335,7 @@ def test_incremental_preassembly_with_database():
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
-    _, rdg_raw_stmts = pm.distill_stmts_from_reading(db, get_full_stmts=True)
+    rdg_raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
     db_raw_stmts = db.select_all(db.RawStatements,
                                  db.RawStatements.db_info_id.isnot(None))
     raw_stmts = rdg_raw_stmts | set(db_util.make_stmts_from_db_list(db_raw_stmts))

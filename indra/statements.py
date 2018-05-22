@@ -992,9 +992,14 @@ class Evidence(object):
             self.epistemics = {}
 
     def matches_key(self):
-        key = str((self.source_api, self.source_id, self.pmid,
-                  self.text, self.annotations, self.epistemics))
-        return key
+        key_lst = [self.source_api, self.source_id, self.pmid,
+                   self.text]
+        for d in [self.annotations, self.epistemics]:
+            d_key = list(d.items())
+            d_key.sort()
+            key_lst.append(d_key)
+        key = str(key_lst)
+        return key.replace('"', '').replace('\'', '').replace('None', '~')[1:-1]
 
     def equals(self, other):
         matches = (self.source_api == other.source_api) and\

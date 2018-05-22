@@ -68,7 +68,7 @@ if __name__ == '__main__':
 import indra.tools.assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
-from indra.db.util import insert_pa_stmts, distill_stmts_from_reading, get_db
+from indra.db.util import insert_pa_stmts, distill_stmts, get_db
 from indra.statements import Statement
 from indra.util import batch_iter
 
@@ -177,12 +177,7 @@ class PreassemblyManager(object):
         For more detail on preassembly, see indra/preassembler/__init__.py
         """
         # Get the statements
-        _, rdg_stmt_ids = distill_stmts_from_reading(db)
-        logger.info("Found %d statement ids from reading." % len(rdg_stmt_ids))
-        db_stmt_ids = db.select_all(db.RawStatements.uuid,
-                                    db.RawStatements.db_info_id.isnot(None))
-        logger.info("Found %d statement ids from databases." % len(db_stmt_ids))
-        stmt_ids = rdg_stmt_ids | {uuid for uuid, in db_stmt_ids}
+        stmt_ids = distill_stmts(db)
         stmts = (_stmt_from_json(s_json) for s_json,
                  in db.select_all(db.RawStatements.json,
                                   db.RawStatements.uuid.in_(stmt_ids),
@@ -230,26 +225,13 @@ class PreassemblyManager(object):
         new_uuid_q = db.filter_query(db.RawStatements.uuid).except_(old_uuid_q)
         all_new_stmt_ids = {uuid for uuid, in new_uuid_q.all()}
 
-        # from reading...
-        _, rdg_stmt_ids = distill_stmts_from_reading(db)
-        new_rdg_stmt_ids = all_new_stmt_ids & rdg_stmt_ids
-        logger.info("Found %d new statement ids from readings."
-                    % len(new_rdg_stmt_ids))
-
-        # and from databases....
-        db_stmt_ids = db.select_all(db.RawStatements.uuid,
-                                    db.RawStatements.db_info_id.isnot(None))
-        new_db_stmt_ids = {uuid for uuid, in db_stmt_ids} & all_new_stmt_ids
-        logger.info("Found %d new statement ids from databases."
-                    % len(new_db_stmt_ids))
-
-        # And put them together.
-        new_stmt_ids = new_db_stmt_ids | new_rdg_stmt_ids
+        stmt_ids = distill_stmts(db)
+        new_stmt_ids = all_new_stmt_ids & stmt_ids
         new_stmts = (_stmt_from_json(s_json) for s_json,
                      in db.select_all(db.RawStatements.json,
                                       db.RawStatements.uuid.in_(new_stmt_ids),
                                       yield_per=self.batch_size))
-        logger.info("Found %d new statements in all." % len(new_stmt_ids))
+        logger.info("Found %d new statements." % len(new_stmt_ids))
 
         # Get the set of new unique statements.
         old_mk_set = {mk for mk, in db.select_all(db.PAStatements.mk_hash)}
