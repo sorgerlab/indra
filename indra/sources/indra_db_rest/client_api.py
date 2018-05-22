@@ -29,17 +29,28 @@ class IndraDBRestError(Exception):
 
 def _make_stmts_query(agent_strs, params):
     """Slightly lower level function to get statements from the REST API."""
+    on_limit = params.get('on_limit', None)
     try:
         resp = _submit_request('statements', *agent_strs, **params)
     except IndraDBRestError as e:
         if e.status_code == 413:
-            logger.info("Original query was too big, breaking up by stmt_type.")
-            stmt_types = e.resp.json().keys()
-            params.pop('type', None)
-            return _query_stmt_types(agent_strs, params, stmt_types)
+            if on_limit == 'error':
+                raise e
+            elif on_limit == 'persist':
+                logger.info("Original query was too big, breaking up by"
+                            "stmt_type.")
+                stmt_types = e.resp.json()['statements'].keys()
+                params.pop('type', None)
+                return _query_stmt_types(agent_strs, params, stmt_types)
+            else:
+                logger.error("Unrecognized behavior! Got %s but on_limit was "
+                             "\%s." % on_limit)
+                raise e
         else:
             raise e
-    stmts_json = resp.json()
+    if on_limit in ['truncate', 'sample'] and resp.json()['limited']:
+        logger.warning("Your query was too big, and was %sd." % on_limit)
+    stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json)
 
 
@@ -48,6 +59,7 @@ def _query_stmt_types(agent_strs, params, stmt_types):
     stmts = []
     for stmt_type in stmt_types:
         params['type'] = stmt_type
+        params['on_limit'] = 'error'  # This really shouldn't be an issue.
         new_stmts = _make_stmts_query(agent_strs, params)
         logger.info("Found %d %s statements." % (len(new_stmts), stmt_type))
         stmts.extend(new_stmts)
@@ -55,7 +67,7 @@ def _query_stmt_types(agent_strs, params, stmt_types):
 
 
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False):
+                   use_exact_type=False, on_limit='sample'):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -80,6 +92,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
+    on_limit : str
+        There are four options for handling the a query that is to large:
+        `sample` - (default) take a sample of statements from the result,
+        `truncate` - simply return the first 10,000 statements of the result,
+        `error` - raise an error if the query is too large, or
+        `persist` - perform as many queries as needed to get all the statements.
+        Note that this last option generally takes much much longer to execute.
 
     Returns
     -------
@@ -99,6 +118,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     key_val_list = [('subject', subject), ('object', object)]
     params = {param_key: param_val for param_key, param_val in key_val_list
               if param_val is not None}
+    params['on_limit'] = on_limit
 
     # Handle the type(s).
     if stmt_type is not None:
@@ -136,7 +156,7 @@ def get_statements_for_paper(id_val, id_type='pmid'):
         A list of INDRA Statement instances.
     """
     resp = _submit_request('papers', id=id_val, type=id_type)
-    stmts_json = resp.json()
+    stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json)
 
 
