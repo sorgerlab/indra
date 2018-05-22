@@ -93,7 +93,7 @@ def process_nxml(nxml_filename, pmid=None, extra_annotations=None,
 
     pp = IsiPreprocessor(pp_dir)
     extra_annotations = {}
-    pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations, False)
+    pp.preprocess_nxml_file(nxml_filename, pmid, extra_annotations)
 
     # Run the ISI reader and extract statements
     ip = process_preprocessed(pp)
@@ -202,9 +202,9 @@ def process_output_folder(folder_path, pmids=None, extra_annotations=None,
     ----------
     folder_path : str
         The directory to traverse
-    pmid : Optional[str]
-        pmid of this nxml file, to be added to the Evidence object of the
-        extracted INDRA statements
+    pmids : Optional[str]
+        PMID mapping to be added to the Evidence of the extracted INDRA
+        Statements
     extra_annotations : Optional[dict]
         Additional annotations to add to the Evidence object of all extracted
         INDRA statements. Extra annotations called 'interaction' are ignored
