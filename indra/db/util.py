@@ -691,36 +691,9 @@ class NestedDict(dict):
         return result_list
 
 
-def distill_stmts(db, get_full_stmts=False, clauses=None,
-                  delete_duplicates=True):
-    """Get a corpus of statements from clauses and filters duplicate evidence.
-
-    Parameters
-    ----------
-    db : :py:class:`DatabaseManager`
-        A database manager instance to access the database.
-    get_full_stmts : bool
-        By default (False), only Statement ids (the primary index of Statements
-        on the database) are returned. However, if set to True, serialized
-        INDRA Statements will be returned. Note that this will in general be
-        VERY large in memory, and therefore should be used with caution.
-    clauses : None or list of sqlalchemy clauses
-        By default None. Specify sqlalchemy clauses to reduce the scope of
-        statements, e.g. `clauses=[db.Statements.type == 'Phosphorylation']` or
-        `clauses=[db.Statements.uuid.in_([<uuids>])]`.
-    delete_duplicates : bool
-        Choose whether you want to delete the statements that are found to be
-        duplicates.
-
-    Returns
-    -------
-    stmt_ret : set
-        A set of either statement ids or serialized statements, depending on
-        `get_full_stmts`.
-    """
-    # Handle statements from reading
-    # ------------------------------
-
+def get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
+                               clauses=None):
+    """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
                           db.TextContent.source, db.Reading.id,
@@ -730,13 +703,6 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
     if clauses:
         q = q.filter(*clauses)
 
-    # Specify sources of fulltext content, and order priorities.
-    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
-
-    # Specify versions of readers, and preference.
-    sparser_versions = ['sept14-linux\n', 'sept14-linux']
-    reach_versions = ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
-
     # Prime some counters.
     num_duplicate_evidence = 0
     num_unique_evidence = 0
@@ -745,10 +711,9 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
     stmt_nd = NestedDict()
     for trid, tcid, src, rid, rv, sid, sjson in q.yield_per(1000):
         # Back out the reader name.
-        if rv in sparser_versions:
-            reader = 'sparser'
-        elif rv in reach_versions:
-            reader = 'reach'
+        for reader, rv_list in reader_versions.items():
+            if rv in rv_list:
+                break
         else:
             raise Exception("rv %s not recognized." % rv)
 
@@ -779,6 +744,25 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
     print("Found %d relevant text refs with statements." % len(stmt_nd))
     print("number of statement exact duplicates: %d" % num_duplicate_evidence)
     print("number of unique statements: %d" % num_unique_evidence)
+    return stmt_nd
+
+
+def get_deduped_rdg_statements(db, get_full_stmts, clauses=None,
+                               not_duplicates=None):
+    """Get the set of statements/ids from readings minus exact duplicates."""
+    if not_duplicates is None:
+        not_duplicates = set()
+    # Specify versions of readers, and preference.
+    reader_versions = {
+        'sparser': ['sept14-linux\n', 'sept14-linux'],
+        'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
+    }
+
+    stmt_nd = get_reading_statement_dict(db, reader_versions, get_full_stmts,
+                                         clauses)
+
+    # Specify sources of fulltext content, and order priorities.
+    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
 
     def better_func(element):
         print(element)
@@ -798,8 +782,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
                 raise
 
         # Filter out the older reader versions
-        for reader, rv_list in [('reach', reach_versions),
-                                ('sparser', sparser_versions)]:
+        for reader, rv_list in reader_versions.items():
             for rv_dict in src_dict.gets(reader):
                 best_rv = max(rv_dict, key=lambda x: rv_list.index(x))
 
@@ -807,9 +790,19 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
                 # already grouped into sets of duplicates keyed by the
                 # Statement and Evidence matches key hashes. We only want one
                 # of each.
-                stmts |= {stmt_set.pop()
-                          for r_dict in rv_dict[best_rv].values()
-                          for stmt_set in r_dict.values()}
+                stmt_set_itr = (stmt_set for r_dict in rv_dict[best_rv].values()
+                                for stmt_set in r_dict.values())
+                for stmt_set in stmt_set_itr:
+                    prefered_stmts = stmt_set & not_duplicates
+                    stmt_set -= prefered_stmts
+                    if len(prefered_stmts) == 1:
+                        stmts.add(prefered_stmts.pop())
+                    elif len(prefered_stmts) > 1:
+                        logger.warning("Duplicate deduplicated statements "
+                                       "found: %s" % str(prefered_stmts))
+                        stmts.add(prefered_stmts.pop())
+                    else:
+                        stmts.add(stmt_set.pop())
                 duplicate_stmts = {s for r_dict in rv_dict[best_rv].values()
                                    for stmt_set in r_dict.values()
                                    for s in stmt_set}
@@ -817,12 +810,17 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
                     duplicate_ids |= {s.uuid for s in duplicate_stmts}
                 else:
                     duplicate_ids |= duplicate_stmts
+    return stmts, duplicate_ids
 
-    print("After filtering reading: %d unique statements, %d duplicates."
-          % (len(stmts), len(duplicate_ids)))
 
-    # Handle statements from databases
-    # --------------------------------
+def get_deduped_db_statements(db, get_full_stmts=False, clauses=None,
+                              not_duplicates=None, num_procs=1):
+    """Get the set of statements/ids from databases minus exact duplicates."""
+    if not_duplicates is None:
+        not_duplicates = set()
+    stmts = set()
+    duplicate_ids = set()
+
     db_s_q = db.filter_query([db.RawStatements.mk_hash,
                               db.RawStatements.uuid,
                               db.RawStatements.json],
@@ -831,19 +829,75 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
         db_s_q = db_s_q.filter(*clauses)
     db_stmt_data = db_s_q.order_by(db.RawStatements.mk_hash).yield_per(10000)
     for mk_hash, stmt_grp in groupby(db_stmt_data, key=lambda x: x[0]):
-        stmt_list = list(stmt_grp)
+        stmt_set = set(stmt_grp)
+        preferred_stmts = stmt_set & not_duplicates
+        if len(preferred_stmts) == 1:
+            s_tpl = preferred_stmts.pop()
+        elif len(preferred_stmts) > 1:
+            logger.warning("Duplicate deduplicated statements "
+                           "found: %s" % str(preferred_stmts))
+            s_tpl = preferred_stmts.pop()
+        else:
+            s_tpl = stmt_set.pop()
+
         if get_full_stmts:
-            stmt_json = json.loads(stmt_list.pop(0)[2].decode('utf-8'))
+            stmt_json = json.loads(s_tpl[2].decode('utf-8'))
             stmts.add(Statement._from_json(stmt_json))
         else:
-            stmts.add(stmt_list.pop(0)[1])
-        duplicate_ids |= {s[1] for s in stmt_list}
+            stmts.add(s_tpl[1])
+        duplicate_ids |= {s_tpl[1] for s_tpl in stmt_set}
 
+    return stmts, duplicate_ids
+
+
+def distill_stmts(db, get_full_stmts=False, clauses=None,
+                  delete_duplicates=True, num_procs=1):
+    """Get a corpus of statements from clauses and filters duplicate evidence.
+
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
+        A database manager instance to access the database.
+    get_full_stmts : bool
+        By default (False), only Statement ids (the primary index of Statements
+        on the database) are returned. However, if set to True, serialized
+        INDRA Statements will be returned. Note that this will in general be
+        VERY large in memory, and therefore should be used with caution.
+    clauses : None or list of sqlalchemy clauses
+        By default None. Specify sqlalchemy clauses to reduce the scope of
+        statements, e.g. `clauses=[db.Statements.type == 'Phosphorylation']` or
+        `clauses=[db.Statements.uuid.in_([<uuids>])]`.
+    delete_duplicates : bool
+        Choose whether you want to delete the statements that are found to be
+        duplicates.
+
+    Returns
+    -------
+    stmt_ret : set
+        A set of either statement ids or serialized statements, depending on
+        `get_full_stmts`.
+    """
+    if delete_duplicates:
+        undeletable = {uuid for uuid,
+                       in db.select_all(db.RawUniqueLinks.raw_stmt_uuid)}
+    else:
+        undeletable = set()
+
+    # Get deduplicated statements, and duplicate ids.
+    stmts, duplicate_ids = \
+        get_deduped_rdg_statements(db, get_full_stmts, clauses, undeletable)
+    print("After filtering reading: %d unique statements, %d duplicates."
+          % (len(stmts), len(duplicate_ids)))
+
+    db_stmts, db_duplicates = \
+        get_deduped_db_statements(db, get_full_stmts, clauses, undeletable,
+                                  num_procs)
+    stmts |= db_stmts
+    duplicate_ids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
           % (len(stmts), len(duplicate_ids)))
 
     # Delete duplicates
-    # -----------------
     if len(duplicate_ids) and delete_duplicates:
         bad_stmts = db.select_all(db.RawStatements,
                                   db.RawStatements.uuid.in_(duplicate_ids))
