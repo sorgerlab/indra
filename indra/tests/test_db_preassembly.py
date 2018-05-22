@@ -28,7 +28,7 @@ from indra.tools import assemble_corpus as ac
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 STMT_PICKLE_FILE = os.path.join(THIS_DIR, 'test_stmts_tuples.pkl')
-MAX_NUM_STMTS = 10000
+MAX_NUM_STMTS = 19165
 STMTS = None
 
 
@@ -296,7 +296,7 @@ def test_preassembly_with_database():
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=1000)
+    pa_manager = pm.PreassemblyManager(batch_size=2017)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)

@@ -161,6 +161,8 @@ class PreassemblyManager(object):
             insert_pa_stmts(db, new_unique_stmts)
             db.copy('raw_unique_links', evidence_links,
                     ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+        logger.info("Added %d new pa statements into the database."
+                    % len(new_mk_set))
         return new_mk_set
 
     @_handle_update_table
