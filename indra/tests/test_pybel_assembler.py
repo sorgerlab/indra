@@ -334,14 +334,14 @@ def test_rxn_no_controller():
             {
                 pc.FUNCTION: pc.ABUNDANCE,
                 pc.NAMESPACE: 'CHEBI',
-                pc.NAME: 'CHEBI:17634',
+                pc.NAME: '17634',
             }
         ],
         pc.PRODUCTS: [
             {
                 pc.FUNCTION: pc.ABUNDANCE,
                 pc.NAMESPACE: 'CHEBI',
-                pc.NAME: 'CHEBI:4170'
+                pc.NAME: '4170'
             }
         ]
     }
@@ -365,14 +365,14 @@ def test_rxn_with_controller():
             {
                 pc.FUNCTION: pc.ABUNDANCE,
                 pc.NAMESPACE: 'CHEBI',
-                pc.NAME: 'CHEBI:17634',
+                pc.NAME: '17634',
             }
         ],
         pc.PRODUCTS: [
             {
                 pc.FUNCTION: pc.ABUNDANCE,
                 pc.NAMESPACE: 'CHEBI',
-                pc.NAME: 'CHEBI:4170'
+                pc.NAME: '4170'
             }
         ]
     }
