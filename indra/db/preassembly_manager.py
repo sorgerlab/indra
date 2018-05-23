@@ -183,11 +183,14 @@ class PreassemblyManager(object):
         # Get the statements
         stmt_ids = distill_stmts(db, num_procs=self.n_proc)
         if continuing:
+            logger.info("Getting set of statements already de-duplicated...")
             checked_raw_stmt_ids, pa_stmt_hashes = \
                 zip(*db.select_all([db.RawUniqueLinks.raw_stmt_uuid,
                                     db.RawUniqueLinks.pa_stmt_mk_hash]))
             stmt_ids -= set(checked_raw_stmt_ids)
             done_pa_ids = set(pa_stmt_hashes)
+            logger.info("Found %d preassembled statements already done."
+                        % len(done_pa_ids))
         else:
             done_pa_ids = set()
         stmts = (_stmt_from_json(s_json) for s_json,
@@ -201,19 +204,31 @@ class PreassemblyManager(object):
             self._get_unique_statements(db, stmts, len(stmt_ids), done_pa_ids)
 
         # Now get the support links between all batches.
+        if continuing:
+            logger.info("Getting pre-existing links...")
+            db_existing_links = db.select_all([
+                db.PASupportLinks.supporting_mk_hash,
+                db.PASupportLinks.supporting_mk_hash
+                ])
+            existing_links = {tuple(res) for res in db_existing_links}
+            logger.info("Found %d existing links." % len(existing_links))
+        else:
+            existing_links = set()
         support_links = set()
         for i, outer_batch in enumerate(self._pa_batch_iter(db)):
             for j, inner_batch in enumerate(self._pa_batch_iter(db)):
                 if i != j:
                     split_idx = len(inner_batch)
                     full_list = inner_batch + outer_batch
-                    support_links |= \
+                    some_support_links = \
                         self._get_support_links(full_list, split_idx=split_idx,
                                                 poolsize=self.n_proc)
                 else:
-                    support_links |= \
+                    some_support_links = \
                         self._get_support_links(inner_batch,
                                                 poolsize=self.n_proc)
+                support_links |= (some_support_links - existing_links)
+        logger.info("Found %d support links." % len(support_links))
         db.copy('pa_support_links', support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
         return True
