@@ -147,9 +147,11 @@ class PreassemblyManager(object):
             mk_done = set()
 
         new_mk_set = set()
-        for stmt_batch in batch_iter(stmts, self.batch_size, return_lists=True):
-            logger.info("Processing batch of %d/%d statements."
-                        % (len(stmt_batch), num_stmts))
+        stmt_batches = batch_iter(stmts, self.batch_size, return_lists=True)
+        num_batches = num_stmts/self.batch_size
+        for i, stmt_batch in enumerate(stmt_batches):
+            logger.info("Processing batch %d/%d of %d/%d statements."
+                        % (i, num_batches, len(stmt_batch), num_stmts))
             unique_stmts, evidence_links = \
                 self._make_unique_statement_set(stmt_batch)
             new_unique_stmts = []
@@ -179,7 +181,7 @@ class PreassemblyManager(object):
         For more detail on preassembly, see indra/preassembler/__init__.py
         """
         # Get the statements
-        stmt_ids = distill_stmts(db)
+        stmt_ids = distill_stmts(db, num_procs=self.n_proc)
         if continuing:
             checked_raw_stmt_ids, pa_stmt_hashes = \
                 zip(*db.select_all([db.RawUniqueLinks.raw_stmt_uuid,
@@ -239,7 +241,7 @@ class PreassemblyManager(object):
         new_uuid_q = db.filter_query(db.RawStatements.uuid).except_(old_uuid_q)
         all_new_stmt_ids = {uuid for uuid, in new_uuid_q.all()}
 
-        stmt_ids = distill_stmts(db)
+        stmt_ids = distill_stmts(db, num_procs=self.n_proc)
         new_stmt_ids = all_new_stmt_ids & stmt_ids
         new_stmts = (_stmt_from_json(s_json) for s_json,
                      in db.select_all(db.RawStatements.json,

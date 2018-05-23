@@ -284,6 +284,10 @@ def test_statement_distillation():
     assert len(stmts) == len(stmt_ids), \
         "stmts: %d, stmt_ids: %d" % (len(stmts), len(stmt_ids))
     assert isinstance(list(stmt_ids)[0], str), type(list(stmt_ids)[0])
+    stmts_p = db_util.distill_stmts(db, num_procs=2)
+    assert len(stmts_p) == len(stmt_ids)
+    stmt_ids_p = db_util.distill_stmts(db, num_procs=2)
+    assert stmt_ids_p == stmt_ids
 
 
 def test_preassembly_with_database():

@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from functools import partial
+from multiprocessing.pool import Pool
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'make_stmts_from_db_list',
@@ -747,8 +749,8 @@ def get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
     return stmt_nd
 
 
-def get_deduped_rdg_statements(db, get_full_stmts, clauses=None,
-                               not_duplicates=None):
+def get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
+                                not_duplicates=None):
     """Get the set of statements/ids from readings minus exact duplicates."""
     if not_duplicates is None:
         not_duplicates = set()
@@ -813,13 +815,33 @@ def get_deduped_rdg_statements(db, get_full_stmts, clauses=None,
     return stmts, duplicate_ids
 
 
-def get_deduped_db_statements(db, get_full_stmts=False, clauses=None,
-                              not_duplicates=None, num_procs=1):
+def _choose_unique(not_duplicates, get_full_stmts, stmt_grp):
+    """Choose one of the statements from a redundant set."""
+    stmt_set = set(stmt_grp)
+    preferred_stmts = stmt_set & not_duplicates
+    if len(preferred_stmts) == 1:
+        s_tpl = preferred_stmts.pop()
+    elif len(preferred_stmts) > 1:
+        logger.warning("Duplicate deduplicated statements "
+                       "found: %s" % str(preferred_stmts))
+        s_tpl = preferred_stmts.pop()
+    else:
+        s_tpl = stmt_set.pop()
+
+    if get_full_stmts:
+        stmt_json = json.loads(s_tpl[2].decode('utf-8'))
+        ret_stmt = Statement._from_json(stmt_json)
+    else:
+        ret_stmt = s_tpl[1]
+    duplicate_ids = {s_tpl[1] for s_tpl in stmt_set}
+    return ret_stmt, duplicate_ids
+
+
+def get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
+                               not_duplicates=None, num_procs=1):
     """Get the set of statements/ids from databases minus exact duplicates."""
     if not_duplicates is None:
         not_duplicates = set()
-    stmts = set()
-    duplicate_ids = set()
 
     db_s_q = db.filter_query([db.RawStatements.mk_hash,
                               db.RawStatements.uuid,
@@ -828,24 +850,25 @@ def get_deduped_db_statements(db, get_full_stmts=False, clauses=None,
     if clauses:
         db_s_q = db_s_q.filter(*clauses)
     db_stmt_data = db_s_q.order_by(db.RawStatements.mk_hash).yield_per(10000)
-    for mk_hash, stmt_grp in groupby(db_stmt_data, key=lambda x: x[0]):
-        stmt_set = set(stmt_grp)
-        preferred_stmts = stmt_set & not_duplicates
-        if len(preferred_stmts) == 1:
-            s_tpl = preferred_stmts.pop()
-        elif len(preferred_stmts) > 1:
-            logger.warning("Duplicate deduplicated statements "
-                           "found: %s" % str(preferred_stmts))
-            s_tpl = preferred_stmts.pop()
-        else:
-            s_tpl = stmt_set.pop()
-
-        if get_full_stmts:
-            stmt_json = json.loads(s_tpl[2].decode('utf-8'))
-            stmts.add(Statement._from_json(stmt_json))
-        else:
-            stmts.add(s_tpl[1])
-        duplicate_ids |= {s_tpl[1] for s_tpl in stmt_set}
+    choose_unique_stmt = partial(_choose_unique, not_duplicates, get_full_stmts)
+    stmt_groups = (list(grp) for _, grp
+                   in groupby(db_stmt_data, key=lambda x: x[0]))
+    if num_procs is 1:
+        stmts = set()
+        duplicate_ids = set()
+        for stmt_list in stmt_groups:
+            stmt, some_duplicates = choose_unique_stmt(stmt_list)
+            stmts.add(stmt)
+            duplicate_ids |= some_duplicates
+    else:
+        pool = Pool(num_procs)
+        print("Filtering db statements in %d processess." % num_procs)
+        res = pool.map(choose_unique_stmt, stmt_groups)
+        pool.close()
+        pool.join()
+        stmt_list, duplicate_sets = zip(*res)
+        stmts = set(stmt_list)
+        duplicate_ids = {uuid for dup_set in duplicate_sets for uuid in dup_set}
 
     return stmts, duplicate_ids
 
@@ -885,13 +908,13 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
 
     # Get deduplicated statements, and duplicate ids.
     stmts, duplicate_ids = \
-        get_deduped_rdg_statements(db, get_full_stmts, clauses, undeletable)
+        get_filtered_rdg_statements(db, get_full_stmts, clauses, undeletable)
     print("After filtering reading: %d unique statements, %d duplicates."
           % (len(stmts), len(duplicate_ids)))
 
     db_stmts, db_duplicates = \
-        get_deduped_db_statements(db, get_full_stmts, clauses, undeletable,
-                                  num_procs)
+        get_filtered_db_statements(db, get_full_stmts, clauses, undeletable,
+                                   num_procs)
     stmts |= db_stmts
     duplicate_ids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
@@ -899,6 +922,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
 
     # Delete duplicates
     if len(duplicate_ids) and delete_duplicates:
+        print("Deleting duplicates...")
         bad_stmts = db.select_all(db.RawStatements,
                                   db.RawStatements.uuid.in_(duplicate_ids))
         bad_uuid_set = {s.uuid for s in bad_stmts}
