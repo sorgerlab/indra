@@ -30,6 +30,8 @@ class IndraDBRestError(Exception):
 def _make_stmts_query(agent_strs, params):
     """Slightly lower level function to get statements from the REST API."""
     on_limit = params.get('on_limit', None)
+    if on_limit == 'persist':
+        params['on_limit'] = 'error'
     try:
         resp = _submit_request('statements', *agent_strs, **params)
     except IndraDBRestError as e:
@@ -37,7 +39,7 @@ def _make_stmts_query(agent_strs, params):
             if on_limit == 'error':
                 raise e
             elif on_limit == 'persist':
-                logger.info("Original query was too big, breaking up by"
+                logger.info("Original query was too big, breaking up by "
                             "stmt_type.")
                 stmt_types = e.resp.json()['statements'].keys()
                 params.pop('type', None)
@@ -49,7 +51,9 @@ def _make_stmts_query(agent_strs, params):
         else:
             raise e
     if on_limit in ['truncate', 'sample'] and resp.json()['limited']:
-        logger.warning("Your query was too big, and was %sd." % on_limit)
+        logger.warning("Your query was too big, and a %sd result will be "
+                       "returned. To get all statements, make the same query "
+                       "with `on_limit='persist'`" % on_limit)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json)
 
