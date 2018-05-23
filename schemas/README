@@ -1,0 +1,11 @@
+statements_schema.json contains a JSON schema (http://json-schema.org) for a
+list of INDRA statements serialized in JSON format.
+
+This schema can be used to validate whether a JSON file filled with INDRA
+statements is in the proper form. Some validation tools include:
+
+* ajv-cli (https://www.npmjs.com/package/ajv-cli): Install with
+    "npm install -g ajv-cli" and then validate with:
+    ajv -s statements_schema.json -d file_to_validate.json
+* There are a variety of web-based tools for validation with JSON schemas,
+  including https://www.jsonschemavalidator.net
