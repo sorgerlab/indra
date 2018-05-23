@@ -30,15 +30,15 @@
             "description": "Mutation state of an amino acid position of an Agent.",
             "properties": {
                 "position": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "description": "Residue position of the mutation in the protein sequence."
                 },
                 "residue_from": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "description": "Wild-type (unmodified) amino acid residue at the given position."
                 },
                 "residue_to": {
-                    "type": "string",
+                    "type": ["string", "null"],
                     "description": "Amino acid at the position resulting from the mutation."
                 }
             },
@@ -201,7 +201,7 @@
                     "properties": {
                         "type": {
                             "type": "string",
-                            "pattern": "^((Phosphorylation)|(Dephosphorylation)|(Ubiquitination)|(Debiquitination)|(Sumoylation)|(Desumoylation)|(Hydroxylation)|(Dehydroxylation)|(Acetylation)|(Deacetylation)|Glycosylation|(Deglycosylation)|(Farnesylation)|(Defarnesylation)|(Geranylgeranylation)|(Degeranylgeranylation)|(Palmitoylation)|(Depalmitoylation)|(Myristoylation)|(Demyristoylation)|(Ribosylation)|(Deribosylation)|(Methylation)|(Demethylation))$",
+                            "pattern": "^((Phosphorylation)|(Dephosphorylation)|(Ubiquitination)|(Debiquitination)|(Sumoylation)|(Desumoylation)|(Hydroxylation)|(Dehydroxylation)|(Acetylation)|(Deacetylation)|Glycosylation|(Deglycosylation)|(Farnesylation)|(Defarnesylation)|(Geranylgeranylation)|(Degeranylgeranylation)|(Palmitoylation)|(Depalmitoylation)|(Myristoylation)|(Demyristoylation)|(Ribosylation)|(Deribosylation)|(Methylation)|(Demethylation)|(Deubiquitination))$",
                             "description": "The type of the statement"
                         },
                         "enz": {
@@ -213,11 +213,11 @@
                             "description": "The substrate of the modification."
                         },
                         "residue": {
-                            "$ref": "#/definitions/Agent",
+                            "type": "string",
                             "description": "The amino acid residue being modified, or None if it is unknown or unspecified."
                         },
                         "position": {
-                            "$ref": "#/definitions/Agent",
+                            "type": "string",
                             "description": "The position of the modified amino acid, or None if it is unknown or unspecified."
                         }
                     },
