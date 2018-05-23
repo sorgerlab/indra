@@ -1,5 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
+    "id": "http://www.indra.bio/schemas/statements.json",
 
     "definitions": {
         "ModCondition": {
@@ -520,7 +521,6 @@
         }
     },
 
-    "id": "http://www.indra.bio/schemas/statements.json",
     "type": "array",
     "items": {
         "anyOf": [
