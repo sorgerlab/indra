@@ -38,18 +38,20 @@ def test_valid_modification():
                  'Farnesylation', 'Defarnesylation', 'Geranylgeranylation',
                  'Degeranylgeranylation', 'Palmitoylation', 'Depalmitoylation',
                  'Myristoylation', 'Demyristoylation', 'Ribosylation',
-                 'Deribosylation', 'Methylation', 'Demethylation']
+                 'Deribosylation', 'Methylation', 'Demethylation',
+                 'Activation', 'Inhibition']
 
     for mod_type in mod_types:
         s = {'enz': valid_agent1, 'sub': valid_agent2,
              'type': mod_type, 'id': '5'}
         jsonschema.validate([s], schema)
 
-        s['residue'] = 'S'
-        jsonschema.validate([s], schema)
+        if mod_type not in ['Activation', 'Inhibition']:
+            s['residue'] = 'S'
+            jsonschema.validate([s], schema)
 
-        s['position'] = '10'
-        jsonschema.validate([s], schema)
+            s['position'] = '10'
+            jsonschema.validate([s], schema)
 
 
 def test_invalid_phosphorylation():
