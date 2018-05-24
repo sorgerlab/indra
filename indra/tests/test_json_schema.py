@@ -59,6 +59,10 @@ def test_invalid_phosphorylation():
          'id': '5'}
     assert_raises(ValidationError, val, s)
 
+    invalid_evidence = {'source_api': 42}
+    s = {'enz': valid_agent1, 'sub': valid_agent2, 'type': 'Phosphorylation',
+         'id': '5', 'evidence': invalid_evidence}
+
 
 def test_valid_active_form():
     s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': True,
@@ -146,7 +150,8 @@ def test_invalid_conversion():
     assert_raises(ValidationError, val, s)
 
     s = {'type': 'Conversion', 'id': '11', 'subj': valid_agent1,
-         'obj_from': [valid_agent2, valid_agent3], 'obj_to': [valid_agent3, 12]}
+         'obj_from': [valid_agent2, valid_agent3],
+         'obj_to': [valid_agent3, 12]}
     assert_raises(ValidationError, val, s)
 
     s = {'type': 'Conversion', 'id': '11', 'subj': 'dog',
