@@ -568,8 +568,8 @@ def test_conversion_refinement():
 
 
 def test_influence_duplicate():
-    gov = 'entities/human/nation/government'
-    agr = 'entities/human/livelihood/agriculture'
+    gov = 'UN/entities/human/government/government_entity'
+    agr = 'UN/entities/natural/crop_technology'
     cgov = Concept('government', db_refs={'EIDOS': [(gov, 1.0)]})
     cagr = Concept('agriculture', db_refs={'EIDOS': [(agr, 1.0)]})
     stmt1 = Influence(cgov, cagr, evidence=[Evidence(source_api='eidos1')])
@@ -582,17 +582,17 @@ def test_influence_duplicate():
     pa = Preassembler(hierarchies, [stmt1, stmt2, stmt3])
     unique_stmts = pa.combine_duplicates()
     assert len(unique_stmts) == 2
-    assert len(unique_stmts[0].evidence) == 1
-    assert len(unique_stmts[1].evidence) == 2
-    sources = [e.source_api for e in unique_stmts[1].evidence]
+    assert len(unique_stmts[0].evidence) == 2
+    assert len(unique_stmts[1].evidence) == 1
+    sources = [e.source_api for e in unique_stmts[0].evidence]
     assert set(sources) == set(['eidos1', 'eidos3'])
 
 
 def test_influence_refinement():
     tran = 'UN/entities/human/infrastructure/transportation'
     truck = 'UN/entities/human/infrastructure/transportation/' + \
-        'transportation_methods/examples/trucking'
-    agr = 'UN/entities/human/livelihood/examples/agriculture'
+        'transportation_methods'
+    agr = 'UN/entities/human/livelihood'
     ctran = Concept('transportation', db_refs={'EIDOS': [(tran, 1.0)]})
     ctruck = Concept('trucking', db_refs={'EIDOS': [(truck, 1.0)]})
     cagr = Concept('agriculture', db_refs={'EIDOS': [(agr, 1.0)]})
