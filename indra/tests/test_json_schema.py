@@ -17,6 +17,12 @@ invalid_agent2 = {'db_refs': {'TEXT': 'RAS'}}
 invalid_agent3 = {'name': 'cow', 'db_refs': {'TEXT': 'RAS'},
                   'bound_conditions': 'mooooooooooo!'}
 
+valid_concept1 = {'name': 'government', 'db_refs': {'TEXT': 'government'}}
+valid_concept2 = {'name': 'agriculture', 'db_refs': {'TEXT': 'agriculture'}}
+
+invalid_concept1 = {'name': 3, 'db_refs': {'TEXT': 'government'}}
+invalid_concept2 = {'name': 'government'}
+
 
 def val(s):
     jsonschema.validate([s], schema)
@@ -96,4 +102,32 @@ def test_invalid_complex():
 
     s = {'members': [valid_agent1, invalid_agent2], 'type': 'Complex',
          'id': '3'}
+    assert_raises(ValidationError, val, s)
+
+
+def test_valid_influence():
+    s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': None,
+         'obj_delta': None, 'type': 'Influence', 'id': '10'}
+    jsonschema.validate([s], schema)
+
+
+def test_invalid_influence():
+    s = {'subj': invalid_concept1, 'obj': valid_concept2, 'subj_delta': None,
+         'obj_delta': None, 'type': 'Influence', 'id': '10'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'subj': valid_concept1, 'obj': invalid_concept2, 'subj_delta': None,
+         'obj_delta': None, 'type': 'Influence', 'id': '10'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': None,
+         'obj_delta': 'Henry', 'type': 'Influence', 'id': '10'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': 'Larry',
+         'obj_delta': None, 'type': 'Influence', 'id': '10'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'subj': valid_concept1, 'obj': valid_concept2, 'subj_delta': None,
+         'obj_delta': None, 'type': 'Influence', 'id': 10}
     assert_raises(ValidationError, val, s)
