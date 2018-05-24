@@ -29,17 +29,27 @@ def val(s):
     jsonschema.validate([s], schema)
 
 
-def test_valid_phosphorylation():
+def test_valid_modification():
     # Calls to validate() in this function should not raise exceptions
-    s = {'enz': valid_agent1, 'sub': valid_agent2, 'type': 'Phosphorylation',
-         'id': '5'}
-    jsonschema.validate([s], schema)
+    mod_types = ['Phosphorylation', 'Dephosphorylation', 'Ubiquitination',
+                 'Deubiquitination', 'Sumoylation', 'Desumoylation',
+                 'Hydroxylation', 'Dehydroxylation', 'Acetylation',
+                 'Deacetylation', 'Glycosylation', 'Deglycosylation',
+                 'Farnesylation', 'Defarnesylation', 'Geranylgeranylation',
+                 'Degeranylgeranylation', 'Palmitoylation', 'Depalmitoylation',
+                 'Myristoylation', 'Demyristoylation', 'Ribosylation',
+                 'Deribosylation', 'Methylation', 'Demethylation']
 
-    s['residue'] = 'S'
-    jsonschema.validate([s], schema)
+    for mod_type in mod_types:
+        s = {'enz': valid_agent1, 'sub': valid_agent2,
+             'type': mod_type, 'id': '5'}
+        jsonschema.validate([s], schema)
 
-    s['position'] = '10'
-    jsonschema.validate([s], schema)
+        s['residue'] = 'S'
+        jsonschema.validate([s], schema)
+
+        s['position'] = '10'
+        jsonschema.validate([s], schema)
 
 
 def test_invalid_phosphorylation():
@@ -161,3 +171,4 @@ def test_invalid_conversion():
     s = {'type': 'Conversion', 'id': '11', 'subj': valid_agent1,
          'obj_from': 'banana', 'obj_to': [valid_agent3]}
     assert_raises(ValidationError, val, s)
+
