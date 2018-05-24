@@ -13,6 +13,17 @@ valid_agent1 = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'}}
 valid_agent2 = {'name': 'RAS', 'db_refs': {'TEXT': 'RAS'}}
 valid_agent3 = {'name': 'ERK', 'db_refs': {'TEXT': 'ERK'}}
 
+mod_cond1 = {'mod_type': 'phosphorylation', 'residue': 'S', 'position': '100',
+             'is_modified': True}
+mut_cond1 = {'position': '100', 'residue_from': 'S', 'residue_to': 'Y'}
+activity_cond1 = {'activity_type': 'kinase', 'is_active': True}
+
+agent_mod = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'}, 'mods': [mod_cond1]}
+agent_mut = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'},
+             'mutations': [mut_cond1]}
+agent_act = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'},
+             'activity': activity_cond1}
+
 invalid_agent1 = {'name': 'RAS', 'db_refs': 2}
 invalid_agent2 = {'db_refs': {'TEXT': 'RAS'}}
 invalid_agent3 = {'name': 'cow', 'db_refs': {'TEXT': 'RAS'},
@@ -45,6 +56,15 @@ def test_valid_modification():
     for mod_type in mod_types:
         s = {'enz': valid_agent1, 'sub': valid_agent2,
              'type': mod_type, 'id': '5'}
+        jsonschema.validate([s], schema)
+
+        s['enz'] = agent_mod
+        jsonschema.validate([s], schema)
+
+        s['enz'] = agent_mut
+        jsonschema.validate([s], schema)
+
+        s['enz'] = agent_act
         jsonschema.validate([s], schema)
 
         if mod_type not in ['Activation', 'Inhibition', 'IncreaseAmount',
