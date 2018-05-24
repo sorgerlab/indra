@@ -9,15 +9,16 @@ import shutil
 import tzlocal
 import logging
 import datetime
+import requests
 import itertools as itt
 from indra.sources import reach
 from collections import defaultdict
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
-from indra.assemblers import CxAssembler
 from indra.tools.machine import gmail_client
 from indra.tools.machine import twitter_client
 from indra.tools.gene_network import GeneNetwork
+from indra.assemblers import CxAssembler, PybelAssembler
 from indra.tools.incremental_model import IncrementalModel
 from indra.literature import pubmed_client, get_full_text, elsevier_client
 from indra import get_config, has_config
@@ -318,6 +319,36 @@ def filter_db_highbelief(stmts_in, db_names, belief_cutoff):
     return stmts_out
 
 
+def _get_last_bel_commons_version(name):
+    return
+
+
+def upload_bel_commons(stmts, bel_commons_cred, default_version='1.0.0'):
+    name = bel_commons_cred['name']
+    host = bel_commons_cred['host']
+
+    resp = requests.get(host + '/api/get_latest_network_version', params=dict(name=name)).json()
+    if resp['success']:
+        vt = [int(p) for p in resp['version'].split('.')]
+        vt[-1] += 1
+        version = '.'.join(map(str, vt))
+    else:
+        version = default_version
+
+    pa = PybelAssembler(
+        stmts=stmts,
+        name=name,
+        version=version,
+        description=bel_commons_cred.get('description'),
+    )
+
+    pa.to_web(
+        host=host,
+        user=bel_commons_cred.get('user'),
+        password=bel_commons_cred.get('password'),
+    )
+
+
 def upload_new_ndex(model_path, new_stmts, ndex_cred):
     logger.info('Uploading to NDEx')
     logger.info(time.strftime('%c'))
@@ -417,8 +448,18 @@ def get_ndex_cred(config):
     return ndex_cred
 
 
+def get_bel_commons_cred(config):
+    bel_commons_cred = config.get('bel_commons')
+    if not bel_commons_cred:
+        return
+    if not all(x in bel_commons_cred for x in ('user', 'password', 'name')):
+        return
+    return bel_commons_cred
+
+
 def run_machine(model_path, pmids, belief_threshold, search_genes=None,
-                ndex_cred=None, twitter_cred=None, grounding_map=None):
+                ndex_cred=None, twitter_cred=None, bel_commons_cred=None,
+                grounding_map=None):
     start_time_local = datetime.datetime.now(tzlocal.get_localzone())
     date_str = make_date_str()
 
@@ -504,6 +545,9 @@ def run_machine(model_path, pmids, belief_threshold, search_genes=None,
     if ndex_cred:
         upload_new_ndex(model_path, new_stmts, ndex_cred)
 
+    if bel_commons_cred:
+        upload_bel_commons(model.stmts, bel_commons_cred)
+
     # Print and tweet the status message
     logger.info('--- Final statistics ---')
     for k, v in sorted(stats.items(), key=lambda x: x[0]):
@@ -566,6 +610,12 @@ def run_with_search_helper(model_path, config, num_days=None):
         logger.info('Using NDEx with given credentials.')
     else:
         logger.info('Not using NDEx due to missing information.')
+
+    bel_commons_cred = get_bel_commons_cred(config)
+    if bel_commons_cred:
+        logger.info('Using BEL Commons with given credentials.')
+    else:
+        logger.info('Not using BEL Commons due to missing information.')
 
     pmids = {}
     # Get email PMIDs
@@ -631,6 +681,7 @@ def run_with_search_helper(model_path, config, num_days=None):
         search_genes=search_genes,
         ndex_cred=ndex_cred,
         twitter_cred=twitter_cred,
+        bel_commons_cred=bel_commons_cred,
         grounding_map=grounding_map
     )
 
@@ -657,6 +708,7 @@ def run_with_pmids_helper(model_path, pmids):
     belief_threshold = config.get('belief_threshold', 0.95)
     twitter_cred = get_twitter_cred(config)
     ndex_cred = get_ndex_cred(config)
+    bel_commons_cred = get_bel_commons_cred(config)
 
     # Get optional grounding map
     gm_path = config.get('grounding_map_path')
@@ -677,5 +729,7 @@ def run_with_pmids_helper(model_path, pmids):
         belief_threshold,
         ndex_cred=ndex_cred,
         twitter_cred=twitter_cred,
+        bel_commons_cred=bel_commons_cred,
         grounding_map=grounding_map
     )
+
