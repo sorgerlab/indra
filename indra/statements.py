@@ -23,7 +23,7 @@ modifications that further inherit from
 - :py:class:`Phosphorylation`
 - :py:class:`Dephosphorylation`
 - :py:class:`Ubiquitination`
-- :py:class:`Debiquitination`
+- :py:class:`Deubiquitination`
 - :py:class:`Sumoylation`
 - :py:class:`Desumoylation`
 - :py:class:`Hydroxylation`
