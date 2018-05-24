@@ -159,8 +159,7 @@
                     "type": "object",
                     "description": "A dictionary describing various forms of epistemic certainty associated with the statement."
                 }
-            },
-            "required": []
+            }
         },
         "Statement": {
             "type": "object",
