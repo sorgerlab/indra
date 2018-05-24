@@ -591,8 +591,8 @@ def test_influence_duplicate():
 def test_influence_refinement():
     tran = 'UN/entities/human/infrastructure/transportation'
     truck = 'UN/entities/human/infrastructure/transportation/' + \
-        'transportation_methods/examples/trucking'
-    agr = 'UN/entities/human/livelihood/examples/agriculture'
+        'transportation_methods'
+    agr = 'UN/entities/human/livelihood'
     ctran = Concept('transportation', db_refs={'EIDOS': [(tran, 1.0)]})
     ctruck = Concept('trucking', db_refs={'EIDOS': [(truck, 1.0)]})
     cagr = Concept('agriculture', db_refs={'EIDOS': [(agr, 1.0)]})
