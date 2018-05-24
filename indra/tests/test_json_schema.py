@@ -18,6 +18,10 @@ invalid_agent3 = {'name': 'cow', 'db_refs': {'TEXT': 'RAS'},
                   'bound_conditions': 'mooooooooooo!'}
 
 
+def val(s):
+    jsonschema.validate([s], schema)
+
+
 def test_valid_phosphorylation():
     # Calls to validate() in this function should not raise exceptions
     s = {'enz': valid_agent1, 'sub': valid_agent2, 'type': 'Phosphorylation',
@@ -34,7 +38,6 @@ def test_valid_phosphorylation():
 def test_invalid_phosphorylation():
     s = {'enz': valid_agent1, 'sub': valid_agent2, 'type': 'Phosphorylation',
          'id': '5', 'residue': 5}  # residue should be a string
-    val = lambda s: jsonschema.validate([s], schema)
     assert_raises(ValidationError, val, s)
 
     s = {'enz': valid_agent1, 'sub': invalid_agent1, 'type': 'Phosphorylation',
@@ -47,4 +50,32 @@ def test_invalid_phosphorylation():
 
     s = {'enz': valid_agent1, 'sub': invalid_agent3, 'type': 'Phosphorylation',
          'id': '5'}
+    assert_raises(ValidationError, val, s)
+
+
+def test_valid_active_form():
+    s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': True,
+         'type': 'ActiveForm', 'id': '6'}
+    jsonschema.validate([s], schema)
+
+
+def test_invalid_active_form():
+    s = {'agent': invalid_agent1, 'activity': 'kinase', 'is_active': True,
+         'type': 'ActiveForm', 'id': '6'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': 'moo',
+         'type': 'ActiveForm', 'id': '6'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': True,
+         'type': 'ActiveForm', 'id': 42}
+    assert_raises(ValidationError, val, s)
+
+    s = {'agent': valid_agent1, 'activity': 'kinase', 'is_active': True,
+         'type': 'MOO', 'id': '6'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'agent': valid_agent1, 'activity': {'cow': False}, 'is_active': True,
+         'type': 'ActiveForm', 'id': '6'}
     assert_raises(ValidationError, val, s)
