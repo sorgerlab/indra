@@ -240,7 +240,7 @@
                             "description": "The type of the statement"
                         },
                         "enz": {
-                            "type": "string",
+                            "$ref": "#/definitions/Agent",
                             "description": "The enzyme involved in the modification."
                         },
                         "residue": {

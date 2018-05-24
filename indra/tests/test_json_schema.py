@@ -175,4 +175,14 @@ def test_invalid_conversion():
     assert_raises(ValidationError, val, s)
 
 
-def test_valid_self_modification():
+def test_self_modifications():
+    self_mods = ['Autophosphorylation', 'Transphosphorylation']
+    for self_mod in self_mods:
+        s = {'type': self_mod, 'id': '20', 'enz': valid_agent1}
+        jsonschema.validate([s], schema)
+
+        s['residue'] = 'S'
+        jsonschema.validate([s], schema)
+
+        s['position'] = '10'
+        jsonschema.validate([s], schema)
