@@ -5,7 +5,8 @@ from nose.plugins.attrib import attr
 from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor
 from indra.util import unicode_strs
-from indra.statements import IncreaseAmount, DecreaseAmount, Dephosphorylation
+from indra.statements import IncreaseAmount, DecreaseAmount, \
+    Dephosphorylation, Complex
 
 # Change this list to control what modes of
 # reading are enabled in tests
@@ -134,15 +135,6 @@ def test_parse_site_multiple():
     assert(sites[2][1] == '205')
 
 
-def test_valid_name():
-    assert(ReachProcessor._get_valid_name('') == '')
-    assert(ReachProcessor._get_valid_name('a') == 'a')
-    assert(ReachProcessor._get_valid_name('Name123') == 'Name123')
-    assert(ReachProcessor._get_valid_name('<>#~!,./][;-') == '____________')
-    assert(ReachProcessor._get_valid_name('PI3 Kinase') == 'PI3_Kinase')
-    assert(ReachProcessor._get_valid_name('14-3-3') == 'p14_3_3')
-
-
 def test_phosphorylate():
     for offline in offline_modes:
         rp = reach.process_text('MEK1 phosphorylates ERK2.', offline=offline)
@@ -208,6 +200,18 @@ def test_activate():
         s = rp.statements[0]
         assert (s.subj.name == 'HRAS')
         assert (s.obj.name == 'BRAF')
+        assert unicode_strs(rp.statements)
+
+
+def test_reg_amount_complex_controller():
+    txt = 'The FOS-JUN complex increases the amount of ZEB2.'
+    for offline in offline_modes:
+        rp = reach.process_text(txt, offline=offline)
+        assert len(rp.statements) == 2
+        cplx = [s for s in rp.statements if isinstance(s, Complex)][0]
+        regam = [s for s in rp.statements if isinstance(s, IncreaseAmount)][0]
+        assert {a.name for a in cplx.members} == {'FOS_family', 'JUN'}
+        assert len(regam.subj.bound_conditions) == 1
         assert unicode_strs(rp.statements)
 
 
@@ -331,3 +335,26 @@ def test_process_mod_condition1():
             assert mcs[0].residue == residue
             assert mcs[0].position == position
             assert mcs[0].is_modified == is_modified
+
+
+def test_get_db_refs_up_human():
+    entity_term = {
+        'text': 'Ikaros',
+        'xrefs': [{'namespace': 'uniprot', 'id': 'Q13422',
+                   'object-type': 'db-reference'}]
+        }
+    name, db_refs = ReachProcessor._get_db_refs(entity_term)
+    assert name == 'IKZF1', name
+    assert db_refs == {'UP': 'Q13422', 'HGNC': '13176',
+                       'TEXT': 'Ikaros'}, db_refs
+
+
+def test_get_db_refs_up_non_human():
+    entity_term = {
+        'text': 'MYC',
+        'xrefs': [{'namespace': 'uniprot', 'id': 'Q9MZT7',
+                   'object-type': 'db-reference'}]
+        }
+    name, db_refs = ReachProcessor._get_db_refs(entity_term)
+    assert name == 'MYC', name
+    assert db_refs == {'UP': 'Q9MZT7', 'TEXT': 'MYC'}, db_refs

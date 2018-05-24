@@ -202,11 +202,8 @@ class ReachProcessor(object):
                 controller_agent = None
                 for a in reg['arguments']:
                     if self._get_arg_type(a) == 'controller':
-                        controller = a.get('arg')
-                        if controller is not None:
-                            controller_agent = \
-                                    self._get_agent_from_entity(controller)
-                            break
+                        controller_agent = self._get_controller_agent(a)
+
                 sentence = reg['verbose-text']
 
                 ev = Evidence(source_api='reach', text=sentence,
@@ -226,9 +223,17 @@ class ReachProcessor(object):
         res = self.tree.execute(qstr)
         if res is None:
             return
+
         for r in res:
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
+                continue
+            # Due to an issue with the REACH output serialization
+            # (though seemingly not with the raw mentions), sometimes
+            # a redundant complex-assembly event is reported which can
+            # be recognized by the missing direct flag, which we can filter
+            # for here
+            if epistemics.get('direct') is None:
                 continue
             context = self._get_context(r)
             args = r['arguments']
@@ -240,7 +245,8 @@ class ReachProcessor(object):
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=context, pmid=self.citation,
                           epistemics=epistemics)
-            self.statements.append(Complex(members, ev))
+            stmt = Complex(members, ev)
+            self.statements.append(stmt)
 
     def get_activation(self):
         """Extract INDRA Activation Statements."""
@@ -260,22 +266,7 @@ class ReachProcessor(object):
             args = r['arguments']
             for a in args:
                 if self._get_arg_type(a) == 'controller':
-                    controller = a.get('arg')
-                    # When the controller is not a simple entity
-                    if controller is None:
-                        if a['argument-type'] == 'complex':
-                            controllers = list(a.get('args').values())
-                            controller_agent =\
-                                self._get_agent_from_entity(controllers[0])
-                            bound_agents = [self._get_agent_from_entity(c)
-                                            for c in controllers[1:]]
-                            bound_conditions = [BoundCondition(ba, True) for
-                                                ba in bound_agents]
-                            controller_agent.bound_conditions = \
-                                bound_conditions
-                    else:
-                        controller_agent =\
-                            self._get_agent_from_entity(controller)
+                    controller_agent = self._get_controller_agent(a)
                 if self._get_arg_type(a) == 'controlled':
                     controlled = a['arg']
             controlled_agent = self._get_agent_from_entity(controlled)
@@ -370,8 +361,9 @@ class ReachProcessor(object):
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent
 
-    def _get_db_refs(self, entity_term):
-        agent_name = self._get_valid_name(entity_term['text'])
+    @staticmethod
+    def _get_db_refs(entity_term):
+        agent_name = entity_term['text']
         db_refs = {}
         for xr in entity_term['xrefs']:
             ns = xr['namespace']
@@ -381,12 +373,13 @@ class ReachProcessor(object):
                 # Look up official names in UniProt
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name is not None:
-                    agent_name = self._get_valid_name(gene_name)
+                    agent_name = gene_name
                     # If the gene name corresponds to an HGNC ID, add it to the
                     # db_refs
-                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
-                    if hgnc_id:
-                        db_refs['HGNC'] = hgnc_id
+                    if up_client.is_human(up_id):
+                        hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                        if hgnc_id:
+                            db_refs['HGNC'] = hgnc_id
             elif ns == 'hgnc':
                 hgnc_id = xr['id']
                 db_refs['HGNC'] = hgnc_id
@@ -575,6 +568,24 @@ class ReachProcessor(object):
         else:
             return None
 
+    def _get_controller_agent(self, arg):
+        """Return a single or a complex controller agent."""
+        controller_agent = None
+        controller = arg.get('arg')
+        # There is either a single controller here
+        if controller is not None:
+            controller_agent = self._get_agent_from_entity(controller)
+        # Or the controller is a complex
+        elif arg['argument-type'] == 'complex':
+            controllers = list(arg.get('args').values())
+            controller_agent = self._get_agent_from_entity(controllers[0])
+            bound_agents = [self._get_agent_from_entity(c)
+                            for c in controllers[1:]]
+            bound_conditions = [BoundCondition(ba, True) for
+                                ba in bound_agents]
+            controller_agent.bound_conditions = bound_conditions
+        return controller_agent
+
     @staticmethod
     def _get_arg_type(arg):
         """Return the type of the argument with backwards compatibility."""
@@ -582,14 +593,6 @@ class ReachProcessor(object):
             return arg.get('argument_label')
         else:
             return arg.get('type')
-
-    @staticmethod
-    def _get_valid_name(txt):
-        """Produce valid agent name from string."""
-        name = ''.join(ch if ch.isalnum() else '_' for ch in txt)
-        if name and name[0].isdigit():
-            name = 'p' + name
-        return name
 
     @staticmethod
     def _parse_mutation(s):
