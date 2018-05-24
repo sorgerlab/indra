@@ -123,6 +123,31 @@ The evidence for a given Statement, which could include relevant citations,
 database identifiers, and passages of text from the scientific literature, is
 contained in one or more :py:class:`Evidence` objects associated with the
 Statement.
+
+
+JSON serialization of INDRA Statements
+--------------------------------------
+
+Statements can be serialized into JSON and deserialized from JSON to allow
+their exchange in a platform-independent way. We also provide a JSON
+schema (see http://json-schema.org to learn about schemas) in
+https://raw.githubusercontent.com/sorgerlab/indra/master/indra/resources/statements_schema.json
+which can be used to validate INDRA Statements JSONs.
+
+Some validation tools include:
+
+- jsonschema
+    a Python package to validate JSON content with respect to
+    a schema
+- ajv-cli
+    Available at https://www.npmjs.com/package/ajv-cli
+    Install with "npm install -g ajv-cli" and then validate with:
+    ajv -s statements_schema.json -d file_to_validate.json. This tool
+    provides more sophisticated and better interpretable output than
+    jsonschema.
+- Web based tools
+    There are a variety of web-based tools for validation with JSON schemas,
+    including https://www.jsonschemavalidator.net
 """
 
 from __future__ import absolute_import, print_function, unicode_literals

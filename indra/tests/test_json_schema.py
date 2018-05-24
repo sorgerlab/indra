@@ -5,7 +5,7 @@ from nose.tools import assert_raises
 from jsonschema.exceptions import ValidationError
 
 dir_this = os.path.dirname(__file__)
-schema_file = os.path.join(dir_this, '../../schemas/statements_schema.json')
+schema_file = os.path.join(dir_this, '../resources/statements_schema.json')
 with open(schema_file, 'r') as f:
     schema = json.loads(f.read())
 
