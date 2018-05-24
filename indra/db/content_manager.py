@@ -109,8 +109,8 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 from indra.literature.pmc_client import id_lookup
 from indra.literature import pubmed_client
 
-from indra.db.util import get_primary_db, get_defaults, get_db, get_test_db
-from indra.db.database_manager import texttypes, formats, DatabaseManager
+from indra.db.util import get_primary_db, get_db, get_test_db
+from indra.db.database_manager import texttypes, formats
 from indra.db.database_manager import sql_expressions as sql_exp
 
 

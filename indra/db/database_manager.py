@@ -1,16 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
-
-import random
 from builtins import dict, str
-from sqlalchemy.orm.attributes import InstrumentedAttribute
+
 
 __all__ = ['sqltypes', 'texttypes', 'formats', 'DatabaseManager',
            'IndraDatabaseError', 'sql_expressions']
 
 import re
+import random
 import logging
 from io import BytesIO
-from os import path
 from numbers import Number
 from datetime import datetime
 
@@ -20,9 +18,9 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
-    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime, func, \
-    BigInteger
+    create_engine, inspect, LargeBinary, Boolean, DateTime, func
 from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.dialects.postgresql import BYTEA
 
 try:
