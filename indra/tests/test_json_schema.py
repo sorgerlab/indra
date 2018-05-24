@@ -174,3 +174,5 @@ def test_invalid_conversion():
          'obj_from': 'banana', 'obj_to': [valid_agent3]}
     assert_raises(ValidationError, val, s)
 
+
+def test_valid_self_modification():

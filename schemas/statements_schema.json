@@ -240,15 +240,15 @@
                             "description": "The type of the statement"
                         },
                         "enz": {
-                            "$ref": "#/definitions/Agent",
+                            "type": "string",
                             "description": "The enzyme involved in the modification."
                         },
                         "residue": {
-                            "$ref": "#/definitions/Agent",
+                            "type": "string",
                             "description": "The amino acid residue being modified, or None if it is unknown or unspecified."
                         },
                         "position": {
-                            "$ref": "#/definitions/Agent",
+                            "type": "string",
                             "description": "The position of the modified amino acid, or None if it is unknown or unspecified."
                         }
                     },
