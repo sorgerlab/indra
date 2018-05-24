@@ -186,3 +186,17 @@ def test_self_modifications():
 
         s['position'] = '10'
         jsonschema.validate([s], schema)
+
+
+def test_translocation():
+    s = {'type': 'Translocation', 'id': '30', 'agent': valid_agent1}
+    jsonschema.validate([s], schema)
+
+    s['from_location'] = 'A'
+    jsonschema.validate([s], schema)
+
+    s['to_location'] = 'B'
+    jsonschema.validate([s], schema)
+
+    s['to_location'] = 3
+    assert_raises(ValidationError, val, s)
