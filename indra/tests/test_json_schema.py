@@ -18,11 +18,16 @@ mod_cond1 = {'mod_type': 'phosphorylation', 'residue': 'S', 'position': '100',
 mut_cond1 = {'position': '100', 'residue_from': 'S', 'residue_to': 'Y'}
 activity_cond1 = {'activity_type': 'kinase', 'is_active': True}
 
+bc1 = {'agent': valid_agent1, 'is_bound': True}
+bc2 = {'agent': valid_agent2, 'is_bound': False}
+
 agent_mod = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'}, 'mods': [mod_cond1]}
 agent_mut = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'},
              'mutations': [mut_cond1]}
 agent_act = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'},
              'activity': activity_cond1}
+agent_bc = {'name': 'RAF', 'db_refs': {'TEXT': 'RAF'},
+             'bound_conditions': [bc1, bc2]}
 
 invalid_agent1 = {'name': 'RAS', 'db_refs': 2}
 invalid_agent2 = {'db_refs': {'TEXT': 'RAS'}}
