@@ -39,14 +39,16 @@ def test_valid_modification():
                  'Degeranylgeranylation', 'Palmitoylation', 'Depalmitoylation',
                  'Myristoylation', 'Demyristoylation', 'Ribosylation',
                  'Deribosylation', 'Methylation', 'Demethylation',
-                 'Activation', 'Inhibition']
+                 'Activation', 'Inhibition', 'IncreaseAmount',
+                 'DecreaseAmount']
 
     for mod_type in mod_types:
         s = {'enz': valid_agent1, 'sub': valid_agent2,
              'type': mod_type, 'id': '5'}
         jsonschema.validate([s], schema)
 
-        if mod_type not in ['Activation', 'Inhibition']:
+        if mod_type not in ['Activation', 'Inhibition', 'IncreaseAmount',
+                            'DecreaseAmount']:
             s['residue'] = 'S'
             jsonschema.validate([s], schema)
 
