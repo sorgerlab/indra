@@ -385,6 +385,12 @@
                             "type": "string",
                             "pattern": "^Complex$",
                             "description": "The type of the statement"
+                        },
+                        "members": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Agent"
+                            }
                         }
                     },
                     "required": ["type"]

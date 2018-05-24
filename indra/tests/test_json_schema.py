@@ -79,3 +79,21 @@ def test_invalid_active_form():
     s = {'agent': valid_agent1, 'activity': {'cow': False}, 'is_active': True,
          'type': 'ActiveForm', 'id': '6'}
     assert_raises(ValidationError, val, s)
+
+
+def test_valid_complex():
+    s = {'members': [valid_agent1, valid_agent2], 'type': 'Complex', 'id': '3'}
+    jsonschema.validate([s], schema)
+
+    s = {'members': [], 'type': 'Complex', 'id': '3'}
+    jsonschema.validate([s], schema)
+
+
+def test_invalid_complex():
+    s = {'members': [invalid_agent1, valid_agent2], 'type': 'Complex',
+         'id': '3'}
+    assert_raises(ValidationError, val, s)
+
+    s = {'members': [valid_agent1, invalid_agent2], 'type': 'Complex',
+         'id': '3'}
+    assert_raises(ValidationError, val, s)
