@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
 from os.path import join, dirname
 from nose.tools import raises
-import unittest
 
 from indra.statements import *
 from indra.databases import hgnc_client
@@ -25,11 +25,8 @@ test_row = SignorRow(ENTITYA='RELA', TYPEA='protein', IDA='Q04206',
         SIGNOR_ID='SIGNOR-241929')
 
 
-test_data_file = os.path.join(dirname(__file__), 'signor_test_data.csv')
-
-
-test_complexes_file = os.path.join(dirname(__file__),
-                                   'signor_test_complexes.csv')
+test_data_file = join(dirname(__file__), 'signor_test_data.csv')
+test_complexes_file = join(dirname(__file__), 'signor_test_complexes.csv')
 
 
 def test_parse_csv_from_file():
@@ -49,6 +46,7 @@ def test_parse_csv_from_file():
     sp = process_from_file(test_data_file)
     assert isinstance(sp.statements[0], Statement)
     assert sp.complex_map == {}
+
 
 def test_parse_csv_from_web():
     sp = process_from_web()
@@ -768,6 +766,7 @@ def test_recursively_expand_complex_constituents():
     constituents = sp._recursively_lookup_complex('SIGNOR-C91')
     assert(constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
                             'Q15291'])
+
 
 if __name__ == '__main__':
     test_recursive_complexes()

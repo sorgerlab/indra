@@ -153,6 +153,42 @@ Some validation tools include:
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+
+__all__ = [
+    # Condition classes
+    'BoundCondition', 'MutCondition', 'ModCondition', 'ActivityCondition',
+
+    # Statement classes
+    'Statement', 'Modification', 'AddModification', 'RemoveModification',
+    'SelfModification', 'Phosphorylation', 'Autophosphorylation',
+    'Transphosphorylation', 'Dephosphorylation', 'Hydroxylation',
+    'Dehydroxylation', 'Sumoylation', 'Desumoylation', 'Acetylation',
+    'Deacetylation', 'Glycosylation', 'Deglycosylation', 'Ribosylation',
+    'Deribosylation', 'Ubiquitination', 'Deubiquitination', 'Farnesylation',
+    'Defarnesylation', 'Geranylgeranylation', 'Degeranylgeranylation',
+    'Palmitoylation', 'Depalmitoylation', 'Myristoylation', 'Demyristoylation',
+    'Methylation', 'Demethylation', 'RegulateActivity', 'Inhibition',
+    'Activation', 'GtpActivation', 'ActiveForm', 'HasActivity', 'Gef', 'Gap',
+    'Complex', 'Translocation', 'RegulateAmount', 'DecreaseAmount',
+    'IncreaseAmount', 'Influence', 'Conversion', 'Unresolved',
+
+    # Error classes
+    'InputError', 'UnresolvedUuidError', 'InvalidLocationError',
+    'InvalidResidueError', 'NotAStatementName',
+
+    # Other classes
+    'Concept', 'Agent', 'Evidence',
+
+    # Functions and values
+    'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
+    'get_valid_residue', 'get_valid_location', 'get_valid_location',
+    'draw_stmt_graph', 'get_all_descendants','make_statement_camel',
+    'amino_acids', 'amino_acids_reverse', 'activity_types',
+    'cellular_components', 'cellular_components_reverse', 'modtype_to_modclass',
+    'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
+    'modclass_to_inverse'
+    ]
+
 import os
 import abc
 import sys
@@ -162,6 +198,7 @@ import logging
 import itertools
 from copy import deepcopy
 from collections import OrderedDict as _o
+
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc

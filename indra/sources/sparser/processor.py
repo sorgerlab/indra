@@ -1,8 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
+import os
 import logging
 import collections
 from copy import copy
+
 from indra.util import read_unicode_csv
 from indra.literature import id_lookup
 from indra.statements import *

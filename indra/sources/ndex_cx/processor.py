@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import objectpath
-from indra.databases import uniprot_client, chebi_client, hgnc_client
-from indra.literature import id_lookup
+
+import logging
+from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
 
 

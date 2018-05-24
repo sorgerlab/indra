@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
            'distill_stmts']
@@ -14,7 +13,6 @@ from itertools import groupby
 from functools import partial
 from multiprocessing.pool import Pool
 
-from indra.util import batch_iter
 from indra.util.get_version import get_version
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement

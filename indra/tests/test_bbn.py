@@ -1,17 +1,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from os.path import join, dirname
+
+from os.path import join, dirname, abspath
 from indra.sources.bbn.bbn_api import *
 
 from indra.statements import *
 
 # Path to the BBN test file
-path_this = os.path.dirname(os.path.abspath(__file__))
-test_file_simple = os.path.join(path_this, 'bbn_test_simple.json-ld')
-test_file_negatedCause = os.path.join(path_this,
-        'bbn_test_negatedCause.json-ld')
-test_file_negatedEffect = os.path.join(path_this,
-        'bbn_test_negatedEffect.json-ld')
+path_this = dirname(abspath(__file__))
+test_file_simple = join(path_this, 'bbn_test_simple.json-ld')
+test_file_negatedCause = join(path_this, 'bbn_test_negatedCause.json-ld')
+test_file_negatedEffect = join(path_this, 'bbn_test_negatedEffect.json-ld')
 
 
 def test_simple_extraction():
