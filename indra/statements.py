@@ -3195,14 +3195,16 @@ class NotAStatementName(Exception):
     pass
 
 
-def make_statement_camel(stmt_name):
-    """Makes a statement name match the case of the corresponding statement."""
+def get_statement_by_name(stmt_name):
+    """Get a statement class given the name of the statement class."""
     stmt_classes = get_all_descendants(Statement)
     for stmt_class in stmt_classes:
         if stmt_class.__name__.lower() == stmt_name.lower():
-            ret = stmt_class.__name__
-            break
-    else:
-        raise NotAStatementName('%s is not recognized as a statement.'
-                                % stmt_name)
-    return ret
+            return stmt_class
+    raise NotAStatementName('%s is not recognized as a statement type: %s'
+                            % stmt_name)
+
+
+def make_statement_camel(stmt_name):
+    """Makes a statement name match the case of the corresponding statement."""
+    return get_statement_by_name(stmt_name).__name__

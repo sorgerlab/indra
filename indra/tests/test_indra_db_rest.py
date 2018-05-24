@@ -5,6 +5,7 @@ from datetime import datetime
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
+from indra.sources.indra_db_rest import IndraDBRestError
 
 
 def __check_request(seconds, *args, **kwargs):
@@ -12,7 +13,8 @@ def __check_request(seconds, *args, **kwargs):
     stmts = dbr.get_statements(*args, **kwargs)
     assert stmts, "Got no statements."
     time_taken = datetime.now() - now
-    assert time_taken.seconds < seconds
+    assert time_taken.seconds < seconds, time_taken.seconds
+    return stmts
 
 
 @attr('nonpublic')
@@ -24,7 +26,7 @@ def test_simple_request():
 def test_null_request():
     try:
         dbr.get_statements()
-    except dbr.IndraDBRestError:
+    except ValueError:
         return
     except BaseException as e:
         assert False, "Raised wrong exception: " + str(e)
@@ -43,15 +45,21 @@ def test_bigger_request():
 
 @attr('nonpublic')
 def test_too_big_request():
+    stmts_smpl = __check_request(30, agents=['TP53'])
     try:
-        __check_request(30, agents=['TP53'])
-    except dbr.IndraDBRestError as e:
-        if '502: Bad Gateway' in str(e):
-            pass  # This is the error that indicates the too much data.
-        else:
-            assert False, 'Unexpected error occured: %s' % str(e)
-    except BaseException as e:
-        assert False, 'A very unexpected error occured: %s' % str(e)
+        __check_request(30, agents=['TP53'], on_limit='error')
+        assert False, "Didn't raise error."
+    except IndraDBRestError as e:
+        assert e.status_code == 413, str(e)
+        assert len(e.resp.json()['statements'])
+    stmts_all = __check_request(60, agents=['TP53'], on_limit='persist')
+    assert len(stmts_all) > len(stmts_smpl)
+    smpl_uuids = {s.uuid for s in stmts_smpl}
+    all_uuids = {s.uuid for s in stmts_all}
+    assert smpl_uuids.issubset(all_uuids)
+    stmts_trnc = __check_request(30, agents=['TP53'], on_limit='truncate')
+    assert len(stmts_trnc) == len(stmts_smpl)
+    assert {s.uuid for s in stmts_trnc}.issubset(all_uuids)
 
 
 @attr('nonpublic')
@@ -70,3 +78,12 @@ def test_paper_query():
     assert len(stmts_1)
     stmts_2 = dbr.get_statements_for_paper('8436299')
     assert len(stmts_2)
+
+
+@attr('nonpublic')
+def test_regulate_amount():
+    stmts = dbr.get_statements('FOS', stmt_type='RegulateAmount')
+    print(len(stmts))
+    stmt_types = {type(s).__name__ for s in stmts}
+    print(stmt_types)
+    assert {'IncreaseAmount', 'DecreaseAmount'}.issubset(stmt_types), stmt_types
