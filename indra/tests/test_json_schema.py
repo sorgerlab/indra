@@ -200,3 +200,13 @@ def test_translocation():
 
     s['to_location'] = 3
     assert_raises(ValidationError, val, s)
+
+
+def test_gef():
+    s = {'type': 'Gef', 'id': '40', 'agent': valid_agent1, 'ras': valid_agent2}
+    jsonschema.validate([s], schema)
+
+
+def test_gap():
+    s = {'type': 'Gap', 'id': '41', 'gap': valid_agent1, 'ras': valid_agent2}
+    jsonschema.validate([s], schema)
