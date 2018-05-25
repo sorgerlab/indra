@@ -2328,18 +2328,22 @@ class Complex(Statement):
         if len(self.members) != len(other.members):
             return False
         # Check that every member in other is refined in self, but only once!
-        self_match_indices = set([])
-        for other_agent in other.members:
-            for self_agent_ix, self_agent in enumerate(self.members):
-                if self_agent_ix in self_match_indices:
-                    continue
-                if self_agent.refinement_of(other_agent, hierarchies):
-                    self_match_indices.add(self_agent_ix)
-                    break
-        if len(self_match_indices) != len(other.members):
-            return False
-        else:
+
+        def match_members(self_members, other_members):
+            self_match_indices = set([])
+            for other_agent in other_members:
+                for self_agent_ix, self_agent in enumerate(self_members):
+                    if self_agent_ix in self_match_indices:
+                        continue
+                    if self_agent.refinement_of(other_agent, hierarchies):
+                        self_match_indices.add(self_agent_ix)
+                        break
+            print(self_match_indices)
+            if len(self_match_indices) != len(other_members):
+                return False
             return True
+
+        return match_members(self.members, other.members)
 
     def equals(self, other):
         matches = super(Complex, self).equals(other)
