@@ -1149,9 +1149,11 @@ def test_related_complex_refinement():
     st2 = Complex([kras, ras])
     st3 = Complex([hras, kras])
     st4 = Complex([ras, kras])
-    #assert st1.refinement_of(st2, hierarchies)
-    #assert st3.refinement_of(st4, hierarchies)
+    assert st1.refinement_of(st2, hierarchies)
+    assert st3.refinement_of(st4, hierarchies)
     assert st1.refinement_of(st4, hierarchies)
+    assert not st2.refinement_of(st1, hierarchies)
+    assert not st4.refinement_of(st1, hierarchies)
 
 
 @raises(InvalidResidueError)
