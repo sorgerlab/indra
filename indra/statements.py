@@ -159,6 +159,7 @@ import sys
 import uuid
 import rdflib
 import logging
+import itertools
 from copy import deepcopy
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
@@ -2328,18 +2329,37 @@ class Complex(Statement):
         if len(self.members) != len(other.members):
             return False
         # Check that every member in other is refined in self, but only once!
-        self_match_indices = set([])
-        for other_agent in other.members:
-            for self_agent_ix, self_agent in enumerate(self.members):
-                if self_agent_ix in self_match_indices:
-                    continue
-                if self_agent.refinement_of(other_agent, hierarchies):
-                    self_match_indices.add(self_agent_ix)
-                    break
-        if len(self_match_indices) != len(other.members):
+
+        def match_members(self_members, other_members):
+            # Build all the permutations of the other complex's members
+            other_member_perms = \
+                itertools.permutations(other_members, len(other_members))
+            # Compare self with all orders of other
+            for other_member_perm in other_member_perms:
+                self_match_indices = set([])
+                # See if each of the members in other has a corresponding
+                # member in self
+                for other_agent in other_member_perm:
+                    for self_agent_ix, self_agent in enumerate(self_members):
+                        # This is when the agent is already matched so we
+                        # don't want to match it (use it) again
+                        if self_agent_ix in self_match_indices:
+                            continue
+                        # If self member is a refinement of other, record
+                        # self's index to make sure we know it's matched
+                        # and don't match it again
+                        if self_agent.refinement_of(other_agent, hierarchies):
+                            self_match_indices.add(self_agent_ix)
+                            break
+                # If we matches all self members to other members, this is
+                # a refinement and we can return
+                if len(self_match_indices) == len(other_members):
+                    return True
+            # If none of the orderings resulted in refinement then this
+            # is not a refinement
             return False
-        else:
-            return True
+
+        return match_members(self.members, other.members)
 
     def equals(self, other):
         matches = super(Complex, self).equals(other)

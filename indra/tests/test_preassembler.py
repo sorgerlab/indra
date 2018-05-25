@@ -623,3 +623,18 @@ def test_find_contradicts():
         assert {s1.uuid, s2.uuid} in ({st1.uuid, st2.uuid},
                                       {st3.uuid, st4.uuid})
 
+
+def test_preassemble_related_complex():
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
+    kras = Agent('KRAS', db_refs={'HGNC': '6407'})
+    hras = Agent('HRAS', db_refs={'HGNC': '5173'})
+    st1 = Complex([kras, hras])
+    st2 = Complex([kras, ras])
+    st3 = Complex([hras, kras])
+    st4 = Complex([ras, kras])
+    pa = Preassembler(hierarchies, [st1, st2, st3, st4])
+    uniq = pa.combine_duplicates()
+    assert len(uniq) == 2
+    top = pa.combine_related()
+    assert len(top) == 1
+
