@@ -675,6 +675,75 @@ def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
     return stmts_out
 
 
+def filter_concept_names(stmts_in, name_list, policy, **kwargs):
+    """Return Statements that refer to concepts/agents given as a list of names.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of Statements to filter.
+    name_list : list[str]
+        A list of concept/agent names to filter for.
+    policy : str
+        The policy to apply when filtering for the list of names. "one": keep
+        Statements that contain at least one of the list of names and
+        possibly others not in the list "all": keep Statements that only
+        contain names given in the list
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+    invert : Optional[bool]
+        If True, the Statements that do not match according to the policy
+        are returned. Default: False
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered Statements.
+    """
+    invert = kwargs.get('invert', False)
+
+    if policy not in ('one', 'all'):
+        logger.error('Policy %s is invalid, not applying filter.' % policy)
+    else:
+        name_str = ', '.join(name_list)
+        inv_str = 'not ' if invert else ''
+        logger.info(('Filtering %d statements for ones %scontaining "%s" of: '
+                     '%s...') % (len(stmts_in), inv_str, policy, name_str))
+
+    stmts_out = []
+
+    if policy == 'one':
+        for st in stmts_in:
+            found = False
+            agent_list = st.agent_list()
+            for agent in agent_list:
+                if agent is not None:
+                    if agent.name in name_list:
+                        found = True
+                        break
+            if (found and not invert) or (not found and invert):
+                stmts_out.append(st)
+    elif policy == 'all':
+        for st in stmts_in:
+            found = True
+            agent_list = st.agent_list()
+            for agent in agent_list:
+                if agent is not None:
+                    if agent.name not in name_list:
+                        found = False
+                        break
+            if (found and not invert) or (not found and invert):
+                stmts_out.append(st)
+    else:
+        stmts_out = stmts_in
+
+    logger.info('%d Statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
+
 def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are grounded, but not to a human gene.
 

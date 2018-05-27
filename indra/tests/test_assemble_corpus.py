@@ -431,3 +431,21 @@ def test_rename_db_ref():
     assert stmts[0].enz.db_refs.get('FPLX') == 'X'
     assert 'BE' not in stmts[0].enz.db_refs
     assert stmts[0].sub.db_refs.get('FPLX') == 'Y'
+
+
+def test_filter_concept_names():
+    stmts = [
+        Influence(Concept('a'), Concept('b')),
+        Influence(Concept('a'), Concept('c')),
+        Influence(Concept('a'), Concept('d')),
+        Influence(Concept('c'), Concept('d'))
+        ]
+
+    stmts_out = ac.filter_concept_names(stmts, ['a'], 'one')
+    assert len(stmts_out) == 3, stmts_out
+    stmts_out = ac.filter_concept_names(stmts, ['a', 'b', 'c'], 'all')
+    assert len(stmts_out) == 2, stmts_out
+    stmts_out = ac.filter_concept_names(stmts, ['a', 'd'], 'one')
+    assert len(stmts_out) == 4, stmts_out
+    stmts_out = ac.filter_concept_names(stmts, ['a', 'b'], 'one', invert=True)
+    assert len(stmts_out) == 1, stmts_out
