@@ -201,7 +201,9 @@ class BeliefEngine(object):
             Verifies that the scorer has all the information it needs to score
             every statement in the list, and raises an exception if not
     """
-    def __init__(self, scorer=default_scorer):
+    def __init__(self, scorer=None):
+        if scorer is None:
+            scorer = default_scorer
         assert(isinstance(scorer, BeliefScorer))
         self.scorer = scorer
 
