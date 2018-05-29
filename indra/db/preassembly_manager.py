@@ -122,7 +122,7 @@ class PreassemblyManager(object):
             return None
         return max([u.run_datetime for u in update_list])
 
-    def _pa_batch_iter(self, db, mk_set=None):
+    def _pa_batch_iter(self, db, in_mks=None, ex_mks=None):
         """Return an iterator over batches of preassembled statements.
 
         This avoids the need to load all such statements from the database into
@@ -131,13 +131,28 @@ class PreassemblyManager(object):
         You may limit the set of pa_statements loaded by providing a set/list of
         matches-keys of the statements you wish to include.
         """
-        if mk_set is None:
+        if in_mks is None and ex_mks is None:
             db_stmt_iter = db.select_all(db.PAStatements.json,
                                          yield_per=self.batch_size)
+        elif ex_mks is None:
+            db_stmt_iter = db.select_all(
+                db.PAStatements.json,
+                db.PAStatements.mk_hash.in_(in_mks),
+                yield_per=self.batch_size
+                )
+        elif in_mks is None:
+            db_stmt_iter = db.select_all(
+                db.PAStatements.json,
+                db.PAStatements.mk_hash.notin_(ex_mks),
+                yield_per=self.batch_size
+                )
         else:
-            db_stmt_iter = db.select_all(db.PAStatements.json,
-                                         db.PAStatements.mk_hash.in_(mk_set),
-                                         yield_per=self.batch_size)
+            db_stmt_iter = db.select_all(
+                db.PAStatements.json,
+                db.PAStatements.mk_hash.notin_(ex_mks),
+                db.PAStatements.mk_hash.in_(in_mks),
+                yield_per=self.batch_size
+                )
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_lists=True)
 
@@ -203,7 +218,7 @@ class PreassemblyManager(object):
         if stmt_ids:
             self._get_unique_statements(db, stmts, len(stmt_ids), done_pa_ids)
 
-        # Now get the support links between all batches.
+        # If we are continuing, check for support links that were already found.
         if continuing:
             logger.info("Getting pre-existing links...")
             db_existing_links = db.select_all([
@@ -214,20 +229,27 @@ class PreassemblyManager(object):
             logger.info("Found %d existing links." % len(existing_links))
         else:
             existing_links = set()
+
+        # Now get the support links between all batches.
         support_links = set()
-        for i, outer_batch in enumerate(self._pa_batch_iter(db)):
-            for j, inner_batch in enumerate(self._pa_batch_iter(db)):
-                if i != j:
-                    split_idx = len(inner_batch)
-                    full_list = inner_batch + outer_batch
-                    some_support_links = \
-                        self._get_support_links(full_list, split_idx=split_idx,
-                                                poolsize=self.n_proc)
-                else:
-                    some_support_links = \
-                        self._get_support_links(inner_batch,
-                                                poolsize=self.n_proc)
-                support_links |= (some_support_links - existing_links)
+        for outer_batch in self._pa_batch_iter(db):
+            # Get internal support links
+            some_support_links = self._get_support_links(outer_batch,
+                                                         poolsize=self.n_proc)
+            outer_mk_hashes = {s.get_hash(shallow=True) for s in outer_batch}
+
+            # Get links with all other batches
+            for inner_batch in self._pa_batch_iter(db, ex_mks=outer_mk_hashes):
+                split_idx = len(inner_batch)
+                full_list = inner_batch + outer_batch
+                some_support_links |= \
+                    self._get_support_links(full_list, split_idx=split_idx,
+                                            poolsize=self.n_proc)
+
+            # Add all the new support links
+            support_links |= (some_support_links - existing_links)
+
+        # Copy the support links into the database
         logger.info("Found %d support links." % len(support_links))
         db.copy('pa_support_links', support_links,
                 ('supported_mk_hash', 'supporting_mk_hash'))
@@ -271,14 +293,14 @@ class PreassemblyManager(object):
 
         # Now find the new support links that need to be added.
         new_support_links = set()
-        for npa_batch in self._pa_batch_iter(db, mk_set=new_mk_set):
+        for npa_batch in self._pa_batch_iter(db, in_mks=new_mk_set):
             # Compare internally
             new_support_links |= self._get_support_links(npa_batch)
 
             # Compare against the other new batch statements.
             diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
                                          for s in npa_batch}
-            for diff_npa_batch in self._pa_batch_iter(db, mk_set=diff_new_mks):
+            for diff_npa_batch in self._pa_batch_iter(db, in_mks=diff_new_mks):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + diff_npa_batch
                 new_support_links |= \
@@ -286,7 +308,7 @@ class PreassemblyManager(object):
                                             poolsize=self.n_proc)
 
             # Compare against the existing statements.
-            for opa_batch in self._pa_batch_iter(db, mk_set=old_mk_set):
+            for opa_batch in self._pa_batch_iter(db, in_mks=old_mk_set):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + opa_batch
                 new_support_links |= \
