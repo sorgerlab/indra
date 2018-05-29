@@ -22,6 +22,7 @@ pa_logger = logging.getLogger('preassembler')
 pa_logger.setLevel(logging.WARNING)
 
 from indra.db import util as db_util
+from indra.db import client as db_client
 from indra.db import preassembly_manager as pm
 from indra.statements import stmts_from_json, Statement
 from indra.tools import assemble_corpus as ac
@@ -317,7 +318,7 @@ def test_preassembly_with_database():
     assert num_support_links
 
     # Try to get all the preassembled statements from the table.
-    pa_stmts = db_util.get_statements([], preassembled=True, db=db)
+    pa_stmts = db_client.get_statements([], preassembled=True, db=db)
     assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
                                                 len(pa_stmt_list))
 
@@ -343,5 +344,5 @@ def test_incremental_preassembly_with_database():
     db_raw_stmts = db.select_all(db.RawStatements,
                                  db.RawStatements.db_info_id.isnot(None))
     raw_stmts = rdg_raw_stmts | set(db_util.make_stmts_from_db_list(db_raw_stmts))
-    pa_stmts = db_util.get_statements([], preassembled=True, db=db)
+    pa_stmts = db_client.get_statements([], preassembled=True, db=db)
     _check_against_opa_stmts(raw_stmts, pa_stmts)

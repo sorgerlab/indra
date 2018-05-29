@@ -3,11 +3,15 @@ from builtins import dict, str
 
 import logging
 from collections import defaultdict
-
-from indra.databases import hgnc_client
-from indra.db import util as db_util
+from itertools import groupby
+from sqlalchemy import or_
 
 logger = logging.getLogger('db_client')
+
+from indra.util import batch_iter
+from indra.databases import hgnc_client
+from .util import get_primary_db, make_stmts_from_db_list,\
+    make_pa_stmts_from_db_list, unpack
 
 
 def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
@@ -37,24 +41,24 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
         by text content id, then by reader.
     """
     if ref_type == 'tcid':
-        clauses = [db.Readings.text_content_id == ref_id]
+        clauses = [db.Reading.text_content_id == ref_id]
     else:
         trids = _get_trids(db, ref_id, ref_type)
         if not trids:
             return []
         logger.debug("Found %d text ref ids." % len(trids))
         clauses = [db.TextContent.text_ref_id.in_(trids),
-                   db.Readings.text_content_id == db.TextContent.id]
+                   db.Reading.text_content_id == db.TextContent.id]
     if reader:
-        clauses.append(db.Readings.reader == reader.upper())
+        clauses.append(db.Reading.reader == reader.upper())
     if reader_version:
-        clauses.append(db.Readings.reader_version == reader_version)
+        clauses.append(db.Reading.reader_version == reader_version)
 
-    res = db.select_all([db.Readings.text_content_id, db.Readings.reader,
-                         db.Readings.bytes], *clauses)
+    res = db.select_all([db.Reading.text_content_id, db.Readings.reader,
+                         db.Reading.bytes], *clauses)
     reading_dict = defaultdict(lambda: defaultdict(lambda: []))
     for tcid, reader, result in res:
-        reading_dict[tcid][reader].append(db_util.unpack(result))
+        reading_dict[tcid][reader].append(unpack(result))
     return reading_dict
 
 
@@ -121,17 +125,12 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
                                      db.TextContent.text_ref_id.in_(trid_list),
                                      *clauses)
     if unzip:
-        content_dict = {id_val: db_util.unpack(content)
+        content_dict = {id_val: unpack(content)
                         for id_val, content in content_list}
     else:
         content_dict = {id_val: content for id_val, content in content_list}
     return content_dict
 
-
-#==============================================================================
-# Below are some functions that are useful for getting raw statements from the
-# database at various levels of abstraction.
-#==============================================================================
 
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
@@ -174,14 +173,14 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     list of Statements from the database corresponding to the query.
     """
     if db is None:
-        db = db_util.get_primary_db()
+        db = get_primary_db()
 
     if preassembled:
         Statements = db.PAStatements
         Agents = db.PAAgents
     else:
-        Statements = db.Statements
-        Agents = db.Agents
+        Statements = db.RawStatements
+        Agents = db.RawAgents
 
     if not (agent_id or role or stmt_type):
         raise ValueError('At least one of agent_id, role, or stmt_type '
@@ -238,7 +237,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     A list of Statements from the database corresponding to the paper id given.
     """
     if db is None:
-        db = db_util.get_primary_db()
+        db = get_primary_db()
 
     trid_list = _get_trids(db, id_val, id_type)
     if not trid_list:
@@ -282,32 +281,48 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     list of Statements from the database corresponding to the query.
     """
     if db is None:
-        db = db_util.get_primary_db()
+        db = get_primary_db()
 
-    stmts_tblname = 'pa_statements' if preassembled else 'statements'
+    stmts_tblname = 'pa_statements' if preassembled else 'raw_statements'
 
-    stmts = []
-    q = db.filter_query(stmts_tblname, *clauses)
-    if do_stmt_count:
-        logger.info("Counting statements...")
-        num_stmts = q.count()
-        logger.info("Total of %d statements" % num_stmts)
-    db_stmts = q.yield_per(count)
-    subset = []
-    total_counter = 0
-    for stmt in db_stmts:
-        subset.append(stmt)
-        if len(subset) == count:
-            stmts.extend(db_util.make_stmts_from_db_list(subset))
-            subset = []
-        total_counter += 1
-        if total_counter % count == 0:
+    if not preassembled:
+        stmts = []
+        q = db.filter_query(stmts_tblname, *clauses)
+        if do_stmt_count:
+            logger.info("Counting statements...")
+            num_stmts = q.count()
+            logger.info("Total of %d statements" % num_stmts)
+        db_stmts = q.yield_per(count)
+        for subset in batch_iter(db_stmts, count):
+            stmts.extend(make_stmts_from_db_list(subset))
             if do_stmt_count:
-                logger.info("%d of %d statements" % (total_counter, num_stmts))
+                logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
-                logger.info("%d statements" % total_counter)
+                logger.info("%d statements" % len(stmts))
+    else:
+        clauses += db.join(db.PAStatements, db.RawStatements)
+        pa_raw_stmt_pairs = db.filter_query([db.PAStatements, db.RawStatements],
+                                            *clauses) \
+            .order_by(db.PAStatements.mk_hash).yield_per(count)
+        stmt_dict = {}
+        for k, grp in groupby(pa_raw_stmt_pairs, key=lambda x: x[0].mk_hash):
+            some_stmts = make_pa_stmts_from_db_list(grp)
+            assert len(some_stmts) == 1, len(some_stmts)
+            stmt_dict[k] = some_stmts[0]
 
-    stmts.extend(db_util.make_stmts_from_db_list(subset))
+        # Now populate the supports/supported by fields.
+        support_links = db.filter_query(
+            [db.PASupportLinks.supported_mk_hash,
+             db.PASupportLinks.supporting_mk_hash],
+            or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
+                db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
+        ).distinct().yield_per(count)
+        for supped_hash, supping_hash in support_links:
+            stmt_dict[supped_hash].supported_by.append(stmt_dict[supping_hash])
+            stmt_dict[supping_hash].supports.append(stmt_dict[supped_hash])
+
+        stmts = list(stmt_dict.values())
+
     return stmts
 
 
