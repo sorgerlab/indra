@@ -6,9 +6,9 @@ import gzip
 import zlib
 from io import BytesIO
 import xml.etree.ElementTree as ET
-try:
+try:  # Python 3
     from itertools import zip_longest
-except ImportError:
+except ImportError:  # Python 2
     from itertools import izip_longest as zip_longest
 
 
