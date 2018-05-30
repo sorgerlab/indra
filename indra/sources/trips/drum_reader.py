@@ -67,6 +67,7 @@ class DrumReader(KQMLModule):
                               'the DrumReader')
         run_drum = kwargs.pop('run_drum', None)
         drum_system = kwargs.pop('drum_system', None)
+        name = kwargs.pop('name', 'DrumReader')
         if drum_system:
             self.drum_system = drum_system
         elif not run_drum:
@@ -76,7 +77,7 @@ class DrumReader(KQMLModule):
             port = kwargs.get('port', None)
             self.drum_system = self._run_drum(host, port)
 
-        super(DrumReader, self).__init__(name='DrumReader', **kwargs)
+        super(DrumReader, self).__init__(name=name, **kwargs)
         self.msg_counter = random.randint(1, 100000)
         self.ready()
         self.extractions = []
@@ -136,26 +137,20 @@ class DrumReader(KQMLModule):
         if host:
             options += ['-host', host]
         if port:
-            options += ['-port', port]
+            options += ['-port', str(port)]
         cmd = [cmd_path] + options
-        drum_proc = subprocess.Popen(cmd)
+        # The os.setsid() is passed in the argument preexec_fn so
+        # it's run after the fork() and before  exec() to run the shell.
+        # Uncomment the stdout line to supress printing to stdout
+        drum_proc = subprocess.Popen(cmd,
+                                     stdout=subprocess.PIPE,
+                                     preexec_fn=os.setsid)
         # TODO: Here we could monitor the stdout and wait for the "Ready" line
         time.sleep(20)
         return drum_proc
 
     def _kill_drum(self):
-        ps_command = subprocess.Popen("ps -o pid --ppid %d --noheaders" %
-                                      self.drum_system.pid, shell=True,
-                                      stdout=subprocess.PIPE)
-        # TODO: this needs to be recursive
-        ps_output = ps_command.stdout.read().decode('utf-8')
-        retcode = ps_command.wait()
-        children = ps_output.split('\n')[:-1]
-        # Kill the child processes
-        for pid_str in children:
-            os.kill(int(pid_str), signal.SIGTERM)
-        # Kill the process itself
-        os.kill(int(self.drum_system.pid), signal.SIGTERM)
+        os.killpg(os.getpgid(self.drum_system.pid), signal.SIGTERM)
 
 def _get_perf(text, msg_id):
     """Return a request message for a given text."""
