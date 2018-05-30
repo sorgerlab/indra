@@ -46,7 +46,9 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
         logger.info('Processing %d sentences for %s' % (len(sentences), pmid))
         ts = time.time()
         # Make a DrumReader instance
+        drum_args['name'] = 'DrumReader%s' % pmid
         dr = DrumReader(**drum_args)
+        time.sleep(3)
         # If there is no DRUM process set yet, we get the one that was
         # just started by the DrumReader
         if run_drum and drum_process is None:
@@ -66,6 +68,9 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
         statements = []
         # Process all the extractions into INDRA Statements
         for extraction in dr.extractions:
+            # Sometimes we get nothing back
+            if not extraction:
+                continue
             tp = process_xml(extraction)
             statements += tp.statements
         # Set the PMIDs for the evidences of the Statements
@@ -76,7 +81,7 @@ def read_pmid_sentences(pmid_sentences, **drum_args):
         all_statements[pmid] = statements
     # If we were running a DRUM process, we should kill it
     if drum_process and dr.drum_system:
-        dt._kill_drum()
+        dr._kill_drum()
     return all_statements
 
 
