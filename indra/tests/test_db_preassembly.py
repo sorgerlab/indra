@@ -29,7 +29,8 @@ from indra.tools import assemble_corpus as ac
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 STMT_PICKLE_FILE = os.path.join(THIS_DIR, 'test_stmts_tuples.pkl')
-MAX_NUM_STMTS = 100000  # 19165
+MAX_NUM_STMTS = 11721
+BATCH_SIZE = 2017
 STMTS = None
 
 
@@ -48,11 +49,9 @@ def _get_stmt_tuples():
     return stmt_tuples, col_names
 
 
-def _get_loaded_db(split=None, with_init_corpus=False):
-    print("Creating and filling a test database:")
+def _get_background_loaded_db():
     db = db_util.get_test_db()
     db._clear(force=True)
-    stmt_tuples, col_names = _get_stmt_tuples()
 
     # Get and load the provenance for the statements.
     print("\tLoading background metadata...")
@@ -67,10 +66,12 @@ def _get_loaded_db(split=None, with_init_corpus=False):
                                   'text_content_id', 'format', 'bytes'))
     db.copy('db_info', _load_tuples('test_db_info_tuples.pkl'),
             ('id', 'db_name'))
+    return db
 
-    # Now load the statements. Much of this processing is the result of active
-    # development, and once that is done, TODO: Format pickle to match
+
+def _get_input_stmt_tuples():
     print("\tPrepping the raw statements...")
+    stmt_tuples, col_names = _get_stmt_tuples()
     copy_col_names = ('uuid', 'mk_hash', 'type', 'indra_version', 'json',
                       'reading_id', 'db_info_id')
     copy_stmt_tuples = []
@@ -81,6 +82,16 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         entry_dict['mk_hash'] = stmt.get_hash()
         ret_tpl = tuple([entry_dict[col] for col in copy_col_names])
         copy_stmt_tuples.append(ret_tpl)
+    return copy_stmt_tuples, copy_col_names
+
+
+def _get_loaded_db(split=None, with_init_corpus=False):
+    print("Creating and filling a test database:")
+    db = _get_background_loaded_db()
+
+    # Now load the statements. Much of this processing is the result of active
+    # development, and once that is done, TODO: Format pickle to match
+    copy_stmt_tuples, copy_col_names = _get_input_stmt_tuples()
 
     print("\tInserting the raw statements...")
     if split is None:
@@ -104,7 +115,7 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         if with_init_corpus:
             print("\tAdding a preassembled corpus from first batch of raw "
                   "stmts...")
-            pa_manager = pm.PreassemblyManager(batch_size=20000)
+            pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)
             pa_manager.create_corpus(db)
         print("\tInserting the rest of the raw statements...")
         new_datetime = datetime.now()
@@ -153,9 +164,11 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
             else:
                 vals_2.append(val)
         if len(vals_1) or len(vals_2):
-            print("Found mismatched %s: %s=%s vs. %s=%s."
-                  % (label, stmt_1_name, vals_1, stmt_2_name, vals_2))
-            return {stmt_1_name: vals_1, stmt_2_name: vals_2}
+            print("Found mismatched %s: %s(%s)=%s vs. %s(%s)=%s."
+                  % (label, stmt_1_name, stmt_1.get_hash(shallow=True), vals_1,
+                     stmt_2_name, stmt_2.get_hash(shallow=True), vals_2))
+            return {'diffs': {stmt_1_name: vals_1, stmt_2_name: vals_2},
+                    'stmts': {stmt_1_name: stmt_1, stmt_2_name: stmt_2}}
         return None
 
     opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
@@ -165,8 +178,10 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
 
     new_hash_set = set(new_stmt_dict.keys())
     old_hash_set = set(old_stmt_dict.keys())
-    hash_diffs = {'extra_new': new_hash_set - old_hash_set,
-                  'extra_old': old_hash_set - new_hash_set}
+    hash_diffs = {'extra_new': [new_stmt_dict[h]
+                                for h in new_hash_set - old_hash_set],
+                  'extra_old': [old_stmt_dict[h]
+                                for h in old_hash_set - new_hash_set]}
     print(hash_diffs)
     tests = [{'funcs': {'list': lambda s: s.evidence,
                         'comp': lambda ev: ev.matches_key()},
@@ -295,6 +310,7 @@ def test_statement_distillation():
     assert len(stmts_p) == len(stmt_ids)
     stmt_ids_p = db_util.distill_stmts(db, num_procs=2)
     assert stmt_ids_p == stmt_ids
+    db = _get_loaded_db()
 
 
 def test_preassembly_with_database():
@@ -307,7 +323,7 @@ def test_preassembly_with_database():
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=2017)
+    pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
@@ -342,7 +358,7 @@ def test_preassembly_with_database():
 
 def test_incremental_preassembly_with_database():
     db = _get_loaded_db(split=0.8, with_init_corpus=True)
-    pa_manager = pm.PreassemblyManager(batch_size=11239)
+    pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
