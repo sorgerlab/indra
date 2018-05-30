@@ -199,7 +199,10 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     if role:
         clauses.append(Agents.role == role)
     if agent_id or role:
-        clauses.append(Agents.stmt_id == Statements.id)
+        if preassembled:
+            clauses.append(Agents.stmt_mk_hash == Statements.mk_hash)
+        else:
+            clauses.append(Agents.stmt_uuid == Statements.uuid)
     if stmt_type:
         clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
@@ -208,11 +211,8 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
 
 
 def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
-                            do_stmt_count=True):
+                            do_stmt_count=True, preassembled=True):
     """Get the statements from a particular paper.
-
-    Note: currently this can only retrieve raw statements, because of the
-    partially implemented configuration of the pre-assembled Statement table.
 
     Parameters
     ----------
@@ -245,13 +245,13 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
 
     stmts = []
     for trid in trid_list:
-        clauses = [
-            db.TextContent.text_ref_id == trid,
-            db.Readings.text_content_id == db.TextContent.id,
-            db.Statements.reader_ref == db.Readings.id
-        ]
-        stmts.extend(get_statements(clauses, count=count, preassembled=False,
-                                    do_stmt_count=do_stmt_count, db=db))
+        clauses = db.join(db.TextContent, db.RawStatements) \
+                  + [db.TextContent.text_ref_id == trid]
+        if preassembled:
+            clauses += db.join(db.RawStatements, db.PAStatements)
+        stmts.extend(get_statements(clauses, count=count, db=db,
+                                    preassembled=preassembled,
+                                    do_stmt_count=do_stmt_count))
     return stmts
 
 
@@ -316,7 +316,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
              db.PASupportLinks.supporting_mk_hash],
             or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
                 db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
-        ).distinct().yield_per(count)
+            ).distinct().yield_per(count)
         for supped_hash, supping_hash in support_links:
             stmt_dict[supped_hash].supported_by.append(stmt_dict[supping_hash])
             stmt_dict[supping_hash].supports.append(stmt_dict[supped_hash])
