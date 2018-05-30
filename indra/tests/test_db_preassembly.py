@@ -29,7 +29,7 @@ from indra.tools import assemble_corpus as ac
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 STMT_PICKLE_FILE = os.path.join(THIS_DIR, 'test_stmts_tuples.pkl')
-MAX_NUM_STMTS = 19165
+MAX_NUM_STMTS = 100000  # 19165
 STMTS = None
 
 
@@ -85,6 +85,8 @@ def _get_loaded_db(split=None, with_init_corpus=False):
     print("\tInserting the raw statements...")
     if split is None:
         db.copy('raw_statements', copy_stmt_tuples, copy_col_names)
+        print("\tAdding agents...")
+        db_util.insert_agents(db, 'raw')
         if with_init_corpus:
             print("\tAdding a preassembled corpus...")
             pa_manager = pm.PreassemblyManager()
@@ -97,17 +99,19 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         db.copy('raw_statements', [t + (initial_datetime,)
                                    for t in stmt_tuples_initial],
                 copy_col_names + ('create_date',))
+        print("\tAdding agents...")
+        db_util.insert_agents(db, 'raw')
         if with_init_corpus:
             print("\tAdding a preassembled corpus from first batch of raw "
                   "stmts...")
-            pa_manager = pm.PreassemblyManager(batch_size=1000)
+            pa_manager = pm.PreassemblyManager(batch_size=20000)
             pa_manager.create_corpus(db)
         print("\tInserting the rest of the raw statements...")
         new_datetime = datetime.now()
         db.copy('raw_statements', [t + (new_datetime,) for t in stmt_tuples_new],
                 copy_col_names + ('create_date',))
-    print("\tAdding agents...")
-    db_util.insert_agents(db, 'raw')
+        print("\tAdding agents...")
+        db_util.insert_agents(db, 'raw')
     return db
 
 
@@ -161,8 +165,9 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
 
     new_hash_set = set(new_stmt_dict.keys())
     old_hash_set = set(old_stmt_dict.keys())
-    assert new_hash_set == old_hash_set, \
-        (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
+    hash_diffs = {'extra_new': new_hash_set - old_hash_set,
+                  'extra_old': old_hash_set - new_hash_set}
+    print(hash_diffs)
     tests = [{'funcs': {'list': lambda s: s.evidence,
                         'comp': lambda ev: ev.matches_key()},
               'label': 'evidence text',
@@ -175,7 +180,7 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
                         'comp': lambda s: s.get_hash(shallow=True)},
               'label': 'supported-by matches keys',
               'results': []}]
-    for mk_hash in new_hash_set:
+    for mk_hash in (new_hash_set & old_hash_set):
         for test_dict in tests:
             res = _compare_list_elements(test_dict['label'],
                                          test_dict['funcs']['list'],
@@ -192,6 +197,7 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
         ('\n'.join(['Found %d mismatches in %s.' % (len(td['results']),
                                                     td['label'])
                     for td in tests]))
+    assert not any(hash_diffs.values()), "Found mismatched hashes."
 
 
 def test_preassembly_without_database():
@@ -336,13 +342,10 @@ def test_preassembly_with_database():
 
 def test_incremental_preassembly_with_database():
     db = _get_loaded_db(split=0.8, with_init_corpus=True)
-    pa_manager = pm.PreassemblyManager(batch_size=1000)
+    pa_manager = pm.PreassemblyManager(batch_size=11239)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
-    rdg_raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
-    db_raw_stmts = db.select_all(db.RawStatements,
-                                 db.RawStatements.db_info_id.isnot(None))
-    raw_stmts = rdg_raw_stmts | set(db_util.make_stmts_from_db_list(db_raw_stmts))
+    raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
