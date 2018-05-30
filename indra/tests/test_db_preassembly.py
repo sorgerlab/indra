@@ -164,9 +164,9 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
             else:
                 vals_2.append(val)
         if len(vals_1) or len(vals_2):
-            print("Found mismatched %s: %s(%s)=%s vs. %s(%s)=%s."
-                  % (label, stmt_1_name, stmt_1.get_hash(shallow=True), vals_1,
-                     stmt_2_name, stmt_2.get_hash(shallow=True), vals_2))
+            print("Found mismatched %s for hash %s:\n\t%s=%s\n\t%s=%s"
+                  % (label, stmt_1.get_hash(shallow=True), stmt_1_name, vals_1,
+                     stmt_2_name, vals_2))
             return {'diffs': {stmt_1_name: vals_1, stmt_2_name: vals_2},
                     'stmts': {stmt_1_name: stmt_1, stmt_2_name: stmt_2}}
         return None
@@ -310,7 +310,6 @@ def test_statement_distillation():
     assert len(stmts_p) == len(stmt_ids)
     stmt_ids_p = db_util.distill_stmts(db, num_procs=2)
     assert stmt_ids_p == stmt_ids
-    db = _get_loaded_db()
 
 
 def test_preassembly_with_database():

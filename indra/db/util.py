@@ -573,12 +573,9 @@ def get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                             # was some kind of misuse. Flag it, pick just one of
                             # the preferred statements, and delete any deletable
                             # statements.
-                            logger.warning("Duplicate deduplicated statements "
-                                           "found: %s" % str(preferred_stmts))
-                            stmts.add(preferred_stmts.pop())
-                            # TODO: Perhaps the offending evidence links should
-                            # be cleaned up as well?
-                            duplicate_stmts |= (stmt_set - preferred_stmts)
+                            assert False,\
+                                ("Duplicate deduplicated statements found: %s"
+                                 % str(preferred_stmts))
                 if get_full_stmts:
                     duplicate_ids |= {s.uuid for s in duplicate_stmts}
                 else:
@@ -600,9 +597,9 @@ def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
         elif len(preferred_stmts) == 1:
             s_tpl = preferred_stmts.pop()
         else:  # len(preferred_stmts) > 1
-            logger.warning("Duplicate deduplicated statements "
-                           "found: %s" % str(preferred_stmts))
-            s_tpl = preferred_stmts.pop()
+            assert False, \
+                ("Duplicate deduplicated statements found: %s"
+                 % str(preferred_stmts))
         duplicate_ids = {s.uuid for s in stmt_tpl_set
                          if s.uuid not in not_duplicates}
 
