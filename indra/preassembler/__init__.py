@@ -750,15 +750,7 @@ def flatten_stmts(stmts):
     return list(total_stmts)
 
 
-def _flatten_evidence_for_stmt(stmt):
-    total_evidence = set(stmt.evidence)
-    for supp_stmt in stmt.supported_by:
-        child_evidence = _flatten_evidence_for_stmt(supp_stmt)
-        total_evidence = total_evidence.union(child_evidence)
-    return list(total_evidence)
-
-
-def flatten_evidence(stmts):
+def flatten_evidence(stmts, collect_from=None):
     """Add evidence from *supporting* stmts to evidence for *supported* stmts.
 
     Parameters
@@ -767,6 +759,10 @@ def flatten_evidence(stmts):
         A list of top-level statements with associated supporting statements
         resulting from building a statement hierarchy with
         :py:meth:`combine_related`.
+    collect_from : str in ('supports', 'supported_by')
+        String indicating whether to collect and flatten evidence from the
+        `supports` attribute of each statement or the `supported_by` attribute.
+        If not set, defaults to 'supported_by'.
 
     Returns
     -------
@@ -796,10 +792,26 @@ def flatten_evidence(stmts):
     >>> sorted([e.text for e in flattened[0].evidence]) # doctest:+IGNORE_UNICODE
     ['bak', 'bar', 'baz', 'foo']
     """
+    if collect_from is None:
+        collect_from = 'supported_by'
+    if collect_from not in ('supports', 'supported_by'):
+        raise ValueError('collect_from must be one of "supports", '
+                         '"supported_by"')
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
     stmts = fast_deepcopy(stmts)
     for stmt in stmts:
-        total_evidence = _flatten_evidence_for_stmt(stmt)
+        total_evidence = _flatten_evidence_for_stmt(stmt, collect_from)
         stmt.evidence = total_evidence
     return stmts
+
+
+def _flatten_evidence_for_stmt(stmt, collect_from):
+    supp_stmts = (stmt.supports if collect_from == 'supports'
+                                else stmt.supported_by)
+    total_evidence = set(stmt.evidence)
+    for supp_stmt in supp_stmts:
+        child_evidence = _flatten_evidence_for_stmt(supp_stmt, collect_from)
+        total_evidence = total_evidence.union(child_evidence)
+    return list(total_evidence)
+
