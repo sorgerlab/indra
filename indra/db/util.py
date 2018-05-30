@@ -544,20 +544,41 @@ def get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                 # of each.
                 stmt_set_itr = (stmt_set for r_dict in rv_dict[best_rv].values()
                                 for stmt_set in r_dict.values())
+                duplicate_stmts = set()
                 for stmt_set in stmt_set_itr:
-                    prefered_stmts = stmt_set & not_duplicates
-                    stmt_set -= prefered_stmts
-                    if len(prefered_stmts) == 1:
-                        stmts.add(prefered_stmts.pop())
-                    elif len(prefered_stmts) > 1:
-                        logger.warning("Duplicate deduplicated statements "
-                                       "found: %s" % str(prefered_stmts))
-                        stmts.add(prefered_stmts.pop())
+                    if not stmt_set:
+                        continue
+                    elif len(stmt_set) == 1:
+                        # There isn't really a choice here.
+                        stmts |= stmt_set
                     else:
-                        stmts.add(stmt_set.pop())
-                duplicate_stmts = {s for r_dict in rv_dict[best_rv].values()
-                                   for stmt_set in r_dict.values()
-                                   for s in stmt_set}
+                        if get_full_stmts:
+                            preferred_stmts = {s for s in stmt_set
+                                              if s.uuid in not_duplicates}
+                        else:
+                            preferred_stmts = stmt_set & not_duplicates
+                        if not preferred_stmts:
+                            # Pick the first one to pop, record the rest as
+                            # duplicates.
+                            stmts.add(stmt_set.pop())
+                            duplicate_stmts |= stmt_set
+                        elif len(preferred_stmts) == 1:
+                            # There is now no choice: just take the preferred
+                            # statement.
+                            stmts |= preferred_stmts
+                            duplicate_stmts |= (stmt_set - preferred_stmts)
+                        else:
+                            # This shouldn't happen, so an early run of this
+                            # function must have failed somehow, or else there
+                            # was some kind of misuse. Flag it, pick just one of
+                            # the preferred statements, and delete any deletable
+                            # statements.
+                            logger.warning("Duplicate deduplicated statements "
+                                           "found: %s" % str(preferred_stmts))
+                            stmts.add(preferred_stmts.pop())
+                            # TODO: Perhaps the offending evidence links should
+                            # be cleaned up as well?
+                            duplicate_stmts |= (stmt_set - preferred_stmts)
                 if get_full_stmts:
                     duplicate_ids |= {s.uuid for s in duplicate_stmts}
                 else:
@@ -565,25 +586,31 @@ def get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
     return stmts, duplicate_ids
 
 
-def _choose_unique(not_duplicates, get_full_stmts, stmt_grp):
+def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
     """Choose one of the statements from a redundant set."""
-    stmt_set = set(stmt_grp)
-    preferred_stmts = stmt_set & not_duplicates
-    if len(preferred_stmts) == 1:
-        s_tpl = preferred_stmts.pop()
-    elif len(preferred_stmts) > 1:
-        logger.warning("Duplicate deduplicated statements "
-                       "found: %s" % str(preferred_stmts))
-        s_tpl = preferred_stmts.pop()
+    assert stmt_tpl_grp, "This cannot be empty."
+    if len(stmt_tpl_grp) == 1:
+        s_tpl = stmt_tpl_grp[0]
+        duplicate_ids = set()
     else:
-        s_tpl = stmt_set.pop()
+        stmt_tpl_set = set(stmt_tpl_grp)
+        preferred_stmts = {s for s in stmt_tpl_set if s.uuid in not_duplicates}
+        if not preferred_stmts:
+            s_tpl = stmt_tpl_set.pop()
+        elif len(preferred_stmts) == 1:
+            s_tpl = preferred_stmts.pop()
+        else:  # len(preferred_stmts) > 1
+            logger.warning("Duplicate deduplicated statements "
+                           "found: %s" % str(preferred_stmts))
+            s_tpl = preferred_stmts.pop()
+        duplicate_ids = {s.uuid for s in stmt_tpl_set
+                         if s.uuid not in not_duplicates}
 
     if get_full_stmts:
         stmt_json = json.loads(s_tpl[2].decode('utf-8'))
         ret_stmt = Statement._from_json(stmt_json)
     else:
         ret_stmt = s_tpl[1]
-    duplicate_ids = {s_tpl[1] for s_tpl in stmt_set}
     return ret_stmt, duplicate_ids
 
 
@@ -661,6 +688,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
         get_filtered_rdg_statements(db, get_full_stmts, clauses, undeletable)
     print("After filtering reading: %d unique statements, %d duplicates."
           % (len(stmts), len(duplicate_ids)))
+    assert not undeletable & duplicate_ids, undeletable & duplicate_ids
 
     db_stmts, db_duplicates = \
         get_filtered_db_statements(db, get_full_stmts, clauses, undeletable,
@@ -669,6 +697,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
     duplicate_ids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
           % (len(stmts), len(duplicate_ids)))
+    assert not undeletable & duplicate_ids, undeletable & duplicate_ids
 
     # Delete duplicates
     if len(duplicate_ids) and delete_duplicates:
