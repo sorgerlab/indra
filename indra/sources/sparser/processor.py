@@ -161,6 +161,12 @@ def _fix_agent(agent):
             hgnc_id = hgnc_client.get_hgnc_id(gene_name)
             if hgnc_id:
                 agent.db_refs['HGNC'] = hgnc_id
+        # If it doesn't have a gene name, it's better to just
+        # use the raw string name otherwise Sparser sets
+        # has Uniprot IDs or mnemonics as the name
+        else:
+            name = agent.db_refs.get('TEXT', agent.name)
+            agent.name = name
 
 
 class SparserXMLProcessor(object):
