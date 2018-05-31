@@ -154,7 +154,7 @@ class Content(object):
         return any([self._format == fmt for fmt in formats])
 
     def get_id(self):
-        return str(self._id)
+        return self._id
 
     def get_format(self):
         return self._format
@@ -362,10 +362,12 @@ class ReachReader(Reader):
                                % (content.get_id(), quality_issue))
                 continue
 
-            if re.match('^\w+?\d+$', content.get_id()) is None:
+            # Look for things that are more like file names, rather than ids.
+            cid = content.get_id()
+            if isinstance(cid, str) and re.match('^\w*?\d+$', cid) is None:
                 new_id = 'FILE%06d' % i
                 i += 1
-                self.id_maps[new_id] = content.get_id()
+                self.id_maps[new_id] = cid
                 content.change_id(new_id)
                 new_fpath = content.copy_to(self.input_dir)
             else:

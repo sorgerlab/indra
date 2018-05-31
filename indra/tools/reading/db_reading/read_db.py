@@ -457,7 +457,7 @@ def process_content(text_content):
         cont_fmt = 'nxml'
     else:
         cont_fmt = text_content.format
-    content = Content.from_string(str(text_content.id), cont_fmt,
+    content = Content.from_string(text_content.id, cont_fmt,
                                   text_content.content, compressed=True,
                                   encoded=True)
     if text_content.source == 'elsevier':
