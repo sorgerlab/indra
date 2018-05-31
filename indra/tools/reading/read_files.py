@@ -25,7 +25,7 @@ if __name__ == '__main__':
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
 
-from indra.tools.reading.readers import _get_dir, get_readers
+from indra.tools.reading.readers import _get_dir, get_readers, Content
 
 
 def read_files(files, readers, **kwargs):
@@ -46,9 +46,10 @@ def read_files(files, readers, **kwargs):
     output_list : list [ReadingData]
         A list of ReadingData objects with the contents of the readings.
     """
+    reading_content = [Content.from_file(filepath) for filepath in files]
     output_list = []
     for reader in readers:
-        res_list = reader.read(files, **kwargs)
+        res_list = reader.read(reading_content, **kwargs)
         if res_list is None:
             logger.info("Nothing read by %s." % reader.name)
         else:

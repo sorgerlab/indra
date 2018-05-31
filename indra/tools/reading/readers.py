@@ -71,6 +71,141 @@ class SparserError(ReadingError):
     pass
 
 
+class Content(object):
+    """An object to regularize the content passed to the readers.
+
+    To use this class, use one of the two constructor methods:
+     - `from_file` : use content from a file on the filesystem.
+     - `from_string` : Pass a string (or bytes) directly as content.
+
+    This class also regularizes the handling of id's and formats, as well as
+    allowing for decompression and decoding, in the manner standard in the INDRA
+    project.
+    """
+    def __init__(self, id, format, compressed=False, encoded=False):
+        self.file_exists = False
+        self.compressed = compressed
+        self.encoded = encoded
+        self._id = id
+        self._format = format
+        self._text = None
+        self._fname = None
+        self._location = None
+        self._raw_content = None
+        return
+
+    @classmethod
+    def from_file(cls, file_path, compressed=False, encoded=False):
+        """Create a content object from a file path."""
+        file_id = '.'.join(path.basename(file_path).split('.')[:-1])
+        file_format = file_path.split('.')[-1]
+        content = cls(file_id, file_format, compressed, encoded)
+        content.file_exists = True
+        content._location = path.dirname(file_path)
+        return content
+
+    @classmethod
+    def from_string(cls, id, format, raw_content, compressed=False,
+                    encoded=False):
+        """Create a Content object from string/bytes content."""
+        content = cls(id, format, compressed, encoded)
+        content._raw_content = raw_content
+        return content
+
+    def _load_raw_content(self):
+        if self.file_exists and self._raw_content is None:
+            with open(self.get_filepath(), 'r') as f:
+                self._raw_content = f.read()
+        return
+
+    def change_id(self, new_id):
+        """Change the id of this content."""
+        self._load_raw_content()
+        self._id = new_id
+        self.get_filename(renew=True)
+        self.get_filepath(renew=True)
+        return
+
+    def change_format(self, new_format):
+        """Change the format label of this content.
+
+        Note that this does NOT actually alter the format of the content, only
+        the label.
+        """
+        self._load_raw_content()
+        self._format = new_format
+        self.get_filename(renew=True)
+        self.get_filepath(renew=True)
+        return
+
+    def set_location(self, new_location):
+        """Set/change the location of this content.
+
+        Note that this does NOT change the actual location of the file. To do
+        so, use the `copy_to` method.
+        """
+        self._load_raw_content()
+        self._location = new_location
+        self.get_filepath(renew=True)
+        return
+
+    def is_format(self, *formats):
+        """Check the format of this content."""
+        return any([self._format == fmt for fmt in formats])
+
+    def get_id(self):
+        return self._id
+
+    def get_format(self):
+        return self._format
+
+    def get_text(self):
+        """Get the loaded, decompressed, and decoded text of this content."""
+        self._load_raw_content()
+        if self._text is None:
+            assert self._raw_content is not None
+            ret_cont = self._raw_content
+            if self.compressed:
+                ret_cont = zlib.decompress(ret_cont, zlib.MAX_WBITS+16)
+            if self.encoded:
+                ret_cont = ret_cont.decode('utf-8')
+            self._text = ret_cont
+        assert self._text is not None
+        return self._text
+
+    def get_filename(self, renew=False):
+        """Get the filename of this content.
+
+        If the file name doesn't already exist, we created it as {id}.{format}.
+        """
+        if self._fname is None or renew:
+            self._fname = '%s.%s' % (self._id, self._format)
+        return self._fname
+
+    def get_filepath(self, renew=False):
+        """Get the file path, joining the name and location for this file.
+
+        If no location is given, it is assumed to be "here", e.g. ".".
+        """
+        if self._location is None or renew:
+            self._location = '.'
+        return path.join(self._location, self.get_filename())
+
+    def copy_to(self, location, fname=None):
+        if fname is None:
+            fname = self.get_filename()
+        fpath = path.join(location, fname)
+        if self.file_exists and not self._raw_content:
+            shutil.copy(self.get_filepath(), fpath)
+        else:
+            with open(fpath, 'w') as f:
+                f.write(self.get_text())
+        self._fname = fname
+        self._location = location
+        self.file_exists = True
+        return fpath
+
+
 class Reader(object):
     """This abstract object defines and some general methods for readers."""
     name = NotImplemented
@@ -86,6 +221,7 @@ class Reader(object):
             )
         self.tmp_dir = tmp_dir
         self.input_dir = _get_dir(tmp_dir, 'input')
+        self.id_maps = {}
         return
 
     @classmethod
@@ -121,11 +257,12 @@ class ReachReader(Reader):
         self.conf_file_path = path.join(self.tmp_dir, 'indra.conf')
         with open(conf_fmt_fname, 'r') as fmt_file:
             fmt = fmt_file.read()
-            loglevel = 'INFO'  # 'DEBUG' if logger.level == logging.DEBUG else 'INFO'
+            log_level = 'INFO'
+            # log_level = 'DEBUG' if logger.level == logging.DEBUG else 'INFO'
             with open(self.conf_file_path, 'w') as f:
                 f.write(
                     fmt.format(tmp_dir=self.tmp_dir, num_cores=self.n_proc,
-                               loglevel=loglevel)
+                               loglevel=log_level)
                     )
         self.output_dir = _get_dir(self.tmp_dir, 'output')
         return
@@ -213,45 +350,31 @@ class ReachReader(Reader):
                                               self.input_character_limit)
         return None
 
-    def _write_content(self, text_content):
-        def write_content_file(ext):
-            fname = '%s.%s' % (text_content.id, ext)
-            cont_str = zlib.decompress(text_content.content, 16+zlib.MAX_WBITS)
-
-            quality_issue = self._check_content(cont_str.decode('utf8'))
-            if quality_issue is not None:
-                logger.warning("Skipping %d due to: %s"
-                                % (text_content.id, quality_issue))
-            with open(path.join(self.input_dir, fname), 'wb') as f:
-                f.write(cont_str)
-            logger.debug('%s saved for reading by reach.' % fname)
-        if text_content.format == formats.XML:
-            write_content_file('nxml')
-        elif text_content.format == formats.TEXT:
-            write_content_file('txt')
-        else:
-            raise ReachError("Unrecognized format %s." % text_content.format)
-        return
-
-    def _move_content(self, text_content):
-        fname = text_content.strip()
-        with open(fname) as f:
-            quality_issue = self._check_content(f.read())
-        if quality_issue is not None:
-            logger.warning("Skipping %s due to: %s"
-                           % (fname, quality_issue))
-        new_fname = path.join(self.input_dir, path.basename(fname))
-        shutil.copy(fname, new_fname)
-        return
-
     def prep_input(self, read_list):
         """Apply the readers to the content."""
         logger.info("Prepping input.")
-        for text_content in read_list:
-            if isinstance(text_content, str):
-                self._move_content(text_content)
+        i = 0
+        for content in read_list:
+            # Check the quality of the text, and skip if there are any issues.
+            quality_issue = self._check_content(content.get_text())
+            if quality_issue is not None:
+                logger.warning("Skipping %d due to: %s"
+                               % (content.get_id(), quality_issue))
+                continue
+
+            # Look for things that are more like file names, rather than ids.
+            cid = content.get_id()
+            if isinstance(cid, str) and re.match('^\w*?\d+$', cid) is None:
+                new_id = 'FILE%06d' % i
+                i += 1
+                self.id_maps[new_id] = cid
+                content.change_id(new_id)
+                new_fpath = content.copy_to(self.input_dir)
             else:
-                self._write_content(text_content)
+                # Put the content in the appropriate directory.
+                new_fpath = content.copy_to(self.input_dir)
+            logger.debug('%s saved for reading by reach.'
+                         % new_fpath)
         return
 
     def get_output(self):
@@ -271,6 +394,8 @@ class ReachReader(Reader):
             base_prefix = path.basename(prefix)
             if base_prefix.isdecimal():
                 base_prefix = int(base_prefix)
+            elif base_prefix in self.id_maps.keys():
+                base_prefix = self.id_maps[base_prefix]
             try:
                 content = self._join_json_files(prefix, clear=True)
             except Exception as e:
@@ -303,7 +428,7 @@ class ReachReader(Reader):
         if mem_tot is not None and mem_tot <= self.REACH_MEM + self.MEM_BUFFER:
             logger.error(
                 "Too little memory to run reach. At least %s required." %
-                self.REACH_MEM + self.MEM_BUFFER
+                (self.REACH_MEM + self.MEM_BUFFER)
                 )
             logger.info("REACH not run.")
         elif len(read_list) > 0:
@@ -348,6 +473,7 @@ class SparserReader(Reader):
     def __init__(self, *args, **kwargs):
         self.version = self.get_version()
         super(SparserReader, self).__init__(*args, **kwargs)
+        self.file_list = None
         return
 
     @classmethod
@@ -358,60 +484,28 @@ class SparserReader(Reader):
         "Prepare the list of files or text content objects to be read."
         logger.info('Prepping input for sparser.')
 
-        file_list = []
+        self.file_list = []
 
-        def add_nxml_file(tcid, nxml_bts):
-            fpath = path.join(self.input_dir, 'PMC%d.nxml' % tcid)
-            with open(fpath, 'wb') as f:
-                f.write(nxml_bts)
-            file_list.append(fpath)
-
-        for item in read_list:
-            if isinstance(item, str):
-                # This implies that it is a file path
-                fpath = item.strip()
-                if fpath.endswith('.nxml'):
-                    # If it is already an nxml, we just need to adjust the
-                    # name a bit, if anything.
-                    if fpath.startswith('PMC'):
-                        file_list.append(fpath)
-                    else:
-                        new_fpath = path.join(self.tmp_dir,
-                                              'PMC' + path.basename(fpath))
-                        shutil.copy(fpath, new_fpath)
-                        file_list.append(new_fpath)
-                else:
-                    # Otherwise we need to frame the content in xml and put it
-                    # in a new file with the appropriat name.
-                    old_name = path.basename(fpath)
-                    new_fname = '.'.join(old_name.split('.')[:-1] + ['nxml'])
-                    new_fpath = path.join(self.tmp_dir, new_fname)
-                    with open(fpath, 'r') as f_old:
-                        content = f_old.read()
-                    nxml_str = sparser.make_nxml_from_text(content)
-                    with open(new_fpath, 'w') as f_new:
-                        f_new.write(nxml_str)
-                    file_list.append(new_fpath)
-            elif all([hasattr(item, a) for a in ['format', 'content', 'id']]):
-                # This implies that it is a text content object, or something
-                # with a matching API.
-                if item.format == formats.XML:
-                    add_nxml_file(
-                        item.id,
-                        zlib.decompress(item.content, 16+zlib.MAX_WBITS)
-                        )
-                elif item.format == formats.TEXT:
-                    txt_bts = zlib.decompress(item.content, 16+zlib.MAX_WBITS)
-                    nxml_str = sparser.make_nxml_from_text(
-                        txt_bts.decode('utf8')
-                        )
-                    add_nxml_file(item.id, nxml_str.encode('utf8'))
-                else:
-                    raise SparserError("Unrecognized format %s." % item.format)
+        for content in read_list:
+            if content.is_format('nxml'):
+                # If it is already an nxml, we just need to adjust the
+                # name a bit, if anything.
+                if not content.get_filename().startswith('PMC'):
+                    content.change_id('PMC' + str(content.get_id()))
+                fpath = content.copy_to(self.tmp_dir)
+                self.file_list.append(fpath)
+            elif content.is_format('txt', 'text'):
+                # Otherwise we need to frame the content in xml and put it
+                # in a new file with the appropriate name.
+                nxml_str = sparser.make_nxml_from_text(content.get_text())
+                new_content = Content.from_string('PMC' + str(content.get_id()),
+                                                  'nxml', nxml_str)
+                fpath = new_content.copy_to(self.tmp_dir)
+                self.file_list.append(fpath)
             else:
-                raise SparserError("Unknown type of item for reading %s." %
-                                   type(item))
-        return file_list
+                raise SparserError("Unrecognized format %s."
+                                   % content.format)
+        return
 
     def get_output(self, output_files, clear=True):
         "Get the output files as an id indexed dict."
@@ -490,8 +584,9 @@ class SparserReader(Reader):
     def read(self, read_list, verbose=False, log=False, n_per_proc=None):
         "Perform the actual reading."
         ret = []
-        file_list = self.prep_input(read_list)
-        if len(file_list) > 0:
+        self.prep_input(read_list)
+        L = len(self.file_list)
+        if L > 0:
             logger.info("Beginning to run sparser.")
             output_file_list = []
             if log:
@@ -501,31 +596,31 @@ class SparserReader(Reader):
                 outbuf = None
             try:
                 if self.n_proc == 1:
-                    for fpath in file_list:
+                    for fpath in self.file_list:
                         outpath, _ = self.read_one(fpath, outbuf, verbose)
                         if outpath is not None:
                             output_file_list.append(outpath)
                 else:
                     if n_per_proc is None:
-                        L = len(file_list)
                         n_per_proc = max(1, min(1000, L//self.n_proc//2))
-
+                    pool = None
                     try:
                         pool = Pool(self.n_proc)
                         if n_per_proc is not 1:
-                            batches = [file_list[n*n_per_proc:(n+1)*n_per_proc]
+                            batches = [self.file_list[n*n_per_proc:(n+1)*n_per_proc]
                                        for n in range(L//n_per_proc + 1)]
                             out_lists_and_buffs = pool.map(self.read_some,
                                                            batches)
                         else:
                             out_files_and_buffs = pool.map(self.read_one,
-                                                           file_list)
+                                                           self.file_list)
                             out_lists_and_buffs = [([out_files], buffs)
                                                    for out_files, buffs
                                                    in out_files_and_buffs]
                     finally:
-                        pool.close()
-                        pool.join()
+                        if pool is not None:
+                            pool.close()
+                            pool.join()
                     for i, (out_list, buff) in enumerate(out_lists_and_buffs):
                         if out_list is not None:
                             output_file_list += out_list
@@ -619,8 +714,8 @@ class ReadingData(object):
                               .decode('utf8')),
                    db_reading.id)
 
-    @classmethod
-    def get_cols(self):
+    @staticmethod
+    def get_cols():
         """Get the columns for the tuple returned by `make_tuple`."""
         return ('text_content_id', 'reader', 'reader_version', 'format',
                 'bytes')
@@ -645,6 +740,8 @@ class ReadingData(object):
             else:
                 raise ReadingError("Sparser should only ever be JSON, not %s."
                                    % self.format)
+        else:
+            raise ReadingError("Unknown reader: %s." % self.reader)
         if processor is None:
             logger.error("Production of statements from %s failed for %s."
                          % (self.reader, self.tcid))

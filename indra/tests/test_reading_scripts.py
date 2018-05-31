@@ -8,12 +8,12 @@ from os import path
 from nose.plugins.attrib import attr
 
 from indra.tools.reading.db_reading import read_db as rdb
+from indra.tools.reading.db_reading.read_db import process_content
 from indra.tools.reading.read_files import read_files
 from indra.tools.reading.util.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 
-from indra.db import formats
 from indra.tests.test_db import get_db as get_test_db
 from indra.tests.test_db import get_db_with_pubmed_content
 
@@ -112,7 +112,8 @@ def test_reading_content_insert():
     readers = get_readers()
     reading_output = []
     for reader in readers:
-        reading_output += reader.read(tc_list, verbose=True)
+        reading_output += reader.read([process_content(tc) for tc in tc_list],
+                                      verbose=True)
     expected_output_len = len(tc_list)*len(readers)
     assert len(reading_output) == expected_output_len, \
         ("Not all text content successfully read."
@@ -246,28 +247,29 @@ def test_produce_readings():
 @attr('slow', 'nonpublic')
 def test_read_files():
     "Test that the system can read files."
-    db = get_db_with_pubmed_content()
-
     # Create the test files.
-    test_file_fmt = 'test_reading_input.%s'
     example_files = []
-    for fmt in [formats.TEXT, formats.XML]:
-        tc = db.select_one(db.TextContent, db.TextContent.format == fmt)
-        if tc is None:
-            print("Could not find %s content for testing." % fmt)
-            continue
-        suffix = fmt
-        if fmt is formats.XML:
-            suffix = 'n' + fmt
-        with open(test_file_fmt % suffix, 'wb') as f:
-            f.write(zlib.decompress(tc.content, 16+zlib.MAX_WBITS))
-        example_files.append(test_file_fmt % suffix)
+
+    # Get txt content
+    abstract_txt = ("This is a paper that contains the phrase: MEK "
+                    "phosphorylates ERK.")
+    with open('test_abstract.txt', 'w') as f:
+        f.write(abstract_txt)
+    example_files.append('test_abstract.txt')
+
+    # Get nxml content
+    pmc_test_fpath = path.join(path.dirname(path.abspath(__file__)),
+                               'pmc_cont_example.nxml')
+    if path.exists(pmc_test_fpath):
+        example_files.append(pmc_test_fpath)
+
+    assert len(example_files), "No content available to test."
 
     # Now read them.
     readers = get_readers()
     outputs = read_files(example_files, readers)
     N_out = len(outputs)
-    N_exp = len(example_files)
+    N_exp = 2*len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
 
 
@@ -277,7 +279,8 @@ def test_sparser_parallel():
     db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
-    result = sparser_reader.read(tc_list, verbose=True, log=True)
+    result = sparser_reader.read([process_content(tc) for tc in tc_list],
+                                 verbose=True, log=True)
     N_exp = len(tc_list)
     N_res = len(result)
     assert N_exp == N_res, \
@@ -290,7 +293,8 @@ def test_sparser_parallel_one_batch():
     db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
-    result = sparser_reader.read(tc_list, verbose=True, n_per_proc=1)
+    result = sparser_reader.read([process_content(tc) for tc in tc_list],
+                                 verbose=True, n_per_proc=1)
     N_exp = len(tc_list)
     N_res = len(result)
     assert N_exp == N_res, \

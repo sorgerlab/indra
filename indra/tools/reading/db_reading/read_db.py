@@ -100,10 +100,12 @@ if __name__ == '__main__':
     if args.debug and not args.quiet:
         logger.setLevel(logging.DEBUG)
 
+from indra.literature.elsevier_client import extract_text as process_elsevier
 from indra.db import get_primary_db, formats, texttypes
 from indra.db import sql_expressions as sql
 from indra.db.util import insert_agents
-from indra.tools.reading.readers import ReadingData, _get_dir, get_reader
+from indra.tools.reading.readers import ReadingData, _get_dir, get_reader, \
+    Content
 
 
 class ReadDBError(Exception):
@@ -446,6 +448,29 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
     return readings_query.distinct()
 
 
+def process_content(text_content):
+    """Get the appropriate content object from the text content."""
+    if text_content.format == formats.TEXT:
+        cont_fmt = 'txt'
+    elif (text_content.source in ['pmc_oa', 'manuscripts']
+          and text_content.format == formats.XML):
+        cont_fmt = 'nxml'
+    else:
+        cont_fmt = text_content.format
+    content = Content.from_string(text_content.id, cont_fmt,
+                                  text_content.content, compressed=True,
+                                  encoded=True)
+    if text_content.source == 'elsevier':
+        raw_xml_text = content.get_text()
+        elsevier_text = process_elsevier(raw_xml_text)
+        if elsevier_text is None:
+            logger.warning("Could not extract text from Elsevier xml for tcid: "
+                           "%d" % text_content.id)
+            return None
+        content = Content.from_string(content.get_id(), 'text', elsevier_text)
+    return content
+
+
 # =============================================================================
 # Core Reading Functions
 # =============================================================================
@@ -503,7 +528,7 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
         for text_content in tc_read_q.yield_per(batch_size):
             # The get_content function returns an iterator which yields
             # results in batches, so as not to overwhelm RAM. We need to read
-            # in batches for much the same reaason.
+            # in batches for much the same reason.
             for r in readers:
                 if not force_read:
                     if skip_dict is not None:
@@ -518,7 +543,9 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                             )
                         if reading is not None:
                             continue
-                batch_list_dict[r.name].append(text_content)
+                processed_content = process_content(text_content)
+                if processed_content is not None:
+                    batch_list_dict[r.name].append(processed_content)
 
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
                     # TODO: this is a bit cludgy...maybe do this better?
