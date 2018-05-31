@@ -80,7 +80,7 @@ def get_xml(html, content_tag='ekb', fail_if_empty=False):
 
     if fail_if_empty:
         assert events_terms != '',\
-            "Get empty string for events content from html:\n%s" % html
+            "Got empty string for events content from html:\n%s" % html
 
     header = ('<?xml version="1.0" encoding="utf-8" standalone="yes"?><%s%s>'
               % (content_tag, meta))
