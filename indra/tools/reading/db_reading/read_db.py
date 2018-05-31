@@ -457,12 +457,17 @@ def process_content(text_content):
         cont_fmt = 'nxml'
     else:
         cont_fmt = text_content.format
-    content = Content.from_string(text_content.id, cont_fmt,
+    content = Content.from_string(str(text_content.id), cont_fmt,
                                   text_content.content, compressed=True,
                                   encoded=True)
     if text_content.source == 'elsevier':
-        content = Content.from_string(content.id, 'text',
-                                      process_elsevier(content.get_text()))
+        raw_xml_text = content.get_text()
+        elsevier_text = process_elsevier(raw_xml_text)
+        if elsevier_text is None:
+            logger.warning("Could not extract text from Elsevier xml for tcid: "
+                           "%d" % text_content.id)
+            return None
+        content = Content.from_string(content.get_id(), 'text', elsevier_text)
     return content
 
 
@@ -538,7 +543,9 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                             )
                         if reading is not None:
                             continue
-                batch_list_dict[r.name].append(process_content(text_content))
+                processed_content = process_content(text_content)
+                if processed_content is not None:
+                    batch_list_dict[r.name].append(processed_content)
 
                 if (len(batch_list_dict[r.name])+1) % batch_size is 0:
                     # TODO: this is a bit cludgy...maybe do this better?

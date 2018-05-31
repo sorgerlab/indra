@@ -154,7 +154,7 @@ class Content(object):
         return any([self._format == fmt for fmt in formats])
 
     def get_id(self):
-        return self._id
+        return str(self._id)
 
     def get_format(self):
         return self._format
@@ -163,12 +163,14 @@ class Content(object):
         """Get the loaded, decompressed, and decoded text of this content."""
         self._load_raw_content()
         if self._text is None:
+            assert self._raw_content is not None
             ret_cont = self._raw_content
             if self.compressed:
                 ret_cont = zlib.decompress(ret_cont, zlib.MAX_WBITS+16)
             if self.encoded:
                 ret_cont = ret_cont.decode('utf-8')
             self._text = ret_cont
+        assert self._text is not None
         return self._text
 
     def get_filename(self, renew=False):
