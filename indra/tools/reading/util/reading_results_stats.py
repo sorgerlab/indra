@@ -66,6 +66,8 @@ from indra.preassembler import grounding_mapper as gm
 
 #pf.set_fig_params()
 
+# TODO: This file will definitely need some fixing.
+
 
 def load_file(stmts_file):
     logger.info("Loading results...")
@@ -78,26 +80,27 @@ def load_stmts_from_db(clauses, db):
     assert clauses, "No constraints provided for selecting statements."
 
     stmt_query = db.filter_query(
-        [db.Statements, db.Readings.reader, db.TextRef.id],
-        db.Statements.reader_ref == db.Readings.id,
-        db.Readings.text_content_id == db.TextContent.id,
-        db.TextContent.text_ref_id == db.TextRef.id,
-        *clauses
+        [db.Statements, db.Readings.reader, db.TextRef],
+        *(clauses + db.join(db.RawStatements, db.TextRef))
         )
-    all_db_stmts = stmt_query.all()
-    logger.info("Found %d statements on the database." % len(all_db_stmts))
-    all_stmts = make_stmts_from_db_list([db_stmt
-                                         for db_stmt, _, _, in all_db_stmts])
-    results_db = {'reach': {}, 'sparser': {}}
-    for stmt, reader_name, trid in all_db_stmts:
-        reader_name = reader_name.lower()
-        if trid in results_db[reader_name]:
-            results_db[reader_name][trid].append(stmt)
-        else:
-            results_db[reader_name][trid] = [stmt]
+    all_db_stmt_data = stmt_query.all()
+    logger.info("Found %d statements on the database." % len(all_db_stmt_data))
+    all_stmt_tr_pairs = [(_get_statement_object(db_stmt), tr)
+                         for db_stmt, _, tr in all_db_stmt_data]
+    map(_set_evidence_text_ref, all_stmt_tr_pairs)
+    all_stmts = [stmt for stmt, _ in all_stmt_tr_pairs]
 
-    results = {reader_name: {trid: make_stmts_from_db_list(stmts)
-                             for trid, stmts in paper_stmts.items()}
+    results_db = {'reach': {}, 'sparser': {}}
+    for db_stmt, reader_name, tr in all_db_stmt_data:
+        reader_name = reader_name.lower()
+        stmt = _get_statement_object(db_stmt)
+        _set_evidence_text_ref(stmt, tr)
+        if tr.id in results_db[reader_name]:
+            results_db[reader_name][tr.id].append(stmt)
+        else:
+            results_db[reader_name][tr.id] = [stmt]
+
+    results = {reader_name: {trid: stmts for trid, stmts in paper_stmts.items()}
                for reader_name, paper_stmts in results_db.items()}
     logger.info("Done sorting db statements.")
     return all_stmts, results
@@ -270,7 +273,9 @@ if __name__ == '__main__':
     if args.source == 'from-db':
         logger.info("Getting statements from the database.")
         from indra.db import get_primary_db
-        from indra.db.util import make_stmts_from_db_list
+        from indra.db.util import make_raw_stmts_from_db_list, \
+            _get_statement_object, _set_evidence_text_ref
+
         db = get_primary_db()
         clauses = []
         if args.indra_version:

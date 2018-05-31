@@ -345,13 +345,7 @@ def test_preassembly_with_database():
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
-    rdg_stmt_ids = db_util.distill_stmts(db)
-    db_stmt_ids = db.select_all(db.RawStatements.uuid,
-                                db.RawStatements.uuid.in_(all_raw_uuids),
-                                db.RawStatements.db_info_id.isnot(None))
-    stmt_ids = {uuid for uuid, in db_stmt_ids} | rdg_stmt_ids
-    raw_stmts = db_util.make_stmts_from_db_list([s for s in raw_stmt_list
-                                                 if s.uuid in stmt_ids])
+    raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 

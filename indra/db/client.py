@@ -12,7 +12,7 @@ logger = logging.getLogger('db_client')
 
 from indra.util import batch_iter
 from indra.databases import hgnc_client
-from .util import get_primary_db, make_stmts_from_db_list,\
+from .util import get_primary_db, make_raw_stmts_from_db_list,\
     make_pa_stmts_from_db_list, unpack
 
 
@@ -296,7 +296,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             logger.info("Total of %d statements" % num_stmts)
         db_stmts = q.yield_per(count)
         for subset in batch_iter(db_stmts, count):
-            stmts.extend(make_stmts_from_db_list(subset))
+            stmts.extend(make_raw_stmts_from_db_list(db, subset))
             if do_stmt_count:
                 logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
@@ -308,7 +308,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             .order_by(db.PAStatements.mk_hash).yield_per(count)
         stmt_dict = {}
         for k, grp in groupby(pa_raw_stmt_pairs, key=lambda x: x[0].mk_hash):
-            some_stmts = make_pa_stmts_from_db_list(grp)
+            some_stmts = make_pa_stmts_from_db_list(db, list(grp))
             assert len(some_stmts) == 1, len(some_stmts)
             stmt_dict[k] = some_stmts[0]
 

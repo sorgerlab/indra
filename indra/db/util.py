@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+from collections import defaultdict
 from functools import partial
 from multiprocessing.pool import Pool
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
-           'insert_pa_stmts', 'insert_db_stmts', 'make_stmts_from_db_list',
+           'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
            'make_pa_stmts_from_db_list', 'distill_stmts']
 
 import re
@@ -320,34 +321,71 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
 #==============================================================================
 
 
-def make_stmts_from_db_list(db_stmt_objs):
-    stmt_json_list = []
-    for st_obj in db_stmt_objs:
-        stmt_json_list.append(json.loads(st_obj.json.decode('utf8')))
-    return stmts_from_json(stmt_json_list)
+def _get_statement_object(db_stmt):
+    """Get an INDRA Statement object from a db_stmt."""
+    return Statement._from_json(json.loads(db_stmt.json.decode('utf-8')))
 
 
-def make_pa_stmts_from_db_list(db_stmt_tuples):
+def _set_evidence_text_ref(stmt, tr):
+    # This is a separate function because it is likely to change, and this is a
+    # critical process that is executed in multiple places.
+    for ev in stmt.evidence:
+        ev.pmid = tr.pmid
+
+
+def _fix_evidence_refs(db, rid_stmt_pairs):
+    """Get proper id data for a raw statement from the database.
+
+    Alterations are made to the Statement objects "in-place", so this function
+    itself returns None.
+    """
+    rid_set = {rid for rid, _ in rid_stmt_pairs if rid is not None}
+    rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
+                                       db.Reading.id.in_(rid_set),
+                                       *db.join(db.Reading, db.TextRef))
+    rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
+    for rid, stmt in rid_stmt_pairs:
+        if rid is None:
+            # This means this statement came from a database, not reading.
+            continue
+        assert len(stmt.evidence) == 1, \
+            "Only raw statements can have their refs fixed."
+        _set_evidence_text_ref(stmt, rid_tr_dict[rid])
+    return
+
+
+def make_raw_stmts_from_db_list(db, db_stmt_objs):
+    """Convert table objects of raw statements into INDRA Statement objects."""
+    rid_stmt_pairs = [(db_stmt.reading_id, _get_statement_object(db_stmt))
+                      for db_stmt in db_stmt_objs]
+    _fix_evidence_refs(db, rid_stmt_pairs)
+    return [stmt for _, stmt in rid_stmt_pairs]
+
+
+def make_pa_stmts_from_db_list(db, db_stmt_tuples):
     """Reconstruct the preassembled statements from db data.
 
     Note: this does NOT repopulate `supports` and `supported_by` lists.
     """
+    # Create a dict of lists of uuids representing evidence links.
+    mk_uuid_dict = defaultdict(lambda: [])
+    for pa_stmt_obj, raw_stmt_obj in db_stmt_tuples:
+        mk_uuid_dict[pa_stmt_obj.mk_hash].append(raw_stmt_obj.uuid)
+
+    # Create the raw supporting statements.
+    pa_stmt_objs, raw_stmt_objs = [set(l) for l in zip(*list(db_stmt_tuples))]
+    uuid_ev_dict = {stmt.uuid: stmt.evidence[0]
+                    for stmt in make_raw_stmts_from_db_list(db, raw_stmt_objs)}
+
     # Get the set of unique statements.
     pa_stmt_dict = {}
-    for pa_stmt_obj, raw_stmt_obj in db_stmt_tuples:
-        # Add a statement to the dict if we haven't seen it before.
-        if pa_stmt_obj.mk_hash not in pa_stmt_dict:
-            stmt_json = json.loads(pa_stmt_obj.json.decode('utf-8'))
-            pa_stmt = Statement._from_json(stmt_json)
-            pa_stmt.shallow_hash = pa_stmt_obj.mk_hash
-            pa_stmt_dict[pa_stmt_obj.mk_hash] = pa_stmt
-        else:
-            pa_stmt = pa_stmt_dict[pa_stmt_obj.mk_hash]
+    for pa_stmt_obj in pa_stmt_objs:
+        pa_stmt = _get_statement_object(pa_stmt_obj)
+        pa_stmt.shallow_hash = pa_stmt_obj.mk_hash
+        pa_stmt_dict[pa_stmt_obj.mk_hash] = pa_stmt
+        for uuid in mk_uuid_dict[pa_stmt_obj.mk_hash]:
+            pa_stmt.evidence.append(uuid_ev_dict[uuid])
 
-        # Add the evidence from the raw statement.
-        raw_stmt_json = json.loads(raw_stmt_obj.json.decode('utf-8'))
-        raw_stmt = Statement._from_json(raw_stmt_json)
-        pa_stmt.evidence += raw_stmt.evidence
     return list(pa_stmt_dict.values())
 
 
@@ -443,15 +481,15 @@ class NestedDict(dict):
         return result_list
 
 
-def get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
-                               clauses=None):
+def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
+                                clauses=None):
     """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
-    q = (db.session.query(db.TextContent.text_ref_id, db.TextContent.id,
+    q = (db.session.query(db.TextRef, db.TextContent.id,
                           db.TextContent.source, db.Reading.id,
                           db.Reading.reader_version, db.RawStatements.uuid,
                           db.RawStatements.json)
-         .filter(*db.join(db.RawStatements, db.TextContent)))
+         .filter(*db.join(db.RawStatements, db.TextRef)))
     if clauses:
         q = q.filter(*clauses)
 
@@ -461,7 +499,7 @@ def get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
 
     # Populate a dict with all the data.
     stmt_nd = NestedDict()
-    for trid, tcid, src, rid, rv, sid, sjson in q.yield_per(1000):
+    for tr, tcid, src, rid, rv, sid, sjson in q.yield_per(1000):
         # Back out the reader name.
         for reader, rv_list in reader_versions.items():
             if rv in rv_list:
@@ -472,12 +510,13 @@ def get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
         # Get the json for comparison and/or storage
         stmt_json = json.loads(sjson.decode('utf8'))
         stmt = Statement._from_json(stmt_json)
+        _set_evidence_text_ref(stmt, tr)
 
         # Hash the compbined stmt and evidence matches key.
         stmt_hash = stmt.get_hash()
 
         # For convenience get the endpoint statement dict
-        s_dict = stmt_nd[trid][src][tcid][reader][rv][rid]
+        s_dict = stmt_nd[tr.id][src][tcid][reader][rv][rid]
 
         # Initialize the value to a set, and count duplicates
         if stmt_hash not in s_dict.keys():
@@ -499,8 +538,8 @@ def get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
     return stmt_nd
 
 
-def get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
-                                not_duplicates=None):
+def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
+                                 not_duplicates=None):
     """Get the set of statements/ids from readings minus exact duplicates."""
     if not_duplicates is None:
         not_duplicates = set()
@@ -510,8 +549,8 @@ def get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
         'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
     }
 
-    stmt_nd = get_reading_statement_dict(db, reader_versions, get_full_stmts,
-                                         clauses)
+    stmt_nd = _get_reading_statement_dict(db, reader_versions, get_full_stmts,
+                                          clauses)
 
     # Specify sources of fulltext content, and order priorities.
     full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
@@ -611,8 +650,8 @@ def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
     return ret_stmt, duplicate_ids
 
 
-def get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
-                               not_duplicates=None, num_procs=1):
+def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
+                                not_duplicates=None, num_procs=1):
     """Get the set of statements/ids from databases minus exact duplicates."""
     if not_duplicates is None:
         not_duplicates = set()
@@ -682,14 +721,14 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
 
     # Get deduplicated statements, and duplicate ids.
     stmts, duplicate_ids = \
-        get_filtered_rdg_statements(db, get_full_stmts, clauses, undeletable)
+        _get_filtered_rdg_statements(db, get_full_stmts, clauses, undeletable)
     print("After filtering reading: %d unique statements, %d duplicates."
           % (len(stmts), len(duplicate_ids)))
     assert not undeletable & duplicate_ids, undeletable & duplicate_ids
 
     db_stmts, db_duplicates = \
-        get_filtered_db_statements(db, get_full_stmts, clauses, undeletable,
-                                   num_procs)
+        _get_filtered_db_statements(db, get_full_stmts, clauses, undeletable,
+                                    num_procs)
     stmts |= db_stmts
     duplicate_ids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
