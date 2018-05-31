@@ -2942,12 +2942,17 @@ class Unresolved(Statement):
     representation of an indra statement. When this happens, this class is used
     as a place-holder, carrying only the uuid of the statement.
     """
-    def __init__(self, uuid_str):
+    def __init__(self, uuid_str=None, shallow_hash=None, mk_hash=None):
         super(Unresolved, self).__init__()
         self.uuid = uuid_str
+        self.shallow_hash = shallow_hash
+        self.hash = mk_hash
 
     def __str__(self):
-        return "%s(%s)" % (type(self).__name__, self.uuid)
+        if self.uuid:
+            return "%s(%s)" % (type(self).__name__, self.uuid)
+        elif self.shallow_hash:
+            return "%s(%s)" % (type(self).__name__, self.shallow_hash)
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):

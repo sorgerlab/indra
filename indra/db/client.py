@@ -6,6 +6,8 @@ from collections import defaultdict
 from itertools import groupby
 from sqlalchemy import or_
 
+from indra.statements import Unresolved
+
 logger = logging.getLogger('db_client')
 
 from indra.util import batch_iter
@@ -318,8 +320,14 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                 db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
             ).distinct().yield_per(count)
         for supped_hash, supping_hash in support_links:
-            stmt_dict[supped_hash].supported_by.append(stmt_dict[supping_hash])
-            stmt_dict[supping_hash].supports.append(stmt_dict[supped_hash])
+            supped_stmt = stmt_dict.get(supped_hash,
+                                        Unresolved(shallow_hash=supped_hash))
+            supping_stmt = stmt_dict.get(supping_hash,
+                                         Unresolved(shallow_hash=supping_hash))
+            if not isinstance(supped_stmt, str):
+                supped_stmt.supported_by.append(supping_stmt)
+            if not isinstance(supping_stmt, str):
+                supping_stmt.supports.append(supped_stmt)
 
         stmts = list(stmt_dict.values())
 
