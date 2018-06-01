@@ -361,6 +361,10 @@ class ModelChecker(object):
         # object, and the object may not have an "active" site of the
         # appropriate type
         obs_names = self.stmt_to_obs[stmt]
+        if not obs_names:
+            logger.debug("No observables for stmt %s, returning False" % stmt)
+            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
+                              max_paths, max_path_length)
         for obs_name in obs_names:
             return self._find_im_paths(subj_mp, obs_name, target_polarity,
                                        max_paths, max_path_length)
@@ -376,6 +380,10 @@ class ModelChecker(object):
         else:
             target_polarity = 1 if isinstance(stmt, IncreaseAmount) else -1
         obs_names = self.stmt_to_obs[stmt]
+        if not obs_names:
+            logger.debug("No observables for stmt %s, returning False" % stmt)
+            return PathResult(False, 'OBSERVABLES_NOT_FOUND',
+                              max_paths, max_path_length)
         for obs_name in obs_names:
             return self._find_im_paths(subj_mp, obs_name, target_polarity,
                                        max_paths, max_path_length)
@@ -579,7 +587,7 @@ class ModelChecker(object):
             if not input_rule_set:
                 return PathResult(False, 'INPUT_RULES_NOT_FOUND',
                                   max_paths, max_path_length)
-        logger.info('Finding paths between %s and %s with polarity %s' %
+        logger.info('Checking path metrics between %s and %s with polarity %s' %
                     (subj_mp, obs_name, target_polarity))
 
         # -- Route to the path sampling function --
