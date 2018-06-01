@@ -210,7 +210,7 @@ def flatMap(f, xs):
     return flatten(lmap(f, xs))
 
 
-def batch_iter(iterator, batch_size, padding=None, return_lists=False):
+def batch_iter(iterator, batch_size, padding=None, return_func=None):
     """Break an iterable into batches of size batch_size
 
     Note that `padding` should be set to something (anything) which is NOT a
@@ -226,15 +226,17 @@ def batch_iter(iterator, batch_size, padding=None, return_lists=False):
     padding : anything
         This is used internally to ensure that the remainder of the list is
         included. This MUST NOT be a valid element of the iterator.
-    return_lists : bool
-        Choose to return batches as lists, rather than generators.
+    return_func : executable or None
+        Pass a function that takes a generator and returns an iterable (e.g.
+        `list` or `set`). If None, a generator will be returned.
 
     Returns
     -------
     An iterator over lists or generators, depending on `return_lists`.
     """
     for batch in zip_longest(*[iter(iterator)]*batch_size, fillvalue=padding):
-        if return_lists:
-            yield [thing for thing in batch if thing is not padding]
+        gen = (thing for thing in batch if thing is not padding)
+        if return_func is None:
+            yield gen
         else:
-            yield (thing for thing in batch if thing is not padding)
+            yield return_func(gen)

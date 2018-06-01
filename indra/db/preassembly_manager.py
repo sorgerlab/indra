@@ -154,7 +154,7 @@ class PreassemblyManager(object):
                 yield_per=self.batch_size
                 )
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
-        return batch_iter(pa_stmts, self.batch_size, return_lists=True)
+        return batch_iter(pa_stmts, self.batch_size, return_func=list)
 
     def _get_unique_statements(self, db, stmts, num_stmts, mk_done=None):
         """Get the unique Statements from the raw statements."""
@@ -162,7 +162,7 @@ class PreassemblyManager(object):
             mk_done = set()
 
         new_mk_set = set()
-        stmt_batches = batch_iter(stmts, self.batch_size, return_lists=True)
+        stmt_batches = batch_iter(stmts, self.batch_size, return_func=list)
         num_batches = num_stmts/self.batch_size
         for i, stmt_batch in enumerate(stmt_batches):
             logger.info("Processing batch %d/%d of %d/%d statements."

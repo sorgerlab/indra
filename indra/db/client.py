@@ -12,8 +12,8 @@ logger = logging.getLogger('db_client')
 
 from indra.util import batch_iter
 from indra.databases import hgnc_client
-from .util import get_primary_db, make_raw_stmts_from_db_list,\
-    make_pa_stmts_from_db_list, unpack
+from .util import get_primary_db, make_raw_stmts_from_db_list, \
+    unpack, _get_statement_object
 
 
 def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
@@ -302,17 +302,40 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             else:
                 logger.info("%d statements" % len(stmts))
     else:
+        # Get pairs of pa statements with their supporting statement (as long as
+        # the number of supporting statements).
         clauses += db.join(db.PAStatements, db.RawStatements)
-        pa_raw_stmt_pairs = db.filter_query([db.PAStatements, db.RawStatements],
-                                            *clauses) \
-            .order_by(db.PAStatements.mk_hash).yield_per(count)
-        stmt_dict = {}
-        for k, grp in groupby(pa_raw_stmt_pairs, key=lambda x: x[0].mk_hash):
-            some_stmts = make_pa_stmts_from_db_list(db, list(grp))
-            assert len(some_stmts) == 1, len(some_stmts)
-            stmt_dict[k] = some_stmts[0]
+        pa_raw_stmt_pairs = db.select_all([db.PAStatements, db.RawStatements],
+                                          *clauses, yield_per=count)
 
-        # Now populate the supports/supported by fields.
+        # Iterate over the batches to create the statement objects.
+        stmt_dict = {}
+        ev_dict = {}
+        raw_stmt_dict = {}
+        for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
+
+            # Instantiate the PA statement objects, and record the uuid evidence
+            # (raw statement) links.
+            raw_stmt_obj_list = []
+            for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
+                k = pa_stmt_db_obj.mk_hash
+                if k not in stmt_dict.keys():
+                    stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+                    ev_dict[k] = [raw_stmt_db_obj.uuid,]
+                else:
+                    ev_dict[k].append(raw_stmt_db_obj.uuid)
+                raw_stmt_obj_list.append(raw_stmt_db_obj)
+
+            # Instantiate the raw statements.
+            raw_stmts = make_raw_stmts_from_db_list(db, raw_stmt_obj_list)
+            raw_stmt_dict.update({s.uuid: s for s in raw_stmts})
+
+        # Attach the evidence
+        for k, uuid_list in ev_dict.items():
+            stmt_dict[k].evidence = [raw_stmt_dict[uuid].evidence[0]
+                                     for uuid in uuid_list]
+
+        # Populate the supports/supported by fields.
         support_links = db.filter_query(
             [db.PASupportLinks.supported_mk_hash,
              db.PASupportLinks.supporting_mk_hash],

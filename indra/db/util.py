@@ -362,33 +362,6 @@ def make_raw_stmts_from_db_list(db, db_stmt_objs):
     return [stmt for _, stmt in rid_stmt_pairs]
 
 
-def make_pa_stmts_from_db_list(db, db_stmt_tuples):
-    """Reconstruct the preassembled statements from db data.
-
-    Note: this does NOT repopulate `supports` and `supported_by` lists.
-    """
-    # Create a dict of lists of uuids representing evidence links.
-    mk_uuid_dict = defaultdict(lambda: [])
-    for pa_stmt_obj, raw_stmt_obj in db_stmt_tuples:
-        mk_uuid_dict[pa_stmt_obj.mk_hash].append(raw_stmt_obj.uuid)
-
-    # Create the raw supporting statements.
-    pa_stmt_objs, raw_stmt_objs = [set(l) for l in zip(*list(db_stmt_tuples))]
-    uuid_ev_dict = {stmt.uuid: stmt.evidence[0]
-                    for stmt in make_raw_stmts_from_db_list(db, raw_stmt_objs)}
-
-    # Get the set of unique statements.
-    pa_stmt_dict = {}
-    for pa_stmt_obj in pa_stmt_objs:
-        pa_stmt = _get_statement_object(pa_stmt_obj)
-        pa_stmt.shallow_hash = pa_stmt_obj.mk_hash
-        pa_stmt_dict[pa_stmt_obj.mk_hash] = pa_stmt
-        for uuid in mk_uuid_dict[pa_stmt_obj.mk_hash]:
-            pa_stmt.evidence.append(uuid_ev_dict[uuid])
-
-    return list(pa_stmt_dict.values())
-
-
 class NestedDict(dict):
     """A dict-like object that recursively populates elements of a dict."""
 

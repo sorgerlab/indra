@@ -31,7 +31,7 @@ if __name__ == '__main__':
         )
     parser.add_argument(
         dest='mode',
-        choices=['all', 'unread', 'none'],
+        choices=['all', 'unread_all', 'none'],
         help=('Set the reading mode. If \'all\', read everything, if '
               '\'unread\', only read content that does not have pre-existing '
               'readings of the same reader and version, if \'none\', only '
