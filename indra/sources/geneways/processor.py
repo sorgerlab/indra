@@ -105,7 +105,7 @@ class GenewaysProcessor(object):
         # listed by the Geneways action mention table and only includes
         # it in the evidence if there is exactly one such sentence
         text = None
-        if get_ft_mention:
+        if self.get_ft_mention:
             try:
                 content, content_type = get_full_text(mention.pmid, 'pmid')
                 if content is not None:
