@@ -453,6 +453,22 @@ class NestedDict(dict):
                     result_list.append(((sub_key, key), v[key]))
         return result_list
 
+    def get_leaves(self):
+        """Get the deepest entries as a flat set."""
+        ret_set = set()
+        for val in self.values():
+            if isinstance(val, self.__class__):
+                ret_set |= val.get_leaves()
+            elif isinstance(val, dict):
+                ret_set |= set(val.values())
+            elif isinstance(val, list):
+                ret_set |= set(val)
+            elif isinstance(val, set):
+                ret_set |= val
+            else:
+                ret_set.add(val)
+        return ret_set
+
 
 def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
                                 clauses=None):
@@ -512,10 +528,10 @@ def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
 
 
 def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
-                                 not_duplicates=None):
+                                 linked_uuids=None):
     """Get the set of statements/ids from readings minus exact duplicates."""
-    if not_duplicates is None:
-        not_duplicates = set()
+    if linked_uuids is None:
+        linked_uuids = set()
     # Specify versions of readers, and preference.
     reader_versions = {
         'sparser': ['sept14-linux\n', 'sept14-linux'],
@@ -534,12 +550,15 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
-    duplicate_ids = set()
+    duplicate_uuids = set()  # Statements that are exact duplicates.
+    bettered_duplicate_uuids = set()  # Statements with "better" alternatives
     for trid, src_dict in stmt_nd.items():
+        bettered_duplicate_stmts = set()
         # Filter out unneeded fulltext.
         while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
             try:
                 worst_src = min(src_dict, key=better_func)
+                bettered_duplicate_stmts |= src_dict[worst_src].get_leaves()
                 del src_dict[worst_src]
             except:
                 print(src_dict)
@@ -556,6 +575,15 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                 # of each.
                 stmt_set_itr = (stmt_set for r_dict in rv_dict[best_rv].values()
                                 for stmt_set in r_dict.values())
+
+                # Record the rest of the statement uuids.
+                for rv, r_dict in rv_dict.items():
+                    if rv != best_rv:
+                        bettered_duplicate_stmts |= r_dict.get_leaves()
+
+                # Pick one among any exact duplicates. Unlike with bettered
+                # duplicates, these choices are arbitrary, and such duplicates
+                # can be deleted.
                 duplicate_stmts = set()
                 for stmt_set in stmt_set_itr:
                     if not stmt_set:
@@ -566,9 +594,9 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                     else:
                         if get_full_stmts:
                             preferred_stmts = {s for s in stmt_set
-                                              if s.uuid in not_duplicates}
+                                               if s.uuid in linked_uuids}
                         else:
-                            preferred_stmts = stmt_set & not_duplicates
+                            preferred_stmts = stmt_set & linked_uuids
                         if not preferred_stmts:
                             # Pick the first one to pop, record the rest as
                             # duplicates.
@@ -588,11 +616,17 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                             assert False,\
                                 ("Duplicate deduplicated statements found: %s"
                                  % str(preferred_stmts))
+
+                # Get the uuids from the statements, if we have full statements.
                 if get_full_stmts:
-                    duplicate_ids |= {s.uuid for s in duplicate_stmts}
+                    duplicate_uuids |= {s.uuid for s in duplicate_stmts}
+                    bettered_duplicate_uuids |= \
+                        {s.uuid for s in bettered_duplicate_stmts}
                 else:
-                    duplicate_ids |= duplicate_stmts
-    return stmts, duplicate_ids
+                    duplicate_uuids |= duplicate_stmts
+                    bettered_duplicate_uuids |= bettered_duplicate_stmts
+
+    return stmts, duplicate_uuids, bettered_duplicate_uuids
 
 
 def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
@@ -659,8 +693,8 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
     return stmts, duplicate_ids
 
 
-def distill_stmts(db, get_full_stmts=False, clauses=None,
-                  delete_duplicates=True, num_procs=1):
+def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
+                  delete_duplicates=True, weed_evidence=True):
     """Get a corpus of statements from clauses and filters duplicate evidence.
 
     Parameters
@@ -676,9 +710,15 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
         By default None. Specify sqlalchemy clauses to reduce the scope of
         statements, e.g. `clauses=[db.Statements.type == 'Phosphorylation']` or
         `clauses=[db.Statements.uuid.in_([<uuids>])]`.
+    num_procs : int
+        Select the number of process that can be used.
     delete_duplicates : bool
         Choose whether you want to delete the statements that are found to be
         duplicates.
+    weed_evidence : bool
+        If True, evidence links that exist for raw statements that now have
+        better alternatives will be removed. If False, such links will remain,
+        which may cause problems in incremental pre-assembly.
 
     Returns
     -------
@@ -687,32 +727,43 @@ def distill_stmts(db, get_full_stmts=False, clauses=None,
         `get_full_stmts`.
     """
     if delete_duplicates:
-        undeletable = {uuid for uuid,
-                       in db.select_all(db.RawUniqueLinks.raw_stmt_uuid)}
+        linked_uuids = {uuid for uuid,
+                        in db.select_all(db.RawUniqueLinks.raw_stmt_uuid)}
     else:
-        undeletable = set()
+        linked_uuids = set()
 
-    # Get deduplicated statements, and duplicate ids.
-    stmts, duplicate_ids = \
-        _get_filtered_rdg_statements(db, get_full_stmts, clauses, undeletable)
+    # Get de-duplicated Statements, and duplicate uuids, as well as uuid of
+    # Statements that have been improved upon...
+    stmts, duplicate_uuids, bettered_duplicate_uuids = \
+        _get_filtered_rdg_statements(db, get_full_stmts, clauses, linked_uuids)
     print("After filtering reading: %d unique statements, %d duplicates."
-          % (len(stmts), len(duplicate_ids)))
-    assert not undeletable & duplicate_ids, undeletable & duplicate_ids
+          % (len(stmts), len(duplicate_uuids)))
+    assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
 
     db_stmts, db_duplicates = \
-        _get_filtered_db_statements(db, get_full_stmts, clauses, undeletable,
+        _get_filtered_db_statements(db, get_full_stmts, clauses, linked_uuids,
                                     num_procs)
     stmts |= db_stmts
-    duplicate_ids |= db_duplicates
+    duplicate_uuids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
-          % (len(stmts), len(duplicate_ids)))
-    assert not undeletable & duplicate_ids, undeletable & duplicate_ids
+          % (len(stmts), len(duplicate_uuids)))
+    assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
 
-    # Delete duplicates
-    if len(duplicate_ids) and delete_duplicates:
+    # Remove support links for statements that have better versions available.
+    bad_link_uuids = bettered_duplicate_uuids & linked_uuids
+    if len(bad_link_uuids):
+        print("Removing bettered evidence links...")
+        rm_links = db.select_all(
+            db.RawUniqueLinks,
+            db.RawUniqueLinks.raw_stmt_uuid.in_(bad_link_uuids)
+            )
+        db.delete_all(rm_links)
+
+    # Delete exact duplicates
+    if len(duplicate_uuids) and delete_duplicates:
         print("Deleting duplicates...")
         bad_stmts = db.select_all(db.RawStatements,
-                                  db.RawStatements.uuid.in_(duplicate_ids))
+                                  db.RawStatements.uuid.in_(duplicate_uuids))
         bad_uuid_set = {s.uuid for s in bad_stmts}
         bad_agents = db.select_all(db.RawAgents,
                                    db.RawAgents.stmt_uuid.in_(bad_uuid_set))
