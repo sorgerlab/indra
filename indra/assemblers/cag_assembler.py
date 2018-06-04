@@ -57,7 +57,8 @@ class CAGAssembler(object):
         nx.MultiDiGraph
             The assembled CAG.
         """
-        self.grounding_threshold = grounding_threshold
+        if grounding_threshold is not None:
+            self.grounding_threshold = grounding_threshold
 
         # Filter to Influence Statements which are currently supported
         statements = [stmt for stmt in self.statements if
