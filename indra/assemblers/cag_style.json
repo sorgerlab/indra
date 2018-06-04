@@ -11,11 +11,11 @@
         "text-halign": "center",
         "text-valign": "center",
         "padding": 10,
-        "width": "function( node ){ return 2*node.degree(); }",
-        "height": "function( node ){ return 2*node.degree(); }",
-        "shape": "ellipse",
-        "text-max-width": 80,
-        "text-wrap": true
+        "width": "label",
+        "height": "label",
+        "shape": "roundrectangle",
+        "text-max-width": 100,
+        "text-wrap": "wrap"
       }
     },
     {
