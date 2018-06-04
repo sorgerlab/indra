@@ -3,6 +3,7 @@ import json
 import logging
 from bottle import route, run, request, default_app, response
 from indra.sources import trips, reach, bel, biopax
+from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
     CyJSAssembler, SifAssembler
@@ -501,6 +502,66 @@ def filter_grounded_only():
     else:
         res = {'statements': []}
     return res
+
+
+@route('/indra_db_rest/get_evidence', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_evidence_for_stmts():
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmt_json = body.get('statement')
+    stmt = stmts_from_json([stmt_json])
+    from indra.sources.indra_db_rest import get_statements
+    def _get_agent_ref(agent):
+        """Get the preferred ref for an agent for db web api."""
+        if agent is None:
+            return None
+        ag_hgnc_id = hgnc_client.get_hgnc_id(agent.name)
+        if ag_hgnc_id is not None:
+            return ag_hgnc_id + "@HGNC"
+        db_refs = agent.db_refs
+        for namespace in ['HGNC', 'FPLX', 'CHEBI', 'TEXT']:
+            if namespace in db_refs.keys():
+                # TODO: Remove. This is a temporary workaround.
+                if namespace == 'FPLX':
+                    return '%s@%s' % (db_refs[namespace], 'BE')
+                return '%s@%s' % (db_refs[namespace], namespace)
+        return '%s@%s' % (agent.name, 'TEXT')
+
+    def _get_matching_stmts(stmt_ref):
+        # Filter by statement type.
+        stmt_type = stmt_ref.__class__.__name__
+        agent_name_list = [_get_agent_ref(ag) for ag in stmt_ref.agent_list()]
+        non_binary_statements = (Complex, SelfModification, ActiveForm)
+        # TODO: We should look at more than just the agent name.
+        # Doing so efficiently may require changes to the web api.
+        if isinstance(stmt_ref, non_binary_statements):
+            agent_list = [ag_name for ag_name in agent_name_list
+                          if ag_name is not None]
+            kwargs = {}
+        else:
+            agent_list = []
+            kwargs = {k: v for k, v in zip(['subject', 'object'],
+                                           agent_name_list)}
+            if not any(kwargs.values()):
+                return []
+            print(agent_list)
+        stmts = get_statements(agents=agent_list, stmt_type=stmt_type,
+                               **kwargs)
+        return stmts
+
+    stmts_out = _get_matching_stmts(stmt)
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
 
 app = default_app()
 
