@@ -1637,8 +1637,8 @@ def test_concept_get_grounding():
     d2 = {'TEXT': 'b', 'EIDOS': 'c'}
     d3 = {'TEXT': 'x', 'EIDOS': 'y', 'BBN': 'z'}
     d4 = {'TEXT': 'b', 'BBN': 'a'}
-    d5 = {'EIDOS': [('a', 1.0), ('b', 0.8)]}
-    d6 = {'EIDOS': [('b', 0.8), ('a', 1.0)]}
+    d5 = {'EIDOS': {'un':[('a', 1.0), ('b', 0.8)]}}
+    d6 = {'EIDOS': {'un':[('b', 0.8), ('a', 1.0)]}}
     d7 = {'EIDOS': []}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
     assert Concept('b', db_refs=d2).get_grounding() == ('EIDOS', 'c')
@@ -1653,8 +1653,8 @@ def test_concept_isa_eidos():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
     hm = HierarchyManager(eidos_ont, True, True)
-    c1 = Concept('a', db_refs={'EIDOS': [('events/human/conflict/war', 1.0)]})
-    c2 = Concept('b', db_refs={'EIDOS': [('events/human/conflict', 1.0)]})
+    c1 = Concept('a', db_refs={'EIDOS': {'un':[('events/human/conflict/war', 1.0)]}})
+    c2 = Concept('b', db_refs={'EIDOS': {'un':[('events/human/conflict', 1.0)]}})
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
 

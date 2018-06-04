@@ -44,7 +44,7 @@ class CAGAssembler(object):
         """Add a list of Statements to the assembler."""
         self.statements += stmts
 
-    def make_model(self, grounding_threshold=None):
+    def make_model(self, grounding_ontology='un', grounding_threshold=None):
         """Return a networkx MultiDiGraph representing a causal analysis graph.
 
         Parameters
@@ -59,6 +59,8 @@ class CAGAssembler(object):
         """
         if grounding_threshold is not None:
             self.grounding_threshold = grounding_threshold
+
+        self.grounding_ontology = grounding_ontology
 
         # Filter to Influence Statements which are currently supported
         statements = [stmt for stmt in self.statements if
@@ -119,7 +121,7 @@ class CAGAssembler(object):
         def _get_factor(stmt, concept, delta, evidence, raw_name):
             if evidence.source_api == 'eidos':
                 if concept.db_refs['EIDOS']:
-                    factor_norm = concept.db_refs['EIDOS'][0][0]
+                    factor_norm = concept.db_refs['EIDOS'][self.grounding_ontology][0][0]
                 else:
                     factor_norm = ''
             elif evidence.source_api == 'bbn':
@@ -287,9 +289,11 @@ class CAGAssembler(object):
             self.grounding_threshold is not None
             # Eidos groundings are present
             and concept.db_refs['EIDOS']
+            # The particular eidos ontology grounding (un/wdi/fao) is present
+            and concept.db_refs['EIDOS'][self.grounding_ontology]
             # The grounding score is above the grounding threshold
-            and concept.db_refs['EIDOS'][0][1] > self.grounding_threshold):
-                entry = concept.db_refs['EIDOS'][0][0]
+            and concept.db_refs['EIDOS'][self.grounding_ontology][0][1] > self.grounding_threshold):
+                entry = concept.db_refs['EIDOS'][self.grounding_ontology][0][0]
                 return entry.split('/')[-1].replace('_', ' ').capitalize()
         else:
             return concept.name.capitalize()

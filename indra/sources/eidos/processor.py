@@ -70,6 +70,36 @@ class EidosJsonLdProcessor(object):
             else:
                 return []
 
+        def _get_grounding_tuples(grounding):
+            if not grounding or "values" not in grounding:
+                return None
+
+            grounding_values = grounding.get("values", [])
+
+            grounding_tuples = map(
+                # For some versions of eidos, groundings may erroneously have
+                # the /examples suffix; strip that off if present
+                lambda t: (
+                    (t[0][: -len("/examples")], t[1])
+                    if t[0].endswith("/examples")
+                    else (t[0][: -len("/description")], t[1])
+                    if t[0].endswith("/description")
+                    else t
+                ),
+                map(
+                    lambda x: (
+                        (x["ontologyConcept"][1:], x["value"])
+                        if x["ontologyConcept"].startswith("/")
+                        else (x["ontologyConcept"], x["value"])
+                    ),
+                    # get all the groundings that have non-zero score
+                    filter(lambda x: x["value"] > 0, grounding_values),
+                ),
+            )
+
+            return list(grounding_tuples)
+
+
         def _get_eidos_groundings(entity):
             """Return Eidos groundings are a list of tuples with scores."""
             groundings = entity.get('groundings')
@@ -77,30 +107,9 @@ class EidosJsonLdProcessor(object):
             if not groundings:
                 return None
             # The grounding dict can still be empty
-            grounding_dict = groundings[0]
-            if not grounding_dict or 'values' not in grounding_dict:
-                return None
-            grounding_values = grounding_dict.get('values', [])
-            # Otherwise get all the groundings that have non-zero score
-            grounding_tuples = []
-            for g in grounding_values:
-                if g['value'] > 0:
-                    if g['ontologyConcept'].startswith('/'):
-                        concept = g['ontologyConcept'][1:]
-                    else:
-                        concept = g['ontologyConcept']
-                    grounding_tuples.append((concept, g['value']))
-            # For some versions of eidos, groundings may erroneously have
-            # the /examples suffix; strip that off if present
-            for ind in range(len(grounding_tuples)):
-                t = grounding_tuples[ind]
-                assert(len(t) == 2)
-                if t[0].endswith('/examples'):
-                    name = t[0]
-                    name = name[:-len('/examples')]
-                    score = t[1]
-                    grounding_tuples[ind] = (name, score)
-            return grounding_tuples
+
+            return {g["name"]: _get_grounding_tuples(g) for g in groundings}
+
 
         def _make_concept(entity):
             """Return Concept from an Eidos entity."""
