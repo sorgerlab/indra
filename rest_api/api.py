@@ -509,11 +509,12 @@ def filter_grounded_only():
 def get_evidence_for_stmts():
     if request.method == 'OPTIONS':
         return {}
-    response = request.body.read().decode('utf-8')
-    body = json.loads(response)
+    req = request.body.read().decode('utf-8')
+    body = json.loads(req)
     stmt_json = body.get('statement')
-    stmt = stmts_from_json([stmt_json])
+    stmt = Statement._from_json(stmt_json)
     from indra.sources.indra_db_rest import get_statements
+
     def _get_agent_ref(agent):
         """Get the preferred ref for an agent for db web api."""
         if agent is None:
