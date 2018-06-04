@@ -72,12 +72,12 @@ class EidosJsonLdProcessor(object):
 
         def _get_eidos_groundings(entity):
             """Return Eidos groundings are a list of tuples with scores."""
-            grounding_tag = entity.get('groundings')
+            groundings = entity.get('groundings')
             # If no grounding at all, just return None
-            if not grounding_tag:
+            if not groundings:
                 return None
             # The grounding dict can still be empty
-            grounding_dict = grounding_tag[0]
+            grounding_dict = groundings[0]
             if not grounding_dict or 'values' not in grounding_dict:
                 return None
             grounding_values = grounding_dict.get('values', [])
