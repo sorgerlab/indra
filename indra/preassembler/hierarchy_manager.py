@@ -390,7 +390,7 @@ class HierarchyManager(object):
             return 'http://identifiers.org/uniprot/' + id
         elif ns == 'FPLX':
             return 'http://identifiers.org/fplx/' + id
-        elif ns == 'EIDOS':
+        elif ns in ['UN', 'WDI', 'FAO']:
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
         elif ns == 'CWMS':

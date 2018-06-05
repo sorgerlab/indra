@@ -33,23 +33,28 @@ class CAGAssembler(object):
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
-    def __init__(self, stmts=None, grounding_threshold=None):
+    def __init__(self, stmts=None):
         if not stmts:
             self.statements = []
         else:
             self.statements = stmts
-        self.grounding_threshold = grounding_threshold
+        self.grounding_threshold = None
+        self.grounding_ontology = 'UN'
+        self.CAG = None
 
     def add_statements(self, stmts):
         """Add a list of Statements to the assembler."""
         self.statements += stmts
 
-    def make_model(self, grounding_threshold=None):
+    def make_model(self, grounding_ontology='UN', grounding_threshold=None):
         """Return a networkx MultiDiGraph representing a causal analysis graph.
 
         Parameters
         ----------
-        grounding_threshold: Optional[float]
+        grounding_ontology : Optional[str]
+            The ontology from which the grounding should be taken
+            (e.g. UN, FAO)
+        grounding_threshold : Optional[float]
             Minimum threshold score for Eidos grounding.
 
         Returns
@@ -57,7 +62,10 @@ class CAGAssembler(object):
         nx.MultiDiGraph
             The assembled CAG.
         """
-        self.grounding_threshold = grounding_threshold
+        if grounding_threshold is not None:
+            self.grounding_threshold = grounding_threshold
+
+        self.grounding_ontology = grounding_ontology
 
         # Filter to Influence Statements which are currently supported
         statements = [stmt for stmt in self.statements if
@@ -79,19 +87,20 @@ class CAGAssembler(object):
             for node, delta in zip((s.subj, s.obj),
                                    (s.subj_delta, s.obj_delta)):
                 self.CAG.add_node(self._node_name(node),
-                        simulable=has_both_polarity, mods=delta['adjectives'])
+                                  simulable=has_both_polarity,
+                                  mods=delta['adjectives'])
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
             if has_both_polarity:
-                same_polarity = s.subj_delta['polarity'] == s.obj_delta['polarity']
+                same_polarity = (s.subj_delta['polarity'] ==
+                                 s.obj_delta['polarity'])
                 if same_polarity:
-                    targetArrowShape, linecolor = ('circle', 'green')
+                    target_arrow_shape, linecolor = ('circle', 'green')
                 else:
-                    targetArrowShape, linecolor = ('tee', 'maroon')
+                    target_arrow_shape, linecolor = ('tee', 'maroon')
             else:
-                targetArrowShape, linecolor = ('triangle', 'maroon')
-
+                target_arrow_shape, linecolor = ('triangle', 'maroon')
 
             # Add edge to the graph with metadata from statement
             provenance = []
@@ -108,7 +117,7 @@ class CAGAssembler(object):
                     obj_adjectives   = s.obj_delta['adjectives'],
                     linestyle        = linestyle,
                     linecolor=linecolor,
-                    targetArrowShape=targetArrowShape,
+                    targetArrowShape=target_arrow_shape,
                     provenance=provenance,
                 )
 
@@ -117,8 +126,8 @@ class CAGAssembler(object):
     def print_tsv(self, file_name):
         def _get_factor(stmt, concept, delta, evidence, raw_name):
             if evidence.source_api == 'eidos':
-                if concept.db_refs['EIDOS']:
-                    factor_norm = concept.db_refs['EIDOS'][0][0]
+                if concept.db_refs[self.grounding_ontology]:
+                    factor_norm = concept.db_refs[self.grounding_ontology][0][0]
                 else:
                     factor_norm = ''
             elif evidence.source_api == 'bbn':
@@ -148,7 +157,6 @@ class CAGAssembler(object):
             ref = evidence.pmid if evidence.pmid is not None else ''
             return ref, evidence.source_api, sent_id, location, \
                 time, evidence.text
-
 
         header = ['Source', 'System', 'Sentence ID',
                   'Factor A Text', 'Factor A Normalization',
@@ -183,7 +191,7 @@ class CAGAssembler(object):
                 relation_mod = ''
                 row = [source, system, sent_id,
                        factor_a, factor_a_norm, mod_a, pol_a,
-                       'influence', '', '',
+                       relation_text, relation_norm, relation_mod,
                        factor_b, factor_b_norm, mod_b, pol_b,
                        location, time, text, str(idx)]
                 if row not in all_rows:
@@ -236,7 +244,7 @@ class CAGAssembler(object):
                     } for n in self.CAG.nodes(data=True)],
 
                 'edges': [{'data': _create_edge_data_dict(e)}
-                           for e in self.CAG.edges(data=True, keys=True)]
+                          for e in self.CAG.edges(data=True, keys=True)]
                 }
 
     def generate_jupyter_js(self, cyjs_style=None, cyjs_layout=None):
@@ -284,11 +292,12 @@ class CAGAssembler(object):
         """Return a standardized name for a node given a Concept."""
         if (# grounding threshold is specified
             self.grounding_threshold is not None
-            # Eidos groundings are present
-            and concept.db_refs['EIDOS']
+            # The particular eidos ontology grounding (un/wdi/fao) is present
+            and concept.db_refs[self.grounding_ontology]
             # The grounding score is above the grounding threshold
-            and concept.db_refs['EIDOS'][0][1] > self.grounding_threshold):
-                entry = concept.db_refs['EIDOS'][0][0]
+            and (concept.db_refs[self.grounding_ontology][0][1] >
+                 self.grounding_threshold)):
+                entry = concept.db_refs[self.grounding_ontology][0][0]
                 return entry.split('/')[-1].replace('_', ' ').capitalize()
         else:
             return concept.name.capitalize()

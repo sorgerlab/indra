@@ -1634,18 +1634,18 @@ def test_concept_matches():
 
 def test_concept_get_grounding():
     d1 = {'TEXT': 'a'}
-    d2 = {'TEXT': 'b', 'EIDOS': 'c'}
-    d3 = {'TEXT': 'x', 'EIDOS': 'y', 'BBN': 'z'}
+    d2 = {'TEXT': 'b', 'UN': 'c'}
+    d3 = {'TEXT': 'x', 'UN': 'y', 'BBN': 'z'}
     d4 = {'TEXT': 'b', 'BBN': 'a'}
-    d5 = {'EIDOS': [('a', 1.0), ('b', 0.8)]}
-    d6 = {'EIDOS': [('b', 0.8), ('a', 1.0)]}
-    d7 = {'EIDOS': []}
+    d5 = {'UN': [('a', 1.0), ('b', 0.8)]}
+    d6 = {'UN': [('b', 0.8), ('a', 1.0)]}
+    d7 = {'UN': []}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
-    assert Concept('b', db_refs=d2).get_grounding() == ('EIDOS', 'c')
+    assert Concept('b', db_refs=d2).get_grounding() == ('UN', 'c')
     assert Concept('c', db_refs=d3).get_grounding() == ('BBN', 'z')
     assert Concept('d', db_refs=d4).get_grounding() == ('BBN', 'a')
-    assert Concept('e', db_refs=d5).get_grounding() == ('EIDOS', 'a')
-    assert Concept('f', db_refs=d6).get_grounding() == ('EIDOS', 'a')
+    assert Concept('e', db_refs=d5).get_grounding() == ('UN', 'a')
+    assert Concept('f', db_refs=d6).get_grounding() == ('UN', 'a')
     assert Concept('g', db_refs=d7).get_grounding() == (None, None)
 
 
@@ -1653,8 +1653,10 @@ def test_concept_isa_eidos():
     eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/eidos/eidos_ontology.rdf')
     hm = HierarchyManager(eidos_ont, True, True)
-    c1 = Concept('a', db_refs={'EIDOS': [('events/human/conflict/war', 1.0)]})
-    c2 = Concept('b', db_refs={'EIDOS': [('events/human/conflict', 1.0)]})
+    c1 = Concept('a', db_refs={'UN': [('UN/events/human/conflict', 1.0)]})
+    c2 = Concept('b', db_refs={'UN': [('UN/events/human', 1.0)]})
+    print(c1.get_grounding())
+    print(c2.get_grounding())
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
 

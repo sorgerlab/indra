@@ -3,8 +3,8 @@ from builtins import dict, str
 from indra.statements import *
 from indra.assemblers import CAGAssembler
 
-eg1 = {'EIDOS': [('a/b/c', 0.123)]}
-eg2 = {'EIDOS': [('a/b/c', 0.234)]}
+eg1 = {'UN': [('a/b/c', 0.123)]}
+eg2 = {'UN': [('a/b/c', 0.234)]}
 
 # An example provenance from Eidos
 prov = [{
