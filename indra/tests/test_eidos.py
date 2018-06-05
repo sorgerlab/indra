@@ -10,6 +10,7 @@ from indra.assemblers.pysb_assembler import PysbAssembler
 
 path_this = os.path.dirname(os.path.abspath(__file__))
 test_json = os.path.join(path_this, 'eidos_test.json')
+test_jsonld = os.path.join(path_this, 'eidos_test_with_grounding.json')
 
 
 def __get_remote_jsonld():
@@ -72,8 +73,8 @@ def test_process_text_json_ld():
            == 'ported_syntax_1_verb-Causal')
     assert 'TEXT' in stmt.subj.db_refs
     assert 'TEXT' in stmt.obj.db_refs
-    assert 'UN' in stmt.subj.db_refs
-    assert 'UN' in stmt.obj.db_refs
+    # assert 'UN' in stmt.subj.db_refs
+    # assert 'UN' in stmt.obj.db_refs
     # FIXME: once groundings are propagated well from offline reading
     # this should work
     # assert len(stmt.subj.db_refs['UN']) > 5
@@ -83,6 +84,11 @@ def test_process_text_json_ld():
     assert sanitized == '(something)'
 
 
+def test_process_json_ld_file():
+    ep = eidos.process_json_ld_file(test_jsonld)
+    assert len(ep.statements) == 1
+    assert 'UN' in ep.statements[0].subj.db_refs
+    assert 'UN' in ep.statements[0].obj.db_refs
 
 def test_eidos_to_cag():
     stmts = __get_stmts_from_remote_jsonld()
