@@ -249,14 +249,28 @@ class PreassemblyManager(object):
             # Add all the new support links
             support_links |= (some_support_links - existing_links)
 
-        # Copy the support links into the database
-        logger.info("Found %d support links." % len(support_links))
-        db.copy('pa_support_links', support_links,
-                ('supported_mk_hash', 'supporting_mk_hash'))
+            # There are generally few support links compared to the number of
+            # statements, so it doesn't make sense to copy every time, but for
+            # long preassembly, this allows for better failure recovery.
+            if len(support_links) >= self.batch_size:
+                logger.info("Copying batch of %d support links into db."
+                            % len(support_links))
+                db.copy('pa_support_links', support_links,
+                        ('supported_mk_hash', 'supporting_mk_hash'))
+                existing_links |= support_links
+                support_links = set()
+
+        # Insert any remaining support links.
+        if support_links:
+            logger.info("Copying batch of %d support links into db."
+                        % len(support_links))
+            db.copy('pa_support_links', support_links,
+                    ('supported_mk_hash', 'supporting_mk_hash'))
+
         return True
 
     @_handle_update_table
-    def supplement_corpus(self, db):
+    def supplement_corpus(self, db, continuing=False):
         """Update the table of preassembled statements.
 
         This method will take any new raw statements that have not yet been
@@ -291,11 +305,25 @@ class PreassemblyManager(object):
         new_mk_set = self._get_unique_statements(db, new_stmts,
                                                  len(new_stmt_ids), old_mk_set)
 
+        # If we are continuing, check for support links that were already found.
+        if continuing:
+            logger.info("Getting pre-existing links...")
+            db_existing_links = db.select_all([
+                db.PASupportLinks.supporting_mk_hash,
+                db.PASupportLinks.supporting_mk_hash
+                ])
+            existing_links = {tuple(res) for res in db_existing_links}
+            logger.info("Found %d existing links." % len(existing_links))
+        else:
+            existing_links = set()
+
         # Now find the new support links that need to be added.
         new_support_links = set()
         for npa_batch in self._pa_batch_iter(db, in_mks=new_mk_set):
+            some_support_links = set()
+
             # Compare internally
-            new_support_links |= self._get_support_links(npa_batch)
+            some_support_links |= self._get_support_links(npa_batch)
 
             # Compare against the other new batch statements.
             diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
@@ -303,7 +331,7 @@ class PreassemblyManager(object):
             for diff_npa_batch in self._pa_batch_iter(db, in_mks=diff_new_mks):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + diff_npa_batch
-                new_support_links |= \
+                some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
 
@@ -311,12 +339,30 @@ class PreassemblyManager(object):
             for opa_batch in self._pa_batch_iter(db, in_mks=old_mk_set):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + opa_batch
-                new_support_links |= \
+                some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
 
-        db.copy('pa_support_links', new_support_links,
-                ('supported_mk_hash', 'supporting_mk_hash'))
+            new_support_links |= (some_support_links - existing_links)
+
+            # There are generally few support links compared to the number of
+            # statements, so it doesn't make sense to copy every time, but for
+            # long preassembly, this allows for better failure recovery.
+            if len(new_support_links) >= self.batch_size:
+                logger.info("Copying batch of %d support links into db."
+                            % len(new_support_links))
+                db.copy('pa_support_links', new_support_links,
+                        ('supported_mk_hash', 'supporting_mk_hash'))
+                existing_links |= new_support_links
+                new_support_links = set()
+
+        # Insert any remaining support links.
+        if new_support_links:
+            logger.info("Copying batch of %d support links into db."
+                        % len(new_support_links))
+            db.copy('pa_support_links', new_support_links,
+                    ('supported_mk_hash', 'supporting_mk_hash'))
+
         return True
 
     def _make_unique_statement_set(self, stmts):
