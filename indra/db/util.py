@@ -6,7 +6,7 @@ from multiprocessing.pool import Pool
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
-           'make_pa_stmts_from_db_list', 'distill_stmts']
+           'distill_stmts']
 
 import re
 import json

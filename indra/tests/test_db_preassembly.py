@@ -235,11 +235,12 @@ def _check_statement_distillation(num_stmts):
     assert stmt_ids_p == stmt_ids
 
 
+@attr('nonpublic')
 def test_statement_distillation_small():
     _check_statement_distillation(1000)
 
 
-@attr('slow')
+@attr('nonpublic', 'slow')
 def test_statement_distillation_large():
     _check_statement_distillation(11721)
 
@@ -282,11 +283,12 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
+@attr('nonpublic')
 def test_db_preassembly_small():
     _check_preassembly_with_database(200, 40)
 
 
-@attr('slow')
+@attr('nonpublic', 'slow')
 def test_db_preassembly_large():
     _check_preassembly_with_database(11721, 2017)
 
@@ -304,10 +306,11 @@ def _check_incremental_preassembly_with_database(num_stmts, batch_size):
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
+@attr('nonpublic')
 def test_db_incremental_preassembly_small():
     _check_incremental_preassembly_with_database(200, 40)
 
 
-@attr('slow')
+@attr('nonpublic', 'slow')
 def test_db_incremental_preassembly_large():
     _check_incremental_preassembly_with_database(11721, 2017)
