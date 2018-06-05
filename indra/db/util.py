@@ -339,17 +339,19 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
     itself returns None.
     """
     rid_set = {rid for rid, _ in rid_stmt_pairs if rid is not None}
-    rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
-                                       db.Reading.id.in_(rid_set),
-                                       *db.join(db.Reading, db.TextRef))
-    rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
-    for rid, stmt in rid_stmt_pairs:
-        if rid is None:
-            # This means this statement came from a database, not reading.
-            continue
-        assert len(stmt.evidence) == 1, \
-            "Only raw statements can have their refs fixed."
-        _set_evidence_text_ref(stmt, rid_tr_dict[rid])
+    logger.info("Getting text refs for %d readings." % len(rid_set))
+    if rid_set:
+        rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
+                                     db.Reading.id.in_(rid_set),
+                                     *db.join(db.TextRef, db.Reading))
+        rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
+        for rid, stmt in rid_stmt_pairs:
+            if rid is None:
+                # This means this statement came from a database, not reading.
+                continue
+            assert len(stmt.evidence) == 1, \
+                "Only raw statements can have their refs fixed."
+            _set_evidence_text_ref(stmt, rid_tr_dict[rid])
     return
 
 
