@@ -541,7 +541,7 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                                           clauses)
 
     # Specify sources of fulltext content, and order priorities.
-    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
+    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
 
     def better_func(element):
         print(element)
@@ -554,7 +554,7 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
     for trid, src_dict in stmt_nd.items():
         bettered_duplicate_stmts = set()
         # Filter out unneeded fulltext.
-        while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
+        while len(src_dict) > 1:
             try:
                 worst_src = min(src_dict, key=better_func)
                 bettered_duplicate_stmts |= src_dict[worst_src].get_leaves()

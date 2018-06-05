@@ -297,9 +297,12 @@ def test_db_preassembly_large():
 def _check_incremental_preassembly_with_database(num_stmts, batch_size):
     db = _get_loaded_db(num_stmts, batch_size=batch_size, split=0.8,
                         with_init_corpus=True)
+    start = datetime.now()
     pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
+    end = datetime.now()
+    print("Duration of incremental update:", end-start)
 
     raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db)
