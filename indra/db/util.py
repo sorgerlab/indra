@@ -34,12 +34,11 @@ def get_primary_db(force_new=False):
     are specified, this function will raise an exception.
 
     Note: by default, calling this function twice will return the same
-    `DatabaseManager` instance. In other words:
+    `DatabaseManager` instance. In other words::
 
-    >>> db1 = get_primary_db()
-    >>> db2 = get_primary_db()
-    >>> db1 is db2
-    True
+        db1 = get_primary_db()
+        db2 = get_primary_db()
+        db1 is db2
 
     This means also that, for example `db1.select_one(db2.TextRef)` will work,
     in the above context.
