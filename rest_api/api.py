@@ -272,6 +272,27 @@ def assemble_cx():
     return res
 
 
+#   SHARE CX   #
+@route('/share_model', method=['POST', 'OPTIONS'])
+@allow_cors
+def share_model():
+    """Upload the model to NDEX"""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    cyjs_model_str = body.get('cyjs_model')
+    stmts = stmts_from_json(stmts_json)
+    ca = CxAssembler(stmts)
+    ca.cx['networkAttributes'].append({'n': 'cyjs_model',
+                                       'v': cyjs_model_str,
+                                       'd': 'string'})
+    ca.make_model()
+    network_id = ca.upload_model()
+    return {'network_id': network_id}
+
+
 #  GRAPH   #
 @route('/assemblers/graph', method=['POST', 'OPTIONS'])
 @allow_cors
