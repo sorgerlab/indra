@@ -87,19 +87,20 @@ class CAGAssembler(object):
             for node, delta in zip((s.subj, s.obj),
                                    (s.subj_delta, s.obj_delta)):
                 self.CAG.add_node(self._node_name(node),
-                        simulable=has_both_polarity, mods=delta['adjectives'])
+                                  simulable=has_both_polarity,
+                                  mods=delta['adjectives'])
 
             # Edge is solid if both nodes have polarity given
             linestyle = 'solid' if has_both_polarity else 'dotted'
             if has_both_polarity:
-                same_polarity = s.subj_delta['polarity'] == s.obj_delta['polarity']
+                same_polarity = (s.subj_delta['polarity'] ==
+                                 s.obj_delta['polarity'])
                 if same_polarity:
-                    targetArrowShape, linecolor = ('circle', 'green')
+                    target_arrow_shape, linecolor = ('circle', 'green')
                 else:
-                    targetArrowShape, linecolor = ('tee', 'maroon')
+                    target_arrow_shape, linecolor = ('tee', 'maroon')
             else:
-                targetArrowShape, linecolor = ('triangle', 'maroon')
-
+                target_arrow_shape, linecolor = ('triangle', 'maroon')
 
             # Add edge to the graph with metadata from statement
             provenance = []
@@ -116,7 +117,7 @@ class CAGAssembler(object):
                     obj_adjectives   = s.obj_delta['adjectives'],
                     linestyle        = linestyle,
                     linecolor=linecolor,
-                    targetArrowShape=targetArrowShape,
+                    targetArrowShape=target_arrow_shape,
                     provenance=provenance,
                 )
 
@@ -157,7 +158,6 @@ class CAGAssembler(object):
             return ref, evidence.source_api, sent_id, location, \
                 time, evidence.text
 
-
         header = ['Source', 'System', 'Sentence ID',
                   'Factor A Text', 'Factor A Normalization',
                   'Factor A Modifiers', 'Factor A Polarity',
@@ -191,7 +191,7 @@ class CAGAssembler(object):
                 relation_mod = ''
                 row = [source, system, sent_id,
                        factor_a, factor_a_norm, mod_a, pol_a,
-                       'influence', '', '',
+                       relation_text, relation_norm, relation_mod,
                        factor_b, factor_b_norm, mod_b, pol_b,
                        location, time, text, str(idx)]
                 if row not in all_rows:
@@ -244,7 +244,7 @@ class CAGAssembler(object):
                     } for n in self.CAG.nodes(data=True)],
 
                 'edges': [{'data': _create_edge_data_dict(e)}
-                           for e in self.CAG.edges(data=True, keys=True)]
+                          for e in self.CAG.edges(data=True, keys=True)]
                 }
 
     def generate_jupyter_js(self, cyjs_style=None, cyjs_layout=None):
