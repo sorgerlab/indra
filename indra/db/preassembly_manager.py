@@ -288,22 +288,26 @@ class PreassemblyManager(object):
         old_uuid_q = db.filter_query(
             db.RawStatements.uuid,
             db.RawStatements.uuid == db.RawUniqueLinks.raw_stmt_uuid
-        )
+            )
         new_uuid_q = db.filter_query(db.RawStatements.uuid).except_(old_uuid_q)
         all_new_stmt_ids = {uuid for uuid, in new_uuid_q.all()}
+        logger.info("Found %d new statement ids." % len(all_new_stmt_ids))
 
         stmt_ids = distill_stmts(db, num_procs=self.n_proc)
         new_stmt_ids = all_new_stmt_ids & stmt_ids
+        logger.info("There are %d new distilled raw statement ids."
+                    % len(new_stmt_ids))
         new_stmts = (_stmt_from_json(s_json) for s_json,
                      in db.select_all(db.RawStatements.json,
                                       db.RawStatements.uuid.in_(new_stmt_ids),
                                       yield_per=self.batch_size))
-        logger.info("Found %d new statements." % len(new_stmt_ids))
 
         # Get the set of new unique statements.
         old_mk_set = {mk for mk, in db.select_all(db.PAStatements.mk_hash)}
+        logger.info("Found %d old pa statements." % len(old_mk_set))
         new_mk_set = self._get_unique_statements(db, new_stmts,
                                                  len(new_stmt_ids), old_mk_set)
+        logger.info("Found %d new pa statements." % len(new_mk_set))
 
         # If we are continuing, check for support links that were already found.
         if continuing:

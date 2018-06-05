@@ -302,6 +302,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             else:
                 logger.info("%d statements" % len(stmts))
     else:
+        logger.info("Getting preassembled statements.")
         # Get pairs of pa statements with their supporting statement (as long as
         # the number of supporting statements).
         clauses += db.join(db.PAStatements, db.RawStatements)
@@ -313,7 +314,6 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         ev_dict = {}
         raw_stmt_dict = {}
         for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
-
             # Instantiate the PA statement objects, and record the uuid evidence
             # (raw statement) links.
             raw_stmt_obj_list = []
@@ -326,16 +326,22 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                     ev_dict[k].append(raw_stmt_db_obj.uuid)
                 raw_stmt_obj_list.append(raw_stmt_db_obj)
 
+            logger.info("Up to %d pa statements, with %d pieces of evidence in "
+                        "all." % (len(stmt_dict), len(ev_dict)))
+
             # Instantiate the raw statements.
             raw_stmts = make_raw_stmts_from_db_list(db, raw_stmt_obj_list)
             raw_stmt_dict.update({s.uuid: s for s in raw_stmts})
+            logger.info("Processed %d raw statements." % len(raw_stmts))
 
         # Attach the evidence
+        logger.info("Inserting evidence.")
         for k, uuid_list in ev_dict.items():
             stmt_dict[k].evidence = [raw_stmt_dict[uuid].evidence[0]
                                      for uuid in uuid_list]
 
         # Populate the supports/supported by fields.
+        logger.info("Populating support links.")
         support_links = db.filter_query(
             [db.PASupportLinks.supported_mk_hash,
              db.PASupportLinks.supporting_mk_hash],
@@ -353,6 +359,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                 supping_stmt.supports.append(supped_stmt)
 
         stmts = list(stmt_dict.values())
+        logger.info("In all, there are %d pa statements." % len(stmts))
 
     return stmts
 
