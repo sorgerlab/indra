@@ -740,7 +740,7 @@ class DatabaseManager(object):
         """
         return self.filter_query(tbls, *args).first()
 
-    def select_all(self, tbls, *args, yield_per=None):
+    def select_all(self, tbls, *args, **kwargs):
         """Select any and all entries from table given by tbl_name.
 
         The results will be filtered by your keyword arguments. For example if
@@ -773,7 +773,8 @@ class DatabaseManager(object):
         ----------
         tbls, *args
             See above for usage.
-        yield_per : int or None
+        **kwargs
+            yield_per: int or None
             If the result to your query is expected to be large, you can choose
             to only load `yield_per` items at a time, using the eponymous
             feature of sqlalchemy queries. Default is None, meaning all results
@@ -783,6 +784,7 @@ class DatabaseManager(object):
         -------
 
         """
+        yield_per = kwargs.get('yield_per')
         if yield_per is not None:
             return self.filter_query(tbls, *args).yield_per(yield_per)
         return self.filter_query(tbls, *args).all()
