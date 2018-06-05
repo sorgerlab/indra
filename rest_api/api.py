@@ -289,7 +289,7 @@ def share_model():
                                        'v': cyjs_model_str,
                                        'd': 'string'})
     ca.make_model()
-    network_id = ca.upload_model()
+    network_id = ca.upload_model(private=False)
     return {'network_id': network_id}
 
 

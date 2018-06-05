@@ -168,7 +168,7 @@ class CxAssembler(object):
             cx_str = self.print_cx()
             fh.write(cx_str)
 
-    def upload_model(self, ndex_cred=None):
+    def upload_model(self, ndex_cred=None, private=True):
         """Creates a new NDEx network of the assembled CX model.
 
         To upload the assembled CX model to NDEx, you need to have
@@ -178,10 +178,13 @@ class CxAssembler(object):
 
         Parameters
         ----------
-        ndex_cred : dict
+        ndex_cred : Optional[dict]
             A dictionary with the following entries:
             'user': NDEx user name
             'password': NDEx password
+        
+        private : Optional[bool]
+            Whether or not the created network will be private on NDEX.
 
         Returns
         -------
@@ -194,7 +197,7 @@ class CxAssembler(object):
             username, password = ndex_client.get_default_ndex_cred({})
             ndex_cred = {'user': username,
                          'password': password}
-        network_id = ndex_client.create_network(cx_str, ndex_cred)
+        network_id = ndex_client.create_network(cx_str, ndex_cred, private)
         return network_id
 
     def set_context(self, cell_type):
