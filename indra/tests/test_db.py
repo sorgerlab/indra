@@ -1,21 +1,21 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-import re
 from os import remove, path
-from sys import version_info, argv
+from sys import argv
+
+from sqlalchemy.exc import IntegrityError
+
 from nose import SkipTest
 from nose.tools import assert_equal
-from functools import wraps
-from sqlalchemy.exc import IntegrityError
+from nose.plugins.attrib import attr
+
 from indra.db.util import NestedDict, get_test_db
 from indra.db.client import get_content_by_refs
-from nose.plugins.attrib import attr
 from indra.db.reading_manager import BulkLocalReadingManager
 
-IS_PY3 = True
-if version_info.major is not 3:
-    IS_PY3 = False
+from .util import needs_py3, IS_PY3
+
 if IS_PY3:
     from indra.db.content_manager import Pubmed, PmcOA, Manuscripts, Elsevier
 
@@ -56,15 +56,6 @@ def get_db(clear=True):
     if clear:
         db._clear(force=True)
     return db
-
-
-def needs_py3(func):
-    @wraps(func)
-    def test_with_py3_func(*args, **kwargs):
-        if not IS_PY3:
-            raise SkipTest("This tests features only supported in Python 3.x")
-        return func(*args, **kwargs)
-    return test_with_py3_func
 
 
 @needs_py3

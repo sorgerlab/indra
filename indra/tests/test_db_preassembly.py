@@ -27,8 +27,10 @@ from indra.db import preassembly_manager as pm
 from indra.statements import stmts_from_json, Statement
 from indra.tools import assemble_corpus as ac
 
+from nose.plugins.attrib import attr
+from .util import needs_py3
+
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-STMT_PICKLE_FILE = os.path.join(THIS_DIR, 'test_stmts_tuples.pkl')
 MAX_NUM_STMTS = 11721
 BATCH_SIZE = 2017
 STMTS = None
@@ -41,8 +43,7 @@ def _load_tuples(fname):
 
 
 def _get_stmt_tuples():
-    with open(STMT_PICKLE_FILE, 'rb') as f:
-        stmt_tuples = pickle.load(f)
+    stmt_tuples = _load_tuples('test_stmts_tuples.pkl')
     col_names = stmt_tuples.pop(0)
     if len(stmt_tuples) > MAX_NUM_STMTS:
         stmt_tuples = random.sample(stmt_tuples, MAX_NUM_STMTS)
@@ -215,87 +216,8 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
     assert not any(hash_diffs.values()), "Found mismatched hashes."
 
 
-def test_preassembly_without_database():
-    stmts = _get_stmts()
-    pam = pm.PreassemblyManager()
-    unique_stmt_dict, evidence_links, support_links = \
-        pam._process_statements(stmts)
-    assert len(unique_stmt_dict)
-    total_evidence = len(evidence_links)
-    assert len(unique_stmt_dict) <= total_evidence <= len(stmts), \
-        ("Got %d ev links for %d stmts and %d unique statements (should be "
-         "between)." % (total_evidence, len(stmts), len(unique_stmt_dict)))
-    num_unique_stmt_keys = len({t[0] for t in evidence_links})
-    assert num_unique_stmt_keys == len(unique_stmt_dict), \
-        ("Got %d ev sets for %d unique stmts."
-         % (num_unique_stmt_keys, len(unique_stmt_dict)))
-    assert len(support_links)
-
-    opa_stmts = _do_old_fashioned_preassembly(stmts)
-    new_hash_set = set(unique_stmt_dict.keys())
-    old_hash_set = {s.get_hash(shallow=True) for s in opa_stmts}
-    assert new_hash_set == old_hash_set, \
-        (new_hash_set - old_hash_set, old_hash_set - new_hash_set)
-    return
-
-
-def test_incremental_preassmbly_without_database():
-    stmts = _get_stmts()
-    pam = pm.PreassemblyManager()
-
-    # For comparison, preassemble the entire corpus.
-    full_unique_stmts, full_evidence_links, full_support_links = \
-        pam._process_statements(stmts)
-
-    # Randomly split the sample 80-20
-    init_stmts = random.sample(stmts, int(0.8*len(stmts)))
-    new_stmts = list(set(stmts) - set(init_stmts))
-
-    # Run preassmbly on the "init" corpus (the 80)
-    init_unique_stmts, init_evidence_links, init_support_links = \
-        pam._process_statements(init_stmts)
-    assert len(init_support_links)
-
-    # Make sure the "new" statements actually have at least some links to add
-    new_unique_stmts, new_only_ev_links, new_only_mk_links = \
-        pam._process_statements(new_stmts)
-    assert len(new_only_mk_links), "Test not useful without new matches."
-    print("Evidence links from new stmts:", len(new_only_ev_links))
-    print("Support links from new stmts:", len(new_only_mk_links))
-
-    # Now merge in the "new" statements (the 20)
-    new_support_links = pam._get_increment_links(init_unique_stmts,
-                                                 new_unique_stmts)
-    updated_unique_stmts = init_unique_stmts.copy()
-    updated_unique_stmts.update(new_unique_stmts)
-    updated_evidence_links = init_evidence_links | new_only_ev_links
-    updated_support_links = init_support_links | new_only_mk_links \
-                            | new_support_links
-
-    # Check that we got all the same statements (trivial)
-    assert len(updated_unique_stmts) == len(full_unique_stmts), \
-        ("Got %d unique stmts from update, but %d from pre-assembly of all "
-         "stmts." % (len(updated_unique_stmts), len(full_unique_stmts)))
-
-    # Check that the evidence matches up (easy)
-    # fevl_set = pas.flatten_evidence_dict(full_evidence_links)
-    # uevl_set = pas.flatten_evidence_dict(updated_evidence_links)
-    missed_evidence_links = full_evidence_links - updated_evidence_links
-    extra_evidence_links = updated_evidence_links - full_evidence_links
-    assert not len(missed_evidence_links) and not len(extra_evidence_links), \
-        ("Some evidence links missed: %s, and/or some evidence links added: %s"
-         % (_str_large_set(missed_evidence_links, 5),
-            _str_large_set(extra_evidence_links, 5)))
-
-    # Check that we have the same match key links (less easy)
-    missed_supports = full_support_links - updated_support_links
-    extra_supports = updated_support_links - full_support_links
-    assert not len(extra_supports) and not len(missed_supports), \
-        ("Some match key links missed: %s and/or some match key links added: %s"
-         % (missed_supports, extra_supports))
-    return
-
-
+@needs_py3
+@attr('slow')
 def test_statement_distillation():
     db = _get_loaded_db()
     assert db is not None, "Test was broken. Got None instead of db insance."
@@ -312,6 +234,8 @@ def test_statement_distillation():
     assert stmt_ids_p == stmt_ids
 
 
+@needs_py3
+@attr('slow')
 def test_preassembly_with_database():
     db = _get_loaded_db()
 
@@ -349,6 +273,8 @@ def test_preassembly_with_database():
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
+@needs_py3
+@attr('slow')
 def test_incremental_preassembly_with_database():
     db = _get_loaded_db(split=0.8, with_init_corpus=True)
     pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)

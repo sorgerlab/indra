@@ -63,6 +63,7 @@ install:
   - wget http://sorger.med.harvard.edu/data/bgyori/test_text_ref_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_text_content_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_reading_tuples.pkl -nv
+  - wget http://sorger.med.harvard.edu/data/bgyori/test_db_info_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_stmts_tuples.pkl -nv
 before_script:
   # Enable plotting on fake display
