@@ -1,5 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
 from datetime import datetime
 
 import boto3
@@ -21,7 +22,7 @@ def get_text_ref_stats(fname=None, db=None):
     if db is None:
         db = get_primary_db()
     tr_tc_link = db.TextRef.id == db.TextContent.text_ref_id
-    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
+    tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
     __report_stat("Text ref statistics:", fname)
     __report_stat("--------------------", fname)
     tr_q = db.filter_query(db.TextRef)
@@ -55,7 +56,7 @@ def get_text_ref_stats(fname=None, db=None):
 def get_text_content_stats(fname=None, db=None):
     if db is None:
         db = get_primary_db()
-    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
+    tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
     __report_stat("\nText Content statistics:", fname)
     __report_stat('------------------------', fname)
     tc_q = db.filter_query(db.TextContent)
@@ -109,22 +110,22 @@ def get_readings_stats(fname=None, db=None):
 
     __report_stat('\nReading statistics:', fname)
     __report_stat('-------------------', fname)
-    rdg_q = db.filter_query(db.Readings)
+    rdg_q = db.filter_query(db.Reading)
     __report_stat('Total number or readings: %d' % rdg_q.count(), fname)
     # There may be a way to do this more neatly with a group_by clause, however
     # the naive way of doing it leaves us with a miscount due to indistinct.
-    reader_versions = (db.session.query(db.Readings.reader_version)
+    reader_versions = (db.session.query(db.Reading.reader_version)
                        .distinct().all())
     sources = db.session.query(db.TextContent.source).distinct().all()
     stats = ''
     for rv, in reader_versions:
         for src, in sources:
             cnt = db.filter_query(
-                db.Readings,
-                db.TextContent.id == db.Readings.text_content_id,
+                db.Reading,
+                db.TextContent.id == db.Reading.text_content_id,
                 db.TextContent.source == src,
-                db.Readings.reader_version == rv
-            ).distinct().count()
+                db.Reading.reader_version == rv
+                ).distinct().count()
             stats += '    Readings by %s from %s: %d\n' % (rv, src, cnt)
     __report_stat("Readings by reader version and content source:\n%s" % stats,
                   fname)
@@ -134,16 +135,16 @@ def get_readings_stats(fname=None, db=None):
 def get_statements_stats(fname=None, db=None, indra_version=None):
     if db is None:
         db = get_primary_db()
-    tc_rdng_link = db.TextContent.id == db.Readings.text_content_id
-    stmt_rdng_link = db.Readings.id == db.Statements.reader_ref
+    tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
+    stmt_rdng_link = db.Reading.id == db.RawStatements.reader_ref
 
     __report_stat('\nStatement Statistics:', fname)
     __report_stat('---------------------', fname)
-    stmt_q = db.filter_query(db.Statements)
+    stmt_q = db.filter_query(db.RawStatements)
     if indra_version is not None:
-        stmt_q = stmt_q.filter(db.Statements.indra_version == indra_version)
+        stmt_q = stmt_q.filter(db.RawStatements.indra_version == indra_version)
     __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
-    readers = db.session.query(db.Readings.reader).distinct().all()
+    readers = db.session.query(db.Reading.reader).distinct().all()
     sources = db.session.query(db.TextContent.source).distinct().all()
     stats = ''
     for reader, in readers:
@@ -151,32 +152,32 @@ def get_statements_stats(fname=None, db=None, indra_version=None):
             cnt = stmt_q.filter(
                 stmt_rdng_link,
                 tc_rdng_link,
-                db.Readings.reader == reader,
+                db.Reading.reader == reader,
                 db.TextContent.source == src
-            ).distinct().count()
+                ).distinct().count()
             stats += ('    Statements from %s reading %s: %d\n'
                       % (reader, src, cnt))
     __report_stat("Statements by reader and content source:\n%s" % stats,
                   fname)
     if indra_version is None:
         statements_by_db_source = (
-            db.session.query(db.DBInfo.db_name, func.count(db.Statements.id))
-                .filter(db.Statements.db_ref == db.DBInfo.id)
-                .distinct()
-                .group_by(db.DBInfo.db_name)
-                .all()
-        )
+            db.session.query(db.DBInfo.db_name, func.count(db.RawStatements.id))
+            .filter(db.RawStatements.db_ref == db.DBInfo.id)
+            .distinct()
+            .group_by(db.DBInfo.db_name)
+            .all()
+            )
         __report_stat(("Statements by database:\n    %s"
                        % '\n    '.join(['%s: %d' % (s, n)
                                         for s, n in statements_by_db_source])),
                       fname
                       )
         statements_by_indra_version = (
-            db.session.query(db.Statements.indra_version,
-                             func.count(db.Statements.id))
-                .group_by(db.Statements.indra_version)
-                .all()
-        )
+            db.session.query(db.RawStatements.indra_version,
+                             func.count(db.RawStatements.id))
+            .group_by(db.RawStatements.indra_version)
+            .all()
+            )
         __report_stat(("Number of statements by indra version:\n    %s"
                        % '\n    '.join(['%s: %d' % (s, n) for s, n
                                         in statements_by_indra_version])),
@@ -195,8 +196,8 @@ def get_pa_statement_stats(fname=None, db=None):
     statements_produced_by_indra_version = (
         db.session.query(db.PAStatements.indra_version,
                          func.count(db.PAStatements.id))
-            .group_by(db.PAStatements.indra_version)
-            .all()
+          .group_by(db.PAStatements.indra_version)
+          .all()
     )
     __report_stat(("Number of statements by indra version:\n    %s"
                    % '\n    '.join(['%s: %d' % (s, n) for s, n
@@ -217,7 +218,7 @@ def get_db_statistics(fname=None, db=None, tables=None):
         'readings': get_readings_stats,
         'statements': get_statements_stats,
         'pa_statements': get_pa_statement_stats
-    }
+        }
 
     # Get the statistics
     if tables is None:

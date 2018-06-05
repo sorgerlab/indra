@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
+import random
 from builtins import dict, str
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
@@ -17,10 +19,17 @@ from sqlalchemy.schema import DropTable
 from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey,\
-    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime, func
+from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
+    TIMESTAMP, create_engine, inspect, LargeBinary, Boolean, DateTime, func, \
+    BigInteger
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.dialects.postgresql import BYTEA
+
+try:
+    import networkx as nx
+    WITH_NX = True
+except ImportError:
+    WITH_NX = False
 
 
 logger = logging.getLogger('db_manager')
@@ -155,6 +164,7 @@ class DatabaseManager(object):
         self.Base = declarative_base()
         self.sqltype = sqltype
         self.label = label
+        self.tables = {}
 
         if sqltype is sqltypes.POSTGRESQL:
             Bytea = BYTEA
@@ -176,6 +186,8 @@ class DatabaseManager(object):
                 UniqueConstraint('pmid', 'doi'),
                 UniqueConstraint('pmcid', 'doi')
                 )
+        self.TextRef = TextRef
+        self.tables[TextRef.__tablename__] = TextRef
 
         class SourceFile(self.Base):
             __tablename__ = 'source_file'
@@ -186,6 +198,8 @@ class DatabaseManager(object):
             __table_args__ = (
                 UniqueConstraint('source', 'name'),
                 )
+        self.SourceFile = SourceFile
+        self.tables[SourceFile.__tablename__] = SourceFile
 
         class Updates(self.Base):
             __tablename__ = 'updates'
@@ -194,6 +208,8 @@ class DatabaseManager(object):
             source = Column(String(250), nullable=False)
             unresolved_conflicts_file = Column(Bytea)
             datetime = Column(DateTime, default=func.now())
+        self.Updates = Updates
+        self.tables[Updates.__tablename__] = Updates
 
         class TextContent(self.Base):
             __tablename__ = 'text_content'
@@ -213,9 +229,11 @@ class DatabaseManager(object):
                     'text_ref_id', 'source', 'format', 'text_type'
                     ),
                 )
+        self.TextContent = TextContent
+        self.tables[TextContent.__tablename__] = TextContent
 
-        class Readings(self.Base):
-            __tablename__ = 'readings'
+        class Reading(self.Base):
+            __tablename__ = 'reading'
             id = Column(Integer, primary_key=True)
             text_content_id = Column(Integer,
                                      ForeignKey('text_content.id'),
@@ -232,6 +250,8 @@ class DatabaseManager(object):
                     'text_content_id', 'reader', 'reader_version'
                     ),
                 )
+        self.Reading = Reading
+        self.tables[Reading.__tablename__] = Reading
 
         class ReadingUpdates(self.Base):
             __tablename__ = 'reading_updates'
@@ -242,6 +262,8 @@ class DatabaseManager(object):
             run_datetime = Column(DateTime, default=func.now())
             earliest_datetime = Column(DateTime)
             latest_datetime = Column(DateTime, nullable=False)
+        self.ReadingUpdates = ReadingUpdates
+        self.tables[ReadingUpdates.__tablename__] = ReadingUpdates
 
         class DBInfo(self.Base):
             __tablename__ = 'db_info'
@@ -249,58 +271,110 @@ class DatabaseManager(object):
             db_name = Column(String(20), nullable=False)
             create_date = Column(DateTime, default=func.now())
             last_updated = Column(DateTime, onupdate=func.now())
+        self.DBInfo = DBInfo
+        self.tables[DBInfo.__tablename__] = DBInfo
 
-        class Statements(self.Base):
-            __tablename__ = 'statements'
-            id = Column(Integer, primary_key=True)
-            uuid = Column(String(40), unique=True, nullable=False)
-            db_ref = Column(Integer, ForeignKey('db_info.id'))
+        class RawStatements(self.Base):
+            __tablename__ = 'raw_statements'
+            uuid = Column(String(40), primary_key=True)
+            mk_hash = Column(String, nullable=False)
+            db_info_id = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
-            reader_ref = Column(Integer, ForeignKey('readings.id'))
-            readings = relationship(Readings)
+            reading_id = Column(Integer, ForeignKey('reading.id'))
+            reading = relationship(Reading)
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
             create_date = Column(DateTime, default=func.now())
+        self.RawStatements = RawStatements
+        self.tables[RawStatements.__tablename__] = RawStatements
 
-        class Agents(self.Base):
-            __tablename__ = 'agents'
+        class RawAgents(self.Base):
+            __tablename__ = 'raw_agents'
             id = Column(Integer, primary_key=True)
-            stmt_id = Column(Integer,
-                             ForeignKey('statements.id'),
-                             nullable=False)
-            statements = relationship(Statements)
+            stmt_uuid = Column(String(40),
+                               ForeignKey('raw_statements.uuid'),
+                               nullable=False)
+            statements = relationship(RawStatements)
             db_name = Column(String(40), nullable=False)
             db_id = Column(String, nullable=False)
             role = Column(String(20), nullable=False)
+        self.RawAgents = RawAgents
+        self.tables[RawAgents.__tablename__] = RawAgents
+
+        class RawUniqueLinks(self.Base):
+            __tablename__ = 'raw_unique_links'
+            id = Column(Integer, primary_key=True)
+            raw_stmt_uuid = Column(String(40), ForeignKey('raw_statements.uuid'),
+                                   nullable=False)
+            pa_stmt_mk_hash = Column(String, ForeignKey('pa_statements.mk_hash'),
+                                     nullable=False)
+        self.RawUniqueLinks = RawUniqueLinks
+        self.tables[RawUniqueLinks.__tablename__] = RawUniqueLinks
+
+        class PreassemblyUpdates(self.Base):
+            __tablename__ = 'preassembly_updates'
+            id = Column(Integer, primary_key=True)
+            corpus_init = Column(Boolean, nullable=False)
+            run_datetime = Column(DateTime, default=func.now())
+        self.PreassemblyUpdates = PreassemblyUpdates
+        self.tables[PreassemblyUpdates.__tablename__] = PreassemblyUpdates
 
         class PAStatements(self.Base):
             __tablename__ = 'pa_statements'
-            id = Column(Integer, primary_key=True)
+            mk_hash = Column(String, primary_key=True)
             uuid = Column(String(40), unique=True, nullable=False)
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)
             json = Column(Bytea, nullable=False)
             create_date = Column(DateTime, default=func.now())
+        self.PAStatements = PAStatements
+        self.tables[PAStatements.__tablename__] = PAStatements
 
         class PAAgents(self.Base):
             __tablename__ = 'pa_agents'
             id = Column(Integer, primary_key=True)
-            stmt_id = Column(Integer,
-                             ForeignKey('pa_statements.id'),
-                             nullable=False)
+            stmt_mk_hash = Column(String,
+                                  ForeignKey('pa_statements.mk_hash'),
+                                  nullable=False)
             statements = relationship(PAStatements)
             db_name = Column(String(40), nullable=False)
             db_id = Column(String, nullable=False)
             role = Column(String(20), nullable=False)
+        self.PAAgents = PAAgents
+        self.tables[PAAgents.__tablename__] = PAAgents
 
-        self.tables = {}
-        for tbl in [TextRef, TextContent, Readings, SourceFile, Updates,
-                    DBInfo, Statements, Agents, PAStatements, PAAgents,
-                    ReadingUpdates]:
-            self.tables[tbl.__tablename__] = tbl
-            self.__setattr__(tbl.__name__, tbl)
+        class PASupportLinks(self.Base):
+            __tablename__ = 'pa_support_links'
+            id = Column(Integer, primary_key=True)
+            supporting_mk_hash = Column(String,
+                                        ForeignKey('pa_statements.mk_hash'),
+                                        nullable=False)
+            supported_mk_hash = Column(String,
+                                       ForeignKey('pa_statements.mk_hash'),
+                                       nullable=False)
+        self.PASupportLinks = PASupportLinks
+        self.tables[PASupportLinks.__tablename__] = PASupportLinks
+
         self.engine = create_engine(host)
+
+        if WITH_NX:
+            G = nx.Graph()
+            G.add_edges_from([
+                ('pa_agents', 'pa_statements'),
+                ('raw_unique_links', 'pa_statements'),
+                ('raw_unique_links', 'raw_statements'),
+                ('raw_statements', 'reading'),
+                ('raw_agents', 'raw_statements'),
+                ('raw_statements', 'db_info'),
+                ('reading', 'text_content'),
+                ('text_content', 'text_ref')
+                ])
+            self.__foreign_key_graph = G
+        else:
+            self.__foreign_key_graph = None
+
+        return
 
     def __del__(self, *args, **kwargs):
         try:
@@ -358,11 +432,13 @@ class DatabaseManager(object):
         if not force:
             # Build the message
             if tbl_list is None:
-                msg = "Do you really want to clear the primary database? [y/N]: "
+                msg = ("Do you really want to clear the %s database? [y/N]: "
+                       % self.label)
             else:
                 msg = "You are going to clear the following tables:\n"
                 msg += str([tbl.__tablename__ for tbl in tbl_objs]) + '\n'
-                msg += "Do you really want to clear these tables? [y/N]: "
+                msg += ("Do you really want to clear these tables from %s? "
+                        "[y/N]: " % self.label)
             # Check to make sure.
             try:
                 resp = raw_input(msg)
@@ -446,6 +522,45 @@ class DatabaseManager(object):
             logger.error(err_msg)
             raise
 
+    def _get_foreign_key_constraint(self, table_name_1, table_name_2):
+        cols = self.get_column_objects(self.tables[table_name_1])
+        ret = None
+        for col in cols:
+            for fk in col.foreign_keys:
+                target_table_name, target_col = fk.target_fullname.split('.')
+                if table_name_2 == target_table_name:
+                    ret = (col == getattr(self.tables[table_name_2],
+                                          target_col))
+                    break
+        return ret
+
+    def join(self, table_1, table_2):
+        """Get the joining clause between two tables, if one exists.
+
+        If no link exists, an exception will be raised. Note that this only
+        works for directly links.
+        """
+        table_name_1 = table_1.__tablename__
+        table_name_2 = table_2.__tablename__
+        if WITH_NX:
+            fk_path = nx.shortest_path(self.__foreign_key_graph, table_name_1,
+                                       table_name_2)
+        else:
+            fk_path = [table_name_1, table_name_2]
+
+        links = []
+        for i in range(len(fk_path) - 1):
+            link = self._get_foreign_key_constraint(fk_path[i], fk_path[i+1])
+            if link is None:
+                link = self._get_foreign_key_constraint(fk_path[i+1],
+                                                        fk_path[i])
+            if link is None:
+                raise IndraDatabaseError("There is no foreign key in %s "
+                                         "pointing to %s."
+                                         % (table_name_1, table_name_2))
+            links.append(link)
+        return links
+
     def get_values(self, entry_list, col_names=None, keyed=False):
         "Get the column values from the entries in entry_list"
         if col_names is None and len(entry_list) > 0:  # Get everything.
@@ -461,29 +576,56 @@ class DatabaseManager(object):
                 ret.append(getattr(entry, col_names))
         return ret
 
-    def insert(self, tbl_name, ret_info='id', **input_dict):
+    def insert(self, table, ret_info=None, **input_dict):
         "Insert a an entry into specified table, and return id."
         self.grab_session()
-        inputs = dict.fromkeys(self.get_column_names(tbl_name))
+        # Resolve the table instance
+        if isinstance(table, str):
+            inputs = dict.fromkeys(self.get_column_names(table))
+            table = self.tables[table]
+        else:
+            inputs = dict.fromkeys(self.get_column_names(table.__tablename__))
+
+        # Get the default return info
+        if ret_info is None:
+            ret_info = inspect(table).primary_key[0].name
+
+        # Do the insert
         inputs.update(input_dict)
-        new_entry = self.tables[tbl_name](**inputs)
+        new_entry = table(**inputs)
         self.session.add(new_entry)
         self.commit("Excepted while trying to insert %s into %s" %
-                    (inputs, tbl_name))
+                    (inputs, table.__tablename__))
         return self.get_values([new_entry], ret_info)[0]
 
-    def insert_many(self, tbl_name, input_dict_list, ret_info='id'):
+    def insert_many(self, table, input_data_list, ret_info=None, cols=None):
         "Insert many records into the table given by table_name."
         self.grab_session()
-        inputs = dict.fromkeys(self.get_column_names(tbl_name))
+
+        # Resolve the table instance
+        if isinstance(table, str):
+            inputs = dict.fromkeys(self.get_column_names(table))
+            table = self.tables[table]
+        else:
+            inputs = dict.fromkeys(self.get_column_names(table.__tablename__))
+
+        # Set the default return info
+        if ret_info is None:
+            ret_info = inspect(table).primary_key[0].name
+
+        # Prepare and insert the data
         entry_list = []
-        for input_dict in input_dict_list:
+        for input_data in input_data_list:
+            if cols:
+                input_dict = zip(cols, input_data)
+            else:
+                input_dict = input_data
             inputs.update(input_dict)
-            entry_list.append(self.tables[tbl_name](**inputs))
+            entry_list.append(table(**inputs))
             inputs = inputs.fromkeys(inputs)  # Clear the values of the dict.
         self.session.add_all(entry_list)
         self.commit("Excepted while trying to insert:\n%s,\ninto %s" %
-                    (input_dict_list, tbl_name))
+                    (input_data_list, table.__tablename__))
         return self.get_values(entry_list, ret_info)
 
     def delete_all(self, entry_list):
@@ -583,18 +725,22 @@ class DatabaseManager(object):
 
         return self.session.query(*query_args).filter(*args)
 
+    def count(self, tbls, *args):
+        """Get a count of the results to a query."""
+        return self.filter_query(tbls, *args).distinct().count()
+
     def select_one(self, tbls, *args):
         """Select the first value that matches requirements.
 
         Requirements are given in kwargs from table indicated by tbl_name. See
-        *select_all*.
+        `select_all`.
 
         Note that if your specification yields multiple results, this method
         will just return the first result without exception.
         """
         return self.filter_query(tbls, *args).first()
 
-    def select_all(self, tbls, *args):
+    def select_all(self, tbls, *args, **kwargs):
         """Select any and all entries from table given by tbl_name.
 
         The results will be filtered by your keyword arguments. For example if
@@ -604,7 +750,7 @@ class DatabaseManager(object):
 
             db.select_all('text_ref', db.TextRef.pmid == '10532205')
 
-        Note that double equals are required, not a single equal. Eqivalently
+        Note that double equals are required, not a single equal. Equivalently
         you could call:
 
         .. code-block:: python
@@ -622,8 +768,67 @@ class DatabaseManager(object):
                db.TextContent.source == 'pmc_oa',
                db.TextContent.text_type == 'fulltext'
                )
+
+        Parameters
+        ----------
+        tbls, *args
+            See above for usage.
+        **kwargs
+            yield_per: int or None
+            If the result to your query is expected to be large, you can choose
+            to only load `yield_per` items at a time, using the eponymous
+            feature of sqlalchemy queries. Default is None, meaning all results
+            will be loaded simultaneously.
+
+        Returns
+        -------
+
         """
+        yield_per = kwargs.get('yield_per')
+        if yield_per is not None:
+            return self.filter_query(tbls, *args).yield_per(yield_per)
         return self.filter_query(tbls, *args).all()
+
+    def select_sample_from_table(self, number, table, *args, **kwargs):
+        """Select a number of random samples from the given table.
+
+        Parameters
+        ----------
+        number : int
+            The number of samples to return
+        table : str, table class, or column attribute of table class
+            The table or table column to be sampled.
+        *args, **kwargs :
+            All other arguments are passed to `select_all`, including any and
+            all filtering clauses.
+
+        Returns
+        -------
+        A list of sqlalchemy orm objects
+        """
+        # Get the base set of tables needed.
+        if isinstance(table, str) and table in self.tables.keys():
+            true_table = getattr(self, table)
+        elif hasattr(table, 'class_'):
+            true_table = table.class_
+        elif table in self.tables.values():
+            true_table = table
+        else:
+            raise IndraDatabaseError("Unrecognized table: %s of type %s"
+                                     % (table, type(table)))
+
+        # Get all ids for this table given query filters
+        logger.info("Getting all relevant ids.")
+        id_tuples = self.select_all(true_table.id, *args, **kwargs)
+        id_list = list({entry_id for entry_id, in id_tuples})
+
+        # Sample from the list of ids
+        logger.info("Getting sample.")
+        id_sample = random.sample(id_list, number)
+        if hasattr(table, 'key') and table.key == 'id':
+            return [(entry_id,) for entry_id in id_sample]
+
+        return self.select_all(table, table.id.in_(id_sample))
 
     def has_entry(self, tbls, *args):
         "Check whether an entry/entries matching given specs live in the db."

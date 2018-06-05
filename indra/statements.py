@@ -992,9 +992,14 @@ class Evidence(object):
             self.epistemics = {}
 
     def matches_key(self):
-        key = str((self.source_api, self.source_id, self.pmid,
-                  self.text, self.annotations, self.epistemics))
-        return key
+        key_lst = [self.source_api, self.source_id, self.pmid,
+                   self.text]
+        for d in [self.annotations, self.epistemics]:
+            d_key = list(d.items())
+            d_key.sort()
+            key_lst.append(d_key)
+        key = str(key_lst)
+        return key.replace('"', '').replace('\'', '').replace('None', '~')[1:-1]
 
     def equals(self, other):
         matches = (self.source_api == other.source_api) and\
@@ -1078,9 +1083,31 @@ class Statement(object):
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
         self.uuid = '%s' % uuid.uuid4()
+        self.hash = None
+        self.shallow_hash = None
+        return
+
+    def matches_key(self):
+        raise NotImplementedError("Method must be implemented in child class.")
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
+
+    def get_hash(self, refresh=False, shallow=False):
+        def clean(rep):
+            return (rep.replace('\\', '').replace('class', '')
+                    .replace('indra.statements.', '').replace('None', '~')
+                    .replace('\'', '').replace('\"', '').replace(' ', ''))
+        if not shallow:
+            if self.hash is None or refresh:
+                ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
+                self.hash = clean(self.matches_key() + str(ev_matches_key_list))
+            ret = self.hash
+        else:
+            if self.shallow_hash is None or refresh:
+                self.shallow_hash = clean(self.matches_key())
+            ret = self.shallow_hash
+        return ret
 
     def agent_list_with_bound_condition_agents(self):
         # Returns the list of agents both directly participating in the
@@ -1255,7 +1282,13 @@ class Statement(object):
         for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
-        return self.__class__(**kwargs)
+        for attr in ['hash', 'shallow_hash']:
+            my_hash = kwargs.pop(attr, None)
+            my_shallow_hash = kwargs.pop(attr, None)
+        new_instance = self.__class__(**kwargs)
+        new_instance.hash = my_hash
+        new_instance.shallow_hash = my_shallow_hash
+        return new_instance
 
 
 @python_2_unicode_compatible
@@ -2909,12 +2942,17 @@ class Unresolved(Statement):
     representation of an indra statement. When this happens, this class is used
     as a place-holder, carrying only the uuid of the statement.
     """
-    def __init__(self, uuid_str):
+    def __init__(self, uuid_str=None, shallow_hash=None, mk_hash=None):
         super(Unresolved, self).__init__()
         self.uuid = uuid_str
+        self.shallow_hash = shallow_hash
+        self.hash = mk_hash
 
     def __str__(self):
-        return "%s(%s)" % (type(self).__name__, self.uuid)
+        if self.uuid:
+            return "%s(%s)" % (type(self).__name__, self.uuid)
+        elif self.shallow_hash:
+            return "%s(%s)" % (type(self).__name__, self.shallow_hash)
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):

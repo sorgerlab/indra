@@ -93,8 +93,9 @@ class StatementData(object):
         The id number of the entry in the `readings` table of the database.
         None if no such id is available.
     """
-    def __init__(self, statement, reading_id):
+    def __init__(self, statement, reading_id=None, db_info_id=None):
         self.reading_id = reading_id
+        self.db_info_id = db_info_id
         self.statement = statement
         self.indra_version = get_indra_version()
         return
@@ -102,14 +103,13 @@ class StatementData(object):
     @classmethod
     def get_cols(self):
         """Get the columns for the tuple returned by `make_tuple`."""
-        return ('reader_ref', 'uuid', 'type', 'json', 'indra_version')
+        return 'reading_id', 'db_info_id', 'uuid', 'mk_hash', 'type', 'json', 'indra_version'
 
     def make_tuple(self):
         """Make a tuple for copying into the database."""
-        return (self.reading_id, self.statement.uuid,
-                self.statement.__class__.__name__,
-                json.dumps(self.statement.to_json()),
-                self.indra_version)
+        return (self.reading_id, self.db_info_id, self.statement.uuid,
+                self.statement.get_hash(), self.statement.__class__.__name__,
+                json.dumps(self.statement.to_json()), self.indra_version)
 
 
 def get_stmts_safely(reading_data):

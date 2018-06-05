@@ -1,22 +1,21 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-import re
 from os import remove, path
-from sys import version_info, argv
+from sys import argv
+
+from sqlalchemy.exc import IntegrityError
+
 from nose import SkipTest
 from nose.tools import assert_equal
-from functools import wraps
-from sqlalchemy.exc import IntegrityError
-from indra.db.database_manager import DatabaseManager
-from indra.db.util import get_defaults, NestedDict
-from indra.db.client import get_content_by_refs
 from nose.plugins.attrib import attr
+
+from indra.db.util import NestedDict, get_test_db
+from indra.db.client import get_content_by_refs
 from indra.db.reading_manager import BulkLocalReadingManager
 
-IS_PY3 = True
-if version_info.major is not 3:
-    IS_PY3 = False
+from .util import needs_py3, IS_PY3
+
 if IS_PY3:
     from indra.db.content_manager import Pubmed, PmcOA, Manuscripts, Elsevier
 
@@ -26,44 +25,11 @@ if '-a' in argv:
             ('!nonpublic', '!webservice')]):
         raise SkipTest("Every test is nonpublic and a webservice.")
 
-defaults = get_defaults()
-test_defaults = {k: v for k, v in defaults.items() if 'test' in k}
-
-# Get host for the test database from system defaults.
-TEST_HOST = None
-TEST_HOST_TYPE = ''
-key_list = list(test_defaults.keys())
-key_list.sort()
-report = ''
-for k in key_list:
-    v = test_defaults[k]
-    m = re.match('(\w+)://.*?/([\w.]+)', v)
-    if m is None:
-        raise SkipTest(
-            "No hosts found for testing. Please update defaults.txt if you\n"
-            "wish to run these tests. Test host entries must be of the form\n"
-            "test*=<sql type>://<passwords and such>/<database name>")
-    sqltype = m.groups()[0]
-    db_name = m.groups()[1]
-    try:
-        db = DatabaseManager(v, sqltype=sqltype)
-        db._clear(force=True)
-    except Exception as e:
-        report += "Tried to use %s, but failed due to:\n%s\n" % (k, e)
-        continue  # Clearly this test table won't work.
-    if db_name.endswith('.db'):
-        TEST_FILE = db_name
-        if path.exists(TEST_FILE):
-            remove(TEST_FILE)
-    else:
-        TEST_FILE = None
-    TEST_HOST = v
-    TEST_HOST_TYPE = sqltype
-    print("Using test database %s." % k)
-    break
-else:
+try:
+    get_test_db()
+except Exception as e:
     raise SkipTest("Not able to start up any of the available test hosts:\n"
-                   + report)
+                   + str(e))
 
 
 #==============================================================================
@@ -85,20 +51,11 @@ def capitalize_list_of_tpls(l):
 
 def get_db(clear=True):
     "Set up the database for testing."
-    db = DatabaseManager(TEST_HOST, sqltype=TEST_HOST_TYPE)
+    db = get_test_db()
     db.grab_session()
     if clear:
         db._clear(force=True)
     return db
-
-
-def needs_py3(func):
-    @wraps(func)
-    def test_with_py3_func(*args, **kwargs):
-        if not IS_PY3:
-            raise SkipTest("This tests features only supported in Python 3.x")
-        return func(*args, **kwargs)
-    return test_with_py3_func
 
 
 @needs_py3
@@ -565,12 +522,12 @@ def test_sparser_initial_reading():
     sparser_updates_q = db.filter_query(db.ReadingUpdates,
                                         db.ReadingUpdates.reader == 'SPARSER')
     assert sparser_updates_q.count() == 1, "Update was not logged."
-    sparser_readings_q = db.filter_query(db.Readings,
-                                         db.Readings.reader == 'SPARSER')
+    sparser_readings_q = db.filter_query(db.Reading,
+                                         db.Reading.reader == 'SPARSER')
     assert sparser_readings_q.count() > 0, "Failed to produce readings."
-    sparser_stmts_q = db.filter_query(db.Statements,
-                                      db.Statements.reader_ref == db.Readings.id,
-                                      db.Readings.reader == 'SPARSER')
+    sparser_stmts_q = db.filter_query(db.RawStatements,
+                                      db.RawStatements.reading_id == db.Reading.id,
+                                      db.Reading.reader == 'SPARSER')
     assert sparser_stmts_q.count() > 0
 
 
