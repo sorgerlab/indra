@@ -165,7 +165,7 @@ def test_load_eidos_hierarchy():
     eidos_ns = 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#'
     hm = HierarchyManager(eidos_ont, True, True)
     assert hm.isa_closure
-    eidos_isa = lambda a, b: hm.isa('EIDOS', a, 'EIDOS', b)
+    eidos_isa = lambda a, b: hm.isa('UN', a, 'UN', b)
     assert eidos_isa('events/human/conflict/war',
                      'events/human/conflict')
     assert not eidos_isa('events/human/conflict/war',
