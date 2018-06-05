@@ -33,23 +33,28 @@ class CAGAssembler(object):
     CAG : nx.MultiDiGraph
         A networkx MultiDiGraph object representing the causal analysis graph.
     """
-    def __init__(self, stmts=None, grounding_threshold=None):
+    def __init__(self, stmts=None):
         if not stmts:
             self.statements = []
         else:
             self.statements = stmts
-        self.grounding_threshold = grounding_threshold
+        self.grounding_threshold = None
+        self.grounding_ontology = 'UN'
+        self.CAG = None
 
     def add_statements(self, stmts):
         """Add a list of Statements to the assembler."""
         self.statements += stmts
 
-    def make_model(self, grounding_ontology='un', grounding_threshold=None):
+    def make_model(self, grounding_ontology='UN', grounding_threshold=None):
         """Return a networkx MultiDiGraph representing a causal analysis graph.
 
         Parameters
         ----------
-        grounding_threshold: Optional[float]
+        grounding_ontology : Optional[str]
+            The ontology from which the grounding should be taken
+            (e.g. UN, FAO)
+        grounding_threshold : Optional[float]
             Minimum threshold score for Eidos grounding.
 
         Returns
@@ -120,8 +125,8 @@ class CAGAssembler(object):
     def print_tsv(self, file_name):
         def _get_factor(stmt, concept, delta, evidence, raw_name):
             if evidence.source_api == 'eidos':
-                if concept.db_refs['EIDOS']:
-                    factor_norm = concept.db_refs['EIDOS'][self.grounding_ontology][0][0]
+                if concept.db_refs[self.grounding_ontology]:
+                    factor_norm = concept.db_refs[self.grounding_ontology][0][0]
                 else:
                     factor_norm = ''
             elif evidence.source_api == 'bbn':
@@ -287,13 +292,12 @@ class CAGAssembler(object):
         """Return a standardized name for a node given a Concept."""
         if (# grounding threshold is specified
             self.grounding_threshold is not None
-            # Eidos groundings are present
-            and concept.db_refs['EIDOS']
             # The particular eidos ontology grounding (un/wdi/fao) is present
-            and concept.db_refs['EIDOS'][self.grounding_ontology]
+            and concept.db_refs[self.grounding_ontology]
             # The grounding score is above the grounding threshold
-            and concept.db_refs['EIDOS'][self.grounding_ontology][0][1] > self.grounding_threshold):
-                entry = concept.db_refs['EIDOS'][self.grounding_ontology][0][0]
+            and (concept.db_refs[self.grounding_ontology][0][1] >
+                 self.grounding_threshold)):
+                entry = concept.db_refs[self.grounding_ontology][0][0]
                 return entry.split('/')[-1].replace('_', ' ').capitalize()
         else:
             return concept.name.capitalize()
