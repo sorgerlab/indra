@@ -42,11 +42,11 @@ def _load_tuples(fname):
     return ret_tuples
 
 
-def _get_stmt_tuples():
+def _get_stmt_tuples(num_stmts):
     stmt_tuples = _load_tuples('test_stmts_tuples.pkl')
     col_names = stmt_tuples.pop(0)
-    if len(stmt_tuples) > MAX_NUM_STMTS:
-        stmt_tuples = random.sample(stmt_tuples, MAX_NUM_STMTS)
+    if len(stmt_tuples) > num_stmts:
+        stmt_tuples = random.sample(stmt_tuples, num_stmts)
     return stmt_tuples, col_names
 
 
@@ -54,8 +54,8 @@ def _get_background_loaded_db():
     db = db_util.get_test_db()
     db._clear(force=True)
 
-    # Get and load the provenance for the statements.
-    print("\tLoading background metadata...")
+    # get and load the provenance for the statements.
+    print("\tloading background metadata...")
     db.copy('text_ref', _load_tuples('test_text_ref_tuples.pkl'),
             ('id', 'pmid', 'pmcid', 'doi'))
     tc_tuples = [t + (b'',)
@@ -70,9 +70,9 @@ def _get_background_loaded_db():
     return db
 
 
-def _get_input_stmt_tuples():
+def _get_input_stmt_tuples(num_stmts):
     print("\tPrepping the raw statements...")
-    stmt_tuples, col_names = _get_stmt_tuples()
+    stmt_tuples, col_names = _get_stmt_tuples(num_stmts)
     copy_col_names = ('uuid', 'mk_hash', 'type', 'indra_version', 'json',
                       'reading_id', 'db_info_id')
     copy_stmt_tuples = []
@@ -86,13 +86,14 @@ def _get_input_stmt_tuples():
     return copy_stmt_tuples, copy_col_names
 
 
-def _get_loaded_db(split=None, with_init_corpus=False):
+def _get_loaded_db(num_stmts, batch_size=None, split=None,
+                   with_init_corpus=False):
     print("Creating and filling a test database:")
     db = _get_background_loaded_db()
 
     # Now load the statements. Much of this processing is the result of active
     # development, and once that is done, TODO: Format pickle to match
-    copy_stmt_tuples, copy_col_names = _get_input_stmt_tuples()
+    copy_stmt_tuples, copy_col_names = _get_input_stmt_tuples(num_stmts)
 
     print("\tInserting the raw statements...")
     if split is None:
@@ -104,6 +105,7 @@ def _get_loaded_db(split=None, with_init_corpus=False):
             pa_manager = pm.PreassemblyManager()
             pa_manager.create_corpus(db)
     else:
+        assert batch_size is not None
         num_initial = int(split*len(copy_stmt_tuples))
         stmt_tuples_initial = random.sample(copy_stmt_tuples, num_initial)
         stmt_tuples_new = list(set(copy_stmt_tuples) - set(stmt_tuples_initial))
@@ -116,7 +118,7 @@ def _get_loaded_db(split=None, with_init_corpus=False):
         if with_init_corpus:
             print("\tAdding a preassembled corpus from first batch of raw "
                   "stmts...")
-            pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)
+            pa_manager = pm.PreassemblyManager(batch_size=batch_size)
             pa_manager.create_corpus(db)
         print("\tInserting the rest of the raw statements...")
         new_datetime = datetime.now()
@@ -217,9 +219,8 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
 
 
 @needs_py3
-@attr('slow')
-def test_statement_distillation():
-    db = _get_loaded_db()
+def _check_statement_distillation(num_stmts):
+    db = _get_loaded_db(num_stmts)
     assert db is not None, "Test was broken. Got None instead of db insance."
     stmts = db_util.distill_stmts(db, get_full_stmts=True)
     assert len(stmts), "Got zero statements."
@@ -234,10 +235,18 @@ def test_statement_distillation():
     assert stmt_ids_p == stmt_ids
 
 
-@needs_py3
+def test_statement_distillation_small():
+    _check_statement_distillation(1000)
+
+
 @attr('slow')
-def test_preassembly_with_database():
-    db = _get_loaded_db()
+def test_statement_distillation_large():
+    _check_statement_distillation(11721)
+
+
+@needs_py3
+def _check_preassembly_with_database(num_stmts, batch_size):
+    db = _get_loaded_db(num_stmts)
 
     # Get the set of raw statements.
     raw_stmt_list = db.select_all(db.RawStatements)
@@ -246,7 +255,7 @@ def test_preassembly_with_database():
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
@@ -273,14 +282,32 @@ def test_preassembly_with_database():
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
-@needs_py3
+def test_db_preassembly_small():
+    _check_preassembly_with_database(200, 40)
+
+
 @attr('slow')
-def test_incremental_preassembly_with_database():
-    db = _get_loaded_db(split=0.8, with_init_corpus=True)
-    pa_manager = pm.PreassemblyManager(batch_size=BATCH_SIZE)
+def test_db_preassembly_large():
+    _check_preassembly_with_database(11721, 2017)
+
+
+@needs_py3
+def _check_incremental_preassembly_with_database(num_stmts, batch_size):
+    db = _get_loaded_db(num_stmts, batch_size=batch_size, split=0.8,
+                        with_init_corpus=True)
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
 
     raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
+
+
+def test_db_incremental_preassembly_small():
+    _check_incremental_preassembly_with_database(200, 40)
+
+
+@attr('slow')
+def test_db_incremental_preassembly_large():
+    _check_incremental_preassembly_with_database(11721, 2017)
