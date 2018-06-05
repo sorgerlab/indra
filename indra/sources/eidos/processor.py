@@ -99,25 +99,26 @@ class EidosJsonLdProcessor(object):
 
             return list(grounding_tuples)
 
-
-        def _get_eidos_groundings(entity):
-            """Return Eidos groundings are a list of tuples with scores."""
-            groundings = entity.get('groundings')
-            # If no grounding at all, just return None
-            if not groundings:
-                return None
-            # The grounding dict can still be empty
-
-            return {g["name"]: _get_grounding_tuples(g) for g in groundings}
-
+        def _get_groundings(entity):
+            """Return Eidos groundings as a list of tuples with scores."""
+            refs = {'TEXT': entity['text']}
+            groundings = entity.get('groundings', [])
+            for g in groundings:
+                values = _get_grounding_tuples(g)
+                # Only add these groundings if there are actual values listed
+                if values:
+                    key = g['name'].upper()
+                    refs[key] = values
+            return refs
 
         def _make_concept(entity):
             """Return Concept from an Eidos entity."""
             # Use the canonical name as the name of the Concept
             name = entity['canonicalName']
             # Save raw text and Eidos scored groundings as db_refs
-            db_refs = {'TEXT': entity['text'],
-                       'EIDOS': _get_eidos_groundings(entity)}
+            db_refs = {'TEXT': entity['text']}
+            groundings = _get_groundings(entity)
+            db_refs.update(groundings)
             concept = Concept(name, db_refs=db_refs)
             return concept
 

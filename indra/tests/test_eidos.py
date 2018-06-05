@@ -72,12 +72,12 @@ def test_process_text_json_ld():
            == 'ported_syntax_1_verb-Causal')
     assert 'TEXT' in stmt.subj.db_refs
     assert 'TEXT' in stmt.obj.db_refs
-    assert 'EIDOS' in stmt.subj.db_refs
-    assert 'EIDOS' in stmt.obj.db_refs
+    assert 'UN' in stmt.subj.db_refs
+    assert 'UN' in stmt.obj.db_refs
     # FIXME: once groundings are propagated well from offline reading
     # this should work
-    # assert len(stmt.subj.db_refs['EIDOS']) > 5
-    # assert len(stmt.obj.db_refs['EIDOS']) > 5
+    # assert len(stmt.subj.db_refs['UN']) > 5
+    # assert len(stmt.obj.db_refs['UN']) > 5
     # Make sure sanitization works
     sanitized = ep._sanitize('-LRB-something-RRB-')
     assert sanitized == '(something)'
