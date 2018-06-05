@@ -168,7 +168,7 @@ class CxAssembler(object):
             cx_str = self.print_cx()
             fh.write(cx_str)
 
-    def upload_model(self, ndex_cred):
+    def upload_model(self, ndex_cred=None):
         """Creates a new NDEx network of the assembled CX model.
 
         To upload the assembled CX model to NDEx, you need to have
@@ -190,6 +190,10 @@ class CxAssembler(object):
             the assembled CX model.
         """
         cx_str = self.print_cx()
+        if not ndex_cred:
+            username, password = ndex_client.get_default_ndex_cred({})
+            ndex_cred = {'user': username,
+                         'password': password}
         network_id = ndex_client.create_network(cx_str, ndex_cred)
         return network_id
 
