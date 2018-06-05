@@ -333,12 +333,13 @@ class Preassembler(object):
         logger.info("Groups: %d parent, %d worker" %
                     (len(parent_proc_groups), len(child_proc_groups)))
 
-        # Check if we are running any groups in child processes; note that if
-        # use_mp is False, child_proc_groups will be empty
         supports_func = functools.partial(_set_supports_stmt_pairs,
                                           hierarchies=self.hierarchies,
-                                          split_idx = split_idx,
+                                          split_idx=split_idx,
                                           check_entities_match=False)
+
+        # Check if we are running any groups in child processes; note that if
+        # use_mp is False, child_proc_groups will be empty
         if child_proc_groups:
             # Get a multiprocessing context
             ctx = mp.get_context('spawn')
