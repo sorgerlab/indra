@@ -258,7 +258,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
 
 
 def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
-                   preassembled=True):
+                   preassembled=True, with_support=False):
     """Select statements according to a given set of clauses.
 
     Parameters
@@ -341,22 +341,23 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                                      for uuid in uuid_list]
 
         # Populate the supports/supported by fields.
-        logger.info("Populating support links.")
-        support_links = db.filter_query(
-            [db.PASupportLinks.supported_mk_hash,
-             db.PASupportLinks.supporting_mk_hash],
-            or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
-                db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
-            ).distinct().yield_per(count)
-        for supped_hash, supping_hash in support_links:
-            supped_stmt = stmt_dict.get(supped_hash,
-                                        Unresolved(shallow_hash=supped_hash))
-            supping_stmt = stmt_dict.get(supping_hash,
-                                         Unresolved(shallow_hash=supping_hash))
-            if not isinstance(supped_stmt, str):
-                supped_stmt.supported_by.append(supping_stmt)
-            if not isinstance(supping_stmt, str):
-                supping_stmt.supports.append(supped_stmt)
+        if with_support:
+            logger.info("Populating support links.")
+            support_links = db.filter_query(
+                [db.PASupportLinks.supported_mk_hash,
+                 db.PASupportLinks.supporting_mk_hash],
+                or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
+                    db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
+                ).distinct().yield_per(count)
+            for supped_hash, supping_hash in support_links:
+                supped_stmt = stmt_dict.get(supped_hash,
+                                            Unresolved(shallow_hash=supped_hash))
+                supping_stmt = stmt_dict.get(supping_hash,
+                                             Unresolved(shallow_hash=supping_hash))
+                if not isinstance(supped_stmt, str):
+                    supped_stmt.supported_by.append(supping_stmt)
+                if not isinstance(supping_stmt, str):
+                    supping_stmt.supports.append(supped_stmt)
 
         stmts = list(stmt_dict.values())
         logger.info("In all, there are %d pa statements." % len(stmts))
