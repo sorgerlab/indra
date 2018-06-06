@@ -253,6 +253,11 @@ class GraphAssembler():
 
 
 def _get_node_label(agent):
+    def sanitize_name(name):
+        name = name.replace('\n', ' ')
+        name = name.replace('<', '')
+        name = name.replace('>', '')
+        return name
     # If the agent doesn't have grounding in a known
     # database, try to use the original text as a node name.
     # otherwise return the agent name.
@@ -261,15 +266,15 @@ def _get_node_label(agent):
         'CHEBI' not in agent.db_refs):
         if 'FPLX' in agent.db_refs:
             name_for_node = agent.db_refs['FPLX']
-            return name_for_node
+            return sanitize_name(name_for_node)
         elif 'BE' in agent.db_refs:
             name_for_node = agent.db_refs['BE']
-            return name_for_node
+            return sanitize_name(name_for_node)
         elif 'TEXT' in agent.db_refs:
             name_for_node = agent.db_refs['TEXT']
-            return name_for_node
+            return sanitize_name(name_for_node)
     name_for_node = agent.name
-    return name_for_node
+    return sanitize_name(name_for_node)
 
 def _get_node_key(agent):
     #return agent.matches_key()
