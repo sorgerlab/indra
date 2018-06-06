@@ -21,3 +21,9 @@ Eidos Reader (:py:mod:`indra.sources.eidos.eidos_reader`)
 
 .. automodule:: indra.sources.eidos.eidos_reader
     :members:
+
+Eidos CLI (:py:mod:`indra.sources.eidos.eidos_cli`)
+---------------------------------------------------
+
+.. automodule:: indra.sources.eidos.eidos_cli
+    :members:
