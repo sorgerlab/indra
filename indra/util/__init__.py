@@ -210,7 +210,7 @@ def flatMap(f, xs):
     return flatten(lmap(f, xs))
 
 
-def batch_iter(iterator, batch_size, padding=None, return_func=None):
+def batch_iter(iterator, batch_size, return_func=None, padding=None):
     """Break an iterable into batches of size batch_size
 
     Note that `padding` should be set to something (anything) which is NOT a
@@ -223,12 +223,12 @@ def batch_iter(iterator, batch_size, padding=None, return_func=None):
         A python object which is iterable.
     batch_size : int
         The size of batches you wish to produce from the iterator.
-    padding : anything
-        This is used internally to ensure that the remainder of the list is
-        included. This MUST NOT be a valid element of the iterator.
     return_func : executable or None
         Pass a function that takes a generator and returns an iterable (e.g.
         `list` or `set`). If None, a generator will be returned.
+    padding : anything
+        This is used internally to ensure that the remainder of the list is
+        included. This MUST NOT be a valid element of the iterator.
 
     Returns
     -------
