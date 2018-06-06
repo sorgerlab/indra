@@ -38,7 +38,7 @@ def run_eidos(endpoint, *args):
     subprocess.call(cmd)
 
 
-def run_extract_from_directory(path_in, path_out):
+def extract_from_directory(path_in, path_out):
     """Run Eidos on a set of text files in a folder.
 
     The output is produced in the specified output folder but
@@ -56,7 +56,7 @@ def run_extract_from_directory(path_in, path_out):
     run_eidos('apps.ExtractFromDirectory', path_in, path_out)
 
 
-def run_extract_and_process(path_in, path_out):
+def extract_and_process(path_in, path_out):
     """Run Eidos on a set of text files and process output with INDRA.
 
     The output is produced in the specified output folder but
@@ -75,7 +75,7 @@ def run_extract_and_process(path_in, path_out):
     stmts : list[indra.statements.Statements]
         A list of INDRA Statements
     """
-    run_extract_from_directory(path_in, path_out)
+    extract_from_directory(path_in, path_out)
     jsons = glob.glob(os.path.join(path_out, '*.jsonld'))
     logger.info('Found %d JSON-LD files to process in %s' %
                 (len(jsons), path_out))
