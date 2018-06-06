@@ -546,10 +546,10 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                                           clauses)
 
     # Specify sources of fulltext content, and order priorities.
-    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
+    text_content_sources = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
 
     def better_func(element):
-        return full_text_content.index(element)
+        return text_content_sources.index(element)
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
