@@ -16,7 +16,7 @@ default_config_path = os.path.join(os.path.dirname(__file__),
                                    'resources/default_config.ini')
 if not os.path.isfile(config_path):
     try:
-        os.mkdirs(config_dir)
+        os.makedirs(config_dir)
     except Exception:
         logger.warning(config_dir + ' already exists')
     try:
