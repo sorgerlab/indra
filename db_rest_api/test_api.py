@@ -54,15 +54,21 @@ class DbApiTestCase(unittest.TestCase):
             ("Query took up %f MB. Must be less than %f MB."
              % (size/1e6, SIZELIMIT/1e6))
         stmts = stmts_from_json(json_stmts)
-        assert any([s.supports + s.supported_by for s in stmts]),\
-            ("Some statements lack support: %s."
-             % str([str(s) for s in stmts if not s.supports + s.supported_by]))
-        if check_stmts:
-            assert all([not s1.matches(s2)
-                        for s1, s2 in combinations(stmts, 2)]),\
-                ("Some statements match: %s."
-                 % str([(s1, s2) for s1, s2 in combinations(stmts, 2)
-                        if s1.matches(s2)]))
+        assert all([s.evidence for s in stmts]), \
+            "Some statements lack evidence."
+
+        # To allow for faster response-times, we currently do not include
+        # support links in the response.
+        # assert any([s.supports + s.supported_by for s in stmts]),\
+        #     ("Some statements lack support: %s."
+        #      % str([str(s) for s in stmts if not s.supports+s.supported_by]))
+        # if check_stmts:
+        #     assert all([not s1.matches(s2)
+        #                 for s1, s2 in combinations(stmts, 2)]),\
+        #         ("Some statements match: %s."
+        #          % str([(s1, s2) for s1, s2 in combinations(stmts, 2)
+        #                 if s1.matches(s2)]))
+
         assert dt <= time_limit, \
             ("Query took %f seconds. Must be less than %f seconds."
              % (dt, time_limit))
