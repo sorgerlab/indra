@@ -1,8 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from collections import defaultdict
-from functools import partial
-from multiprocessing.pool import Pool
+
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
@@ -13,9 +11,14 @@ import json
 import zlib
 import logging
 from itertools import groupby
+from functools import partial
+from multiprocessing.pool import Pool
+
+from indra.util import batch_iter
 from indra.util.get_version import get_version
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
+
 from .database_manager import DatabaseManager, IndraDatabaseError
 from .config import get_databases as get_defaults
 
@@ -339,17 +342,19 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
     itself returns None.
     """
     rid_set = {rid for rid, _ in rid_stmt_pairs if rid is not None}
-    rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
-                                       db.Reading.id.in_(rid_set),
-                                       *db.join(db.Reading, db.TextRef))
-    rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
-    for rid, stmt in rid_stmt_pairs:
-        if rid is None:
-            # This means this statement came from a database, not reading.
-            continue
-        assert len(stmt.evidence) == 1, \
-            "Only raw statements can have their refs fixed."
-        _set_evidence_text_ref(stmt, rid_tr_dict[rid])
+    logger.info("Getting text refs for %d readings." % len(rid_set))
+    if rid_set:
+        rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
+                                     db.Reading.id.in_(rid_set),
+                                     *db.join(db.TextRef, db.Reading))
+        rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
+        for rid, stmt in rid_stmt_pairs:
+            if rid is None:
+                # This means this statement came from a database, not reading.
+                continue
+            assert len(stmt.evidence) == 1, \
+                "Only raw statements can have their refs fixed."
+            _set_evidence_text_ref(stmt, rid_tr_dict[rid])
     return
 
 
@@ -541,11 +546,10 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                                           clauses)
 
     # Specify sources of fulltext content, and order priorities.
-    full_text_content = ['manuscripts', 'pmc_oa', 'elsevier']
+    text_content_sources = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
 
     def better_func(element):
-        print(element)
-        return full_text_content.index(element)
+        return text_content_sources.index(element)
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
@@ -554,7 +558,7 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
     for trid, src_dict in stmt_nd.items():
         bettered_duplicate_stmts = set()
         # Filter out unneeded fulltext.
-        while sum([k != 'pubmed' for k in src_dict.keys()]) > 1:
+        while len(src_dict) > 1:
             try:
                 worst_src = min(src_dict, key=better_func)
                 bettered_duplicate_stmts |= src_dict[worst_src].get_leaves()
@@ -693,7 +697,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
 
 
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
-                  delete_duplicates=True, weed_evidence=True):
+                  delete_duplicates=True, weed_evidence=True, batch_size=1000):
     """Get a corpus of statements from clauses and filters duplicate evidence.
 
     Parameters
@@ -750,7 +754,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     # Remove support links for statements that have better versions available.
     bad_link_uuids = bettered_duplicate_uuids & linked_uuids
-    if len(bad_link_uuids):
+    if len(bad_link_uuids) and weed_evidence:
         print("Removing bettered evidence links...")
         rm_links = db.select_all(
             db.RawUniqueLinks,
@@ -761,16 +765,17 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
     # Delete exact duplicates
     if len(duplicate_uuids) and delete_duplicates:
         print("Deleting duplicates...")
-        bad_stmts = db.select_all(db.RawStatements,
-                                  db.RawStatements.uuid.in_(duplicate_uuids))
-        bad_uuid_set = {s.uuid for s in bad_stmts}
-        bad_agents = db.select_all(db.RawAgents,
-                                   db.RawAgents.stmt_uuid.in_(bad_uuid_set))
-        print("Deleting %d agents associated with redundant raw statements."
-              % len(bad_agents))
-        db.delete_all(bad_agents)
-        print("Deleting %d redundant raw statements." % len(bad_stmts))
-        db.delete_all(bad_stmts)
+        for dup_id_batch in batch_iter(duplicate_uuids, batch_size, set):
+            bad_stmts = db.select_all(db.RawStatements,
+                                      db.RawStatements.uuid.in_(dup_id_batch))
+            bad_uuid_set = {s.uuid for s in bad_stmts}
+            bad_agents = db.select_all(db.RawAgents,
+                                       db.RawAgents.stmt_uuid.in_(bad_uuid_set))
+            print("Deleting %d agents associated with redundant raw statements."
+                  % len(bad_agents))
+            db.delete_all(bad_agents)
+            print("Deleting %d redundant raw statements." % len(bad_stmts))
+            db.delete_all(bad_stmts)
 
     return stmts
 

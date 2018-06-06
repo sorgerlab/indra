@@ -92,9 +92,6 @@ def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
     """
     logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
     # TODO: This is a temporary measure, remove ASAP.
-    if ns == 'FPLX':
-        ns = 'BE'
-
     if role:
         role = role.upper()
 
@@ -229,14 +226,6 @@ def get_statements():
         elif limit_behavior == 'sample':
             from random import sample
             stmts = sample(stmts, MAX_STATEMENTS)
-
-    # TODO: This is a temporary patch. Remove ASAP.
-    # Fix the names from BE to FPLX
-    for s in stmts:
-        for ag in s.agent_list():
-            if ag is not None:
-                if 'BE' in ag.db_refs.keys():
-                    ag.db_refs['FPLX'] = ag.db_refs.pop('BE')
 
     # Create the json response, and send off.
     resp = jsonify({'limited': hit_limit,

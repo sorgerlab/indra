@@ -273,7 +273,8 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     assert num_support_links
 
     # Try to get all the preassembled statements from the table.
-    pa_stmts = db_client.get_statements([], preassembled=True, db=db)
+    pa_stmts = db_client.get_statements([], preassembled=True, db=db,
+                                        with_support=True)
     assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
                                                 len(pa_stmt_list))
 
@@ -294,23 +295,30 @@ def test_db_preassembly_large():
 
 
 @needs_py3
-def _check_incremental_preassembly_with_database(num_stmts, batch_size):
-    db = _get_loaded_db(num_stmts, batch_size=batch_size, split=0.8,
+def _check_db_pa_supplement(num_stmts, batch_size, init_batch_size=None,
+                            split=0.8):
+    if not init_batch_size:
+        init_batch_size = batch_size
+    db = _get_loaded_db(num_stmts, batch_size=init_batch_size, split=split,
                         with_init_corpus=True)
+    start = datetime.now()
     pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
+    end = datetime.now()
+    print("Duration of incremental update:", end-start)
 
     raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
-    pa_stmts = db_client.get_statements([], preassembled=True, db=db)
+    pa_stmts = db_client.get_statements([], preassembled=True, db=db,
+                                        with_support=True)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
 @attr('nonpublic')
 def test_db_incremental_preassembly_small():
-    _check_incremental_preassembly_with_database(200, 40)
+    _check_db_pa_supplement(200, 40)
 
 
 @attr('nonpublic', 'slow')
 def test_db_incremental_preassembly_large():
-    _check_incremental_preassembly_with_database(11721, 2017)
+    _check_db_pa_supplement(11721, 2017)
