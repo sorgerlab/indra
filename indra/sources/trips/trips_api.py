@@ -111,4 +111,5 @@ def process_xml(xml_string):
     tp.get_degradations()
     tp.get_syntheses()
     tp.get_conversions()
+    tp.get_simple_increase_decrease()
     return tp

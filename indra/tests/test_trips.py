@@ -208,3 +208,18 @@ def test_degradation():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert(st.evidence)
+
+@attr('webservice')
+def test_simple_decrease():
+    tp = trips.process_text('Selumetinib decreases FOS.')
+    assert len(tp.statements) == 1
+    st = tp.statements[0]
+    assert isinstance(st, ist.DecreaseAmount)
+    assert st.subj is not None
+    assert st.obj is not None
+    assert st.subj.name.upper() == 'SELUMETINIB'
+    assert st.obj.name.upper() == 'FOS'
+    assert unicode_strs((tp, st))
+    assert_if_hgnc_then_up(st)
+    assert_grounding_value_or_none(st)
+    assert st.evidence
