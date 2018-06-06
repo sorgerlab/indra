@@ -484,6 +484,46 @@ class TripsProcessor(object):
                 self._add_extracted(_get_type(event), event.attrib['id'])
                 self._subsumed_events.append(affected_event.attrib['id'])
 
+    def get_simple_increase_decrease(self):
+        increases = self.tree.findall("EVENT/[type='ONT::INCREASE']")
+        decreases = self.tree.findall("EVENT/[type='ONT::DECREASE']")
+        for stmt_type, events in ((IncreaseAmount, increases),
+                                  (DecreaseAmount, decreases)):
+            for event in events:
+                # The agent has to exist and be a molecular type
+                agent = event.find(".//*[@role=':AGENT']")
+                if agent is None:
+                    continue
+                if agent.find('type') is None or \
+                        (agent.find('type').text not in molecule_types):
+                    continue
+                agent_id = agent.attrib.get('id')
+                if agent_id is None:
+                    continue
+                agent_agent = self._get_agent_by_id(agent_id,
+                                                    event.attrib['id'])
+
+                # The affected has to exist and be a molecular type
+                affected = event.find(".//*[@role=':AFFECTED']")
+                if affected is None:
+                    continue
+                if affected.find('type') is None or \
+                        (affected.find('type').text not in molecule_types):
+                    continue
+                affected_id = affected.attrib.get('id')
+                if affected_id is None:
+                    continue
+                affected_agent = self._get_agent_by_id(affected_id,
+                                                       event.attrib['id'])
+
+                ev = self._get_evidence(event)
+                location = self._get_event_location(event)
+                for subj, obj in \
+                        _agent_list_product((agent_agent, affected_agent)):
+                    st = stmt_type(subj, obj, evidence=ev)
+                    _stmt_location_to_agents(st, location)
+                    self.statements.append(st)
+
 
     def get_active_forms(self):
         """Extract ActiveForm INDRA Statements."""
