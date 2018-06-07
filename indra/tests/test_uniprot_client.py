@@ -59,6 +59,16 @@ def test_get_gene_name_no_table_entry():
 '''
 
 
+def test_get_synonyms():
+    synonyms = uniprot_client.get_gene_alt_labels('P31938')
+    assert synonyms, synonyms
+    other_names = uniprot_client.get_gene_alt_names('P31938')
+    assert other_names, other_names
+    all_names = uniprot_client.get_all_gene_names('P31938')
+    assert (set(synonyms) & set(other_names)).issubset(set(all_names)), \
+        all_names
+
+
 def test_get_gene_name_nonhuman():
     gene_name = uniprot_client.get_gene_name('P31938')
     assert(gene_name == 'Map2k1')

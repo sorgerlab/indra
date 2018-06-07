@@ -265,6 +265,56 @@ def get_gene_name(protein_id, web_fallback=True):
         return gene_name
     return None
 
+
+def get_gene_alt_labels(protein_id):
+    """Return a list of other names for the protein."""
+    g = query_protein(protein_id)
+    if g is None:
+        return None
+    query = rdf_prefixes + """
+        SELECT ?name
+        WHERE {
+            ?gene skos:altLabel ?name .
+            }
+        """
+    res = g.query(query)
+    if res:
+        return [r[0].toPython() for r in res]
+    return None
+
+
+def get_gene_alt_names(protein_id):
+    """Get the structured names of the gene."""
+    g = query_protein(protein_id)
+    if g is None:
+        return None
+    query = rdf_prefixes + """
+        SELECT ?name
+        WHERE {
+            ?gene :fullName | :shortName ?name .
+            }
+        """
+    res = g.query(query)
+    if res:
+        return [r[0].toPython() for r in res]
+    return None
+
+
+def get_all_gene_names(protein_id):
+    """Get all names associated with the protein id."""
+    ret = []
+    gene_name = get_gene_name(protein_id)
+    if gene_name:
+        ret.append(gene_name)
+    alt_labels = get_gene_alt_labels(protein_id)
+    if alt_labels:
+        ret.extend(alt_labels)
+    alt_names = get_gene_alt_names(protein_id)
+    if alt_names:
+        ret.extend(alt_names)
+    return ret
+
+
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
     try:
