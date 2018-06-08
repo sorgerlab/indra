@@ -5,7 +5,7 @@ from flask import Flask, request, abort, jsonify, Response, make_response
 from flask_compress import Compress
 
 from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper
+    get_statements_by_paper, get_evidence
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 
@@ -99,7 +99,9 @@ def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
         # Get an initial list
         stmts = get_statements_by_gene_role_type(agent_id=ag_id, agent_ns=ns,
                                                  role=role, stmt_type=stmt_type,
-                                                 do_stmt_count=False)
+                                                 do_stmt_count=False,
+                                                 with_evidence=False,
+                                                 with_support=False)
     else:
         stmts = _filter_statements(stmts, ns, ag_id, role)
 
@@ -226,6 +228,12 @@ def get_statements():
         elif limit_behavior == 'sample':
             from random import sample
             stmts = sample(stmts, MAX_STATEMENTS)
+
+    # Retrieve the evidence for the statements.
+    logger.info("Getting evidence for the %d resulting statements."
+                % len(stmts))
+    if stmts:
+        get_evidence(stmts)
 
     # Create the json response, and send off.
     resp = jsonify({'limited': hit_limit,
