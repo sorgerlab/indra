@@ -5,15 +5,18 @@ import itertools
 import rdflib.namespace
 from copy import deepcopy
 from indra.preassembler.hierarchy_manager import HierarchyManager, \
-    UnknownNamespaceException
+    UnknownNamespaceException, hierarchies as default_hierarchies
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
 
 logger = logging.getLogger('expand_families')
 
 class Expander(object):
-    def __init__(self, hierarchies):
-        self.entities = hierarchies['entity']
+    def __init__(self, hierarchies=None):
+        if hierarchies is None:
+            self.entities = default_hierarchies['entity']
+        else:
+            self.entities = hierarchies['entity']
 
     def expand_families(self, stmts):
         """Generate statements by expanding members of families and complexes.
