@@ -137,7 +137,7 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
                                      db=None, do_stmt_count=True,
-                                     preassembled=True):
+                                     preassembled=True, fix_refs=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -208,7 +208,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     if stmt_type:
         clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
-                           db=db, preassembled=preassembled)
+                           db=db, preassembled=preassembled, fix_refs=fix_refs)
     return stmts
 
 
@@ -258,7 +258,8 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
 
 
 def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
-                   preassembled=True, with_support=False):
+                   preassembled=True, with_support=False, fix_refs=True,
+                   with_evidence=True):
     """Select statements according to a given set of clauses.
 
     Parameters
@@ -303,42 +304,60 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                 logger.info("%d statements" % len(stmts))
     else:
         logger.info("Getting preassembled statements.")
-        # Get pairs of pa statements with their supporting statement (as long as
-        # the number of supporting statements).
-        clauses += db.join(db.PAStatements, db.RawStatements)
-        pa_raw_stmt_pairs = db.select_all([db.PAStatements, db.RawStatements],
-                                          *clauses, yield_per=count)
+        if with_evidence:
+            logger.info("Getting preassembled statements.")
+            # Get pairs of pa statements with their supporting statement (as
+            # long as the number of supporting statements).
+            clauses += db.join(db.PAStatements, db.RawStatements)
+            pa_raw_stmt_pairs = \
+                db.select_all([db.PAStatements, db.RawStatements],
+                              *clauses, yield_per=count)
 
-        # Iterate over the batches to create the statement objects.
-        stmt_dict = {}
-        ev_dict = {}
-        raw_stmt_dict = {}
-        for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
-            # Instantiate the PA statement objects, and record the uuid evidence
-            # (raw statement) links.
-            raw_stmt_obj_list = []
-            for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
-                k = pa_stmt_db_obj.mk_hash
-                if k not in stmt_dict.keys():
-                    stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
-                    ev_dict[k] = [raw_stmt_db_obj.uuid,]
-                else:
-                    ev_dict[k].append(raw_stmt_db_obj.uuid)
-                raw_stmt_obj_list.append(raw_stmt_db_obj)
+            # Iterate over the batches to create the statement objects.
+            stmt_dict = {}
+            ev_dict = {}
+            raw_stmt_dict = {}
+            for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
+                # Instantiate the PA statement objects, and record the uuid
+                # evidence (raw statement) links.
+                raw_stmt_obj_list = []
+                for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
+                    k = pa_stmt_db_obj.mk_hash
+                    if k not in stmt_dict.keys():
+                        stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+                        ev_dict[k] = [raw_stmt_db_obj.uuid,]
+                    else:
+                        ev_dict[k].append(raw_stmt_db_obj.uuid)
+                    raw_stmt_obj_list.append(raw_stmt_db_obj)
 
-            logger.info("Up to %d pa statements, with %d pieces of evidence in "
-                        "all." % (len(stmt_dict), len(ev_dict)))
+                logger.info("Up to %d pa statements, with %d pieces of"
+                            "evidence in all." % (len(stmt_dict), len(ev_dict)))
 
-            # Instantiate the raw statements.
-            raw_stmts = make_raw_stmts_from_db_list(db, raw_stmt_obj_list)
-            raw_stmt_dict.update({s.uuid: s for s in raw_stmts})
-            logger.info("Processed %d raw statements." % len(raw_stmts))
+                # Instantiate the raw statements.
+                raw_stmts = make_raw_stmts_from_db_list(db, raw_stmt_obj_list,
+                                                        fix_refs=fix_refs)
+                raw_stmt_dict.update({s.uuid: s for s in raw_stmts})
+                logger.info("Processed %d raw statements." % len(raw_stmts))
 
-        # Attach the evidence
-        logger.info("Inserting evidence.")
-        for k, uuid_list in ev_dict.items():
-            stmt_dict[k].evidence = [raw_stmt_dict[uuid].evidence[0]
-                                     for uuid in uuid_list]
+            # Attach the evidence
+            logger.info("Inserting evidence.")
+            for k, uuid_list in ev_dict.items():
+                stmt_dict[k].evidence = [raw_stmt_dict[uuid].evidence[0]
+                                         for uuid in uuid_list]
+        else:
+            # Get just pa statements without their supporting raw statement(s).
+            pa_stmts = db.select_all(db.PAStatements, *clauses, yield_per=count)
+
+            # Iterate over the batches to create the statement objects.
+            stmt_dict = {}
+            for stmt_pair_batch in batch_iter(pa_stmts, count):
+                # Instantiate the PA statement objects.
+                for pa_stmt_db_obj in stmt_pair_batch:
+                    k = pa_stmt_db_obj.mk_hash
+                    if k not in stmt_dict.keys():
+                        stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+
+                logger.info("Up to %d pa statements in all." % len(stmt_dict))
 
         # Populate the supports/supported by fields.
         if with_support:
@@ -363,6 +382,30 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         logger.info("In all, there are %d pa statements." % len(stmts))
 
     return stmts
+
+
+def get_evidence(db, pa_stmt_list, fix_refs=True):
+    """Fill in the evidence for a list of pre-assembled statements."""
+    # Turn the list into a dict.
+    stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmt_list}
+
+    # Get the data from the database
+    raw_list = db.select_all([db.PAStatements.mk_hash, db.RawStatements],
+                             db.PAStatements.mk_hash.in_(stmt_dict.keys()),
+                             *db.join(db.PAStatements, db.RawStatements))
+
+    # Note that this step depends on the ordering being maintained.
+    mk_hashes, raw_stmt_objects = zip(*raw_list)
+    raw_stmt_mk_pairs = zip(mk_hashes,
+                            make_raw_stmts_from_db_list(raw_stmt_objects,
+                                                        fix_refs=fix_refs))
+
+    # Now attach the evidence
+    for mk_hash, raw_stmt in raw_stmt_mk_pairs:
+        # Each raw statement can have just one piece of evidence.
+        stmt_dict[mk_hashes].evidence.append(raw_stmt.evidence[0])
+
+    return list(stmt_dict.values())
 
 
 def _get_trids(db, id_val, id_type):
