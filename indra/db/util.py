@@ -358,11 +358,12 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
     return
 
 
-def make_raw_stmts_from_db_list(db, db_stmt_objs):
+def make_raw_stmts_from_db_list(db, db_stmt_objs, fix_refs=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
     rid_stmt_pairs = [(db_stmt.reading_id, _get_statement_object(db_stmt))
                       for db_stmt in db_stmt_objs]
-    _fix_evidence_refs(db, rid_stmt_pairs)
+    if fix_refs:
+        _fix_evidence_refs(db, rid_stmt_pairs)
     return [stmt for _, stmt in rid_stmt_pairs]
 
 
