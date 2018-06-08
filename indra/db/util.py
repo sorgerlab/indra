@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
+from datetime import datetime
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
@@ -11,7 +11,7 @@ import json
 import zlib
 import logging
 from itertools import groupby
-from functools import partial
+from functools import partial, wraps
 from multiprocessing.pool import Pool
 
 from indra.util import batch_iter
@@ -322,6 +322,19 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
 # database at various levels of abstraction.
 #==============================================================================
 
+def _clockit(func):
+    @wraps(func)
+    def timed_func(*args, **kwargs):
+        logger.debug("Starting: %s" % func.__name__)
+        start = datetime.now()
+        ret = func(*args, **kwargs)
+        end = datetime.now()
+        logger.debug("Finished %s after %d seconds." % (func.__name__,
+                                                        (end-start).microseconds))
+        print(func.__name__, end-start)
+        return ret
+    return timed_func
+
 
 def _get_statement_object(db_stmt):
     """Get an INDRA Statement object from a db_stmt."""
@@ -335,6 +348,7 @@ def _set_evidence_text_ref(stmt, tr):
         ev.pmid = tr.pmid
 
 
+@_clockit
 def _fix_evidence_refs(db, rid_stmt_pairs):
     """Get proper id data for a raw statement from the database.
 
@@ -358,6 +372,7 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
     return
 
 
+@_clockit
 def make_raw_stmts_from_db_list(db, db_stmt_objs, fix_refs=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
     rid_stmt_pairs = [(db_stmt.reading_id, _get_statement_object(db_stmt))

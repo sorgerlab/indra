@@ -13,7 +13,7 @@ logger = logging.getLogger('db_client')
 from indra.util import batch_iter
 from indra.databases import hgnc_client
 from .util import get_primary_db, make_raw_stmts_from_db_list, \
-    unpack, _get_statement_object
+    unpack, _get_statement_object, _clockit
 
 
 def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
@@ -134,6 +134,7 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
     return content_dict
 
 
+@_clockit
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
                                      db=None, do_stmt_count=True,
@@ -273,6 +274,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     return stmts
 
 
+@_clockit
 def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
                    preassembled=True, with_support=False, fix_refs=True,
                    with_evidence=True):
@@ -410,6 +412,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     return stmts
 
 
+@_clockit
 def get_evidence(pa_stmt_list, db=None, fix_refs=True):
     """Fill in the evidence for a list of pre-assembled statements.
 

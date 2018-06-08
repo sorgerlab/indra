@@ -233,7 +233,7 @@ def get_statements():
     logger.info("Getting evidence for the %d resulting statements."
                 % len(stmts))
     if stmts:
-        get_evidence(stmts)
+        get_evidence(stmts, fix_refs=False)
 
     # Create the json response, and send off.
     resp = jsonify({'limited': hit_limit,
