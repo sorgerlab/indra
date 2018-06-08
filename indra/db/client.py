@@ -137,7 +137,8 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
                                      db=None, do_stmt_count=True,
-                                     preassembled=True, fix_refs=True):
+                                     preassembled=True, fix_refs=True,
+                                     with_evidence=True, with_support=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -169,6 +170,16 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         If true, statements will be selected from the table of pre-assembled
         statements. Otherwise, they will be selected from the raw statements.
         Default is True.
+    with_support : bool
+        Choose whether to populate the supports and supported_by list attributes
+        of the Statement objects. General results in slower queries.
+    with_evidence : bool
+        Choose whether or not to populate the evidence list attribute of the
+        Statements. As with `with_support`, setting this to True will take
+        longer.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the datbase.
 
     Returns
     -------
@@ -208,7 +219,8 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     if stmt_type:
         clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
-                           db=db, preassembled=preassembled, fix_refs=fix_refs)
+                           db=db, preassembled=preassembled, fix_refs=fix_refs,
+                           with_evidence=with_evidence, with_support=with_support)
     return stmts
 
 
@@ -233,6 +245,10 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     do_stmt_count : bool
         Whether or not to perform an initial statement counting step to give
         more meaningful progress messages.
+    preassembled : bool
+        If true, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
 
     Returns
     -------
@@ -278,6 +294,16 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         If true, statements will be selected from the table of pre-assembled
         statements. Otherwise, they will be selected from the raw statements.
         Default is True.
+    with_support : bool
+        Choose whether to populate the supports and supported_by list attributes
+        of the Statement objects. General results in slower queries.
+    with_evidence : bool
+        Choose whether or not to populate the evidence list attribute of the
+        Statements. As with `with_support`, setting this to True will take
+        longer.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the datbase.
 
     Returns
     -------
@@ -384,8 +410,28 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     return stmts
 
 
-def get_evidence(db, pa_stmt_list, fix_refs=True):
-    """Fill in the evidence for a list of pre-assembled statements."""
+def get_evidence(pa_stmt_list, db=None, fix_refs=True):
+    """Fill in the evidence for a list of pre-assembled statements.
+
+    Parameters
+    ----------
+    pa_stmt_list : list[Statement]
+        A list of unique statements, generally drawn from the database
+        pa_statement table (via `get_statemetns`).
+    db : DatabaseManager instance or None
+        An instance of a database manager. If None, defaults to the "primary"
+        database, as defined in the db_config.ini file in .config/indra.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the datbase.
+
+    Returns
+    -------
+    None - modifications are made to the Statements "in-place".
+    """
+    if db is None:
+        db = get_primary_db()
+
     # Turn the list into a dict.
     stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmt_list}
 
@@ -397,15 +443,15 @@ def get_evidence(db, pa_stmt_list, fix_refs=True):
     # Note that this step depends on the ordering being maintained.
     mk_hashes, raw_stmt_objects = zip(*raw_list)
     raw_stmt_mk_pairs = zip(mk_hashes,
-                            make_raw_stmts_from_db_list(raw_stmt_objects,
+                            make_raw_stmts_from_db_list(db, raw_stmt_objects,
                                                         fix_refs=fix_refs))
 
     # Now attach the evidence
     for mk_hash, raw_stmt in raw_stmt_mk_pairs:
         # Each raw statement can have just one piece of evidence.
-        stmt_dict[mk_hashes].evidence.append(raw_stmt.evidence[0])
+        stmt_dict[mk_hash].evidence.append(raw_stmt.evidence[0])
 
-    return list(stmt_dict.values())
+    return
 
 
 def _get_trids(db, id_val, id_type):
