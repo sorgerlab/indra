@@ -265,6 +265,93 @@ def get_gene_name(protein_id, web_fallback=True):
         return gene_name
     return None
 
+
+def get_gene_synonyms(protein_id):
+    """Return a list of synonyms for the gene corresponding to a protein.
+
+    Note that synonyms here also include the official gene name as
+    returned by get_gene_name.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein to query
+
+    Returns
+    -------
+    synonyms : list[str]
+        The list of synonyms of the gene corresponding to the protein
+    """
+    g = query_protein(protein_id)
+    if g is None:
+        return None
+    query = rdf_prefixes + """
+        SELECT ?name
+        WHERE {
+            ?gene skos:altLabel | skos:prefLabel ?name .
+            }
+        """
+    res = g.query(query)
+    if res:
+        return [r[0].toPython() for r in res]
+    return None
+
+
+def get_protein_synonyms(protein_id):
+    """Return a list of synonyms for a protein.
+
+    Note that this function returns protein synonyms as provided by UniProt.
+    The get_gene_synonym returns synonyms given for the gene corresponding
+    to the protein, and get_synonyms returns both.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein to query
+
+    Returns
+    -------
+    synonyms : list[str]
+        The list of synonyms of the protein
+    """
+    g = query_protein(protein_id)
+    if g is None:
+        return None
+    query = rdf_prefixes + """
+        SELECT ?name
+        WHERE {
+            ?gene :fullName | :shortName ?name .
+            }
+        """
+    res = g.query(query)
+    if res:
+        return [r[0].toPython() for r in res]
+    return None
+
+
+def get_synonyms(protein_id):
+    """Return synonyms for a protein and its associated gene.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein to query
+
+    Returns
+    -------
+    synonyms : list[str]
+        The list of synonyms of the protein and its associated gene.
+    """
+    ret = []
+    gene_syms = get_gene_synonyms(protein_id)
+    if gene_syms:
+        ret.extend(gene_syms)
+    prot_syms = get_protein_synonyms(protein_id)
+    if prot_syms:
+        ret.extend(prot_syms)
+    return ret
+
+
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
     try:
