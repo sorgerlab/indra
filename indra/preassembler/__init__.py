@@ -1,9 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
 import sys
 import time
 import logging
-import tempfile
 import itertools
 import functools
 import collections
@@ -15,7 +15,6 @@ except ImportError:
     pass
 from indra.util import fast_deepcopy
 from indra.statements import *
-from indra.databases import uniprot_client
 from indra.assemblers.english_assembler import EnglishAssembler
 
 logger = logging.getLogger('preassembler')
