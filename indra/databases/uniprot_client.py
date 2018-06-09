@@ -266,15 +266,29 @@ def get_gene_name(protein_id, web_fallback=True):
     return None
 
 
-def get_gene_alt_labels(protein_id):
-    """Return a list of other names for the protein."""
+def get_gene_synonyms(protein_id):
+    """Return a list of synonyms for the gene corresponding to a protein.
+
+    Note that synonyms here also include the official gene name as
+    returned by get_gene_name.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein to query
+
+    Returns
+    -------
+    synonyms : list[str]
+        The list of synonyms of the gene corresponding to the protein
+    """
     g = query_protein(protein_id)
     if g is None:
         return None
     query = rdf_prefixes + """
         SELECT ?name
         WHERE {
-            ?gene skos:altLabel ?name .
+            ?gene skos:altLabel | skos:prefLabel ?name .
             }
         """
     res = g.query(query)
@@ -283,8 +297,23 @@ def get_gene_alt_labels(protein_id):
     return None
 
 
-def get_gene_alt_names(protein_id):
-    """Get the structured names of the gene."""
+def get_protein_synonyms(protein_id):
+    """Return a list of synonyms for a protein.
+
+    Note that this function returns protein synonyms as provided by UniProt.
+    The get_gene_synonym returns synonyms given for the gene corresponding
+    to the protein, and get_synonyms returns both.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein to query
+
+    Returns
+    -------
+    synonyms : list[str]
+        The list of synonyms of the protein
+    """
     g = query_protein(protein_id)
     if g is None:
         return None
@@ -300,18 +329,26 @@ def get_gene_alt_names(protein_id):
     return None
 
 
-def get_all_gene_names(protein_id):
-    """Get all names associated with the protein id."""
+def get_synonyms(protein_id):
+    """Return synonyms for a protein and its associated gene.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein to query
+
+    Returns
+    -------
+    synonyms : list[str]
+        The list of synonyms of the protein and its associated gene.
+    """
     ret = []
-    gene_name = get_gene_name(protein_id)
-    if gene_name:
-        ret.append(gene_name)
-    alt_labels = get_gene_alt_labels(protein_id)
-    if alt_labels:
-        ret.extend(alt_labels)
-    alt_names = get_gene_alt_names(protein_id)
-    if alt_names:
-        ret.extend(alt_names)
+    gene_syms = get_gene_synonyms(protein_id)
+    if gene_syms:
+        ret.extend(gene_syms)
+    prot_syms = get_protein_synonyms(protein_id)
+    if prot_syms:
+        ret.extend(prot_syms)
     return ret
 
 
