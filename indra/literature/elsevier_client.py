@@ -268,6 +268,57 @@ def get_dois(query_str, count=100):
     return dois
 
 
+@lru_cache(maxsize=100)
+@_ensure_api_keys('perform search')
+def get_piis(query_str):
+    """Search ScienceDirect through the API for articles and return PIIs."""
+    count = 200
+    params = {'query': query_str,
+              'count': count,
+              'start': 0,
+              'sort': '-coverdate',
+              'field': 'pii'}
+    all_piis = []
+    while True:
+        print(params)
+        res = requests.get(elsevier_search_url, params, headers=ELSEVIER_KEYS)
+        if not res.status_code == 200:
+            logger.info('Got status code: %d' % res.status_code)
+            break
+        res_json = res.json()
+        entries = res_json['search-results']['entry']
+        logger.info(res_json['search-results']['opensearch:totalResults'])
+        piis = [entry['pii'] for entry in entries]
+        all_piis += piis
+        # Get next batch
+        links = res_json['search-results'].get('link', [])
+        cont = False
+        for link in links:
+            if link.get('@ref') == 'next':
+                params['start'] += count
+                cont = True
+                break
+        if not cont:
+            break
+    return all_piis
+
+
+def download_from_search(query_str, folder, as_text=True):
+    piis = get_piis(query_str)
+    for pii in piis:
+        if os.path.exists(os.path.join(folder, '%s.txt' % pii)):
+            continue
+        logger.info('Downloading %s' % pii)
+        xml = download_article(pii, 'pii')
+        sleep(1)
+        txt = extract_text(xml)
+        if not txt:
+            continue
+
+        with open(os.path.join(folder, '%s.txt' % pii), 'wb') as fh:
+            fh.write(txt.encode('utf-8'))
+
+
 def _get_article_body(full_text_elem):
     # Look for ja:article
     main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
