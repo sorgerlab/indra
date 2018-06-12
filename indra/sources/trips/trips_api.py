@@ -30,9 +30,9 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
         If True, the saved XML is pretty-printed. Some third-party tools
         require non-pretty-printed XMLs which can be obtained by setting this
         to False. Default: True
-    oflline : Optional[bool]
+    offline : Optional[bool]
         If True, offline reading is used with a local instance of DRUM, if
-        availble. Default: False
+        available. Default: False
     service_endpoint : Optional[str]
         Selects the TRIPS/DRUM web service endpoint to use. Is a choice between
         "drum" (default) and "drum-dev", a nightly build.
