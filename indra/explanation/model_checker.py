@@ -1202,3 +1202,28 @@ def _im_to_signed_digraph(im):
     dg.add_edges_from(edges)
     return dg
 
+
+def stmts_for_path(path, model, stmts):
+    path_stmts = []
+    for path_rule, sign in path:
+        for rule in model.rules:
+            if rule.name == path_rule:
+                stmt = _stmt_from_rule(model, path_rule, stmts)
+                path_stmts.append(stmt)
+    return path_stmts
+
+
+def _stmt_from_rule(model, rule_name, stmts):
+    """Return the INDRA Statement corresponding to a given rule by name."""
+    stmt_uuid = None
+    for ann in model.annotations:
+        if ann.predicate == 'from_indra_statement':
+            if ann.subject == rule_name:
+                stmt_uuid = ann.object
+                break
+    if stmt_uuid:
+        for stmt in stmts:
+            if stmt.uuid == stmt_uuid:
+                return stmt
+
+
