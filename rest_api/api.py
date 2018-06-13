@@ -554,6 +554,8 @@ def get_evidence_for_stmts():
         return stmts
 
     stmts_out = _get_matching_stmts(stmt)
+    agent_name_list = [ag.name for ag in stmt.agent_list()]
+    stmts_out = stmts = ac.filter_concept_names(stmts_out, agent_name_list, 'all')
     if stmts_out:
         stmts_json = stmts_to_json(stmts_out)
         res = {'statements': stmts_json}
