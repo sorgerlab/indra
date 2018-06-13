@@ -509,6 +509,12 @@ class TripsProcessor(object):
                 if affected is None:
                     continue
                 affected_id = affected.attrib.get('id')
+                # If it has a type and is not a molecule then we can skip it
+                affected_type = affected.find('type')
+                if affected_type is not None and \
+                    affected_type.text not in molecule_types:
+                    continue
+                # Otherwise we need to look up the element
                 affected = self.tree.find("TERM/[@id='%s']" % affected_id)
                 affected_type = affected.find('type')
                 if affected_type is None:
