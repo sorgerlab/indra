@@ -498,6 +498,8 @@ class TripsProcessor(object):
                 if agent_id is None:
                     continue
                 agent = self.tree.find("TERM/[@id='%s']" % agent_id)
+                if agent is None:
+                    continue
                 if agent.find('type') is None or \
                         (agent.find('type').text not in molecule_types):
                     continue
@@ -516,6 +518,8 @@ class TripsProcessor(object):
                     continue
                 # Otherwise we need to look up the element
                 affected = self.tree.find("TERM/[@id='%s']" % affected_id)
+                if affected is None:
+                    continue
                 affected_type = affected.find('type')
                 if affected_type is None:
                     continue
