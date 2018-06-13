@@ -9,6 +9,7 @@ from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
     CyJSAssembler, SifAssembler
 import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
+from indra.sources.indra_db_rest import get_statements
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -513,7 +514,6 @@ def get_evidence_for_stmts():
     body = json.loads(req)
     stmt_json = body.get('statement')
     stmt = Statement._from_json(stmt_json)
-    from indra.sources.indra_db_rest import get_statements
 
     def _get_agent_ref(agent):
         """Get the preferred ref for an agent for db web api."""
