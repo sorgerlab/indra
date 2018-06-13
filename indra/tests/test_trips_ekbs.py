@@ -728,3 +728,12 @@ def test_assoc_with():
     assert len(tp.statements[0].members) == 2
     names = {m.name for m in tp.statements[0].members}
     assert names == {'EGF', 'EGFR'}
+
+
+def test_increase_amount_of():
+    fname = os.path.join(path_this, 'trips_ekbs', 'increase_amount_qty.ekb')
+    tp = trips.process_xml(open(fname, 'r').read())
+    assert len(tp.statements) == 1
+    assert isinstance(tp.statements[0], IncreaseAmount)
+    assert tp.statements[0].subj.name == 'TGFBR1'
+    assert tp.statements[0].obj.name == 'SMURF2'
