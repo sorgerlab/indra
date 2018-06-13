@@ -1,0 +1,50 @@
+<ekb timestamp="20180612T145100">
+  <EVENT id="V40011">
+    <type>ONT::INCREASE</type>
+    <force>ONT::TRUE</force>
+    <arg role=":AGENT" id="V40007"/>
+    <arg id="V40038" role=":AFFECTED"/>
+  </EVENT>
+  <TERM id="V40007" dbid="NCIT:C30098|NCIT:C51730|HGNC:11772|UP:P36897">
+    <type>ONT::GENE-PROTEIN</type>
+    <name>TGFBR-1</name>
+    <drum-terms>
+      <drum-term match-score="0.85366" name="transforming growth factor beta receptor 1" matched-name="TGFBR1" dbid="HGNC:11772">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+        <xrefs>
+          <xref dbid="UP:P36897"/>
+        </xrefs>
+      </drum-term>
+      <drum-term matched-name="TGFBR1" dbid="NCIT:C51730" match-score="0.85366" name="TGFBR1">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+      </drum-term>
+      <drum-term name="transforming growth factor beta receptor-I" match-score="0.70732" dbid="NCIT:C30098" matched-name="TGFBR1">
+        <types>
+          <type>ONT::PROTEIN</type>
+        </types>
+      </drum-term>
+    </drum-terms>
+  </TERM>
+  <TERM id="V40038">
+    <type>ONT::QTY</type>
+    <of id="V40063"/>
+  </TERM>
+  <TERM id="V40063" dbid="HGNC:16809|UP:Q9HAU4">
+    <type>ONT::GENE</type>
+    <name>SMURF-2</name>
+    <drum-terms>
+      <drum-term match-score="0.85366" name="SMAD specific E3 ubiquitin protein ligase 2" matched-name="SMURF2" dbid="HGNC:16809">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+        <xrefs>
+          <xref dbid="UP:Q9HAU4"/>
+        </xrefs>
+      </drum-term>
+    </drum-terms>
+  </TERM>
+</ekb>
