@@ -6,7 +6,7 @@ from indra.sources import trips, reach, bel, biopax
 from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
-    CyJSAssembler, SifAssembler
+    CyJSAssembler, SifAssembler, EnglishAssembler
 import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
@@ -328,6 +328,27 @@ def assemble_cyjs():
     cja.make_model(grouping=True)
     model_str = cja.print_cyjs_graph()
     return model_str
+
+
+#   English   #
+@route('/assemblers/english', method=['POST', 'OPTIONS'])
+@allow_cors
+def assemble_english():
+    """Assemble each statement into """
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    sentences = {}
+    for st in stmts:
+        enga = EnglishAssembler()
+        enga.add_statements([st])
+        model_str = enga.make_model()
+        sentences[st.uuid] = model_str
+    res = {'sentences': sentences}
+    return res
 
 
 @route('/assemblers/sif/loopy', method=['POST', 'OPTIONS'])
