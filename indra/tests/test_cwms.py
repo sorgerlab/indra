@@ -1,24 +1,24 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from os.path import join, dirname
-from nose.tools import raises
+
+from os.path import join, dirname, abspath
 from nose.plugins.attrib import attr
 
 from indra.statements import *
 from indra.sources.cwms import process_rdf_file, process_text
 
 # Path to the CWMS test/dummy data folder
-path_this = os.path.dirname(os.path.abspath(__file__))
-data_folder = os.path.join(path_this, 'cwms_tests_data')
+path_this = dirname(abspath(__file__))
+data_folder = join(path_this, 'cwms_tests_data')
 
-example1_rdf = os.path.join(data_folder, 'example_2_sentence_1.rdf')
-example1_txt = os.path.join(data_folder, 'example_2_sentence_1.txt')
+example1_rdf = join(data_folder, 'example_2_sentence_1.rdf')
+example1_txt = join(data_folder, 'example_2_sentence_1.txt')
 
-example2_rdf = os.path.join(data_folder, 'example_2_sentence_3.rdf')
-example2_txt = os.path.join(data_folder, 'example_2_sentence_3.txt')
+example2_rdf = join(data_folder, 'example_2_sentence_3.rdf')
+example2_txt = join(data_folder, 'example_2_sentence_3.txt')
 
-example3_rdf = os.path.join(data_folder, 'example_2_sentence_4.rdf')
-example3_txt = os.path.join(data_folder, 'example_2_sentence_4.txt')
+example3_rdf = join(data_folder, 'example_2_sentence_4.rdf')
+example3_txt = join(data_folder, 'example_2_sentence_4.txt')
 
 
 def load_text(fname):

@@ -17,6 +17,7 @@ from multiprocessing.pool import Pool
 from indra.util import batch_iter
 from indra.util.nested_dict import NestedDict
 from indra.util.get_version import get_version
+from indra.util import batch_iter
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
 

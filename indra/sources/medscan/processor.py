@@ -3,6 +3,7 @@ import os
 import codecs
 import lxml.etree
 import collections
+import logging
 from indra.statements import *
 from indra.databases.chebi_client import get_chebi_id_from_cas
 from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
