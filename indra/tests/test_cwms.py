@@ -32,21 +32,23 @@ def test_cwmsreader_cause():
     text = 'government causes agriculture.'
     cp = process_text(text)
     statements = cp.statements
-    assert(len(statements) == 1)
+    assert len(statements) == 1, len(statements)
 
     s0 = statements[0]
-    assert(isinstance(s0, Influence))
+    assert isinstance(s0, Influence), type(s0)
     subj = s0.subj
-    assert(subj.db_refs['TEXT'] == 'government')
-    assert(subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION')
+    assert subj.db_refs['TEXT'] == 'government', subj.db_refs['TEXT']
+    assert subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION',\
+        subj.db_refs['CWMS']
 
     obj = s0.obj
-    assert(obj.db_refs['TEXT'] == 'agriculture')
-    assert(obj.db_refs['CWMS'] == 'ONT::COMMERCIAL-ACTIVITY')
+    assert obj.db_refs['TEXT'] == 'agriculture', obj.db_refs['TEXT']
+    assert obj.db_refs['CWMS'] == 'ONT::AGRICULTURE',\
+        obj.db_refs['CWMS']
 
     ev = s0.evidence[0]
-    assert(ev.text == 'government causes agriculture.')
-    assert(ev.source_api == 'cwms')
+    assert ev.text == 'government causes agriculture.', ev.text
+    assert ev.source_api == 'cwms', ev.source_api
 
 
 @attr('slow', 'webservice')
@@ -57,7 +59,7 @@ def test_cwmsreader_inhibit():
     cp = process_text(text)
     statements = cp.statements
     print(statements)
-    assert(len(statements) == 1)
+    assert len(statements) == 1, len(statements)
 
     s0 = statements[0]
     print('Statement:', s0)
@@ -79,21 +81,23 @@ def test_cwmsreader_influence():
     text = 'government influences agriculture.'
     cp = process_text(text)
     statements = cp.statements
-    assert(len(statements) == 1)
+    assert len(statements) == 1, len(statements)
 
     s0 = statements[0]
-    assert(isinstance(s0, Influence))
+    assert isinstance(s0, Influence), type(s0)
     subj = s0.subj
-    assert(subj.db_refs['TEXT'] == 'government')
-    assert(subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION')
+    assert subj.db_refs['TEXT'] == 'government', subj.db_refs['TEXT']
+    assert subj.db_refs['CWMS'] == 'ONT::FEDERAL-ORGANIZATION',\
+        subj.db_refs['CWMS']
 
     obj = s0.obj
-    assert(obj.db_refs['TEXT'] == 'agriculture')
-    assert(obj.db_refs['CWMS'] == 'ONT::COMMERCIAL-ACTIVITY')
+    assert obj.db_refs['TEXT'] == 'agriculture', obj.db_refs['TEXT']
+    assert obj.db_refs['CWMS'] == 'ONT::AGRICULTURE',\
+        obj.db_refs['CWMS']
 
     ev = s0.evidence[0]
-    assert(ev.text == 'government influences agriculture.')
-    assert(ev.source_api == 'cwms')
+    assert ev.text == 'government influences agriculture.', ev.text
+    assert ev.source_api == 'cwms', ev.source_api
 
 
 def test_rdf_example1():
@@ -134,10 +138,10 @@ def test_rdf_example3():
     assert(len(cp.statements) == 1)
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] ==
-           'displacement')
-    assert(statement0.obj.db_refs['TEXT'] ==
-           'delayed planting')
+    assert statement0.subj.db_refs['TEXT'] == 'displacement',\
+        statement0.subj.db_refs['TEXT']
+    assert statement0.obj.db_refs['TEXT'] == 'delayed planting',\
+        statement0.obj.db_refs['TEXT']
 
 
 def test_cwms_agriculture_increases():
