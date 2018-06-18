@@ -11,9 +11,20 @@ class BMIModel(object):
         self.sim = None
         self.attributes = copy.copy(default_attributes)
         self.species_name_map = {}
+        self.input_vars = []
         # These attributes are related to the simulation state
         self.time = 0.0
         self.state = None
+
+    def _get_input_vars(self):
+        species_is_obj = {s: False for s in self.species_name_map.keys()}
+        for ann in self.model.annotations:
+            if ann.predicate == 'rule_has_object':
+                species_is_obj[ann.object] = True
+        # Return all the variables that aren't objects in a rule
+        input_vars = [s for s, tf in species_is_obj.items() if not tf]
+        return input_vars
+
 
     # Simulation functions
     def initialize(self, fname=None):
@@ -29,7 +40,7 @@ class BMIModel(object):
         for idx, species in enumerate(self.model.species):
             monomer = species.monomer_patterns[0].monomer
             self.species_name_map[monomer.name] = idx
-
+        self.input_vars = self._get_input_vars()
         self.time = 0.0
 
     def update(self, dt=None):
@@ -112,7 +123,7 @@ class BMIModel(object):
         var_names : list[str]
             A list of variable names that can be set from the outside
         """
-        pass
+        return self.input_vars
 
     def get_output_var_names(self):
         """Return a list of variables names that can be read as output.
@@ -122,7 +133,10 @@ class BMIModel(object):
         var_names : list[str]
             A list of variable names that can be read from the outside
         """
-        pass
+        # Return all the variables that aren't input variables
+        all_vars = set(self.species_name_map.keys())
+        output_vars = list(all_vars - set(self.input_vars))
+        return output_vars
 
     def get_var_name(self, var_name):
         """Return the internal variable name given an outside variable name.

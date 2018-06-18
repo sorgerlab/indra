@@ -28,6 +28,13 @@ def test_initialize():
     assert bm.time == 0.0
 
 
+def test_get_in_out_vars():
+    bm = make_bmi_model()
+    bm.initialize()
+    assert set(bm.get_output_var_names()) == {'flood', 'displacement'}
+    assert bm.get_input_var_names() == ['rainfall']
+
+
 def test_update():
     bm = make_bmi_model()
     bm.initialize()
