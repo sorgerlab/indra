@@ -36,8 +36,9 @@ class BMIModel(object):
         """
         dt = dt if dt else self.dt
         tspan = [0, dt]
-        res = sim.run(tspan=tspan)
+        res = self.sim.run(tspan=tspan)
         # Set the state based on the result here
+        self.time += dt
 
     def finalize(self):
         """Finish the simulation and clean up resources as needed."""
