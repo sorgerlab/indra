@@ -271,7 +271,23 @@ def get_dois(query_str, count=100):
 
 
 def get_piis(query_str):
-    """Search ScienceDirect through the API for articles and return PIIs."""
+    """Search ScienceDirect through the API for articles and return PIIs.
+
+    Note that ScienceDirect has a limitation in which a maximum of 6,000
+    PIIs can be retrieved for a given search and therefore this call is
+    internally broken up into multiple queries by a range of years and the
+    results are combined.
+
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with
+
+    Returns
+    -------
+    piis : list[str]
+        The list of PIIs identifying the papers returned by the search
+    """
     dates = range(1960, datetime.datetime.now().year)
     all_piis = flatten([get_piis_for_date(query_str, date) for date in dates])
     return all_piis
@@ -280,6 +296,20 @@ def get_piis(query_str):
 @lru_cache(maxsize=100)
 @_ensure_api_keys('perform search')
 def get_piis_for_date(query_str, date):
+    """Search ScienceDirect with a query string constrained to a given year.
+
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with
+    date : str
+        The year to constrain the search to
+
+    Returns
+    -------
+    piis : list[str]
+        The list of PIIs identifying the papers returned by the search
+    """
     count = 200
     params = {'query': query_str,
               'count': count,
@@ -315,7 +345,21 @@ def get_piis_for_date(query_str, date):
     return all_piis
 
 
-def download_from_search(query_str, folder, as_text=True):
+def download_from_search(query_str, folder):
+    """Save raw text files based on a search for papers on ScienceDirect.
+
+    This performs a search to get PIIs, downloads the XML corresponding to
+    the PII, extracts the raw text and then saves the text into a file
+    in the designated folder.
+
+    Parameters
+    ----------
+    query_str : str
+        The query string to search with
+    folder : str
+        The local path to an existing folder in which the text files
+        will be dumped
+    """
     piis = get_piis(query_str)
     for pii in piis:
         if os.path.exists(os.path.join(folder, '%s.txt' % pii)):
