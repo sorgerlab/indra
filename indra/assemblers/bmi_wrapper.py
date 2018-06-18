@@ -30,12 +30,12 @@ class BMIModel(object):
 
 
     # Simulation functions
-    def initialize(self, fname=None):
+    def initialize(self, cfg_file=None, mode=None):
         """Initialize the model for simulation, possibly given a config file.
 
         Parameters
         ----------
-        fname : Optional[str]
+        cfg_file : Optional[str]
             The name of the configuration file to load, optional.
         """
         self.sim = ScipyOdeSimulator(self.model)
@@ -262,12 +262,39 @@ class BMIModel(object):
         class_name = etree.Element('class_name')
         class_name.text = 'model_class'
         component.append(class_name)
+
+        model_name = etree.Element('model_name')
+        model_name.text = self.model.name
+        component.append(model_name)
+
+        lang = etree.Element('language')
+        lang.text = 'python'
+        component.append(lang)
+
+        ver = etree.Element('version')
+        ver.text = self.get_attribute('version')
+        component.append(ver)
+
+        au = etree.Element('author')
+        au.text = self.get_attribute('author_name')
+        component.append(au)
+
+        hu = etree.Element('help_url')
+        hu.text = 'http://github.com/sorgerlab/indra'
+        component.append(hu)
+
+        for tag in ('cfg_template', 'time_step_type', 'time_units',
+                    'grid_type', 'description', 'comp_type', 'uses_types'):
+            elem = etree.Element(tag)
+            elem.text = tag
+            component.append(elem)
+
         return etree.tounicode(component, pretty_print=True)
 
     def export_into_python(self):
         pkl_path = self.model.name + '.pkl'
         with open(pkl_path, 'wb') as fh:
-            pickle.dump(self, fh)
+            pickle.dump(self, fh, protocol=2)
         py_str = """
         import pickle
         with open('%s', 'rb') as fh:
