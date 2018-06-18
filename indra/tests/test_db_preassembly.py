@@ -29,6 +29,7 @@ from indra.tools import assemble_corpus as ac
 
 from nose.plugins.attrib import attr
 from .util import needs_py3
+from .make_raw_statement_test_set import make_raw_statement_test_set
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MAX_NUM_STMTS = 11721
@@ -218,6 +219,21 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
     assert not any(hash_diffs.values()), "Found mismatched hashes."
 
 
+def test_distillation_on_curated_set():
+    stmt_dict, stmt_list, target_sets, target_bettered_uuids = \
+        make_raw_statement_test_set()
+    filtered_set, duplicate_uuids, bettered_uuids = \
+        db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=True)
+    for stmt_set, dup_set in target_sets:
+        if stmt_set == filtered_set:
+            break
+    else:
+        assert False, "Filtered set does not match any valid possibilities."
+    assert bettered_uuids == target_bettered_uuids
+    assert dup_set == duplicate_uuids, (dup_set - duplicate_uuids,
+                                        duplicate_uuids - dup_set)
+
+
 @needs_py3
 def _check_statement_distillation(num_stmts):
     db = _get_loaded_db(num_stmts)
@@ -280,7 +296,7 @@ def _check_preassembly_with_database(num_stmts, batch_size):
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
-    raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
+    raw_stmts = db_client.get_statements([], preassembled=False, db=db)
     _check_against_opa_stmts(raw_stmts, pa_stmts)
 
 
@@ -308,7 +324,7 @@ def _check_db_pa_supplement(num_stmts, batch_size, init_batch_size=None,
     end = datetime.now()
     print("Duration of incremental update:", end-start)
 
-    raw_stmts = db_util.distill_stmts(db, get_full_stmts=True)
+    raw_stmts = db_client.get_statements([], preassembled=False, db=db)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
     _check_against_opa_stmts(raw_stmts, pa_stmts)

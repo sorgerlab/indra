@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from datetime import datetime
+from os.path import abspath
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
@@ -329,9 +330,10 @@ def _clockit(func):
         start = datetime.now()
         ret = func(*args, **kwargs)
         end = datetime.now()
-        logger.debug("Finished %s after %d seconds." % (func.__name__,
-                                                        (end-start).microseconds))
         print(func.__name__, end-start)
+        fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
+        with open(fname, 'a') as f:
+            f.write('%s: %s\n' % (start, end-start))
         return ret
     return timed_func
 
@@ -490,8 +492,7 @@ class NestedDict(dict):
         return ret_set
 
 
-def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
-                                clauses=None):
+def _get_reading_statement_dict(db, get_full_stmts=False, clauses=None):
     """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextRef, db.TextContent.id,
@@ -547,25 +548,22 @@ def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
     return stmt_nd
 
 
-def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
-                                 linked_uuids=None):
+# Specify versions of readers, and preference.
+reader_versions = {
+    'sparser': ['sept14-linux\n', 'sept14-linux'],
+    'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
+    }
+
+# Specify sources of fulltext content, and order priorities.
+text_content_sources = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
+
+
+def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_uuids=None):
     """Get the set of statements/ids from readings minus exact duplicates."""
     if linked_uuids is None:
         linked_uuids = set()
-    # Specify versions of readers, and preference.
-    reader_versions = {
-        'sparser': ['sept14-linux\n', 'sept14-linux'],
-        'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
-    }
-
-    stmt_nd = _get_reading_statement_dict(db, reader_versions, get_full_stmts,
-                                          clauses)
-
-    # Specify sources of fulltext content, and order priorities.
-    text_content_sources = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
-
     def better_func(element):
-        return text_content_sources.index(element)
+        return -text_content_sources.index(element)
 
     # Now we filter and get the set of statements/statement ids.
     stmts = set()
@@ -753,8 +751,10 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     # Get de-duplicated Statements, and duplicate uuids, as well as uuid of
     # Statements that have been improved upon...
+    stmt_nd = _get_reading_statement_dict(db, get_full_stmts, clauses)
+
     stmts, duplicate_uuids, bettered_duplicate_uuids = \
-        _get_filtered_rdg_statements(db, get_full_stmts, clauses, linked_uuids)
+        _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_uuids)
     print("After filtering reading: %d unique statements, %d duplicates."
           % (len(stmts), len(duplicate_uuids)))
     assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
