@@ -138,3 +138,18 @@ def test_rdf_example3():
            'displacement')
     assert(statement0.obj.db_refs['TEXT'] ==
            'delayed planting')
+
+
+def test_cwms_agriculture_increases():
+    text = 'Agriculture increases food security.'
+    cp = process_text(text)
+    assert cp
+    assert len(cp.statements) == 1
+
+
+@attr('slow', 'webservice')
+def test_cwms_two_sentences():
+    text = 'Floods decrease agriculture. Agriculture increases food security.'
+    cp = process_text(text)
+    assert cp is not None
+    assert len(cp.statements) == 2
