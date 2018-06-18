@@ -1,5 +1,6 @@
 import copy
 import numpy
+from pysb import bng
 from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
@@ -9,6 +10,7 @@ class BMIModel(object):
         self.units = 'seconds'
         self.sim = None
         self.attributes = copy.copy(default_attributes)
+        self.species_name_map = {}
         # These attributes are related to the simulation state
         self.time = 0.0
         self.state = None
@@ -23,6 +25,10 @@ class BMIModel(object):
             The name of the configuration file to load, optional.
         """
         self.sim = ScipyOdeSimulator(self.model)
+        for idx, species in enumerate(model.species):
+            monomer = species.monomer_patterns[0].monomer
+            self.species_name_map[monomer.name] = idx
+
         self.time = 0.0
 
     def update(self, dt=None):
@@ -36,8 +42,10 @@ class BMIModel(object):
         """
         dt = dt if dt else self.dt
         tspan = [0, dt]
-        res = self.sim.run(tspan=tspan)
+        # Run simulaton with initials set to current state
+        res = self.sim.run(tspan=tspan, initials=self.state)
         # Set the state based on the result here
+        self.state  = res[-1]
         self.time += dt
 
     def finalize(self):
@@ -56,8 +64,8 @@ class BMIModel(object):
         value : float
             The value the variable should be set to
         """
-        # Change model initial conditions
-        pass
+        species_idx = self.species_name_map[var_name]
+        self.state[species_idx] = value
 
     # Getter functions for state
     def get_value(self, var_name):
@@ -73,8 +81,8 @@ class BMIModel(object):
         value : float
             The value of the given variable in the current state
         """
-        # Return simulation result in current state for given variable
-        pass
+        species_idx = self.species_name_map[var_name]
+        return self.state[species_idx]
 
     # Getter functions for basic properties
     def get_attribute(self, att_name):
@@ -93,8 +101,7 @@ class BMIModel(object):
         value : str
             The value of the attribute
         """
-
-        pass
+        return self.attributes.get(att_name)
 
     def get_input_var_names(self):
         """Return a list of variables names that can be set as input.
@@ -129,7 +136,7 @@ class BMIModel(object):
         internal_var_name : str
             The internal name of the corresponding variable
         """
-        pass
+        return var_name
 
     def get_var_units(self, var_name):
         """Return the units of a given variable.
@@ -144,7 +151,7 @@ class BMIModel(object):
         unit : str
             The units of the variable
         """
-        pass
+        return '1'
 
     def get_var_type(self, var_name):
         """Return the type of a given variable.
