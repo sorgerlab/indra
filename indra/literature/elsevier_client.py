@@ -9,9 +9,11 @@ from builtins import dict, str
 import os
 import logging
 import textwrap
+import datetime
 import xml.etree.ElementTree as ET
 import requests
 from time import sleep
+from indra.util import flatten
 from indra import has_config, get_config
 # Python3
 try:
@@ -268,19 +270,25 @@ def get_dois(query_str, count=100):
     return dois
 
 
-@lru_cache(maxsize=100)
-@_ensure_api_keys('perform search')
 def get_piis(query_str):
     """Search ScienceDirect through the API for articles and return PIIs."""
+    dates = range(1960, datetime.datetime.now().year)
+    all_piis = flatten([get_piis_for_date(query_str, date) for date in dates])
+    return all_piis
+
+
+@lru_cache(maxsize=100)
+@_ensure_api_keys('perform search')
+def get_piis_for_date(query_str, date):
     count = 200
     params = {'query': query_str,
               'count': count,
               'start': 0,
               'sort': '-coverdate',
+              'date': date,
               'field': 'pii'}
     all_piis = []
     while True:
-        print(params)
         res = requests.get(elsevier_search_url, params, headers=ELSEVIER_KEYS)
         if not res.status_code == 200:
             logger.info('Got status code: %d' % res.status_code)
@@ -288,6 +296,9 @@ def get_piis(query_str):
         res_json = res.json()
         entries = res_json['search-results']['entry']
         logger.info(res_json['search-results']['opensearch:totalResults'])
+        if entries == [{'@_fa': 'true', 'error': 'Result set was empty'}]:
+            logger.info('Search result was empty')
+            return []
         piis = [entry['pii'] for entry in entries]
         all_piis += piis
         # Get next batch
@@ -295,6 +306,7 @@ def get_piis(query_str):
         cont = False
         for link in links:
             if link.get('@ref') == 'next':
+                logger.info('Found link to next batch of results.')
                 params['start'] += count
                 cont = True
                 break
