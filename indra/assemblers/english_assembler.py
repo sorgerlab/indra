@@ -79,6 +79,10 @@ def _assemble_agent_str(agent):
     """Assemble an Agent object to text."""
     agent_str = agent.name
 
+    # Only do the more detailed assembly for molecular agents
+    if not isinstance(agent, ist.Agent):
+        return agent_str
+
     # Handle mutation conditions
     if agent.mutations:
         mut_strs = []
