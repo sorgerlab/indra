@@ -14,7 +14,7 @@ def test_get_ids():
 
 @attr('webservice')
 def test_get_no_ids():
-    ids = pubmed_client.get_ids('xkcd', retmax=10, db='pubmed')
+    ids = pubmed_client.get_ids('UUuXNWMCusRpcVTX', retmax=10, db='pubmed')
     assert(not ids)
 
 
@@ -31,8 +31,8 @@ def test_get_ids():
 def test_get_pmc_ids():
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
     assert(len(ids) == 10)
-    assert(len([i for i in ids if i.startswith('5') or
-                i.startswith('4')]) == 10)
+    assert(len([i for i in ids if i.startswith('6') or
+                i.startswith('5')]) == 10)
     assert unicode_strs(ids)
 
 
