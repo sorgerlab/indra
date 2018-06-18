@@ -4,20 +4,25 @@ import numpy
 import pickle
 import textwrap
 from lxml import etree
+from pysb.bng import generate_equations
 from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
     def __init__(self, model):
         self.model = model
+        generate_equations(model)
         self.dt = 1.0
         self.units = 'seconds'
         self.sim = None
         self.attributes = copy.copy(default_attributes)
         self.species_name_map = {}
-        self.input_vars = []
+        for idx, species in enumerate(self.model.species):
+            monomer = species.monomer_patterns[0].monomer
+            self.species_name_map[monomer.name] = idx
+        self.input_vars = self._get_input_vars()
         # These attributes are related to the simulation state
         self.time = 0.0
-        self.state = None
+        self.status = 'start'
 
     def _get_input_vars(self):
         species_is_obj = {s: False for s in self.species_name_map.keys()}
@@ -43,11 +48,8 @@ class BMIModel(object):
         """
         self.sim = ScipyOdeSimulator(self.model)
         self.state = copy.copy(self.sim.initials)[0]
-        for idx, species in enumerate(self.model.species):
-            monomer = species.monomer_patterns[0].monomer
-            self.species_name_map[monomer.name] = idx
-        self.input_vars = self._get_input_vars()
         self.time = 0.0
+        self.status = 'initialized'
 
     def update(self, dt=None):
         """Simulate the model for a given time interval.
@@ -68,7 +70,7 @@ class BMIModel(object):
 
     def finalize(self):
         """Finish the simulation and clean up resources as needed."""
-        pass
+        self.status = 'finalized'
 
     # Setter functions for state variables
     def set_value(self, var_name, value):
@@ -101,6 +103,15 @@ class BMIModel(object):
         """
         species_idx = self.species_name_map[var_name]
         return self.state[species_idx]
+
+    def get_values(self, var_name):
+        return self.get_value(var_name)
+
+    def set_values(self, var_name, value):
+        self.set_value(var_name, value)
+
+    def get_status(self):
+        return self.status
 
     # Getter functions for basic properties
     def get_attribute(self, att_name):
@@ -142,7 +153,7 @@ class BMIModel(object):
         # Return all the variables that aren't input variables
         all_vars = list(self.species_name_map.keys())
         output_vars = list(set(all_vars) - set(self.input_vars))
-        return all_vars
+        return output_vars
 
     def get_var_name(self, var_name):
         """Return the internal variable name given an outside variable name.
