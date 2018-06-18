@@ -1,6 +1,8 @@
+import os
 import copy
 import numpy
-from pysb import bng
+import pickle
+from lxml import etree
 from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
@@ -240,9 +242,43 @@ class BMIModel(object):
         """
         return self.units
 
+    def make_repository_component(self):
+        """Return XML representing this BMI in a workflow."""
+        component = etree.Element('component')
+
+        comp_name = etree.Element('comp_name')
+        comp_name.text = self.model.name
+        component.append(comp_name)
+
+        mod_path = etree.Element('module_path')
+        mod_path.text = os.getcwd()
+        component.append(mod_path)
+
+        mod_name = etree.Element('module_name')
+        mod_name.text = self.model.name
+        component.append(mod_name)
+
+        class_name = etree.Element('class_name')
+        class_name.text = 'model_class'
+        component.append(class_name)
+        return etree.tounicode(component, pretty_print=True)
+
+    def export_into_python(self):
+        pkl_path = self.model.name + '.pkl'
+        with open(pkl_path, 'wb') as fh:
+            pickle.dump(fh, self)
+        py_str = """
+        import pickle
+        with open(%s, 'rb') as fh:
+            model_class = pickle.load(fh)
+        """ % os.path.abspath(pkl_path)
+        py_path = self.model.name + '.py'
+        with open(py_path, 'w') as fh:
+            fh.write(py_str)
+
 
 default_attributes = {
-        'model_name': 'INDRA assembled model',
+        'model_name': 'indra_model',
         'version': '1.0',
         'author_name': 'Benjamin M. Gyori',
         'grid_type': 'none',

@@ -63,3 +63,11 @@ def test_get_attribute():
     bm = make_bmi_model()
     attr = bm.get_attribute('model_name')
     assert attr == 'INDRA assembled model'
+
+
+def test_make_repo_component():
+    bm = make_bmi_model()
+    bm.model.name = 'indra_model'
+    comp = bm.make_repository_component()
+    print(comp)
+    assert '<class_name>' in comp
