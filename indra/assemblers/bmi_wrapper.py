@@ -26,6 +26,9 @@ class BMIModel(object):
                 species_is_obj[ann.object] = True
         # Return all the variables that aren't objects in a rule
         input_vars = [s for s, tf in species_is_obj.items() if not tf]
+        if 'rainfall' in input_vars:
+            idx = input_vars.index('rainfall')
+            del(input_vars[idx])
         return input_vars
 
 
@@ -137,9 +140,9 @@ class BMIModel(object):
             A list of variable names that can be read from the outside
         """
         # Return all the variables that aren't input variables
-        all_vars = set(self.species_name_map.keys())
-        output_vars = list(all_vars - set(self.input_vars))
-        return output_vars
+        all_vars = list(self.species_name_map.keys())
+        output_vars = list(set(all_vars) - set(self.input_vars))
+        return all_vars
 
     def get_var_name(self, var_name):
         """Return the internal variable name given an outside variable name.
