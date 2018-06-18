@@ -1,11 +1,17 @@
+import copy
 import numpy
+from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
     def __init__(self, model):
         self.model = model
-        self.time = 0.0
         self.dt = 1.0
         self.units = 'seconds'
+        self.sim = None
+        self.attributes = copy.copy(default_attributes)
+        # These attributes are related to the simulation state
+        self.time = 0.0
+        self.state = None
 
     # Simulation functions
     def initialize(self, fname=None):
@@ -16,6 +22,7 @@ class BMIModel(object):
         fname : Optional[str]
             The name of the configuration file to load, optional.
         """
+        self.sim = ScipyOdeSimulator(self.model)
         self.time = 0.0
 
     def update(self, dt=None):
@@ -27,7 +34,10 @@ class BMIModel(object):
             The time step to simulate, if None, the default built-in time step
             is used.
         """
-        pass
+        dt = dt if dt else self.dt
+        tspan = [0, dt]
+        res = sim.run(tspan=tspan)
+        # Set the state based on the result here
 
     def finalize(self):
         """Finish the simulation and clean up resources as needed."""
@@ -45,6 +55,7 @@ class BMIModel(object):
         value : float
             The value the variable should be set to
         """
+        # Change model initial conditions
         pass
 
     # Getter functions for state
@@ -61,6 +72,7 @@ class BMIModel(object):
         value : float
             The value of the given variable in the current state
         """
+        # Return simulation result in current state for given variable
         pass
 
     # Getter functions for basic properties
@@ -80,6 +92,7 @@ class BMIModel(object):
         value : str
             The value of the attribute
         """
+
         pass
 
     def get_input_var_names(self):
@@ -204,3 +217,13 @@ class BMIModel(object):
         """
         return self.units
 
+
+default_attributes = {
+        'model_name': 'INDRA assembled model',
+        'version': '1.0',
+        'author_name': 'Benjamin M. Gyori',
+        'grid_type': 'none',
+        'time_step_type': 'fixed',
+        'step_method': 'expliit',
+        'time_units': 'seconds'
+        }
