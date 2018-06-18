@@ -25,7 +25,8 @@ class BMIModel(object):
             The name of the configuration file to load, optional.
         """
         self.sim = ScipyOdeSimulator(self.model)
-        for idx, species in enumerate(model.species):
+        self.state = copy.copy(self.sim.initials)[0]
+        for idx, species in enumerate(self.model.species):
             monomer = species.monomer_patterns[0].monomer
             self.species_name_map[monomer.name] = idx
 
@@ -45,7 +46,7 @@ class BMIModel(object):
         # Run simulaton with initials set to current state
         res = self.sim.run(tspan=tspan, initials=self.state)
         # Set the state based on the result here
-        self.state  = res[-1]
+        self.state  = res.species[-1]
         self.time += dt
 
     def finalize(self):

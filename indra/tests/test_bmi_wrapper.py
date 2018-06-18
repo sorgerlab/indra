@@ -23,6 +23,7 @@ def test_bmi_model():
 def test_initialize():
     bm = make_bmi_model()
     bm.initialize()
+    assert bm.state[1] == 10000.0
     assert bm.sim is not None
     assert bm.time == 0.0
 
@@ -32,3 +33,26 @@ def test_update():
     bm.initialize()
     bm.update(dt=100)
     assert bm.time == 100.0
+    assert bm.state[1] != 0.0
+    assert bm.get_current_time() == 100.0
+
+
+def test_set_value():
+    bm = make_bmi_model()
+    bm.initialize()
+    bm.set_value('rainfall', 10.0)
+    assert bm.state[bm.species_name_map['rainfall']] == 10.0
+
+
+def test_get_value():
+    bm = make_bmi_model()
+    bm.initialize()
+    bm.set_value('rainfall', 10.0)
+    val = bm.get_value('rainfall')
+    assert val == 10.0
+
+
+def test_get_attribute():
+    bm = make_bmi_model()
+    attr = bm.get_attribute('model_name')
+    assert attr == 'INDRA assembled model'
