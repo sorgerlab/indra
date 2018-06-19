@@ -144,6 +144,7 @@ def test_rdf_example3():
         statement0.obj.db_refs['TEXT']
 
 
+@attr('slow', 'webservice')
 def test_cwms_agriculture_increases():
     text = 'Agriculture increases food security.'
     cp = process_text(text)
