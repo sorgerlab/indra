@@ -98,7 +98,8 @@ class PybelAssembler(object):
                   'namespace/swissprot/swissprot-20170725.belns',
             'IP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                   'namespace/interpro/interpro-20170731.belns',
-            #'FPLX':
+            'FPLX': 'https://raw.githubusercontent.com/sorgerlab/famplex/'
+                    '5f5b573fe26d7405dbccb711ae8e5697b6a3ec7e/export/famplex.belns',
             #'PFAM':
             #'NXPFA':
             'CHEBI': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
