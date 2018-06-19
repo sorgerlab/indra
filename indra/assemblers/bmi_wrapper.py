@@ -370,6 +370,6 @@ default_attributes = {
         'author_name': 'Benjamin M. Gyori',
         'grid_type': 'none',
         'time_step_type': 'fixed',
-        'step_method': 'expliit',
+        'step_method': 'explicit',
         'time_units': 'seconds'
         }

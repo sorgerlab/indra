@@ -23,19 +23,20 @@ def make_component_repo(bmi_models):
     with open('component_repository.xml', 'w') as fh:
         fh.write(rep_str)
     with open('component_providers.txt', 'w') as fh:
-        fh.write('model0 model0\nmodel1 model1')
-
+        for m in bmi_models:
+            fh.write('%s %s\n' % (m.model.name, m.model.name))
 
 
 if __name__ == '__main__':
     model_txts = ['rainfall causes floods', 'floods cause displacement']
     stmts = [text_to_stmts(t) for t in model_txts]
     bmi_models = []
+    root_vars = [['rainfall'], []]
     for idx, model_stmts in enumerate(stmts):
         pa = PysbAssembler()
         pa.add_statements(model_stmts)
         model = pa.make_model()
         model.name = 'model%d' % idx
-        bm = BMIModel(model)
+        bm = BMIModel(model, root_vars=root_vars[idx])
         bmi_models.append(bm)
     make_component_repo(bmi_models)
