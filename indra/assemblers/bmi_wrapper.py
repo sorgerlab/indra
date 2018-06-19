@@ -8,11 +8,12 @@ from pysb.bng import generate_equations
 from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
-    def __init__(self, model, root_vars=None):
+    def __init__(self, model, root_vars=None, stop_time=1000):
         self.model = model
         generate_equations(model)
 
         self.root_vars = root_vars if root_vars else []
+        self.stop_time = stop_time
 
         self.dt = numpy.array(1.0)
         self.units = 'seconds'
@@ -73,6 +74,8 @@ class BMIModel(object):
         # Set the state based on the result here
         self.state  = res.species[-1]
         self.time += dt
+        if self.time > self.stop_time:
+            self.DONE = True
 
     def finalize(self):
         """Finish the simulation and clean up resources as needed."""
