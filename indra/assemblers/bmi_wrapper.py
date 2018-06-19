@@ -13,12 +13,14 @@ from pysb.bng import generate_equations
 from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
-    def __init__(self, model, root_vars=None, stop_time=1000):
+    def __init__(self, model, root_vars=None, stop_time=1000,
+                 outside_name_map=None):
         self.model = model
         generate_equations(model)
 
         self.root_vars = root_vars if root_vars else []
         self.stop_time = stop_time
+        self.outside_name_map = outside_name_map if outside_name_map else {}
 
         self.dt = numpy.array(10.0)
         self.units = 'seconds'
@@ -101,6 +103,11 @@ class BMIModel(object):
         value : float
             The value the variable should be set to
         """
+        if var_name in self.outside_name_map:
+            var_name = self.outside_name_map[var_name]
+            print('%s=%.5f' % (var_name, 1e9*value))
+            if var_name == 'rainfall':
+                value = 1e9*value
         species_idx = self.species_name_map[var_name]
         self.state[species_idx] = value
 
@@ -131,6 +138,8 @@ class BMIModel(object):
         value : float
             The value of the given variable in the current state
         """
+        if var_name in self.outside_name_map:
+            var_name = self.outside_name_map[var_name]
         species_idx = self.species_name_map[var_name]
         return self.state[species_idx]
 
@@ -180,7 +189,11 @@ class BMIModel(object):
         var_names : list[str]
             A list of variable names that can be set from the outside
         """
-        return self.input_vars
+        in_vars = copy.copy(self.input_vars)
+        for idx, var in enumerate(in_vars):
+            if self._map_in_out(var) is not None:
+                in_vars[idx] = self._map_in_out(var)
+        return in_vars
 
     def get_output_var_names(self):
         """Return a list of variables names that can be read as output.
@@ -193,6 +206,10 @@ class BMIModel(object):
         # Return all the variables that aren't input variables
         all_vars = list(self.species_name_map.keys())
         output_vars = list(set(all_vars) - set(self.input_vars))
+        # Re-map to outside var names if needed
+        for idx, var in enumerate(output_vars):
+            if self._map_in_out(var) is not None:
+                output_vars[idx] = self._map_in_out(var)
         return output_vars
 
     def get_var_name(self, var_name):
@@ -208,7 +225,7 @@ class BMIModel(object):
         internal_var_name : str
             The internal name of the corresponding variable
         """
-        return var_name
+        return self._map_out_in(var_name)
 
     def get_var_units(self, var_name):
         """Return the units of a given variable.
@@ -373,6 +390,16 @@ class BMIModel(object):
         py_path = self.model.name + '.py'
         with open(py_path, 'w') as fh:
             fh.write(py_str)
+
+
+    def _map_out_in(self, outside_var_name):
+        return self.outside_name_map.get(outside_var_name)
+
+    def _map_in_out(self, inside_var_name):
+        for out_name, in_name in self.outside_name_map.items():
+            if inside_var_name == in_name:
+                return out_name
+        return None
 
 
 default_attributes = {
