@@ -137,25 +137,31 @@ class PreassemblyManager(object):
         if in_mks is None and ex_mks is None:
             db_stmt_iter = db.select_all(db.PAStatements.json,
                                          yield_per=self.batch_size)
-        elif ex_mks is None:
+        elif ex_mks is None and in_mks:
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
                 db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
-        elif in_mks is None:
+        elif in_mks is None and ex_mks:
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
                 db.PAStatements.mk_hash.notin_(ex_mks),
+                yield_per=self.batch_size
+                )
+        elif in_mks and ex_mks:
+            db_stmt_iter = db.select_all(
+                db.PAStatements.json,
+                db.PAStatements.mk_hash.notin_(ex_mks),
+                db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
         else:
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
-                db.PAStatements.mk_hash.notin_(ex_mks),
-                db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
+
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_func=list)
 
