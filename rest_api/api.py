@@ -3,11 +3,13 @@ import json
 import logging
 from bottle import route, run, request, default_app, response
 from indra.sources import trips, reach, bel, biopax
+from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
-    CyJSAssembler, SifAssembler
+    CyJSAssembler, SifAssembler, EnglishAssembler
 import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
+from indra.sources.indra_db_rest import get_statements
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -272,6 +274,27 @@ def assemble_cx():
     return res
 
 
+#   SHARE CX   #
+@route('/share_model', method=['POST', 'OPTIONS'])
+@allow_cors
+def share_model():
+    """Upload the model to NDEX"""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    cyjs_model_str = body.get('cyjs_model')
+    stmts = stmts_from_json(stmts_json)
+    ca = CxAssembler(stmts)
+    ca.cx['networkAttributes'].append({'n': 'cyjs_model',
+                                       'v': cyjs_model_str,
+                                       'd': 'string'})
+    ca.make_model()
+    network_id = ca.upload_model(private=False)
+    return {'network_id': network_id}
+
+
 #  GRAPH   #
 @route('/assemblers/graph', method=['POST', 'OPTIONS'])
 @allow_cors
@@ -305,6 +328,27 @@ def assemble_cyjs():
     cja.make_model(grouping=True)
     model_str = cja.print_cyjs_graph()
     return model_str
+
+
+#   English   #
+@route('/assemblers/english', method=['POST', 'OPTIONS'])
+@allow_cors
+def assemble_english():
+    """Assemble each statement into """
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    sentences = {}
+    for st in stmts:
+        enga = EnglishAssembler()
+        enga.add_statements([st])
+        model_str = enga.make_model()
+        sentences[st.uuid] = model_str
+    res = {'sentences': sentences}
+    return res
 
 
 @route('/assemblers/sif/loopy', method=['POST', 'OPTIONS'])
@@ -480,6 +524,68 @@ def filter_grounded_only():
     else:
         res = {'statements': []}
     return res
+
+
+@route('/indra_db_rest/get_evidence', method=['POST', 'OPTIONS'])
+@allow_cors
+def get_evidence_for_stmts():
+    if request.method == 'OPTIONS':
+        return {}
+    req = request.body.read().decode('utf-8')
+    body = json.loads(req)
+    stmt_json = body.get('statement')
+    stmt = Statement._from_json(stmt_json)
+
+    def _get_agent_ref(agent):
+        """Get the preferred ref for an agent for db web api."""
+        if agent is None:
+            return None
+        ag_hgnc_id = hgnc_client.get_hgnc_id(agent.name)
+        if ag_hgnc_id is not None:
+            return ag_hgnc_id + "@HGNC"
+        db_refs = agent.db_refs
+        for namespace in ['HGNC', 'FPLX', 'CHEBI', 'TEXT']:
+            if namespace in db_refs.keys():
+                # TODO: Remove. This is a temporary workaround.
+                if namespace == 'FPLX':
+                    return '%s@%s' % (db_refs[namespace], 'BE')
+                return '%s@%s' % (db_refs[namespace], namespace)
+        return '%s@%s' % (agent.name, 'TEXT')
+
+    def _get_matching_stmts(stmt_ref):
+        # Filter by statement type.
+        stmt_type = stmt_ref.__class__.__name__
+        agent_name_list = [_get_agent_ref(ag) for ag in stmt_ref.agent_list()]
+        non_binary_statements = (Complex, SelfModification, ActiveForm)
+        # TODO: We should look at more than just the agent name.
+        # Doing so efficiently may require changes to the web api.
+        if isinstance(stmt_ref, non_binary_statements):
+            agent_list = [ag_name for ag_name in agent_name_list
+                          if ag_name is not None]
+            kwargs = {}
+        else:
+            agent_list = []
+            kwargs = {k: v for k, v in zip(['subject', 'object'],
+                                           agent_name_list)}
+            if not any(kwargs.values()):
+                return []
+            print(agent_list)
+        stmts = get_statements(agents=agent_list, stmt_type=stmt_type,
+                               **kwargs)
+        return stmts
+
+    stmts_out = _get_matching_stmts(stmt)
+    agent_name_list = [ag.name for ag in stmt.agent_list()]
+    stmts_out = stmts = ac.filter_concept_names(stmts_out, agent_name_list, 'all')
+    if stmts_out:
+        stmts_json = stmts_to_json(stmts_out)
+        res = {'statements': stmts_json}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
 
 app = default_app()
 

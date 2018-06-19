@@ -88,7 +88,7 @@ def send_request(ndex_service_url, params, is_json=True, use_get=False):
         return res.text
 
 
-def create_network(cx_str, ndex_cred):
+def create_network(cx_str, ndex_cred, private=True):
     """Creates a new NDEx network of the assembled CX model.
 
     To upload the assembled CX model to NDEx, you need to have
@@ -123,6 +123,8 @@ def create_network(cx_str, ndex_cred):
         return
 
     network_id = network_uri.rsplit('/')[-1]
+    if not private:
+        nd.make_network_public(network_id)
     logger.info('The UUID for the uploaded network is: %s' % network_id)
     logger.info('View at: http://ndexbio.org/#/network/%s' % network_id)
     return network_id
