@@ -8,9 +8,12 @@ from pysb.bng import generate_equations
 from pysb.simulator import ScipyOdeSimulator
 
 class BMIModel(object):
-    def __init__(self, model):
+    def __init__(self, model, root_vars=None):
         self.model = model
         generate_equations(model)
+
+        self.root_vars = root_vars if root_vars else []
+
         self.dt = numpy.array(1.0)
         self.units = 'seconds'
         self.sim = None
@@ -34,6 +37,8 @@ class BMIModel(object):
                 species_is_obj[ann.object] = True
         # Return all the variables that aren't objects in a rule
         input_vars = [s for s, tf in species_is_obj.items() if not tf]
+        # Remove the root variables since we assume they are not inputs
+        input_vars = list(set(input_vars) - set(self.root_vars))
         return input_vars
 
 
@@ -282,7 +287,16 @@ class BMIModel(object):
         return self.units
 
     def make_repository_component(self):
-        """Return XML representing this BMI in a workflow."""
+        """Return XML representing this BMI in a workflow.
+
+        This description is required by EMELI to discover and load models.
+
+        Returns
+        -------
+        xml : str
+            String serialized XML representation of the component in the
+            model repository.
+        """
         component = etree.Element('component')
 
         comp_name = etree.Element('comp_name')
@@ -330,6 +344,12 @@ class BMIModel(object):
         return etree.tounicode(component, pretty_print=True)
 
     def export_into_python(self):
+        """Write the model into a pickle and create a module that loads it.
+
+        The model basically exports itself as a pickle file and a Python
+        file is then written which loads the pickle file. This allows importing
+        the model in the simulation workflow.
+        """
         pkl_path = self.model.name + '.pkl'
         with open(pkl_path, 'wb') as fh:
             pickle.dump(self, fh, protocol=2)
