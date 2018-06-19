@@ -1,3 +1,8 @@
+"""This module allows creating a Basic Modeling Interface (BMI) model from
+and automatically assembled PySB model. The BMI model can be instantiated
+within a simulation workflow system where it is simulated together
+with other models."""
+
 import os
 import copy
 import numpy
@@ -15,7 +20,7 @@ class BMIModel(object):
         self.root_vars = root_vars if root_vars else []
         self.stop_time = stop_time
 
-        self.dt = numpy.array(1.0)
+        self.dt = numpy.array(10.0)
         self.units = 'seconds'
         self.sim = None
         self.attributes = copy.copy(default_attributes)
@@ -25,9 +30,10 @@ class BMIModel(object):
             self.species_name_map[monomer.name] = idx
         self.input_vars = self._get_input_vars()
         # These attributes are related to the simulation state
-        self.state = numpy.array([0.0 for s in self.species_name_map.keys()])
+        self.state = numpy.array([100.0 for s in self.species_name_map.keys()])
         self.time = numpy.array(0.0)
         self.status = 'start'
+        self.time_course = [(self.time, self.state)]
         # EMELI needs a DONE attribute
         self.DONE = False
 
@@ -76,6 +82,8 @@ class BMIModel(object):
         self.time += dt
         if self.time > self.stop_time:
             self.DONE = True
+        print((self.time, self.state))
+        self.time_course.append((self.time.copy(), self.state.copy()))
 
     def finalize(self):
         """Finish the simulation and clean up resources as needed."""
