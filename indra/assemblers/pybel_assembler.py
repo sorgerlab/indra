@@ -99,7 +99,7 @@ class PybelAssembler(object):
             'IP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                   'namespace/interpro/interpro-20170731.belns',
             'FPLX': 'https://raw.githubusercontent.com/sorgerlab/famplex/'
-'                   '5f5b573fe26d7405dbccb711ae8e5697b6a3ec7e/export/famplex.belns',
+                    '5f5b573fe26d7405dbccb711ae8e5697b6a3ec7e/export/famplex.belns',
             #'NXPFA':
             'CHEBI': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                      'namespace/chebi-ids/chebi-ids-20170725.belns',
