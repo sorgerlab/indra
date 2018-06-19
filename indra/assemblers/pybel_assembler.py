@@ -98,9 +98,7 @@ class PybelAssembler(object):
                   'namespace/swissprot/swissprot-20170725.belns',
             'IP': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                   'namespace/interpro/interpro-20170731.belns',
-            'FPLX': 'https://raw.githubusercontent.com/sorgerlab/famplex/'
-                    '5f5b573fe26d7405dbccb711ae8e5697b6a3ec7e/export/famplex.belns',
-            #'PFAM':
+            #'FPLX':
             #'NXPFA':
             'CHEBI': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                      'namespace/chebi-ids/chebi-ids-20170725.belns',
@@ -109,8 +107,12 @@ class PybelAssembler(object):
             'MESH': 'https://arty.scai.fraunhofer.de/artifactory/bel/'
                     'namespace/mesh-processes/mesh-processes-20170725.belns'
         }
+        ns_regex = {
+            'PFAM': '^PF\d{5}$',
+            'PUBCHEM': '^\d+$',
+        }
         self.model.namespace_url.update(ns_dict)
-        self.model.namespace_pattern['PUBCHEM'] = '\d+'
+        self.model.namespace_pattern.update(ns_regex)
 
     def add_statements(self, stmts_to_add):
         self.statements += stmts_to_add
