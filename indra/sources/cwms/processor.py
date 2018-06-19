@@ -68,8 +68,9 @@ class CWMSProcessor(object):
 
         # Extract statements
         self.extract_noun_causal_relations()
-        self.extract_noun_inhibit_relations()
+        self.extract_noun_affect_relations()
         self.extract_noun_influence_relations()
+        return
 
     def extract_noun_causal_relations(self):
         """Extracts causal relationships between two nouns/terms (as opposed to
@@ -85,18 +86,21 @@ class CWMSProcessor(object):
             self.make_statement_noun_cause_effect(cc, factor, outcome,
                                                   polarity)
 
-    def extract_noun_inhibit_relations(self):
-        """Extracts relationships involving one term/noun inhibiting another
-        term/noun"""
-        events = self.tree.findall("EVENT/[type='ONT::INHIBIT']")
-        events += self.tree.findall("EVENT/[type='ONT::DECREASE']")
-        for event in events:
-            # Each inhibit event should involve an agent and an affected
-            agent = event.find("*[@role=':AGENT']")
-            affected = event.find("*[@role=':AFFECTED']")
-            polarity = -1
-            self.make_statement_noun_cause_effect(event, agent, affected,
-                                                  polarity)
+    def extract_noun_affect_relations(self):
+        """Extract relationships where a term/noun affects another term/noun"""
+        event_polarity_tuples = [
+            (-1, self.tree.findall("EVENT/[type='ONT::INHIBIT']")
+                 + self.tree.findall("EVENT/[type='ONT::DECREASE']")),
+            (1, self.tree.findall("EVENT/[type='ONT::INCREASE']"))
+            ]
+        for polarity, events in event_polarity_tuples:
+            for event in events:
+                # Each inhibit event should involve an agent and an affected
+                agent = event.find("*[@role=':AGENT']")
+                affected = event.find("*[@role=':AFFECTED']")
+                self.make_statement_noun_cause_effect(event, agent, affected,
+                                                      polarity)
+
 
     def extract_noun_influence_relations(self):
         """Extracts relationships with one term influencing another term."""
