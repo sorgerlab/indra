@@ -1,126 +1,108 @@
 from indra.statements import Phosphorylation, Agent, Evidence
 from indra.db.util import NestedDict
+from indra.db.util import reader_versions as rv_dict
 
-
-def add_stmts_to_target_set(stmts, target_sets):
-    if not target_sets:
-        for stmt in stmts:
-            target_sets.append(({stmt},
-                                {s.uuid for s in stmts if s is not stmt}))
-    else:
-        old_target_sets = target_sets[:]
-        target_sets = []
-        for stmt_set, dup_set in old_target_sets:
-            for stmt in stmts:
-                new_set = stmt_set.copy()
-                new_set.add(stmt)
-                new_dups = dup_set.copy()
-                new_dups |= {s.uuid for s in stmts if s != stmt}
-                target_sets.append((new_set, new_dups))
-    return target_sets
 
 
 def make_raw_statement_test_set():
     d = NestedDict()
     stmts = []
     target_sets = []
-    bettered_uuids = set()
+    bettered_sids = set()
+
+    def add_stmts_to_target_set(some_stmts):
+        if not target_sets:
+            for stmt in some_stmts:
+                target_sets.append(({stmt},
+                                    {stmts.index(s) for s in some_stmts
+                                     if s is not stmt}))
+        else:
+            old_target_sets = target_sets[:]
+            target_sets.clear()
+            for stmt_set, dup_set in old_target_sets:
+                for stmt in some_stmts:
+                    new_set = stmt_set.copy()
+                    new_set.add(stmt)
+                    new_dups = dup_set.copy()
+                    new_dups |= {stmts.index(s) for s in some_stmts
+                                 if s is not stmt}
+                    target_sets.append((new_set, new_dups))
+        return target_sets
+
+    def add_content(trid, src, tcid, reader, rv_idx, rid, a, b, ev_num, copies,
+                    is_target=False):
+        stmts.extend(make_test_statements(a, b, reader, ev_num, copies))
+        if copies > 1:
+            if ev_num is not None:
+                assert stmts[-1].get_hash() == stmts[-2].get_hash()
+            else:
+                assert stmts[-1].get_hash() != stmts[-2].get_hash()
+        rv = rv_dict[reader][rv_idx]
+        r_dict = d[trid][src][tcid][reader][rv][rid]
+        if ev_num is not None:
+            s_hash = stmts[-1].get_hash()
+            if r_dict.get(s_hash) is None:
+                r_dict[s_hash] = set()
+            d[trid][src][tcid][reader][rv][rid][stmts[-1].get_hash()] |= \
+                {(stmts.index(s), s) for s in stmts[-copies:]}
+        else:
+            for s in stmts[-copies:]:
+                s_hash = s.get_hash()
+                if r_dict.get(s_hash) is None:
+                    r_dict[s_hash] = set()
+                d[trid][src][tcid][reader][rv][rid][s_hash].add(
+                    (stmts.index(s), s)
+                    )
+        if is_target:
+            global target_sets
+            target_sets = add_stmts_to_target_set(stmts[-copies:])
+        return
 
     # We produced statements a coupld of times with and old reader version
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-1].get_hash() == stmts[-2].get_hash()
-    d[1]['pubmed'][1]['reach']['61059a-biores-e9ee36'][1][stmts[-1].get_hash()] = set(stmts[-2:])
+    add_content(1, 'pubmed', 1, 'reach', 0, 1, 'A1', 'B1', 1, 2)
+    add_content(1, 'pubmed', 1, 'reach', 0, 1, 'A1', 'B1', 2, 1)
+    add_content(1, 'pubmed', 1, 'reach', 0, 1, 'A2', 'B2', 1, 1)
 
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 2 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-2].get_hash() != stmts[-1].get_hash()
-    d[1]['pubmed'][1]['reach']['61059a-biores-e9ee36'][1][stmts[-1].get_hash()] = {stmts[-1]}
+    # Do it again for a new reader version.
+    add_content(1, 'pubmed', 1, 'reach', 1, 2, 'A1', 'B1', 1, 2)
+    add_content(1, 'pubmed', 1, 'reach', 1, 2, 'A1', 'B1', 2, 1)
 
-    stmts.append(make_test_statement('A2', 'B2', 'Evience 1 for A2 phosphorylates B2', 'reach'))
-    d[1]['pubmed'][1]['reach']['61059a-biores-e9ee36'][1][stmts[-1].get_hash()] = {stmts[-1]}
-
-    # Then we did it again for a new reader version.
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-1].get_hash() == stmts[-2].get_hash()
-    d[1]['pubmed'][1]['reach']['1.3.3-61059a-biores-'][2][stmts[-1].get_hash()] = set(stmts[-2:])
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 2 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-2].get_hash() != stmts[-1].get_hash()
-    d[1]['pubmed'][1]['reach']['1.3.3-61059a-biores-'][2][stmts[-1].get_hash()] = {stmts[-1]}
-
-    # Add some results from sparser
-    stmts.append(make_test_statement(None, 'B1', 'Evidence 1 for A1 phosphorylates B1', 'sparser'))
-    stmts.append(make_test_statement(None, 'B1', 'Evidence 1 for A1 phosphorylates B1', 'sparser'))
-    assert stmts[-1].get_hash() == stmts[-2].get_hash()
-    d[1]['pubmed'][1]['sparser']['sept14-linux'][3][stmts[-1].get_hash()] = set(stmts[-2:])
-
-    stmts.append(make_test_statement(None, 'B2', 'Evidence 1 for A2 phosphoryates B2', 'sparser'))
-    assert stmts[-1].get_hash() != stmts[-2].get_hash()
-    d[1]['pubmed'][1]['sparser']['sept14-linux'][3][stmts[-1].get_hash()] = {stmts[-1]}
+    # Add some for sparser.
+    add_content(1, 'pubmed', 1, 'sparser', 1, 3, 'A1', 'B1', 1, 2)
+    add_content(1, 'pubmed', 1, 'sparser', 1, 3, 'A2', 'B2', 1, 1)
 
     # Now add statements from another source.
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-1].get_hash() == stmts[-2].get_hash()
-    d[1]['pmc_oa'][2]['reach']['61059a-biores-e9ee36'][4][stmts[-1].get_hash()] = set(stmts[-2:])
+    add_content(1, 'pmc_oa', 2, 'reach', 0, 4, 'A1', 'B1', 1, 2)
+    add_content(1, 'pmc_oa', 2, 'reach', 0, 4, 'A1', 'B1', 2, 1)
+    add_content(1, 'pmc_oa', 2, 'reach', 0, 4, 'A2', 'B2', 1, 1)
+    bettered_sids |= set(range(len(stmts)))
 
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 2 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-2].get_hash() != stmts[-1].get_hash()
-    d[1]['pmc_oa'][2]['reach']['61059a-biores-e9ee36'][4][stmts[-1].get_hash()] = {stmts[-1]}
-
-    stmts.append(make_test_statement('A2', 'B2', 'Evience 1 for A2 phosphorylates B2', 'reach'))
-    d[1]['pmc_oa'][2]['reach']['61059a-biores-e9ee36'][4][stmts[-1].get_hash()] = {stmts[-1]}
-
-    stmts.append(make_test_statement('A2', 'B2', 'Evidence 2 for A2 phosphorylates B2', 'reach'))
-    d[1]['pmc_oa'][2]['reach']['61059a-biores-e9ee36'][4][stmts[-1].get_hash()] = {stmts[-1]}
-
-    stmts.append(make_test_statement('A3', 'B3', 'Evidence 1 for A3 phosphorylates B3', 'reach'))
-    d[1]['pmc_oa'][2]['reach']['61059a-biores-e9ee36'][4][stmts[-1].get_hash()] = {stmts[-1]}
-    bettered_uuids |= {s.uuid for s in stmts}
-
-    # Then we did it again for a new reader version.
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 1 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-1].get_hash() == stmts[-2].get_hash()
-    d[1]['pmc_oa'][2]['reach']['1.3.3-61059a-biores-'][5][stmts[-1].get_hash()] = set(stmts[-2:])
-    target_sets = add_stmts_to_target_set(stmts[-2:], target_sets)
-
-    stmts.append(make_test_statement('A1', 'B1', 'Evidence 2 for A1 phosphorylates B1', 'reach'))
-    assert stmts[-2].get_hash() != stmts[-1].get_hash()
-    d[1]['pmc_oa'][2]['reach']['1.3.3-61059a-biores-'][5][stmts[-1].get_hash()] = {stmts[-1]}
-    target_sets = add_stmts_to_target_set(stmts[-1:], target_sets)
-
-    stmts.append(make_test_statement('A2', 'B2', 'Evidence 2 for A2 phosphorylates B2', 'reach'))
-    d[1]['pmc_oa'][2]['reach']['1.3.3-61059a-biores-'][4][stmts[-1].get_hash()] = {stmts[-1]}
-    target_sets = add_stmts_to_target_set(stmts[-1:], target_sets)
-
-    stmts.append(make_test_statement('A3', 'B3', 'Evidence 1 for A3 phosphorylates B3', 'reach'))
-    d[1]['pmc_oa'][2]['reach']['1.3.3-61059a-biores-'][4][stmts[-1].get_hash()] = {stmts[-1]}
-    target_sets = add_stmts_to_target_set(stmts[-1:], target_sets)
+    # ...and again for a new reader version.
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A1', 'B1', 1, 2, True)
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A1', 'B1', 2, 1, True)
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A2', 'B2', 1, 1, True)
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A3', 'B3', 1, 1, True)
 
     # Add some results from sparser
-    stmts.append(make_test_statement(None, 'B1', 'Evidence 1 for A1 phosphorylates B1', 'sparser'))
-    stmts.append(make_test_statement(None, 'B1', 'Evidence 1 for A1 phosphorylates B1', 'sparser'))
-    assert stmts[-1].get_hash() == stmts[-2].get_hash()
-    d[1]['pmc_oa'][2]['sparser']['sept14-linux'][6][stmts[-1].get_hash()] = set(stmts[-2:])
-    target_sets = add_stmts_to_target_set(stmts[-2:], target_sets)
+    add_content(1, 'pmc_oa', 2, 'sparser', 1, 5, 'A1', 'B1', 1, 2, True)
+    add_content(1, 'pmc_oa', 2, 'sparser', 1, 5, 'A2', 'B2', 1, 1, True)
 
-    stmts.append(make_test_statement(None, 'B2', 'Evidence 1 for A2 phosphoryates B2', 'sparser'))
-    assert stmts[-1].get_hash() != stmts[-2].get_hash()
-    d[1]['pmc_oa'][2]['sparser']['sept14-linux'][6][stmts[-1].get_hash()] = {stmts[-1]}
-    target_sets = add_stmts_to_target_set(stmts[-1:], target_sets)
+    # Add some content for another text ref.
+    add_content(2, 'pmc_oa', 3, 'sparser', 1, 6, 'A3', 'B3', 1, 1, True)
+    add_content(2, 'manuscripts', 4, 'sparser', 1, 7, 'A3', 'B3', 1, 1)
+    bettered_sids.add(len(stmts) - 1)
 
-    stmts.append(make_test_statement('A3', 'B3', 'Evidence 1 for A3 phosphorylates B3', 'sparser'))
-    d[2]['manuscripts'][3]['sparser']['sept14-linux'][7][stmts[-1].get_hash()] = {stmts[-1]}
-    target_sets = add_stmts_to_target_set(stmts[-1:], target_sets)
-
-    stmts.append(make_test_statement('A3', 'B3', 'Evidence 1 for A3 phosphorylates B3', 'sparser'))
-    d[2]['pmc_oa'][4]['sparser']['sept14-linux'][8][stmts[-1].get_hash()] = {stmts[-1]}
-    bettered_uuids.add(stmts[-1].uuid)
-
-    return d, stmts, target_sets, bettered_uuids
+    return d, stmts, target_sets, bettered_sids
 
 
-def make_test_statement(A, B, text, source_api):
-    return Phosphorylation(Agent(A), Agent(B),
-                           evidence=[Evidence(text=text, source_api=source_api)])
+def make_test_statements(a, b, source_api, ev_num=None, copies=1):
+    stmts = []
+    A = Agent(a)
+    B = Agent(b)
+    for i in range(copies):
+        if ev_num is None:
+            ev_num = i
+        ev_text = "Evidence %d for %s phosphorylates %s." % (ev_num, a, b)
+        ev_list = [Evidence(text=ev_text, source_api=source_api)]
+        stmts.append(Phosphorylation(Agent(A), Agent(B), evidence=ev_list))
+    return stmts
