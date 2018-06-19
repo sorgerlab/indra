@@ -12,7 +12,7 @@ logger = logging.getLogger('db_client')
 
 from indra.util import batch_iter
 from indra.databases import hgnc_client
-from .util import get_primary_db, make_raw_stmts_from_db_list, \
+from .util import get_primary_db, get_raw_stmts_frm_db_list, \
     unpack, _get_statement_object, _clockit
 
 
@@ -216,7 +216,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         if preassembled:
             clauses.append(Agents.stmt_mk_hash == Statements.mk_hash)
         else:
-            clauses.append(Agents.stmt_uuid == Statements.uuid)
+            clauses.append(Agents.stmt_id == Statements.id)
     if stmt_type:
         clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
@@ -325,7 +325,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             logger.info("Total of %d statements" % num_stmts)
         db_stmts = q.yield_per(count)
         for subset in batch_iter(db_stmts, count):
-            stmts.extend(make_raw_stmts_from_db_list(db, subset))
+            stmts.extend(get_raw_stmts_frm_db_list(db, subset, with_sids=False))
             if do_stmt_count:
                 logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
@@ -348,30 +348,32 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
                 # Instantiate the PA statement objects, and record the uuid
                 # evidence (raw statement) links.
-                raw_stmt_obj_list = []
+                raw_stmt_objs = []
                 for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
                     k = pa_stmt_db_obj.mk_hash
                     if k not in stmt_dict.keys():
                         stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
-                        ev_dict[k] = [raw_stmt_db_obj.uuid,]
+                        ev_dict[k] = [raw_stmt_db_obj.id,]
                     else:
-                        ev_dict[k].append(raw_stmt_db_obj.uuid)
-                    raw_stmt_obj_list.append(raw_stmt_db_obj)
+                        ev_dict[k].append(raw_stmt_db_obj.id)
+                    raw_stmt_objs.append(raw_stmt_db_obj)
 
                 logger.info("Up to %d pa statements, with %d pieces of"
                             "evidence in all." % (len(stmt_dict), len(ev_dict)))
 
                 # Instantiate the raw statements.
-                raw_stmts = make_raw_stmts_from_db_list(db, raw_stmt_obj_list,
-                                                        fix_refs=fix_refs)
-                raw_stmt_dict.update({s.uuid: s for s in raw_stmts})
-                logger.info("Processed %d raw statements." % len(raw_stmts))
+                raw_stmt_sid_tpls = get_raw_stmts_frm_db_list(db, raw_stmt_objs,
+                                                              fix_refs,
+                                                              with_sids=True)
+                raw_stmt_dict.update({sid: s for sid, s in raw_stmt_sid_tpls})
+                logger.info("Processed %d raw statements."
+                            % len(raw_stmt_sid_tpls))
 
             # Attach the evidence
             logger.info("Inserting evidence.")
-            for k, uuid_list in ev_dict.items():
-                stmt_dict[k].evidence = [raw_stmt_dict[uuid].evidence[0]
-                                         for uuid in uuid_list]
+            for k, sid_list in ev_dict.items():
+                stmt_dict[k].evidence = [raw_stmt_dict[sid].evidence[0]
+                                         for sid in sid_list]
         else:
             # Get just pa statements without their supporting raw statement(s).
             pa_stmts = db.select_all(db.PAStatements, *clauses, yield_per=count)
@@ -444,10 +446,10 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True):
                              *db.join(db.PAStatements, db.RawStatements))
 
     # Note that this step depends on the ordering being maintained.
-    mk_hashes, raw_stmt_objects = zip(*raw_list)
-    raw_stmt_mk_pairs = zip(mk_hashes,
-                            make_raw_stmts_from_db_list(db, raw_stmt_objects,
-                                                        fix_refs=fix_refs))
+    mk_hashes, raw_stmt_objs = zip(*raw_list)
+    raw_stmts = get_raw_stmts_frm_db_list(db, raw_stmt_objs, fix_refs,
+                                          with_sids=False)
+    raw_stmt_mk_pairs = zip(mk_hashes, raw_stmts)
 
     # Now attach the evidence
     for mk_hash, raw_stmt in raw_stmt_mk_pairs:
