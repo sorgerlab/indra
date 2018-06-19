@@ -165,8 +165,10 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
         elif prefix == 'raw':
             stmts_w_agents_q = db.filter_query(
                 stmt_tbl_obj,
-                stmt_tbl_obj.uuid == agent_tbl_obj.stmt_uuid
+                stmt_tbl_obj.id == agent_tbl_obj.stmt_id
                 )
+        else:
+            raise IndraDatabaseError("Unrecognized prefix: %s." % prefix)
         stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
                              .except_(stmts_w_agents_q))
     else:
@@ -208,8 +210,8 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
             for ns, ag_id in ag.db_refs.items():
                 if prefix == 'pa':
                     stmt_id = db_stmt.mk_hash
-                elif prefix == 'raw':
-                    stmt_id = db_stmt.uuid
+                else:  # prefix == 'raw'
+                    stmt_id = db_stmt.id
                 if isinstance(ag_id, list):
                     for sub_id in ag_id:
                         agent_data.append((stmt_id, ns, sub_id, role))
@@ -225,8 +227,8 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
 
     if prefix == 'pa':
         cols = ('stmt_mk_hash', 'db_name', 'db_id', 'role')
-    elif prefix == 'raw':
-        cols = ('stmt_uuid', 'db_name', 'db_id', 'role')
+    else:  # prefix == 'raw'
+        cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
 
@@ -492,12 +494,12 @@ class NestedDict(dict):
         return ret_set
 
 
-def _get_reading_statement_dict(db, get_full_stmts=False, clauses=None):
+def _get_reading_statement_dict(db, clauses=None):
     """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextRef, db.TextContent.id,
                           db.TextContent.source, db.Reading.id,
-                          db.Reading.reader_version, db.RawStatements.uuid,
+                          db.Reading.reader_version, db.RawStatements.id,
                           db.RawStatements.json)
          .filter(*db.join(db.RawStatements, db.TextRef)))
     if clauses:
@@ -536,10 +538,7 @@ def _get_reading_statement_dict(db, get_full_stmts=False, clauses=None):
             num_duplicate_evidence += 1
 
         # Either store the statement, or the statement id.
-        if get_full_stmts:
-            s_dict[stmt_hash].add(stmt)
-        else:
-            s_dict[stmt_hash].add(sid)
+        s_dict[stmt_hash].add((sid, stmt))
 
     # Report on the results.
     print("Found %d relevant text refs with statements." % len(stmt_nd))
@@ -555,27 +554,27 @@ reader_versions = {
     }
 
 # Specify sources of fulltext content, and order priorities.
-text_content_sources = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
+text_content_sources = ['pubmed', 'elsevier', 'manuscripts', 'pmc_oa']
 
 
-def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_uuids=None):
+def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
     """Get the set of statements/ids from readings minus exact duplicates."""
-    if linked_uuids is None:
-        linked_uuids = set()
+    if linked_sids is None:
+        linked_sids = set()
     def better_func(element):
-        return -text_content_sources.index(element)
+        return text_content_sources.index(element)
 
     # Now we filter and get the set of statements/statement ids.
-    stmts = set()
-    duplicate_uuids = set()  # Statements that are exact duplicates.
-    bettered_duplicate_uuids = set()  # Statements with "better" alternatives
+    stmt_tpls = set()
+    duplicate_sids = set()  # Statements that are exact duplicates.
+    bettered_duplicate_sids = set()  # Statements with "better" alternatives
     for trid, src_dict in stmt_nd.items():
-        bettered_duplicate_stmts = set()
+        some_bettered_duplicate_tpls = set()
         # Filter out unneeded fulltext.
         while len(src_dict) > 1:
             try:
                 worst_src = min(src_dict, key=better_func)
-                bettered_duplicate_stmts |= src_dict[worst_src].get_leaves()
+                some_bettered_duplicate_tpls |= src_dict[worst_src].get_leaves()
                 del src_dict[worst_src]
             except:
                 print(src_dict)
@@ -596,34 +595,31 @@ def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_uuids=None):
                 # Record the rest of the statement uuids.
                 for rv, r_dict in rv_dict.items():
                     if rv != best_rv:
-                        bettered_duplicate_stmts |= r_dict.get_leaves()
+                        some_bettered_duplicate_tpls |= r_dict.get_leaves()
 
                 # Pick one among any exact duplicates. Unlike with bettered
                 # duplicates, these choices are arbitrary, and such duplicates
                 # can be deleted.
-                duplicate_stmts = set()
-                for stmt_set in stmt_set_itr:
-                    if not stmt_set:
+                some_duplicate_tpls = set()
+                for stmt_tpl_set in stmt_set_itr:
+                    if not stmt_tpl_set:
                         continue
-                    elif len(stmt_set) == 1:
+                    elif len(stmt_tpl_set) == 1:
                         # There isn't really a choice here.
-                        stmts |= stmt_set
+                        stmt_tpls |= stmt_tpl_set
                     else:
-                        if get_full_stmts:
-                            preferred_stmts = {s for s in stmt_set
-                                               if s.uuid in linked_uuids}
-                        else:
-                            preferred_stmts = stmt_set & linked_uuids
-                        if not preferred_stmts:
+                        prefed_tpls = {tpl for tpl in stmt_tpl_set
+                                       if tpl[0] in linked_sids}
+                        if not prefed_tpls:
                             # Pick the first one to pop, record the rest as
                             # duplicates.
-                            stmts.add(stmt_set.pop())
-                            duplicate_stmts |= stmt_set
-                        elif len(preferred_stmts) == 1:
+                            stmt_tpls.add(stmt_tpl_set.pop())
+                            some_duplicate_tpls |= stmt_tpl_set
+                        elif len(prefed_tpls) == 1:
                             # There is now no choice: just take the preferred
                             # statement.
-                            stmts |= preferred_stmts
-                            duplicate_stmts |= (stmt_set - preferred_stmts)
+                            stmt_tpls |= prefed_tpls
+                            some_duplicate_tpls |= (stmt_tpl_set - prefed_tpls)
                         else:
                             # This shouldn't happen, so an early run of this
                             # function must have failed somehow, or else there
@@ -632,18 +628,19 @@ def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_uuids=None):
                             # statements.
                             assert False,\
                                 ("Duplicate deduplicated statements found: %s"
-                                 % str(preferred_stmts))
+                                 % str(prefed_tpls))
 
                 # Get the uuids from the statements, if we have full statements.
-                if get_full_stmts:
-                    duplicate_uuids |= {s.uuid for s in duplicate_stmts}
-                    bettered_duplicate_uuids |= \
-                        {s.uuid for s in bettered_duplicate_stmts}
-                else:
-                    duplicate_uuids |= duplicate_stmts
-                    bettered_duplicate_uuids |= bettered_duplicate_stmts
+                duplicate_sids |= {sid for sid, _ in some_duplicate_tpls}
+                bettered_duplicate_sids |= \
+                    {sid for sid, _ in some_bettered_duplicate_tpls}
 
-    return stmts, duplicate_uuids, bettered_duplicate_uuids
+    if get_full_stmts:
+        stmts = {stmt for _, stmt in stmt_tpls}
+    else:
+        stmts = {sid for sid, _ in stmt_tpls}
+
+    return stmts, duplicate_sids, bettered_duplicate_sids
 
 
 def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
@@ -654,17 +651,18 @@ def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
         duplicate_ids = set()
     else:
         stmt_tpl_set = set(stmt_tpl_grp)
-        preferred_stmts = {s for s in stmt_tpl_set if s.uuid in not_duplicates}
-        if not preferred_stmts:
+        preferred_tpls = {tpl for tpl in stmt_tpl_set
+                          if tpl[1] in not_duplicates}
+        if not preferred_tpls:
             s_tpl = stmt_tpl_set.pop()
-        elif len(preferred_stmts) == 1:
-            s_tpl = preferred_stmts.pop()
+        elif len(preferred_tpls) == 1:
+            s_tpl = preferred_tpls.pop()
         else:  # len(preferred_stmts) > 1
             assert False, \
                 ("Duplicate deduplicated statements found: %s"
-                 % str(preferred_stmts))
-        duplicate_ids = {s.uuid for s in stmt_tpl_set
-                         if s.uuid not in not_duplicates}
+                 % str(preferred_tpls))
+        duplicate_ids = {tpl[1] for tpl in stmt_tpl_set
+                         if tpl[1] not in not_duplicates}
 
     if get_full_stmts:
         stmt_json = json.loads(s_tpl[2].decode('utf-8'))
@@ -681,7 +679,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
         not_duplicates = set()
 
     db_s_q = db.filter_query([db.RawStatements.mk_hash,
-                              db.RawStatements.uuid,
+                              db.RawStatements.id,
                               db.RawStatements.json],
                              db.RawStatements.db_info_id.isnot(None))
     if clauses:
@@ -710,6 +708,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
     return stmts, duplicate_ids
 
 
+@_clockit
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                   delete_duplicates=True, weed_evidence=True, batch_size=1000):
     """Get a corpus of statements from clauses and filters duplicate evidence.
@@ -744,49 +743,49 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `get_full_stmts`.
     """
     if delete_duplicates:
-        linked_uuids = {uuid for uuid,
-                        in db.select_all(db.RawUniqueLinks.raw_stmt_uuid)}
+        linked_sids = {sid for sid,
+                        in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
     else:
-        linked_uuids = set()
+        linked_sids = set()
 
     # Get de-duplicated Statements, and duplicate uuids, as well as uuid of
     # Statements that have been improved upon...
-    stmt_nd = _get_reading_statement_dict(db, get_full_stmts, clauses)
+    stmt_nd = _get_reading_statement_dict(db, clauses)
 
-    stmts, duplicate_uuids, bettered_duplicate_uuids = \
-        _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_uuids)
+    stmts, duplicate_sids, bettered_duplicate_sids = \
+        _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids)
     print("After filtering reading: %d unique statements, %d duplicates."
-          % (len(stmts), len(duplicate_uuids)))
-    assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
+          % (len(stmts), len(duplicate_sids)))
+    assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     db_stmts, db_duplicates = \
-        _get_filtered_db_statements(db, get_full_stmts, clauses, linked_uuids,
+        _get_filtered_db_statements(db, get_full_stmts, clauses, linked_sids,
                                     num_procs)
     stmts |= db_stmts
-    duplicate_uuids |= db_duplicates
+    duplicate_sids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
-          % (len(stmts), len(duplicate_uuids)))
-    assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
+          % (len(stmts), len(duplicate_sids)))
+    assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     # Remove support links for statements that have better versions available.
-    bad_link_uuids = bettered_duplicate_uuids & linked_uuids
-    if len(bad_link_uuids) and weed_evidence:
+    bad_link_sids = bettered_duplicate_sids & linked_sids
+    if len(bad_link_sids) and weed_evidence:
         print("Removing bettered evidence links...")
         rm_links = db.select_all(
             db.RawUniqueLinks,
-            db.RawUniqueLinks.raw_stmt_uuid.in_(bad_link_uuids)
+            db.RawUniqueLinks.raw_stmt_id.in_(bad_link_sids)
             )
         db.delete_all(rm_links)
 
     # Delete exact duplicates
-    if len(duplicate_uuids) and delete_duplicates:
+    if len(duplicate_sids) and delete_duplicates:
         print("Deleting duplicates...")
-        for dup_id_batch in batch_iter(duplicate_uuids, batch_size, set):
+        for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
             bad_stmts = db.select_all(db.RawStatements,
-                                      db.RawStatements.uuid.in_(dup_id_batch))
-            bad_uuid_set = {s.uuid for s in bad_stmts}
+                                      db.RawStatements.id.in_(dup_id_batch))
+            bad_sid_set = {s.id for s in bad_stmts}
             bad_agents = db.select_all(db.RawAgents,
-                                       db.RawAgents.stmt_uuid.in_(bad_uuid_set))
+                                       db.RawAgents.stmt_id.in_(bad_sid_set))
             print("Deleting %d agents associated with redundant raw statements."
                   % len(bad_agents))
             db.delete_all(bad_agents)
