@@ -11,7 +11,7 @@ class BMIModel(object):
     def __init__(self, model):
         self.model = model
         generate_equations(model)
-        self.dt = 1.0
+        self.dt = numpy.array(1.0)
         self.units = 'seconds'
         self.sim = None
         self.attributes = copy.copy(default_attributes)
@@ -21,8 +21,11 @@ class BMIModel(object):
             self.species_name_map[monomer.name] = idx
         self.input_vars = self._get_input_vars()
         # These attributes are related to the simulation state
-        self.time = 0.0
+        self.state = numpy.array([0.0 for s in self.species_name_map.keys()])
+        self.time = numpy.array(0.0)
         self.status = 'start'
+        # EMELI needs a DONE attribute
+        self.DONE = False
 
     def _get_input_vars(self):
         species_is_obj = {s: False for s in self.species_name_map.keys()}
@@ -31,9 +34,6 @@ class BMIModel(object):
                 species_is_obj[ann.object] = True
         # Return all the variables that aren't objects in a rule
         input_vars = [s for s, tf in species_is_obj.items() if not tf]
-        if 'rainfall' in input_vars:
-            idx = input_vars.index('rainfall')
-            del(input_vars[idx])
         return input_vars
 
 
@@ -47,8 +47,8 @@ class BMIModel(object):
             The name of the configuration file to load, optional.
         """
         self.sim = ScipyOdeSimulator(self.model)
-        self.state = copy.copy(self.sim.initials)[0]
-        self.time = 0.0
+        self.state = numpy.array(copy.copy(self.sim.initials)[0])
+        self.time = numpy.array(0.0)
         self.status = 'initialized'
 
     def update(self, dt=None):
@@ -60,7 +60,8 @@ class BMIModel(object):
             The time step to simulate, if None, the default built-in time step
             is used.
         """
-        dt = dt if dt else self.dt
+        # EMELI passes dt = -1 so we need to handle that here
+        dt = dt if (dt is not None and dt > 0) else self.dt
         tspan = [0, dt]
         # Run simulaton with initials set to current state
         res = self.sim.run(tspan=tspan, initials=self.state)
@@ -87,6 +88,19 @@ class BMIModel(object):
         species_idx = self.species_name_map[var_name]
         self.state[species_idx] = value
 
+    def set_values(self, var_name, value):
+        """Set the value of a given variable to a given value.
+
+        Parameters
+        ----------
+        var_name : str
+            The name of the variable in the model whose value should be set.
+
+        value : float
+            The value the variable should be set to
+        """
+        self.set_value(var_name, value)
+
     # Getter functions for state
     def get_value(self, var_name):
         """Return the value of a given variable.
@@ -105,12 +119,22 @@ class BMIModel(object):
         return self.state[species_idx]
 
     def get_values(self, var_name):
+        """Return the value of a given variable.
+
+        Parameters
+        ----------
+        var_name : str
+            The name of the variable whose value should be returned
+
+        Returns
+        -------
+        value : float
+            The value of the given variable in the current state
+        """
         return self.get_value(var_name)
 
-    def set_values(self, var_name, value):
-        self.set_value(var_name, value)
-
     def get_status(self):
+        """Return the current status of the model."""
         return self.status
 
     # Getter functions for basic properties
