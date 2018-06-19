@@ -220,18 +220,24 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
 
 
 def test_distillation_on_curated_set():
-    stmt_dict, stmt_list, target_sets, target_bettered_uuids = \
+    stmt_dict, stmt_list, target_sets, target_bettered_ids = \
         make_raw_statement_test_set()
-    filtered_set, duplicate_uuids, bettered_uuids = \
+    filtered_set, duplicate_ids, bettered_ids = \
         db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=True)
     for stmt_set, dup_set in target_sets:
         if stmt_set == filtered_set:
             break
     else:
         assert False, "Filtered set does not match any valid possibilities."
-    assert bettered_uuids == target_bettered_uuids
-    assert dup_set == duplicate_uuids, (dup_set - duplicate_uuids,
-                                        duplicate_uuids - dup_set)
+    assert bettered_ids == target_bettered_ids
+    assert dup_set == duplicate_ids, (dup_set - duplicate_ids,
+                                      duplicate_ids - dup_set)
+    stmt_dict, stmt_list, target_sets, target_bettered_ids = \
+        make_raw_statement_test_set()
+    filtered_id_set, duplicate_ids, bettered_ids = \
+        db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=False)
+    assert len(filtered_id_set) == len(filtered_set), \
+        (len(filtered_set), len(filtered_id_set))
 
 
 @needs_py3
@@ -244,7 +250,7 @@ def _check_statement_distillation(num_stmts):
     stmt_ids = db_util.distill_stmts(db)
     assert len(stmts) == len(stmt_ids), \
         "stmts: %d, stmt_ids: %d" % (len(stmts), len(stmt_ids))
-    assert isinstance(list(stmt_ids)[0], str), type(list(stmt_ids)[0])
+    assert isinstance(list(stmt_ids)[0], int), type(list(stmt_ids)[0])
     stmts_p = db_util.distill_stmts(db, num_procs=2)
     assert len(stmts_p) == len(stmt_ids)
     stmt_ids_p = db_util.distill_stmts(db, num_procs=2)
@@ -261,13 +267,18 @@ def test_statement_distillation_large():
     _check_statement_distillation(11721)
 
 
+@attr('nonpublic', 'slow')
+def test_statement_distillation_large():
+    _check_statement_distillation(1001721)
+
+
 @needs_py3
 def _check_preassembly_with_database(num_stmts, batch_size):
     db = _get_loaded_db(num_stmts)
 
     # Get the set of raw statements.
     raw_stmt_list = db.select_all(db.RawStatements)
-    all_raw_uuids = {raw_stmt.uuid for raw_stmt in raw_stmt_list}
+    all_raw_ids = {raw_stmt.id for raw_stmt in raw_stmt_list}
     assert len(raw_stmt_list)
 
     # Run the preassembly initialization.
@@ -280,9 +291,9 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     assert 0 < len(pa_stmt_list) < len(raw_stmt_list)
     raw_unique_link_list = db.select_all(db.RawUniqueLinks)
     assert len(raw_unique_link_list)
-    all_link_uuids = {ru.raw_stmt_uuid for ru in raw_unique_link_list}
+    all_link_ids = {ru.raw_stmt_id for ru in raw_unique_link_list}
     all_link_mk_hashes = {ru.pa_stmt_mk_hash for ru in raw_unique_link_list}
-    assert len(all_link_uuids - all_raw_uuids) is 0
+    assert len(all_link_ids - all_raw_ids) is 0
     assert all([pa_stmt.mk_hash in all_link_mk_hashes
                 for pa_stmt in pa_stmt_list])
     num_support_links = db.filter_query(db.PASupportLinks).count()
