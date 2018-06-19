@@ -159,19 +159,19 @@ class PreassemblyManager(object):
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_func=list)
 
-    def _get_unique_statements(self, db, stmts, num_stmts, mk_done=None):
+    def _get_unique_statements(self, db, stmt_tpls, num_stmts, mk_done=None):
         """Get the unique Statements from the raw statements."""
         if mk_done is None:
             mk_done = set()
 
         new_mk_set = set()
-        stmt_batches = batch_iter(stmts, self.batch_size, return_func=list)
+        stmt_batches = batch_iter(stmt_tpls, self.batch_size, return_func=list)
         num_batches = num_stmts/self.batch_size
-        for i, stmt_batch in enumerate(stmt_batches):
+        for i, stmt_tpl_batch in enumerate(stmt_batches):
             self._log("Processing batch %d/%d of %d/%d statements."
-                        % (i, num_batches, len(stmt_batch), num_stmts))
+                       % (i, num_batches, len(stmt_tpl_batch), num_stmts))
             unique_stmts, evidence_links = \
-                self._make_unique_statement_set(stmt_batch)
+                self._make_unique_statement_set(stmt_tpl_batch)
             new_unique_stmts = []
             for s in unique_stmts:
                 s_hash = s.get_hash(shallow=True)
@@ -180,7 +180,7 @@ class PreassemblyManager(object):
                     new_unique_stmts.append(s)
             insert_pa_stmts(db, new_unique_stmts)
             db.copy('raw_unique_links', evidence_links,
-                    ('pa_stmt_mk_hash', 'raw_stmt_uuid'))
+                    ('pa_stmt_mk_hash', 'raw_stmt_id'))
         self._log("Added %d new pa statements into the database."
                     % len(new_mk_set))
         return new_mk_set
@@ -212,9 +212,9 @@ class PreassemblyManager(object):
                         % len(done_pa_ids))
         else:
             done_pa_ids = set()
-        stmts = (_stmt_from_json(s_json) for s_json,
-                 in db.select_all(db.RawStatements.json,
-                                  db.RawStatements.uuid.in_(stmt_ids),
+        stmts = ((sid, _stmt_from_json(s_json)) for sid, s_json
+                 in db.select_all([db.RawStatements.id, db.RawStatements.json],
+                                  db.RawStatements.id.in_(stmt_ids),
                                   yield_per=self.batch_size))
         self._log("Found %d statements in all." % len(stmt_ids))
 
@@ -273,14 +273,14 @@ class PreassemblyManager(object):
 
         return True
 
-    def _get_new_statement_uuids(self, db):
+    def _get_new_stmt_ids(self, db):
         """Get all the uuids of statements not included in evidence."""
-        old_uuid_q = db.filter_query(
-            db.RawStatements.uuid,
-            db.RawStatements.uuid == db.RawUniqueLinks.raw_stmt_uuid
+        old_id_q = db.filter_query(
+            db.RawStatements.id,
+            db.RawStatements.id == db.RawUniqueLinks.raw_stmt_id
         )
-        new_uuid_q = db.filter_query(db.RawStatements.uuid).except_(old_uuid_q)
-        all_new_stmt_ids = {uuid for uuid, in new_uuid_q.all()}
+        new_sid_q = db.filter_query(db.RawStatements.id).except_(old_id_q)
+        all_new_stmt_ids = {sid for sid, in new_sid_q.all()}
         self._log("Found %d new statement ids." % len(all_new_stmt_ids))
         return all_new_stmt_ids
 
@@ -303,7 +303,7 @@ class PreassemblyManager(object):
         # Get the new statements...
         self._log("Loading info about the existing state of preassembly. "
                   "(This may take a little time)")
-        new_uuids = self._get_new_statement_uuids(db)
+        new_ids = self._get_new_stmt_ids(db)
 
         # If we are continuing, check for support links that were already found.
         if continuing:
@@ -319,12 +319,13 @@ class PreassemblyManager(object):
 
         # Weed out exact duplicates.
         stmt_ids = distill_stmts(db, num_procs=self.n_proc)
-        new_stmt_ids = new_uuids & stmt_ids
+        new_stmt_ids = new_ids & stmt_ids
         self._log("There are %d new distilled raw statement ids."
                   % len(new_stmt_ids))
-        new_stmts = (_stmt_from_json(s_json) for s_json,
-                     in db.select_all(db.RawStatements.json,
-                                      db.RawStatements.uuid.in_(new_stmt_ids),
+        new_stmts = ((sid, _stmt_from_json(s_json)) for sid, s_json
+                     in db.select_all([db.RawStatements.id,
+                                       db.RawStatements.json],
+                                      db.RawStatements.id.in_(new_stmt_ids),
                                       yield_per=self.batch_size))
 
         # Get the set of new unique statements and link to any new evidence.
@@ -387,13 +388,18 @@ class PreassemblyManager(object):
         """Applies a task specific tag to the log message."""
         getattr(logger, level)("(%s) %s" % (self.__tag, msg))
 
-    def _make_unique_statement_set(self, stmts):
+    def _make_unique_statement_set(self, stmt_tpls):
         """Perform grounding, sequence mapping, and find unique set from stmts.
 
         This method returns a list of statement objects, as well as a set of
         tuples of the form (uuid, matches_key) which represent the links between
         raw (evidence) statements and their unique/preassembled counterparts.
         """
+        stmts = []
+        uuid_sid_dict = {}
+        for sid, stmt in stmt_tpls:
+            uuid_sid_dict[stmt.uuid] = sid
+            stmts.append(stmt)
         stmts = ac.map_grounding(stmts)
         stmts = ac.map_sequence(stmts)
         stmt_groups = self.pa._get_stmt_matching_groups(stmts)
@@ -405,21 +411,12 @@ class PreassemblyManager(object):
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix == 0:
                     first_stmt = stmt.make_generic_copy()
-                evidence_links[first_stmt.get_hash(shallow=True)].add(stmt.uuid)
+                    stmt_hash = first_stmt.get_hash(shallow=True)
+                evidence_links[stmt_hash].add(uuid_sid_dict[stmt.uuid])
             # This should never be None or anything else
             assert isinstance(first_stmt, type(stmt))
             unique_stmts.append(first_stmt)
         return unique_stmts, flatten_evidence_dict(evidence_links)
-
-    def _process_statements(self, stmts, **generate_id_map_kwargs):
-        """Perform the full process pipeline. (Currently only used in tests)"""
-        # TODO: This should probably be somehow placed in canonical preassembly.
-        unique_stmts, evidence_links = self._make_unique_statement_set(stmts)
-        match_key_maps = self._get_support_links(unique_stmts,
-                                                 **generate_id_map_kwargs)
-        unique_stmt_dict = {stmt.get_hash(shallow=True): stmt
-                            for stmt in unique_stmts}
-        return unique_stmt_dict, evidence_links, match_key_maps
 
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
         """Find the links of refinement/support between statements."""
@@ -428,36 +425,6 @@ class PreassemblyManager(object):
         return {tuple([unique_stmts[idx].get_hash(shallow=True)
                        for idx in idx_pair])
                 for idx_pair in id_maps}
-
-    def _get_increment_links(self, unique_stmt_dict, new_unique_stmt_dict,
-                             **kwargs):
-        """Perform the update process. (Currently only used in tests)"""
-        new_support_links = set()
-        # Now get the list of statements the need to be compared between the
-        # existing and new corpora
-        old_stmt_hash_set = set(unique_stmt_dict.keys())
-        new_stmt_hash_set = set(new_unique_stmt_dict.keys())
-        only_old_stmts = [unique_stmt_dict[mk_hash]
-                          for mk_hash in old_stmt_hash_set - new_stmt_hash_set]
-        only_new_stmts = [new_unique_stmt_dict[mk_hash]
-                          for mk_hash in new_stmt_hash_set - old_stmt_hash_set]
-        logger.info("There were %d exclusively old statements and we are "
-                    "adding %d exclusively new statements. There were %d "
-                    "overlapping statements."
-                    % (len(only_old_stmts), len(only_new_stmts),
-                       len(new_stmt_hash_set & old_stmt_hash_set)))
-        split_idx = len(only_old_stmts) + 1
-        merge_stmts = only_old_stmts + only_new_stmts
-
-        # Find the support links between the new corpora
-        merge_support_links = self._get_support_links(merge_stmts,
-                                                      split_idx=split_idx,
-                                                      **kwargs)
-        logger.info("Found %d links between old and new corpora."
-                    % len(merge_support_links))
-
-        new_support_links |= merge_support_links
-        return new_support_links
 
 
 def make_graph(unique_stmts, match_key_maps):
