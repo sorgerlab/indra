@@ -276,8 +276,9 @@ class DatabaseManager(object):
 
         class RawStatements(self.Base):
             __tablename__ = 'raw_statements'
-            uuid = Column(String(40), primary_key=True)
-            mk_hash = Column(String, nullable=False)
+            id = Column(Integer, primary_key=True)
+            uuid = Column(String(40))
+            mk_hash = Column(BigInteger, nullable=False)
             db_info_id = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
             reading_id = Column(Integer, ForeignKey('reading.id'))
@@ -292,9 +293,9 @@ class DatabaseManager(object):
         class RawAgents(self.Base):
             __tablename__ = 'raw_agents'
             id = Column(Integer, primary_key=True)
-            stmt_uuid = Column(String(40),
-                               ForeignKey('raw_statements.uuid'),
-                               nullable=False)
+            stmt_id = Column(Integer,
+                             ForeignKey('raw_statements.id'),
+                             nullable=False)
             statements = relationship(RawStatements)
             db_name = Column(String(40), nullable=False)
             db_id = Column(String, nullable=False)
@@ -305,9 +306,9 @@ class DatabaseManager(object):
         class RawUniqueLinks(self.Base):
             __tablename__ = 'raw_unique_links'
             id = Column(Integer, primary_key=True)
-            raw_stmt_uuid = Column(String(40), ForeignKey('raw_statements.uuid'),
-                                   nullable=False)
-            pa_stmt_mk_hash = Column(String, ForeignKey('pa_statements.mk_hash'),
+            raw_stmt_id = Column(Integer, ForeignKey('raw_statements.id'),
+                                 nullable=False)
+            pa_stmt_mk_hash = Column(BigInteger, ForeignKey('pa_statements.mk_hash'),
                                      nullable=False)
         self.RawUniqueLinks = RawUniqueLinks
         self.tables[RawUniqueLinks.__tablename__] = RawUniqueLinks
@@ -322,7 +323,7 @@ class DatabaseManager(object):
 
         class PAStatements(self.Base):
             __tablename__ = 'pa_statements'
-            mk_hash = Column(String, primary_key=True)
+            mk_hash = Column(BigInteger, primary_key=True)
             uuid = Column(String(40), unique=True, nullable=False)
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)
@@ -334,7 +335,7 @@ class DatabaseManager(object):
         class PAAgents(self.Base):
             __tablename__ = 'pa_agents'
             id = Column(Integer, primary_key=True)
-            stmt_mk_hash = Column(String,
+            stmt_mk_hash = Column(BigInteger,
                                   ForeignKey('pa_statements.mk_hash'),
                                   nullable=False)
             statements = relationship(PAStatements)
@@ -347,10 +348,10 @@ class DatabaseManager(object):
         class PASupportLinks(self.Base):
             __tablename__ = 'pa_support_links'
             id = Column(Integer, primary_key=True)
-            supporting_mk_hash = Column(String,
+            supporting_mk_hash = Column(BigInteger,
                                         ForeignKey('pa_statements.mk_hash'),
                                         nullable=False)
-            supported_mk_hash = Column(String,
+            supported_mk_hash = Column(BigInteger,
                                        ForeignKey('pa_statements.mk_hash'),
                                        nullable=False)
         self.PASupportLinks = PASupportLinks
