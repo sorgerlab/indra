@@ -4,7 +4,7 @@ from datetime import datetime
 from os.path import abspath
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
-           'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
+           'insert_pa_stmts', 'insert_db_stmts', 'get_raw_stmts_frm_db_list',
            'distill_stmts']
 
 import re
@@ -333,9 +333,9 @@ def _clockit(func):
         ret = func(*args, **kwargs)
         end = datetime.now()
         print(func.__name__, end-start)
-        fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
-        with open(fname, 'a') as f:
-            f.write('%s: %s\n' % (start, end-start))
+        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
+        #with open(fname, 'a') as f:
+        #    f.write('%s: %s\n' % (start, end-start))
         return ret
     return timed_func
 
@@ -359,14 +359,14 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
     Alterations are made to the Statement objects "in-place", so this function
     itself returns None.
     """
-    rid_set = {rid for rid, _ in rid_stmt_pairs if rid is not None}
+    rid_set = {rid for rid, _, _ in rid_stmt_pairs if rid is not None}
     logger.info("Getting text refs for %d readings." % len(rid_set))
     if rid_set:
         rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
                                      db.Reading.id.in_(rid_set),
                                      *db.join(db.TextRef, db.Reading))
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
-        for rid, stmt in rid_stmt_pairs:
+        for rid, sid, stmt in rid_stmt_pairs:
             if rid is None:
                 # This means this statement came from a database, not reading.
                 continue
@@ -377,13 +377,19 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
 
 
 @_clockit
-def make_raw_stmts_from_db_list(db, db_stmt_objs, fix_refs=True):
+def get_raw_stmts_frm_db_list(db, db_stmt_objs, fix_refs=True, with_sids=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
-    rid_stmt_pairs = [(db_stmt.reading_id, _get_statement_object(db_stmt))
+    rid_stmt_pairs = [(db_stmt.reading_id, db_stmt.id,
+                       _get_statement_object(db_stmt))
                       for db_stmt in db_stmt_objs]
     if fix_refs:
         _fix_evidence_refs(db, rid_stmt_pairs)
-    return [stmt for _, stmt in rid_stmt_pairs]
+    # Note: it is important that order is maintained here (hence not a set or
+    # dict).
+    if with_sids:
+        return [(sid, stmt) for _, sid, stmt in rid_stmt_pairs]
+    else:
+        return [stmt for _, _, stmt in rid_stmt_pairs]
 
 
 class NestedDict(dict):
