@@ -21,11 +21,12 @@ def process_jsonld_file(fname):
         A BBNProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
-    with open(fname, 'rb') as fh:
+    with open(fname, 'r') as fh:
         json_dict = json.load(fh)
     bp = processor.BBNJsonLdProcessor(json_dict)
     bp.get_events()
     return bp
+
 
 def process_json_file_old(fname):
     """Process a JSON-LD file in the old format to extract Statements.
