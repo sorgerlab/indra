@@ -3,6 +3,7 @@ import rdflib
 import logging
 import objectpath
 import collections
+from os.path import basename
 from indra.statements import Concept, Influence, Evidence
 
 
@@ -48,9 +49,10 @@ class BBNJsonLdProcessor(object):
         self.event_dict = {ev['@id']: ev for ev in events}
 
         # TODO: are there other event types we can use?
-        extract_types = ['Cause-Effect']
+        extract_types = ['event relation']
         # Restrict to known event types
-        events = [e for e in events if e.get('type') in extract_types]
+        events = [e for e in events if any([et in e.get('type')
+                                            for et in extract_types])]
         logger.info('%d events of types %s found' % (len(events),
                                                      ', '.join(extract_types)))
 
@@ -97,43 +99,50 @@ class BBNJsonLdProcessor(object):
             return concept
 
         for event in events:
-            args = event.get('arguments', {})
-            subj_tag = [arg for arg in args if arg['type'] == 'has_cause']
-            if subj_tag:
-                subj_id = subj_tag[0]['value']['@id']
+            etype = event.get('type')
+            if 'causal assertion' in etype:
+                agent_name = 'has_%s' % basename(etype).split('-')[0].lower()
+                args = event.get('arguments', {})
+                subj_tag = [arg for arg in args if arg['type'] == agent_name]
+                if subj_tag:
+                    subj_id = subj_tag[0]['value']['@id']
+                else:
+                    subj_id = None
+                obj_tag = [arg for arg in args if arg['type'] == 'has_effect']
+                if obj_tag:
+                    obj_id = obj_tag[0]['value']['@id']
+                else:
+                    obj_id = None
+
+                # Skip event if either argument is missing
+                if not subj_id or not obj_id:
+                    continue
+
+                subj = self.event_dict[subj_id]
+                obj = self.event_dict[obj_id]
+
+                subj_concept = _make_concept(subj)
+                obj_concept = _make_concept(obj)
+
+                # Adjectives are not extracted for now, in the case of BBN
+                # they are things like 'Asserted', 'Specific', 'Generic'
+                subj_delta = {'adjectives': get_adjectives(subj),
+                              'polarity': get_polarity(subj)}
+                obj_delta = {'adjectives': get_adjectives(obj),
+                             'polarity': get_polarity(obj)}
+
+                evidence = self._get_evidence(event, subj_concept, obj_concept,
+                                              get_adjectives(event))
+
+                st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
+                               evidence=evidence)
             else:
-                subj_id = None
-            obj_tag = [arg for arg in args if arg['type'] == 'has_effect']
-            if obj_tag:
-                obj_id = obj_tag[0]['value']['@id']
-            else:
-                obj_id = None
-
-            # Skip event if either argument is missing
-            if not subj_id or not obj_id:
-                continue
-
-            subj = self.event_dict[subj_id]
-            obj = self.event_dict[obj_id]
-
-            subj_concept = _make_concept(subj)
-            obj_concept = _make_concept(obj)
-
-            # Adjectives are not extracted for now, in the case of BBN
-            # they are things like 'Asserted', 'Specific', 'Generic'
-            subj_delta = {'adjectives': [],
-                          'polarity': get_polarity(subj)}
-            obj_delta = {'adjectives': [],
-                         'polarity': get_polarity(obj)}
-
-            evidence = self._get_evidence(event, subj_concept, obj_concept)
-
-            st = Influence(subj_concept, obj_concept,
-                           subj_delta, obj_delta, evidence=evidence)
+                print("Got: %s." % etype)
+                st = None
 
             self.statements.append(st)
 
-    def _get_evidence(self, event, subj_concept, obj_concept):
+    def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
@@ -153,9 +162,11 @@ class BBNJsonLdProcessor(object):
                            "with agents: %s" % (doc_id, str(agent_strs)))
 
         annotations = {
-                'found_by'   : event.get('rule'),
-                'provenance' : provenance,
-                }
+            'found_by': event.get('rule'),
+            'provenance': provenance,
+            'event_type': basename(event.get('type')),
+            'adjectives': adjectives
+            }
         location = self.document_dict[doc_id]['location']
         ev = Evidence(source_api='bbn', text=text, annotations=annotations,
                       pmid=location)
@@ -169,7 +180,6 @@ class BBNJsonLdProcessor(object):
             return None
         text = text.replace('\n', ' ')
         return text
-
 
 
 # OLD BBN PROCESSOR
