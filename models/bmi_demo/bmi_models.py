@@ -7,6 +7,7 @@ from indra.statements import DecreaseAmount, Concept
 from indra.assemblers.bmi_wrapper import BMIModel
 from indra.assemblers import PysbAssembler
 from topoflow.framework import emeli
+import eval_model
 
 def text_to_stmts(text):
     """Run Eidos reading on a given text and return INDRA Statements."""
@@ -81,36 +82,45 @@ if __name__ == '__main__':
         demo_idx = int(sys.argv[1])
 
 
-    # The content of the two independent models described in natural language
-    model_txts = ['rainfall causes floods',
-        'floods cause displacement, and displacement reduces access to food']
-    # Read with Eidos and extract INDRA Statements for each NL model
-    stmts = [text_to_stmts(t) for t in model_txts]
-    # It makes sense to assume that floods go away naturally and that
-    # displacement is also decreased naturally over time. These are not
-    # really needed for the demo but are conceptually interesting to think
-    # about in terms of information missing from the original descriptions.
-    stmts[0].append(DecreaseAmount(None, Concept('flood')))
-    stmts[1].append(DecreaseAmount(None, Concept('displacement')))
-    # We now create the variable mappings and the assumed "root" variables
-    # for each demo case. In Demo 1, "rainfall" is assumed to be a root
-    # variable that is assumed to be fixed. In demo 2, "rainfall" is mapped
-    # to a corresponding Topoflow variable.
+    if demo_idx in (1, 2):
+        # The content of the two independent models described in natural language
+        model_txts = ['rainfall causes floods',
+            'floods cause displacement, and displacement reduces access to food']
+        # Read with Eidos and extract INDRA Statements for each NL model
+        stmts = [text_to_stmts(t) for t in model_txts]
+        # It makes sense to assume that floods go away naturally and that
+        # displacement is also decreased naturally over time. These are not
+        # really needed for the demo but are conceptually interesting to think
+        # about in terms of information missing from the original descriptions.
+        stmts[0].append(DecreaseAmount(None, Concept('flood')))
+        stmts[1].append(DecreaseAmount(None, Concept('displacement')))
+        # We now create the variable mappings and the assumed "root" variables
+        # for each demo case. In Demo 1, "rainfall" is assumed to be a root
+        # variable that is assumed to be fixed. In demo 2, "rainfall" is mapped
+        # to a corresponding Topoflow variable.
+    elif demo_idx == 3:
+        stmts = [eval_model.stmts]
     bmi_models = []
     if demo_idx == 1:
         out_name_maps = [{}, {}]
         root_vars = [['rainfall'], []]
-    else:
+    elif demo_idx == 2:
         out_name_maps = [{'atmosphere_water__rainfall_volume_flux': 'rainfall'},
                          {}]
         root_vars = [[], []]
+    else:
+        out_name_maps = [{'atmosphere_water__rainfall_volume_flux': 'rainfall'}]
+        root_vars = [[]]
     # We now assemble PySB models from the INDRA Statements and then
     # instantiate these models as BMI-wrapped models along with a simulator
     for idx, model_stmts in enumerate(stmts):
         pa = PysbAssembler()
         pa.add_statements(model_stmts)
         model = pa.make_model()
-        model.name = 'indra_model%d' % idx
+        if demo_idx in (1, 2):
+            model.name = 'indra_model%d' % idx
+        else:
+            model.name = 'indra_eval_model'
         bm = BMIModel(model, root_vars=root_vars[idx], stop_time=10000,
                       outside_name_map=out_name_maps[idx])
         bmi_models.append(bm)
@@ -128,7 +138,19 @@ if __name__ == '__main__':
 
     # Example 2: two NL models + Topoflow co-simulated
     elif demo_idx == 2:
-        # We make the model component repository without Topoflow
+        # We make the model component repository with Topoflow
+        make_component_repo(bmi_models, True)
+        f = emeli.framework()
+        # We instantiate the EMELI framework and then run the simulations
+        f.run_model(cfg_prefix='June_20_67',
+            cfg_directory='/Users/ben/src/topoflow/topoflow/examples/Treynor_Iowa_30m',
+            driver_comp_name=bmi_models[0].model.name)
+        # Finally plot the results
+        plot_results(f.comp_set)
+
+    # Example 3: evaluation model + Topoflow co-simulated
+    elif demo_idx == 3:
+        # We make the model component repository with Topoflow
         make_component_repo(bmi_models, True)
         f = emeli.framework()
         # We instantiate the EMELI framework and then run the simulations
