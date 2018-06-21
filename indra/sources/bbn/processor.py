@@ -31,6 +31,8 @@ class BBNJsonLdProcessor(object):
         self.document_dict = {}
         self.entity_dict = {}
         self.event_dict = {}
+        self.eid_stmt_dict = {}
+        self.element_pair_stmt_dict = {}
 
     def get_documents(self):
         """Populate the sentences attribute with a dict keyed by document id."""
@@ -64,83 +66,109 @@ class BBNJsonLdProcessor(object):
 
         self.get_documents()
 
-        # The first state corresponds to increase/decrease
-        def get_polarity(event):
-            pol_map = {'Positive': 1, 'Negative': -1}
-            if 'states' in event:
-                for state_property in event['states']:
-                    if state_property['type'] == 'polarity':
-                        return pol_map[state_property['text']]
-            return None
-
-        def get_adjectives(event):
-            ret_list = []
-            if 'states' in event:
-                for state_property in event['states']:
-                    if state_property['type'] != 'polarity':
-                        ret_list.append(state_property['text'])
-            return ret_list
-
-        def _get_bbn_grounding(entity):
-            """Return BBN grounding."""
-            grounding = entity['type']
-            if grounding.startswith('/'):
-                grounding = grounding[1:]
-            return grounding
-
-        def _make_concept(entity):
-            """Return Concept from an BBN entity."""
-            # Use the canonical name as the name of the Concept
-            name = self._sanitize(entity['canonicalName'])
-            # Save raw text and BBN scored groundings as db_refs
-            db_refs = {'TEXT': entity['text'],
-                       'BBN': _get_bbn_grounding(entity)}
-            concept = Concept(name, db_refs=db_refs)
-            return concept
-
+        higher_order_events = []
+        annotation_events = []
         for event in events:
             etype = event.get('type')
-            if 'causal assertion' in etype:
-                agent_name = 'has_%s' % basename(etype).split('-')[0].lower()
-                args = event.get('arguments', {})
-                subj_tag = [arg for arg in args if arg['type'] == agent_name]
-                if subj_tag:
-                    subj_id = subj_tag[0]['value']['@id']
-                else:
-                    subj_id = None
-                obj_tag = [arg for arg in args if arg['type'] == 'has_effect']
-                if obj_tag:
-                    obj_id = obj_tag[0]['value']['@id']
-                else:
-                    obj_id = None
+            if 'causal assertion' in etype and 'Catalyst-Effect' not in etype:
+                subj_id = _get_subject_id(event, etype)
+                obj_id = _get_object_id(event)
 
                 # Skip event if either argument is missing
                 if not subj_id or not obj_id:
                     continue
 
-                subj = self.event_dict[subj_id]
-                obj = self.event_dict[obj_id]
-
-                subj_concept = _make_concept(subj)
-                obj_concept = _make_concept(obj)
-
-                # Adjectives are not extracted for now, in the case of BBN
-                # they are things like 'Asserted', 'Specific', 'Generic'
-                subj_delta = {'adjectives': get_adjectives(subj),
-                              'polarity': get_polarity(subj)}
-                obj_delta = {'adjectives': get_adjectives(obj),
-                             'polarity': get_polarity(obj)}
+                subj_concept, subj_delta = self._get_concept_from_eid(subj_id)
+                obj_concept, obj_delta = self._get_concept_from_eid(obj_id)
 
                 evidence = self._get_evidence(event, subj_concept, obj_concept,
-                                              get_adjectives(event))
+                                              get_states(event))
 
                 st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                                evidence=evidence)
+                self.eid_stmt_dict[event['@id']] = st
+                self.element_pair_stmt_dict[subj_id, obj_id] = st
+                self.statements.append(st)
+            elif 'Catalyst-Effect' in etype:
+                higher_order_events.append(event)
             else:
-                print("Got: %s." % etype)
-                st = None
+                annotation_events.append(event)
 
+        for event in higher_order_events:
+            subj_id = _get_subject_id(event)
+            obj_id = _get_object_id(event)
+            if not subj_id and not obj_id:
+                logger.warning("Found incomplete Catalyst Event: %s"
+                               % str(event))
+                continue
+            subj, subj_delta = self._handle_high_level_event(subj_id)
+            obj, obj_delta = self._handle_high_level_event(obj_id)
+            evidence = self._get_evidence(event, subj, obj, get_states(event))
+            logger.info("Created Catalyst-Effect!")
+            st = Influence(subj, obj, subj_delta, obj_delta, evidence)
+            self.eid_stmt_dict[event['@id']] = st
+            self.element_pair_stmt_dict[subj_id, obj_id] = st
             self.statements.append(st)
+
+        for event in annotation_events:
+            etype = event.get('type')
+            if 'Before-After' in etype:
+                fore_id = _choose_id(event, 'before')
+                aft_id = _choose_id(event, 'after')
+                if not fore_id or not aft_id:
+                    logger.warning("Unexpected Before-After: does not have two "
+                                   "known arguments.")
+                    continue
+                fore, fore_delta = self._handle_high_level_event(fore_id)
+                aft, aft_delta = self._handle_high_level_event(aft_id)
+
+                # Align against sentence number
+                ev = self._get_evidence(event, fore, aft, get_states(event))
+                st = self.element_pair_stmt_dict.get((fore_id, aft_id))
+                if st is None:
+                    logger.info("Found Before-After relation with no causal "
+                                "relation: before=%s after=%s." % (fore, aft))
+                    continue
+                else:
+                    logger.info("Found Before-After relation with causal "
+                                "relation!")
+
+                # Note: the next step assumes no pre-assembly has been done,
+                # specifically that there is only one evidence in each
+                # statement.
+                st.evidence[0].annotations['time order'] = {'before': fore,
+                                                            'after': aft,
+                                                            'evidence': ev}
+
+        return
+
+    def _handle_high_level_event(self, eid):
+        if eid in self.eid_stmt_dict.keys():
+            ev = self.eid_stmt_dict[eid]
+            edelta = None
+        elif eid in self.event_dict.keys():
+            ev, edelta = self._get_concept_from_eid(eid)
+        else:
+            assert False, 'Subject eid unresolved.'
+        return ev, edelta
+
+    def _make_concept(self, entity):
+        """Return Concept from an BBN entity."""
+        # Use the canonical name as the name of the Concept
+        name = self._sanitize(entity['canonicalName'])
+        # Save raw text and BBN scored groundings as db_refs
+        db_refs = {'TEXT': entity['text'],
+                   'BBN': _get_bbn_grounding(entity)}
+        concept = Concept(name, db_refs=db_refs)
+        return concept
+
+    def _get_concept_from_eid(self, eid):
+        ev = self.event_dict[eid]
+        concept = self._make_concept(ev)
+        ev_delta = {'adjectives': [],
+                    'states': get_states(ev),
+                    'polarity': get_polarity(ev)}
+        return concept, ev_delta
 
     def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
         """Return the Evidence object for the INDRA Statement."""
@@ -181,6 +209,52 @@ class BBNJsonLdProcessor(object):
         text = text.replace('\n', ' ')
         return text
 
+
+def _choose_id(event, arg_type):
+    args = event.get('arguments', {})
+    obj_tag = [arg for arg in args if arg['type'] ==  'has_' + arg_type]
+    if obj_tag:
+        obj_id = obj_tag[0]['value']['@id']
+    else:
+        obj_id = None
+    return obj_id
+
+
+def _get_subject_id(event, event_type=None):
+    if event_type is None:
+        event_type = event.get('type')
+    agent_name = basename(event_type).split('-')[0].lower()
+    return _choose_id(event, agent_name)
+
+
+def _get_object_id(event):
+    return _choose_id(event, 'effect')
+
+
+def get_states(event):
+    ret_list = []
+    if 'states' in event:
+        for state_property in event['states']:
+            if state_property['type'] != 'polarity':
+                ret_list.append(state_property['text'])
+    return ret_list
+
+
+def _get_bbn_grounding(entity):
+    """Return BBN grounding."""
+    grounding = entity['type']
+    if grounding.startswith('/'):
+        grounding = grounding[1:]
+    return grounding
+
+
+def get_polarity(event):
+    pol_map = {'Positive': 1, 'Negative': -1}
+    if 'states' in event:
+        for state_property in event['states']:
+            if state_property['type'] == 'polarity':
+                return pol_map[state_property['text']]
+    return None
 
 # OLD BBN PROCESSOR
 
