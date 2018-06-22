@@ -79,6 +79,12 @@ def _load_wm_map():
                 t = 'UN'
             else:
                 t = t.upper()
+            if s == 'SOFIA':
+                parts = se.split('/')[1:]
+                se = '/'.join(parts)
+            if t == 'SOFIA':
+                parts = te.split('/')[1:]
+                te = '/'.join(parts)
             if (s, se) in mappings:
                 if mappings[(s, se)][1] < score:
                     mappings[(s, se)] = ((t, te), score)
