@@ -1,3 +1,5 @@
+import os
+
 class OntologyMapper(object):
     """A class to map between ontologies in grounded arguments of Statements.
 
@@ -57,3 +59,36 @@ class OntologyMapper(object):
 
 def _load_default_mappings():
     return [(('EIDOS', 'entities/x'), ('BBN', 'entities/y'))]
+
+
+
+
+def _load_wm_map():
+    path_here = os.path.dirname(os.path.abspath(__file__))
+    ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
+    mappings = {}
+    with open(ontomap_file, 'r') as fh:
+        for line in fh.readlines():
+            s, se, t, te, score = line.split('\t')
+            if s == 'eidos':
+                s = 'UN'
+            else:
+                s = s.upper()
+            if t == 'eidos':
+                t = 'UN'
+            else:
+                t = t.upper()
+            if (s, se) in mappings:
+                if mappings[(s, se)][1] < score:
+                    mappings[(s, se)] = ((t, te), score)
+            else:
+                mappings[(s, se)] = ((t, te), score)
+    ontomap = []
+    for s, ts in mappings.items():
+        ontomap.append((s, ts[0]))
+    return ontomap
+
+try:
+    wm_ontomap = _load_wm_map()
+except Exception as e:
+    wm_ontomap = []
