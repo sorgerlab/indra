@@ -85,6 +85,10 @@ def _load_wm_map():
             if t == 'SOFIA':
                 parts = te.split('/')[1:]
                 te = '/'.join(parts)
+            if s == 'BBN':
+                se = 'events/%s' % se
+            if t == 'BBN':
+                te = 'events/%s' % te
             if (s, se) in mappings:
                 if mappings[(s, se)][1] < score:
                     mappings[(s, se)] = ((t, te), score)
