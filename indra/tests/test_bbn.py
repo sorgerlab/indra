@@ -54,3 +54,10 @@ def test_on_ten_doc_file():
     bp = process_jsonld_file(join(path_this, 'wm_10_doc.json-ld'))
     assert bp is not None
     assert bp.statements
+
+
+def test_bbn_on_ben_paragraph():
+    bp = process_jsonld_file(join(path_this, 'hackathon_ben_paras.json-ld'))
+    assert bp is not None
+    stmt_dict = {hash(s.get_hash()): s for s in bp.statements}
+    assert len(stmt_dict) == 3, len(stmt_dict)
