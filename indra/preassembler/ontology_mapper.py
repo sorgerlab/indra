@@ -32,15 +32,15 @@ class OntologyMapper(object):
                     continue
                 all_mappings = []
                 for db_name, db_id in agent.db_refs.items():
-                    if db_name == 'EIDOS':
+                    if db_name == 'UN':
                         db_id = db_id[0][0]
                     mappings = self._map_id(db_name, db_id)
                     all_mappings += mappings
                 for map_db_name, map_db_id in all_mappings:
                     if map_db_name in agent.db_refs:
                         continue
-                    if map_db_name == 'EIDOS':
-                        agent.db_refs['EIDOS'] = [(map_db_id, 1.0)]
+                    if map_db_name == 'UN':
+                        agent.db_refs['UN'] = [(map_db_id, 1.0)]
                     else:
                         agent.db_refs[map_db_name] = map_db_id
 
@@ -53,7 +53,8 @@ class OntologyMapper(object):
         mappings = []
         # TODO: This lookup should be optimized using a dict
         for m1, m2 in self.mappings:
-            if m1 == (db_name, db_id):
+            if m1 == (db_name, db_id) or \
+                m1 == (db_name, db_id.lower()):
                 mappings.append(m2)
         return mappings
 
