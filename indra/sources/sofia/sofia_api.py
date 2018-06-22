@@ -1,7 +1,7 @@
 import openpyxl
 from .processor import SofiaProcessor
 
-def process_table(fname, sheet_name):
+def process_table(fname):
     """Return processor by processing a given sheet of a spreadsheet file.
 
     Parameters
