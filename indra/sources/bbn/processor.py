@@ -71,7 +71,10 @@ class BBNJsonLdProcessor(object):
         for event in events:
             etype = event.get('type')
             if 'causal assertion' in etype and 'Catalyst-Effect' not in etype:
-                subj_id = _get_subject_id(event, etype)
+                if 'MitigatingFactor' in etype:
+                    subj_id = _get_subject_id(event, 'mitigating_factor')
+                else:
+                    subj_id = _get_subject_id(event, etype)
                 obj_id = _get_object_id(event)
 
                 # Skip event if either argument is missing
@@ -212,7 +215,7 @@ class BBNJsonLdProcessor(object):
 
 def _choose_id(event, arg_type):
     args = event.get('arguments', {})
-    obj_tag = [arg for arg in args if arg['type'] ==  'has_' + arg_type]
+    obj_tag = [arg for arg in args if arg['type'] == 'has_' + arg_type]
     if obj_tag:
         obj_id = obj_tag[0]['value']['@id']
     else:
