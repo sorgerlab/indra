@@ -47,6 +47,7 @@ class CWMSProcessor(object):
     """
     def __init__(self, xml_string):
         self.statements = []
+        self.statement_dict = {}
         # Parse XML
         try:
             self.tree = ET.XML(xml_string, parser=UTB())
@@ -95,12 +96,14 @@ class CWMSProcessor(object):
             ]
         for polarity, events in event_polarity_tuples:
             for event in events:
-                # Each inhibit event should involve an agent and an affected
-                agent = event.find("*[@role=':AGENT']")
-                affected = event.find("*[@role=':AFFECTED']")
-                self.make_statement_noun_cause_effect(event, agent, affected,
-                                                      polarity)
+                self.handle_agent_affected_event(event, polarity)
 
+    def handle_agent_affected_event(self, event, polarity):
+        # Each inhibit event should involve an agent and an affected
+        agent = event.find("*[@role=':AGENT']")
+        affected = event.find("*[@role=':AFFECTED']")
+        return self.make_statement_noun_cause_effect(event, agent, affected,
+                                                     polarity)
 
     def extract_noun_influence_relations(self):
         """Extracts relationships with one term influencing another term."""
@@ -113,49 +116,43 @@ class CWMSProcessor(object):
             self.make_statement_noun_cause_effect(cc, factor, outcome,
                                                   polarity)
 
+    def get_element_object(self, element, polarity):
+        # Get the term with the given element id
+        element_id = element.attrib.get('id')
+        element_term = self.tree.find("*[@id='%s']" % element_id)
+
+        # Not sure this is the best way to check, but it will work. It is a
+        # HACKathon, afterall. Need to figure out how to propagate polarity...
+        if 'EVENT' in repr(element_term):
+            return self.handle_agent_affected_event(element_term, polarity)
+
+        if element_term is None:
+            return
+
+        # Get the element's text and use it to construct a Concept
+        element_text_element = element_term.find('text')
+        if element_text_element is None:
+            return
+        element_text = element_text_element.text
+        element_db_refs = {'TEXT': element_text}
+
+        element_type_element = element_term.find('type')
+        if element_type_element is not None:
+            element_db_refs['CWMS'] = element_type_element.text
+
+        return Concept(element_text, db_refs=element_db_refs)
+
     def make_statement_noun_cause_effect(self, event_element,
                                          cause, affected, polarity):
         # Only process if both the cause and affected are present
         if cause is None or affected is None:
             return
 
-        # Get the term with the given cause id
-        cause_id = cause.attrib.get('id')
-        cause_term = self.tree.find("TERM/[@id='%s']" % cause_id)
-        if cause_term is None:
-            return
+        cause_concept = self.get_element_object(cause, polarity)
+        affected_concept = self.get_element_object(affected, polarity)
 
-        # Get the cause's text and use it to construct a Concept
-        cause_text_element = cause_term.find('text')
-        if cause_text_element is None:
+        if cause_concept is None or affected_concept is None:
             return
-        cause_text = cause_text_element.text
-        cause_db_refs = {'TEXT': cause_text}
-        #
-        cause_type_element = cause_term.find('type')
-        if cause_type_element is not None:
-            cause_db_refs['CWMS'] = cause_type_element.text
-        #
-        cause_concept = Concept(cause_text, db_refs=cause_db_refs)
-
-        # Get the term with the given affected id
-        affected_id = affected.attrib.get('id')
-        affected_term = self.tree.find("TERM/[@id='%s']" % affected_id)
-        if affected_term is None:
-            return
-
-        # Get the affected's text and type and use them to construct a Concept
-        affected_text_element = affected_term.find('text')
-        if affected_text_element is None:
-            return
-        affected_text = affected_text_element.text
-        affected_db_refs = {'TEXT': affected_text}
-        #
-        affected_type_element = affected_term.find('type')
-        if affected_type_element is not None:
-            affected_db_refs['CWMS'] = affected_type_element.text
-        #
-        affected_concept = Concept(affected_text, db_refs=affected_db_refs)
 
         # Construct evidence
         ev = self._get_evidence(event_element)
@@ -168,7 +165,14 @@ class CWMSProcessor(object):
             obj_delta = None
         st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
                        evidence=[ev])
-        self.statements.append(st)
+        if st.get_hash() not in self.statement_dict.keys():
+            self.statements.append(st)
+            self.statement_dict[st.get_hash()] = st
+        else:
+            # It's a shame we have to go this far before throwing away our work,
+            # but it will do for now.
+            st = self.statement_dict[st.get_hash()]
+        return st
 
     def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)
