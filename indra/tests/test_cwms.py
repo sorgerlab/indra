@@ -158,3 +158,22 @@ def test_cwms_two_sentences():
     cp = process_text(text)
     assert cp is not None
     assert len(cp.statements) == 2
+
+
+@attr('slow', 'webservice')
+def test_second_order_statements():
+    text = 'Drought increases the decrease of crops by army worms'
+    cp = process_text(text)
+    assert cp is not None
+    print(cp.statements)  # Check to make sure str/repr work.
+    assert len(cp.statements) == 2, len(cp.statements)
+
+
+@attr('slow', 'webservice')
+def test_three_sentences():
+    text = 'Floods cause displacement. Displacement reduces access to food. ' \
+           'Rainfall causes floods.'
+    cp = process_text(text)
+    assert cp is not None
+    print(cp.statements)
+    assert len(cp.statements) == 3, len(cp.statements)

@@ -16,6 +16,10 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 logger = logging.getLogger('cwms')
 
 
+class CWMSError(Exception):
+    pass
+
+
 class CWMSProcessor(object):
     """The CWMSProcessor currently extracts causal relationships between
     terms (nouns) in EKB. In the future, this processor can be extended to
@@ -70,53 +74,46 @@ class CWMSProcessor(object):
         # Extract statements
         self.extract_noun_causal_relations()
         self.extract_noun_affect_relations()
-        self.extract_noun_influence_relations()
         return
+
+    def _extract_statement(self, event):
+        ev_type = _get_type(event)
+        positive_ccs = {'ONT::CAUSE', 'ONT::INFLUENCE'}
+        positive_events = {'ONT::INCREASE'}
+        negative_events = {'ONT::DECREASE', 'ONT::INHIBIT'}
+        if ev_type in positive_ccs:
+            polarity = 1
+            subj_arg = event.find("arg/[@role=':FACTOR']")
+            obj_arg = event.find("arg/[@role=':OUTCOME']")
+        elif ev_type in positive_events | negative_events:
+            subj_arg = event.find("*[@role=':AGENT']")
+            obj_arg = event.find("*[@role=':AFFECTED']")
+            if ev_type in positive_events:
+                polarity = 1
+            else:
+                 polarity = -1
+        else:
+            logger.info("Unhandled event type: %s" % ev_type)
+            return Concept(ev_type)
+        return self.make_statement_noun_cause_effect(event, subj_arg, obj_arg,
+                                                     polarity)
 
     def extract_noun_causal_relations(self):
         """Extracts causal relationships between two nouns/terms (as opposed to
         events)
         """
         # Search for causal connectives of type ONT::CAUSE
-        ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
+        ccs = self.tree.findall("CC/[type]")
         for cc in ccs:
-            # Each cause should involve a factor term and an outcome term
-            factor = cc.find("arg/[@role=':FACTOR']")
-            outcome = cc.find("arg/[@role=':OUTCOME']")
-            polarity = 1
-            self.make_statement_noun_cause_effect(cc, factor, outcome,
-                                                  polarity)
+            self._extract_statement(cc)
 
     def extract_noun_affect_relations(self):
         """Extract relationships where a term/noun affects another term/noun"""
-        event_polarity_tuples = [
-            (-1, self.tree.findall("EVENT/[type='ONT::INHIBIT']")
-                 + self.tree.findall("EVENT/[type='ONT::DECREASE']")),
-            (1, self.tree.findall("EVENT/[type='ONT::INCREASE']"))
-            ]
-        for polarity, events in event_polarity_tuples:
-            for event in events:
-                self.handle_agent_affected_event(event, polarity)
+        events = self.tree.findall("EVENT/[type]")
+        for event in events:
+            self._extract_statement(event)
 
-    def handle_agent_affected_event(self, event, polarity):
-        # Each inhibit event should involve an agent and an affected
-        agent = event.find("*[@role=':AGENT']")
-        affected = event.find("*[@role=':AFFECTED']")
-        return self.make_statement_noun_cause_effect(event, agent, affected,
-                                                     polarity)
-
-    def extract_noun_influence_relations(self):
-        """Extracts relationships with one term influencing another term."""
-        ccs = self.tree.findall("CC/[type='ONT::INFLUENCE']")
-        for cc in ccs:
-            # Each cause should involve a factor term and an outcome term
-            factor = cc.find("arg/[@role=':FACTOR']")
-            outcome = cc.find("arg/[@role=':OUTCOME']")
-            polarity = 1
-            self.make_statement_noun_cause_effect(cc, factor, outcome,
-                                                  polarity)
-
-    def get_element_object(self, element, polarity):
+    def get_element_object(self, element):
         # Get the term with the given element id
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
@@ -124,7 +121,7 @@ class CWMSProcessor(object):
         # Not sure this is the best way to check, but it will work. It is a
         # HACKathon, afterall. Need to figure out how to propagate polarity...
         if 'EVENT' in repr(element_term):
-            return self.handle_agent_affected_event(element_term, polarity)
+            return self._extract_statement(element_term)
 
         if element_term is None:
             return
@@ -148,8 +145,8 @@ class CWMSProcessor(object):
         if cause is None or affected is None:
             return
 
-        cause_concept = self.get_element_object(cause, polarity)
-        affected_concept = self.get_element_object(affected, polarity)
+        cause_concept = self.get_element_object(cause)
+        affected_concept = self.get_element_object(affected)
 
         if cause_concept is None or affected_concept is None:
             return
@@ -207,3 +204,13 @@ class CWMSProcessor(object):
         par_id = event_tag.attrib.get('paragraph')
         sec = self.par_to_sec.get(par_id)
         return sec
+
+
+def _get_type(event):
+    """Get the type of event."""
+    children = event.getchildren()
+    # What follows is another terrible hack.
+    type_text_list = [ch.text for ch in children if 'type' in repr(ch)]
+    if len(type_text_list) != 1:
+        raise CWMSError("Unexpected event structure.")
+    return type_text_list[0]
