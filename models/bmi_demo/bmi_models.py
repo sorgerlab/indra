@@ -9,6 +9,10 @@ from indra.assemblers import PysbAssembler
 from topoflow.framework import emeli
 import eval_model
 
+# This is a specific configuration of the Topoflow model we will use
+topoflow_config = '/Users/ben/src/topoflow/topoflow/examples/Treynor_Iowa_30m'
+
+
 def text_to_stmts(text):
     """Run Eidos reading on a given text and return INDRA Statements."""
     # We use some caching here so that sentences we have already read
@@ -55,14 +59,16 @@ def plot_results(model_dict):
     plt.figure()
     plt.ion()
     for model_name, bmi_model in model_dict.items():
-        if model_name not in ['indra_model0', 'indra_model1']:
+        if model_name not in ['indra_model0', 'indra_model1',
+                              'indra_eval_model']:
             continue
         state_dict = {}
         times = [tc[0] for tc in bmi_model.time_course]
         for var_name, var_id in bmi_model.species_name_map.items():
             state_dict[var_name] = [tc[1][var_id] for tc in
                                     bmi_model.time_course]
-            plt.plot(times, state_dict[var_name], label=var_name)
+            short_var_name = var_name[:10]
+            plt.plot(times, state_dict[var_name], label=short_var_name)
     plt.legend()
     plt.show()
 
@@ -103,14 +109,14 @@ if __name__ == '__main__':
     bmi_models = []
     if demo_idx == 1:
         out_name_maps = [{}, {}]
-        root_vars = [['rainfall'], []]
+        input_vars = [[], ['flood']]
     elif demo_idx == 2:
         out_name_maps = [{'atmosphere_water__rainfall_volume_flux': 'rainfall'},
                          {}]
-        root_vars = [[], []]
+        input_vars = [['rainfall'], ['flood']]
     else:
         out_name_maps = [{'atmosphere_water__rainfall_volume_flux': 'rainfall'}]
-        root_vars = [[]]
+        input_vars = [['rainfall']]
     # We now assemble PySB models from the INDRA Statements and then
     # instantiate these models as BMI-wrapped models along with a simulator
     for idx, model_stmts in enumerate(stmts):
@@ -121,7 +127,7 @@ if __name__ == '__main__':
             model.name = 'indra_model%d' % idx
         else:
             model.name = 'indra_eval_model'
-        bm = BMIModel(model, root_vars=root_vars[idx], stop_time=10000,
+        bm = BMIModel(model, inputs=input_vars[idx], stop_time=10000,
                       outside_name_map=out_name_maps[idx])
         bmi_models.append(bm)
 
@@ -131,7 +137,7 @@ if __name__ == '__main__':
         make_component_repo(bmi_models, False)
         # We instantiate the EMELI framework and then run the simulations
         f = emeli.framework()
-        f.run_model(cfg_prefix='component',cfg_directory='.',
+        f.run_model(cfg_prefix='component', cfg_directory='.',
                     driver_comp_name=bmi_models[0].model.name)
         # Finally plot the results
         plot_results(f.comp_set)
@@ -142,9 +148,8 @@ if __name__ == '__main__':
         make_component_repo(bmi_models, True)
         f = emeli.framework()
         # We instantiate the EMELI framework and then run the simulations
-        f.run_model(cfg_prefix='June_20_67',
-            cfg_directory='/Users/ben/src/topoflow/topoflow/examples/Treynor_Iowa_30m',
-            driver_comp_name=bmi_models[0].model.name)
+        f.run_model(cfg_prefix='June_20_67', cfg_directory=topoflow_config,
+                    driver_comp_name=bmi_models[0].model.name)
         # Finally plot the results
         plot_results(f.comp_set)
 
@@ -154,8 +159,7 @@ if __name__ == '__main__':
         make_component_repo(bmi_models, True)
         f = emeli.framework()
         # We instantiate the EMELI framework and then run the simulations
-        f.run_model(cfg_prefix='June_20_67',
-            cfg_directory='/Users/ben/src/topoflow/topoflow/examples/Treynor_Iowa_30m',
-            driver_comp_name=bmi_models[0].model.name)
+        f.run_model(cfg_prefix='June_20_67', cfg_directory=topoflow_config,
+                    driver_comp_name=bmi_models[0].model.name)
         # Finally plot the results
         plot_results(f.comp_set)
