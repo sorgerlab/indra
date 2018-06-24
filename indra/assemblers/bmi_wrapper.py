@@ -12,13 +12,32 @@ from lxml import etree
 from pysb.bng import generate_equations
 from pysb.simulator import ScipyOdeSimulator
 
+
 class BMIModel(object):
-    def __init__(self, model, root_vars=None, stop_time=1000,
+    """This class represents a BMI model wrapping a model assembled by INDRA.
+
+    Parameters
+    ----------
+    model : pysb.Model
+        A PySB model assembled by INDRA to be wrapped in BMI.
+    inputs : Optional[list[str]]
+        A list of variable names that are considered to be inputs to the model
+        meaning that they are read from other models. Note that designating
+        a variable as input means that it must be provided by another component
+        during the simulation.
+    stop_time : int
+        The stopping time for this model, controlling the time units up to
+        which the model is simulated.
+    outside_name_map : dict
+        A dictionary mapping outside variables names to inside variable names
+        (i.e. ones that are in the wrapped model)
+    """
+    def __init__(self, model, inputs=None, stop_time=1000,
                  outside_name_map=None):
         self.model = model
         generate_equations(model)
 
-        self.root_vars = root_vars if root_vars else []
+        self.inputs = inputs if inputs else []
         self.stop_time = stop_time
         self.outside_name_map = outside_name_map if outside_name_map else {}
 
@@ -40,16 +59,16 @@ class BMIModel(object):
         self.DONE = False
 
     def _get_input_vars(self):
-        species_is_obj = {s: False for s in self.species_name_map.keys()}
-        for ann in self.model.annotations:
-            if ann.predicate == 'rule_has_object':
-                species_is_obj[ann.object] = True
-        # Return all the variables that aren't objects in a rule
-        input_vars = [s for s, tf in species_is_obj.items() if not tf]
-        # Remove the root variables since we assume they are not inputs
-        input_vars = list(set(input_vars) - set(self.root_vars))
-        return input_vars
-
+        return self.inputs
+        # The code below attempts to discover input variables, it is currently
+        # inactive but could be made optional later
+        # species_is_obj = {s: False for s in self.species_name_map.keys()}
+        # for ann in self.model.annotations:
+        #     if ann.predicate == 'rule_has_object':
+        #         species_is_obj[ann.object] = True
+        # # Return all the variables that aren't objects in a rule
+        # input_vars = [s for s, tf in species_is_obj.items() if not tf]
+        # return input_vars
 
     # Simulation functions
     def initialize(self, cfg_file=None, mode=None):
@@ -315,7 +334,7 @@ class BMIModel(object):
         return self.units
 
     def make_repository_component(self):
-        """Return XML representing this BMI in a workflow.
+        """Return an XML string representing this BMI in a workflow.
 
         This description is required by EMELI to discover and load models.
 
@@ -391,11 +410,12 @@ class BMIModel(object):
         with open(py_path, 'w') as fh:
             fh.write(py_str)
 
-
     def _map_out_in(self, outside_var_name):
+        """Return the internal name of a variable mapped from outside."""
         return self.outside_name_map.get(outside_var_name)
 
     def _map_in_out(self, inside_var_name):
+        """Return the external name of a variable mapped from inside."""
         for out_name, in_name in self.outside_name_map.items():
             if inside_var_name == in_name:
                 return out_name

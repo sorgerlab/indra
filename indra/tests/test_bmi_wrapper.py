@@ -10,7 +10,7 @@ def make_bmi_model():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    bm = BMIModel(model)
+    bm = BMIModel(model, inputs=['rainfall'])
     return bm
 
 
@@ -62,7 +62,7 @@ def test_get_value():
 def test_get_attribute():
     bm = make_bmi_model()
     attr = bm.get_attribute('model_name')
-    assert attr == 'INDRA assembled model'
+    assert attr == 'indra_model', attr
 
 
 def test_make_repo_component():
