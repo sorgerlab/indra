@@ -54,12 +54,13 @@ class OntologyMapper(object):
         # TODO: This lookup should be optimized using a dict
         for m1, m2 in self.mappings:
             if m1 == (db_name, db_id) or \
-                m1 == (db_name, db_id.lower()):
+                ((not isinstance(m1, list)) and
+                 (m1 == (db_name, db_id.lower()))):
                 mappings.append(m2)
         return mappings
 
 def _load_default_mappings():
-    return [(('EIDOS', 'entities/x'), ('BBN', 'entities/y'))]
+    return [(('UN', 'entities/x'), ('BBN', 'entities/y'))]
 
 
 

@@ -3,7 +3,7 @@ from indra.preassembler.ontology_mapper import OntologyMapper
 
 
 def test_map():
-    c1 = Concept('x', db_refs={'EIDOS': [('entities/x', 1.0)]})
+    c1 = Concept('x', db_refs={'UN': [('entities/x', 1.0)]})
     c2 = Concept('y', db_refs={'BBN': 'entities/y'})
     c3 = Concept('z')
     stmts = [Influence(c1, c3), Influence(c2, c3)]
@@ -12,5 +12,5 @@ def test_map():
     assert len(om.statements) == 2
     assert om.statements[0].subj.db_refs['BBN'] == 'entities/y', \
         om.statements[0].subj.db_refs
-    assert om.statements[1].subj.db_refs['EIDOS'] == [('entities/x', 1.0)], \
+    assert om.statements[1].subj.db_refs['UN'] == [('entities/x', 1.0)], \
         om.statements[1].subj.db_refs
