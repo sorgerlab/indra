@@ -86,7 +86,7 @@ class CWMSProcessor(object):
         and the polarity of the influence (see `_positive_ccs`,
         `_positive_events`, and `_negative_events` class attributes).
         """
-        ev_type = _get_type(event)
+        ev_type = event.find('type').text
         if ev_type in self._positive_ccs:
             polarity = 1
             subj = self._get_concept(event, "arg/[@role=':FACTOR']")
@@ -190,13 +190,3 @@ class CWMSProcessor(object):
         par_id = event_tag.attrib.get('paragraph')
         sec = self.par_to_sec.get(par_id)
         return sec
-
-
-def _get_type(event):
-    """Get the type of event."""
-    children = event.getchildren()
-    # What follows is another terrible hack.
-    type_text_list = [ch.text for ch in children if 'type' in repr(ch)]
-    if len(type_text_list) != 1:
-        raise CWMSError("Unexpected event structure.")
-    return type_text_list[0]
