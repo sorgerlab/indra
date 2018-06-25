@@ -49,6 +49,10 @@ class CWMSProcessor(object):
     par_to_sec : dict[str: str]
         A map from paragraph IDs to their associated section types
     """
+    _positive_ccs = {'ONT::CAUSE', 'ONT::INFLUENCE'}
+    _positive_events = {'ONT::INCREASE'}
+    _negative_events = {'ONT::DECREASE', 'ONT::INHIBIT'}
+
     def __init__(self, xml_string):
         self.statements = []
         # Parse XML
@@ -76,18 +80,21 @@ class CWMSProcessor(object):
         return
 
     def _get_subj_obj(self, event):
+        """Get the concepts for a relation given and element.
+
+        The ontological type of the event is used to infer the labels of agents
+        and the polarity of the influence (see `_positive_ccs`,
+        `_positive_events`, and `_negative_events` class attributes).
+        """
         ev_type = _get_type(event)
-        positive_ccs = {'ONT::CAUSE', 'ONT::INFLUENCE'}
-        positive_events = {'ONT::INCREASE'}
-        negative_events = {'ONT::DECREASE', 'ONT::INHIBIT'}
-        if ev_type in positive_ccs:
+        if ev_type in self._positive_ccs:
             polarity = 1
-            subj = self.get_concept(event, "arg/[@role=':FACTOR']")
-            obj = self.get_concept(event, "arg/[@role=':OUTCOME']")
-        elif ev_type in positive_events | negative_events:
-            subj = self.get_concept(event, "*[@role=':AGENT']")
-            obj = self.get_concept(event, "*[@role=':AFFECTED']")
-            if ev_type in positive_events:
+            subj = self._get_concept(event, "arg/[@role=':FACTOR']")
+            obj = self._get_concept(event, "arg/[@role=':OUTCOME']")
+        elif ev_type in self._positive_events | self._negative_events:
+            subj = self._get_concept(event, "*[@role=':AGENT']")
+            obj = self._get_concept(event, "*[@role=':AFFECTED']")
+            if ev_type in self._positive_events:
                 polarity = 1
             else:
                  polarity = -1
@@ -102,9 +109,10 @@ class CWMSProcessor(object):
         events = self.tree.findall("%s/[type]" % key)
         for event in events:
             subj, obj, pol = self._get_subj_obj(event)
-            self.make_statement_noun_cause_effect(event, subj, obj, pol)
+            self._make_statement_noun_cause_effect(event, subj, obj, pol)
 
-    def get_concept(self, event, find_str):
+    def _get_concept(self, event, find_str):
+        """Get a concept referred from the event by the given string."""
         # Get the term with the given element id
         element = event.find(find_str)
         if element is None:
@@ -128,9 +136,10 @@ class CWMSProcessor(object):
 
         return Concept(element_text, db_refs=element_db_refs)
 
-    def make_statement_noun_cause_effect(self, event_element,
-                                         cause_concept, affected_concept,
-                                         polarity):
+    def _make_statement_noun_cause_effect(self, event_element,
+                                          cause_concept, affected_concept,
+                                          polarity):
+        """Make the Influence statement from the component parts."""
         if cause_concept is None or affected_concept is None:
             return
 
