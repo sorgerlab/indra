@@ -20,6 +20,14 @@ class CWMSError(Exception):
     pass
 
 
+POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
+                        'ONT::INFLUENCE': 1},
+                 'EVENT': {'ONT::INCREASE': 1,
+                           'ONT::MODULATE': None,
+                           'ONT::DECREASE': -1,
+                           'ONT::INHIBIT': -1}}
+
+
 class CWMSProcessor(object):
     """The CWMSProcessor currently extracts causal relationships between
     terms (nouns) in EKB. In the future, this processor can be extended to
@@ -49,10 +57,6 @@ class CWMSProcessor(object):
     par_to_sec : dict[str: str]
         A map from paragraph IDs to their associated section types
     """
-    _positive_ccs = {'ONT::CAUSE', 'ONT::INFLUENCE'}
-    _positive_events = {'ONT::INCREASE'}
-    _neutral_events = {'ONT::MODULATE'}
-    _negative_events = {'ONT::DECREASE', 'ONT::INHIBIT'}
 
     def __init__(self, xml_string):
         self.statements = []
@@ -88,19 +92,14 @@ class CWMSProcessor(object):
         `_positive_events`, and `_negative_events` class attributes).
         """
         ev_type = event.find('type').text
-        if ev_type in self._positive_ccs:
-            polarity = 1
+        if ev_type in POLARITY_DICT['CC'].keys():
+            polarity = POLARITY_DICT['CC'][ev_type]
             subj = self._get_concept(event, "arg/[@role=':FACTOR']")
             obj = self._get_concept(event, "arg/[@role=':OUTCOME']")
-        elif ev_type in (self._positive_events
-                         | self._negative_events
-                         | self._neutral_events):
+        elif ev_type in POLARITY_DICT['EVENT'].keys():
+            polarity = POLARITY_DICT['EVENT'][ev_type]
             subj = self._get_concept(event, "*[@role=':AGENT']")
             obj = self._get_concept(event, "*[@role=':AFFECTED']")
-            if ev_type in self._negative_events:
-                polarity = -1
-            else:
-                 polarity = 1
         else:
             logger.info("Unhandled event type: %s" % ev_type)
             return None, None, None
