@@ -75,7 +75,7 @@ class CWMSProcessor(object):
         self.extract_noun_affect_relations()
         return
 
-    def _extract_statement(self, event):
+    def _get_subj_obj(self, event):
         ev_type = _get_type(event)
         positive_ccs = {'ONT::CAUSE', 'ONT::INFLUENCE'}
         positive_events = {'ONT::INCREASE'}
@@ -93,9 +93,8 @@ class CWMSProcessor(object):
                  polarity = -1
         else:
             logger.info("Unhandled event type: %s" % ev_type)
-            return Concept(ev_type)
-        return self.make_statement_noun_cause_effect(event, subj_arg, obj_arg,
-                                                     polarity)
+            return None, None, None
+        return subj_arg, obj_arg, polarity
 
     def extract_noun_causal_relations(self):
         """Extracts causal relationships between two nouns/terms (as opposed to
@@ -104,13 +103,15 @@ class CWMSProcessor(object):
         # Search for causal connectives of type ONT::CAUSE
         ccs = self.tree.findall("CC/[type]")
         for cc in ccs:
-            self._extract_statement(cc)
+            subj, obj, pol = self._get_subj_obj(cc)
+            self.make_statement_noun_cause_effect(cc, subj, obj, pol)
 
     def extract_noun_affect_relations(self):
         """Extract relationships where a term/noun affects another term/noun"""
         events = self.tree.findall("EVENT/[type]")
         for event in events:
-            self._extract_statement(event)
+            subj, obj, pol = self._get_subj_obj(event)
+            self.make_statement_noun_cause_effect(event, subj, obj, pol)
 
     def get_element_object(self, element):
         # Get the term with the given element id
