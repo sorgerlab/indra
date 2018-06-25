@@ -82,11 +82,11 @@ class CWMSProcessor(object):
         negative_events = {'ONT::DECREASE', 'ONT::INHIBIT'}
         if ev_type in positive_ccs:
             polarity = 1
-            subj_arg = event.find("arg/[@role=':FACTOR']")
-            obj_arg = event.find("arg/[@role=':OUTCOME']")
+            subj = self.get_concept(event, "arg/[@role=':FACTOR']")
+            obj = self.get_concept(event, "arg/[@role=':OUTCOME']")
         elif ev_type in positive_events | negative_events:
-            subj_arg = event.find("*[@role=':AGENT']")
-            obj_arg = event.find("*[@role=':AFFECTED']")
+            subj = self.get_concept(event, "*[@role=':AGENT']")
+            obj = self.get_concept(event, "*[@role=':AFFECTED']")
             if ev_type in positive_events:
                 polarity = 1
             else:
@@ -95,7 +95,7 @@ class CWMSProcessor(object):
             logger.info("Unhandled event type: %s" % ev_type)
             return None, None, None
 
-        return subj_arg, obj_arg, polarity
+        return subj, obj, polarity
 
     def extract_noun_relations(self, key):
         """Extract relationships where a term/noun affects another term/noun"""
@@ -104,8 +104,11 @@ class CWMSProcessor(object):
             subj, obj, pol = self._get_subj_obj(event)
             self.make_statement_noun_cause_effect(event, subj, obj, pol)
 
-    def get_element_object(self, element):
+    def get_concept(self, event, find_str):
         # Get the term with the given element id
+        element = event.find(find_str)
+        if element is None:
+            return
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
 
@@ -126,14 +129,8 @@ class CWMSProcessor(object):
         return Concept(element_text, db_refs=element_db_refs)
 
     def make_statement_noun_cause_effect(self, event_element,
-                                         cause, affected, polarity):
-        # Only process if both the cause and affected are present
-        if cause is None or affected is None:
-            return
-
-        cause_concept = self.get_element_object(cause)
-        affected_concept = self.get_element_object(affected)
-
+                                         cause_concept, affected_concept,
+                                         polarity):
         if cause_concept is None or affected_concept is None:
             return
 
