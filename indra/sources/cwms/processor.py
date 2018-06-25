@@ -51,6 +51,7 @@ class CWMSProcessor(object):
     """
     _positive_ccs = {'ONT::CAUSE', 'ONT::INFLUENCE'}
     _positive_events = {'ONT::INCREASE'}
+    _neutral_events = {'ONT::MODULATE'}
     _negative_events = {'ONT::DECREASE', 'ONT::INHIBIT'}
 
     def __init__(self, xml_string):
@@ -91,13 +92,15 @@ class CWMSProcessor(object):
             polarity = 1
             subj = self._get_concept(event, "arg/[@role=':FACTOR']")
             obj = self._get_concept(event, "arg/[@role=':OUTCOME']")
-        elif ev_type in self._positive_events | self._negative_events:
+        elif ev_type in (self._positive_events
+                         | self._negative_events
+                         | self._neutral_events):
             subj = self._get_concept(event, "*[@role=':AGENT']")
             obj = self._get_concept(event, "*[@role=':AFFECTED']")
-            if ev_type in self._positive_events:
-                polarity = 1
+            if ev_type in self._negative_events:
+                polarity = -1
             else:
-                 polarity = -1
+                 polarity = 1
         else:
             logger.info("Unhandled event type: %s" % ev_type)
             return None, None, None
