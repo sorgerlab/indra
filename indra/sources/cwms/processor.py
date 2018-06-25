@@ -51,7 +51,6 @@ class CWMSProcessor(object):
     """
     def __init__(self, xml_string):
         self.statements = []
-        self.statement_dict = {}
         # Parse XML
         try:
             self.tree = ET.XML(xml_string, parser=UTB())
@@ -118,11 +117,6 @@ class CWMSProcessor(object):
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
 
-        # Not sure this is the best way to check, but it will work. It is a
-        # HACKathon, afterall. Need to figure out how to propagate polarity...
-        if 'EVENT' in repr(element_term):
-            return self._extract_statement(element_term)
-
         if element_term is None:
             return
 
@@ -162,13 +156,7 @@ class CWMSProcessor(object):
             obj_delta = None
         st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
                        evidence=[ev])
-        if st.get_hash() not in self.statement_dict.keys():
-            self.statements.append(st)
-            self.statement_dict[st.get_hash()] = st
-        else:
-            # It's a shame we have to go this far before throwing away our work,
-            # but it will do for now.
-            st = self.statement_dict[st.get_hash()]
+        self.statements.append(st)
         return st
 
     def _get_evidence(self, event_tag):
