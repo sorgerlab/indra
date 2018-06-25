@@ -71,8 +71,8 @@ class CWMSProcessor(object):
                            for p in paragraph_tags}
 
         # Extract statements
-        self.extract_noun_causal_relations()
-        self.extract_noun_affect_relations()
+        self.extract_noun_relations('CC')
+        self.extract_noun_relations('EVENT')
         return
 
     def _get_subj_obj(self, event):
@@ -94,21 +94,12 @@ class CWMSProcessor(object):
         else:
             logger.info("Unhandled event type: %s" % ev_type)
             return None, None, None
+
         return subj_arg, obj_arg, polarity
 
-    def extract_noun_causal_relations(self):
-        """Extracts causal relationships between two nouns/terms (as opposed to
-        events)
-        """
-        # Search for causal connectives of type ONT::CAUSE
-        ccs = self.tree.findall("CC/[type]")
-        for cc in ccs:
-            subj, obj, pol = self._get_subj_obj(cc)
-            self.make_statement_noun_cause_effect(cc, subj, obj, pol)
-
-    def extract_noun_affect_relations(self):
+    def extract_noun_relations(self, key):
         """Extract relationships where a term/noun affects another term/noun"""
-        events = self.tree.findall("EVENT/[type]")
+        events = self.tree.findall("%s/[type]" % key)
         for event in events:
             subj, obj, pol = self._get_subj_obj(event)
             self.make_statement_noun_cause_effect(event, subj, obj, pol)
