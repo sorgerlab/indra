@@ -162,6 +162,8 @@ def test_cwms_two_sentences():
 
 @attr('slow', 'webservice')
 def test_second_order_statements():
+    # NOTE: the second order statement feature is being developed elsewhere,
+    # however this test should still pass as is.
     text = 'Drought increases the decrease of crops by army worms'
     cp = process_text(text)
     assert cp is not None
@@ -171,6 +173,9 @@ def test_second_order_statements():
 
 @attr('slow', 'webservice')
 def test_three_sentences():
+    # These sentences were used in the June 2018 WM East and West coast
+    # hackathons for creating a simple test model constructed from all the
+    # readers, and utilizing other components.
     text = 'Floods cause displacement. Displacement reduces access to food. ' \
            'Rainfall causes floods.'
     cp = process_text(text)
