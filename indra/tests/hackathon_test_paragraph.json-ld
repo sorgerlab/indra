@@ -1,0 +1,756 @@
+{
+    "@context": {
+        "Argument": "https://w3id.org/wm/cag/Argument", 
+        "Corpus": "https://w3id.org/wm/cag/Corpus", 
+        "Dependency": "https://w3id.org/wm/cag/Dependency", 
+        "Document": "https://w3id.org/wm/cag/Document", 
+        "Entity": "https://w3id.org/wm/cag/Entity", 
+        "Event": "https://w3id.org/wm/cag/Event", 
+        "Interval": "https://w3id.org/wm/cag/Interval", 
+        "Modifier": "https://w3id.org/wm/cag/Modifier", 
+        "Provenance": "https://w3id.org/wm/cag/Provenance", 
+        "Sentence": "https://w3id.org/wm/cag/Sentence", 
+        "State": "https://w3id.org/wm/cag/State", 
+        "Trigger": "https://w3id.org/wm/cag/Trigger", 
+        "Word": "https://w3id.org/wm/cag/Word"
+    }, 
+    "@type": "Corpus", 
+    "documents": [
+        {
+            "@id": "ENG_NW_WM_HACK_BEN_PARAS", 
+            "@type": "Document", 
+            "location": "ENG_NW_WM_HACK_BEN_PARAS", 
+            "sentences": [
+                {
+                    "@id": "SEN-ENG_NW_WM_HACK_BEN_PARAS-0", 
+                    "@type": "Sentence", 
+                    "text": "Floods cause displacement."
+                }, 
+                {
+                    "@id": "SEN-ENG_NW_WM_HACK_BEN_PARAS-1", 
+                    "@type": "Sentence", 
+                    "text": "Displacement reduces access to food."
+                }, 
+                {
+                    "@id": "SEN-ENG_NW_WM_HACK_BEN_PARAS-2", 
+                    "@type": "Sentence", 
+                    "text": "Rainfall causes floods."
+                }
+            ]
+        }
+    ], 
+    "extractions": [
+        {
+            "@id": "EventGroup-0", 
+            "@type": "Event", 
+            "canonicalName": "rainfall", 
+            "text": "rainfall", 
+            "type": "/event/event group"
+        }, 
+        {
+            "@id": "unification-1", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "group", 
+                    "value": {
+                        "@id": "EventGroup-0"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "member", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-11"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "type": "unification"
+        }, 
+        {
+            "@id": "EventGroup-1", 
+            "@type": "Event", 
+            "canonicalName": "floods", 
+            "text": "floods", 
+            "type": "/event/event group"
+        }, 
+        {
+            "@id": "unification-2", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "group", 
+                    "value": {
+                        "@id": "EventGroup-1"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "member", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-0"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "type": "unification"
+        }, 
+        {
+            "@id": "unification-3", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "group", 
+                    "value": {
+                        "@id": "EventGroup-1"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "member", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-10"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "type": "unification"
+        }, 
+        {
+            "@id": "EventGroup-2", 
+            "@type": "Event", 
+            "canonicalName": "displacement", 
+            "text": "displacement", 
+            "type": "/event/event group"
+        }, 
+        {
+            "@id": "unification-4", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "group", 
+                    "value": {
+                        "@id": "EventGroup-2"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "member", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-5"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "type": "unification"
+        }, 
+        {
+            "@id": "unification-5", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "group", 
+                    "value": {
+                        "@id": "EventGroup-2"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "member", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-4"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "type": "unification"
+        }, 
+        {
+            "@id": "EventGroup-3", 
+            "@type": "Event", 
+            "canonicalName": "access", 
+            "text": "access", 
+            "type": "/event/event group"
+        }, 
+        {
+            "@id": "unification-6", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "group", 
+                    "value": {
+                        "@id": "EventGroup-3"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "member", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-6"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "type": "unification"
+        }, 
+        {
+            "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-6", 
+            "@type": "Event", 
+            "arguments": [], 
+            "canonicalName": "access", 
+            "grounding": [
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/event/factor", 
+                    "value": 0.28738973585570116
+                }
+            ], 
+            "labels": [
+                "Event"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 126, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-1", 
+                        "start": 121
+                    }
+                }
+            ], 
+            "states": [
+                {
+                    "@type": "State", 
+                    "text": "Asserted", 
+                    "type": "modality"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Generic", 
+                    "type": "genericity"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Positive", 
+                    "type": "polarity"
+                }
+            ], 
+            "text": "access", 
+            "trigger": {
+                "@type": "Trigger", 
+                "head text": "access", 
+                "provenance": [
+                    {
+                        "@type": "Provenance", 
+                        "document": {
+                            "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                        }, 
+                        "documentCharPositions": {
+                            "@type": "Interval", 
+                            "end": 126, 
+                            "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-1", 
+                            "start": 121
+                        }
+                    }
+                ], 
+                "text": "access"
+            }, 
+            "type": "/event/factor"
+        }, 
+        {
+            "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-5", 
+            "@type": "Event", 
+            "arguments": [], 
+            "canonicalName": "Displacement", 
+            "grounding": [
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/event/factor", 
+                    "value": 0.24066585870573057
+                }
+            ], 
+            "labels": [
+                "Event"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 111, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-1", 
+                        "start": 100
+                    }
+                }
+            ], 
+            "states": [
+                {
+                    "@type": "State", 
+                    "text": "Asserted", 
+                    "type": "modality"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Generic", 
+                    "type": "genericity"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Positive", 
+                    "type": "polarity"
+                }
+            ], 
+            "text": "Displacement", 
+            "trigger": {
+                "@type": "Trigger", 
+                "head text": "Displacement", 
+                "provenance": [
+                    {
+                        "@type": "Provenance", 
+                        "document": {
+                            "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                        }, 
+                        "documentCharPositions": {
+                            "@type": "Interval", 
+                            "end": 111, 
+                            "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-1", 
+                            "start": 100
+                        }
+                    }
+                ], 
+                "text": "Displacement"
+            }, 
+            "type": "/event/factor"
+        }, 
+        {
+            "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-4", 
+            "@type": "Event", 
+            "arguments": [], 
+            "canonicalName": "displacement", 
+            "grounding": [
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/event/factor", 
+                    "value": 0.24066585870573057
+                }
+            ], 
+            "labels": [
+                "Event"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 97, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-0", 
+                        "start": 86
+                    }
+                }
+            ], 
+            "states": [
+                {
+                    "@type": "State", 
+                    "text": "Asserted", 
+                    "type": "modality"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Generic", 
+                    "type": "genericity"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Positive", 
+                    "type": "polarity"
+                }
+            ], 
+            "text": "displacement", 
+            "trigger": {
+                "@type": "Trigger", 
+                "head text": "displacement", 
+                "provenance": [
+                    {
+                        "@type": "Provenance", 
+                        "document": {
+                            "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                        }, 
+                        "documentCharPositions": {
+                            "@type": "Interval", 
+                            "end": 97, 
+                            "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-0", 
+                            "start": 86
+                        }
+                    }
+                ], 
+                "text": "displacement"
+            }, 
+            "type": "/event/factor"
+        }, 
+        {
+            "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-11", 
+            "@type": "Event", 
+            "arguments": [], 
+            "canonicalName": "Rainfall", 
+            "grounding": [
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/event/factor", 
+                    "value": 0.25770933167862553
+                }
+            ], 
+            "labels": [
+                "Event"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 144, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-2", 
+                        "start": 137
+                    }
+                }
+            ], 
+            "states": [
+                {
+                    "@type": "State", 
+                    "text": "Asserted", 
+                    "type": "modality"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Generic", 
+                    "type": "genericity"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Positive", 
+                    "type": "polarity"
+                }
+            ], 
+            "text": "Rainfall", 
+            "trigger": {
+                "@type": "Trigger", 
+                "head text": "Rainfall", 
+                "provenance": [
+                    {
+                        "@type": "Provenance", 
+                        "document": {
+                            "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                        }, 
+                        "documentCharPositions": {
+                            "@type": "Interval", 
+                            "end": 144, 
+                            "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-2", 
+                            "start": 137
+                        }
+                    }
+                ], 
+                "text": "Rainfall"
+            }, 
+            "type": "/event/factor"
+        }, 
+        {
+            "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-10", 
+            "@type": "Event", 
+            "arguments": [], 
+            "canonicalName": "floods", 
+            "grounding": [
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/event/weather/precipitation", 
+                    "value": 0.12665498751708462
+                }, 
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/entity/indicator/Flood Potential Index", 
+                    "value": 0.12665498751708462
+                }
+            ], 
+            "labels": [
+                "Event"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 158, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-2", 
+                        "start": 153
+                    }
+                }
+            ], 
+            "states": [
+                {
+                    "@type": "State", 
+                    "text": "Asserted", 
+                    "type": "modality"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Specific", 
+                    "type": "genericity"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Positive", 
+                    "type": "polarity"
+                }
+            ], 
+            "text": "floods", 
+            "trigger": {
+                "@type": "Trigger", 
+                "head text": "floods", 
+                "provenance": [
+                    {
+                        "@type": "Provenance", 
+                        "document": {
+                            "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                        }, 
+                        "documentCharPositions": {
+                            "@type": "Interval", 
+                            "end": 158, 
+                            "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-2", 
+                            "start": 153
+                        }
+                    }
+                ], 
+                "text": "floods"
+            }, 
+            "type": "/event/weather/precipitation"
+        }, 
+        {
+            "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-0", 
+            "@type": "Event", 
+            "arguments": [], 
+            "canonicalName": "Floods", 
+            "grounding": [
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/event/weather", 
+                    "value": 0.12665498751708462
+                }, 
+                {
+                    "@type": "Grounding", 
+                    "name": "bbn", 
+                    "ontologyConcept": "/entity/indicator/Flood Potential Index", 
+                    "value": 0.12665498751708462
+                }
+            ], 
+            "labels": [
+                "Event"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 78, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-0", 
+                        "start": 73
+                    }
+                }
+            ], 
+            "states": [
+                {
+                    "@type": "State", 
+                    "text": "Asserted", 
+                    "type": "modality"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Specific", 
+                    "type": "genericity"
+                }, 
+                {
+                    "@type": "State", 
+                    "text": "Positive", 
+                    "type": "polarity"
+                }
+            ], 
+            "text": "Floods", 
+            "trigger": {
+                "@type": "Trigger", 
+                "head text": "Floods", 
+                "provenance": [
+                    {
+                        "@type": "Provenance", 
+                        "document": {
+                            "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                        }, 
+                        "documentCharPositions": {
+                            "@type": "Interval", 
+                            "end": 78, 
+                            "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-0", 
+                            "start": 73
+                        }
+                    }
+                ], 
+                "text": "Floods"
+            }, 
+            "type": "/event/weather"
+        }, 
+        {
+            "@id": "REL-ENG_NW_WM_HACK_BEN_PARAS-18", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "source", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-5"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "destination", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-6"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 126, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-1", 
+                        "start": 100
+                    }
+                }
+            ], 
+            "type": "mitigation"
+        }, 
+        {
+            "@id": "REL-ENG_NW_WM_HACK_BEN_PARAS-17", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "source", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-0"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "destination", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-4"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 97, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-0", 
+                        "start": 73
+                    }
+                }
+            ], 
+            "type": "causation"
+        }, 
+        {
+            "@id": "REL-ENG_NW_WM_HACK_BEN_PARAS-10", 
+            "@type": "Event", 
+            "arguments": [
+                {
+                    "@type": "Argument", 
+                    "type": "source", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-11"
+                    }
+                }, 
+                {
+                    "@type": "Argument", 
+                    "type": "destination", 
+                    "value": {
+                        "@id": "EVE-ENG_NW_WM_HACK_BEN_PARAS-10"
+                    }
+                }
+            ], 
+            "labels": [
+                "DirectedRelation"
+            ], 
+            "provenance": [
+                {
+                    "@type": "Provenance", 
+                    "document": {
+                        "@id": "ENG_NW_WM_HACK_BEN_PARAS"
+                    }, 
+                    "documentCharPositions": {
+                        "@type": "Interval", 
+                        "end": 158, 
+                        "sentence": "SEN-ENG_NW_WM_HACK_BEN_PARAS-2", 
+                        "start": 137
+                    }
+                }
+            ], 
+            "type": "causation"
+        }
+    ]
+}
