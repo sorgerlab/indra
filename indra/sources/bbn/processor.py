@@ -111,6 +111,7 @@ class BBNJsonLdProcessor(object):
         doc_id = provenance[0]['document']['@id']
         sent_id = provenance[0]['documentCharPositions']['sentence']
         text = self.document_dict[doc_id]['sentences'][sent_id]
+        text = self._sanitize(text)
         bounds = [provenance[0]['documentCharPositions'][k]
                   for k in ['start', 'end']]
 
