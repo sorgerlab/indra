@@ -50,14 +50,14 @@ class BBNJsonLdProcessor(object):
         self.event_dict = {ev['@id']: ev for ev in events}
 
         # List out event types and their default (implied) polarities.
-        extract_types = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                         'mitigation': -1, 'prevention': -1}
+        event_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+                            'mitigation': -1, 'prevention': -1}
 
         # Restrict to known event types
         events = [e for e in events if any([et in e.get('type')
-                                            for et in extract_types.keys()])]
-        logger.info('%d events of types %s found' % (len(events),
-                                                     ', '.join(extract_types)))
+                                            for et in event_polarities.keys()])]
+        logger.info('%d events of types %s found'
+                    % (len(events), ', '.join(event_polarities.keys())))
 
         # Build a dictionary of entities and sentences by ID for convenient
         # lookup
@@ -68,8 +68,13 @@ class BBNJsonLdProcessor(object):
         self.get_documents()
 
         for event in events:
+            event_type = event.get('type')
             subj_concept, subj_delta = self._get_concept(event, 'source')
             obj_concept, obj_delta = self._get_concept(event, 'destination')
+
+            # Apply the naive polarity from the type of statement.
+            obj_delta['polarity'] = \
+                event_polarities[event_type]*obj_delta['polarity']
 
             if not subj_concept or not obj_concept:
                 continue
