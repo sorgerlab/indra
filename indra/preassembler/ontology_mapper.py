@@ -1,4 +1,6 @@
 import os
+import rdflib
+
 
 class OntologyMapper(object):
     """A class to map between ontologies in grounded arguments of Statements.
@@ -26,7 +28,6 @@ class OntologyMapper(object):
     def map_statements(self):
         """Run the ontology mapping on the statements."""
         for stmt in self.statements:
-            agents = stmt.agent_list()
             for agent in stmt.agent_list():
                 if agent is None:
                     continue
@@ -69,6 +70,30 @@ def _load_wm_map():
     ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
     mappings = {}
 
+    def make_bbn_prefix_map():
+        bbn_ont = os.path.join(path_here, '../sources/bbn/bbn_ontology.rdf')
+        graph = rdflib.Graph()
+        graph.parse(os.path.abspath(bbn_ont), format='nt')
+        entry_map = {}
+        for node in graph.all_nodes():
+            entry = node.split('#')[1]
+            # Handle "event" and other top-level entries
+            if '/' not in entry:
+                entry_map[entry] = None
+                continue
+            parts = entry.split('/')
+            prefix, real_entry = parts[0], '/'.join(parts[1:])
+            print(prefix, real_entry)
+            entry_map[real_entry] = prefix
+        return entry_map
+
+    bbn_prefix_map = make_bbn_prefix_map()
+
+    def add_bbn_prefix(bbn_entry):
+        """We need to do this because the BBN prefixes are missing"""
+        prefix = bbn_prefix_map[bbn_entry]
+        return '%s/%s' % (prefix, bbn_entry)
+
     def map_entry(reader, entry):
         """Remap the reader and entry strings to match our internal standards."""
         if reader == 'eidos':
@@ -76,10 +101,8 @@ def _load_wm_map():
             entry_id = entry
         elif reader == 'BBN':
             namespace = 'BBN'
-            # TODO: here we will have to not only append event/entity
-            # to the entry but also split single words like economicactivity
-            # into economic_activity
-            entry_id = entry
+            entry = entry.replace(' ', '_').lower()
+            entry_id = add_bbn_prefix(entry)
         elif reader == 'sofia':
             namespace = 'SOFIA'
             # First chop off the Event/Entity prefix
@@ -111,7 +134,8 @@ def _load_wm_map():
         ontomap.append(((s[0], s[1]), ts[0]))
     return ontomap
 
-try:
-    wm_ontomap = _load_wm_map()
-except Exception as e:
-    wm_ontomap = []
+
+#try:
+wm_ontomap = _load_wm_map()
+#except Exception as e:
+#    wm_ontomap = []
