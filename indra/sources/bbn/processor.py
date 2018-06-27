@@ -95,8 +95,15 @@ class BBNJsonLdProcessor(object):
 
     def _make_concept(self, entity):
         """Return Concept from an BBN entity."""
-        # Use the canonical name as the name of the Concept
+        # Use the canonical name as the name of the Concept by default
         name = self._sanitize(entity['canonicalName'])
+        # But if there is a trigger head text, we prefer that since
+        # it almost always results in a cleaner name
+        trigger = entity.get('trigger')
+        if trigger is not None:
+            head_text = trigger.get('head text')
+            if head_text is not None:
+                name = head_text
         # Save raw text and BBN scored groundings as db_refs
         db_refs = {'TEXT': entity['text'],
                    'BBN': _get_bbn_grounding(entity)}
