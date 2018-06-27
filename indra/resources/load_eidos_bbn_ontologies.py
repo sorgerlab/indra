@@ -70,6 +70,17 @@ def load_ontology(ont_url, rdf_path):
     save_hierarchy(G, rdf_path)
 
 
+def make_bbn_tsv():
+    """Make a TSV with BBN's ontology with examples
+    
+    This is meant to match the format of the file that Eidos can work
+    with to perform ontology alignment.
+    """
+    yml = requests.get(bbn_ont_url).content
+    root = yaml.load(yml)
+
+
+
 if __name__ == '__main__':
     # Eidos
     from indra.sources import eidos
