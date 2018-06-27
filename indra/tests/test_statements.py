@@ -1671,6 +1671,17 @@ def test_concept_isa_cwms():
     assert not c2.refinement_of(c1, {'entity': hm})
 
 
+def test_concept_isa_bbn():
+    bbn_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           '../sources/bbn/bbn_ontology.rdf')
+    hm = HierarchyManager(bbn_ont, True, True)
+    c1 = Concept('a',
+                 db_refs={'BBN': 'entity/academic_discipline/engineering'})
+    c2 = Concept('b', db_refs={'BBN': 'entity/academic_discipline'})
+    assert c1.refinement_of(c2, {'entity': hm})
+    assert not c2.refinement_of(c1, {'entity': hm})
+
+
 def test_influence_refinement_of():
     c1 = Concept('production')
     c2 = Concept('price')
