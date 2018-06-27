@@ -1,19 +1,23 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import os
-import re
 import logging
-import operator
-import itertools
-import collections
 import xml.etree.ElementTree as ET
-from indra.util import read_unicode_csv
 from indra.statements import *
-import indra.databases.hgnc_client as hgnc_client
-import indra.databases.uniprot_client as up_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('cwms')
+
+
+class CWMSError(Exception):
+    pass
+
+
+POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
+                        'ONT::INFLUENCE': 1},
+                 'EVENT': {'ONT::INCREASE': 1,
+                           'ONT::MODULATE': None,
+                           'ONT::DECREASE': -1,
+                           'ONT::INHIBIT': -1}}
 
 
 class CWMSProcessor(object):
@@ -45,6 +49,7 @@ class CWMSProcessor(object):
     par_to_sec : dict[str: str]
         A map from paragraph IDs to their associated section types
     """
+
     def __init__(self, xml_string):
         self.statements = []
         # Parse XML
@@ -67,108 +72,81 @@ class CWMSProcessor(object):
                            for p in paragraph_tags}
 
         # Extract statements
-        self.extract_noun_causal_relations()
-        self.extract_noun_affect_relations()
-        self.extract_noun_influence_relations()
+        self.extract_noun_relations('CC')
+        self.extract_noun_relations('EVENT')
         return
 
-    def extract_noun_causal_relations(self):
-        """Extracts causal relationships between two nouns/terms (as opposed to
-        events)
+    def _get_subj_obj(self, event):
+        """Get the concepts for a relation given and element.
+
+        The ontological type of the event is used to infer the labels of agents
+        and the polarity of the influence (see `_positive_ccs`,
+        `_positive_events`, and `_negative_events` class attributes).
         """
-        # Search for causal connectives of type ONT::CAUSE
-        ccs = self.tree.findall("CC/[type='ONT::CAUSE']")
-        for cc in ccs:
-            # Each cause should involve a factor term and an outcome term
-            factor = cc.find("arg/[@role=':FACTOR']")
-            outcome = cc.find("arg/[@role=':OUTCOME']")
-            polarity = 1
-            self.make_statement_noun_cause_effect(cc, factor, outcome,
-                                                  polarity)
+        ev_type = event.find('type').text
+        if ev_type in POLARITY_DICT['CC'].keys():
+            polarity = POLARITY_DICT['CC'][ev_type]
+            subj = self._get_concept(event, "arg/[@role=':FACTOR']")
+            obj = self._get_concept(event, "arg/[@role=':OUTCOME']")
+        elif ev_type in POLARITY_DICT['EVENT'].keys():
+            polarity = POLARITY_DICT['EVENT'][ev_type]
+            subj = self._get_concept(event, "*[@role=':AGENT']")
+            obj = self._get_concept(event, "*[@role=':AFFECTED']")
+        else:
+            logger.info("Unhandled event type: %s" % ev_type)
+            return None, None, None
 
-    def extract_noun_affect_relations(self):
+        return subj, obj, polarity
+
+    def extract_noun_relations(self, key):
         """Extract relationships where a term/noun affects another term/noun"""
-        event_polarity_tuples = [
-            (-1, self.tree.findall("EVENT/[type='ONT::INHIBIT']")
-                 + self.tree.findall("EVENT/[type='ONT::DECREASE']")),
-            (1, self.tree.findall("EVENT/[type='ONT::INCREASE']"))
-            ]
-        for polarity, events in event_polarity_tuples:
-            for event in events:
-                # Each inhibit event should involve an agent and an affected
-                agent = event.find("*[@role=':AGENT']")
-                affected = event.find("*[@role=':AFFECTED']")
-                self.make_statement_noun_cause_effect(event, agent, affected,
-                                                      polarity)
+        events = self.tree.findall("%s/[type]" % key)
+        for event in events:
+            subj, obj, pol = self._get_subj_obj(event)
+            self._make_statement_noun_cause_effect(event, subj, obj, pol)
 
+    def _get_concept(self, event, find_str):
+        """Get a concept referred from the event by the given string."""
+        # Get the term with the given element id
+        element = event.find(find_str)
+        if element is None:
+            return
+        element_id = element.attrib.get('id')
+        element_term = self.tree.find("*[@id='%s']" % element_id)
 
-    def extract_noun_influence_relations(self):
-        """Extracts relationships with one term influencing another term."""
-        ccs = self.tree.findall("CC/[type='ONT::INFLUENCE']")
-        for cc in ccs:
-            # Each cause should involve a factor term and an outcome term
-            factor = cc.find("arg/[@role=':FACTOR']")
-            outcome = cc.find("arg/[@role=':OUTCOME']")
-            polarity = 1
-            self.make_statement_noun_cause_effect(cc, factor, outcome,
-                                                  polarity)
-
-    def make_statement_noun_cause_effect(self, event_element,
-                                         cause, affected, polarity):
-        # Only process if both the cause and affected are present
-        if cause is None or affected is None:
+        if element_term is None:
             return
 
-        # Get the term with the given cause id
-        cause_id = cause.attrib.get('id')
-        cause_term = self.tree.find("TERM/[@id='%s']" % cause_id)
-        if cause_term is None:
+        # Get the element's text and use it to construct a Concept
+        element_text_element = element_term.find('text')
+        if element_text_element is None:
             return
+        element_text = element_text_element.text
+        element_db_refs = {'TEXT': element_text}
 
-        # Get the cause's text and use it to construct a Concept
-        cause_text_element = cause_term.find('text')
-        if cause_text_element is None:
-            return
-        cause_text = cause_text_element.text
-        cause_db_refs = {'TEXT': cause_text}
-        #
-        cause_type_element = cause_term.find('type')
-        if cause_type_element is not None:
-            cause_db_refs['CWMS'] = cause_type_element.text
-        #
-        cause_concept = Concept(cause_text, db_refs=cause_db_refs)
+        element_type_element = element_term.find('type')
+        if element_type_element is not None:
+            element_db_refs['CWMS'] = element_type_element.text
 
-        # Get the term with the given affected id
-        affected_id = affected.attrib.get('id')
-        affected_term = self.tree.find("TERM/[@id='%s']" % affected_id)
-        if affected_term is None:
-            return
+        return Concept(element_text, db_refs=element_db_refs)
 
-        # Get the affected's text and type and use them to construct a Concept
-        affected_text_element = affected_term.find('text')
-        if affected_text_element is None:
+    def _make_statement_noun_cause_effect(self, event_element,
+                                          cause_concept, affected_concept,
+                                          polarity):
+        """Make the Influence statement from the component parts."""
+        if cause_concept is None or affected_concept is None:
             return
-        affected_text = affected_text_element.text
-        affected_db_refs = {'TEXT': affected_text}
-        #
-        affected_type_element = affected_term.find('type')
-        if affected_type_element is not None:
-            affected_db_refs['CWMS'] = affected_type_element.text
-        #
-        affected_concept = Concept(affected_text, db_refs=affected_db_refs)
 
         # Construct evidence
         ev = self._get_evidence(event_element)
         ev.epistemics['direct'] = False
 
         # Make statement
-        if polarity == -1:
-            obj_delta = {'polarity': -1, 'adjectives': []}
-        else:
-            obj_delta = None
+        obj_delta = {'polarity': polarity, 'adjectives': []}
         st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
                        evidence=[ev])
         self.statements.append(st)
+        return st
 
     def _get_evidence(self, event_tag):
         text = self._get_evidence_text(event_tag)

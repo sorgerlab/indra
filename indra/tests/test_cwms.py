@@ -158,3 +158,27 @@ def test_cwms_two_sentences():
     cp = process_text(text)
     assert cp is not None
     assert len(cp.statements) == 2
+
+
+@attr('slow', 'webservice')
+def test_second_order_statements():
+    # NOTE: the second order statement feature is being developed elsewhere,
+    # however this test should still pass as is.
+    text = 'Drought increases the decrease of crops by army worms'
+    cp = process_text(text)
+    assert cp is not None
+    print(cp.statements)  # Check to make sure str/repr work.
+    assert len(cp.statements) == 2, len(cp.statements)
+
+
+@attr('slow', 'webservice')
+def test_three_sentences():
+    # These sentences were used in the June 2018 WM East and West coast
+    # hackathons for creating a simple test model constructed from all the
+    # readers, and utilizing other components.
+    text = 'Floods cause displacement. Displacement reduces access to food. ' \
+           'Rainfall causes floods.'
+    cp = process_text(text)
+    assert cp is not None
+    print(cp.statements)
+    assert len(cp.statements) == 3, len(cp.statements)
