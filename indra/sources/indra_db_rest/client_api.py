@@ -97,7 +97,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
     on_limit : str
-        There are four options for handling the a query that is to large:
+        There are four options for handling a query that is too large:
         `sample` - (default) take a sample of statements from the result,
         `truncate` - simply return the first 10,000 statements of the result,
         `error` - raise an error if the query is too large, or
