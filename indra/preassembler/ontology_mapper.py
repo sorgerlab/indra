@@ -59,45 +59,52 @@ class OntologyMapper(object):
                 mappings.append(m2)
         return mappings
 
+
 def _load_default_mappings():
     return [(('UN', 'entities/x'), ('BBN', 'entities/y'))]
-
-
 
 
 def _load_wm_map():
     path_here = os.path.dirname(os.path.abspath(__file__))
     ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
     mappings = {}
+
+    def map_entry(reader, entry):
+        """Remap the reader and entry strings to match our internal standards."""
+        if reader == 'eidos':
+            namespace = 'UN'
+            entry_id = entry
+        elif reader == 'BBN':
+            namespace = 'BBN'
+            # TODO: here we will have to not only append event/entity
+            # to the entry but also split single words like economicactivity
+            # into economic_activity
+            entry_id = entry
+        elif reader == 'sofia':
+            namespace = 'SOFIA'
+            parts = entry.split('/')[1:]
+            # TODO: we will also need to capitalize each part of each
+            # component split by underscores e.g. Natural_Phenomena
+            entry_id = '/'.join([p.capitalize() for p in parts])
+        else:
+            return reader, entry
+        return namespace, entry_id
+
     with open(ontomap_file, 'r') as fh:
         for line in fh.readlines():
+            # Get each entry from the line
             s, se, t, te, score = line.split('\t')
-            if s == 'eidos':
-                s = 'UN'
-            else:
-                s = s.upper()
-            if t == 'eidos':
-                t = 'UN'
-            else:
-                t = t.upper()
-            if s == 'SOFIA':
-                parts = se.split('/')[1:]
-                se = '/'.join(parts)
-            if t == 'SOFIA':
-                parts = te.split('/')[1:]
-                te = '/'.join(parts)
-            if s == 'BBN':
-                se = 'event/%s' % se
-            if t == 'BBN':
-                te = 'event/%s' % te
+            # Map the entries to our internal naming standards
+            s, se = map_entry(s, se)
+            t, te = map_entry(t, te)
             if (s, se) in mappings:
-                if mappings[(s, se)][1] < score:
-                    mappings[(s, se)] = ((t, te), score)
+                if mappings[(s, se, t)][1] < score:
+                    mappings[(s, se, t)] = ((t, te), score)
             else:
-                mappings[(s, se)] = ((t, te), score)
+                mappings[(s, se, t)] = ((t, te), score)
     ontomap = []
     for s, ts in mappings.items():
-        ontomap.append((s, ts[0]))
+        ontomap.append(((s[0], s[1]), ts[0]))
     return ontomap
 
 try:
