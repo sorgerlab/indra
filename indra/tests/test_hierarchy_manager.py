@@ -190,6 +190,19 @@ def test_load_trips_hierarchy():
     assert trips_isa('ONT::TABLE', 'ONT::MANUFACTURED-OBJECT')
 
 
+def test_load_bbn_hierarchy():
+    bbn_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           '../sources/bbn/bbn_ontology.rdf')
+    hm = HierarchyManager(bbn_ont, True, True)
+    assert hm.isa_closure
+    bbn_isa = lambda a, b: hm.isa('BBN', a, 'BBN', b)
+    assert bbn_isa('entity/academic_discipline/engineering',
+                   'entity/academic_discipline')
+    assert not bbn_isa('entity/academic_discipline',
+                       'entity/academic_discipline/engineering')
+    assert bbn_isa('event/healthcare/human_disease/outbreak',
+                   'event/healthcare/human_disease')
+
 def test_same_components():
     uri_prkag1 = ent_hierarchy.get_uri('HGNC', 'PRKAG1')
     uri_ampk = ent_hierarchy.get_uri('FPLX', 'AMPK')
