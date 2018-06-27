@@ -9,9 +9,9 @@ from indra.statements import *
 path_this = os.path.dirname(os.path.abspath(__file__))
 test_file_simple = os.path.join(path_this, 'bbn_test_simple.json-ld')
 test_file_negatedCause = os.path.join(path_this,
-        'bbn_test_negatedCause.json-ld')
+                                      'bbn_test_negatedCause.json-ld')
 test_file_negatedEffect = os.path.join(path_this,
-        'bbn_test_negatedEffect.json-ld')
+                                       'bbn_test_negatedEffect.json-ld')
 
 
 def test_simple_extraction():
@@ -47,3 +47,12 @@ def test_negated_effect():
     The processor should give no statements for a negated effect."""
     bp = process_json_file_old(test_file_negatedEffect)
     assert(len(bp.statements) == 0)
+
+
+def test_bbn_on_ben_paragraph():
+    bp = process_jsonld_file(join(path_this,
+                                  'hackathon_test_paragraph.json-ld'))
+    assert bp is not None
+    print(bp.statements)
+    stmt_dict = {hash(s.get_hash()): s for s in bp.statements}
+    assert len(stmt_dict) == 3, len(stmt_dict)

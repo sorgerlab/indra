@@ -3,6 +3,7 @@ import rdflib
 import logging
 import objectpath
 import collections
+from os.path import basename
 from indra.statements import Concept, Influence, Evidence
 
 
@@ -30,6 +31,7 @@ class BBNJsonLdProcessor(object):
         self.document_dict = {}
         self.entity_dict = {}
         self.event_dict = {}
+        self.eid_stmt_dict = {}
 
     def get_documents(self):
         """Populate the sentences attribute with a dict keyed by document id."""
@@ -47,12 +49,15 @@ class BBNJsonLdProcessor(object):
             return
         self.event_dict = {ev['@id']: ev for ev in events}
 
-        # TODO: are there other event types we can use?
-        extract_types = ['Cause-Effect']
+        # List out event types and their default (implied) polarities.
+        event_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+                            'mitigation': -1, 'prevention': -1}
+
         # Restrict to known event types
-        events = [e for e in events if e.get('type') in extract_types]
-        logger.info('%d events of types %s found' % (len(events),
-                                                     ', '.join(extract_types)))
+        events = [e for e in events if any([et in e.get('type')
+                                            for et in event_polarities.keys()])]
+        logger.info('%d events of types %s found'
+                    % (len(events), ', '.join(event_polarities.keys())))
 
         # Build a dictionary of entities and sentences by ID for convenient
         # lookup
@@ -62,100 +67,82 @@ class BBNJsonLdProcessor(object):
 
         self.get_documents()
 
-        # The first state corresponds to increase/decrease
-        def get_polarity(event):
-            pol_map = {'Positive': 1, 'Negative': -1}
-            if 'states' in event:
-                for state_property in event['states']:
-                    if state_property['type'] == 'polarity':
-                        return pol_map[state_property['text']]
-            return None
-
-        def get_adjectives(event):
-            ret_list = []
-            if 'states' in event:
-                for state_property in event['states']:
-                    if state_property['type'] != 'polarity':
-                        ret_list.append(state_property['text'])
-            return ret_list
-
-        def _get_bbn_grounding(entity):
-            """Return BBN grounding."""
-            grounding = entity['type']
-            if grounding.startswith('/'):
-                grounding = grounding[1:]
-            return grounding
-
-        def _make_concept(entity):
-            """Return Concept from an BBN entity."""
-            # Use the canonical name as the name of the Concept
-            name = self._sanitize(entity['canonicalName'])
-            # Save raw text and BBN scored groundings as db_refs
-            db_refs = {'TEXT': entity['text'],
-                       'BBN': _get_bbn_grounding(entity)}
-            concept = Concept(name, db_refs=db_refs)
-            return concept
-
         for event in events:
-            args = event.get('arguments', {})
-            subj_tag = [arg for arg in args if arg['type'] == 'has_cause']
-            if subj_tag:
-                subj_id = subj_tag[0]['value']['@id']
-            else:
-                subj_id = None
-            obj_tag = [arg for arg in args if arg['type'] == 'has_effect']
-            if obj_tag:
-                obj_id = obj_tag[0]['value']['@id']
-            else:
-                obj_id = None
+            event_type = event.get('type')
+            subj_concept, subj_delta = self._get_concept(event, 'source')
+            obj_concept, obj_delta = self._get_concept(event, 'destination')
 
-            # Skip event if either argument is missing
-            if not subj_id or not obj_id:
+            # Apply the naive polarity from the type of statement. For the
+            # purpose of the multiplication here, if obj_delta['polarity'] is
+            # None to begin with, we assume it is positive
+            obj_delta['polarity'] = \
+                event_polarities[event_type] * \
+                (obj_delta['polarity'] if obj_delta['polarity'] is not None
+                 else 1)
+
+            if not subj_concept or not obj_concept:
                 continue
 
-            subj = self.event_dict[subj_id]
-            obj = self.event_dict[obj_id]
+            evidence = self._get_evidence(event, subj_concept, obj_concept,
+                                          get_states(event))
 
-            subj_concept = _make_concept(subj)
-            obj_concept = _make_concept(obj)
-
-            # Adjectives are not extracted for now, in the case of BBN
-            # they are things like 'Asserted', 'Specific', 'Generic'
-            subj_delta = {'adjectives': [],
-                          'polarity': get_polarity(subj)}
-            obj_delta = {'adjectives': [],
-                         'polarity': get_polarity(obj)}
-
-            evidence = self._get_evidence(event, subj_concept, obj_concept)
-
-            st = Influence(subj_concept, obj_concept,
-                           subj_delta, obj_delta, evidence=evidence)
-
+            st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
+                           evidence=evidence)
+            self.eid_stmt_dict[event['@id']] = st
             self.statements.append(st)
 
-    def _get_evidence(self, event, subj_concept, obj_concept):
+        return
+
+    def _make_concept(self, entity):
+        """Return Concept from an BBN entity."""
+        # Use the canonical name as the name of the Concept by default
+        name = self._sanitize(entity['canonicalName'])
+        # But if there is a trigger head text, we prefer that since
+        # it almost always results in a cleaner name
+        # This is removed for now since the head word seems to be too
+        # minimal for some concepts, e.g. it gives us only "security"
+        # for "food security".
+        """
+        trigger = entity.get('trigger')
+        if trigger is not None:
+            head_text = trigger.get('head text')
+            if head_text is not None:
+                name = head_text
+        """
+        # Save raw text and BBN scored groundings as db_refs
+        db_refs = {'TEXT': entity['text'],
+                   'BBN': _get_bbn_grounding(entity)}
+        concept = Concept(name, db_refs=db_refs)
+        return concept
+
+    def _get_concept(self, event, arg_type):
+        eid = _choose_id(event, arg_type)
+        ev = self.event_dict[eid]
+        concept = self._make_concept(ev)
+        ev_delta = {'adjectives': [],
+                    'states': get_states(ev),
+                    'polarity': get_polarity(ev)}
+        return concept, ev_delta
+
+    def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
         # First try looking up the full sentence through provenance
-        doc_info = provenance[0].get('document')
-        doc_id = doc_info['@id']
-        agent_strs = [ag.db_refs['TEXT'] for ag in [subj_concept, obj_concept]]
-        text = None
-        for sent in self.document_dict[doc_id]['sentences'].values():
-            # We take the first match, which _might_ be wrong sometimes. Perhaps
-            # refine further later.
-            if all([agent_text in sent for agent_text in agent_strs]):
-                text = self._sanitize(sent)
-                break
-        else:
-            logger.warning("Could not find sentence in document %s for event "
-                           "with agents: %s" % (doc_id, str(agent_strs)))
+        doc_id = provenance[0]['document']['@id']
+        sent_id = provenance[0]['documentCharPositions']['sentence']
+        text = self.document_dict[doc_id]['sentences'][sent_id]
+        text = self._sanitize(text)
+        bounds = [provenance[0]['documentCharPositions'][k]
+                  for k in ['start', 'end']]
 
         annotations = {
-                'found_by'   : event.get('rule'),
-                'provenance' : provenance,
-                }
+            'found_by': event.get('rule'),
+            'provenance': provenance,
+            'event_type': basename(event.get('type')),
+            'adjectives': adjectives,
+            'bounds': bounds
+            }
         location = self.document_dict[doc_id]['location']
         ev = Evidence(source_api='bbn', text=text, annotations=annotations,
                       pmid=location)
@@ -171,6 +158,40 @@ class BBNJsonLdProcessor(object):
         return text
 
 
+def _choose_id(event, arg_type):
+    args = event.get('arguments', {})
+    obj_tag = [arg for arg in args if arg['type'] == arg_type]
+    if obj_tag:
+        obj_id = obj_tag[0]['value']['@id']
+    else:
+        obj_id = None
+    return obj_id
+
+
+def get_states(event):
+    ret_list = []
+    if 'states' in event:
+        for state_property in event['states']:
+            if state_property['type'] != 'polarity':
+                ret_list.append(state_property['text'])
+    return ret_list
+
+
+def _get_bbn_grounding(entity):
+    """Return BBN grounding."""
+    grounding = entity['type']
+    if grounding.startswith('/'):
+        grounding = grounding[1:]
+    return grounding
+
+
+def get_polarity(event):
+    pol_map = {'Positive': 1, 'Negative': -1}
+    if 'states' in event:
+        for state_property in event['states']:
+            if state_property['type'] == 'polarity':
+                return pol_map[state_property['text']]
+    return None
 
 # OLD BBN PROCESSOR
 
