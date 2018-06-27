@@ -1,15 +1,13 @@
 import openpyxl
 from .processor import SofiaProcessor
 
-def process_table(fname, sheet_name):
+def process_table(fname):
     """Return processor by processing a given sheet of a spreadsheet file.
 
     Parameters
     ----------
     fname : str
         The name of the Excel file (typically .xlsx extension) to process
-    sheet_name : str
-        The name of the sheet in the Excel file that has extractions
 
     Returns
     -------
@@ -18,7 +16,8 @@ def process_table(fname, sheet_name):
         Statements as its statements attribute
     """
     book = openpyxl.load_workbook(fname, read_only=True)
-    sheet = book[sheet_name]
-    rows = sheet.rows
-    sp = SofiaProcessor(rows)
+    rel_sheet = book['Relations']
+    event_sheet = book['Events']
+    entities_sheet = book['Entities']
+    sp = SofiaProcessor(rel_sheet.rows, event_sheet.rows, entities_sheet.rows)
     return sp
