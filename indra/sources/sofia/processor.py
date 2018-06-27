@@ -77,9 +77,9 @@ class SofiaProcessor(object):
                                          db_refs={'TEXT': effect_name,
                                                   'SOFIA': effect_grounding})
                 stmt = Influence(cause_concept, effect_concept, evidence=[ev])
-                # Assume positive polarity on the subject, put the overall
+                # Assume unknown polarity on the subject, put the overall
                 # polarity in the sign of the object
-                stmt.subj_delta['polarity'] = 1
+                stmt.subj_delta['polarity'] = None
                 stmt.obj_delta['polarity'] = pol
                 stmts.append(stmt)
         return stmts
