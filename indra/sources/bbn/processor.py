@@ -72,9 +72,13 @@ class BBNJsonLdProcessor(object):
             subj_concept, subj_delta = self._get_concept(event, 'source')
             obj_concept, obj_delta = self._get_concept(event, 'destination')
 
-            # Apply the naive polarity from the type of statement.
+            # Apply the naive polarity from the type of statement. For the
+            # purpose of the multiplication here, if obj_delta['polarity'] is
+            # None to begin with, we assume it is positive
             obj_delta['polarity'] = \
-                event_polarities[event_type]*obj_delta['polarity']
+                event_polarities[event_type] * \
+                (obj_delta['polarity'] if obj_delta['polarity'] is not None
+                 else 1)
 
             if not subj_concept or not obj_concept:
                 continue
