@@ -1,16 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import os
-import re
 import logging
-import operator
-import itertools
-import collections
 import xml.etree.ElementTree as ET
-from indra.util import read_unicode_csv
 from indra.statements import *
-import indra.databases.hgnc_client as hgnc_client
-import indra.databases.uniprot_client as up_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('cwms')
@@ -150,10 +142,7 @@ class CWMSProcessor(object):
         ev.epistemics['direct'] = False
 
         # Make statement
-        if polarity == -1:
-            obj_delta = {'polarity': -1, 'adjectives': []}
-        else:
-            obj_delta = None
+        obj_delta = {'polarity': polarity, 'adjectives': []}
         st = Influence(cause_concept, affected_concept, obj_delta=obj_delta,
                        evidence=[ev])
         self.statements.append(st)
