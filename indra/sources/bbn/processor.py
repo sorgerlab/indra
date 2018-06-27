@@ -99,11 +99,16 @@ class BBNJsonLdProcessor(object):
         name = self._sanitize(entity['canonicalName'])
         # But if there is a trigger head text, we prefer that since
         # it almost always results in a cleaner name
+        # This is removed for now since the head word seems to be too
+        # minimal for some concepts, e.g. it gives us only "security"
+        # for "food security".
+        """
         trigger = entity.get('trigger')
         if trigger is not None:
             head_text = trigger.get('head text')
             if head_text is not None:
                 name = head_text
+        """
         # Save raw text and BBN scored groundings as db_refs
         db_refs = {'TEXT': entity['text'],
                    'BBN': _get_bbn_grounding(entity)}
