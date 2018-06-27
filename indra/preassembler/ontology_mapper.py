@@ -82,10 +82,14 @@ def _load_wm_map():
             entry_id = entry
         elif reader == 'sofia':
             namespace = 'SOFIA'
+            # First chop off the Event/Entity prefix
             parts = entry.split('/')[1:]
-            # TODO: we will also need to capitalize each part of each
-            # component split by underscores e.g. Natural_Phenomena
-            entry_id = '/'.join([p.capitalize() for p in parts])
+            # Now we split each part by underscore and capitalize
+            # each piece of each part
+            parts = ['_'.join([p.capitalize() for p in part.split('_')])
+                     for part in parts]
+            # Finally we stick the entry back together separated by slashes
+            entry_id = '/'.join(parts)
         else:
             return reader, entry
         return namespace, entry_id
