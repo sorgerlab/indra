@@ -49,15 +49,9 @@ def test_negated_effect():
     assert(len(bp.statements) == 0)
 
 
-def test_on_ten_doc_file():
-    """Test on the extraction from the WM 10 documents."""
-    bp = process_jsonld_file(join(path_this, 'wm_10_doc.json-ld'))
-    assert bp is not None
-    assert bp.statements
-
-
 def test_bbn_on_ben_paragraph():
-    bp = process_jsonld_file(join(path_this, 'hackathon_test_paragraph.json-ld'))
+    bp = process_jsonld_file(join(path_this,
+                                  'hackathon_test_paragraph.json-ld'))
     assert bp is not None
     print(bp.statements)
     stmt_dict = {hash(s.get_hash()): s for s in bp.statements}
