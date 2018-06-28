@@ -449,3 +449,21 @@ def test_filter_concept_names():
     assert len(stmts_out) == 4, stmts_out
     stmts_out = ac.filter_concept_names(stmts, ['a', 'b'], 'one', invert=True)
     assert len(stmts_out) == 1, stmts_out
+
+
+def test_filter_namespace_concepts():
+    def make_statement(a, b):
+        return Influence(Concept(a, db_refs={'TEXT': a}),
+                         Concept(b, db_refs={'TEXT': b}))
+    stmts = [make_statement('education', 'thinking'),
+             make_statement('doubt', 'government')]
+    fs = ac.filter_by_namespace_entries(stmts, 'TEXT', ['education'], 'one')
+    assert [stmts[0]] == fs, fs
+    fs = ac.filter_by_namespace_entries(stmts, 'TEXT', ['education'], 'one',
+                                        invert=True)
+    assert stmts == fs, fs
+    fs = ac.filter_by_namespace_entries(stmts, 'TEXT', ['education'], 'all',
+                                        invert=True)
+    assert [stmts[1]] == fs, fs
+    fs = ac.filter_by_namespace_entries(stmts, 'TEXT', ['education'], 'all')
+    assert not fs, fs
