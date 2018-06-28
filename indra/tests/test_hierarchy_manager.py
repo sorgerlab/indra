@@ -166,16 +166,16 @@ def test_load_eidos_hierarchy():
     hm = HierarchyManager(eidos_ont, True, True)
     assert hm.isa_closure
     eidos_isa = lambda a, b: hm.isa('UN', a, 'UN', b)
-    assert eidos_isa('events/human/conflict/war',
-                     'events/human/conflict')
-    assert not eidos_isa('events/human/conflict/war',
-                         'events/human/human_migration/migration')
-    assert eidos_isa('entities/measurement/distance/meter',
-                     'entities/measurement')
-    assert eidos_isa('events/natural/weather/storm/tornado',
-                     'events')
-    assert not eidos_isa('events',
-                         'events/natural/weather/storm/tornado')
+    assert eidos_isa('UN/events/human/conflict',
+                     'UN/events/human')
+    assert not eidos_isa('UN/events/human/conflict',
+                         'UN/events/human/human_migration')
+    assert eidos_isa('UN/entities/human/infrastructure',
+                     'UN/entities')
+    assert eidos_isa('UN/events/natural_disaster/storm',
+                     'UN/events')
+    assert not eidos_isa('UN/events',
+                         'UN/events/natural/weather/storm')
 
 
 def test_load_trips_hierarchy():
