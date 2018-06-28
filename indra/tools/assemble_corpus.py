@@ -745,7 +745,7 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
 
 
 def filter_by_namespace_entries(stmts_in, ns, entries, policy,
-                                match_suffix=False):
+                                match_suffix=False, invert=False):
     """Filter out statements with no agent matching any entry."""
 
     if policy not in ('one', 'all'):
@@ -753,14 +753,16 @@ def filter_by_namespace_entries(stmts_in, ns, entries, policy,
         return
     else:
         name_str = ', '.join(entries)
-        logger.info(('Filtering %d statements for ones containing "%s" of: '
-                     '%s...') % (len(stmts_in), policy, name_str))
+        rev_mod = 'not ' if invert else ''
+        logger.info(('Filtering %d statements for those %scontaining "%s" of: '
+                     '%s...') % (len(stmts_in), rev_mod, policy, name_str))
 
     def meets_criterion(agent):
         if agent.db_refs[ns] in entries:
-            return True
+            return False if invert else True
         if match_suffix:
-            return agent.db_refs[ns] in [e.split('/')[-1] for e in entries]
+            if agent.db_refs[ns] in [e.split('/')[-1] for e in entries]:
+                return False if invert else True
 
     if policy == 'all':
         enough = all
