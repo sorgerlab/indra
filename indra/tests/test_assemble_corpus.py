@@ -449,3 +449,41 @@ def test_filter_concept_names():
     assert len(stmts_out) == 4, stmts_out
     stmts_out = ac.filter_concept_names(stmts, ['a', 'b'], 'one', invert=True)
     assert len(stmts_out) == 1, stmts_out
+
+
+def test_filter_namespace_concepts_simple():
+    def make_statement(a, b):
+        return Influence(Concept(a, db_refs={'TEXT': a}),
+                         Concept(b, db_refs={'TEXT': b}))
+    stmts = [make_statement('education', 'thinking'),
+             make_statement('doubt', 'government')]
+    fs = ac.filter_by_db_refs(stmts, 'TEXT', ['education'], 'one')
+    assert [stmts[0]] == fs, fs
+    fs = ac.filter_by_db_refs(stmts, 'TEXT', ['education'], 'one',
+                                        invert=True)
+    assert stmts == fs, fs
+    fs = ac.filter_by_db_refs(stmts, 'TEXT', ['education'], 'all',
+                                        invert=True)
+    assert [stmts[1]] == fs, fs
+    fs = ac.filter_by_db_refs(stmts, 'TEXT', ['education'], 'all')
+    assert not fs, fs
+
+
+def test_filter_namespace_concepts_list():
+    def make_statement(a, b):
+        return Influence(Concept(a, db_refs={'UN': [(a, 1.0)]}),
+                         Concept(b, db_refs={'UN': [(b, 1.0)]}))
+    stmts = [make_statement('UN/entities/human/education',
+                'UN/entities/human/food/food_security'),
+             make_statement('UN/entities/human/fishery',
+                'UN/entities/human/government')]
+    fs = ac.filter_by_db_refs(stmts, 'UN', ['education'], 'one',
+                                        match_suffix=True)
+    assert [stmts[0]] == fs, fs
+    fs = ac.filter_by_db_refs(stmts, 'UN', ['education', 'fishery'],
+                                        'one', match_suffix=True)
+    assert stmts == fs, fs
+    fs = ac.filter_by_db_refs(stmts, 'UN',
+                                        ['fishery', 'government'], 'all',
+                                        match_suffix=True)
+    assert [stmts[1]] == fs, fs

@@ -744,6 +744,47 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     return stmts_out
 
 
+def filter_by_db_refs(stmts_in, ns, entries, policy,
+                      match_suffix=False, invert=False):
+    """Filter out statements with no agent matching any entry."""
+
+    if policy not in ('one', 'all'):
+        logger.error('Policy %s is invalid, not applying filter.' % policy)
+        return
+    else:
+        name_str = ', '.join(entries)
+        rev_mod = 'not ' if invert else ''
+        logger.info(('Filtering %d statements for those with %s agents %s'
+                     'containing: %s...') % (len(stmts_in), policy, rev_mod,
+                                             name_str))
+
+    def meets_criterion(agent):
+        if ns not in agent.db_refs:
+            return False
+        entry = agent.db_refs[ns]
+        if isinstance(entry, list):
+            entry = entry[0][0]
+        ret = False
+        # Match suffix or entire entry
+        if match_suffix:
+            if any([entry.endswith(e) for e in entries]):
+                ret = True
+        else:
+            if entry in entries:
+                ret = True
+        # Invert if needed
+        if invert:
+            return not ret
+        else:
+            return ret
+
+    enough = all if policy == 'all' else any
+
+    return [s for s in stmts_in
+            if enough([meets_criterion(ag) for ag in s.agent_list()
+                       if ag is not None])]
+
+
 def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are grounded, but not to a human gene.
 
