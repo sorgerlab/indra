@@ -41,13 +41,13 @@ def build_relations(G, node, tree, prefix):
         prefix = prefix.replace(' ', '_')
     this_prefix = prefix + '/' + node if prefix else node
     for entry in tree:
-        if isinstance(entry, str) and entry[0] != '_':
-            child = entry
+        if isinstance(entry, str):
+            continue
         elif isinstance(entry, dict):
             if 'OntologyNode' not in entry.keys():
                 for child in entry.keys():
                     if child[0] != '_' and child != 'examples' \
-                       and any(isinstance(entry[child], t) for t in [list, dict]):
+                       and isinstance(entry[child], (list, dict)):
                         build_relations(G, child, entry[child], this_prefix)
             else:
                 child = entry['name']
