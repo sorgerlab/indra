@@ -41,13 +41,13 @@ def build_relations(G, node, tree, prefix):
         prefix = prefix.replace(' ', '_')
     this_prefix = prefix + '/' + node if prefix else node
     for entry in tree:
-        if isinstance(entry, str) and entry[0] != '_':
-            child = entry
+        if isinstance(entry, str):
+            continue
         elif isinstance(entry, dict):
             if 'OntologyNode' not in entry.keys():
                 for child in entry.keys():
                     if child[0] != '_' and child != 'examples' \
-                       and any(isinstance(entry[child], t) for t in [list, dict]):
+                       and isinstance(entry[child], (list, dict)):
                         build_relations(G, child, entry[child], this_prefix)
             else:
                 child = entry['name']
@@ -68,17 +68,6 @@ def load_ontology(ont_url, rdf_path):
         node = list(top_entry.keys())[0]
         build_relations(G, node, top_entry[node], None)
     save_hierarchy(G, rdf_path)
-
-
-def make_bbn_tsv():
-    """Make a TSV with BBN's ontology with examples
-    
-    This is meant to match the format of the file that Eidos can work
-    with to perform ontology alignment.
-    """
-    yml = requests.get(bbn_ont_url).content
-    root = yaml.load(yml)
-
 
 
 if __name__ == '__main__':
