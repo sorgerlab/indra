@@ -402,7 +402,7 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     if force_read:
         mode = 'all'
     else:
-        mode = 'unread'
+        mode = 'unread-all'
 
     # Iterate over the list of PMIDs and submit the job in chunks
     batch_client = boto3.client('batch', region_name='us-east-1')
