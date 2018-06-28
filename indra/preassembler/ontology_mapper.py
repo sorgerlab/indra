@@ -101,7 +101,7 @@ def _load_wm_map():
             entry_id = entry
         elif reader == 'BBN':
             namespace = 'BBN'
-            entry = entry.replace(' ', '_').lower()
+            entry = entry.replace(' ', '_')
             entry_id = add_bbn_prefix(entry)
         elif reader == 'sofia':
             namespace = 'SOFIA'
