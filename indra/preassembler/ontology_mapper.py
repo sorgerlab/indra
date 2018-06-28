@@ -141,7 +141,7 @@ def _load_wm_map():
     return ontomap
 
 
-#try:
-wm_ontomap = _load_wm_map()
-#except Exception as e:
-#    wm_ontomap = []
+try:
+    wm_ontomap = _load_wm_map()
+except Exception as e:
+    wm_ontomap = []

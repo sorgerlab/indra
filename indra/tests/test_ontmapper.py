@@ -1,3 +1,4 @@
+import unittest
 from indra.statements import Influence, Concept
 from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
 
@@ -16,6 +17,8 @@ def test_map():
         om.statements[1].subj.db_refs
 
 
+
+@@unittest.skip('Mapping file not in repo')
 def test_wm_map():
     c1 = Concept('x', db_refs={'UN': [('UN/properties/price', 1.0)]})
     c2 = Concept('y', db_refs={'UN': [('UN/entities/human/education', 1.0)]})
