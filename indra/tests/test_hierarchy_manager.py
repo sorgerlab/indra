@@ -196,12 +196,10 @@ def test_load_bbn_hierarchy():
     hm = HierarchyManager(bbn_ont, True, True)
     assert hm.isa_closure
     bbn_isa = lambda a, b: hm.isa('BBN', a, 'BBN', b)
-    assert bbn_isa('entity/academic_discipline/engineering',
-                   'entity/academic_discipline')
-    assert not bbn_isa('entity/academic_discipline',
-                       'entity/academic_discipline/engineering')
-    assert bbn_isa('event/healthcare/human_disease/outbreak',
-                   'event/healthcare/human_disease')
+    assert bbn_isa('entity/academic_discipline', 'entity')
+    assert not bbn_isa('entity', 'entity/academic_discipline')
+    assert bbn_isa('event/healthcare/human_disease',
+                   'event/healthcare')
 
 def test_same_components():
     uri_prkag1 = ent_hierarchy.get_uri('HGNC', 'PRKAG1')

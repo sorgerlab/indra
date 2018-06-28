@@ -1642,7 +1642,7 @@ def test_concept_get_grounding():
     d7 = {'UN': []}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
     assert Concept('b', db_refs=d2).get_grounding() == ('UN', 'c')
-    assert Concept('c', db_refs=d3).get_grounding() == ('BBN', 'z')
+    assert Concept('c', db_refs=d3).get_grounding() == ('UN', 'y')
     assert Concept('d', db_refs=d4).get_grounding() == ('BBN', 'a')
     assert Concept('e', db_refs=d5).get_grounding() == ('UN', 'a')
     assert Concept('f', db_refs=d6).get_grounding() == ('UN', 'a')
@@ -1676,8 +1676,8 @@ def test_concept_isa_bbn():
                            '../sources/bbn/bbn_ontology.rdf')
     hm = HierarchyManager(bbn_ont, True, True)
     c1 = Concept('a',
-                 db_refs={'BBN': 'entity/academic_discipline/engineering'})
-    c2 = Concept('b', db_refs={'BBN': 'entity/academic_discipline'})
+                 db_refs={'BBN': 'entity/rule/law'})
+    c2 = Concept('b', db_refs={'BBN': 'entity/rule'})
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
 
