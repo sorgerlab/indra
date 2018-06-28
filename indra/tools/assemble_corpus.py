@@ -744,8 +744,8 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     return stmts_out
 
 
-def filter_by_namespace_entries(stmts_in, ns, entries, policy,
-                                match_suffix=False, invert=False):
+def filter_by_db_refs(stmts_in, ns, entries, policy,
+                      match_suffix=False, invert=False):
     """Filter out statements with no agent matching any entry."""
 
     if policy not in ('one', 'all'):
@@ -759,13 +759,13 @@ def filter_by_namespace_entries(stmts_in, ns, entries, policy,
                                              name_str))
 
     def meets_criterion(agent):
-        if agent is None:
-            ret = False
+        if ns not in agent.db_refs:
+            return False
         elif agent.db_refs[ns] in entries:
             ret = True
         elif match_suffix:
             ret = False
-            if agent.db_refs[ns] in [e.split('/')[-1] for e in entries]:
+            if any([agent.db_refs[ns].endswith(e) for e in entries]):
                 ret = True
         else:
             ret = False
@@ -777,7 +777,8 @@ def filter_by_namespace_entries(stmts_in, ns, entries, policy,
     enough = all if policy == 'all' else any
 
     return [s for s in stmts_in
-            if enough([meets_criterion(ag) for ag in s.agent_list()])]
+            if enough([meets_criterion(ag) for ag in s.agent_list()
+                       if ag is not None])]
 
 
 def filter_human_only(stmts_in, **kwargs):
