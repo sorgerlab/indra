@@ -17,7 +17,9 @@ POLARITY_DICT = {'CC': {'ONT::CAUSE': 1,
                  'EVENT': {'ONT::INCREASE': 1,
                            'ONT::MODULATE': None,
                            'ONT::DECREASE': -1,
-                           'ONT::INHIBIT': -1}}
+                           'ONT::INHIBIT': -1,
+                           'ONT::TRANSFORM': None,
+                           'ONT::STIMULATE': 1}}
 
 
 class CWMSProcessor(object):
