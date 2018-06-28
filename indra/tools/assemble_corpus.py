@@ -754,17 +754,25 @@ def filter_by_namespace_entries(stmts_in, ns, entries, policy,
     else:
         name_str = ', '.join(entries)
         rev_mod = 'not ' if invert else ''
-        logger.info(('Filtering %d statements for those %scontaining "%s" of: '
-                     '%s...') % (len(stmts_in), rev_mod, policy, name_str))
+        logger.info(('Filtering %d statements for those with %s agents %s'
+                     'containing: %s...') % (len(stmts_in), policy, rev_mod,
+                                             name_str))
 
     def meets_criterion(agent):
         if agent is None:
-            return True if invert else False
-        if agent.db_refs[ns] in entries:
-            return False if invert else True
-        if match_suffix:
+            ret = False
+        elif agent.db_refs[ns] in entries:
+            ret = True
+        elif match_suffix:
+            ret = False
             if agent.db_refs[ns] in [e.split('/')[-1] for e in entries]:
-                return False if invert else True
+                ret = True
+        else:
+            ret = False
+        if invert:
+            return not ret
+        else:
+            return ret
 
     enough = all if policy == 'all' else any
 
