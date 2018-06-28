@@ -83,7 +83,6 @@ def _load_wm_map():
                 continue
             parts = entry.split('/')
             prefix, real_entry = parts[0], '/'.join(parts[1:])
-            print(prefix, real_entry)
             entry_map[real_entry] = prefix
         return entry_map
 
@@ -124,11 +123,18 @@ def _load_wm_map():
             # Map the entries to our internal naming standards
             s, se = map_entry(s, se)
             t, te = map_entry(t, te)
-            if (s, se) in mappings:
+            # We first do the forward mapping
+            if (s, se, t) in mappings:
                 if mappings[(s, se, t)][1] < score:
                     mappings[(s, se, t)] = ((t, te), score)
             else:
                 mappings[(s, se, t)] = ((t, te), score)
+            # Then we add the reverse mapping
+            if (t, te, s) in mappings:
+                if mappings[(t, te, s)][1] < score:
+                    mappings[(t, te, s)] = ((s, se), score)
+            else:
+                mappings[(t, te, s)] = ((s, se), score)
     ontomap = []
     for s, ts in mappings.items():
         ontomap.append(((s[0], s[1]), ts[0]))
