@@ -744,6 +744,18 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     return stmts_out
 
 
+def filter_by_namespace_entries(stmts_in, ns, entries, match_suffix=False):
+    """Filter out statements with no agent matching any entry."""
+    def meets_criterion(agent):
+        if agent.db_refs[ns] in entries:
+            return True
+        if match_suffix:
+            return agent.db_refs[ns] in [e.split('/')[-1] for e in entries]
+
+    return [s for s in stmts_in
+            if any([meets_criterion(ag) for ag in s.agent_list()])]
+
+
 def filter_human_only(stmts_in, **kwargs):
     """Filter out statements that are grounded, but not to a human gene.
 
