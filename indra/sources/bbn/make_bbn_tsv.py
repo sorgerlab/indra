@@ -1,4 +1,4 @@
-"""This script produces a TSV that help map the BBN ontology
+"""This script produces a TSV that helps map the BBN ontology
 to the Eidos UN ontology based on entries and examples."""
 
 import yaml
