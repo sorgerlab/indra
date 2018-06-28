@@ -761,14 +761,18 @@ def filter_by_db_refs(stmts_in, ns, entries, policy,
     def meets_criterion(agent):
         if ns not in agent.db_refs:
             return False
-        elif agent.db_refs[ns] in entries:
-            ret = True
-        elif match_suffix:
-            ret = False
-            if any([agent.db_refs[ns].endswith(e) for e in entries]):
+        entry = agent.db_refs[ns]
+        if isinstance(entry, list):
+            entry = entry[0][0]
+        ret = False
+        # Match suffix or entire entry
+        if match_suffix:
+            if any([entry.endswith(e) for e in entries]):
                 ret = True
         else:
-            ret = False
+            if entry in entries:
+                ret = True
+        # Invert if needed
         if invert:
             return not ret
         else:
