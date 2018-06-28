@@ -758,16 +758,15 @@ def filter_by_namespace_entries(stmts_in, ns, entries, policy,
                      '%s...') % (len(stmts_in), rev_mod, policy, name_str))
 
     def meets_criterion(agent):
+        if agent is None:
+            return True if invert else False
         if agent.db_refs[ns] in entries:
             return False if invert else True
         if match_suffix:
             if agent.db_refs[ns] in [e.split('/')[-1] for e in entries]:
                 return False if invert else True
 
-    if policy == 'all':
-        enough = all
-    else:
-        enough = any
+    enough = all if policy == 'all' else any
 
     return [s for s in stmts_in
             if enough([meets_criterion(ag) for ag in s.agent_list()])]
