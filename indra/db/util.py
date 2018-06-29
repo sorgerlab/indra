@@ -121,7 +121,43 @@ def get_db(db_label):
     return DatabaseManager(db_name, sqltype=sqltype, label=db_label)
 
 
-def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
+def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
+    """Get a generator for db orm statement objects which do not have agents."""
+    num_per_yield = kwargs.pop('num_per_yield', 100)
+    verbose = kwargs.pop('verbose', False)
+
+    # Get the objects for either raw or pa statements.
+    stmt_tbl_obj = db.tables[prefix + '_statements']
+    agent_tbl_obj = db.tables[prefix + '_agents']
+
+    # Build a dict mapping stmt UUIDs to statement IDs
+    logger.info("Getting %s that lack %s in the database."
+                % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
+    if prefix == 'pa':
+        stmts_w_agents_q = db.filter_query(
+            stmt_tbl_obj,
+            stmt_tbl_obj.mk_hash == agent_tbl_obj.stmt_mk_hash
+        )
+    elif prefix == 'raw':
+        stmts_w_agents_q = db.filter_query(
+            stmt_tbl_obj,
+            stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+        )
+    else:
+        raise IndraDatabaseError("Unrecognized prefix: %s." % prefix)
+    stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+                         .except_(stmts_w_agents_q))
+
+    # Start printing some data
+    if verbose:
+        num_stmts = stmts_wo_agents_q.count()
+        print("Adding agents for %d statements." % num_stmts)
+
+    # Get the iterator
+    return stmts_wo_agents_q.yield_per(num_per_yield)
+
+
+def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     """Insert agents for statements that don't have any agents.
 
     Note: This method currently works for both Statements and PAStatements and
@@ -146,40 +182,19 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
         using the `yeild_per` feature of sqlalchemy queries.
     """
     verbose = kwargs.pop('verbose', False)
-    stmt_tbl_obj = db.tables[prefix + '_statements']
-    agent_tbl_obj = db.tables[prefix + '_agents']
-    num_per_yield = kwargs.pop('num_per_yield', 100)
-    override_default_query = kwargs.pop('override_default_query', False)
     if len(kwargs):
         raise IndraDatabaseError("Unrecognized keyword argument(s): %s."
                                  % kwargs)
-    # Build a dict mapping stmt UUIDs to statement IDs
-    logger.info("Getting %s that lack %s in the database."
-                % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
-    if not override_default_query:
-        if prefix == 'pa':
-            stmts_w_agents_q = db.filter_query(
-                stmt_tbl_obj,
-                stmt_tbl_obj.mk_hash == agent_tbl_obj.stmt_mk_hash
-            )
-        elif prefix == 'raw':
-            stmts_w_agents_q = db.filter_query(
-                stmt_tbl_obj,
-                stmt_tbl_obj.id == agent_tbl_obj.stmt_id
-                )
-        else:
-            raise IndraDatabaseError("Unrecognized prefix: %s." % prefix)
-        stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-                             .except_(stmts_w_agents_q))
-    else:
-        stmts_wo_agents_q = db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-    #logger.debug("Getting stmts with query:\n%s" % str(stmts_wo_agents_q))
-    if verbose:
-        num_stmts = stmts_wo_agents_q.count()
-        print("Adding agents for %d statements." % num_stmts)
-    stmts_wo_agents = stmts_wo_agents_q.yield_per(num_per_yield)
 
-    # Now assemble agent records
+    agent_tbl_obj = db.tables[prefix + '_agents']
+
+    if stmts_wo_agents is None:
+        stmts_wo_agents = get_statements_without_agents(db, prefix)
+
+    if verbose:
+        num_stmts = len(stmts_wo_agents)
+
+    # Construct the agent records
     logger.info("Building agent data for insert...")
     if verbose:
         print("Loading:", end='', flush=True)
@@ -275,7 +290,10 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('raw_statements', stmt_data, cols)
-    insert_agents(db, 'raw', db.RawStatements.db_info_id == db_ref_id)
+    stmts_to_add_agents = \
+        get_statements_without_agents(db, 'raw',
+                                      db.RawStatements.db_info_id == db_ref_id)
+    insert_agents(db, 'raw', stmts_to_add_agents)
     return
 
 
