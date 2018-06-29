@@ -744,33 +744,66 @@ def filter_concept_names(stmts_in, name_list, policy, **kwargs):
     return stmts_out
 
 
-def filter_by_db_refs(stmts_in, ns, entries, policy,
-                      match_suffix=False, invert=False):
-    """Filter out statements with no agent matching any entry."""
+def filter_by_db_refs(stmts_in, namespace, values, policy, **kwargs):
+    """Filter to Statements whose agents are grounded to a matching entry.
+
+    Statements are filtered so that the db_refs entry (of the given namespace)
+    of their Agent/Concept arguments take a value in the given list of values.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of Statements to filter.
+    namespace : str
+        The namespace in db_refs to which the filter should apply.
+    values : list[str]
+        A list of values in the given namespace to which the filter should
+        apply.
+    policy : str
+        The policy to apply when filtering for the db_refs. "one": keep
+        Statements that contain at least one of the list of db_refs and
+        possibly others not in the list "all": keep Statements that only
+        contain db_refs given in the list
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+    invert : Optional[bool]
+        If True, the Statements that do not match according to the policy
+        are returned. Default: False
+    match_suffix : Optional[bool]
+        If True, the suffix of the db_refs entry is matches agains the list
+        of entries
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered Statements.
+    """
+    invert = kwargs.get('invert', False)
+    match_suffix = kwargs.get('match_suffix', False)
 
     if policy not in ('one', 'all'):
         logger.error('Policy %s is invalid, not applying filter.' % policy)
         return
     else:
-        name_str = ', '.join(entries)
+        name_str = ', '.join(values)
         rev_mod = 'not ' if invert else ''
         logger.info(('Filtering %d statements for those with %s agents %s'
-                     'containing: %s...') % (len(stmts_in), policy, rev_mod,
-                                             name_str))
+                     'grounded to: %s in the %s namespace...') %
+                        (len(stmts_in), policy, rev_mod, name_str, namespace))
 
     def meets_criterion(agent):
-        if ns not in agent.db_refs:
+        if namespace not in agent.db_refs:
             return False
-        entry = agent.db_refs[ns]
+        entry = agent.db_refs[namespace]
         if isinstance(entry, list):
             entry = entry[0][0]
         ret = False
         # Match suffix or entire entry
         if match_suffix:
-            if any([entry.endswith(e) for e in entries]):
+            if any([entry.endswith(e) for e in values]):
                 ret = True
         else:
-            if entry in entries:
+            if entry in values:
                 ret = True
         # Invert if needed
         if invert:
@@ -780,9 +813,15 @@ def filter_by_db_refs(stmts_in, ns, entries, policy,
 
     enough = all if policy == 'all' else any
 
-    return [s for s in stmts_in
-            if enough([meets_criterion(ag) for ag in s.agent_list()
-                       if ag is not None])]
+    stmts_out = [s for s in stmts_in
+                 if enough([meets_criterion(ag) for ag in s.agent_list()
+                            if ag is not None])]
+
+    logger.info('%d Statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
 
 
 def filter_human_only(stmts_in, **kwargs):
