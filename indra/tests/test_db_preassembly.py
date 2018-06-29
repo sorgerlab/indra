@@ -257,7 +257,7 @@ def test_statement_distillation_large():
 
 
 @attr('nonpublic', 'slow')
-def test_statement_distillation_large():
+def test_statement_distillation_extra_large():
     _check_statement_distillation(1001721)
 
 
