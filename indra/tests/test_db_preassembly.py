@@ -37,106 +37,95 @@ BATCH_SIZE = 2017
 STMTS = None
 
 
-def _load_tuples(fname):
-    with open(os.path.join(THIS_DIR, fname), 'rb') as f:
-        ret_tuples = pickle.load(f)
-    return ret_tuples
+class _DatabaseTestSetup(object):
+    """This object is used to setup the test database into various configs."""
+    def __init__(self, max_total_stmts):
+        self.test_db = db_util.get_test_db()
+        self.test_db._clear(force=True)
+        with open(os.path.join(THIS_DIR, 'db_pa_test_input_1M.pkl'), 'rb') as f:
+            self.test_data = pickle.load(f)
+
+        if max_total_stmts < len(self.test_data['raw_statements']['tuples']):
+            self.stmt_tuples = random.sample(
+                self.test_data['raw_statements']['tuples'],
+                max_total_stmts
+                )
+        else:
+            self.stmt_tuples = self.test_data['raw_statements']['tuples']
+
+        self.used_stmt_tuples = set()
+        return
+
+    def get_available_stmt_tuples(self):
+        return list(set(self.stmt_tuples) - self.used_stmt_tuples)
+
+    def load_background(self):
+        """Load in all the background provenance metadata (e.g. text_ref).
+
+        Note: This must be done before you try to load any statements.
+        """
+        for tbl in ['text_ref', 'text_content', 'reading', 'db_info']:
+            print("Loading %s..." % tbl)
+            self.test_db.copy(tbl, self.test_data[tbl]['tuples'],
+                              self.test_data[tbl]['cols'])
+        return
+
+    def add_statements(self, fraction=1, with_pa=False):
+        """Add statements and agents to the database.
+
+        Parameters
+        ----------
+        fraction : float between 0 and 1
+            Default is 1. The fraction of remaining statements to be added.
+        with_pa : bool
+            Default False. Choose to run pre-assembly/incremental-preassembly
+            on the added statements.
+        """
+        available_tuples = self.get_available_stmt_tuples()
+        if fraction is not 1:
+            num_stmts = fraction*len(available_tuples)
+            input_tuples = random.sample(available_tuples, num_stmts)
+        else:
+            input_tuples = available_tuples
+
+        print("Loading %d statements..." % len(input_tuples))
+        if hasattr(self.test_db.RawStatements, 'id'):
+            self.test_db.copy('raw_statements', input_tuples,
+                               self.test_data['raw_statements']['cols'])
+        else:
+            self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
+                              self.test_data['raw_statements']['cols'][1:])
+
+        print("Inserting agents...")
+        db_util.insert_agents(self.test_db, 'raw')
+
+        if with_pa:
+            print("Preassembling new statements...")
+            if len(input_tuples) > 100:
+                batch_size = len(input_tuples)//10
+                pam = pm.PreassemblyManager(1, batch_size)
+            else:
+                pam = pm.PreassemblyManager()
+
+            if self.used_stmt_tuples:
+                pam.supplement_corpus(self.test_db)
+            else:
+                pam.create_corpus(self.test_db)
+
+        return
 
 
-def _get_stmt_tuples(num_stmts):
-    stmt_tuples = _load_tuples('test_stmts_tuples.pkl')
-    col_names = stmt_tuples.pop(0)
-    if len(stmt_tuples) > num_stmts:
-        stmt_tuples = random.sample(stmt_tuples, num_stmts)
-    return stmt_tuples, col_names
-
-
-def _get_background_loaded_db():
-    db = db_util.get_test_db()
-    db._clear(force=True)
-
-    # get and load the provenance for the statements.
-    print("\tloading background metadata...")
-    db.copy('text_ref', _load_tuples('test_text_ref_tuples.pkl'),
-            ('id', 'pmid', 'pmcid', 'doi'))
-    tc_tuples = [t + (b'',)
-                 for t in _load_tuples('test_text_content_tuples.pkl')]
-    db.copy('text_content', tc_tuples, ('id', 'text_ref_id', 'source', 'format',
-                                        'text_type', 'content'))
-    r_tuples = [t + (b'',) for t in _load_tuples('test_reading_tuples.pkl')]
-    db.copy('reading', r_tuples, ('id', 'reader', 'reader_version',
-                                  'text_content_id', 'format', 'bytes'))
-    db.copy('db_info', _load_tuples('test_db_info_tuples.pkl'),
-            ('id', 'db_name'))
-    return db
-
-
-def _get_input_stmt_tuples(num_stmts):
-    print("\tPrepping the raw statements...")
-    stmt_tuples, col_names = _get_stmt_tuples(num_stmts)
-    copy_col_names = ('uuid', 'mk_hash', 'type', 'indra_version', 'json',
-                      'reading_id', 'db_info_id')
-    copy_stmt_tuples = []
-    for tpl in stmt_tuples:
-        entry_dict = dict(zip(col_names, tpl))
-        json_bytes = entry_dict['json']
-        stmt = Statement._from_json(json.loads(json_bytes.decode('utf-8')))
-        entry_dict['mk_hash'] = stmt.get_hash()
-        ret_tpl = tuple([entry_dict[col] for col in copy_col_names])
-        copy_stmt_tuples.append(ret_tpl)
-    return copy_stmt_tuples, copy_col_names
-
-
-def _get_loaded_db(num_stmts, batch_size=None, split=None,
-                   with_init_corpus=False):
+def _get_loaded_db(num_stmts, split=None, with_init_corpus=False):
     print("Creating and filling a test database:")
-    db = _get_background_loaded_db()
+    dts = _DatabaseTestSetup(num_stmts)
+    dts.load_background()
 
-    # Now load the statements. Much of this processing is the result of active
-    # development, and once that is done, TODO: Format pickle to match
-    copy_stmt_tuples, copy_col_names = _get_input_stmt_tuples(num_stmts)
-
-    print("\tInserting the raw statements...")
     if split is None:
-        db.copy('raw_statements', copy_stmt_tuples, copy_col_names)
-        print("\tAdding agents...")
-        db_util.insert_agents(db, 'raw')
-        if with_init_corpus:
-            print("\tAdding a preassembled corpus...")
-            pa_manager = pm.PreassemblyManager()
-            pa_manager.create_corpus(db)
+        dts.add_statements(with_pa=with_init_corpus)
     else:
-        assert batch_size is not None
-        num_initial = int(split*len(copy_stmt_tuples))
-        stmt_tuples_initial = random.sample(copy_stmt_tuples, num_initial)
-        stmt_tuples_new = list(set(copy_stmt_tuples) - set(stmt_tuples_initial))
-        initial_datetime = datetime.now() - timedelta(days=2)
-        db.copy('raw_statements', [t + (initial_datetime,)
-                                   for t in stmt_tuples_initial],
-                copy_col_names + ('create_date',))
-        print("\tAdding agents...")
-        db_util.insert_agents(db, 'raw')
-        if with_init_corpus:
-            print("\tAdding a preassembled corpus from first batch of raw "
-                  "stmts...")
-            pa_manager = pm.PreassemblyManager(batch_size=batch_size)
-            pa_manager.create_corpus(db)
-        print("\tInserting the rest of the raw statements...")
-        new_datetime = datetime.now()
-        db.copy('raw_statements', [t + (new_datetime,) for t in stmt_tuples_new],
-                copy_col_names + ('create_date',))
-        print("\tAdding agents...")
-        db_util.insert_agents(db, 'raw')
-    return db
-
-
-def _get_stmts():
-    global STMTS
-    if STMTS is None:
-        stmt_tuples, _ = _get_stmt_tuples()
-        stmt_jsons = [json.loads(tpl[-1].decode('utf8')) for tpl in stmt_tuples]
-        STMTS = stmts_from_json(stmt_jsons)
-    return STMTS
+        dts.add_statements(split, with_pa=with_init_corpus)
+        dts.add_statements()
+    return dts.test_db
 
 
 def _str_large_set(s, max_num):
@@ -322,12 +311,8 @@ def test_db_preassembly_large():
 
 
 @needs_py3
-def _check_db_pa_supplement(num_stmts, batch_size, init_batch_size=None,
-                            split=0.8):
-    if not init_batch_size:
-        init_batch_size = batch_size
-    db = _get_loaded_db(num_stmts, batch_size=init_batch_size, split=split,
-                        with_init_corpus=True)
+def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
+    db = _get_loaded_db(num_stmts, split=split, with_init_corpus=True)
     start = datetime.now()
     pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     print("Beginning supplement...")
