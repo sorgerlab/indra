@@ -145,8 +145,14 @@ class CWMSProcessor(object):
         assoc_with = element_term.find('assoc-with')
         if assoc_with is not None:
             # We first identify the ID of the assoc-with argument
-            assoc_with_id = assoc_with.attrib['id']
-            # Then find the TERM corresponding to assoc-with
+            assoc_with_id = assoc_with.attrib.get('id')
+            # In some cases the assoc-with has no ID but has a type
+            # defined in place that we can get
+            if assoc_with_id is None:
+                assoc_with_grounding = assoc_with.find('type').text
+                return assoc_with_grounding
+            # If the assoc-with has an ID then find the TERM
+            # corresponding to it
             assoc_with_term = self.tree.find("*[@id='%s']" % assoc_with_id)
             if assoc_with_term is not None:
                 # We then get the grounding for the term
