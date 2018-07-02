@@ -16,9 +16,15 @@ from pysb.core import as_complex_pattern, ComponentDuplicateNameError
 from indra.statements import *
 from indra.assemblers import pysb_assembler as pa
 from indra.tools.expand_families import _agent_from_uri
-import paths_graph as pg
 from collections import Counter
 from indra.util.kappa_util import im_json_to_graph
+
+try:
+    import paths_graph as pg
+    has_pg = True
+except ImportError:
+    has_pg = False
+
 
 logger = logging.getLogger('model_checker')
 
@@ -572,6 +578,8 @@ class ModelChecker(object):
 
         # -- Route to the path sampling function --
         if self.do_sampling:
+            if not has_pg:
+                raise Exception('The paths_graph package could not be imported.')
             return self._sample_paths(input_rule_set, obs_name, target_polarity,
                                max_paths, max_path_length)
 
