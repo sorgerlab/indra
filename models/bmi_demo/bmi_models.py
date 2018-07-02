@@ -54,7 +54,7 @@ def make_component_repo(bmi_models, topo):
             fh.write('%s %s\n' % (m.model.name, m.model.name))
 
 
-def plot_results(model_dict):
+def plot_results(model_dict, vars_to_plot=None):
     """Plot the results of a simulation."""
     plt.figure()
     plt.ion()
@@ -65,10 +65,11 @@ def plot_results(model_dict):
         state_dict = {}
         times = [tc[0] for tc in bmi_model.time_course]
         for var_name, var_id in bmi_model.species_name_map.items():
-            state_dict[var_name] = [tc[1][var_id] for tc in
-                                    bmi_model.time_course]
-            short_var_name = var_name[:10]
-            plt.plot(times, state_dict[var_name], label=short_var_name)
+            if not vars_to_plot or var_name in vars_to_plot:
+                state_dict[var_name] = [tc[1][var_id] for tc in
+                                        bmi_model.time_course]
+                short_var_name = var_name[:20]
+                plt.plot(times, state_dict[var_name], label=short_var_name)
     plt.legend()
     plt.show()
 
@@ -115,8 +116,9 @@ if __name__ == '__main__':
                          {}]
         input_vars = [['rainfall'], ['flood']]
     else:
-        out_name_maps = [{'atmosphere_water__rainfall_volume_flux': 'rainfall'}]
-        input_vars = [['rainfall']]
+        out_name_maps = [{'atmosphere_water__rainfall_volume_flux': 
+                          'Precipitation'}]
+        input_vars = [['Precipitation']]
     # We now assemble PySB models from the INDRA Statements and then
     # instantiate these models as BMI-wrapped models along with a simulator
     for idx, model_stmts in enumerate(stmts):
@@ -162,4 +164,5 @@ if __name__ == '__main__':
         f.run_model(cfg_prefix='June_20_67', cfg_directory=topoflow_config,
                     driver_comp_name=bmi_models[0].model.name)
         # Finally plot the results
-        plot_results(f.comp_set)
+        plot_results(f.comp_set, ['Precipitation',
+                                  'Crop_technology'])
