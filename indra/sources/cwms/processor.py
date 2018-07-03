@@ -119,6 +119,10 @@ class CWMSProcessor(object):
         if element_term is None:
             return
 
+        # Now see if there is a modifier like assoc-with connected
+        # to the main concept
+        assoc_with = self._get_assoc_with(element_term)
+
         # Get the element's text and use it to construct a Concept
         element_text_element = element_term.find('text')
         if element_text_element is None:
@@ -129,8 +133,32 @@ class CWMSProcessor(object):
         element_type_element = element_term.find('type')
         if element_type_element is not None:
             element_db_refs['CWMS'] = element_type_element.text
+            # If there's an assoc-with, we tack it on as extra grounding
+            if assoc_with is not None:
+                element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
         return Concept(element_text, db_refs=element_db_refs)
+
+    def _get_assoc_with(self, element_term):
+        # NOTE: there could be multiple assoc-withs here that we may
+        # want to handle
+        assoc_with = element_term.find('assoc-with')
+        if assoc_with is not None:
+            # We first identify the ID of the assoc-with argument
+            assoc_with_id = assoc_with.attrib.get('id')
+            # In some cases the assoc-with has no ID but has a type
+            # defined in place that we can get
+            if assoc_with_id is None:
+                assoc_with_grounding = assoc_with.find('type').text
+                return assoc_with_grounding
+            # If the assoc-with has an ID then find the TERM
+            # corresponding to it
+            assoc_with_term = self.tree.find("*[@id='%s']" % assoc_with_id)
+            if assoc_with_term is not None:
+                # We then get the grounding for the term
+                assoc_with_grounding = assoc_with_term.find('type').text
+                return assoc_with_grounding
+        return None
 
     def _make_statement_noun_cause_effect(self, event_element,
                                           cause_concept, affected_concept,

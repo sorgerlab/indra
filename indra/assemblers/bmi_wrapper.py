@@ -125,7 +125,7 @@ class BMIModel(object):
         if var_name in self.outside_name_map:
             var_name = self.outside_name_map[var_name]
             print('%s=%.5f' % (var_name, 1e9*value))
-            if var_name == 'rainfall':
+            if var_name == 'Precipitation':
                 value = 1e9*value
         species_idx = self.species_name_map[var_name]
         self.state[species_idx] = value
