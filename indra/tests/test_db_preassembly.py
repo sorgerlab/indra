@@ -145,7 +145,7 @@ def _do_old_fashioned_preassembly(stmts):
     return opa_stmts
 
 
-def _check_against_opa_stmts(raw_stmts, pa_stmts):
+def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
     def _compare_list_elements(label, list_func, comp_func, **stmts):
         (stmt_1_name, stmt_1), (stmt_2_name, stmt_2) = list(stmts.items())
         vals_1 = [comp_func(elem) for elem in list_func(stmt_1)]
@@ -175,6 +175,12 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
                                 for h in new_hash_set - old_hash_set],
                   'extra_old': [old_stmt_dict[h]
                                 for h in old_hash_set - new_hash_set]}
+    if hash_diffs['extra_new']:
+        elaborate_on_hash_diffs(db, 'new', hash_diffs['extra_new'],
+                                old_stmt_dict.keys())
+    if hash_diffs['extra_old']:
+        elaborate_on_hash_diffs(db, 'old', hash_diffs['extra_old'],
+                                new_stmt_dict.keys())
     print(hash_diffs)
     tests = [{'funcs': {'list': lambda s: s.evidence,
                         'comp': lambda ev: ev.matches_key()},
@@ -206,6 +212,82 @@ def _check_against_opa_stmts(raw_stmts, pa_stmts):
                                                     td['label'])
                     for td in tests]))
     assert not any(hash_diffs.values()), "Found mismatched hashes."
+
+
+def str_imp(o, uuid=None, other_stmt_keys=None):
+    if o is None:
+        return '~'
+    cname = o.__class__.__name__
+    if cname == 'TextRef':
+        return ('<TextRef: trid: %s, pmid: %s, pmcid: %s>'
+                % (o.id, o.pmid, o.pmcid))
+    if cname == 'TextContent':
+        return ('<TextContent: tcid: %s, trid: %s, src: %s>'
+                % (o.id, o.text_ref_id, o.source))
+    if cname == 'Reading':
+        return ('<Reading: rid: %s, tcid: %s, reader: %s, rv: %s>'
+                % (o.id, o.text_content_id, o.reader, o.reader_version))
+    if cname == 'RawStatements':
+        s = Statement._from_json(json.loads(o.json.decode()))
+        s_str = ('<RawStmt: %s sid: %s, uuid: %s, type: %s, iv: %s, hash: %s>'
+                 % (str(s), o.id, o.uuid, o.type, o.indra_version, o.mk_hash))
+        if other_stmt_keys and s.get_hash(shallow=True) in other_stmt_keys:
+            s_str = '+' + s_str
+        if s.uuid == uuid:
+            s_str = '*' + s_str
+        return s_str
+
+
+def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
+    print("#"*100)
+    print("Elaboration on extra %s statements:" % lbl)
+    print("#"*100)
+    for s in stmt_list:
+        print(s)
+        uuid = s.uuid
+        print('-'*100)
+        print('uuid: %s\nhash: %s\nshallow hash: %s'
+              % (s.uuid, s.get_hash(), s.get_hash(shallow=True)))
+        print('-'*100)
+        db_pas = db.select_one(db.PAStatements,
+                               db.PAStatements.mk_hash == s.get_hash(shallow=True))
+        print('\tPA statement:', db_pas.__dict__ if db_pas else '~')
+        print('-'*100)
+        db_s = db.select_one(db.RawStatements, db.RawStatements.uuid == s.uuid)
+        print('\tRaw statement:', str_imp(db_s, uuid, other_stmt_keys))
+        if db_s is None:
+            continue
+        print('-'*100)
+        db_r = db.select_one(db.Reading, db.Reading.id == db_s.reading_id)
+        print('\tReading:', str_imp(db_r))
+        print('\tOther Raw Statements:')
+        for s in db.select_all(db.RawStatements,
+                               db.RawStatements.reading_id == db_r.id):
+            print('\t\t', str_imp(s, uuid, other_stmt_keys))
+        print('-'*100)
+        tc = db.select_one(db.TextContent,
+                           db.TextContent.id == db_r.text_content_id)
+        print('\tText Content:', str_imp(tc))
+        print('\tOther Readings:')
+        for r in db.select_all(db.Reading, db.Reading.text_content_id == tc.id):
+            print('\t\t', str_imp(r))
+            for s in db.select_all(db.RawStatements,
+                                   db.RawStatements.reading_id == r.id):
+                print('\t\t\t', str_imp(s, uuid, other_stmt_keys))
+        print('-'*100)
+        tr = db.select_one(db.TextRef, db.TextRef.id == tc.text_ref_id)
+        print('\tText ref:', str_imp(tr))
+        print('\tOther Content:')
+        for tc in db.select_all(db.TextContent,
+                                db.TextContent.text_ref_id == tr.id):
+            print('\t\t ', str_imp(tc))
+            for r in db.select_all(db.Reading,
+                                   db.Reading.text_content_id == tc.id):
+                print('\t\t\t', str_imp(r))
+                for s in db.select_all(db.RawStatements,
+                                       db.RawStatements.reading_id == r.id):
+                    print('\t\t\t\t', str_imp(s, uuid, other_stmt_keys))
+        print('='*100)
 
 
 def test_distillation_on_curated_set():
@@ -297,7 +379,7 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
     raw_stmts = db_client.get_statements([], preassembled=False, db=db)
-    _check_against_opa_stmts(raw_stmts, pa_stmts)
+    _check_against_opa_stmts(db, raw_stmts, pa_stmts)
 
 
 @attr('nonpublic')
@@ -309,6 +391,15 @@ def test_db_preassembly_small():
 def test_db_preassembly_large():
     _check_preassembly_with_database(11721, 2017)
 
+
+@attr('nonpublic', 'slow')
+def test_db_preassembly_extra_large():
+    _check_preassembly_with_database(101721, 2017)
+
+
+@attr('nonpublic', 'slow')
+def test_db_preassembly_supremely_large():
+    _check_preassembly_with_database(1001721, 200017)
 
 @needs_py3
 def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
@@ -323,7 +414,7 @@ def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
     raw_stmts = db_client.get_statements([], preassembled=False, db=db)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
-    _check_against_opa_stmts(raw_stmts, pa_stmts)
+    _check_against_opa_stmts(db, raw_stmts, pa_stmts)
 
 
 @attr('nonpublic')
