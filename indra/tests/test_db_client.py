@@ -112,3 +112,7 @@ def test_get_statements_by_grot():
                                                  fix_refs=False)
     assert stmts
 
+    stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
+                                                 essentials_only=True)
+    assert stmts
+
