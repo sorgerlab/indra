@@ -1102,11 +1102,12 @@ class Statement(object):
         if not shallow:
             if self.hash is None or refresh:
                 ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
-                self.hash = clean(self.matches_key() + str(ev_matches_key_list))
+                self.hash = hash(clean(self.matches_key()
+                                       + str(ev_matches_key_list)))
             ret = self.hash
         else:
             if self.shallow_hash is None or refresh:
-                self.shallow_hash = clean(self.matches_key())
+                self.shallow_hash = hash(clean(self.matches_key()))
             ret = self.shallow_hash
         return ret
 

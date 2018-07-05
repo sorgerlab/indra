@@ -273,7 +273,7 @@ if __name__ == '__main__':
     if args.source == 'from-db':
         logger.info("Getting statements from the database.")
         from indra.db import get_primary_db
-        from indra.db.util import make_raw_stmts_from_db_list, \
+        from indra.db.util import get_raw_stmts_frm_db_list, \
             _get_statement_object, _set_evidence_text_ref
 
         db = get_primary_db()

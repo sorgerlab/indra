@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
+from datetime import datetime
+from os.path import abspath
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
-           'insert_pa_stmts', 'insert_db_stmts', 'make_raw_stmts_from_db_list',
+           'insert_pa_stmts', 'insert_db_stmts', 'get_raw_stmts_frm_db_list',
            'distill_stmts']
 
 import re
@@ -11,7 +12,7 @@ import json
 import zlib
 import logging
 from itertools import groupby
-from functools import partial
+from functools import partial, wraps
 from multiprocessing.pool import Pool
 
 from indra.util import batch_iter
@@ -120,7 +121,43 @@ def get_db(db_label):
     return DatabaseManager(db_name, sqltype=sqltype, label=db_label)
 
 
-def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
+def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
+    """Get a generator for db orm statement objects which do not have agents."""
+    num_per_yield = kwargs.pop('num_per_yield', 100)
+    verbose = kwargs.pop('verbose', False)
+
+    # Get the objects for either raw or pa statements.
+    stmt_tbl_obj = db.tables[prefix + '_statements']
+    agent_tbl_obj = db.tables[prefix + '_agents']
+
+    # Build a dict mapping stmt UUIDs to statement IDs
+    logger.info("Getting %s that lack %s in the database."
+                % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
+    if prefix == 'pa':
+        stmts_w_agents_q = db.filter_query(
+            stmt_tbl_obj,
+            stmt_tbl_obj.mk_hash == agent_tbl_obj.stmt_mk_hash
+        )
+    elif prefix == 'raw':
+        stmts_w_agents_q = db.filter_query(
+            stmt_tbl_obj,
+            stmt_tbl_obj.id == agent_tbl_obj.stmt_id
+        )
+    else:
+        raise IndraDatabaseError("Unrecognized prefix: %s." % prefix)
+    stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
+                         .except_(stmts_w_agents_q))
+
+    # Start printing some data
+    if verbose:
+        num_stmts = stmts_wo_agents_q.count()
+        print("Adding agents for %d statements." % num_stmts)
+
+    # Get the iterator
+    return stmts_wo_agents_q.yield_per(num_per_yield)
+
+
+def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     """Insert agents for statements that don't have any agents.
 
     Note: This method currently works for both Statements and PAStatements and
@@ -145,38 +182,19 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
         using the `yeild_per` feature of sqlalchemy queries.
     """
     verbose = kwargs.pop('verbose', False)
-    stmt_tbl_obj = db.tables[prefix + '_statements']
-    agent_tbl_obj = db.tables[prefix + '_agents']
-    num_per_yield = kwargs.pop('num_per_yield', 100)
-    override_default_query = kwargs.pop('override_default_query', False)
     if len(kwargs):
         raise IndraDatabaseError("Unrecognized keyword argument(s): %s."
                                  % kwargs)
-    # Build a dict mapping stmt UUIDs to statement IDs
-    logger.info("Getting %s that lack %s in the database."
-                % (stmt_tbl_obj.__tablename__, agent_tbl_obj.__tablename__))
-    if not override_default_query:
-        if prefix == 'pa':
-            stmts_w_agents_q = db.filter_query(
-                stmt_tbl_obj,
-                stmt_tbl_obj.mk_hash == agent_tbl_obj.stmt_mk_hash
-            )
-        elif prefix == 'raw':
-            stmts_w_agents_q = db.filter_query(
-                stmt_tbl_obj,
-                stmt_tbl_obj.uuid == agent_tbl_obj.stmt_uuid
-                )
-        stmts_wo_agents_q = (db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-                             .except_(stmts_w_agents_q))
-    else:
-        stmts_wo_agents_q = db.filter_query(stmt_tbl_obj, *other_stmt_clauses)
-    #logger.debug("Getting stmts with query:\n%s" % str(stmts_wo_agents_q))
-    if verbose:
-        num_stmts = stmts_wo_agents_q.count()
-        print("Adding agents for %d statements." % num_stmts)
-    stmts_wo_agents = stmts_wo_agents_q.yield_per(num_per_yield)
 
-    # Now assemble agent records
+    agent_tbl_obj = db.tables[prefix + '_agents']
+
+    if stmts_wo_agents is None:
+        stmts_wo_agents = get_statements_without_agents(db, prefix)
+
+    if verbose:
+        num_stmts = len(stmts_wo_agents)
+
+    # Construct the agent records
     logger.info("Building agent data for insert...")
     if verbose:
         print("Loading:", end='', flush=True)
@@ -207,8 +225,8 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
             for ns, ag_id in ag.db_refs.items():
                 if prefix == 'pa':
                     stmt_id = db_stmt.mk_hash
-                elif prefix == 'raw':
-                    stmt_id = db_stmt.uuid
+                else:  # prefix == 'raw'
+                    stmt_id = db_stmt.id
                 if isinstance(ag_id, list):
                     for sub_id in ag_id:
                         agent_data.append((stmt_id, ns, sub_id, role))
@@ -224,8 +242,8 @@ def insert_agents(db, prefix, *other_stmt_clauses, **kwargs):
 
     if prefix == 'pa':
         cols = ('stmt_mk_hash', 'db_name', 'db_id', 'role')
-    elif prefix == 'raw':
-        cols = ('stmt_uuid', 'db_name', 'db_id', 'role')
+    else:  # prefix == 'raw'
+        cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
 
@@ -272,7 +290,10 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('raw_statements', stmt_data, cols)
-    insert_agents(db, 'raw', db.RawStatements.db_info_id == db_ref_id)
+    stmts_to_add_agents = \
+        get_statements_without_agents(db, 'raw',
+                                      db.RawStatements.db_info_id == db_ref_id)
+    insert_agents(db, 'raw', stmts_to_add_agents)
     return
 
 
@@ -322,6 +343,20 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
 # database at various levels of abstraction.
 #==============================================================================
 
+def _clockit(func):
+    @wraps(func)
+    def timed_func(*args, **kwargs):
+        logger.debug("Starting: %s" % func.__name__)
+        start = datetime.now()
+        ret = func(*args, **kwargs)
+        end = datetime.now()
+        print(func.__name__, end-start)
+        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
+        #with open(fname, 'a') as f:
+        #    f.write('%s: %s\n' % (start, end-start))
+        return ret
+    return timed_func
+
 
 def _get_statement_object(db_stmt):
     """Get an INDRA Statement object from a db_stmt."""
@@ -335,20 +370,21 @@ def _set_evidence_text_ref(stmt, tr):
         ev.pmid = tr.pmid
 
 
+@_clockit
 def _fix_evidence_refs(db, rid_stmt_pairs):
     """Get proper id data for a raw statement from the database.
 
     Alterations are made to the Statement objects "in-place", so this function
     itself returns None.
     """
-    rid_set = {rid for rid, _ in rid_stmt_pairs if rid is not None}
+    rid_set = {rid for rid, _, _ in rid_stmt_pairs if rid is not None}
     logger.info("Getting text refs for %d readings." % len(rid_set))
     if rid_set:
         rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
                                      db.Reading.id.in_(rid_set),
                                      *db.join(db.TextRef, db.Reading))
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
-        for rid, stmt in rid_stmt_pairs:
+        for rid, sid, stmt in rid_stmt_pairs:
             if rid is None:
                 # This means this statement came from a database, not reading.
                 continue
@@ -358,12 +394,20 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
     return
 
 
-def make_raw_stmts_from_db_list(db, db_stmt_objs):
+@_clockit
+def get_raw_stmts_frm_db_list(db, db_stmt_objs, fix_refs=True, with_sids=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
-    rid_stmt_pairs = [(db_stmt.reading_id, _get_statement_object(db_stmt))
+    rid_stmt_pairs = [(db_stmt.reading_id, db_stmt.id,
+                       _get_statement_object(db_stmt))
                       for db_stmt in db_stmt_objs]
-    _fix_evidence_refs(db, rid_stmt_pairs)
-    return [stmt for _, stmt in rid_stmt_pairs]
+    if fix_refs:
+        _fix_evidence_refs(db, rid_stmt_pairs)
+    # Note: it is important that order is maintained here (hence not a set or
+    # dict).
+    if with_sids:
+        return [(sid, stmt) for _, sid, stmt in rid_stmt_pairs]
+    else:
+        return [stmt for _, _, stmt in rid_stmt_pairs]
 
 
 class NestedDict(dict):
@@ -474,13 +518,12 @@ class NestedDict(dict):
         return ret_set
 
 
-def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
-                                clauses=None):
+def _get_reading_statement_dict(db, clauses=None):
     """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextRef, db.TextContent.id,
                           db.TextContent.source, db.Reading.id,
-                          db.Reading.reader_version, db.RawStatements.uuid,
+                          db.Reading.reader_version, db.RawStatements.id,
                           db.RawStatements.json)
          .filter(*db.join(db.RawStatements, db.TextRef)))
     if clauses:
@@ -519,10 +562,7 @@ def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
             num_duplicate_evidence += 1
 
         # Either store the statement, or the statement id.
-        if get_full_stmts:
-            s_dict[stmt_hash].add(stmt)
-        else:
-            s_dict[stmt_hash].add(sid)
+        s_dict[stmt_hash].add((sid, stmt))
 
     # Report on the results.
     print("Found %d relevant text refs with statements." % len(stmt_nd))
@@ -531,37 +571,34 @@ def _get_reading_statement_dict(db, reader_versions, get_full_stmts=False,
     return stmt_nd
 
 
-def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
-                                 linked_uuids=None):
-    """Get the set of statements/ids from readings minus exact duplicates."""
-    if linked_uuids is None:
-        linked_uuids = set()
-    # Specify versions of readers, and preference.
-    reader_versions = {
-        'sparser': ['sept14-linux\n', 'sept14-linux'],
-        'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
+# Specify versions of readers, and preference.
+reader_versions = {
+    'sparser': ['sept14-linux\n', 'sept14-linux'],
+    'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
     }
 
-    stmt_nd = _get_reading_statement_dict(db, reader_versions, get_full_stmts,
-                                          clauses)
+# Specify sources of fulltext content, and order priorities.
+text_content_sources = ['pubmed', 'elsevier', 'manuscripts', 'pmc_oa']
 
-    # Specify sources of fulltext content, and order priorities.
-    text_content_sources = ['manuscripts', 'pmc_oa', 'elsevier', 'pubmed']
 
+def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
+    """Get the set of statements/ids from readings minus exact duplicates."""
+    if linked_sids is None:
+        linked_sids = set()
     def better_func(element):
         return text_content_sources.index(element)
 
     # Now we filter and get the set of statements/statement ids.
-    stmts = set()
-    duplicate_uuids = set()  # Statements that are exact duplicates.
-    bettered_duplicate_uuids = set()  # Statements with "better" alternatives
+    stmt_tpls = set()
+    duplicate_sids = set()  # Statements that are exact duplicates.
+    bettered_duplicate_sids = set()  # Statements with "better" alternatives
     for trid, src_dict in stmt_nd.items():
-        bettered_duplicate_stmts = set()
+        some_bettered_duplicate_tpls = set()
         # Filter out unneeded fulltext.
         while len(src_dict) > 1:
             try:
                 worst_src = min(src_dict, key=better_func)
-                bettered_duplicate_stmts |= src_dict[worst_src].get_leaves()
+                some_bettered_duplicate_tpls |= src_dict[worst_src].get_leaves()
                 del src_dict[worst_src]
             except:
                 print(src_dict)
@@ -582,34 +619,31 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                 # Record the rest of the statement uuids.
                 for rv, r_dict in rv_dict.items():
                     if rv != best_rv:
-                        bettered_duplicate_stmts |= r_dict.get_leaves()
+                        some_bettered_duplicate_tpls |= r_dict.get_leaves()
 
                 # Pick one among any exact duplicates. Unlike with bettered
                 # duplicates, these choices are arbitrary, and such duplicates
                 # can be deleted.
-                duplicate_stmts = set()
-                for stmt_set in stmt_set_itr:
-                    if not stmt_set:
+                some_duplicate_tpls = set()
+                for stmt_tpl_set in stmt_set_itr:
+                    if not stmt_tpl_set:
                         continue
-                    elif len(stmt_set) == 1:
+                    elif len(stmt_tpl_set) == 1:
                         # There isn't really a choice here.
-                        stmts |= stmt_set
+                        stmt_tpls |= stmt_tpl_set
                     else:
-                        if get_full_stmts:
-                            preferred_stmts = {s for s in stmt_set
-                                               if s.uuid in linked_uuids}
-                        else:
-                            preferred_stmts = stmt_set & linked_uuids
-                        if not preferred_stmts:
+                        prefed_tpls = {tpl for tpl in stmt_tpl_set
+                                       if tpl[0] in linked_sids}
+                        if not prefed_tpls:
                             # Pick the first one to pop, record the rest as
                             # duplicates.
-                            stmts.add(stmt_set.pop())
-                            duplicate_stmts |= stmt_set
-                        elif len(preferred_stmts) == 1:
+                            stmt_tpls.add(stmt_tpl_set.pop())
+                            some_duplicate_tpls |= stmt_tpl_set
+                        elif len(prefed_tpls) == 1:
                             # There is now no choice: just take the preferred
                             # statement.
-                            stmts |= preferred_stmts
-                            duplicate_stmts |= (stmt_set - preferred_stmts)
+                            stmt_tpls |= prefed_tpls
+                            some_duplicate_tpls |= (stmt_tpl_set - prefed_tpls)
                         else:
                             # This shouldn't happen, so an early run of this
                             # function must have failed somehow, or else there
@@ -618,18 +652,19 @@ def _get_filtered_rdg_statements(db, get_full_stmts, clauses=None,
                             # statements.
                             assert False,\
                                 ("Duplicate deduplicated statements found: %s"
-                                 % str(preferred_stmts))
+                                 % str(prefed_tpls))
 
                 # Get the uuids from the statements, if we have full statements.
-                if get_full_stmts:
-                    duplicate_uuids |= {s.uuid for s in duplicate_stmts}
-                    bettered_duplicate_uuids |= \
-                        {s.uuid for s in bettered_duplicate_stmts}
-                else:
-                    duplicate_uuids |= duplicate_stmts
-                    bettered_duplicate_uuids |= bettered_duplicate_stmts
+                duplicate_sids |= {sid for sid, _ in some_duplicate_tpls}
+                bettered_duplicate_sids |= \
+                    {sid for sid, _ in some_bettered_duplicate_tpls}
 
-    return stmts, duplicate_uuids, bettered_duplicate_uuids
+    if get_full_stmts:
+        stmts = {stmt for _, stmt in stmt_tpls}
+    else:
+        stmts = {sid for sid, _ in stmt_tpls}
+
+    return stmts, duplicate_sids, bettered_duplicate_sids
 
 
 def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
@@ -640,17 +675,18 @@ def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
         duplicate_ids = set()
     else:
         stmt_tpl_set = set(stmt_tpl_grp)
-        preferred_stmts = {s for s in stmt_tpl_set if s.uuid in not_duplicates}
-        if not preferred_stmts:
+        preferred_tpls = {tpl for tpl in stmt_tpl_set
+                          if tpl[1] in not_duplicates}
+        if not preferred_tpls:
             s_tpl = stmt_tpl_set.pop()
-        elif len(preferred_stmts) == 1:
-            s_tpl = preferred_stmts.pop()
+        elif len(preferred_tpls) == 1:
+            s_tpl = preferred_tpls.pop()
         else:  # len(preferred_stmts) > 1
             assert False, \
                 ("Duplicate deduplicated statements found: %s"
-                 % str(preferred_stmts))
-        duplicate_ids = {s.uuid for s in stmt_tpl_set
-                         if s.uuid not in not_duplicates}
+                 % str(preferred_tpls))
+        duplicate_ids = {tpl[1] for tpl in stmt_tpl_set
+                         if tpl[1] not in not_duplicates}
 
     if get_full_stmts:
         stmt_json = json.loads(s_tpl[2].decode('utf-8'))
@@ -667,7 +703,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
         not_duplicates = set()
 
     db_s_q = db.filter_query([db.RawStatements.mk_hash,
-                              db.RawStatements.uuid,
+                              db.RawStatements.id,
                               db.RawStatements.json],
                              db.RawStatements.db_info_id.isnot(None))
     if clauses:
@@ -696,6 +732,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
     return stmts, duplicate_ids
 
 
+@_clockit
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                   delete_duplicates=True, weed_evidence=True, batch_size=1000):
     """Get a corpus of statements from clauses and filters duplicate evidence.
@@ -730,47 +767,49 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `get_full_stmts`.
     """
     if delete_duplicates:
-        linked_uuids = {uuid for uuid,
-                        in db.select_all(db.RawUniqueLinks.raw_stmt_uuid)}
+        linked_sids = {sid for sid,
+                        in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
     else:
-        linked_uuids = set()
+        linked_sids = set()
 
     # Get de-duplicated Statements, and duplicate uuids, as well as uuid of
     # Statements that have been improved upon...
-    stmts, duplicate_uuids, bettered_duplicate_uuids = \
-        _get_filtered_rdg_statements(db, get_full_stmts, clauses, linked_uuids)
+    stmt_nd = _get_reading_statement_dict(db, clauses)
+
+    stmts, duplicate_sids, bettered_duplicate_sids = \
+        _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids)
     print("After filtering reading: %d unique statements, %d duplicates."
-          % (len(stmts), len(duplicate_uuids)))
-    assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
+          % (len(stmts), len(duplicate_sids)))
+    assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     db_stmts, db_duplicates = \
-        _get_filtered_db_statements(db, get_full_stmts, clauses, linked_uuids,
+        _get_filtered_db_statements(db, get_full_stmts, clauses, linked_sids,
                                     num_procs)
     stmts |= db_stmts
-    duplicate_uuids |= db_duplicates
+    duplicate_sids |= db_duplicates
     print("After filtering database statements: %d unique, %d duplicates."
-          % (len(stmts), len(duplicate_uuids)))
-    assert not linked_uuids & duplicate_uuids, linked_uuids & duplicate_uuids
+          % (len(stmts), len(duplicate_sids)))
+    assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     # Remove support links for statements that have better versions available.
-    bad_link_uuids = bettered_duplicate_uuids & linked_uuids
-    if len(bad_link_uuids) and weed_evidence:
+    bad_link_sids = bettered_duplicate_sids & linked_sids
+    if len(bad_link_sids) and weed_evidence:
         print("Removing bettered evidence links...")
         rm_links = db.select_all(
             db.RawUniqueLinks,
-            db.RawUniqueLinks.raw_stmt_uuid.in_(bad_link_uuids)
+            db.RawUniqueLinks.raw_stmt_id.in_(bad_link_sids)
             )
         db.delete_all(rm_links)
 
     # Delete exact duplicates
-    if len(duplicate_uuids) and delete_duplicates:
+    if len(duplicate_sids) and delete_duplicates:
         print("Deleting duplicates...")
-        for dup_id_batch in batch_iter(duplicate_uuids, batch_size, set):
+        for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
             bad_stmts = db.select_all(db.RawStatements,
-                                      db.RawStatements.uuid.in_(dup_id_batch))
-            bad_uuid_set = {s.uuid for s in bad_stmts}
+                                      db.RawStatements.id.in_(dup_id_batch))
+            bad_sid_set = {s.id for s in bad_stmts}
             bad_agents = db.select_all(db.RawAgents,
-                                       db.RawAgents.stmt_uuid.in_(bad_uuid_set))
+                                       db.RawAgents.stmt_id.in_(bad_sid_set))
             print("Deleting %d agents associated with redundant raw statements."
                   % len(bad_agents))
             db.delete_all(bad_agents)

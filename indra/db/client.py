@@ -12,8 +12,8 @@ logger = logging.getLogger('db_client')
 
 from indra.util import batch_iter
 from indra.databases import hgnc_client
-from .util import get_primary_db, make_raw_stmts_from_db_list, \
-    unpack, _get_statement_object
+from .util import get_primary_db, get_raw_stmts_frm_db_list, \
+    unpack, _get_statement_object, _clockit
 
 
 def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
@@ -134,10 +134,12 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
     return content_dict
 
 
+@_clockit
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
-                                     db=None, do_stmt_count=True,
-                                     preassembled=True):
+                                     db=None, do_stmt_count=False,
+                                     preassembled=True, fix_refs=True,
+                                     with_evidence=True, with_support=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -169,6 +171,20 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         If true, statements will be selected from the table of pre-assembled
         statements. Otherwise, they will be selected from the raw statements.
         Default is True.
+    with_support : bool
+        Choose whether to populate the supports and supported_by list attributes
+        of the Statement objects. Generally results in slower queries.
+    with_evidence : bool
+        Choose whether or not to populate the evidence list attribute of the
+        Statements. As with `with_support`, setting this to True will take
+        longer.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
 
     Returns
     -------
@@ -204,16 +220,18 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         if preassembled:
             clauses.append(Agents.stmt_mk_hash == Statements.mk_hash)
         else:
-            clauses.append(Agents.stmt_uuid == Statements.uuid)
+            clauses.append(Agents.stmt_id == Statements.id)
     if stmt_type:
         clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
-                           db=db, preassembled=preassembled)
+                           db=db, preassembled=preassembled, fix_refs=fix_refs,
+                           with_evidence=with_evidence,
+                           with_support=with_support)
     return stmts
 
 
 def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
-                            do_stmt_count=True, preassembled=True):
+                            do_stmt_count=False, preassembled=True):
     """Get the statements from a particular paper.
 
     Parameters
@@ -233,6 +251,10 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     do_stmt_count : bool
         Whether or not to perform an initial statement counting step to give
         more meaningful progress messages.
+    preassembled : bool
+        If True, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
 
     Returns
     -------
@@ -257,8 +279,10 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     return stmts
 
 
-def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
-                   preassembled=True, with_support=False):
+@_clockit
+def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
+                   preassembled=True, with_support=False, fix_refs=True,
+                   with_evidence=True):
     """Select statements according to a given set of clauses.
 
     Parameters
@@ -277,6 +301,20 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         If true, statements will be selected from the table of pre-assembled
         statements. Otherwise, they will be selected from the raw statements.
         Default is True.
+    with_support : bool
+        Choose whether to populate the supports and supported_by list attributes
+        of the Statement objects. General results in slower queries.
+    with_evidence : bool
+        Choose whether or not to populate the evidence list attribute of the
+        Statements. As with `with_support`, setting this to True will take
+        longer.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
 
     Returns
     -------
@@ -296,49 +334,68 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
             logger.info("Total of %d statements" % num_stmts)
         db_stmts = q.yield_per(count)
         for subset in batch_iter(db_stmts, count):
-            stmts.extend(make_raw_stmts_from_db_list(db, subset))
+            stmts.extend(get_raw_stmts_frm_db_list(db, subset, with_sids=False, fix_refs=fix_refs))
             if do_stmt_count:
                 logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
                 logger.info("%d statements" % len(stmts))
     else:
         logger.info("Getting preassembled statements.")
-        # Get pairs of pa statements with their supporting statement (as long as
-        # the number of supporting statements).
-        clauses += db.join(db.PAStatements, db.RawStatements)
-        pa_raw_stmt_pairs = db.select_all([db.PAStatements, db.RawStatements],
-                                          *clauses, yield_per=count)
+        if with_evidence:
+            logger.info("Getting preassembled statements.")
+            # Get pairs of pa statements with their linked raw statements
+            clauses += db.join(db.PAStatements, db.RawStatements)
+            pa_raw_stmt_pairs = \
+                db.select_all([db.PAStatements, db.RawStatements],
+                              *clauses, yield_per=count)
 
-        # Iterate over the batches to create the statement objects.
-        stmt_dict = {}
-        ev_dict = {}
-        raw_stmt_dict = {}
-        for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
-            # Instantiate the PA statement objects, and record the uuid evidence
-            # (raw statement) links.
-            raw_stmt_obj_list = []
-            for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
-                k = pa_stmt_db_obj.mk_hash
-                if k not in stmt_dict.keys():
-                    stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
-                    ev_dict[k] = [raw_stmt_db_obj.uuid,]
-                else:
-                    ev_dict[k].append(raw_stmt_db_obj.uuid)
-                raw_stmt_obj_list.append(raw_stmt_db_obj)
+            # Iterate over the batches to create the statement objects.
+            stmt_dict = {}
+            ev_dict = {}
+            raw_stmt_dict = {}
+            for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
+                # Instantiate the PA statement objects, and record the uuid
+                # evidence (raw statement) links.
+                raw_stmt_objs = []
+                for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
+                    k = pa_stmt_db_obj.mk_hash
+                    if k not in stmt_dict.keys():
+                        stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+                        ev_dict[k] = [raw_stmt_db_obj.id,]
+                    else:
+                        ev_dict[k].append(raw_stmt_db_obj.id)
+                    raw_stmt_objs.append(raw_stmt_db_obj)
 
-            logger.info("Up to %d pa statements, with %d pieces of evidence in "
-                        "all." % (len(stmt_dict), len(ev_dict)))
+                logger.info("Up to %d pa statements, with %d pieces of"
+                            "evidence in all." % (len(stmt_dict), len(ev_dict)))
 
-            # Instantiate the raw statements.
-            raw_stmts = make_raw_stmts_from_db_list(db, raw_stmt_obj_list)
-            raw_stmt_dict.update({s.uuid: s for s in raw_stmts})
-            logger.info("Processed %d raw statements." % len(raw_stmts))
+                # Instantiate the raw statements.
+                raw_stmt_sid_tpls = get_raw_stmts_frm_db_list(db, raw_stmt_objs,
+                                                              fix_refs,
+                                                              with_sids=True)
+                raw_stmt_dict.update({sid: s for sid, s in raw_stmt_sid_tpls})
+                logger.info("Processed %d raw statements."
+                            % len(raw_stmt_sid_tpls))
 
-        # Attach the evidence
-        logger.info("Inserting evidence.")
-        for k, uuid_list in ev_dict.items():
-            stmt_dict[k].evidence = [raw_stmt_dict[uuid].evidence[0]
-                                     for uuid in uuid_list]
+            # Attach the evidence
+            logger.info("Inserting evidence.")
+            for k, sid_list in ev_dict.items():
+                stmt_dict[k].evidence = [raw_stmt_dict[sid].evidence[0]
+                                         for sid in sid_list]
+        else:
+            # Get just pa statements without their supporting raw statement(s).
+            pa_stmts = db.select_all(db.PAStatements, *clauses, yield_per=count)
+
+            # Iterate over the batches to create the statement objects.
+            stmt_dict = {}
+            for stmt_pair_batch in batch_iter(pa_stmts, count):
+                # Instantiate the PA statement objects.
+                for pa_stmt_db_obj in stmt_pair_batch:
+                    k = pa_stmt_db_obj.mk_hash
+                    if k not in stmt_dict.keys():
+                        stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+
+                logger.info("Up to %d pa statements in all." % len(stmt_dict))
 
         # Populate the supports/supported by fields.
         if with_support:
@@ -363,6 +420,55 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         logger.info("In all, there are %d pa statements." % len(stmts))
 
     return stmts
+
+
+@_clockit
+def get_evidence(pa_stmt_list, db=None, fix_refs=True):
+    """Fill in the evidence for a list of pre-assembled statements.
+
+    Parameters
+    ----------
+    pa_stmt_list : list[Statement]
+        A list of unique statements, generally drawn from the database
+        pa_statement table (via `get_statemetns`).
+    db : DatabaseManager instance or None
+        An instance of a database manager. If None, defaults to the "primary"
+        database, as defined in the db_config.ini file in .config/indra.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
+
+    Returns
+    -------
+    None - modifications are made to the Statements "in-place".
+    """
+    if db is None:
+        db = get_primary_db()
+
+    # Turn the list into a dict.
+    stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmt_list}
+
+    # Get the data from the database
+    raw_list = db.select_all([db.PAStatements.mk_hash, db.RawStatements],
+                             db.PAStatements.mk_hash.in_(stmt_dict.keys()),
+                             *db.join(db.PAStatements, db.RawStatements))
+
+    # Note that this step depends on the ordering being maintained.
+    mk_hashes, raw_stmt_objs = zip(*raw_list)
+    raw_stmts = get_raw_stmts_frm_db_list(db, raw_stmt_objs, fix_refs,
+                                          with_sids=False)
+    raw_stmt_mk_pairs = zip(mk_hashes, raw_stmts)
+
+    # Now attach the evidence
+    for mk_hash, raw_stmt in raw_stmt_mk_pairs:
+        # Each raw statement can have just one piece of evidence.
+        stmt_dict[mk_hash].evidence.append(raw_stmt.evidence[0])
+
+    return
 
 
 def _get_trids(db, id_val, id_type):
