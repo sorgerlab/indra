@@ -371,20 +371,20 @@ def _set_evidence_text_ref(stmt, tr):
 
 
 @_clockit
-def _fix_evidence_refs(db, rid_stmt_pairs):
+def _fix_evidence_refs(db, rid_stmt_trios):
     """Get proper id data for a raw statement from the database.
 
     Alterations are made to the Statement objects "in-place", so this function
     itself returns None.
     """
-    rid_set = {rid for rid, _, _ in rid_stmt_pairs if rid is not None}
+    rid_set = {rid for rid, _, _ in rid_stmt_trios if rid is not None}
     logger.info("Getting text refs for %d readings." % len(rid_set))
     if rid_set:
         rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
                                      db.Reading.id.in_(rid_set),
                                      *db.join(db.TextRef, db.Reading))
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
-        for rid, sid, stmt in rid_stmt_pairs:
+        for rid, sid, stmt in rid_stmt_trios:
             if rid is None:
                 # This means this statement came from a database, not reading.
                 continue
@@ -397,17 +397,17 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
 @_clockit
 def get_raw_stmts_frm_db_list(db, db_stmt_objs, fix_refs=True, with_sids=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
-    rid_stmt_pairs = [(db_stmt.reading_id, db_stmt.id,
-                       _get_statement_object(db_stmt))
-                      for db_stmt in db_stmt_objs]
+    rid_stmt_sid_trios = [(db_stmt.reading_id, db_stmt.id,
+                          _get_statement_object(db_stmt))
+                          for db_stmt in db_stmt_objs]
     if fix_refs:
-        _fix_evidence_refs(db, rid_stmt_pairs)
+        _fix_evidence_refs(db, rid_stmt_sid_trios)
     # Note: it is important that order is maintained here (hence not a set or
     # dict).
     if with_sids:
-        return [(sid, stmt) for _, sid, stmt in rid_stmt_pairs]
+        return [(sid, stmt) for _, sid, stmt in rid_stmt_sid_trios]
     else:
-        return [stmt for _, _, stmt in rid_stmt_pairs]
+        return [stmt for _, _, stmt in rid_stmt_sid_trios]
 
 
 class NestedDict(dict):
