@@ -330,7 +330,7 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
             logger.info("Total of %d statements" % num_stmts)
         db_stmts = q.yield_per(count)
         for subset in batch_iter(db_stmts, count):
-            stmts.extend(get_raw_stmts_frm_db_list(db, subset, with_sids=False))
+            stmts.extend(get_raw_stmts_frm_db_list(db, subset, with_sids=False, fix_refs=fix_refs))
             if do_stmt_count:
                 logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
