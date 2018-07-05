@@ -139,7 +139,8 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
                                      db=None, do_stmt_count=False,
                                      preassembled=True, fix_refs=True,
-                                     with_evidence=True, with_support=True):
+                                     with_evidence=True, with_support=True,
+                                     essentials_only=False):
     """Get statements from the DB by stmt type, agent, and/or agent role.
 
     Parameters
@@ -185,10 +186,17 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         is set to the correct PMIDs, or None if no PMID is available. If False,
         the `pmid` field defaults to the value populated by the reading
         system.
+    essentials_only : bool
+        Default is False. If True, retrieve only some metadata regarding the
+        statements. Implicitly `with_support`, `with_evidence`, `fix_refs`, and
+        `do_stmt_count` are all False, as none of the relevant features apply.
 
     Returns
     -------
-    list of Statements from the database corresponding to the query.
+    if essentials_only is False:
+        list of Statements from the database corresponding to the query.
+    else:
+        list of tuples containing basic data from the statements.
     """
     if db is None:
         db = get_primary_db()
@@ -223,10 +231,16 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
             clauses.append(Agents.stmt_id == Statements.id)
     if stmt_type:
         clauses.append(Statements.type == stmt_type)
-    stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
-                           db=db, preassembled=preassembled, fix_refs=fix_refs,
-                           with_evidence=with_evidence,
-                           with_support=with_support)
+
+    if essentials_only:
+        stmts = get_statement_essentials(clauses, count=count, db=db,
+                                         preassembled=preassembled)
+    else:
+        stmts = get_statements(clauses, count=count,
+                               do_stmt_count=do_stmt_count, db=db,
+                               preassembled=preassembled, fix_refs=fix_refs,
+                               with_evidence=with_evidence,
+                               with_support=with_support)
     return stmts
 
 
