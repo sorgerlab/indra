@@ -30,6 +30,7 @@ from indra.tools import assemble_corpus as ac
 from nose.plugins.attrib import attr
 from .util import needs_py3
 from .make_raw_statement_test_set import make_raw_statement_test_set
+from .test_db_client import _PrePaDatabaseTestSetup
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MAX_NUM_STMTS = 11721
@@ -37,39 +38,8 @@ BATCH_SIZE = 2017
 STMTS = None
 
 
-class _DatabaseTestSetup(object):
+class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
     """This object is used to setup the test database into various configs."""
-    def __init__(self, max_total_stmts):
-        self.test_db = db_util.get_test_db()
-        self.test_db._clear(force=True)
-        with open(os.path.join(THIS_DIR, 'db_pa_test_input_1M.pkl'), 'rb') as f:
-            self.test_data = pickle.load(f)
-
-        if max_total_stmts < len(self.test_data['raw_statements']['tuples']):
-            self.stmt_tuples = random.sample(
-                self.test_data['raw_statements']['tuples'],
-                max_total_stmts
-                )
-        else:
-            self.stmt_tuples = self.test_data['raw_statements']['tuples']
-
-        self.used_stmt_tuples = set()
-        return
-
-    def get_available_stmt_tuples(self):
-        return list(set(self.stmt_tuples) - self.used_stmt_tuples)
-
-    def load_background(self):
-        """Load in all the background provenance metadata (e.g. text_ref).
-
-        Note: This must be done before you try to load any statements.
-        """
-        for tbl in ['text_ref', 'text_content', 'reading', 'db_info']:
-            print("Loading %s..." % tbl)
-            self.test_db.copy(tbl, self.test_data[tbl]['tuples'],
-                              self.test_data[tbl]['cols'])
-        return
-
     def add_statements(self, fraction=1, with_pa=False):
         """Add statements and agents to the database.
 
@@ -88,16 +58,7 @@ class _DatabaseTestSetup(object):
         else:
             input_tuples = available_tuples
 
-        print("Loading %d statements..." % len(input_tuples))
-        if hasattr(self.test_db.RawStatements, 'id'):
-            self.test_db.copy('raw_statements', input_tuples,
-                               self.test_data['raw_statements']['cols'])
-        else:
-            self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
-                              self.test_data['raw_statements']['cols'][1:])
-
-        print("Inserting agents...")
-        db_util.insert_agents(self.test_db, 'raw')
+        self.insert_the_statements(input_tuples)
 
         if with_pa:
             print("Preassembling new statements...")
