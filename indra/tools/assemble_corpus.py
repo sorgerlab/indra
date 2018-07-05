@@ -229,7 +229,7 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
                 len(preassembler.stmts))
     dump_pkl = kwargs.get('save')
     stmts_out = preassembler.combine_duplicates()
-    #beliefengine.set_prior_probs(stmts_out)
+    beliefengine.set_prior_probs(stmts_out)
     logger.info('%d unique statements' % len(stmts_out))
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
