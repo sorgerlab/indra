@@ -427,5 +427,6 @@ def test_db_incremental_preassembly_large():
     _check_db_pa_supplement(11721, 2017)
 
 
+@attr('nonpublic', 'slow')
 def test_db_incremental_preassembly_very_large():
     _check_db_pa_supplement(100000, 20000)
