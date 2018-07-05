@@ -334,7 +334,8 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
             logger.info("Total of %d statements" % num_stmts)
         db_stmts = q.yield_per(count)
         for subset in batch_iter(db_stmts, count):
-            stmts.extend(get_raw_stmts_frm_db_list(db, subset, with_sids=False, fix_refs=fix_refs))
+            stmts.extend(get_raw_stmts_frm_db_list(db, subset, with_sids=False,
+                                                   fix_refs=fix_refs))
             if do_stmt_count:
                 logger.info("%d of %d statements" % (len(stmts), num_stmts))
             else:
@@ -420,6 +421,54 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
         logger.info("In all, there are %d pa statements." % len(stmts))
 
     return stmts
+
+
+@_clockit
+def get_statement_essentials(clauses, count=1000, db=None, preassembled=True):
+    """Get the type, agents, and id data for the specified statements.
+
+    This function is useful for light-weight searches of basic mechanistic
+    information, without the need to follow as many links in the database to
+    populate the Statement objects.
+
+    To get full statements, use `get_statements`.
+
+    Parameters
+    ----------
+    clauses : list
+        list of sqlalchemy WHERE clauses to pass to the filter query.
+    count : int
+        Number of statements to retrieve and process in each batch.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local database instance.
+    preassembled : bool
+        If true, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
+
+    Returns
+    -------
+    A list of tuples containing:
+        `(uuid, sid, hash, type, (agent_1, agent_2, ...))`.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    stmts_tblname = 'pa_statements' if preassembled else 'raw_statements'
+
+    stmt_data = []
+    db_stmts = db.select_all(stmts_tblname, *clauses, yield_per=count)
+    for db_stmt in db_stmts:
+        stmt = _get_statement_object(db_stmt)
+        sid = db_stmt.id if hasattr(db_stmt, 'id') else None
+        stmt_data.append((db_stmt.uuid, sid, stmt.get_hash(shallow=True),
+                          db_stmt.type, stmt.agent_list()))
+
+    return stmt_data
 
 
 @_clockit
