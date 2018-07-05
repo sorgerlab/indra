@@ -31,7 +31,7 @@ def make_raw_statement_test_set():
 
     def add_content(trid, src, tcid, reader, rv_idx, rid, a, b, ev_num, copies,
                     is_target=False):
-        stmts.extend(make_test_statements(a, b, reader, ev_num, copies))
+        stmts.extend(__make_test_statements(a, b, reader, ev_num, copies))
         if copies > 1:
             if ev_num is not None:
                 assert stmts[-1].get_hash() == stmts[-2].get_hash()
@@ -95,7 +95,7 @@ def make_raw_statement_test_set():
     return d, stmts, target_sets, bettered_sids
 
 
-def make_test_statements(a, b, source_api, ev_num=None, copies=1):
+def __make_test_statements(a, b, source_api, ev_num=None, copies=1):
     stmts = []
     A = Agent(a)
     B = Agent(b)
