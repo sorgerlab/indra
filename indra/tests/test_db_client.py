@@ -2,6 +2,8 @@ import os
 import pickle
 import random
 
+from nose.plugins.attrib import attr
+
 from indra.literature import pubmed_client as pubc
 
 from indra.db import util as dbu
@@ -70,6 +72,7 @@ def _get_prepped_db(num_stmts):
     return dts.test_db
 
 
+@attr('nonpublic', 'slow')
 def test_get_statements():
     num_stmts = 10000
     db = _get_prepped_db(num_stmts)
@@ -77,6 +80,9 @@ def test_get_statements():
     # Test getting all statements
     stmts = dbc.get_statements([], preassembled=False, db=db)
     assert len(stmts) == num_stmts, len(stmts)
+
+    stmts = dbc.get_statements([db.RawStatements.reading_id.isnot(None)],
+                               preassembled=False, db=db)
     pmids = {s.evidence[0].pmid for s in random.sample(stmts, 200)}
     assert pmids
     assert None not in pmids
@@ -84,18 +90,22 @@ def test_get_statements():
     assert len(md_list) == len(pmids), (len(md_list), len(pmids))
 
     # Test getting some statements
-    sid = stmts[0].id
-    stmts = dbc.get_statements([db.RawStatements.id.isnot(sid)],
+    stmt_uuid = stmts[0].uuid
+    stmts = dbc.get_statements([db.RawStatements.uuid != stmt_uuid],
                                preassembled=False, db=db)
     assert len(stmts) == num_stmts-1, len(stmts)
 
     # Test getting statements without fix refs.
-    stmts = dbc.get_statements([], preassembled=False, fix_refs=False, db=db)
-    assert len(stmts) == num_stmts
+    stmts = dbc.get_statements([db.RawStatements.reading_id.isnot(None),
+                                db.RawStatements.reading_id == db.Reading.id,
+                                db.Reading.reader == 'SPARSER'],
+                               preassembled=False, fix_refs=False, db=db)
+    assert 0 < len(stmts) < num_stmts, len(stmts)
     pmids = {s.evidence[0].pmid for s in random.sample(stmts, 200)}
     assert None in pmids, pmids
 
 
+@attr('nonpublic', 'slow')
 def test_get_statements_by_grot():
     """Test get statements by gene-role-type."""
     num_stmts = 10000
