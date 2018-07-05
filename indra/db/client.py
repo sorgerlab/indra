@@ -137,7 +137,7 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
 @_clockit
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
-                                     db=None, do_stmt_count=True,
+                                     db=None, do_stmt_count=False,
                                      preassembled=True, fix_refs=True,
                                      with_evidence=True, with_support=True):
     """Get statements from the DB by stmt type, agent, and/or agent role.
@@ -173,7 +173,7 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         Default is True.
     with_support : bool
         Choose whether to populate the supports and supported_by list attributes
-        of the Statement objects. General results in slower queries.
+        of the Statement objects. Generally results in slower queries.
     with_evidence : bool
         Choose whether or not to populate the evidence list attribute of the
         Statements. As with `with_support`, setting this to True will take
@@ -181,6 +181,8 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
     fix_refs : bool
         The paper refs within the evidence objects are not populated in the
         database, and thus must be filled using the relations in the datbase.
+        If True (default), the Text Ref IDs from the database are normalized
+        to PMIDs, or None if no PMID is available.
 
     Returns
     -------
@@ -221,12 +223,13 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         clauses.append(Statements.type == stmt_type)
     stmts = get_statements(clauses, count=count, do_stmt_count=do_stmt_count,
                            db=db, preassembled=preassembled, fix_refs=fix_refs,
-                           with_evidence=with_evidence, with_support=with_support)
+                           with_evidence=with_evidence,
+                           with_support=with_support)
     return stmts
 
 
 def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
-                            do_stmt_count=True, preassembled=True):
+                            do_stmt_count=False, preassembled=True):
     """Get the statements from a particular paper.
 
     Parameters
@@ -247,7 +250,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
         Whether or not to perform an initial statement counting step to give
         more meaningful progress messages.
     preassembled : bool
-        If true, statements will be selected from the table of pre-assembled
+        If True, statements will be selected from the table of pre-assembled
         statements. Otherwise, they will be selected from the raw statements.
         Default is True.
 
@@ -275,7 +278,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
 
 
 @_clockit
-def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
+def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
                    preassembled=True, with_support=False, fix_refs=True,
                    with_evidence=True):
     """Select statements according to a given set of clauses.
@@ -306,6 +309,8 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
     fix_refs : bool
         The paper refs within the evidence objects are not populated in the
         database, and thus must be filled using the relations in the datbase.
+        If True (default), the Text Ref IDs from the database are normalized
+        to PMIDs, or None if no PMID is available.
 
     Returns
     -------
@@ -334,8 +339,7 @@ def get_statements(clauses, count=1000, do_stmt_count=True, db=None,
         logger.info("Getting preassembled statements.")
         if with_evidence:
             logger.info("Getting preassembled statements.")
-            # Get pairs of pa statements with their supporting statement (as
-            # long as the number of supporting statements).
+            # Get pairs of pa statements with their linked raw statements
             clauses += db.join(db.PAStatements, db.RawStatements)
             pa_raw_stmt_pairs = \
                 db.select_all([db.PAStatements, db.RawStatements],
@@ -429,6 +433,8 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True):
     fix_refs : bool
         The paper refs within the evidence objects are not populated in the
         database, and thus must be filled using the relations in the datbase.
+        If True (default), the Text Ref IDs from the database are normalized
+        to PMIDs, or None if no PMID is available.
 
     Returns
     -------
