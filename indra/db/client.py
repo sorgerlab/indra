@@ -180,9 +180,11 @@ def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
         longer.
     fix_refs : bool
         The paper refs within the evidence objects are not populated in the
-        database, and thus must be filled using the relations in the datbase.
-        If True (default), the Text Ref IDs from the database are normalized
-        to PMIDs, or None if no PMID is available.
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
 
     Returns
     -------
@@ -308,9 +310,11 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
         longer.
     fix_refs : bool
         The paper refs within the evidence objects are not populated in the
-        database, and thus must be filled using the relations in the datbase.
-        If True (default), the Text Ref IDs from the database are normalized
-        to PMIDs, or None if no PMID is available.
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
 
     Returns
     -------
@@ -432,9 +436,11 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True):
         database, as defined in the db_config.ini file in .config/indra.
     fix_refs : bool
         The paper refs within the evidence objects are not populated in the
-        database, and thus must be filled using the relations in the datbase.
-        If True (default), the Text Ref IDs from the database are normalized
-        to PMIDs, or None if no PMID is available.
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
 
     Returns
     -------
