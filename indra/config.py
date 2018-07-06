@@ -10,7 +10,8 @@ else:
 logger = logging.getLogger('indra_config')
 
 # If the configuration file does not exist, try to create it from the default
-config_dir = os.path.expanduser('~/.config/indra')
+home_dir = os.path.expanduser('~')
+config_dir = os.path.join(home_dir, '.config', 'indra')
 config_path = os.path.join(config_dir, 'config.ini')
 default_config_path = os.path.join(os.path.dirname(__file__),
                                    'resources/default_config.ini')
