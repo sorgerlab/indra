@@ -154,7 +154,7 @@ def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
         print("Adding agents for %d statements." % num_stmts)
 
     # Get the iterator
-    return stmts_wo_agents_q.yield_per(num_per_yield)
+    return stmts_wo_agents_q.yield_per(num_per_yield), num_stmts
 
 
 def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
@@ -189,10 +189,15 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     agent_tbl_obj = db.tables[prefix + '_agents']
 
     if stmts_wo_agents is None:
-        stmts_wo_agents = get_statements_without_agents(db, prefix)
+        stmts_wo_agents, num_stmts = get_statements_without_agents(db, prefix)
 
     if verbose:
-        num_stmts = len(stmts_wo_agents)
+        try:
+            num_stmts = len(stmts_wo_agents)
+        except TypeError:
+            logger.info("Could not get length from type: %s. Turning off "
+                        "verbose messaging." % type(stmts_wo_agents))
+            verbose = False
 
     # Construct the agent records
     logger.info("Building agent data for insert...")
@@ -290,7 +295,7 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('raw_statements', stmt_data, cols)
-    stmts_to_add_agents = \
+    stmts_to_add_agents, num_stmts = \
         get_statements_without_agents(db, 'raw',
                                       db.RawStatements.db_info_id == db_ref_id)
     insert_agents(db, 'raw', stmts_to_add_agents)
