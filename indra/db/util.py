@@ -152,6 +152,8 @@ def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     if verbose:
         num_stmts = stmts_wo_agents_q.count()
         print("Adding agents for %d statements." % num_stmts)
+    else:
+        num_stmts = None
 
     # Get the iterator
     return stmts_wo_agents_q.yield_per(num_per_yield), num_stmts
@@ -189,7 +191,8 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     agent_tbl_obj = db.tables[prefix + '_agents']
 
     if stmts_wo_agents is None:
-        stmts_wo_agents, num_stmts = get_statements_without_agents(db, prefix)
+        stmts_wo_agents, num_stmts = \
+            get_statements_without_agents(db, prefix, verbose=verbose)
 
     if verbose:
         try:
