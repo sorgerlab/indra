@@ -2675,21 +2675,29 @@ def export_sbgn(model):
         # Add glyph for reaction
         process_glyph = sa._process_glyph('process')
         # Connect reactants with arcs
-        for r in reactants:
-            glyph = glyphs.get(r)
-            if glyph is None:
-                glyph_id = sa._none_glyph()
-            else:
-                glyph_id = glyph.attrib['id']
+        if not reactants:
+            glyph_id = sa._none_glyph()
             sa._arc('consumption', glyph_id, process_glyph)
+        else:
+            for r in reactants:
+                glyph = glyphs.get(r)
+                if glyph is None:
+                    glyph_id = sa._none_glyph()
+                else:
+                    glyph_id = glyph.attrib['id']
+                sa._arc('consumption', glyph_id, process_glyph)
         # Connect products with arcs
-        for p in products:
-            glyph = glyphs.get(p)
-            if glyph is None:
-                glyph_id = sa._none_glyph()
-            else:
-                glyph_id = glyph.attrib['id']
+        if not products:
+            glyph_id = sa._none_glyph()
             sa._arc('production', process_glyph, glyph_id)
+        else:
+            for p in products:
+                glyph = glyphs.get(p)
+                if glyph is None:
+                    glyph_id = sa._none_glyph()
+                else:
+                    glyph_id = glyph.attrib['id']
+                sa._arc('production', process_glyph, glyph_id)
         # Connect controllers with arcs
         for c in controllers:
             glyph = glyphs[c]
