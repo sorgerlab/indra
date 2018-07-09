@@ -295,19 +295,20 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
         elaborate_on_hash_diffs(db, 'old', hash_diffs['extra_old'],
                                 new_stmt_dict.keys())
     print(hash_diffs)
-    tests = [{'funcs': {'list': lambda s: s.evidence,
+    tests = [{'funcs': {'list': lambda s: s.evidence[:],
                         'comp': lambda ev: ev.matches_key()},
               'label': 'evidence text',
               'results': []},
-             {'funcs': {'list': lambda s: s.supports,
+             {'funcs': {'list': lambda s: s.supports[:],
                         'comp': lambda s: s.get_hash(shallow=True)},
               'label': 'supports matches keys',
               'results': []},
-             {'funcs': {'list': lambda s: s.supported_by,
+             {'funcs': {'list': lambda s: s.supported_by[:],
                         'comp': lambda s: s.get_hash(shallow=True)},
               'label': 'supported-by matches keys',
               'results': []}]
-    for mk_hash in (new_hash_set & old_hash_set):
+    comp_hashes = new_hash_set & old_hash_set
+    for mk_hash in comp_hashes:
         for test_dict in tests:
             res = _compare_list_elements(test_dict['label'],
                                          test_dict['funcs']['list'],
@@ -321,8 +322,9 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
     assert all([len(mismatch_res) is 0
                 for mismatch_res in [test_dict['results']
                                      for test_dict in tests]]),\
-        ('\n'.join(['Found %d mismatches in %s.' % (len(td['results']),
-                                                    td['label'])
+        ('\n'.join(['Found %d/%d mismatches in %s.' % (len(td['results']),
+                                                       len(comp_hashes),
+                                                       td['label'])
                     for td in tests]))
     assert not any(hash_diffs.values()), "Found mismatched hashes."
 
@@ -440,8 +442,12 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
+
+    # Make sure the number of pa statements is within reasonable bounds.
     pa_stmt_list = db.select_all(db.PAStatements)
     assert 0 < len(pa_stmt_list) < len(raw_stmt_list)
+
+    # Check the evidence links.
     raw_unique_link_list = db.select_all(db.RawUniqueLinks)
     assert len(raw_unique_link_list)
     all_link_ids = {ru.raw_stmt_id for ru in raw_unique_link_list}
@@ -449,14 +455,24 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     assert len(all_link_ids - all_raw_ids) is 0
     assert all([pa_stmt.mk_hash in all_link_mk_hashes
                 for pa_stmt in pa_stmt_list])
-    num_support_links = db.filter_query(db.PASupportLinks).count()
-    assert num_support_links
+
+    # Check the support links.
+    sup_links = db.select_all([db.PASupportLinks.supporting_mk_hash,
+                               db.PASupportLinks.supported_mk_hash])
+    assert sup_links
+    assert not any([l[0] == l[1] for l in sup_links]),\
+        "Found self-support in the database."
 
     # Try to get all the preassembled statements from the table.
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
     assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
                                                 len(pa_stmt_list))
+    assert not any([s.get_hash(shallow=True)
+                    in [s_.get_hash(shallow=True)
+                        for s_ in s.supported_by + s.supports]]
+                   for s in pa_stmts),\
+        "Found self-support in constructed pa statement objects."
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
