@@ -205,7 +205,7 @@ class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
         """
         available_tuples = self.get_available_stmt_tuples()
         if fraction is not 1:
-            num_stmts = fraction*len(available_tuples)
+            num_stmts = int(fraction*len(available_tuples))
             input_tuples = random.sample(available_tuples, num_stmts)
         else:
             input_tuples = available_tuples

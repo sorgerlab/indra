@@ -47,12 +47,8 @@ class _PrePaDatabaseTestSetup(object):
 
     def insert_the_statements(self, input_tuples):
         print("Loading %d statements..." % len(input_tuples))
-        if hasattr(self.test_db.RawStatements, 'id'):
-            self.test_db.copy('raw_statements', input_tuples,
-                              self.test_data['raw_statements']['cols'])
-        else:
-            self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
-                              self.test_data['raw_statements']['cols'][1:])
+        self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
+                          self.test_data['raw_statements']['cols'][1:])
 
         print("Inserting agents...")
         dbu.insert_agents(self.test_db, 'raw')
