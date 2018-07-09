@@ -3276,6 +3276,40 @@ def get_all_descendants(parent):
     return descendants
 
 
+# In the future, when hierarchy is no longer determined by sub-classing, this
+# function should be altered to account for the change.
+def get_type_hierarchy(s):
+    """Get the sequence of parents from `s` to Statement.
+
+    Parameters
+    ----------
+    s : a class or instance of a child of Statement
+        For example the statement `Phosphorylation(MEK(), ERK())` or just the
+        class `Phosphorylation`.
+
+    Returns
+    -------
+    parent_list : list[types]
+        A list of the types leading up to Statement.
+
+    Examples
+    --------
+        >> s = Phosphorylation(MAPK1(), Elk1())
+        >> get_type_hierarchy(s)
+        [Phosphorylation, AddModification, Modification, Statement]
+        >> get_type_hierarchy(AddModification)
+        [AddModification, Modification, Statement]
+    """
+    tp = type(s) if not isinstance(s, type) else s
+    p_list = [tp]
+    for p in tp.__bases__:
+        if p is not Statement:
+            p_list.extend(get_type_hierarchy(p))
+        else:
+            p_list.append(p)
+    return p_list
+
+
 class NotAStatementName(Exception):
     pass
 
