@@ -3,10 +3,9 @@ from builtins import dict, str
 
 import os
 import json
-import pickle
 import random
 import logging
-from datetime import timedelta, datetime
+from datetime import datetime
 
 
 gm_logger = logging.getLogger('grounding_mapper')
@@ -24,52 +23,175 @@ pa_logger.setLevel(logging.WARNING)
 from indra.db import util as db_util
 from indra.db import client as db_client
 from indra.db import preassembly_manager as pm
-from indra.statements import stmts_from_json, Statement
+from indra.statements import Statement
 from indra.tools import assemble_corpus as ac
 
 from nose.plugins.attrib import attr
 from .util import needs_py3
-from .make_raw_statement_test_set import make_raw_statement_test_set
+from .test_db_client import _PrePaDatabaseTestSetup
+
+from indra.statements import Phosphorylation, Agent, Evidence
+from indra.db.util import NestedDict
+from indra.db.util import reader_versions as rv_dict
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MAX_NUM_STMTS = 11721
 BATCH_SIZE = 2017
 STMTS = None
 
+# ==============================================================================
+# Support clases and functions
+# ==============================================================================
 
-class _DatabaseTestSetup(object):
-    """This object is used to setup the test database into various configs."""
-    def __init__(self, max_total_stmts):
-        self.test_db = db_util.get_test_db()
-        self.test_db._clear(force=True)
-        with open(os.path.join(THIS_DIR, 'db_pa_test_input_1M.pkl'), 'rb') as f:
-            self.test_data = pickle.load(f)
 
-        if max_total_stmts < len(self.test_data['raw_statements']['tuples']):
-            self.stmt_tuples = random.sample(
-                self.test_data['raw_statements']['tuples'],
-                max_total_stmts
-                )
+def make_raw_statement_set_for_distillation():
+    d = NestedDict()
+    stmts = []
+    target_sets = []
+    bettered_sids = set()
+
+    # Create a function which will update all possible outcome scenarios given a
+    # set of some_stmts.
+    def add_stmts_to_target_set(some_stmts):
+        # If we don't have any target sets of statements, initialize with the
+        # input statements.
+        if not target_sets:
+            for stmt in some_stmts:
+                target_sets.append(({stmt},
+                                    {stmts.index(s) for s in some_stmts
+                                     if s is not stmt}))
         else:
-            self.stmt_tuples = self.test_data['raw_statements']['tuples']
+            # Make a copy and empty the current list.
+            old_target_sets = target_sets[:]
+            try: # Python 3
+                target_sets.clear()
+            except AttributeError: # Python 2
+                del target_sets[:]
 
-        self.used_stmt_tuples = set()
+            # Now for every previous scenario, pick a random possible "good"
+            # statement, update the corresponding duplicate trace.
+            for stmt_set, dup_set in old_target_sets:
+                for stmt in some_stmts:
+                    # Here we consider the possibility that each of the
+                    # potential valid statements may be chosen, and record that
+                    # possible alteration to the set of possible histories.
+                    new_set = stmt_set.copy()
+                    new_set.add(stmt)
+                    new_dups = dup_set.copy()
+                    new_dups |= {stmts.index(s) for s in some_stmts
+                                 if s is not stmt}
+                    target_sets.append((new_set, new_dups))
+        return target_sets
+
+    # Create a function to handle the creation of the metadata.
+    def add_content(trid, src, tcid, reader, rv_idx, rid, a, b, ev_num, copies,
+                    is_target=False):
+        # Add the new statements to the over-all list.
+        stmts.extend(__make_test_statements(a, b, reader, ev_num, copies))
+
+        # If we are making multiple copies, the latest copies should have the
+        # same overall hash. If it's not a copy, the hashes should be different.
+        if copies > 1:
+            # The above only applies if the evidence was specified to be the
+            # same, otherwise it assumed the evidence, and therefore the hash,
+            # is different.
+            if ev_num is not None:
+                assert stmts[-1].get_hash() == stmts[-2].get_hash()
+            else:
+                assert stmts[-1].get_hash() != stmts[-2].get_hash()
+
+        # Populate the provenance for the dict.
+        rv = rv_dict[reader][rv_idx]
+        r_dict = d[trid][src][tcid][reader][rv][rid]
+
+        # If the evidence variation was specified, the evidence in any copies is
+        # identical, and they will all have the same hash. Else, the hash is
+        # different and the statements need to be iterated over.
+        if ev_num is not None:
+            s_hash = stmts[-1].get_hash()
+
+            # Check to see if we have a matching statment yet.
+            if r_dict.get(s_hash) is None:
+                r_dict[s_hash] = set()
+
+            # Set the value
+            d[trid][src][tcid][reader][rv][rid][stmts[-1].get_hash()] |= \
+                {(stmts.index(s), s) for s in stmts[-copies:]}
+        else:
+            for s in stmts[-copies:]:
+                s_hash = s.get_hash()
+                if r_dict.get(s_hash) is None:
+                    r_dict[s_hash] = set()
+                d[trid][src][tcid][reader][rv][rid][s_hash].add(
+                    (stmts.index(s), s)
+                    )
+
+        # If this/these statement/s is intended to be picked up, add it/them to
+        # the target sets.
+        if is_target:
+            global target_sets
+            target_sets = add_stmts_to_target_set(stmts[-copies:])
         return
 
-    def get_available_stmt_tuples(self):
-        return list(set(self.stmt_tuples) - self.used_stmt_tuples)
+    # We produced statements a coupld of times with and old reader version
+    #           trid         tcid        reader vrsn idx   distinct evidence id
+    #           |  source    |  reader   |  reading id     |  number of copies
+    #           |  |         |  |        |  |  Agents      |  |  Is it a target?
+    add_content(1, 'pubmed', 1, 'reach', 0, 1, 'A1', 'B1', 1, 2, False)
+    add_content(1, 'pubmed', 1, 'reach', 0, 1, 'A1', 'B1', 2, 1)
+    add_content(1, 'pubmed', 1, 'reach', 0, 1, 'A2', 'B2', 1, 1)
 
-    def load_background(self):
-        """Load in all the background provenance metadata (e.g. text_ref).
+    # Do it again for a new reader version.
+    add_content(1, 'pubmed', 1, 'reach', 1, 2, 'A1', 'B1', 1, 2)
+    add_content(1, 'pubmed', 1, 'reach', 1, 2, 'A1', 'B1', 2, 1)
 
-        Note: This must be done before you try to load any statements.
-        """
-        for tbl in ['text_ref', 'text_content', 'reading', 'db_info']:
-            print("Loading %s..." % tbl)
-            self.test_db.copy(tbl, self.test_data[tbl]['tuples'],
-                              self.test_data[tbl]['cols'])
-        return
+    # Add some for sparser.
+    add_content(1, 'pubmed', 1, 'sparser', 1, 3, 'A1', 'B1', 1, 2)
+    add_content(1, 'pubmed', 1, 'sparser', 1, 3, 'A2', 'B2', 1, 1)
 
+    # Now add statements from another source.
+    add_content(1, 'pmc_oa', 2, 'reach', 0, 4, 'A1', 'B1', 1, 2)
+    add_content(1, 'pmc_oa', 2, 'reach', 0, 4, 'A1', 'B1', 2, 1)
+    add_content(1, 'pmc_oa', 2, 'reach', 0, 4, 'A2', 'B2', 1, 1)
+
+    # All the statements up until now will be skipped, if all goes well.
+    bettered_sids |= set(range(len(stmts)))
+
+    # ...and again for a new reader version.
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A1', 'B1', 1, 2, True)
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A1', 'B1', 2, 1, True)
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A2', 'B2', 1, 1, True)
+    add_content(1, 'pmc_oa', 2, 'reach', 1, 4, 'A3', 'B3', 1, 1, True)
+
+    # Add some results from sparser
+    add_content(1, 'pmc_oa', 2, 'sparser', 1, 5, 'A1', 'B1', 1, 2, True)
+    add_content(1, 'pmc_oa', 2, 'sparser', 1, 5, 'A2', 'B2', 1, 1, True)
+
+    # Add some content for another text ref.
+    add_content(2, 'pmc_oa', 3, 'sparser', 1, 6, 'A3', 'B3', 1, 1, True)
+    add_content(2, 'manuscripts', 4, 'sparser', 1, 7, 'A3', 'B3', 1, 1)
+
+    # This last statement should also be skipped, if all goes well.
+    bettered_sids.add(len(stmts) - 1)
+
+    return d, stmts, target_sets, bettered_sids
+
+
+def __make_test_statements(a, b, source_api, ev_num=None, copies=1):
+    stmts = []
+    A = Agent(a)
+    B = Agent(b)
+    for i in range(copies):
+        if ev_num is None:
+            ev_num = i
+        ev_text = "Evidence %d for %s phosphorylates %s." % (ev_num, a, b)
+        ev_list = [Evidence(text=ev_text, source_api=source_api)]
+        stmts.append(Phosphorylation(Agent(A), Agent(B), evidence=ev_list))
+    return stmts
+
+
+class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
+    """This object is used to setup the test database into various configs."""
     def add_statements(self, fraction=1, with_pa=False):
         """Add statements and agents to the database.
 
@@ -88,16 +210,7 @@ class _DatabaseTestSetup(object):
         else:
             input_tuples = available_tuples
 
-        print("Loading %d statements..." % len(input_tuples))
-        if hasattr(self.test_db.RawStatements, 'id'):
-            self.test_db.copy('raw_statements', input_tuples,
-                               self.test_data['raw_statements']['cols'])
-        else:
-            self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
-                              self.test_data['raw_statements']['cols'][1:])
-
-        print("Inserting agents...")
-        db_util.insert_agents(self.test_db, 'raw')
+        self.insert_the_statements(input_tuples)
 
         if with_pa:
             print("Preassembling new statements...")
@@ -290,25 +403,9 @@ def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
         print('='*100)
 
 
-def test_distillation_on_curated_set():
-    stmt_dict, stmt_list, target_sets, target_bettered_ids = \
-        make_raw_statement_test_set()
-    filtered_set, duplicate_ids, bettered_ids = \
-        db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=True)
-    for stmt_set, dup_set in target_sets:
-        if stmt_set == filtered_set:
-            break
-    else:
-        assert False, "Filtered set does not match any valid possibilities."
-    assert bettered_ids == target_bettered_ids
-    assert dup_set == duplicate_ids, (dup_set - duplicate_ids,
-                                      duplicate_ids - dup_set)
-    stmt_dict, stmt_list, target_sets, target_bettered_ids = \
-        make_raw_statement_test_set()
-    filtered_id_set, duplicate_ids, bettered_ids = \
-        db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=False)
-    assert len(filtered_id_set) == len(filtered_set), \
-        (len(filtered_set), len(filtered_id_set))
+# ==============================================================================
+# Generic test definitions
+# ==============================================================================
 
 
 @needs_py3
@@ -326,21 +423,6 @@ def _check_statement_distillation(num_stmts):
     assert len(stmts_p) == len(stmt_ids)
     stmt_ids_p = db_util.distill_stmts(db, num_procs=2)
     assert stmt_ids_p == stmt_ids
-
-
-@attr('nonpublic')
-def test_statement_distillation_small():
-    _check_statement_distillation(1000)
-
-
-@attr('nonpublic', 'slow')
-def test_statement_distillation_large():
-    _check_statement_distillation(11721)
-
-
-@attr('nonpublic', 'slow')
-def test_statement_distillation_extra_large():
-    _check_statement_distillation(1001721)
 
 
 @needs_py3
@@ -382,25 +464,6 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     _check_against_opa_stmts(db, raw_stmts, pa_stmts)
 
 
-@attr('nonpublic')
-def test_db_preassembly_small():
-    _check_preassembly_with_database(200, 40)
-
-
-@attr('nonpublic', 'slow')
-def test_db_preassembly_large():
-    _check_preassembly_with_database(11721, 2017)
-
-
-@attr('nonpublic', 'slow')
-def test_db_preassembly_extra_large():
-    _check_preassembly_with_database(101721, 2017)
-
-
-@attr('nonpublic', 'slow')
-def test_db_preassembly_supremely_large():
-    _check_preassembly_with_database(1001721, 200017)
-
 @needs_py3
 def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
     db = _get_loaded_db(num_stmts, split=split, with_init_corpus=True)
@@ -415,6 +478,67 @@ def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
     _check_against_opa_stmts(db, raw_stmts, pa_stmts)
+
+
+# ==============================================================================
+# Specific Tests
+# ==============================================================================
+
+
+def test_distillation_on_curated_set():
+    stmt_dict, stmt_list, target_sets, target_bettered_ids = \
+        make_raw_statement_set_for_distillation()
+    filtered_set, duplicate_ids, bettered_ids = \
+        db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=True)
+    for stmt_set, dup_set in target_sets:
+        if stmt_set == filtered_set:
+            break
+    else:
+        assert False, "Filtered set does not match any valid possibilities."
+    assert bettered_ids == target_bettered_ids
+    assert dup_set == duplicate_ids, (dup_set - duplicate_ids,
+                                      duplicate_ids - dup_set)
+    stmt_dict, stmt_list, target_sets, target_bettered_ids = \
+        make_raw_statement_set_for_distillation()
+    filtered_id_set, duplicate_ids, bettered_ids = \
+        db_util._get_filtered_rdg_statements(stmt_dict, get_full_stmts=False)
+    assert len(filtered_id_set) == len(filtered_set), \
+        (len(filtered_set), len(filtered_id_set))
+
+
+@attr('nonpublic')
+def test_statement_distillation_small():
+    _check_statement_distillation(1000)
+
+
+@attr('nonpublic', 'slow')
+def test_statement_distillation_large():
+    _check_statement_distillation(11721)
+
+
+@attr('nonpublic', 'slow')
+def test_statement_distillation_extra_large():
+    _check_statement_distillation(1001721)
+
+
+@attr('nonpublic')
+def test_db_preassembly_small():
+    _check_preassembly_with_database(200, 40)
+
+
+@attr('nonpublic', 'slow')
+def test_db_preassembly_large():
+    _check_preassembly_with_database(11721, 2017)
+
+
+@attr('nonpublic', 'slow')
+def test_db_preassembly_extra_large():
+    _check_preassembly_with_database(101721, 20017)
+
+
+@attr('nonpublic', 'slow')
+def test_db_preassembly_supremely_large():
+    _check_preassembly_with_database(1001721, 200017)
 
 
 @attr('nonpublic')

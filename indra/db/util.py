@@ -152,9 +152,11 @@ def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     if verbose:
         num_stmts = stmts_wo_agents_q.count()
         print("Adding agents for %d statements." % num_stmts)
+    else:
+        num_stmts = None
 
     # Get the iterator
-    return stmts_wo_agents_q.yield_per(num_per_yield)
+    return stmts_wo_agents_q.yield_per(num_per_yield), num_stmts
 
 
 def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
@@ -189,10 +191,19 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     agent_tbl_obj = db.tables[prefix + '_agents']
 
     if stmts_wo_agents is None:
-        stmts_wo_agents = get_statements_without_agents(db, prefix)
+        stmts_wo_agents, num_stmts = \
+            get_statements_without_agents(db, prefix, verbose=verbose)
+    else:
+        num_stmts = None
 
     if verbose:
-        num_stmts = len(stmts_wo_agents)
+        if num_stmts is None:
+            try:
+                num_stmts = len(stmts_wo_agents)
+            except TypeError:
+                logger.info("Could not get length from type: %s. Turning off "
+                            "verbose messaging." % type(stmts_wo_agents))
+                verbose = False
 
     # Construct the agent records
     logger.info("Building agent data for insert...")
@@ -290,7 +301,7 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     if verbose:
         print(" Done loading %d statements." % len(stmts))
     db.copy('raw_statements', stmt_data, cols)
-    stmts_to_add_agents = \
+    stmts_to_add_agents, num_stmts = \
         get_statements_without_agents(db, 'raw',
                                       db.RawStatements.db_info_id == db_ref_id)
     insert_agents(db, 'raw', stmts_to_add_agents)
@@ -371,20 +382,20 @@ def _set_evidence_text_ref(stmt, tr):
 
 
 @_clockit
-def _fix_evidence_refs(db, rid_stmt_pairs):
+def _fix_evidence_refs(db, rid_stmt_trios):
     """Get proper id data for a raw statement from the database.
 
     Alterations are made to the Statement objects "in-place", so this function
     itself returns None.
     """
-    rid_set = {rid for rid, _, _ in rid_stmt_pairs if rid is not None}
+    rid_set = {rid for rid, _, _ in rid_stmt_trios if rid is not None}
     logger.info("Getting text refs for %d readings." % len(rid_set))
     if rid_set:
         rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
                                      db.Reading.id.in_(rid_set),
                                      *db.join(db.TextRef, db.Reading))
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
-        for rid, sid, stmt in rid_stmt_pairs:
+        for rid, sid, stmt in rid_stmt_trios:
             if rid is None:
                 # This means this statement came from a database, not reading.
                 continue
@@ -397,17 +408,17 @@ def _fix_evidence_refs(db, rid_stmt_pairs):
 @_clockit
 def get_raw_stmts_frm_db_list(db, db_stmt_objs, fix_refs=True, with_sids=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
-    rid_stmt_pairs = [(db_stmt.reading_id, db_stmt.id,
-                       _get_statement_object(db_stmt))
-                      for db_stmt in db_stmt_objs]
+    rid_stmt_sid_trios = [(db_stmt.reading_id, db_stmt.id,
+                          _get_statement_object(db_stmt))
+                          for db_stmt in db_stmt_objs]
     if fix_refs:
-        _fix_evidence_refs(db, rid_stmt_pairs)
+        _fix_evidence_refs(db, rid_stmt_sid_trios)
     # Note: it is important that order is maintained here (hence not a set or
     # dict).
     if with_sids:
-        return [(sid, stmt) for _, sid, stmt in rid_stmt_pairs]
+        return [(sid, stmt) for _, sid, stmt in rid_stmt_sid_trios]
     else:
-        return [stmt for _, _, stmt in rid_stmt_pairs]
+        return [stmt for _, _, stmt in rid_stmt_sid_trios]
 
 
 class NestedDict(dict):
