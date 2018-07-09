@@ -193,14 +193,17 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     if stmts_wo_agents is None:
         stmts_wo_agents, num_stmts = \
             get_statements_without_agents(db, prefix, verbose=verbose)
+    else:
+        num_stmts = None
 
     if verbose:
-        try:
-            num_stmts = len(stmts_wo_agents)
-        except TypeError:
-            logger.info("Could not get length from type: %s. Turning off "
-                        "verbose messaging." % type(stmts_wo_agents))
-            verbose = False
+        if num_stmts is None:
+            try:
+                num_stmts = len(stmts_wo_agents)
+            except TypeError:
+                logger.info("Could not get length from type: %s. Turning off "
+                            "verbose messaging." % type(stmts_wo_agents))
+                verbose = False
 
     # Construct the agent records
     logger.info("Building agent data for insert...")
