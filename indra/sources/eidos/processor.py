@@ -42,9 +42,12 @@ class EidosJsonLdProcessor(object):
             self.tree.execute("$.extractions[(@.@type is 'Entity')]")
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
-        sentences = \
-            self.tree.execute("$.extractions[(@.@type is 'Sentence')]")
-        self.sentence_dict = {sent['@id']: sent for sent in sentences}
+        documents = \
+            self.tree.execute("$.documents[(@.@type is 'Document')]")
+        self.sentence_dict = {}
+        for document in documents:
+            sentences = document.get('sentences', [])
+            self.sentence_dict = {sent['@id']: sent for sent in sentences}
 
         # The first state corresponds to increase/decrease
         def get_polarity(x):
@@ -147,13 +150,25 @@ class EidosJsonLdProcessor(object):
 
         # First try looking up the full sentence through provenance
         text = None
+        time_annot = {}
         if provenance:
             sentence_tag = provenance[0].get('sentence')
             if sentence_tag and '@id' in sentence_tag:
                 sentence_id = sentence_tag['@id']
                 sentence = self.sentence_dict.get(sentence_id)
                 if sentence is not None:
-                    text = self._sanitize(sentence)
+                    text = self._sanitize(sentence['text'])
+                # Get temporal constraints if available
+                timexes = sentence.get('timexes', [])
+                if timexes:
+                    time_text = timexes[0].get('text')
+                    constraint = timexes[0]['intervals'][0]
+                    start = constraint['start']
+                    end = constraint['end']
+                    duration = constraint['duration']
+                    time_annot = {'text': time_text, 'start': start,
+                                  'end': end, 'duration': duration}
+
         # If that fails, we can still get the text of the event
         if text is None:
             text = self._sanitize(event.get('text'))
@@ -162,6 +177,8 @@ class EidosJsonLdProcessor(object):
                 'found_by'   : event.get('rule'),
                 'provenance' : provenance,
                 }
+        if time_annot:
+            annotations['time'] = time_annot
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]
 
