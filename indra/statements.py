@@ -153,6 +153,7 @@ Some validation tools include:
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+
 import os
 import abc
 import sys
@@ -160,8 +161,10 @@ import uuid
 import rdflib
 import logging
 import itertools
+from hashlib import md5
 from copy import deepcopy
 from collections import OrderedDict as _o
+
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
@@ -1084,9 +1087,21 @@ class Statement(object):
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
         self.uuid = '%s' % uuid.uuid4()
-        self.hash = None
-        self.shallow_hash = None
+        self._full_hash = None
+        self._shallow_hash = None
         return
+
+    def _make_hash(self, matches_key, n_bytes):
+        """Make the has from a matches key."""
+        # Clean up the matches key.
+        mk_cleaned = matches_key
+        reps = [('\\', ''), ('class', ''), ('indra.statements.', ''),
+                ('None', '~'), ('\'', ''), ('\"', ''), (' ', '')]
+        for old, new in reps:
+            mk_cleaned = mk_cleaned.replace(old, new)
+
+        # Make the hash using a truncated md5 converted to int.
+        return int(md5(mk_cleaned.encode('utf-8')).hexdigest()[:n_bytes], 16)
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -1094,21 +1109,46 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
-    def get_hash(self, refresh=False, shallow=False):
-        def clean(rep):
-            return (rep.replace('\\', '').replace('class', '')
-                    .replace('indra.statements.', '').replace('None', '~')
-                    .replace('\'', '').replace('\"', '').replace(' ', ''))
-        if not shallow:
-            if self.hash is None or refresh:
-                ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
-                self.hash = hash(clean(self.matches_key()
-                                       + str(ev_matches_key_list)))
-            ret = self.hash
+    def get_hash(self, shallow=False, refresh=False):
+        """Get a hash for this Statement.
+
+        There are two types of hash, "shallow" and "full". A shallow hash is
+        as unique as the information carried by the statement, i.e. it is a hash
+        of the `matches_key`. This means that differences in source, evidence,
+        and so on are not included. As such, it is a shorter hash (12 bytes).
+
+        A full hash includes, in addition to the matches key, information from
+        the evidence of the statement. These hashes will be equal if the two
+        Statements came from the same sentences, extracted by the same reader,
+        from the same source.
+
+        Note that a hash of the Python object will also include the `uuid`, so
+        it will always be unique for every object.
+
+        Parameters
+        ----------
+        shallow : bool
+            Choose between the shallow and full hashes described above. Default
+            is false (e.g. a deep hash).
+        refresh : bool
+            Used to get a new copy of the hash. Default is false, so the hash,
+            if it has been already created, will be read from the attribute.
+
+        Returns
+        -------
+        hash : int
+            A long integer hash.
+        """
+        if shallow:
+            if self._shallow_hash is None or refresh:
+                self._shallow_hash = self._make_hash(self.matches_key(), 12)
+            ret = self._shallow_hash
         else:
-            if self.shallow_hash is None or refresh:
-                self.shallow_hash = hash(clean(self.matches_key()))
-            ret = self.shallow_hash
+            if self._full_hash is None or refresh:
+                ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
+                self._full_hash =\
+                    self._make_hash(self.matches_key() + str(ev_mk_list), 16)
+            ret = self._full_hash
         return ret
 
     def agent_list_with_bound_condition_agents(self):
@@ -1288,8 +1328,8 @@ class Statement(object):
             my_hash = kwargs.pop(attr, None)
             my_shallow_hash = kwargs.pop(attr, None)
         new_instance = self.__class__(**kwargs)
-        new_instance.hash = my_hash
-        new_instance.shallow_hash = my_shallow_hash
+        new_instance._full_hash = my_hash
+        new_instance._shallow_hash = my_shallow_hash
         return new_instance
 
 
