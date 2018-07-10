@@ -1093,15 +1093,7 @@ class Statement(object):
 
     def _make_hash(self, matches_key, n_bytes):
         """Make the has from a matches key."""
-        # Clean up the matches key.
-        mk_cleaned = matches_key
-        reps = [('\\', ''), ('class', ''), ('indra.statements.', ''),
-                ('None', '~'), ('\'', ''), ('\"', ''), (' ', '')]
-        for old, new in reps:
-            mk_cleaned = mk_cleaned.replace(old, new)
-
-        # Make the hash using a truncated md5 converted to int.
-        return int(md5(mk_cleaned.encode('utf-8')).hexdigest()[:n_bytes], 16)
+        return int(md5(matches_key.encode('utf-8')).hexdigest()[:n_bytes], 16)
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -1133,6 +1125,7 @@ class Statement(object):
         refresh : bool
             Used to get a new copy of the hash. Default is false, so the hash,
             if it has been already created, will be read from the attribute.
+            This is primarily used for speed testing.
 
         Returns
         -------
