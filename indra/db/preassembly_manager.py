@@ -137,13 +137,17 @@ class PreassemblyManager(object):
         if in_mks is None and ex_mks is None:
             db_stmt_iter = db.select_all(db.PAStatements.json,
                                          yield_per=self.batch_size)
-        elif ex_mks is None and in_mks:
+        elif ex_mks is None and in_mks is not None:
+            if not in_mks:
+                return []
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
                 db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
-        elif in_mks is None and ex_mks:
+        elif in_mks is None and ex_mks is not None:
+            if not ex_mks:
+                return []
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
                 db.PAStatements.mk_hash.notin_(ex_mks),
@@ -156,11 +160,8 @@ class PreassemblyManager(object):
                 db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
-        else:
-            db_stmt_iter = db.select_all(
-                db.PAStatements.json,
-                yield_per=self.batch_size
-                )
+        else:  # Neither is None, and both are empty.
+            return []
 
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_func=list)
@@ -344,10 +345,9 @@ class PreassemblyManager(object):
         # Now find the new support links that need to be added.
         new_support_links = set()
         for npa_batch in self._pa_batch_iter(db, in_mks=new_mk_set):
-            some_support_links = set()
 
             # Compare internally
-            some_support_links |= self._get_support_links(npa_batch)
+            some_support_links = self._get_support_links(npa_batch)
 
             # Compare against the other new batch statements.
             diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
@@ -428,9 +428,17 @@ class PreassemblyManager(object):
         """Find the links of refinement/support between statements."""
         id_maps = self.pa._generate_id_maps(unique_stmts,
                                             **generate_id_map_kwargs)
-        return {tuple([unique_stmts[idx].get_hash(shallow=True)
-                       for idx in idx_pair])
-                for idx_pair in id_maps}
+        ret = set()
+        for ix_pair in id_maps:
+            if ix_pair[0] == ix_pair[1]:
+                assert False, "Self-comparison occurred."
+            hash_pair = \
+                tuple([unique_stmts[ix].get_hash(True) for ix in ix_pair])
+            if hash_pair[0] == hash_pair[1]:
+                assert False, "Input list included duplicates."
+            ret.add(hash_pair)
+
+        return ret
 
 
 def make_graph(unique_stmts, match_key_maps):
