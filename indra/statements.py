@@ -2984,17 +2984,23 @@ class Unresolved(Statement):
     representation of an indra statement. When this happens, this class is used
     as a place-holder, carrying only the uuid of the statement.
     """
-    def __init__(self, uuid_str=None, shallow_hash=None, mk_hash=None):
+    def __init__(self, uuid_str=None, shallow_hash=None, full_hash=None):
         super(Unresolved, self).__init__()
         self.uuid = uuid_str
-        self.shallow_hash = shallow_hash
-        self.hash = mk_hash
+        self._shallow_hash = shallow_hash
+        self._full_hash = full_hash
+        assert self.uuid or self._shallow_hash or self._full_hash,\
+            "Some identifying information must be given."
 
     def __str__(self):
         if self.uuid:
-            return "%s(%s)" % (type(self).__name__, self.uuid)
-        elif self.shallow_hash:
-            return "%s(%s)" % (type(self).__name__, self.shallow_hash)
+            return "%s(uuid=%s)" % (type(self).__name__, self.uuid)
+        elif self._shallow_hash:
+            return "%s(shallow_hash=%s)" % (type(self).__name__,
+                                            self._shallow_hash)
+        else:
+            return "%s(full_hash=%s)" % (type(self).__name__,
+                                         self._full_hash)
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
