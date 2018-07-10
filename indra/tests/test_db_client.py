@@ -24,7 +24,7 @@ class _PrePaDatabaseTestSetup(object):
             self.stmt_tuples = random.sample(
                 self.test_data['raw_statements']['tuples'],
                 max_total_stmts
-            )
+                )
         else:
             self.stmt_tuples = self.test_data['raw_statements']['tuples']
 
@@ -39,16 +39,52 @@ class _PrePaDatabaseTestSetup(object):
 
         Note: This must be done before you try to load any statements.
         """
-        for tbl in ['text_ref', 'text_content', 'reading', 'db_info']:
+        # Abbreviate this variable to avoid excessive line breaks.
+        td = self.test_data
+        tables = ['text_ref', 'text_content', 'reading', 'db_info']
+
+        # Handle the case where we aren't using all the statements.
+        if len(self.stmt_tuples) < len(td['raw_statements']['tuples']):
+            # Look up the indices for easy access.
+            rdg_idx = td['raw_statements']['cols'].index('reading_id')
+            tc_idx = td['reading']['cols'].index('text_content_id')
+            tr_idx = td['text_content']['cols'].index('text_ref_id')
+
+            # Select only the necessary refs
+            inputs = {tbl: set() for tbl in tables}
+
+            # Take all the db_info (there aren't many).
+            inputs['db_info'] = set(td['db_info']['tuples'])
+
+            # Filter out un-needed reading provenance.
+            for stmt_tpl in self.stmt_tuples:
+                rid = stmt_tpl[rdg_idx]
+                if not rid:
+                    continue
+                # Select the reading.
+                rdg_tpl = td['reading']['dict'][stmt_tpl[rdg_idx]]
+                inputs['reading'].add(rdg_tpl)
+
+                # Select the text content.
+                tc_tpl = td['text_content']['dict'][rdg_tpl[tc_idx]]
+                inputs['text_content'].add(tc_tpl)
+
+                # Select the text ref.
+                inputs['text_ref'].add(td['text_ref']['dict'][tc_tpl[tr_idx]])
+        else:
+            inputs = {tbl: set(td['tbl']['tuples']) for tbl in tables}
+
+        # Insert the necessary content.
+        for tbl in tables:
             print("Loading %s..." % tbl)
-            self.test_db.copy(tbl, self.test_data[tbl]['tuples'],
-                              self.test_data[tbl]['cols'])
+            self.test_db.copy(tbl, inputs[tbl], self.test_data[tbl]['cols'])
         return
 
     def insert_the_statements(self, input_tuples):
         print("Loading %d statements..." % len(input_tuples))
         self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
                           self.test_data['raw_statements']['cols'][1:])
+        self.used_stmt_tuples |= set(input_tuples)
 
         print("Inserting agents...")
         dbu.insert_agents(self.test_db, 'raw')
