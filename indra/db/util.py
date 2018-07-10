@@ -789,8 +789,9 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     stmts, duplicate_sids, bettered_duplicate_sids = \
         _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids)
-    print("After filtering reading: %d unique statements, %d duplicates."
-          % (len(stmts), len(duplicate_sids)))
+    print("After filtering reading: %d unique statements, %d exact duplicates, "
+          "%d with results from better resources available."
+          % (len(stmts), len(duplicate_sids), len(bettered_duplicate_sids)))
     assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     db_stmts, db_duplicates = \
