@@ -1093,7 +1093,9 @@ class Statement(object):
 
     def _make_hash(self, matches_key, n_bytes):
         """Make the has from a matches key."""
-        return int(md5(matches_key.encode('utf-8')).hexdigest()[:n_bytes], 16)
+        raw_h = int(md5(matches_key.encode('utf-8')).hexdigest()[:n_bytes], 16)
+        # Make it a signed int.
+        return 16**n_bytes//2 - raw_h
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -1115,9 +1117,9 @@ class Statement(object):
         A full hash includes, in addition to the matches key, information from
         the evidence of the statement. These hashes will be equal if the two
         Statements came from the same sentences, extracted by the same reader,
-        from the same source. These hashes are correspondingly longer (18
+        from the same source. These hashes are correspondingly longer (16
         nibbles). The odds of a collision for an expected less than 10^10
-        extractions is ~10^-12 (1 in a trillion).
+        extractions is ~10^-9 (1 in a billion).
 
         Note that a hash of the Python object will also include the `uuid`, so
         it will always be unique for every object.
@@ -1145,7 +1147,7 @@ class Statement(object):
             if self._full_hash is None or refresh:
                 ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
                 self._full_hash =\
-                    self._make_hash(self.matches_key() + str(ev_mk_list), 18)
+                    self._make_hash(self.matches_key() + str(ev_mk_list), 16)
             ret = self._full_hash
         return ret
 
@@ -1322,7 +1324,7 @@ class Statement(object):
         for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
-        for attr in ['hash', 'shallow_hash']:
+        for attr in ['_full_hash', '_shallow_hash']:
             my_hash = kwargs.pop(attr, None)
             my_shallow_hash = kwargs.pop(attr, None)
         new_instance = self.__class__(**kwargs)
