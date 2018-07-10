@@ -277,7 +277,7 @@ class DatabaseManager(object):
         class RawStatements(self.Base):
             __tablename__ = 'raw_statements'
             id = Column(Integer, primary_key=True)
-            uuid = Column(String(40))
+            uuid = Column(String(40), unique=True, nullable=False)
             mk_hash = Column(BigInteger, nullable=False)
             db_info_id = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
