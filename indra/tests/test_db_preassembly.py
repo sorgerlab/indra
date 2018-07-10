@@ -225,6 +225,7 @@ class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
             else:
                 pam.create_corpus(self.test_db)
 
+        self.used_stmt_tuples |= set(input_tuples)
         return
 
 

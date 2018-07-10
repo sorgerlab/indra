@@ -84,8 +84,6 @@ class _PrePaDatabaseTestSetup(object):
         print("Loading %d statements..." % len(input_tuples))
         self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
                           self.test_data['raw_statements']['cols'][1:])
-        self.used_stmt_tuples |= set(input_tuples)
-
         print("Inserting agents...")
         dbu.insert_agents(self.test_db, 'raw')
         return
@@ -94,6 +92,7 @@ class _PrePaDatabaseTestSetup(object):
         """Add statements and agents to the database."""
         input_tuples = self.get_available_stmt_tuples()
         self.insert_the_statements(input_tuples)
+        self.used_stmt_tuples |= set(input_tuples)
         return
 
 
