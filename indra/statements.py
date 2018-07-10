@@ -1107,12 +1107,17 @@ class Statement(object):
         There are two types of hash, "shallow" and "full". A shallow hash is
         as unique as the information carried by the statement, i.e. it is a hash
         of the `matches_key`. This means that differences in source, evidence,
-        and so on are not included. As such, it is a shorter hash (12 bytes).
+        and so on are not included. As such, it is a shorter hash (14 nibbles).
+        The odds of a collision among all the statements we expect to encounter
+        (well under 10^8) is ~10^-9 (1 in a billion). Checks for collisions can
+        be done by using the matches keys.
 
         A full hash includes, in addition to the matches key, information from
         the evidence of the statement. These hashes will be equal if the two
         Statements came from the same sentences, extracted by the same reader,
-        from the same source.
+        from the same source. These hashes are correspondingly longer (18
+        nibbles). The odds of a collision for an expected less than 10^10
+        extractions is ~10^-12 (1 in a trillion).
 
         Note that a hash of the Python object will also include the `uuid`, so
         it will always be unique for every object.
@@ -1134,13 +1139,13 @@ class Statement(object):
         """
         if shallow:
             if self._shallow_hash is None or refresh:
-                self._shallow_hash = self._make_hash(self.matches_key(), 12)
+                self._shallow_hash = self._make_hash(self.matches_key(), 14)
             ret = self._shallow_hash
         else:
             if self._full_hash is None or refresh:
                 ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
                 self._full_hash =\
-                    self._make_hash(self.matches_key() + str(ev_mk_list), 16)
+                    self._make_hash(self.matches_key() + str(ev_mk_list), 18)
             ret = self._full_hash
         return ret
 
