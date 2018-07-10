@@ -80,19 +80,28 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     job_log_dict = {}
 
     def check_logs(job_defs):
+        """Updates teh job_log_dict."""
         stalled_jobs = set()
+
+        # Check the status of all the jobs we're tracking.
         for job_def in job_defs:
             try:
+                # Get the logs for this job.
                 log_lines = get_job_log(job_def, write_file=False)
+
+                # Get the job id.
                 jid = job_def['jobId']
                 now = datetime.now()
                 if jid not in job_log_dict.keys():
+                    # If the job is new...
                     logger.info("Adding job %s to the log tracker at %s."
                                 % (jid, now))
                     job_log_dict[jid] = {'log': log_lines,
-                                         'check_time': now}
+                                         'last change time': now}
                 elif len(job_log_dict[jid]['log']) == len(log_lines):
-                    check_dt = now - job_log_dict[jid]['check_time']
+                    # If the job log hasn't changed, announce as such, and check
+                    # to see if it has been the same for longer than stall time.
+                    check_dt = now - job_log_dict[jid]['last change time']
                     logger.warning(('Job \'%s\' has not produced output for '
                                     '%d seconds.')
                                    % (job_def['jobName'], check_dt.seconds))
@@ -101,22 +110,25 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                                        % job_def['jobName'])
                         stalled_jobs.add(jid)
                 else:
+                    # If the job is known, and the logs have changed, update the
+                    # "last change time".
                     old_log = job_log_dict[jid]['log']
                     old_log += log_lines[len(old_log):]
-                    job_log_dict[jid]['check_time'] = now
+                    job_log_dict[jid]['last change time'] = now
             except Exception as e:
+                # Sometimes due to sync et al. issues, a part of this will fail.
+                # Such things are usually transitory issues so we keep trying.
                 logger.error("Failed to check log for: %s" % str(job_def))
                 logger.exception(e)
+
+        # Pass up the set of job id's for stalled jobs.
         return stalled_jobs
 
     # Don't start watching jobs added after this command was initialized.
-    observed_job_def_set = set()
-
-    if stash_log_method is not None:
-        def get_set_of_job_tuples(job_defs):
-            return {tuple([(k, v) for k, v in job_def.items()
-                           if k in ['jobName', 'jobId']])
-                    for job_def in job_defs}
+    observed_job_def_dict = {}
+    def get_dict_of_job_tuples(job_defs):
+        return {jdef['jobId']: [(k, jdef[k]) for k in ['jobName', 'jobId']]
+                for jdef in job_defs}
 
     batch_client = boto3.client('batch')
     if tag_instances:
@@ -132,20 +144,19 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         failed = get_jobs_by_status('FAILED', job_id_list, job_name_prefix)
         done = get_jobs_by_status('SUCCEEDED', job_id_list, job_name_prefix)
 
-        if stash_log_method is not None:
-            observed_job_def_set |= get_set_of_job_tuples(pre_run + running)
+        observed_job_def_dict.update(get_dict_of_job_tuples(pre_run + running))
 
         logger.info('(%d s)=(pre: %d, running: %d, failed: %d, done: %d)' %
                     ((datetime.now() - start_time).seconds, len(pre_run),
                      len(running), len(failed), len(done)))
 
         # Check the logs for new output, and possibly terminate some jobs.
+        stalled_jobs = check_logs(running)
         if idle_log_timeout is not None:
-            stalled_jobs = check_logs(running)
             if kill_on_log_timeout:
                 # Keep track of terminated jobs so we don't send a terminate
                 # message twice.
-                for jid in stalled_jobs.difference(terminated_jobs):
+                for jid in stalled_jobs - terminated_jobs:
                     batch_client.terminate_job(
                         jobId=jid,
                         reason=terminate_msg % (idle_log_timeout/60.0)
@@ -165,15 +176,16 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
         if tag_instances:
             tag_instances_on_cluster(ecs_cluster_name)
-        sleep(poll_interval)
 
-    # Stash the logs
-    if stash_log_method:
-        success_ids = [job_def['jobId'] for job_def in done]
-        failure_ids = [job_def['jobId'] for job_def in failed]
-        stash_logs(observed_job_def_set, success_ids, failure_ids, queue_name,
-                   stash_log_method, job_name_prefix,
-                   start_time.strftime('%Y%m%d_%H%M%S'))
+        # Stash the logs of things that have finished so far. Note that jobs
+        # terminated in this round will not be picked up until the next round.
+        if stash_log_method:
+            success_ids = [job_def['jobId'] for job_def in done]
+            failure_ids = [job_def['jobId'] for job_def in failed]
+            stash_logs(observed_job_def_dict, success_ids, failure_ids,
+                       queue_name, stash_log_method, job_name_prefix,
+                       start_time.strftime('%Y%m%d_%H%M%S'))
+        sleep(poll_interval)
 
     return ret
 
