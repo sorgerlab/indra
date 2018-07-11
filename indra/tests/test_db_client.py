@@ -72,7 +72,7 @@ class _PrePaDatabaseTestSetup(object):
                 # Select the text ref.
                 inputs['text_ref'].add(td['text_ref']['dict'][tc_tpl[tr_idx]])
         else:
-            inputs = {tbl: set(td['tbl']['tuples']) for tbl in tables}
+            inputs = {tbl: set(td[tbl]['tuples']) for tbl in tables}
 
         # Insert the necessary content.
         for tbl in tables:
