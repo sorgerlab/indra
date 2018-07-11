@@ -39,6 +39,11 @@ def send_request(endpoint, **kwargs):
         The basic ones are "q" which is the search query, "from" is a start
         date formatted as for instance 2018-06-10 and "to" is an end date
         with the same format.
+
+    Returns
+    -------
+    res_json : dict
+        The response from the web service as a JSON dict.
     """
     if api_key is None:
         logger.error('NewsAPI cannot be used without an API key')
