@@ -28,3 +28,9 @@ Elsevier client (:py:mod:`indra.literature.elsevier_client`)
 .. automodule:: indra.literature.elsevier_client
     :members:
 
+NewsAPI client (:py:mod:`indra.literature.newsapi_client`)
+----------------------------------------------------------
+
+.. automodule:: indra.literature.newsapi_client
+    :members:
+
