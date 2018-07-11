@@ -192,7 +192,7 @@ def __make_test_statements(a, b, source_api, ev_num=None, copies=1):
 
 class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
     """This object is used to setup the test database into various configs."""
-    def add_statements(self, fraction=1, with_pa=False):
+    def add_statements(self, fraction=1, pam=None):
         """Add statements and agents to the database.
 
         Parameters
@@ -212,14 +212,8 @@ class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
 
         self.insert_the_statements(input_tuples)
 
-        if with_pa:
+        if pam:
             print("Preassembling new statements...")
-            if len(input_tuples) > 100:
-                batch_size = len(input_tuples)//10
-                pam = pm.PreassemblyManager(1, batch_size)
-            else:
-                pam = pm.PreassemblyManager()
-
             if self.used_stmt_tuples:
                 pam.supplement_corpus(self.test_db)
             else:
@@ -229,15 +223,15 @@ class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
         return
 
 
-def _get_loaded_db(num_stmts, split=None, with_init_corpus=False):
+def _get_loaded_db(num_stmts, split=None, pam=None):
     print("Creating and filling a test database:")
     dts = _DatabaseTestSetup(num_stmts)
     dts.load_background()
 
     if split is None:
-        dts.add_statements(with_pa=with_init_corpus)
+        dts.add_statements(pam=pam)
     else:
-        dts.add_statements(split, with_pa=with_init_corpus)
+        dts.add_statements(split, pam=pam)
         dts.add_statements()
     return dts.test_db
 
@@ -319,15 +313,25 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
             if res is not None:
                 test_dict['results'].append(res)
 
+    def all_tests_passed():
+        test_results = [not any(hash_diffs.values())]
+        for td in tests:
+            test_results.append(len(td['results']) == 0)
+        print("%d/%d tests passed." % (sum(test_results), len(test_results)))
+        return all(test_results)
+
+    def write_report(num_comps):
+        ret_str = "Some tests failed:\n"
+        ret_str += ('Found %d extra old stmts and %d extra new stmts.\n'
+                    % (len(hash_diffs['extra_old']),
+                       len(hash_diffs['extra_new'])))
+        for td in tests:
+            ret_str += ('Found %d/%d mismatches in %s.\n'
+                        % (len(td['results']), num_comps, td['label']))
+        return ret_str
+
     # Now evaluate the results for exceptions
-    assert all([len(mismatch_res) is 0
-                for mismatch_res in [test_dict['results']
-                                     for test_dict in tests]]),\
-        ('\n'.join(['Found %d/%d mismatches in %s.' % (len(td['results']),
-                                                       len(comp_hashes),
-                                                       td['label'])
-                    for td in tests]))
-    assert not any(hash_diffs.values()), "Found mismatched hashes."
+    assert all_tests_passed(), write_report(len(comp_hashes))
 
 
 def str_imp(o, uuid=None, other_stmt_keys=None):
@@ -374,23 +378,14 @@ def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
         if db_s is None:
             continue
         print('-'*100)
+        if db_s.reading_id is None:
+            print("Statement was from a database: %s" % db_s.db_info_id)
+            continue
         db_r = db.select_one(db.Reading, db.Reading.id == db_s.reading_id)
         print('\tReading:', str_imp(db_r))
-        print('\tOther Raw Statements:')
-        for s in db.select_all(db.RawStatements,
-                               db.RawStatements.reading_id == db_r.id):
-            print('\t\t', str_imp(s, uuid, other_stmt_keys))
-        print('-'*100)
         tc = db.select_one(db.TextContent,
                            db.TextContent.id == db_r.text_content_id)
         print('\tText Content:', str_imp(tc))
-        print('\tOther Readings:')
-        for r in db.select_all(db.Reading, db.Reading.text_content_id == tc.id):
-            print('\t\t', str_imp(r))
-            for s in db.select_all(db.RawStatements,
-                                   db.RawStatements.reading_id == r.id):
-                print('\t\t\t', str_imp(s, uuid, other_stmt_keys))
-        print('-'*100)
         tr = db.select_one(db.TextRef, db.TextRef.id == tc.text_ref_id)
         print('\tText ref:', str_imp(tr))
         print('\tOther Content:')
@@ -429,7 +424,7 @@ def _check_statement_distillation(num_stmts):
 
 
 @needs_py3
-def _check_preassembly_with_database(num_stmts, batch_size):
+def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
     db = _get_loaded_db(num_stmts)
 
     # Get the set of raw statements.
@@ -439,7 +434,7 @@ def _check_preassembly_with_database(num_stmts, batch_size):
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=batch_size)
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
@@ -482,10 +477,10 @@ def _check_preassembly_with_database(num_stmts, batch_size):
 
 
 @needs_py3
-def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
-    db = _get_loaded_db(num_stmts, split=split, with_init_corpus=True)
+def _check_db_pa_supplement(num_stmts, batch_size, split=0.8, n_proc=1):
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc)
+    db = _get_loaded_db(num_stmts, split=split, pam=pa_manager)
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
     end = datetime.now()
@@ -570,4 +565,9 @@ def test_db_incremental_preassembly_large():
 
 @attr('nonpublic', 'slow')
 def test_db_incremental_preassembly_very_large():
-    _check_db_pa_supplement(100000, 20000)
+    _check_db_pa_supplement(100000, 20000, n_proc=2)
+
+
+@attr('nonpublic', 'slow')
+def test_db_incremental_preassembly_1M():
+    _check_db_pa_supplement(1000000, 200000, n_proc=6)
