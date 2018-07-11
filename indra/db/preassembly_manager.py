@@ -109,11 +109,12 @@ class PreassemblyManager(object):
         time. In general, a larger batch size will somewhat be faster, but
         require much more memory.
     """
-    def __init__(self, n_proc=1, batch_size=10000):
+    def __init__(self, n_proc=1, batch_size=10000, print_logs=False):
         self.n_proc = n_proc
         self.batch_size = batch_size
         self.pa = Preassembler(hierarchies)
         self.__tag = 'Unpurposed'
+        self.__print_logs = print_logs
         return
 
     def _get_latest_updatetime(self, db):
@@ -243,16 +244,20 @@ class PreassemblyManager(object):
 
         # Now get the support links between all batches.
         support_links = set()
-        for outer_batch in self._pa_batch_iter(db):
+        for i, outer_batch in enumerate(self._pa_batch_iter(db)):
             # Get internal support links
+            self._log('Getting internal support links outer batch %d.' % i)
             some_support_links = self._get_support_links(outer_batch,
                                                          poolsize=self.n_proc)
             outer_mk_hashes = {s.get_hash(shallow=True) for s in outer_batch}
 
             # Get links with all other batches
-            for inner_batch in self._pa_batch_iter(db, ex_mks=outer_mk_hashes):
+            ib_iter = self._pa_batch_iter(db, ex_mks=outer_mk_hashes)
+            for j, inner_batch in enumerate(ib_iter):
                 split_idx = len(inner_batch)
                 full_list = inner_batch + outer_batch
+                self._log('Getting support compared to other batch %d of outer'
+                          'batch %d.' % (j, i))
                 some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
@@ -344,25 +349,33 @@ class PreassemblyManager(object):
 
         # Now find the new support links that need to be added.
         new_support_links = set()
-        for npa_batch in self._pa_batch_iter(db, in_mks=new_mk_set):
+        new_stmt_iter = self._pa_batch_iter(db, in_mks=new_mk_set)
+        for i, npa_batch in enumerate(new_stmt_iter):
 
             # Compare internally
+            self._log("Getting support for new pa batch %d." % i)
             some_support_links = self._get_support_links(npa_batch)
 
             # Compare against the other new batch statements.
             diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
                                          for s in npa_batch}
-            for diff_npa_batch in self._pa_batch_iter(db, in_mks=diff_new_mks):
+            other_new_stmt_iter =  self._pa_batch_iter(db, in_mks=diff_new_mks)
+            for j, diff_npa_batch in enumerate(other_new_stmt_iter):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + diff_npa_batch
+                self._log("Comparing %d to batch %d of other new statements."
+                          % (i, j))
                 some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
 
             # Compare against the existing statements.
-            for opa_batch in self._pa_batch_iter(db, in_mks=old_mk_set):
+            old_stmt_iter =  self._pa_batch_iter(db, in_mks=old_mk_set)
+            for k, opa_batch in enumerate(old_stmt_iter):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + opa_batch
+                self._log("Comparing %d to batch of %d of old statements."
+                          % (i, k))
                 some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
@@ -392,6 +405,9 @@ class PreassemblyManager(object):
 
     def _log(self, msg, level='info'):
         """Applies a task specific tag to the log message."""
+        if self.__print_logs:
+            print("Preassembly Manager [%s] (%s): %s"
+                  % (datetime.now(), self.__tag, msg))
         getattr(logger, level)("(%s) %s" % (self.__tag, msg))
 
     def _make_unique_statement_set(self, stmt_tpls):
@@ -406,8 +422,11 @@ class PreassemblyManager(object):
         for sid, stmt in stmt_tpls:
             uuid_sid_dict[stmt.uuid] = sid
             stmts.append(stmt)
+        self._log("Map grounding...")
         stmts = ac.map_grounding(stmts)
+        self._log("Map sequences...")
         stmts = ac.map_sequence(stmts)
+        self._log("Condense into unique statements...")
         stmt_groups = self.pa._get_stmt_matching_groups(stmts)
         unique_stmts = []
         evidence_links = defaultdict(lambda: set())
