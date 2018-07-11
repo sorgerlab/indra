@@ -322,9 +322,9 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
 
     def write_report(num_comps):
         ret_str = "Some tests failed:\n"
-        ret_str += ('Found %d extra old stmts and %d extra new stmts.\n'
-                    % (len(hash_diffs['extra_old']),
-                       len(hash_diffs['extra_new'])))
+        ret_str += ('Found %d/%d extra old stmts and %d/%d extra new stmts.\n'
+                    % (len(hash_diffs['extra_old']), len(old_hash_set),
+                       len(hash_diffs['extra_new']), len(new_hash_set)))
         for td in tests:
             ret_str += ('Found %d/%d mismatches in %s.\n'
                         % (len(td['results']), num_comps, td['label']))
@@ -350,7 +350,8 @@ def str_imp(o, uuid=None, other_stmt_keys=None):
     if cname == 'RawStatements':
         s = Statement._from_json(json.loads(o.json.decode()))
         s_str = ('<RawStmt: %s sid: %s, uuid: %s, type: %s, iv: %s, hash: %s>'
-                 % (str(s), o.id, o.uuid, o.type, o.indra_version, o.mk_hash))
+                 % (str(s), o.id, o.uuid[:8] + '...', o.type,
+                    o.indra_version[:14] + '...', o.mk_hash))
         if other_stmt_keys and s.get_hash(shallow=True) in other_stmt_keys:
             s_str = '+' + s_str
         if s.uuid == uuid:
@@ -388,16 +389,16 @@ def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
         print('\tText Content:', str_imp(tc))
         tr = db.select_one(db.TextRef, db.TextRef.id == tc.text_ref_id)
         print('\tText ref:', str_imp(tr))
-        print('\tOther Content:')
+        print('-'*100)
         for tc in db.select_all(db.TextContent,
                                 db.TextContent.text_ref_id == tr.id):
-            print('\t\t ', str_imp(tc))
+            print('\t', str_imp(tc))
             for r in db.select_all(db.Reading,
                                    db.Reading.text_content_id == tc.id):
-                print('\t\t\t', str_imp(r))
+                print('\t\t', str_imp(r))
                 for s in db.select_all(db.RawStatements,
                                        db.RawStatements.reading_id == r.id):
-                    print('\t\t\t\t', str_imp(s, uuid, other_stmt_keys))
+                    print('\t\t\t', str_imp(s, uuid, other_stmt_keys))
         print('='*100)
 
 
@@ -478,7 +479,8 @@ def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
 
 @needs_py3
 def _check_db_pa_supplement(num_stmts, batch_size, split=0.8, n_proc=1):
-    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc)
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc,
+                                       print_logs=True)
     db = _get_loaded_db(num_stmts, split=split, pam=pa_manager)
     start = datetime.now()
     print("Beginning supplement...")
