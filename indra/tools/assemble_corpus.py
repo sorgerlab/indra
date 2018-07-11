@@ -161,6 +161,7 @@ def map_sequence(stmts_in, **kwargs):
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    del sm
     return stmts_out
 
 def run_preassembly(stmts_in, **kwargs):

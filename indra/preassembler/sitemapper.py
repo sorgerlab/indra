@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
 import os
+import pickle
 import logging
 import textwrap
 from copy import deepcopy
@@ -17,6 +18,8 @@ except:
 
 logger = logging.getLogger('sitemapper')
 
+
+HERE = os.path.dirname(os.path.abspath(__file__))
 
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
@@ -106,9 +109,22 @@ class SiteMapper(object):
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     """
     def __init__(self, site_map):
+        self._cache_path = os.path.join(HERE, '.site_mapper_cache.pkl')
         self.site_map = site_map
         self._cache = {}
+        if os.path.exists(self._cache_path):
+            with open(self._cache_path, 'rb') as f:
+                self._cache = pickle.load(f)
+            print("Loaded cache of length %d." % len(self._cache))
         self._sitecount = {}
+
+    def __del__(self):
+        try:
+            import pickle
+            with open(self._cache_path, 'wb') as f:
+                pickle.dump(self._cache, f)
+        except:
+            pass
 
     def map_stmt_sites(self, stmt, do_methionine_offset=True,
                        do_orthology_mapping=True, do_isoform_mapping=True):
