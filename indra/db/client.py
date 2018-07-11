@@ -368,6 +368,7 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
             stmt_dict = {}
             ev_dict = {}
             raw_stmt_dict = {}
+            total_ev = 0
             for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
                 # Instantiate the PA statement objects, and record the uuid
                 # evidence (raw statement) links.
@@ -380,9 +381,10 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
                     else:
                         ev_dict[k].append(raw_stmt_db_obj.id)
                     raw_stmt_objs.append(raw_stmt_db_obj)
+                    total_ev += 1
 
-                logger.info("Up to %d pa statements, with %d pieces of"
-                            "evidence in all." % (len(stmt_dict), len(ev_dict)))
+                logger.info("Up to %d pa statements, with %d pieces of "
+                            "evidence in all." % (len(stmt_dict), total_ev))
 
                 # Instantiate the raw statements.
                 raw_stmt_sid_tpls = get_raw_stmts_frm_db_list(db, raw_stmt_objs,
