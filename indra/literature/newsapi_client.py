@@ -8,8 +8,12 @@ NewsAPI also requires attribution e.g. "powered by NewsAPI.org" for derived
 uses.
 """
 import math
+import logging
 import requests
 from indra import has_config, get_config
+
+
+logger = logging.getLogger('newsapi_client')
 
 
 api_key = None
