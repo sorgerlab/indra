@@ -435,7 +435,8 @@ def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc)
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc,
+                                       print_logs=True)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
