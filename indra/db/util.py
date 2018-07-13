@@ -29,6 +29,21 @@ logger = logging.getLogger('db_util')
 __PRIMARY_DB = None
 
 
+def _clockit(func):
+    @wraps(func)
+    def timed_func(*args, **kwargs):
+        start = datetime.now()
+        ret = func(*args, **kwargs)
+        end = datetime.now()
+        print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
+              % ('~'*5, func.__name__, end-start, '~'*5))
+        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
+        #with open(fname, 'a') as f:
+        #    f.write('%s: %s\n' % (start, end-start))
+        return ret
+    return timed_func
+
+
 def get_primary_db(force_new=False):
     """Get a DatabaseManager instance for the primary database host.
 
@@ -121,6 +136,7 @@ def get_db(db_label):
     return DatabaseManager(db_name, sqltype=sqltype, label=db_label)
 
 
+@_clockit
 def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     """Get a generator for db orm statement objects which do not have agents."""
     num_per_yield = kwargs.pop('num_per_yield', 100)
@@ -159,11 +175,15 @@ def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     return stmts_wo_agents_q.yield_per(num_per_yield), num_stmts
 
 
+@_clockit
 def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     """Insert agents for statements that don't have any agents.
 
     Note: This method currently works for both Statements and PAStatements and
-    their corresponding agents (Agents and PAAgents).
+    their corresponding agents (Agents and PAAgents). However, if you already
+    have preassembled INDRA Statement objects that you know don't have agents in
+    the database, you can use `insert_pa_agents_directly` to insert the agents
+    much faster.
 
     Parameters
     ----------
@@ -214,35 +234,12 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
         # Convert the database statement entry object into an indra statement.
         stmt = stmts_from_json([json.loads(db_stmt.json.decode())])[0]
 
-        # Figure out how the agents are structured and assign roles.
-        ag_list = stmt.agent_list()
-        nary_stmt_types = [Complex, SelfModification, ActiveForm, Conversion,
-                           Translocation]
-        if any([isinstance(stmt, tp) for tp in nary_stmt_types]):
-            agents = {('OTHER', ag) for ag in ag_list}
-        elif len(ag_list) == 2:
-            agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
-        else:
-            raise IndraDatabaseError("Unhandled agent structure for stmt %s "
-                                     "with agents: %s."
-                                     % (str(stmt), str(stmt.agent_list())))
+        if prefix == 'pa':
+            stmt_id = db_stmt.mk_hash
+        else:  # prefix == 'raw'
+            stmt_id = db_stmt.id
 
-        # Prep the agents for copy into the database.
-        for role, ag in agents:
-            # If no agent, or no db_refs for the agent, skip the insert
-            # that follows.
-            if ag is None or ag.db_refs is None:
-                continue
-            for ns, ag_id in ag.db_refs.items():
-                if prefix == 'pa':
-                    stmt_id = db_stmt.mk_hash
-                else:  # prefix == 'raw'
-                    stmt_id = db_stmt.id
-                if isinstance(ag_id, list):
-                    for sub_id in ag_id:
-                        agent_data.append((stmt_id, ns, sub_id, role))
-                else:
-                    agent_data.append((stmt_id, ns, ag_id, role))
+        agent_data.extend(_get_agent_tuples(stmt, stmt_id))
 
         # Optionally print another tick on the progress bar.
         if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
@@ -257,6 +254,78 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
         cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
+
+
+@_clockit
+def insert_pa_agents_directly(db, stmts, verbose=False):
+    """Insert agents for preasembled statements.
+
+    Unlike raw statements, preassembled statements are indexed by a hash,
+    allowing for bulk import without a lookup beforehand, and allowing for a
+    much simpler API.
+
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
+        The manager for the database into which you are adding agents.
+    stmts : list[:py:class:`Statement`]
+        A list of statements for which statements should be inserted.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        agents for insert from statements. Default False.
+    """
+    if verbose:
+        num_stmts = len(stmts)
+
+    # Construct the agent records
+    logger.info("Building agent data for insert...")
+    if verbose:
+        print("Loading:", end='', flush=True)
+    agent_data = []
+    for i, stmt in enumerate(stmts):
+        agent_data.extend(_get_agent_tuples(stmt, stmt.get_hash(shallow=True)))
+
+        # Optionally print another tick on the progress bar.
+        if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
+            print('|', end='', flush=True)
+
+    if verbose and num_stmts > 25:
+        print()
+
+    cols = ('stmt_mk_hash', 'db_name', 'db_id', 'role')
+    db.copy('pa_agents', agent_data, cols)
+    return
+
+
+def _get_agent_tuples(stmt, stmt_id):
+    """Create the tuples for copying agents into the database."""
+    # Figure out how the agents are structured and assign roles.
+    ag_list = stmt.agent_list()
+    nary_stmt_types = [Complex, SelfModification, ActiveForm, Conversion,
+                       Translocation]
+    if any([isinstance(stmt, tp) for tp in nary_stmt_types]):
+        agents = {('OTHER', ag) for ag in ag_list}
+    elif len(ag_list) == 2:
+        agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
+    else:
+        raise IndraDatabaseError("Unhandled agent structure for stmt %s "
+                                 "with agents: %s."
+                                 % (str(stmt), str(stmt.agent_list())))
+
+    # Prep the agents for copy into the database.
+    agent_data = []
+    for role, ag in agents:
+        # If no agent, or no db_refs for the agent, skip the insert
+        # that follows.
+        if ag is None or ag.db_refs is None:
+            continue
+        for ns, ag_id in ag.db_refs.items():
+            if isinstance(ag_id, list):
+                for sub_id in ag_id:
+                    agent_data.append((stmt_id, ns, sub_id, role))
+            else:
+                agent_data.append((stmt_id, ns, ag_id, role))
+    return agent_data
 
 
 def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
@@ -308,7 +377,8 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     return
 
 
-def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
+def insert_pa_stmts(db, stmts, verbose=False, do_copy=True,
+                    direct_agent_load=True):
     """Insert pre-assembled statements, and any affiliated agents.
 
     Parameters
@@ -321,6 +391,10 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
     verbose : bool
         If True, print extra information and a status bar while compiling
         statements for insert. Default False.
+    direct_agent_load : bool
+        If True (default), use the Statement get_hash method to get the id's of
+        the Statements for insert, instead of looking up the ids of Statements
+        from the database.
     """
     logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
@@ -346,7 +420,10 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
         db.copy('pa_statements', stmt_data, cols)
     else:
         db.insert_many('pa_statements', stmt_data, cols=cols)
-    insert_agents(db, 'pa', verbose=verbose)
+    if insert_pa_agents_directly:
+        insert_pa_agents_directly(db, stmts, verbose=verbose)
+    else:
+        insert_agents(db, 'pa', verbose=verbose)
     return
 
 
@@ -354,21 +431,6 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
 # Below are some functions that are useful for getting raw statements from the
 # database at various levels of abstraction.
 #==============================================================================
-
-def _clockit(func):
-    @wraps(func)
-    def timed_func(*args, **kwargs):
-        start = datetime.now()
-        ret = func(*args, **kwargs)
-        end = datetime.now()
-        print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
-              % ('~'*5, func.__name__, end-start, '~'*5))
-        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
-        #with open(fname, 'a') as f:
-        #    f.write('%s: %s\n' % (start, end-start))
-        return ret
-    return timed_func
-
 
 def _get_statement_object(db_stmt):
     """Get an INDRA Statement object from a db_stmt."""
