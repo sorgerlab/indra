@@ -1259,7 +1259,7 @@ class Statement(object):
                 if isinstance(element, basestring) and \
                    element.startswith('http'):
                     element = element.split('/')[-1]
-                graph.add_node(node_id, label=('%s' % element))
+                graph.add_node(node_id, label=('%s' % str(element)))
             return node_id
         jd = self.to_json()
         graph = networkx.DiGraph()
