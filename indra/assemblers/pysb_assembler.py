@@ -2501,7 +2501,7 @@ class PysbPreassembler(object):
                 base_agent.add_activity_form(agent_to_add, stmt.is_active)
 
     def replace_activities(self):
-        logger.info('Running PySB Preassembler replace activities')
+        logger.debug('Running PySB Preassembler replace activities')
         # TODO: handle activity hierarchies
         new_stmts = []
         def has_agent_activity(stmt):
@@ -2583,6 +2583,11 @@ class PysbPreassembler(object):
                     neg_mod_sites[agent].append((stmt.residue, stmt.position))
                 except KeyError:
                     neg_mod_sites[agent] = [(stmt.residue, stmt.position)]
+            elif isinstance(stmt, ist.Influence):
+                if stmt.overall_polarity() == 1:
+                    syntheses.append(stmt.obj.name)
+                elif stmt.overall_polarity() == -1:
+                    degradations.append(stmt.obj.name)
             elif isinstance(stmt, ist.IncreaseAmount):
                 syntheses.append(stmt.obj.name)
             elif isinstance(stmt, ist.DecreaseAmount):
