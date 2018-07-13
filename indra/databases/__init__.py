@@ -55,6 +55,10 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'BBN':
         url = ('https://github.com/BBN-E/Hume/blob/master/resource/ontologies/'
                'hume_ontology/%s' % db_id)
+    elif db_name == 'CWMS':
+        url = 'http://trips.ihmc.us/%s' % db_id
+    elif db_name == 'SOFIA':
+        url = 'http://cs.cmu.edu/sofia/%s' % db_id
     elif db_name == 'TEXT':
         return None
     else:
