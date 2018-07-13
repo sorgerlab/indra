@@ -49,6 +49,12 @@ def get_identifiers_url(db_name, db_id):
         url = 'http://identifiers.org/fplx/%s' % db_id
     elif db_name == 'NXPFA':
         url = 'https://www.nextprot.org/term/FA-%s' % db_id
+    elif db_name == 'UN':
+        url = 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/%s' % \
+                db_id
+    elif db_name == 'BBN':
+        url = ('https://github.com/BBN-E/Hume/blob/master/resource/ontologies/'
+               'hume_ontology/%s' % db_id)
     elif db_name == 'TEXT':
         return None
     else:
