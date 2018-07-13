@@ -23,6 +23,7 @@ pa_logger.setLevel(logging.WARNING)
 from indra.db import util as db_util
 from indra.db import client as db_client
 from indra.db import preassembly_manager as pm
+from indra.db.preassembly_manager import shash
 from indra.statements import Statement
 from indra.tools import assemble_corpus as ac
 
@@ -266,16 +267,16 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
                 vals_2.append(val)
         if len(vals_1) or len(vals_2):
             print("Found mismatched %s for hash %s:\n\t%s=%s\n\t%s=%s"
-                  % (label, stmt_1.get_hash(shallow=True), stmt_1_name, vals_1,
-                     stmt_2_name, vals_2))
+                  % (label, shash(stmt_1), stmt_1_name, vals_1, stmt_2_name,
+                     vals_2))
             return {'diffs': {stmt_1_name: vals_1, stmt_2_name: vals_2},
                     'stmts': {stmt_1_name: stmt_1, stmt_2_name: stmt_2}}
         return None
 
     opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
 
-    old_stmt_dict = {s.get_hash(shallow=True): s for s in opa_stmts}
-    new_stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmts}
+    old_stmt_dict = {shash(s): s for s in opa_stmts}
+    new_stmt_dict = {shash(s): s for s in pa_stmts}
 
     new_hash_set = set(new_stmt_dict.keys())
     old_hash_set = set(old_stmt_dict.keys())
@@ -295,11 +296,11 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
               'label': 'evidence text',
               'results': []},
              {'funcs': {'list': lambda s: s.supports[:],
-                        'comp': lambda s: s.get_hash(shallow=True)},
+                        'comp': lambda s: shash(s)},
               'label': 'supports matches keys',
               'results': []},
              {'funcs': {'list': lambda s: s.supported_by[:],
-                        'comp': lambda s: s.get_hash(shallow=True)},
+                        'comp': lambda s: shash(s)},
               'label': 'supported-by matches keys',
               'results': []}]
     comp_hashes = new_hash_set & old_hash_set
@@ -352,7 +353,7 @@ def str_imp(o, uuid=None, other_stmt_keys=None):
         s_str = ('<RawStmt: %s sid: %s, uuid: %s, type: %s, iv: %s, hash: %s>'
                  % (str(s), o.id, o.uuid[:8] + '...', o.type,
                     o.indra_version[:14] + '...', o.mk_hash))
-        if other_stmt_keys and s.get_hash(shallow=True) in other_stmt_keys:
+        if other_stmt_keys and shash(s) in other_stmt_keys:
             s_str = '+' + s_str
         if s.uuid == uuid:
             s_str = '*' + s_str
@@ -368,10 +369,10 @@ def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
         uuid = s.uuid
         print('-'*100)
         print('uuid: %s\nhash: %s\nshallow hash: %s'
-              % (s.uuid, s.get_hash(), s.get_hash(shallow=True)))
+              % (s.uuid, s.get_hash(), shash(s)))
         print('-'*100)
         db_pas = db.select_one(db.PAStatements,
-                               db.PAStatements.mk_hash == s.get_hash(shallow=True))
+                               db.PAStatements.mk_hash == shash(s))
         print('\tPA statement:', db_pas.__dict__ if db_pas else '~')
         print('-'*100)
         db_s = db.select_one(db.RawStatements, db.RawStatements.uuid == s.uuid)
@@ -466,11 +467,13 @@ def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
                                         with_support=True)
     assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
                                                 len(pa_stmt_list))
-    assert not any([s.get_hash(shallow=True)
-                    in [s_.get_hash(shallow=True)
-                        for s_ in s.supported_by + s.supports]]
-                   for s in pa_stmts),\
-        "Found self-support in constructed pa statement objects."
+
+    self_supports = {
+        shash(s): shash(s) in {shash(s_) for s_ in s.supported_by + s.supports}
+        for s in pa_stmts
+        }
+    if any(self_supports.values()):
+        assert False, "Found self-support in constructed pa statement objects."
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).

@@ -92,6 +92,12 @@ def _stmt_from_json(stmt_json_bytes):
     return Statement._from_json(json.loads(stmt_json_bytes.decode('utf-8')))
 
 
+# This is purely for reducing having to type this long thing so often.
+def shash(s):
+    """Get the shallow hash of a statement."""
+    return s.get_hash(shallow=True)
+
+
 class IndraDBPreassemblyError(Exception):
     pass
 
@@ -182,7 +188,7 @@ class PreassemblyManager(object):
                 self._make_unique_statement_set(stmt_tpl_batch)
             new_unique_stmts = []
             for s in unique_stmts:
-                s_hash = s.get_hash(shallow=True)
+                s_hash = shash(s)
                 if s_hash not in (mk_done | new_mk_set):
                     new_mk_set.add(s_hash)
                     new_unique_stmts.append(s)
@@ -249,7 +255,7 @@ class PreassemblyManager(object):
             self._log('Getting internal support links outer batch %d.' % i)
             some_support_links = self._get_support_links(outer_batch,
                                                          poolsize=self.n_proc)
-            outer_mk_hashes = {s.get_hash(shallow=True) for s in outer_batch}
+            outer_mk_hashes = {shash(s) for s in outer_batch}
 
             # Get links with all other batches
             ib_iter = self._pa_batch_iter(db, ex_mks=outer_mk_hashes)
@@ -357,9 +363,8 @@ class PreassemblyManager(object):
             some_support_links = self._get_support_links(npa_batch)
 
             # Compare against the other new batch statements.
-            diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
-                                         for s in npa_batch}
-            other_new_stmt_iter =  self._pa_batch_iter(db, in_mks=diff_new_mks)
+            diff_new_mks = new_mk_set - {shash(s) for s in npa_batch}
+            other_new_stmt_iter = self._pa_batch_iter(db, in_mks=diff_new_mks)
             for j, diff_npa_batch in enumerate(other_new_stmt_iter):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + diff_npa_batch
@@ -436,7 +441,7 @@ class PreassemblyManager(object):
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix == 0:
                     first_stmt = stmt.make_generic_copy()
-                    stmt_hash = first_stmt.get_hash(shallow=True)
+                    stmt_hash = shash(first_stmt)
                 evidence_links[stmt_hash].add(uuid_sid_dict[stmt.uuid])
             # This should never be None or anything else
             assert isinstance(first_stmt, type(stmt))
@@ -452,7 +457,7 @@ class PreassemblyManager(object):
             if ix_pair[0] == ix_pair[1]:
                 assert False, "Self-comparison occurred."
             hash_pair = \
-                tuple([unique_stmts[ix].get_hash(True) for ix in ix_pair])
+                tuple([shash(unique_stmts[ix]) for ix in ix_pair])
             if hash_pair[0] == hash_pair[1]:
                 assert False, "Input list included duplicates."
             ret.add(hash_pair)
