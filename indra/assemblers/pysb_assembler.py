@@ -2297,7 +2297,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     obj = model.monomers[obj_base_agent.name]
     rule_subj_str = get_agent_rule_str(stmt.subj)
     rule_obj_str = get_agent_rule_str(stmt.obj)
-    rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+    rule_name = '%s_produces_%s' % (rule_subj_str, rule_obj_str)
 
     subj_site_name = get_binding_site_name(stmt.obj)
     obj_site_name = get_binding_site_name(stmt.subj)
@@ -2341,7 +2341,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
         rule_subj_str = get_agent_rule_str(stmt.subj)
-        rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+        rule_name = '%s_produces_%s' % (rule_subj_str, rule_obj_str)
         if rule_name in [r.name for r in model.rules]:
             return
         if not rate_law:

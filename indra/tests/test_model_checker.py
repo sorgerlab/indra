@@ -913,8 +913,8 @@ def test_increase_amount():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1].paths == [(('TP53_synthesizes_X', 1),
-                                   ('X_synthesizes_MDM2', 1),
+    assert checks[0][1].paths == [(('TP53_produces_X', 1),
+                                   ('X_produces_MDM2', 1),
                                    ('MDM2__obs', 1))]
 
 
@@ -933,7 +933,7 @@ def test_decrease_amount():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1].paths == [(('TP53_synthesizes_MDM2', 1),
+    assert checks[0][1].paths == [(('TP53_produces_MDM2', 1),
                                    ('MDM2_ubiquitination_TP53_ub', 1),
                                    ('TP53_ub_degraded', 1),
                                    ('TP53__obs', -1))]
