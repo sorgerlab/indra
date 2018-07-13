@@ -358,11 +358,11 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
 def _clockit(func):
     @wraps(func)
     def timed_func(*args, **kwargs):
-        logger.debug("Starting: %s" % func.__name__)
         start = datetime.now()
         ret = func(*args, **kwargs)
         end = datetime.now()
-        print(func.__name__, end-start)
+        print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
+              % ('~'*5, func.__name__, end-start, '~'*5))
         #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
         #with open(fname, 'a') as f:
         #    f.write('%s: %s\n' % (start, end-start))
