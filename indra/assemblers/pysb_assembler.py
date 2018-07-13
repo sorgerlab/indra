@@ -334,7 +334,7 @@ def add_rule_to_model(model, rule, annotations=None):
     # If this rule is already in the model, issue a warning and continue
     except ComponentDuplicateNameError:
         msg = "Rule %s already in model! Skipping." % rule.name
-        logger.warning(msg)
+        logger.debug(msg)
 
 
 def get_create_parameter(model, name, value, unique=True):
@@ -2314,7 +2314,8 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
 
 def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
-        logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
+        if not isinstance(stmt, Influence):
+            logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
