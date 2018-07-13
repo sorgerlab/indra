@@ -324,6 +324,7 @@ class DatabaseManager(object):
         class PAStatements(self.Base):
             __tablename__ = 'pa_statements'
             mk_hash = Column(BigInteger, primary_key=True)
+            matches_key = Column(String, unique=True, nullable=False)
             uuid = Column(String(40), unique=True, nullable=False)
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)

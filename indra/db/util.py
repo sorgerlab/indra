@@ -325,12 +325,13 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
     logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
     indra_version = get_version()
-    cols = ('uuid', 'mk_hash', 'type', 'json', 'indra_version')
+    cols = ('uuid', 'matches_key', 'mk_hash', 'type', 'json', 'indra_version')
     if verbose:
         print("Loading:", end='', flush=True)
     for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
+            stmt.matches_key(),
             stmt.get_hash(shallow=True),
             stmt.__class__.__name__,
             json.dumps(stmt.to_json()).encode('utf8'),
