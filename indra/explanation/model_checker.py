@@ -776,7 +776,7 @@ class ModelChecker(object):
     def prune_influence_map_subj_obj(self):
         """Prune influence map to include only edges where the object of the
         upstream rule matches the subject of the downstream rule."""
-        def get_rule_subj_obj(r):
+        def get_rule_info(r):
             result = {}
             for ann in self.model.annotations:
                 if ann.subject == r:
