@@ -10,6 +10,7 @@ from collections import Counter
 from pysb import *
 from pysb.core import SelfExporter
 from pysb.tools import render_reactions
+from indra.databases import hgnc_client
 from indra.explanation.model_checker import ModelChecker, _mp_embeds_into, \
                                       _cp_embeds_into, _match_lhs, \
                                       stmt_from_rule, PathResult, \
@@ -1125,6 +1126,34 @@ def test_prune_influence_map():
     assert len(im.edges()) == 2
 
 
+def test_prune_influence_map_subj_obj():
+    def ag(gene_name):
+        return Agent(gene_name,
+                     db_refs={'HGNC': hgnc_client.get_hgnc_id(gene_name)})
+    mek = ag('MAP2K1')
+    erk = ag('MAPK1')
+    mek2 = ag('MAP2K2')
+
+    s1 = Influence(mek, erk)
+    s2 = Influence(mek2, erk, obj_delta={'polarity': -1})
+    s3 = Influence(erk, mek2, obj_delta={'polarity': -1})
+    # To check:
+    s4 = Influence(mek, mek2)
+    # Make the model
+    pa = PysbAssembler()
+    pa.add_statements([s1, s2, s3])
+    model = pa.make_model()
+    # Check the model
+    mc = ModelChecker(model, [s4])
+    pr_before = mc.check_statement(s4)
+    assert pr_before.result_code == 'PATHS_FOUND'
+    # Now prune the influence map
+    mc.prune_influence_map()
+    mc.prune_influence_map_subj_obj()
+    pr_after = mc.check_statement(s4)
+    assert pr_after.result_code == 'NO_PATHS_FOUND'
+
+
 def test_weighted_sampling1():
     """Test sampling with different path lengths but no data."""
     os.environ['TEST_FLAG'] = 'TRUE'
@@ -1294,7 +1323,7 @@ def test_weighted_sampling3():
 
 
 if __name__ == '__main__':
-    test_model_check_data()
+    test_prune_influence_map_subj_obj()
 
 # TODO Add tests for autophosphorylation
 # TODO Add test for transphosphorylation
