@@ -294,8 +294,8 @@ class Preassembler(object):
         """Connect statements using their refinement relationships."""
         # Check arguments relating to multiprocessing
         if poolsize is None:
-            logger.info('combine_related: poolsize not set, '
-                        'not using multiprocessing.')
+            logger.debug('combine_related: poolsize not set, '
+                         'not using multiprocessing.')
             use_mp = False
         elif sys.version_info[0] >= 3 and sys.version_info[1] >= 4:
             use_mp = True
@@ -330,8 +330,8 @@ class Preassembler(object):
                     parent_proc_groups.append(g)
 
         # Now run preassembly!
-        logger.info("Groups: %d parent, %d worker" %
-                    (len(parent_proc_groups), len(child_proc_groups)))
+        logger.debug("Groups: %d parent, %d worker" %
+                     (len(parent_proc_groups), len(child_proc_groups)))
 
         supports_func = functools.partial(_set_supports_stmt_pairs,
                                           hierarchies=self.hierarchies,
@@ -357,7 +357,7 @@ class Preassembler(object):
                      len(parent_proc_groups))
         stmt_ix_map = [supports_func(stmt_tuples)
                        for stmt_tuples in parent_proc_groups]
-        logger.info("Done running parent process groups")
+        logger.debug("Done running parent process groups")
 
         while not workers_ready:
             logger.debug("Checking child processes")
@@ -373,7 +373,7 @@ class Preassembler(object):
                 pool.close()
                 pool.join()
             time.sleep(1)
-        logger.info("Done.")
+        logger.debug("Done.")
         # Combine all redundant map edges
         stmt_ix_map_set = set([])
         for group_ix_map in stmt_ix_map:
