@@ -2314,7 +2314,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
 
 def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
-        if not isinstance(stmt, Influence):
+        if not isinstance(stmt, ist.Influence):
             logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
     # We get the monomer pattern just to get a valid monomer

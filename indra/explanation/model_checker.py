@@ -368,7 +368,12 @@ class ModelChecker(object):
         """Check a RegulateAmount statement."""
         logger.info('Checking stmt: %s' % stmt)
         subj_mp = pa.get_monomer_pattern(self.model, stmt.subj)
-        target_polarity = 1 if isinstance(stmt, IncreaseAmount) else -1
+        if isinstance(stmt, Influence):
+            target_polarity = stmt.overall_polarity()
+            if target_polarity is None:
+                target_polarity = 1
+        else:
+            target_polarity = 1 if isinstance(stmt, IncreaseAmount) else -1
         obs_names = self.stmt_to_obs[stmt]
         for obs_name in obs_names:
             return self._find_im_paths(subj_mp, obs_name, target_polarity,
