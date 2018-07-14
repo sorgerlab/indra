@@ -1,21 +1,22 @@
 Processors for knowledge input (:py:mod:`indra.sources`)
 ========================================================
-
 .. toctree::
    :maxdepth: 3
 
-   bel/index
-   biopax/index
    reach/index
    trips/index
-   ndex_cx/index
-   signor/index
+   sparser/index
+   isi/index
+   medscan/index
    geneways/index
    tees/index
    eidos/index
    cwms/index
-   biogrid/index
-   medscan/index
    sofia/index
+   bbn/index
+   bel/index
+   biopax/index
+   signor/index
+   biogrid/index
+   ndex_cx/index
    indra_db_rest/index
-   isi/index
