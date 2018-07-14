@@ -201,3 +201,8 @@ def process_json_ld(json_dict):
     ep = EidosJsonLdProcessor(json_dict)
     ep.get_events()
     return ep
+
+
+def initialize_reader():
+    """Instantiate an Eidos reader for fast subsequent reading."""
+    eidos_reader.process_text('', 'json_ld')

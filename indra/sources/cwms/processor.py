@@ -95,7 +95,7 @@ class CWMSProcessor(object):
             subj = self._get_concept(event, "*[@role=':AGENT']")
             obj = self._get_concept(event, "*[@role=':AFFECTED']")
         else:
-            logger.info("Unhandled event type: %s" % ev_type)
+            logger.debug("Unhandled event type: %s" % ev_type)
             return None, None, None
 
         return subj, obj, polarity

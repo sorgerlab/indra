@@ -10,8 +10,10 @@ from topoflow.framework import emeli
 import eval_model
 
 # This is a specific configuration of the Topoflow model we will use
-topoflow_config = '/Users/ben/src/topoflow/topoflow/examples/Treynor_Iowa_30m'
-
+# topoflow_config = '/Users/ben/src/topoflow/topoflow/examples/Treynor_Iowa_30m'
+# cfg_prefix = 'June_20_67'
+topoflow_config = '/Users/ben/src/topoflow/topoflow/examples/Gel-Aliab'
+cfg_prefix = 'Test2'
 
 def text_to_stmts(text):
     """Run Eidos reading on a given text and return INDRA Statements."""
@@ -129,7 +131,7 @@ if __name__ == '__main__':
             model.name = 'indra_model%d' % idx
         else:
             model.name = 'indra_eval_model'
-        bm = BMIModel(model, inputs=input_vars[idx], stop_time=10000,
+        bm = BMIModel(model, inputs=input_vars[idx], stop_time=50000,
                       outside_name_map=out_name_maps[idx])
         bmi_models.append(bm)
 
@@ -150,7 +152,7 @@ if __name__ == '__main__':
         make_component_repo(bmi_models, True)
         f = emeli.framework()
         # We instantiate the EMELI framework and then run the simulations
-        f.run_model(cfg_prefix='June_20_67', cfg_directory=topoflow_config,
+        f.run_model(cfg_prefix=cfg_prefix, cfg_directory=topoflow_config,
                     driver_comp_name=bmi_models[0].model.name)
         # Finally plot the results
         plot_results(f.comp_set)
@@ -161,7 +163,7 @@ if __name__ == '__main__':
         make_component_repo(bmi_models, True)
         f = emeli.framework()
         # We instantiate the EMELI framework and then run the simulations
-        f.run_model(cfg_prefix='June_20_67', cfg_directory=topoflow_config,
+        f.run_model(cfg_prefix=cfg_prefix, cfg_directory=topoflow_config,
                     driver_comp_name=bmi_models[0].model.name)
         # Finally plot the results
         plot_results(f.comp_set, ['Precipitation',

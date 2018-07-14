@@ -334,7 +334,7 @@ def add_rule_to_model(model, rule, annotations=None):
     # If this rule is already in the model, issue a warning and continue
     except ComponentDuplicateNameError:
         msg = "Rule %s already in model! Skipping." % rule.name
-        logger.warning(msg)
+        logger.debug(msg)
 
 
 def get_create_parameter(model, name, value, unique=True):
@@ -2297,7 +2297,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
     obj = model.monomers[obj_base_agent.name]
     rule_subj_str = get_agent_rule_str(stmt.subj)
     rule_obj_str = get_agent_rule_str(stmt.obj)
-    rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+    rule_name = '%s_produces_%s' % (rule_subj_str, rule_obj_str)
 
     subj_site_name = get_binding_site_name(stmt.obj)
     obj_site_name = get_binding_site_name(stmt.subj)
@@ -2314,7 +2314,8 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
 
 def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
-        logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
+        if not isinstance(stmt, ist.Influence):
+            logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
         return
     # We get the monomer pattern just to get a valid monomer
     # otherwise the patter will be replaced
@@ -2340,7 +2341,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
         rule_subj_str = get_agent_rule_str(stmt.subj)
-        rule_name = '%s_synthesizes_%s' % (rule_subj_str, rule_obj_str)
+        rule_name = '%s_produces_%s' % (rule_subj_str, rule_obj_str)
         if rule_name in [r.name for r in model.rules]:
             return
         if not rate_law:
@@ -2501,7 +2502,7 @@ class PysbPreassembler(object):
                 base_agent.add_activity_form(agent_to_add, stmt.is_active)
 
     def replace_activities(self):
-        logger.info('Running PySB Preassembler replace activities')
+        logger.debug('Running PySB Preassembler replace activities')
         # TODO: handle activity hierarchies
         new_stmts = []
         def has_agent_activity(stmt):
@@ -2583,6 +2584,11 @@ class PysbPreassembler(object):
                     neg_mod_sites[agent].append((stmt.residue, stmt.position))
                 except KeyError:
                     neg_mod_sites[agent] = [(stmt.residue, stmt.position)]
+            elif isinstance(stmt, ist.Influence):
+                if stmt.overall_polarity() == 1:
+                    syntheses.append(stmt.obj.name)
+                elif stmt.overall_polarity() == -1:
+                    degradations.append(stmt.obj.name)
             elif isinstance(stmt, ist.IncreaseAmount):
                 syntheses.append(stmt.obj.name)
             elif isinstance(stmt, ist.DecreaseAmount):
