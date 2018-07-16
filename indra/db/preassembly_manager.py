@@ -72,7 +72,7 @@ from indra.statements import Statement
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
-from indra.db.util import insert_pa_stmts, distill_stmts, get_db
+from indra.db.util import insert_pa_stmts, distill_stmts, get_db, _clockit
 
 
 def _handle_update_table(func):
@@ -173,6 +173,7 @@ class PreassemblyManager(object):
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_func=list)
 
+    @_clockit
     def _get_unique_statements(self, db, stmt_tpls, num_stmts, mk_done=None):
         """Get the unique Statements from the raw statements."""
         if mk_done is None:
@@ -184,20 +185,45 @@ class PreassemblyManager(object):
         for i, stmt_tpl_batch in enumerate(stmt_batches):
             self._log("Processing batch %d/%d of %d/%d statements."
                        % (i, num_batches, len(stmt_tpl_batch), num_stmts))
-            unique_stmts, evidence_links = \
-                self._make_unique_statement_set(stmt_tpl_batch)
-            new_unique_stmts = []
-            for s in unique_stmts:
-                s_hash = shash(s)
-                if s_hash not in (mk_done | new_mk_set):
-                    new_mk_set.add(s_hash)
-                    new_unique_stmts.append(s)
+            # Get a list of statements, and generate a mapping from uuid to sid.
+            stmts = []
+            uuid_sid_dict = {}
+            for sid, stmt in stmt_tpl_batch:
+                uuid_sid_dict[stmt.uuid] = sid
+                stmts.append(stmt)
+
+            # Map groundings and sequences.
+            cleaned_stmts = self._clean_statements(stmts)
+
+            # Use the shallow hash to condense unique statements.
+            new_unique_stmts, evidence_links = \
+                self._condense_statements(cleaned_stmts, mk_done | new_mk_set,
+                                          uuid_sid_dict)
+            new_mk_set |= set(evidence_links.keys())
+
+            self._log("Insert new statements into database...")
             insert_pa_stmts(db, new_unique_stmts)
-            db.copy('raw_unique_links', evidence_links,
+            self._log("Insert new raw_unique links into the database...")
+            db.copy('raw_unique_links', flatten_evidence_dict(evidence_links),
                     ('pa_stmt_mk_hash', 'raw_stmt_id'))
         self._log("Added %d new pa statements into the database."
                     % len(new_mk_set))
         return new_mk_set
+
+    @_clockit
+    def _condense_statements(self, cleaned_stmts, mk_done, uuid_sid_dict):
+        self._log("Condense into unique statements...")
+        new_unique_stmts = []
+        evidence_links = defaultdict(lambda: set())
+        for s in cleaned_stmts:
+            h = shash(s)
+            if h not in mk_done:
+                if h not in evidence_links.keys():
+                    new_unique_stmts.append(s.make_generic_copy())
+                    evidence_links[h] = {uuid_sid_dict[s.uuid]}
+                else:
+                    evidence_links[h].add(uuid_sid_dict[s.uuid])
+        return new_unique_stmts, evidence_links
 
     @_handle_update_table
     def create_corpus(self, db, continuing=False):
@@ -415,39 +441,21 @@ class PreassemblyManager(object):
                   % (datetime.now(), self.__tag, msg))
         getattr(logger, level)("(%s) %s" % (self.__tag, msg))
 
-    def _make_unique_statement_set(self, stmt_tpls):
+    @_clockit
+    def _clean_statements(self, stmts):
         """Perform grounding, sequence mapping, and find unique set from stmts.
 
         This method returns a list of statement objects, as well as a set of
         tuples of the form (uuid, matches_key) which represent the links between
         raw (evidence) statements and their unique/preassembled counterparts.
         """
-        stmts = []
-        uuid_sid_dict = {}
-        for sid, stmt in stmt_tpls:
-            uuid_sid_dict[stmt.uuid] = sid
-            stmts.append(stmt)
         self._log("Map grounding...")
         stmts = ac.map_grounding(stmts)
         self._log("Map sequences...")
         stmts = ac.map_sequence(stmts)
-        self._log("Condense into unique statements...")
-        stmt_groups = self.pa._get_stmt_matching_groups(stmts)
-        unique_stmts = []
-        evidence_links = defaultdict(lambda: set())
-        for _, duplicates in stmt_groups:
-            # Get the first statement and add the evidence of all subsequent
-            # Statements to it
-            for stmt_ix, stmt in enumerate(duplicates):
-                if stmt_ix == 0:
-                    first_stmt = stmt.make_generic_copy()
-                    stmt_hash = shash(first_stmt)
-                evidence_links[stmt_hash].add(uuid_sid_dict[stmt.uuid])
-            # This should never be None or anything else
-            assert isinstance(first_stmt, type(stmt))
-            unique_stmts.append(first_stmt)
-        return unique_stmts, flatten_evidence_dict(evidence_links)
+        return stmts
 
+    @_clockit
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
         """Find the links of refinement/support between statements."""
         id_maps = self.pa._generate_id_maps(unique_stmts,
