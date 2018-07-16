@@ -205,7 +205,6 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
                     name),
                 Body=log_str
                 )
-
     elif method == 'local':
         if job_name_prefix is None:
             job_name_prefix = 'batch_%s' % tag
@@ -215,8 +214,12 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
         def stash_log(log_str, name_base):
             with open(os.path.join(dirname, name_base + '.log'), 'w') as f:
                 f.write(log_str)
+    else:
+        raise ValueError('Invalid method: %s' % method)
 
-    for job_def_tpl in job_defs:
+    for jobId, job_def_tpl in job_defs.items():
+        if jobId not in success_ids and jobId not in failure_ids:
+            continue  # Logs aren't done and ready to be loaded.
         try:
             job_def = dict(job_def_tpl)
             lines = get_job_log(job_def, write_file=False)
