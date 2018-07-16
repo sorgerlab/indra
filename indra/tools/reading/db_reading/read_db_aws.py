@@ -10,10 +10,106 @@ import logging
 import sys
 import os
 import random
+import numpy as np
+from matplotlib import pyplot as plt
 from datetime import datetime
 from indra.tools.reading.db_reading.read_db import produce_readings, \
     produce_statements, get_id_dict
 from indra.tools.reading.readers import get_readers
+
+
+def plot_hist(agged, agg_over, data, s3, s3_base, bucket_name):
+    fig = plt.figure()
+    plt.hist(data)
+    plt.xlabel('Number of %s for %s' % (agged, agg_over))
+    plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
+    fname = '%s_per_%s.png' % (agged, agg_over)
+    fig.savefig(fname)
+    with open(fname, 'rb') as f:
+        s3_key = s3_base + fname
+        s3.put_object(Key=s3_key, Body=f.read(), Bucket=bucket_name)
+    return
+
+
+def report_statistics(reading_outputs, stmt_outputs, basename, s3, bucket_name):
+    s3_base = 'reading_results/%s/logs/run_db_reading/statisics/' % basename
+    data_dict = {}
+    hist_dict = {}
+    data_dict['Total readings'] = len(reading_outputs)
+    reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
+                     for rd in reading_outputs]
+    data_dict['Content processed'] = len({t[1] for t in reading_stmts})
+    tc_rd_dict = {}
+    tc_stmt_dict = {}
+    rd_stmt_dict = {}
+    reader_stmts = {}
+    reader_tcids = {}
+    reader_rids = {}
+    for rid, tcid, reader, stmts in reading_stmts:
+        # Handle things keyed by tcid
+        if tcid not in tc_rd_dict.keys():
+            tc_rd_dict[tcid] = {rid}
+            tc_stmt_dict[tcid] = set(stmts)
+        else:
+            tc_rd_dict[tcid].add(rid)
+            tc_stmt_dict[tcid] |= set(stmts)
+
+        # Handle things keyed by rid
+        if rid not in rd_stmt_dict.keys():
+            rd_stmt_dict[rid] = set(stmts)
+        else:
+            rd_stmt_dict[rid] |= set(stmts)  # this shouldn't really happen.
+
+        # Handle things keyed by reader
+        if reader not in reader_stmts.keys():
+            reader_stmts[reader] = set(stmts)
+            reader_tcids[reader] = {tcid}
+            reader_rids[reader] = {rid}
+        else:
+            reader_stmts[reader] |= set(stmts)
+            reader_tcids[reader].add(tcid)
+            reader_rids[reader].add(rid)
+
+    hist_dict[('readings', 'text content')] = \
+        np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
+    hist_dict[('statements', 'text_content')] = \
+        np.array([len(stmts) for stmts in tc_stmt_dict.values()])
+    hist_dict[('statements', 'readings')] = \
+        np.array([len(stmts) for stmts in rd_stmt_dict.values()])
+    hist_dict[('statements', 'readers')] = \
+        np.array([len(stmts) for stmts in reader_stmts.values()])
+    hist_dict[('text content', 'reader')] = \
+        np.array([len(tcid_set) for tcid_set in reader_tcids.values()])
+    hist_dict[('readings', 'reader')] = \
+        np.array([len(rid_set) for rid_set in reader_rids.values()])
+
+    for (agged, agg_over), data in hist_dict.items():
+        plot_hist(agged, agg_over, data, s3_base, s3)
+        label = '%s per %s' % (agged, agg_over)
+        data_dict[label.capitalize()] = {'mean': data.mean(), 'std': data.std(),
+                                         'median': np.median(data)}
+
+    data_dict['Statements produced'] = len(stmt_outputs)
+
+    text_report_str = ''
+    top_labels = ['Total readings', 'Content processed', 'Statements produced']
+    for label in top_labels:
+        text_report_str += '%s: %d\n' % (label, data_dict[label])
+
+    for label, data in data_dict.items():
+        if label in top_labels:
+            continue
+        if isinstance(data, dict):
+            text_report_str += '%s:\n' % label
+            text_report_str += '\n'.join(['\t%s: %d' % (k, v)
+                                          for k, v in data.items()])
+            text_report_str += '\n'
+        else:
+            text_report_str += '%s: %d\n' % (label, data)
+
+    s3.put_object(Key=s3_base + 'summary.txt', Body=text_report_str,
+                  Bucket=bucket_name)
+    return
 
 
 if __name__ == '__main__':
@@ -126,4 +222,6 @@ if __name__ == '__main__':
                               Bucket=bucket_name)
 
     # Convert the outputs to statements ==================================
-    produce_statements(outputs, n_proc=args.num_cores)
+    stmt_data = produce_statements(outputs, n_proc=args.num_cores)
+
+    report_statistics(outputs, stmt_data, args.basename, client, bucket_name)
