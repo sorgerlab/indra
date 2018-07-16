@@ -33,12 +33,16 @@ def plot_hist(agged, agg_over, data, s3, s3_base, bucket_name):
 
 def report_statistics(reading_outputs, stmt_outputs, basename, s3, bucket_name):
     s3_base = 'reading_results/%s/logs/run_db_reading/statisics/' % basename
+    starts['stats'] = datetime.now()
     data_dict = {}
     hist_dict = {}
     data_dict['Total readings'] = len(reading_outputs)
     reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
                      for rd in reading_outputs]
     data_dict['Content processed'] = len({t[1] for t in reading_stmts})
+    data_dict['Statements produced'] = len(stmt_outputs)
+
+    # Do a bunch of aggregation
     tc_rd_dict = {}
     tc_stmt_dict = {}
     rd_stmt_dict = {}
@@ -70,6 +74,7 @@ def report_statistics(reading_outputs, stmt_outputs, basename, s3, bucket_name):
             reader_tcids[reader].add(tcid)
             reader_rids[reader].add(rid)
 
+    # Produce some numpy count arrays.
     hist_dict[('readings', 'text content')] = \
         np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
     hist_dict[('statements', 'text_content')] = \
@@ -83,14 +88,14 @@ def report_statistics(reading_outputs, stmt_outputs, basename, s3, bucket_name):
     hist_dict[('readings', 'reader')] = \
         np.array([len(rid_set) for rid_set in reader_rids.values()])
 
+    # Produce the histograms
     for (agged, agg_over), data in hist_dict.items():
         plot_hist(agged, agg_over, data, s3_base, s3)
         label = '%s per %s' % (agged, agg_over)
         data_dict[label.capitalize()] = {'mean': data.mean(), 'std': data.std(),
                                          'median': np.median(data)}
 
-    data_dict['Statements produced'] = len(stmt_outputs)
-
+    # Produce the summary report
     text_report_str = ''
     top_labels = ['Total readings', 'Content processed', 'Statements produced']
     for label in top_labels:
@@ -109,6 +114,16 @@ def report_statistics(reading_outputs, stmt_outputs, basename, s3, bucket_name):
 
     s3.put_object(Key=s3_base + 'summary.txt', Body=text_report_str,
                   Bucket=bucket_name)
+    ends['stats'] = datetime.now()
+
+    # Report on the timing
+    timing_str = ''
+    for step in ['reading', 'statement production', 'stats']:
+        time_taken = ends[step] - starts[step]
+        timing_str += ('%22s: start: %s, end: %s, duration: %s\n'
+                       % (step, starts[step], ends[step], time_taken))
+
+    s3.put_object(Key=s3_base + 'time.txt', Body=timing_str, Bucket=bucket_name)
     return
 
 
@@ -198,11 +213,17 @@ if __name__ == '__main__':
     random.shuffle(id_str_list)
     id_dict = get_id_dict([line.strip() for line in id_str_list])
 
+    # Init some timing dicts
+    starts = {}
+    ends = {}
+
     # Read everything ========================================
+    starts['reading'] = datetime.now()
     outputs = produce_readings(id_dict, readers, verbose=True,
                                read_mode=args.mode,
                                force_fulltext=args.force_fulltext,
                                prioritize=(not args.read_all_fulltext))
+    ends['reading'] = datetime.now()
 
     # Preserve the sparser logs
     contents = os.listdir('.')
@@ -222,6 +243,9 @@ if __name__ == '__main__':
                               Bucket=bucket_name)
 
     # Convert the outputs to statements ==================================
+    starts['statement production'] = datetime.now()
     stmt_data = produce_statements(outputs, n_proc=args.num_cores)
+    ends['statement production'] = datetime.now()
 
-    report_statistics(outputs, stmt_data, args.basename, client, bucket_name)
+    report_statistics(outputs, stmt_data, starts, ends, args.basename, client, bucket_name)
+
