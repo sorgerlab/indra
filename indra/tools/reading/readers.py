@@ -703,6 +703,7 @@ class ReadingData(object):
         self.reader_version = reader_version
         self.format = content_format
         self.content = content
+        self._statements = None
         return
 
     @classmethod
@@ -720,34 +721,40 @@ class ReadingData(object):
         return ('text_content_id', 'reader', 'reader_version', 'format',
                 'bytes')
 
-    def get_statements(self):
+    def get_statements(self, reprocess=False):
         """General method to create statements."""
-        logger.debug("Making statements from %s." % self.reading_id)
-        if self.reader == ReachReader.name:
-            if self.format == formats.JSON:
-                # Process the reach json into statements.
-                json_str = json.dumps(self.content)
-                processor = reach.process_json_str(json_str)
+        if self._statements is None or reprocess:
+            logger.debug("Making statements from %s." % self.reading_id)
+            if self.reader == ReachReader.name:
+                if self.format == formats.JSON:
+                    # Process the reach json into statements.
+                    json_str = json.dumps(self.content)
+                    processor = reach.process_json_str(json_str)
+                else:
+                    raise ReadingError("Incorrect format for Reach output: %s."
+                                       % self.format)
+            elif self.reader == SparserReader.name:
+                if self.format == formats.JSON:
+                    # Process the sparser content into statements
+                    processor = sparser.process_json_dict(self.content)
+                    if processor is not None:
+                        processor.set_statements_pmid(None)
+                else:
+                    raise ReadingError("Sparser should only ever be JSON, not "
+                                       "%s." % self.format)
             else:
-                raise ReadingError("Incorrect format for Reach output: %s."
-                                   % self.format)
-        elif self.reader == SparserReader.name:
-            if self.format == formats.JSON:
-                # Process the sparser content into statements
-                processor = sparser.process_json_dict(self.content)
-                if processor is not None:
-                    processor.set_statements_pmid(None)
+                raise ReadingError("Unknown reader: %s." % self.reader)
+            if processor is None:
+                logger.error("Production of statements from %s failed for %s."
+                             % (self.reader, self.tcid))
+                stmts = []
             else:
-                raise ReadingError("Sparser should only ever be JSON, not %s."
-                                   % self.format)
+                stmts = processor.statements
+            self._statements = stmts
         else:
-            raise ReadingError("Unknown reader: %s." % self.reader)
-        if processor is None:
-            logger.error("Production of statements from %s failed for %s."
-                         % (self.reader, self.tcid))
-            stmts = []
-        else:
-            stmts = processor.statements
+            logger.debug("Returning %d statements that were already produced "
+                         "from %s." % (len(self._statements), self.reading_id))
+            stmts = self._statements
         return stmts
 
     def zip_content(self):
