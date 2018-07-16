@@ -390,8 +390,8 @@ def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                       end_ix=None, pmids_per_job=3000, num_tries=2,
-                      force_read=False, force_fulltext=False,
-                      read_all_fulltext=False, project_name=None,
+                      force_read=False, no_stmts=False, force_fulltext=False,
+                      prioritize=False, project_name=None,
                       max_reach_input_len=None, max_reach_space_ratio=None):
     # Upload the pmid_list to Amazon S3
     pmid_list_key = 'reading_inputs/%s/id_list' % basename
@@ -414,10 +414,8 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
     if 'all' in readers:
         readers = ['reach', 'sparser']
 
-    if force_read:
-        mode = 'all'
-    else:
-        mode = 'unread-all'
+    read_mode = 'all' if force_read else 'unread'
+    stmt_mode = 'none' if no_stmts else 'all'
 
     # Iterate over the list of PMIDs and submit the job in chunks
     batch_client = boto3.client('batch', region_name='us-east-1')
@@ -429,15 +427,15 @@ def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
         job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
         command_list = get_batch_command(
             ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
-             basename, '/tmp', mode, '32', str(job_start_ix), str(job_end_ix),
-             '-r'] + readers,
+             basename, '/tmp', read_mode, stmt_mode, '32', str(job_start_ix),
+             str(job_end_ix), '-r'] + readers,
             purpose='db_reading',
             project=project_name
             )
         if force_fulltext:
             command_list.append('--force_fulltext')
-        if read_all_fulltext:
-            command_list.append('--read_all_fulltext')
+        if prioritize:
+            command_list.append('--read_best_fulltext')
         if max_reach_input_len is not None:
             command_list += ['--max_reach_input_len', max_reach_input_len]
         if max_reach_space_ratio is not None:
@@ -580,22 +578,27 @@ if __name__ == '__main__':
         )
     '''
     parent_db_parser.add_argument(
-        '--read_all_fulltext',
+        '--read_best_fulltext',
         action='store_true',
-        help='Read all available fulltext for input ids, not just the best.'
+        help='Read only the best fulltext for input ids.'
         )
-    parent_db_parser.add_argumet(
+    parent_db_parser.add_argument(
+        '--no_statements',
+        action='store_true',
+        help='Choose to not produce any Statements; only readings will be done.'
+        )
+    parent_db_parser.add_argument(
         '--max_reach_space_ratio',
         type=float,
         help='Set the maximum ratio of spaces to non-spaces for REACH input.',
         default=None
-    )
+        )
     parent_db_parser.add_argument(
         '--max_reach_input_len',
         type=int,
         help='Set the maximum length of content that REACH will read.',
         default=None
-    )
+        )
 
     # Make non_db_parser and get subparsers
     non_db_parser = subparsers.add_parser(
@@ -677,8 +680,9 @@ if __name__ == '__main__':
             args.ids_per_job,
             2,
             args.force_read,
+            args.no_statements,
             args.force_fulltext,
-            args.read_all_fulltext,
+            args.read_best_fulltext,
             args.project,
             args.max_reach_input_len,
             args.max_reach_space_ratio

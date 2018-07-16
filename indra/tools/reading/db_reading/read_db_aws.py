@@ -141,12 +141,21 @@ if __name__ == '__main__':
         help='The name of the temporary output directory'
         )
     parser.add_argument(
-        dest='mode',
-        choices=['all', 'unread-all', 'unread-unread', 'none'],
-        help=('Set the reading mode. If \'all\', read everything, if '
-              '\'unread\', only read content that does not have pre-existing '
-              'readings of the same reader and version, if \'none\', only '
-              'use pre-existing readings. Default is \'unread\'.')
+        dest='read_mode',
+        choices=['all', 'unread', 'none'],
+        help=("Set the reading mode. If 'all', read everything, if "
+              "'unread', only read content that does not have pre-existing "
+              "readings of the same reader and version, if 'none', only "
+              "use pre-existing readings. Default is 'unread'.")
+        )
+    parser.add_argument(
+        dest='stmt_mode',
+        choices=['all', 'unread', 'none'],
+        help=("Choose which readings should produce statements. If 'all', all "
+              "readings that are produced or retrieved will be used to produce "
+              "statements. If 'unread', only produce statements from "
+              "previously unread content. If 'none', do not produce any "
+              "statements (only readings will be produced).")
         )
     parser.add_argument(
         dest='num_cores',
@@ -176,10 +185,9 @@ if __name__ == '__main__':
         help='Require that content be fulltext, skip anything that isn\'t.'
         )
     parser.add_argument(
-        '--read_all_fulltext',
+        '--use_best_fulltext',
         action='store_true',
-        help=('Do not read only the \"best\" fulltext available for a given id, '
-              'read all of it.')
+        help='Read only the "best" fulltext available for a given id.'
         )
     args = parser.parse_args()
 
@@ -213,6 +221,12 @@ if __name__ == '__main__':
     random.shuffle(id_str_list)
     id_dict = get_id_dict([line.strip() for line in id_str_list])
 
+    # Some combinations of options don't make sense:
+    forbidden_combos = [('all', 'unread'), ('none', 'unread'), ('none', 'none')]
+    assert (args.reading_mode, args.stmt_mode) not in forbidden_combos, \
+        ("The combination of reading mode %s and statement mode %s is not "
+         "allowed." % (args.reading_mode, args.stmt_mode))
+
     # Init some timing dicts
     starts = {}
     ends = {}
@@ -220,9 +234,10 @@ if __name__ == '__main__':
     # Read everything ========================================
     starts['reading'] = datetime.now()
     outputs = produce_readings(id_dict, readers, verbose=True,
-                               read_mode=args.mode,
+                               read_mode=args.read_mode,
+                               get_preexisting=(args.stmt_mode == 'all'),
                                force_fulltext=args.force_fulltext,
-                               prioritize=(not args.read_all_fulltext))
+                               prioritize=args.use_best_fulltext)
     ends['reading'] = datetime.now()
 
     # Preserve the sparser logs
@@ -243,9 +258,12 @@ if __name__ == '__main__':
                               Bucket=bucket_name)
 
     # Convert the outputs to statements ==================================
-    starts['statement production'] = datetime.now()
-    stmt_data = produce_statements(outputs, n_proc=args.num_cores)
-    ends['statement production'] = datetime.now()
+    if args.stmt_mode != 'none':
+        starts['statement production'] = datetime.now()
+        stmt_data = produce_statements(outputs, n_proc=args.num_cores)
+        ends['statement production'] = datetime.now()
+    else:
+        stmt_data = []
 
     report_statistics(outputs, stmt_data, starts, ends, args.basename, client, bucket_name)
 
