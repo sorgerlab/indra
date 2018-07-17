@@ -645,9 +645,9 @@ def _get_reading_statement_dict(db, clauses=None):
     return stmt_nd
 
 
-# Specify versions of readers, and preference.
+# Specify versions of readers, and preference. Later in the list is better.
 reader_versions = {
-    'sparser': ['sept14-linux\n', 'sept14-linux'],
+    'sparser': ['sept14-linux\n', 'sept14-linux', 'June2018-linux'],
     'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
     }
 
