@@ -31,7 +31,8 @@ def plot_hist(agged, agg_over, data, s3, s3_base, bucket_name):
     return
 
 
-def report_statistics(reading_outputs, stmt_outputs, basename, s3, bucket_name):
+def report_statistics(reading_outputs, stmt_outputs, starts, ends, basename, s3,
+                      bucket_name):
     s3_base = 'reading_results/%s/logs/run_db_reading/statisics/' % basename
     starts['stats'] = datetime.now()
     data_dict = {}
@@ -265,5 +266,6 @@ if __name__ == '__main__':
     else:
         stmt_data = []
 
-    report_statistics(outputs, stmt_data, starts, ends, args.basename, client, bucket_name)
+    report_statistics(outputs, stmt_data, starts, ends, args.basename, client,
+                      bucket_name)
 
