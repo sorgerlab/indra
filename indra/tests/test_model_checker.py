@@ -657,8 +657,8 @@ def test_multitype_path():
         results = mc.check_model()
         assert len(results) == len(stmts_to_check)
         assert isinstance(results[0], tuple)
-        assert results[0][1].paths == paths[0]
-        assert results[1][1].paths == paths[1]
+        assert results[0][1].paths == paths[0], results[0][1].paths
+        assert results[1][1].paths == paths[1], results[1][1].paths
     # Check with the ActiveForm
     stmts1 = [
         Complex([egfr, grb2]),
@@ -672,7 +672,7 @@ def test_multitype_path():
                            ('KRAS_gtpbound_active_obs', 1))],
                          [(('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
                            ('SOS1_GRB2_activates_KRAS_gtpbound', 1),
-                           ('KRAS_activates_BRAF_kinase', 1),
+                           ('KRAS_gtp_activates_BRAF_kinase', 1),
                            ('BRAF_kinase_active_obs', 1))]))
     # Check without the ActiveForm
     stmts2 = [
@@ -686,7 +686,7 @@ def test_multitype_path():
                            ('KRAS_gtpbound_active_obs', 1))],
                          [(('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
                            ('SOS1_GRB2_activates_KRAS', 1),
-                           ('KRAS_activates_BRAF_kinase', 1),
+                           ('KRAS_gtp_activates_BRAF_kinase', 1),
                            ('BRAF_kinase_active_obs', 1))]))
 
 
@@ -792,7 +792,9 @@ def test_gef_rasgtp():
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('SOS1_activates_KRAS', 1),
                                    ('KRAS_activates_BRAF_kinase', 1),
-                                   ('BRAF_kinase_active_obs', 1))]
+                                   ('BRAF_kinase_active_obs', 1))], \
+        checks[0][1].paths
+
 
 
 def test_gef_rasgtp_phos():
@@ -817,9 +819,10 @@ def test_gef_rasgtp_phos():
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
     assert checks[0][1].paths == [(('SOS1_activates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', 1),
-                                   ('BRAF_phosphorylation_MEK_phospho', 1),
-                                   ('MEK_phospho_p_obs', 1))]
+                                   ('KRAS_gtp_activates_BRAF_kinase', 1),
+                                   ('BRAF_kin_phosphorylation_MEK_phospho', 1),
+                                   ('MEK_phospho_p_obs', 1))], \
+        checks[0][1].paths
 
 
 def test_gap_activation():
@@ -871,8 +874,9 @@ def test_gap_rasgtp():
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('NF1_deactivates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', -1),
-                                   ('BRAF_kinase_active_obs', -1))]
+                                   ('KRAS_gtp_activates_BRAF_kinase', -1),
+                                   ('BRAF_kinase_active_obs', -1))], \
+        checks[0][1].paths
 
 
 def test_gap_rasgtp_phos():
@@ -895,10 +899,11 @@ def test_gap_rasgtp_phos():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1].paths == [(('NF1_deactivates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', -1),
-                                   ('BRAF_phosphorylation_MEK_phospho', -1),
-                                   ('MEK_phospho_p_obs', -1))]
+    assert checks[0][1].paths == \
+        [(('NF1_deactivates_KRAS', 1),
+          ('KRAS_gtp_activates_BRAF_kin_kinase', -1),
+          ('BRAF_kin_phosphorylation_MEK_phospho', -1),
+          ('MEK_phospho_p_obs', -1))], checks[0][1].paths
 
 
 def test_increase_amount():
