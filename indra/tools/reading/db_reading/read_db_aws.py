@@ -91,7 +91,7 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends, basename, s3,
 
     # Produce the histograms
     for (agged, agg_over), data in hist_dict.items():
-        plot_hist(agged, agg_over, data, s3_base, s3)
+        plot_hist(agged, agg_over, data, s3, s3_base, bucket_name)
         label = '%s per %s' % (agged, agg_over)
         data_dict[label.capitalize()] = {'mean': data.mean(), 'std': data.std(),
                                          'median': np.median(data)}
@@ -190,6 +190,11 @@ if __name__ == '__main__':
         action='store_true',
         help='Read only the "best" fulltext available for a given id.'
         )
+    parser.add_argument(
+        '--test',
+        action='store_true',
+        help="Use the test database."
+        )
     args = parser.parse_args()
 
     logger = logging.getLogger('read_db_aws')
@@ -232,13 +237,20 @@ if __name__ == '__main__':
     starts = {}
     ends = {}
 
+    # Get a handle for the database
+    if args.test:
+        from indra.db import util as dbu
+        db = dbu.get_test_db()
+    else:
+        db = None
+
     # Read everything ========================================
     starts['reading'] = datetime.now()
     outputs = produce_readings(id_dict, readers, verbose=True,
                                read_mode=args.read_mode,
                                get_preexisting=(args.stmt_mode == 'all'),
                                force_fulltext=args.force_fulltext,
-                               prioritize=args.use_best_fulltext)
+                               prioritize=args.use_best_fulltext, db=db)
     ends['reading'] = datetime.now()
 
     # Preserve the sparser logs
@@ -261,7 +273,7 @@ if __name__ == '__main__':
     # Convert the outputs to statements ==================================
     if args.stmt_mode != 'none':
         starts['statement production'] = datetime.now()
-        stmt_data = produce_statements(outputs, n_proc=args.num_cores)
+        stmt_data = produce_statements(outputs, n_proc=args.num_cores, db=db)
         ends['statement production'] = datetime.now()
     else:
         stmt_data = []
