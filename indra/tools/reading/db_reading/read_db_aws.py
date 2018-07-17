@@ -11,6 +11,8 @@ import sys
 import os
 import random
 import numpy as np
+import matplotlib as mpl
+mpl.use('Agg')
 from matplotlib import pyplot as plt
 from datetime import datetime
 from indra.tools.reading.db_reading.read_db import produce_readings, \
