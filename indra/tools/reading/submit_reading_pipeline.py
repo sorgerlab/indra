@@ -187,6 +187,14 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                        start_time.strftime('%Y%m%d_%H%M%S'))
         sleep(poll_interval)
 
+    # Pick up any stragglers
+    if stash_log_method:
+        success_ids = [job_def['jobId'] for job_def in done]
+        failure_ids = [job_def['jobId'] for job_def in failed]
+        stash_logs(observed_job_def_dict, success_ids, failure_ids,
+                   queue_name, stash_log_method, job_name_prefix,
+                   start_time.strftime('%Y%m%d_%H%M%S'))
+
     return ret
 
 
