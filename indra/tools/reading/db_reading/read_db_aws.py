@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
     # Some combinations of options don't make sense:
     forbidden_combos = [('all', 'unread'), ('none', 'unread'), ('none', 'none')]
-    assert (args.reading_mode, args.stmt_mode) not in forbidden_combos, \
+    assert (args.read_mode, args.stmt_mode) not in forbidden_combos, \
         ("The combination of reading mode %s and statement mode %s is not "
          "allowed." % (args.reading_mode, args.stmt_mode))
 
