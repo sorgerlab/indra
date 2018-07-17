@@ -45,3 +45,10 @@ def test_db_reading_noraml_querty():
     check_call(['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
                 basename, local_dir, 'unread', 'all', '4', '0', '2', '-r',
                 'sparser', '--test'])
+
+    # Remove garbage on s3
+    for pref in [s3_inp_prefix, s3_out_prefix]:
+        res = s3.list_objects(Bucket='bigmech', Prefix=pref)
+        for entry in res['Contents']:
+            print("Removing %s..." % entry['Key'])
+            s3.delete_object(Bucket='bigmech', Key=entry['Key'])
