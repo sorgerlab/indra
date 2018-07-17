@@ -776,11 +776,12 @@ def test_gef_activation():
 
 def test_gef_rasgtp():
     sos = Agent('SOS1', db_refs={'HGNC': '1'})
-    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
-                db_refs={'HGNC': '2'})
+    ras = Agent('KRAS', db_refs={'HGNC': '2'})
+    ras_gtp = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                    db_refs={'HGNC': '2'})
     raf = Agent('BRAF', db_refs={'HGNC': '3'})
     gef_stmt = Gef(sos, ras)
-    rasgtp_stmt = GtpActivation(ras, raf, 'kinase')
+    rasgtp_stmt = GtpActivation(ras_gtp, raf, 'kinase')
     act_stmt = Activation(sos, raf, 'kinase')
     # Check that the activation is satisfied by the Gef
     pysba = PysbAssembler()
@@ -791,7 +792,7 @@ def test_gef_rasgtp():
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('SOS1_activates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', 1),
+                                   ('KRAS_gtp_activates_BRAF_kinase', 1),
                                    ('BRAF_kinase_active_obs', 1))], \
         checks[0][1].paths
 
@@ -884,12 +885,13 @@ def test_gap_rasgtp_phos():
     ras = Agent('KRAS', db_refs={'HGNC': '2'})
     ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
                   db_refs={'HGNC': '2'})
-    raf = Agent('BRAF', activity=ActivityCondition('kinase', True),
-                db_refs={'HGNC': '3'})
+    raf = Agent('BRAF', db_refs={'HGNC': '3'})
+    raf_a = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC': '3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
     gap_stmt = Gap(nf1, ras)
     rasgtp_stmt = GtpActivation(ras_g, raf, 'kinase')
-    phos = Phosphorylation(raf, mek)
+    phos = Phosphorylation(raf_a, mek)
     stmt_to_check = Dephosphorylation(nf1, mek)
     # Assemble and check
     pysba = PysbAssembler()
@@ -901,7 +903,7 @@ def test_gap_rasgtp_phos():
     assert checks[0][0] == stmt_to_check
     assert checks[0][1].paths == \
         [(('NF1_deactivates_KRAS', 1),
-          ('KRAS_gtp_activates_BRAF_kin_kinase', -1),
+          ('KRAS_gtp_activates_BRAF_kinase', -1),
           ('BRAF_kin_phosphorylation_MEK_phospho', -1),
           ('MEK_phospho_p_obs', -1))], checks[0][1].paths
 
