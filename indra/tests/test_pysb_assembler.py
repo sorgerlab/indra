@@ -1155,3 +1155,17 @@ def test_convert_subj():
     assert(len(pa.model.rules) == 1)
     assert(len(pa.model.monomers) == 3)
 
+
+def test_activity_agent_rule_name():
+    stmt = Phosphorylation(Agent('BRAF',
+                                 activity=ActivityCondition('kinase',
+                                                            True)),
+                           Agent('MAP2K1',
+                                 activity=ActivityCondition('activity',
+                                                            False)))
+    pa = PysbAssembler()
+    pa.add_statements([stmt])
+    pa.make_model()
+    assert pa.model.rules[0].name == \
+        'BRAF_kin_phosphorylation_MAP2K1_act_inact_phospho', \
+        pa.model.rules[0].name

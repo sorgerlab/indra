@@ -320,6 +320,11 @@ def get_agent_rule_str(agent):
                     rule_str_list.append('n' + _n(b.agent.name))
         if agent.location is not None:
             rule_str_list.append(_n(agent.location))
+        if agent.activity is not None:
+            if agent.activity.is_active:
+                rule_str_list.append(agent.activity.activity_type[:3])
+            else:
+                rule_str_list.append(agent.activity.activity_type[:3] + '_inact')
     rule_str = '_'.join(rule_str_list)
     return rule_str
 
