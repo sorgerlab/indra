@@ -659,7 +659,8 @@ reader_versions = {
 text_content_sources = ['pubmed', 'elsevier', 'manuscripts', 'pmc_oa']
 
 
-def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
+def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None,
+                                 ignore_duplicates=False):
     """Get the set of statements/ids from readings minus exact duplicates."""
     logger.info("Filtering the statements from reading.")
     if linked_sids is None:
@@ -688,55 +689,32 @@ def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
             for rv_dict in src_dict.gets(reader):
                 best_rv = max(rv_dict, key=lambda x: rv_list.index(x))
 
+                # Record the rest of the statement uuids.
+                for rv, r_dict in rv_dict.items():
+                    if rv != best_rv:
+                        some_bettered_duplicate_tpls |= r_dict.get_leaves()
+
                 # Take any one of the duplicates. Statements/Statement ids are
                 # already grouped into sets of duplicates keyed by the
                 # Statement and Evidence matches key hashes. We only want one
                 # of each.
                 stmt_set_itr = (stmt_set for r_dict in rv_dict[best_rv].values()
                                 for stmt_set in r_dict.values())
+                if ignore_duplicates:
+                    some_stmt_tpls = {stmt_tpl for stmt_set in stmt_set_itr
+                                      for stmt_tpl in stmt_set}
+                else:
+                    some_stmt_tpls, some_duplicate_tpls = \
+                        _detect_exact_duplicates(stmt_set_itr, linked_sids)
 
-                # Record the rest of the statement uuids.
-                for rv, r_dict in rv_dict.items():
-                    if rv != best_rv:
-                        some_bettered_duplicate_tpls |= r_dict.get_leaves()
+                    # Get the sids for the statements.
+                    duplicate_sids |= {sid for sid, _ in some_duplicate_tpls}
 
-                # Pick one among any exact duplicates. Unlike with bettered
-                # duplicates, these choices are arbitrary, and such duplicates
-                # can be deleted.
-                some_duplicate_tpls = set()
-                for stmt_tpl_set in stmt_set_itr:
-                    if not stmt_tpl_set:
-                        continue
-                    elif len(stmt_tpl_set) == 1:
-                        # There isn't really a choice here.
-                        stmt_tpls |= stmt_tpl_set
-                    else:
-                        prefed_tpls = {tpl for tpl in stmt_tpl_set
-                                       if tpl[0] in linked_sids}
-                        if not prefed_tpls:
-                            # Pick the first one to pop, record the rest as
-                            # duplicates.
-                            stmt_tpls.add(stmt_tpl_set.pop())
-                            some_duplicate_tpls |= stmt_tpl_set
-                        elif len(prefed_tpls) == 1:
-                            # There is now no choice: just take the preferred
-                            # statement.
-                            stmt_tpls |= prefed_tpls
-                            some_duplicate_tpls |= (stmt_tpl_set - prefed_tpls)
-                        else:
-                            # This shouldn't happen, so an early run of this
-                            # function must have failed somehow, or else there
-                            # was some kind of misuse. Flag it, pick just one of
-                            # the preferred statements, and delete any deletable
-                            # statements.
-                            assert False,\
-                                ("Duplicate deduplicated statements found: %s"
-                                 % str(prefed_tpls))
+                stmt_tpls |= some_stmt_tpls
 
-                # Get the uuids from the statements, if we have full statements.
-                duplicate_sids |= {sid for sid, _ in some_duplicate_tpls}
-                bettered_duplicate_sids |= \
-                    {sid for sid, _ in some_bettered_duplicate_tpls}
+        # Add the bettered duplicates found in this round.
+        bettered_duplicate_sids |= \
+            {sid for sid, _ in some_bettered_duplicate_tpls}
 
     if get_full_stmts:
         stmts = {stmt for _, stmt in stmt_tpls if stmt is not None}
@@ -748,6 +726,43 @@ def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
         stmts = {sid for sid, _ in stmt_tpls}
 
     return stmts, duplicate_sids, bettered_duplicate_sids
+
+
+def _detect_exact_duplicates(stmt_set_itr, linked_sids):
+    # Pick one among any exact duplicates. Unlike with bettered
+    # duplicates, these choices are arbitrary, and such duplicates
+    # can be deleted.
+    stmt_tpls = set()
+    some_duplicate_tpls = set()
+    for stmt_tpl_set in stmt_set_itr:
+        if not stmt_tpl_set:
+            continue
+        elif len(stmt_tpl_set) == 1:
+            # There isn't really a choice here.
+            stmt_tpls |= stmt_tpl_set
+        else:
+            prefed_tpls = {tpl for tpl in stmt_tpl_set
+                           if tpl[0] in linked_sids}
+            if not prefed_tpls:
+                # Pick the first one to pop, record the rest as
+                # duplicates.
+                stmt_tpls.add(stmt_tpl_set.pop())
+                some_duplicate_tpls |= stmt_tpl_set
+            elif len(prefed_tpls) == 1:
+                # There is now no choice: just take the preferred
+                # statement.
+                stmt_tpls |= prefed_tpls
+                some_duplicate_tpls |= (stmt_tpl_set - prefed_tpls)
+            else:
+                # This shouldn't happen, so an early run of this
+                # function must have failed somehow, or else there
+                # was some kind of misuse. Flag it, pick just one of
+                # the preferred statements, and delete any deletable
+                # statements.
+                assert False, \
+                    ("Duplicate deduplicated statements found: %s"
+                     % str(prefed_tpls))
+    return stmt_tpls, some_duplicate_tpls
 
 
 def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
