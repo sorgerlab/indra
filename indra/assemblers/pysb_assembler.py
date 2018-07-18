@@ -320,6 +320,11 @@ def get_agent_rule_str(agent):
                     rule_str_list.append('n' + _n(b.agent.name))
         if agent.location is not None:
             rule_str_list.append(_n(agent.location))
+        if agent.activity is not None:
+            if agent.activity.is_active:
+                rule_str_list.append(agent.activity.activity_type[:3])
+            else:
+                rule_str_list.append(agent.activity.activity_type[:3] + '_inact')
     rule_str = '_'.join(rule_str_list)
     return rule_str
 
@@ -512,7 +517,12 @@ def get_monomer_pattern(model, agent, extra_fields=None):
     pattern = get_site_pattern(agent)
     if extra_fields is not None:
         for k, v in extra_fields.items():
-            pattern[k] = v
+            # This is an important assumption, it only sets the given pattern
+            # on the monomer if that site/key is not already specified at the
+            # Agent level. For instance, if the Agent is specified to have
+            # 'activity', that site will not be updated here.
+            if k not in pattern:
+                pattern[k] = v
     # If a model is given, return the Monomer with the generated pattern,
     # otherwise just return the pattern
     try:

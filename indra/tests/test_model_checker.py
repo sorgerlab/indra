@@ -657,8 +657,8 @@ def test_multitype_path():
         results = mc.check_model()
         assert len(results) == len(stmts_to_check)
         assert isinstance(results[0], tuple)
-        assert results[0][1].paths == paths[0]
-        assert results[1][1].paths == paths[1]
+        assert results[0][1].paths == paths[0], results[0][1].paths
+        assert results[1][1].paths == paths[1], results[1][1].paths
     # Check with the ActiveForm
     stmts1 = [
         Complex([egfr, grb2]),
@@ -672,7 +672,7 @@ def test_multitype_path():
                            ('KRAS_gtpbound_active_obs', 1))],
                          [(('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
                            ('SOS1_GRB2_activates_KRAS_gtpbound', 1),
-                           ('KRAS_activates_BRAF_kinase', 1),
+                           ('KRAS_gtp_activates_BRAF_kinase', 1),
                            ('BRAF_kinase_active_obs', 1))]))
     # Check without the ActiveForm
     stmts2 = [
@@ -686,7 +686,7 @@ def test_multitype_path():
                            ('KRAS_gtpbound_active_obs', 1))],
                          [(('EGFR_GRB2_bind', 1), ('SOS1_GRB2_EGFR_bind', 1),
                            ('SOS1_GRB2_activates_KRAS', 1),
-                           ('KRAS_activates_BRAF_kinase', 1),
+                           ('KRAS_gtp_activates_BRAF_kinase', 1),
                            ('BRAF_kinase_active_obs', 1))]))
 
 
@@ -776,11 +776,12 @@ def test_gef_activation():
 
 def test_gef_rasgtp():
     sos = Agent('SOS1', db_refs={'HGNC': '1'})
-    ras = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
-                db_refs={'HGNC': '2'})
+    ras = Agent('KRAS', db_refs={'HGNC': '2'})
+    ras_gtp = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
+                    db_refs={'HGNC': '2'})
     raf = Agent('BRAF', db_refs={'HGNC': '3'})
     gef_stmt = Gef(sos, ras)
-    rasgtp_stmt = GtpActivation(ras, raf, 'kinase')
+    rasgtp_stmt = GtpActivation(ras_gtp, raf, 'kinase')
     act_stmt = Activation(sos, raf, 'kinase')
     # Check that the activation is satisfied by the Gef
     pysba = PysbAssembler()
@@ -791,8 +792,10 @@ def test_gef_rasgtp():
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('SOS1_activates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', 1),
-                                   ('BRAF_kinase_active_obs', 1))]
+                                   ('KRAS_gtp_activates_BRAF_kinase', 1),
+                                   ('BRAF_kinase_active_obs', 1))], \
+        checks[0][1].paths
+
 
 
 def test_gef_rasgtp_phos():
@@ -817,9 +820,10 @@ def test_gef_rasgtp_phos():
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
     assert checks[0][1].paths == [(('SOS1_activates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', 1),
-                                   ('BRAF_phosphorylation_MEK_phospho', 1),
-                                   ('MEK_phospho_p_obs', 1))]
+                                   ('KRAS_gtp_activates_BRAF_kinase', 1),
+                                   ('BRAF_kin_phosphorylation_MEK_phospho', 1),
+                                   ('MEK_phospho_p_obs', 1))], \
+        checks[0][1].paths
 
 
 def test_gap_activation():
@@ -871,8 +875,9 @@ def test_gap_rasgtp():
     assert len(checks) == 1
     assert checks[0][0] == act_stmt
     assert checks[0][1].paths == [(('NF1_deactivates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', -1),
-                                   ('BRAF_kinase_active_obs', -1))]
+                                   ('KRAS_gtp_activates_BRAF_kinase', -1),
+                                   ('BRAF_kinase_active_obs', -1))], \
+        checks[0][1].paths
 
 
 def test_gap_rasgtp_phos():
@@ -880,12 +885,13 @@ def test_gap_rasgtp_phos():
     ras = Agent('KRAS', db_refs={'HGNC': '2'})
     ras_g = Agent('KRAS', activity=ActivityCondition('gtpbound', True),
                   db_refs={'HGNC': '2'})
-    raf = Agent('BRAF', activity=ActivityCondition('kinase', True),
-                db_refs={'HGNC': '3'})
+    raf = Agent('BRAF', db_refs={'HGNC': '3'})
+    raf_a = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                  db_refs={'HGNC': '3'})
     mek = Agent('MEK', db_refs={'HGNC': '4'})
     gap_stmt = Gap(nf1, ras)
     rasgtp_stmt = GtpActivation(ras_g, raf, 'kinase')
-    phos = Phosphorylation(raf, mek)
+    phos = Phosphorylation(raf_a, mek)
     stmt_to_check = Dephosphorylation(nf1, mek)
     # Assemble and check
     pysba = PysbAssembler()
@@ -895,10 +901,11 @@ def test_gap_rasgtp_phos():
     checks = mc.check_model()
     assert len(checks) == 1
     assert checks[0][0] == stmt_to_check
-    assert checks[0][1].paths == [(('NF1_deactivates_KRAS', 1),
-                                   ('KRAS_activates_BRAF_kinase', -1),
-                                   ('BRAF_phosphorylation_MEK_phospho', -1),
-                                   ('MEK_phospho_p_obs', -1))]
+    assert checks[0][1].paths == \
+        [(('NF1_deactivates_KRAS', 1),
+          ('KRAS_gtp_activates_BRAF_kinase', -1),
+          ('BRAF_kin_phosphorylation_MEK_phospho', -1),
+          ('MEK_phospho_p_obs', -1))], checks[0][1].paths
 
 
 def test_increase_amount():
