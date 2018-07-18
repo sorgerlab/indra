@@ -35,8 +35,9 @@ def _clockit(func):
         start = datetime.now()
         ret = func(*args, **kwargs)
         end = datetime.now()
-        print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
-              % ('~'*5, func.__name__, end-start, '~'*5))
+        # print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
+        #       % ('~'*5, func.__name__, end-start, '~'*5))
+        print('%s %-30s %s %s' % ('~'*5, func.__name__, end-start, '~'*5))
         #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
         #with open(fname, 'a') as f:
         #    f.write('%s: %s\n' % (start, end-start))
@@ -592,7 +593,7 @@ class NestedDict(dict):
         return ret_set
 
 
-def _get_reading_statement_dict(db, clauses=None):
+def _get_reading_statement_dict(db, clauses=None, get_full_stmts=True):
     """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextRef, db.TextContent.id,
@@ -636,7 +637,10 @@ def _get_reading_statement_dict(db, clauses=None):
             num_duplicate_evidence += 1
 
         # Either store the statement, or the statement id.
-        s_dict[stmt_hash].add((sid, stmt))
+        if get_full_stmts:
+            s_dict[stmt_hash].add((sid, stmt))
+        else:
+            s_dict[stmt_hash].add((sid, None))
 
     # Report on the results.
     print("Found %d relevant text refs with statements." % len(stmt_nd))
@@ -657,6 +661,7 @@ text_content_sources = ['pubmed', 'elsevier', 'manuscripts', 'pmc_oa']
 
 def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
     """Get the set of statements/ids from readings minus exact duplicates."""
+    logger.info("Filtering the statements from reading.")
     if linked_sids is None:
         linked_sids = set()
     def better_func(element):
@@ -734,7 +739,11 @@ def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
                     {sid for sid, _ in some_bettered_duplicate_tpls}
 
     if get_full_stmts:
-        stmts = {stmt for _, stmt in stmt_tpls}
+        stmts = {stmt for _, stmt in stmt_tpls if stmt is not None}
+        assert len(stmts) == len(stmt_tpls),\
+            ("Some statements were None! The interaction between "
+             "_get_reading_statement_dict and _filter_rdg_statements was "
+             "probably mishandled.")
     else:
         stmts = {sid for sid, _ in stmt_tpls}
 
@@ -841,6 +850,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `get_full_stmts`.
     """
     if delete_duplicates:
+        logger.info("Looking for ids from existing links...")
         linked_sids = {sid for sid,
                         in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
     else:
@@ -848,13 +858,15 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     # Get de-duplicated Statements, and duplicate uuids, as well as uuid of
     # Statements that have been improved upon...
-    stmt_nd = _get_reading_statement_dict(db, clauses)
+    logger.info("Sorting reading statements...")
+    stmt_nd = _get_reading_statement_dict(db, clauses, get_full_stmts)
 
     stmts, duplicate_sids, bettered_duplicate_sids = \
         _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids)
-    print("After filtering reading: %d unique statements, %d exact duplicates, "
-          "%d with results from better resources available."
-          % (len(stmts), len(duplicate_sids), len(bettered_duplicate_sids)))
+    logger.info("After filtering reading: %d unique statements, %d exact "
+                "duplicates, %d with results from better resources available."
+                % (len(stmts), len(duplicate_sids),
+                   len(bettered_duplicate_sids)))
     assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     db_stmts, db_duplicates = \
@@ -862,14 +874,14 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                                     num_procs)
     stmts |= db_stmts
     duplicate_sids |= db_duplicates
-    print("After filtering database statements: %d unique, %d duplicates."
-          % (len(stmts), len(duplicate_sids)))
+    logger.info("After filtering database statements: %d unique, %d duplicates."
+                % (len(stmts), len(duplicate_sids)))
     assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     # Remove support links for statements that have better versions available.
     bad_link_sids = bettered_duplicate_sids & linked_sids
     if len(bad_link_sids) and weed_evidence:
-        print("Removing bettered evidence links...")
+        logger.info("Removing bettered evidence links...")
         rm_links = db.select_all(
             db.RawUniqueLinks,
             db.RawUniqueLinks.raw_stmt_id.in_(bad_link_sids)
@@ -878,17 +890,17 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     # Delete exact duplicates
     if len(duplicate_sids) and delete_duplicates:
-        print("Deleting duplicates...")
+        logger.info("Deleting duplicates...")
         for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
             bad_stmts = db.select_all(db.RawStatements,
                                       db.RawStatements.id.in_(dup_id_batch))
             bad_sid_set = {s.id for s in bad_stmts}
             bad_agents = db.select_all(db.RawAgents,
                                        db.RawAgents.stmt_id.in_(bad_sid_set))
-            print("Deleting %d agents associated with redundant raw statements."
-                  % len(bad_agents))
+            logger.info("Deleting %d agents associated with redundant raw "
+                        "statements." % len(bad_agents))
             db.delete_all(bad_agents)
-            print("Deleting %d redundant raw statements." % len(bad_stmts))
+            logger.info("Deleting %d redundant raw statements." % len(bad_stmts))
             db.delete_all(bad_stmts)
 
     return stmts
