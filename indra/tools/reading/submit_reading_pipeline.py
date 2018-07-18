@@ -352,155 +352,161 @@ def get_environment():
             if var_dict['value'] and var_dict['name']]
 
 
-def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
-                   end_ix=None, pmids_per_job=3000, num_tries=2,
-                   force_read=False, force_fulltext=False, project_name=None):
-    # Upload the pmid_list to Amazon S3
-    pmid_list_key = 'reading_results/%s/pmids' % basename
-    s3_client = boto3.client('s3')
-    s3_client.upload_file(pmid_list_filename, bucket_name, pmid_list_key)
+class Submitter(object):
+    _s3_input_name = NotImplemented
+    _purpose = NotImplemented
+    _job_queue = NotImplemented
+    _job_def = NotImplemented
 
-    # If no end index is specified, read all the PMIDs
-    if end_ix is None:
-        with open(pmid_list_filename, 'rt') as f:
-            lines = f.readlines()
-            end_ix = len(lines)
-
-    if start_ix is None:
-        start_ix = 0
-
-    # Get environment variables
-    environment_vars = get_environment()
-
-    # Iterate over the list of PMIDs and submit the job in chunks
-    batch_client = boto3.client('batch')
-    job_list = []
-    for job_start_ix in range(start_ix, end_ix, pmids_per_job):
-        job_end_ix = job_start_ix + pmids_per_job
-        if job_end_ix > end_ix:
-            job_end_ix = end_ix
-        job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
-        command_list = get_batch_command(
-            ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
-             basename, '/tmp', '16', str(job_start_ix), str(job_end_ix), '-r']
-            + readers,
-            purpose='pmid_reading',
-            project=project_name
-            )
-        if force_read:
-            command_list.append('--force_read')
-        if force_fulltext:
-            command_list.append('--force_fulltext')
-        logger.info('Commands list: %s' % str(command_list))
-        job_info = batch_client.submit_job(
-            jobName=job_name,
-            jobQueue='run_reach_queue',
-            jobDefinition='run_reach_jobdef',
-            containerOverrides={
-                'environment': environment_vars,
-                'command': command_list},
-            retryStrategy={'attempts': num_tries}
-            )
-        logger.info("submitted...")
-        job_list.append({'jobId': job_info['jobId']})
-    return job_list
-
-
-def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
-                      end_ix=None, pmids_per_job=3000, num_tries=2,
-                      force_read=False, no_stmts=False, force_fulltext=False,
-                      prioritize=False, project_name=None,
-                      max_reach_input_len=None, max_reach_space_ratio=None):
-    # Upload the pmid_list to Amazon S3
-    pmid_list_key = 'reading_inputs/%s/id_list' % basename
-    s3_client = boto3.client('s3')
-    s3_client.upload_file(id_list_filename, bucket_name, pmid_list_key)
-
-    # If no end index is specified, read all the PMIDs
-    if end_ix is None:
-        with open(id_list_filename, 'rt') as f:
-            lines = f.readlines()
-            end_ix = len(lines)
-
-    if start_ix is None:
-        start_ix = 0
-
-    # Get environment variables
-    environment_vars = get_environment()
-
-    # Fix reader options
-    if 'all' in readers:
-        readers = ['reach', 'sparser']
-
-    read_mode = 'all' if force_read else 'unread'
-    stmt_mode = 'none' if no_stmts else 'all'
-
-    # Iterate over the list of PMIDs and submit the job in chunks
-    batch_client = boto3.client('batch', region_name='us-east-1')
-    job_list = []
-    for job_start_ix in range(start_ix, end_ix, pmids_per_job):
-        job_end_ix = job_start_ix + pmids_per_job
-        if job_end_ix > end_ix:
-            job_end_ix = end_ix
-        job_name = '%s_%d_%d' % (basename, job_start_ix, job_end_ix)
-        command_list = get_batch_command(
-            ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
-             basename, '/tmp', read_mode, stmt_mode, '32', str(job_start_ix),
-             str(job_end_ix), '-r'] + readers,
-            purpose='db_reading',
-            project=project_name
-            )
-        if force_fulltext:
-            command_list.append('--force_fulltext')
-        if prioritize:
-            command_list.append('--read_best_fulltext')
-        if max_reach_input_len is not None:
-            command_list += ['--max_reach_input_len', max_reach_input_len]
-        if max_reach_space_ratio is not None:
-            command_list += ['--max_reach_space_ratio', max_reach_space_ratio]
-        logger.info('Command list: %s' % str(command_list))
-        job_info = batch_client.submit_job(
-            jobName=job_name,
-            jobQueue='run_db_reading_queue',
-            jobDefinition='run_db_reading_jobdef',
-            containerOverrides={
-                'environment': environment_vars,
-                'command': command_list},
-            retryStrategy={'attempts': num_tries}
-            )
-        logger.info("submitted...")
-        job_list.append({'jobId': job_info['jobId']})
-    return job_list
-
-
-def submit_combine(basename, readers, job_ids=None, project_name=None):
-    if job_ids is not None and len(job_ids) > 20:
-        print("WARNING: boto3 cannot support waiting for more than 20 jobs.")
-        print("Please wait for the reading to finish, then run again with the")
-        print("`combine` option.")
+    def __init__(self, basename, readers, project_name=None, **options):
+        self.basename = basename
+        if 'all' in readers:
+            self.readers = ['reach', 'sparser']
+        else:
+            self.readers = readers
+        self.project_name = project_name
+        self.job_list = None
+        self.options=options
         return
 
-    # Get environment variables
-    environment_vars = get_environment()
+    def _make_command(self, start_ix, end_ix):
+        job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
+        cmd = self._get_base(job_name, start_ix, end_ix) + ['-r', self.readers]
+        cmd += self._get_extensions()
+        return job_name, cmd
 
-    job_name = '%s_combine_reading_results' % basename
-    command_list = get_batch_command(
-        ['python', '-m', 'indra.tools.reading.assemble_reading_stmts_aws',
-         basename, '-r'] + readers,
-        purpose='pmid_reading',
-        project=project_name
-        )
-    logger.info('Command list: %s' % str(command_list))
-    kwargs = {'jobName': job_name, 'jobQueue': 'run_reach_queue',
-              'jobDefinition': 'run_reach_jobdef',
-              'containerOverrides': {'environment': environment_vars,
-                                     'command': command_list,
-                                     'memory': 60000, 'vcpus': 1}}
-    if job_ids:
-        kwargs['dependsOn'] = job_ids
-    batch_client = boto3.client('batch')
-    batch_client.submit_job(**kwargs)
-    logger.info("submitted...")
+    def _get_base(self, job_name, start_ix, end_ix):
+        raise NotImplementedError
+
+    def _get_extensions(self):
+        return []
+
+    def submit_reading(self, input_fname, start_ix, end_ix, ids_per_job,
+                       num_tries=2):
+        # Upload the pmid_list to Amazon S3
+        pmid_list_key = 'reading_inputs/%s/%s' % (self.basename,
+                                                  self._s3_input_name)
+        s3_client = boto3.client('s3')
+        s3_client.upload_file(input_fname, bucket_name, pmid_list_key)
+
+        # If no end index is specified, read all the PMIDs
+        if end_ix is None:
+            with open(input_fname, 'rt') as f:
+                lines = f.readlines()
+                end_ix = len(lines)
+
+        if start_ix is None:
+            start_ix = 0
+
+        # Get environment variables
+        environment_vars = get_environment()
+
+        # Iterate over the list of PMIDs and submit the job in chunks
+        batch_client = boto3.client('batch', region_name='us-east-1')
+        job_list = []
+        for job_start_ix in range(start_ix, end_ix, ids_per_job):
+            job_end_ix = job_start_ix + ids_per_job
+            if job_end_ix > end_ix:
+                job_end_ix = end_ix
+            job_name, cmd = self._make_command(job_start_ix, job_end_ix)
+            command_list = get_batch_command(cmd, purpose=self._purpose,
+                                             project=self.project_name)
+            logger.info('Command list: %s' % str(command_list))
+            job_info = batch_client.submit_job(
+                jobName=job_name,
+                jobQueue=self._job_def,
+                jobDefinition=self._job_queue,
+                containerOverrides={
+                    'environment': environment_vars,
+                    'command': command_list},
+                retryStrategy={'attempts': num_tries}
+            )
+            logger.info("submitted...")
+            job_list.append({'jobId': job_info['jobId']})
+        self.job_list = job_list
+        return job_list
+
+
+class PmidSubmitter(Submitter):
+    _s3_input_name = 'pmids'
+    _purpose = 'pmid_reading'
+    _job_queue = 'run_reach_queue'
+    _job_def = 'run_reach_jobdef'
+
+    def _get_base(self, job_name, start_ix, end_ix):
+        base = ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
+                self.basename, '/tmp', '16', str(start_ix), str(end_ix), '-r']
+        return base
+
+    def _get_extensions(self):
+        extensions = []
+        for opt_key in ['force_read', 'force_fulltext']:
+            if self.options.get(opt_key, False):
+                extensions.append('--' + opt_key)
+        return extensions
+
+    def submit_combine(self):
+        job_ids = self.job_list
+        if job_ids is not None and len(job_ids) > 20:
+            print("WARNING: boto3 cannot support waiting for more than 20 jobs.")
+            print("Please wait for the reading to finish, then run again with the")
+            print("`combine` option.")
+            return
+
+        # Get environment variables
+        environment_vars = get_environment()
+
+        job_name = '%s_combine_reading_results' % self.basename
+        command_list = get_batch_command(
+            ['python', '-m', 'indra.tools.reading.assemble_reading_stmts_aws',
+             self.basename, '-r'] + self.readers,
+            purpose='pmid_reading',
+            project=self.project_name
+            )
+        logger.info('Command list: %s' % str(command_list))
+        kwargs = {'jobName': job_name, 'jobQueue': self._job_queue,
+                  'jobDefinition': self._job_def,
+                  'containerOverrides': {'environment': environment_vars,
+                                         'command': command_list,
+                                         'memory': 60000, 'vcpus': 1}}
+        if job_ids:
+            kwargs['dependsOn'] = job_ids
+        batch_client = boto3.client('batch')
+        batch_client.submit_job(**kwargs)
+        logger.info("submitted...")
+        return
+
+
+class DbReadingSubmitter(Submitter):
+    _s3_input_name = 'id_list'
+    _purpose = 'db_reading'
+    _job_queue = 'run_db_reading_queue'
+    _job_def = 'run_db_reading_jobdef'
+
+    def _get_base(self, job_name, start_ix, end_ix):
+
+        read_mode = 'all' if self.options.get('force_read', False) else 'unread'
+        stmt_mode = 'none' if self.options.get('no_stmts', False) else 'all'
+
+        job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
+        base = ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
+                self.basename]
+        base += [job_name]
+        base += ['/tmp', read_mode, stmt_mode, '32']
+        return base
+
+    def _get_extensions(self):
+        extensions = []
+        if self.options.get('force_fulltext', False):
+            extensions.append('--force_fulltext')
+        if self.options.get('prioritize', False):
+            extensions.append('--read_best_fulltext')
+        max_reach_input_len = self.options.get('max_reach_input_len')
+        max_reach_space_ratio = self.options.get('max_reach_space_ratio')
+        if max_reach_input_len is not None:
+            extensions += ['--max_reach_input_len', max_reach_input_len]
+        if max_reach_space_ratio is not None:
+            extensions += ['--max_reach_space_ratio', max_reach_space_ratio]
 
 
 if __name__ == '__main__':
@@ -673,35 +679,19 @@ if __name__ == '__main__':
 
     job_ids = None
     if args.method == 'no-db':
+        sub = PmidSubmitter(args.basename, args.readers, args.project,
+                            force_read=args.force_read,
+                            force_fulltext=args.force_fulltext)
         if args.job_type in ['read', 'full']:
-            job_ids = submit_reading(
-                args.basename,
-                args.input_file,
-                args.readers,
-                args.start_ix,
-                args.end_ix,
-                args.ids_per_job,
-                2,
-                args.force_read,
-                args.force_fulltext,
-                args.project
-                )
+            sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
+                               args.ids_per_job)
         if args.job_type in ['combine', 'full']:
-            submit_combine(args.basename, args.readers, job_ids, args.project)
+            sub.submit_combine()
     elif args.method == 'with-db':
-        job_ids = submit_db_reading(
-            args.basename,
-            args.input_file,
-            args.readers,
-            args.start_ix,
-            args.end_ix,
-            args.ids_per_job,
-            2,
-            args.force_read,
-            args.no_statements,
-            args.force_fulltext,
-            args.read_best_fulltext,
-            args.project,
-            args.max_reach_input_len,
-            args.max_reach_space_ratio
-            )
+        sub = DbReadingSubmitter(args.basename, args.readers, args.project,
+                                 force_fulltext=args.force_fulltext,
+                                 no_stmts=args.no_statements,
+                                 max_reach_input_len=args.max_reach_input_len,
+                                 max_reach_space_ratio=args.max_reach_space_ratio)
+        sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
+                           args.ids_per_job)
