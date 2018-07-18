@@ -136,6 +136,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
 
     terminate_msg = 'Job log has stalled for at least %f minutes.'
     terminated_jobs = set()
+    stashed_id_set = set()
     while True:
         pre_run = []
         for status in ('SUBMITTED', 'PENDING', 'RUNNABLE', 'STARTING'):
@@ -180,26 +181,34 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         # Stash the logs of things that have finished so far. Note that jobs
         # terminated in this round will not be picked up until the next round.
         if stash_log_method:
-            success_ids = [job_def['jobId'] for job_def in done]
-            failure_ids = [job_def['jobId'] for job_def in failed]
-            stash_logs(observed_job_def_dict, success_ids, failure_ids,
-                       queue_name, stash_log_method, job_name_prefix,
-                       start_time.strftime('%Y%m%d_%H%M%S'))
+            stash_logs(observed_job_def_dict, done, failed, queue_name,
+                       stash_log_method, job_name_prefix,
+                       start_time.strftime('%Y%m%d_%H%M%S'),
+                       ids_stashed=stashed_id_set)
         sleep(poll_interval)
 
     # Pick up any stragglers
     if stash_log_method:
-        success_ids = [job_def['jobId'] for job_def in done]
-        failure_ids = [job_def['jobId'] for job_def in failed]
-        stash_logs(observed_job_def_dict, success_ids, failure_ids,
-                   queue_name, stash_log_method, job_name_prefix,
-                   start_time.strftime('%Y%m%d_%H%M%S'))
+        stash_logs(observed_job_def_dict, done, failed, queue_name,
+                   stash_log_method, job_name_prefix,
+                   start_time.strftime('%Y%m%d_%H%M%S'),
+                   ids_stashed=stashed_id_set)
 
     return ret
 
 
-def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
-               job_name_prefix=None, tag='stash'):
+def _get_job_ids_to_stash(job_def_list, stashed_id_set):
+    return [job_def['jobId'] for job_def in job_def_list
+            if job_def['jobId'] not in stashed_id_set]
+
+
+def stash_logs(job_defs, success_jobs, failure_jobs, queue_name, method='local',
+               job_name_prefix=None, tag='stash', ids_stashed=None):
+    if ids_stashed is None:
+        ids_stashed = set()
+
+    success_ids = _get_job_ids_to_stash(success_jobs, ids_stashed)
+    failure_ids = _get_job_ids_to_stash(failure_jobs, ids_stashed)
     if method == 's3':
         s3_client = boto3.client('s3')
 
@@ -245,6 +254,7 @@ def stash_logs(job_defs, success_ids, failure_ids, queue_name, method='local',
         except Exception as e:
             logger.error("Failed to save logs for: %s" % str(job_def_tpl))
             logger.exception(e)
+    ids_stashed |= {jid for jids in [success_ids, failure_ids] for jid in jids}
     return
 
 
