@@ -261,8 +261,7 @@ def _get_opa_input_stmts(db):
                                              ignore_duplicates=True)
     db_stmts = db_client.get_statements([db.RawStatements.reading_id == None],
                                         preassembled=False, db=db)
-    stmts = reading_stmts + db_stmts
-    random.shuffle(stmts)
+    stmts = reading_stmts | set(db_stmts)
     print("Got %d statements for opa." % len(stmts))
     return stmts
 
@@ -442,6 +441,10 @@ def _check_statement_distillation(num_stmts):
 def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
     db = _get_loaded_db(num_stmts)
 
+    # Now test the set of preassembled (pa) statements from the database against
+    # what we get from old-fashioned preassembly (opa).
+    opa_inp_stmts = _get_opa_input_stmts(db)
+
     # Get the set of raw statements.
     raw_stmt_list = db.select_all(db.RawStatements)
     all_raw_ids = {raw_stmt.id for raw_stmt in raw_stmt_list}
@@ -488,10 +491,8 @@ def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
     if any(self_supports.values()):
         assert False, "Found self-support in constructed pa statement objects."
 
-    # Now test the set of preassembled (pa) statements from the database against
-    # what we get from old-fashioned preassembly (opa).
-    raw_stmts = _get_opa_input_stmts(db)
-    _check_against_opa_stmts(db, raw_stmts, pa_stmts)
+    _check_against_opa_stmts(db, opa_inp_stmts, pa_stmts)
+    return
 
 
 @needs_py3
@@ -499,16 +500,17 @@ def _check_db_pa_supplement(num_stmts, batch_size, split=0.8, n_proc=1):
     pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc,
                                        print_logs=True)
     db = _get_loaded_db(num_stmts, split=split, pam=pa_manager)
+    opa_inp_stmts = _get_opa_input_stmts(db)
     start = datetime.now()
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
     end = datetime.now()
     print("Duration of incremental update:", end-start)
 
-    raw_stmts, = _get_opa_input_stmts(db)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
-    _check_against_opa_stmts(db, raw_stmts, pa_stmts)
+    _check_against_opa_stmts(db, opa_inp_stmts, pa_stmts)
+    return
 
 
 # ==============================================================================
