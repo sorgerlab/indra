@@ -197,9 +197,8 @@ class PreassemblyManager(object):
 
             # Use the shallow hash to condense unique statements.
             new_unique_stmts, evidence_links = \
-                self._condense_statements(cleaned_stmts, mk_done | new_mk_set,
+                self._condense_statements(cleaned_stmts, mk_done, new_mk_set,
                                           uuid_sid_dict)
-            new_mk_set |= set(evidence_links.keys())
 
             self._log("Insert new statements into database...")
             insert_pa_stmts(db, new_unique_stmts)
@@ -211,18 +210,21 @@ class PreassemblyManager(object):
         return new_mk_set
 
     @_clockit
-    def _condense_statements(self, cleaned_stmts, mk_done, uuid_sid_dict):
+    def _condense_statements(self, cleaned_stmts, mk_done, new_mk_set,
+                             uuid_sid_dict):
         self._log("Condense into unique statements...")
         new_unique_stmts = []
         evidence_links = defaultdict(lambda: set())
         for s in cleaned_stmts:
             h = shash(s)
-            if h not in mk_done:
-                if h not in evidence_links.keys():
-                    new_unique_stmts.append(s.make_generic_copy())
-                    evidence_links[h] = {uuid_sid_dict[s.uuid]}
-                else:
-                    evidence_links[h].add(uuid_sid_dict[s.uuid])
+
+            # If this statement is new, make it.
+            if h not in (mk_done | new_mk_set):
+                new_unique_stmts.append(s.make_generic_copy())
+                new_mk_set.add(h)
+
+            # Add the evidence to the dict.
+            evidence_links[h].add(uuid_sid_dict[s.uuid])
         return new_unique_stmts, evidence_links
 
     @_handle_update_table
