@@ -254,6 +254,12 @@ def _do_old_fashioned_preassembly(stmts):
     return opa_stmts
 
 
+def _get_opa_input_stmts(db):
+    stmt_nd = db_util._get_reading_statement_dict(db, get_full_stmts=True)
+    return db_util._get_filtered_rdg_statements(stmt_nd, get_full_stmts=True,
+                                                ignore_duplicates=True)
+
+
 def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
     def _compare_list_elements(label, list_func, comp_func, **stmts):
         (stmt_1_name, stmt_1), (stmt_2_name, stmt_2) = list(stmts.items())
@@ -477,7 +483,7 @@ def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
 
     # Now test the set of preassembled (pa) statements from the database against
     # what we get from old-fashioned preassembly (opa).
-    raw_stmts = db_client.get_statements([], preassembled=False, db=db)
+    raw_stmts = _get_opa_input_stmts(db)
     _check_against_opa_stmts(db, raw_stmts, pa_stmts)
 
 
@@ -492,7 +498,7 @@ def _check_db_pa_supplement(num_stmts, batch_size, split=0.8, n_proc=1):
     end = datetime.now()
     print("Duration of incremental update:", end-start)
 
-    raw_stmts = db_client.get_statements([], preassembled=False, db=db)
+    raw_stmts = _get_opa_input_stmts(db)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
     _check_against_opa_stmts(db, raw_stmts, pa_stmts)
