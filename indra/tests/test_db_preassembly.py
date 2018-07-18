@@ -256,8 +256,15 @@ def _do_old_fashioned_preassembly(stmts):
 
 def _get_opa_input_stmts(db):
     stmt_nd = db_util._get_reading_statement_dict(db, get_full_stmts=True)
-    return db_util._get_filtered_rdg_statements(stmt_nd, get_full_stmts=True,
-                                                ignore_duplicates=True)
+    reading_stmts, _, _ =\
+        db_util._get_filtered_rdg_statements(stmt_nd, get_full_stmts=True,
+                                             ignore_duplicates=True)
+    db_stmts = db_client.get_statements([db.RawStatements.reading_id == None],
+                                        preassembled=False, db=db)
+    stmts = reading_stmts + db_stmts
+    random.shuffle(stmts)
+    print("Got %d statements for opa." % len(stmts))
+    return stmts
 
 
 def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
@@ -498,7 +505,7 @@ def _check_db_pa_supplement(num_stmts, batch_size, split=0.8, n_proc=1):
     end = datetime.now()
     print("Duration of incremental update:", end-start)
 
-    raw_stmts = _get_opa_input_stmts(db)
+    raw_stmts, = _get_opa_input_stmts(db)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
     _check_against_opa_stmts(db, raw_stmts, pa_stmts)
