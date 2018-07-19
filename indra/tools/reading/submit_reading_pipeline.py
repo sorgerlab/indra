@@ -369,6 +369,12 @@ class Submitter(object):
         self.options=options
         return
 
+    def set_options(self, **kwargs):
+        """Set the options of reading job."""
+        # This should be more specifically implemented in a child class.
+        self.options = kwargs
+        return
+
     def _make_command(self, start_ix, end_ix):
         job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
         cmd = self._get_base(job_name, start_ix, end_ix) + ['-r', self.readers]
@@ -445,6 +451,12 @@ class PmidSubmitter(Submitter):
                 extensions.append('--' + opt_key)
         return extensions
 
+    def set_options(self, force_read=False, force_fulltext=False):
+        """Set the options for this run."""
+        self.options['force_read'] = force_read
+        self.options['force_fulltext'] = force_fulltext
+        return
+
     def submit_combine(self):
         job_ids = self.job_list
         if job_ids is not None and len(job_ids) > 20:
@@ -507,6 +519,15 @@ class DbReadingSubmitter(Submitter):
             extensions += ['--max_reach_input_len', max_reach_input_len]
         if max_reach_space_ratio is not None:
             extensions += ['--max_reach_space_ratio', max_reach_space_ratio]
+
+    def set_options(self, force_read=False, no_stmts=False,
+                    force_fulltext=False, prioritize=False,
+                    max_reach_input_len=None, max_reach_space_ratio=None):
+        self.options['force_fulltext'] = force_fulltext
+        self.options['prioritize'] = prioritize
+        self.options['max_reach_input_len'] = max_reach_input_len
+        self.options['max_reach_space_ratio'] = max_reach_space_ratio
+        return
 
 
 if __name__ == '__main__':
@@ -679,19 +700,17 @@ if __name__ == '__main__':
 
     job_ids = None
     if args.method == 'no-db':
-        sub = PmidSubmitter(args.basename, args.readers, args.project,
-                            force_read=args.force_read,
-                            force_fulltext=args.force_fulltext)
+        sub = PmidSubmitter(args.basename, args.readers, args.project)
+        sub.set_options(args.force_read, args.force_fulltext)
         if args.job_type in ['read', 'full']:
             sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
                                args.ids_per_job)
         if args.job_type in ['combine', 'full']:
             sub.submit_combine()
     elif args.method == 'with-db':
-        sub = DbReadingSubmitter(args.basename, args.readers, args.project,
-                                 force_fulltext=args.force_fulltext,
-                                 no_stmts=args.no_statements,
-                                 max_reach_input_len=args.max_reach_input_len,
-                                 max_reach_space_ratio=args.max_reach_space_ratio)
+        sub = DbReadingSubmitter(args.basename, args.readers, args.project)
+        sub.set_options(args.force_read, args.no_statements,
+                        args.force_fulltext, args.prioritize,
+                        args.max_reach_input_len, args.max_reach_space_ratio)
         sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
                            args.ids_per_job)
