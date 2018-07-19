@@ -432,6 +432,18 @@ class Submitter(object):
         self.job_list = job_list
         return job_list
 
+    def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
+                       kill_on_timeout=False, stash_log_method=None,
+                       tag_instances=False):
+        """This provides shortcut access to the wait_for_complete_function."""
+        return wait_for_complete(self._job_queue, job_list=self.job_list,
+                                 job_name_prefix=self.basename,
+                                 poll_interval=poll_interval,
+                                 idle_log_timeout=idle_log_timeout,
+                                 kill_on_log_timeout=kill_on_timeout,
+                                 stash_log_method=stash_log_method,
+                                 tag_instances=tag_instances)
+
 
 class PmidSubmitter(Submitter):
     _s3_input_name = 'pmids'
