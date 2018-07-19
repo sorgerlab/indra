@@ -2,7 +2,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import json
+import pickle
 import logging
+from os import path
 from functools import wraps
 from datetime import datetime
 from collections import defaultdict
@@ -73,6 +75,9 @@ from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
 from indra.db.util import insert_pa_stmts, distill_stmts, get_db, _clockit
+
+
+HERE = path.dirname(path.abspath(__file__))
 
 
 def _handle_update_table(func):
@@ -241,8 +246,17 @@ class PreassemblyManager(object):
         For more detail on preassembly, see indra/preassembler/__init__.py
         """
         self.__tag = 'create'
-        # Get the statement ids.
-        stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+
+        # Get filtered statement ID's.
+        sid_cache_fname = path.join(HERE, 'stmt_id_cache.pkl')
+        if continuing and path.exists(sid_cache_fname):
+            with open(sid_cache_fname, 'rb') as f:
+                stmt_ids = pickle.load(f)
+        else:
+            # Get the statement ids.
+            stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+            with open(sid_cache_fname, 'wb') as f:
+                pickle.dump(stmt_ids, f)
 
         # Handle the possibility we're picking up after an earlier job...
         done_pa_ids = set()
@@ -260,10 +274,13 @@ class PreassemblyManager(object):
                           % len(done_pa_ids))
 
         # Create a generator for the actual statements.
-        stmts = ((sid, _stmt_from_json(s_json)) for sid, s_json
-                 in db.select_all([db.RawStatements.id, db.RawStatements.json],
-                                  db.RawStatements.id.in_(stmt_ids),
-                                  yield_per=self.batch_size))
+        def get_raw_stmt_data(stmt_ids):
+            return db.select_all([db.RawStatements.id, db.RawStatements.json],
+                                 db.RawStatements.id.in_(stmt_ids),
+                                 yield_per=self.batch_size//10)
+        stmts = ((sid, _stmt_from_json(s_json))
+                 for stmt_id_batch in batch_iter(stmt_ids, self.batch_size)
+                 for sid, s_json in get_raw_stmt_data(stmt_id_batch))
         self._log("Found %d statements in all." % len(stmt_ids))
 
         # Get the set of unique statements
