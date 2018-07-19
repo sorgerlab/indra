@@ -4,6 +4,7 @@ from os import path
 from subprocess import check_call
 from indra.db import util as dbu
 from indra.util import zip_string
+from indra.tools.reading import submit_reading_pipeline as srp
 
 
 s3 = boto3.client('s3')
@@ -17,7 +18,7 @@ def test_db_reading_help():
                 '--help'])
 
 
-def test_db_reading_noraml_querty():
+def test_normal_db_reading_call():
     # Put some basic stuff in the test databsae
     N = 6
     db = dbu.get_test_db()
@@ -37,14 +38,14 @@ def test_db_reading_noraml_querty():
     basename = 'local_test_run'
     s3_inp_prefix = 'reading_inputs/%s/' % basename
     s3_out_prefix = 'reading_results/%s/' % basename
-    local_dir = path.join(HERE, 'local_test')
     s3.put_object(Bucket='bigmech', Key=s3_inp_prefix + 'id_list',
                   Body='\n'.join(['tcid: %d' % i for i in range(5)]))
 
     # Call the reading tool
-    check_call(['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
-                basename, local_dir, 'unread', 'all', '4', '0', '2', '-r',
-                'sparser', '--test'])
+    sub = srp.DbReadingSubmitter(basename, ['sparser'])
+    job_name, cmd = sub._make_command(0, 2)
+    cmd += ['--test']
+    check_call(cmd)
 
     # Remove garbage on s3
     for pref in [s3_inp_prefix, s3_out_prefix]:
