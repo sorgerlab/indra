@@ -241,19 +241,25 @@ class PreassemblyManager(object):
         For more detail on preassembly, see indra/preassembler/__init__.py
         """
         self.__tag = 'create'
-        # Get the statements
+        # Get the statement ids.
         stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+
+        # Handle the possibility we're picking up after an earlier job...
+        done_pa_ids = set()
         if continuing:
             self._log("Getting set of statements already de-duplicated...")
-            checked_raw_stmt_ids, pa_stmt_hashes = \
-                zip(*db.select_all([db.RawUniqueLinks.raw_stmt_id,
-                                    db.RawUniqueLinks.pa_stmt_mk_hash]))
-            stmt_ids -= set(checked_raw_stmt_ids)
-            done_pa_ids = set(pa_stmt_hashes)
-            self._log("Found %d preassembled statements already done."
-                        % len(done_pa_ids))
-        else:
-            done_pa_ids = set()
+            link_resp = db.select_all([db.RawUniqueLinks.raw_stmt_id,
+                                       db.RawUniqueLinks.pa_stmt_mk_hash])
+            if link_resp:
+                checked_raw_stmt_ids, pa_stmt_hashes = \
+                    zip(*db.select_all([db.RawUniqueLinks.raw_stmt_id,
+                                        db.RawUniqueLinks.pa_stmt_mk_hash]))
+                stmt_ids -= set(checked_raw_stmt_ids)
+                done_pa_ids = set(pa_stmt_hashes)
+                self._log("Found %d preassembled statements already done."
+                          % len(done_pa_ids))
+
+        # Create a generator for the actual statements.
         stmts = ((sid, _stmt_from_json(s_json)) for sid, s_json
                  in db.select_all([db.RawStatements.id, db.RawStatements.json],
                                   db.RawStatements.id.in_(stmt_ids),
