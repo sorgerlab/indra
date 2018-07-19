@@ -501,6 +501,34 @@ class PmidSubmitter(Submitter):
         return
 
 
+def submit_reading(basename, pmid_list_filename, readers, start_ix=None,
+                   end_ix=None, pmids_per_job=3000, num_tries=2,
+                   force_read=False, force_fulltext=False, project_name=None):
+    """Submit an old-style pmid-centered no-database s3 only reading job.
+
+    This function is provided for the sake of backward compatibility. It is
+    preferred that you use the object-oriented PmidSubmitter and the
+    submit_reading job going forward.
+    """
+    sub = PmidSubmitter(basename, readers, project_name)
+    sub.set_options(force_read, force_fulltext)
+    sub.submit_reading(pmid_list_filename, start_ix, end_ix, pmids_per_job,
+                       num_tries)
+    return sub.job_list
+
+
+def submit_combine(basename, readers, job_ids=None, project_name=None):
+    """Submit a batch job to combine the outputs of a reading job.
+
+    This function is provided for backwards compatibility. You should use the
+    PmidSubmitter and submit_combine methods.
+    """
+    sub = PmidSubmitter(basename, readers, project_name)
+    sub.job_list = job_ids
+    sub.submit_combine()
+    return sub
+
+
 class DbReadingSubmitter(Submitter):
     _s3_input_name = 'id_list'
     _purpose = 'db_reading'
@@ -540,6 +568,25 @@ class DbReadingSubmitter(Submitter):
         self.options['max_reach_input_len'] = max_reach_input_len
         self.options['max_reach_space_ratio'] = max_reach_space_ratio
         return
+
+
+def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
+                      end_ix=None, pmids_per_job=3000, num_tries=2,
+                      force_read=False, force_fulltext=False,
+                      read_all_fulltext=False, project_name=None,
+                      max_reach_input_len=None, max_reach_space_ratio=None,
+                      no_stmts=False):
+    """Submit batch reading jobs that uses the database for content and results.
+
+    This function is provided for backwards compatibility, use DbReadingSubmitter
+    and its submit_reading method instead.
+    """
+    sub = DbReadingSubmitter(basename, readers, project_name)
+    sub.set_options(force_read, no_stmts, force_fulltext, read_all_fulltext,
+                    max_reach_input_len, max_reach_space_ratio)
+    sub.submit_reading(id_list_filename, start_ix, end_ix, pmids_per_job,
+                       num_tries)
+    return sub
 
 
 if __name__ == '__main__':
