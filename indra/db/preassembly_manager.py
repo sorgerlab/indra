@@ -246,7 +246,7 @@ class PreassemblyManager(object):
         if continuing:
             self._log("Getting set of statements already de-duplicated...")
             checked_raw_stmt_ids, pa_stmt_hashes = \
-                zip(*db.select_all([db.RawUniqueLinks.raw_stmt_uuid,
+                zip(*db.select_all([db.RawUniqueLinks.raw_stmt_id,
                                     db.RawUniqueLinks.pa_stmt_mk_hash]))
             stmt_ids -= set(checked_raw_stmt_ids)
             done_pa_ids = set(pa_stmt_hashes)
