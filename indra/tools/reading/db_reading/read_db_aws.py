@@ -45,6 +45,16 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends,
     data_dict['Content processed'] = len({t[1] for t in reading_stmts})
     data_dict['Statements produced'] = len(stmt_outputs)
 
+    readings_with_stmts = []
+    readings_with_no_stmts = []
+    for t in reading_stmts:
+        if t[-1]:
+            readings_with_stmts.append(t)
+        else:
+            readings_with_no_stmts.append(t)
+
+    data_dict['Readings with 0 statements'] = len(readings_with_no_stmts)
+
     # Do a bunch of aggregation
     tc_rd_dict = {}
     tc_stmt_dict = {}
@@ -52,7 +62,7 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends,
     reader_stmts = {}
     reader_tcids = {}
     reader_rids = {}
-    for rid, tcid, reader, stmts in reading_stmts:
+    for rid, tcid, reader, stmts in readings_with_stmts:
         # Handle things keyed by tcid
         if tcid not in tc_rd_dict.keys():
             tc_rd_dict[tcid] = {rid}
@@ -74,6 +84,21 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends,
             reader_rids[reader] = {rid}
         else:
             reader_stmts[reader] |= set(stmts)
+            reader_tcids[reader].add(tcid)
+            reader_rids[reader].add(rid)
+
+    for rid, tcid, reader, _ in readings_with_no_stmts:
+        # Handle things keyed by tcid
+        if tcid not in tc_rd_dict.keys():
+            tc_rd_dict[tcid] = {rid}
+        else:
+            tc_rd_dict[tcid].add(rid)
+
+        # Handle things keyed by reader
+        if reader not in reader_stmts.keys():
+            reader_tcids[reader] = {tcid}
+            reader_rids[reader] = {rid}
+        else:
             reader_tcids[reader].add(tcid)
             reader_rids[reader].add(rid)
 
