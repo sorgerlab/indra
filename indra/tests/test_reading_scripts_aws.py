@@ -35,7 +35,7 @@ def test_normal_db_reading_call():
                   'content'))
 
     # Put an id file on s3
-    basename = 'local_test_run'
+    basename = 'local_db_test_run'
     s3_inp_prefix = 'reading_inputs/%s/' % basename
     s3_out_prefix = 'reading_results/%s/' % basename
     s3.put_object(Bucket='bigmech', Key=s3_inp_prefix + 'id_list',
@@ -53,3 +53,26 @@ def test_normal_db_reading_call():
         for entry in res['Contents']:
             print("Removing %s..." % entry['Key'])
             s3.delete_object(Bucket='bigmech', Key=entry['Key'])
+    return
+
+
+def test_normal_pmid_reading_call():
+    # Put an id file on s3
+    basename = 'local_pmid_test_run'
+    s3_inp_prefix = 'reading_inputs/%s/' % basename
+    s3_out_prefix = 'reading_results/%s/' % basename
+    s3.put_object(Bucket='bigmech', Key=s3_inp_prefix + 'pmids',
+                  Body='\n'.join(['PMID000test%d' % n for n in range(4)]))
+
+    # Call the reading tool
+    sub = srp.PmidSubmitter(basename, ['sparser'])
+    job_name, cmd = sub._make_command(0, 2)
+    check_call(cmd)
+
+    # Remove garbage on s3
+    for pref in [s3_inp_prefix, s3_out_prefix]:
+        res = s3.list_objects(Bucket='bigmech', Prefix=pref)
+        for entry in res['Contents']:
+            print("Removing %s..." % entry['Key'])
+            s3.delete_object(Bucket='bigmech', Key=entry['Key'])
+    return
