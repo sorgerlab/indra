@@ -33,9 +33,9 @@ def plot_hist(agged, agg_over, data, s3, s3_base, bucket_name):
     return
 
 
-def report_statistics(reading_outputs, stmt_outputs, starts, ends, basename, s3,
-                      bucket_name):
-    s3_base = 'reading_results/%s/logs/run_db_reading/statisics/' % basename
+def report_statistics(reading_outputs, stmt_outputs, starts, ends,
+                      s3_log_prefix, s3, bucket_name):
+    s3_prefix = s3_log_prefix + 'statisics/'
     starts['stats'] = datetime.now()
     data_dict = {}
     hist_dict = {}
@@ -93,7 +93,7 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends, basename, s3,
 
     # Produce the histograms
     for (agged, agg_over), data in hist_dict.items():
-        plot_hist(agged, agg_over, data, s3, s3_base, bucket_name)
+        plot_hist(agged, agg_over, data, s3, s3_prefix, bucket_name)
         label = '%s per %s' % (agged, agg_over)
         data_dict[label.capitalize()] = {'mean': data.mean(), 'std': data.std(),
                                          'median': np.median(data)}
@@ -115,7 +115,7 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends, basename, s3,
         else:
             text_report_str += '%s: %d\n' % (label, data)
 
-    s3.put_object(Key=s3_base + 'summary.txt', Body=text_report_str,
+    s3.put_object(Key=s3_prefix + 'summary.txt', Body=text_report_str,
                   Bucket=bucket_name)
     ends['stats'] = datetime.now()
 
@@ -126,7 +126,7 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends, basename, s3,
         timing_str += ('%22s: start: %s, end: %s, duration: %s\n'
                        % (step, starts[step], ends[step], time_taken))
 
-    s3.put_object(Key=s3_base + 'time.txt', Body=timing_str, Bucket=bucket_name)
+    s3.put_object(Key=s3_prefix + 'time.txt', Body=timing_str, Bucket=bucket_name)
     return
 
 
@@ -138,6 +138,10 @@ if __name__ == '__main__':
     parser.add_argument(
         dest='basename',
         help='The name of this run.'
+        )
+    parser.add_argument(
+        dest='job_name',
+        help='The name of this job.'
         )
     parser.add_argument(
         dest='out_dir',
@@ -246,6 +250,9 @@ if __name__ == '__main__':
     else:
         db = None
 
+    s3_log_prefix = ('reading_results/%s/logs/run_db_reading_queue/%s/'
+                     % (args.basename, args.job_name))
+
     # Read everything ========================================
     starts['reading'] = datetime.now()
     outputs = produce_readings(id_dict, readers, verbose=True,
@@ -259,11 +266,7 @@ if __name__ == '__main__':
     contents = os.listdir('.')
     sparser_logs = [fname for fname in contents
                     if fname.startswith('sparser') and fname.endswith('log')]
-    sparser_log_dir = ('reading_results/%s/logs/run_db_reading_queue/'
-                       'sparser_logs_%s/') % (
-                           args.basename,
-                           datetime.now().strftime('%Y%m%d_%H%M%S')
-                           )
+    sparser_log_dir = s3_log_prefix + 'sparser_logs/'
     for fname in sparser_logs:
         s3_key = sparser_log_dir + fname
         logger.info("Saving sparser logs to %s on s3 in %s."
@@ -280,6 +283,6 @@ if __name__ == '__main__':
     else:
         stmt_data = []
 
-    report_statistics(outputs, stmt_data, starts, ends, args.basename, client,
+    report_statistics(outputs, stmt_data, starts, ends, s3_log_prefix, client,
                       bucket_name)
 
