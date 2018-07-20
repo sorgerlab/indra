@@ -3,6 +3,8 @@ for the job either needs to be provided in environment variables (e.g., the
 REACH version and path) or loaded from S3 (e.g., the list of PMIDs).
 """
 from __future__ import absolute_import, print_function, unicode_literals
+
+import pickle
 from builtins import dict, str
 import boto3
 import botocore
@@ -141,6 +143,10 @@ def report_statistics(reading_outputs, stmt_outputs, starts, ends,
             text_report_str += '%s: %d\n' % (label, data)
 
     s3.put_object(Key=s3_prefix + 'summary.txt', Body=text_report_str,
+                  Bucket=bucket_name)
+    s3.put_object(Key=s3_prefix + 'hist_data.pkl', Body=pickle.dumps(hist_dict),
+                  Bucket=bucket_name)
+    s3.put_object(Key=s3_prefix + 'sum_data.pkl', Body=pickle.dumps(data_dict),
                   Bucket=bucket_name)
     ends['stats'] = datetime.now()
 
