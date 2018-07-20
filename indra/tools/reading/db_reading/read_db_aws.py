@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'
-    id_list_key = 'reading_inputs/%s/id_list' % args.basename
+    id_list_key = 'reading_results/%s/id_list' % args.basename
     readers = [reader_class(args.basename, args.num_cores)
                for reader_class in get_readers()
                if reader_class.name.lower() in args.readers]
