@@ -19,73 +19,83 @@ class SparserJSONProcessor(object):
     def get_statements(self):
         mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
         for json_stmt in self.json_stmts:
-            # Step 1: fix JSON directly to eliminate errors when deserializing
-            if json_stmt.get('type') in mod_class_names:
-                position = json_stmt.get('position')
-                residue = json_stmt.get('residue')
-                if isinstance(position, list):
-                    if len(position) != 1:
-                        logger.error('Invalid position: %s' % position)
-                    else:
-                        json_stmt['position'] = position[0]
-                if isinstance(residue, list):
-                    if len(residue) != 1:
-                        logger.error('Invalid residue: %s' % residue)
-                    else:
-                        json_stmt['residue'] = residue[0]
-            elif json_stmt.get('type') in ('Activation', 'Inhibition'):
-                obj_activity = json_stmt.get('obj_activity')
-                if isinstance(obj_activity, list):
-                    if len(obj_activity) != 1:
-                        print('Invalid object activity: %s' % obj_activity)
-                    else:
-                        json_stmt['obj_activity'] = obj_activity[0]
-                obj = json_stmt.get('obj')
-                if isinstance(obj, (list, str)):
-                    continue
-            elif json_stmt.get('type') == 'Translocation':
-                # Fix locations if possible
-                for loc_param in ('from_location', 'to_location'):
-                    loc = json_stmt.get(loc_param)
-                    if loc:
-                        try:
-                            loc = get_valid_location(loc)
-                        except InvalidLocationError:
-                            logger.error('Invalid location: %s' % loc)
-                            loc = None
-                        json_stmt[loc_param] = loc
-                # Skip Translocation with both locations None
-                if (json_stmt.get('from_location') is None
-                   and json_stmt.get('to_location') is None):
-                    continue
-            elif json_stmt.get('type') == 'GeneTranscriptExpress':
-                continue
-
-            # Step 2: Deserialize into INDRA Statement
-            stmt = Statement._from_json(json_stmt)
-
-            # Step 3: Filter out invalid Statements
-            # Skip Statement if all agents are None
-            if not any(stmt.agent_list()):
-                continue
-            # Skip RegulateActivity if object is None
-            if isinstance(stmt, RegulateActivity):
-                if stmt.obj is None or stmt.subj is None:
-                    continue
-            if isinstance(stmt, Modification):
-                if stmt.sub is None:
-                    continue
-            # Skip Complexes with less than 2 members
-            if isinstance(stmt, Complex):
-                if len(stmt.members) < 2:
+            try:
+                # Step 1: fix JSON directly to reduce errors when deserializing
+                if json_stmt.get('type') in mod_class_names:
+                    position = json_stmt.get('position')
+                    residue = json_stmt.get('residue')
+                    if isinstance(position, list):
+                        if len(position) != 1:
+                            logger.error('Invalid position: %s' % position)
+                        else:
+                            json_stmt['position'] = position[0]
+                    if isinstance(residue, list):
+                        if len(residue) != 1:
+                            logger.error('Invalid residue: %s' % residue)
+                        else:
+                            json_stmt['residue'] = residue[0]
+                elif json_stmt.get('type') in ('Activation', 'Inhibition'):
+                    obj_activity = json_stmt.get('obj_activity')
+                    if isinstance(obj_activity, list):
+                        if len(obj_activity) != 1:
+                            print('Invalid object activity: %s' % obj_activity)
+                        else:
+                            json_stmt['obj_activity'] = obj_activity[0]
+                    obj = json_stmt.get('obj')
+                    if isinstance(obj, (list, str)):
+                        continue
+                elif json_stmt.get('type') == 'Translocation':
+                    # Fix locations if possible
+                    for loc_param in ('from_location', 'to_location'):
+                        loc = json_stmt.get(loc_param)
+                        if loc:
+                            try:
+                                loc = get_valid_location(loc)
+                            except InvalidLocationError:
+                                logger.error('Invalid location: %s' % loc)
+                                loc = None
+                            json_stmt[loc_param] = loc
+                    # Skip Translocation with both locations None
+                    if (json_stmt.get('from_location') is None
+                       and json_stmt.get('to_location') is None):
+                        continue
+                elif json_stmt.get('type') == 'GeneTranscriptExpress':
                     continue
 
-            # Step 4: Fix Agent names and grounding
-            for agent in stmt.agent_list():
-                _fix_agent(agent)
+                # Step 2: Deserialize into INDRA Statement
+                stmt = Statement._from_json(json_stmt)
 
-            # Step 5: Append to list of Statements
-            self.statements.append(stmt)
+                # Step 3: Filter out invalid Statements
+                # Skip Statement if all agents are None
+                if not any(stmt.agent_list()):
+                    continue
+                # Skip RegulateActivity if object is None
+                if isinstance(stmt, RegulateActivity):
+                    if stmt.obj is None or stmt.subj is None:
+                        continue
+                if isinstance(stmt, Modification):
+                    if stmt.sub is None:
+                        continue
+                # Skip Complexes with less than 2 members
+                if isinstance(stmt, Complex):
+                    if len(stmt.members) < 2:
+                        continue
+
+                # Step 4: Fix Agent names and grounding
+                for agent in stmt.agent_list():
+                    _fix_agent(agent)
+
+                # Step 5: Append to list of Statements
+                self.statements.append(stmt)
+            except Exception as e:
+                # Keep an eye on these and try to fix them as they come up, but
+                # at least a reading job won't fail because of a couple
+                # glitches. The logs should be processed, and processing errors
+                # should be extracted and reported.
+                logger.error("PROCESSING ERROR: Could not process json:\n%s"
+                             % str(json_stmt))
+                logger.exception(e)
+                logger.error("END PROCESSING ERROR --------")
 
     def set_statements_pmid(self, pmid):
         """Set the evidence PMID of Statements that have been extracted.
