@@ -30,7 +30,7 @@ class SparserJSONProcessor(object):
                         else:
                             json_stmt['position'] = position[0]
                     if isinstance(residue, list):
-                        if len(residue) != 1:
+                        if len(residue) != 1 or not isinstance(residue[0], str):
                             logger.error('Invalid residue: %s' % residue)
                         else:
                             json_stmt['residue'] = residue[0]
