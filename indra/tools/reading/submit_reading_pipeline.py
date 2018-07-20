@@ -213,7 +213,7 @@ def stash_logs(job_defs, success_jobs, failure_jobs, queue_name, method='local',
         s3_client = boto3.client('s3')
 
         def stash_log(log_str, name_base):
-            name = '%s_%s.log' % (name_base, tag)
+            name = '%s/%s.log' % (name_base, tag)
             s3_client.put_object(
                 Bucket=bucket_name,
                 Key='reading_results/%s/logs/%s/%s' % (
