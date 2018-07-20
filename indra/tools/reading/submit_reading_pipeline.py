@@ -424,8 +424,8 @@ class Submitter(object):
             logger.info('Command list: %s' % str(command_list))
             job_info = batch_client.submit_job(
                 jobName=job_name,
-                jobQueue=self._job_def,
-                jobDefinition=self._job_queue,
+                jobQueue=self._job_queue,
+                jobDefinition=self._job_def,
                 containerOverrides={
                     'environment': environment_vars,
                     'command': command_list},
