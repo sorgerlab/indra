@@ -136,13 +136,20 @@ def get_reading_stats(log_str):
     ret_dict = {}
     ret_dict['num_prex_readings'] = \
         re_get_nums('Found (\d+) pre-existing readings', 0)[0]
-    ret_dict['num_new_readings'] = re_get_nums('Made (\d+) new readings')[0]
+    try:
+        ret_dict['num_new_readings'] = re_get_nums('Made (\d+) new readings')[0]
+    except:
+        ret_dict['num_new_readings'] = None
     ret_dict['num_succeeded'] = \
         re_get_nums('Adding (\d+)/\d+ reading entries')[0]
     ret_dict['num_stmts'], ret_dict['num_readings'] = \
         re_get_nums('Found (\d+) statements from (\d+) readings')
     ret_dict['num_agents'] = \
-        re_get_nums('Received request to copy (\d+) entries into agents')[0]
+        re_get_nums('Received request to copy (\d+) entries '
+                    'into .{3,4}agents')[0]
+    ret_dict['num_statements'] = \
+        re_get_nums('Received request to copy (\d+) entries into '
+                    '.{3,4}statements')[0]
     return ret_dict
 
 
