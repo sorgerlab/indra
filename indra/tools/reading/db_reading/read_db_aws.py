@@ -24,7 +24,7 @@ from indra.tools.reading.readers import get_readers
 
 def plot_hist(agged, agg_over, data, s3, s3_base, bucket_name):
     fig = plt.figure()
-    plt.hist(data)
+    plt.hist(data, bins=np.arange(len(data)))
     plt.xlabel('Number of %s for %s' % (agged, agg_over))
     plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
     fname = '%s_per_%s.png' % (agged, agg_over)
