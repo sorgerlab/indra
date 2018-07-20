@@ -75,11 +75,12 @@ if __name__ == '__main__':
     client = boto3.client('s3')
     bucket_name = 'bigmech'
     pmid_list_key = 'reading_results/%s/pmids' % args.basename
-    path_to_reach = get_config('REACHPATH')
-    reach_version = get_config('REACH_VERSION')
-    if path_to_reach is None or reach_version is None:
-        print('REACHPATH and/or REACH_VERSION not defined, exiting.')
-        sys.exit(1)
+    if 'reach' in [rdr.lower() for rdr in args.readers]:
+        path_to_reach = get_config('REACHPATH')
+        reach_version = get_config('REACH_VERSION')
+        if path_to_reach is None or reach_version is None:
+            print('REACHPATH and/or REACH_VERSION not defined, exiting.')
+            sys.exit(1)
 
     try:
         pmid_list_obj = client.get_object(
