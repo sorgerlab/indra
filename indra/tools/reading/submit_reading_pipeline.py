@@ -377,8 +377,12 @@ class Submitter(object):
 
     def _make_command(self, start_ix, end_ix):
         job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
-        cmd = self._get_base(job_name, start_ix, end_ix) + ['-r', self.readers]
+        cmd = self._get_base(job_name, start_ix, end_ix) + ['-r'] + self.readers
         cmd += self._get_extensions()
+        for arg in cmd:
+            if not isinstance(arg, str):
+                logger.warning("Argument of command is not a string: %s"
+                               % repr(arg))
         return job_name, cmd
 
     def _get_base(self, job_name, start_ix, end_ix):
@@ -390,8 +394,8 @@ class Submitter(object):
     def submit_reading(self, input_fname, start_ix, end_ix, ids_per_job,
                        num_tries=2):
         # Upload the pmid_list to Amazon S3
-        pmid_list_key = 'reading_inputs/%s/%s' % (self.basename,
-                                                  self._s3_input_name)
+        pmid_list_key = 'reading_results/%s/%s' % (self.basename,
+                                                   self._s3_input_name)
         s3_client = boto3.client('s3')
         s3_client.upload_file(input_fname, bucket_name, pmid_list_key)
 
@@ -453,7 +457,7 @@ class PmidSubmitter(Submitter):
 
     def _get_base(self, job_name, start_ix, end_ix):
         base = ['python', '-m', 'indra.tools.reading.pmid_reading.read_pmids_aws',
-                self.basename, '/tmp', '16', str(start_ix), str(end_ix), '-r']
+                self.basename, '/tmp', '16', str(start_ix), str(end_ix)]
         return base
 
     def _get_extensions(self):
@@ -544,7 +548,7 @@ class DbReadingSubmitter(Submitter):
         base = ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
                 self.basename]
         base += [job_name]
-        base += ['/tmp', read_mode, stmt_mode, '32']
+        base += ['/tmp', read_mode, stmt_mode, '32', str(start_ix), str(end_ix)]
         return base
 
     def _get_extensions(self):
@@ -559,6 +563,7 @@ class DbReadingSubmitter(Submitter):
             extensions += ['--max_reach_input_len', max_reach_input_len]
         if max_reach_space_ratio is not None:
             extensions += ['--max_reach_space_ratio', max_reach_space_ratio]
+        return extensions
 
     def set_options(self, force_read=False, no_stmts=False,
                     force_fulltext=False, prioritize=False,
