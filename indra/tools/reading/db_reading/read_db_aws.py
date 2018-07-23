@@ -52,7 +52,8 @@ class StatReporter(Reporter):
         self.summary_dict['Total readings'] = len(reading_outputs)
         reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
                          for rd in reading_outputs]
-        self.summary_dict['Content processed'] = len({t[1] for t in reading_stmts})
+        self.summary_dict['Content processed'] = \
+            len({t[1] for t in reading_stmts})
         self.summary_dict['Statements produced'] = len(stmt_outputs)
 
         readings_with_stmts = []
@@ -63,8 +64,42 @@ class StatReporter(Reporter):
             else:
                 readings_with_no_stmts.append(t)
 
-        self.summary_dict['Readings with 0 statements'] = len(readings_with_no_stmts)
+        self.summary_dict['Readings with 0 statements'] = \
+            len(readings_with_no_stmts)
 
+        self.populate_hist_data(readings_with_stmts, readings_with_no_stmts)
+        self.make_histograms()
+        self.make_text_summary()
+        ends['stats'] = datetime.now()
+
+        self.make_timing_report(starts, ends)
+        self.stash_data()
+        return
+
+    def make_timing_report(self, starts, ends):
+        # Report on the timing
+        timing_str = ''
+        for step in ['reading', 'statement production', 'stats']:
+            time_taken = ends[step] - starts[step]
+            timing_str += ('%22s: start: %s, end: %s, duration: %s\n'
+                           % (step, starts[step], ends[step], time_taken))
+
+        self.s3.put_object(Key=self.s3_prefix + 'timing.txt', Body=timing_str,
+                           Bucket=self.bucket_name)
+        return
+
+    def stash_data(self):
+        """Store the data in pickle files. This should be done last."""
+        self.s3.put_object(Key=self.s3_prefix + 'hist_data.pkl',
+                           Body=pickle.dumps(self.hist_dict),
+                           Bucket=self.bucket_name)
+        self.s3.put_object(Key=self.s3_prefix + 'sum_data.pkl',
+                           Bucket=self.bucket_name,
+                           Body=pickle.dumps(self.summary_dict))
+        return
+
+
+    def populate_hist_data(self, readings_with_stmts, readings_with_no_stmts):
         # Do a bunch of aggregation
         tc_rd_dict = {}
         tc_stmt_dict = {}
@@ -125,16 +160,19 @@ class StatReporter(Reporter):
             np.array([len(tcid_set) for tcid_set in reader_tcids.values()])
         self.hist_dict[('readings', 'reader')] = \
             np.array([len(rid_set) for rid_set in reader_rids.values()])
+        return
 
+    def make_histograms(self):
         # Produce the histograms
         for (agged, agg_over), data in self.hist_dict.items():
             self._plot_hist(agged, agg_over, data)
             label = '%s per %s' % (agged, agg_over)
             self.summary_dict[label.capitalize()] = {'mean': data.mean(),
-                                             'std': data.std(),
-                                             'median': np.median(data)}
+                                                     'std': data.std(),
+                                                     'median': np.median(data)}
+        return
 
-        # Produce the summary report
+    def make_text_summary(self):
         text_report_str = ''
         top_labels = ['Total readings', 'Content processed',
                       'Statements produced']
@@ -151,24 +189,8 @@ class StatReporter(Reporter):
                 text_report_str += '\n'
             else:
                 text_report_str += '%s: %d\n' % (label, data)
-
         self.s3.put_object(Key=self.s3_prefix + 'summary.txt',
-                           Body=text_report_str, Bucket=bucket_name)
-        self.s3.put_object(Key=self.s3_prefix + 'hist_data.pkl',
-                           Body=pickle.dumps(self.hist_dict), Bucket=bucket_name)
-        self.s3.put_object(Key=self.s3_prefix + 'sum_data.pkl',
-                           Body=pickle.dumps(self.summary_dict), Bucket=bucket_name)
-        ends['stats'] = datetime.now()
-
-        # Report on the timing
-        timing_str = ''
-        for step in ['reading', 'statement production', 'stats']:
-            time_taken = ends[step] - starts[step]
-            timing_str += ('%22s: start: %s, end: %s, duration: %s\n'
-                           % (step, starts[step], ends[step], time_taken))
-
-        self.s3.put_object(Key=self.s3_prefix + 'time.txt', Body=timing_str,
-                           Bucket=bucket_name)
+                           Body=text_report_str, Bucket=self.bucket_name)
         return
 
 
