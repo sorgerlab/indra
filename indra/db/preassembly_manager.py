@@ -224,7 +224,7 @@ class PreassemblyManager(object):
             h = shash(s)
 
             # If this statement is new, make it.
-            if h not in (mk_done | new_mk_set):
+            if h not in mk_done and h not in new_mk_set:
                 new_unique_stmts.append(s.make_generic_copy())
                 new_mk_set.add(h)
 
