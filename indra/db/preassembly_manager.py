@@ -477,7 +477,7 @@ class PreassemblyManager(object):
         self._log("Map grounding...")
         stmts = ac.map_grounding(stmts)
         self._log("Map sequences...")
-        stmts = ac.map_sequence(stmts)
+        stmts = ac.map_sequence(stmts, use_cache=True)
         return stmts
 
     @_clockit
