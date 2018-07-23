@@ -139,6 +139,11 @@ def map_sequence(stmts_in, **kwargs):
         in other human isoforms of the protein (based on PhosphoSitePlus
         data). If a site is found that is linked to a site in the human
         reference sequence, a mapping is created. Default is True.
+    use_cache : boolean
+        If True, a cache will be created/used from the laction specified by
+        SITEMAPPER_CACHE_PATH, defined in your Indra config or the environment.
+        If false, no cache is used. For more details on the cache, see the
+        SiteMapper class definition.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -150,7 +155,7 @@ def map_sequence(stmts_in, **kwargs):
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
     kwarg_list = ['do_methionine_offset', 'do_orthology_mapping',
                   'do_isoform_mapping']
-    sm = SiteMapper(default_site_map)
+    sm = SiteMapper(default_site_map, use_cache=kwargs.pop('use_cache', False))
     valid, mapped = sm.map_sites(stmts_in, **_filter(kwargs, kwarg_list))
     correctly_mapped_stmts = []
     for ms in mapped:
@@ -161,6 +166,7 @@ def map_sequence(stmts_in, **kwargs):
     dump_pkl = kwargs.get('save')
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
+    del sm
     return stmts_out
 
 def run_preassembly(stmts_in, **kwargs):

@@ -153,6 +153,7 @@ Some validation tools include:
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+
 import os
 import abc
 import sys
@@ -160,8 +161,10 @@ import uuid
 import rdflib
 import logging
 import itertools
+from hashlib import md5
 from copy import deepcopy
 from collections import OrderedDict as _o
+
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
@@ -1084,9 +1087,15 @@ class Statement(object):
         self.supported_by = supported_by if supported_by else []
         self.belief = 1
         self.uuid = '%s' % uuid.uuid4()
-        self.hash = None
-        self.shallow_hash = None
+        self._full_hash = None
+        self._shallow_hash = None
         return
+
+    def _make_hash(self, matches_key, n_bytes):
+        """Make the has from a matches key."""
+        raw_h = int(md5(matches_key.encode('utf-8')).hexdigest()[:n_bytes], 16)
+        # Make it a signed int.
+        return 16**n_bytes//2 - raw_h
 
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
@@ -1094,21 +1103,52 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
-    def get_hash(self, refresh=False, shallow=False):
-        def clean(rep):
-            return (rep.replace('\\', '').replace('class', '')
-                    .replace('indra.statements.', '').replace('None', '~')
-                    .replace('\'', '').replace('\"', '').replace(' ', ''))
-        if not shallow:
-            if self.hash is None or refresh:
-                ev_matches_key_list = sorted([ev.matches_key() for ev in self.evidence])
-                self.hash = hash(clean(self.matches_key()
-                                       + str(ev_matches_key_list)))
-            ret = self.hash
+    def get_hash(self, shallow=False, refresh=False):
+        """Get a hash for this Statement.
+
+        There are two types of hash, "shallow" and "full". A shallow hash is
+        as unique as the information carried by the statement, i.e. it is a hash
+        of the `matches_key`. This means that differences in source, evidence,
+        and so on are not included. As such, it is a shorter hash (14 nibbles).
+        The odds of a collision among all the statements we expect to encounter
+        (well under 10^8) is ~10^-9 (1 in a billion). Checks for collisions can
+        be done by using the matches keys.
+
+        A full hash includes, in addition to the matches key, information from
+        the evidence of the statement. These hashes will be equal if the two
+        Statements came from the same sentences, extracted by the same reader,
+        from the same source. These hashes are correspondingly longer (16
+        nibbles). The odds of a collision for an expected less than 10^10
+        extractions is ~10^-9 (1 in a billion).
+
+        Note that a hash of the Python object will also include the `uuid`, so
+        it will always be unique for every object.
+
+        Parameters
+        ----------
+        shallow : bool
+            Choose between the shallow and full hashes described above. Default
+            is false (e.g. a deep hash).
+        refresh : bool
+            Used to get a new copy of the hash. Default is false, so the hash,
+            if it has been already created, will be read from the attribute.
+            This is primarily used for speed testing.
+
+        Returns
+        -------
+        hash : int
+            A long integer hash.
+        """
+        if shallow:
+            if self._shallow_hash is None or refresh:
+                self._shallow_hash = self._make_hash(self.matches_key(), 14)
+            ret = self._shallow_hash
         else:
-            if self.shallow_hash is None or refresh:
-                self.shallow_hash = hash(clean(self.matches_key()))
-            ret = self.shallow_hash
+            if self._full_hash is None or refresh:
+                ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
+                self._full_hash =\
+                    self._make_hash(self.matches_key() + str(ev_mk_list), 16)
+            ret = self._full_hash
         return ret
 
     def agent_list_with_bound_condition_agents(self):
@@ -1284,12 +1324,12 @@ class Statement(object):
         for attr in ['evidence', 'belief', 'uuid', 'supports', 'supported_by',
                      'is_activation']:
             kwargs.pop(attr, None)
-        for attr in ['hash', 'shallow_hash']:
+        for attr in ['_full_hash', '_shallow_hash']:
             my_hash = kwargs.pop(attr, None)
             my_shallow_hash = kwargs.pop(attr, None)
         new_instance = self.__class__(**kwargs)
-        new_instance.hash = my_hash
-        new_instance.shallow_hash = my_shallow_hash
+        new_instance._full_hash = my_hash
+        new_instance._shallow_hash = my_shallow_hash
         return new_instance
 
 
@@ -2944,17 +2984,23 @@ class Unresolved(Statement):
     representation of an indra statement. When this happens, this class is used
     as a place-holder, carrying only the uuid of the statement.
     """
-    def __init__(self, uuid_str=None, shallow_hash=None, mk_hash=None):
+    def __init__(self, uuid_str=None, shallow_hash=None, full_hash=None):
         super(Unresolved, self).__init__()
         self.uuid = uuid_str
-        self.shallow_hash = shallow_hash
-        self.hash = mk_hash
+        self._shallow_hash = shallow_hash
+        self._full_hash = full_hash
+        assert self.uuid or self._shallow_hash or self._full_hash,\
+            "Some identifying information must be given."
 
     def __str__(self):
         if self.uuid:
-            return "%s(%s)" % (type(self).__name__, self.uuid)
-        elif self.shallow_hash:
-            return "%s(%s)" % (type(self).__name__, self.shallow_hash)
+            return "%s(uuid=%s)" % (type(self).__name__, self.uuid)
+        elif self._shallow_hash:
+            return "%s(shallow_hash=%s)" % (type(self).__name__,
+                                            self._shallow_hash)
+        else:
+            return "%s(full_hash=%s)" % (type(self).__name__,
+                                         self._full_hash)
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):

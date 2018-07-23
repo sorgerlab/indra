@@ -23,6 +23,7 @@ pa_logger.setLevel(logging.WARNING)
 from indra.db import util as db_util
 from indra.db import client as db_client
 from indra.db import preassembly_manager as pm
+from indra.db.preassembly_manager import shash
 from indra.statements import Statement
 from indra.tools import assemble_corpus as ac
 
@@ -192,7 +193,7 @@ def __make_test_statements(a, b, source_api, ev_num=None, copies=1):
 
 class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
     """This object is used to setup the test database into various configs."""
-    def add_statements(self, fraction=1, with_pa=False):
+    def add_statements(self, fraction=1, pam=None):
         """Add statements and agents to the database.
 
         Parameters
@@ -205,38 +206,33 @@ class _DatabaseTestSetup(_PrePaDatabaseTestSetup):
         """
         available_tuples = self.get_available_stmt_tuples()
         if fraction is not 1:
-            num_stmts = fraction*len(available_tuples)
+            num_stmts = int(fraction*len(available_tuples))
             input_tuples = random.sample(available_tuples, num_stmts)
         else:
             input_tuples = available_tuples
 
         self.insert_the_statements(input_tuples)
 
-        if with_pa:
+        if pam:
             print("Preassembling new statements...")
-            if len(input_tuples) > 100:
-                batch_size = len(input_tuples)//10
-                pam = pm.PreassemblyManager(1, batch_size)
-            else:
-                pam = pm.PreassemblyManager()
-
             if self.used_stmt_tuples:
                 pam.supplement_corpus(self.test_db)
             else:
                 pam.create_corpus(self.test_db)
 
+        self.used_stmt_tuples |= set(input_tuples)
         return
 
 
-def _get_loaded_db(num_stmts, split=None, with_init_corpus=False):
+def _get_loaded_db(num_stmts, split=None, pam=None):
     print("Creating and filling a test database:")
     dts = _DatabaseTestSetup(num_stmts)
     dts.load_background()
 
     if split is None:
-        dts.add_statements(with_pa=with_init_corpus)
+        dts.add_statements(pam=pam)
     else:
-        dts.add_statements(split, with_pa=with_init_corpus)
+        dts.add_statements(split, pam=pam)
         dts.add_statements()
     return dts.test_db
 
@@ -258,6 +254,18 @@ def _do_old_fashioned_preassembly(stmts):
     return opa_stmts
 
 
+def _get_opa_input_stmts(db):
+    stmt_nd = db_util._get_reading_statement_dict(db, get_full_stmts=True)
+    reading_stmts, _, _ =\
+        db_util._get_filtered_rdg_statements(stmt_nd, get_full_stmts=True,
+                                             ignore_duplicates=True)
+    db_stmts = db_client.get_statements([db.RawStatements.reading_id == None],
+                                        preassembled=False, db=db)
+    stmts = reading_stmts | set(db_stmts)
+    print("Got %d statements for opa." % len(stmts))
+    return stmts
+
+
 def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
     def _compare_list_elements(label, list_func, comp_func, **stmts):
         (stmt_1_name, stmt_1), (stmt_2_name, stmt_2) = list(stmts.items())
@@ -271,16 +279,16 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
                 vals_2.append(val)
         if len(vals_1) or len(vals_2):
             print("Found mismatched %s for hash %s:\n\t%s=%s\n\t%s=%s"
-                  % (label, stmt_1.get_hash(shallow=True), stmt_1_name, vals_1,
-                     stmt_2_name, vals_2))
+                  % (label, shash(stmt_1), stmt_1_name, vals_1, stmt_2_name,
+                     vals_2))
             return {'diffs': {stmt_1_name: vals_1, stmt_2_name: vals_2},
                     'stmts': {stmt_1_name: stmt_1, stmt_2_name: stmt_2}}
         return None
 
     opa_stmts = _do_old_fashioned_preassembly(raw_stmts)
 
-    old_stmt_dict = {s.get_hash(shallow=True): s for s in opa_stmts}
-    new_stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmts}
+    old_stmt_dict = {shash(s): s for s in opa_stmts}
+    new_stmt_dict = {shash(s): s for s in pa_stmts}
 
     new_hash_set = set(new_stmt_dict.keys())
     old_hash_set = set(old_stmt_dict.keys())
@@ -295,19 +303,20 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
         elaborate_on_hash_diffs(db, 'old', hash_diffs['extra_old'],
                                 new_stmt_dict.keys())
     print(hash_diffs)
-    tests = [{'funcs': {'list': lambda s: s.evidence,
+    tests = [{'funcs': {'list': lambda s: s.evidence[:],
                         'comp': lambda ev: ev.matches_key()},
               'label': 'evidence text',
               'results': []},
-             {'funcs': {'list': lambda s: s.supports,
-                        'comp': lambda s: s.get_hash(shallow=True)},
+             {'funcs': {'list': lambda s: s.supports[:],
+                        'comp': lambda s: shash(s)},
               'label': 'supports matches keys',
               'results': []},
-             {'funcs': {'list': lambda s: s.supported_by,
-                        'comp': lambda s: s.get_hash(shallow=True)},
+             {'funcs': {'list': lambda s: s.supported_by[:],
+                        'comp': lambda s: shash(s)},
               'label': 'supported-by matches keys',
               'results': []}]
-    for mk_hash in (new_hash_set & old_hash_set):
+    comp_hashes = new_hash_set & old_hash_set
+    for mk_hash in comp_hashes:
         for test_dict in tests:
             res = _compare_list_elements(test_dict['label'],
                                          test_dict['funcs']['list'],
@@ -317,14 +326,25 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
             if res is not None:
                 test_dict['results'].append(res)
 
+    def all_tests_passed():
+        test_results = [not any(hash_diffs.values())]
+        for td in tests:
+            test_results.append(len(td['results']) == 0)
+        print("%d/%d tests passed." % (sum(test_results), len(test_results)))
+        return all(test_results)
+
+    def write_report(num_comps):
+        ret_str = "Some tests failed:\n"
+        ret_str += ('Found %d/%d extra old stmts and %d/%d extra new stmts.\n'
+                    % (len(hash_diffs['extra_old']), len(old_hash_set),
+                       len(hash_diffs['extra_new']), len(new_hash_set)))
+        for td in tests:
+            ret_str += ('Found %d/%d mismatches in %s.\n'
+                        % (len(td['results']), num_comps, td['label']))
+        return ret_str
+
     # Now evaluate the results for exceptions
-    assert all([len(mismatch_res) is 0
-                for mismatch_res in [test_dict['results']
-                                     for test_dict in tests]]),\
-        ('\n'.join(['Found %d mismatches in %s.' % (len(td['results']),
-                                                    td['label'])
-                    for td in tests]))
-    assert not any(hash_diffs.values()), "Found mismatched hashes."
+    assert all_tests_passed(), write_report(len(comp_hashes))
 
 
 def str_imp(o, uuid=None, other_stmt_keys=None):
@@ -343,8 +363,9 @@ def str_imp(o, uuid=None, other_stmt_keys=None):
     if cname == 'RawStatements':
         s = Statement._from_json(json.loads(o.json.decode()))
         s_str = ('<RawStmt: %s sid: %s, uuid: %s, type: %s, iv: %s, hash: %s>'
-                 % (str(s), o.id, o.uuid, o.type, o.indra_version, o.mk_hash))
-        if other_stmt_keys and s.get_hash(shallow=True) in other_stmt_keys:
+                 % (str(s), o.id, o.uuid[:8] + '...', o.type,
+                    o.indra_version[:14] + '...', o.mk_hash))
+        if other_stmt_keys and shash(s) in other_stmt_keys:
             s_str = '+' + s_str
         if s.uuid == uuid:
             s_str = '*' + s_str
@@ -360,10 +381,10 @@ def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
         uuid = s.uuid
         print('-'*100)
         print('uuid: %s\nhash: %s\nshallow hash: %s'
-              % (s.uuid, s.get_hash(), s.get_hash(shallow=True)))
+              % (s.uuid, s.get_hash(), shash(s)))
         print('-'*100)
         db_pas = db.select_one(db.PAStatements,
-                               db.PAStatements.mk_hash == s.get_hash(shallow=True))
+                               db.PAStatements.mk_hash == shash(s))
         print('\tPA statement:', db_pas.__dict__ if db_pas else '~')
         print('-'*100)
         db_s = db.select_one(db.RawStatements, db.RawStatements.uuid == s.uuid)
@@ -371,35 +392,26 @@ def elaborate_on_hash_diffs(db, lbl, stmt_list, other_stmt_keys):
         if db_s is None:
             continue
         print('-'*100)
+        if db_s.reading_id is None:
+            print("Statement was from a database: %s" % db_s.db_info_id)
+            continue
         db_r = db.select_one(db.Reading, db.Reading.id == db_s.reading_id)
         print('\tReading:', str_imp(db_r))
-        print('\tOther Raw Statements:')
-        for s in db.select_all(db.RawStatements,
-                               db.RawStatements.reading_id == db_r.id):
-            print('\t\t', str_imp(s, uuid, other_stmt_keys))
-        print('-'*100)
         tc = db.select_one(db.TextContent,
                            db.TextContent.id == db_r.text_content_id)
         print('\tText Content:', str_imp(tc))
-        print('\tOther Readings:')
-        for r in db.select_all(db.Reading, db.Reading.text_content_id == tc.id):
-            print('\t\t', str_imp(r))
-            for s in db.select_all(db.RawStatements,
-                                   db.RawStatements.reading_id == r.id):
-                print('\t\t\t', str_imp(s, uuid, other_stmt_keys))
-        print('-'*100)
         tr = db.select_one(db.TextRef, db.TextRef.id == tc.text_ref_id)
         print('\tText ref:', str_imp(tr))
-        print('\tOther Content:')
+        print('-'*100)
         for tc in db.select_all(db.TextContent,
                                 db.TextContent.text_ref_id == tr.id):
-            print('\t\t ', str_imp(tc))
+            print('\t', str_imp(tc))
             for r in db.select_all(db.Reading,
                                    db.Reading.text_content_id == tc.id):
-                print('\t\t\t', str_imp(r))
+                print('\t\t', str_imp(r))
                 for s in db.select_all(db.RawStatements,
                                        db.RawStatements.reading_id == r.id):
-                    print('\t\t\t\t', str_imp(s, uuid, other_stmt_keys))
+                    print('\t\t\t', str_imp(s, uuid, other_stmt_keys))
         print('='*100)
 
 
@@ -426,8 +438,12 @@ def _check_statement_distillation(num_stmts):
 
 
 @needs_py3
-def _check_preassembly_with_database(num_stmts, batch_size):
+def _check_preassembly_with_database(num_stmts, batch_size, n_proc=1):
     db = _get_loaded_db(num_stmts)
+
+    # Now test the set of preassembled (pa) statements from the database against
+    # what we get from old-fashioned preassembly (opa).
+    opa_inp_stmts = _get_opa_input_stmts(db)
 
     # Get the set of raw statements.
     raw_stmt_list = db.select_all(db.RawStatements)
@@ -436,12 +452,17 @@ def _check_preassembly_with_database(num_stmts, batch_size):
 
     # Run the preassembly initialization.
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=batch_size)
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc,
+                                       print_logs=True)
     pa_manager.create_corpus(db)
     end = datetime.now()
     print("Duration:", end-start)
+
+    # Make sure the number of pa statements is within reasonable bounds.
     pa_stmt_list = db.select_all(db.PAStatements)
     assert 0 < len(pa_stmt_list) < len(raw_stmt_list)
+
+    # Check the evidence links.
     raw_unique_link_list = db.select_all(db.RawUniqueLinks)
     assert len(raw_unique_link_list)
     all_link_ids = {ru.raw_stmt_id for ru in raw_unique_link_list}
@@ -449,8 +470,13 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     assert len(all_link_ids - all_raw_ids) is 0
     assert all([pa_stmt.mk_hash in all_link_mk_hashes
                 for pa_stmt in pa_stmt_list])
-    num_support_links = db.filter_query(db.PASupportLinks).count()
-    assert num_support_links
+
+    # Check the support links.
+    sup_links = db.select_all([db.PASupportLinks.supporting_mk_hash,
+                               db.PASupportLinks.supported_mk_hash])
+    assert sup_links
+    assert not any([l[0] == l[1] for l in sup_links]),\
+        "Found self-support in the database."
 
     # Try to get all the preassembled statements from the table.
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
@@ -458,26 +484,33 @@ def _check_preassembly_with_database(num_stmts, batch_size):
     assert len(pa_stmts) == len(pa_stmt_list), (len(pa_stmts),
                                                 len(pa_stmt_list))
 
-    # Now test the set of preassembled (pa) statements from the database against
-    # what we get from old-fashioned preassembly (opa).
-    raw_stmts = db_client.get_statements([], preassembled=False, db=db)
-    _check_against_opa_stmts(db, raw_stmts, pa_stmts)
+    self_supports = {
+        shash(s): shash(s) in {shash(s_) for s_ in s.supported_by + s.supports}
+        for s in pa_stmts
+        }
+    if any(self_supports.values()):
+        assert False, "Found self-support in constructed pa statement objects."
+
+    _check_against_opa_stmts(db, opa_inp_stmts, pa_stmts)
+    return
 
 
 @needs_py3
-def _check_db_pa_supplement(num_stmts, batch_size, split=0.8):
-    db = _get_loaded_db(num_stmts, split=split, with_init_corpus=True)
+def _check_db_pa_supplement(num_stmts, batch_size, split=0.8, n_proc=1):
+    pa_manager = pm.PreassemblyManager(batch_size=batch_size, n_proc=n_proc,
+                                       print_logs=True)
+    db = _get_loaded_db(num_stmts, split=split, pam=pa_manager)
+    opa_inp_stmts = _get_opa_input_stmts(db)
     start = datetime.now()
-    pa_manager = pm.PreassemblyManager(batch_size=batch_size)
     print("Beginning supplement...")
     pa_manager.supplement_corpus(db)
     end = datetime.now()
     print("Duration of incremental update:", end-start)
 
-    raw_stmts = db_client.get_statements([], preassembled=False, db=db)
     pa_stmts = db_client.get_statements([], preassembled=True, db=db,
                                         with_support=True)
-    _check_against_opa_stmts(db, raw_stmts, pa_stmts)
+    _check_against_opa_stmts(db, opa_inp_stmts, pa_stmts)
+    return
 
 
 # ==============================================================================
@@ -553,4 +586,9 @@ def test_db_incremental_preassembly_large():
 
 @attr('nonpublic', 'slow')
 def test_db_incremental_preassembly_very_large():
-    _check_db_pa_supplement(100000, 20000)
+    _check_db_pa_supplement(100000, 20000, n_proc=2)
+
+
+@attr('nonpublic', 'slow')
+def test_db_incremental_preassembly_1M():
+    _check_db_pa_supplement(1000000, 200000, n_proc=6)

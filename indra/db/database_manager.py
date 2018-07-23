@@ -277,7 +277,7 @@ class DatabaseManager(object):
         class RawStatements(self.Base):
             __tablename__ = 'raw_statements'
             id = Column(Integer, primary_key=True)
-            uuid = Column(String(40))
+            uuid = Column(String(40), unique=True, nullable=False)
             mk_hash = Column(BigInteger, nullable=False)
             db_info_id = Column(Integer, ForeignKey('db_info.id'))
             db_info = relationship(DBInfo)
@@ -324,6 +324,7 @@ class DatabaseManager(object):
         class PAStatements(self.Base):
             __tablename__ = 'pa_statements'
             mk_hash = Column(BigInteger, primary_key=True)
+            matches_key = Column(String, unique=True, nullable=False)
             uuid = Column(String(40), unique=True, nullable=False)
             type = Column(String(100), nullable=False)
             indra_version = Column(String(100), nullable=False)

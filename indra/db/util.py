@@ -29,6 +29,22 @@ logger = logging.getLogger('db_util')
 __PRIMARY_DB = None
 
 
+def _clockit(func):
+    @wraps(func)
+    def timed_func(*args, **kwargs):
+        start = datetime.now()
+        ret = func(*args, **kwargs)
+        end = datetime.now()
+        # print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
+        #       % ('~'*5, func.__name__, end-start, '~'*5))
+        print('%s %-30s %s %s' % ('~'*5, func.__name__, end-start, '~'*5))
+        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
+        #with open(fname, 'a') as f:
+        #    f.write('%s: %s\n' % (start, end-start))
+        return ret
+    return timed_func
+
+
 def get_primary_db(force_new=False):
     """Get a DatabaseManager instance for the primary database host.
 
@@ -121,6 +137,7 @@ def get_db(db_label):
     return DatabaseManager(db_name, sqltype=sqltype, label=db_label)
 
 
+@_clockit
 def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     """Get a generator for db orm statement objects which do not have agents."""
     num_per_yield = kwargs.pop('num_per_yield', 100)
@@ -159,11 +176,15 @@ def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     return stmts_wo_agents_q.yield_per(num_per_yield), num_stmts
 
 
+@_clockit
 def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     """Insert agents for statements that don't have any agents.
 
     Note: This method currently works for both Statements and PAStatements and
-    their corresponding agents (Agents and PAAgents).
+    their corresponding agents (Agents and PAAgents). However, if you already
+    have preassembled INDRA Statement objects that you know don't have agents in
+    the database, you can use `insert_pa_agents_directly` to insert the agents
+    much faster.
 
     Parameters
     ----------
@@ -214,35 +235,12 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
         # Convert the database statement entry object into an indra statement.
         stmt = stmts_from_json([json.loads(db_stmt.json.decode())])[0]
 
-        # Figure out how the agents are structured and assign roles.
-        ag_list = stmt.agent_list()
-        nary_stmt_types = [Complex, SelfModification, ActiveForm, Conversion,
-                           Translocation]
-        if any([isinstance(stmt, tp) for tp in nary_stmt_types]):
-            agents = {('OTHER', ag) for ag in ag_list}
-        elif len(ag_list) == 2:
-            agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
-        else:
-            raise IndraDatabaseError("Unhandled agent structure for stmt %s "
-                                     "with agents: %s."
-                                     % (str(stmt), str(stmt.agent_list())))
+        if prefix == 'pa':
+            stmt_id = db_stmt.mk_hash
+        else:  # prefix == 'raw'
+            stmt_id = db_stmt.id
 
-        # Prep the agents for copy into the database.
-        for role, ag in agents:
-            # If no agent, or no db_refs for the agent, skip the insert
-            # that follows.
-            if ag is None or ag.db_refs is None:
-                continue
-            for ns, ag_id in ag.db_refs.items():
-                if prefix == 'pa':
-                    stmt_id = db_stmt.mk_hash
-                else:  # prefix == 'raw'
-                    stmt_id = db_stmt.id
-                if isinstance(ag_id, list):
-                    for sub_id in ag_id:
-                        agent_data.append((stmt_id, ns, sub_id, role))
-                else:
-                    agent_data.append((stmt_id, ns, ag_id, role))
+        agent_data.extend(_get_agent_tuples(stmt, stmt_id))
 
         # Optionally print another tick on the progress bar.
         if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
@@ -257,6 +255,78 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
         cols = ('stmt_id', 'db_name', 'db_id', 'role')
     db.copy(agent_tbl_obj.__tablename__, agent_data, cols)
     return
+
+
+@_clockit
+def insert_pa_agents_directly(db, stmts, verbose=False):
+    """Insert agents for preasembled statements.
+
+    Unlike raw statements, preassembled statements are indexed by a hash,
+    allowing for bulk import without a lookup beforehand, and allowing for a
+    much simpler API.
+
+    Parameters
+    ----------
+    db : :py:class:`DatabaseManager`
+        The manager for the database into which you are adding agents.
+    stmts : list[:py:class:`Statement`]
+        A list of statements for which statements should be inserted.
+    verbose : bool
+        If True, print extra information and a status bar while compiling
+        agents for insert from statements. Default False.
+    """
+    if verbose:
+        num_stmts = len(stmts)
+
+    # Construct the agent records
+    logger.info("Building agent data for insert...")
+    if verbose:
+        print("Loading:", end='', flush=True)
+    agent_data = []
+    for i, stmt in enumerate(stmts):
+        agent_data.extend(_get_agent_tuples(stmt, stmt.get_hash(shallow=True)))
+
+        # Optionally print another tick on the progress bar.
+        if verbose and num_stmts > 25 and i % (num_stmts//25) == 0:
+            print('|', end='', flush=True)
+
+    if verbose and num_stmts > 25:
+        print()
+
+    cols = ('stmt_mk_hash', 'db_name', 'db_id', 'role')
+    db.copy('pa_agents', agent_data, cols)
+    return
+
+
+def _get_agent_tuples(stmt, stmt_id):
+    """Create the tuples for copying agents into the database."""
+    # Figure out how the agents are structured and assign roles.
+    ag_list = stmt.agent_list()
+    nary_stmt_types = [Complex, SelfModification, ActiveForm, Conversion,
+                       Translocation]
+    if any([isinstance(stmt, tp) for tp in nary_stmt_types]):
+        agents = {('OTHER', ag) for ag in ag_list}
+    elif len(ag_list) == 2:
+        agents = {('SUBJECT', ag_list[0]), ('OBJECT', ag_list[1])}
+    else:
+        raise IndraDatabaseError("Unhandled agent structure for stmt %s "
+                                 "with agents: %s."
+                                 % (str(stmt), str(stmt.agent_list())))
+
+    # Prep the agents for copy into the database.
+    agent_data = []
+    for role, ag in agents:
+        # If no agent, or no db_refs for the agent, skip the insert
+        # that follows.
+        if ag is None or ag.db_refs is None:
+            continue
+        for ns, ag_id in ag.db_refs.items():
+            if isinstance(ag_id, list):
+                for sub_id in ag_id:
+                    agent_data.append((stmt_id, ns, sub_id, role))
+            else:
+                agent_data.append((stmt_id, ns, ag_id, role))
+    return agent_data
 
 
 def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
@@ -308,7 +378,8 @@ def insert_db_stmts(db, stmts, db_ref_id, verbose=False):
     return
 
 
-def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
+def insert_pa_stmts(db, stmts, verbose=False, do_copy=True,
+                    direct_agent_load=True):
     """Insert pre-assembled statements, and any affiliated agents.
 
     Parameters
@@ -321,16 +392,21 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
     verbose : bool
         If True, print extra information and a status bar while compiling
         statements for insert. Default False.
+    direct_agent_load : bool
+        If True (default), use the Statement get_hash method to get the id's of
+        the Statements for insert, instead of looking up the ids of Statements
+        from the database.
     """
     logger.info("Beginning to insert pre-assembled statements.")
     stmt_data = []
     indra_version = get_version()
-    cols = ('uuid', 'mk_hash', 'type', 'json', 'indra_version')
+    cols = ('uuid', 'matches_key', 'mk_hash', 'type', 'json', 'indra_version')
     if verbose:
         print("Loading:", end='', flush=True)
     for i, stmt in enumerate(stmts):
         stmt_rec = (
             stmt.uuid,
+            stmt.matches_key(),
             stmt.get_hash(shallow=True),
             stmt.__class__.__name__,
             json.dumps(stmt.to_json()).encode('utf8'),
@@ -345,7 +421,10 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
         db.copy('pa_statements', stmt_data, cols)
     else:
         db.insert_many('pa_statements', stmt_data, cols=cols)
-    insert_agents(db, 'pa', verbose=verbose)
+    if insert_pa_agents_directly:
+        insert_pa_agents_directly(db, stmts, verbose=verbose)
+    else:
+        insert_agents(db, 'pa', verbose=verbose)
     return
 
 
@@ -353,21 +432,6 @@ def insert_pa_stmts(db, stmts, verbose=False, do_copy=True):
 # Below are some functions that are useful for getting raw statements from the
 # database at various levels of abstraction.
 #==============================================================================
-
-def _clockit(func):
-    @wraps(func)
-    def timed_func(*args, **kwargs):
-        logger.debug("Starting: %s" % func.__name__)
-        start = datetime.now()
-        ret = func(*args, **kwargs)
-        end = datetime.now()
-        print(func.__name__, end-start)
-        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
-        #with open(fname, 'a') as f:
-        #    f.write('%s: %s\n' % (start, end-start))
-        return ret
-    return timed_func
-
 
 def _get_statement_object(db_stmt):
     """Get an INDRA Statement object from a db_stmt."""
@@ -529,7 +593,7 @@ class NestedDict(dict):
         return ret_set
 
 
-def _get_reading_statement_dict(db, clauses=None):
+def _get_reading_statement_dict(db, clauses=None, get_full_stmts=True):
     """Get a nested dict of statements, keyed by ref, content, and reading."""
     # Construct the query for metadata from the database.
     q = (db.session.query(db.TextRef, db.TextContent.id,
@@ -573,7 +637,10 @@ def _get_reading_statement_dict(db, clauses=None):
             num_duplicate_evidence += 1
 
         # Either store the statement, or the statement id.
-        s_dict[stmt_hash].add((sid, stmt))
+        if get_full_stmts:
+            s_dict[stmt_hash].add((sid, stmt))
+        else:
+            s_dict[stmt_hash].add((sid, None))
 
     # Report on the results.
     print("Found %d relevant text refs with statements." % len(stmt_nd))
@@ -582,9 +649,9 @@ def _get_reading_statement_dict(db, clauses=None):
     return stmt_nd
 
 
-# Specify versions of readers, and preference.
+# Specify versions of readers, and preference. Later in the list is better.
 reader_versions = {
-    'sparser': ['sept14-linux\n', 'sept14-linux'],
+    'sparser': ['sept14-linux\n', 'sept14-linux', 'June2018-linux'],
     'reach': ['61059a-biores-e9ee36', '1.3.3-61059a-biores-']
     }
 
@@ -592,8 +659,10 @@ reader_versions = {
 text_content_sources = ['pubmed', 'elsevier', 'manuscripts', 'pmc_oa']
 
 
-def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
+def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None,
+                                 ignore_duplicates=False):
     """Get the set of statements/ids from readings minus exact duplicates."""
+    logger.info("Filtering the statements from reading.")
     if linked_sids is None:
         linked_sids = set()
     def better_func(element):
@@ -620,62 +689,80 @@ def _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids=None):
             for rv_dict in src_dict.gets(reader):
                 best_rv = max(rv_dict, key=lambda x: rv_list.index(x))
 
+                # Record the rest of the statement uuids.
+                for rv, r_dict in rv_dict.items():
+                    if rv != best_rv:
+                        some_bettered_duplicate_tpls |= r_dict.get_leaves()
+
                 # Take any one of the duplicates. Statements/Statement ids are
                 # already grouped into sets of duplicates keyed by the
                 # Statement and Evidence matches key hashes. We only want one
                 # of each.
                 stmt_set_itr = (stmt_set for r_dict in rv_dict[best_rv].values()
                                 for stmt_set in r_dict.values())
+                if ignore_duplicates:
+                    some_stmt_tpls = {stmt_tpl for stmt_set in stmt_set_itr
+                                      for stmt_tpl in stmt_set}
+                else:
+                    some_stmt_tpls, some_duplicate_tpls = \
+                        _detect_exact_duplicates(stmt_set_itr, linked_sids)
 
-                # Record the rest of the statement uuids.
-                for rv, r_dict in rv_dict.items():
-                    if rv != best_rv:
-                        some_bettered_duplicate_tpls |= r_dict.get_leaves()
+                    # Get the sids for the statements.
+                    duplicate_sids |= {sid for sid, _ in some_duplicate_tpls}
 
-                # Pick one among any exact duplicates. Unlike with bettered
-                # duplicates, these choices are arbitrary, and such duplicates
-                # can be deleted.
-                some_duplicate_tpls = set()
-                for stmt_tpl_set in stmt_set_itr:
-                    if not stmt_tpl_set:
-                        continue
-                    elif len(stmt_tpl_set) == 1:
-                        # There isn't really a choice here.
-                        stmt_tpls |= stmt_tpl_set
-                    else:
-                        prefed_tpls = {tpl for tpl in stmt_tpl_set
-                                       if tpl[0] in linked_sids}
-                        if not prefed_tpls:
-                            # Pick the first one to pop, record the rest as
-                            # duplicates.
-                            stmt_tpls.add(stmt_tpl_set.pop())
-                            some_duplicate_tpls |= stmt_tpl_set
-                        elif len(prefed_tpls) == 1:
-                            # There is now no choice: just take the preferred
-                            # statement.
-                            stmt_tpls |= prefed_tpls
-                            some_duplicate_tpls |= (stmt_tpl_set - prefed_tpls)
-                        else:
-                            # This shouldn't happen, so an early run of this
-                            # function must have failed somehow, or else there
-                            # was some kind of misuse. Flag it, pick just one of
-                            # the preferred statements, and delete any deletable
-                            # statements.
-                            assert False,\
-                                ("Duplicate deduplicated statements found: %s"
-                                 % str(prefed_tpls))
+                stmt_tpls |= some_stmt_tpls
 
-                # Get the uuids from the statements, if we have full statements.
-                duplicate_sids |= {sid for sid, _ in some_duplicate_tpls}
-                bettered_duplicate_sids |= \
-                    {sid for sid, _ in some_bettered_duplicate_tpls}
+        # Add the bettered duplicates found in this round.
+        bettered_duplicate_sids |= \
+            {sid for sid, _ in some_bettered_duplicate_tpls}
 
     if get_full_stmts:
-        stmts = {stmt for _, stmt in stmt_tpls}
+        stmts = {stmt for _, stmt in stmt_tpls if stmt is not None}
+        assert len(stmts) == len(stmt_tpls),\
+            ("Some statements were None! The interaction between "
+             "_get_reading_statement_dict and _filter_rdg_statements was "
+             "probably mishandled.")
     else:
         stmts = {sid for sid, _ in stmt_tpls}
 
     return stmts, duplicate_sids, bettered_duplicate_sids
+
+
+def _detect_exact_duplicates(stmt_set_itr, linked_sids):
+    # Pick one among any exact duplicates. Unlike with bettered
+    # duplicates, these choices are arbitrary, and such duplicates
+    # can be deleted.
+    stmt_tpls = set()
+    some_duplicate_tpls = set()
+    for stmt_tpl_set in stmt_set_itr:
+        if not stmt_tpl_set:
+            continue
+        elif len(stmt_tpl_set) == 1:
+            # There isn't really a choice here.
+            stmt_tpls |= stmt_tpl_set
+        else:
+            prefed_tpls = {tpl for tpl in stmt_tpl_set
+                           if tpl[0] in linked_sids}
+            if not prefed_tpls:
+                # Pick the first one to pop, record the rest as
+                # duplicates.
+                stmt_tpls.add(stmt_tpl_set.pop())
+                some_duplicate_tpls |= stmt_tpl_set
+            elif len(prefed_tpls) == 1:
+                # There is now no choice: just take the preferred
+                # statement.
+                stmt_tpls |= prefed_tpls
+                some_duplicate_tpls |= (stmt_tpl_set - prefed_tpls)
+            else:
+                # This shouldn't happen, so an early run of this
+                # function must have failed somehow, or else there
+                # was some kind of misuse. Flag it, pick just one of
+                # the preferred statements, and delete any deletable
+                # statements.
+                assert False, \
+                    ("Duplicate deduplicated statements found: %s"
+                     % str(prefed_tpls))
+    return stmt_tpls, some_duplicate_tpls
 
 
 def _choose_unique(not_duplicates, get_full_stmts, stmt_tpl_grp):
@@ -778,6 +865,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `get_full_stmts`.
     """
     if delete_duplicates:
+        logger.info("Looking for ids from existing links...")
         linked_sids = {sid for sid,
                         in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
     else:
@@ -785,12 +873,15 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     # Get de-duplicated Statements, and duplicate uuids, as well as uuid of
     # Statements that have been improved upon...
-    stmt_nd = _get_reading_statement_dict(db, clauses)
+    logger.info("Sorting reading statements...")
+    stmt_nd = _get_reading_statement_dict(db, clauses, get_full_stmts)
 
     stmts, duplicate_sids, bettered_duplicate_sids = \
         _get_filtered_rdg_statements(stmt_nd, get_full_stmts, linked_sids)
-    print("After filtering reading: %d unique statements, %d duplicates."
-          % (len(stmts), len(duplicate_sids)))
+    logger.info("After filtering reading: %d unique statements, %d exact "
+                "duplicates, %d with results from better resources available."
+                % (len(stmts), len(duplicate_sids),
+                   len(bettered_duplicate_sids)))
     assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     db_stmts, db_duplicates = \
@@ -798,14 +889,14 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                                     num_procs)
     stmts |= db_stmts
     duplicate_sids |= db_duplicates
-    print("After filtering database statements: %d unique, %d duplicates."
-          % (len(stmts), len(duplicate_sids)))
+    logger.info("After filtering database statements: %d unique, %d duplicates."
+                % (len(stmts), len(duplicate_sids)))
     assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
 
     # Remove support links for statements that have better versions available.
     bad_link_sids = bettered_duplicate_sids & linked_sids
     if len(bad_link_sids) and weed_evidence:
-        print("Removing bettered evidence links...")
+        logger.info("Removing bettered evidence links...")
         rm_links = db.select_all(
             db.RawUniqueLinks,
             db.RawUniqueLinks.raw_stmt_id.in_(bad_link_sids)
@@ -814,17 +905,17 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
 
     # Delete exact duplicates
     if len(duplicate_sids) and delete_duplicates:
-        print("Deleting duplicates...")
+        logger.info("Deleting duplicates...")
         for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
             bad_stmts = db.select_all(db.RawStatements,
                                       db.RawStatements.id.in_(dup_id_batch))
             bad_sid_set = {s.id for s in bad_stmts}
             bad_agents = db.select_all(db.RawAgents,
                                        db.RawAgents.stmt_id.in_(bad_sid_set))
-            print("Deleting %d agents associated with redundant raw statements."
-                  % len(bad_agents))
+            logger.info("Deleting %d agents associated with redundant raw "
+                        "statements." % len(bad_agents))
             db.delete_all(bad_agents)
-            print("Deleting %d redundant raw statements." % len(bad_stmts))
+            logger.info("Deleting %d redundant raw statements." % len(bad_stmts))
             db.delete_all(bad_stmts)
 
     return stmts

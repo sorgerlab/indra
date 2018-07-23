@@ -2,7 +2,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import json
+import pickle
 import logging
+from os import path
 from functools import wraps
 from datetime import datetime
 from collections import defaultdict
@@ -72,7 +74,10 @@ from indra.statements import Statement
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
-from indra.db.util import insert_pa_stmts, distill_stmts, get_db
+from indra.db.util import insert_pa_stmts, distill_stmts, get_db, _clockit
+
+
+HERE = path.dirname(path.abspath(__file__))
 
 
 def _handle_update_table(func):
@@ -92,6 +97,12 @@ def _stmt_from_json(stmt_json_bytes):
     return Statement._from_json(json.loads(stmt_json_bytes.decode('utf-8')))
 
 
+# This is purely for reducing having to type this long thing so often.
+def shash(s):
+    """Get the shallow hash of a statement."""
+    return s.get_hash(shallow=True)
+
+
 class IndraDBPreassemblyError(Exception):
     pass
 
@@ -109,11 +120,12 @@ class PreassemblyManager(object):
         time. In general, a larger batch size will somewhat be faster, but
         require much more memory.
     """
-    def __init__(self, n_proc=1, batch_size=10000):
+    def __init__(self, n_proc=1, batch_size=10000, print_logs=False):
         self.n_proc = n_proc
         self.batch_size = batch_size
         self.pa = Preassembler(hierarchies)
         self.__tag = 'Unpurposed'
+        self.__print_logs = print_logs
         return
 
     def _get_latest_updatetime(self, db):
@@ -137,13 +149,17 @@ class PreassemblyManager(object):
         if in_mks is None and ex_mks is None:
             db_stmt_iter = db.select_all(db.PAStatements.json,
                                          yield_per=self.batch_size)
-        elif ex_mks is None and in_mks:
+        elif ex_mks is None and in_mks is not None:
+            if not in_mks:
+                return []
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
                 db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
-        elif in_mks is None and ex_mks:
+        elif in_mks is None and ex_mks is not None:
+            if not ex_mks:
+                return []
             db_stmt_iter = db.select_all(
                 db.PAStatements.json,
                 db.PAStatements.mk_hash.notin_(ex_mks),
@@ -156,15 +172,13 @@ class PreassemblyManager(object):
                 db.PAStatements.mk_hash.in_(in_mks),
                 yield_per=self.batch_size
                 )
-        else:
-            db_stmt_iter = db.select_all(
-                db.PAStatements.json,
-                yield_per=self.batch_size
-                )
+        else:  # Neither is None, and both are empty.
+            return []
 
         pa_stmts = (_stmt_from_json(s_json) for s_json, in db_stmt_iter)
         return batch_iter(pa_stmts, self.batch_size, return_func=list)
 
+    @_clockit
     def _get_unique_statements(self, db, stmt_tpls, num_stmts, mk_done=None):
         """Get the unique Statements from the raw statements."""
         if mk_done is None:
@@ -176,20 +190,47 @@ class PreassemblyManager(object):
         for i, stmt_tpl_batch in enumerate(stmt_batches):
             self._log("Processing batch %d/%d of %d/%d statements."
                        % (i, num_batches, len(stmt_tpl_batch), num_stmts))
-            unique_stmts, evidence_links = \
-                self._make_unique_statement_set(stmt_tpl_batch)
-            new_unique_stmts = []
-            for s in unique_stmts:
-                s_hash = s.get_hash(shallow=True)
-                if s_hash not in (mk_done | new_mk_set):
-                    new_mk_set.add(s_hash)
-                    new_unique_stmts.append(s)
+            # Get a list of statements, and generate a mapping from uuid to sid.
+            stmts = []
+            uuid_sid_dict = {}
+            for sid, stmt in stmt_tpl_batch:
+                uuid_sid_dict[stmt.uuid] = sid
+                stmts.append(stmt)
+
+            # Map groundings and sequences.
+            cleaned_stmts = self._clean_statements(stmts)
+
+            # Use the shallow hash to condense unique statements.
+            new_unique_stmts, evidence_links = \
+                self._condense_statements(cleaned_stmts, mk_done, new_mk_set,
+                                          uuid_sid_dict)
+
+            self._log("Insert new statements into database...")
             insert_pa_stmts(db, new_unique_stmts)
-            db.copy('raw_unique_links', evidence_links,
+            self._log("Insert new raw_unique links into the database...")
+            db.copy('raw_unique_links', flatten_evidence_dict(evidence_links),
                     ('pa_stmt_mk_hash', 'raw_stmt_id'))
         self._log("Added %d new pa statements into the database."
                     % len(new_mk_set))
         return new_mk_set
+
+    @_clockit
+    def _condense_statements(self, cleaned_stmts, mk_done, new_mk_set,
+                             uuid_sid_dict):
+        self._log("Condense into unique statements...")
+        new_unique_stmts = []
+        evidence_links = defaultdict(lambda: set())
+        for s in cleaned_stmts:
+            h = shash(s)
+
+            # If this statement is new, make it.
+            if h not in mk_done and h not in new_mk_set:
+                new_unique_stmts.append(s.make_generic_copy())
+                new_mk_set.add(h)
+
+            # Add the evidence to the dict.
+            evidence_links[h].add(uuid_sid_dict[s.uuid])
+        return new_unique_stmts, evidence_links
 
     @_handle_update_table
     def create_corpus(self, db, continuing=False):
@@ -205,23 +246,41 @@ class PreassemblyManager(object):
         For more detail on preassembly, see indra/preassembler/__init__.py
         """
         self.__tag = 'create'
-        # Get the statements
-        stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+
+        # Get filtered statement ID's.
+        sid_cache_fname = path.join(HERE, 'stmt_id_cache.pkl')
+        if continuing and path.exists(sid_cache_fname):
+            with open(sid_cache_fname, 'rb') as f:
+                stmt_ids = pickle.load(f)
+        else:
+            # Get the statement ids.
+            stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+            with open(sid_cache_fname, 'wb') as f:
+                pickle.dump(stmt_ids, f)
+
+        # Handle the possibility we're picking up after an earlier job...
+        done_pa_ids = set()
         if continuing:
             self._log("Getting set of statements already de-duplicated...")
-            checked_raw_stmt_ids, pa_stmt_hashes = \
-                zip(*db.select_all([db.RawUniqueLinks.raw_stmt_uuid,
-                                    db.RawUniqueLinks.pa_stmt_mk_hash]))
-            stmt_ids -= set(checked_raw_stmt_ids)
-            done_pa_ids = set(pa_stmt_hashes)
-            self._log("Found %d preassembled statements already done."
-                        % len(done_pa_ids))
-        else:
-            done_pa_ids = set()
-        stmts = ((sid, _stmt_from_json(s_json)) for sid, s_json
-                 in db.select_all([db.RawStatements.id, db.RawStatements.json],
-                                  db.RawStatements.id.in_(stmt_ids),
-                                  yield_per=self.batch_size))
+            link_resp = db.select_all([db.RawUniqueLinks.raw_stmt_id,
+                                       db.RawUniqueLinks.pa_stmt_mk_hash])
+            if link_resp:
+                checked_raw_stmt_ids, pa_stmt_hashes = \
+                    zip(*db.select_all([db.RawUniqueLinks.raw_stmt_id,
+                                        db.RawUniqueLinks.pa_stmt_mk_hash]))
+                stmt_ids -= set(checked_raw_stmt_ids)
+                done_pa_ids = set(pa_stmt_hashes)
+                self._log("Found %d preassembled statements already done."
+                          % len(done_pa_ids))
+
+        # Create a generator for the actual statements.
+        def get_raw_stmt_data(stmt_ids):
+            return db.select_all([db.RawStatements.id, db.RawStatements.json],
+                                 db.RawStatements.id.in_(stmt_ids),
+                                 yield_per=self.batch_size//10)
+        stmts = ((sid, _stmt_from_json(s_json))
+                 for stmt_id_batch in batch_iter(stmt_ids, self.batch_size)
+                 for sid, s_json in get_raw_stmt_data(stmt_id_batch))
         self._log("Found %d statements in all." % len(stmt_ids))
 
         # Get the set of unique statements
@@ -242,16 +301,20 @@ class PreassemblyManager(object):
 
         # Now get the support links between all batches.
         support_links = set()
-        for outer_batch in self._pa_batch_iter(db):
+        for i, outer_batch in enumerate(self._pa_batch_iter(db)):
             # Get internal support links
+            self._log('Getting internal support links outer batch %d.' % i)
             some_support_links = self._get_support_links(outer_batch,
                                                          poolsize=self.n_proc)
-            outer_mk_hashes = {s.get_hash(shallow=True) for s in outer_batch}
+            outer_mk_hashes = {shash(s) for s in outer_batch}
 
             # Get links with all other batches
-            for inner_batch in self._pa_batch_iter(db, ex_mks=outer_mk_hashes):
+            ib_iter = self._pa_batch_iter(db, ex_mks=outer_mk_hashes)
+            for j, inner_batch in enumerate(ib_iter):
                 split_idx = len(inner_batch)
                 full_list = inner_batch + outer_batch
+                self._log('Getting support compared to other batch %d of outer'
+                          'batch %d.' % (j, i))
                 some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
@@ -343,26 +406,32 @@ class PreassemblyManager(object):
 
         # Now find the new support links that need to be added.
         new_support_links = set()
-        for npa_batch in self._pa_batch_iter(db, in_mks=new_mk_set):
-            some_support_links = set()
+        new_stmt_iter = self._pa_batch_iter(db, in_mks=new_mk_set)
+        for i, npa_batch in enumerate(new_stmt_iter):
 
             # Compare internally
-            some_support_links |= self._get_support_links(npa_batch)
+            self._log("Getting support for new pa batch %d." % i)
+            some_support_links = self._get_support_links(npa_batch)
 
             # Compare against the other new batch statements.
-            diff_new_mks = new_mk_set - {s.get_hash(shallow=True)
-                                         for s in npa_batch}
-            for diff_npa_batch in self._pa_batch_iter(db, in_mks=diff_new_mks):
+            diff_new_mks = new_mk_set - {shash(s) for s in npa_batch}
+            other_new_stmt_iter = self._pa_batch_iter(db, in_mks=diff_new_mks)
+            for j, diff_npa_batch in enumerate(other_new_stmt_iter):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + diff_npa_batch
+                self._log("Comparing %d to batch %d of other new statements."
+                          % (i, j))
                 some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
 
             # Compare against the existing statements.
-            for opa_batch in self._pa_batch_iter(db, in_mks=old_mk_set):
+            old_stmt_iter =  self._pa_batch_iter(db, in_mks=old_mk_set)
+            for k, opa_batch in enumerate(old_stmt_iter):
                 split_idx = len(npa_batch)
                 full_list = npa_batch + opa_batch
+                self._log("Comparing %d to batch of %d of old statements."
+                          % (i, k))
                 some_support_links |= \
                     self._get_support_links(full_list, split_idx=split_idx,
                                             poolsize=self.n_proc)
@@ -392,45 +461,41 @@ class PreassemblyManager(object):
 
     def _log(self, msg, level='info'):
         """Applies a task specific tag to the log message."""
+        if self.__print_logs:
+            print("Preassembly Manager [%s] (%s): %s"
+                  % (datetime.now(), self.__tag, msg))
         getattr(logger, level)("(%s) %s" % (self.__tag, msg))
 
-    def _make_unique_statement_set(self, stmt_tpls):
+    @_clockit
+    def _clean_statements(self, stmts):
         """Perform grounding, sequence mapping, and find unique set from stmts.
 
         This method returns a list of statement objects, as well as a set of
         tuples of the form (uuid, matches_key) which represent the links between
         raw (evidence) statements and their unique/preassembled counterparts.
         """
-        stmts = []
-        uuid_sid_dict = {}
-        for sid, stmt in stmt_tpls:
-            uuid_sid_dict[stmt.uuid] = sid
-            stmts.append(stmt)
+        self._log("Map grounding...")
         stmts = ac.map_grounding(stmts)
-        stmts = ac.map_sequence(stmts)
-        stmt_groups = self.pa._get_stmt_matching_groups(stmts)
-        unique_stmts = []
-        evidence_links = defaultdict(lambda: set())
-        for _, duplicates in stmt_groups:
-            # Get the first statement and add the evidence of all subsequent
-            # Statements to it
-            for stmt_ix, stmt in enumerate(duplicates):
-                if stmt_ix == 0:
-                    first_stmt = stmt.make_generic_copy()
-                    stmt_hash = first_stmt.get_hash(shallow=True)
-                evidence_links[stmt_hash].add(uuid_sid_dict[stmt.uuid])
-            # This should never be None or anything else
-            assert isinstance(first_stmt, type(stmt))
-            unique_stmts.append(first_stmt)
-        return unique_stmts, flatten_evidence_dict(evidence_links)
+        self._log("Map sequences...")
+        stmts = ac.map_sequence(stmts, use_cache=True)
+        return stmts
 
+    @_clockit
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
         """Find the links of refinement/support between statements."""
         id_maps = self.pa._generate_id_maps(unique_stmts,
                                             **generate_id_map_kwargs)
-        return {tuple([unique_stmts[idx].get_hash(shallow=True)
-                       for idx in idx_pair])
-                for idx_pair in id_maps}
+        ret = set()
+        for ix_pair in id_maps:
+            if ix_pair[0] == ix_pair[1]:
+                assert False, "Self-comparison occurred."
+            hash_pair = \
+                tuple([shash(unique_stmts[ix]) for ix in ix_pair])
+            if hash_pair[0] == hash_pair[1]:
+                assert False, "Input list included duplicates."
+            ret.add(hash_pair)
+
+        return ret
 
 
 def make_graph(unique_stmts, match_key_maps):

@@ -368,6 +368,7 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
             stmt_dict = {}
             ev_dict = {}
             raw_stmt_dict = {}
+            total_ev = 0
             for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
                 # Instantiate the PA statement objects, and record the uuid
                 # evidence (raw statement) links.
@@ -380,9 +381,10 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
                     else:
                         ev_dict[k].append(raw_stmt_db_obj.id)
                     raw_stmt_objs.append(raw_stmt_db_obj)
+                    total_ev += 1
 
-                logger.info("Up to %d pa statements, with %d pieces of"
-                            "evidence in all." % (len(stmt_dict), len(ev_dict)))
+                logger.info("Up to %d pa statements, with %d pieces of "
+                            "evidence in all." % (len(stmt_dict), total_ev))
 
                 # Instantiate the raw statements.
                 raw_stmt_sid_tpls = get_raw_stmts_frm_db_list(db, raw_stmt_objs,
@@ -415,21 +417,21 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
         # Populate the supports/supported by fields.
         if with_support:
             logger.info("Populating support links.")
-            support_links = db.filter_query(
+            support_links = db.select_all(
                 [db.PASupportLinks.supported_mk_hash,
                  db.PASupportLinks.supporting_mk_hash],
                 or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
                     db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
-                ).distinct().yield_per(count)
-            for supped_hash, supping_hash in support_links:
+                )
+            for supped_hash, supping_hash in set(support_links):
+                if supped_hash == supping_hash:
+                    assert False, 'Self-support found on-load.'
                 supped_stmt = stmt_dict.get(supped_hash,
                                             Unresolved(shallow_hash=supped_hash))
                 supping_stmt = stmt_dict.get(supping_hash,
                                              Unresolved(shallow_hash=supping_hash))
-                if not isinstance(supped_stmt, str):
-                    supped_stmt.supported_by.append(supping_stmt)
-                if not isinstance(supping_stmt, str):
-                    supping_stmt.supports.append(supped_stmt)
+                supped_stmt.supported_by.append(supping_stmt)
+                supping_stmt.supports.append(supped_stmt)
 
         stmts = list(stmt_dict.values())
         logger.info("In all, there are %d pa statements." % len(stmts))
