@@ -134,7 +134,7 @@ class SiteMapper(object):
             if self.use_cache:
                 import pickle
                 with open(self._cache_path, 'wb') as f:
-                    pickle.dump(self._cache, f)
+                    pickle.dump(self._cache, f, protocol=2)
         except:
             pass
 
