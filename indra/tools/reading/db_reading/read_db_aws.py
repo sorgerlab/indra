@@ -17,148 +17,159 @@ import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 from datetime import datetime
+from indra.tools.reading.util.reporter import Reporter
 from indra.tools.reading.db_reading.read_db import produce_readings, \
     produce_statements, get_id_dict
 from indra.tools.reading.readers import get_readers
 
 
-def plot_hist(agged, agg_over, data, s3, s3_base, bucket_name):
-    fig = plt.figure()
-    plt.hist(data, bins=np.arange(len(data)))
-    plt.xlabel('Number of %s for %s' % (agged, agg_over))
-    plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
-    fname = '%s_per_%s.png' % (agged, agg_over)
-    fig.savefig(fname)
-    with open(fname, 'rb') as f:
-        s3_key = s3_base + fname
-        s3.put_object(Key=s3_key, Body=f.read(), Bucket=bucket_name)
-    return
+class StatReporter(Reporter):
+    """A class to handle generating the reports made at the end of a job."""
+    def __init__(self, s3_log_prefix, s3, bucket_name):
+        super(StatReporter, self).__init__('report')
+        self.s3_prefix = s3_log_prefix + 'statistics/'
+        self.bucket_name = bucket_name
+        self.s3 = s3
+        self.summary_dict = {}
+        self.hist_dict = {}
+        return
 
+    def _plot_hist(self, agged, agg_over, data):
+        fig = plt.figure()
+        plt.hist(data, bins=np.arange(len(data)))
+        plt.xlabel('Number of %s for %s' % (agged, agg_over))
+        plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
+        fname = '%s_per_%s.png' % (agged, agg_over)
+        fig.savefig(fname)
+        with open(fname, 'rb') as f:
+            s3_key = self.s3_prefix + fname
+            self.s3.put_object(Key=s3_key, Body=f.read(),
+                               Bucket=self.bucket_name)
+        return
 
-def report_statistics(reading_outputs, stmt_outputs, starts, ends,
-                      s3_log_prefix, s3, bucket_name):
-    s3_prefix = s3_log_prefix + 'statisics/'
-    starts['stats'] = datetime.now()
-    data_dict = {}
-    hist_dict = {}
-    data_dict['Total readings'] = len(reading_outputs)
-    reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
-                     for rd in reading_outputs]
-    data_dict['Content processed'] = len({t[1] for t in reading_stmts})
-    data_dict['Statements produced'] = len(stmt_outputs)
+    def report_statistics(self, reading_outputs, stmt_outputs, starts, ends):
+        starts['stats'] = datetime.now()
+        self.summary_dict['Total readings'] = len(reading_outputs)
+        reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
+                         for rd in reading_outputs]
+        self.summary_dict['Content processed'] = len({t[1] for t in reading_stmts})
+        self.summary_dict['Statements produced'] = len(stmt_outputs)
 
-    readings_with_stmts = []
-    readings_with_no_stmts = []
-    for t in reading_stmts:
-        if t[-1]:
-            readings_with_stmts.append(t)
-        else:
-            readings_with_no_stmts.append(t)
+        readings_with_stmts = []
+        readings_with_no_stmts = []
+        for t in reading_stmts:
+            if t[-1]:
+                readings_with_stmts.append(t)
+            else:
+                readings_with_no_stmts.append(t)
 
-    data_dict['Readings with 0 statements'] = len(readings_with_no_stmts)
+        self.summary_dict['Readings with 0 statements'] = len(readings_with_no_stmts)
 
-    # Do a bunch of aggregation
-    tc_rd_dict = {}
-    tc_stmt_dict = {}
-    rd_stmt_dict = {}
-    reader_stmts = {}
-    reader_tcids = {}
-    reader_rids = {}
-    for rid, tcid, reader, stmts in readings_with_stmts:
-        # Handle things keyed by tcid
-        if tcid not in tc_rd_dict.keys():
-            tc_rd_dict[tcid] = {rid}
-            tc_stmt_dict[tcid] = set(stmts)
-        else:
-            tc_rd_dict[tcid].add(rid)
-            tc_stmt_dict[tcid] |= set(stmts)
+        # Do a bunch of aggregation
+        tc_rd_dict = {}
+        tc_stmt_dict = {}
+        rd_stmt_dict = {}
+        reader_stmts = {}
+        reader_tcids = {}
+        reader_rids = {}
+        for rid, tcid, reader, stmts in readings_with_stmts:
+            # Handle things keyed by tcid
+            if tcid not in tc_rd_dict.keys():
+                tc_rd_dict[tcid] = {rid}
+                tc_stmt_dict[tcid] = set(stmts)
+            else:
+                tc_rd_dict[tcid].add(rid)
+                tc_stmt_dict[tcid] |= set(stmts)
 
-        # Handle things keyed by rid
-        if rid not in rd_stmt_dict.keys():
-            rd_stmt_dict[rid] = set(stmts)
-        else:
-            rd_stmt_dict[rid] |= set(stmts)  # this shouldn't really happen.
+            # Handle things keyed by rid
+            if rid not in rd_stmt_dict.keys():
+                rd_stmt_dict[rid] = set(stmts)
+            else:
+                rd_stmt_dict[rid] |= set(stmts)  # this shouldn't really happen.
 
-        # Handle things keyed by reader
-        if reader not in reader_stmts.keys():
-            reader_stmts[reader] = set(stmts)
-            reader_tcids[reader] = {tcid}
-            reader_rids[reader] = {rid}
-        else:
-            reader_stmts[reader] |= set(stmts)
-            reader_tcids[reader].add(tcid)
-            reader_rids[reader].add(rid)
+            # Handle things keyed by reader
+            if reader not in reader_stmts.keys():
+                reader_stmts[reader] = set(stmts)
+                reader_tcids[reader] = {tcid}
+                reader_rids[reader] = {rid}
+            else:
+                reader_stmts[reader] |= set(stmts)
+                reader_tcids[reader].add(tcid)
+                reader_rids[reader].add(rid)
 
-    for rid, tcid, reader, _ in readings_with_no_stmts:
-        # Handle things keyed by tcid
-        if tcid not in tc_rd_dict.keys():
-            tc_rd_dict[tcid] = {rid}
-        else:
-            tc_rd_dict[tcid].add(rid)
+        for rid, tcid, reader, _ in readings_with_no_stmts:
+            # Handle things keyed by tcid
+            if tcid not in tc_rd_dict.keys():
+                tc_rd_dict[tcid] = {rid}
+            else:
+                tc_rd_dict[tcid].add(rid)
 
-        # Handle things keyed by reader
-        if reader not in reader_stmts.keys():
-            reader_tcids[reader] = {tcid}
-            reader_rids[reader] = {rid}
-        else:
-            reader_tcids[reader].add(tcid)
-            reader_rids[reader].add(rid)
+            # Handle things keyed by reader
+            if reader not in reader_stmts.keys():
+                reader_tcids[reader] = {tcid}
+                reader_rids[reader] = {rid}
+            else:
+                reader_tcids[reader].add(tcid)
+                reader_rids[reader].add(rid)
 
-    # Produce some numpy count arrays.
-    hist_dict[('readings', 'text content')] = \
-        np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
-    hist_dict[('statements', 'text_content')] = \
-        np.array([len(stmts) for stmts in tc_stmt_dict.values()])
-    hist_dict[('statements', 'readings')] = \
-        np.array([len(stmts) for stmts in rd_stmt_dict.values()])
-    hist_dict[('statements', 'readers')] = \
-        np.array([len(stmts) for stmts in reader_stmts.values()])
-    hist_dict[('text content', 'reader')] = \
-        np.array([len(tcid_set) for tcid_set in reader_tcids.values()])
-    hist_dict[('readings', 'reader')] = \
-        np.array([len(rid_set) for rid_set in reader_rids.values()])
+        # Produce some numpy count arrays.
+        self.hist_dict[('readings', 'text content')] = \
+            np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
+        self.hist_dict[('statements', 'text_content')] = \
+            np.array([len(stmts) for stmts in tc_stmt_dict.values()])
+        self.hist_dict[('statements', 'readings')] = \
+            np.array([len(stmts) for stmts in rd_stmt_dict.values()])
+        self.hist_dict[('statements', 'readers')] = \
+            np.array([len(stmts) for stmts in reader_stmts.values()])
+        self.hist_dict[('text content', 'reader')] = \
+            np.array([len(tcid_set) for tcid_set in reader_tcids.values()])
+        self.hist_dict[('readings', 'reader')] = \
+            np.array([len(rid_set) for rid_set in reader_rids.values()])
 
-    # Produce the histograms
-    for (agged, agg_over), data in hist_dict.items():
-        plot_hist(agged, agg_over, data, s3, s3_prefix, bucket_name)
-        label = '%s per %s' % (agged, agg_over)
-        data_dict[label.capitalize()] = {'mean': data.mean(), 'std': data.std(),
-                                         'median': np.median(data)}
+        # Produce the histograms
+        for (agged, agg_over), data in self.hist_dict.items():
+            self._plot_hist(agged, agg_over, data)
+            label = '%s per %s' % (agged, agg_over)
+            self.summary_dict[label.capitalize()] = {'mean': data.mean(),
+                                             'std': data.std(),
+                                             'median': np.median(data)}
 
-    # Produce the summary report
-    text_report_str = ''
-    top_labels = ['Total readings', 'Content processed', 'Statements produced']
-    for label in top_labels:
-        text_report_str += '%s: %d\n' % (label, data_dict[label])
+        # Produce the summary report
+        text_report_str = ''
+        top_labels = ['Total readings', 'Content processed',
+                      'Statements produced']
+        for label in top_labels:
+            text_report_str += '%s: %d\n' % (label, self.summary_dict[label])
 
-    for label, data in data_dict.items():
-        if label in top_labels:
-            continue
-        if isinstance(data, dict):
-            text_report_str += '%s:\n' % label
-            text_report_str += '\n'.join(['\t%s: %d' % (k, v)
-                                          for k, v in data.items()])
-            text_report_str += '\n'
-        else:
-            text_report_str += '%s: %d\n' % (label, data)
+        for label, data in self.summary_dict.items():
+            if label in top_labels:
+                continue
+            if isinstance(data, dict):
+                text_report_str += '%s:\n' % label
+                text_report_str += '\n'.join(['\t%s: %d' % (k, v)
+                                              for k, v in data.items()])
+                text_report_str += '\n'
+            else:
+                text_report_str += '%s: %d\n' % (label, data)
 
-    s3.put_object(Key=s3_prefix + 'summary.txt', Body=text_report_str,
-                  Bucket=bucket_name)
-    s3.put_object(Key=s3_prefix + 'hist_data.pkl', Body=pickle.dumps(hist_dict),
-                  Bucket=bucket_name)
-    s3.put_object(Key=s3_prefix + 'sum_data.pkl', Body=pickle.dumps(data_dict),
-                  Bucket=bucket_name)
-    ends['stats'] = datetime.now()
+        self.s3.put_object(Key=self.s3_prefix + 'summary.txt',
+                           Body=text_report_str, Bucket=bucket_name)
+        self.s3.put_object(Key=self.s3_prefix + 'hist_data.pkl',
+                           Body=pickle.dumps(self.hist_dict), Bucket=bucket_name)
+        self.s3.put_object(Key=self.s3_prefix + 'sum_data.pkl',
+                           Body=pickle.dumps(self.summary_dict), Bucket=bucket_name)
+        ends['stats'] = datetime.now()
 
-    # Report on the timing
-    timing_str = ''
-    for step in ['reading', 'statement production', 'stats']:
-        time_taken = ends[step] - starts[step]
-        timing_str += ('%22s: start: %s, end: %s, duration: %s\n'
-                       % (step, starts[step], ends[step], time_taken))
+        # Report on the timing
+        timing_str = ''
+        for step in ['reading', 'statement production', 'stats']:
+            time_taken = ends[step] - starts[step]
+            timing_str += ('%22s: start: %s, end: %s, duration: %s\n'
+                           % (step, starts[step], ends[step], time_taken))
 
-    s3.put_object(Key=s3_prefix + 'time.txt', Body=timing_str, Bucket=bucket_name)
-    return
+        self.s3.put_object(Key=self.s3_prefix + 'time.txt', Body=timing_str,
+                           Bucket=bucket_name)
+        return
 
 
 if __name__ == '__main__':
@@ -314,6 +325,5 @@ if __name__ == '__main__':
     else:
         stmt_data = []
 
-    report_statistics(outputs, stmt_data, starts, ends, s3_log_prefix, client,
-                      bucket_name)
-
+    rep = StatReporter(s3_log_prefix, client, bucket_name)
+    rep.report_statistics(outputs, stmt_data, starts, ends)
