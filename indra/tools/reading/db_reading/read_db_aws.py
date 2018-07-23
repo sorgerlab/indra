@@ -47,36 +47,7 @@ class StatReporter(Reporter):
                                Bucket=self.bucket_name)
         return
 
-    def report_statistics(self, reading_outputs, stmt_outputs, starts, ends):
-        starts['stats'] = datetime.now()
-        self.summary_dict['Total readings'] = len(reading_outputs)
-        reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
-                         for rd in reading_outputs]
-        self.summary_dict['Content processed'] = \
-            len({t[1] for t in reading_stmts})
-        self.summary_dict['Statements produced'] = len(stmt_outputs)
-
-        readings_with_stmts = []
-        readings_with_no_stmts = []
-        for t in reading_stmts:
-            if t[-1]:
-                readings_with_stmts.append(t)
-            else:
-                readings_with_no_stmts.append(t)
-
-        self.summary_dict['Readings with 0 statements'] = \
-            len(readings_with_no_stmts)
-
-        self.populate_hist_data(readings_with_stmts, readings_with_no_stmts)
-        self.make_histograms()
-        self.make_text_summary()
-        ends['stats'] = datetime.now()
-
-        self.make_timing_report(starts, ends)
-        self.stash_data()
-        return
-
-    def make_timing_report(self, starts, ends):
+    def _make_timing_report(self, starts, ends):
         # Report on the timing
         timing_str = ''
         for step in ['reading', 'statement production', 'stats']:
@@ -88,7 +59,7 @@ class StatReporter(Reporter):
                            Bucket=self.bucket_name)
         return
 
-    def stash_data(self):
+    def _stash_data(self):
         """Store the data in pickle files. This should be done last."""
         self.s3.put_object(Key=self.s3_prefix + 'hist_data.pkl',
                            Body=pickle.dumps(self.hist_dict),
@@ -98,8 +69,7 @@ class StatReporter(Reporter):
                            Body=pickle.dumps(self.summary_dict))
         return
 
-
-    def populate_hist_data(self, readings_with_stmts, readings_with_no_stmts):
+    def _populate_hist_data(self, readings_with_stmts, readings_with_no_stmts):
         # Do a bunch of aggregation
         tc_rd_dict = {}
         tc_stmt_dict = {}
@@ -162,7 +132,7 @@ class StatReporter(Reporter):
             np.array([len(rid_set) for rid_set in reader_rids.values()])
         return
 
-    def make_histograms(self):
+    def _make_histograms(self):
         # Produce the histograms
         for (agged, agg_over), data in self.hist_dict.items():
             self._plot_hist(agged, agg_over, data)
@@ -172,7 +142,7 @@ class StatReporter(Reporter):
                                                      'median': np.median(data)}
         return
 
-    def make_text_summary(self):
+    def _make_text_summary(self):
         text_report_str = ''
         top_labels = ['Total readings', 'Content processed',
                       'Statements produced']
@@ -191,6 +161,35 @@ class StatReporter(Reporter):
                 text_report_str += '%s: %d\n' % (label, data)
         self.s3.put_object(Key=self.s3_prefix + 'summary.txt',
                            Body=text_report_str, Bucket=self.bucket_name)
+        return
+
+    def report_statistics(self, reading_outputs, stmt_outputs, starts, ends):
+        starts['stats'] = datetime.now()
+        self.summary_dict['Total readings'] = len(reading_outputs)
+        reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
+                         for rd in reading_outputs]
+        self.summary_dict['Content processed'] = \
+            len({t[1] for t in reading_stmts})
+        self.summary_dict['Statements produced'] = len(stmt_outputs)
+
+        readings_with_stmts = []
+        readings_with_no_stmts = []
+        for t in reading_stmts:
+            if t[-1]:
+                readings_with_stmts.append(t)
+            else:
+                readings_with_no_stmts.append(t)
+
+        self.summary_dict['Readings with 0 statements'] = \
+            len(readings_with_no_stmts)
+
+        self._populate_hist_data(readings_with_stmts, readings_with_no_stmts)
+        self._make_histograms()
+        self._make_text_summary()
+        ends['stats'] = datetime.now()
+
+        self._make_timing_report(starts, ends)
+        self._stash_data()
         return
 
 
