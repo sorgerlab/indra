@@ -25,13 +25,15 @@ from indra.tools.reading.readers import get_readers
 
 class StatReporter(Reporter):
     """A class to handle generating the reports made at the end of a job."""
-    def __init__(self, s3_log_prefix, s3, bucket_name):
-        super(StatReporter, self).__init__('report')
+    def __init__(self, job_name, s3_log_prefix, s3, bucket_name):
+        super(StatReporter, self).__init__('%s_summary' % job_name)
         self.s3_prefix = s3_log_prefix + 'statistics/'
         self.bucket_name = bucket_name
         self.s3 = s3
         self.summary_dict = {}
         self.hist_dict = {}
+        self.add_story_text("Report of db reading job: %s" % job_name,
+                            style='Title', fontsize=16)
         return
 
     def _plot_hist(self, agged, agg_over, data):
@@ -40,11 +42,13 @@ class StatReporter(Reporter):
         plt.xlabel('Number of %s for %s' % (agged, agg_over))
         plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
         fname = '%s_per_%s.png' % (agged, agg_over)
+        fig.set_size_inches(6, 4)
         fig.savefig(fname)
         with open(fname, 'rb') as f:
             s3_key = self.s3_prefix + fname
             self.s3.put_object(Key=s3_key, Body=f.read(),
                                Bucket=self.bucket_name)
+        self.add_story_image(fname, width=6, height=4)
         return
 
     def _make_timing_report(self, starts, ends):
@@ -134,9 +138,13 @@ class StatReporter(Reporter):
 
     def _make_histograms(self):
         # Produce the histograms
+        self.add_story_text("Plots ----------", style='Heading1')
         for (agged, agg_over), data in self.hist_dict.items():
             self._plot_hist(agged, agg_over, data)
             label = '%s per %s' % (agged, agg_over)
+            stat_dict = {'mean': data.mean(), 'std': data.std(),
+                         'median': np.median(data)}
+            self.add_story_text(str(stat_dict), style='Code')
             self.summary_dict[label.capitalize()] = {'mean': data.mean(),
                                                      'std': data.std(),
                                                      'median': np.median(data)}
@@ -187,6 +195,8 @@ class StatReporter(Reporter):
         self._make_histograms()
         self._make_text_summary()
         ends['stats'] = datetime.now()
+
+        doc = self.make_report()
 
         self._make_timing_report(starts, ends)
         self._stash_data()
@@ -346,5 +356,5 @@ if __name__ == '__main__':
     else:
         stmt_data = []
 
-    rep = StatReporter(s3_log_prefix, client, bucket_name)
+    rep = StatReporter(args.job_name, s3_log_prefix, client, bucket_name)
     rep.report_statistics(outputs, stmt_data, starts, ends)
