@@ -284,3 +284,6 @@ reading system (path to a folder)
 
 - INDRA_DEFAULT_JAVA_MEM_LIMIT: Maximum memory limit for Java virtual machines
   launched by INDRA
+
+- SITEMAPPER_CACHE_PATH: Path to an optional cache (a pickle file) for the
+  SiteMapper's automatically obtained mappings.

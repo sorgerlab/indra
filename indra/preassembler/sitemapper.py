@@ -8,6 +8,7 @@ import textwrap
 from copy import deepcopy
 from indra.statements import *
 from indra.util import read_unicode_csv
+from indra.config import has_config, get_config
 from indra.databases import uniprot_client, hgnc_client, phosphosite_client
 # Python 2
 try:
@@ -19,7 +20,11 @@ except:
 logger = logging.getLogger('sitemapper')
 
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+if has_config('SITEMAPPER_CACHE_PATH'):
+    sitemapper_cache = get_config('SITEMAPPER_CACHE_PATH')
+else:
+    sitemapper_cache = None
+
 
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
@@ -77,6 +82,10 @@ class SiteMapper(object):
         `correct_pos` are the corrected residue and position, and `comment` is
         a string describing the reason for the mapping (species error, isoform
         error, wrong residue name, etc.).
+    use_cache : Optional[bool]
+        If True, the SITEMAPPER_CACHE_PATH from the config (or environment)
+        is loaded and cached mappings are read and written to the given path.
+        Otherwise, no cache is used. Default: False
 
     Examples
     --------
@@ -108,21 +117,24 @@ class SiteMapper(object):
     >>> ms.mapped_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     """
-    def __init__(self, site_map):
-        self._cache_path = os.path.join(HERE, '.site_mapper_cache.pkl')
+    def __init__(self, site_map, use_cache=False):
         self.site_map = site_map
+        self.use_cache = use_cache
         self._cache = {}
-        if os.path.exists(self._cache_path):
-            with open(self._cache_path, 'rb') as f:
-                self._cache = pickle.load(f)
-            print("Loaded cache of length %d." % len(self._cache))
+        if self.use_cache:
+            self._cache_path = sitemapper_cache
+            if os.path.exists(self._cache_path):
+                with open(self._cache_path, 'rb') as f:
+                    self._cache = pickle.load(f)
+                print("Loaded cache of length %d." % len(self._cache))
         self._sitecount = {}
 
     def __del__(self):
         try:
-            import pickle
-            with open(self._cache_path, 'wb') as f:
-                pickle.dump(self._cache, f)
+            if self.use_cache:
+                import pickle
+                with open(self._cache_path, 'wb') as f:
+                    pickle.dump(self._cache, f)
         except:
             pass
 
