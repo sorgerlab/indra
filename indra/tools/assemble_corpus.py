@@ -139,6 +139,11 @@ def map_sequence(stmts_in, **kwargs):
         in other human isoforms of the protein (based on PhosphoSitePlus
         data). If a site is found that is linked to a site in the human
         reference sequence, a mapping is created. Default is True.
+    use_cache : boolean
+        If True, a cache will be created/used from the laction specified by
+        SITEMAPPER_CACHE_PATH, defined in your Indra config or the environment.
+        If false, no cache is used. For more details on the cache, see the
+        SiteMapper class definition.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
