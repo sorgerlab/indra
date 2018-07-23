@@ -23,7 +23,7 @@ class Reporter(object):
     def add_story_text(self, text, style='Normal', space=None, fontsize=12):
         if space is None:
             space=(1,12)
-        ptext = '<fond size=%d>%s</font>' % (fontsize, text)
+        ptext = '<font size=%d>%s</font>' % (fontsize, text)
         self.story.append(Paragraph(ptext, self.styles[style]))
         self.story.append(Spacer(*space))
         return
