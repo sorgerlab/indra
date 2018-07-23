@@ -11,6 +11,13 @@ from indra.databases import uniprot_client, hgnc_client
 logger = logging.getLogger('sparser')
 
 
+try:
+    basestring
+except:
+    basestring = str
+
+
+
 class SparserJSONProcessor(object):
     def __init__(self, json_dict):
         self.json_stmts = json_dict
@@ -30,7 +37,9 @@ class SparserJSONProcessor(object):
                         else:
                             json_stmt['position'] = position[0]
                     if isinstance(residue, list):
-                        if len(residue) != 1 or not isinstance(residue[0], str):
+                        if len(residue) != 1:
+                            logger.error('Invalid residue: %s' % residue)
+                        elif not isinstance(residue[0], basestring):
                             logger.error('Invalid residue: %s' % residue)
                         else:
                             json_stmt['residue'] = residue[0]
