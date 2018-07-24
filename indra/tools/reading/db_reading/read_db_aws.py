@@ -34,6 +34,8 @@ class StatReporter(Reporter):
         self.hist_dict = {}
         self.add_story_text("Report of db reading job: %s" % job_name,
                             style='Title', fontsize=16)
+        self.sections = {'Summary Statistics': [],
+                         'Plots': []}
         return
 
     def _plot_hist(self, agged, agg_over, data):
@@ -48,7 +50,7 @@ class StatReporter(Reporter):
             s3_key = self.s3_prefix + fname
             self.s3.put_object(Key=s3_key, Body=f.read(),
                                Bucket=self.bucket_name)
-        self.add_story_image(fname, width=6, height=4)
+        self.add_story_image(fname, width=6, height=4, section='Plots')
         return
 
     def _make_timing_report(self, starts, ends):
@@ -138,13 +140,12 @@ class StatReporter(Reporter):
 
     def _make_histograms(self):
         # Produce the histograms
-        self.add_story_text("Plots ----------", style='Heading1')
         for (agged, agg_over), data in self.hist_dict.items():
             self._plot_hist(agged, agg_over, data)
             label = '%s per %s' % (agged, agg_over)
             stat_dict = {'mean': data.mean(), 'std': data.std(),
                          'median': np.median(data)}
-            self.add_story_text(str(stat_dict), style='Code')
+            self.add_story_text(str(stat_dict), style='Code', section='Plots')
             self.summary_dict[label.capitalize()] = {'mean': data.mean(),
                                                      'std': data.std(),
                                                      'median': np.median(data)}
@@ -155,6 +156,8 @@ class StatReporter(Reporter):
         top_labels = ['Total readings', 'Content processed',
                       'Statements produced']
         for label in top_labels:
+            text_str = '%s: %d\n' % (label, self.summary_dict[label])
+            self.add_story_text(text_str, section='Summary Statistics')
             text_report_str += '%s: %d\n' % (label, self.summary_dict[label])
 
         for label, data in self.summary_dict.items():
@@ -166,7 +169,9 @@ class StatReporter(Reporter):
                                               for k, v in data.items()])
                 text_report_str += '\n'
             else:
-                text_report_str += '%s: %d\n' % (label, data)
+                text_str = '%s: %d\n' % (label, data)
+                self.add_story_text(text_str, section='Summary Statistics')
+                text_report_str += text_str
         self.s3.put_object(Key=self.s3_prefix + 'summary.txt',
                            Body=text_report_str, Bucket=self.bucket_name)
         return
