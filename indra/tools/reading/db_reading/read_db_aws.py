@@ -14,9 +14,12 @@ import os
 import random
 import numpy as np
 import matplotlib as mpl
+
+
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 from datetime import datetime
+from indra.util.get_version import get_git_info
 from indra.tools.reading.util.reporter import Reporter
 from indra.tools.reading.db_reading.read_db import produce_readings, \
     produce_statements, get_id_dict
@@ -32,10 +35,19 @@ class StatReporter(Reporter):
         self.s3 = s3
         self.summary_dict = {}
         self.hist_dict = {}
-        self.add_story_text("Report of db reading job: %s" % job_name,
-                            style='Title', fontsize=16)
-        self.sections = {'Summary Statistics': [],
-                         'Plots': []}
+        self.set_title("Report of Database Reading Batch Job")
+        self.sections = {'Summary Statistics': [], 'Plots': [], 'Git Info': [],
+                         'Job Info': []}
+        self._make_job_line('Job Name', job_name)
+        self._make_job_line('Job s3 prefix', s3_log_prefix)
+        self._get_git_info()
+        return
+
+    def _get_git_info(self):
+        git_info_dict = get_git_info()
+        for key, val in git_info_dict.items():
+            label = key.replace('_', ' ').capitalize()
+            self.add_story_text('%s: %s' % (label, val), section='Git Info')
         return
 
     def _plot_hist(self, agged, agg_over, data):
@@ -176,8 +188,17 @@ class StatReporter(Reporter):
                            Body=text_report_str, Bucket=self.bucket_name)
         return
 
+    def _make_job_line(self, key, value):
+        self.add_story_text(key, section='Job Info', space=(1, 6))
+        self.add_story_text(value, section='Job Info', style='Code')
+
     def report_statistics(self, reading_outputs, stmt_outputs, starts, ends):
         starts['stats'] = datetime.now()
+        for k, end in ends.items():
+            self._make_job_line(k + ' start', str(starts[k]))
+            self._make_job_line(k + ' end', str(end))
+            self._make_job_line(k + ' duration', str(end-starts[k]))
+
         self.summary_dict['Total readings'] = len(reading_outputs)
         reading_stmts = [(rd.reading_id, rd.tcid, rd.reader, rd.get_statements())
                          for rd in reading_outputs]
