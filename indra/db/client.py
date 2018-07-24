@@ -426,10 +426,12 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
             for supped_hash, supping_hash in set(support_links):
                 if supped_hash == supping_hash:
                     assert False, 'Self-support found on-load.'
-                supped_stmt = stmt_dict.get(supped_hash,
-                                            Unresolved(shallow_hash=supped_hash))
-                supping_stmt = stmt_dict.get(supping_hash,
-                                             Unresolved(shallow_hash=supping_hash))
+                supped_stmt = stmt_dict.get(supped_hash)
+                if supped_stmt is None:
+                    supped_stmt = Unresolved(shallow_hash=supped_hash)
+                supping_stmt = stmt_dict.get(supping_hash)
+                if supping_stmt is None:
+                    supping_stmt = Unresolved(shallow_hash=supping_hash)
                 supped_stmt.supported_by.append(supping_stmt)
                 supping_stmt.supports.append(supped_stmt)
 
