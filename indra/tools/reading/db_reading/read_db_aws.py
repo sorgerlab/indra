@@ -144,11 +144,11 @@ class StatReporter(Reporter):
         # Produce some numpy count arrays.
         self.hist_dict[('readings', 'text content')] = \
             np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
-        self.hist_dict[('statements', 'text_content')] = \
+        self.hist_dict[('stmts', 'text content')] = \
             np.array([len(stmts) for stmts in tc_stmt_dict.values()])
-        self.hist_dict[('statements', 'readings')] = \
+        self.hist_dict[('stmts', 'readings')] = \
             np.array([len(stmts) for stmts in rd_stmt_dict.values()])
-        self.hist_dict[('statements', 'readers')] = \
+        self.hist_dict[('stmts', 'readers')] = \
             np.array([len(stmts) for stmts in reader_stmts.values()])
         self.hist_dict[('text content', 'reader')] = \
             np.array([len(tcid_set) for tcid_set in reader_tcids.values()])
@@ -211,6 +211,10 @@ class StatReporter(Reporter):
         self.summary_dict['Content processed'] = \
             len({t[1] for t in reading_stmts})
         self.summary_dict['Statements produced'] = len(stmt_outputs)
+        self.s3.put_object(Key=self.s3_prefix + 'raw_tuples.pkl',
+                           Body=pickle.dumps([t[:-1] + (len(t[-1]),)
+                                              for t in reading_stmts]),
+                           Bucket=self.bucket_name)
 
         readings_with_stmts = []
         readings_with_no_stmts = []
@@ -220,7 +224,7 @@ class StatReporter(Reporter):
             else:
                 readings_with_no_stmts.append(t)
 
-        self.summary_dict['Readings with 0 statements'] = \
+        self.summary_dict['Readings with no statements'] = \
             len(readings_with_no_stmts)
 
         self._populate_hist_data(readings_with_stmts, readings_with_no_stmts)
