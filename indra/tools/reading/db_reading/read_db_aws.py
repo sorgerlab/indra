@@ -47,9 +47,13 @@ class StatReporter(Reporter):
 
     def _get_git_info(self):
         git_info_dict = get_git_info()
+        text_file_content = ''
         for key, val in git_info_dict.items():
             label = key.replace('_', ' ').capitalize()
+            text_file_content += '%s: %s\n' % (label, val)
             self.add_story_text('%s: %s' % (label, val), section='Git Info')
+        self.s3.put_object(Key=self.s3_prefix + 'git_info.txt',
+                           Body=text_file_content, Bucket=self.bucket_name)
         return
 
     def _plot_hist(self, agged, agg_over, data):
