@@ -41,11 +41,12 @@ class Reporter(object):
             full_story += self.story
             full_story += self._make_sections(**section_header_params)
 
-        doc = SimpleDocTemplate(self.name + '.pdf', pagesize=letter,
+        fname = self.name + '.pdf'
+        doc = SimpleDocTemplate(fname, pagesize=letter,
                                 rightMargin=72, leftMargin=72,
                                 topMargin=72, bottomMargin=18)
         doc.build(full_story)
-        return doc
+        return fname
 
     def _make_sections(self, **section_hdr_params):
         sect_story = []

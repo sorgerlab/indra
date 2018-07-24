@@ -222,7 +222,10 @@ class StatReporter(Reporter):
         self._make_text_summary()
         ends['stats'] = datetime.now()
 
-        doc = self.make_report()
+        fname = self.make_report()
+        with open(fname, 'rb') as f:
+            self.s3.put_object(Key=self.s3_prefix + fname, Body=f.read(),
+                               Bucket=self.bucket_name)
 
         self._make_timing_report(starts, ends)
         self._stash_data()
