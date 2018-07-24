@@ -146,20 +146,19 @@ class PybelAssembler(object):
                 logger.info('Unhandled statement: %s' % stmt)
         return self.model
 
-    def to_database(self, connection=None):
+    def to_database(self, manager=None):
         """Send the model to the PyBEL database
 
         This function wraps :py:func:`pybel.to_database`.
 
         Parameters
         ----------
-        connection : Optional[str or pybel.manager.Manager]
-            An RFC-1738 database connection string to the PyBEL SQL database
-            or a PyBEL manager. If none, first checks the PyBEL configuration
-            for ``PYBEL_CONNECTION`` then checks the environment variable
-            ``PYBEL_REMOTE_HOST``. Finally, defaults to using SQLite
-            database in PyBEL data directory (automatically configured
-            by PyBEL)
+        manager : Optional[pybel.manager.Manager]
+            A PyBEL database manager. If none, first checks the PyBEL
+            configuration for ``PYBEL_CONNECTION`` then checks the
+            environment variable ``PYBEL_REMOTE_HOST``. Finally,
+            defaults to using SQLite database in PyBEL data directory
+            (automatically configured by PyBEL)
 
         Returns
         -------
@@ -167,7 +166,7 @@ class PybelAssembler(object):
             The SQLAlchemy model representing the network that was uploaded.
             Returns None if upload fails.
         """
-        network = pybel.to_database(self.model, connection=connection)
+        network = pybel.to_database(self.model, manager=manager)
         return network
 
     def to_web(self, host=None, user=None, password=None):
