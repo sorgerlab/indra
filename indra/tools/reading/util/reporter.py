@@ -13,13 +13,22 @@ class Reporter(object):
         self.name = name
         self.title = name
         self.sections = {}
+        self.section_headings = []
         return
 
     def set_title(self, title):
         self.title = title
         return
 
+    def set_section_order(self, section_name_list):
+        self.section_headings = section_name_list[:]
+        for section_name in self.sections.keys():
+            if section_name not in section_name_list:
+                section_name_list.append(section_name)
+        return
+
     def add_section(self, section_name):
+        self.section_headings.append(section_name)
         if section_name in self.sections:
             raise ValueError("Section %s already exists." % section_name)
         self.sections[section_name] = []

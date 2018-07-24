@@ -41,6 +41,8 @@ class StatReporter(Reporter):
         self._make_job_line('Job Name', job_name)
         self._make_job_line('Job s3 prefix', s3_log_prefix)
         self._get_git_info()
+        self.set_section_order(['Job Info', 'Git Info', 'Summary Statistics',
+                                'Plots'])
         return
 
     def _get_git_info(self):
