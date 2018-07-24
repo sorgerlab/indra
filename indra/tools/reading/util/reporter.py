@@ -11,7 +11,12 @@ class Reporter(object):
         self.styles.add(ParagraphStyle(name="Justify", alignment=TA_JUSTIFY))
         self.story = []
         self.name = name
+        self.title = name
         self.sections = {}
+        return
+
+    def set_title(self, title):
+        self.title = title
         return
 
     def add_section(self, section_name):
@@ -20,11 +25,13 @@ class Reporter(object):
         self.sections[section_name] = []
 
     def make_report(self, sections_first=True, section_header_params=None):
-        full_story = []
+        full_story = list(self._preformat_text(self.title, style='Title',
+                                               fontsize=18, alignment='center'))
 
         # Set the default section header parameters
         if section_header_params is None:
-            section_header_params = {'style': 'h1', 'fontsize': 14}
+            section_header_params = {'style': 'h1', 'fontsize': 14,
+                                     'alignment': 'center'}
 
         # Merge the sections and the rest of the story.
         if sections_first:
@@ -43,15 +50,19 @@ class Reporter(object):
     def _make_sections(self, **section_hdr_params):
         sect_story = []
         for section_name, section_story in self.sections.items():
-            title, title_sp = self._preformat_text(section_name + '-'*40,
+            line = '-'*20
+            section_head_text = '%s %s %s' % (line, section_name, line)
+            title, title_sp = self._preformat_text(section_head_text,
                                                    **section_hdr_params)
             sect_story += [title, title_sp] + section_story
         return sect_story
 
-    def _preformat_text(self, text, style='Normal', space=None, fontsize=12):
+    def _preformat_text(self, text, style='Normal', space=None, fontsize=12,
+                        alignment='left'):
         if space is None:
             space=(1,12)
-        ptext = '<font size=%d>%s</font>' % (fontsize, text)
+        ptext = ('<para alignment=\"%s\"><font size=%d>%s</font></para>'
+                 % (alignment, fontsize, text))
         para = Paragraph(ptext, self.styles[style])
         sp = Spacer(*space)
         return para, sp
