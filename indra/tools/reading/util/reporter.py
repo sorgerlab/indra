@@ -59,7 +59,8 @@ class Reporter(object):
 
     def _make_sections(self, **section_hdr_params):
         sect_story = []
-        for section_name, section_story in self.sections.items():
+        for section_name in self.section_headings:
+            section_story = self.sections[section_name]
             line = '-'*20
             section_head_text = '%s %s %s' % (line, section_name, line)
             title, title_sp = self._preformat_text(section_head_text,
