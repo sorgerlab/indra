@@ -5,8 +5,8 @@ will include the git commit hash. Otherwise, the version will be marked with
 """
 
 import re
-from os import devnull
-from os.path import dirname
+from os import devnull, chdir, curdir
+from os.path import dirname, abspath
 from subprocess import check_output, CalledProcessError
 
 from indra import __version__
@@ -17,16 +17,21 @@ INDRA_GITHASH = None
 
 def get_git_info():
     """Get a dict with useful git info."""
-    re_patt_str = (r'commit\s+(?P<commit_hash>\w+)\s+Author:\s+'
-                   r'(?P<author_name>.*?)\s+<(?P<author_email>.*?)>\s+Date:\s+'
-                   r'(?P<date>.*?)\n\s+(?P<commit_msg>.*?)\s+diff')
-    show_out = check_output(['git', 'show']).decode('ascii')
-    revp_out = check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
-    revp_out = revp_out.decode('ascii').strip()
-    m = re.match(re_patt_str, show_out)
-    assert m is not None, "Regex failed."
-    ret_dict = m.groupdict()
-    ret_dict['branch_name'] = revp_out
+    start_dir = abspath(curdir)
+    try:
+        chdir(dirname(abspath(__file__)))
+        re_patt_str = (r'commit\s+(?P<commit_hash>\w+)\s+Author:\s+'
+                       r'(?P<author_name>.*?)\s+<(?P<author_email>.*?)>\s+Date:\s+'
+                       r'(?P<date>.*?)\n\s+(?P<commit_msg>.*?)\s+diff')
+        show_out = check_output(['git', 'show']).decode('ascii')
+        revp_out = check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+        revp_out = revp_out.decode('ascii').strip()
+        m = re.match(re_patt_str, show_out)
+        assert m is not None, "Regex failed."
+        ret_dict = m.groupdict()
+        ret_dict['branch_name'] = revp_out
+    finally:
+        chdir(start_dir)
     return ret_dict
 
 
