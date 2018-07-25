@@ -1,8 +1,7 @@
 
 import boto3
-from os import path
+from os import path, chdir
 from subprocess import check_call
-
 from nose.plugins.attrib import attr
 
 from indra.db import util as dbu
@@ -18,12 +17,14 @@ HERE = path.dirname(path.abspath(__file__))
 
 @attr('nonpublic')
 def test_db_reading_help():
+    chdir(path.expanduser('~'))
     check_call(['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
                 '--help'])
 
 
 @attr('nonpublic')
 def test_normal_db_reading_call():
+    chdir(path.expanduser('~'))
     # Put some basic stuff in the test databsae
     N = 6
     db = dbu.get_test_db()
@@ -61,6 +62,7 @@ def test_normal_db_reading_call():
 
 @attr('nonpublic')
 def test_normal_pmid_reading_call():
+    chdir(path.expanduser('~'))
     # Put an id file on s3
     basename = 'local_pmid_test_run'
     s3_prefix = 'reading_results/%s/' % basename
