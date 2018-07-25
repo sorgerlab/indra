@@ -24,6 +24,7 @@ def main():
                       'bbn': ['rdflib-jsonld'],
                       'ndex': ['ndex2'],
                       'bel': ['pybel'],
+                      'sbml': ['python-libsbml'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy', 'ndex2',
                                   'pyyaml', 'click'],

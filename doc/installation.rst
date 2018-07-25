@@ -237,6 +237,8 @@ of dependencies.
 +-----------------+------------------------------------------------------+
 |ndex             |NDEx client for network input processing and CX upload|
 +-----------------+------------------------------------------------------+
+|sbml             |SBML model export through the PySB Assembler          |
++-----------------+------------------------------------------------------+
 |machine          |Running a local instance of a "RAS machine"           |
 +-----------------+------------------------------------------------------+
 |explanation      |Finding explanatory paths in rule-based models        |
