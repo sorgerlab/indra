@@ -1640,6 +1640,7 @@ def test_concept_get_grounding():
     d5 = {'UN': [('a', 1.0), ('b', 0.8)]}
     d6 = {'UN': [('b', 0.8), ('a', 1.0)]}
     d7 = {'UN': []}
+    d8 = {'BBN': [('a', 1.0), ('b', 0.8)]}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
     assert Concept('b', db_refs=d2).get_grounding() == ('UN', 'c')
     assert Concept('c', db_refs=d3).get_grounding() == ('UN', 'y')
@@ -1647,6 +1648,7 @@ def test_concept_get_grounding():
     assert Concept('e', db_refs=d5).get_grounding() == ('UN', 'a')
     assert Concept('f', db_refs=d6).get_grounding() == ('UN', 'a')
     assert Concept('g', db_refs=d7).get_grounding() == (None, None)
+    assert Concept('h', db_refs=d8).get_grounding() == ('BBN', 'a')
 
 
 def test_concept_isa_eidos():

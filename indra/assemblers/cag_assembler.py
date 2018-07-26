@@ -131,7 +131,7 @@ class CAGAssembler(object):
                 else:
                     factor_norm = ''
             elif evidence.source_api == 'bbn':
-                factor_norm = concept.db_refs['BBN']
+                factor_norm = concept.db_refs['BBN'][0][0]
             elif evidence.source_api == 'cwms':
                 factor_norm = concept.db_refs['CWMS']
             elif evidence.source_api == 'sofia':

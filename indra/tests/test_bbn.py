@@ -1,9 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
+import unittest
 from os.path import join, dirname
+from indra.statements import *
 from indra.sources.bbn.bbn_api import *
 
-from indra.statements import *
 
 # Path to the BBN test file
 path_this = os.path.dirname(os.path.abspath(__file__))
@@ -49,6 +51,7 @@ def test_negated_effect():
     assert(len(bp.statements) == 0)
 
 
+@unittest.skip('Need updated JSON-LD file')
 def test_bbn_on_ben_paragraph():
     bp = process_jsonld_file(join(path_this,
                                   'hackathon_test_paragraph.json-ld'))
