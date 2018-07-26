@@ -7,7 +7,7 @@ from os.path import basename
 from indra.statements import Concept, Influence, Evidence
 
 
-logger = logging.getLogger('bbn')
+logger = logging.getLogger('hume')
 
 
 class BBNJsonLdProcessor(object):
@@ -116,7 +116,7 @@ class BBNJsonLdProcessor(object):
         """
         # Save raw text and BBN scored groundings as db_refs
         db_refs = {'TEXT': entity['text'],
-                   'BBN': _get_bbn_grounding(entity)}
+                   'BBN': _get_hume_grounding(entity)}
         concept = Concept(name, db_refs=db_refs)
         return concept
 
@@ -149,7 +149,7 @@ class BBNJsonLdProcessor(object):
             'bounds': bounds
             }
         location = self.document_dict[doc_id]['location']
-        ev = Evidence(source_api='bbn', text=text, annotations=annotations,
+        ev = Evidence(source_api='hume', text=text, annotations=annotations,
                       pmid=location)
         return [ev]
 
@@ -182,7 +182,7 @@ def get_states(event):
     return ret_list
 
 
-def _get_bbn_grounding(entity):
+def _get_hume_grounding(entity):
     """Return BBN grounding."""
     groundings = entity.get('grounding')
     if not groundings:
@@ -376,7 +376,7 @@ class CauseEffect(object):
             evidence_text = evidence_texts[0]
         else:
             evidence_text = repr(evidence_texts)
-        ev = Evidence(source_api='bbn', text=str(evidence_text))
+        ev = Evidence(source_api='hume', text=str(evidence_text))
 
         # Convert from rdf literal to python string
         cause_text = str(cause_text)

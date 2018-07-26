@@ -1673,10 +1673,10 @@ def test_concept_isa_cwms():
     assert not c2.refinement_of(c1, {'entity': hm})
 
 
-def test_concept_isa_bbn():
-    bbn_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           '../sources/bbn/bbn_ontology.rdf')
-    hm = HierarchyManager(bbn_ont, True, True)
+def test_concept_isa_hume():
+    hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            '../sources/hume/hume_ontology.rdf')
+    hm = HierarchyManager(hume_ont, True, True)
     c1 = Concept('a',
                  db_refs={'BBN': 'entity/rule/law'})
     c2 = Concept('b', db_refs={'BBN': 'entity/rule'})

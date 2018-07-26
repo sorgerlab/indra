@@ -1,10 +1,10 @@
 import json
 import rdflib
 import logging
-from indra.sources.bbn import processor
+from indra.sources.hume import processor
 from os.path import abspath
 
-logger = logging.getLogger('bbn')
+logger = logging.getLogger('hume')
 
 
 def process_jsonld_file(fname):
@@ -17,7 +17,7 @@ def process_jsonld_file(fname):
 
     Returns
     -------
-    bp : indra.sources.bbn.BBNProcessor
+    bp : indra.sources.hume.BBNProcessor
         A BBNProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
@@ -38,7 +38,7 @@ def process_json_file_old(fname):
 
     Returns
     -------
-    bp : indra.sources.bbn.BBNProcessor
+    bp : indra.sources.hume.BBNProcessor
         A BBNProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """

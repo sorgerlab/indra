@@ -3,7 +3,7 @@ to the Eidos UN ontology based on entries and examples."""
 
 import yaml
 import requests
-from indra.sources import bbn
+from indra.sources import hume
 
 
 
@@ -42,6 +42,6 @@ if __name__ == '__main__':
         build_examples(node, top_entry[node], None)
 
 
-    with open('bbn_ontology_examples.tsv', 'w') as fh:
+    with open('hume_ontology_examples.tsv', 'w') as fh:
         for k, v in sorted(all_examples.items(), key=lambda x: x[0]):
             fh.write('%s\t%s\n' % (k, ','.join(sorted(list(v)))))

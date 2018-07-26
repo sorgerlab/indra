@@ -4,7 +4,7 @@ from builtins import dict, str
 import unittest
 from os.path import join, dirname
 from indra.statements import *
-from indra.sources.bbn.bbn_api import *
+from indra.sources.hume.api import *
 
 
 # Path to the BBN test file
@@ -33,7 +33,7 @@ def test_simple_extraction():
 
     assert(len(s0.evidence) == 1)
     ev0 = s0.evidence[0]
-    assert(ev0.source_api == 'bbn')
+    assert(ev0.source_api == 'hume')
     assert(ev0.text == 'Cow causes moo.')
 
 
