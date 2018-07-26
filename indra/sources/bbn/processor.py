@@ -135,7 +135,7 @@ class BBNJsonLdProcessor(object):
 
         # First try looking up the full sentence through provenance
         doc_id = provenance[0]['document']['@id']
-        sent_id = provenance[0]['documentCharPositions']['sentence']
+        sent_id = provenance[0]['sentence']
         text = self.document_dict[doc_id]['sentences'][sent_id]
         text = self._sanitize(text)
         bounds = [provenance[0]['documentCharPositions'][k]
