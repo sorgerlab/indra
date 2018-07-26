@@ -195,7 +195,7 @@ def test_load_bbn_hierarchy():
                            '../sources/bbn/bbn_ontology.rdf')
     hm = HierarchyManager(bbn_ont, True, True)
     assert hm.isa_closure
-    bbn_isa = lambda a, b: hm.isa('BBN', a, 'BBN', b)
+    bbn_isa = lambda a, b: hm.isa('HUME', a, 'HUME', b)
     assert bbn_isa('entity/academic_discipline', 'entity')
     assert not bbn_isa('entity', 'entity/academic_discipline')
     assert bbn_isa('event/healthcare/human_disease',

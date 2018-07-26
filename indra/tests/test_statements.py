@@ -1635,20 +1635,20 @@ def test_concept_matches():
 def test_concept_get_grounding():
     d1 = {'TEXT': 'a'}
     d2 = {'TEXT': 'b', 'UN': 'c'}
-    d3 = {'TEXT': 'x', 'UN': 'y', 'BBN': 'z'}
-    d4 = {'TEXT': 'b', 'BBN': 'a'}
+    d3 = {'TEXT': 'x', 'UN': 'y', 'HUME': 'z'}
+    d4 = {'TEXT': 'b', 'HUME': 'a'}
     d5 = {'UN': [('a', 1.0), ('b', 0.8)]}
     d6 = {'UN': [('b', 0.8), ('a', 1.0)]}
     d7 = {'UN': []}
-    d8 = {'BBN': [('a', 1.0), ('b', 0.8)]}
+    d8 = {'HUME': [('a', 1.0), ('b', 0.8)]}
     assert Concept('a', db_refs=d1).get_grounding() == (None, None)
     assert Concept('b', db_refs=d2).get_grounding() == ('UN', 'c')
     assert Concept('c', db_refs=d3).get_grounding() == ('UN', 'y')
-    assert Concept('d', db_refs=d4).get_grounding() == ('BBN', 'a')
+    assert Concept('d', db_refs=d4).get_grounding() == ('HUME', 'a')
     assert Concept('e', db_refs=d5).get_grounding() == ('UN', 'a')
     assert Concept('f', db_refs=d6).get_grounding() == ('UN', 'a')
     assert Concept('g', db_refs=d7).get_grounding() == (None, None)
-    assert Concept('h', db_refs=d8).get_grounding() == ('BBN', 'a')
+    assert Concept('h', db_refs=d8).get_grounding() == ('HUME', 'a')
 
 
 def test_concept_isa_eidos():
@@ -1678,8 +1678,8 @@ def test_concept_isa_hume():
                             '../sources/hume/hume_ontology.rdf')
     hm = HierarchyManager(hume_ont, True, True)
     c1 = Concept('a',
-                 db_refs={'BBN': 'entity/rule/law'})
-    c2 = Concept('b', db_refs={'BBN': 'entity/rule'})
+                 db_refs={'HUME': 'entity/rule/law'})
+    c2 = Concept('b', db_refs={'HUME': 'entity/rule'})
     assert c1.refinement_of(c2, {'entity': hm})
     assert not c2.refinement_of(c1, {'entity': hm})
 

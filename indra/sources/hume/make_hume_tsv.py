@@ -1,4 +1,4 @@
-"""This script produces a TSV that helps map the BBN ontology
+"""This script produces a TSV that helps map the Hume ontology
 to the Eidos UN ontology based on entries and examples."""
 
 import yaml
@@ -29,7 +29,6 @@ def build_examples(node, tree, prefix):
 
 
 if __name__ == '__main__':
-    # BBN
     bbn_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
                    'resource/ontologies/hume_ontology.yaml')
 

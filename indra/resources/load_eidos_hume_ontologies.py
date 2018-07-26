@@ -1,6 +1,6 @@
 """This file contains the methods needed to load the ontologies for Eidos.
 
-It also loads BBN and can easly handle any other ontology which uses the same
+It also loads Hume and can easly handle any other ontology which uses the same
 format (yaml ontology following the namespace defined at `eidos_ns`).
 """
 

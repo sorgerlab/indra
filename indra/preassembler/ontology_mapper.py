@@ -40,7 +40,7 @@ class OntologyMapper(object):
                 for map_db_name, map_db_id in all_mappings:
                     if map_db_name in agent.db_refs:
                         continue
-                    if map_db_name in ('UN', 'BBN'):
+                    if map_db_name in ('UN', 'HUME'):
                         agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
                     else:
                         agent.db_refs[map_db_name] = map_db_id
@@ -62,7 +62,7 @@ class OntologyMapper(object):
 
 
 def _load_default_mappings():
-    return [(('UN', 'entities/x'), ('BBN', 'entities/y'))]
+    return [(('UN', 'entities/x'), ('HUME', 'entities/y'))]
 
 
 def _load_wm_map():
@@ -89,7 +89,7 @@ def _load_wm_map():
     bbn_prefix_map = make_bbn_prefix_map()
 
     def add_bbn_prefix(bbn_entry):
-        """We need to do this because the BBN prefixes are missing"""
+        """We need to do this because the HUME prefixes are missing"""
         prefix = bbn_prefix_map[bbn_entry]
         return '%s/%s' % (prefix, bbn_entry)
 
@@ -99,7 +99,7 @@ def _load_wm_map():
             namespace = 'UN'
             entry_id = entry
         elif reader == 'BBN':
-            namespace = 'BBN'
+            namespace = 'HUME'
             entry = entry.replace(' ', '_')
             entry_id = add_bbn_prefix(entry)
         elif reader == 'sofia':
