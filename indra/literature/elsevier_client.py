@@ -129,8 +129,8 @@ def download_article(id_val, id_type='doi', on_retry=False):
     params = {'httpAccept': 'text/xml'}
     res = requests.get(url, params, headers=ELSEVIER_KEYS)
     if res.status_code == 404:
-        logger.debug("Resource for %s not available on elsevier."
-                     % url)
+        logger.info("Resource for %s not available on elsevier." % url)
+        return None
     elif res.status_code == 429:
         if not on_retry:
             logger.warning("Broke the speed limit. Waiting half a second then "
@@ -146,12 +146,14 @@ def download_article(id_val, id_type='doi', on_retry=False):
                      (url, res.status_code))
         logger.error('Elsevier response: %s' % res.text)
         return None
-    elif res.content.decode('utf-8').startswith('<service-error>'):
-        logger.error('Got a service error with 200 status: %s'
-                     % res.content.decode('utf-8'))
-        return None
+    else:
+        content_str = res.content.decode('utf-8')
+        if content_str.startswith('<service-error>'):
+            logger.error('Got a service error with 200 status: %s'
+                         % content_str)
+            return None
     # Return the XML content as a unicode string, assuming UTF-8 encoding
-    return res.content.decode('utf-8')
+    return content_str
 
 
 def download_article_from_ids(**id_dict):
