@@ -29,8 +29,8 @@ class BBNJsonLdProcessor(object):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
         self.document_dict = {}
-        self.entity_dict = {}
-        self.event_dict = {}
+        self.concept_dict = {}
+        self.relation_dict = {}
         self.eid_stmt_dict = {}
 
     def get_documents(self):
@@ -43,52 +43,57 @@ class BBNJsonLdProcessor(object):
         return
 
     def get_events(self):
-        events = \
-            list(self.tree.execute("$.extractions[(@.@type is 'Event')]"))
-        if not events:
+        # Get all extractions
+        extractions = \
+            list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
+
+        # Get relations from extractions
+        relations = [e for e in extractions if 'DirectedRelation' in
+                     e.get('labels', [])]
+        if not relations:
             return
-        self.event_dict = {ev['@id']: ev for ev in events}
+        self.relation_dict = {rel['@id']: rel for rel in relations}
 
-        # List out event types and their default (implied) polarities.
-        event_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                            'mitigation': -1, 'prevention': -1}
+        # List out relation types and their default (implied) polarities.
+        relation_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+                               'mitigation': -1, 'prevention': -1}
 
-        # Restrict to known event types
-        events = [e for e in events if any([et in e.get('type')
-                                            for et in event_polarities.keys()])]
-        logger.info('%d events of types %s found'
-                    % (len(events), ', '.join(event_polarities.keys())))
+        # Restrict to known relation types
+        relations = [r for r in relations if any([rt in r.get('type') for rt in
+                                                  relation_polarities.keys()])]
+        logger.info('%d relations of types %s found'
+                    % (len(relations), ', '.join(relation_polarities.keys())))
 
-        # Build a dictionary of entities and sentences by ID for convenient
+        # Build a dictionary of concepts and sentences by ID for convenient
         # lookup
-        entities = \
-            self.tree.execute("$.extractions[(@.@type is 'Entity')]")
-        self.entity_dict = {entity['@id']: entity for entity in entities}
+        concepts = [e for e in extractions if
+                    set(e.get('labels', [])) & {'Event', 'Entity'}]
+        self.concept_dict = {concept['@id']: concept for concept in concepts}
 
         self.get_documents()
 
-        for event in events:
-            event_type = event.get('type')
-            subj_concept, subj_delta = self._get_concept(event, 'source')
-            obj_concept, obj_delta = self._get_concept(event, 'destination')
+        for relation in relations:
+            relation_type = relation.get('type')
+            subj_concept, subj_delta = self._get_concept(relation, 'source')
+            obj_concept, obj_delta = self._get_concept(relation, 'destination')
 
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
             # None to begin with, we assume it is positive
             obj_delta['polarity'] = \
-                event_polarities[event_type] * \
+                relation_polarities[relation_type] * \
                 (obj_delta['polarity'] if obj_delta['polarity'] is not None
                  else 1)
 
             if not subj_concept or not obj_concept:
                 continue
 
-            evidence = self._get_evidence(event, subj_concept, obj_concept,
-                                          get_states(event))
+            evidence = self._get_evidence(relation, subj_concept, obj_concept,
+                                          get_states(relation))
 
             st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
-            self.eid_stmt_dict[event['@id']] = st
+            self.eid_stmt_dict[relation['@id']] = st
             self.statements.append(st)
 
         return
@@ -117,7 +122,7 @@ class BBNJsonLdProcessor(object):
 
     def _get_concept(self, event, arg_type):
         eid = _choose_id(event, arg_type)
-        ev = self.event_dict[eid]
+        ev = self.concept_dict[eid]
         concept = self._make_concept(ev)
         ev_delta = {'adjectives': [],
                     'states': get_states(ev),
