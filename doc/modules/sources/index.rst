@@ -13,7 +13,7 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    eidos/index
    cwms/index
    sofia/index
-   bbn/index
+   hume/index
    bel/index
    biopax/index
    signor/index
