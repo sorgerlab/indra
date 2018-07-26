@@ -29,12 +29,12 @@ def build_examples(node, tree, prefix):
 
 
 if __name__ == '__main__':
-    bbn_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
-                   'resource/ontologies/hume_ontology.yaml')
+    hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
+                    'resource/ontologies/hume_ontology.yaml')
 
     all_examples = {}
 
-    yml = requests.get(bbn_ont_url).content
+    yml = requests.get(hume_ont_url).content
     root = yaml.load(yml)
     for top_entry in root:
         node = list(top_entry.keys())[0]

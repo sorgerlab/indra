@@ -190,15 +190,15 @@ def test_load_trips_hierarchy():
     assert trips_isa('ONT::TABLE', 'ONT::MANUFACTURED-OBJECT')
 
 
-def test_load_bbn_hierarchy():
-    bbn_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           '../sources/bbn/bbn_ontology.rdf')
-    hm = HierarchyManager(bbn_ont, True, True)
+def test_load_hume_hierarchy():
+    hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           '../sources/hume/hume_ontology.rdf')
+    hm = HierarchyManager(hume_ont, True, True)
     assert hm.isa_closure
-    bbn_isa = lambda a, b: hm.isa('HUME', a, 'HUME', b)
-    assert bbn_isa('entity/academic_discipline', 'entity')
-    assert not bbn_isa('entity', 'entity/academic_discipline')
-    assert bbn_isa('event/healthcare/human_disease',
+    hume_isa = lambda a, b: hm.isa('HUME', a, 'HUME', b)
+    assert hume_isa('entity/academic_discipline', 'entity')
+    assert not hume_isa('entity', 'entity/academic_discipline')
+    assert hume_isa('event/healthcare/human_disease',
                    'event/healthcare')
 
 def test_same_components():
