@@ -193,9 +193,24 @@ def _get_bbn_grounding(entity):
             concept = concept[1:]
         return concept
 
-    grounding_entries = [(get_ont_concept(g['ontologyConcept']),
-                          g['value'])
-                         for g in groundings]
+    # Basic collection of grounding entries
+    raw_grounding_entries = [(get_ont_concept(g['ontologyConcept']),
+                              g['value']) for g in groundings]
+
+    # Occasionally we get duplicate grounding entries, we want to
+    # eliminate those here
+    grounding_dict = {}
+    for cat, score in raw_grounding_entries:
+        if (cat not in grounding_dict) or (score > grounding_dict[cat]):
+            grounding_dict[cat] = score
+    # Then we sort the list in reverse order according to score
+    # Sometimes the exact same score appears multiple times, in this
+    # case we prioritize by the "depth" of the grounding which is
+    # obtained by looking at the number of /-s in the entry
+    grounding_entries = sorted(list(set(grounding_dict.items())),
+                               key=lambda x: (x[1], x[0].count('/')),
+                               reverse=True)
+
     return grounding_entries
 
 
