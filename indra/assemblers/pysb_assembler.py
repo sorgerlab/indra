@@ -740,7 +740,7 @@ class PysbAssembler(object):
         self.statements += stmts
 
     def make_model(self, policies=None, initial_conditions=True,
-                   reverse_effects=False):
+                   reverse_effects=False, model_name='indra_model'):
         """Assemble the PySB model from the collected INDRA Statements.
 
         This method assembles a PySB model from the set of INDRA Statements.
@@ -757,7 +757,14 @@ class PysbAssembler(object):
             different policies.
         initial_conditions : Optional[bool]
             If True, default initial conditions are generated for the
-            Monomers in the model.
+            Monomers in the model. Default: True
+        reverse_effects : Optional[bool]
+            If True, reverse rules are added to the model for activity,
+            modification and amount regulations that have no corresponding
+            reverse effects. Default: False
+        model_name : Optional[str]
+            The name attribute assigned to the PySB Model object.
+            Default: "indra_model"
 
         Returns
         -------
@@ -780,6 +787,7 @@ class PysbAssembler(object):
                 local_policies.update(policies)
             self.policies = local_policies
         self.model = Model()
+        self.model.name = model_name
         self.agent_set = _BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
