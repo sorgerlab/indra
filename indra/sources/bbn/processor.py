@@ -184,10 +184,19 @@ def get_states(event):
 
 def _get_bbn_grounding(entity):
     """Return BBN grounding."""
-    grounding = entity['type']
-    if grounding.startswith('/'):
-        grounding = grounding[1:]
-    return grounding
+    groundings = entity.get('grounding')
+    if not groundings:
+        return None
+    def get_ont_concept(concept):
+        """Strip /event/x to event/x."""
+        if concept.startswith('/'):
+            concept = concept[1:]
+        return concept
+
+    grounding_entries = [(get_ont_concept(g['ontologyConcept']),
+                          g['value'])
+                         for g in groundings]
+    return grounding_entries
 
 
 def get_polarity(event):
