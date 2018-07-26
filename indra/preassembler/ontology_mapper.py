@@ -33,15 +33,15 @@ class OntologyMapper(object):
                     continue
                 all_mappings = []
                 for db_name, db_id in agent.db_refs.items():
-                    if db_name == 'UN':
+                    if isinstance(db_id, list):
                         db_id = db_id[0][0]
                     mappings = self._map_id(db_name, db_id)
                     all_mappings += mappings
                 for map_db_name, map_db_id in all_mappings:
                     if map_db_name in agent.db_refs:
                         continue
-                    if map_db_name == 'UN':
-                        agent.db_refs['UN'] = [(map_db_id, 1.0)]
+                    if map_db_name in ('UN', 'BBN'):
+                        agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
                     else:
                         agent.db_refs[map_db_name] = map_db_id
 

@@ -11,7 +11,7 @@ def test_map():
     om = OntologyMapper(stmts)
     om.map_statements()
     assert len(om.statements) == 2
-    assert om.statements[0].subj.db_refs['BBN'] == [('entities/y', 1.0)] \
+    assert om.statements[0].subj.db_refs['BBN'] == [('entities/y', 1.0)], \
         om.statements[0].subj.db_refs
     assert om.statements[1].subj.db_refs['UN'] == [('entities/x', 1.0)], \
         om.statements[1].subj.db_refs
