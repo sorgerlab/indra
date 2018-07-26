@@ -497,11 +497,7 @@ def filter_genes_only(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
-
-    if 'remove_bound' in kwargs and kwargs['remove_bound']:
-        remove_bound = True
-    else:
-        remove_bound = False
+    remove_bound = 'remove_bound' in kwargs and kwargs['remove_bound']
 
     specific_only = kwargs.get('specific_only')
     logger.info('Filtering %d statements for ones containing genes only...' % 
@@ -555,10 +551,9 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
     stmts_out = []
     # Now we eliminate supports/supported-by
     for stmt in stmts_in:
-        if stmt.belief >= belief_cutoff:
-            stmts_out.append(stmt)
-        else:
+        if stmt.belief < belief_cutoff:
             continue
+        stmts_out.append(stmt)
         supp_by = []
         supp = []
         for st in stmt.supports:
