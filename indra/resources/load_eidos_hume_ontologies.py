@@ -1,6 +1,6 @@
 """This file contains the methods needed to load the ontologies for Eidos.
 
-It also loads BBN and can easly handle any other ontology which uses the same
+It also loads Hume and can easly handle any other ontology which uses the same
 format (yaml ontology following the namespace defined at `eidos_ns`).
 """
 
@@ -80,9 +80,9 @@ if __name__ == '__main__':
                           'eidos_ontology.rdf')
     load_ontology(eidos_ont_url, eidos_rdf_path)
 
-    # BBN
-    from indra.sources import bbn
-    bbn_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
-                   'resource/ontologies/hume_ontology.yaml')
-    bbn_rdf_path = join(dirname(abspath(bbn.__file__)), 'bbn_ontology.rdf')
-    load_ontology(bbn_ont_url, bbn_rdf_path)
+    # Hume
+    from indra.sources import hume
+    hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
+                    'resource/ontologies/hume_ontology.yaml')
+    hume_rdf_path = join(dirname(abspath(hume.__file__)), 'hume_ontology.rdf')
+    load_ontology(hume_ont_url, hume_rdf_path)

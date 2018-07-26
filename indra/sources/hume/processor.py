@@ -7,16 +7,16 @@ from os.path import basename
 from indra.statements import Concept, Influence, Evidence
 
 
-logger = logging.getLogger('bbn')
+logger = logging.getLogger('hume')
 
 
-class BBNJsonLdProcessor(object):
-    """This processor extracts INDRA Statements from BBN JSON-LD output.
+class HumeJsonLdProcessor(object):
+    """This processor extracts INDRA Statements from Hume JSON-LD output.
 
     Parameters
     ----------
     json_dict : dict
-        A JSON dictionary containing the BBN extractions in JSON-LD format.
+        A JSON dictionary containing the Hume extractions in JSON-LD format.
 
     Attributes
     ----------
@@ -99,7 +99,7 @@ class BBNJsonLdProcessor(object):
         return
 
     def _make_concept(self, entity):
-        """Return Concept from an BBN entity."""
+        """Return Concept from a Hume entity."""
         # Use the canonical name as the name of the Concept by default
         name = self._sanitize(entity['canonicalName'])
         # But if there is a trigger head text, we prefer that since
@@ -114,9 +114,9 @@ class BBNJsonLdProcessor(object):
             if head_text is not None:
                 name = head_text
         """
-        # Save raw text and BBN scored groundings as db_refs
+        # Save raw text and Hume scored groundings as db_refs
         db_refs = {'TEXT': entity['text'],
-                   'BBN': _get_bbn_grounding(entity)}
+                   'HUME': _get_hume_grounding(entity)}
         concept = Concept(name, db_refs=db_refs)
         return concept
 
@@ -149,13 +149,13 @@ class BBNJsonLdProcessor(object):
             'bounds': bounds
             }
         location = self.document_dict[doc_id]['location']
-        ev = Evidence(source_api='bbn', text=text, annotations=annotations,
+        ev = Evidence(source_api='hume', text=text, annotations=annotations,
                       pmid=location)
         return [ev]
 
     @staticmethod
     def _sanitize(text):
-        """Return sanitized BBN text field for human readability."""
+        """Return sanitized Hume text field for human readability."""
         # TODO: any cleanup needed here?
         if text is None:
             return None
@@ -182,8 +182,8 @@ def get_states(event):
     return ret_list
 
 
-def _get_bbn_grounding(entity):
-    """Return BBN grounding."""
+def _get_hume_grounding(entity):
+    """Return Hume grounding."""
     groundings = entity.get('grounding')
     if not groundings:
         return None
@@ -222,7 +222,7 @@ def get_polarity(event):
                 return pol_map[state_property['text']]
     return None
 
-# OLD BBN PROCESSOR
+# OLD PROCESSOR
 
 prefixes = """
     PREFIX causal: <http://www.bbn.com/worldmodelers/ontology/wm/CauseEffect#>
@@ -232,8 +232,8 @@ prefixes = """
     """
 
 
-class BBNProcessor(object):
-    """Process a BBN extraction graph into INDRA Statements.
+class HumeProcessor(object):
+    """Process a Hume extraction graph into INDRA Statements.
 
     Parameters
     ----------
@@ -244,7 +244,7 @@ class BBNProcessor(object):
     Attributes
     ----------
     statements: list[indra.statements.Statement]
-        INDRA statements extracted from BBN reader output.
+        INDRA statements extracted from Hume reader output.
     """
     def __init__(self, graph):
         self.graph = graph
@@ -314,7 +314,7 @@ class BBNProcessor(object):
 
 class CauseEffect(object):
     """A data structure to incrementally store cause/effect information as it
-    is extracted from the BBN JSON file.
+    is extracted from the Hume JSON file.
 
     Parameters
     ----------
@@ -376,7 +376,7 @@ class CauseEffect(object):
             evidence_text = evidence_texts[0]
         else:
             evidence_text = repr(evidence_texts)
-        ev = Evidence(source_api='bbn', text=str(evidence_text))
+        ev = Evidence(source_api='hume', text=str(evidence_text))
 
         # Convert from rdf literal to python string
         cause_text = str(cause_text)
@@ -385,13 +385,13 @@ class CauseEffect(object):
         # Make cause concept
         cause_db_refs = {'TEXT': cause_text}
         if self.cause_type is not None:
-            cause_db_refs['BBN'] = self.cause_type
+            cause_db_refs['HUME'] = self.cause_type
         cause_concept = Concept(cause_text, db_refs=cause_db_refs)
 
         # Make effect concept
         effect_db_refs = {'TEXT': effect_text}
         if self.effect_type is not None:
-            effect_db_refs['BBN'] = self.effect_type
+            effect_db_refs['HUME'] = self.effect_type
         effect_concept = Concept(effect_text, db_refs=effect_db_refs)
 
         return Influence(cause_concept, effect_concept, evidence=ev)

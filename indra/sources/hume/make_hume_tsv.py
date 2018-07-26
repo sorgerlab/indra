@@ -1,9 +1,9 @@
-"""This script produces a TSV that helps map the BBN ontology
+"""This script produces a TSV that helps map the Hume ontology
 to the Eidos UN ontology based on entries and examples."""
 
 import yaml
 import requests
-from indra.sources import bbn
+from indra.sources import hume
 
 
 
@@ -29,19 +29,18 @@ def build_examples(node, tree, prefix):
 
 
 if __name__ == '__main__':
-    # BBN
-    bbn_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
-                   'resource/ontologies/hume_ontology.yaml')
+    hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
+                    'resource/ontologies/hume_ontology.yaml')
 
     all_examples = {}
 
-    yml = requests.get(bbn_ont_url).content
+    yml = requests.get(hume_ont_url).content
     root = yaml.load(yml)
     for top_entry in root:
         node = list(top_entry.keys())[0]
         build_examples(node, top_entry[node], None)
 
 
-    with open('bbn_ontology_examples.tsv', 'w') as fh:
+    with open('hume_ontology_examples.tsv', 'w') as fh:
         for k, v in sorted(all_examples.items(), key=lambda x: x[0]):
             fh.write('%s\t%s\n' % (k, ','.join(sorted(list(v)))))

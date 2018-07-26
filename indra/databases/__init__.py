@@ -52,7 +52,7 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'UN':
         url = 'https://github.com/clulab/eidos/wiki/JSON-LD#Grounding/%s' % \
                 db_id
-    elif db_name == 'BBN':
+    elif db_name == 'HUME':
         url = ('https://github.com/BBN-E/Hume/blob/master/resource/ontologies/'
                'hume_ontology/%s' % db_id)
     elif db_name == 'CWMS':

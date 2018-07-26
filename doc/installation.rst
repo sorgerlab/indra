@@ -251,6 +251,7 @@ of dependencies.
 +-----------------+------------------------------------------------------+
 |plot             |Create and display plots                              |
 +-----------------+------------------------------------------------------+
+
 Configuring INDRA
 -----------------
 Various aspects of INDRA, including API keys, dependency locations, and

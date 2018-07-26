@@ -40,7 +40,7 @@ class OntologyMapper(object):
                 for map_db_name, map_db_id in all_mappings:
                     if map_db_name in agent.db_refs:
                         continue
-                    if map_db_name in ('UN', 'BBN'):
+                    if map_db_name in ('UN', 'HUME'):
                         agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
                     else:
                         agent.db_refs[map_db_name] = map_db_id
@@ -62,7 +62,7 @@ class OntologyMapper(object):
 
 
 def _load_default_mappings():
-    return [(('UN', 'entities/x'), ('BBN', 'entities/y'))]
+    return [(('UN', 'entities/x'), ('HUME', 'entities/y'))]
 
 
 def _load_wm_map():
@@ -70,10 +70,10 @@ def _load_wm_map():
     ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
     mappings = {}
 
-    def make_bbn_prefix_map():
-        bbn_ont = os.path.join(path_here, '../sources/bbn/bbn_ontology.rdf')
+    def make_hume_prefix_map():
+        hume_ont = os.path.join(path_here, '../sources/hume/hume_ontology.rdf')
         graph = rdflib.Graph()
-        graph.parse(os.path.abspath(bbn_ont), format='nt')
+        graph.parse(os.path.abspath(hume_ont), format='nt')
         entry_map = {}
         for node in graph.all_nodes():
             entry = node.split('#')[1]
@@ -86,12 +86,12 @@ def _load_wm_map():
             entry_map[real_entry] = prefix
         return entry_map
 
-    bbn_prefix_map = make_bbn_prefix_map()
+    hume_prefix_map = make_hume_prefix_map()
 
-    def add_bbn_prefix(bbn_entry):
-        """We need to do this because the BBN prefixes are missing"""
-        prefix = bbn_prefix_map[bbn_entry]
-        return '%s/%s' % (prefix, bbn_entry)
+    def add_hume_prefix(hume_entry):
+        """We need to do this because the HUME prefixes are missing"""
+        prefix = hume_prefix_map[hume_entry]
+        return '%s/%s' % (prefix, hume_entry)
 
     def map_entry(reader, entry):
         """Remap the reader and entry strings to match our internal standards."""
@@ -99,9 +99,9 @@ def _load_wm_map():
             namespace = 'UN'
             entry_id = entry
         elif reader == 'BBN':
-            namespace = 'BBN'
+            namespace = 'HUME'
             entry = entry.replace(' ', '_')
-            entry_id = add_bbn_prefix(entry)
+            entry_id = add_hume_prefix(entry)
         elif reader == 'sofia':
             namespace = 'SOFIA'
             # First chop off the Event/Entity prefix
