@@ -28,6 +28,14 @@ def test_get_ids():
 
 
 @attr('webservice')
+def test_get_id_count():
+    id_count = pubmed_client.get_id_count('SDLFKJSLDKJH')
+    assert id_count == 0
+    id_count = pubmed_client.get_id_count('KRAS')
+    assert id_count > 0
+
+
+@attr('webservice')
 def test_get_pmc_ids():
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
     assert(len(ids) == 10)
