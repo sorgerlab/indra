@@ -324,10 +324,10 @@ class CxAssembler(object):
                 continue
             elif isinstance(db_ids, int):
                 db_id = str(db_ids)
-            elif isinstance(db_ids, basestring):
-                db_id = db_ids
+            elif isinstance(db_ids, list):
+                db_id = db_ids[0][0]
             else:
-                db_id = db_ids[0]
+                db_id = db_ids
             url = get_identifiers_url(db_name, db_id)
             if not url:
                 continue
