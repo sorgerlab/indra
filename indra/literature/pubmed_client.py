@@ -108,6 +108,30 @@ def get_ids(search_term, **kwargs):
     return ids
 
 
+def get_id_count(search_term):
+    """Get the number of citations in Pubmed for a search query.
+
+    Parameters
+    ----------
+    search_term : str
+        A term for which the PubMed search should be performed.
+
+    Returns
+    -------
+    int or None
+        The number of citations for the query, or None if the query fails.
+    """
+    params = {'term': search_term,
+              'rettype': 'count',
+              'db': 'pubmed'}
+    tree = send_request(pubmed_search, params)
+    if tree is None:
+        return None
+    else:
+        count = tree.getchildren()[0].text
+        return int(count)
+
+
 @lru_cache(maxsize=100)
 def get_ids_for_gene(hgnc_name, **kwargs):
     """Get the curated set of articles for a gene in the Entrez database.
