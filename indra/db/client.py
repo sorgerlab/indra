@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
 from builtins import dict, str
 
 import logging
 from collections import defaultdict
-from itertools import groupby
+from itertools import groupby, permutations, product
 from sqlalchemy import or_
 
 from indra.statements import Unresolved
@@ -487,6 +488,140 @@ def get_statement_essentials(clauses, count=1000, db=None, preassembled=True):
                           db_stmt.type, stmt.agent_list()))
 
     return stmt_data
+
+
+def get_relation_dict(db, groundings=None):
+    """Get a dictionary of entity interactions from the database.
+
+    Use only metadata from the database to rapidly get simple interaction data.
+    This is much faster than handling the full Statement jsons, while providing
+    some basic valuable functionality.
+
+    Parameters
+    ----------
+    db : DatabaseManager instance
+        An instance of a database manager.
+    groundings : list[str] or None
+        NOT YET IMPLEMENTED! This will allow the user to select which types of
+        groundings to select, e.g. HGNC, or FPLX, or both. Only agent refs with
+        these groundings will be selected. CURRENTLY, ONLY HGNC IS AVAILABLE.
+    """
+
+    # Query the database
+    results = db.select_all(
+        [db.PAAgents.id, db.PAAgents.db_id, db.PAAgents.role,
+         db.PAStatements.type, db.PAStatements.mk_hash],
+        db.PAStatements.mk_hash == db.PAAgents.stmt_mk_hash,
+        db.PAAgents.db_name.like('HGNC'),
+        yield_per=10000
+        )
+
+    # Sort into a dict.
+    stmt_dict = {}
+    for res in results:
+        ag_id, ag_dbid, ag_role, stmt_type, stmt_hash = res
+        ag_tpl = (ag_id, ag_role, ag_dbid, hgnc_client.get_hgnc_name(ag_dbid))
+        if stmt_hash not in stmt_dict.keys():
+            stmt_dict[stmt_hash] = {'type': stmt_type, 'agents': [ag_tpl]}
+        else:
+            assert stmt_dict[stmt_hash]['type'] == stmt_type
+            stmt_dict[stmt_hash]['agents'].append(ag_tpl)
+
+    # Only return the entries with at least 2 agents.
+    return {k: d for k, d in stmt_dict.items() if len(d['agents']) >= 2}
+
+
+def export_relation_dict_to_tsv(relation_dict, out_base, out_types=None):
+    """Export a relation dict (from get_relation_dict) to a tsv.
+
+    Available output types are:
+    - "full_tsv" : get a tsv with directed pairs of entities (e.g. HGNC symbols),
+        the type of relation (e.g. Phosphorylation) and the hash of the
+        preassembled statement. Columns are agent_1, agent_2 (where agent_1
+        affects agent_2), type, hash.
+    - "short_tsv" : like the above, but without the hashes, so only one instance
+        of each pair and type trio occurs. However, the information cannot be
+        traced. Columns are agent_1, agent_2, type, where agent_1 affects
+        agent_2.
+    - "pairs_tsv" : like the above, but without the relation type. Similarly,
+        each row is unique. In addition, the agents are undirected. Thus this is
+        purely a list of pairs of related entities. The columns are just agent_1
+        and agent_2, where nothing is implied by the ordering.
+
+    Parameters
+    ----------
+    relation_dict : dict
+        This should be the output from `get_relation_dict`, or something
+        equivalently constructed.
+    out_base : str
+        The base-name for the output files.
+    out_types : list[str]
+        A list of the types of tsv to output. See above for details.
+    """
+    # Check to make sure the output types are valid.
+    ok_types = ['full_tsv', 'short_tsv', 'pairs_tsv']
+    if out_types is None:
+        out_types = ok_types[:]
+
+    if any(ot not in ok_types for ot in out_types):
+        raise ValueError('Invalid output_types: %s. Allowed types are: %s'
+                         % (out_types, ok_types))
+
+    # Now write any tsv's.
+    def write_tsv_line(f, row_tpl):
+        f.write('\t'.join(list(row_tpl)) + '\n')
+
+    # Open the tsv files.
+    tsv_files = {}
+    for output_type in out_types:
+        tsv_files[output_type] = open('%s_%s.tsv' % (out_base, output_type), 'w')
+
+    # Write the tsv files.
+    short_set = set()
+    very_short_set = set()
+    for h, d in relation_dict.items():
+        # Do some pre-processing
+        roles = sorted([ag_tpl[1] for ag_tpl in d['agents']])
+        ag_by_roles = dict.fromkeys(roles)
+        for role in roles:
+            ag_by_roles[role] = [ag_tpl[-1] for ag_tpl in d['agents']
+                                 if ag_tpl[1] == role]
+        if roles == ['OBJECT', 'SUBJECT']:
+            data_tpls = [(ag_by_roles['SUBJECT'][0], ag_by_roles['OBJECT'][0],
+                          d['type'], str(h))]
+        elif set(roles) == {'OTHER'}:
+            data_tpls = [(a, b, d['type'], str(h))
+                         for a, b in permutations(ag_by_roles['OTHER'], 2)]
+        elif d['type'] == 'Conversion':
+            continue  # TODO: Handle conversions.
+        else:
+            print("This is weird...", h, d)
+            continue
+
+        # Handle writing the various files.
+        if 'full_tsv' in out_types:
+            for data_tpl in data_tpls:
+                write_tsv_line(tsv_files['full_tsv'], data_tpl)
+
+        if 'short_tsv' in out_types:
+            short_tpls = [t[:-1] for t in data_tpls]
+            for t in short_tpls:
+                if t not in short_set:
+                    short_set.add(t)
+                    write_tsv_line(tsv_files['short_tsv'], t)
+
+        if 'pairs_tsv' in out_types:
+            vs_tpls ={tuple(sorted(t[:-2])) for t in data_tpls}
+            for t in vs_tpls:
+                if t not in very_short_set:
+                    very_short_set.add(t)
+                    write_tsv_line(tsv_files['pairs_tsv'], t)
+
+    # Close the tsv files.
+    for file_handle in tsv_files.values():
+        file_handle.close()
+
+    return relation_dict
 
 
 @_clockit
