@@ -9,13 +9,12 @@ from indra.assemblers.pysb_assembler import PysbAssembler
 
 
 path_this = os.path.dirname(os.path.abspath(__file__))
-test_json = os.path.join(path_this, 'eidos_test.json')
-test_jsonld = os.path.join(path_this, 'eidos_test_with_grounding.json')
+test_jsonld = os.path.join(path_this, 'eidos_test.jsonld')
 
 
 def __get_remote_jsonld():
     res = requests.get('https://raw.githubusercontent.com/clulab/eidos/master/'
-                       'example_output/example-0.2.0.jsonld')
+                       'example_output/example-0.2.2.jsonld')
     assert res.status_code is 200, "Could not get example json from remote."
     example_json = json.loads(res.content.decode('utf-8'))
     return example_json
@@ -27,22 +26,6 @@ def __get_stmts_from_remote_jsonld():
     assert ep is not None, 'Failed to handle json with eidos processor.'
     assert len(ep.statements), 'Did not get statements from json.'
     return ep.statements
-
-
-def test_process_json():
-    ep = eidos.process_json_file(test_json)
-    assert ep is not None
-    assert len(ep.statements) == 1
-    stmt = ep.statements[0]
-    assert isinstance(stmt, Influence)
-    assert stmt.subj_delta.get('polarity') == 1
-    assert stmt.obj_delta.get('polarity') == -1
-    assert stmt.subj_delta.get('adjectives') == ['large']
-    assert stmt.obj_delta.get('adjectives') == ['seriously']
-
-    assert(stmt.evidence[0].annotations['found_by']
-           == 'ported_syntax_1_verb-Causal')
-    print(stmt)
 
 
 def test_process_text():

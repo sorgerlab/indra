@@ -31,15 +31,18 @@ class EidosJsonLdProcessor(object):
         self.entity_dict = {}
 
     def get_events(self):
-        events = \
-            self.tree.execute("$.extractions[(@.@type is 'DirectedRelation')]")
-        if not events:
+        extractions = \
+            list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
+        if not extractions:
             return
+
+        events = [e for e in extractions if 'DirectedRelation' in
+                  e.get('labels', [])]
 
         # Build a dictionary of entities and sentences by ID for convenient
         # lookup
-        entities = \
-            self.tree.execute("$.extractions[(@.@type is 'Entity')]")
+        entities = [e for e in extractions if 'Concept' in
+                    e.get('labels', [])]
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
         documents = \
@@ -125,24 +128,40 @@ class EidosJsonLdProcessor(object):
             concept = Concept(name, db_refs=db_refs)
             return concept
 
+        def find_arg(event, arg_type):
+            args = event.get('arguments', {})
+            obj_tag = [arg for arg in args if arg['type'] == arg_type]
+            if obj_tag:
+                obj_id = obj_tag[0]['value']['@id']
+            else:
+                obj_id = None
+            return obj_id
+
         for event in events:
-            if 'Causal' in event['labels']:
-                # For now, just take the first source and first destination.
-                # Later, might deal with hypergraph representation.
-                subj = self.entity_dict[event['sources'][0]['@id']]
-                obj = self.entity_dict[event['destinations'][0]['@id']]
+            if not 'Causal' in event['labels']:
+                continue
 
-                subj_delta = {'adjectives': get_adjectives(subj),
-                              'polarity': get_polarity(subj)}
-                obj_delta = {'adjectives': get_adjectives(obj),
-                             'polarity': get_polarity(obj)}
+            # For now, just take the first source and first destination.
+            # Later, might deal with hypergraph representation.
+            subj_id = find_arg(event, 'source')
+            obj_id = find_arg(event, 'destination')
+            if subj_id is None or obj_id is None:
+                continue
 
-                evidence = self._get_evidence(event)
+            subj = self.entity_dict[subj_id]
+            obj = self.entity_dict[obj_id]
 
-                st = Influence(_make_concept(subj), _make_concept(obj),
-                               subj_delta, obj_delta, evidence=evidence)
+            subj_delta = {'adjectives': get_adjectives(subj),
+                          'polarity': get_polarity(subj)}
+            obj_delta = {'adjectives': get_adjectives(obj),
+                         'polarity': get_polarity(obj)}
 
-                self.statements.append(st)
+            evidence = self._get_evidence(event)
+
+            st = Influence(_make_concept(subj), _make_concept(obj),
+                           subj_delta, obj_delta, evidence=evidence)
+
+            self.statements.append(st)
 
     def _get_evidence(self, event):
         """Return the Evidence object for the INDRA Statment."""
