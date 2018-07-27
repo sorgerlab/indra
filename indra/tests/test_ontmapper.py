@@ -17,7 +17,6 @@ def test_map():
         om.statements[1].subj.db_refs
 
 
-
 @unittest.skip('Mapping file not in repo')
 def test_wm_map():
     c1 = Concept('x', db_refs={'UN': [('UN/properties/price', 1.0)]})
@@ -30,3 +29,14 @@ def test_wm_map():
     assert 'HUME' in stmt.obj.db_refs
     assert 'SOFIA' in stmt.subj.db_refs
     assert 'SOFIA' in stmt.obj.db_refs
+    # Test the previously problematic famine case
+    c3 = Concept('z', db_refs={'SOFIA': 'Health/Famine'})
+    c4 = Concept('a', db_refs={'HUME': [('event/healthcare/famine', 1.0)]})
+    stmts = [Influence(c4, c3)]
+    om = OntologyMapper(stmts, wm_ontomap, symmetric=False)
+    om.map_statements()
+    stmt = om.statements[0]
+    assert stmt.obj.db_refs['UN'] == [('UN/events/human/famine', 1.0)], \
+        stmt.obj.db_refs['UN']
+    assert stmt.subj.db_refs['UN'] == [('UN/events/human/famine', 1.0)], \
+        stmt.subj.db_refs['UN']
