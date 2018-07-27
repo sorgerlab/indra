@@ -10,6 +10,7 @@ from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
 import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
+from indra.sources.ndex_cx.ndex_cx_api import process_ndex_network
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -292,6 +293,27 @@ def share_model():
     ca.make_model()
     network_id = ca.upload_model(private=False)
     return {'network_id': network_id}
+
+
+@route('/fetch_model', method=['POST', 'OPTIONS'])
+@allow_cors
+def share_model():
+    """Download model from NDEX"""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    network_id = body.get('network_id')
+    cx = process_ndex_network(network_id)
+    network_attr = [x for x in cx.cx if x.get('networkAttributes')]
+    network_attr = network_attr[0]['networkAttributes']
+    keep_keys = ['model_elements', 'preset_pos', 'stmts',
+                 'sentences', 'evidence']
+    stored_data = {}
+    for d in network_attr:
+        if d['n'] in keep_keys:
+            stored_data[d['n']] = d['v']
+    return stored_data
 
 
 #  GRAPH   #
