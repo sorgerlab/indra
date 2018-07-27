@@ -339,10 +339,11 @@ def _agent_is_grounded(agent, score_threshold):
     if not db_names:
         grounded = False
     # If there are entries but they point to None / empty values
-    if not all([agent.db_refs[db_name] for db_name in db_names]):
+    if not any([agent.db_refs[db_name] for db_name in db_names]):
         grounded = False
     # If we are looking for scored groundings with a threshold
     if score_threshold:
+        any_passing = False
         for db_name in db_names:
             val = agent.db_refs[db_name]
             # If it's a list with some values, find the
@@ -350,8 +351,11 @@ def _agent_is_grounded(agent, score_threshold):
             if isinstance(val, list) and val:
                 high_score = sorted(val, key=lambda x: x[1],
                                     reverse=True)[0][1]
-                if high_score < score_threshold:
-                    grounded = False
+                if high_score > score_threshold:
+                    any_passing = True
+                    break
+        if not any_passing:
+            grounded = False
     return grounded
 
 
