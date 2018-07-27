@@ -52,6 +52,8 @@ def extract_from_directory(path_in, path_out):
         Path to an output folder in which Eidos places the output
         JSON-LD files
     """
+    path_in = os.path.realpath(os.path.expanduser(path_in))
+    path_out = os.path.realpath(os.path.expanduser(path_out))
     logger.info('Running Eidos on input folder %s' % path_in)
     run_eidos('apps.ExtractFromDirectory', path_in, path_out)
 
@@ -75,6 +77,8 @@ def extract_and_process(path_in, path_out):
     stmts : list[indra.statements.Statements]
         A list of INDRA Statements
     """
+    path_in = os.path.realpath(os.path.expanduser(path_in))
+    path_out = os.path.realpath(os.path.expanduser(path_out))
     extract_from_directory(path_in, path_out)
     jsons = glob.glob(os.path.join(path_out, '*.jsonld'))
     logger.info('Found %d JSON-LD files to process in %s' %
