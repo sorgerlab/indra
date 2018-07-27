@@ -283,13 +283,12 @@ def share_model():
         return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
-    stmts_json = body.get('statements')
-    cyjs_model_str = body.get('cyjs_model')
-    stmts = stmts_from_json(stmts_json)
+    stmts_str = body.get('stmts')
+    stmts_json = json.loads(stmts_str)
+    stmts = stmts_from_json(stmts_json["statements"])
     ca = CxAssembler(stmts)
-    ca.cx['networkAttributes'].append({'n': 'cyjs_model',
-                                       'v': cyjs_model_str,
-                                       'd': 'string'})
+    for n, v in body.items():
+        ca.cx['networkAttributes'].append({'n': n, 'v': v, 'd': 'string'})
     ca.make_model()
     network_id = ca.upload_model(private=False)
     return {'network_id': network_id}
