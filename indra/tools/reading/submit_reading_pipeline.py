@@ -574,6 +574,17 @@ class DbReadingSubmitter(Submitter):
         self.options['max_reach_space_ratio'] = max_reach_space_ratio
         return
 
+    def watch_and_wait(self, *args, **kwargs):
+        super(DbReadingSubmitter, self).watch_and_wait(*args, **kwargs)
+        self.produce_report()
+
+    def produce_report(self):
+        """Produce a report of the batch jobs."""
+        s3_prefix = 'reading_results/%s/logs/%s/' % (self.basename,
+                                                     self._job_queue)
+        s3 = boto3.client('s3')
+        relevant_files = s3.list_objects(Bucket=bucket_name, Prefix=s3_prefix)
+
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
                       end_ix=None, pmids_per_job=3000, num_tries=2,
