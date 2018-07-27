@@ -1523,6 +1523,53 @@ def rename_db_ref(stmts_in, ns_from, ns_to, **kwargs):
     return stmts_out
 
 
+def align_statements(stmts1, stmts2, keyfun=None):
+    """Return alignment of two lists of statements by key.
+
+    Parameters
+    ----------
+    stmts1 : list[indra.statements.Statement]
+        A list of INDRA Statements to align
+    stmts2 : list[indra.statements.Statement]
+        A list of INDRA Statements to align
+    keyfun : Optional[function]
+        A function that takes a Statement as an argument
+        and returns a key to align by. If not given,
+        the default key function is a tuble of the names
+        of the Agents in the Statement.
+
+    Return
+    ------
+    matches : list(tuple)
+        A list of tuples where each tuple has two elements,
+        the first corresponding to an element of the stmts1
+        list and the second corresponding to an element
+        of the stmts2 list. If a given element is not matched,
+        its corresponding pair in the tuple is None.
+    """
+    def name_keyfun(stmt):
+        return tuple(a.name if a is not None else None for
+                     a in stmt.agent_list())
+    if not keyfun:
+        keyfun = name_keyfun
+    matches = []
+    keys1 = [keyfun(s) for s in stmts1]
+    keys2 = [keyfun(s) for s in stmts2]
+    for stmt, key in zip(stmts1, keys1):
+        try:
+            match_idx = keys2.index(key)
+            match_stmt = stmts2[match_idx]
+            matches.append((stmt, match_stmt))
+        except ValueError:
+            matches.append((stmt, None))
+    for stmt, key in zip(stmts2, keys2):
+        try:
+            match_idx = keys1.index(key)
+        except ValueError:
+            matches.append((None, stmt))
+    return matches
+
+
 if __name__ == '__main__':
     if len(sys.argv) < 3:
         logger.error('Usage: assemble_corpus.py <pickle_file> <output_folder>')
