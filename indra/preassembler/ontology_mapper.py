@@ -119,7 +119,8 @@ def _load_wm_map():
     with open(ontomap_file, 'r') as fh:
         for line in fh.readlines():
             # Get each entry from the line
-            s, se, t, te, score = line.split('\t')
+            s, se, t, te, score = line.strip().split('\t')
+            score = float(score)
             # Map the entries to our internal naming standards
             s, se = map_entry(s, se)
             t, te = map_entry(t, te)
