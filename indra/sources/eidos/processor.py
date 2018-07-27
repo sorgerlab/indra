@@ -32,9 +32,11 @@ class EidosJsonLdProcessor(object):
 
     def get_events(self):
         extractions = \
-            list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
+            self.tree.execute("$.extractions[(@.@type is 'Extraction')]")
         if not extractions:
             return
+        # Listify for multiple reuse
+        extractions = list(extractions)
 
         events = [e for e in extractions if 'DirectedRelation' in
                   e.get('labels', [])]
