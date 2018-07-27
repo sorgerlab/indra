@@ -800,16 +800,28 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
     if not_duplicates is None:
         not_duplicates = set()
 
-    db_s_q = db.filter_query([db.RawStatements.mk_hash,
-                              db.RawStatements.id,
-                              db.RawStatements.json],
-                             db.RawStatements.db_info_id.isnot(None))
+    # Only get the json if it's going to be used. Note that if the use of the
+    # get_full_stmts parameter is inconsistent in _choose_unique, this will
+    # cause some problems.
+    if get_full_stmts:
+        tbl_list = [db.RawStatements.mk_hash, db.RawStatements.id,
+                    db.RawStatements.json]
+    else:
+        tbl_list = [db.RawStatements.mk_hash, db.RawStatements.id]
+
+    db_s_q = db.filter_query(tbl_list, db.RawStatements.db_info_id.isnot(None))
+
+    # Add any other criterion specified at higher levels.
     if clauses:
         db_s_q = db_s_q.filter(*clauses)
+
+    # Produce a generator of statement groups.
     db_stmt_data = db_s_q.order_by(db.RawStatements.mk_hash).yield_per(10000)
     choose_unique_stmt = partial(_choose_unique, not_duplicates, get_full_stmts)
     stmt_groups = (list(grp) for _, grp
                    in groupby(db_stmt_data, key=lambda x: x[0]))
+
+    # Actually do the comparison.
     if num_procs is 1:
         stmts = set()
         duplicate_ids = set()
@@ -883,6 +895,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                 % (len(stmts), len(duplicate_sids),
                    len(bettered_duplicate_sids)))
     assert not linked_sids & duplicate_sids, linked_sids & duplicate_sids
+    del stmt_nd  # This takes up a lot of memory, and is done being used.
 
     db_stmts, db_duplicates = \
         _get_filtered_db_statements(db, get_full_stmts, clauses, linked_sids,
