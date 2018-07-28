@@ -14,8 +14,14 @@ class OntologyMapper(object):
     symmetric : Optional[bool]
         If True, the mappings are interpreted as symmetric and will be applied
         in both directions
+    scored : Optional[bool]
+        If True, the mappings are assumed to be scored and the scores are
+        propagated into the mapped groundings. If False, the scores don't
+        need to be provided in the mappings and even if they are, they are
+        ignored. Default: False
     """
-    def __init__(self, statements, mappings=None, symmetric=True):
+    def __init__(self, statements, mappings=None, symmetric=True,
+                 scored=False):
         self.statements = statements
         if mappings is None:
             self.mappings = _load_default_mappings()
@@ -24,6 +30,7 @@ class OntologyMapper(object):
         self.symmetric = symmetric
         if self.symmetric:
             self._add_reverse_map()
+        self.scored = scored
 
     def map_statements(self):
         """Run the ontology mapping on the statements."""
@@ -37,13 +44,18 @@ class OntologyMapper(object):
                         db_id = db_id[0][0]
                     mappings = self._map_id(db_name, db_id)
                     all_mappings += mappings
-                for map_db_name, map_db_id in all_mappings:
+                for map_db_name, map_db_id, score in all_mappings:
                     if map_db_name in agent.db_refs:
+                        print(agent.db_refs, map_db_name)
+                        print(score)
                         continue
-                    if map_db_name in ('UN', 'HUME'):
-                        agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
+                    if self.scored:
+                        agent.db_refs[map_db_name] = [(map_db_id, score)]
                     else:
-                        agent.db_refs[map_db_name] = map_db_id
+                        if map_db_name in ('UN', 'HUME'):
+                            agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
+                        else:
+                            agent.db_refs[map_db_name] = map_db_id
 
     def _add_reverse_map(self):
         for m1, m2 in self.mappings:
@@ -53,11 +65,16 @@ class OntologyMapper(object):
     def _map_id(self, db_name, db_id):
         mappings = []
         # TODO: This lookup should be optimized using a dict
-        for m1, m2 in self.mappings:
+        for mapping in self.mappings:
+            if self.scored:
+                m1, m2, score = mapping
+            else:
+                m1, m2 = mapping[:2]
+                score = 1.0
             if m1 == (db_name, db_id) or \
                 ((not isinstance(m1, list)) and
                  (m1 == (db_name, db_id.lower()))):
-                mappings.append(m2)
+                mappings.append((m2[0], m2[1], score))
         return mappings
 
 
@@ -138,7 +155,7 @@ def _load_wm_map():
                 mappings[(t, te, s)] = ((s, se), score)
     ontomap = []
     for s, ts in mappings.items():
-        ontomap.append(((s[0], s[1]), ts[0]))
+        ontomap.append(((s[0], s[1]), ts[0], ts[1]))
     return ontomap
 
 
