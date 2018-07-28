@@ -193,19 +193,23 @@ def _get_hume_grounding(entity):
     if not groundings:
         return None
     def get_ont_concept(concept):
-        """Strip /event/x to event/x."""
+        """Strip slah, replace spaces and remove example leafs."""
         if concept.startswith('/'):
             concept = concept[1:]
+        concept = concept.replace(' ', '_')
+        # We eliminate any entries that aren't ontology categories
+        # these are typically "examples" corresponding to the category
+        while concept not in hume_onto_entries:
+            print(concept)
+            parts = concept.split('/')
+            if len(parts) == 1:
+                break
+            concept = '/'.join(parts[:-1])
         return concept
 
     # Basic collection of grounding entries
     raw_grounding_entries = [(get_ont_concept(g['ontologyConcept']),
                               g['value']) for g in groundings]
-
-    # First we eliminate any entries that aren't ontology categories
-    # these are typically "examples" corresponding to the category
-    raw_grounding_entries = [g for g in raw_grounding_entries if
-                             g in hume_onto_entries]
 
     # Occasionally we get duplicate grounding entries, we want to
     # eliminate those here
