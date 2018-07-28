@@ -200,7 +200,6 @@ def _get_hume_grounding(entity):
         # We eliminate any entries that aren't ontology categories
         # these are typically "examples" corresponding to the category
         while concept not in hume_onto_entries:
-            print(concept)
             parts = concept.split('/')
             if len(parts) == 1:
                 break
