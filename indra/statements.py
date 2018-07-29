@@ -1044,9 +1044,10 @@ class Evidence(object):
         return ev
 
     def __str__(self):
-        ev_str = 'Evidence(%s, %s, %s, %s)' % \
-                 (self.source_api, self.pmid, self.annotations,
-                  self.text)
+        ev_str = 'Evidence(source_api\'=%s\',\n' % self.source_api
+        ev_str += '         pmid=\'%s\',\n' % self.pmid
+        ev_str += '         text=\'%s\',\n' % self.text
+        ev_str += '         annotations=%s)' % self.annotations
         return ev_str
 
     def __repr__(self):
