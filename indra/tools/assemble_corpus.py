@@ -1369,18 +1369,27 @@ def filter_uuid_list(stmts_in, uuids, **kwargs):
         A list of UUIDs to filter for.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
+    invert : Optional[bool]
+        Invert the filter to remove the Statements corresponding to the given
+        UUIDs.
 
     Returns
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
     """
+    invert = kwargs.get('invert', False)
     logger.info('Filtering %d statements for %d UUID%s...' %
                 (len(stmts_in), len(uuids), 's' if len(uuids) > 1 else ''))
     stmts_out = []
     for st in stmts_in:
-        if st.uuid in uuids:
-            stmts_out.append(st)
+        if not invert:
+            if st.uuid in uuids:
+                stmts_out.append(st)
+        else:
+            if st.uuid not in uuids:
+                stmts_out.append(st)
+
     logger.info('%d statements after filter...' % len(stmts_out))
     dump_pkl = kwargs.get('save')
     if dump_pkl:
