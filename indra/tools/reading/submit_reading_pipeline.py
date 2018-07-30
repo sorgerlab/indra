@@ -2,11 +2,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import os
+import re
 import boto3
 import logging
 import botocore.session
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timedelta
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
 from indra.util.aws import get_job_log, tag_instance, get_batch_command
@@ -582,6 +583,25 @@ class DbReadingSubmitter(Submitter):
         super(DbReadingSubmitter, self).watch_and_wait(*args, **kwargs)
         self.produce_report()
 
+    @staticmethod
+    def _parse_time(time_str):
+        """Create a timedelta or datetime object from default string reprs."""
+        # This is kinda terrible, but it is the easiest way to distinguish them.
+        if '-' in time_str:
+            return datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
+        else:
+            if 'day' in time_str:
+                m = re.match(('(?P<days>[-\d]+) day[s]*, '
+                              '(?P<hours>\d+):(?P<minutes>\d+):'
+                              '(?P<seconds>\d[\.\d+]*)'),
+                             time_str)
+            else:
+                m = re.match(('(?P<hours>\d+):(?P<minutes>\d+):'
+                              '(?P<seconds>\d[\.\d+]*)'),
+                             time_str)
+            return timedelta(**{key: float(val)
+                                for key, val in m.groupdict().items()})
+
     def _get_results_file_tree(self, s3, s3_prefix):
         relevant_files = s3.list_objects(Bucket=bucket_name, Prefix=s3_prefix)
         file_tree = NestedDict()
@@ -619,6 +639,24 @@ class DbReadingSubmitter(Submitter):
             git_info.update(this_info)
         return
 
+    def _handle_timing(self, ref, timing_info, this_info):
+        timing_patt = re.compile(r'(\w+):\s+([ 0-9:.\-]+)')
+        for stage, data in this_info.items():
+            if stage not in timing_info.keys():
+                logger.info("Adding timing stage: %s" % stage)
+                timing_info[stage] = {}
+            stage_info = timing_info[stage]
+            timing_pairs = timing_patt.findall(data)
+            if len(timing_pairs) is not 3:
+                logger.warning("Not all timings present for %s "
+                               "in %s." % (stage, ref))
+            for label, time_str in timing_pairs:
+                if label not in stage_info.keys():
+                    stage_info[label] = {}
+                # e.g. timing_info['reading']['start']['job_name'] = <datetime>
+                stage_info[label][ref] = self._parse_time(time_str)
+        return
+
     def produce_report(self):
         """Produce a report of the batch jobs."""
         s3_prefix = 'reading_results/%s/logs/%s/' % (self.basename,
@@ -628,6 +666,7 @@ class DbReadingSubmitter(Submitter):
         stat_files = ['git_info.txt', 'raw_tuples.pkl', 'hist_data.pkl',
                       'timing.txt', 'sum_data.pkl']
         git_info = {}
+        timing_info = {}
         for stat_file in stat_files:
             file_paths = file_tree.get_paths(stat_file)
             for sub_path, fname in file_paths:
@@ -640,6 +679,8 @@ class DbReadingSubmitter(Submitter):
                     this_info = self._get_txt_file_dict(file_bytes)
                     if stat_file == 'git_info.txt':
                         self._handle_git_info(ref, git_info, this_info)
+                    elif stat_file == 'timing.txt':
+                        self._handle_timing(ref, timing_info, this_info)
 
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
