@@ -119,3 +119,5 @@
 <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/temporal/seasons/season> <http://sorger.med.harvard.edu/indra/relations/isa> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/temporal/seasons> .
 <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/temporal/seasons> <http://sorger.med.harvard.edu/indra/relations/isa> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/temporal> .
 <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/temporal> <http://sorger.med.harvard.edu/indra/relations/isa> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN> .
+<https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/entities/human/food/food_security> <http://sorger.med.harvard.edu/indra/relations/is_opposite> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/entities/human/food/food_insecurity> .
+<https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/entities/human/food/food_insecurity> <http://sorger.med.harvard.edu/indra/relations/is_opposite> <https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#UN/entities/human/food/food_security> .
