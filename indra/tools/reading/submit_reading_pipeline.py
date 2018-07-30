@@ -213,7 +213,7 @@ def stash_logs(job_defs, success_jobs, failure_jobs, queue_name, method='local',
         s3_client = boto3.client('s3')
 
         def stash_log(log_str, name_base):
-            name = '%s/%s.log' % (name_base, tag)
+            name = '%s_%s.log' % (name_base, tag)
             s3_client.put_object(
                 Bucket=bucket_name,
                 Key='reading_results/%s/logs/%s/%s' % (
@@ -246,9 +246,12 @@ def stash_logs(job_defs, success_jobs, failure_jobs, queue_name, method='local',
             log_str = ''.join(lines)
             base_name = job_def['jobName']
             if job_def['jobId'] in success_ids:
-                base_name += '_SUCCESS'
+                base_name += '/SUCCESS'
             elif job_def['jobId'] in failure_ids:
-                base_name += '_FAILED'
+                base_name += '/FAILED'
+            else:
+                logger.error("Job cannot be logged unless completed.")
+                continue
             logger.info('Stashing ' + base_name)
             stash_log(log_str, base_name)
         except Exception as e:
