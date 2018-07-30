@@ -11,6 +11,7 @@ graft db_rest_api
 include indra/sources/biopax/jars/paxtools.jar
 include indra/sources/cwms/trips_ontology.rdf
 include indra/sources/eidos/eidos_ontology.rdf
+include indra/sources/hume/hume_ontology.rdf
 include indra/sources/reach/reach_rule_regexps.txt
 include indra/sources/isi/isi_verb_to_indra_statement_type.tsv
 include indra/tools/machine/default-config.yaml
