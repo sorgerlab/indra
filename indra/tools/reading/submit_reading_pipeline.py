@@ -10,6 +10,7 @@ from datetime import datetime
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
 from indra.util.aws import get_job_log, tag_instance, get_batch_command
+from indra.util.nested_dict import NestedDict
 
 bucket_name = 'bigmech'
 
@@ -581,12 +582,64 @@ class DbReadingSubmitter(Submitter):
         super(DbReadingSubmitter, self).watch_and_wait(*args, **kwargs)
         self.produce_report()
 
+    def _get_results_file_tree(self, s3, s3_prefix):
+        relevant_files = s3.list_objects(Bucket=bucket_name, Prefix=s3_prefix)
+        file_tree = NestedDict()
+        file_keys = [entry['Key'] for entry in relevant_files['Contents']]
+        pref_path = s3_prefix.split('/')[:-1]   # avoid the trailing empty str.
+        for key in file_keys:
+            full_path = key.split('/')
+            relevant_path = full_path[len(pref_path):]
+            path_list = relevant_path[:-1]
+            fname = relevant_path[:-1]
+            curr = file_tree
+            for step in path_list:
+                curr = curr[step]
+            if 'files' not in curr.keys():
+                curr['files'] = [fname]
+            else:
+                curr['files'].append(fname)
+        return file_tree
+
+    def _get_txt_file_dict(self, file_bytes):
+        line_list = file_bytes.decode('utf-8').splitlines()
+        sc = ': '
+        file_info = {}
+        for line in line_list:
+            segments = line.split(sc)
+            file_info[segments[0].strip()] = sc.join(segments[1:]).strip()
+        return file_info
+
+    def _handle_git_info(self, ref, git_info, this_info):
+        if git_info and this_info != git_info:
+            logger.warning("Disagreement in git info in %s: "
+                           "%s vs. %s."
+                           % (ref, git_info, this_info))
+        elif not git_info:
+            git_info.update(this_info)
+        return
+
     def produce_report(self):
         """Produce a report of the batch jobs."""
         s3_prefix = 'reading_results/%s/logs/%s/' % (self.basename,
                                                      self._job_queue)
         s3 = boto3.client('s3')
-        relevant_files = s3.list_objects(Bucket=bucket_name, Prefix=s3_prefix)
+        file_tree = self._get_results_file_tree(s3, s3_prefix)
+        stat_files = ['git_info.txt', 'raw_tuples.pkl', 'hist_data.pkl',
+                      'timing.txt', 'sum_data.pkl']
+        git_info = {}
+        for stat_file in stat_files:
+            file_paths = file_tree.get_paths(stat_file)
+            for sub_path, fname in file_paths:
+                nextfix = '/'.join(sub_path) + '/'
+                ref = sub_path[0]
+                file = s3.get_object(Bucket=bucket_name,
+                                     Key=s3_prefix + nextfix + fname)
+                file_bytes = file['Body'].read()
+                if stat_file.endswith('.txt'):
+                    this_info = self._get_txt_file_dict(file_bytes)
+                    if stat_file == 'git_info.txt':
+                        self._handle_git_info(ref, git_info, this_info)
 
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
