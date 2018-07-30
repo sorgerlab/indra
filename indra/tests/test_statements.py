@@ -1663,6 +1663,20 @@ def test_concept_isa_eidos():
     assert not c2.refinement_of(c1, {'entity': hm})
 
 
+def test_concept_opposite_eidos():
+    eidos_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, True, True)
+    c1 = Concept('a', db_refs={'UN':
+                               [('UN/entities/human/food/food_insecurity',
+                                 1.0)]})
+    c2 = Concept('b', db_refs={'UN':
+                               [('UN/entities/human/food/food_security',
+                                 1.0)]})
+    assert c1.is_opposite(c2, {'entity': hm})
+    assert c2.is_opposite(c1, {'entity': hm})
+
+
 def test_concept_isa_cwms():
     trips_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                              '../sources/cwms/trips_ontology.rdf')

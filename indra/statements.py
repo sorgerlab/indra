@@ -595,6 +595,18 @@ class Concept(object):
         # Check for isa relationship
         return hierarchies['entity'].isa(self_ns, self_id, other_ns, other_id)
 
+    def is_opposite(self, other, hierarchies):
+        # Get the namespaces for the comparison
+        (self_ns, self_id) = self.get_grounding()
+        (other_ns, other_id) = other.get_grounding()
+        # If one of the agents isn't grounded to a relevant namespace,
+        # there can't be an is_opposite relationship
+        if not all((self_ns, self_id, other_ns, other_id)):
+            return False
+        # Check for is_opposite relationship
+        return hierarchies['entity'].is_opposite(self_ns, self_id,
+                                                 other_ns, other_id)
+
     def refinement_of(self, other, hierarchies):
         # Make sure the Agent types match
         if type(self) != type(other):
@@ -2768,12 +2780,22 @@ class Influence(IncreaseAmount):
         return str(key)
 
     def contradicts(self, other, hierarchies):
+        # First case is if they are "consistent" and related
         if self.entities_match(other) or \
             self.refinement_of(other, hierarchies) or \
             other.refinement_of(self, hierarchies):
             sp = self.overall_polarity()
             op = other.overall_polarity()
             if sp and op and sp * op == -1:
+                return True
+        # Second case is if they are "opposites" and related
+        if (self.subj.entity_matches(other.subj) and \
+            self.obj.is_opposite(other.obj, hierarchies)) or \
+           (self.obj.entity_matches(other.obj) and \
+            self.subj.is_opposite(other.subj, hierarchies)):
+            sp = self.overall_polarity()
+            op = other.overall_polarity()
+            if sp and op and sp * op == 1:
                 return True
         return False
 
