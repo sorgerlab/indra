@@ -586,21 +586,33 @@ class DbReadingSubmitter(Submitter):
     @staticmethod
     def _parse_time(time_str):
         """Create a timedelta or datetime object from default string reprs."""
-        # This is kinda terrible, but it is the easiest way to distinguish them.
-        if '-' in time_str:
-            return datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
-        else:
-            if 'day' in time_str:
-                m = re.match(('(?P<days>[-\d]+) day[s]*, '
-                              '(?P<hours>\d+):(?P<minutes>\d+):'
-                              '(?P<seconds>\d[\.\d+]*)'),
-                             time_str)
+        try:
+            # This is kinda terrible, but it is the easiest way to distinguish
+            # them.
+            if '-' in time_str:
+                time_fmt = '%Y-%m-%d %H:%M:%S'
+                if '.' in time_str:
+                    pre_dec, post_dec = time_str.split('.')
+                    dt = datetime.strptime(pre_dec, time_fmt)
+                    dt.replace(microsecond=int(post_dec))
+                else:
+                    dt = datetime.strftime(time_str, time_fmt)
+                return dt
             else:
-                m = re.match(('(?P<hours>\d+):(?P<minutes>\d+):'
-                              '(?P<seconds>\d[\.\d+]*)'),
-                             time_str)
-            return timedelta(**{key: float(val)
-                                for key, val in m.groupdict().items()})
+                if 'day' in time_str:
+                    m = re.match(('(?P<days>[-\d]+) day[s]*, '
+                                  '(?P<hours>\d+):(?P<minutes>\d+):'
+                                  '(?P<seconds>\d[\.\d+]*)'),
+                                 time_str)
+                else:
+                    m = re.match(('(?P<hours>\d+):(?P<minutes>\d+):'
+                                  '(?P<seconds>\d[\.\d+]*)'),
+                                 time_str)
+                return timedelta(**{key: float(val)
+                                    for key, val in m.groupdict().items()})
+        except Exception as e:
+            logger.error('Failed to parse \"%s\".' % time_str)
+            raise e
 
     def _get_results_file_tree(self, s3, s3_prefix):
         relevant_files = s3.list_objects(Bucket=bucket_name, Prefix=s3_prefix)
@@ -610,15 +622,10 @@ class DbReadingSubmitter(Submitter):
         for key in file_keys:
             full_path = key.split('/')
             relevant_path = full_path[len(pref_path):]
-            path_list = relevant_path[:-1]
-            fname = relevant_path[:-1]
             curr = file_tree
-            for step in path_list:
+            for step in relevant_path:
                 curr = curr[step]
-            if 'files' not in curr.keys():
-                curr['files'] = [fname]
-            else:
-                curr['files'].append(fname)
+            curr['key'] = key
         return file_tree
 
     def _get_txt_file_dict(self, file_bytes):
@@ -662,8 +669,11 @@ class DbReadingSubmitter(Submitter):
         """Produce a report of the batch jobs."""
         s3_prefix = 'reading_results/%s/logs/%s/' % (self.basename,
                                                      self._job_queue)
+        logger.info("Producing batch report for %s, from prefix %s."
+                    % (self.basename, s3_prefix))
         s3 = boto3.client('s3')
         file_tree = self._get_results_file_tree(s3, s3_prefix)
+        logger.info("Found %d relevant files." % len(file_tree))
         stat_files = {
             'git_info.txt': self._handle_git_info,
             'timing.txt': self._handle_timing,
@@ -672,7 +682,8 @@ class DbReadingSubmitter(Submitter):
             'sum_data.pkl': None
             }
         stat_aggs = {}
-        for stat_file, handle_stats in stat_files:
+        for stat_file, handle_stats in stat_files.items():
+            logger.info("Aggregating %s..." % stat_file)
             # Prep the data storage.
             if stat_file not in stat_aggs.keys():
                 stat_aggs[stat_file] = {}
@@ -680,18 +691,18 @@ class DbReadingSubmitter(Submitter):
 
             # Get a list of the relevant files (one per job).
             file_paths = file_tree.get_paths(stat_file)
+            logger.info("Found %d files for %s." % (len(file_paths), stat_file))
 
             # Aggregate the data from all the jobs for each file type.
-            for sub_path, fname in file_paths:
-                nextfix = '/'.join(sub_path) + '/'
+            for sub_path, file_entry in file_paths:
+                s3_key = file_entry['key']
                 ref = sub_path[0]
-                file = s3.get_object(Bucket=bucket_name,
-                                     Key=s3_prefix + nextfix + fname)
+                file = s3.get_object(Bucket=bucket_name, Key=s3_key)
                 file_bytes = file['Body'].read()
                 if handle_stats is not None:
                     handle_stats(ref, my_agg, file_bytes)
 
-        return stat_aggs
+        return file_tree, stat_aggs
 
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
