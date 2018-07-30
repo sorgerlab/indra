@@ -484,5 +484,19 @@ hierarchies = {'entity': entity_hierarchy,
                'cellular_component': ccomp_hierarchy}
 
 
+def get_wm_hierarchies():
+    eidos_ont = os.path.join(os.path.dirname(__file__),
+                             '../sources/eidos/eidos_ontology.rdf')
+    hume_ont = os.path.join(os.path.dirname(__file__),
+                            '../sources/hume/hume_ontology.rdf')
+    trips_ont = os.path.join(os.path.dirname(__file__),
+                             '../sources/cwms/trips_ontology.rdf')
+    hm = HierarchyManager(eidos_ont, build_closure=True, uri_as_name=True)
+    hm.extend_with(hume_ont)
+    hm.extend_with(trips_ont)
+    wm_hierarchies = {'entity': hm}
+    return wm_hierarchies
+
+
 class UnknownNamespaceException(Exception):
     pass
