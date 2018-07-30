@@ -3,6 +3,7 @@ from builtins import dict, str, bytes
 from past.builtins import basestring
 import json
 import logging
+import requests
 from .processor import EidosJsonProcessor, EidosJsonLdProcessor
 
 logger = logging.getLogger('eidos')
@@ -18,7 +19,8 @@ except Exception as e:
     eidos_reader = None
 
 
-def process_text(text, out_format='json_ld', save_json='eidos_output.json'):
+def process_text(text, out_format='json_ld', save_json='eidos_output.json',
+                 webservice=None):
     """Return an EidosProcessor by processing the given text.
 
     This constructs a reader object via Java and extracts mentions
@@ -34,6 +36,8 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json'):
         "json" or "json_ld". Default: "json_ld"
     save_json : Optional[str]
         The name of a file in which to dump the JSON output of Eidos.
+    webservice : Optional[str]
+        An Eidos reader web service URL to send the request to.
 
     Returns
     -------
@@ -41,10 +45,15 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json'):
         A EidosJsonProcessor or EidosJsonLdProcessor containing the extracted
         INDRA Statements in ep.statements.
     """
-    if eidos_reader is None:
-        logger.error('Eidos reader is not available.')
-        return None
-    json_dict = eidos_reader.process_text(text, out_format)
+    if not webservice:
+        if eidos_reader is None:
+            logger.error('Eidos reader is not available.')
+            return None
+        json_dict = eidos_reader.process_text(text, out_format)
+    else:
+        res = requests.post('%s/process_text' % webservice,
+                            json={'text': text})
+        json_dict = res.json()
     if save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)

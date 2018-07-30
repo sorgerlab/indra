@@ -263,7 +263,8 @@ def _get_node_label(agent):
     # otherwise return the agent name.
     if ('UP' not in agent.db_refs and
         'HGNC' not in agent.db_refs and
-        'CHEBI' not in agent.db_refs):
+        'CHEBI' not in agent.db_refs and
+        'UN' not in agent.db_refs):
         if 'FPLX' in agent.db_refs:
             name_for_node = agent.db_refs['FPLX']
             return sanitize_name(name_for_node)

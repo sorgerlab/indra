@@ -1,4 +1,5 @@
 import re
+import os
 import rdflib
 import logging
 import objectpath
@@ -115,8 +116,12 @@ class HumeJsonLdProcessor(object):
                 name = head_text
         """
         # Save raw text and Hume scored groundings as db_refs
-        db_refs = {'TEXT': entity['text'],
-                   'HUME': _get_hume_grounding(entity)}
+        db_refs = {'TEXT': entity['text']}
+        hume_grounding = _get_hume_grounding(entity)
+        # We could get an empty list here in which case we don't add the
+        # grounding
+        if hume_grounding:
+            db_refs['HUME'] = hume_grounding
         concept = Concept(name, db_refs=db_refs)
         return concept
 
@@ -188,9 +193,17 @@ def _get_hume_grounding(entity):
     if not groundings:
         return None
     def get_ont_concept(concept):
-        """Strip /event/x to event/x."""
+        """Strip slah, replace spaces and remove example leafs."""
         if concept.startswith('/'):
             concept = concept[1:]
+        concept = concept.replace(' ', '_')
+        # We eliminate any entries that aren't ontology categories
+        # these are typically "examples" corresponding to the category
+        while concept not in hume_onto_entries:
+            parts = concept.split('/')
+            if len(parts) == 1:
+                break
+            concept = '/'.join(parts[:-1])
         return concept
 
     # Basic collection of grounding entries
@@ -221,6 +234,19 @@ def get_polarity(event):
             if state_property['type'] == 'polarity':
                 return pol_map[state_property['text']]
     return None
+
+
+def _get_ontology_entries():
+    path_here = os.path.dirname(os.path.abspath(__file__))
+    onto_file = os.path.join(path_here, 'hume_ontology.rdf')
+    G = rdflib.Graph()
+    G.parse(onto_file, format='nt')
+    entries = [e.toPython().split('#')[1] for e in G.all_nodes()]
+    return entries
+
+
+hume_onto_entries = _get_ontology_entries()
+
 
 # OLD PROCESSOR
 

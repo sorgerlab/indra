@@ -29,14 +29,31 @@ def test_wm_map():
     assert 'HUME' in stmt.obj.db_refs
     assert 'SOFIA' in stmt.subj.db_refs
     assert 'SOFIA' in stmt.obj.db_refs
+
     # Test the previously problematic famine case
     c3 = Concept('z', db_refs={'SOFIA': 'Health/Famine'})
     c4 = Concept('a', db_refs={'HUME': [('event/healthcare/famine', 1.0)]})
     stmts = [Influence(c4, c3)]
-    om = OntologyMapper(stmts, wm_ontomap, symmetric=False)
+
+    # Unscored mapping
+    om = OntologyMapper(stmts, wm_ontomap, symmetric=False, scored=False)
     om.map_statements()
     stmt = om.statements[0]
     assert stmt.obj.db_refs['UN'] == [('UN/events/human/famine', 1.0)], \
         stmt.obj.db_refs['UN']
     assert stmt.subj.db_refs['UN'] == [('UN/events/human/famine', 1.0)], \
+        stmt.subj.db_refs['UN']
+
+    # Scored mapping
+    c3 = Concept('z', db_refs={'SOFIA': 'Health/Famine'})
+    c4 = Concept('a', db_refs={'HUME': [('event/healthcare/famine', 1.0)]})
+    stmts = [Influence(c4, c3)]
+    om = OntologyMapper(stmts, wm_ontomap, symmetric=False, scored=True)
+    om.map_statements()
+    stmt = om.statements[0]
+    assert stmt.obj.db_refs['UN'] == [('UN/events/human/famine',
+                                       1.036856450549298)], \
+        stmt.obj.db_refs['UN']
+    assert stmt.subj.db_refs['UN'] == [('UN/events/human/famine',
+                                        0.9465582395117739)], \
         stmt.subj.db_refs['UN']
