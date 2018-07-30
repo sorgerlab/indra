@@ -13,7 +13,20 @@ from indra.tools.reading.util.reporter import Reporter
 
 
 class DbAwsStatReporter(Reporter):
-    """A class to handle generating the reports made at the end of a job."""
+    """A class to handle generating the reports made at the end of a job.
+
+    Parameters
+    ----------
+    job_name : str
+        The name of the job about which this report is being produced.
+    s3_log_prefix: str
+        The desired prefix location in which the information about the job is
+        stored on s3.
+    s3 : boto3.client('s3') instance
+        An s3 client from boto3.
+    bucket_name : str
+        The name of the root s3 bucket.
+    """
     def __init__(self, job_name, s3_log_prefix, s3, bucket_name):
         super(DbAwsStatReporter, self).__init__('%s_summary' % job_name)
         self.s3_prefix = s3_log_prefix + 'statistics/'
@@ -32,6 +45,7 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _get_git_info(self):
+        """Stash the git info in a text file."""
         git_info_dict = get_git_info()
         text_file_content = ''
         for key, val in git_info_dict.items():
@@ -43,6 +57,7 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _plot_hist(self, agged, agg_over, data):
+        """Make and stash a figure for histogram-like data."""
         fig = plt.figure()
         plt.hist(data, bins=np.arange(len(data)))
         plt.xlabel('Number of %s for %s' % (agged, agg_over))
@@ -58,6 +73,7 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _make_timing_report(self, starts, ends):
+        """Stash a text file with the timings: start, end, and duration."""
         # Report on the timing
         timing_str = ''
         for step in ['reading', 'statement production', 'stats']:
@@ -80,6 +96,7 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _populate_hist_data(self, readings_with_stmts, readings_with_no_stmts):
+        """Aggregate data from the various readings into arrays."""
         # Do a bunch of aggregation
         tc_rd_dict = {}
         tc_stmt_dict = {}
@@ -143,6 +160,7 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _make_histograms(self):
+        """Plot all the histograms."""
         # Produce the histograms
         for (agged, agg_over), data in self.hist_dict.items():
             self._plot_hist(agged, agg_over, data)
@@ -156,6 +174,7 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _make_text_summary(self):
+        """Stash a text file summary of totals."""
         text_report_str = ''
         top_labels = ['Total readings', 'Content processed',
                       'Statements produced']
@@ -181,10 +200,28 @@ class DbAwsStatReporter(Reporter):
         return
 
     def _make_job_line(self, key, value):
+        """For job info section, produce one line."""
         self.add_story_text(key, section='Job Info', space=(1, 6))
         self.add_story_text(value, section='Job Info', style='Code')
 
     def report_statistics(self, reading_outputs, stmt_outputs, starts, ends):
+        """Grab low-hanging-statistics and produce a pdf report.
+
+        All the data generated is also stashed for future use in text and pickle
+        files alongside the pdf summary on s3.
+
+        Parameters
+        ----------
+        reading_outputs : list [ReadingData]
+            A list of the ReadingData results output by `produce_readings`.
+        stmt_outputs : list [StatementData]
+            A list of the StatementData results output by `produce_statements`.
+        starts : dict {<stage> : <datetime.datetime instance>}
+            A dict of the start times of different parts of the job
+            (e.g. statement production).
+        ends : dict {<stage> : <datetime.datetime instance>}
+            A dict of the end times of different parts of the job (like starts).
+        """
         starts['stats'] = datetime.now()
         for k, end in ends.items():
             self._make_job_line(k + ' start', str(starts[k]))
