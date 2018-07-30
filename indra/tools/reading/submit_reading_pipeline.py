@@ -7,6 +7,9 @@ import boto3
 import logging
 import botocore.session
 from time import sleep
+import matplotlib as mpl
+mpl.use('Agg')
+from matplotlib import pyplot as plt
 from datetime import datetime, timedelta
 from indra.literature import elsevier_client as ec
 from indra.literature.elsevier_client import _ensure_api_keys
@@ -665,6 +668,30 @@ class DbReadingSubmitter(Submitter):
                 stage_info[label][ref] = self._parse_time(time_str)
         return
 
+    def _produce_timing_plot(self, timing_info):
+        job_segs = {}
+        for stage, stage_d in timing_info.items():
+            for metric, metric_d in stage_d.items():
+                for job_name, t in metric_d.items():
+                    if job_name not in job_segs.keys():
+                        job_segs[job_name] = {}
+                    if stage not in job_segs[job_name].keys():
+                        job_segs[job_name][stage] = {}
+                    if metric not in job_segs[job_name][stage].keys():
+                        job_segs[job_name][stage][metric] = t
+        all_times = [dt for job in job_segs.values() for stage in job.values()
+                     for metric, dt in stage.items() if metric != 'duration']
+        all_start = min(all_times)
+        fig = plt.figure()
+        ax = fig.gca()
+        for i, job_name in enumerate(sorted(job_segs.keys())):
+            job_d = job_segs[job_name]
+            xs = [((job_d[stg]['start']-all_start).total_seconds(), job_d[stg]['duration'].total_seconds()) for stg in ['reading', 'statement production', 'stats']]
+            ys = (4*i, 3)
+            print(job_name, xs, ys)
+            ax.broken_barh(xs, ys, facecolors=('red', 'green', 'blue'))
+        return
+
     def produce_report(self):
         """Produce a report of the batch jobs."""
         s3_prefix = 'reading_results/%s/logs/%s/' % (self.basename,
@@ -701,6 +728,8 @@ class DbReadingSubmitter(Submitter):
                 file_bytes = file['Body'].read()
                 if handle_stats is not None:
                     handle_stats(ref, my_agg, file_bytes)
+
+        self._produce_timing_plot(stat_aggs['timing.txt'])
 
         return file_tree, stat_aggs
 
