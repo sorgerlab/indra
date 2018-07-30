@@ -46,8 +46,6 @@ class OntologyMapper(object):
                     all_mappings += mappings
                 for map_db_name, map_db_id, score in all_mappings:
                     if map_db_name in agent.db_refs:
-                        print(agent.db_refs, map_db_name)
-                        print(score)
                         continue
                     if self.scored:
                         agent.db_refs[map_db_name] = [(map_db_id, score)]
