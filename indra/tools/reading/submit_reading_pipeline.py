@@ -630,7 +630,8 @@ class DbReadingSubmitter(Submitter):
             file_info[segments[0].strip()] = sc.join(segments[1:]).strip()
         return file_info
 
-    def _handle_git_info(self, ref, git_info, this_info):
+    def _handle_git_info(self, ref, git_info, file_bytes):
+        this_info = self._get_txt_file_dict(file_bytes)
         if git_info and this_info != git_info:
             logger.warning("Disagreement in git info in %s: "
                            "%s vs. %s."
@@ -639,14 +640,14 @@ class DbReadingSubmitter(Submitter):
             git_info.update(this_info)
         return
 
-    def _handle_timing(self, ref, timing_info, this_info):
-        timing_patt = re.compile(r'(\w+):\s+([ 0-9:.\-]+)')
+    def _handle_timing(self, ref, timing_info, file_bytes):
+        this_info = self._get_txt_file_dict(file_bytes)
         for stage, data in this_info.items():
             if stage not in timing_info.keys():
                 logger.info("Adding timing stage: %s" % stage)
                 timing_info[stage] = {}
             stage_info = timing_info[stage]
-            timing_pairs = timing_patt.findall(data)
+            timing_pairs = re.findall(r'(\w+):\s+([ 0-9:.\-]+)', data)
             if len(timing_pairs) is not 3:
                 logger.warning("Not all timings present for %s "
                                "in %s." % (stage, ref))
@@ -663,24 +664,34 @@ class DbReadingSubmitter(Submitter):
                                                      self._job_queue)
         s3 = boto3.client('s3')
         file_tree = self._get_results_file_tree(s3, s3_prefix)
-        stat_files = ['git_info.txt', 'raw_tuples.pkl', 'hist_data.pkl',
-                      'timing.txt', 'sum_data.pkl']
-        git_info = {}
-        timing_info = {}
-        for stat_file in stat_files:
+        stat_files = {
+            'git_info.txt': self._handle_git_info,
+            'timing.txt': self._handle_timing,
+            'raw_tuples.pkl': None,
+            'hist_data.pkl': None,
+            'sum_data.pkl': None
+            }
+        stat_aggs = {}
+        for stat_file, handle_stats in stat_files:
+            # Prep the data storage.
+            if stat_file not in stat_aggs.keys():
+                stat_aggs[stat_file] = {}
+            my_agg = stat_aggs[stat_file]
+
+            # Get a list of the relevant files (one per job).
             file_paths = file_tree.get_paths(stat_file)
+
+            # Aggregate the data from all the jobs for each file type.
             for sub_path, fname in file_paths:
                 nextfix = '/'.join(sub_path) + '/'
                 ref = sub_path[0]
                 file = s3.get_object(Bucket=bucket_name,
                                      Key=s3_prefix + nextfix + fname)
                 file_bytes = file['Body'].read()
-                if stat_file.endswith('.txt'):
-                    this_info = self._get_txt_file_dict(file_bytes)
-                    if stat_file == 'git_info.txt':
-                        self._handle_git_info(ref, git_info, this_info)
-                    elif stat_file == 'timing.txt':
-                        self._handle_timing(ref, timing_info, this_info)
+                if handle_stats is not None:
+                    handle_stats(ref, my_agg, file_bytes)
+
+        return stat_aggs
 
 
 def submit_db_reading(basename, id_list_filename, readers, start_ix=None,
