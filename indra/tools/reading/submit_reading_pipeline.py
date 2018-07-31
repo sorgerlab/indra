@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
+import pickle
 from builtins import dict, str
 
 import os
@@ -814,6 +816,22 @@ class DbReadingSubmitter(Submitter):
         img_path = 'time_figure.png'
         fig.savefig(img_path)
         self.reporter.add_image(img_path, width=w, height=h, section='Plots')
+        return
+
+    def _handle_sum_data(self, job_ref, summary_info, file_bytes):
+        one_sum_data_dict = pickle.loads(file_bytes)
+        for k, v in one_sum_data_dict.items():
+            if k not in summary_info.keys():
+                summary_info[k] = {}
+            summary_info[k][job_ref] = v
+        return
+
+    def _report_sum_data(self, summary_info):
+        return
+
+    def _handle_hist_data(self, job_ref, hist_dict, file_bytes):
+        a_hist_data_dict = pickle.loads(file_bytes)
+        hist_dict[job_ref] = a_hist_data_dict
         return
 
     def produce_report(self):
