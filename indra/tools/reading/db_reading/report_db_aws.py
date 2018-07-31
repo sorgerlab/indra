@@ -149,7 +149,7 @@ class DbAwsStatReporter(Reporter):
                 tc_rd_dict[tcid].add(rid)
 
             # Handle things keyed by reader
-            if reader not in reader_stmts.keys():
+            if reader not in reader_tcids.keys():
                 reader_tcids[reader] = {tcid}
                 reader_rids[reader] = {rid}
             else:
