@@ -503,9 +503,16 @@ def get_relation_dict(db, groundings=None, with_evidence_count=False,
     db : DatabaseManager instance
         An instance of a database manager.
     groundings : list[str] or None
-        NOT YET IMPLEMENTED! This will allow the user to select which types of
-        groundings to select, e.g. HGNC, or FPLX, or both. Only agent refs with
-        these groundings will be selected. CURRENTLY, ONLY HGNC IS AVAILABLE.
+        Select which types of grounding namespaces to include, e.g. HGNC, or
+        FPLX, or both. Only agent refs with these groundings will be selected.
+        If None, only HGNC is used.
+    with_evidence_count : bool
+        Default is False. If True, an additional query will be made for each
+        statement to get the count of supporting evidence, which is a userful
+        proxy for belief. This is currently VERY SLOW.
+    with_support_count : bool
+        Default is False. Like `with_evidence_count`, except the number of
+        supporting statements is counted.
     """
     other_params = []
     if groundings is None:
