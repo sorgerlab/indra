@@ -56,6 +56,7 @@ def test_normal_db_reading_call():
     job_name, cmd = sub._make_command(0, len(text_content))
     cmd += ['--test']
     check_call(cmd)
+    sub.produce_report()
 
     # Remove garbage on s3
     res = s3.list_objects(Bucket='bigmech', Prefix=s3_prefix)
