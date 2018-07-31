@@ -10,6 +10,9 @@ from time import sleep
 import matplotlib as mpl
 from numpy import median, arange, array
 
+from indra.tools.reading.util.reporter import Reporter
+from indra.util.get_version import get_git_info
+
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 from datetime import datetime, timedelta
@@ -553,6 +556,12 @@ class DbReadingSubmitter(Submitter):
     _job_queue = 'run_db_reading_queue'
     _job_def = 'run_db_reading_jobdef'
 
+    def __init__(self, *args, **kwargs):
+        super(DbReadingSubmitter, self).__init__(*args, **kwargs)
+        self.reporter = Reporter(self.basename + '_summary')
+        self.reporter.sections = {'Plots': [], 'Totals': [], 'Git': []}
+        return
+
     def _get_base(self, job_name, start_ix, end_ix):
 
         read_mode = 'all' if self.options.get('force_read', False) else 'unread'
@@ -656,6 +665,19 @@ class DbReadingSubmitter(Submitter):
             git_info.update(this_info)
         return
 
+    def _report_git_info(self, batch_git_info):
+        self.reporter.add_text('Batch Git Info', section='Git', style='h1')
+        for key, val in batch_git_info.items():
+            label = key.replace('_', ' ').capitalize()
+            self.reporter.add_text('%s: %s' % (label, val), section='Git')
+        self.reporter.add_text('Launching System\'s Git Info', section='Git',
+                               style='h1')
+        git_info_dict = get_git_info()
+        for key, val in git_info_dict.items():
+            label = key.replace('_', ' ').capitalize()
+            self.reporter.add_text('%s: %s' % (label, val), section='Git')
+        return
+
     def _handle_timing(self, ref, timing_info, file_bytes):
         this_info = self._get_txt_file_dict(file_bytes)
         for stage, data in this_info.items():
@@ -674,7 +696,7 @@ class DbReadingSubmitter(Submitter):
                 stage_info[label][ref] = self._parse_time(time_str)
         return
 
-    def _produce_timing_plot(self, timing_info):
+    def _report_timing(self, timing_info):
         # Pivot the timing info.
         idx_patt = re.compile('%s_(\d+)_(\d+)' % self.basename)
         job_segs = NestedDict()
@@ -707,7 +729,9 @@ class DbReadingSubmitter(Submitter):
             return start_seconds, stage_data['duration'].total_seconds()
 
         # Make the broken barh plots.
-        fig = plt.figure(figsize=(6.5, 9))
+        w = 6.5
+        h = 9
+        fig = plt.figure(figsize=(w, h))
         gs = plt.GridSpec(2, 1, height_ratios=[10, 1])
         ax0 = plt.subplot(gs[0])
         ytick_pairs = []
@@ -786,6 +810,9 @@ class DbReadingSubmitter(Submitter):
 
         # Make the figue borders more sensible.
         fig.tight_layout()
+        img_path = 'time_figure.png'
+        fig.savefig(img_path)
+        self.reporter.add_image(img_path, width=w, height=h, section='Plots')
         return
 
     def produce_report(self):
@@ -798,14 +825,14 @@ class DbReadingSubmitter(Submitter):
         file_tree = self._get_results_file_tree(s3, s3_prefix)
         logger.info("Found %d relevant files." % len(file_tree))
         stat_files = {
-            'git_info.txt': self._handle_git_info,
-            'timing.txt': self._handle_timing,
-            'raw_tuples.pkl': None,
-            'hist_data.pkl': None,
-            'sum_data.pkl': None
+            'git_info.txt': (self._handle_git_info, self._report_git_info),
+            'timing.txt': (self._handle_timing, self._report_timing),
+            'raw_tuples.pkl': (None, None),
+            'hist_data.pkl': (None, None),
+            'sum_data.pkl': (None, None)
             }
         stat_aggs = {}
-        for stat_file, handle_stats in stat_files.items():
+        for stat_file, (handle_stats, report_stats) in stat_files.items():
             logger.info("Aggregating %s..." % stat_file)
             # Prep the data storage.
             if stat_file not in stat_aggs.keys():
@@ -825,7 +852,7 @@ class DbReadingSubmitter(Submitter):
                 if handle_stats is not None:
                     handle_stats(ref, my_agg, file_bytes)
 
-        self._produce_timing_plot(stat_aggs['timing.txt'])
+            report_stats(stat_aggs[stat_file])
 
         return file_tree, stat_aggs
 
