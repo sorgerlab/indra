@@ -509,6 +509,8 @@ def get_relation_dict(db, groundings=None):
     other_params = []
     if groundings is None:
         other_params.append(db.PAAgents.db_name.like('HGNC'))
+    elif len(groundings) == 1:
+        other_params.append(db.PAAgents.db_name.like(groundings[0]))
     else:
         ors = []
         for gdng in groundings:
