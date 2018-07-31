@@ -36,6 +36,10 @@ def test_normal_db_reading_call():
          zip_string('MEK phosphorylates ERK in test %d.' % i))
         for i in range(N)
         ]
+    text_content += [
+        (N, N-1, 'pmc_oa', 'text', 'fulltext',
+         zip_string('MEK phosphorylates ERK. EGFR activates SHC.'))
+        ]
     db.copy('text_content', text_content,
             cols=('id', 'text_ref_id', 'source', 'format', 'text_type',
                   'content'))
@@ -44,11 +48,12 @@ def test_normal_db_reading_call():
     basename = 'local_db_test_run'
     s3_prefix = 'reading_results/%s/' % basename
     s3.put_object(Bucket='bigmech', Key=s3_prefix + 'id_list',
-                  Body='\n'.join(['tcid: %d' % i for i in range(5)]))
+                  Body='\n'.join(['tcid: %d' % i
+                                  for i in range(len(text_content))]))
 
     # Call the reading tool
     sub = srp.DbReadingSubmitter(basename, ['sparser'])
-    job_name, cmd = sub._make_command(0, 2)
+    job_name, cmd = sub._make_command(0, len(text_content))
     cmd += ['--test']
     check_call(cmd)
 
