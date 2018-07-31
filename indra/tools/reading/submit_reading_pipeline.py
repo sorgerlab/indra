@@ -8,7 +8,7 @@ import logging
 import botocore.session
 from time import sleep
 import matplotlib as mpl
-from numpy import median, arange
+from numpy import median, arange, array
 
 mpl.use('Agg')
 from matplotlib import pyplot as plt
@@ -707,27 +707,40 @@ class DbReadingSubmitter(Submitter):
             return start_seconds, stage_data['duration'].total_seconds()
 
         # Make the broken barh plots.
-        fig = plt.figure()
-        ax = fig.gca()
+        fig = plt.figure(figsize=(6.5, 9))
+        gs = plt.GridSpec(2, 1, height_ratios=[10, 1])
+        ax0 = plt.subplot(gs[0])
         ytick_pairs = []
+        stages = ['reading', 'statement production', 'stats']
+        t = arange((all_end - all_start).total_seconds())
+        counts = dict.fromkeys(['jobs'] + stages)
+        for k in counts.keys():
+            counts[k] = array([0 for _ in t])
         for i, job_tpl in enumerate(plot_list):
             s_ix, e_ix, job_name = job_tpl
             job_d = job_segs[job_name]
-            xs = [get_time_tuple(job_d[stg])
-                  for stg in ['reading', 'statement production', 'stats']]
+            xs = [get_time_tuple(job_d[stg]) for stg in stages]
             ys = (s_ix, (e_ix - s_ix)*0.9)
             ytick_pairs.append(((s_ix + e_ix)/2, '%s_%s' % (s_ix, e_ix)))
             logger.debug("Making plot for: %s" % str((job_name, xs, ys)))
-            ax.broken_barh(xs, ys, facecolors=('red', 'green', 'blue'))
+            ax0.broken_barh(xs, ys, facecolors=('red', 'green', 'blue'))
+
+            for n, stg in enumerate(stages):
+                cs = counts[stg]
+                start = xs[n][0]
+                dur = xs[n][1]
+                cs[(t>start) & (t<(start + dur))] += 1
+            cs = counts['jobs']
+            cs[(t>xs[0][0]) & (t<(xs[-1][0] + xs[-1][1]))] += 1
 
         # Format the plot
-        ax.tick_params(top='off', left='off', right='off', bottom='on',
-                       labelleft='on', labelbottom='on')
-        for spine in ax.spines.values():
+        ax0.tick_params(top='off', left='off', right='off', bottom='off',
+                       labelleft='on', labelbottom='off')
+        for spine in ax0.spines.values():
             spine.set_visible(False)
-        ax.set_xlabel('Time since beginning [seconds]')
-        ax.set_xlim(0, (all_end - all_start).total_seconds())
-        ax.set_ylabel(self.basename + '_ ...')
+        total_time = (all_end - all_start).total_seconds()
+        ax0.set_xlim(0, total_time)
+        ax0.set_ylabel(self.basename + '_ ...')
         print(ytick_pairs)
         yticks, ylabels = zip(*ytick_pairs)
         print(yticks)
@@ -748,9 +761,31 @@ class DbReadingSubmitter(Submitter):
                 ylabel_filled.append(ylabels[yticks.index(ytick)])
             else:
                 ylabel_filled.append('FAILED')
-        ax.set_ylim(0, max(ytick_range) + spacing)
-        ax.set_yticks(ytick_range)
-        ax.set_yticklabels(ylabel_filled)
+        ax0.set_ylim(0, max(ytick_range) + spacing)
+        ax0.set_yticks(ytick_range)
+        ax0.set_yticklabels(ylabel_filled)
+
+        # Plot the lower axis.
+        legend_list = []
+        color_map = {'jobs': 'k', 'reading': 'r', 'statement production': 'g',
+                     'stats': 'b'}
+        ax1 = plt.subplot(gs[1], sharex=ax0)
+        for k, cs in counts.items():
+            legend_list.append(k)
+            ax1.plot(t, cs, color=color_map[k])
+        for lbl, spine in ax1.spines.items():
+            spine.set_visible(False)
+        max_n = max(counts['jobs'])
+        ax1.set_ylim(0, max_n + 1)
+        ax1.set_xlim(0, total_time)
+        yticks = list(range(0, max_n-max_n//5, max_n//5))
+        ax1.set_yticks(yticks + [max_n])
+        ax1.set_yticklabels([str(n) for n in yticks] + ['max=%d' % max_n])
+        ax1.set_ylabel('N_jobs')
+        ax1.set_xlabel('Time since beginning [seconds]')
+
+        # Make the figue borders more sensible.
+        fig.tight_layout()
         return
 
     def produce_report(self):
