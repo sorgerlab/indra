@@ -490,7 +490,8 @@ def get_statement_essentials(clauses, count=1000, db=None, preassembled=True):
     return stmt_data
 
 
-def get_relation_dict(db, groundings=None):
+def get_relation_dict(db, groundings=None, with_evidence_count=False,
+                      with_support_count=False):
     """Get a dictionary of entity interactions from the database.
 
     Use only metadata from the database to rapidly get simple interaction data.
@@ -540,6 +541,16 @@ def get_relation_dict(db, groundings=None):
         # Add the tuple to the dict in the appropriate manner.
         if stmt_hash not in stmt_dict.keys():
             stmt_dict[stmt_hash] = {'type': stmt_type, 'agents': [ag_tpl]}
+            if with_evidence_count:
+                logger.info('Getting a count of evidence for %d' % stmt_hash)
+                n_ev = db.count(db.RawUniqueLinks,
+                                db.RawUniqueLinks.pa_stmt_mk_hash == stmt_hash)
+                stmt_dict[stmt_hash]['n_ev'] = n_ev
+            if with_support_count:
+                logger.info('Getting a count of support for %d' % stmt_hash)
+                n_sup = db.count(db.PASupportLinks,
+                               db.PASupportLinks.supported_mk_hash == stmt_hash)
+                stmt_dict[stmt_hash]['n_sup'] = n_sup
         else:
             assert stmt_dict[stmt_hash]['type'] == stmt_type
             stmt_dict[stmt_hash]['agents'].append(ag_tpl)
