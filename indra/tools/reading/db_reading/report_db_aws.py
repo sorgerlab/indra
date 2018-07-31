@@ -61,19 +61,32 @@ class DbAwsStatReporter(Reporter):
         fig = plt.figure()
 
         # Check if it's worth actually making a histogram...
-        if not data:
-            self.add_text('No data for %s per %s.' % (agged, agg_over),
+        if not len(data):
+            self.add_text('No data for %s vs %s.' % (agged, agg_over),
                           section='Plots')
             return
         if len(set(data)) == 1:
-            self.add_text('%s per %s: %d' % (agged, agg_over, data[0]),
-                          section='Plots')
+            if isinstance(data, dict):
+                k = list(data.keys())[0]
+                v = list(data.values())[0]
+                txt = 'One of the %s, %s, has %d %s.' % (agg_over, k, v, agged)
+                self.add_text(txt, section='Plots')
+            else:
+                self.add_text('%s per %s: %d' % (agged, agg_over, data[0]),
+                              section='Plots')
             return
 
         # Make the histogram.
-        plt.hist(data, bins=np.arange(len(data)), log=True)
-        plt.xlabel('Number of %s for %s' % (agged, agg_over))
-        plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
+        if isinstance(data, dict):
+            key_list = list(data.keys())
+            xtick_locs = np.arange(len(data))
+            plt.plot(xtick_locs, [data[k] for k in key_list],
+                     align='center')
+            plt.xticks(xtick_locs, key_list)
+        else:
+            plt.hist(data, bins=np.arange(len(data)), log=True)
+        plt.xlabel(agged)
+        plt.ylabel(agg_over)
         fname = '%s_per_%s.png' % (agged, agg_over)
         fig.set_size_inches(6, 4)
         fig.savefig(fname)
@@ -157,32 +170,41 @@ class DbAwsStatReporter(Reporter):
                 reader_rids[reader].add(rid)
 
         # Produce some numpy count arrays.
-        self.hist_dict[('readings', 'text content')] = \
-            np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
-        self.hist_dict[('stmts', 'text content')] = \
-            np.array([len(stmts) for stmts in tc_stmt_dict.values()])
-        self.hist_dict[('stmts', 'readings')] = \
-            np.array([len(stmts) for stmts in rd_stmt_dict.values()])
-        self.hist_dict[('stmts', 'readers')] = \
-            np.array([len(stmts) for stmts in reader_stmts.values()])
-        self.hist_dict[('text content', 'reader')] = \
-            np.array([len(tcid_set) for tcid_set in reader_tcids.values()])
-        self.hist_dict[('readings', 'reader')] = \
-            np.array([len(rid_set) for rid_set in reader_rids.values()])
+        self.hist_dict[('readings', 'text content')] = {
+            'data': np.array([len(rid_set) for rid_set in tc_rd_dict.values()])
+            }
+        self.hist_dict[('stmts', 'text content')] = {
+            'data': np.array([len(stmts) for stmts in tc_stmt_dict.values()])
+            }
+        self.hist_dict[('stmts', 'readings')] = {
+            'data': np.array([len(stmts) for stmts in rd_stmt_dict.values()])
+            }
+        self.hist_dict[('stmts', 'readers')] = {
+            'data': {rdr: len(stmts) for rdr, stmts in reader_stmts.items()}
+            }
+        self.hist_dict[('text content', 'readers')] = {
+            'data': {rdr: len(tcids) for rdr, tcids in reader_tcids.items()},
+            }
+        self.hist_dict[('readings', 'readers')] = {
+            'data': {rdr: len(rid_set) for rdr, rid_set in reader_rids.items()}
+            }
         return
 
     def _make_histograms(self):
         """Plot all the histograms."""
         # Produce the histograms
         for (agged, agg_over), data in self.hist_dict.items():
-            self._plot_hist(agged, agg_over, data)
+            self._plot_hist(agged, agg_over, data['data'])
             label = '%s per %s' % (agged, agg_over)
-            stat_dict = {'mean': data.mean(), 'std': data.std(),
-                         'median': np.median(data)}
-            self.add_text(str(stat_dict), style='Code', section='Plots')
-            self.summary_dict[label.capitalize()] = {'mean': data.mean(),
-                                                     'std': data.std(),
-                                                     'median': np.median(data)}
+            if not isinstance(data, dict):
+                stat_dict = {'mean': data.mean(), 'std': data.std(),
+                             'median': np.median(data)}
+                self.add_text(str(stat_dict), style='Code', section='Plots')
+                self.summary_dict[label.capitalize()] = {
+                    'mean': data.mean(),
+                    'std': data.std(),
+                    'median': np.median(data)
+                    }
         return
 
     def _make_text_summary(self):
