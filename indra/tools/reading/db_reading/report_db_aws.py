@@ -84,11 +84,12 @@ class DbAwsStatReporter(Reporter):
                      align='center')
             plt.xticks(xtick_locs, key_list)
         else:
-            plt.hist(data, bins=np.arange(len(data)), log=True)
+            plt.hist(data, bins=np.arange(len(data)), log=True, align='left')
         plt.xlabel(agged)
         plt.ylabel(agg_over)
         fname = '%s_per_%s.png' % (agged, agg_over)
         fig.set_size_inches(6, 4)
+        fig.tight_layout()
         fig.savefig(fname)
         with open(fname, 'rb') as f:
             s3_key = self.s3_prefix + fname
@@ -196,15 +197,14 @@ class DbAwsStatReporter(Reporter):
         for (agged, agg_over), data in self.hist_dict.items():
             self._plot_hist(agged, agg_over, data['data'])
             label = '%s per %s' % (agged, agg_over)
-            if not isinstance(data, dict):
-                stat_dict = {'mean': data.mean(), 'std': data.std(),
-                             'median': np.median(data)}
-                self.add_text(str(stat_dict), style='Code', section='Plots')
-                self.summary_dict[label.capitalize()] = {
-                    'mean': data.mean(),
-                    'std': data.std(),
-                    'median': np.median(data)
-                    }
+            if not isinstance(data['data'], dict):
+                arr = data['data']
+                stat_dict = {'mean': arr.mean(), 'std': arr.std(),
+                             'median': np.median(arr)}
+                stat_str = ', '.join(['%s=%f' % (k, v)
+                                      for k, v in stat_dict.items()])
+                self.add_text(stat_str, style='Code', section='Plots')
+                self.summary_dict[label.capitalize()] = stat_dict.copy()
         return
 
     def _make_text_summary(self):
