@@ -173,6 +173,9 @@ class Reporter(object):
     def _make_sections(self, **section_hdr_params):
         """Flatten the sections into a single story list."""
         sect_story = []
+        if not self.section_headings and len(self.sections):
+            self.section_headings = self.sections.keys()
+
         for section_name in self.section_headings:
             section_story = self.sections[section_name]
             line = '-'*20
