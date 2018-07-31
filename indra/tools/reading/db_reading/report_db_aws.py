@@ -59,7 +59,19 @@ class DbAwsStatReporter(Reporter):
     def _plot_hist(self, agged, agg_over, data):
         """Make and stash a figure for histogram-like data."""
         fig = plt.figure()
-        plt.hist(data, bins=np.arange(len(data)))
+
+        # Check if it's worth actually making a histogram...
+        if not data:
+            self.add_text('No data for %s per %s.' % (agged, agg_over),
+                          section='Plots')
+            return
+        if len(set(data)) == 1:
+            self.add_text('%s per %s: %d' % (agged, agg_over, data[0]),
+                          section='Plots')
+            return
+
+        # Make the histogram.
+        plt.hist(data, bins=np.arange(len(data)), log=True)
         plt.xlabel('Number of %s for %s' % (agged, agg_over))
         plt.ylabel('Number of %s with a given number of %s' % (agg_over, agged))
         fname = '%s_per_%s.png' % (agged, agg_over)
