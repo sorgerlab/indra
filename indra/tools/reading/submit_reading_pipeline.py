@@ -411,10 +411,10 @@ class Submitter(object):
         self.ids_per_job = ids_per_job
 
         # Upload the pmid_list to Amazon S3
-        pmid_list_key = 'reading_results/%s/%s' % (self.basename,
-                                                   self._s3_input_name)
+        id_list_key = 'reading_results/%s/%s' % (self.basename,
+                                                 self._s3_input_name)
         s3_client = boto3.client('s3')
-        s3_client.upload_file(input_fname, bucket_name, pmid_list_key)
+        s3_client.upload_file(input_fname, bucket_name, id_list_key)
 
         # If no end index is specified, read all the PMIDs
         if end_ix is None:
@@ -774,6 +774,7 @@ class DbReadingSubmitter(Submitter):
             # Infer if we don't have it.
             spacing = median([yticks[i+1] - yticks[i]
                               for i in range(len(yticks) - 1)])
+            spacing = max(1, spacing)
         else:
             spacing = self.ids_per_job
         print(spacing)
@@ -802,7 +803,7 @@ class DbReadingSubmitter(Submitter):
         max_n = max(counts['jobs'])
         ax1.set_ylim(0, max_n + 1)
         ax1.set_xlim(0, total_time)
-        yticks = list(range(0, max_n-max_n//5, max_n//5))
+        yticks = list(range(0, max_n-max_n//5, max(1, max_n//5)))
         ax1.set_yticks(yticks + [max_n])
         ax1.set_yticklabels([str(n) for n in yticks] + ['max=%d' % max_n])
         ax1.set_ylabel('N_jobs')
@@ -852,8 +853,14 @@ class DbReadingSubmitter(Submitter):
                 if handle_stats is not None:
                     handle_stats(ref, my_agg, file_bytes)
 
-            report_stats(stat_aggs[stat_file])
+            if report_stats is not None:
+                report_stats(stat_aggs[stat_file])
 
+        fname = self.reporter.make_report()
+        with open(fname, 'rb') as f:
+            s3.put_object(Bucket=bucket_name,
+                          Key='reading_results/%s/%s' % (self.basename, fname),
+                          Body=f.read())
         return file_tree, stat_aggs
 
 
