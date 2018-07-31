@@ -506,21 +506,36 @@ def get_relation_dict(db, groundings=None):
         groundings to select, e.g. HGNC, or FPLX, or both. Only agent refs with
         these groundings will be selected. CURRENTLY, ONLY HGNC IS AVAILABLE.
     """
+    other_params = []
+    if groundings is None:
+        other_params.append(db.PAAgents.db_name.like('HGNC'))
+    else:
+        ors = []
+        for gdng in groundings:
+            ors.append(db.PAAgents.db_name.like(gdng))
+        other_params.append(or_(*ors))
 
     # Query the database
     results = db.select_all(
         [db.PAAgents.id, db.PAAgents.db_id, db.PAAgents.role,
-         db.PAStatements.type, db.PAStatements.mk_hash],
+         db.PAAgents.db_name, db.PAStatements.type, db.PAStatements.mk_hash],
         db.PAStatements.mk_hash == db.PAAgents.stmt_mk_hash,
-        db.PAAgents.db_name.like('HGNC'),
-        yield_per=10000
+        *other_params, **{'yield_per': 10000}
         )
 
     # Sort into a dict.
     stmt_dict = {}
     for res in results:
-        ag_id, ag_dbid, ag_role, stmt_type, stmt_hash = res
-        ag_tpl = (ag_id, ag_role, ag_dbid, hgnc_client.get_hgnc_name(ag_dbid))
+        ag_id, ag_dbid, ag_role, ag_dbname, stmt_type, stmt_hash = res
+
+        # Handle the case that this is or isn't HGNC
+        if ag_dbname == 'HGNC':
+            ag_tpl = (ag_id, ag_role, ag_dbname, ag_dbid,
+                      hgnc_client.get_hgnc_name(ag_dbid))
+        else:
+            ag_tpl = (ag_id, ag_role, ag_dbname, ag_dbid, ag_dbid)
+
+        # Add the tuple to the dict in the appropriate manner.
         if stmt_hash not in stmt_dict.keys():
             stmt_dict[stmt_hash] = {'type': stmt_type, 'agents': [ag_tpl]}
         else:
