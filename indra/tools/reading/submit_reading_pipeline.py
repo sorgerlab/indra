@@ -8,6 +8,8 @@ import logging
 import botocore.session
 from time import sleep
 import matplotlib as mpl
+from numpy import median, arange
+
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 from datetime import datetime, timedelta
@@ -375,6 +377,7 @@ class Submitter(object):
         self.project_name = project_name
         self.job_list = None
         self.options=options
+        self.ids_per_job = None
         return
 
     def set_options(self, **kwargs):
@@ -401,6 +404,9 @@ class Submitter(object):
 
     def submit_reading(self, input_fname, start_ix, end_ix, ids_per_job,
                        num_tries=2):
+        # stash this for later.
+        self.ids_per_job = ids_per_job
+
         # Upload the pmid_list to Amazon S3
         pmid_list_key = 'reading_results/%s/%s' % (self.basename,
                                                    self._s3_input_name)
@@ -669,27 +675,82 @@ class DbReadingSubmitter(Submitter):
         return
 
     def _produce_timing_plot(self, timing_info):
-        job_segs = {}
+        # Pivot the timing info.
+        idx_patt = re.compile('%s_(\d+)_(\d+)' % self.basename)
+        job_segs = NestedDict()
+        plot_set = set()
         for stage, stage_d in timing_info.items():
+            # e.g. reading, statement production...
             for metric, metric_d in stage_d.items():
+                # e.g. start, end, ...
                 for job_name, t in metric_d.items():
-                    if job_name not in job_segs.keys():
-                        job_segs[job_name] = {}
-                    if stage not in job_segs[job_name].keys():
-                        job_segs[job_name][stage] = {}
-                    if metric not in job_segs[job_name][stage].keys():
-                        job_segs[job_name][stage][metric] = t
+                    # e.g. job_basename_startIx_endIx
+                    job_segs[job_name][stage][metric] = t
+                    m = idx_patt.match(job_name)
+                    if m is None:
+                        logger.error("Unexpectedly formatted name: %s."
+                                     % job_name)
+                        continue
+                    key = tuple([int(n) for n in m.groups()] + [job_name])
+                    plot_set.add(key)
+        plot_list = list(plot_set)
+        plot_list.sort()
+
+        # Use this for getting the minimum and maximum.
         all_times = [dt for job in job_segs.values() for stage in job.values()
                      for metric, dt in stage.items() if metric != 'duration']
         all_start = min(all_times)
+        all_end = max(all_times)
+
+        def get_time_tuple(stage_data):
+            start_seconds = (stage_data['start'] - all_start).total_seconds()
+            return start_seconds, stage_data['duration'].total_seconds()
+
+        # Make the broken barh plots.
         fig = plt.figure()
         ax = fig.gca()
-        for i, job_name in enumerate(sorted(job_segs.keys())):
+        ytick_pairs = []
+        for i, job_tpl in enumerate(plot_list):
+            s_ix, e_ix, job_name = job_tpl
             job_d = job_segs[job_name]
-            xs = [((job_d[stg]['start']-all_start).total_seconds(), job_d[stg]['duration'].total_seconds()) for stg in ['reading', 'statement production', 'stats']]
-            ys = (4*i, 3)
-            print(job_name, xs, ys)
+            xs = [get_time_tuple(job_d[stg])
+                  for stg in ['reading', 'statement production', 'stats']]
+            ys = (s_ix, (e_ix - s_ix)*0.9)
+            ytick_pairs.append(((s_ix + e_ix)/2, '%s_%s' % (s_ix, e_ix)))
+            logger.debug("Making plot for: %s" % str((job_name, xs, ys)))
             ax.broken_barh(xs, ys, facecolors=('red', 'green', 'blue'))
+
+        # Format the plot
+        ax.tick_params(top='off', left='off', right='off', bottom='on',
+                       labelleft='on', labelbottom='on')
+        for spine in ax.spines.values():
+            spine.set_visible(False)
+        ax.set_xlabel('Time since beginning [seconds]')
+        ax.set_xlim(0, (all_end - all_start).total_seconds())
+        ax.set_ylabel(self.basename + '_ ...')
+        print(ytick_pairs)
+        yticks, ylabels = zip(*ytick_pairs)
+        print(yticks)
+        if not self.ids_per_job:
+            print([yticks[i+1] - yticks[i]
+                   for i in range(len(yticks) - 1)])
+            # Infer if we don't have it.
+            spacing = median([yticks[i+1] - yticks[i]
+                              for i in range(len(yticks) - 1)])
+        else:
+            spacing = self.ids_per_job
+        print(spacing)
+        print(yticks[0], yticks[-1])
+        ytick_range = list(arange(yticks[0], yticks[-1] + spacing, spacing))
+        ylabel_filled = []
+        for ytick in ytick_range:
+            if ytick in yticks:
+                ylabel_filled.append(ylabels[yticks.index(ytick)])
+            else:
+                ylabel_filled.append('FAILED')
+        ax.set_ylim(0, max(ytick_range) + spacing)
+        ax.set_yticks(ytick_range)
+        ax.set_yticklabels(ylabel_filled)
         return
 
     def produce_report(self):
