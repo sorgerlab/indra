@@ -708,6 +708,21 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True):
     return
 
 
+def get_statements_from_hashes():
+    """Retrieve statement objects given only a statement hash."""
+    pass
+
+
+def get_support():
+    """Populate the supports and supported_by lists of the given statements."""
+    pass
+
+
+def get_related_papers():
+    """Get papers with references to the same mechanisms."""
+    pass
+
+
 def _get_trids(db, id_val, id_type):
     """Return text ref IDs corresponding to any ID type and value."""
     # Get the text ref id(s)
