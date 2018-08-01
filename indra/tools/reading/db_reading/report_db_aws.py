@@ -84,7 +84,7 @@ class DbAwsStatReporter(Reporter):
                      align='center')
             plt.xticks(xtick_locs, key_list)
         else:
-            plt.hist(data, bins=np.arange(len(data)), log=True, align='left')
+            plt.hist(data, bins=np.arange(max(data)), log=True, align='left')
         plt.xlabel(agged)
         plt.ylabel(agg_over)
         fname = '%s_per_%s.png' % (agged, agg_over)
