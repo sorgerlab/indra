@@ -297,8 +297,8 @@ def share_model():
 
 @route('/fetch_model', method=['POST', 'OPTIONS'])
 @allow_cors
-def share_model():
-    """Download model from NDEX"""
+def fetch_model():
+    """Download model and associated pieces from NDEX"""
     if request.method == 'OPTIONS':
         return {}
     response = request.body.read().decode('utf-8')
