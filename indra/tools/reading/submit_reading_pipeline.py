@@ -35,7 +35,7 @@ class BatchReadingError(Exception):
 def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                       poll_interval=10, idle_log_timeout=None,
                       kill_on_log_timeout=False, stash_log_method=None,
-                      tag_instances=False):
+                      tag_instances=False, result_record=None):
     """Return when all jobs in the given list finished.
 
     If not job list is given, return when all jobs in queue finished.
@@ -67,6 +67,11 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
         method is specified, the logs will not be loaded off of AWS. If 's3' is
         specified, then `job_name_prefix` must also be given, as this will
         indicate where on s3 to store the logs.
+    tag_instances : bool
+        Default is False. If True, apply tags to the instances. This is toady
+        typically done by each job, so in most cases this should not be needed.
+    result_record : dict
+        A dict which will be modified in place to record the results of the job.
     """
     if stash_log_method == 's3' and job_name_prefix is None:
         raise Exception('A job_name_prefix is required to post logs on s3.')
@@ -205,6 +210,10 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
                    stash_log_method, job_name_prefix,
                    start_time.strftime('%Y%m%d_%H%M%S'),
                    ids_stashed=stashed_id_set)
+
+    result_record['terminated'] = terminated_jobs
+    result_record['failed'] = failed
+    result_record['succeeded'] = done
 
     return ret
 
@@ -560,8 +569,10 @@ class DbReadingSubmitter(Submitter):
 
     def __init__(self, *args, **kwargs):
         super(DbReadingSubmitter, self).__init__(*args, **kwargs)
-        self.reporter = Reporter(self.basename + '_summary')
+        self.time_tag = datetime.now().strftime('%Y%m%d_%H%M')
+        self.reporter = Reporter(self.basename + '_summary_%s' % self.time_tag)
         self.reporter.sections = {'Plots': [], 'Totals': [], 'Git': []}
+        self.run_record = {}
         return
 
     def _get_base(self, job_name, start_ix, end_ix):
@@ -600,6 +611,7 @@ class DbReadingSubmitter(Submitter):
         return
 
     def watch_and_wait(self, *args, **kwargs):
+        kwargs['result_record'] = self.run_record
         super(DbReadingSubmitter, self).watch_and_wait(*args, **kwargs)
         self.produce_report()
 
@@ -898,11 +910,18 @@ class DbReadingSubmitter(Submitter):
 
             stat_aggs[stat_file] = my_agg
 
+        for end_type, jobs in self.run_record.items():
+            self.reporter.add_text('Jobs %s: %d' % (end_type, len(jobs)))
+
+        s3_prefix = 'reading_results/%s/' % self.basename
         fname = self.reporter.make_report()
         with open(fname, 'rb') as f:
             s3.put_object(Bucket=bucket_name,
-                          Key='reading_results/%s/%s' % (self.basename, fname),
+                          Key= s3_prefix + fname,
                           Body=f.read())
+        s3.put_object(Bucket=bucket_name,
+                      Key=s3_prefix + 'stat_aggregates_%s.pkl' % self.time_tag,
+                      Body=pickle.dumps(stat_aggs))
         return file_tree, stat_aggs
 
 
