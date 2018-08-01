@@ -308,7 +308,7 @@ def fetch_model():
     network_attr = [x for x in cx.cx if x.get('networkAttributes')]
     network_attr = network_attr[0]['networkAttributes']
     keep_keys = ['model_elements', 'preset_pos', 'stmts',
-                 'sentences', 'evidence']
+                 'sentences', 'evidence', 'cell_line', 'mrna', 'mutations']
     stored_data = {}
     for d in network_attr:
         if d['n'] in keep_keys:
