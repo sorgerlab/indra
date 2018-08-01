@@ -80,7 +80,7 @@ class DbAwsStatReporter(Reporter):
         if isinstance(data, dict):
             key_list = list(data.keys())
             xtick_locs = np.arange(len(data))
-            plt.plot(xtick_locs, [data[k] for k in key_list],
+            plt.bar(xtick_locs, [data[k] for k in key_list],
                      align='center')
             plt.xticks(xtick_locs, key_list)
         else:
