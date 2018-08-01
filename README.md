@@ -177,7 +177,7 @@ from indra.sources import bel
 bel_processor = bel.process_pybel_neighborhood(['BRAF', 'MAP2K1'])
 ```
 At this point, `bel_processor.statements` contains a list of INDRA statements
-extracted from the neihborhood query.
+extracted from the neighborhood query.
 
 Next, we look at an example of querying the [Pathway Commons
 database](http://pathwaycommons.org) for paths between two lists of proteins.
