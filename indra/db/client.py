@@ -708,9 +708,19 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True):
     return
 
 
-def get_statements_from_hashes():
-    """Retrieve statement objects given only a statement hash."""
-    pass
+def get_statements_from_hashes(statement_hashes, preassembled=True, db=None,
+                               **kwargs):
+    """Retrieve statement objects given only statement hashes."""
+    if db is None:
+        db = get_primary_db()
+
+    if preassembled:
+        DbStatements = db.PAStatements
+    else:
+        DbStatements = db.RawStatements
+    stmts = get_statements([DbStatements.mk_hash.in_(statement_hashes)], db=db,
+                           preassembled=preassembled, **kwargs)
+    return stmts
 
 
 def get_support():
