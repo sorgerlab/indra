@@ -878,9 +878,7 @@ class DbReadingSubmitter(Submitter):
         for stat_file, (handle_stats, report_stats) in stat_files.items():
             logger.info("Aggregating %s..." % stat_file)
             # Prep the data storage.
-            if stat_file not in stat_aggs.keys():
-                stat_aggs[stat_file] = {}
-            my_agg = stat_aggs[stat_file]
+            my_agg = {}
 
             # Get a list of the relevant files (one per job).
             file_paths = file_tree.get_paths(stat_file)
@@ -895,8 +893,10 @@ class DbReadingSubmitter(Submitter):
                 if handle_stats is not None:
                     handle_stats(ref, my_agg, file_bytes)
 
-            if report_stats is not None:
-                report_stats(stat_aggs[stat_file])
+            if report_stats is not None and len(my_agg):
+                report_stats(my_agg)
+
+            stat_aggs[stat_file] = my_agg
 
         fname = self.reporter.make_report()
         with open(fname, 'rb') as f:
