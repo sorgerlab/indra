@@ -83,10 +83,14 @@ class DbAwsStatReporter(Reporter):
             plt.bar(xtick_locs, [data[k] for k in key_list],
                      align='center')
             plt.xticks(xtick_locs, key_list)
+            plt.xlabel(agg_over)
+            plt.ylabel(agged)
         else:
-            plt.hist(data, bins=np.arange(max(data)), log=True, align='left')
-        plt.xlabel(agged)
-        plt.ylabel(agg_over)
+            plt.hist(data, bins=np.arange(min(data), max(data)), log=True,
+                     align='left', edgecolor='none')
+            plt.xlim(min(data), max(data))
+            plt.xlabel(agged)
+            plt.ylabel(agg_over)
         fname = '%s_per_%s.png' % (agged, agg_over)
         fig.set_size_inches(6, 4)
         fig.tight_layout()
