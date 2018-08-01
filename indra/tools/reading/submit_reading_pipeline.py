@@ -829,15 +829,21 @@ class DbReadingSubmitter(Submitter):
     def _report_sum_data(self, summary_info):
         # Two kind of things to handle:
         for k, job_dict in summary_info.items():
+            if isinstance(list(job_dict.values())[0], dict):
+                continue
+
             # Overall totals
             self.reporter.add_text('total %s: %d' % (k, sum(job_dict.values())),
                                    section='Totals')
 
             # Hists of totals.
+            if len(job_dict) <= 1:
+                continue
+
             w = 6.5
             h = 4
             fig = plt.figure(figsize=(w, h))
-            plt.hist(job_dict.values(), bins=range(max(job_dict.values())),
+            plt.hist(list(job_dict.values()), bins=range(max(job_dict.values())),
                      align='left')
             plt.xlabel(k)
             plt.ylabel('Number of Jobs')
