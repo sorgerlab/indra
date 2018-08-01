@@ -827,6 +827,24 @@ class DbReadingSubmitter(Submitter):
         return
 
     def _report_sum_data(self, summary_info):
+        # Two kind of things to handle:
+        for k, job_dict in summary_info.items():
+            # Overall totals
+            self.reporter.add_text('total %s: %d' % (k, sum(job_dict.values())),
+                                   section='Totals')
+
+            # Hists of totals.
+            w = 6.5
+            h = 4
+            fig = plt.figure(figsize=(w, h))
+            plt.hist(job_dict.values(), bins=range(max(job_dict.values())),
+                     align='left')
+            plt.xlabel(k)
+            plt.ylabel('Number of Jobs')
+            fig.tight_layout()
+            fname = k + '_hist.png'
+            fig.savefig(fname)
+            self.reporter.add_image(fname, width=w, height=h, section='Plots')
         return
 
     def _handle_hist_data(self, job_ref, hist_dict, file_bytes):
@@ -847,8 +865,8 @@ class DbReadingSubmitter(Submitter):
             'git_info.txt': (self._handle_git_info, self._report_git_info),
             'timing.txt': (self._handle_timing, self._report_timing),
             'raw_tuples.pkl': (None, None),
-            'hist_data.pkl': (None, None),
-            'sum_data.pkl': (None, None)
+            'hist_data.pkl': (self._handle_hist_data, None),
+            'sum_data.pkl': (self._handle_sum_data, self._report_sum_data)
             }
         stat_aggs = {}
         for stat_file, (handle_stats, report_stats) in stat_files.items():
