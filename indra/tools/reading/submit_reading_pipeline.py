@@ -466,7 +466,7 @@ class Submitter(object):
 
     def watch_and_wait(self, poll_interval=10, idle_log_timeout=None,
                        kill_on_timeout=False, stash_log_method=None,
-                       tag_instances=False):
+                       tag_instances=False, **kwargs):
         """This provides shortcut access to the wait_for_complete_function."""
         return wait_for_complete(self._job_queue, job_list=self.job_list,
                                  job_name_prefix=self.basename,
@@ -474,7 +474,7 @@ class Submitter(object):
                                  idle_log_timeout=idle_log_timeout,
                                  kill_on_log_timeout=kill_on_timeout,
                                  stash_log_method=stash_log_method,
-                                 tag_instances=tag_instances)
+                                 tag_instances=tag_instances, **kwargs)
 
 
 class PmidSubmitter(Submitter):
@@ -855,8 +855,8 @@ class DbReadingSubmitter(Submitter):
             w = 6.5
             h = 4
             fig = plt.figure(figsize=(w, h))
-            plt.hist(list(job_dict.values()), bins=range(max(job_dict.values())),
-                     align='left')
+            plt.hist(list(job_dict.values()), align='left',
+                     bins=range(min(job_dict.values()), max(job_dict.values())))
             plt.xlabel(k)
             plt.ylabel('Number of Jobs')
             fig.tight_layout()
@@ -867,7 +867,56 @@ class DbReadingSubmitter(Submitter):
 
     def _handle_hist_data(self, job_ref, hist_dict, file_bytes):
         a_hist_data_dict = pickle.loads(file_bytes)
-        hist_dict[job_ref] = a_hist_data_dict
+        for k, v in a_hist_data_dict.items():
+            if k not in hist_dict.keys():
+                hist_dict[k] = {}
+            hist_dict[k][job_ref] = v
+        return
+
+    def _report_hist_data(self, job_ref, hist_dict, file_bytes):
+        for k, data_dict in hist_dict.items():
+            w = 6.5
+            if k == ('stmts', 'readers'):
+                h = 6
+                fig = plt.figure(figsize=(w, h))
+                data = {}
+                for datum in data_dict.values():
+                    for rdr, num in datum.items():
+                        if rdr not in data.keys():
+                            data[rdr] = [num]
+                        else:
+                            data[rdr].append(num)
+                N = len(data)
+                key_list = list(data.keys())
+                xtick_locs = arange(N)
+                n = (N+1)*100 + 11
+                ax0 = plt.subplot(n)
+                ax0.bar(xtick_locs, [sum(data[k]) for k in key_list],
+                         align='center')
+                ax0.set_xticks(xtick_locs, key_list)
+                ax0.set_xlabel('readers')
+                ax0.set_ylabel('stmts')
+                ax0.set_title('Reader production')
+                rdr_ax_list = []
+                for rdr, stmt_counts in data.items():
+                    n += 1
+                    if not rdr_ax_list:
+                        ax = plt.subplot(n)
+                    else:
+                        ax = plt.subplot(n, sharex=rdr_ax_list[0])
+                    ax.set_title(rdr)
+                    ax.hist(stmt_counts, align='left',
+                            bins=range(min(stmt_counts), max(stmt_counts)))
+                    ax.set_ylabel('jobs')
+                    rdr_ax_list.append(ax)
+                if rdr_ax_list:
+                    ax.set_xlabel('stmts')
+            else:
+                continue
+            figname = '_'.join(k) + '.png'
+            fig.savefig(figname)
+            self.reporter.add_image(figname, width=w, height=h, section='Plots')
+
         return
 
     def produce_report(self):
@@ -911,7 +960,8 @@ class DbReadingSubmitter(Submitter):
             stat_aggs[stat_file] = my_agg
 
         for end_type, jobs in self.run_record.items():
-            self.reporter.add_text('Jobs %s: %d' % (end_type, len(jobs)))
+            self.reporter.add_text('Jobs %s: %d' % (end_type, len(jobs)),
+                                   section='Totals')
 
         s3_prefix = 'reading_results/%s/' % self.basename
         fname = self.reporter.make_report()
