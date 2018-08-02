@@ -417,24 +417,7 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
 
         # Populate the supports/supported by fields.
         if with_support:
-            logger.info("Populating support links.")
-            support_links = db.select_all(
-                [db.PASupportLinks.supported_mk_hash,
-                 db.PASupportLinks.supporting_mk_hash],
-                or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
-                    db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
-                )
-            for supped_hash, supping_hash in set(support_links):
-                if supped_hash == supping_hash:
-                    assert False, 'Self-support found on-load.'
-                supped_stmt = stmt_dict.get(supped_hash)
-                if supped_stmt is None:
-                    supped_stmt = Unresolved(shallow_hash=supped_hash)
-                supping_stmt = stmt_dict.get(supping_hash)
-                if supping_stmt is None:
-                    supping_stmt = Unresolved(shallow_hash=supping_hash)
-                supped_stmt.supported_by.append(supping_stmt)
-                supping_stmt.supports.append(supped_stmt)
+            get_support(stmt_dict, db=db)
 
         stmts = list(stmt_dict.values())
         logger.info("In all, there are %d pa statements." % len(stmts))
@@ -723,9 +706,36 @@ def get_statements_from_hashes(statement_hashes, preassembled=True, db=None,
     return stmts
 
 
-def get_support():
+def get_support(statements, db=None, recursive=False):
     """Populate the supports and supported_by lists of the given statements."""
-    pass
+    # TODO: Allow recursive mode.
+    if db is None:
+        db = get_primary_db()
+
+    if not isinstance(statements, dict):
+        stmt_dict = {s.get_hash(shallow=True): s for s in statements}
+    else:
+        stmt_dict = statements
+
+    logger.info("Populating support links.")
+    support_links = db.select_all(
+        [db.PASupportLinks.supported_mk_hash,
+         db.PASupportLinks.supporting_mk_hash],
+        or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
+            db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
+        )
+    for supped_hash, supping_hash in set(support_links):
+        if supped_hash == supping_hash:
+            assert False, 'Self-support found on-load.'
+        supped_stmt = stmt_dict.get(supped_hash)
+        if supped_stmt is None:
+            supped_stmt = Unresolved(shallow_hash=supped_hash)
+        supping_stmt = stmt_dict.get(supping_hash)
+        if supping_stmt is None:
+            supping_stmt = Unresolved(shallow_hash=supping_hash)
+        supped_stmt.supported_by.append(supping_stmt)
+        supping_stmt.supports.append(supped_stmt)
+    return
 
 
 def get_related_papers():
