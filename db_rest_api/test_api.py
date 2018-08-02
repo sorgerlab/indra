@@ -11,7 +11,7 @@ from indra.statements import stmts_from_json
 from db_rest_api import api
 
 
-TIMELIMIT = 5
+TIMELIMIT = 20
 SIZELIMIT = 4e7
 
 
@@ -38,7 +38,7 @@ class DbApiTestCase(unittest.TestCase):
 
     def __check_good_statement_query(self, *args, **kwargs):
         check_stmts = kwargs.pop('check_stmts', True)
-        time_limit = kwargs.pop('time_limit', TIMELIMIT)
+        time_limit = max(kwargs.pop('time_limit', TIMELIMIT), TIMELIMIT)
         query_str = '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                              + list(args))
         resp, dt, size = self.__time_get_query('statements', query_str)
@@ -46,7 +46,7 @@ class DbApiTestCase(unittest.TestCase):
             ('Got error code %d: \"%s\".'
              % (resp.status_code, resp.data.decode()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
-        #assert not resp_dict['limited']
+        assert not resp_dict['limited']
         json_stmts = resp_dict['statements']
         assert len(json_stmts) is not 0, \
             'Did not get any statements.'
