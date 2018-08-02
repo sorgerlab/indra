@@ -572,11 +572,11 @@ class DbReadingSubmitter(Submitter):
         self.time_tag = datetime.now().strftime('%Y%m%d_%H%M')
         self.reporter = Reporter(self.basename + '_summary_%s' % self.time_tag)
         self.reporter.sections = {'Plots': [], 'Totals': [], 'Git': []}
+        self.reporter.set_section_order(['Git', 'Totals', 'Plots'])
         self.run_record = {}
         return
 
     def _get_base(self, job_name, start_ix, end_ix):
-
         read_mode = 'all' if self.options.get('force_read', False) else 'unread'
         stmt_mode = 'none' if self.options.get('no_stmts', False) else 'all'
 
@@ -855,8 +855,7 @@ class DbReadingSubmitter(Submitter):
             w = 6.5
             h = 4
             fig = plt.figure(figsize=(w, h))
-            plt.hist(list(job_dict.values()), align='left',
-                     bins=range(min(job_dict.values()), max(job_dict.values())))
+            plt.hist(list(job_dict.values()), align='left')
             plt.xlabel(k)
             plt.ylabel('Number of Jobs')
             fig.tight_layout()
@@ -873,15 +872,15 @@ class DbReadingSubmitter(Submitter):
             hist_dict[k][job_ref] = v
         return
 
-    def _report_hist_data(self, job_ref, hist_dict, file_bytes):
+    def _report_hist_data(self, hist_dict):
         for k, data_dict in hist_dict.items():
             w = 6.5
             if k == ('stmts', 'readers'):
                 h = 6
                 fig = plt.figure(figsize=(w, h))
                 data = {}
-                for datum in data_dict.values():
-                    for rdr, num in datum.items():
+                for job_datum in data_dict.values():
+                    for rdr, num in job_datum['data'].items():
                         if rdr not in data.keys():
                             data[rdr] = [num]
                         else:
@@ -892,7 +891,7 @@ class DbReadingSubmitter(Submitter):
                 n = (N+1)*100 + 11
                 ax0 = plt.subplot(n)
                 ax0.bar(xtick_locs, [sum(data[k]) for k in key_list],
-                         align='center')
+                        align='center')
                 ax0.set_xticks(xtick_locs, key_list)
                 ax0.set_xlabel('readers')
                 ax0.set_ylabel('stmts')
@@ -905,13 +904,12 @@ class DbReadingSubmitter(Submitter):
                     else:
                         ax = plt.subplot(n, sharex=rdr_ax_list[0])
                     ax.set_title(rdr)
-                    ax.hist(stmt_counts, align='left',
-                            bins=range(min(stmt_counts), max(stmt_counts)))
+                    ax.hist(stmt_counts, align='left')
                     ax.set_ylabel('jobs')
                     rdr_ax_list.append(ax)
                 if rdr_ax_list:
                     ax.set_xlabel('stmts')
-            else:
+            else:  # TODO: Handle other summary plots.
                 continue
             figname = '_'.join(k) + '.png'
             fig.savefig(figname)
@@ -932,7 +930,7 @@ class DbReadingSubmitter(Submitter):
             'git_info.txt': (self._handle_git_info, self._report_git_info),
             'timing.txt': (self._handle_timing, self._report_timing),
             'raw_tuples.pkl': (None, None),
-            'hist_data.pkl': (self._handle_hist_data, None),
+            'hist_data.pkl': (self._handle_hist_data, self._report_hist_data),
             'sum_data.pkl': (self._handle_sum_data, self._report_sum_data)
             }
         stat_aggs = {}
