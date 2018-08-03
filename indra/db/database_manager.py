@@ -389,6 +389,22 @@ class DatabaseManager(object):
         self.ReadingRefLink = ReadingRefLink
         self.m_views[ReadingRefLink.__tablename__] = ReadingRefLink
 
+        class AgentToRaw(self.Base):
+            __tablename__ = 'agent_to_raw'
+            ag_id = Column(Integer, primary_key=True)
+            db_name = Column(String(40), nullable=False)
+            db_id = Column(String, nullable=False)
+            role = Column(String(20), nullable=False)
+            sid = Column(Integer)
+            raw_json = Column(BYTEA)
+            reading_id = Column(Integer)
+            db_info_id = Column(Integer)
+            mk_hash = Column(BigInteger)
+            pa_json = Column(BYTEA)
+            type = Column(String)
+        self.AgentToRaw = AgentToRaw
+        self.m_views[AgentToRaw.__tablename__] = AgentToRaw
+
         self.engine = create_engine(host)
 
         if WITH_NX:
