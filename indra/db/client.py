@@ -2,12 +2,13 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from builtins import dict, str
 
+import json
 import logging
 from collections import defaultdict
 from itertools import groupby, permutations, product
 from sqlalchemy import or_
 
-from indra.statements import Unresolved
+from indra.statements import Unresolved, Evidence
 
 logger = logging.getLogger('db_client')
 
@@ -275,6 +276,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     -------
     A list of Statements from the database corresponding to the paper id given.
     """
+    # TODO: Make this get from multiple papers.
     if db is None:
         db = get_primary_db()
 
@@ -643,7 +645,7 @@ def export_relation_dict_to_tsv(relation_dict, out_base, out_types=None):
 
 
 @_clockit
-def get_evidence(pa_stmt_list, db=None, fix_refs=True):
+def get_evidence(pa_stmt_list, db=None, fix_refs=True, use_views=True):
     """Fill in the evidence for a list of pre-assembled statements.
 
     Parameters
@@ -672,21 +674,64 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True):
     # Turn the list into a dict.
     stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmt_list}
 
-    # Get the data from the database
-    raw_list = db.select_all([db.PAStatements.mk_hash, db.RawStatements],
-                             db.PAStatements.mk_hash.in_(stmt_dict.keys()),
-                             *db.join(db.PAStatements, db.RawStatements))
+    if use_views:
+        if fix_refs:
+            raw_links = db.select_all([db.FastRawPaLink.mk_hash,
+                                       db.FastRawPaLink.raw_json,
+                                       db.FastRawPaLink.reading_id],
+                                      db.FastRawPaLink.mk_hash.in_(stmt_dict.keys()))
+            rel_refs = ['pmid', 'rid']
+            ref_cols = [getattr(db.ReadingRefLink, k) for k in rel_refs]
+        else:
+            raw_links = db.select_all([db.FastRawPaLink.mk_hash,
+                                       db.FastRawPaLink.raw_json],
+                                      db.FastRawPaLink.mk_hash.in_(stmt_dict.keys()))
+        rid_ref_dict = {}
+        unknown_rid_rs_dict = defaultdict(list)
+        for info in raw_links:
+            if fix_refs:
+                mk_hash, raw_json, rid = info
+            else:
+                mk_hash, raw_json = info
+                rid = None
+            json_dict = json.loads(raw_json.decode('utf-8'))
+            ev_json = json_dict.get('evidence', [])
+            assert len(ev_json) == 1,\
+                "Raw statements must have one evidence, got %d." % len(ev_json)
+            ev = Evidence._from_json(ev_json[0])
+            stmt_dict[mk_hash].evidence.append(ev)
+            if fix_refs:
+                ref_dict = rid_ref_dict.get(rid)
+                if ref_dict is None:
+                    unknown_rid_rs_dict[rid].append(ev)
+                    if len(unknown_rid_rs_dict) >= 1000:
+                        ref_data_list = db.select_all(
+                                ref_cols,
+                                db.ReadingRefLink.rid.in_(unknown_rid_rs_dict.keys())
+                                )
+                        for pmid, rid in ref_data_list:
+                            rid_ref_dict[rid] = pmid
+                            for ev in unknown_rid_rs_dict[rid]:
+                                ev.pmid = pmid
+                        unknown_rid_rs_dict.clear()
+                else:
+                    ev.pmid = rid_ref_dict[rid]
+    else:
+        # Get the data from the database
+        raw_list = db.select_all([db.PAStatements.mk_hash, db.RawStatements],
+                                 db.PAStatements.mk_hash.in_(stmt_dict.keys()),
+                                 *db.join(db.PAStatements, db.RawStatements))
 
-    # Note that this step depends on the ordering being maintained.
-    mk_hashes, raw_stmt_objs = zip(*raw_list)
-    raw_stmts = get_raw_stmts_frm_db_list(db, raw_stmt_objs, fix_refs,
-                                          with_sids=False)
-    raw_stmt_mk_pairs = zip(mk_hashes, raw_stmts)
+        # Note that this step depends on the ordering being maintained.
+        mk_hashes, raw_stmt_objs = zip(*raw_list)
+        raw_stmts = get_raw_stmts_frm_db_list(db, raw_stmt_objs, fix_refs,
+                                              with_sids=False)
+        raw_stmt_mk_pairs = zip(mk_hashes, raw_stmts)
 
-    # Now attach the evidence
-    for mk_hash, raw_stmt in raw_stmt_mk_pairs:
-        # Each raw statement can have just one piece of evidence.
-        stmt_dict[mk_hash].evidence.append(raw_stmt.evidence[0])
+        # Now attach the evidence
+        for mk_hash, raw_stmt in raw_stmt_mk_pairs:
+            # Each raw statement can have just one piece of evidence.
+            stmt_dict[mk_hash].evidence.append(raw_stmt.evidence[0])
 
     return
 
@@ -708,7 +753,7 @@ def get_statements_from_hashes(statement_hashes, preassembled=True, db=None,
 
 def get_support(statements, db=None, recursive=False):
     """Populate the supports and supported_by lists of the given statements."""
-    # TODO: Allow recursive mode.
+    # TODO: Allow recursive mode (argument should probably be an integer level).
     if db is None:
         db = get_primary_db()
 
@@ -736,11 +781,6 @@ def get_support(statements, db=None, recursive=False):
         supped_stmt.supported_by.append(supping_stmt)
         supping_stmt.supports.append(supped_stmt)
     return
-
-
-def get_related_papers():
-    """Get papers with references to the same mechanisms."""
-    pass
 
 
 def _get_trids(db, id_val, id_type):
