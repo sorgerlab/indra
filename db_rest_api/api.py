@@ -4,8 +4,9 @@ import logging
 from flask import Flask, request, abort, jsonify, Response, make_response
 from flask_compress import Compress
 
+from indra.db import get_primary_db
 from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper, get_evidence
+    get_statements_by_paper, get_evidence, _process_pa_statement_res_wev
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 
@@ -199,45 +200,37 @@ def get_statements():
     logger.info("Getting statements...")
 
     # First look for statements matching the role'd agents.
-    for role, (ag_id, ns) in roled_agents.items():
-        stmts = _get_relevant_statements(stmts, ag_id, ns, act, role)
-        if not len(stmts):
-            break
-    else:
-        # Second (if we're still looking), look for statements from free agents.
-        for ag_id, ns in free_agents:
-            stmts = _get_relevant_statements(stmts, ag_id, ns, act)
-            if not len(stmts):
-                break
+    db = get_primary_db()
+    master_q = None
+    tbls = [db.AgentToRaw.raw_json, db.AgentToRaw.pa_json]
+    for role, (ag_dbid, ns) in roled_agents.items():
+        # Create this query (for this agent)
+        q = db.filter_query(tbls, db.AgentToRaw.role == role,
+                            db.AgentToRaw.db_id.like(ag_dbid),
+                            db.AgentToRaw.db_name.like(ns))
+        if act is not None:
+            q = q.filter(db.AgentToRaw.type == act)
 
-    # Check to make sure we didn't get too many statements
-    hit_limit = (len(stmts) > MAX_STATEMENTS)
-    if hit_limit:
-        if limit_behavior == 'error':
-            # Divide the statements up by type, and get counts of each type.
-            stmt_counts = {}
-            for stmt in stmts:
-                stmt_type = type(stmt).__name__
-                if stmt_type not in stmt_counts:
-                    stmt_counts[stmt_type] = {'count': 0}
-                stmt_counts[stmt_type]['count'] += 1
+        # Intersect with the previous query.
+        if master_q:
+            master_q.intersect(q)
+        else:
+            master_q = q
+    for ag_dbid, ns in free_agents:
+        q = db.filter_query(tbls, db.AgentToRaw.db_id.like(ag_dbid),
+                            db.AgentToRaw.db_name.like(ns))
+        if master_q:
+            master_q.intersect(q)
+        else:
+            master_q = q
+    assert master_q, "No conditions imposed."
 
-            return jsonify({'limited': True, 'statements': stmt_counts}), 413
-        elif limit_behavior == 'truncate':
-            stmts = stmts[:MAX_STATEMENTS]
-        elif limit_behavior == 'sample':
-            from random import sample
-            stmts = sample(stmts, MAX_STATEMENTS)
-
-    # Retrieve the evidence for the statements.
-    logger.info("Getting evidence for the %d resulting statements."
-                % len(stmts))
-    if stmts:
-        get_evidence(stmts, fix_refs=True)
+    stmt_iter = master_q.limit(MAX_STATEMENTS).yield_per(1000)
+    stmts = _process_pa_statement_res_wev(db, stmt_iter)
 
     # Create the json response, and send off.
-    resp = jsonify({'limited': hit_limit,
-                    'statements':[stmt.to_json() for stmt in stmts]})
+    resp = jsonify({'limited': True,
+                    'statements': [stmt.to_json() for stmt in stmts]})
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
     return resp
