@@ -366,56 +366,13 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
             pa_raw_stmt_pairs = \
                 db.select_all([db.PAStatements, db.RawStatements],
                               *clauses, yield_per=count)
-
-            # Iterate over the batches to create the statement objects.
-            stmt_dict = {}
-            ev_dict = {}
-            raw_stmt_dict = {}
-            total_ev = 0
-            for stmt_pair_batch in batch_iter(pa_raw_stmt_pairs, count):
-                # Instantiate the PA statement objects, and record the uuid
-                # evidence (raw statement) links.
-                raw_stmt_objs = []
-                for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
-                    k = pa_stmt_db_obj.mk_hash
-                    if k not in stmt_dict.keys():
-                        stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
-                        ev_dict[k] = [raw_stmt_db_obj.id,]
-                    else:
-                        ev_dict[k].append(raw_stmt_db_obj.id)
-                    raw_stmt_objs.append(raw_stmt_db_obj)
-                    total_ev += 1
-
-                logger.info("Up to %d pa statements, with %d pieces of "
-                            "evidence in all." % (len(stmt_dict), total_ev))
-
-                # Instantiate the raw statements.
-                raw_stmt_sid_tpls = get_raw_stmts_frm_db_list(db, raw_stmt_objs,
-                                                              fix_refs,
-                                                              with_sids=True)
-                raw_stmt_dict.update({sid: s for sid, s in raw_stmt_sid_tpls})
-                logger.info("Processed %d raw statements."
-                            % len(raw_stmt_sid_tpls))
-
-            # Attach the evidence
-            logger.info("Inserting evidence.")
-            for k, sid_list in ev_dict.items():
-                stmt_dict[k].evidence = [raw_stmt_dict[sid].evidence[0]
-                                         for sid in sid_list]
+            stmt_dict = _process_pa_statement_res_wev(db, pa_raw_stmt_pairs,
+                                                      count=count,
+                                                      fix_refs=fix_refs)
         else:
             # Get just pa statements without their supporting raw statement(s).
             pa_stmts = db.select_all(db.PAStatements, *clauses, yield_per=count)
-
-            # Iterate over the batches to create the statement objects.
-            stmt_dict = {}
-            for stmt_pair_batch in batch_iter(pa_stmts, count):
-                # Instantiate the PA statement objects.
-                for pa_stmt_db_obj in stmt_pair_batch:
-                    k = pa_stmt_db_obj.mk_hash
-                    if k not in stmt_dict.keys():
-                        stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
-
-                logger.info("Up to %d pa statements in all." % len(stmt_dict))
+            stmt_dict = _process_pa_statement_res_nev(db, pa_stmts, count=count)
 
         # Populate the supports/supported by fields.
         if with_support:
@@ -425,6 +382,61 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
         logger.info("In all, there are %d pa statements." % len(stmts))
 
     return stmts
+
+
+@_clockit
+def _process_pa_statement_res_wev(db, stmt_iterable, count=1000, fix_refs=True):
+    # Iterate over the batches to create the statement objects.
+    stmt_dict = {}
+    ev_dict = {}
+    raw_stmt_dict = {}
+    total_ev = 0
+    for stmt_pair_batch in batch_iter(stmt_iterable, count):
+        # Instantiate the PA statement objects, and record the uuid
+        # evidence (raw statement) links.
+        raw_stmt_objs = []
+        for pa_stmt_db_obj, raw_stmt_db_obj in stmt_pair_batch:
+            k = pa_stmt_db_obj.mk_hash
+            if k not in stmt_dict.keys():
+                stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+                ev_dict[k] = [raw_stmt_db_obj.id,]
+            else:
+                ev_dict[k].append(raw_stmt_db_obj.id)
+            raw_stmt_objs.append(raw_stmt_db_obj)
+            total_ev += 1
+
+        logger.info("Up to %d pa statements, with %d pieces of "
+                    "evidence in all." % (len(stmt_dict), total_ev))
+
+        # Instantiate the raw statements.
+        raw_stmt_sid_tpls = get_raw_stmts_frm_db_list(db, raw_stmt_objs,
+                                                      fix_refs,
+                                                      with_sids=True)
+        raw_stmt_dict.update({sid: s for sid, s in raw_stmt_sid_tpls})
+        logger.info("Processed %d raw statements."
+                    % len(raw_stmt_sid_tpls))
+
+    # Attach the evidence
+    logger.info("Inserting evidence.")
+    for k, sid_list in ev_dict.items():
+        stmt_dict[k].evidence = [raw_stmt_dict[sid].evidence[0]
+                                 for sid in sid_list]
+    return stmt_dict
+
+
+@_clockit
+def _process_pa_statement_res_nev(stmt_iterable, count=1000):
+    # Iterate over the batches to create the statement objects.
+    stmt_dict = {}
+    for stmt_pair_batch in batch_iter(stmt_iterable, count):
+        # Instantiate the PA statement objects.
+        for pa_stmt_db_obj in stmt_pair_batch:
+            k = pa_stmt_db_obj.mk_hash
+            if k not in stmt_dict.keys():
+                stmt_dict[k] = _get_statement_object(pa_stmt_db_obj)
+
+        logger.info("Up to %d pa statements in all." % len(stmt_dict))
+    return stmt_dict
 
 
 @_clockit
