@@ -169,6 +169,8 @@ class DatabaseManager(object):
         else:
             Bytea = LargeBinary
 
+        # Normal Tables --------------------------------------------------------
+
         class TextRef(self.Base):
             __tablename__ = 'text_ref'
             id = Column(Integer, primary_key=True)
@@ -355,6 +357,37 @@ class DatabaseManager(object):
                                        nullable=False)
         self.PASupportLinks = PASupportLinks
         self.tables[PASupportLinks.__tablename__] = PASupportLinks
+
+        # Materialized Views ---------------------------------------------------
+        self.m_views = {}
+
+        class FastRawPaLink(self.Base):
+            __tablename__ = 'fast_raw_pa_link'
+            id = Column(Integer, primary_key=True)
+            raw_json = Column(BYTEA)
+            reading_id = Column(Integer)
+            db_info_id = Column(Integer)
+            mk_hash = Column(BigInteger)
+            pa_json = Column(BYTEA)
+            type = Column(String)
+        self.FastRawPaLink = FastRawPaLink
+        self.m_views[FastRawPaLink.__tablename__] = FastRawPaLink
+
+        class ReadingRefLink(self.Base):
+            __tablename__ = 'reading_ref_link'
+            trid = Column(Integer)
+            pmid = Column(String(20))
+            pmcid = Column(String(20))
+            doi = Column(String(100))
+            pii = Column(String(250))
+            url = Column(String(250))
+            manuscript_id = Column(String(100))
+            tcid = Column(Integer)
+            source = Column(String(250))
+            rid = Column(Integer, primary_key=True)
+            reader = Column(String(20))
+        self.ReadingRefLink = ReadingRefLink
+        self.m_views[ReadingRefLink.__tablename__] = ReadingRefLink
 
         self.engine = create_engine(host)
 
