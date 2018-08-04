@@ -50,6 +50,7 @@ _type_db_map = {
     ('stimulus', 'SIGNOR'): 'SIGNOR',
     ('chemical', 'PUBCHEM'): 'PUBCHEM',
     ('fusion protein', 'SIGNOR'): 'SIGNOR',
+    ('chemical', 'ChEBI'): 'CHEBI',
     ('smallmolecule', 'ChEBI'): 'CHEBI',
     ('mirna', 'miRBase'): 'MIRBASE',
 }
