@@ -286,10 +286,14 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
 
     stmts = []
     for trid in trid_list:
-        clauses = db.join(db.TextContent, db.RawStatements) \
-                  + [db.TextContent.text_ref_id == trid]
+        clauses = [db.TextContent.id == db.Reading.text_content_id,
+                   db.Reading.id == db.RawStatements.reading_id,
+                   db.TextContent.text_ref_id == trid]
         if preassembled:
-            clauses += db.join(db.RawStatements, db.PAStatements)
+            clauses += [
+                db.RawStatements.id == db.RawUniqueLinks.raw_stmt_id,
+                db.PAStatements.mk_hash == db.RawUniqueLinks.pa_stmt_mk_hash
+                ]
         stmts.extend(get_statements(clauses, count=count, db=db,
                                     preassembled=preassembled,
                                     do_stmt_count=do_stmt_count))
@@ -362,7 +366,10 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
         if with_evidence:
             logger.info("Getting preassembled statements.")
             # Get pairs of pa statements with their linked raw statements
-            clauses += db.join(db.PAStatements, db.RawStatements)
+            clauses += [
+                db.PAStatements.mk_hash == db.RawUniqueLinks.pa_stmt_mk_hash,
+                db.RawStatements.id == db.RawUniqueLinks.raw_stmt_id
+                ]
             pa_raw_stmt_pairs = \
                 db.select_all([db.PAStatements, db.RawStatements],
                               *clauses, yield_per=count)
@@ -730,9 +737,12 @@ def get_evidence(pa_stmt_list, db=None, fix_refs=True, use_views=True):
                     ev.pmid = rid_ref_dict[rid]
     else:
         # Get the data from the database
-        raw_list = db.select_all([db.PAStatements.mk_hash, db.RawStatements],
-                                 db.PAStatements.mk_hash.in_(stmt_dict.keys()),
-                                 *db.join(db.PAStatements, db.RawStatements))
+        raw_list = db.select_all(
+            [db.PAStatements.mk_hash, db.RawStatements],
+            db.PAStatements.mk_hash.in_(stmt_dict.keys()),
+            db.PAStatements.mk_hash == db.RawUniqueLinks.pa_stmt_mk_hash,
+            db.RawUniqueLinks.raw_stmt_id == db.RawStatements.id
+            )
 
         # Note that this step depends on the ordering being maintained.
         mk_hashes, raw_stmt_objs = zip(*raw_list)
