@@ -389,21 +389,19 @@ class DatabaseManager(object):
         self.ReadingRefLink = ReadingRefLink
         self.m_views[ReadingRefLink.__tablename__] = ReadingRefLink
 
-        class AgentToRaw(self.Base):
-            __tablename__ = 'agent_to_raw'
+        class AgentToRawMeta(self.Base):
+            __tablename__ = 'agent_to_raw_meta'
             ag_id = Column(Integer, primary_key=True)
-            db_name = Column(String(40), nullable=False)
-            db_id = Column(String, nullable=False)
-            role = Column(String(20), nullable=False)
+            db_name = Column(String(40))
+            db_id = Column(String)
+            role = Column(String(20))
+            type = Column(String(100))
+            mk_hash = Column(BigInteger)
             sid = Column(Integer)
-            raw_json = Column(BYTEA)
             reading_id = Column(Integer)
             db_info_id = Column(Integer)
-            mk_hash = Column(BigInteger)
-            pa_json = Column(BYTEA)
-            type = Column(String)
-        self.AgentToRaw = AgentToRaw
-        self.m_views[AgentToRaw.__tablename__] = AgentToRaw
+        self.AgentToRawMeta = AgentToRawMeta
+        self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
 
         self.engine = create_engine(host)
 
