@@ -4,6 +4,7 @@ import sys
 
 from itertools import combinations
 from datetime import datetime
+from warnings import warn
 
 from db_rest_api.api import MAX_STATEMENTS
 from indra.statements import stmts_from_json
@@ -11,8 +12,14 @@ from indra.statements import stmts_from_json
 from db_rest_api import api
 
 
-TIMELIMIT = 20
+TIMEGOAL = 1
+TIMELIMIT = 25
 SIZELIMIT = 4e7
+
+
+class TimeWarning(Warning):
+    pass
+
 
 
 class DbApiTestCase(unittest.TestCase):
@@ -23,6 +30,16 @@ class DbApiTestCase(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    def __check_time(self, dt, time_goal=TIMEGOAL):
+        print(dt)
+        assert dt <= TIMELIMIT, \
+            ("Query took %f seconds. Must be less than %f seconds."
+             % (dt, TIMELIMIT))
+        if dt >= TIMEGOAL:
+            warn("Query took %f seconds, goal is less than %f seconds."
+                 % (dt, TIMEGOAL), TimeWarning)
+        return
 
     def __time_get_query(self, end_point, query_str):
         return self.__time_query('get', end_point, query_str)
@@ -50,7 +67,7 @@ class DbApiTestCase(unittest.TestCase):
 
     def __check_good_statement_query(self, *args, **kwargs):
         check_stmts = kwargs.pop('check_stmts', True)
-        time_limit = max(kwargs.pop('time_limit', TIMELIMIT), TIMELIMIT)
+        time_goal = max(kwargs.pop('time_goal', TIMEGOAL), TIMEGOAL)
         query_str = '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                              + list(args))
         resp, dt, size = self.__time_get_query('statements', query_str)
@@ -64,9 +81,7 @@ class DbApiTestCase(unittest.TestCase):
              % (size/1e6, SIZELIMIT/1e6))
         self.__check_stmts(resp_dict['statements'], check_stmts=check_stmts)
 
-        assert dt <= time_limit, \
-            ("Query took %f seconds. Must be less than %f seconds."
-             % (dt, time_limit))
+        self.__check_time(dt, time_goal)
         return resp
 
     def __check_stmts(self, json_stmts, check_support=False, check_stmts=False):
@@ -129,25 +144,28 @@ class DbApiTestCase(unittest.TestCase):
     def test_big_query(self):
         """Load-test with several big queries."""
         self.__check_good_statement_query(agent='AKT1', check_stmts=False,
-                                          time_limit=5)
+                                          time_goal=10)
         self.__check_good_statement_query(agent='MAPK1', check_stmts=False,
-                                          time_limit=10)
+                                          time_goal=20)
 
     def test_query_with_too_many_stmts(self):
         """Test our check of statement length and the response."""
         resp, dt, size = self.__time_get_query('statements',
                                                'agent=TP53&on_limit=error')
         assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
-        assert dt < 30, "Query took too long: %d" % dt
+        assert dt < TIMELIMIT, "Query took too long: %d" % dt
         assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))['statements']
         resp, dt, size = self.__time_get_query('statements',
                                                'agent=TP53&on_limit=sample')
         assert resp.status_code == 200, str(resp)
-        assert dt < 30, dt
+        assert dt < TIMELIMIT, dt
         resp_dict = json.loads(resp.data.decode('utf-8'))
         assert len(resp_dict['statements']) == MAX_STATEMENTS
         resp, dt, size = self.__time_get_query('statements',
                                                'agent=TP53&on_limit=truncate')
+        assert dt < TIMELIMIT, dt
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        assert len(resp_dict['statements']) == MAX_STATEMENTS
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
@@ -172,7 +190,7 @@ class DbApiTestCase(unittest.TestCase):
                                                ('subject=MEK&object=ERK'
                                                 '&type=Phosphorylation'))
         assert resp.status_code != 200, "Got good status code."
-        assert dt <= TIMELIMIT, dt
+        self.__check_time(dt)
         assert size <= SIZELIMIT, size
 
     def test_famplex_query(self):
@@ -186,7 +204,7 @@ class DbApiTestCase(unittest.TestCase):
         assert all([s.agent_list()[1].db_refs.get('FPLX') == 'PPP1C'
                     for s in stmts]),\
             'Not all subjects match.'
-        assert dt <= TIMELIMIT, dt
+        self.__check_time(dt)
         assert size <= SIZELIMIT, size
 
     def test_statements_by_hashes_query(self):
@@ -196,13 +214,13 @@ class DbApiTestCase(unittest.TestCase):
                                                    -12724735151233845])
         resp_dict = json.loads(resp.data.decode('utf-8'))
         self.__check_stmts(resp_dict['statements'], check_support=True)
-        assert dt < TIMELIMIT, "Took %f out of %f." % (dt, TIMELIMIT)
+        self.__check_time(dt)
         return
 
     def __test_basic_paper_query(self, id_val, id_type, min_num_results=1):
         query_str = 'id=%s&type=%s' % (id_val, id_type)
         resp, dt, size = self.__time_get_query('papers', query_str)
-        assert dt <= TIMELIMIT, dt
+        self.__check_time(dt)
         assert size <= SIZELIMIT, size
         assert resp.status_code == 200, str(resp)
         json_str = resp.data.decode('utf-8')
