@@ -861,11 +861,17 @@ class DatabaseManager(object):
         A list of sqlalchemy orm objects
         """
         # Get the base set of tables needed.
-        if isinstance(table, str) and table in self.tables.keys():
-            true_table = getattr(self, table)
+        if isinstance(table, str):
+            # This should be the string name for a table or view.
+            if table in self.tables.keys() or table in self.m_views.keys():
+                true_table = getattr(self, table)
+            else:
+                raise IndraDatabaseError("Invalid table name: %s." % table)
         elif hasattr(table, 'class_'):
+            # This is technically an attribute of a table.
             true_table = table.class_
-        elif table in self.tables.values():
+        elif table in self.tables.values() or table in self.m_views.values():
+            # This is an actual table object
             true_table = table
         else:
             raise IndraDatabaseError("Unrecognized table: %s of type %s"
