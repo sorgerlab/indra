@@ -879,7 +879,9 @@ class DatabaseManager(object):
 
         # Get all ids for this table given query filters
         logger.info("Getting all relevant ids.")
-        id_tuples = self.select_all(true_table.id, *args, **kwargs)
+        pk = inspect(true_table).primary_key[0]
+        id_tuples = self.select_all(getattr(true_table, pk.name), *args,
+                                    **kwargs)
         id_list = list({entry_id for entry_id, in id_tuples})
 
         # Sample from the list of ids
@@ -888,7 +890,7 @@ class DatabaseManager(object):
         if hasattr(table, 'key') and table.key == 'id':
             return [(entry_id,) for entry_id in id_sample]
 
-        return self.select_all(table, table.id.in_(id_sample))
+        return self.select_all(table, getattr(table, pk.name).in_(id_sample))
 
     def has_entry(self, tbls, *args):
         "Check whether an entry/entries matching given specs live in the db."
