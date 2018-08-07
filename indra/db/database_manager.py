@@ -588,7 +588,7 @@ class DatabaseManager(object):
                     break
         return ret
 
-    def join(self, table_1, table_2):
+    def link(self, table_1, table_2):
         """Get the joining clause between two tables, if one exists.
 
         If no link exists, an exception will be raised. Note that this only

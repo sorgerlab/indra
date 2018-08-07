@@ -458,7 +458,7 @@ def _fix_evidence_refs(db, rid_stmt_trios):
     if rid_set:
         rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
                                      db.Reading.id.in_(rid_set),
-                                     *db.join(db.TextRef, db.Reading))
+                                     *db.link(db.TextRef, db.Reading))
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
         for rid, sid, stmt in rid_stmt_trios:
             if rid is None:
@@ -493,7 +493,7 @@ def _get_reading_statement_dict(db, clauses=None, get_full_stmts=True):
                           db.TextContent.source, db.Reading.id,
                           db.Reading.reader_version, db.RawStatements.id,
                           db.RawStatements.json)
-         .filter(*db.join(db.RawStatements, db.TextRef)))
+         .filter(*db.link(db.RawStatements, db.TextRef)))
     if clauses:
         q = q.filter(*clauses)
 
