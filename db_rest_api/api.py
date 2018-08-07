@@ -8,7 +8,8 @@ from flask_compress import Compress
 
 from indra.db import get_primary_db
 from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper, get_evidence, _process_pa_statement_res_wev
+    get_statements_by_paper, get_evidence, _process_pa_statement_res_wev, \
+    get_statements_from_hashes
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 
@@ -251,6 +252,24 @@ def get_statements():
     # Create the json response, and send off.
     resp = jsonify({'limited': True,
                     'statements': []})
+    logger.info("Exiting with %d statements of nominal size %f MB."
+                % (len(stmts), sys.getsizeof(resp.data)/1e6))
+    return resp
+
+
+@app.route('/statements/from_hashes', methods=['POST', 'GET'])
+def get_statements_by_hash():
+    hashes = request.json.get('hashes')
+    if not hashes:
+        logger.error("No hashes provided!")
+        abort(Response("No hashes given!", 400))
+    if len(hashes) > MAX_STATEMENTS:
+        logger.error("Too many hashes given!")
+        abort(Response("Too many hashes given, %d allowed." % MAX_STATEMENTS,
+                       400))
+
+    stmts = get_statements_from_hashes(hashes, with_support=True)
+    resp = jsonify({'statements': [s.to_json() for s in stmts if s.evidence]})
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
     return resp
