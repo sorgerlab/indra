@@ -7,6 +7,7 @@ from datetime import datetime
 from warnings import warn
 
 from db_rest_api.api import MAX_STATEMENTS
+from indra.db import get_primary_db
 from indra.statements import stmts_from_json
 
 from db_rest_api import api
@@ -215,6 +216,20 @@ class DbApiTestCase(unittest.TestCase):
         resp_dict = json.loads(resp.data.decode('utf-8'))
         self.__check_stmts(resp_dict['statements'], check_support=True)
         self.__check_time(dt)
+        return
+
+    def test_statements_by_hashes_large_query(self):
+        # Get a set of hashes.
+        db = get_primary_db()
+        res = db.select_sample_from_table(1000, db.EvidenceCounts)
+        hash_cnt_dict = {ev_cts.mk_hash: ev_cts.ev_count for ev_cts in res}
+
+        # Run the test.
+        resp, dt, size = self.__time_query('get', 'statements/from_hashes',
+                                           hashes=list(hash_cnt_dict.keys()))
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        self.__check_stmts(resp_dict['statements'], check_support=True)
+        self.__check_time(dt, time_goal=20)
         return
 
     def __test_basic_paper_query(self, id_val, id_type, min_num_results=1):
