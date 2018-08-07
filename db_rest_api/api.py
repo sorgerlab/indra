@@ -1,5 +1,7 @@
 import sys
+import json
 import logging
+from collections import defaultdict
 
 from flask import Flask, request, abort, jsonify, Response, make_response
 from flask_compress import Compress
@@ -202,35 +204,53 @@ def get_statements():
     # First look for statements matching the role'd agents.
     db = get_primary_db()
     master_q = None
-    tbls = [db.AgentToRaw.raw_json, db.AgentToRaw.pa_json]
+    tbls = db.AgentToRawMeta.mk_hash
     for role, (ag_dbid, ns) in roled_agents.items():
         # Create this query (for this agent)
-        q = db.filter_query(tbls, db.AgentToRaw.role == role,
-                            db.AgentToRaw.db_id.like(ag_dbid),
-                            db.AgentToRaw.db_name.like(ns))
+        q = db.filter_query(tbls, db.AgentToRawMeta.role == role,
+                            db.AgentToRawMeta.db_id.like(ag_dbid),
+                            db.AgentToRawMeta.db_name.like(ns))
         if act is not None:
-            q = q.filter(db.AgentToRaw.type == act)
+            q = q.filter(db.AgentToRawMeta.type.like(act))
 
         # Intersect with the previous query.
         if master_q:
-            master_q.intersect(q)
+            master_q = master_q.intersect(q)
         else:
             master_q = q
     for ag_dbid, ns in free_agents:
-        q = db.filter_query(tbls, db.AgentToRaw.db_id.like(ag_dbid),
-                            db.AgentToRaw.db_name.like(ns))
+        q = db.filter_query(tbls, db.AgentToRawMeta.db_id.like(ag_dbid),
+                            db.AgentToRawMeta.db_name.like(ns))
         if master_q:
-            master_q.intersect(q)
+            master_q = master_q.intersect(q)
         else:
             master_q = q
     assert master_q, "No conditions imposed."
 
-    stmt_iter = master_q.limit(MAX_STATEMENTS).yield_per(1000)
-    stmts = _process_pa_statement_res_wev(db, stmt_iter)
+    # TODO: Do better than truncating.
+    # Specifically, this should probably be an order-by a parameter such as
+    # evidence count and/or support count.
+    stmt_hashes = master_q.limit(MAX_STATEMENTS).all()
+
+    tbls = [db.FastRawPaLink.reading_id, db.FastRawPaLink.raw_json,
+            db.FastRawPaLink.pa_json, db.FastRawPaLink.mk_hash]
+    stmt_data = db.select_all(tbls, db.FastRawPaLink.mk_hash.in_(stmt_hashes))
+    stmt_dict = {}
+    rid_pmid_dict = {}
+    rid_ev_dict = defaultdict(list)
+    for rid, raw_json_bts, pa_json_bts, mk_hash in stmt_data:
+        raw_json = json.loads(raw_json_bts.decode('utf-8'))
+        ev = raw_json['evidence'][0]
+        if mk_hash not in stmt_dict.keys():
+            stmt_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
+        stmt_dict[mk_hash]['evidence'].append(ev)
+        ev['pmid'] = rid_pmid_dict.get('pmid')
+        if ev['pmid'] is None:
+            rid_ev_dict[rid].append(ev)
 
     # Create the json response, and send off.
     resp = jsonify({'limited': True,
-                    'statements': [stmt.to_json() for stmt in stmts]})
+                    'statements': []})
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts), sys.getsizeof(resp.data)/1e6))
     return resp
