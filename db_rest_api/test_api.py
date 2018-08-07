@@ -244,7 +244,7 @@ class DbApiTestCase(unittest.TestCase):
         assert len(stmts)
         _check_stmt_agents(resp, agents=[
                 (0, 'CHEBI', 'CHEBI:4465'),
-                (1, 'FPLX', 'PPP1C')]
+                (1, 'FPLX', 'PPP1C')])
         self.__check_time(dt)
         assert size <= SIZELIMIT, size
 
