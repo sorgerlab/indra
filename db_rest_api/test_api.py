@@ -9,6 +9,7 @@ from warnings import warn
 from db_rest_api.api import MAX_STATEMENTS
 from indra.db import get_primary_db
 from indra.statements import stmts_from_json
+from indra.databases import hgnc_client
 
 from db_rest_api import api
 
@@ -17,6 +18,18 @@ TIMEGOAL = 1
 TIMELIMIT = 25
 SIZELIMIT = 4e7
 
+def _check_stmt_agents(resp, agents):
+    json_stmts = json.loads(resp.data.decode('utf-8'))['statements']
+    stmts = stmts_from_json(json_stmts)
+    for stmt in stmts:
+        for ag_ix, db_ns, db_id in agents:
+            if ag_ix is not None:
+                assert stmt.agent_list()[ag_ix].db_refs.get(db_ns) == db_id
+            # If the ag_ix is None, we're just checking that the Statement
+            # contains the agent we're looking for
+            else:
+                db_ids = [ag.db_refs.get(db_ns) for ag in stmt.agent_list()]
+                assert db_id in db_ids
 
 class TimeWarning(Warning):
     pass
@@ -121,33 +134,51 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_specific_query(self):
         """Test whether we can get a "fully" specified statement."""
-        self.__check_good_statement_query(object='MAP2K1', subject='MAPK1',
-                                          type='Phosphorylation')
+        resp = self.__check_good_statement_query(object='MAP2K1',
+                                                 subject='MAPK1',
+                                                 type='Phosphorylation')
+        _check_stmt_agents(resp, agents=[
+                (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1')),
+                (1, 'HGNC', hgnc_client.get_hgnc_id('MAP2K1'))])
+
 
     def test_object_only_query(self):
         """Test whether we can get an object only statement."""
-        self.__check_good_statement_query(object='GLUL',
+        resp = self.__check_good_statement_query(object='GLUL',
                                           type='IncreaseAmount')
+        _check_stmt_agents(resp, agents=[
+                (1, 'HGNC', hgnc_client.get_hgnc_id('GLUL'))])
 
     def test_query_with_two_agents(self):
         """Test a query were the roles of the agents are not given."""
         self.__check_good_statement_query('agent=MAP2K1', 'agent=MAPK1',
                                           type='Phosphorylation')
+        _check_stmt_agents(resp, agents=[
+                (None, 'HGNC', hgnc_client.get_hgnc_id('MAPK1')),
+                (None, 'HGNC', hgnc_client.get_hgnc_id('MAP2K1'))])
 
     def test_query_with_other(self):
         """Test that we can get an ActiveForm."""
         self.__check_good_statement_query(agent='MAPK1', type='ActiveForm')
+        _check_stmt_agents(resp, agents=[
+                (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
 
     def test_bad_camel(self):
         """Test that a type can be poorly formatted and resolve correctly."""
         self.__check_good_statement_query(agent='MAPK1', type='acTivefOrm')
+        _check_stmt_agents(resp, agents=[
+                (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
 
     def test_big_query(self):
         """Load-test with several big queries."""
         self.__check_good_statement_query(agent='AKT1', check_stmts=False,
                                           time_goal=10)
+        _check_stmt_agents(resp, agents=[
+                (None, 'HGNC', hgnc_client.get_hgnc_id('AKT1'))])
         self.__check_good_statement_query(agent='MAPK1', check_stmts=False,
                                           time_goal=20)
+        _check_stmt_agents(resp, agents=[
+                (None, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
 
     def test_query_with_too_many_stmts(self):
         """Test our check of statement length and the response."""
@@ -155,7 +186,8 @@ class DbApiTestCase(unittest.TestCase):
                                                'agent=TP53&on_limit=error')
         assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
         assert dt < TIMELIMIT, "Query took too long: %d" % dt
-        assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))['statements']
+        assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))\
+                                          ['statements']
         resp, dt, size = self.__time_get_query('statements',
                                                'agent=TP53&on_limit=sample')
         assert resp.status_code == 200, str(resp)
@@ -172,19 +204,27 @@ class DbApiTestCase(unittest.TestCase):
         """Test specifying HGNC as a namespace."""
         self.__check_good_statement_query(subject='6871@HGNC', object='MAP2K1',
                                           type='Phosphorylation')
+        _check_stmt_agents(resp, agents=[
+                (0, 'HGNC', '6871'),
+                (1, 'HGNC', hgnc_client.get_hgnc_id('MAP2K1'))])
 
     def test_query_with_text_ns(self):
         """Test specifying TEXT as a namespace."""
-        self.__check_good_statement_query(subject='ERK@TEXT', type='Phosphorylation')
+        self.__check_good_statement_query(subject='ERK@TEXT',
+                                          type='Phosphorylation')
+        _check_stmt_agents(resp, agents=[(0, 'TEXT', 'ERK')])
 
     def test_query_with_hgnc_symbol_ns(self):
         """Test specifying HGNC-SYMBOL as a namespace."""
         self.__check_good_statement_query(subject='MAPK1@HGNC-SYMBOL',
                                           type='Phosphorylation')
+        _check_stmt_agents(resp, agents=[
+                (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
 
     def test_query_with_chebi_ns(self):
         """Test specifying CHEBI as a namespace."""
         self.__check_good_statement_query(subject='CHEBI:6801@CHEBI')
+        _check_stmt_agents(resp, agents=[(0, 'CHEBI', 'CHEBI:6801')])
 
     def test_query_with_bad_hgnc(self):
         resp, dt, size = self.__time_get_query('statements',
@@ -202,9 +242,9 @@ class DbApiTestCase(unittest.TestCase):
         resp_dict = json.loads(resp.data.decode('utf-8'))
         stmts = stmts_from_json(resp_dict['statements'])
         assert len(stmts)
-        assert all([s.agent_list()[1].db_refs.get('FPLX') == 'PPP1C'
-                    for s in stmts]),\
-            'Not all subjects match.'
+        _check_stmt_agents(resp, agents=[
+                (0, 'CHEBI', 'CHEBI:4465'),
+                (1, 'FPLX', 'PPP1C')]
         self.__check_time(dt)
         assert size <= SIZELIMIT, size
 
