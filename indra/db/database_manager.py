@@ -403,6 +403,13 @@ class DatabaseManager(object):
         self.AgentToRawMeta = AgentToRawMeta
         self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
 
+        class EvidenceCounts(self.Base):
+            __tablename__ = 'evidence_counts'
+            mk_hash = Column(BigInteger, primary_key=True)
+            ev_count = Column(Integer)
+        self.EvidenceCounts = EvidenceCounts
+        self.m_views[EvidenceCounts.__tablename__] = EvidenceCounts
+
         self.engine = create_engine(host)
 
         if WITH_NX:
