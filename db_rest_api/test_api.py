@@ -25,8 +25,20 @@ class DbApiTestCase(unittest.TestCase):
         pass
 
     def __time_get_query(self, end_point, query_str):
+        return self.__time_query('get', end_point, query_str)
+
+    def __time_query(self, method, end_point, query_str='', **data):
         start_time = datetime.now()
-        resp = self.app.get('/%s/?%s' % (end_point, query_str))
+        if query_str:
+            url = '/%s/?%s' % (end_point, query_str)
+        else:
+            url = end_point
+        meth_func = getattr(self.app, method)
+        if data:
+            resp = meth_func(url, data=json.dumps(data),
+                             headers={'content-type': 'application/json'})
+        else:
+            resp = meth_func(url)
         t_delta = datetime.now() - start_time
         dt = t_delta.seconds + t_delta.microseconds/1e6
         print(dt)
@@ -47,32 +59,36 @@ class DbApiTestCase(unittest.TestCase):
              % (resp.status_code, resp.data.decode()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
         assert not resp_dict['limited']
-        json_stmts = resp_dict['statements']
-        assert len(json_stmts) is not 0, \
-            'Did not get any statements.'
         assert size <= SIZELIMIT, \
             ("Query took up %f MB. Must be less than %f MB."
              % (size/1e6, SIZELIMIT/1e6))
-        stmts = stmts_from_json(json_stmts)
-        #assert all([s.evidence for s in stmts]), \
-        #    "Some statements lack evidence."
-
-        # To allow for faster response-times, we currently do not include
-        # support links in the response.
-        # assert any([s.supports + s.supported_by for s in stmts]),\
-        #     ("Some statements lack support: %s."
-        #      % str([str(s) for s in stmts if not s.supports+s.supported_by]))
-        # if check_stmts:
-        #     assert all([not s1.matches(s2)
-        #                 for s1, s2 in combinations(stmts, 2)]),\
-        #         ("Some statements match: %s."
-        #          % str([(s1, s2) for s1, s2 in combinations(stmts, 2)
-        #                 if s1.matches(s2)]))
+        self.__check_stmts(resp_dict['statements'], check_stmts=check_stmts)
 
         assert dt <= time_limit, \
             ("Query took %f seconds. Must be less than %f seconds."
              % (dt, time_limit))
         return resp
+
+    def __check_stmts(self, json_stmts, check_support=False, check_stmts=False):
+        assert len(json_stmts) is not 0, \
+            'Did not get any statements.'
+        stmts = stmts_from_json(json_stmts)
+        assert all([s.evidence for s in stmts]), \
+            "Some statements lack evidence."
+
+        # To allow for faster response-times, we currently do not include
+        # support links in the response.
+        if check_support:
+            assert any([s.supports + s.supported_by for s in stmts]),\
+                ("Some statements lack support: %s."
+                 % str([str(s) for s in stmts if not s.supports+s.supported_by]))
+            if check_stmts:
+                assert all([not s1.matches(s2)
+                            for s1, s2 in combinations(stmts, 2)]),\
+                    ("Some statements match: %s."
+                     % str([(s1, s2) for s1, s2 in combinations(stmts, 2)
+                            if s1.matches(s2)]))
+        return
 
     def test_blank_response(self):
         """Test the response to an empty request."""
@@ -172,6 +188,16 @@ class DbApiTestCase(unittest.TestCase):
             'Not all subjects match.'
         assert dt <= TIMELIMIT, dt
         assert size <= SIZELIMIT, size
+
+    def test_statements_by_hashes_query(self):
+        resp, dt, size = self.__time_query('get', 'statements/from_hashes',
+                                           hashes=[-36028793042562873,
+                                                   -12978096432588272,
+                                                   -12724735151233845])
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        self.__check_stmts(resp_dict['statements'], check_support=True)
+        assert dt < TIMELIMIT, "Took %f out of %f." % (dt, TIMELIMIT)
+        return
 
     def __test_basic_paper_query(self, id_val, id_type, min_num_results=1):
         query_str = 'id=%s&type=%s' % (id_val, id_type)
