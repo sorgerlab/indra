@@ -4,6 +4,7 @@ import logging
 
 from flask import Flask, request, abort, jsonify, Response
 from flask_compress import Compress
+from flask_cors import CORS
 
 from indra.db import get_primary_db
 from indra.db.client import get_statements_by_gene_role_type, \
@@ -15,6 +16,7 @@ logger = logging.getLogger("db-api")
 
 app = Flask(__name__)
 Compress(app)
+CORS(app)
 
 
 MAX_STATEMENTS = int(1e4)
