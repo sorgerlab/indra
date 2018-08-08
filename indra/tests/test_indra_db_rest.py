@@ -87,3 +87,24 @@ def test_regulate_amount():
     stmt_types = {type(s).__name__ for s in stmts}
     print(stmt_types)
     assert {'IncreaseAmount', 'DecreaseAmount'}.issubset(stmt_types), stmt_types
+
+
+@attr('nonpublic')
+def test_get_statements_by_hash():
+    hash_list = [-36028793042562873, -12978096432588272, -12724735151233845]
+    stmts = dbr.get_statements_by_hash(hash_list)
+    print({s.get_hash(shallow=True): s for s in stmts})
+    assert len(stmts) == len(hash_list), \
+        "Wrong number of statements: %s vs. %s" % (len(stmts), len(hash_list))
+    return
+
+
+@attr('nonpublic')
+def test_get_statements_by_hash_no_hash():
+    try:
+        stmts = dbr.get_statements_by_hash([])
+    except IndraDBRestError as e:
+        assert e.status_code == 400, \
+            "Query failed for wrong reason:\n%s" % str(e)
+        return
+    assert False, "Query with no hashes did not get an exception."
