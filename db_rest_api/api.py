@@ -1,16 +1,13 @@
 import sys
 import json
 import logging
-from collections import defaultdict
 
-from flask import Flask, request, abort, jsonify, Response, make_response
+from flask import Flask, request, abort, jsonify, Response
 from flask_compress import Compress
-from sqlalchemy import or_
 
 from indra.db import get_primary_db
 from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper, get_evidence, _process_pa_statement_res_wev, \
-    get_statements_from_hashes
+    get_statements_by_paper, get_statements_from_hashes
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 
