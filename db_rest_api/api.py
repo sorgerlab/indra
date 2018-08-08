@@ -149,6 +149,8 @@ def get_statements_query_format():
 def get_statements():
     """Get some statements constrained by query."""
     logger.info("Got query for statements!")
+    return "This capability is down for maintenance."
+
     query_dict = request.args.copy()
     limit_behavior = query_dict.pop('on_limit', 'sample')
     if limit_behavior not in ['sample', 'truncate', 'error']:
