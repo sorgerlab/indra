@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from flask import Flask, request, abort, jsonify, Response, make_response
 from flask_compress import Compress
+from sqlalchemy import or_
 
 from indra.db import get_primary_db
 from indra.db.client import get_statements_by_gene_role_type, \
@@ -200,7 +201,6 @@ def get_statements():
         "None agents found. No agents should be None."
 
     # Now find the statements.
-    stmts = []
     logger.info("Getting statements...")
 
     # First look for statements matching the role'd agents.
@@ -208,7 +208,7 @@ def get_statements():
                   for role, (ag_dbid, ns) in roled_agents.items()]
     agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
     db = get_primary_db()
-    master_q = None
+    sub_q = None
     tbls = db.AgentToRawMeta.mk_hash
     for role, ag_dbid, ns in agent_iter:
         # Create this query (for this agent)
@@ -221,38 +221,36 @@ def get_statements():
             q = q.filter(db.AgentToRawMeta.role == role.upper())
 
         # Intersect with the previous query.
-        if master_q:
-            master_q = master_q.intersect(q)
+        if sub_q:
+            sub_q = sub_q.intersect(q)
         else:
-            master_q = q
-    assert master_q, "No conditions imposed."
+            sub_q = q
+    assert sub_q, "No conditions imposed."
+    sub_q = sub_q.subquery('mk_hashes')
+
+    # Get the statements from reading
+    stmts_dict = {}
+    master_q = db.filter_query(
+        [db.FastRawPaLink.mk_hash, db.FastRawPaLink.raw_json,
+         db.FastRawPaLink.pa_json, db.ReadingRefLink.pmid],
+        db.FastRawPaLink.mk_hash == sub_q.c.agent_to_raw_meta_mk_hash,
+        ).outerjoin(db.FastRawPaLink.reading_ref)
 
     # TODO: Do better than truncating.
     # Specifically, this should probably be an order-by a parameter such as
     # evidence count and/or support count.
-    stmt_hashes = master_q.limit(MAX_STATEMENTS).all()
-
-    tbls = [db.FastRawPaLink.reading_id, db.FastRawPaLink.raw_json,
-            db.FastRawPaLink.pa_json, db.FastRawPaLink.mk_hash]
-    stmt_data = db.select_all(tbls, db.FastRawPaLink.mk_hash.in_(stmt_hashes))
-    stmt_dict = {}
-    rid_pmid_dict = {}
-    rid_ev_dict = defaultdict(list)
-    for rid, raw_json_bts, pa_json_bts, mk_hash in stmt_data:
+    res = master_q.limit(MAX_STATEMENTS).all()
+    for mk_hash, raw_json_bts, pa_json_bts, pmid in res:
         raw_json = json.loads(raw_json_bts.decode('utf-8'))
-        ev = raw_json['evidence'][0]
-        if mk_hash not in stmt_dict.keys():
-            stmt_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
-        stmt_dict[mk_hash]['evidence'].append(ev)
-        ev['pmid'] = rid_pmid_dict.get('pmid')
-        if ev['pmid'] is None:
-            rid_ev_dict[rid].append(ev)
-
-    # Create the json response, and send off.
-    resp = jsonify({'limited': True,
-                    'statements': []})
+        if mk_hash not in stmts_dict.keys():
+            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
+            stmts_dict[mk_hash]['evidence'] = []
+        if pmid:
+            raw_json['evidence'][0]['pmid'] = pmid
+        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
+    resp = jsonify({'statements': list(stmts_dict.values()), 'limited': False})
     logger.info("Exiting with %d statements of nominal size %f MB."
-                % (len(stmts), sys.getsizeof(resp.data)/1e6))
+                % (len(stmts_dict), sys.getsizeof(resp.data)/1e6))
     return resp
 
 
