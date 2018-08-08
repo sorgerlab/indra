@@ -361,17 +361,12 @@ class DatabaseManager(object):
         # Materialized Views ---------------------------------------------------
         self.m_views = {}
 
-        class FastRawPaLink(self.Base):
-            __tablename__ = 'fast_raw_pa_link'
-            id = Column(Integer, primary_key=True)
-            raw_json = Column(BYTEA)
-            reading_id = Column(Integer)
-            db_info_id = Column(Integer)
-            mk_hash = Column(BigInteger)
-            pa_json = Column(BYTEA)
-            type = Column(String)
-        self.FastRawPaLink = FastRawPaLink
-        self.m_views[FastRawPaLink.__tablename__] = FastRawPaLink
+        class EvidenceCounts(self.Base):
+            __tablename__ = 'evidence_counts'
+            mk_hash = Column(BigInteger, primary_key=True)
+            ev_count = Column(Integer)
+        self.EvidenceCounts = EvidenceCounts
+        self.m_views[EvidenceCounts.__tablename__] = EvidenceCounts
 
         class ReadingRefLink(self.Base):
             __tablename__ = 'reading_ref_link'
@@ -389,6 +384,20 @@ class DatabaseManager(object):
         self.ReadingRefLink = ReadingRefLink
         self.m_views[ReadingRefLink.__tablename__] = ReadingRefLink
 
+        class FastRawPaLink(self.Base):
+            __tablename__ = 'fast_raw_pa_link'
+            id = Column(Integer, primary_key=True)
+            raw_json = Column(BYTEA)
+            reading_id = Column(Integer, ForeignKey('reading_ref_link.rid'))
+            reading_ref = relationship(ReadingRefLink)
+            db_info_id = Column(Integer)
+            mk_hash = Column(BigInteger, ForeignKey('evidence_counts.mk_hash'))
+            ev_counts = relationship(EvidenceCounts)
+            pa_json = Column(BYTEA)
+            type = Column(String)
+        self.FastRawPaLink = FastRawPaLink
+        self.m_views[FastRawPaLink.__tablename__] = FastRawPaLink
+
         class AgentToRawMeta(self.Base):
             __tablename__ = 'agent_to_raw_meta'
             ag_id = Column(Integer, primary_key=True)
@@ -396,19 +405,14 @@ class DatabaseManager(object):
             db_id = Column(String)
             role = Column(String(20))
             type = Column(String(100))
-            mk_hash = Column(BigInteger)
+            mk_hash = Column(BigInteger, ForeignKey('fast_raw_pa_link.mk_hash'))
+            raw_pa_link = relationship(FastRawPaLink)
             sid = Column(Integer)
-            reading_id = Column(Integer)
+            reading_id = Column(Integer, ForeignKey('reading_ref_link.rid'))
+            reading_ref = relationship(ReadingRefLink)
             db_info_id = Column(Integer)
         self.AgentToRawMeta = AgentToRawMeta
         self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
-
-        class EvidenceCounts(self.Base):
-            __tablename__ = 'evidence_counts'
-            mk_hash = Column(BigInteger, primary_key=True)
-            ev_count = Column(Integer)
-        self.EvidenceCounts = EvidenceCounts
-        self.m_views[EvidenceCounts.__tablename__] = EvidenceCounts
 
         self.engine = create_engine(host)
 
