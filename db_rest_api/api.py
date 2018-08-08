@@ -228,13 +228,21 @@ def get_statements():
     assert sub_q, "No conditions imposed."
     sub_q = sub_q.subquery('mk_hashes')
 
+    if hasattr(sub_q.c, 'mk_hash'):
+        link = db.FastRawPaLink.mk_hash == sub_q.c.mk_hash
+    elif hasattr(sub_q.c, 'agent_to_raw_meta_mk_hash'):
+        link = db.FastRawPaLink.mk_hash == sub_q.c.agent_to_raw_meta_mk_hash
+    else:
+        raise DbAPIError("Cannot find correct attribute to use for linking: %s"
+                         % str(sub_q.c._all_columns))
+
     # Get the statements from reading
     stmts_dict = {}
-    master_q = db.filter_query(
-        [db.FastRawPaLink.mk_hash, db.FastRawPaLink.raw_json,
-         db.FastRawPaLink.pa_json, db.ReadingRefLink.pmid],
-        db.FastRawPaLink.mk_hash == sub_q.c.agent_to_raw_meta_mk_hash,
-        ).outerjoin(db.FastRawPaLink.reading_ref)
+    master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
+                                db.FastRawPaLink.raw_json,
+                                db.FastRawPaLink.pa_json,
+                                db.ReadingRefLink.pmid], link)
+                .outerjoin(db.FastRawPaLink.reading_ref))
 
     # TODO: Do better than truncating.
     # Specifically, this should probably be an order-by a parameter such as
@@ -248,7 +256,7 @@ def get_statements():
         if pmid:
             raw_json['evidence'][0]['pmid'] = pmid
         stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
-    resp = jsonify({'statements': list(stmts_dict.values()), 'limited': False})
+    resp = jsonify({'statements': list(stmts_dict.values()), 'limited': True})
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts_dict), sys.getsizeof(resp.data)/1e6))
     return resp
