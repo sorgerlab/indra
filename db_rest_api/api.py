@@ -204,25 +204,23 @@ def get_statements():
     logger.info("Getting statements...")
 
     # First look for statements matching the role'd agents.
+    agent_iter = [(role, ag_dbid, ns)
+                  for role, (ag_dbid, ns) in roled_agents.items()]
+    agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
     db = get_primary_db()
     master_q = None
     tbls = db.AgentToRawMeta.mk_hash
-    for role, (ag_dbid, ns) in roled_agents.items():
+    for role, ag_dbid, ns in agent_iter:
         # Create this query (for this agent)
-        q = db.filter_query(tbls, db.AgentToRawMeta.role == role.upper(),
-                            db.AgentToRawMeta.db_id.like(ag_dbid),
+        q = db.filter_query(tbls, db.AgentToRawMeta.db_id.like(ag_dbid),
                             db.AgentToRawMeta.db_name.like(ns))
         if act is not None:
             q = q.filter(db.AgentToRawMeta.type.like(act))
 
+        if role is not None:
+            q = q.filter(db.AgentToRawMeta.role == role.upper())
+
         # Intersect with the previous query.
-        if master_q:
-            master_q = master_q.intersect(q)
-        else:
-            master_q = q
-    for ag_dbid, ns in free_agents:
-        q = db.filter_query(tbls, db.AgentToRawMeta.db_id.like(ag_dbid),
-                            db.AgentToRawMeta.db_name.like(ns))
         if master_q:
             master_q = master_q.intersect(q)
         else:
