@@ -456,9 +456,12 @@ def _fix_evidence_refs(db, rid_stmt_trios):
     rid_set = {rid for rid, _, _ in rid_stmt_trios if rid is not None}
     logger.info("Getting text refs for %d readings." % len(rid_set))
     if rid_set:
-        rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
-                                     db.Reading.id.in_(rid_set),
-                                     *db.link(db.TextRef, db.Reading))
+        rid_tr_pairs = db.select_all(
+            [db.Reading.id, db.TextRef],
+            db.Reading.id.in_(rid_set),
+            db.Reading.text_content_id == db.TextContent.id,
+            db.TextContent.text_ref_id == db.TextRef.id
+            )
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
         for rid, sid, stmt in rid_stmt_trios:
             if rid is None:
@@ -493,7 +496,9 @@ def _get_reading_statement_dict(db, clauses=None, get_full_stmts=True):
                           db.TextContent.source, db.Reading.id,
                           db.Reading.reader_version, db.RawStatements.id,
                           db.RawStatements.json)
-         .filter(*db.link(db.RawStatements, db.TextRef)))
+         .filter(db.RawStatements.reading_id == db.Reading.id,
+                 db.Reading.text_content_id == db.TextContent.id,
+                 db.TextContent.text_ref_id == db.TextRef.id))
     if clauses:
         q = q.filter(*clauses)
 
