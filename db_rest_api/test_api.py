@@ -18,6 +18,7 @@ TIMEGOAL = 1
 TIMELIMIT = 25
 SIZELIMIT = 4e7
 
+
 def _check_stmt_agents(resp, agents):
     json_stmts = json.loads(resp.data.decode('utf-8'))['statements']
     stmts = stmts_from_json(json_stmts)
@@ -31,9 +32,9 @@ def _check_stmt_agents(resp, agents):
                 db_ids = [ag.db_refs.get(db_ns) for ag in stmt.agent_list()]
                 assert db_id in db_ids
 
+
 class TimeWarning(Warning):
     pass
-
 
 
 class DbApiTestCase(unittest.TestCase):
@@ -141,47 +142,56 @@ class DbApiTestCase(unittest.TestCase):
                 (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1')),
                 (1, 'HGNC', hgnc_client.get_hgnc_id('MAP2K1'))])
 
-
     def test_object_only_query(self):
         """Test whether we can get an object only statement."""
         resp = self.__check_good_statement_query(object='GLUL',
                                           type='IncreaseAmount')
         _check_stmt_agents(resp, agents=[
                 (1, 'HGNC', hgnc_client.get_hgnc_id('GLUL'))])
+        return
 
     def test_query_with_two_agents(self):
         """Test a query were the roles of the agents are not given."""
-        self.__check_good_statement_query('agent=MAP2K1', 'agent=MAPK1',
-                                          type='Phosphorylation')
+        resp = self.__check_good_statement_query('agent=MAP2K1', 'agent=MAPK1',
+                                                 type='Phosphorylation')
         _check_stmt_agents(resp, agents=[
                 (None, 'HGNC', hgnc_client.get_hgnc_id('MAPK1')),
                 (None, 'HGNC', hgnc_client.get_hgnc_id('MAP2K1'))])
+        return
 
     def test_query_with_other(self):
         """Test that we can get an ActiveForm."""
-        self.__check_good_statement_query(agent='MAPK1', type='ActiveForm')
+        resp = self.__check_good_statement_query(agent='MAPK1',
+                                                 type='ActiveForm')
         _check_stmt_agents(resp, agents=[
                 (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
+        return
 
     def test_bad_camel(self):
         """Test that a type can be poorly formatted and resolve correctly."""
-        self.__check_good_statement_query(agent='MAPK1', type='acTivefOrm')
+        resp = self.__check_good_statement_query(agent='MAPK1',
+                                                 type='acTivefOrm')
         _check_stmt_agents(resp, agents=[
                 (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
+        return
 
     def test_big_query(self):
         """Load-test with several big queries."""
+        # Note that in this test we do not check the quality of the statements,
+        # because there are likely to be so many statements that that would take
+        # longer than needed, given that the quality is tested in other tests.
         self.__check_good_statement_query(agent='AKT1', check_stmts=False,
                                           time_goal=10)
-        _check_stmt_agents(resp, agents=[
-                (None, 'HGNC', hgnc_client.get_hgnc_id('AKT1'))])
         self.__check_good_statement_query(agent='MAPK1', check_stmts=False,
                                           time_goal=20)
-        _check_stmt_agents(resp, agents=[
-                (None, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
+        return
 
     def test_query_with_too_many_stmts(self):
         """Test our check of statement length and the response."""
+        # As with the above, we do not check the quality of statements, because
+        # there will be in general so many that it would make this test take far
+        # to long, especially given that the statement quality is not really in
+        # the scope of this test.
         resp, dt, size = self.__time_get_query('statements',
                                                'agent=TP53&on_limit=error')
         assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
@@ -199,32 +209,38 @@ class DbApiTestCase(unittest.TestCase):
         assert dt < TIMELIMIT, dt
         resp_dict = json.loads(resp.data.decode('utf-8'))
         assert len(resp_dict['statements']) == MAX_STATEMENTS
+        return
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
-        self.__check_good_statement_query(subject='6871@HGNC', object='MAP2K1',
-                                          type='Phosphorylation')
+        resp = self.__check_good_statement_query(subject='6871@HGNC',
+                                                 object='MAP2K1',
+                                                 type='Phosphorylation')
         _check_stmt_agents(resp, agents=[
                 (0, 'HGNC', '6871'),
                 (1, 'HGNC', hgnc_client.get_hgnc_id('MAP2K1'))])
+        return
 
     def test_query_with_text_ns(self):
         """Test specifying TEXT as a namespace."""
-        self.__check_good_statement_query(subject='ERK@TEXT',
+        resp = self.__check_good_statement_query(subject='ERK@TEXT',
                                           type='Phosphorylation')
         _check_stmt_agents(resp, agents=[(0, 'TEXT', 'ERK')])
+        return
 
     def test_query_with_hgnc_symbol_ns(self):
         """Test specifying HGNC-SYMBOL as a namespace."""
-        self.__check_good_statement_query(subject='MAPK1@HGNC-SYMBOL',
-                                          type='Phosphorylation')
+        resp = self.__check_good_statement_query(subject='MAPK1@HGNC-SYMBOL',
+                                                 type='Phosphorylation')
         _check_stmt_agents(resp, agents=[
                 (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
+        return
 
     def test_query_with_chebi_ns(self):
         """Test specifying CHEBI as a namespace."""
-        self.__check_good_statement_query(subject='CHEBI:6801@CHEBI')
+        resp = self.__check_good_statement_query(subject='CHEBI:6801@CHEBI')
         _check_stmt_agents(resp, agents=[(0, 'CHEBI', 'CHEBI:6801')])
+        return
 
     def test_query_with_bad_hgnc(self):
         resp, dt, size = self.__time_get_query('statements',
