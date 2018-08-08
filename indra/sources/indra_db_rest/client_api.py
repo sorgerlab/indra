@@ -1,7 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 
-__all__ = ['get_statements', 'get_statements_for_paper', 'IndraDBRestError']
+import json
+from builtins import dict, str
+from os.path import join
+
+__all__ = ['get_statements', 'get_statements_for_paper',
+           'get_statements_by_hash', 'IndraDBRestError']
 
 import logging
 import requests
@@ -21,9 +25,17 @@ class IndraDBRestError(Exception):
             self.reason = resp.text
         else:
             self.reason = resp.reason
+        reason_lines = self.reason.splitlines()
+        if len(reason_lines) > 1:
+            ws = '\n'
+            for i, line in enumerate(reason_lines):
+                reason_lines[i] = '  ' + line
+        else:
+            ws = ' '
+        fmtd_reason = '\n'.join(reason_lines)
         self.resp = resp
-        Exception.__init__(self, ('Got bad return code %d: %s'
-                                  % (self.status_code, self.reason)))
+        Exception.__init__(self, ('Got bad return code %d:%s%s'
+                                  % (self.status_code, ws, fmtd_reason)))
         return
 
 
@@ -33,7 +45,7 @@ def _make_stmts_query(agent_strs, params):
     if on_limit == 'persist':
         params['on_limit'] = 'error'
     try:
-        resp = _submit_request('statements', *agent_strs, **params)
+        resp = _submit_query_request('statements', *agent_strs, **params)
     except IndraDBRestError as e:
         if e.status_code == 413:
             if on_limit == 'error':
@@ -140,6 +152,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     return stmts
 
 
+def get_statements_by_hash(hash_list, with_support=True):
+    """Get fully formed statements from a list of hashes."""
+    resp = _submit_request('post', 'statements/from_hashes',
+                           hashes=hash_list)
+    return stmts_from_json(resp.json()['statements'])
+
+
 def get_statements_for_paper(id_val, id_type='pmid'):
     """Get the set of raw Statements extracted from a paper given by the id.
 
@@ -159,19 +178,41 @@ def get_statements_for_paper(id_val, id_type='pmid'):
     stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
-    resp = _submit_request('papers', id=id_val, type=id_type)
+    resp = _submit_query_request('papers', id=id_val, type=id_type)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json)
 
 
-def _submit_request(end_point, *args, **kwargs):
-    """Low level function to make the request to the rest API."""
+def _submit_query_request(end_point, *args, **kwargs):
+    """Low level function to format the query string."""
+    # This isn't handled by requests because of the multiple identical agent
+    # keys, e.g. {'agent': 'MEK', 'agent': 'ERK'} which is not supported in
+    # python, but is allowed and necessary in these query strings.
     query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                                + list(args))
+    return _submit_request('get', end_point, query_str)
+
+
+def _submit_request(meth, end_point, query_str='', **data):
+    """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
-    resp = requests.get(url + ('/%s/' % end_point) + query_str,
-                        headers={'x-api-key': api_key})
+    url_path = join(url, end_point)
+    if query_str:
+        url_path += '/' + query_str
+    headers={'x-api-key': api_key}
+    if data:
+        # This is an assumption which applies to our use cases for now, but may
+        # not generalize.
+        headers['content-type'] = 'application/json'
+        json_data = json.dumps(data)
+    else:
+        json_data = None
+    print('url and query string:', url_path)
+    print('headers:', headers)
+    print('data:', data)
+    method_func = getattr(requests, meth.lower())
+    resp = method_func(url_path, headers=headers, data=json_data)
     if resp.status_code == 200:
         return resp
     else:
