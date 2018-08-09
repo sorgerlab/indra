@@ -210,7 +210,7 @@ def get_statements():
     sub_q = None
     for role, ag_dbid, ns in agent_iter:
         # Create this query (for this agent)
-        q = db.filter_query(db.PaMeta.mk_hash,
+        q = db.filter_query([db.PaMeta.mk_hash, db.PaMeta.ev_count],
                             db.PaMeta.db_id.like(ag_dbid),
                             db.PaMeta.db_name.like(ns))
         if act is not None:
@@ -225,6 +225,7 @@ def get_statements():
         else:
             sub_q = q
     assert sub_q, "No conditions imposed."
+    sub_q = sub_q.distinct()
     sub_al = sub_q.subquery('mk_hashes')
 
     if hasattr(sub_al.c, 'mk_hash'):
