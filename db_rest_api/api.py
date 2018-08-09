@@ -208,16 +208,16 @@ def get_statements():
     agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
     db = get_primary_db()
     sub_q = None
-    tbls = db.AgentToRawMeta.mk_hash
     for role, ag_dbid, ns in agent_iter:
         # Create this query (for this agent)
-        q = db.filter_query(tbls, db.AgentToRawMeta.db_id.like(ag_dbid),
-                            db.AgentToRawMeta.db_name.like(ns))
+        q = db.filter_query(db.PaMeta.mk_hash,
+                            db.PaMeta.db_id.like(ag_dbid),
+                            db.PaMeta.db_name.like(ns))
         if act is not None:
-            q = q.filter(db.AgentToRawMeta.type.like(act))
+            q = q.filter(db.PaMeta.type.like(act))
 
         if role is not None:
-            q = q.filter(db.AgentToRawMeta.role == role.upper())
+            q = q.filter(db.PaMeta.role == role.upper())
 
         # Intersect with the previous query.
         if sub_q:
@@ -225,15 +225,15 @@ def get_statements():
         else:
             sub_q = q
     assert sub_q, "No conditions imposed."
-    sub_q = sub_q.subquery('mk_hashes')
+    sub_al = sub_q.subquery('mk_hashes')
 
-    if hasattr(sub_q.c, 'mk_hash'):
-        link = db.FastRawPaLink.mk_hash == sub_q.c.mk_hash
-    elif hasattr(sub_q.c, 'agent_to_raw_meta_mk_hash'):
-        link = db.FastRawPaLink.mk_hash == sub_q.c.agent_to_raw_meta_mk_hash
+    if hasattr(sub_al.c, 'mk_hash'):
+        link = db.FastRawPaLink.mk_hash == sub_al.c.mk_hash
+    elif hasattr(sub_al.c, 'pa_meta_mk_hash'):
+        link = db.FastRawPaLink.mk_hash == sub_al.c.pa_meta_mk_hash
     else:
         raise DbAPIError("Cannot find correct attribute to use for linking: %s"
-                         % str(sub_q.c._all_columns))
+                         % str(sub_al.c._all_columns))
 
     # Get the statements from reading
     stmts_dict = {}
