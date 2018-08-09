@@ -414,6 +414,19 @@ class DatabaseManager(object):
         self.AgentToRawMeta = AgentToRawMeta
         self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
 
+        class PaMeta(self.Base):
+            __tablename__ = 'pa_meta'
+            ag_id = Column(Integer, primary_key=True)
+            db_name = Column(String)
+            db_id = Column(String)
+            role = Column(String(20))
+            type = Column(String(100))
+            mk_hash = Column(BigInteger, ForeignKey('fast_raw_pa_link.mk_hash'))
+            raw_pa_link = relationship(FastRawPaLink)
+            ev_count = Column(Integer)
+        self.PaMeta = PaMeta
+        self.m_views[PaMeta.__tablename__] = PaMeta
+
         self.engine = create_engine(host)
 
         if WITH_NX:
