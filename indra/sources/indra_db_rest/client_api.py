@@ -1,14 +1,16 @@
 from __future__ import absolute_import, print_function, unicode_literals
-
-import json
 from builtins import dict, str
-from os.path import join
+
 
 __all__ = ['get_statements', 'get_statements_for_paper',
            'get_statements_by_hash', 'IndraDBRestError']
 
+import json
 import logging
 import requests
+from os.path import join
+
+from indra.db.util import _clockit
 
 from indra import get_config
 from indra.statements import stmts_from_json, get_statement_by_name, \
@@ -82,6 +84,7 @@ def _query_stmt_types(agent_strs, params, stmt_types):
     return stmts
 
 
+@_clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, on_limit='sample'):
     """Get statements from INDRA's database using the web api.
@@ -152,6 +155,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     return stmts
 
 
+@_clockit
 def get_statements_by_hash(hash_list, with_support=True):
     """Get fully formed statements from a list of hashes."""
     resp = _submit_request('post', 'statements/from_hashes',
@@ -159,6 +163,7 @@ def get_statements_by_hash(hash_list, with_support=True):
     return stmts_from_json(resp.json()['statements'])
 
 
+@_clockit
 def get_statements_for_paper(id_val, id_type='pmid'):
     """Get the set of raw Statements extracted from a paper given by the id.
 
@@ -193,6 +198,7 @@ def _submit_query_request(end_point, *args, **kwargs):
     return _submit_request('get', end_point, query_str)
 
 
+@_clockit
 def _submit_request(meth, end_point, query_str='', **data):
     """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
