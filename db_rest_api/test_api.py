@@ -59,9 +59,9 @@ class DbApiTestCase(unittest.TestCase):
     def __time_get_query(self, end_point, query_str):
         return self.__time_query('get', end_point, query_str)
 
-    def __time_query(self, method, end_point, query_str='', **data):
+    def __time_query(self, method, end_point, query_str=None, **data):
         start_time = datetime.now()
-        if query_str:
+        if query_str is not None:
             url = '/%s/?%s' % (end_point, query_str)
         else:
             url = end_point
@@ -90,7 +90,7 @@ class DbApiTestCase(unittest.TestCase):
             ('Got error code %d: \"%s\".'
              % (resp.status_code, resp.data.decode()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
-        assert not resp_dict['limited']
+        #assert not resp_dict['limited']
         assert size <= SIZELIMIT, \
             ("Query took up %f MB. Must be less than %f MB."
              % (size/1e6, SIZELIMIT/1e6))
