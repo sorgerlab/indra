@@ -24,14 +24,6 @@ _indra_pybel_act_map = {
     'gap': 'gap'
 }
 
-_abundance_type_to_dsl = {
-    pc.ABUNDANCE: abundance,
-    pc.PROTEIN: protein,
-    pc.RNA: rna,
-    pc.MIRNA: mirna,
-    pc.GENE: gene,
-}
-
 _pybel_indra_act_map = {v: k for k, v in _indra_pybel_act_map.items()}
 
 
@@ -555,8 +547,3 @@ def _get_evidence(evidence):
     pybel_ev[pc.CITATION] = citation
     pybel_ev[pc.ANNOTATIONS] = {}
     return pybel_ev
-
-
-def _get_simple_abundance(func, namespace, name):
-    dsl = _abundance_type_to_dsl[func]
-    return dsl(namespace=namespace, name=name)
