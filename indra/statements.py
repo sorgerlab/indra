@@ -1074,7 +1074,7 @@ class Statement(object):
 
     Parameters
     ----------
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         If a list of Evidence objects is passed to the constructor, the
         value is set to this list. If a bare Evidence object is passed,
         it is enclosed in a list. If no evidence is passed (the default),
@@ -2880,11 +2880,11 @@ class Conversion(Statement):
         The list of molecular species being consumed by the conversion.
     obj_to : list of :py:class:`indra.statement.Agent`
         The list of molecular species being created by the conversion.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the synthesis statement.
     """
     def __init__(self, subj, obj_from=None, obj_to=None, evidence=None):
-        super(Conversion, self).__init__(evidence)
+        super(Conversion, self).__init__(evidence=evidence)
         self.subj = subj
         self.obj_from = obj_from if obj_from is not None else []
         if isinstance(obj_from, Agent):
