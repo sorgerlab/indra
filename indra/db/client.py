@@ -6,7 +6,7 @@ import json
 import logging
 from collections import defaultdict
 from itertools import groupby, permutations, product
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 
 from indra.statements import Unresolved, Evidence
 
@@ -503,7 +503,18 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
         else:
             sub_q = q
     assert sub_q, "No conditions imposed."
-    sub_q = sub_q.distinct()
+
+    # Handle limiting.
+    sub_q = sub_q.order_by(desc(db.PaMeta.ev_count))
+    if max_stmts is not None:
+        sub_q = sub_q.limit(max_stmts)
+
+        # This is a bit of a hack, but on average there are 4.5 raw statements
+        # for each pa statement. This should reduce the amount of excessive
+        # evidence cutting.
+        max_stmts = int(4.5*max_stmts)
+
+    # Create the link
     sub_al = sub_q.subquery('mk_hashes')
 
     if hasattr(sub_al.c, 'mk_hash'):
