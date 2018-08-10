@@ -6,11 +6,12 @@ from flask import Flask, request, abort, jsonify, Response
 from flask_compress import Compress
 from flask_cors import CORS
 
-from indra.db import get_primary_db
 from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper, get_statements_from_hashes
+    get_statements_by_paper, get_statements_from_hashes, \
+    get_statement_jsons_from_agents
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
+from indra.util import batch_iter
 
 logger = logging.getLogger("db-api")
 
@@ -19,7 +20,7 @@ Compress(app)
 CORS(app)
 
 
-MAX_STATEMENTS = int(1e4)
+MAX_STATEMENTS = int(1e6)
 
 
 class DbAPIError(Exception):
@@ -152,6 +153,8 @@ def get_statements():
 
     query_dict = request.args.copy()
     limit_behavior = query_dict.pop('on_limit', 'sample')
+    do_stream_str = query_dict.pop('stream', 'false')
+    do_stream = True if do_stream_str == 'true' else False
     if limit_behavior not in ['sample', 'truncate', 'error']:
         abort(Response('Unrecognized value for on_limit: %s' % limit_behavior,
                        400))
@@ -201,62 +204,22 @@ def get_statements():
 
     # Now find the statements.
     logger.info("Getting statements...")
-
-    # First look for statements matching the role'd agents.
     agent_iter = [(role, ag_dbid, ns)
                   for role, (ag_dbid, ns) in roled_agents.items()]
     agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
-    db = get_primary_db()
-    sub_q = None
-    for role, ag_dbid, ns in agent_iter:
-        # Create this query (for this agent)
-        q = db.filter_query([db.PaMeta.mk_hash, db.PaMeta.ev_count],
-                            db.PaMeta.db_id.like(ag_dbid),
-                            db.PaMeta.db_name.like(ns))
-        if act is not None:
-            q = q.filter(db.PaMeta.type.like(act))
 
-        if role is not None:
-            q = q.filter(db.PaMeta.role == role.upper())
+    stmts_dict = get_statement_jsons_from_agents(agent_iter, stmt_type=act,
+                                                 max_stmts=None)
 
-        # Intersect with the previous query.
-        if sub_q:
-            sub_q = sub_q.intersect(q)
-        else:
-            sub_q = q
-    assert sub_q, "No conditions imposed."
-    sub_q = sub_q.distinct()
-    sub_al = sub_q.subquery('mk_hashes')
+    resp_json = {'statements': list(stmts_dict.values()), 'limited': True}
 
-    if hasattr(sub_al.c, 'mk_hash'):
-        link = db.FastRawPaLink.mk_hash == sub_al.c.mk_hash
-    elif hasattr(sub_al.c, 'pa_meta_mk_hash'):
-        link = db.FastRawPaLink.mk_hash == sub_al.c.pa_meta_mk_hash
+    if do_stream:
+        # Returning a generator should stream the data.
+        resp_json_bts = json.dumps(resp_json)
+        gen = batch_iter(resp_json_bts, 10000)
+        resp = Response(gen, mimetype='application/json')
     else:
-        raise DbAPIError("Cannot find correct attribute to use for linking: %s"
-                         % str(sub_al.c._all_columns))
-
-    # Get the statements from reading
-    stmts_dict = {}
-    master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
-                                db.FastRawPaLink.raw_json,
-                                db.FastRawPaLink.pa_json,
-                                db.ReadingRefLink.pmid], link)
-                .outerjoin(db.FastRawPaLink.reading_ref))
-
-    # TODO: Do better than truncating.
-    # Specifically, this should probably be an order-by a parameter such as
-    # evidence count and/or support count.
-    res = master_q.limit(MAX_STATEMENTS).all()
-    for mk_hash, raw_json_bts, pa_json_bts, pmid in res:
-        raw_json = json.loads(raw_json_bts.decode('utf-8'))
-        if mk_hash not in stmts_dict.keys():
-            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
-            stmts_dict[mk_hash]['evidence'] = []
-        if pmid:
-            raw_json['evidence'][0]['pmid'] = pmid
-        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
-    resp = jsonify({'statements': list(stmts_dict.values()), 'limited': True})
+        resp = jsonify(resp_json)
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmts_dict), sys.getsizeof(resp.data)/1e6))
     return resp
