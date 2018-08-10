@@ -66,12 +66,12 @@ class PybelProcessor(object):
 
     # FIXME: Handle reactions
     def get_statements(self):
-        for u, v, d in self.graph.edges_iter(data=True):
+        for u, v, k, d in self.graph.edges_iter(keys=True, data=True):
             u_data = self.graph.node[u]
             v_data = self.graph.node[v]
             # We only interpret causal relations, not correlations
             if d[pc.RELATION] not in pc.CAUSAL_RELATIONS:
-                self.unhandled.append((u_data, v_data, d))
+                self.unhandled.append((u_data, v_data, k, d))
                 continue
             # If the left or right-hand sides involve complex abundances,
             # add them as statements
@@ -86,19 +86,22 @@ class PybelProcessor(object):
             if obj_to_loc:
                 self.unhandled.append((u_data, v_data, d))
                 logger.info("Controlled translocations are currently not "
-                               "handled: %s)" % edge_to_bel(u_data, v_data, d))
+                               "handled: %s)" % edge_to_bel(u_data, v_data, k, d))
                 continue
+
+            v_func = v_data[pc.FUNCTION]
+                
             # Modification, e.g.
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
-            if v_data[pc.FUNCTION] == pc.PROTEIN and \
+            if v_func == pc.PROTEIN and \
                has_protein_modification(self.graph, v):
                 if obj_activity:
                     logger.info("Ignoring object activity modifier in "
                                 "modification statement: %s, %s, %s" %
                                 (u_data, v_data, d))
                 else:
-                    self._get_modification(u_data, v_data, d)
+                    self._get_modification(u_data, v_data, k, d)
             elif obj_activity:
                 # If the agents on the left and right hand sides are the same,
                 # then get an active form:
@@ -109,25 +112,25 @@ class PybelProcessor(object):
                 #                       p(Foo, pmod('Ph', 'Y'))) ->/-|
                 #                            act(p(Foo))
                 if not subj_activity and _proteins_match(u_data, v_data):
-                    self._get_active_form(u_data, v_data, d)
+                    self._get_active_form(u_data, v_data, k, d)
                 # Gef
                 #   act(p(Foo)) => gtp(p(Foo))
                 # Gap
                 #   act(p(Foo)) =| gtp(p(Foo))
                 elif subj_activity and _rel_is_direct(d) and \
                      obj_activity.activity_type == 'gtpbound':
-                    self._get_gef_gap(u_data, v_data, d)
+                    self._get_gef_gap(u_data, v_data, k, d)
                 # Activation/Inhibition
                 #   x(Foo) -> act(x(Foo))
                 #   act(x(Foo)) -> act(x(Foo))
                 # GtpActivation
                 #   gtp(p(Foo)) => act(p(Foo))
                 else:
-                    self._get_regulate_activity(u_data, v_data, d)
+                    self._get_regulate_activity(u_data, v_data, k, d)
             # Activations involving biological processes or pathologies
             #   x(Foo) -> bp(Bar)
-            elif v_data[pc.FUNCTION] in (pc.BIOPROCESS, pc.PATHOLOGY):
-                self._get_regulate_activity(u_data, v_data, d)
+            elif v_func in (pc.BIOPROCESS, pc.PATHOLOGY):
+                self._get_regulate_activity(u_data, v_data, k, d)
             # Regulate amount
             #   x(Foo) -> p(Bar)
             #   x(Foo) -> r(Bar)
@@ -136,7 +139,7 @@ class PybelProcessor(object):
             #   act(x(Foo)) ->/-| deg(p(Bar))
             elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA, pc.ABUNDANCE,
                  pc.COMPLEX, pc.MIRNA) and not obj_activity:
-                self._get_regulate_amount(u_data, v_data, d)
+                self._get_regulate_amount(u_data, v_data, k, d)
             # Controlled conversions
             #   x(Foo) -> rxn(reactants(r1,...,rn), products(p1,...pn))
             #   act(x(Foo)) -> rxn(reactants(r1,...,rn), products(p1,...pn))
@@ -145,7 +148,7 @@ class PybelProcessor(object):
             # of a controlled conversion
             elif v_data[pc.FUNCTION] == pc.REACTION and \
                  d[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
-                self._get_conversion(u_data, v_data, d)
+                self._get_conversion(u_data, v_data, k, d)
             # UNHANDLED
             # rxn(reactants(r1,...,rn), products(p1,...pn))
             # Complex(a,b)
@@ -154,9 +157,9 @@ class PybelProcessor(object):
             # Complexes
             #   complex(x(Foo), x(Bar), ...)
             else:
-                self.unhandled.append((u_data, v_data, d))
+                self.unhandled.append((u_data, v_data, k, d))
 
-    def _get_complex(self, u_data, v_data, edge_data, node_ix):
+    def _get_complex(self, u_data, v_data, k, edge_data, node_ix):
         # Get an agent with bound conditions from the Complex
         assert node_ix in (0, 1)
         node_data = [u_data, v_data][node_ix]
@@ -170,7 +173,7 @@ class PybelProcessor(object):
         stmt = Complex(agents, evidence=[ev])
         self.statements.append(stmt)
 
-    def _get_regulate_amount(self, u_data, v_data, edge_data):
+    def _get_regulate_amount(self, u_data, v_data, k, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         obj_agent = _get_agent(v_data, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
@@ -191,7 +194,7 @@ class PybelProcessor(object):
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
 
-    def _get_modification(self, u_data, v_data, edge_data):
+    def _get_modification(self, u_data, v_data, k, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         mods, muts = _get_all_pmods(v_data, edge_data)
         v_data_no_mods = _remove_pmods(v_data)
@@ -206,7 +209,7 @@ class PybelProcessor(object):
                             evidence=[ev])
             self.statements.append(stmt)
 
-    def _get_regulate_activity(self, u_data, v_data, edge_data):
+    def _get_regulate_activity(self, u_data, v_data, k, edge_data):
         # Subject info
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
@@ -242,7 +245,7 @@ class PybelProcessor(object):
         stmt = stmt_class(subj_agent, obj_agent, activity_type, evidence=[ev])
         self.statements.append(stmt)
 
-    def _get_active_form(self, u_data, v_data, edge_data):
+    def _get_active_form(self, u_data, v_data, k, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         # Don't pass the object modifier info because we don't want an activity
         # condition applied to the agent
@@ -256,15 +259,15 @@ class PybelProcessor(object):
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
         is_active = edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS
-        ev = _get_evidence(u_data, v_data, edge_data)
+        ev = _get_evidence(u_data, v_data, k, edge_data)
         stmt = ActiveForm(subj_agent, activity_type, is_active, evidence=[ev])
         self.statements.append(stmt)
 
-    def _get_gef_gap(self, u_data, v_data, edge_data):
+    def _get_gef_gap(self, u_data, v_data, k, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         obj_agent = _get_agent(v_data)
         if subj_agent is None or obj_agent is None:
-            self.unhandled.append((u_data, v_data, edge_data))
+            self.unhandled.append((u_data, v_data, k, edge_data))
             return
         ev = _get_evidence(u_data, v_data, edge_data)
         if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
@@ -274,7 +277,7 @@ class PybelProcessor(object):
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
 
-    def _get_conversion(self, u_data, v_data, edge_data):
+    def _get_conversion(self, u_data, v_data, k, edge_data):
         subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
         # Get the nodes for the reactants and products
         reactant_agents = [_get_agent(r) for r in v_data[pc.REACTANTS]]
@@ -282,9 +285,9 @@ class PybelProcessor(object):
         if subj_agent is None or \
            any([r is None for r in reactant_agents]) or \
            any([p is None for p in product_agents]):
-            self.unhandled.append((u_data, v_data, edge_data))
+            self.unhandled.append((u_data, v_data, k, edge_data))
             return
-        ev = _get_evidence(u_data, v_data, edge_data)
+        ev = _get_evidence(u_data, v_data, k, edge_data)
         stmt = Conversion(subj_agent, obj_from=reactant_agents,
                           obj_to=product_agents, evidence = ev)
         self.statements.append(stmt)
@@ -442,7 +445,7 @@ def _get_agent(node_data, node_modifier_data=None):
     return ag
 
 
-def _get_evidence(u_data, v_data, edge_data):
+def _get_evidence(u_data, v_data, k, edge_data):
     ev_text = edge_data.get(pc.EVIDENCE)
     ev_citation = edge_data.get(pc.CITATION)
     ev_pmid = None
@@ -473,7 +476,7 @@ def _get_evidence(u_data, v_data, edge_data):
         epistemics['section_type'] = _pybel_text_location_map.get(text_location)
 
     ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
-                  source_id=edge_data.get(pc.HASH), epistemics=epistemics,
+                  source_id=k, epistemics=epistemics,
                   annotations=annotations)
     return ev
 
