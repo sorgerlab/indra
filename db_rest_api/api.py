@@ -209,7 +209,7 @@ def get_statements():
     agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
 
     stmts_dict = get_statement_jsons_from_agents(agent_iter, stmt_type=act,
-                                                 max_stmts=None)
+                                                 max_stmts=MAX_STATEMENTS)
 
     resp_json = {'statements': list(stmts_dict.values()), 'limited': True}
 
