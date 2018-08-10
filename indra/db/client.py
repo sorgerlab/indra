@@ -548,26 +548,19 @@ def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None):
 
 
 @_clockit
-def get_statements_by_papers(paper_refs, db=None, preassembled=True):
-    """Get the statements from a particular paper.
+def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
+    """Get the statements from a list of papers.
 
     Parameters
     ----------
-    id_val : int or str
-        The value of the id for the paper whose statements you wish to retrieve.
-    id_type : str
-        The type of id used (default is pmid). Options include pmid, pmcid, doi,
-        pii, url, or manuscript_id. Note that pmid is generally the best means
-        of getting a paper.
-    count : int
-        Number of statements to retrieve in each batch (passed to
-        :py:func:`get_statements`).
+    paper_refs : list[list[(<id_type>, <paper_id>)]]
+        A list of lists of tuples, where each tuple indicates and id-type (e.g.
+        'pmid') and an id value, and each sub-list is a set of ids for a
+        particular paper. Each paper must satisfy all ids, and statements are
+        retrieved for all papers.
     db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
-    do_stmt_count : bool
-        Whether or not to perform an initial statement counting step to give
-        more meaningful progress messages.
     preassembled : bool
         If True, statements will be selected from the table of pre-assembled
         statements. Otherwise, they will be selected from the raw statements.
@@ -575,7 +568,7 @@ def get_statements_by_papers(paper_refs, db=None, preassembled=True):
 
     Returns
     -------
-    A list of Statements from the database corresponding to the paper id given.
+    A list of Statement jsons from the database corresponding to the paper ids.
     """
     if db is None:
         db = get_primary_db()
@@ -588,7 +581,7 @@ def get_statements_by_papers(paper_refs, db=None, preassembled=True):
 
         # Intersect with the previous query.
         if sub_q:
-            sub_q = sub_q.intersect(q)
+            sub_q = sub_q.union(q)
         else:
             sub_q = q
     assert sub_q, "No conditions imposed."
