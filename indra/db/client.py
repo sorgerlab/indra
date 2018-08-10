@@ -446,6 +446,97 @@ def _process_pa_statement_res_nev(stmt_iterable, count=1000):
     return stmt_dict
 
 
+class DbClientError(Exception):
+    pass
+
+
+@_clockit
+def get_statement_jsons_from_agents(agents=None, stmt_type=None,
+                                    max_stmts=None):
+    """Get json's for statements given agent refs and Statement type.
+
+    Parameters
+    ----------
+    agents : list[(<role>, <id>, <namespace>)]
+        A list of agents, each specified by a tuple of information including:
+        the `role`, which can be 'subject', 'object', or None, an `id`, such as
+        the HGNC id, a CHEMBL id, or a FPLX id, etc, and the
+        `namespace` which specifies which of the above is given in `id`.
+
+        Some examples:
+            (None, 'MEK', 'FPLX')
+            ('object', '11998', 'HGNC')
+            ('subject', 'MAP2K1', 'TEXT')
+
+        Note that you will get the logical AND of the conditions given, in other
+        words, each Statement will satisfy all constraints.
+    stmt_type : str or None
+        The type of statement to retrieve, e.g. 'Phosphorylation'. If None, no
+        type restriction is imposed.
+    max_stmts : int or None
+        Restrict the number of statements (specifically, the number of evidence)
+        that are included. If None, no restriction is applied.
+    """
+    # First look for statements matching the role'd agents.
+    db = get_primary_db()
+    sub_q = None
+    for role, ag_dbid, ns in agents:
+        # Create this query (for this agent)
+        q = db.filter_query([db.PaMeta.mk_hash, db.PaMeta.ev_count],
+                            db.PaMeta.db_id.like(ag_dbid),
+                            db.PaMeta.db_name.like(ns))
+        if stmt_type is not None:
+            q = q.filter(db.PaMeta.type.like(stmt_type))
+
+        if role is not None:
+            q = q.filter(db.PaMeta.role == role.upper())
+
+        # Intersect with the previous query.
+        if sub_q:
+            sub_q = sub_q.intersect(q)
+        else:
+            sub_q = q
+    assert sub_q, "No conditions imposed."
+    sub_q = sub_q.distinct()
+    sub_al = sub_q.subquery('mk_hashes')
+
+    if hasattr(sub_al.c, 'mk_hash'):
+        link = db.FastRawPaLink.mk_hash == sub_al.c.mk_hash
+    elif hasattr(sub_al.c, 'pa_meta_mk_hash'):
+        link = db.FastRawPaLink.mk_hash == sub_al.c.pa_meta_mk_hash
+    else:
+        raise DbClientError("Cannot find attribute to use for linking: %s"
+                            % str(sub_al.c._all_columns))
+
+    # Get the statements from reading
+    stmts_dict = {}
+    master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
+                                db.FastRawPaLink.raw_json,
+                                db.FastRawPaLink.pa_json,
+                                db.ReadingRefLink.pmid], link)
+                .outerjoin(db.FastRawPaLink.reading_ref))
+
+    # TODO: Do better than truncating.
+    # Specifically, this should probably be an order-by a parameter such as
+    # evidence count and/or support count.
+    if max_stmts is not None:
+        res = master_q.limit(max_stmts).all()
+    else:
+        res = master_q.all()
+
+    # Process the json to fix refs etc.
+    for mk_hash, raw_json_bts, pa_json_bts, pmid in res:
+        raw_json = json.loads(raw_json_bts.decode('utf-8'))
+        if mk_hash not in stmts_dict.keys():
+            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
+            stmts_dict[mk_hash]['evidence'] = []
+        if pmid:
+            raw_json['evidence'][0]['pmid'] = pmid
+        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
+
+    return stmts_dict
+
+
 @_clockit
 def get_statement_essentials(clauses, count=1000, db=None, preassembled=True):
     """Get the type, agents, and id data for the specified statements.
