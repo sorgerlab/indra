@@ -479,6 +479,8 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
     """
     # First look for statements matching the role'd agents.
     db = get_primary_db()
+
+    # TODO: Extend this to allow retrieval of raw statements.
     sub_q = None
     for role, ag_dbid, ns in agents:
         # Create this query (for this agent)
@@ -508,12 +510,17 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
 
+    return _get_pa_statements_by_subq_link(db, link, max_stmts)
+
+
+@_clockit
+def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None):
     # Get the statements from reading
     stmts_dict = {}
     master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
-                                db.FastRawPaLink.raw_json,
-                                db.FastRawPaLink.pa_json,
-                                db.ReadingRefLink.pmid], link)
+                                 db.FastRawPaLink.raw_json,
+                                 db.FastRawPaLink.pa_json,
+                                 db.ReadingRefLink.pmid], sub_q_link)
                 .outerjoin(db.FastRawPaLink.reading_ref))
 
     # TODO: Do better than truncating.
@@ -533,8 +540,65 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
         if pmid:
             raw_json['evidence'][0]['pmid'] = pmid
         stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
-
     return stmts_dict
+
+
+@_clockit
+def get_statements_by_papers(paper_refs, db=None, preassembled=True):
+    """Get the statements from a particular paper.
+
+    Parameters
+    ----------
+    id_val : int or str
+        The value of the id for the paper whose statements you wish to retrieve.
+    id_type : str
+        The type of id used (default is pmid). Options include pmid, pmcid, doi,
+        pii, url, or manuscript_id. Note that pmid is generally the best means
+        of getting a paper.
+    count : int
+        Number of statements to retrieve in each batch (passed to
+        :py:func:`get_statements`).
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local databse instance.
+    do_stmt_count : bool
+        Whether or not to perform an initial statement counting step to give
+        more meaningful progress messages.
+    preassembled : bool
+        If True, statements will be selected from the table of pre-assembled
+        statements. Otherwise, they will be selected from the raw statements.
+        Default is True.
+
+    Returns
+    -------
+    A list of Statements from the database corresponding to the paper id given.
+    """
+    if db is None:
+        db = get_primary_db()
+
+    sub_q = None
+    for paper in paper_refs:
+        q = db.filter_query([db.ReadingRefLink.rid])
+        for id_type, paper_id in paper:
+            q = q.filter(getattr(db.ReadingRefLink, id_type) == paper_id)
+
+        # Intersect with the previous query.
+        if sub_q:
+            sub_q = sub_q.intersect(q)
+        else:
+            sub_q = q
+    assert sub_q, "No conditions imposed."
+    sub_q = sub_q.distinct()
+    sub_al = sub_q.subquery('reading_ids')
+
+    if hasattr(sub_al.c, 'rid'):
+        link = db.FastRawPaLink.reading_id == sub_al.c.rid
+    elif hasattr(sub_al.c, 'reading_ref_link_rid'):
+        link = db.FastRawPaLink.reading_id == sub_al.c.reading_ref_link_rid
+    else:
+        raise DbClientError("Cannot find attribute to use for linking: %s"
+                            % str(sub_al.c._all_columns))
+    return _get_pa_statements_by_subq_link(db, link, None)
 
 
 @_clockit
