@@ -1,7 +1,7 @@
 import pybel
 from pybel.dsl import *
 import pybel.constants as pc
-from pybel.examples import egf_graph, sialic_acid_graph
+from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
 from indra.sources.bel import pybel_processor as pb
@@ -582,23 +582,14 @@ def test_gtpactivation():
 
 def test_conversion():
     enz = protein(name='PLCG1', namespace='HGNC')
-    rxn = {
-            'function': 'Reaction',
-            'reactants': [
-                {'function': 'Abundance',
-                 'name': '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate',
-                 'namespace': 'SCHEM'}
-            ],
-            'products': [
-                {'function': 'Abundance',
-                 'name': 'Diacylglycerol',
-                 'namespace': 'SCHEM'},
-                {'cname': 'Inositol 1,4,5-trisphosphate',
-                 'function': 'Abundance',
-                 'name': 'Inositol 1,4,5-trisphosphate',
-                 'namespace': 'SCHEM'}
-            ]
-          }
+    react_1 = abundance('SCHEM', '1-Phosphatidyl-D-myo-inositol 4,5-bisphosphate')
+    p1 = abundance('SCHEM', 'Diacylglycerol')
+    p2 = abundance('SCHEM', 'Inositol 1,4,5-trisphosphate')
+
+    rxn = reaction(
+        reactants=[react_1],
+        products=[p1, p2],
+    )
     g = pybel.BELGraph()
     g.add_qualified_edge(enz, rxn, relation=pc.DIRECTLY_INCREASES,
                          subject_modifier=activity(name='activity'),
