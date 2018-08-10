@@ -77,16 +77,16 @@ class PybelProcessor(object):
             # add them as statements
             for node_ix, node_data in enumerate((u_data, v_data)):
                 if node_data[pc.FUNCTION] == pc.COMPLEX:
-                    self._get_complex(u_data, v_data, d, node_ix)
+                    self._get_complex(u_data, v_data, k, d, node_ix)
             subj_activity = _get_activity_condition(d.get(pc.SUBJECT))
             obj_activity = _get_activity_condition(d.get(pc.OBJECT))
             obj_to_loc = _get_translocation_target(d.get(pc.OBJECT))
             # If the object is a translocation, this represents a controlled
             # translocation, which we currently do not represent
             if obj_to_loc:
-                self.unhandled.append((u_data, v_data, d))
+                self.unhandled.append((u_data, v_data, k, d))
                 logger.info("Controlled translocations are currently not "
-                               "handled: %s)" % edge_to_bel(u_data, v_data, k, d))
+                            "handled: %s)", edge_to_bel(u_data, v_data, d))
                 continue
 
             v_func = v_data[pc.FUNCTION]
@@ -98,8 +98,8 @@ class PybelProcessor(object):
                has_protein_modification(self.graph, v):
                 if obj_activity:
                     logger.info("Ignoring object activity modifier in "
-                                "modification statement: %s, %s, %s" %
-                                (u_data, v_data, d))
+                                "modification statement: %s, %s, %s, %s",
+                                u_data, v_data, k, d)
                 else:
                     self._get_modification(u_data, v_data, k, d)
             elif obj_activity:
@@ -169,7 +169,7 @@ class PybelProcessor(object):
         agents = [bc.agent for bc in cplx_agent.bound_conditions]
         cplx_agent.bound_conditions = []
         agents.append(cplx_agent)
-        ev = _get_evidence(u_data, v_data, edge_data)
+        ev = _get_evidence(u_data, v_data, k, edge_data)
         stmt = Complex(agents, evidence=[ev])
         self.statements.append(stmt)
 
@@ -181,16 +181,16 @@ class PybelProcessor(object):
             return
         obj_mod = edge_data.get(pc.OBJECT)
         deg_polarity = (-1 if obj_mod and obj_mod[pc.MODIFIER] == pc.DEGRADATION
-                           else 1)
+                        else 1)
         rel_polarity = (1 if edge_data[pc.RELATION] in
-                                    pc.CAUSAL_INCREASE_RELATIONS else -1)
+                        pc.CAUSAL_INCREASE_RELATIONS else -1)
         # Set polarity accordingly based on the relation type and whether
         # the object is a degradation node
         if deg_polarity * rel_polarity > 0:
             stmt_class = IncreaseAmount
         else:
             stmt_class = DecreaseAmount
-        ev = _get_evidence(u_data, v_data, edge_data)
+        ev = _get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
 
@@ -200,11 +200,11 @@ class PybelProcessor(object):
         v_data_no_mods = _remove_pmods(v_data)
         obj_agent = _get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
-            self.unhandled.append((u_data, v_data, edge_data))
+            self.unhandled.append((u_data, v_data, k, edge_data))
             return
         for mod in mods:
             modclass = modtype_to_modclass[mod.mod_type]
-            ev = _get_evidence(u_data, v_data, edge_data)
+            ev = _get_evidence(u_data, v_data, k, edge_data)
             stmt = modclass(subj_agent, obj_agent, mod.residue, mod.position,
                             evidence=[ev])
             self.statements.append(stmt)
@@ -241,7 +241,7 @@ class PybelProcessor(object):
             stmt_class = Activation
         else:
             stmt_class = Inhibition
-        ev = _get_evidence(u_data, v_data, edge_data)
+        ev = _get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, activity_type, evidence=[ev])
         self.statements.append(stmt)
 
@@ -269,7 +269,7 @@ class PybelProcessor(object):
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
-        ev = _get_evidence(u_data, v_data, edge_data)
+        ev = _get_evidence(u_data, v_data, k, edge_data)
         if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
             stmt_class = Gef
         else:
@@ -289,7 +289,7 @@ class PybelProcessor(object):
             return
         ev = _get_evidence(u_data, v_data, k, edge_data)
         stmt = Conversion(subj_agent, obj_from=reactant_agents,
-                          obj_to=product_agents, evidence = ev)
+                          obj_to=product_agents, evidence=ev)
         self.statements.append(stmt)
 
 
@@ -302,8 +302,8 @@ def _get_agent(node_data, node_modifier_data=None):
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
         mod_data = ('No node data' if not node_modifier_data
                                    else node_modifier_data.get(pc.CNAME))
-        logger.info("Nodes of type %s not handled: %s" %
-                        (node_func, mod_data))
+        logger.info("Nodes of type %s not handled: %s",
+                    node_func, mod_data)
         return None
     # Skip gene/protein fusions
     if pc.FUSION in node_data:
@@ -384,8 +384,8 @@ def _get_agent(node_data, node_modifier_data=None):
                     db_refs['UP'] = up_id
                 else:
                     logger.info('HGNC entity %s with HGNC ID %s has no '
-                                   'corresponding Uniprot ID.' %
-                                   (name, hgnc_id))
+                                'corresponding Uniprot ID.',
+                                name, hgnc_id)
             else:
                 logger.info('Could not map EGID%s to HGNC.' % name)
                 name = 'E%s' % name
@@ -461,7 +461,7 @@ def _get_evidence(u_data, v_data, k, edge_data):
     epistemics = {'direct': _rel_is_direct(edge_data)}
     annotations = edge_data.get(pc.ANNOTATIONS, {})
     annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
-    if ev_ref:
+    if ev_ref:  # FIXME what if ev_citation is Falsy?
         annotations['citation_ref'] = ev_ref
 
     text_location = annotations.pop('TextLocation', None)
@@ -496,8 +496,10 @@ def _remove_pmods(node_data):
     node_data_no_pmods = copy(node_data)
     variants = node_data.get(pc.VARIANTS)
     if variants:
-        node_data_no_pmods[pc.VARIANTS] = [var for var in variants
-                                               if var[pc.KIND] != pc.PMOD]
+        node_data_no_pmods[pc.VARIANTS] = [
+            var for var in variants
+            if var[pc.KIND] != pc.PMOD
+        ]
     return node_data_no_pmods
 
 
