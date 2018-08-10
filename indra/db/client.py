@@ -452,7 +452,7 @@ class DbClientError(Exception):
 
 @_clockit
 def get_statement_jsons_from_agents(agents=None, stmt_type=None,
-                                    max_stmts=None):
+                                    max_stmts=None, db=None):
     """Get json's for statements given agent refs and Statement type.
 
     Parameters
@@ -476,9 +476,13 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
     max_stmts : int or None
         Restrict the number of statements (specifically, the number of evidence)
         that are included. If None, no restriction is applied.
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local databse instance.
     """
     # First look for statements matching the role'd agents.
-    db = get_primary_db()
+    if db is None:
+        db = get_primary_db()
 
     # TODO: Extend this to allow retrieval of raw statements.
     sub_q = None
