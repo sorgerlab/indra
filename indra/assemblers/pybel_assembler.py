@@ -330,16 +330,17 @@ class PybelAssembler(object):
         pybel_lists = ([], [])
         for pybel_list, agent_list in \
                             zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
-            for ag in agent_list:
-                func, namespace, name = _get_agent_grounding(ag)
-                pybel_list.append(_get_simple_abundance(func, namespace, name))
+            for agent in agent_list:
+                node = _get_agent_grounding(agent)
+                # TODO check for missing grounding?
+                pybel_list.append(node)
 
         rxn_node_data = reaction(
             reactants=pybel_lists[0],
             products=pybel_lists[1],
         )
         obj_node = self.model.add_node_from_data(rxn_node_data)
-        obj_edge = None # TODO: Any edge information possible here?
+        obj_edge = None  # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
@@ -431,8 +432,8 @@ def _get_complex_node(members):
 
 
 def _get_agent_node_no_bcs(agent):
-    (abundance_type, db_ns, db_id) = _get_agent_grounding(agent)
-    if abundance_type is None:
+    node_data = _get_agent_grounding(agent)
+    if node_data is None:
         logger.warning('Agent %s has no grounding.', agent)
         return None, None
 
@@ -456,10 +457,7 @@ def _get_agent_node_no_bcs(agent):
         variants.append(var)
 
     if variants:
-        dsl = _abundance_type_to_dsl[abundance_type]
-        node_data = dsl(namespace=db_ns, name=db_id, variants=variants)
-    else:
-        node_data = _get_simple_abundance(abundance_type, db_ns, db_id)
+        node_data = node_data.with_variants(variants)
 
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
@@ -467,6 +465,7 @@ def _get_agent_node_no_bcs(agent):
 
 
 def _get_agent_grounding(agent):
+    """Convert an agent to the corresponding PyBEL DSL object (to be filled with variants later)."""
     def _get_id(_agent, key):
         _id = _agent.db_refs.get(key)
         if isinstance(_id, list):
@@ -474,54 +473,53 @@ def _get_agent_grounding(agent):
         return _id
 
     hgnc_id = _get_id(agent, 'HGNC')
-    uniprot_id = _get_id(agent, 'UP')
-    fplx_id = _get_id(agent, 'FPLX')
-    ip_id = _get_id(agent, 'IP')
-    pfam_id = _get_id(agent, 'PF')
-    fa_id = _get_id(agent, 'FA')
-    chebi_id = _get_id(agent, 'CHEBI')
-    pubchem_id = _get_id(agent, 'PUBCHEM')
-    go_id = _get_id(agent, 'GO')
-    mesh_id = _get_id(agent, 'MESH')
-
     if hgnc_id:
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         if not hgnc_name:
             logger.warning('Agent %s with HGNC ID %s has no HGNC name.',
                            agent, hgnc_id)
-            return None, None, None
-        return pc.PROTEIN, 'HGNC', hgnc_name
+            return
+        return protein('HGNC', hgnc_name)
 
+    uniprot_id = _get_id(agent, 'UP')
     if uniprot_id:
-        return pc.PROTEIN, 'UP', uniprot_id
+        return protein('UP', uniprot_id)
 
+    fplx_id = _get_id(agent, 'FPLX')
     if fplx_id:
-        return pc.PROTEIN, 'FPLX', fplx_id
+        return protein('FPLX', fplx_id)
 
+    pfam_id = _get_id(agent, 'PF')
     if pfam_id:
-        return pc.PROTEIN, 'PFAM', pfam_id
+        return protein('PFAM', pfam_id)
 
+    ip_id = _get_id(agent, 'IP')
     if ip_id:
-        return pc.PROTEIN, 'IP', ip_id
+        return protein('IP', ip_id)
 
+    fa_id = _get_id(agent, 'FA')
     if fa_id:
-        return pc.PROTEIN, 'NXPFA', fa_id
+        return protein('NXPFA', fa_id)
 
+    chebi_id = _get_id(agent, 'CHEBI')
     if chebi_id:
         if chebi_id.startswith('CHEBI:'):
             chebi_id = chebi_id[len('CHEBI:'):]
-        return pc.ABUNDANCE, 'CHEBI', chebi_id
+        return abundance('CHEBI', chebi_id)
 
+    pubchem_id = _get_id(agent, 'PUBCHEM')
     if pubchem_id:
-        return pc.ABUNDANCE, 'PUBCHEM', pubchem_id
+        return abundance('PUBCHEM', pubchem_id)
 
+    go_id = _get_id(agent, 'GO')
     if go_id:
-        return pc.BIOPROCESS, 'GO', go_id
+        return bioprocess('GO', go_id)
 
+    mesh_id = _get_id(agent, 'MESH')
     if mesh_id:
-        return pc.BIOPROCESS, 'MESH', mesh_id
+        return bioprocess('MESH', mesh_id)
 
-    return None, None, None
+    return
 
 
 def _get_agent_activity(agent):
