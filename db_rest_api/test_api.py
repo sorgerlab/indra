@@ -259,7 +259,7 @@ class DbApiTestCase(unittest.TestCase):
         stmts = stmts_from_json(resp_dict['statements'])
         assert len(stmts)
         _check_stmt_agents(resp, agents=[
-                (0, 'CHEBI', 'CHEBI:4465'),
+                (0, 'CHEBI', 'CHEBI:44658'),
                 (1, 'FPLX', 'PPP1C')])
         self.__check_time(dt)
         assert size <= SIZELIMIT, size
