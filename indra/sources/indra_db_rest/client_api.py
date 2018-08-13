@@ -84,7 +84,7 @@ def _make_stmts_query(agent_strs, params, persist=True):
         else:
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
-    return stmts_from_json(stmts_json)
+    return stmts_from_json(stmts_json.values())
 
 
 def _query_stmt_types(agent_strs, params, stmt_types):
@@ -92,7 +92,6 @@ def _query_stmt_types(agent_strs, params, stmt_types):
     stmts = []
     for stmt_type in stmt_types:
         params['type'] = stmt_type
-        params['on_limit'] = 'error'  # This really shouldn't be an issue.
         new_stmts = _make_stmts_query(agent_strs, params)
         logger.info("Found %d %s statements." % (len(new_stmts), stmt_type))
         stmts.extend(new_stmts)
