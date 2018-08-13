@@ -6,6 +6,7 @@ import networkx as nx
 from copy import deepcopy, copy
 import pybel
 import pybel.constants as pc
+from pybel.dsl import *
 from pybel.language import pmod_namespace
 from indra.statements import *
 from indra.databases import hgnc_client
@@ -22,7 +23,6 @@ _indra_pybel_act_map = {
     'gef': 'gef',
     'gap': 'gap'
 }
-
 
 _pybel_indra_act_map = {v: k for k, v in _indra_pybel_act_map.items()}
 
@@ -322,19 +322,17 @@ class PybelAssembler(object):
         pybel_lists = ([], [])
         for pybel_list, agent_list in \
                             zip(pybel_lists, (stmt.obj_from, stmt.obj_to)):
-            for ag in agent_list:
-                func, namespace, name = _get_agent_grounding(ag)
-                pybel_list.append({
-                    pc.FUNCTION: func,
-                    pc.NAMESPACE: namespace,
-                    pc.NAME: name})
-        rxn_node_data = {
-            pc.FUNCTION: pc.REACTION,
-            pc.REACTANTS: pybel_lists[0],
-            pc.PRODUCTS: pybel_lists[1]
-        }
+            for agent in agent_list:
+                node = _get_agent_grounding(agent)
+                # TODO check for missing grounding?
+                pybel_list.append(node)
+
+        rxn_node_data = reaction(
+            reactants=pybel_lists[0],
+            products=pybel_lists[1],
+        )
         obj_node = self.model.add_node_from_data(rxn_node_data)
-        obj_edge = None # TODO: Any edge information possible here?
+        obj_edge = None  # TODO: Any edge information possible here?
         # Add node for controller, if there is one
         if stmt.subj is not None:
             subj_attr, subj_edge = _get_agent_node(stmt.subj)
@@ -397,15 +395,18 @@ def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
 
 
 def _get_agent_node(agent):
-    if agent.bound_conditions:
-        # "Flatten" the bound conditions for the agent at this level
-        agent_no_bc = deepcopy(agent)
-        agent_no_bc.bound_conditions = []
-        members = [agent_no_bc] + [bc.agent for bc in agent.bound_conditions
-                                   if bc.is_bound]
-        return _get_complex_node(members)
-    else:
+    if not agent.bound_conditions:
         return _get_agent_node_no_bcs(agent)
+
+    # "Flatten" the bound conditions for the agent at this level
+    agent_no_bc = deepcopy(agent)
+    agent_no_bc.bound_conditions = []
+    members = [agent_no_bc] + [
+        bc.agent
+        for bc in agent.bound_conditions
+        if bc.is_bound
+    ]
+    return _get_complex_node(members)
 
 
 def _get_complex_node(members):
@@ -414,95 +415,103 @@ def _get_complex_node(members):
         member_data, member_edge = _get_agent_node(member)
         if member_data:
             members_list.append(member_data)
+
     if members_list:
-        complex_node_data = {
-                pc.FUNCTION: pc.COMPLEX,
-                pc.MEMBERS: members_list}
-        return (complex_node_data, None)
-    else:
-        return (None, None)
+        complex_node_data = complex_abundance(members=members_list)
+        return complex_node_data, None
+
+    return None, None
 
 
 def _get_agent_node_no_bcs(agent):
-    (abundance_type, db_ns, db_id) = _get_agent_grounding(agent)
-    if abundance_type is None:
+    node_data = _get_agent_grounding(agent)
+    if node_data is None:
         logger.warning('Agent %s has no grounding.', agent)
-        return (None, None)
-    node_data = {pc.FUNCTION: abundance_type,
-                 pc.NAMESPACE: db_ns,
-                 pc.NAME: db_id}
+        return None, None
+
     variants = []
     for mod in agent.mods:
         pybel_mod = pmod_namespace.get(mod.mod_type)
         if not pybel_mod:
             logger.info('Skipping modification of type %s on agent %s',
-                         mod.mod_type, agent)
+                        mod.mod_type, agent)
             continue
-        var = {pc.KIND: pc.PMOD,
-               pc.IDENTIFIER: {
-                   pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
-                   pc.NAME: pybel_mod}}
+        var = pmod(namespace=pc.BEL_DEFAULT_NAMESPACE, name=pybel_mod)
         if mod.residue is not None:
             res = amino_acids[mod.residue]['short_name'].capitalize()
             var[pc.PMOD_CODE] = res
         if mod.position is not None:
             var[pc.PMOD_POSITION] = int(mod.position)
         variants.append(var)
+
     for mut in agent.mutations:
-        var = {pc.KIND: pc.HGVS, pc.IDENTIFIER: mut.to_hgvs()}
+        var = hgvs(mut.to_hgvs())
         variants.append(var)
+
     if variants:
-        node_data[pc.VARIANTS] = variants
+        node_data = node_data.with_variants(variants)
+
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
-    return (node_data, edge_data)
+    return node_data, edge_data
 
 
 def _get_agent_grounding(agent):
-    def _get_id(agent, key):
-        id = agent.db_refs.get(key)
-        if isinstance(id, list):
-            id = id[0]
-        return id
+    """Convert an agent to the corresponding PyBEL DSL object (to be filled with variants later)."""
+    def _get_id(_agent, key):
+        _id = _agent.db_refs.get(key)
+        if isinstance(_id, list):
+            _id = _id[0]
+        return _id
+
     hgnc_id = _get_id(agent, 'HGNC')
-    uniprot_id = _get_id(agent, 'UP')
-    fplx_id = _get_id(agent, 'FPLX')
-    ip_id = _get_id(agent, 'IP')
-    pfam_id = _get_id(agent, 'PF')
-    fa_id = _get_id(agent, 'FA')
-    chebi_id = _get_id(agent, 'CHEBI')
-    pubchem_id = _get_id(agent, 'PUBCHEM')
-    go_id = _get_id(agent, 'GO')
-    mesh_id = _get_id(agent, 'MESH')
     if hgnc_id:
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         if not hgnc_name:
             logger.warning('Agent %s with HGNC ID %s has no HGNC name.',
                            agent, hgnc_id)
-            return (None, None, None)
-        return (pc.PROTEIN, 'HGNC', hgnc_name)
-    elif uniprot_id:
-        return (pc.PROTEIN, 'UP', uniprot_id)
-    elif fplx_id:
-        return (pc.PROTEIN, 'FPLX', fplx_id)
-    elif pfam_id:
-        return (pc.PROTEIN, 'PFAM', pfam_id)
-    elif ip_id:
-        return (pc.PROTEIN, 'IP', ip_id)
-    elif fa_id:
-        return (pc.PROTEIN, 'NXPFA', fa_id)
-    elif chebi_id:
+            return
+        return protein('HGNC', hgnc_name)
+
+    uniprot_id = _get_id(agent, 'UP')
+    if uniprot_id:
+        return protein('UP', uniprot_id)
+
+    fplx_id = _get_id(agent, 'FPLX')
+    if fplx_id:
+        return protein('FPLX', fplx_id)
+
+    pfam_id = _get_id(agent, 'PF')
+    if pfam_id:
+        return protein('PFAM', pfam_id)
+
+    ip_id = _get_id(agent, 'IP')
+    if ip_id:
+        return protein('IP', ip_id)
+
+    fa_id = _get_id(agent, 'FA')
+    if fa_id:
+        return protein('NXPFA', fa_id)
+
+    chebi_id = _get_id(agent, 'CHEBI')
+    if chebi_id:
         if chebi_id.startswith('CHEBI:'):
             chebi_id = chebi_id[len('CHEBI:'):]
-        return (pc.ABUNDANCE, 'CHEBI', chebi_id)
-    elif pubchem_id:
-        return (pc.ABUNDANCE, 'PUBCHEM', pubchem_id)
-    elif go_id:
-        return (pc.BIOPROCESS, 'GO', go_id)
-    elif mesh_id:
-        return (pc.BIOPROCESS, 'MESH', mesh_id)
-    else:
-        return (None, None, None)
+        return abundance('CHEBI', chebi_id)
+
+    pubchem_id = _get_id(agent, 'PUBCHEM')
+    if pubchem_id:
+        return abundance('PUBCHEM', pubchem_id)
+
+    go_id = _get_id(agent, 'GO')
+    if go_id:
+        return bioprocess('GO', go_id)
+
+    mesh_id = _get_id(agent, 'MESH')
+    if mesh_id:
+        return bioprocess('MESH', mesh_id)
+
+    return
 
 
 def _get_agent_activity(agent):
@@ -538,4 +547,3 @@ def _get_evidence(evidence):
     pybel_ev[pc.CITATION] = citation
     pybel_ev[pc.ANNOTATIONS] = {}
     return pybel_ev
-

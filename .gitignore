@@ -112,3 +112,5 @@ models/fallahi_eval/output
 # For the cool cats using PyCharm
 .idea
 .idea/*
+
+.pytest_cache
