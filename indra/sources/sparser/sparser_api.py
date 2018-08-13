@@ -207,7 +207,7 @@ def process_xml(xml_str):
     return sp
 
 
-def run_sparser(fname, output_fmt, outbuf=None):
+def run_sparser(fname, output_fmt, outbuf=None, timeout=600):
     """Return the path to reading output after running Sparser reading.
 
     Parameters
@@ -221,6 +221,10 @@ def run_sparser(fname, output_fmt, outbuf=None):
         'json' or 'xml'.
     outbuf : Optional[file]
         A file like object that the Sparser output is written to.
+    timeout : int
+        The number of seconds to wait until giving up on this one reading. The
+        default is 600 seconds (i.e. 10 minutes). Sparcer is a fast reader and
+        the typical type to read a single full text is a matter of seconds.
 
     Returns
     -------
@@ -245,7 +249,8 @@ def run_sparser(fname, output_fmt, outbuf=None):
         if not os.path.exists(fpath):
             raise Exception("'%s' is not a valid path." % fpath)
 
-    out_bts = subprocess.check_output([sparser_exec_path, format_flag, fname])
+    out_bts = subprocess.check_output([sparser_exec_path, format_flag, fname],
+                                      timeout=timeout)
     if outbuf is not None:
         outbuf.write(out_bts)
         outbuf.flush()

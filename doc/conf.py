@@ -314,7 +314,8 @@ MOCK_MODULES = [
     'sqlalchemy', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
     'sqlalchemy.orm', 'sqlalchemy.orm.attributes', 'sqlalchemy.dialects',
     'sqlalchemy.dialects.postgresql', 'sqlalchemy.schema', 'sqlalchemy.ext.compiler',
-    'sqlalchemy.sql', 'sqlalchemy.sql.expression', 'nltk', 'kappy', 'openpyxl'
+    'sqlalchemy.sql', 'sqlalchemy.sql.expression', 'nltk', 'kappy', 'openpyxl',
+    'reportlab'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()

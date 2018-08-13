@@ -563,7 +563,7 @@ class SparserReader(Reader):
             logger.info('Reading %s.' % fpath)
         outpath = None
         try:
-            outpath = sparser.run_sparser(fpath, 'json', outbuf)
+            outpath = sparser.run_sparser(fpath, 'json', outbuf, timeout=60)
         except Exception as e:
             if verbose:
                 logger.error('Failed to run sparser on %s.' %
