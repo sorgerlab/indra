@@ -53,7 +53,7 @@ class DbApiTestCase(unittest.TestCase):
              % (dt, TIMELIMIT))
         if dt >= TIMEGOAL:
             warn("Query took %f seconds, goal is less than %f seconds."
-                 % (dt, TIMEGOAL), TimeWarning)
+                 % (dt, time_goal), TimeWarning)
         return
 
     def __time_get_query(self, end_point, query_str):
