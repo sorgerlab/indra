@@ -41,34 +41,49 @@ class IndraDBRestError(Exception):
         return
 
 
-def _make_stmts_query(agent_strs, params):
+def _query_and_extract(agent_strs, params)
+    resp = _submit_query_request('statements', *agent_strs, **params)
+    resp_dict = resp.json()
+    stmts_json = resp_dict['statements']
+    total_ev = resp_dict['total_evidence']
+    limit_ev = resp_dict['limit']
+
+    # NOTE: this is technically not a direct conclusion, and could be wrong,
+    # resulting in an unnecessary extra query, but that should almost never
+    # happen.
+    limited = (total_ev >= limit_ev)
+    return stmts_json, total_ev, limited
+
+
+def _make_stmts_query(agent_strs, params, persist=True):
     """Slightly lower level function to get statements from the REST API."""
-    on_limit = params.get('on_limit', None)
-    if on_limit == 'persist':
-        params['on_limit'] = 'error'
-    try:
-        resp = _submit_query_request('statements', *agent_strs, **params)
-    except IndraDBRestError as e:
-        if e.status_code == 413:
-            if on_limit == 'error':
-                raise e
-            elif on_limit == 'persist':
-                logger.info("Original query was too big, breaking up by "
-                            "stmt_type.")
-                stmt_types = e.resp.json()['statements'].keys()
-                params.pop('type', None)
-                return _query_stmt_types(agent_strs, params, stmt_types)
-            else:
-                logger.error("Unrecognized behavior! Got %s but on_limit was "
-                             "\%s." % on_limit)
-                raise e
+
+    stmts_json, total_ev, limited = _query_and_extract(agent_strs, params)
+
+    if limited:
+        logger.info("Some results could not be returned directly.")
+        if persist:
+            logger.info("You chose to persist, so I will paginate through the "
+                        "rest until I have everything!")
+            offset = params.get('offset', 0)
+            while limited:
+                # Get the next page.
+                offset = offset + total_ev
+                params['offset'] = offset
+                new_stmts_json, new_total_ev, limited = \
+                    _query_and_extract(agent_strs, params)
+
+                # Merge in the new results
+                for k, sj in new_stmts_json.items():
+                    if k not in stmts_json:
+                        stmts_json[k] = sj  # This should be most of them
+                    else:
+                        # This should only happen rarely.
+                        for evj in sj['evidence']:
+                            stmts_json[k]['evidence'].append(evj)
         else:
-            raise e
-    if on_limit in ['truncate', 'sample'] and resp.json()['limited']:
-        logger.warning("Your query was too big, and a %sd result will be "
-                       "returned. To get all statements, make the same query "
-                       "with `on_limit='persist'`" % on_limit)
-    stmts_json = resp.json()['statements']
+            logger.warning("You did not choose persist=True, therefore this is "
+                           "all you get.")
     return stmts_from_json(stmts_json)
 
 
@@ -86,7 +101,7 @@ def _query_stmt_types(agent_strs, params, stmt_types):
 
 @_clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, on_limit='sample'):
+                   use_exact_type=False, offset=None, persist=True, block=True):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -137,7 +152,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     key_val_list = [('subject', subject), ('object', object)]
     params = {param_key: param_val for param_key, param_val in key_val_list
               if param_val is not None}
-    params['on_limit'] = on_limit
+    if offset is not None:
+        params['offset'] = offset
 
     # Handle the type(s).
     if stmt_type is not None:
