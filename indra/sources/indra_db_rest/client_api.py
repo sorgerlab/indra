@@ -41,7 +41,7 @@ class IndraDBRestError(Exception):
         return
 
 
-def _query_and_extract(agent_strs, params)
+def _query_and_extract(agent_strs, params):
     resp = _submit_query_request('statements', *agent_strs, **params)
     resp_dict = resp.json()
     stmts_json = resp_dict['statements']
