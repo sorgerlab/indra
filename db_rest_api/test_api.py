@@ -51,7 +51,7 @@ class DbApiTestCase(unittest.TestCase):
         assert dt <= TIMELIMIT, \
             ("Query took %f seconds. Must be less than %f seconds."
              % (dt, TIMELIMIT))
-        if dt >= TIMEGOAL:
+        if dt >= time_goal:
             warn("Query took %f seconds, goal is less than %f seconds."
                  % (dt, time_goal), TimeWarning)
         return
@@ -90,11 +90,11 @@ class DbApiTestCase(unittest.TestCase):
             ('Got error code %d: \"%s\".'
              % (resp.status_code, resp.data.decode()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
-        #assert not resp_dict['limited']
         assert size <= SIZELIMIT, \
             ("Query took up %f MB. Must be less than %f MB."
              % (size/1e6, SIZELIMIT/1e6))
-        self.__check_stmts(resp_dict['statements'], check_stmts=check_stmts)
+        self.__check_stmts(resp_dict['statements'].values(),
+                           check_stmts=check_stmts)
 
         self.__check_time(dt, time_goal)
         return resp
@@ -184,32 +184,22 @@ class DbApiTestCase(unittest.TestCase):
                                           time_goal=10)
         self.__check_good_statement_query(agent='MAPK1', check_stmts=False,
                                           time_goal=20)
+        self.__check_good_statement_query(agent='TP53', check_stmts=False,
+                                          time_goal=20)
+        self.__check_good_statement_query(agent='NFkappaB@FPLX',
+                                          check_stmts=False, time_goal=20)
         return
 
-    def test_query_with_too_many_stmts(self):
-        """Test our check of statement length and the response."""
-        # As with the above, we do not check the quality of statements, because
-        # there will be in general so many that it would make this test take far
-        # to long, especially given that the statement quality is not really in
-        # the scope of this test.
-        resp, dt, size = self.__time_get_query('statements',
-                                               'agent=TP53&on_limit=error')
-        # assert resp.status_code == 413, "Unexpected status code: %s" % str(resp)
-        assert dt < TIMELIMIT, "Query took too long: %s" % dt
-        #assert 'Acetylation' in json.loads(resp.data.decode('utf-8'))\
-        #                                  ['statements']
-        resp, dt, size = self.__time_get_query('statements',
-                                               'agent=TP53&on_limit=sample')
-        # assert resp.status_code == 200, str(resp)
-        assert dt < TIMELIMIT, dt
-        resp_dict = json.loads(resp.data.decode('utf-8'))
-        #assert len(resp_dict['statements']) == MAX_STATEMENTS
-        resp, dt, size = self.__time_get_query('statements',
-                                               'agent=TP53&on_limit=truncate')
-        assert dt < TIMELIMIT, dt
-        resp_dict = json.loads(resp.data.decode('utf-8'))
-        #assert len(resp_dict['statements']) == MAX_STATEMENTS
+    def test_offset(self):
+        resp1 = self.__check_good_statement_query(agent='NFkappaB@FPLX',
+                                                  check_stmts=False,
+                                                  time_goal=20)
+        resp2 = self.__check_good_statement_query(agent='NFkappaB@FPLX',
+                                                  offset=MAX_STATEMENTS,
+                                                  check_stmts=False,
+                                                  time_goal=20)
         return
+
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
@@ -256,7 +246,7 @@ class DbApiTestCase(unittest.TestCase):
                                                 '&subject=CHEBI:44658@CHEBI'
                                                 '&type=Inhibition'))
         resp_dict = json.loads(resp.data.decode('utf-8'))
-        stmts = stmts_from_json(resp_dict['statements'])
+        stmts = stmts_from_json(resp_dict['statements'].values())
         assert len(stmts)
         _check_stmt_agents(resp, agents=[
                 (0, 'CHEBI', 'CHEBI:44658'),
