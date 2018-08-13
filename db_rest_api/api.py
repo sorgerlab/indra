@@ -20,7 +20,7 @@ Compress(app)
 CORS(app)
 
 
-MAX_STATEMENTS = int(1e6)
+MAX_STATEMENTS = int(1e4)
 
 
 class DbAPIError(Exception):
@@ -152,12 +152,9 @@ def get_statements():
     logger.info("Got query for statements!")
 
     query_dict = request.args.copy()
-    limit_behavior = query_dict.pop('on_limit', 'sample')
+    offs = query_dict.pop('offset', None)
     do_stream_str = query_dict.pop('stream', 'false')
     do_stream = True if do_stream_str == 'true' else False
-    if limit_behavior not in ['sample', 'truncate', 'error']:
-        abort(Response('Unrecognized value for on_limit: %s' % limit_behavior,
-                       400))
 
     logger.info("Getting query details.")
     try:
@@ -208,20 +205,21 @@ def get_statements():
                   for role, (ag_dbid, ns) in roled_agents.items()]
     agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
 
-    stmts_dict = get_statement_jsons_from_agents(agent_iter, stmt_type=act,
-                                                 max_stmts=MAX_STATEMENTS)
-
-    resp_json = {'statements': list(stmts_dict.values()), 'limited': True}
+    result = \
+        get_statement_jsons_from_agents(agent_iter, stmt_type=act, offset=offs,
+                                        max_stmts=MAX_STATEMENTS)
+    result['limit'] = MAX_STATEMENTS
 
     if do_stream:
         # Returning a generator should stream the data.
-        resp_json_bts = json.dumps(resp_json)
+        resp_json_bts = json.dumps(result)
         gen = batch_iter(resp_json_bts, 10000)
         resp = Response(gen, mimetype='application/json')
     else:
-        resp = jsonify(resp_json)
-    logger.info("Exiting with %d statements of nominal size %f MB."
-                % (len(stmts_dict), sys.getsizeof(resp.data)/1e6))
+        resp = jsonify(result)
+    logger.info("Exiting with %d statements with %d evidence of size %f MB."
+                % (len(result['statements']), result['total_evidence'],
+                   sys.getsizeof(resp.data)/1e6))
     return resp
 
 
