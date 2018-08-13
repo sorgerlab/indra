@@ -451,8 +451,41 @@ class DbClientError(Exception):
 
 
 @_clockit
+def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None,
+                                    offset=None):
+    # Get the statements from reading
+    stmts_dict = {}
+    master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
+                                 db.FastRawPaLink.raw_json,
+                                 db.FastRawPaLink.pa_json,
+                                 db.ReadingRefLink.pmid], sub_q_link)
+                .outerjoin(db.FastRawPaLink.reading_ref))
+
+    # Specifically, this should probably be an order-by a parameter such as
+    # evidence count and/or support count.
+    if offset is not None:
+        master_q = master_q.offset(offset)
+
+    if max_stmts is not None:
+        master_q = master_q.limit(max_stmts)
+
+    res = master_q.all()
+
+    # Process the json to fix refs etc.
+    for mk_hash, raw_json_bts, pa_json_bts, pmid in res:
+        raw_json = json.loads(raw_json_bts.decode('utf-8'))
+        if mk_hash not in stmts_dict.keys():
+            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
+            stmts_dict[mk_hash]['evidence'] = []
+        if pmid:
+            raw_json['evidence'][0]['pmid'] = pmid
+        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
+    return {'statements': stmts_dict, 'total_evidence': len(res)}
+
+
+@_clockit
 def get_statement_jsons_from_agents(agents=None, stmt_type=None,
-                                    max_stmts=None, db=None):
+                                    max_stmts=None, db=None, offset=None):
     """Get json's for statements given agent refs and Statement type.
 
     Parameters
@@ -506,13 +539,6 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
 
     # Handle limiting.
     sub_q = sub_q.order_by(desc(db.PaMeta.ev_count))
-    if max_stmts is not None:
-        sub_q = sub_q.limit(max_stmts)
-
-        # This is a bit of a hack, but on average there are 4.5 raw statements
-        # for each pa statement. This should reduce the amount of excessive
-        # evidence cutting.
-        max_stmts = int(4.5*max_stmts)
 
     # Create the link
     sub_al = sub_q.subquery('mk_hashes')
@@ -525,37 +551,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
 
-    return _get_pa_statements_by_subq_link(db, link, max_stmts)
-
-
-@_clockit
-def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None):
-    # Get the statements from reading
-    stmts_dict = {}
-    master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
-                                 db.FastRawPaLink.raw_json,
-                                 db.FastRawPaLink.pa_json,
-                                 db.ReadingRefLink.pmid], sub_q_link)
-                .outerjoin(db.FastRawPaLink.reading_ref))
-
-    # TODO: Do better than truncating.
-    # Specifically, this should probably be an order-by a parameter such as
-    # evidence count and/or support count.
-    if max_stmts is not None:
-        res = master_q.limit(max_stmts).all()
-    else:
-        res = master_q.all()
-
-    # Process the json to fix refs etc.
-    for mk_hash, raw_json_bts, pa_json_bts, pmid in res:
-        raw_json = json.loads(raw_json_bts.decode('utf-8'))
-        if mk_hash not in stmts_dict.keys():
-            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
-            stmts_dict[mk_hash]['evidence'] = []
-        if pmid:
-            raw_json['evidence'][0]['pmid'] = pmid
-        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
-    return stmts_dict
+    return _get_pa_statements_by_subq_link(db, link, max_stmts, offset)
 
 
 @_clockit
