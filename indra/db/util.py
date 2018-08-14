@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
+import pickle
 from builtins import dict, str
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
@@ -742,7 +744,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
 
 @_clockit
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
-                  delete_duplicates=True, weed_evidence=True, batch_size=1000):
+                  handle_duplicates='ignore', weed_evidence=True, batch_size=1000):
     """Get a corpus of statements from clauses and filters duplicate evidence.
 
     Parameters
@@ -760,9 +762,11 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `clauses=[db.Statements.uuid.in_([<uuids>])]`.
     num_procs : int
         Select the number of process that can be used.
-    delete_duplicates : bool
+    handle_duplicates : 'ignore', 'delete', or 'report'
         Choose whether you want to delete the statements that are found to be
-        duplicates.
+        duplicates ('delete'), or write a pickle file with their ids ('report')
+        for later handling, or simply do nothing ('ignore'). The default
+        behavior is 'ignore'.
     weed_evidence : bool
         If True, evidence links that exist for raw statements that now have
         better alternatives will be removed. If False, such links will remain,
@@ -774,10 +778,10 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         A set of either statement ids or serialized statements, depending on
         `get_full_stmts`.
     """
-    if delete_duplicates:
+    if handle_duplicates in ['report', 'delete']:
         logger.info("Looking for ids from existing links...")
         linked_sids = {sid for sid,
-                        in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
+                       in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
     else:
         linked_sids = set()
 
@@ -815,19 +819,24 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         db.delete_all(rm_links)
 
     # Delete exact duplicates
-    if len(duplicate_sids) and delete_duplicates:
-        logger.info("Deleting duplicates...")
-        for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
-            bad_stmts = db.select_all(db.RawStatements,
-                                      db.RawStatements.id.in_(dup_id_batch))
-            bad_sid_set = {s.id for s in bad_stmts}
-            bad_agents = db.select_all(db.RawAgents,
-                                       db.RawAgents.stmt_id.in_(bad_sid_set))
-            logger.info("Deleting %d agents associated with redundant raw "
-                        "statements." % len(bad_agents))
-            db.delete_all(bad_agents)
-            logger.info("Deleting %d redundant raw statements." % len(bad_stmts))
-            db.delete_all(bad_stmts)
+    if len(duplicate_sids):
+        if handle_duplicates == 'delete':
+            logger.info("Deleting duplicates...")
+            for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
+                bad_stmts = db.select_all(db.RawStatements,
+                                          db.RawStatements.id.in_(dup_id_batch))
+                bad_sid_set = {s.id for s in bad_stmts}
+                bad_ags = db.select_all(db.RawAgents,
+                                        db.RawAgents.stmt_id.in_(bad_sid_set))
+                logger.info("Deleting %d agents associated with redundant raw "
+                            "statements." % len(bad_ags))
+                db.delete_all(bad_ags)
+                logger.info("Deleting %d redundant raw statements."
+                            % len(bad_stmts))
+                db.delete_all(bad_stmts)
+        elif handle_duplicates == 'report':
+            with open('duplicate_ids_%s.pkl' % datetime.now(), 'wb') as f:
+                pickle.dump(duplicate_sids, f)
 
     return stmts
 
