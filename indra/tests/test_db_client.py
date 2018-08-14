@@ -8,6 +8,7 @@ from indra.literature import pubmed_client as pubc
 
 from indra.db import util as dbu
 from indra.db import client as dbc
+from indra.statements import stmts_from_json
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -142,18 +143,39 @@ def test_get_statements_by_grot():
     num_stmts = 10000
     db = _get_prepped_db(num_stmts)
 
-    stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False)
+    stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
+                                                 db=db)
     assert stmts
 
     stmts = dbc.get_statements_by_gene_role_type('MEK', agent_ns='FPLX',
-                                                 preassembled=False)
+                                                 preassembled=False, db=db)
     assert stmts
 
     stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
-                                                 fix_refs=False)
+                                                 fix_refs=False, db=db)
     assert stmts
 
     stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
-                                                 essentials_only=True)
+                                                 essentials_only=True, db=db)
     assert stmts
 
+
+@attr('nonpublic')
+def test_get_statement_jsons_by_agent():
+    # Note that this deliberately uses the primary (production) database in
+    # testing. This is only allowed because only retrieval is tested, however
+    # PLEASE PROCEED WITH CARE WHEN MODIFYING THIS TEST.
+
+    # TODO: don't rely on the primary database, because that's scary in a test.
+    agents = [(None, 'MEK', 'FPLX'), (None, 'ERK', 'FPLX')]
+    stmt_jsons = dbc.get_statement_jsons_from_agents(agents=agents,
+                                                     stmt_type='Phosphorylation')
+    assert stmt_jsons
+    assert stmt_jsons['statements']
+    assert stmt_jsons['total_evidence']
+    stmts = stmts_from_json(stmt_jsons['statements'].values())
+    for s in stmts:
+        s_agents = [(None, ag_id, ag_ns) for ag in s.agent_list()
+                    for ag_ns, ag_id in ag.db_refs.items()]
+        for ag_tpl in agents:
+            assert ag_tpl in s_agents
