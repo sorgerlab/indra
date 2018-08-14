@@ -763,11 +763,11 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `clauses=[db.Statements.uuid.in_([<uuids>])]`.
     num_procs : int
         Select the number of process that can be used.
-    handle_duplicates : 'ignore', 'delete', or 'report'
+    handle_duplicates : 'ignore', 'delete', or a string file path
         Choose whether you want to delete the statements that are found to be
-        duplicates ('delete'), or write a pickle file with their ids ('report')
-        for later handling, or simply do nothing ('ignore'). The default
-        behavior is 'ignore'.
+        duplicates ('delete'), or write a pickle file with their ids (at the
+        string file path) for later handling, or simply do nothing ('ignore').
+        The default behavior is 'ignore'.
     weed_evidence : bool
         If True, evidence links that exist for raw statements that now have
         better alternatives will be removed. If False, such links will remain,
@@ -779,7 +779,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         A set of either statement ids or serialized statements, depending on
         `get_full_stmts`.
     """
-    if handle_duplicates in ['report', 'delete']:
+    if handle_duplicates == 'delete' or handle_duplicates != 'ignore':
         logger.info("Looking for ids from existing links...")
         linked_sids = {sid for sid,
                        in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
@@ -827,7 +827,7 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                 logger.info("Deleting %d duplicated raw statements."
                             % len(dup_id_batch))
                 delete_raw_statements_by_id(db, dup_id_batch)
-        elif handle_duplicates == 'report':
+        elif handle_duplicates != 'ignore':
             with open('duplicate_ids_%s.pkl' % datetime.now(), 'wb') as f:
                 pickle.dump(duplicate_sids, f)
 
