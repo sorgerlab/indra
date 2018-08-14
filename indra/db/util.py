@@ -744,7 +744,8 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
 
 @_clockit
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
-                  handle_duplicates='ignore', weed_evidence=True, batch_size=1000):
+                  handle_duplicates='ignore', weed_evidence=True,
+                  batch_size=1000):
     """Get a corpus of statements from clauses and filters duplicate evidence.
 
     Parameters

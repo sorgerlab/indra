@@ -402,7 +402,8 @@ class PreassemblyManager(object):
                 stmt_ids = pickle.load(f)
         else:
             stmt_ids = distill_stmts(db, num_procs=self.n_proc,
-                                     get_full_stmts=False)
+                                     get_full_stmts=False,
+                                     handle_duplicates='report')
             with open(dist_stash, 'wb') as f:
                 pickle.dump(stmt_ids, f)
 
