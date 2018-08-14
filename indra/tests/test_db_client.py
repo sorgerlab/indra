@@ -189,7 +189,7 @@ def test_get_statement_jsons_by_paper_id():
         [('doi', '10.3389/FIMMU.2017.00781')],
         [('pmcid', 'PMC4789553')]
         ]
-    stmt_jsons = dbc.get_statement_jsons_by_papers(paper_refs)
+    stmt_jsons = dbc.get_statement_jsons_from_papers(paper_refs)
     assert stmt_jsons
     assert stmt_jsons['statements']
     assert stmt_jsons['total_evidence']
@@ -234,7 +234,7 @@ def test_get_statement_jsons_by_mk_hash():
                  29491428193112311, 30289509021065753, 30992174235867673,
                  31766667918079590, 31904387104764159, 34782800852366343,
                  35686927318045812}
-    stmt_jsons = dbc.get_statement_jsons_by_hashes(mk_hashes)
+    stmt_jsons = dbc.get_statement_jsons_from_hashes(mk_hashes)
     assert stmt_jsons
     assert stmt_jsons['statements']
     assert stmt_jsons['total_evidence']

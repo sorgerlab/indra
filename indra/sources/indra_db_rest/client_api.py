@@ -175,7 +175,7 @@ def get_statements_by_hash(hash_list, with_support=True):
     """Get fully formed statements from a list of hashes."""
     resp = _submit_request('post', 'statements/from_hashes',
                            hashes=hash_list)
-    return stmts_from_json(resp.json()['statements'])
+    return stmts_from_json(resp.json()['statements'].values())
 
 
 @_clockit

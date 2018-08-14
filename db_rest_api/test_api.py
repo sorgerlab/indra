@@ -260,7 +260,7 @@ class DbApiTestCase(unittest.TestCase):
                                                    -12978096432588272,
                                                    -12724735151233845])
         resp_dict = json.loads(resp.data.decode('utf-8'))
-        self.__check_stmts(resp_dict['statements'], check_support=True)
+        self.__check_stmts(resp_dict['statements'].values(), check_support=True)
         self.__check_time(dt)
         return
 
@@ -274,7 +274,7 @@ class DbApiTestCase(unittest.TestCase):
         resp, dt, size = self.__time_query('get', 'statements/from_hashes',
                                            hashes=list(hash_cnt_dict.keys()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
-        self.__check_stmts(resp_dict['statements'], check_support=True)
+        self.__check_stmts(resp_dict['statements'].values(), check_support=True)
         self.__check_time(dt, time_goal=20)
         return
 

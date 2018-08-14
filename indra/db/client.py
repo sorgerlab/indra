@@ -721,7 +721,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
 
 
 @_clockit
-def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
+def get_statement_jsons_from_papers(paper_refs, db=None, preassembled=True):
     """Get the statements from a list of papers.
 
     Parameters
@@ -775,7 +775,7 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
 
 
 @_clockit
-def get_statement_jsons_by_hashes(mk_hashes, db=None):
+def get_statement_jsons_from_hashes(mk_hashes, db=None):
     """Get statement jsons using the appropriate hashes."""
     if db is None:
         db = get_primary_db()

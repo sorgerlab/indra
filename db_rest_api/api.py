@@ -8,7 +8,7 @@ from flask_cors import CORS
 
 from indra.db.client import get_statements_by_gene_role_type, \
     get_statements_by_paper, get_statements_from_hashes, \
-    get_statement_jsons_from_agents
+    get_statement_jsons_from_agents, get_statement_jsons_from_hashes
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 from indra.util import batch_iter
@@ -234,10 +234,10 @@ def get_statements_by_hash():
         abort(Response("Too many hashes given, %d allowed." % MAX_STATEMENTS,
                        400))
 
-    stmts = get_statements_from_hashes(hashes, with_support=True)
-    resp = jsonify({'statements': [s.to_json() for s in stmts if s.evidence]})
+    stmt_jsons = get_statement_jsons_from_hashes(hashes, with_support=True)
+    resp = jsonify({'statements': stmt_jsons})
     logger.info("Exiting with %d statements of nominal size %f MB."
-                % (len(stmts), sys.getsizeof(resp.data)/1e6))
+                % (len(stmt_jsons), sys.getsizeof(resp.data)/1e6))
     return resp
 
 
@@ -258,6 +258,7 @@ def get_paper_statements():
 
     # Now get the statements.
     logger.info('Getting statements for %s=%s...' % (id_type, id_val))
+    # TODO: Use the more natural json version once it isn't absurdly slow.
     stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
     if stmts is None:
         msg = "Invalid or unavailable id %s=%s!" % (id_type, id_val)
