@@ -735,9 +735,9 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
     preassembled : bool
-        If True, statements will be selected from the table of pre-assembled
-        statements. Otherwise, they will be selected from the raw statements.
-        Default is True.
+        (NOT IMPLEMENTED [YET]) If True, statements will be selected from the
+        table of pre-assembled statements. Otherwise, they will be selected from
+        the raw statements. Default is True.
 
     Returns
     -------
@@ -750,7 +750,7 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
     for paper in paper_refs:
         q = db.filter_query([db.ReadingRefLink.rid])
         for id_type, paper_id in paper:
-            q = q.filter(getattr(db.ReadingRefLink, id_type) == paper_id)
+            q = q.filter(getattr(db.ReadingRefLink, id_type).like(paper_id))
 
         # Intersect with the previous query.
         if sub_q:
@@ -765,6 +765,8 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
         link = db.FastRawPaLink.reading_id == sub_al.c.rid
     elif hasattr(sub_al.c, 'reading_ref_link_rid'):
         link = db.FastRawPaLink.reading_id == sub_al.c.reading_ref_link_rid
+    elif len(sub_al.c._all_columns) == 1:
+        link = db.FastRawPaLink.reading_id == sub_al.c._all_columns[0]
     else:
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
