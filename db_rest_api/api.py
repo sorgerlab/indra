@@ -234,7 +234,7 @@ def get_statements_by_hash():
         abort(Response("Too many hashes given, %d allowed." % MAX_STATEMENTS,
                        400))
 
-    stmt_jsons = get_statement_jsons_from_hashes(hashes, with_support=True)
+    stmt_jsons = get_statement_jsons_from_hashes(hashes)
     resp = jsonify({'statements': stmt_jsons})
     logger.info("Exiting with %d statements of nominal size %f MB."
                 % (len(stmt_jsons), sys.getsizeof(resp.data)/1e6))
