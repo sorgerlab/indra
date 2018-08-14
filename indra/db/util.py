@@ -824,22 +824,41 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         if handle_duplicates == 'delete':
             logger.info("Deleting duplicates...")
             for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
-                bad_stmts = db.select_all(db.RawStatements,
-                                          db.RawStatements.id.in_(dup_id_batch))
-                bad_sid_set = {s.id for s in bad_stmts}
-                bad_ags = db.select_all(db.RawAgents,
-                                        db.RawAgents.stmt_id.in_(bad_sid_set))
-                logger.info("Deleting %d agents associated with redundant raw "
-                            "statements." % len(bad_ags))
-                db.delete_all(bad_ags)
-                logger.info("Deleting %d redundant raw statements."
-                            % len(bad_stmts))
-                db.delete_all(bad_stmts)
+                logger.info("Deleting %d duplicated raw statements."
+                            % len(dup_id_batch))
+                delete_raw_statements_by_id(db, dup_id_batch)
         elif handle_duplicates == 'report':
             with open('duplicate_ids_%s.pkl' % datetime.now(), 'wb') as f:
                 pickle.dump(duplicate_sids, f)
 
     return stmts
+
+
+def delete_raw_statements_by_id(db, raw_sids, sync_session=False):
+    """Delete raw statements, their agents, and their raw-unique links.
+
+    It is best to batch over this function with sets of 1000 or so ids. Setting
+    sync_session to False will result in a much faster resolution, but you may
+    find some ORM objects have not been updated.
+    """
+    # First, delete the evidence links.
+    ev_q = db.filter_query(db.RawUniqueLinks,
+                           db.RawUniqueLinks.raw_stmt_id.in_(raw_sids))
+    logger.info("Deleting any connected evidence links...")
+    ev_q.delete(synchronize_session=sync_session)
+
+    # Second, delete the agents.
+    ag_q = db.filter_query(db.RawAgents,
+                           db.RawAgents.stmt_id.in_(raw_sids))
+    logger.info("Deleting all connected agents...")
+    ag_q.delete(synchronize_session=sync_session)
+
+    # Now finally delete the statements.
+    raw_q = db.filter_query(db.RawStatements,
+                            db.RawStatements.id.in_(raw_sids))
+    logger.info("Deleting all raw indicated statements...")
+    raw_q.delete(synchronize_session=sync_session)
+    return
 
 
 def unpack(bts, decode=True):
