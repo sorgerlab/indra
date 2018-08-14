@@ -18,6 +18,15 @@ from .util import get_primary_db, get_raw_stmts_frm_db_list, \
     unpack, _get_statement_object, _clockit
 
 
+class DbClientError(Exception):
+    pass
+
+
+# ==============================================================================
+# Tools for getting information off of the database (older)
+# ==============================================================================
+
+
 def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
                       reader_version=None):
     """Return reader output for a given text content.
@@ -446,8 +455,165 @@ def _process_pa_statement_res_nev(stmt_iterable, count=1000):
     return stmt_dict
 
 
-class DbClientError(Exception):
-    pass
+@_clockit
+def get_evidence(pa_stmt_list, db=None, fix_refs=True, use_views=True):
+    """Fill in the evidence for a list of pre-assembled statements.
+
+    Parameters
+    ----------
+    pa_stmt_list : list[Statement]
+        A list of unique statements, generally drawn from the database
+        pa_statement table (via `get_statemetns`).
+    db : DatabaseManager instance or None
+        An instance of a database manager. If None, defaults to the "primary"
+        database, as defined in the db_config.ini file in .config/indra.
+    fix_refs : bool
+        The paper refs within the evidence objects are not populated in the
+        database, and thus must be filled using the relations in the database.
+        If True (default), the `pmid` field of each Statement Evidence object
+        is set to the correct PMIDs, or None if no PMID is available. If False,
+        the `pmid` field defaults to the value populated by the reading
+        system.
+
+    Returns
+    -------
+    None - modifications are made to the Statements "in-place".
+    """
+    if db is None:
+        db = get_primary_db()
+
+    # Turn the list into a dict.
+    stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmt_list}
+
+    if use_views:
+        if fix_refs:
+            raw_links = db.select_all([db.FastRawPaLink.mk_hash,
+                                       db.FastRawPaLink.raw_json,
+                                       db.FastRawPaLink.reading_id],
+                                      db.FastRawPaLink.mk_hash.in_(stmt_dict.keys()))
+            rel_refs = ['pmid', 'rid']
+            ref_cols = [getattr(db.ReadingRefLink, k) for k in rel_refs]
+        else:
+            raw_links = db.select_all([db.FastRawPaLink.mk_hash,
+                                       db.FastRawPaLink.raw_json],
+                                      db.FastRawPaLink.mk_hash.in_(stmt_dict.keys()))
+        rid_ref_dict = {}
+        unknown_rid_rs_dict = defaultdict(list)
+        for info in raw_links:
+            if fix_refs:
+                mk_hash, raw_json, rid = info
+            else:
+                mk_hash, raw_json = info
+                rid = None
+            json_dict = json.loads(raw_json.decode('utf-8'))
+            ev_json = json_dict.get('evidence', [])
+            assert len(ev_json) == 1, \
+                "Raw statements must have one evidence, got %d." % len(ev_json)
+            ev = Evidence._from_json(ev_json[0])
+            stmt_dict[mk_hash].evidence.append(ev)
+            if fix_refs:
+                ref_dict = rid_ref_dict.get(rid)
+                if ref_dict is None:
+                    unknown_rid_rs_dict[rid].append(ev)
+                    if len(unknown_rid_rs_dict) >= 1000:
+                        ref_data_list = db.select_all(
+                            ref_cols,
+                            db.ReadingRefLink.rid.in_(unknown_rid_rs_dict.keys())
+                        )
+                        for pmid, rid in ref_data_list:
+                            rid_ref_dict[rid] = pmid
+                            for ev in unknown_rid_rs_dict[rid]:
+                                ev.pmid = pmid
+                        unknown_rid_rs_dict.clear()
+                else:
+                    ev.pmid = rid_ref_dict[rid]
+    else:
+        # Get the data from the database
+        raw_list = db.select_all(
+            [db.PAStatements.mk_hash, db.RawStatements],
+            db.PAStatements.mk_hash.in_(stmt_dict.keys()),
+            db.PAStatements.mk_hash == db.RawUniqueLinks.pa_stmt_mk_hash,
+            db.RawUniqueLinks.raw_stmt_id == db.RawStatements.id
+        )
+
+        # Note that this step depends on the ordering being maintained.
+        mk_hashes, raw_stmt_objs = zip(*raw_list)
+        raw_stmts = get_raw_stmts_frm_db_list(db, raw_stmt_objs, fix_refs,
+                                              with_sids=False)
+        raw_stmt_mk_pairs = zip(mk_hashes, raw_stmts)
+
+        # Now attach the evidence
+        for mk_hash, raw_stmt in raw_stmt_mk_pairs:
+            # Each raw statement can have just one piece of evidence.
+            stmt_dict[mk_hash].evidence.append(raw_stmt.evidence[0])
+
+    return
+
+
+def get_statements_from_hashes(statement_hashes, preassembled=True, db=None,
+                               **kwargs):
+    """Retrieve statement objects given only statement hashes."""
+    if db is None:
+        db = get_primary_db()
+
+    if preassembled:
+        DbStatements = db.PAStatements
+    else:
+        DbStatements = db.RawStatements
+    stmts = get_statements([DbStatements.mk_hash.in_(statement_hashes)], db=db,
+                           preassembled=preassembled, **kwargs)
+    return stmts
+
+
+def get_support(statements, db=None, recursive=False):
+    """Populate the supports and supported_by lists of the given statements."""
+    # TODO: Allow recursive mode (argument should probably be an integer level).
+    if db is None:
+        db = get_primary_db()
+
+    if not isinstance(statements, dict):
+        stmt_dict = {s.get_hash(shallow=True): s for s in statements}
+    else:
+        stmt_dict = statements
+
+    logger.info("Populating support links.")
+    support_links = db.select_all(
+        [db.PASupportLinks.supported_mk_hash,
+         db.PASupportLinks.supporting_mk_hash],
+        or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
+            db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
+    )
+    for supped_hash, supping_hash in set(support_links):
+        if supped_hash == supping_hash:
+            assert False, 'Self-support found on-load.'
+        supped_stmt = stmt_dict.get(supped_hash)
+        if supped_stmt is None:
+            supped_stmt = Unresolved(shallow_hash=supped_hash)
+        supping_stmt = stmt_dict.get(supping_hash)
+        if supping_stmt is None:
+            supping_stmt = Unresolved(shallow_hash=supping_hash)
+        supped_stmt.supported_by.append(supping_stmt)
+        supping_stmt.supports.append(supped_stmt)
+    return
+
+
+def _get_trids(db, id_val, id_type):
+    """Return text ref IDs corresponding to any ID type and value."""
+    # Get the text ref id(s)
+    if id_type in ['trid']:
+        trid_list = [int(id_val)]
+    else:
+        id_types = ['pmid', 'pmcid', 'doi', 'pii', 'url', 'manuscript_id']
+        if id_type not in id_types:
+            raise ValueError('id_type must be one of: %s' % str(id_types))
+        constraint = (getattr(db.TextRef, id_type) == id_val)
+        trid_list = [trid for trid, in db.select_all(db.TextRef.id, constraint)]
+    return trid_list
+
+
+# ==============================================================================
+# Tools for getting statement jsons (or less) using efficient queries. (Newer)
+# ==============================================================================
 
 
 @_clockit
@@ -822,157 +988,3 @@ def export_relation_dict_to_tsv(relation_dict, out_base, out_types=None):
     return relation_dict
 
 
-@_clockit
-def get_evidence(pa_stmt_list, db=None, fix_refs=True, use_views=True):
-    """Fill in the evidence for a list of pre-assembled statements.
-
-    Parameters
-    ----------
-    pa_stmt_list : list[Statement]
-        A list of unique statements, generally drawn from the database
-        pa_statement table (via `get_statemetns`).
-    db : DatabaseManager instance or None
-        An instance of a database manager. If None, defaults to the "primary"
-        database, as defined in the db_config.ini file in .config/indra.
-    fix_refs : bool
-        The paper refs within the evidence objects are not populated in the
-        database, and thus must be filled using the relations in the database.
-        If True (default), the `pmid` field of each Statement Evidence object
-        is set to the correct PMIDs, or None if no PMID is available. If False,
-        the `pmid` field defaults to the value populated by the reading
-        system.
-
-    Returns
-    -------
-    None - modifications are made to the Statements "in-place".
-    """
-    if db is None:
-        db = get_primary_db()
-
-    # Turn the list into a dict.
-    stmt_dict = {s.get_hash(shallow=True): s for s in pa_stmt_list}
-
-    if use_views:
-        if fix_refs:
-            raw_links = db.select_all([db.FastRawPaLink.mk_hash,
-                                       db.FastRawPaLink.raw_json,
-                                       db.FastRawPaLink.reading_id],
-                                      db.FastRawPaLink.mk_hash.in_(stmt_dict.keys()))
-            rel_refs = ['pmid', 'rid']
-            ref_cols = [getattr(db.ReadingRefLink, k) for k in rel_refs]
-        else:
-            raw_links = db.select_all([db.FastRawPaLink.mk_hash,
-                                       db.FastRawPaLink.raw_json],
-                                      db.FastRawPaLink.mk_hash.in_(stmt_dict.keys()))
-        rid_ref_dict = {}
-        unknown_rid_rs_dict = defaultdict(list)
-        for info in raw_links:
-            if fix_refs:
-                mk_hash, raw_json, rid = info
-            else:
-                mk_hash, raw_json = info
-                rid = None
-            json_dict = json.loads(raw_json.decode('utf-8'))
-            ev_json = json_dict.get('evidence', [])
-            assert len(ev_json) == 1,\
-                "Raw statements must have one evidence, got %d." % len(ev_json)
-            ev = Evidence._from_json(ev_json[0])
-            stmt_dict[mk_hash].evidence.append(ev)
-            if fix_refs:
-                ref_dict = rid_ref_dict.get(rid)
-                if ref_dict is None:
-                    unknown_rid_rs_dict[rid].append(ev)
-                    if len(unknown_rid_rs_dict) >= 1000:
-                        ref_data_list = db.select_all(
-                                ref_cols,
-                                db.ReadingRefLink.rid.in_(unknown_rid_rs_dict.keys())
-                                )
-                        for pmid, rid in ref_data_list:
-                            rid_ref_dict[rid] = pmid
-                            for ev in unknown_rid_rs_dict[rid]:
-                                ev.pmid = pmid
-                        unknown_rid_rs_dict.clear()
-                else:
-                    ev.pmid = rid_ref_dict[rid]
-    else:
-        # Get the data from the database
-        raw_list = db.select_all(
-            [db.PAStatements.mk_hash, db.RawStatements],
-            db.PAStatements.mk_hash.in_(stmt_dict.keys()),
-            db.PAStatements.mk_hash == db.RawUniqueLinks.pa_stmt_mk_hash,
-            db.RawUniqueLinks.raw_stmt_id == db.RawStatements.id
-            )
-
-        # Note that this step depends on the ordering being maintained.
-        mk_hashes, raw_stmt_objs = zip(*raw_list)
-        raw_stmts = get_raw_stmts_frm_db_list(db, raw_stmt_objs, fix_refs,
-                                              with_sids=False)
-        raw_stmt_mk_pairs = zip(mk_hashes, raw_stmts)
-
-        # Now attach the evidence
-        for mk_hash, raw_stmt in raw_stmt_mk_pairs:
-            # Each raw statement can have just one piece of evidence.
-            stmt_dict[mk_hash].evidence.append(raw_stmt.evidence[0])
-
-    return
-
-
-def get_statements_from_hashes(statement_hashes, preassembled=True, db=None,
-                               **kwargs):
-    """Retrieve statement objects given only statement hashes."""
-    if db is None:
-        db = get_primary_db()
-
-    if preassembled:
-        DbStatements = db.PAStatements
-    else:
-        DbStatements = db.RawStatements
-    stmts = get_statements([DbStatements.mk_hash.in_(statement_hashes)], db=db,
-                           preassembled=preassembled, **kwargs)
-    return stmts
-
-
-def get_support(statements, db=None, recursive=False):
-    """Populate the supports and supported_by lists of the given statements."""
-    # TODO: Allow recursive mode (argument should probably be an integer level).
-    if db is None:
-        db = get_primary_db()
-
-    if not isinstance(statements, dict):
-        stmt_dict = {s.get_hash(shallow=True): s for s in statements}
-    else:
-        stmt_dict = statements
-
-    logger.info("Populating support links.")
-    support_links = db.select_all(
-        [db.PASupportLinks.supported_mk_hash,
-         db.PASupportLinks.supporting_mk_hash],
-        or_(db.PASupportLinks.supported_mk_hash.in_(stmt_dict.keys()),
-            db.PASupportLinks.supporting_mk_hash.in_(stmt_dict.keys()))
-        )
-    for supped_hash, supping_hash in set(support_links):
-        if supped_hash == supping_hash:
-            assert False, 'Self-support found on-load.'
-        supped_stmt = stmt_dict.get(supped_hash)
-        if supped_stmt is None:
-            supped_stmt = Unresolved(shallow_hash=supped_hash)
-        supping_stmt = stmt_dict.get(supping_hash)
-        if supping_stmt is None:
-            supping_stmt = Unresolved(shallow_hash=supping_hash)
-        supped_stmt.supported_by.append(supping_stmt)
-        supping_stmt.supports.append(supped_stmt)
-    return
-
-
-def _get_trids(db, id_val, id_type):
-    """Return text ref IDs corresponding to any ID type and value."""
-    # Get the text ref id(s)
-    if id_type in ['trid']:
-        trid_list = [int(id_val)]
-    else:
-        id_types = ['pmid', 'pmcid', 'doi', 'pii', 'url', 'manuscript_id']
-        if id_type not in id_types:
-            raise ValueError('id_type must be one of: %s' % str(id_types))
-        constraint = (getattr(db.TextRef, id_type) == id_val)
-        trid_list = [trid for trid, in db.select_all(db.TextRef.id, constraint)]
-    return trid_list
