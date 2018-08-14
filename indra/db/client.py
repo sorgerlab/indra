@@ -772,6 +772,15 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
 
 
 @_clockit
+def get_statement_jsons_by_hashes(mk_hashes, db=None):
+    """Get statement jsons using the appropriate hashes."""
+    if db is None:
+        db = get_primary_db()
+    link = db.FastRawPaLink.mk_hash.in_(mk_hashes)
+    return _get_pa_statements_by_subq_link(db, link, None)
+
+
+@_clockit
 def get_statement_essentials(clauses, count=1000, db=None, preassembled=True):
     """Get the type, agents, and id data for the specified statements.
 
