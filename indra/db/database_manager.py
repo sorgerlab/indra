@@ -456,34 +456,33 @@ class DatabaseManager(object):
 
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
+        ordered_tables = ['text_ref', 'text_content', 'reading', 'db_info',
+                          'raw_statements', 'raw_agents', 'pa_statements',
+                          'pa_agents', 'raw_unique_links', 'support_links']
         if tbl_list is None:
-            logger.debug("Creating all tables...")
-            self.Base.metadata.create_all(self.engine)
-            logger.debug("Created all tables.")
-        else:
-            tbl_name_list = []
-            for tbl in tbl_list:
-                if isinstance(tbl, str):
-                    tbl_name_list.append(tbl)
-                else:
-                    tbl_name_list.append(tbl.__tablename__)
-            # These tables must be created in this order.
-            for tbl_name in ['text_ref', 'text_content', 'readings', 'db_info',
-                             'statements', 'agents', 'pa_statements',
-                             'pa_agents']:
-                if tbl_name in tbl_name_list:
-                    tbl_name_list.remove(tbl_name)
-                    logger.debug("Creating %s..." % tbl_name)
-                    if not self.tables[tbl_name].__table__.exists(self.engine):
-                        self.tables[tbl_name].__table__.create(bind=self.engine)
-                        logger.debug("Table created.")
-                    else:
-                        logger.debug("Table already existed.")
-            # The rest can be started any time.
-            for tbl_name in tbl_name_list:
+            tbl_list = list(self.tables.keys())
+
+        tbl_name_list = []
+        for tbl in tbl_list:
+            if isinstance(tbl, str):
+                tbl_name_list.append(tbl)
+            else:
+                tbl_name_list.append(tbl.__tablename__)
+        # These tables must be created in this order.
+        for tbl_name in ordered_tables:
+            if tbl_name in tbl_name_list:
+                tbl_name_list.remove(tbl_name)
                 logger.debug("Creating %s..." % tbl_name)
-                self.tables[tbl_name].__table__.create(bind=self.engine)
-                logger.debug("Table created.")
+                if not self.tables[tbl_name].__table__.exists(self.engine):
+                    self.tables[tbl_name].__table__.create(bind=self.engine)
+                    logger.debug("Table created.")
+                else:
+                    logger.debug("Table already existed.")
+        # The rest can be started any time.
+        for tbl_name in tbl_name_list:
+            logger.debug("Creating %s..." % tbl_name)
+            self.tables[tbl_name].__table__.create(bind=self.engine)
+            logger.debug("Table created.")
         return
 
     def drop_tables(self, tbl_list=None, force=False):
