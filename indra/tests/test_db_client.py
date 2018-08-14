@@ -186,7 +186,7 @@ def test_get_statement_jsons_by_agent():
 def test_get_statement_jsons_by_paper_id():
     paper_refs = [
         [('pmid', '27769048'), ('pmcid', 'PMC5363599')],
-        [('doi', '10.3389/FMICB.2016.00313')],
+        [('doi', '10.3389/FIMMU.2017.00781')],
         [('pmcid', 'PMC4789553')]
         ]
     stmt_jsons = dbc.get_statement_jsons_by_papers(paper_refs)
@@ -195,4 +195,5 @@ def test_get_statement_jsons_by_paper_id():
     assert stmt_jsons['total_evidence']
     stmts = stmts_from_json(stmt_jsons['statements'].values())
     assert len(stmts) == len(stmt_jsons['statements'])
-    assert len({ev.pmid for s in stmts for ev in s.evidence}) >= len(paper_refs)
+    pmid_set = {ev.pmid for s in stmts for ev in s.evidence}
+    assert len(pmid_set) >= len(paper_refs)
