@@ -743,6 +743,7 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
     -------
     A list of Statement jsons from the database corresponding to the paper ids.
     """
+    # TODO: Look into why this is so SLOW
     if db is None:
         db = get_primary_db()
 
@@ -750,7 +751,7 @@ def get_statement_jsons_by_papers(paper_refs, db=None, preassembled=True):
     for paper in paper_refs:
         q = db.filter_query([db.ReadingRefLink.rid])
         for id_type, paper_id in paper:
-            q = q.filter(getattr(db.ReadingRefLink, id_type).like(paper_id))
+            q = q.filter(getattr(db.ReadingRefLink, id_type) == paper_id)
 
         # Intersect with the previous query.
         if sub_q:
