@@ -61,6 +61,13 @@ if __name__ == '__main__':
               'is \'primary\'. Note that this is overwridden by use of the '
               '--test flag if \'test\' is not a part of the name given.')
         )
+    parser.add_argument(
+        '--store_duplicates',
+        help=('If you do not want duplicates deleted in this run, their ids '
+              'can instead be stored in a pickle file. The file given here '
+              'will be used. If this option is not used, they will simply be '
+              'deleted now.')
+        )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -249,7 +256,7 @@ class PreassemblyManager(object):
         return new_unique_stmts, evidence_links
 
     @_handle_update_table
-    def create_corpus(self, db, continuing=False):
+    def create_corpus(self, db, continuing=False, dups_file=None):
         """Initialize the table of preassembled statements.
 
         This method will find the set of unique knowledge represented in the
@@ -263,6 +270,8 @@ class PreassemblyManager(object):
         """
         self.__tag = 'create'
 
+        dup_handling = dups_file if dups_file else 'delete'
+
         # Get filtered statement ID's.
         sid_cache_fname = path.join(HERE, 'stmt_id_cache.pkl')
         if continuing and path.exists(sid_cache_fname):
@@ -270,7 +279,8 @@ class PreassemblyManager(object):
                 stmt_ids = pickle.load(f)
         else:
             # Get the statement ids.
-            stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+            stmt_ids = distill_stmts(db, num_procs=self.n_proc,
+                                     handle_duplicates=dup_handling)
             with open(sid_cache_fname, 'wb') as f:
                 pickle.dump(stmt_ids, f)
 
@@ -363,7 +373,7 @@ class PreassemblyManager(object):
         return all_new_stmt_ids
 
     @_handle_update_table
-    def supplement_corpus(self, db, continuing=False):
+    def supplement_corpus(self, db, continuing=False, dups_file=None):
         """Update the table of preassembled statements.
 
         This method will take any new raw statements that have not yet been
@@ -374,8 +384,11 @@ class PreassemblyManager(object):
         would achieve if you had simply re-run preassembly on _all_ the
         raw statements.
         """
-        pickle_stashes = []
         self.__tag = 'supplement'
+
+        dup_handling = dups_file if dups_file else 'delete'
+
+        pickle_stashes = []
         last_update = self._get_latest_updatetime(db)
         self._log("Latest update was: %s" % last_update)
 
@@ -403,7 +416,7 @@ class PreassemblyManager(object):
         else:
             stmt_ids = distill_stmts(db, num_procs=self.n_proc,
                                      get_full_stmts=False,
-                                     handle_duplicates='report')
+                                     handle_duplicates=dup_handling)
             with open(dist_stash, 'wb') as f:
                 pickle.dump(stmt_ids, f)
 
@@ -575,8 +588,8 @@ if __name__ == '__main__':
 
     print("Beginning to %s preassembled corpus." % args.task)
     if args.task == 'create':
-        pm.create_corpus(db, args.continuing)
+        pm.create_corpus(db, args.continuing, dups_file=args.store_duplicates)
     elif args.task == 'update':
-        pm.supplement_corpus(db)
+        pm.supplement_corpus(db, dups_file=args.store_duplicates)
     else:
         raise IndraDBPreassemblyError('Unrecognized task: %s.' % args.task)
