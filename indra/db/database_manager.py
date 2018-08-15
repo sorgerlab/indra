@@ -795,9 +795,10 @@ class DatabaseManager(object):
 
         return self.session.query(*query_args).filter(*args)
 
-    def count(self, tbls, *args):
+    def count(self, tbl, *args):
         """Get a count of the results to a query."""
-        return self.filter_query(tbls, *args).distinct().count()
+        assert len(tbl) == 1, "Only one table can be counted at a time."
+        return self.filter_query(func.count(tbl), *args).all()[0][0]
 
     def select_one(self, tbls, *args):
         """Select the first value that matches requirements.
