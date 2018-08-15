@@ -50,11 +50,23 @@ def test_bigger_request():
 
 
 @attr('nonpublic')
-def test_too_big_request():
+def test_too_big_request_no_persist():
     resp_some = __check_request(30, agents=['TP53'], persist=False,
                                 simple_response=False)
+    return resp_some
+
+
+@attr('nonpublic', 'slow')
+def test_too_big_request_persist_and_block():
     resp_all1 = __check_request(60, agents=['TP53'], persist=True, block=True,
                                 simple_response=False)
+    return resp_all1
+
+
+@attr('nonpublic', 'slow')
+def test_too_big_request_persist_no_block():
+    resp_some = test_too_big_request_no_persist()
+    resp_all1 = test_too_big_request_persist_and_block()
     resp_all2 = __check_request(30, agents=['TP53'], persist=True, block=False,
                                 check_stmts=False, simple_response=False)
     assert not resp_all2.done, \
