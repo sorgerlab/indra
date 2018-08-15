@@ -55,7 +55,7 @@ def _query_and_extract(agent_strs, params):
     return stmts_json, total_ev, limited
 
 
-def _make_stmts_query(agent_strs, params, persist=True):
+def _make_stmts_query(agent_strs, params, persist=True, block=True):
     """Slightly lower level function to get statements from the REST API."""
 
     stmts_json, total_ev, limited = _query_and_extract(agent_strs, params)
@@ -85,17 +85,6 @@ def _make_stmts_query(agent_strs, params, persist=True):
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
     return stmts_from_json(stmts_json.values())
-
-
-def _query_stmt_types(agent_strs, params, stmt_types):
-    """Low-level function to query multiple different statement types."""
-    stmts = []
-    for stmt_type in stmt_types:
-        params['type'] = stmt_type
-        new_stmts = _make_stmts_query(agent_strs, params)
-        logger.info("Found %d %s statements." % (len(new_stmts), stmt_type))
-        stmts.extend(new_stmts)
-    return stmts
 
 
 @_clockit
@@ -158,15 +147,21 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     if stmt_type is not None:
         if use_exact_type:
             params['type'] = stmt_type
-            stmts = _make_stmts_query(agent_strs, params)
+            stmts = _make_stmts_query(agent_strs, params, persist, block)
         else:
             stmt_class = get_statement_by_name(stmt_type)
             descendant_classes = get_all_descendants(stmt_class)
             stmt_types = [cls.__name__ for cls in descendant_classes] \
                 + [stmt_type]
-            stmts = _query_stmt_types(agent_strs, params, stmt_types)
+            stmts = []
+            for stmt_type in stmt_types:
+                params['type'] = stmt_type
+                new_stmts = _make_stmts_query(agent_strs, params, persist)
+                logger.info("Found %d %s statements."
+                            % (len(new_stmts), stmt_type))
+                stmts.extend(new_stmts)
     else:
-        stmts = _make_stmts_query(agent_strs, params)
+        stmts = _make_stmts_query(agent_strs, params, persist, block)
     return stmts
 
 
