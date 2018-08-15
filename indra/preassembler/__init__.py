@@ -526,10 +526,25 @@ class Preassembler(object):
         contradicts : list(tuple(Statement, Statement))
             A list of Statement pairs that are contradicting.
         """
+        pos_stmts = AddModification.__subclasses__()
+        neg_stmts = [modclass_to_inverse[c] for c in pos_stmts]
+
+        pos_stmts += [Activation, IncreaseAmount, Influence]
+        neg_stmts += [Inhibition, DecreaseAmount, Influence]
+
+        # Make a list of Statement types
+        stmts_by_type = collections.defaultdict(lambda: [])
+        for idx, stmt in enumerate(self.stmts):
+            stmts_by_type[type(stmt)].append(stmt)
+
         contradicts = []
-        for st1, st2 in itertools.combinations(self.stmts, 2):
-            if st1.contradicts(st2, self.hierarchies):
-                contradicts.append((st1, st2))
+        for pst, nst in zip(pos_stmts, neg_stmts):
+            poss = stmts_by_type.get(pst, [])
+            negs = stmts_by_type.get(nst, [])
+            for st1, st2 in itertools.product(poss, negs):
+                if st1.contradicts(st2, self.hierarchies):
+                    contradicts.append((st1, st2))
+
         return contradicts
 
 
