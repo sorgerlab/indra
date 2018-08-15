@@ -41,6 +41,42 @@ class IndraDBRestError(Exception):
         return
 
 
+class IndraDBRestResponse(object):
+    """The packaging for query responses."""
+    def __init__(self, statement_jsons):
+        self.statements = []
+        self.statements_sample = None
+        self.statement_jsons = statement_jsons
+        self.done = False
+        return
+
+    def extend_statements(self, other_response):
+        if not isinstance(other_response, self.__class__):
+            raise ValueError("Can only extend with another %s instance."
+                             % self.__class__.__name__)
+
+        self.statements.extend(other_response.statements)
+        if other_response.statements_sample is not None:
+            if self.statements_sample is None:
+                self.statements_sample = other_response.statements_sample
+            else:
+                self.statements_sample.extend(other_response.statements_sample)
+        return
+
+    def merge_json(self, stmt_json):
+        for k, sj in stmt_json.items():
+            if k not in self.statement_jsons:
+                self.statement_jsons[k] = sj  # This should be most of them
+            else:
+                # This should only happen rarely.
+                for evj in sj['evidence']:
+                    self.statement_jsons[k]['evidence'].append(evj)
+        return
+
+    def compile_statements(self):
+        self.statements = stmts_from_json(self.statement_jsons.values())
+
+
 def _query_and_extract(agent_strs, params):
     resp = _submit_query_request('statements', *agent_strs, **params)
     resp_dict = resp.json()
@@ -57,7 +93,6 @@ def _query_and_extract(agent_strs, params):
 
 def _get_statements_persistently(agent_strs, params, offset, total_ev, ret):
     """Use paging to get all statements."""
-    stmts_json = ret['statement_jsons']
     limited = True
 
     # Get the rest of the content.
@@ -69,17 +104,11 @@ def _get_statements_persistently(agent_strs, params, offset, total_ev, ret):
             _query_and_extract(agent_strs, params)
 
         # Merge in the new results
-        for k, sj in new_stmts_json.items():
-            if k not in stmts_json:
-                stmts_json[k] = sj  # This should be most of them
-            else:
-                # This should only happen rarely.
-                for evj in sj['evidence']:
-                    stmts_json[k]['evidence'].append(evj)
+        ret.merge_json(new_stmts_json)
 
     # Create the actual statements.
-    ret['statements'] = stmts_from_json(stmts_json.values())
-    ret['done'] = True
+    ret.compile_statements()
+    ret.done = True
     return
 
 
@@ -89,8 +118,7 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
     stmts_json, total_ev, limited = _query_and_extract(agent_strs, params)
 
     # Initialize the return dict.
-    ret = {'statements': [], 'statement_jsons': stmts_json, 'done': False,
-           'statements_sample': None}
+    ret = IndraDBRestResponse(stmts_json)
 
     # Handle the content if we were limited.
     if limited:
@@ -102,28 +130,29 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
                 logger.info("You chose to persist, so I will paginate through "
                             "the rest until I have everything!")
                 _get_statements_persistently(*args)
-                assert ret['done']
+                assert ret.done
             else:
                 logger.info("You chose to persist without blocking. Pagination "
                             "is being performed in a thread.")
-                ret['statements_sample'] = stmts_from_json(stmts_json.values())
+                ret.statements_sample = stmts_from_json(stmts_json.values())
                 th = Thread(target=_get_statements_persistently, args=args)
                 th.start()
         else:
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
-            ret['statements_sample'] = stmts_from_json(stmts_json.values())
-            ret['statements'] = stmts_from_json(stmts_json.values())
-            ret['done'] = True
+            ret.compile_statements()
+            ret.statements_sample = ret.statements[:]
+            ret.done = True
     else:
-        ret['statements'] = stmts_from_json(stmts_json.values())
-        ret['done'] = True
+        ret.compile_statements()
+        ret.done = True
     return ret
 
 
 @_clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, offset=None, persist=True, block=True):
+                   use_exact_type=False, offset=None, persist=True, block=True,
+                   simple_response=True):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -196,15 +225,15 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                 if resp is None:
                     resp = new_resp
                 else:
-                    for k in ['statements', 'statements_sample']:
-                        if new_resp[k] is not None:
-                            if resp[k] is None:
-                                resp[k] = new_resp[k]
-                            else:
-                                resp[k].extend(new_resp[k])
+                    resp.extend_statements(new_resp)
     else:
         resp = _make_stmts_query(agent_strs, params, persist, block)
-    return resp
+
+    if simple_response:
+        ret = resp.statements
+    else:
+        ret = resp
+    return ret
 
 
 @_clockit
