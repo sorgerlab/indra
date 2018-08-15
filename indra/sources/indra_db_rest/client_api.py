@@ -1,7 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-
 __all__ = ['get_statements', 'get_statements_for_paper',
            'get_statements_by_hash', 'IndraDBRestError']
 
@@ -9,6 +8,7 @@ import json
 import logging
 import requests
 from os.path import join
+from threading import Thread
 
 from indra.db.util import _clockit
 
@@ -55,36 +55,70 @@ def _query_and_extract(agent_strs, params):
     return stmts_json, total_ev, limited
 
 
+def _get_statements_persistently(agent_strs, params, offset, total_ev, ret):
+    """Use paging to get all statements."""
+    stmts_json = ret['statement_jsons']
+    limited = True
+
+    # Get the rest of the content.
+    while limited:
+        # Get the next page.
+        offset = offset + total_ev
+        params['offset'] = offset
+        new_stmts_json, new_total_ev, limited = \
+            _query_and_extract(agent_strs, params)
+
+        # Merge in the new results
+        for k, sj in new_stmts_json.items():
+            if k not in stmts_json:
+                stmts_json[k] = sj  # This should be most of them
+            else:
+                # This should only happen rarely.
+                for evj in sj['evidence']:
+                    stmts_json[k]['evidence'].append(evj)
+
+    # Create the actual statements.
+    ret['statements'] = stmts_from_json(stmts_json.values())
+    ret['done'] = True
+    return
+
+
 def _make_stmts_query(agent_strs, params, persist=True, block=True):
     """Slightly lower level function to get statements from the REST API."""
-
+    # Perform the first (and last?) query
     stmts_json, total_ev, limited = _query_and_extract(agent_strs, params)
 
+    # Initialize the return dict.
+    ret = {'statements': [], 'statement_jsons': stmts_json, 'done': False,
+           'statements_sample': None}
+
+    # Handle the content if we were limited.
     if limited:
         logger.info("Some results could not be returned directly.")
         if persist:
-            logger.info("You chose to persist, so I will paginate through the "
-                        "rest until I have everything!")
             offset = params.get('offset', 0)
-            while limited:
-                # Get the next page.
-                offset = offset + total_ev
-                params['offset'] = offset
-                new_stmts_json, new_total_ev, limited = \
-                    _query_and_extract(agent_strs, params)
-
-                # Merge in the new results
-                for k, sj in new_stmts_json.items():
-                    if k not in stmts_json:
-                        stmts_json[k] = sj  # This should be most of them
-                    else:
-                        # This should only happen rarely.
-                        for evj in sj['evidence']:
-                            stmts_json[k]['evidence'].append(evj)
+            args = [agent_strs, params, offset, total_ev, ret]
+            if block:
+                logger.info("You chose to persist, so I will paginate through "
+                            "the rest until I have everything!")
+                _get_statements_persistently(*args)
+                assert ret['done']
+            else:
+                logger.info("You chose to persist without blocking. Pagination "
+                            "is being performed in a thread.")
+                ret['statements_sample'] = stmts_from_json(stmts_json.values())
+                th = Thread(target=_get_statements_persistently, args=args)
+                th.start()
         else:
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
-    return stmts_from_json(stmts_json.values())
+            ret['statements_sample'] = stmts_from_json(stmts_json.values())
+            ret['statements'] = stmts_from_json(stmts_json.values())
+            ret['done'] = True
+    else:
+        ret['statements'] = stmts_from_json(stmts_json.values())
+        ret['done'] = True
+    return ret
 
 
 @_clockit
@@ -147,22 +181,30 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     if stmt_type is not None:
         if use_exact_type:
             params['type'] = stmt_type
-            stmts = _make_stmts_query(agent_strs, params, persist, block)
+            resp = _make_stmts_query(agent_strs, params, persist, block)
         else:
             stmt_class = get_statement_by_name(stmt_type)
             descendant_classes = get_all_descendants(stmt_class)
             stmt_types = [cls.__name__ for cls in descendant_classes] \
                 + [stmt_type]
-            stmts = []
+            resp = None
             for stmt_type in stmt_types:
                 params['type'] = stmt_type
-                new_stmts = _make_stmts_query(agent_strs, params, persist)
+                new_resp = _make_stmts_query(agent_strs, params, persist)
                 logger.info("Found %d %s statements."
-                            % (len(new_stmts), stmt_type))
-                stmts.extend(new_stmts)
+                            % (len(resp['statements']), stmt_type))
+                if resp is None:
+                    resp = new_resp
+                else:
+                    for k in ['statements', 'statements_sample']:
+                        if new_resp[k] is not None:
+                            if resp[k] is None:
+                                resp[k] = new_resp[k]
+                            else:
+                                resp[k].extend(new_resp[k])
     else:
-        stmts = _make_stmts_query(agent_strs, params, persist, block)
-    return stmts
+        resp = _make_stmts_query(agent_strs, params, persist, block)
+    return resp
 
 
 @_clockit
