@@ -7,8 +7,10 @@ __all__ = ['get_statements', 'get_statements_for_paper',
 import json
 import logging
 import requests
+from time import sleep
 from os.path import join
 from threading import Thread
+from datetime import datetime
 
 from indra.db.util import _clockit
 
@@ -51,6 +53,7 @@ class IndraDBRestResponse(object):
         return
 
     def extend_statements(self, other_response):
+        """Extend this object with new statements."""
         if not isinstance(other_response, self.__class__):
             raise ValueError("Can only extend with another %s instance."
                              % self.__class__.__name__)
@@ -61,9 +64,12 @@ class IndraDBRestResponse(object):
                 self.statements_sample = other_response.statements_sample
             else:
                 self.statements_sample.extend(other_response.statements_sample)
+
+        self.merge_json(other_response.statement_jsons)
         return
 
     def merge_json(self, stmt_json):
+        """Merge these statement jsons with new jsons."""
         for k, sj in stmt_json.items():
             if k not in self.statement_jsons:
                 self.statement_jsons[k] = sj  # This should be most of them
@@ -74,7 +80,25 @@ class IndraDBRestResponse(object):
         return
 
     def compile_statements(self):
+        """Generate statements from the jsons."""
         self.statements = stmts_from_json(self.statement_jsons.values())
+
+    def wait_until_done(self, timeout=None):
+        """Wait for the background load to complete."""
+        start = datetime.now()
+        while not self.done:
+            sleep(2)
+            if timeout is not None:
+                now = datetime.now()
+                dt = now - start
+                if dt.total_seconds() > timeout:
+                    logger.warning("Timed out waiting for statement load to"
+                                   "complete.")
+                    break
+        dt = datetime.now() - start
+        logger.info("Waited %d seconds for statements to finish loading."
+                    % dt.total_seconds())
+        return
 
 
 def _query_and_extract(agent_strs, params):

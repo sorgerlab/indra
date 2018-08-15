@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from datetime import datetime
-from time import sleep
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
@@ -52,17 +51,16 @@ def test_bigger_request():
 
 @attr('nonpublic')
 def test_too_big_request():
-    resp_some = __check_request(5, agents=['TP53'], persist=False,
-                                simple_respones=False)
+    resp_some = __check_request(30, agents=['TP53'], persist=False,
+                                simple_response=False)
     resp_all1 = __check_request(60, agents=['TP53'], persist=True, block=True,
                                 simple_response=False)
-    resp_all2 = __check_request(5, agents=['TP53'], persist=True, block=False,
+    resp_all2 = __check_request(30, agents=['TP53'], persist=True, block=False,
                                 check_stmts=False, simple_response=False)
     assert not resp_all2.done, \
         "Background complete appears to have resolved too fast."
     assert len(resp_all2.statements_sample) == len(resp_some.statements)
-    print("Waiting 60 seconds for background thread to complete...")
-    sleep(60)
+    resp_all2.wait_until_done(60)
     assert len(resp_all2.statements) == len(resp_all1.statements)
     return
 
