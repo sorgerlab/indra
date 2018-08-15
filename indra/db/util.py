@@ -834,30 +834,36 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
     return stmts
 
 
-def delete_raw_statements_by_id(db, raw_sids, sync_session=False):
+def delete_raw_statements_by_id(db, raw_sids, sync_session=False, remove='all'):
     """Delete raw statements, their agents, and their raw-unique links.
 
     It is best to batch over this function with sets of 1000 or so ids. Setting
     sync_session to False will result in a much faster resolution, but you may
     find some ORM objects have not been updated.
     """
+    if remove == 'all':
+        remove = ['links', 'agents', 'statements']
+
     # First, delete the evidence links.
-    ev_q = db.filter_query(db.RawUniqueLinks,
-                           db.RawUniqueLinks.raw_stmt_id.in_(raw_sids))
-    logger.info("Deleting any connected evidence links...")
-    ev_q.delete(synchronize_session=sync_session)
+    if 'links' in remove:
+        ev_q = db.filter_query(db.RawUniqueLinks,
+                               db.RawUniqueLinks.raw_stmt_id.in_(raw_sids))
+        logger.info("Deleting any connected evidence links...")
+        ev_q.delete(synchronize_session=sync_session)
 
     # Second, delete the agents.
-    ag_q = db.filter_query(db.RawAgents,
-                           db.RawAgents.stmt_id.in_(raw_sids))
-    logger.info("Deleting all connected agents...")
-    ag_q.delete(synchronize_session=sync_session)
+    if 'agents' in remove:
+        ag_q = db.filter_query(db.RawAgents,
+                               db.RawAgents.stmt_id.in_(raw_sids))
+        logger.info("Deleting all connected agents...")
+        ag_q.delete(synchronize_session=sync_session)
 
     # Now finally delete the statements.
-    raw_q = db.filter_query(db.RawStatements,
-                            db.RawStatements.id.in_(raw_sids))
-    logger.info("Deleting all raw indicated statements...")
-    raw_q.delete(synchronize_session=sync_session)
+    if 'statements' in remove:
+        raw_q = db.filter_query(db.RawStatements,
+                                db.RawStatements.id.in_(raw_sids))
+        logger.info("Deleting all raw indicated statements...")
+        raw_q.delete(synchronize_session=sync_session)
     return
 
 
