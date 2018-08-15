@@ -15,7 +15,10 @@ def __check_request(seconds, *args, **kwargs):
     resp = dbr.get_statements(*args, **kwargs)
     time_taken = datetime.now() - now
     if check_stmts:
-        stmts = resp['statements']
+        if kwargs.get('simple_response', True):
+            stmts = resp
+        else:
+            stmts = resp.statements
         assert stmts, "Got no statements."
     assert time_taken.seconds < seconds, time_taken.seconds
     return resp
@@ -49,23 +52,24 @@ def test_bigger_request():
 
 @attr('nonpublic')
 def test_too_big_request():
-    resp_some = __check_request(5, agents=['TP53'], persist=False)
-    resp_all1 = __check_request(60, agents=['TP53'], persist=True, block=True)
+    resp_some = __check_request(5, agents=['TP53'], persist=False,
+                                simple_respones=False)
+    resp_all1 = __check_request(60, agents=['TP53'], persist=True, block=True,
+                                simple_response=False)
     resp_all2 = __check_request(5, agents=['TP53'], persist=True, block=False,
-                                check_stmts=False)
-    assert not resp_all2['done'], \
+                                check_stmts=False, simple_response=False)
+    assert not resp_all2.done, \
         "Background complete appears to have resolved too fast."
-    assert len(resp_all2['statements_sample']) == len(resp_some['statements'])
+    assert len(resp_all2.statements_sample) == len(resp_some.statements)
     print("Waiting 60 seconds for background thread to complete...")
     sleep(60)
-    assert len(resp_all2['statements']) == len(resp_all1['statements'])
+    assert len(resp_all2.statements) == len(resp_all1.statements)
     return
 
 
 @attr('nonpublic')
 def test_famplex_namespace():
-    resp = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
-    stmts = resp['statements']
+    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
     print(len(stmts))
     assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF' for s in stmts]),\
         'Not all subjects match.'
@@ -83,8 +87,7 @@ def test_paper_query():
 
 @attr('nonpublic')
 def test_regulate_amount():
-    resp = dbr.get_statements('FOS', stmt_type='RegulateAmount')
-    stmts = resp['statements']
+    stmts = dbr.get_statements('FOS', stmt_type='RegulateAmount')
     print(len(stmts))
     stmt_types = {type(s).__name__ for s in stmts}
     print(stmt_types)
