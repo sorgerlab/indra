@@ -398,6 +398,7 @@ class PreassemblyManager(object):
         new_id_stash = 'new_ids.pkl'
         pickle_stashes.append(new_id_stash)
         if continuing and path.exists(new_id_stash):
+            self._log("Loading new statement ids from cache...")
             with open(new_id_stash, 'rb') as f:
                 new_ids = pickle.load(f)
         else:
@@ -411,6 +412,7 @@ class PreassemblyManager(object):
         dist_stash = 'stmt_ids.pkl'
         pickle_stashes.append(dist_stash)
         if continuing and path.exists(dist_stash):
+            self._log("Loading distilled statement ids from cache...")
             with open(dist_stash, 'rb') as f:
                 stmt_ids = pickle.load(f)
         else:
@@ -428,6 +430,7 @@ class PreassemblyManager(object):
         new_mk_stash = 'new_mk_set.pkl'
         pickle_stashes.append(new_mk_stash)
         if continuing and path.exists(new_mk_stash):
+            self._log("Loading hashes for new pa statements from cache...")
             with open(new_mk_stash, 'rb') as f:
                 new_mk_set = pickle.load(f)
         else:
@@ -586,6 +589,7 @@ if __name__ == '__main__':
     db.grab_session()
     pm = PreassemblyManager(args.num_procs, args.batch)
 
+    desc = 'Continuing' if args.continuing else 'Beginning'
     print("Beginning to %s preassembled corpus." % args.task)
     if args.task == 'create':
         pm.create_corpus(db, args.continuing, dups_file=args.store_duplicates)
