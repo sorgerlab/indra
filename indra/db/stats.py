@@ -220,13 +220,18 @@ def get_db_statistics(fname=None, db=None, tables=None):
         'pa_statements': get_pa_statement_stats
         }
 
+    task_order = ['text_ref', 'text_content', 'readings', 'statements',
+                  'pa_statements']
+
     # Get the statistics
     if tables is None:
-        for stat_meth in task_dict.values():
+        for task_name in task_order:
+            stat_meth = task_dict[task_name]
             stat_meth(fname, db)
     else:
-        for table_key in set(tables):
-            task_dict[table_key](fname, db)
+        table_set = set(tables)
+        for task_name in [tn for tn in task_order if tn in table_set]:
+            task_dict[task_name](fname, db)
 
     return
 
