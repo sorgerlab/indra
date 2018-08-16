@@ -439,6 +439,10 @@ class PreassemblyManager(object):
                                                      old_mk_set)
             with open(new_mk_stash, 'wb') as f:
                 pickle.dump(new_mk_set, f)
+        if continuing:
+            self._log("Original old mk set: %d" % len(old_mk_set))
+            old_mk_set = old_mk_set - new_mk_set
+            self._log("Adjusted old mk set: %d" % len(old_mk_set))
 
         # If we are continuing, check for support links that were already found.
         support_link_stash = 'new_support_links.pkl'
