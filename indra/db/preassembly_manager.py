@@ -590,10 +590,10 @@ if __name__ == '__main__':
     pm = PreassemblyManager(args.num_procs, args.batch)
 
     desc = 'Continuing' if args.continuing else 'Beginning'
-    print("Beginning to %s preassembled corpus." % args.task)
+    print("%s to %s preassembled corpus." % (desc, args.task))
     if args.task == 'create':
-        pm.create_corpus(db, args.continuing, dups_file=args.store_duplicates)
+        pm.create_corpus(db, args.continuing, args.store_duplicates)
     elif args.task == 'update':
-        pm.supplement_corpus(db, dups_file=args.store_duplicates)
+        pm.supplement_corpus(db, args.continuing, args.store_duplicates)
     else:
         raise IndraDBPreassemblyError('Unrecognized task: %s.' % args.task)
