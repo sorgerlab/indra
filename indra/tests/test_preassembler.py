@@ -616,12 +616,19 @@ def test_find_contradicts():
     st2 = Activation(Agent('a'), Agent('b'))
     st3 = IncreaseAmount(Agent('a'), Agent('b'))
     st4 = DecreaseAmount(Agent('a'), Agent('b'))
-    pa = Preassembler(hierarchies, [st1, st2, st3, st4])
+    st5 = ActiveForm(Agent('a',
+            mods=[ModCondition('phosphorylation', None, None, True)]),
+            'kinase', True)
+    st6 = ActiveForm(Agent('a',
+            mods=[ModCondition('phosphorylation', None, None, True)]),
+            'kinase', False)
+    pa = Preassembler(hierarchies, [st1, st2, st3, st4, st5, st6])
     contradicts = pa.find_contradicts()
-    assert len(contradicts) == 2
+    assert len(contradicts) == 3
     for s1, s2 in contradicts:
         assert {s1.uuid, s2.uuid} in ({st1.uuid, st2.uuid},
-                                      {st3.uuid, st4.uuid})
+                                      {st3.uuid, st4.uuid},
+                                      {st5.uuid, st6.uuid})
 
 
 def test_preassemble_related_complex():

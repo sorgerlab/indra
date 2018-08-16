@@ -526,22 +526,31 @@ class Preassembler(object):
         contradicts : list(tuple(Statement, Statement))
             A list of Statement pairs that are contradicting.
         """
-        pos_stmts = AddModification.__subclasses__()
-        neg_stmts = [modclass_to_inverse[c] for c in pos_stmts]
-
-        pos_stmts += [Activation, IncreaseAmount, Influence]
-        neg_stmts += [Inhibition, DecreaseAmount, Influence]
-
-        # Make a list of Statement types
+        # Make a dict of Statement by type
         stmts_by_type = collections.defaultdict(lambda: [])
         for idx, stmt in enumerate(self.stmts):
             stmts_by_type[type(stmt)].append(stmt)
+
+        # Handle Statements with polarity first
+        pos_stmts = AddModification.__subclasses__()
+        neg_stmts = [modclass_to_inverse[c] for c in pos_stmts]
+
+        pos_stmts += [Activation, IncreaseAmount]
+        neg_stmts += [Inhibition, DecreaseAmount]
 
         contradicts = []
         for pst, nst in zip(pos_stmts, neg_stmts):
             poss = stmts_by_type.get(pst, [])
             negs = stmts_by_type.get(nst, [])
             for st1, st2 in itertools.product(poss, negs):
+                if st1.contradicts(st2, self.hierarchies):
+                    contradicts.append((st1, st2))
+
+        # HAndle neutral Statements next
+        neu_stmts = [Influence, ActiveForm]
+        for stt in neu_stmts:
+            stmts = stmts_by_type.get(stt, [])
+            for st1, st2 in itertools.combinations(stmts, 2):
                 if st1.contradicts(st2, self.hierarchies):
                     contradicts.append((st1, st2))
 
