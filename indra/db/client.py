@@ -6,7 +6,7 @@ import json
 import logging
 from collections import defaultdict
 from itertools import groupby, permutations, product
-from sqlalchemy import or_, desc
+from sqlalchemy import or_, desc, func
 
 from indra.statements import Unresolved, Evidence
 
@@ -618,14 +618,22 @@ def _get_trids(db, id_val, id_type):
 
 @_clockit
 def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None,
-                                    offset=None):
+                                    offset=None, ev_limit=None):
     # Get the statements from reading
     stmts_dict = {}
-    master_q = (db.filter_query([db.FastRawPaLink.mk_hash,
-                                 db.FastRawPaLink.raw_json,
-                                 db.FastRawPaLink.pa_json,
-                                 db.ReadingRefLink.pmid], sub_q_link)
-                .outerjoin(db.FastRawPaLink.reading_ref))
+    outer_q = db.filter_query([db.FastRawPaLink.mk_hash,
+                               db.FastRawPaLink.raw_json,
+                               db.FastRawPaLink.pa_json,
+                               db.ReadingRefLink.pmid], sub_q_link)
+    outer_q.outerjoin(db.FastRawPaLink.reading_ref)
+    if ev_limit is not None:
+        row_num_col = (func
+                       .row_number()
+                       .over(partition_by=db.FastRawPaLink.mk_hash)
+                       .label('rownum'))
+        outer_q = outer_q.add_column(row_num_col)
+        outer_q = outer_q.from_self().filter(row_num_col <= ev_limit)
+    master_q = outer_q
 
     # Specifically, this should probably be an order-by a parameter such as
     # evidence count and/or support count.
