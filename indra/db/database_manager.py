@@ -16,7 +16,7 @@ from sqlalchemy.sql import expression as sql_expressions
 from sqlalchemy.schema import DropTable
 from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
     create_engine, inspect, LargeBinary, Boolean, DateTime, func, BigInteger
 from sqlalchemy.orm import relationship, sessionmaker
@@ -797,8 +797,16 @@ class DatabaseManager(object):
 
     def count(self, tbl, *args):
         """Get a count of the results to a query."""
-        assert len(tbl) == 1, "Only one table can be counted at a time."
-        return self.filter_query(func.count(tbl), *args).all()[0][0]
+        if isinstance(tbl, list):
+            assert len(tbl) == 1, "Only one table can be counted at a time."
+            tbl = tbl[0]
+        if isinstance(tbl, DeclarativeMeta):
+            tbl = inspect(tbl).primary_key[0]
+        q = self.session.query(func.count(tbl)).filter(*args)
+        res = q.all()
+        assert len(res) == 1
+        assert len(res[0]) == 1
+        return res[0][0]
 
     def select_one(self, tbls, *args):
         """Select the first value that matches requirements.
