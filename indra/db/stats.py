@@ -129,6 +129,8 @@ def get_statements_stats(fname=None, db=None, indra_version=None):
     __report_stat('---------------------', fname)
     if indra_version is not None:
         filters = [db.RawStatements.indra_version == indra_version]
+    else:
+        filters = []
     total_raw_statements = db.count(db.RawStatements, *filters)
     __report_stat("Total number of raw statements: %d" % total_raw_statements,
                   fname)
@@ -182,11 +184,11 @@ def get_db_statistics(fname=None, db=None, tables=None):
         'text_ref': get_text_ref_stats,
         'text_content': get_text_content_stats,
         'readings': get_readings_stats,
-        'statements': get_statements_stats,
+        'raw_statements': get_statements_stats,
         'pa_statements': get_pa_statement_stats
         }
 
-    task_order = ['text_ref', 'text_content', 'readings', 'statements',
+    task_order = ['text_ref', 'text_content', 'readings', 'raw_statements',
                   'pa_statements']
 
     # Get the statistics
