@@ -30,25 +30,16 @@ def get_text_ref_stats(fname=None, db=None):
     refs_with_content = db.count(db.TextContent.text_ref_id)
     __report_stat('Total number of refs with content: %d' % refs_with_content,
                   fname)
-    refs_with_fulltext = db.count(db.TextContent.text_ref_id,
-                                  db.TextContent.text_type == 'fulltext')
-    __report_stat('Number of refs with fulltext: %d' % refs_with_fulltext,
-                  fname)
-    refs_with_abstract = db.count(db.TextContent.text_ref_id,
-                                  db.TextContent.text_type == 'abstract')
-    __report_stat('Number of refs with abstract: %d' % refs_with_abstract,
-                  fname)
+    refs_by_type = _report_groups(db, db.TextContent, 'text_ref_id',
+                                  'text_type', fname)
     __report_stat(('Number of refs with only abstract: %d'
-                   % (refs_with_content-refs_with_fulltext)), fname)
+                   % (refs_with_content-refs_by_type['fulltext'])), fname)
     refs_with_reading = db.count(db.TextContent.text_ref_id,
                                  *db.link(db.TextContent, db.Reading))
     __report_stat('Number of refs that have been read: %d' % refs_with_reading,
                   fname)
-    refs_with_fulltext_read = db.count(db.TextContent.text_ref_id,
-                                       db.TextContent.text_type == 'fulltext',
-                                       *db.link(db.TextContent, db.Reading))
-    __report_stat(('Number of refs with fulltext read: %d'
-                   % refs_with_fulltext_read), fname)
+    _report_groups(db, db.TextContent, 'text_ref_id', 'text_type', fname,
+                   tc_rdng_link)
     return
 
 
@@ -78,16 +69,16 @@ def get_text_content_stats(fname=None, db=None):
                              db.TextContent.text_type == 'fulltext',
                              tc_rdng_link)
     __report_stat("Number of fulltext entries read: %d" % fulltext_read, fname)
-    _report_groups(db, db.TextContent, 'source', fname)
-    _report_groups(db, db.TextContent, 'source', fname, tc_rdng_link)
+    _report_groups(db, db.TextContent, 'id', 'source', fname)
+    _report_groups(db, db.TextContent, 'id', 'source', fname, tc_rdng_link)
     return
 
 
-def _report_groups(db, tbl, group_attr, fname, *filters):
+def _report_groups(db, tbl, count_attr, group_attr, fname, *filters):
     """Report on the number of rows by group."""
     col_obj = getattr(tbl, group_attr)
-    pk = func.count(db.get_primary_key(tbl))
-    q = db.session.query(col_obj, pk)
+    count_obj = getattr(tbl, count_attr)
+    q = db.session.query(col_obj, count_obj)
     if filters:
         q = q.filter(*filters)
     content_by_group = (q.distinct()
@@ -99,7 +90,7 @@ def _report_groups(db, tbl, group_attr, fname, *filters):
     report_str = broad_format.format(group=group_attr, values=value_str,
                                      table=tbl.__tablename__)
     __report_stat(report_str, fname)
-    return content_by_group
+    return {s: n for s, n in content_by_group}
 
 
 def get_readings_stats(fname=None, db=None):
