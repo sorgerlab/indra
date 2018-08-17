@@ -631,6 +631,21 @@ def test_find_contradicts():
                                       {st5.uuid, st6.uuid})
 
 
+def test_find_contradicts_refinement():
+    ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
+    kras = Agent('KRAS', db_refs={'HGNC': '6407'})
+    hras = Agent('HRAS', db_refs={'HGNC': '5173'})
+    st1 = Phosphorylation(Agent('x'), ras)
+    st2 = Dephosphorylation(Agent('x'), kras)
+    st3 = Dephosphorylation(Agent('x'), hras)
+    pa = Preassembler(hierarchies, [st1, st2, st3])
+    contradicts = pa.find_contradicts()
+    assert len(contradicts) == 2
+    for s1, s2 in contradicts:
+        assert {s1.uuid, s2.uuid} in ({st1.uuid, st2.uuid},
+                                      {st1.uuid, st3.uuid})
+
+
 def test_preassemble_related_complex():
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
     kras = Agent('KRAS', db_refs={'HGNC': '6407'})
