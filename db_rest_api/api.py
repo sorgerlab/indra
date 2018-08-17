@@ -216,7 +216,7 @@ def get_statements():
         gen = batch_iter(resp_json_bts, 10000)
         resp = Response(gen, mimetype='application/json')
     else:
-        resp = jsonify(result)
+        resp = Response(json.dumps(result), mimetype='application/json')
     logger.info("Exiting with %d statements with %d evidence of size %f MB."
                 % (len(result['statements']), result['total_evidence'],
                    sys.getsizeof(resp.data)/1e6))
