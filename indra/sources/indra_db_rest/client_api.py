@@ -245,7 +245,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                 params['type'] = stmt_type
                 new_resp = _make_stmts_query(agent_strs, params, persist)
                 logger.info("Found %d %s statements."
-                            % (len(resp['statements']), stmt_type))
+                            % (len(new_resp.statements), stmt_type))
                 if resp is None:
                     resp = new_resp
                 else:
