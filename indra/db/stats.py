@@ -25,29 +25,28 @@ def get_text_ref_stats(fname=None, db=None):
     tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
     __report_stat("Text ref statistics:", fname)
     __report_stat("--------------------", fname)
-    tr_q = db.filter_query(db.TextRef)
-    total_refs = tr_q.count()
+    total_refs = db.count(db.TextRef)
     __report_stat('Total number of text refs: %d' % total_refs, fname)
-    tr_w_cont_q = tr_q.filter(tr_tc_link)
-    refs_with_content = tr_w_cont_q.distinct().count()
+    refs_with_content = db.count(db.TextContent.text_ref_id)
     __report_stat('Total number of refs with content: %d' % refs_with_content,
                   fname)
-    tr_w_fulltext_q = tr_w_cont_q.filter(db.TextContent.text_type == 'fulltext')
-    refs_with_fulltext = tr_w_fulltext_q.distinct().count()
+    refs_with_fulltext = db.count(db.TextContent.text_ref_id,
+                                  db.TextContent.text_type == 'fulltext')
     __report_stat('Number of refs with fulltext: %d' % refs_with_fulltext,
                   fname)
-    tr_w_abstract_q = tr_w_cont_q.filter(db.TextContent.text_type == 'abstract')
-    refs_with_abstract = tr_w_abstract_q.distinct().count()
+    refs_with_abstract = db.count(db.TextContent.text_ref_id,
+                                  db.TextContent.text_type == 'abstract')
     __report_stat('Number of refs with abstract: %d' % refs_with_abstract,
                   fname)
     __report_stat(('Number of refs with only abstract: %d'
                    % (refs_with_content-refs_with_fulltext)), fname)
-    tr_w_read_content_q = tr_w_cont_q.filter(tc_rdng_link)
-    refs_with_reading = tr_w_read_content_q.distinct().count()
+    refs_with_reading = db.count(db.TextContent.text_ref_id,
+                                 *db.link(db.TextContent, db.Reading))
     __report_stat('Number of refs that have been read: %d' % refs_with_reading,
                   fname)
-    tr_w_fulltext_read_q = tr_w_fulltext_q.filter(tc_rdng_link)
-    refs_with_fulltext_read = tr_w_fulltext_read_q.distinct().count()
+    refs_with_fulltext_read = db.count(db.TextContent.text_ref_id,
+                                       db.TextContent.text_type == 'fulltext',
+                                       *db.link(db.TextContent, db.Reading))
     __report_stat(('Number of refs with fulltext read: %d'
                    % refs_with_fulltext_read), fname)
     return
