@@ -18,10 +18,28 @@ def __report_stat(report_str, fname=None, do_print=True):
     return
 
 
+def _report_groups(db, tbl, count_attr, group_attr, fname, *filters):
+    """Report on the number of rows by group."""
+    col_obj = getattr(tbl, group_attr)
+    count_obj = getattr(tbl, count_attr)
+    q = db.session.query(col_obj, count_obj)
+    if filters:
+        q = q.filter(*filters)
+    content_by_group = (q.distinct()
+                        .group_by(col_obj)
+                        .all())
+    broad_format = "{table} by {group}:\n    {values}"
+    value_strs = ['%s: %d' % (s, n) for s, n in content_by_group]
+    value_str = '\n    '.join(value_strs)
+    report_str = broad_format.format(group=group_attr, values=value_str,
+                                     table=tbl.__tablename__)
+    __report_stat(report_str, fname)
+    return {s: n for s, n in content_by_group}
+
+
 def get_text_ref_stats(fname=None, db=None):
     if db is None:
         db = get_primary_db()
-    tr_tc_link = db.TextRef.id == db.TextContent.text_ref_id
     tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
     __report_stat("Text ref statistics:", fname)
     __report_stat("--------------------", fname)
@@ -35,7 +53,7 @@ def get_text_ref_stats(fname=None, db=None):
     __report_stat(('Number of refs with only abstract: %d'
                    % (refs_with_content-refs_by_type['fulltext'])), fname)
     refs_with_reading = db.count(db.TextContent.text_ref_id,
-                                 *db.link(db.TextContent, db.Reading))
+                                 tc_rdng_link)
     __report_stat('Number of refs that have been read: %d' % refs_with_reading,
                   fname)
     _report_groups(db, db.TextContent, 'text_ref_id', 'text_type', fname,
@@ -72,25 +90,6 @@ def get_text_content_stats(fname=None, db=None):
     _report_groups(db, db.TextContent, 'id', 'source', fname)
     _report_groups(db, db.TextContent, 'id', 'source', fname, tc_rdng_link)
     return
-
-
-def _report_groups(db, tbl, count_attr, group_attr, fname, *filters):
-    """Report on the number of rows by group."""
-    col_obj = getattr(tbl, group_attr)
-    count_obj = getattr(tbl, count_attr)
-    q = db.session.query(col_obj, count_obj)
-    if filters:
-        q = q.filter(*filters)
-    content_by_group = (q.distinct()
-                         .group_by(col_obj)
-                         .all())
-    broad_format = "{table} by {group}:\n    {values}"
-    value_strs = ['%s: %d' % (s, n) for s, n in content_by_group]
-    value_str = '\n    '.join(value_strs)
-    report_str = broad_format.format(group=group_attr, values=value_str,
-                                     table=tbl.__tablename__)
-    __report_stat(report_str, fname)
-    return {s: n for s, n in content_by_group}
 
 
 def get_readings_stats(fname=None, db=None):
