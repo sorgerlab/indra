@@ -58,8 +58,7 @@ def get_text_content_stats(fname=None, db=None):
     tc_rdng_link = db.TextContent.id == db.Reading.text_content_id
     __report_stat("\nText Content statistics:", fname)
     __report_stat('------------------------', fname)
-    tc_q = db.filter_query(db.TextContent)
-    total_content = tc_q.count()
+    total_content = db.count(db.TextContent)
     __report_stat("Total number of text content entries: %d" % total_content)
     latest_updates = (db.session.query(db.Updates.source,
                                        func.max(db.Updates.datetime))
@@ -70,37 +69,37 @@ def get_text_content_stats(fname=None, db=None):
                                     for s, d in latest_updates])),
                   fname
                   )
-    tc_w_reading_q = tc_q.filter(tc_rdng_link)
-    content_read = tc_w_reading_q.distinct().count()
+    content_read = db.count(db.Reading.text_content_id)
     __report_stat("Total content read: %d" % content_read, fname)
-    tc_fulltext_q = tc_q.filter(db.TextContent.text_type == 'fulltext')
-    fulltext_content = tc_fulltext_q.distinct().count()
+    fulltext_content = db.count(db.TextContent,
+                                db.TextContent.text_type == 'fulltext')
     __report_stat("Number of fulltext entries: %d" % fulltext_content, fname)
-    tc_fulltext_read_q = tc_fulltext_q.filter(tc_rdng_link)
-    fulltext_read = tc_fulltext_read_q.distinct().count()
+    fulltext_read = db.count(db.TextContent,
+                             db.TextContent.text_type == 'fulltext',
+                             tc_rdng_link)
     __report_stat("Number of fulltext entries read: %d" % fulltext_read, fname)
-    content_by_source = (db.session.query(db.TextContent.source,
-                                          func.count(db.TextContent.id))
-                         .distinct()
-                         .group_by(db.TextContent.source)
-                         .all())
-    __report_stat(("Content by source:\n    %s"
-                   % '\n    '.join(['%s: %d' % (s, n)
-                                    for s, n in content_by_source])),
-                  fname
-                  )
-    content_read_by_source = (db.session.query(db.TextContent.source,
-                                               func.count(db.TextContent.id))
-                              .filter(tc_rdng_link)
-                              .distinct()
-                              .group_by(db.TextContent.source)
-                              .all())
-    __report_stat(("Content read by source:\n    %s"
-                   % '\n    '.join(['%s: %d' % (s, n)
-                                    for s, n in content_read_by_source])),
-                  fname
-                  )
+    _report_groups(db, db.TextContent, 'source', fname)
+    _report_groups(db, db.TextContent, 'source', fname, tc_rdng_link)
     return
+
+
+def _report_groups(db, tbl, group_attr, fname, *filters):
+    """Report on the number of rows by group."""
+    col_obj = getattr(tbl, group_attr)
+    pk = func.count(db.get_primary_key(tbl))
+    q = db.session.query(col_obj, pk)
+    if filters:
+        q = q.filter(*filters)
+    content_by_group = (q.distinct()
+                         .group_by(col_obj)
+                         .all())
+    broad_format = "{table} by {group}:\n    {values}"
+    value_strs = ['%s: %d' % (s, n) for s, n in content_by_group]
+    value_str = '\n    '.join(value_strs)
+    report_str = broad_format.format(group=group_attr, values=value_str,
+                                     table=tbl.__tablename__)
+    __report_stat(report_str, fname)
+    return content_by_group
 
 
 def get_readings_stats(fname=None, db=None):
