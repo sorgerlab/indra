@@ -175,17 +175,22 @@ class DbApiTestCase(unittest.TestCase):
                 (0, 'HGNC', hgnc_client.get_hgnc_id('MAPK1'))])
         return
 
-    def test_big_query(self):
-        """Load-test with several big queries."""
-        # Note that in this test we do not check the quality of the statements,
-        # because there are likely to be so many statements that that would take
-        # longer than needed, given that the quality is tested in other tests.
+    # Note that in these big_query tests do not check the quality of statements,
+    # because there are likely to be so many statements that that would take
+    # longer than needed, given that the quality is tested in other tests.
+    def test_big_query_ATK1(self):
         self.__check_good_statement_query(agent='AKT1', check_stmts=False,
                                           time_goal=10)
+
+    def test_big_query_MAPK1(self):
         self.__check_good_statement_query(agent='MAPK1', check_stmts=False,
                                           time_goal=20)
+
+    def test_big_query_TP53(self):
         self.__check_good_statement_query(agent='TP53', check_stmts=False,
                                           time_goal=20)
+
+    def test_big_query_NFkappaB(self):
         self.__check_good_statement_query(agent='NFkappaB@FPLX',
                                           check_stmts=False, time_goal=20)
         return
@@ -199,7 +204,6 @@ class DbApiTestCase(unittest.TestCase):
                                                   check_stmts=False,
                                                   time_goal=20)
         return
-
 
     def test_query_with_hgnc_ns(self):
         """Test specifying HGNC as a namespace."""
