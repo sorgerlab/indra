@@ -444,17 +444,20 @@ class PreassemblyManager(object):
             old_mk_set = old_mk_set - new_mk_set
             self._log("Adjusted old mk set: %d" % len(old_mk_set))
 
+        self._log("Found %d new pa statements." % len(new_mk_set))
+
         # If we are continuing, check for support links that were already found.
         support_link_stash = 'new_support_links.pkl'
         pickle_stashes.append(support_link_stash)
         if continuing and path.exists(support_link_stash):
             with open(support_link_stash, 'rb') as f:
-                existing_links = pickle.load(f)
+                status_dict = pickle.load(f)
+                existing_links = status_dict['existing links']
+                npa_done = status_dict['ids done']
             self._log("Found %d existing links." % len(existing_links))
         else:
             existing_links = set()
-
-        self._log("Found %d new pa statements." % len(new_mk_set))
+            npa_done = set()
 
         # Now find the new support links that need to be added.
         new_support_links = set()
@@ -489,19 +492,19 @@ class PreassemblyManager(object):
                         self._get_support_links(full_list, split_idx=split_idx,
                                                 poolsize=self.n_proc)
 
+                # Although there are generally few support links, copying as we
+                # go allows work to not be wasted.
                 new_support_links |= (some_support_links - existing_links)
-
-                # There are generally few support links compared to the number
-                # of statements, so it doesn't make sense to copy every time,
-                # but for long preassembly, this allows for better failure
-                # recovery.
-                if len(new_support_links) >= self.batch_size:
-                    self._log("Copying batch of %d support links into db."
-                              % len(new_support_links))
-                    db.copy('pa_support_links', new_support_links,
-                            ('supported_mk_hash', 'supporting_mk_hash'))
-                    existing_links |= new_support_links
-                    new_support_links = set()
+                self._log("Copying batch of %d support links into db."
+                          % len(new_support_links))
+                db.copy('pa_support_links', new_support_links,
+                        ('supported_mk_hash', 'supporting_mk_hash'))
+                existing_links |= new_support_links
+                npa_done |= {s.get_hash(shallow=True) for s in npa_batch}
+                new_support_links = set()
+                with open(support_link_stash, 'wb') as f:
+                    pickle.dump({'existing links': existing_links,
+                                 'ids done': npa_done}, f)
 
             # Insert any remaining support links.
             if new_support_links:
