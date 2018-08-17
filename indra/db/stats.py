@@ -22,7 +22,7 @@ def _report_groups(db, tbl, count_attr, group_attr, fname, *filters):
     """Report on the number of rows by group."""
     col_obj = getattr(tbl, group_attr)
     count_obj = getattr(tbl, count_attr)
-    q = db.session.query(col_obj, count_obj)
+    q = db.session.query(col_obj, func.count(count_obj))
     if filters:
         q = q.filter(*filters)
     content_by_group = (q.distinct()
@@ -98,8 +98,8 @@ def get_readings_stats(fname=None, db=None):
 
     __report_stat('\nReading statistics:', fname)
     __report_stat('-------------------', fname)
-    rdg_q = db.filter_query(db.Reading)
-    __report_stat('Total number or readings: %d' % rdg_q.count(), fname)
+    total_readings = db.count(db.Reading)
+    __report_stat('Total number or readings: %d' % total_readings, fname)
     # There may be a way to do this more neatly with a group_by clause, however
     # the naive way of doing it leaves us with a miscount due to indistinct.
     reader_versions = (db.session.query(db.Reading.reader_version)
@@ -108,12 +108,12 @@ def get_readings_stats(fname=None, db=None):
     stats = ''
     for rv, in reader_versions:
         for src, in sources:
-            cnt = db.filter_query(
+            cnt = db.count(
                 db.Reading,
                 db.TextContent.id == db.Reading.text_content_id,
                 db.TextContent.source == src,
                 db.Reading.reader_version == rv
-                ).distinct().count()
+                )
             stats += '    Readings by %s from %s: %d\n' % (rv, src, cnt)
     __report_stat("Readings by reader version and content source:\n%s" % stats,
                   fname)
