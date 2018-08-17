@@ -18,21 +18,19 @@ def __report_stat(report_str, fname=None, do_print=True):
     return
 
 
-def _report_groups(db, tbl, count_attr, group_attr, fname, *filters):
+def _report_groups(db, count_obj, group_obj, fname, *filters):
     """Report on the number of rows by group."""
-    col_obj = getattr(tbl, group_attr)
-    count_obj = getattr(tbl, count_attr)
-    q = db.session.query(col_obj, func.count(count_obj))
+    q = db.session.query(group_obj, func.count(count_obj))
     if filters:
         q = q.filter(*filters)
     content_by_group = (q.distinct()
-                        .group_by(col_obj)
+                        .group_by(group_obj)
                         .all())
     broad_format = "{table} by {group}:\n    {values}"
     value_strs = ['%s: %d' % (s, n) for s, n in content_by_group]
     value_str = '\n    '.join(value_strs)
-    report_str = broad_format.format(group=group_attr, values=value_str,
-                                     table=tbl.__tablename__)
+    report_str = broad_format.format(group=str(group_obj), values=value_str,
+                                     table=str(count_obj))
     __report_stat(report_str, fname)
     return {s: n for s, n in content_by_group}
 
@@ -48,16 +46,16 @@ def get_text_ref_stats(fname=None, db=None):
     refs_with_content = db.count(db.TextContent.text_ref_id)
     __report_stat('Total number of refs with content: %d' % refs_with_content,
                   fname)
-    refs_by_type = _report_groups(db, db.TextContent, 'text_ref_id',
-                                  'text_type', fname)
+    refs_by_type = _report_groups(db, db.TextContent.text_ref_id,
+                                  db.TextContent.text_type, fname)
     __report_stat(('Number of refs with only abstract: %d'
                    % (refs_with_content-refs_by_type['fulltext'])), fname)
     refs_with_reading = db.count(db.TextContent.text_ref_id,
                                  tc_rdng_link)
     __report_stat('Number of refs that have been read: %d' % refs_with_reading,
                   fname)
-    _report_groups(db, db.TextContent, 'text_ref_id', 'text_type', fname,
-                   tc_rdng_link)
+    _report_groups(db, db.TextContent.text_ref_id, db.TextContent.text_type,
+                   fname, tc_rdng_link)
     return
 
 
@@ -87,8 +85,9 @@ def get_text_content_stats(fname=None, db=None):
                              db.TextContent.text_type == 'fulltext',
                              tc_rdng_link)
     __report_stat("Number of fulltext entries read: %d" % fulltext_read, fname)
-    _report_groups(db, db.TextContent, 'id', 'source', fname)
-    _report_groups(db, db.TextContent, 'id', 'source', fname, tc_rdng_link)
+    _report_groups(db, db.TextContent.id, db.TextContent.source, fname)
+    _report_groups(db, db.TextContent.id, db.TextContent.source, fname,
+                   tc_rdng_link)
     return
 
 
@@ -128,49 +127,28 @@ def get_statements_stats(fname=None, db=None, indra_version=None):
 
     __report_stat('\nStatement Statistics:', fname)
     __report_stat('---------------------', fname)
-    stmt_q = db.filter_query(db.RawStatements)
     if indra_version is not None:
-        stmt_q = stmt_q.filter(db.RawStatements.indra_version == indra_version)
-    __report_stat("Total number of statments: %d" % stmt_q.count(), fname)
+        filters = [db.RawStatements.indra_version == indra_version]
+    total_raw_statements = db.count(db.RawStatements, *filters)
+    __report_stat("Total number of raw statements: %d" % total_raw_statements,
+                  fname)
     readers = db.session.query(db.Reading.reader).distinct().all()
     sources = db.session.query(db.TextContent.source).distinct().all()
     stats = ''
     for reader, in readers:
         for src, in sources:
-            cnt = stmt_q.filter(
-                stmt_rdng_link,
-                tc_rdng_link,
-                db.Reading.reader == reader,
-                db.TextContent.source == src
-                ).distinct().count()
-            stats += ('    Statements from %s reading %s: %d\n'
+            cnt = db.count(db.RawStatements, stmt_rdng_link, tc_rdng_link,
+                           db.Reading.reader == reader,
+                           db.TextContent.source == src, *filters)
+            stats += ('    Raw statements from %s reading %s: %d\n'
                       % (reader, src, cnt))
     __report_stat("Statements by reader and content source:\n%s" % stats,
                   fname)
+    _report_groups(db, db.RawStatements.id, db.DBInfo.db_name, fname,
+                   db.RawStatements.db_info_id == db.DBInfo.id)
     if indra_version is None:
-        statements_by_db_source = (
-            db.session.query(db.DBInfo.db_name, func.count(db.RawStatements.id))
-            .filter(db.RawStatements.db_ref == db.DBInfo.id)
-            .distinct()
-            .group_by(db.DBInfo.db_name)
-            .all()
-            )
-        __report_stat(("Statements by database:\n    %s"
-                       % '\n    '.join(['%s: %d' % (s, n)
-                                        for s, n in statements_by_db_source])),
-                      fname
-                      )
-        statements_by_indra_version = (
-            db.session.query(db.RawStatements.indra_version,
-                             func.count(db.RawStatements.id))
-            .group_by(db.RawStatements.indra_version)
-            .all()
-            )
-        __report_stat(("Number of statements by indra version:\n    %s"
-                       % '\n    '.join(['%s: %d' % (s, n) for s, n
-                                        in statements_by_indra_version])),
-                      fname
-                      )
+        _report_groups(db, db.RawStatements.id, db.RawStatements.indra_version,
+                       fname)
     return
 
 
