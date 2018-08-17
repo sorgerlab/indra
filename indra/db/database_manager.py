@@ -801,12 +801,16 @@ class DatabaseManager(object):
             assert len(tbl) == 1, "Only one table can be counted at a time."
             tbl = tbl[0]
         if isinstance(tbl, DeclarativeMeta):
-            tbl = inspect(tbl).primary_key[0]
+            tbl = self.get_primary_key(tbl)
         q = self.session.query(func.count(tbl)).filter(*args)
         res = q.all()
         assert len(res) == 1
         assert len(res[0]) == 1
         return res[0][0]
+
+    def get_primary_key(self, tbl):
+        """Get an instance for the primary key column of a given table."""
+        return inspect(tbl).primary_key[0]
 
     def select_one(self, tbls, *args):
         """Select the first value that matches requirements.
@@ -904,7 +908,7 @@ class DatabaseManager(object):
 
         # Get all ids for this table given query filters
         logger.info("Getting all relevant ids.")
-        pk = inspect(true_table).primary_key[0]
+        pk = self.get_primary_key(true_table)
         id_tuples = self.select_all(getattr(true_table, pk.name), *args,
                                     **kwargs)
         id_list = list({entry_id for entry_id, in id_tuples})
