@@ -1056,7 +1056,7 @@ class Evidence(object):
         return ev
 
     def __str__(self):
-        ev_str = 'Evidence(source_api\'=%s\',\n' % self.source_api
+        ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
         ev_str += '         pmid=\'%s\',\n' % self.pmid
         ev_str += '         text=\'%s\',\n' % self.text
         ev_str += '         annotations=%s)' % self.annotations
