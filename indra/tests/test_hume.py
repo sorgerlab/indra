@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+import os
 import unittest
-from os.path import join, dirname
 from indra.statements import *
 from indra.sources.hume.api import *
 
