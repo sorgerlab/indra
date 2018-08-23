@@ -451,37 +451,51 @@ class HierarchyManager(object):
             raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
         return (ag_ns_name, ag_id)
 
-# Load the default entity and modification hierarchies
-entity_file_path = os.path.join(os.path.dirname(__file__),
-                    '../resources/entity_hierarchy.rdf')
-mod_file_path = os.path.join(os.path.dirname(__file__),
-                    '../resources/modification_hierarchy.rdf')
-act_file_path = os.path.join(os.path.dirname(__file__),
-                    '../resources/activity_hierarchy.rdf')
-ccomp_file_path = os.path.join(os.path.dirname(__file__),
-                    '../resources/cellular_component_hierarchy.rdf')
 
-# Default entity hierarchy loaded from the RDF file at
-# `resources/entity_hierarchy.rdf`.
-entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True,
-                                    uri_as_name=True)
-# Default modification hierarchy loaded from the RDF file at
-# `resources/modification_hierarchy.rdf`.
-modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True,
+def get_bio_hierarchies(from_pickle=True):
+    if from_pickle:
+        import pickle
+        hierarchy_file = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../resources/bio_hierarchies.pkl'
+        with open(hierarchy_file, 'rb') as fh:
+            hierarchies = pickle.load(fh)
+        return hierarchies
+
+    # Load the default entity and modification hierarchies
+    entity_file_path = os.path.join(os.path.dirname(__file__),
+                        '../resources/entity_hierarchy.rdf')
+    mod_file_path = os.path.join(os.path.dirname(__file__),
+                        '../resources/modification_hierarchy.rdf')
+    act_file_path = os.path.join(os.path.dirname(__file__),
+                        '../resources/activity_hierarchy.rdf')
+    ccomp_file_path = os.path.join(os.path.dirname(__file__),
+                        '../resources/cellular_component_hierarchy.rdf')
+
+    # Default entity hierarchy loaded from the RDF file at
+    # `resources/entity_hierarchy.rdf`.
+    entity_hierarchy = HierarchyManager(entity_file_path, build_closure=True,
+                                        uri_as_name=True)
+    # Default modification hierarchy loaded from the RDF file at
+    # `resources/modification_hierarchy.rdf`.
+    modification_hierarchy = HierarchyManager(mod_file_path, build_closure=True,
+                                              uri_as_name=True)
+    # Default activity hierarchy loaded from the RDF file at
+    # `resources/activity_hierarchy.rdf`.
+    activity_hierarchy = HierarchyManager(act_file_path, build_closure=True,
                                           uri_as_name=True)
-# Default activity hierarchy loaded from the RDF file at
-# `resources/activity_hierarchy.rdf`.
-activity_hierarchy = HierarchyManager(act_file_path, build_closure=True,
-                                      uri_as_name=True)
-# Default cellular_component hierarchy loaded from the RDF file at
-# `resources/cellular_component_hierarchy.rdf`.
-ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False,
-                                   uri_as_name=False)
+    # Default cellular_component hierarchy loaded from the RDF file at
+    # `resources/cellular_component_hierarchy.rdf`.
+    ccomp_hierarchy = HierarchyManager(ccomp_file_path, build_closure=False,
+                                       uri_as_name=False)
 
-hierarchies = {'entity': entity_hierarchy,
-               'modification': modification_hierarchy,
-               'activity': activity_hierarchy,
-               'cellular_component': ccomp_hierarchy}
+    hierarchies = {'entity': entity_hierarchy,
+                   'modification': modification_hierarchy,
+                   'activity': activity_hierarchy,
+                   'cellular_component': ccomp_hierarchy}
+    return hierarchies
+
+
+hierarchies = get_bio_hierarchies()
 
 
 def get_wm_hierarchies():

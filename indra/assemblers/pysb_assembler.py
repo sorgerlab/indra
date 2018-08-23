@@ -14,7 +14,7 @@ import pysb.export
 
 from indra import statements as ist
 from indra.databases import context_client, get_identifiers_url
-from indra.preassembler.hierarchy_manager import entity_hierarchy as enth
+from indra.preassembler.hierarchy_manager import hierarchies
 from indra.tools.expand_families import _agent_from_uri
 
 # Python 2
@@ -263,9 +263,9 @@ def get_binding_site_name(agent):
     # Try to construct a binding site name based on parent
     grounding = agent.get_grounding()
     if grounding != (None, None):
-        uri = enth.get_uri(grounding[0], grounding[1])
+        uri = hierarchies['entity'].get_uri(grounding[0], grounding[1])
         # Get highest level parents in hierarchy
-        parents = enth.get_parents(uri, 'top')
+        parents = hierarchies['entity'].get_parents(uri, 'top')
         if parents:
             # Choose the first parent if there are more than one
             parent_uri = sorted(list(parents))[0]
