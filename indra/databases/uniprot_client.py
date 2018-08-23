@@ -681,7 +681,14 @@ def _build_human_mouse_rat():
                     uniprot_rat[human_id] = rat_id
     return uniprot_mouse, uniprot_rat
 
-def _build_uniprot_sec():
+def _build_uniprot_sec(from_pickle=True):
+    if from_pickle:
+        import pickle
+        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../resources/uniprot_sec_ac.pkl'
+        with open(up_entries_file, 'rb') as fh:
+            entries = pickle.load(fh)
+        return entries
     # File containing secondary accession numbers mapped
     # to primary accession numbers
     sec_file = os.path.dirname(os.path.abspath(__file__)) +\
