@@ -13,6 +13,7 @@ except ImportError:
 import logging
 import requests
 from indra.util import read_unicode_csv, write_unicode_csv
+from indra.databases import uniprot_client
 from indra.preassembler.make_cellular_component_hierarchy import \
     get_cellular_components
 from indra.preassembler.make_cellular_component_hierarchy import \
@@ -23,6 +24,7 @@ from indra.preassembler.make_activity_hierarchy import \
     main as make_act_hierarchy
 from indra.preassembler.make_modification_hierarchy import \
     main as make_mod_hierarchy
+from indra.preassembler.hierarchy_manager import get_bio_hierarchies
 
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
@@ -101,6 +103,12 @@ def update_uniprot_entries():
     logging.info('Saving into %s.' % fname)
     with open(fname, 'wb') as fh:
         fh.write(full_table.encode('utf-8'))
+    # Make pickle too
+    entries = uniprot_client._build_uniprot_entries()
+    fname = os.path.join(path, 'uniprot_entries.pkl')
+    with open(fname, 'wb') as fh:
+        pickle.dump(entries, fh, protocol=2)
+
 
 def update_uniprot_sec_ac():
     logger.info('--Updating UniProt secondary accession--')
@@ -109,6 +117,12 @@ def update_uniprot_sec_ac():
     logger.info('Downloading %s' % url)
     fname = os.path.join(path, 'uniprot_sec_ac.txt')
     urlretrieve(url, fname)
+    # Now make the pickle too
+    entries = uniprot_client._build_uniprot_sec()
+    fname = os.path.join(path, 'uniprot_sec_ac.pkl')
+    with open(fname, 'wb') as fh:
+        pickle.dump(entries, fh, protocol=2)
+
 
 def update_uniprot_subcell_loc():
     # TODO: This file could be stored as a tsv instead after some processing
@@ -408,6 +422,13 @@ def update_famplex():
         save_from_http(url, os.path.join(path,'famplex/%s.csv' % csv_name))
 
 
+def update_hierarchy_pickle():
+    fname = os.path.join(path, 'bio_hierarchies.pkl')
+    hierarchies = get_bio_hierarchies()
+    with open(fname, 'wb') as fh:
+        pickle.dump(hierarchies, fh, protocol=2)
+
+
 if __name__ == '__main__':
     update_famplex()
     update_famplex_map()
@@ -426,4 +447,5 @@ if __name__ == '__main__':
     update_modification_hierarchy()
     update_activity_hierarchy()
     update_cellular_component_hierarchy()
+    update_hierarchy_pickle()
     update_ncit_map()
