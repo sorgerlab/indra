@@ -612,7 +612,15 @@ def get_rat_id(human_protein_id):
     """
     return uniprot_human_rat.get(human_protein_id)
 
-def _build_uniprot_entries():
+def _build_uniprot_entries(from_pickle=True):
+    if from_pickle:
+        import pickle
+        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../resources/uniprot_entries.pkl'
+        with open(up_entries_file, 'rb') as fh:
+            entries = pickle.load(fh)
+        return entries
+
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.tsv'
     uniprot_gene_name = {}
@@ -673,7 +681,14 @@ def _build_human_mouse_rat():
                     uniprot_rat[human_id] = rat_id
     return uniprot_mouse, uniprot_rat
 
-def _build_uniprot_sec():
+def _build_uniprot_sec(from_pickle=True):
+    if from_pickle:
+        import pickle
+        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
+            '/../resources/uniprot_sec_ac.pkl'
+        with open(up_entries_file, 'rb') as fh:
+            entries = pickle.load(fh)
+        return entries
     # File containing secondary accession numbers mapped
     # to primary accession numbers
     sec_file = os.path.dirname(os.path.abspath(__file__)) +\
@@ -714,6 +729,7 @@ def _build_uniprot_subcell_loc():
 (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
  uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
  _build_uniprot_entries()
+
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
 uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()

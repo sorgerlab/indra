@@ -15,7 +15,6 @@ except ImportError:
     pass
 from indra.util import fast_deepcopy
 from indra.statements import *
-from indra.assemblers.english_assembler import EnglishAssembler
 
 logger = logging.getLogger('preassembler')
 
@@ -651,6 +650,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         :alt: Example statement graph rendered by Graphviz
 
     """
+    from indra.assemblers.english_assembler import EnglishAssembler
     # Set the default agent formatting properties
     if agent_style is None:
         agent_style = {'color': 'lightgray', 'style': 'filled',
