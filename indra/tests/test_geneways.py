@@ -1,22 +1,21 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from os.path import join, dirname
-from nose.tools import raises
+
+from os.path import join, dirname, abspath
 
 from indra.statements import *
-from indra.sources.geneways.geneways_symbols_parser import \
-        GenewaysSymbols
-from indra.sources.geneways.geneways_action_parser import \
-        GenewaysActionParser
+from indra.sources.geneways.geneways_symbols_parser import GenewaysSymbols
+from indra.sources.geneways.geneways_action_parser import GenewaysActionParser
 from indra.sources.geneways.geneways_actionmention_parser import \
         GenewaysActionMentionParser
 from indra.sources.geneways.geneways_api import process_geneways_files
 
 # Path to the Geneways test/dummy data folder
-path_this = os.path.dirname(os.path.abspath(__file__))
-data_folder = os.path.join(path_this, 'geneways_tests_data')
-symbols_file = os.path.join(data_folder, 'human_symbols.txt')
-actionmention_file = os.path.join(data_folder, 'human_actionmention.txt')
+path_this = dirname(abspath(__file__))
+data_folder = join(path_this, 'geneways_tests_data')
+symbols_file = join(data_folder, 'human_symbols.txt')
+actionmention_file = join(data_folder, 'human_actionmention.txt')
+
 
 def test_geneways_symbols_parser():
     symbols = GenewaysSymbols(symbols_file)
@@ -29,6 +28,7 @@ def test_geneways_symbols_parser():
     assert(symbols.id_to_symbol('2') == 'c-Src')
 
     assert(len(symbols.symbols_with_multiple_ids()) == 0)
+
 
 def test_geneways_actionmention_parser():
     parser = GenewaysActionMentionParser(actionmention_file)
@@ -93,6 +93,7 @@ def test_geneways_actionmention_parser():
     assert(mention3.score == '0.22')
     assert(mention3.prec == '0.55')
 
+
 def test_geneways_action_parser():
     parser = GenewaysActionParser(data_folder)
 
@@ -136,6 +137,7 @@ def test_geneways_action_parser():
     assert(action2.max_prec == '0.17')
     assert(len(action2.action_mentions) == 1)
 
+
 def test_geneways_processor():
     processor = process_geneways_files(data_folder, get_evidence=False)
 
@@ -165,4 +167,3 @@ def test_geneways_processor():
     assert(isinstance(statement2, Complex))
     assert(statement2.members[0].db_refs['TEXT'] == 'C')
     assert(statement2.members[1].db_refs['TEXT'] == 'D')
-

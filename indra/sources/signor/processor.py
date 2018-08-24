@@ -10,6 +10,7 @@ January 2016, Pages D548-D554. https://doi.org/10.1093/nar/gkv1048
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
 import sys
 from io import StringIO, BytesIO
 from copy import deepcopy
@@ -25,7 +26,7 @@ from indra.databases import hgnc_client, uniprot_client
 logger = logging.getLogger('signor')
 
 def _read_famplex_map():
-    fname = os.path.join(dirname(__file__), '../../resources/famplex_map.tsv')
+    fname = join(dirname(__file__), '../../resources/famplex_map.tsv')
     raw_map = read_unicode_csv(fname, '\t')
 
     m = {}

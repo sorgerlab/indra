@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from datetime import datetime
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
            'insert_pa_stmts', 'insert_db_stmts', 'get_raw_stmts_frm_db_list',
@@ -10,6 +9,7 @@ import re
 import json
 import zlib
 import logging
+from datetime import datetime
 from itertools import groupby
 from functools import partial, wraps
 from multiprocessing.pool import Pool
@@ -17,6 +17,7 @@ from multiprocessing.pool import Pool
 from indra.util import batch_iter
 from indra.util.nested_dict import NestedDict
 from indra.util.get_version import get_version
+from indra.util import batch_iter
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
 

@@ -68,9 +68,9 @@ if __name__ == '__main__':
         db_logger.setLevel(logging.DEBUG)
 
 
-import indra.tools.assemble_corpus as ac
 from indra.util import batch_iter
 from indra.statements import Statement
+from indra.tools import assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
