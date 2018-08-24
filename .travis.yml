@@ -30,7 +30,7 @@ install:
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask nltk reportlab
-  - pip install paths-graph
+  - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git@develop
   - mkdir -p $HOME/.pybel/data
@@ -73,6 +73,8 @@ install:
   - wget http://sorger.med.harvard.edu/data/bgyori/test_reading_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_db_info_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_stmts_tuples.pkl -nv
+  - pip install -U networkx>=2
+  - pip list
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"

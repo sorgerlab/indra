@@ -652,17 +652,6 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         :alt: Example statement graph rendered by Graphviz
 
     """
-    def transitive_reduction(G):
-        # NOTE: Copied from networkx version 2.0 source
-        TR = nx.DiGraph()
-        TR.add_nodes_from(G.nodes())
-        for u in G:
-            u_edges = set(G[u])
-            for v in G[u]:
-                u_edges -= {y for x, y in nx.dfs_edges(G, v)}
-            TR.add_edges_from((u, v) for v in u_edges)
-        return TR
-
     # Set the default agent formatting properties
     if agent_style is None:
         agent_style = {'color': 'lightgray', 'style': 'filled',
@@ -688,7 +677,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
     nx_graph.add_edges_from(edges)
     # Perform transitive reduction if desired
     if reduce:
-        nx_graph = transitive_reduction(nx_graph)
+        nx_graph = nx.algorithms.dag.transitive_reduction(nx_graph)
     # Create a pygraphviz graph from the nx graph
     try:
         pgv_graph = pgv.AGraph(name='statements', directed=True,

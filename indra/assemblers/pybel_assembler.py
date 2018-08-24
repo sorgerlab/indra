@@ -257,7 +257,7 @@ class PybelAssembler(object):
         edge_data_list = \
             _combine_edge_data(relation, subj_edge, obj_edge, evidence)
         for edge_data in edge_data_list:
-            self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+            self.model.add_edge(subj_node, obj_node, **edge_data)
 
     def _assemble_regulate_activity(self, stmt):
         """Example: p(HGNC:MAP2K1) => act(p(HGNC:MAPK1))"""
@@ -340,7 +340,7 @@ class PybelAssembler(object):
             edge_data_list = _combine_edge_data(pc.DIRECTLY_INCREASES,
                                            subj_edge, obj_edge, stmt.evidence)
             for edge_data in edge_data_list:
-                self.model.add_edge(subj_node, obj_node, attr_dict=edge_data)
+                self.model.add_edge(subj_node, obj_node, **edge_data)
 
     def _assemble_autophosphorylation(self, stmt):
         """Example: complex(p(HGNC:MAPK14), p(HGNC:TAB1)) =>

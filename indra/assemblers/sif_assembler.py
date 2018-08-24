@@ -104,7 +104,7 @@ class SifAssembler(object):
             relationship (e.g., most PTMs). Default is False.
         """
         sif_str = ''
-        for edge in self.graph.edges_iter(data=True):
+        for edge in self.graph.edges(data=True):
             n1 = edge[0]
             n2 = edge[1]
             data = edge[2]
@@ -252,4 +252,4 @@ class SifAssembler(object):
         if edge_attributes is None:
             self.graph.add_edge(s, t)
         else:
-            self.graph.add_edge(s, t, edge_attributes)
+            self.graph.add_edge(s, t, **edge_attributes)

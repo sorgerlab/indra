@@ -129,7 +129,7 @@ def test_activation():
                     pc.NAMESPACE: 'HGNC',
                     pc.NAME: 'MAP2K1'}
         assert belgraph.number_of_edges() == 1
-        _, _, edge_data = belgraph.edges(data=True)[0]
+        _, _, edge_data = list(belgraph.edges(data=True))[0]
         assert edge_data == edge
 
 
@@ -162,7 +162,7 @@ def test_inhibition():
                 pc.NAMESPACE: 'HGNC',
                 pc.NAME: 'MAP2K1'}
     assert belgraph.number_of_edges() == 1
-    _, _, edge_data = belgraph.edges(data=True)[0]
+    _, _, edge_data = list(belgraph.edges(data=True))[0]
     assert edge_data == edge
 
 
@@ -183,7 +183,7 @@ def test_increase_amount():
                                         pc.NAMESPACE: 'HGNC',
                                         pc.NAME: 'MDM2'}
     assert belgraph.number_of_edges() == 1
-    _, _, edge_data = belgraph.edges(data=True)[0]
+    _, _, edge_data = list(belgraph.edges(data=True))[0]
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
 
@@ -205,7 +205,7 @@ def test_increase_amount_tscript():
                                         pc.NAMESPACE: 'HGNC',
                                         pc.NAME: 'MDM2'}
     assert belgraph.number_of_edges() == 1
-    _, _, edge_data = belgraph.edges(data=True)[0]
+    _, _, edge_data = list(belgraph.edges(data=True))[0]
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
     assert edge_data[pc.SUBJECT] == {
             pc.MODIFIER: pc.ACTIVITY,

@@ -146,14 +146,15 @@ class BeliefEngine(object):
         def build_hierarchy_graph(stmts):
             g = networkx.DiGraph()
             for st1 in stmts:
-                g.add_node(st1.matches_key(), {'stmt': st1})
+                g.add_node(st1.matches_key(), stmt=st1)
                 for st2 in st1.supported_by:
-                    g.add_node(st2.matches_key(), {'stmt': st2})
+                    g.add_node(st2.matches_key(), stmt=st2)
                     g.add_edge(st2.matches_key(), st1.matches_key())
             return g
 
         def get_ranked_stmts(g):
-            node_ranks = networkx.topological_sort(g, reverse=True)
+            node_ranks = networkx.algorithms.dag.topological_sort(g)
+            node_ranks = reversed(list(node_ranks))
             stmts = [g.node[n]['stmt'] for n in node_ranks]
             return stmts
         g = build_hierarchy_graph(statements)
