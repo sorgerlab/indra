@@ -73,7 +73,8 @@ install:
   - wget http://sorger.med.harvard.edu/data/bgyori/test_reading_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_db_info_tuples.pkl -nv
   - wget http://sorger.med.harvard.edu/data/bgyori/test_stmts_tuples.pkl -nv
-  - pip install networkx==2.1
+  - pip install -U networkx>=2
+  - pip list
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
