@@ -526,8 +526,8 @@ class ModelChecker(object):
                 edge_weights_norm[e] = ((v / float(edge_weight_sum)) /
                                         float(rule_obj_count))
             # Add edge weights to paths graph
-            nx.set_edge_attributes(combined_pg.graph,
-                                   edge_weights_norm, 'weight')
+            nx.set_edge_attributes(combined_pg.graph, name='weight',
+                                   values=edge_weights_norm)
 
         # Sample from the combined CFPG
         paths = combined_pg.sample_paths(max_paths)
