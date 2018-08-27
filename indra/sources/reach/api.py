@@ -24,7 +24,7 @@ logger = logging.getLogger('reach')
 
 try:
     # For offline reading
-    from .reach_reader import ReachReader
+    from .reader import ReachReader
     reach_reader = ReachReader()
     try_offline = True
 except Exception:
