@@ -688,8 +688,9 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
         The type of statement to retrieve, e.g. 'Phosphorylation'. If None, no
         type restriction is imposed.
     max_stmts : int or None
-        Restrict the number of statements (specifically, the number of evidence)
-        that are included. If None, no restriction is applied.
+        Restrict the number of statements (the total number of evidence, if
+        ev_limit is not set) that are included. If None, no restriction is
+        applied.
     db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
@@ -720,6 +721,14 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
 
     # Handle limiting.
     sub_q = sub_q.order_by(desc(db.PaMeta.ev_count))
+    if max_stmts is not None:
+        sub_q.limit(max_stmts)
+        if ev_limit is not None:
+            max_total_stmts = ev_limit*max_stmts
+        else:
+            max_total_stmts = max_stmts
+    else:
+        max_total_stmts = None
 
     # Create the link
     sub_al = sub_q.subquery('mk_hashes')
@@ -732,7 +741,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
 
-    return _get_pa_statements_by_subq_link(db, link, max_stmts, offset,
+    return _get_pa_statements_by_subq_link(db, link, max_total_stmts, offset,
                                            ev_limit)
 
 
