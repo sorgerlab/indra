@@ -9,7 +9,7 @@ import glob
 import logging
 import subprocess
 from indra import get_config
-from .eidos_api import process_json_ld_file
+from .api import process_json_ld_file
 
 
 eip = get_config('EIDOSPATH')
