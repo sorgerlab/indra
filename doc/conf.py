@@ -302,10 +302,10 @@ texinfo_documents = [
 
 # Note that for sub-modules, all parent modules must be listed explicitly.
 MOCK_MODULES = [
-    'pybel', 'pybel.constants', 'pybel.struct', 'pybel.canonicalize', 'pybel.language',
+    'pybel', 'pybel.constants', 'pybel.struct', 'pybel.canonicalize',
+    'pybel.language', 'pybel.dsl',
     'pygraphviz', 'jnius', 'jnius_config', 'flask',
-    'rdflib', 'rdflib.namespace', 'rdflib.plugins', 'networkx.drawing.nx_agraph',
-    'rdflib.plugins.parsers', 'rdflib.plugins.parsers.ntriples',
+    'networkx.drawing.nx_agraph',
     'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
     'networkx', 'networkx.algorithms', 'networkx.algorithms.dag',
     'networkx.drawing', 'networkx.algorithms.isomorphism',
@@ -315,7 +315,9 @@ MOCK_MODULES = [
     'sqlalchemy.orm', 'sqlalchemy.orm.attributes', 'sqlalchemy.dialects',
     'sqlalchemy.dialects.postgresql', 'sqlalchemy.schema', 'sqlalchemy.ext.compiler',
     'sqlalchemy.sql', 'sqlalchemy.sql.expression', 'nltk', 'kappy', 'openpyxl',
-    'reportlab'
+    'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
+    'reportlab.lib.pagesizes', 'reportlab.platypus', 'reportlab.lib.styles',
+    'reportlab.lib.units'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
