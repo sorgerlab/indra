@@ -6,8 +6,8 @@ import logging
 from rdflib.plugins.parsers.ntriples import ParseError
 
 from indra.databases import ndex_client
-from .belrdf_processor import BelRdfProcessor
-from .pybel_processor import PybelProcessor
+from .rdf_processor import BelRdfProcessor
+from .processor import PybelProcessor
 import pybel
 
 try:
