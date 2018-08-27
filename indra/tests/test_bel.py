@@ -4,7 +4,7 @@ import os
 from rdflib.term import URIRef
 from indra.util import unicode_strs
 from indra.sources import bel
-from indra.sources.bel.belrdf_processor import BelRdfProcessor
+from indra.sources.bel.rdf_processor import BelRdfProcessor
 from indra.statements import RegulateAmount
 from nose.plugins.attrib import attr
 
