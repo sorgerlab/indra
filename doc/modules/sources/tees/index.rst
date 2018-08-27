@@ -11,14 +11,14 @@ The TEES processor requires an installaton of TEES. To install TEES:
    the same directory as INDRA, your home directory, or ~/Downloads.
    If you put TEES in a location other than one of these three
    places, you will need to pass this directory to
-   `indra.sources.tees.tees_api.process_text` each time you call it.
+   `indra.sources.tees.api.process_text` each time you call it.
 
 3. Run configure.py within the TEES installation to install TEES dependencies.
 
-TEES API (:py:mod:`indra.sources.tees.tees_api`)
+TEES API (:py:mod:`indra.sources.tees.api`)
 ------------------------------------------------
 
-.. automodule:: indra.sources.tees.tees_api
+.. automodule:: indra.sources.tees.api
     :members:
 
 TEES Processor (:py:mod:`indra.sources.tees.processor`)
