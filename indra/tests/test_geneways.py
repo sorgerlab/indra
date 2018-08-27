@@ -4,11 +4,11 @@ from builtins import dict, str
 from os.path import join, dirname, abspath
 
 from indra.statements import *
-from indra.sources.geneways.geneways_symbols_parser import GenewaysSymbols
-from indra.sources.geneways.geneways_action_parser import GenewaysActionParser
-from indra.sources.geneways.geneways_actionmention_parser import \
+from indra.sources.geneways.symbols_parser import GenewaysSymbols
+from indra.sources.geneways.action_parser import GenewaysActionParser
+from indra.sources.geneways.actionmention_parser import \
         GenewaysActionMentionParser
-from indra.sources.geneways.geneways_api import process_geneways_files
+from indra.sources.geneways.api import process_geneways_files
 
 # Path to the Geneways test/dummy data folder
 path_this = dirname(abspath(__file__))
