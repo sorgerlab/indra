@@ -123,9 +123,9 @@ if __name__ == '__main__':
                                       ['string=', 'file=', 'output=', 'help'])
     for o, p in opts:
         if o in ['-h', '--help']:
-            print('String mode: python trips_client.py '
+            print('String mode: python client.py '
                   '--string "RAS binds GTP" --output text.xml')
-            print('File mode: python trips_client.py --file test.txt '
+            print('File mode: python client.py --file test.txt '
                   '--output text.xml')
             sys.exit()
         elif o in ['-s', '--string']:
