@@ -307,7 +307,8 @@ def fetch_model():
     cx = process_ndex_network(network_id)
     network_attr = [x for x in cx.cx if x.get('networkAttributes')]
     network_attr = network_attr[0]['networkAttributes']
-    keep_keys = ['model_elements', 'preset_pos', 'stmts',
+    keep_keys = ['txt_input', 'parser',
+                 'model_elements', 'preset_pos', 'stmts',
                  'sentences', 'evidence', 'cell_line', 'mrna', 'mutations']
     stored_data = {}
     for d in network_attr:
