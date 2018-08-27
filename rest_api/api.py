@@ -276,9 +276,9 @@ def assemble_cx():
 
 
 #   SHARE CX   #
-@route('/share_model', method=['POST', 'OPTIONS'])
+@route('/share_model_ndex', method=['POST', 'OPTIONS'])
 @allow_cors
-def share_model():
+def share_model_ndex():
     """Upload the model to NDEX"""
     if request.method == 'OPTIONS':
         return {}
@@ -295,9 +295,9 @@ def share_model():
     return {'network_id': network_id}
 
 
-@route('/fetch_model', method=['POST', 'OPTIONS'])
+@route('/fetch_model_ndex', method=['POST', 'OPTIONS'])
 @allow_cors
-def fetch_model():
+def fetch_model_ndex():
     """Download model and associated pieces from NDEX"""
     if request.method == 'OPTIONS':
         return {}
