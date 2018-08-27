@@ -6,7 +6,7 @@ import json
 import logging
 from collections import defaultdict
 from itertools import groupby, permutations, product
-from sqlalchemy import or_, desc, func
+from sqlalchemy import or_, desc, func, true
 
 from indra.statements import Unresolved, Evidence
 
@@ -621,18 +621,25 @@ def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None,
                                     offset=None, ev_limit=None):
     # Get the statements from reading
     stmts_dict = {}
-    outer_q = db.filter_query([db.FastRawPaLink.mk_hash,
-                               db.FastRawPaLink.raw_json,
-                               db.FastRawPaLink.pa_json,
-                               db.ReadingRefLink.pmid], sub_q_link)
-    outer_q.outerjoin(db.FastRawPaLink.reading_ref)
     if ev_limit is not None:
-        row_num_col = (func
-                       .row_number()
-                       .over(partition_by=db.FastRawPaLink.mk_hash)
-                       .label('rownum'))
-        outer_q = outer_q.add_column(row_num_col)
-        outer_q = outer_q.from_self().filter(row_num_col <= ev_limit)
+        lateral_q = db.session.query(db.FastRawPaLink.mk_hash,
+                                     db.FastRawPaLink.raw_json,
+                                     db.FastRawPaLink.pa_json)
+        lateral_q = lateral_q.filter(sub_q_link)
+        if ev_limit is not None:
+            lateral_q = lateral_q.limit(ev_limit)
+        lateral_q = lateral_q.subquery().lateral()
+        outer_q = db.session.query(db.FastRawPaLink.mk_hash,
+                                   db.FastRawPaLink.raw_json,
+                                   db.FastRawPaLink.pa_json,
+                                   db.ReadingRefLink.pmid)
+        outer_q = outer_q.outerjoin(lateral_q, true())
+    else:
+        outer_q = db.filter_query([db.FastRawPaLink.mk_hash,
+                                   db.FastRawPaLink.raw_json,
+                                   db.FastRawPaLink.pa_json,
+                                   db.ReadingRefLink.pmid], sub_q_link)
+    outer_q = outer_q.outerjoin(db.FastRawPaLink.reading_ref)
     master_q = outer_q
 
     # Specifically, this should probably be an order-by a parameter such as
@@ -658,8 +665,8 @@ def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None,
 
 
 @_clockit
-def get_statement_jsons_from_agents(agents=None, stmt_type=None,
-                                    max_stmts=None, db=None, offset=None):
+def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
+                                    db=None, offset=None, ev_limit=None):
     """Get json's for statements given agent refs and Statement type.
 
     Parameters
@@ -725,7 +732,8 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None,
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
 
-    return _get_pa_statements_by_subq_link(db, link, max_stmts, offset)
+    return _get_pa_statements_by_subq_link(db, link, max_stmts, offset,
+                                           ev_limit)
 
 
 @_clockit
