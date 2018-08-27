@@ -10,6 +10,7 @@ from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
 import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
+from indra.sources.ndex_cx.ndex_cx_api import process_ndex_network
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -275,24 +276,45 @@ def assemble_cx():
 
 
 #   SHARE CX   #
-@route('/share_model', method=['POST', 'OPTIONS'])
+@route('/share_model_ndex', method=['POST', 'OPTIONS'])
 @allow_cors
-def share_model():
+def share_model_ndex():
     """Upload the model to NDEX"""
     if request.method == 'OPTIONS':
         return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
-    stmts_json = body.get('statements')
-    cyjs_model_str = body.get('cyjs_model')
-    stmts = stmts_from_json(stmts_json)
+    stmts_str = body.get('stmts')
+    stmts_json = json.loads(stmts_str)
+    stmts = stmts_from_json(stmts_json["statements"])
     ca = CxAssembler(stmts)
-    ca.cx['networkAttributes'].append({'n': 'cyjs_model',
-                                       'v': cyjs_model_str,
-                                       'd': 'string'})
+    for n, v in body.items():
+        ca.cx['networkAttributes'].append({'n': n, 'v': v, 'd': 'string'})
     ca.make_model()
     network_id = ca.upload_model(private=False)
     return {'network_id': network_id}
+
+
+@route('/fetch_model_ndex', method=['POST', 'OPTIONS'])
+@allow_cors
+def fetch_model_ndex():
+    """Download model and associated pieces from NDEX"""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    network_id = body.get('network_id')
+    cx = process_ndex_network(network_id)
+    network_attr = [x for x in cx.cx if x.get('networkAttributes')]
+    network_attr = network_attr[0]['networkAttributes']
+    keep_keys = ['txt_input', 'parser',
+                 'model_elements', 'preset_pos', 'stmts',
+                 'sentences', 'evidence', 'cell_line', 'mrna', 'mutations']
+    stored_data = {}
+    for d in network_attr:
+        if d['n'] in keep_keys:
+            stored_data[d['n']] = d['v']
+    return stored_data
 
 
 #  GRAPH   #
