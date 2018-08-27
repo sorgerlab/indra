@@ -4,7 +4,7 @@ from os.path import join, dirname
 from nose.tools import raises
 from nose.plugins.attrib import attr
 
-from indra.sources.tees import tees_api
+from indra.sources.tees import api
 from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
 from indra.statements import Phosphorylation, Dephosphorylation, \
         IncreaseAmount, DecreaseAmount, Complex
@@ -17,7 +17,7 @@ _multiprocess_shared_ = False
 def test_process_phosphorylation():
     # Test the extraction of phosphorylation with a simple example.
     s = 'Ras leads to the phosphorylation of Braf.'
-    tp = tees_api.process_text(s)
+    tp = api.process_text(s)
     statements = tp.statements
 
     # Should only extract one statement
@@ -49,7 +49,7 @@ def test_process_dephosphorylation():
             'production and mRNA expression via activating ' + \
             'MAPK phosphatase-1 (MKP-1) which, in turn, leads to ' + \
             'dephosphorylation and inactivation of JNK in macrophages.'
-    tp = tees_api.process_text(s)
+    tp = api.process_text(s)
     statements = tp.statements
 
     # We'll set this to true if at least one of the extracted statements meets
@@ -87,7 +87,7 @@ def test_process_increase_amount():
 
     s = 'BRAF increases the expression of p53.'
 
-    tp = tees_api.process_text(s)
+    tp = api.process_text(s)
     statements = tp.statements
 
     # Exactly one statement should have been extracted from the provided text
@@ -116,7 +116,7 @@ def test_process_decrease_amount():
     # of a substance decreasing the expression of some gene.
 
     s = 'BRAF decreases the expression of p53.'
-    tp = tees_api.process_text(s)
+    tp = api.process_text(s)
     statements = tp.statements
 
     # Exactly one statement should have been etracted from the provided text
@@ -145,7 +145,7 @@ def test_process_bind():
     # substances binding to each other.
 
     s = 'BRAF binds to p53.'
-    tp = tees_api.process_text(s)
+    tp = api.process_text(s)
     statements = tp.statements
 
     # There should be exactly one statement extracted
@@ -183,7 +183,7 @@ def test_evidence_text():
     tone instead of an elongated one."""
 
     # Process the corpus
-    tp = tees_api.process_text(corpus)
+    tp = api.process_text(corpus)
     statements = tp.statements
 
     # Only one of the sentences was related to a biological mechanism
@@ -205,7 +205,7 @@ def test_evidence_pmid():
 
     # Process some text
     s = 'BRAF binds to p53.'
-    tp = tees_api.process_text(s, pmid)
+    tp = api.process_text(s, pmid)
     statements = tp.statements
 
     # Verify that the pmid was put in the right place
