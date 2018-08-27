@@ -119,7 +119,7 @@ if __name__ == '__main__':
 from indra.sources import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
                              elsevier_client
-from indra.sources.sparser import sparser_api as sparser
+from indra.sources.sparser import api as sparser
 
 
 # Version 1: If JSON is not available, get content and store;
