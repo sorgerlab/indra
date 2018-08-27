@@ -5,7 +5,7 @@ Sofia (:py:mod:`indra.sources.sofia`)
     :members:
 
 Sofia API (:py:mod:`indra.sources.sofia.api`)
----------------------------------------------------
+---------------------------------------------
 
 .. automodule:: indra.sources.sofia.api
     :members:

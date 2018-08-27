@@ -16,7 +16,7 @@ The TEES processor requires an installaton of TEES. To install TEES:
 3. Run configure.py within the TEES installation to install TEES dependencies.
 
 TEES API (:py:mod:`indra.sources.tees.api`)
-------------------------------------------------
+-------------------------------------------
 
 .. automodule:: indra.sources.tees.api
     :members:

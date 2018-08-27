@@ -5,7 +5,7 @@ Eidos (:py:mod:`indra.sources.eidos`)
     :members:
 
 Eidos API (:py:mod:`indra.sources.eidos.api`)
----------------------------------------------------
+---------------------------------------------
 
 .. automodule:: indra.sources.eidos.api
     :members:
@@ -17,13 +17,13 @@ Eidos Processor (:py:mod:`indra.sources.eidos.processor`)
     :members:
 
 Eidos Reader (:py:mod:`indra.sources.eidos.reader`)
----------------------------------------------------------
+---------------------------------------------------
 
 .. automodule:: indra.sources.eidos.reader
     :members:
 
 Eidos CLI (:py:mod:`indra.sources.eidos.cli`)
----------------------------------------------------
+---------------------------------------------
 
 .. automodule:: indra.sources.eidos.cli
     :members:
