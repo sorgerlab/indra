@@ -171,7 +171,7 @@ def get_mnemonic(protein_id, web_fallback=False):
         The UniProt mnemonic corresponding to the given Uniprot ID.
     """
     try:
-        mnemonic = uniprot_mnemonic[protein_id]
+        mnemonic = um.uniprot_mnemonic[protein_id]
         return mnemonic
     except KeyError:
         pass
@@ -207,7 +207,7 @@ def get_id_from_mnemonic(uniprot_mnemonic):
         The UniProt ID corresponding to the given Uniprot mnemonic.
     """
     try:
-        uniprot_id = uniprot_mnemonic_reverse[uniprot_mnemonic]
+        uniprot_id = um.uniprot_mnemonic_reverse[uniprot_mnemonic]
         return uniprot_id
     except KeyError:
         return None
@@ -234,7 +234,7 @@ def get_gene_name(protein_id, web_fallback=True):
     """
     protein_id = get_primary_id(protein_id)
     try:
-        gene_name = uniprot_gene_name[protein_id]
+        gene_name = um.uniprot_gene_name[protein_id]
         # There are cases when the entry is in the resource
         # table but the gene name is empty. Often this gene
         # name is actually available in the web service RDF
@@ -612,6 +612,64 @@ def get_rat_id(human_protein_id):
     """
     return uniprot_human_rat.get(human_protein_id)
 
+
+class UniprotMapper(object):
+    def __init__(self):
+        self.initialized = False
+
+    def initialize(self):
+        maps = _build_uniprot_entries()
+        self._uniprot_gene_name, self._uniprot_mnemonic, \
+        self._uniprot_mnemonic_reverse, \
+        self._uniprot_mgi, self._uniprot_rgd, self._uniprot_mgi_reverse, \
+        self._uniprot_rgd_reverse = maps
+        self.initialized = True
+
+    @property
+    def uniprot_gene_name(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_gene_name
+
+    @property
+    def uniprot_mnemonic(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mnemonic
+
+    @property
+    def uniprot_mnemonic_reverse(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mnemonic_reverse
+
+    @property
+    def uniprot_mgi(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mgi
+
+    @property
+    def uniprot_rgd(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_rgd
+
+    @property
+    def uniprot_mgi_reverse(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mgi_reverse
+
+    @property
+    def uniprot_rgd_reverse(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_rgd_reverse
+
+um = UniprotMapper()
+
+
 def _build_uniprot_entries(from_pickle=True):
     if from_pickle:
         import pickle
@@ -727,8 +785,8 @@ def _build_uniprot_subcell_loc():
     return subcell_loc
 
 (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
- uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
- _build_uniprot_entries()
+uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
+_build_uniprot_entries()
 
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
