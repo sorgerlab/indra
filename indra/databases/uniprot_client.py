@@ -535,7 +535,7 @@ def get_mgi_id(protein_id):
     mgi_id : str
         MGI ID of the mouse protein
     """
-    return uniprot_mgi.get(protein_id)
+    return um.uniprot_mgi.get(protein_id)
 
 def get_rgd_id(protein_id):
     """Return the RGD ID given the protein id of a rat protein.
@@ -550,7 +550,7 @@ def get_rgd_id(protein_id):
     rgd_id : str
         RGD ID of the rat protein
     """
-    return uniprot_rgd.get(protein_id)
+    return um.uniprot_rgd.get(protein_id)
 
 def get_id_from_mgi(mgi_id):
     """Return the UniProt ID given the MGI ID of a mouse protein.
@@ -565,7 +565,7 @@ def get_id_from_mgi(mgi_id):
     up_id : str
         The UniProt ID of the mouse protein.
     """
-    return uniprot_mgi_reverse.get(mgi_id)
+    return um.uniprot_mgi_reverse.get(mgi_id)
 
 def get_id_from_rgd(rgd_id):
     """Return the UniProt ID given the RGD ID of a rat protein.
@@ -580,7 +580,7 @@ def get_id_from_rgd(rgd_id):
     up_id : str
         The UniProt ID of the rat protein.
     """
-    return uniprot_rgd_reverse.get(rgd_id)
+    return um.uniprot_rgd_reverse.get(rgd_id)
 
 def get_mouse_id(human_protein_id):
     """Return the mouse UniProt ID given a human UniProt ID.
@@ -595,7 +595,7 @@ def get_mouse_id(human_protein_id):
     mouse_protein_id : str
         The UniProt ID of a mouse protein orthologous to the given human protein
     """
-    return uniprot_human_mouse.get(human_protein_id)
+    return um.uniprot_human_mouse.get(human_protein_id)
 
 def get_rat_id(human_protein_id):
     """Return the rat UniProt ID given a human UniProt ID.
@@ -610,12 +610,13 @@ def get_rat_id(human_protein_id):
     rat_protein_id : str
         The UniProt ID of a rat protein orthologous to the given human protein
     """
-    return uniprot_human_rat.get(human_protein_id)
+    return um.uniprot_human_rat.get(human_protein_id)
 
 
 class UniprotMapper(object):
     def __init__(self):
         self.initialized = False
+        self.initialized_hmr = False
 
     def initialize(self):
         maps = _build_uniprot_entries()
@@ -624,6 +625,11 @@ class UniprotMapper(object):
         self._uniprot_mgi, self._uniprot_rgd, self._uniprot_mgi_reverse, \
         self._uniprot_rgd_reverse = maps
         self.initialized = True
+
+    def initialize_hmr(self):
+        self._uniprot_human_mouse, self._uniprot_human_rat = \
+            _build_human_mouse_rat()
+        self.initialized_hmr = True
 
     @property
     def uniprot_gene_name(self):
@@ -666,6 +672,18 @@ class UniprotMapper(object):
         if not self.initialized:
             self.initialize()
         return self._uniprot_rgd_reverse
+
+    @property
+    def uniprot_human_mouse(self):
+        if not self.initialized_hmr:
+            self.initialize_hmr()
+        return self._uniprot_human_mouse
+
+    @property
+    def uniprot_human_rat(self):
+        if not self.initialized_hmr:
+            self.initialize_hmr()
+        return self._uniprot_human_rat
 
 um = UniprotMapper()
 
@@ -727,14 +745,14 @@ def _build_human_mouse_rat():
                 mgi_id = mgi_id.split(', ')[0]
                 if mgi_id.startswith('MGI:'):
                     mgi_id = mgi_id[4:]
-                mouse_id = uniprot_mgi_reverse.get(mgi_id)
+                mouse_id = um.uniprot_mgi_reverse.get(mgi_id)
                 if mouse_id:
                     uniprot_mouse[human_id] = mouse_id
             if rgd_id:
                 rgd_id = rgd_id.split(', ')[0]
                 if rgd_id.startswith('RGD:'):
                     rgd_id = rgd_id[4:]
-                rat_id = uniprot_rgd_reverse.get(rgd_id)
+                rat_id = um.uniprot_rgd_reverse.get(rgd_id)
                 if rat_id:
                     uniprot_rat[human_id] = rat_id
     return uniprot_mouse, uniprot_rat
@@ -784,10 +802,10 @@ def _build_uniprot_subcell_loc():
         subcell_loc = {}
     return subcell_loc
 
-(uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
-uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
-_build_uniprot_entries()
+#(uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
+#uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
+#_build_uniprot_entries()
 
 uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
-uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()
+# uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()
