@@ -11,7 +11,7 @@ before_install:
   - sudo apt-get update
   - echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
   - echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-  - pip install numpy scipy sympy cython==0.23.5 nose lxml matplotlib==1.5.0 pandas
+  - pip install numpy scipy sympy cython==0.26.1 nose lxml matplotlib==1.5.0 pandas
   - sudo pip2 install numpy
 install:
   # INDRA dependencies
@@ -42,7 +42,7 @@ install:
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
-  - pip install jnius-indra
+  - pip install pyjnius
   # Download a number of useful resource files for testing purposes
   - pip install .[all]
   - cd indra/benchmarks/assembly_eval/batch4
