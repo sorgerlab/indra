@@ -123,10 +123,10 @@ if __name__ == '__main__':
                                       ['string=', 'file=', 'output=', 'help'])
     for o, p in opts:
         if o in ['-h', '--help']:
-            print('String mode: python client.py '
+            print('String mode: python -m indra.sources.trips.client.py '
                   '--string "RAS binds GTP" --output text.xml')
-            print('File mode: python client.py --file test.txt '
-                  '--output text.xml')
+            print('File mode: python -m indra.sources.trips.client.py '
+                  '--file test.txt --output text.xml')
             sys.exit()
         elif o in ['-s', '--string']:
             text = p
