@@ -43,7 +43,7 @@ def query_protein(protein_id):
     # Try looking up a primary ID if the given one
     # is a secondary ID
     try:
-        prim_ids = uniprot_sec[protein_id]
+        prim_ids = um.uniprot_sec[protein_id]
         protein_id = prim_ids[0]
     except KeyError:
         pass
@@ -85,7 +85,7 @@ def is_secondary(protein_id):
     -------
     True if it is a secondary accessing entry, False otherwise.
     """
-    entry = uniprot_sec.get(protein_id)
+    entry = um.uniprot_sec.get(protein_id)
     if not entry:
         return False
     return True
@@ -106,7 +106,7 @@ def get_primary_id(protein_id):
         human one is returned. If there are no human primary IDs then the
         first primary found is returned.
     """
-    primaries = uniprot_sec.get(protein_id)
+    primaries = um.uniprot_sec.get(protein_id)
     if primaries:
         if len(primaries) > 1:
             logger.debug('More than 1 primary ID for %s.' % protein_id)
@@ -355,7 +355,7 @@ def get_synonyms(protein_id):
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
     try:
-        prim_ids = uniprot_sec[protein_id]
+        prim_ids = um.uniprot_sec[protein_id]
         protein_id = prim_ids[0]
     except KeyError:
         pass
@@ -624,6 +624,9 @@ class UniprotMapper(object):
         self._uniprot_mnemonic_reverse, \
         self._uniprot_mgi, self._uniprot_rgd, self._uniprot_mgi_reverse, \
         self._uniprot_rgd_reverse = maps
+
+        self._uniprot_sec = _build_uniprot_sec()
+
         self.initialized = True
 
     def initialize_hmr(self):
@@ -672,6 +675,12 @@ class UniprotMapper(object):
         if not self.initialized:
             self.initialize()
         return self._uniprot_rgd_reverse
+
+    @property
+    def uniprot_sec(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_sec
 
     @property
     def uniprot_human_mouse(self):
@@ -803,10 +812,5 @@ def _build_uniprot_subcell_loc():
         subcell_loc = {}
     return subcell_loc
 
-#(uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
-#uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
-#_build_uniprot_entries()
 
-uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
-# uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()
