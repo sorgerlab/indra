@@ -75,7 +75,7 @@ Install other dependencies
 ::
 
     pip install jsonpickle # Necessary to process JSON from S3
-    pip install --upgrade jnius-indra # Necessary for REACH
+    pip install --upgrade pyjnius # Necessary for REACH
     export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-amd64
 
 Assemble a Corpus of PMIDs
