@@ -144,15 +144,16 @@ and add `JNI` to `JVMCapabilities` as
 
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Home
 
-4. Then first install cython (tested with version 0.26.1; note that cython
-   versions 0.27 and above do NOT work with pyjnius and indra) followed by
-   pyjnius. These need to be broken up into two sequential calls to pip
+4. Then first install Cython (tested with version 0.28.1) followed by
+   pyjnius (note that the released version of pyjnius does _not_ work with
+   recent Cython versions, hence installation from Github is required).
+   These need to be broken up into two sequential calls to pip
    install.
 
 .. code-block:: bash
 
-    pip install cython==0.26.1
-    pip install pyjnius
+    pip install cython
+    pip install git+https://github.com/kivy/pyjnius.git@1cbfef
 
 Graphviz
 ````````

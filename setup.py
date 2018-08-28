@@ -14,10 +14,10 @@ def main():
 
     extras_require = {
                       # Inputs and outputs
-                      'biopax': ['jnius-indra'],
+                      'biopax': ['cython', 'pyjnius'],
                       'trips_offline': ['pykqml'],
-                      'reach_offline': ['jnius-indra'],
-                      'eidos_offline': ['pyyaml', 'jnius-indra'],
+                      'reach_offline': ['cython', 'pyjnius'],
+                      'eidos_offline': ['pyyaml', 'cython', 'pyjnius'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'hume': ['rdflib-jsonld'],
@@ -72,7 +72,6 @@ def main():
                     'indra.tools.reading.util',
                     'indra.tools.machine', 'indra.util'],
           install_requires=install_list,
-          tests_require=['jnius-indra', 'jsonschema', 'coverage', 'matplotlib'],
           extras_require=extras_require,
           include_package_data=True,
           keywords=['systems', 'biology', 'model', 'pathway', 'assembler',
