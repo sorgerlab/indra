@@ -767,12 +767,13 @@ def _build_human_mouse_rat():
                     uniprot_rat[human_id] = rat_id
     return uniprot_mouse, uniprot_rat
 
-def _build_uniprot_sec(from_pickle=True):
-    if from_pickle:
+def _build_uniprot_sec():
+    # Try loading pickle first (not in version control)
+    up_entries_pkl = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../resources/uniprot_sec_ac.pkl'
+    if os.path.exists(up_entries_pkl):
         import pickle
-        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
-            '/../resources/uniprot_sec_ac.pkl'
-        with open(up_entries_file, 'rb') as fh:
+        with open(up_entries_pkl, 'rb') as fh:
             entries = pickle.load(fh)
         return entries
     # File containing secondary accession numbers mapped
