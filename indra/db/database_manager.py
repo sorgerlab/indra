@@ -18,7 +18,7 @@ from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
-    create_engine, inspect, LargeBinary, Boolean, DateTime, func
+    create_engine, inspect, LargeBinary, Boolean, DateTime, func, BigInteger
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.dialects.postgresql import BYTEA
