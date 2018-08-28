@@ -43,7 +43,7 @@ def query_protein(protein_id):
     # Try looking up a primary ID if the given one
     # is a secondary ID
     try:
-        prim_ids = uniprot_sec[protein_id]
+        prim_ids = um.uniprot_sec[protein_id]
         protein_id = prim_ids[0]
     except KeyError:
         pass
@@ -85,7 +85,7 @@ def is_secondary(protein_id):
     -------
     True if it is a secondary accessing entry, False otherwise.
     """
-    entry = uniprot_sec.get(protein_id)
+    entry = um.uniprot_sec.get(protein_id)
     if not entry:
         return False
     return True
@@ -106,7 +106,7 @@ def get_primary_id(protein_id):
         human one is returned. If there are no human primary IDs then the
         first primary found is returned.
     """
-    primaries = uniprot_sec.get(protein_id)
+    primaries = um.uniprot_sec.get(protein_id)
     if primaries:
         if len(primaries) > 1:
             logger.debug('More than 1 primary ID for %s.' % protein_id)
@@ -171,7 +171,7 @@ def get_mnemonic(protein_id, web_fallback=False):
         The UniProt mnemonic corresponding to the given Uniprot ID.
     """
     try:
-        mnemonic = uniprot_mnemonic[protein_id]
+        mnemonic = um.uniprot_mnemonic[protein_id]
         return mnemonic
     except KeyError:
         pass
@@ -207,7 +207,7 @@ def get_id_from_mnemonic(uniprot_mnemonic):
         The UniProt ID corresponding to the given Uniprot mnemonic.
     """
     try:
-        uniprot_id = uniprot_mnemonic_reverse[uniprot_mnemonic]
+        uniprot_id = um.uniprot_mnemonic_reverse[uniprot_mnemonic]
         return uniprot_id
     except KeyError:
         return None
@@ -234,7 +234,7 @@ def get_gene_name(protein_id, web_fallback=True):
     """
     protein_id = get_primary_id(protein_id)
     try:
-        gene_name = uniprot_gene_name[protein_id]
+        gene_name = um.uniprot_gene_name[protein_id]
         # There are cases when the entry is in the resource
         # table but the gene name is empty. Often this gene
         # name is actually available in the web service RDF
@@ -355,7 +355,7 @@ def get_synonyms(protein_id):
 @lru_cache(maxsize=1000)
 def get_sequence(protein_id):
     try:
-        prim_ids = uniprot_sec[protein_id]
+        prim_ids = um.uniprot_sec[protein_id]
         protein_id = prim_ids[0]
     except KeyError:
         pass
@@ -535,7 +535,7 @@ def get_mgi_id(protein_id):
     mgi_id : str
         MGI ID of the mouse protein
     """
-    return uniprot_mgi.get(protein_id)
+    return um.uniprot_mgi.get(protein_id)
 
 def get_rgd_id(protein_id):
     """Return the RGD ID given the protein id of a rat protein.
@@ -550,7 +550,7 @@ def get_rgd_id(protein_id):
     rgd_id : str
         RGD ID of the rat protein
     """
-    return uniprot_rgd.get(protein_id)
+    return um.uniprot_rgd.get(protein_id)
 
 def get_id_from_mgi(mgi_id):
     """Return the UniProt ID given the MGI ID of a mouse protein.
@@ -565,7 +565,7 @@ def get_id_from_mgi(mgi_id):
     up_id : str
         The UniProt ID of the mouse protein.
     """
-    return uniprot_mgi_reverse.get(mgi_id)
+    return um.uniprot_mgi_reverse.get(mgi_id)
 
 def get_id_from_rgd(rgd_id):
     """Return the UniProt ID given the RGD ID of a rat protein.
@@ -580,7 +580,7 @@ def get_id_from_rgd(rgd_id):
     up_id : str
         The UniProt ID of the rat protein.
     """
-    return uniprot_rgd_reverse.get(rgd_id)
+    return um.uniprot_rgd_reverse.get(rgd_id)
 
 def get_mouse_id(human_protein_id):
     """Return the mouse UniProt ID given a human UniProt ID.
@@ -595,7 +595,7 @@ def get_mouse_id(human_protein_id):
     mouse_protein_id : str
         The UniProt ID of a mouse protein orthologous to the given human protein
     """
-    return uniprot_human_mouse.get(human_protein_id)
+    return um.uniprot_human_mouse.get(human_protein_id)
 
 def get_rat_id(human_protein_id):
     """Return the rat UniProt ID given a human UniProt ID.
@@ -610,17 +610,103 @@ def get_rat_id(human_protein_id):
     rat_protein_id : str
         The UniProt ID of a rat protein orthologous to the given human protein
     """
-    return uniprot_human_rat.get(human_protein_id)
+    return um.uniprot_human_rat.get(human_protein_id)
 
-def _build_uniprot_entries(from_pickle=True):
-    if from_pickle:
+
+class UniprotMapper(object):
+    def __init__(self):
+        self.initialized = False
+        self.initialized_hmr = False
+
+    def initialize(self):
+        maps = _build_uniprot_entries()
+        self._uniprot_gene_name, self._uniprot_mnemonic, \
+        self._uniprot_mnemonic_reverse, \
+        self._uniprot_mgi, self._uniprot_rgd, self._uniprot_mgi_reverse, \
+        self._uniprot_rgd_reverse = maps
+
+        self._uniprot_sec = _build_uniprot_sec()
+
+        self.initialized = True
+
+    def initialize_hmr(self):
+        self._uniprot_human_mouse, self._uniprot_human_rat = \
+            _build_human_mouse_rat()
+        self.initialized_hmr = True
+
+    @property
+    def uniprot_gene_name(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_gene_name
+
+    @property
+    def uniprot_mnemonic(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mnemonic
+
+    @property
+    def uniprot_mnemonic_reverse(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mnemonic_reverse
+
+    @property
+    def uniprot_mgi(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mgi
+
+    @property
+    def uniprot_rgd(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_rgd
+
+    @property
+    def uniprot_mgi_reverse(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_mgi_reverse
+
+    @property
+    def uniprot_rgd_reverse(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_rgd_reverse
+
+    @property
+    def uniprot_sec(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_sec
+
+    @property
+    def uniprot_human_mouse(self):
+        if not self.initialized_hmr:
+            self.initialize_hmr()
+        return self._uniprot_human_mouse
+
+    @property
+    def uniprot_human_rat(self):
+        if not self.initialized_hmr:
+            self.initialize_hmr()
+        return self._uniprot_human_rat
+
+um = UniprotMapper()
+
+
+def _build_uniprot_entries():
+    # Try the pickle file first if it exists (not in version control)
+    up_entries_pkl = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../resources/uniprot_entries.pkl'
+    if os.path.exists(up_entries_pkl):
         import pickle
-        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
-            '/../resources/uniprot_entries.pkl'
-        with open(up_entries_file, 'rb') as fh:
+        with open(up_entries_pkl, 'rb') as fh:
             entries = pickle.load(fh)
         return entries
-
+    # Otherwise process the regular entries TSV
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.tsv'
     uniprot_gene_name = {}
@@ -669,24 +755,25 @@ def _build_human_mouse_rat():
                 mgi_id = mgi_id.split(', ')[0]
                 if mgi_id.startswith('MGI:'):
                     mgi_id = mgi_id[4:]
-                mouse_id = uniprot_mgi_reverse.get(mgi_id)
+                mouse_id = um.uniprot_mgi_reverse.get(mgi_id)
                 if mouse_id:
                     uniprot_mouse[human_id] = mouse_id
             if rgd_id:
                 rgd_id = rgd_id.split(', ')[0]
                 if rgd_id.startswith('RGD:'):
                     rgd_id = rgd_id[4:]
-                rat_id = uniprot_rgd_reverse.get(rgd_id)
+                rat_id = um.uniprot_rgd_reverse.get(rgd_id)
                 if rat_id:
                     uniprot_rat[human_id] = rat_id
     return uniprot_mouse, uniprot_rat
 
-def _build_uniprot_sec(from_pickle=True):
-    if from_pickle:
+def _build_uniprot_sec():
+    # Try loading pickle first (not in version control)
+    up_entries_pkl = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../resources/uniprot_sec_ac.pkl'
+    if os.path.exists(up_entries_pkl):
         import pickle
-        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
-            '/../resources/uniprot_sec_ac.pkl'
-        with open(up_entries_file, 'rb') as fh:
+        with open(up_entries_pkl, 'rb') as fh:
             entries = pickle.load(fh)
         return entries
     # File containing secondary accession numbers mapped
@@ -726,10 +813,5 @@ def _build_uniprot_subcell_loc():
         subcell_loc = {}
     return subcell_loc
 
-(uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
- uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse) = \
- _build_uniprot_entries()
 
-uniprot_sec = _build_uniprot_sec()
 uniprot_subcell_loc = _build_uniprot_subcell_loc()
-uniprot_human_mouse, uniprot_human_rat = _build_human_mouse_rat()
