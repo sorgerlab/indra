@@ -688,15 +688,16 @@ class UniprotMapper(object):
 um = UniprotMapper()
 
 
-def _build_uniprot_entries(from_pickle=True):
-    if from_pickle:
+def _build_uniprot_entries():
+    # Try the pickle file first if it exists (not in version control)
+    up_entries_pkl = os.path.dirname(os.path.abspath(__file__)) + \
+        '/../resources/uniprot_entries.pkl'
+    if os.path.exists(up_entries_pkl):
         import pickle
-        up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
-            '/../resources/uniprot_entries.pkl'
-        with open(up_entries_file, 'rb') as fh:
+        with open(up_entries_pkl, 'rb') as fh:
             entries = pickle.load(fh)
         return entries
-
+    # Otherwise process the regular entries TSV
     up_entries_file = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.tsv'
     uniprot_gene_name = {}
