@@ -722,7 +722,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     # Handle limiting.
     sub_q = sub_q.order_by(desc(db.PaMeta.ev_count))
     if max_stmts is not None:
-        sub_q = sub_q.limit(max_stmts)
+        sub_q = sub_q.limit(max_stmts).from_self()
         if ev_limit is not None:
             max_total_stmts = ev_limit*max_stmts
         else:
@@ -747,7 +747,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
                                  db.FastRawPaLink.pa_json)
     lateral_q = lateral_q.filter(link)
     if ev_limit is not None:
-        lateral_q = lateral_q.limit(ev_limit)
+        lateral_q = lateral_q.limit(ev_limit).from_self()
     lateral_q = lateral_q.subquery().lateral()
 
     stmt_al = sub_q.join(lateral_q, true()).subquery('statements')
