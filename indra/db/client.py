@@ -741,6 +741,24 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
 
+    # Prototype new query method
+    lateral_q = db.session.query(db.FastRawPaLink.mk_hash,
+                                 db.FastRawPaLink.raw_json,
+                                 db.FastRawPaLink.pa_json)
+    lateral_q = lateral_q.filter(link)
+    if ev_limit is not None:
+        lateral_q = lateral_q.limit(ev_limit)
+    lateral_q = lateral_q.subquery().lateral()
+
+    stmt_al = sub_q.join(lateral_q, true()).subquery('statements')
+
+    master_q = (db.session.query(stmt_al.c.mk_hash, stmt_al.c.raw_json,
+                                 stmt_al.c.pa_json, db.ReadingRefLink.pmid)
+                .outerjoin(db.FastRawPaLink.reading_ref)
+                .limit(max_total_stmts))
+
+    res = master_q.all()
+
     return _get_pa_statements_by_subq_link(db, link, max_total_stmts, offset,
                                            ev_limit)
 
