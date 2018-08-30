@@ -106,25 +106,25 @@ def _query_and_extract(agent_strs, params):
     resp_dict = resp.json()
     stmts_json = resp_dict['statements']
     total_ev = resp_dict['total_evidence']
-    limit_ev = resp_dict['limit']
+    stmt_limit = resp_dict['statement_limit']
 
     # NOTE: this is technically not a direct conclusion, and could be wrong,
     # resulting in an unnecessary extra query, but that should almost never
     # happen.
-    limited = (total_ev >= limit_ev)
-    return stmts_json, total_ev, limited
+    limited = (len(stmts_json) == stmt_limit)
+    return stmts_json, limited, stmt_limit
 
 
-def _get_statements_persistently(agent_strs, params, offset, total_ev, ret):
+def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
     """Use paging to get all statements."""
     limited = True
 
     # Get the rest of the content.
     while limited:
         # Get the next page.
-        offset = offset + total_ev
+        offset = offset + offset_step
         params['offset'] = offset
-        new_stmts_json, new_total_ev, limited = \
+        new_stmts_json, limited, _ = \
             _query_and_extract(agent_strs, params)
 
         # Merge in the new results
@@ -139,7 +139,7 @@ def _get_statements_persistently(agent_strs, params, offset, total_ev, ret):
 def _make_stmts_query(agent_strs, params, persist=True, block=True):
     """Slightly lower level function to get statements from the REST API."""
     # Perform the first (and last?) query
-    stmts_json, total_ev, limited = _query_and_extract(agent_strs, params)
+    stmts_json, limited, stmt_limit = _query_and_extract(agent_strs, params)
 
     # Initialize the return dict.
     ret = IndraDBRestResponse(stmts_json)
@@ -149,7 +149,7 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
         logger.info("Some results could not be returned directly.")
         if persist:
             offset = params.get('offset', 0)
-            args = [agent_strs, params, offset, total_ev, ret]
+            args = [agent_strs, params, offset, stmt_limit, ret]
             if block:
                 logger.info("You chose to persist, so I will paginate through "
                             "the rest until I have everything!")

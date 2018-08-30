@@ -127,6 +127,9 @@ def _query_wrapper(f):
         do_stream = True if do_stream_str == 'true' else False
 
         result = f(query_dict, offs, MAX_STATEMENTS, ev_limit)
+        result['offset'] = offs
+        result['evidence_limit'] = ev_limit
+        result['statement_limit'] = MAX_STATEMENTS
 
         if do_stream:
             # Returning a generator should stream the data.
