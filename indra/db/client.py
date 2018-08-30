@@ -725,6 +725,8 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
     if max_stmts is not None:
         mk_hashes_q = mk_hashes_q.limit(max_stmts)
+    if offset is not None:
+        mk_hashes_q = mk_hashes_q.offset(offset)
 
     # Create the link
     mk_hashes_al = mk_hashes_q.subquery('mk_hashes')
