@@ -314,7 +314,7 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
         wait. Default is 2.
     """
     resp = _submit_request('post', 'statements/from_hashes',
-                           hashes=hash_list, ev_limit=ev_limit,
+                           data={'hashes': hash_list}, ev_limit=ev_limit,
                            best_first=best_first, tries=tries)
     return stmts_from_json(resp.json()['statements'].values())
 
@@ -355,7 +355,7 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
                                  ev_limit=ev_limit, best_first=best_first,
                                  tries=tries)
     stmts_json = resp.json()['statements']
-    return stmts_from_json(stmts_json)
+    return stmts_from_json(stmts_json.values())
 
 
 def _submit_query_request(end_point, *args, **kwargs):
