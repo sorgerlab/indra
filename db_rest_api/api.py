@@ -265,7 +265,7 @@ def get_paper_statements():
     logger.info('Getting statements for %s=%s...' % (id_type, id_val))
     if id_type in ['trid', 'tcid']:
         id_val = int(id_val)
-    stmt_jsons = get_statement_jsons_from_papers([[(id_type, id_val)]],
+    stmt_jsons = get_statement_jsons_from_papers([(id_type, id_val)],
                                                  max_stmts=MAX_STATEMENTS,
                                                  offset=offs, ev_limit=ev_limit)
     resp = jsonify(stmt_jsons)

@@ -762,11 +762,9 @@ def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
 
     Parameters
     ----------
-    paper_refs : list[list[(<id_type>, <paper_id>)]]
-        A list of lists of tuples, where each tuple indicates and id-type (e.g.
-        'pmid') and an id value, and each sub-list is a set of ids for a
-        particular paper. Each paper must satisfy all ids, and statements are
-        retrieved for all papers.
+    paper_refs : list[(<id_type>, <paper_id>)]
+        A list of tuples, where each tuple indicates and id-type (e.g. 'pmid')
+        and an id value for a particular paper.
     db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
@@ -800,14 +798,13 @@ def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
 
     # Create a sub-query on the reading metadata
     sub_q = None
-    for paper in paper_refs:
+    for id_type, paper_id in paper_refs:
         q = db.session.query(db.ReadingRefLink.rid.label('rid'))
-        for id_type, paper_id in paper:
-            tbl_attr = getattr(db.ReadingRefLink, id_type)
-            if id_type in ['trid', 'tcid']:
-                q = q.filter(tbl_attr == paper_id)
-            else:
-                q = q.filter(tbl_attr.like(paper_id))
+        tbl_attr = getattr(db.ReadingRefLink, id_type)
+        if id_type in ['trid', 'tcid']:
+            q = q.filter(tbl_attr == paper_id)
+        else:
+            q = q.filter(tbl_attr.like(paper_id))
 
         # Intersect with the previous query.
         if sub_q:

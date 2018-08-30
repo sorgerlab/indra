@@ -241,11 +241,9 @@ def test_get_statement_jsons_options():
 
 @attr('nonpublic')
 def test_get_statement_jsons_by_paper_id():
-    paper_refs = [
-        [('pmid', '27769048'), ('pmcid', 'PMC5363599')],
-        [('doi', '10.3389/FIMMU.2017.00781')],
-        [('pmcid', 'PMC4789553')]
-        ]
+    paper_refs = [('pmid', '27769048'),
+                  ('doi', '10.3389/FIMMU.2017.00781'),
+                  ('pmcid', 'PMC4789553')]
     stmt_jsons = dbc.get_statement_jsons_from_papers(paper_refs)
     assert stmt_jsons
     assert stmt_jsons['statements']
