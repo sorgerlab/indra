@@ -197,12 +197,29 @@ def test_get_statement_jsons_options():
             new_option_dicts.append(option_dict)
             new_option_dicts.append({**option_dict, **nd})
         option_dicts = new_option_dicts
+
+    evidence_count_record = {}
     for option_dict in option_dicts:
         res = dbc.get_statement_jsons_from_agents(agents=agents,
                                                   stmt_type='Phosphorylation',
                                                   **option_dict)
         assert res
         assert len(res['statements'])
+        stmts = res['statements']
+        if 'max_stmts' in option_dict.keys():
+            assert len(stmts) == option_dict['max_stmts']
+        else:
+            assert len(stmts) == 3
+
+        if 'ev_limit' in option_dict.keys():
+            assert all([len(s.evidence) <= options['ev_limit'] for s in stmts.values()])
+        else:
+            if evidence_count_record:
+                assert all([len(s.evidence) == evidence_count_record[mk_hash]
+                            for mk_hash, s in stmts.items()])
+            else:
+                for mk_hash, stmt in stmts.items():
+                    evidence_count_record[mk_hash] = len(stmt.evidence)
     return
 
 
