@@ -176,7 +176,7 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
 @_clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, offset=None, persist=True, block=True,
-                   simple_response=True):
+                   simple_response=True, ev_limit=10, best_first=True):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -201,14 +201,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
-    on_limit : str
-        There are four options for handling a query that is too large:
-        `sample` - (default) take a sample of statements from the result,
-        `truncate` - simply return the first 10,000 statements of the result,
-        `error` - raise an error if the query is too large, or
-        `persist` - perform as many queries as needed to get all the statements.
-        Note that this last option generally takes much much longer to execute.
-
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 10.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
     Returns
     -------
     stmts : list[:py:class:`indra.statements.Statement`]
@@ -229,6 +228,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
               if param_val is not None}
     if offset is not None:
         params['offset'] = offset
+    params['best_first'] = best_first
+    params['ev_limit'] = ev_limit
 
     # Handle the type(s).
     if stmt_type is not None:
@@ -261,18 +262,31 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
 
 @_clockit
-def get_statements_by_hash(hash_list, with_support=True):
-    """Get fully formed statements from a list of hashes."""
+def get_statements_by_hash(hash_list, ev_limit=100, best_first=True):
+    """Get fully formed statements from a list of hashes.
+
+    Parameters
+    ----------
+    hash_list : list[int or str]
+        A list of statement hashes.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 100.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
+    """
     resp = _submit_request('post', 'statements/from_hashes',
-                           hashes=hash_list)
+                           hashes=hash_list, ev_limit=ev_limit,
+                           best_first=best_first)
     return stmts_from_json(resp.json()['statements'].values())
 
 
 @_clockit
-def get_statements_for_paper(id_val, id_type='pmid'):
+def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
+                             best_first=True):
     """Get the set of raw Statements extracted from a paper given by the id.
-
-    Note that in the future this will draw upon preassembled Statements.
 
     Parameters
     ----------
@@ -282,29 +296,41 @@ def get_statements_for_paper(id_val, id_type='pmid'):
         This may be one of 'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or
         'trid', which is the primary key id of the text references in the
         database. The default is 'pmid'.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement. Default is 10.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
 
     Returns
     -------
     stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
-    resp = _submit_query_request('papers', id=id_val, type=id_type)
+    resp = _submit_query_request('papers', id=id_val, type=id_type,
+                                 ev_limit=ev_limit, best_first=best_first)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json)
 
 
 def _submit_query_request(end_point, *args, **kwargs):
     """Low level function to format the query string."""
+    ev_limit = kwargs.pop('ev_limit', 10)
+    best_first = kwargs.pop('best_first', True)
     # This isn't handled by requests because of the multiple identical agent
     # keys, e.g. {'agent': 'MEK', 'agent': 'ERK'} which is not supported in
     # python, but is allowed and necessary in these query strings.
     query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
                                + list(args))
-    return _submit_request('get', end_point, query_str)
+    return _submit_request('get', end_point, query_str, ev_limit=ev_limit,
+                           best_first=best_first)
 
 
 @_clockit
-def _submit_request(meth, end_point, query_str='', **data):
+def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
+                    best_first=True):
     """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
@@ -323,7 +349,8 @@ def _submit_request(meth, end_point, query_str='', **data):
     print('headers:', headers)
     print('data:', data)
     method_func = getattr(requests, meth.lower())
-    resp = method_func(url_path, headers=headers, data=json_data)
+    resp = method_func(url_path, headers=headers, data=json_data,
+                       params={'ev_limit': ev_limit, 'best_first': best_first})
     if resp.status_code == 200:
         return resp
     else:

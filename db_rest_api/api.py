@@ -122,7 +122,7 @@ def _query_wrapper(f):
 
         query_dict = request.args.copy()
         offs = query_dict.pop('offset', None)
-        ev_limit = query_dict.pop('max_evidence_per_stmt', 10)
+        ev_limit = query_dict.pop('ev_limit', 10)
         do_stream_str = query_dict.pop('stream', 'false')
         do_stream = True if do_stream_str == 'true' else False
 
