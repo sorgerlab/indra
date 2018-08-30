@@ -689,12 +689,21 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
         The type of statement to retrieve, e.g. 'Phosphorylation'. If None, no
         type restriction is imposed.
     max_stmts : int or None
-        Restrict the number of statements (the total number of evidence, if
-        ev_limit is not set) that are included. If None, no restriction is
+        Limit the number of statements queried. If None, no restriction is
         applied.
     db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
-        besides the primary database, for example a local databse instance.
+        besides the primary database, for example a local database instance.
+    offset : int or None
+        Start reading statements by a given offset. If None, no offset is
+        applied. Most commonly used in conjunction with `max_stmts`.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
     """
     # First look for statements matching the role'd agents.
     if db is None:
