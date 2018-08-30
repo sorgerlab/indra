@@ -762,16 +762,23 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     res = proxy.fetchall()
 
     stmts_dict = {}
+    total_evidence = 0
+    returned_evidence = 0
     for mk_hash, ev_count, raw_json_bts, pa_json_bts, pmid in res:
+        returned_evidence += 1
         raw_json = json.loads(raw_json_bts.decode('utf-8'))
         if mk_hash not in stmts_dict.keys():
+            total_evidence += ev_count
             stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
             stmts_dict[mk_hash]['evidence'] = []
         if pmid:
             raw_json['evidence'][0]['pmid'] = pmid
         stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
 
-    return {'statements': stmts_dict, 'total_evidence': len(res)}
+    ret = {'statements': stmts_dict,
+           'total_evidence': total_evidence,
+           'evidence_returned': returned_evidence}
+    return ret
 
 
 @_clockit
