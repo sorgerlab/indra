@@ -198,7 +198,7 @@ def test_get_statement_jsons_options():
             new_option_dicts.append({**option_dict, **nd})
         option_dicts = new_option_dicts
 
-    evidence_count_record = {}
+    ev_counts = {}
     total_stmts = None
     for option_dict in option_dicts:
         res = dbc.get_statement_jsons_from_agents(agents=agents,
@@ -209,21 +209,33 @@ def test_get_statement_jsons_options():
         stmts = res['statements']
         if 'max_stmts' in option_dict.keys():
             assert len(stmts) == option_dict['max_stmts']
-        else:
+        elif not 'offset' in option_dict.keys():
             if total_stmts:
-                assert len(stmts) == total_stmts
+                assert len(stmts) == total_stmts,\
+                    ("Number of statements returned changed incorrectly."
+                     "Actual: %d, expected: %d" % (len(stmts), total_stmts))
             else:
                 total_stmts = len(stmts)
 
+        my_ev_counts = {}
+        for mk_hash, stmt in stmts.items():
+            my_ev_counts[mk_hash] = len(stmt['evidence'])
         if 'ev_limit' in option_dict.keys():
-            assert all([len(s.evidence) <= options['ev_limit'] for s in stmts.values()])
+            assert all([c <= options['ev_limit']
+                        for c in my_ev_counts.values()]),\
+                "Evidence limit was not applied: %s." % my_ev_counts
         else:
-            if evidence_count_record:
-                assert all([len(s.evidence) == evidence_count_record[mk_hash]
-                            for mk_hash, s in stmts.items()])
+            my_ev_counts = {}
+            for mk_hash, stmt in stmts.items():
+                my_ev_counts[mk_hash] = len(stmt['evidence'])
+
+            if ev_counts:
+                assert all([ev_counts[h] == c
+                            for h, c in my_ev_counts.items()]),\
+                    ("Evidence counts changed: %s vs. %s"
+                     % (my_ev_counts, ev_counts))
             else:
-                for mk_hash, stmt in stmts.items():
-                    evidence_count_record[mk_hash] = len(stmt.evidence)
+                ev_counts = my_ev_counts
     return
 
 
