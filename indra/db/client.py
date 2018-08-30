@@ -617,120 +617,9 @@ def _get_trids(db, id_val, id_type):
 
 
 @_clockit
-def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None,
-                                    offset=None, ev_limit=None):
-    # Get the statements from reading
-    stmts_dict = {}
-    if ev_limit is not None:
-        lateral_q = db.session.query(db.FastRawPaLink.mk_hash,
-                                     db.FastRawPaLink.raw_json,
-                                     db.FastRawPaLink.pa_json)
-        lateral_q = lateral_q.filter(sub_q_link)
-        if ev_limit is not None:
-            lateral_q = lateral_q.limit(ev_limit)
-        lateral_q = lateral_q.subquery().lateral()
-        outer_q = db.session.query(db.FastRawPaLink.mk_hash,
-                                   db.FastRawPaLink.raw_json,
-                                   db.FastRawPaLink.pa_json,
-                                   db.ReadingRefLink.pmid)
-        outer_q = outer_q.outerjoin(lateral_q, true())
-    else:
-        outer_q = db.filter_query([db.FastRawPaLink.mk_hash,
-                                   db.FastRawPaLink.raw_json,
-                                   db.FastRawPaLink.pa_json,
-                                   db.ReadingRefLink.pmid], sub_q_link)
-    outer_q = outer_q.outerjoin(db.FastRawPaLink.reading_ref)
-    master_q = outer_q
-
-    # Specifically, this should probably be an order-by a parameter such as
-    # evidence count and/or support count.
-    if offset is not None:
-        master_q = master_q.offset(offset)
-
-    if max_stmts is not None:
-        master_q = master_q.limit(max_stmts)
-
-    res = master_q.all()
-
-    # Process the json to fix refs etc.
-    for mk_hash, raw_json_bts, pa_json_bts, pmid in res:
-        raw_json = json.loads(raw_json_bts.decode('utf-8'))
-        if mk_hash not in stmts_dict.keys():
-            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
-            stmts_dict[mk_hash]['evidence'] = []
-        if pmid:
-            raw_json['evidence'][0]['pmid'] = pmid
-        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
-    return {'statements': stmts_dict, 'total_evidence': len(res)}
-
-
-@_clockit
-def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
-                                    db=None, offset=None, ev_limit=None,
-                                    best_first=True):
-    """Get json's for statements given agent refs and Statement type.
-
-    Parameters
-    ----------
-    agents : list[(<role>, <id>, <namespace>)]
-        A list of agents, each specified by a tuple of information including:
-        the `role`, which can be 'subject', 'object', or None, an `id`, such as
-        the HGNC id, a CHEMBL id, or a FPLX id, etc, and the
-        `namespace` which specifies which of the above is given in `id`.
-
-        Some examples:
-            (None, 'MEK', 'FPLX')
-            ('object', '11998', 'HGNC')
-            ('subject', 'MAP2K1', 'TEXT')
-
-        Note that you will get the logical AND of the conditions given, in other
-        words, each Statement will satisfy all constraints.
-    stmt_type : str or None
-        The type of statement to retrieve, e.g. 'Phosphorylation'. If None, no
-        type restriction is imposed.
-    max_stmts : int or None
-        Limit the number of statements queried. If None, no restriction is
-        applied.
-    db : :py:class:`DatabaseManager`
-        Optionally specify a database manager that attaches to something
-        besides the primary database, for example a local database instance.
-    offset : int or None
-        Start reading statements by a given offset. If None, no offset is
-        applied. Most commonly used in conjunction with `max_stmts`.
-    ev_limit : int or None
-        Limit the amount of evidence returned per Statement.
-    best_first : bool
-        If True, the preassembled statements will be sorted by the amount of
-        evidence they have, and those with the most evidence will be
-        prioritized. When using `max_stmts`, this means you will get the "best"
-        statements. If False, statements will be queried in arbitrary order.
-    """
-    # First look for statements matching the role'd agents.
-    if db is None:
-        db = get_primary_db()
-
-    # TODO: Extend this to allow retrieval of raw statements.
-    mk_hashes_q = None
-    mk_hash_c = db.PaMeta.mk_hash.label('mk_hash')
-    ev_count_c = db.PaMeta.ev_count.label('ev_count')
-    for role, ag_dbid, ns in agents:
-        # Create this query (for this agent)
-        q = (db.session
-             .query(mk_hash_c, ev_count_c)
-             .filter(db.PaMeta.db_id.like(ag_dbid), db.PaMeta.db_name.like(ns)))
-        if stmt_type is not None:
-            q = q.filter(db.PaMeta.type.like(stmt_type))
-
-        if role is not None:
-            q = q.filter(db.PaMeta.role == role.upper())
-
-        # Intersect with the previous query.
-        if mk_hashes_q:
-            mk_hashes_q = mk_hashes_q.intersect(q)
-        else:
-            mk_hashes_q = q
-    assert mk_hashes_q, "No conditions imposed."
-
+def _get_pa_statement_jsons_from_mkhash_subquery(db, mk_hashes_q, best_first=True,
+                                                 max_stmts=None, offset=None,
+                                                 ev_limit=None):
     # Handle limiting.
     if best_first:
         mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
@@ -741,8 +630,6 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
 
     # Create the link
     mk_hashes_al = mk_hashes_q.subquery('mk_hashes')
-
-    # Prototype new query method
     raw_json_c = db.FastRawPaLink.raw_json.label('raw_json')
     pa_json_c = db.FastRawPaLink.pa_json.label('pa_json')
     reading_id_c = db.FastRawPaLink.reading_id.label('rid')
@@ -786,6 +673,86 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
            'total_evidence': total_evidence,
            'evidence_returned': returned_evidence}
     return ret
+
+
+@_clockit
+def get_statement_jsons_from_agents(agents=None, stmt_type=None, db=None,
+                                    **kwargs):
+    """Get json's for statements given agent refs and Statement type.
+
+    Parameters
+    ----------
+    agents : list[(<role>, <id>, <namespace>)]
+        A list of agents, each specified by a tuple of information including:
+        the `role`, which can be 'subject', 'object', or None, an `id`, such as
+        the HGNC id, a CHEMBL id, or a FPLX id, etc, and the
+        `namespace` which specifies which of the above is given in `id`.
+
+        Some examples:
+            (None, 'MEK', 'FPLX')
+            ('object', '11998', 'HGNC')
+            ('subject', 'MAP2K1', 'TEXT')
+
+        Note that you will get the logical AND of the conditions given, in other
+        words, each Statement will satisfy all constraints.
+    stmt_type : str or None
+        The type of statement to retrieve, e.g. 'Phosphorylation'. If None, no
+        type restriction is imposed.
+    db : :py:class:`DatabaseManager`
+        Optionally specify a database manager that attaches to something
+        besides the primary database, for example a local database instance.
+
+    Some keyword arguments are passed directly to a lower level function:
+
+    Other Parameters (kwargs)
+    -------------------------
+    max_stmts : int or None
+        Limit the number of statements queried. If None, no restriction is
+        applied.
+    offset : int or None
+        Start reading statements by a given offset. If None, no offset is
+        applied. Most commonly used in conjunction with `max_stmts`.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
+
+    Returns
+    -------
+    A dictionary data structure containing, among other metadata, a dict of
+    statement jsons under the key 'statements', themselves keyed by their
+    shallow matches-key hashes.
+    """
+    # First look for statements matching the role'd agents.
+    if db is None:
+        db = get_primary_db()
+
+    # TODO: Extend this to allow retrieval of raw statements.
+    mk_hashes_q = None
+    mk_hash_c = db.PaMeta.mk_hash.label('mk_hash')
+    ev_count_c = db.PaMeta.ev_count.label('ev_count')
+    for role, ag_dbid, ns in agents:
+        # Create this query (for this agent)
+        q = (db.session
+             .query(mk_hash_c, ev_count_c)
+             .filter(db.PaMeta.db_id.like(ag_dbid), db.PaMeta.db_name.like(ns)))
+        if stmt_type is not None:
+            q = q.filter(db.PaMeta.type.like(stmt_type))
+
+        if role is not None:
+            q = q.filter(db.PaMeta.role == role.upper())
+
+        # Intersect with the previous query.
+        if mk_hashes_q:
+            mk_hashes_q = mk_hashes_q.intersect(q)
+        else:
+            mk_hashes_q = q
+    assert mk_hashes_q, "No conditions imposed."
+
+    return _get_pa_statement_jsons_from_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
 @_clockit
@@ -839,7 +806,7 @@ def get_statement_jsons_from_papers(paper_refs, db=None, preassembled=True):
     else:
         raise DbClientError("Cannot find attribute to use for linking: %s"
                             % str(sub_al.c._all_columns))
-    return _get_pa_statements_by_subq_link(db, link, None)
+    return _get_pa_statement_jsons_from_mkhash_subquery(db, link, None)
 
 
 @_clockit
@@ -848,7 +815,7 @@ def get_statement_jsons_from_hashes(mk_hashes, db=None):
     if db is None:
         db = get_primary_db()
     link = db.FastRawPaLink.mk_hash.in_(mk_hashes)
-    return _get_pa_statements_by_subq_link(db, link, None)
+    return _get_pa_statement_jsons_from_mkhash_subquery(db, link, None)
 
 
 @_clockit
