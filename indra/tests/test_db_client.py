@@ -173,6 +173,7 @@ def test_get_statement_jsons_by_agent():
     assert stmt_jsons
     assert stmt_jsons['statements']
     assert stmt_jsons['total_evidence']
+    assert stmt_jsons['evidence_returned']
     stmts = stmts_from_json(stmt_jsons['statements'].values())
     assert len(stmts) == len(stmt_jsons['statements'])
     for s in stmts:
@@ -180,6 +181,29 @@ def test_get_statement_jsons_by_agent():
                     for ag_ns, ag_id in ag.db_refs.items()]
         for ag_tpl in agents:
             assert ag_tpl in s_agents
+
+
+def test_get_statement_jsons_options():
+    # Test all possible options regarding the number of statements returned.
+    # Note that this suffices to test the same options in other related
+    # functions as well (e.g. the paper version).
+    options = {'max_stmts': 2, 'ev_limit': 4, 'offset': 5, 'best_first': False}
+    agents = [('SUBJECT', 'MEK', 'FPLX'), ('OBJECT', 'ERK', 'FPLX')]
+    option_dicts = [{}]
+    for key, value in options.items():
+        nd = {key: value}
+        new_option_dicts = []
+        for option_dict in option_dicts:
+            new_option_dicts.append(option_dict)
+            new_option_dicts.append({**option_dict, **nd})
+        option_dicts = new_option_dicts
+    for option_dict in option_dicts:
+        res = dbc.get_statement_jsons_from_agents(agents=agents,
+                                                  stmt_type='Phosphorylation',
+                                                  **option_dict)
+        assert res
+        assert len(res['statements'])
+    return
 
 
 @attr('nonpublic')
