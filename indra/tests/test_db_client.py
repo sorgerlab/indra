@@ -118,7 +118,8 @@ def test_get_statements():
     pmids = {s.evidence[0].pmid for s in random.sample(stmts, 200)}
     assert pmids
     assert pmids != {None,}
-    md_list = pubc.get_metadata_for_ids(list(pmids))
+    md_list = pubc.get_metadata_for_ids([pmid for pmid in pmids
+                                         if pmid is not None])
     assert len(md_list) == len(pmids), (len(md_list), len(pmids))
 
     # Test getting some statements
