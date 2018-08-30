@@ -207,7 +207,7 @@ def get_statements():
 
     result = \
         get_statement_jsons_from_agents(agent_iter, stmt_type=act, offset=offs,
-                                        max_stmts=MAX_STATEMENTS)
+                                        max_stmts=MAX_STATEMENTS, ev_limit=10)
     result['limit'] = MAX_STATEMENTS
 
     if do_stream:
