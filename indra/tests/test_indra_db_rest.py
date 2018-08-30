@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from datetime import datetime
+from unittest import SkipTest
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
@@ -51,14 +52,14 @@ def test_bigger_request():
 
 @attr('nonpublic')
 def test_too_big_request_no_persist():
-    resp_some = __check_request(30, agents=['TP53'], persist=False,
+    resp_some = __check_request(40, agents=['TP53'], persist=False,
                                 simple_response=False)
     return resp_some
 
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(60, agents=['TP53'], persist=True, block=True,
+    resp_all1 = __check_request(90, agents=['TP53'], persist=True, block=True,
                                 simple_response=False)
     return resp_all1
 
@@ -67,13 +68,16 @@ def test_too_big_request_persist_and_block():
 def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
-    resp_all2 = __check_request(30, agents=['TP53'], persist=True, block=False,
-                                check_stmts=False, simple_response=False)
-    assert not resp_all2.done, \
-        "Background complete appears to have resolved too fast."
+    resp_all2 = __check_request(60, agents=['TP53'], persist=True,
+                                block=False, check_stmts=False,
+                                simple_response=False)
+    assert not resp_all2.done, "Background complete resolved too fast."
     assert len(resp_all2.statements_sample) == len(resp_some.statements)
-    resp_all2.wait_until_done(60)
-    assert len(resp_all2.statements) == len(resp_all1.statements)
+    resp_all2.wait_until_done(120)
+    assert resp_all2.done
+    assert len(resp_all2.statements) == len(resp_all1.statements), \
+        'Expected: %d, actual: %d' % (len(resp_all1.statements),
+                                      len(resp_all2.statements))
     return
 
 
@@ -89,9 +93,9 @@ def test_famplex_namespace():
 
 @attr('nonpublic')
 def test_paper_query():
-    stmts_1 = dbr.get_statements_for_paper('PMC495400', 'pmcid')
+    stmts_1 = dbr.get_statements_for_paper('PMC5770457', 'pmcid')
     assert len(stmts_1)
-    stmts_2 = dbr.get_statements_for_paper('14461663')
+    stmts_2 = dbr.get_statements_for_paper('27014235')
     assert len(stmts_2)
 
 
