@@ -6,7 +6,7 @@ import json
 import logging
 from collections import defaultdict
 from itertools import groupby, permutations, product
-from sqlalchemy import or_, desc, func, true
+from sqlalchemy import or_, desc, func, true, select
 
 from indra.statements import Unresolved, Evidence
 
@@ -701,11 +701,13 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
 
     # TODO: Extend this to allow retrieval of raw statements.
     sub_q = None
+    mk_hash_c = db.PaMeta.mk_hash.label('mk_hash')
+    ev_count_c = db.PaMeta.ev_count.label('ev_count')
     for role, ag_dbid, ns in agents:
         # Create this query (for this agent)
-        q = db.filter_query([db.PaMeta.mk_hash, db.PaMeta.ev_count],
-                            db.PaMeta.db_id.like(ag_dbid),
-                            db.PaMeta.db_name.like(ns))
+        q = (db.session
+             .query(mk_hash_c, ev_count_c)
+             .filter(db.PaMeta.db_id.like(ag_dbid), db.PaMeta.db_name.like(ns)))
         if stmt_type is not None:
             q = q.filter(db.PaMeta.type.like(stmt_type))
 
@@ -722,7 +724,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     # Handle limiting.
     sub_q = sub_q.order_by(desc(db.PaMeta.ev_count))
     if max_stmts is not None:
-        sub_q = sub_q.limit(max_stmts).from_self()
+        sub_q = sub_q.limit(max_stmts)
         if ev_limit is not None:
             max_total_stmts = ev_limit*max_stmts
         else:
@@ -733,34 +735,43 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     # Create the link
     sub_al = sub_q.subquery('mk_hashes')
 
-    if hasattr(sub_al.c, 'mk_hash'):
-        link = db.FastRawPaLink.mk_hash == sub_al.c.mk_hash
-    elif hasattr(sub_al.c, 'pa_meta_mk_hash'):
-        link = db.FastRawPaLink.mk_hash == sub_al.c.pa_meta_mk_hash
-    else:
-        raise DbClientError("Cannot find attribute to use for linking: %s"
-                            % str(sub_al.c._all_columns))
-
     # Prototype new query method
-    lateral_q = db.session.query(db.FastRawPaLink.mk_hash,
-                                 db.FastRawPaLink.raw_json,
-                                 db.FastRawPaLink.pa_json)
-    lateral_q = lateral_q.filter(link)
+    raw_json_c = db.FastRawPaLink.raw_json.label('raw_json')
+    pa_json_c = db.FastRawPaLink.pa_json.label('pa_json')
+    reading_id_c = db.FastRawPaLink.reading_id.label('rid')
+    cont_q = db.session.query(raw_json_c, pa_json_c, reading_id_c)
+    cont_q = cont_q.filter(db.FastRawPaLink.mk_hash == sub_al.c.mk_hash)
+
     if ev_limit is not None:
-        lateral_q = lateral_q.limit(ev_limit).from_self()
-    lateral_q = lateral_q.subquery().lateral()
+        cont_q = cont_q.limit(ev_limit)
+        json_content_al = cont_q.subquery().lateral('json_content')
+    else:
+        json_content_al = cont_q.subquery('json_content')
 
-    stmt_al = sub_q.join(lateral_q, true()).subquery('statements')
+    stmts_q = (sub_al
+               .outerjoin(json_content_al, true())
+               .outerjoin(db.ReadingRefLink,
+                          db.ReadingRefLink.rid == json_content_al.c.rid))
 
-    master_q = (db.session.query(stmt_al.c.mk_hash, stmt_al.c.raw_json,
-                                 stmt_al.c.pa_json, db.ReadingRefLink.pmid)
-                .outerjoin(db.FastRawPaLink.reading_ref)
-                .limit(max_total_stmts))
+    selection = (select([sub_al.c.mk_hash, sub_al.c.ev_count,
+                         json_content_al.c.raw_json, json_content_al.c.pa_json,
+                         db.ReadingRefLink.pmid])
+                 .select_from(stmts_q))
 
-    res = master_q.all()
+    proxy = db.session.connection().execute(selection)
+    res = proxy.fetchall()
 
-    return _get_pa_statements_by_subq_link(db, link, max_total_stmts, offset,
-                                           ev_limit)
+    stmts_dict = {}
+    for mk_hash, ev_count, raw_json_bts, pa_json_bts, pmid in res:
+        raw_json = json.loads(raw_json_bts.decode('utf-8'))
+        if mk_hash not in stmts_dict.keys():
+            stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
+            stmts_dict[mk_hash]['evidence'] = []
+        if pmid:
+            raw_json['evidence'][0]['pmid'] = pmid
+        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
+
+    return {'statements': stmts_dict, 'total_evidence': len(res)}
 
 
 @_clockit
