@@ -621,6 +621,7 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
                                          max_stmts=None, offset=None,
                                          ev_limit=None):
     # Handle limiting.
+    mk_hashes_q = mk_hashes_q.distinct()
     if best_first:
         mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
     if max_stmts is not None:

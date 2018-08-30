@@ -240,6 +240,14 @@ def test_get_statement_jsons_options():
     return
 
 
+def test_nfkb_anomoly():
+    agents = [(None, 'NFkappaB', 'FPLX')]
+    res = dbc.get_statement_jsons_from_agents(agents=agents, max_stmts=1000,
+                                              ev_limit=10)
+    assert res
+    assert len(res['statements']) == 1000, len(res['statements'])
+
+
 @attr('nonpublic')
 def test_get_statement_jsons_by_paper_id():
     paper_refs = [('pmid', '27769048'),
