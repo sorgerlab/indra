@@ -187,7 +187,7 @@ def test_get_statement_jsons_options():
     # Test all possible options regarding the number of statements returned.
     # Note that this suffices to test the same options in other related
     # functions as well (e.g. the paper version).
-    options = {'max_stmts': 2, 'ev_limit': 4, 'offset': 5, 'best_first': False}
+    options = {'max_stmts': 10, 'ev_limit': 4, 'offset': 5, 'best_first': False}
     agents = [('SUBJECT', 'MEK', 'FPLX'), ('OBJECT', 'ERK', 'FPLX')]
     option_dicts = [{}]
     for key, value in options.items():
@@ -199,6 +199,7 @@ def test_get_statement_jsons_options():
         option_dicts = new_option_dicts
 
     evidence_count_record = {}
+    total_stmts = None
     for option_dict in option_dicts:
         res = dbc.get_statement_jsons_from_agents(agents=agents,
                                                   stmt_type='Phosphorylation',
@@ -209,7 +210,10 @@ def test_get_statement_jsons_options():
         if 'max_stmts' in option_dict.keys():
             assert len(stmts) == option_dict['max_stmts']
         else:
-            assert len(stmts) == 3
+            if total_stmts:
+                assert len(stmts) == total_stmts
+            else:
+                total_stmts = len(stmts)
 
         if 'ev_limit' in option_dict.keys():
             assert all([len(s.evidence) <= options['ev_limit'] for s in stmts.values()])
