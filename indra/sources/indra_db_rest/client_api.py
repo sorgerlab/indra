@@ -201,6 +201,28 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
+    offset : int or None
+        Set the initial offset of this load. Given a query, start returning
+        statements from the n'th in the list. This may be somewhat arbitrary,
+        but if best_first is True, this will move down the list of statements in
+        order of quantity of supporting evidence.
+    persist : bool
+        Default is True. When False, if a query comes back limited (not all
+        results returned), just give up and pass along what was returned.
+        Otherwise, make further queries to get the rest of the data (which may
+        take some time).
+    block : bool
+        If True, (and persist is True) block until all statements are retrieved.
+        Otherwise (if False), the statements will be retrieved in a thread and
+        may be accessed when ready. In the meantime the original sample will be
+        available. (Note, False is not really compatible with simple_response).
+        Default is True.
+    simple_response : bool
+        If True, a simple list of statements is returned (thus block should also
+        be True). If block is False, only the original sample will be returned
+        (as though persist was False), until the statements are done loading, in
+        which case the rest should appear in the list. This behavior is not
+        encouraged. Default is True (for the sake of backwards compatibility).
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
     best_first : bool
