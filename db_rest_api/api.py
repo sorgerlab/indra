@@ -123,10 +123,11 @@ def _query_wrapper(f):
         query_dict = request.args.copy()
         offs = query_dict.pop('offset', None)
         ev_limit = query_dict.pop('ev_limit', 10)
+        best_first = query_dict.pop('best_first', True)
         do_stream_str = query_dict.pop('stream', 'false')
         do_stream = True if do_stream_str == 'true' else False
 
-        result = f(query_dict, offs, MAX_STATEMENTS, ev_limit)
+        result = f(query_dict, offs, MAX_STATEMENTS, ev_limit, best_first)
         result['offset'] = offs
         result['evidence_limit'] = ev_limit
         result['statement_limit'] = MAX_STATEMENTS
@@ -180,7 +181,7 @@ def get_statements_query_format():
 
 @app.route('/statements/', methods=['GET'])
 @_query_wrapper
-def get_statements(query_dict, offs, max_stmts, ev_limit):
+def get_statements(query_dict, offs, max_stmts, ev_limit, best_first):
     """Get some statements constrained by query."""
     logger.info("Getting query details.")
     try:
@@ -229,13 +230,14 @@ def get_statements(query_dict, offs, max_stmts, ev_limit):
 
     result = \
         get_statement_jsons_from_agents(agent_iter, stmt_type=act, offset=offs,
-                                        max_stmts=max_stmts, ev_limit=ev_limit)
+                                        max_stmts=max_stmts, ev_limit=ev_limit,
+                                        best_first=best_first)
     return result
 
 
 @app.route('/statements/from_hashes', methods=['POST', 'GET'])
 @_query_wrapper
-def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit):
+def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit, best_first):
     hashes = request.json.get('hashes')
     if not hashes:
         logger.error("No hashes provided!")
@@ -246,13 +248,14 @@ def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit):
                        400))
 
     result = get_statement_jsons_from_hashes(hashes, max_stmts=max_stmts,
-                                             offset=offs, ev_limit=ev_limit)
+                                             offset=offs, ev_limit=ev_limit,
+                                             best_first=best_first)
     return result
 
 
 @app.route('/papers/', methods=['GET'])
 @_query_wrapper
-def get_paper_statements(query_dict, offs, max_stmts, ev_limit):
+def get_paper_statements(query_dict, offs, max_stmts, ev_limit, best_first):
     """Get and preassemble statements from a paper given by pmid."""
     # Get the paper id.
     id_val = query_dict.get('id')
@@ -269,7 +272,8 @@ def get_paper_statements(query_dict, offs, max_stmts, ev_limit):
         id_val = int(id_val)
     result = get_statement_jsons_from_papers([(id_type, id_val)],
                                              max_stmts=max_stmts,
-                                             offset=offs, ev_limit=ev_limit)
+                                             offset=offs, ev_limit=ev_limit,
+                                             best_first=best_first)
     return result
 
 
