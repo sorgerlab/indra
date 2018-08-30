@@ -700,7 +700,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
         db = get_primary_db()
 
     # TODO: Extend this to allow retrieval of raw statements.
-    sub_q = None
+    mk_hashes_q = None
     mk_hash_c = db.PaMeta.mk_hash.label('mk_hash')
     ev_count_c = db.PaMeta.ev_count.label('ev_count')
     for role, ag_dbid, ns in agents:
@@ -715,26 +715,26 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
             q = q.filter(db.PaMeta.role == role.upper())
 
         # Intersect with the previous query.
-        if sub_q:
-            sub_q = sub_q.intersect(q)
+        if mk_hashes_q:
+            mk_hashes_q = mk_hashes_q.intersect(q)
         else:
-            sub_q = q
-    assert sub_q, "No conditions imposed."
+            mk_hashes_q = q
+    assert mk_hashes_q, "No conditions imposed."
 
     # Handle limiting.
-    sub_q = sub_q.order_by(desc(db.PaMeta.ev_count))
+    mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
     if max_stmts is not None:
-        sub_q = sub_q.limit(max_stmts)
+        mk_hashes_q = mk_hashes_q.limit(max_stmts)
 
     # Create the link
-    sub_al = sub_q.subquery('mk_hashes')
+    mk_hashes_al = mk_hashes_q.subquery('mk_hashes')
 
     # Prototype new query method
     raw_json_c = db.FastRawPaLink.raw_json.label('raw_json')
     pa_json_c = db.FastRawPaLink.pa_json.label('pa_json')
     reading_id_c = db.FastRawPaLink.reading_id.label('rid')
     cont_q = db.session.query(raw_json_c, pa_json_c, reading_id_c)
-    cont_q = cont_q.filter(db.FastRawPaLink.mk_hash == sub_al.c.mk_hash)
+    cont_q = cont_q.filter(db.FastRawPaLink.mk_hash == mk_hashes_al.c.mk_hash)
 
     if ev_limit is not None:
         cont_q = cont_q.limit(ev_limit)
@@ -742,12 +742,12 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     else:
         json_content_al = cont_q.subquery('json_content')
 
-    stmts_q = (sub_al
+    stmts_q = (mk_hashes_al
                .outerjoin(json_content_al, true())
                .outerjoin(db.ReadingRefLink,
                           db.ReadingRefLink.rid == json_content_al.c.rid))
 
-    selection = (select([sub_al.c.mk_hash, sub_al.c.ev_count,
+    selection = (select([mk_hashes_al.c.mk_hash, mk_hashes_al.c.ev_count,
                          json_content_al.c.raw_json, json_content_al.c.pa_json,
                          db.ReadingRefLink.pmid])
                  .select_from(stmts_q))
