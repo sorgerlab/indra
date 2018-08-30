@@ -349,9 +349,14 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
     print('headers:', headers)
     print('data:', data)
     method_func = getattr(requests, meth.lower())
-    resp = method_func(url_path, headers=headers, data=json_data,
-                       params={'ev_limit': ev_limit, 'best_first': best_first})
-    if resp.status_code == 200:
-        return resp
-    else:
-        raise IndraDBRestError(resp)
+    tries = 2
+    while tries:
+        tries -= 1
+        resp = method_func(url_path, headers=headers, data=json_data,
+                           params={'ev_limit': ev_limit, 'best_first': best_first})
+        if resp.status_code == 200:
+            return resp
+        elif resp.status_code == 504 and tries > 0:
+            logger.warning("Endpoint timed out. Trying again...")
+        else:
+            raise IndraDBRestError(resp)
