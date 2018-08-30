@@ -811,7 +811,7 @@ def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
 
     # Map the reading metadata query to mk_hashes with statement counts.
     mk_hashes_q = (db.session
-                   .query(distinct(db.PaMeta.mk_hash).label('mk_hash'),
+                   .query(db.PaMeta.mk_hash.label('mk_hash'),
                           db.PaMeta.ev_count.label('ev_count'))
                    .filter(db.PaMeta.mk_hash == db.FastRawPaLink.mk_hash,
                            db.FastRawPaLink.reading_id == sub_al.c.rid))
