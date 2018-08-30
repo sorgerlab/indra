@@ -666,7 +666,8 @@ def _get_pa_statements_by_subq_link(db, sub_q_link, max_stmts=None,
 
 @_clockit
 def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
-                                    db=None, offset=None, ev_limit=None):
+                                    db=None, offset=None, ev_limit=None,
+                                    best_first=True):
     """Get json's for statements given agent refs and Statement type.
 
     Parameters
@@ -722,7 +723,8 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, max_stmts=None,
     assert mk_hashes_q, "No conditions imposed."
 
     # Handle limiting.
-    mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
+    if best_first:
+        mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
     if max_stmts is not None:
         mk_hashes_q = mk_hashes_q.limit(max_stmts)
     if offset is not None:
