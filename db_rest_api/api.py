@@ -21,7 +21,7 @@ Compress(app)
 CORS(app)
 
 
-MAX_STATEMENTS = int(1e4)
+MAX_STATEMENTS = int(1e3)
 
 
 class DbAPIError(Exception):
@@ -154,6 +154,7 @@ def get_statements():
 
     query_dict = request.args.copy()
     offs = query_dict.pop('offset', None)
+    ev_limit = query_dict.pop('max_evidence_per_stmt', 10)
     do_stream_str = query_dict.pop('stream', 'false')
     do_stream = True if do_stream_str == 'true' else False
 
@@ -208,7 +209,8 @@ def get_statements():
 
     result = \
         get_statement_jsons_from_agents(agent_iter, stmt_type=act, offset=offs,
-                                        max_stmts=MAX_STATEMENTS, ev_limit=10)
+                                        max_stmts=MAX_STATEMENTS,
+                                        ev_limit=ev_limit)
     result['limit'] = MAX_STATEMENTS
 
     if do_stream:
@@ -247,6 +249,8 @@ def get_paper_statements():
     """Get and preassemble statements from a paper given by pmid."""
     logger.info("Got query for statements from a paper!")
     query_dict = request.args.copy()
+    offs = query_dict.pop('offset', None)
+    ev_limit = query_dict.pop('max_evidence_per_stmt', 10)
 
     # Get the paper id.
     id_val = query_dict.get('id')
@@ -259,8 +263,9 @@ def get_paper_statements():
 
     # Now get the statements.
     logger.info('Getting statements for %s=%s...' % (id_type, id_val))
-    # TODO: Use the more natural json version once it isn't absurdly slow.
-    stmt_jsons = get_statement_jsons_from_papers([[(id_type, id_val)]])
+    stmt_jsons = get_statement_jsons_from_papers([[(id_type, id_val)]],
+                                                 max_stmts=MAX_STATEMENTS,
+                                                 offset=offs, ev_limit=ev_limit)
     resp = jsonify(stmt_jsons)
     logger.info("Exiting with %d statements with %d evidence of %d total"
                 "available evidence of size %f MB."
