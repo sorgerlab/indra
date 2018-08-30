@@ -797,22 +797,16 @@ def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
         db = get_primary_db()
 
     # Create a sub-query on the reading metadata
-    sub_q = None
+    q = db.session.query(db.ReadingRefLink.rid.label('rid'))
+    conditions = []
     for id_type, paper_id in paper_refs:
-        q = db.session.query(db.ReadingRefLink.rid.label('rid'))
         tbl_attr = getattr(db.ReadingRefLink, id_type)
         if id_type in ['trid', 'tcid']:
-            q = q.filter(tbl_attr == paper_id)
+            conditions.append(tbl_attr == paper_id)
         else:
-            q = q.filter(tbl_attr.like(paper_id))
-
-        # Intersect with the previous query.
-        if sub_q:
-            sub_q = sub_q.union(q)
-        else:
-            sub_q = q
-    assert sub_q, "No conditions imposed."
-    sub_al = sub_q.subquery('reading_ids')
+            conditions.append(tbl_attr.like(paper_id))
+    q = q.filter(or_(*conditions))
+    sub_al = q.subquery('reading_ids')
 
     # Map the reading metadata query to mk_hashes with statement counts.
     mk_hashes_q = (db.session
