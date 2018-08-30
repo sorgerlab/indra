@@ -6,7 +6,7 @@ import json
 import logging
 from collections import defaultdict
 from itertools import groupby, permutations, product
-from sqlalchemy import or_, desc, func, true, select
+from sqlalchemy import or_, desc, func, true, select, distinct
 
 from indra.statements import Unresolved, Evidence
 
@@ -617,9 +617,9 @@ def _get_trids(db, id_val, id_type):
 
 
 @_clockit
-def _get_pa_statement_jsons_from_mkhash_subquery(db, mk_hashes_q, best_first=True,
-                                                 max_stmts=None, offset=None,
-                                                 ev_limit=None):
+def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
+                                         max_stmts=None, offset=None,
+                                         ev_limit=None):
     # Handle limiting.
     if best_first:
         mk_hashes_q = mk_hashes_q.order_by(desc(db.PaMeta.ev_count))
@@ -638,9 +638,9 @@ def _get_pa_statement_jsons_from_mkhash_subquery(db, mk_hashes_q, best_first=Tru
 
     if ev_limit is not None:
         cont_q = cont_q.limit(ev_limit)
-        json_content_al = cont_q.subquery().lateral('json_content')
-    else:
-        json_content_al = cont_q.subquery('json_content')
+
+    # TODO: Only make a lateral-joined query when evidence is limited.
+    json_content_al = cont_q.subquery().lateral('json_content')
 
     stmts_q = (mk_hashes_al
                .outerjoin(json_content_al, true())
@@ -651,6 +651,7 @@ def _get_pa_statement_jsons_from_mkhash_subquery(db, mk_hashes_q, best_first=Tru
                          json_content_al.c.raw_json, json_content_al.c.pa_json,
                          db.ReadingRefLink.pmid])
                  .select_from(stmts_q))
+    logger.debug("Executing sql to get statements:\n%s" % str(selection))
 
     proxy = db.session.connection().execute(selection)
     res = proxy.fetchall()
@@ -752,11 +753,11 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, db=None,
             mk_hashes_q = q
     assert mk_hashes_q, "No conditions imposed."
 
-    return _get_pa_statement_jsons_from_mkhash_subquery(db, mk_hashes_q, **kwargs)
+    return _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
 @_clockit
-def get_statement_jsons_from_papers(paper_refs, db=None, preassembled=True):
+def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
     """Get the statements from a list of papers.
 
     Parameters
@@ -769,24 +770,40 @@ def get_statement_jsons_from_papers(paper_refs, db=None, preassembled=True):
     db : :py:class:`DatabaseManager`
         Optionally specify a database manager that attaches to something
         besides the primary database, for example a local databse instance.
-    preassembled : bool
-        (NOT IMPLEMENTED [YET]) If True, statements will be selected from the
-        table of pre-assembled statements. Otherwise, they will be selected from
-        the raw statements. Default is True.
+
+    Some keyword arguments are passed directly to a lower level function:
+
+    Other Parameters (kwargs)
+    -------------------------
+    max_stmts : int or None
+        Limit the number of statements queried. If None, no restriction is
+        applied.
+    offset : int or None
+        Start reading statements by a given offset. If None, no offset is
+        applied. Most commonly used in conjunction with `max_stmts`.
+    ev_limit : int or None
+        Limit the amount of evidence returned per Statement.
+    best_first : bool
+        If True, the preassembled statements will be sorted by the amount of
+        evidence they have, and those with the most evidence will be
+        prioritized. When using `max_stmts`, this means you will get the "best"
+        statements. If False, statements will be queried in arbitrary order.
 
     Returns
     -------
-    A list of Statement jsons from the database corresponding to the paper ids.
+    A dictionary data structure containing, among other metadata, a dict of
+    statement jsons under the key 'statements', themselves keyed by their
+    shallow matches-key hashes.
     """
-    # TODO: Look into why this is so SLOW
     if db is None:
         db = get_primary_db()
 
+    # Create a sub-query on the reading metadata
     sub_q = None
     for paper in paper_refs:
-        q = db.filter_query([db.ReadingRefLink.rid])
+        q = db.session.query(db.ReadingRefLink.rid.label('rid'))
         for id_type, paper_id in paper:
-            q = q.filter(getattr(db.ReadingRefLink, id_type) == paper_id)
+            q = q.filter(getattr(db.ReadingRefLink, id_type).like(paper_id))
 
         # Intersect with the previous query.
         if sub_q:
@@ -794,19 +811,16 @@ def get_statement_jsons_from_papers(paper_refs, db=None, preassembled=True):
         else:
             sub_q = q
     assert sub_q, "No conditions imposed."
-    sub_q = sub_q.distinct()
     sub_al = sub_q.subquery('reading_ids')
 
-    if hasattr(sub_al.c, 'rid'):
-        link = db.FastRawPaLink.reading_id == sub_al.c.rid
-    elif hasattr(sub_al.c, 'reading_ref_link_rid'):
-        link = db.FastRawPaLink.reading_id == sub_al.c.reading_ref_link_rid
-    elif len(sub_al.c._all_columns) == 1:
-        link = db.FastRawPaLink.reading_id == sub_al.c._all_columns[0]
-    else:
-        raise DbClientError("Cannot find attribute to use for linking: %s"
-                            % str(sub_al.c._all_columns))
-    return _get_pa_statement_jsons_from_mkhash_subquery(db, link, None)
+    # Map the reading metadata query to mk_hashes with statement counts.
+    mk_hashes_q = (db.session
+                   .query(distinct(db.PaMeta.mk_hash).label('mk_hash'),
+                          db.PaMeta.ev_count.label('ev_count'))
+                   .filter(db.PaMeta.mk_hash == db.FastRawPaLink.mk_hash,
+                           db.FastRawPaLink.reading_id == sub_al.c.rid))
+
+    return _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
 @_clockit
@@ -815,7 +829,7 @@ def get_statement_jsons_from_hashes(mk_hashes, db=None):
     if db is None:
         db = get_primary_db()
     link = db.FastRawPaLink.mk_hash.in_(mk_hashes)
-    return _get_pa_statement_jsons_from_mkhash_subquery(db, link, None)
+    return _get_pa_stmt_jsons_w_mkhash_subquery(db, link, None)
 
 
 @_clockit
