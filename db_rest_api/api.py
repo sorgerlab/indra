@@ -1,6 +1,7 @@
 import sys
 import json
 import logging
+from functools import wraps
 
 from flask import Flask, request, abort, jsonify, Response
 from flask_compress import Compress
@@ -114,6 +115,33 @@ def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
     return stmts
 
 
+def _query_wrapper(f):
+    @wraps(f)
+    def decorator():
+        logger.info("Got query for %s!" % f.__name__)
+
+        query_dict = request.args.copy()
+        offs = query_dict.pop('offset', None)
+        ev_limit = query_dict.pop('max_evidence_per_stmt', 10)
+        do_stream_str = query_dict.pop('stream', 'false')
+        do_stream = True if do_stream_str == 'true' else False
+
+        result = f(query_dict, offs, MAX_STATEMENTS, ev_limit)
+
+        if do_stream:
+            # Returning a generator should stream the data.
+            resp_json_bts = json.dumps(result)
+            gen = batch_iter(resp_json_bts, 10000)
+            resp = Response(gen, mimetype='application/json')
+        else:
+            resp = Response(json.dumps(result), mimetype='application/json')
+        logger.info("Exiting with %d statements with %d evidence of size %f MB."
+                    % (len(result['statements']), result['total_evidence'],
+                       sys.getsizeof(resp.data)/1e6))
+        return resp
+    return decorator
+
+
 @app.route('/')
 def welcome():
     logger.info("Got request for welcome info.")
@@ -148,16 +176,9 @@ def get_statements_query_format():
 
 
 @app.route('/statements/', methods=['GET'])
-def get_statements():
+@_query_wrapper
+def get_statements(query_dict, offs, max_stmts, ev_limit):
     """Get some statements constrained by query."""
-    logger.info("Got query for statements!")
-
-    query_dict = request.args.copy()
-    offs = query_dict.pop('offset', None)
-    ev_limit = query_dict.pop('max_evidence_per_stmt', 10)
-    do_stream_str = query_dict.pop('stream', 'false')
-    do_stream = True if do_stream_str == 'true' else False
-
     logger.info("Getting query details.")
     try:
         # Get the agents without specified locations (subject or object).
@@ -174,19 +195,15 @@ def get_statements():
         return
 
     # Get the raw name of the statement type (we allow for variation in case).
-    act_uncamelled = query_dict.pop('type', None)
+    act_raw = query_dict.pop('type', None)
 
     # Fix the case, if we got a statement type.
-    if act_uncamelled is not None:
-        act = make_statement_camel(act_uncamelled)
-    else:
-        act = None
+    act = None if act_raw is None else make_statement_camel(act_raw)
 
     # If there was something else in the query, there shouldn't be, so someone's
     # probably confused.
     if query_dict:
-        abort(Response("Unrecognized query options; %s." %
-                       list(query_dict.keys()),
+        abort(Response("Unrecognized query options; %s." % list(query_dict.keys()),
                        400))
         return
 
@@ -209,49 +226,31 @@ def get_statements():
 
     result = \
         get_statement_jsons_from_agents(agent_iter, stmt_type=act, offset=offs,
-                                        max_stmts=MAX_STATEMENTS,
-                                        ev_limit=ev_limit)
-    result['limit'] = MAX_STATEMENTS
-
-    if do_stream:
-        # Returning a generator should stream the data.
-        resp_json_bts = json.dumps(result)
-        gen = batch_iter(resp_json_bts, 10000)
-        resp = Response(gen, mimetype='application/json')
-    else:
-        resp = Response(json.dumps(result), mimetype='application/json')
-    logger.info("Exiting with %d statements with %d evidence of size %f MB."
-                % (len(result['statements']), result['total_evidence'],
-                   sys.getsizeof(resp.data)/1e6))
-    return resp
+                                        max_stmts=max_stmts, ev_limit=ev_limit)
+    return result
 
 
 @app.route('/statements/from_hashes', methods=['POST', 'GET'])
-def get_statements_by_hash():
+@_query_wrapper
+def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit):
     hashes = request.json.get('hashes')
     if not hashes:
         logger.error("No hashes provided!")
         abort(Response("No hashes given!", 400))
-    if len(hashes) > MAX_STATEMENTS:
+    if len(hashes) > max_stmts:
         logger.error("Too many hashes given!")
-        abort(Response("Too many hashes given, %d allowed." % MAX_STATEMENTS,
+        abort(Response("Too many hashes given, %d allowed." % max_stmts,
                        400))
 
-    stmts_json = get_statement_jsons_from_hashes(hashes)
-    resp = jsonify(stmts_json)
-    logger.info("Exiting with %d statements of nominal size %f MB."
-                % (len(stmts_json['statements']), sys.getsizeof(resp.data)/1e6))
-    return resp
+    result = get_statement_jsons_from_hashes(hashes, max_stmts=max_stmts,
+                                             offset=offs, ev_limit=ev_limit)
+    return result
 
 
 @app.route('/papers/', methods=['GET'])
-def get_paper_statements():
+@_query_wrapper
+def get_paper_statements(query_dict, offs, max_stmts, ev_limit):
     """Get and preassemble statements from a paper given by pmid."""
-    logger.info("Got query for statements from a paper!")
-    query_dict = request.args.copy()
-    offs = query_dict.pop('offset', None)
-    ev_limit = query_dict.pop('max_evidence_per_stmt', 10)
-
     # Get the paper id.
     id_val = query_dict.get('id')
     if id_val is None:
@@ -265,16 +264,10 @@ def get_paper_statements():
     logger.info('Getting statements for %s=%s...' % (id_type, id_val))
     if id_type in ['trid', 'tcid']:
         id_val = int(id_val)
-    stmt_jsons = get_statement_jsons_from_papers([(id_type, id_val)],
-                                                 max_stmts=MAX_STATEMENTS,
-                                                 offset=offs, ev_limit=ev_limit)
-    resp = jsonify(stmt_jsons)
-    logger.info("Exiting with %d statements with %d evidence of %d total"
-                "available evidence of size %f MB."
-                % (len(stmt_jsons['statements']),
-                   stmt_jsons['evidence_returned'],
-                   stmt_jsons['total_evidence'], sys.getsizeof(resp.data)/1e6))
-    return resp
+    result = get_statement_jsons_from_papers([(id_type, id_val)],
+                                             max_stmts=max_stmts,
+                                             offset=offs, ev_limit=ev_limit)
+    return result
 
 
 if __name__ == '__main__':
