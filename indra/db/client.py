@@ -828,12 +828,13 @@ def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
 
 
 @_clockit
-def get_statement_jsons_from_hashes(mk_hashes, db=None):
+def get_statement_jsons_from_hashes(mk_hashes, db=None, **kwargs):
     """Get statement jsons using the appropriate hashes."""
     if db is None:
         db = get_primary_db()
-    link = db.FastRawPaLink.mk_hash.in_(mk_hashes)
-    return _get_pa_stmt_jsons_w_mkhash_subquery(db, link, None)
+    mk_hashes_q = (db.session.query(db.PaMeta.mk_hash, db.PaMeta.ev_count)
+                   .filter(db.PaMeta.mk_hash.in_(mk_hashes)))
+    return _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
 @_clockit
