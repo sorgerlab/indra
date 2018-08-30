@@ -289,10 +289,10 @@ class DbApiTestCase(unittest.TestCase):
         assert size <= SIZELIMIT, size
         assert resp.status_code == 200, str(resp)
         json_str = resp.data.decode('utf-8')
-        json_list = json.loads(json_str)['statements']
-        assert len(json_list) >= min_num_results, (min_num_results,
-                                                   len(json_list))
-        return
+        json_dict = json.loads(json_str)['statements']
+        assert len(json_dict) >= min_num_results, (min_num_results,
+                                                   len(json_dict))
+        return json_dict
 
     def test_pmid_paper_query(self):
         pmid = '27014235'
@@ -303,7 +303,9 @@ class DbApiTestCase(unittest.TestCase):
         assert resp.status_code == 200, str(resp)
 
     def test_pmcid_paper_query(self):
-        self.__test_basic_paper_query('PMC5770457', 'pmcid')
+        json_dict = self.__test_basic_paper_query('PMC5770457', 'pmcid')
+        assert 40 < len(json_dict) < 60, \
+            "Wrong number of results: %d." % len(json_dict)
 
     def test_trid_paper_query(self):
         self.__test_basic_paper_query('19649148', 'trid')
