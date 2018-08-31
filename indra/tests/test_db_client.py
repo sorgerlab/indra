@@ -184,6 +184,7 @@ def test_get_statement_jsons_by_agent():
             assert ag_tpl in s_agents
 
 
+@attr('nonpublic')
 def test_get_statement_jsons_options():
     # Test all possible options regarding the number of statements returned.
     # Note that this suffices to test the same options in other related
@@ -240,7 +241,8 @@ def test_get_statement_jsons_options():
     return
 
 
-def test_nfkb_anomoly():
+@attr('nonpublic')
+def test_nfkb_anomaly():
     agents = [(None, 'NFkappaB', 'FPLX')]
     res = dbc.get_statement_jsons_from_agents(agents=agents, max_stmts=1000,
                                               ev_limit=10)
@@ -263,6 +265,7 @@ def test_get_statement_jsons_by_paper_id():
     assert len(pmid_set) >= len(paper_refs)
 
 
+@attr('nonpublic')
 def test_get_statement_jsons_by_mk_hash():
     mk_hashes = {-35990550780621697, -34509352007749723, -33762223064440060,
                  -33265410753427801, -33264422871226821, -33006503639209361,
