@@ -202,7 +202,8 @@ def test_get_statement_jsons_options():
         new_option_dicts = []
         for option_dict in option_dicts:
             new_option_dicts.append(option_dict)
-            new_option_dicts.append({**option_dict, **nd})
+            new_option_dicts.append({k: v for d in [option_dict, nd]
+                                     for k, v in d.items()})
         option_dicts = new_option_dicts
 
     ev_counts = {}
