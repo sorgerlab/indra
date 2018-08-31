@@ -685,6 +685,9 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
                 for ag in ag_value:
                     raw_text.append(ag['db_refs'].get('TEXT'))
         ev_json['annotations']['agents'] = {'raw_text': raw_text}
+        if 'prior_uuids' in ev_json['annotations'].keys():
+            ev_json['annotations']['prior_uuids'] = []
+        ev_json['annotations']['prior_uuids'].append(raw_json['id'])
 
         stmts_dict[mk_hash]['evidence'].append(ev_json)
 
