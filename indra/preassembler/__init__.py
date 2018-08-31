@@ -135,9 +135,11 @@ class Preassembler(object):
             # Statements to it
             new_stmt = duplicates[0].make_generic_copy()
             for stmt_ix, stmt in enumerate(duplicates):
+                raw_text = [ag.db_refs.get('TEXT') for ag in stmt.agent_list()]
                 for ev in stmt.evidence:
                     ev_key = ev.matches_key()
                     if ev_key not in ev_keys:
+                        ev.annotations['agents'] = {'raw_text': raw_text}
                         new_stmt.evidence.append(ev)
                         ev_keys.add(ev_key)
             # This should never be None or anything else
