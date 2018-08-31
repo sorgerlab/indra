@@ -2,7 +2,6 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 from datetime import datetime
-from unittest import SkipTest
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr

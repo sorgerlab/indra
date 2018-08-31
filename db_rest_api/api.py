@@ -3,14 +3,12 @@ import json
 import logging
 from functools import wraps
 
-from flask import Flask, request, abort, jsonify, Response
+from flask import Flask, request, abort, Response
 from flask_compress import Compress
 from flask_cors import CORS
 
-from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper, get_statements_from_hashes, \
-    get_statement_jsons_from_agents, get_statement_jsons_from_hashes, \
-    get_statement_jsons_from_papers
+from indra.db.client import get_statement_jsons_from_agents,\
+    get_statement_jsons_from_hashes, get_statement_jsons_from_papers
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 from indra.util import batch_iter
