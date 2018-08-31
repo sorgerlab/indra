@@ -156,7 +156,7 @@ def test_get_entity_mods():
     assert(mod_pos == set(['1035', '1056', '1128', '1188', '1242']))
 
 
-@attr('webservice')
+@attr('webservice', 'slow')
 def test_pathsfromto():
     bp = biopax.process_pc_pathsfromto(['MAP2K1'], ['MAPK1'])
     assert_pmids(bp.statements)

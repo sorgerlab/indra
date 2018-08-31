@@ -2,6 +2,7 @@ import json
 from indra.sources import sparser
 from indra.sources.sparser.processor import _fix_agent
 from indra.statements import Agent, Phosphorylation
+from nose.plugins.attrib import attr
 
 # ############################
 # XML processing tests
@@ -24,6 +25,8 @@ def test_phosphorylation():
     assert(ev.source_api == 'sparser')
 
 
+# This test uses some slow UniPtot web queries to standardize agent names
+@attr('webservice', 'slow')
 def test_phosphorylation2():
     sp = sparser.process_xml(xml_str2)
     assert(len(sp.statements) == 1)
