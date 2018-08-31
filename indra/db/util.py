@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
+import pickle
 from builtins import dict, str
 
 __all__ = ['get_defaults', 'get_primary_db', 'get_db', 'insert_agents',
@@ -456,9 +458,12 @@ def _fix_evidence_refs(db, rid_stmt_trios):
     rid_set = {rid for rid, _, _ in rid_stmt_trios if rid is not None}
     logger.info("Getting text refs for %d readings." % len(rid_set))
     if rid_set:
-        rid_tr_pairs = db.select_all([db.Reading.id, db.TextRef],
-                                     db.Reading.id.in_(rid_set),
-                                     *db.join(db.TextRef, db.Reading))
+        rid_tr_pairs = db.select_all(
+            [db.Reading.id, db.TextRef],
+            db.Reading.id.in_(rid_set),
+            db.Reading.text_content_id == db.TextContent.id,
+            db.TextContent.text_ref_id == db.TextRef.id
+            )
         rid_tr_dict = {rid: tr for rid, tr in rid_tr_pairs}
         for rid, sid, stmt in rid_stmt_trios:
             if rid is None:
@@ -493,7 +498,9 @@ def _get_reading_statement_dict(db, clauses=None, get_full_stmts=True):
                           db.TextContent.source, db.Reading.id,
                           db.Reading.reader_version, db.RawStatements.id,
                           db.RawStatements.json)
-         .filter(*db.join(db.RawStatements, db.TextRef)))
+         .filter(db.RawStatements.reading_id == db.Reading.id,
+                 db.Reading.text_content_id == db.TextContent.id,
+                 db.TextContent.text_ref_id == db.TextRef.id))
     if clauses:
         q = q.filter(*clauses)
 
@@ -737,7 +744,8 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
 
 @_clockit
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
-                  delete_duplicates=True, weed_evidence=True, batch_size=1000):
+                  handle_duplicates='ignore', weed_evidence=True,
+                  batch_size=1000):
     """Get a corpus of statements from clauses and filters duplicate evidence.
 
     Parameters
@@ -755,9 +763,11 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         `clauses=[db.Statements.uuid.in_([<uuids>])]`.
     num_procs : int
         Select the number of process that can be used.
-    delete_duplicates : bool
+    handle_duplicates : 'ignore', 'delete', or a string file path
         Choose whether you want to delete the statements that are found to be
-        duplicates.
+        duplicates ('delete'), or write a pickle file with their ids (at the
+        string file path) for later handling, or simply do nothing ('ignore').
+        The default behavior is 'ignore'.
     weed_evidence : bool
         If True, evidence links that exist for raw statements that now have
         better alternatives will be removed. If False, such links will remain,
@@ -769,10 +779,10 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         A set of either statement ids or serialized statements, depending on
         `get_full_stmts`.
     """
-    if delete_duplicates:
+    if handle_duplicates == 'delete' or handle_duplicates != 'ignore':
         logger.info("Looking for ids from existing links...")
         linked_sids = {sid for sid,
-                        in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
+                       in db.select_all(db.RawUniqueLinks.raw_stmt_id)}
     else:
         linked_sids = set()
 
@@ -810,21 +820,51 @@ def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
         db.delete_all(rm_links)
 
     # Delete exact duplicates
-    if len(duplicate_sids) and delete_duplicates:
-        logger.info("Deleting duplicates...")
-        for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
-            bad_stmts = db.select_all(db.RawStatements,
-                                      db.RawStatements.id.in_(dup_id_batch))
-            bad_sid_set = {s.id for s in bad_stmts}
-            bad_agents = db.select_all(db.RawAgents,
-                                       db.RawAgents.stmt_id.in_(bad_sid_set))
-            logger.info("Deleting %d agents associated with redundant raw "
-                        "statements." % len(bad_agents))
-            db.delete_all(bad_agents)
-            logger.info("Deleting %d redundant raw statements." % len(bad_stmts))
-            db.delete_all(bad_stmts)
+    if len(duplicate_sids):
+        if handle_duplicates == 'delete':
+            logger.info("Deleting duplicates...")
+            for dup_id_batch in batch_iter(duplicate_sids, batch_size, set):
+                logger.info("Deleting %d duplicated raw statements."
+                            % len(dup_id_batch))
+                delete_raw_statements_by_id(db, dup_id_batch)
+        elif handle_duplicates != 'ignore':
+            with open('duplicate_ids_%s.pkl' % datetime.now(), 'wb') as f:
+                pickle.dump(duplicate_sids, f)
 
     return stmts
+
+
+def delete_raw_statements_by_id(db, raw_sids, sync_session=False, remove='all'):
+    """Delete raw statements, their agents, and their raw-unique links.
+
+    It is best to batch over this function with sets of 1000 or so ids. Setting
+    sync_session to False will result in a much faster resolution, but you may
+    find some ORM objects have not been updated.
+    """
+    if remove == 'all':
+        remove = ['links', 'agents', 'statements']
+
+    # First, delete the evidence links.
+    if 'links' in remove:
+        ev_q = db.filter_query(db.RawUniqueLinks,
+                               db.RawUniqueLinks.raw_stmt_id.in_(raw_sids))
+        logger.info("Deleting any connected evidence links...")
+        ev_q.delete(synchronize_session=sync_session)
+
+    # Second, delete the agents.
+    if 'agents' in remove:
+        ag_q = db.filter_query(db.RawAgents,
+                               db.RawAgents.stmt_id.in_(raw_sids))
+        logger.info("Deleting all connected agents...")
+        ag_q.delete(synchronize_session=sync_session)
+
+    # Now finally delete the statements.
+    if 'statements' in remove:
+        raw_q = db.filter_query(db.RawStatements,
+                                db.RawStatements.id.in_(raw_sids))
+        logger.info("Deleting all raw indicated statements...")
+        raw_q.delete(synchronize_session=sync_session)
+    return
 
 
 def unpack(bts, decode=True):

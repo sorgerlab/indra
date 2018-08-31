@@ -61,6 +61,13 @@ if __name__ == '__main__':
               'is \'primary\'. Note that this is overwridden by use of the '
               '--test flag if \'test\' is not a part of the name given.')
         )
+    parser.add_argument(
+        '--store_duplicates',
+        help=('If you do not want duplicates deleted in this run, their ids '
+              'can instead be stored in a pickle file. The file given here '
+              'will be used. If this option is not used, they will simply be '
+              'deleted now.')
+        )
     args = parser.parse_args()
     if args.debug:
         logger.setLevel(logging.DEBUG)
@@ -249,7 +256,7 @@ class PreassemblyManager(object):
         return new_unique_stmts, evidence_links
 
     @_handle_update_table
-    def create_corpus(self, db, continuing=False):
+    def create_corpus(self, db, continuing=False, dups_file=None):
         """Initialize the table of preassembled statements.
 
         This method will find the set of unique knowledge represented in the
@@ -263,6 +270,8 @@ class PreassemblyManager(object):
         """
         self.__tag = 'create'
 
+        dup_handling = dups_file if dups_file else 'delete'
+
         # Get filtered statement ID's.
         sid_cache_fname = path.join(HERE, 'stmt_id_cache.pkl')
         if continuing and path.exists(sid_cache_fname):
@@ -270,7 +279,8 @@ class PreassemblyManager(object):
                 stmt_ids = pickle.load(f)
         else:
             # Get the statement ids.
-            stmt_ids = distill_stmts(db, num_procs=self.n_proc)
+            stmt_ids = distill_stmts(db, num_procs=self.n_proc,
+                                     handle_duplicates=dup_handling)
             with open(sid_cache_fname, 'wb') as f:
                 pickle.dump(stmt_ids, f)
 
@@ -363,7 +373,7 @@ class PreassemblyManager(object):
         return all_new_stmt_ids
 
     @_handle_update_table
-    def supplement_corpus(self, db, continuing=False):
+    def supplement_corpus(self, db, continuing=False, dups_file=None):
         """Update the table of preassembled statements.
 
         This method will take any new raw statements that have not yet been
@@ -374,8 +384,11 @@ class PreassemblyManager(object):
         would achieve if you had simply re-run preassembly on _all_ the
         raw statements.
         """
-        pickle_stashes = []
         self.__tag = 'supplement'
+
+        dup_handling = dups_file if dups_file else 'delete'
+
+        pickle_stashes = []
         last_update = self._get_latest_updatetime(db)
         self._log("Latest update was: %s" % last_update)
 
@@ -385,6 +398,7 @@ class PreassemblyManager(object):
         new_id_stash = 'new_ids.pkl'
         pickle_stashes.append(new_id_stash)
         if continuing and path.exists(new_id_stash):
+            self._log("Loading new statement ids from cache...")
             with open(new_id_stash, 'rb') as f:
                 new_ids = pickle.load(f)
         else:
@@ -398,11 +412,13 @@ class PreassemblyManager(object):
         dist_stash = 'stmt_ids.pkl'
         pickle_stashes.append(dist_stash)
         if continuing and path.exists(dist_stash):
+            self._log("Loading distilled statement ids from cache...")
             with open(dist_stash, 'rb') as f:
                 stmt_ids = pickle.load(f)
         else:
             stmt_ids = distill_stmts(db, num_procs=self.n_proc,
-                                     get_full_stmts=False)
+                                     get_full_stmts=False,
+                                     handle_duplicates=dup_handling)
             with open(dist_stash, 'wb') as f:
                 pickle.dump(stmt_ids, f)
 
@@ -414,6 +430,7 @@ class PreassemblyManager(object):
         new_mk_stash = 'new_mk_set.pkl'
         pickle_stashes.append(new_mk_stash)
         if continuing and path.exists(new_mk_stash):
+            self._log("Loading hashes for new pa statements from cache...")
             with open(new_mk_stash, 'rb') as f:
                 new_mk_set = pickle.load(f)
         else:
@@ -422,18 +439,25 @@ class PreassemblyManager(object):
                                                      old_mk_set)
             with open(new_mk_stash, 'wb') as f:
                 pickle.dump(new_mk_set, f)
+        if continuing:
+            self._log("Original old mk set: %d" % len(old_mk_set))
+            old_mk_set = old_mk_set - new_mk_set
+            self._log("Adjusted old mk set: %d" % len(old_mk_set))
+
+        self._log("Found %d new pa statements." % len(new_mk_set))
 
         # If we are continuing, check for support links that were already found.
         support_link_stash = 'new_support_links.pkl'
         pickle_stashes.append(support_link_stash)
         if continuing and path.exists(support_link_stash):
             with open(support_link_stash, 'rb') as f:
-                existing_links = pickle.load(f)
+                status_dict = pickle.load(f)
+                existing_links = status_dict['existing links']
+                npa_done = status_dict['ids done']
             self._log("Found %d existing links." % len(existing_links))
         else:
             existing_links = set()
-
-        self._log("Found %d new pa statements." % len(new_mk_set))
+            npa_done = set()
 
         # Now find the new support links that need to be added.
         new_support_links = set()
@@ -468,19 +492,19 @@ class PreassemblyManager(object):
                         self._get_support_links(full_list, split_idx=split_idx,
                                                 poolsize=self.n_proc)
 
+                # Although there are generally few support links, copying as we
+                # go allows work to not be wasted.
                 new_support_links |= (some_support_links - existing_links)
-
-                # There are generally few support links compared to the number
-                # of statements, so it doesn't make sense to copy every time,
-                # but for long preassembly, this allows for better failure
-                # recovery.
-                if len(new_support_links) >= self.batch_size:
-                    self._log("Copying batch of %d support links into db."
-                              % len(new_support_links))
-                    db.copy('pa_support_links', new_support_links,
-                            ('supported_mk_hash', 'supporting_mk_hash'))
-                    existing_links |= new_support_links
-                    new_support_links = set()
+                self._log("Copying batch of %d support links into db."
+                          % len(new_support_links))
+                db.copy('pa_support_links', new_support_links,
+                        ('supported_mk_hash', 'supporting_mk_hash'))
+                existing_links |= new_support_links
+                npa_done |= {s.get_hash(shallow=True) for s in npa_batch}
+                new_support_links = set()
+                with open(support_link_stash, 'wb') as f:
+                    pickle.dump({'existing links': existing_links,
+                                 'ids done': npa_done}, f)
 
             # Insert any remaining support links.
             if new_support_links:
@@ -572,10 +596,11 @@ if __name__ == '__main__':
     db.grab_session()
     pm = PreassemblyManager(args.num_procs, args.batch)
 
-    print("Beginning to %s preassembled corpus." % args.task)
+    desc = 'Continuing' if args.continuing else 'Beginning'
+    print("%s to %s preassembled corpus." % (desc, args.task))
     if args.task == 'create':
-        pm.create_corpus(db, args.continuing)
+        pm.create_corpus(db, args.continuing, args.store_duplicates)
     elif args.task == 'update':
-        pm.supplement_corpus(db)
+        pm.supplement_corpus(db, args.continuing, args.store_duplicates)
     else:
         raise IndraDBPreassemblyError('Unrecognized task: %s.' % args.task)

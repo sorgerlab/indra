@@ -16,7 +16,7 @@ from sqlalchemy.sql import expression as sql_expressions
 from sqlalchemy.schema import DropTable
 from sqlalchemy.sql.expression import Delete, Update
 from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.ext.declarative import declarative_base, DeclarativeMeta
 from sqlalchemy import Column, Integer, String, UniqueConstraint, ForeignKey, \
     create_engine, inspect, LargeBinary, Boolean, DateTime, func, BigInteger
 from sqlalchemy.orm import relationship, sessionmaker
@@ -168,6 +168,8 @@ class DatabaseManager(object):
             Bytea = BYTEA
         else:
             Bytea = LargeBinary
+
+        # Normal Tables --------------------------------------------------------
 
         class TextRef(self.Base):
             __tablename__ = 'text_ref'
@@ -356,6 +358,75 @@ class DatabaseManager(object):
         self.PASupportLinks = PASupportLinks
         self.tables[PASupportLinks.__tablename__] = PASupportLinks
 
+        # Materialized Views ---------------------------------------------------
+        self.m_views = {}
+
+        class EvidenceCounts(self.Base):
+            __tablename__ = 'evidence_counts'
+            mk_hash = Column(BigInteger, primary_key=True)
+            ev_count = Column(Integer)
+        self.EvidenceCounts = EvidenceCounts
+        self.m_views[EvidenceCounts.__tablename__] = EvidenceCounts
+
+        class ReadingRefLink(self.Base):
+            __tablename__ = 'reading_ref_link'
+            trid = Column(Integer)
+            pmid = Column(String(20))
+            pmcid = Column(String(20))
+            doi = Column(String(100))
+            pii = Column(String(250))
+            url = Column(String(250))
+            manuscript_id = Column(String(100))
+            tcid = Column(Integer)
+            source = Column(String(250))
+            rid = Column(Integer, primary_key=True)
+            reader = Column(String(20))
+        self.ReadingRefLink = ReadingRefLink
+        self.m_views[ReadingRefLink.__tablename__] = ReadingRefLink
+
+        class FastRawPaLink(self.Base):
+            __tablename__ = 'fast_raw_pa_link'
+            id = Column(Integer, primary_key=True)
+            raw_json = Column(BYTEA)
+            reading_id = Column(Integer, ForeignKey('reading_ref_link.rid'))
+            reading_ref = relationship(ReadingRefLink)
+            db_info_id = Column(Integer)
+            mk_hash = Column(BigInteger, ForeignKey('evidence_counts.mk_hash'))
+            ev_counts = relationship(EvidenceCounts)
+            pa_json = Column(BYTEA)
+            type = Column(String)
+        self.FastRawPaLink = FastRawPaLink
+        self.m_views[FastRawPaLink.__tablename__] = FastRawPaLink
+
+        class AgentToRawMeta(self.Base):
+            __tablename__ = 'agent_to_raw_meta'
+            ag_id = Column(Integer, primary_key=True)
+            db_name = Column(String(40))
+            db_id = Column(String)
+            role = Column(String(20))
+            type = Column(String(100))
+            mk_hash = Column(BigInteger, ForeignKey('fast_raw_pa_link.mk_hash'))
+            raw_pa_link = relationship(FastRawPaLink)
+            sid = Column(Integer)
+            reading_id = Column(Integer, ForeignKey('reading_ref_link.rid'))
+            reading_ref = relationship(ReadingRefLink)
+            db_info_id = Column(Integer)
+        self.AgentToRawMeta = AgentToRawMeta
+        self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
+
+        class PaMeta(self.Base):
+            __tablename__ = 'pa_meta'
+            ag_id = Column(Integer, primary_key=True)
+            db_name = Column(String)
+            db_id = Column(String)
+            role = Column(String(20))
+            type = Column(String(100))
+            mk_hash = Column(BigInteger, ForeignKey('fast_raw_pa_link.mk_hash'))
+            raw_pa_link = relationship(FastRawPaLink)
+            ev_count = Column(Integer)
+        self.PaMeta = PaMeta
+        self.m_views[PaMeta.__tablename__] = PaMeta
+
         self.engine = create_engine(host)
 
         if WITH_NX:
@@ -385,34 +456,33 @@ class DatabaseManager(object):
 
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
+        ordered_tables = ['text_ref', 'text_content', 'reading', 'db_info',
+                          'raw_statements', 'raw_agents', 'pa_statements',
+                          'pa_agents', 'raw_unique_links', 'support_links']
         if tbl_list is None:
-            logger.debug("Creating all tables...")
-            self.Base.metadata.create_all(self.engine)
-            logger.debug("Created all tables.")
-        else:
-            tbl_name_list = []
-            for tbl in tbl_list:
-                if isinstance(tbl, str):
-                    tbl_name_list.append(tbl)
-                else:
-                    tbl_name_list.append(tbl.__tablename__)
-            # These tables must be created in this order.
-            for tbl_name in ['text_ref', 'text_content', 'readings', 'db_info',
-                             'statements', 'agents', 'pa_statements',
-                             'pa_agents']:
-                if tbl_name in tbl_name_list:
-                    tbl_name_list.remove(tbl_name)
-                    logger.debug("Creating %s..." % tbl_name)
-                    if not self.tables[tbl_name].__table__.exists(self.engine):
-                        self.tables[tbl_name].__table__.create(bind=self.engine)
-                        logger.debug("Table created.")
-                    else:
-                        logger.debug("Table already existed.")
-            # The rest can be started any time.
-            for tbl_name in tbl_name_list:
+            tbl_list = list(self.tables.keys())
+
+        tbl_name_list = []
+        for tbl in tbl_list:
+            if isinstance(tbl, str):
+                tbl_name_list.append(tbl)
+            else:
+                tbl_name_list.append(tbl.__tablename__)
+        # These tables must be created in this order.
+        for tbl_name in ordered_tables:
+            if tbl_name in tbl_name_list:
+                tbl_name_list.remove(tbl_name)
                 logger.debug("Creating %s..." % tbl_name)
-                self.tables[tbl_name].__table__.create(bind=self.engine)
-                logger.debug("Table created.")
+                if not self.tables[tbl_name].__table__.exists(self.engine):
+                    self.tables[tbl_name].__table__.create(bind=self.engine)
+                    logger.debug("Table created.")
+                else:
+                    logger.debug("Table already existed.")
+        # The rest can be started any time.
+        for tbl_name in tbl_name_list:
+            logger.debug("Creating %s..." % tbl_name)
+            self.tables[tbl_name].__table__.create(bind=self.engine)
+            logger.debug("Table created.")
         return
 
     def drop_tables(self, tbl_list=None, force=False):
@@ -534,7 +604,7 @@ class DatabaseManager(object):
                     break
         return ret
 
-    def join(self, table_1, table_2):
+    def link(self, table_1, table_2):
         """Get the joining clause between two tables, if one exists.
 
         If no link exists, an exception will be raised. Note that this only
@@ -725,9 +795,22 @@ class DatabaseManager(object):
 
         return self.session.query(*query_args).filter(*args)
 
-    def count(self, tbls, *args):
+    def count(self, tbl, *args):
         """Get a count of the results to a query."""
-        return self.filter_query(tbls, *args).distinct().count()
+        if isinstance(tbl, list):
+            assert len(tbl) == 1, "Only one table can be counted at a time."
+            tbl = tbl[0]
+        if isinstance(tbl, DeclarativeMeta):
+            tbl = self.get_primary_key(tbl)
+        q = self.session.query(func.count(tbl)).filter(*args)
+        res = q.all()
+        assert len(res) == 1
+        assert len(res[0]) == 1
+        return res[0][0]
+
+    def get_primary_key(self, tbl):
+        """Get an instance for the primary key column of a given table."""
+        return inspect(tbl).primary_key[0]
 
     def select_one(self, tbls, *args):
         """Select the first value that matches requirements.
@@ -807,11 +890,17 @@ class DatabaseManager(object):
         A list of sqlalchemy orm objects
         """
         # Get the base set of tables needed.
-        if isinstance(table, str) and table in self.tables.keys():
-            true_table = getattr(self, table)
+        if isinstance(table, str):
+            # This should be the string name for a table or view.
+            if table in self.tables.keys() or table in self.m_views.keys():
+                true_table = getattr(self, table)
+            else:
+                raise IndraDatabaseError("Invalid table name: %s." % table)
         elif hasattr(table, 'class_'):
+            # This is technically an attribute of a table.
             true_table = table.class_
-        elif table in self.tables.values():
+        elif table in self.tables.values() or table in self.m_views.values():
+            # This is an actual table object
             true_table = table
         else:
             raise IndraDatabaseError("Unrecognized table: %s of type %s"
@@ -819,7 +908,9 @@ class DatabaseManager(object):
 
         # Get all ids for this table given query filters
         logger.info("Getting all relevant ids.")
-        id_tuples = self.select_all(true_table.id, *args, **kwargs)
+        pk = self.get_primary_key(true_table)
+        id_tuples = self.select_all(getattr(true_table, pk.name), *args,
+                                    **kwargs)
         id_list = list({entry_id for entry_id, in id_tuples})
 
         # Sample from the list of ids
@@ -828,7 +919,7 @@ class DatabaseManager(object):
         if hasattr(table, 'key') and table.key == 'id':
             return [(entry_id,) for entry_id in id_sample]
 
-        return self.select_all(table, table.id.in_(id_sample))
+        return self.select_all(table, getattr(table, pk.name).in_(id_sample))
 
     def has_entry(self, tbls, *args):
         "Check whether an entry/entries matching given specs live in the db."

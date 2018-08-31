@@ -81,7 +81,7 @@ def load_stmts_from_db(clauses, db):
 
     stmt_query = db.filter_query(
         [db.Statements, db.Readings.reader, db.TextRef],
-        *(clauses + db.join(db.RawStatements, db.TextRef))
+        *(clauses + db.link(db.RawStatements, db.TextRef))
         )
     all_db_stmt_data = stmt_query.all()
     logger.info("Found %d statements on the database." % len(all_db_stmt_data))

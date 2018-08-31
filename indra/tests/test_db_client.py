@@ -2,12 +2,18 @@ import os
 import pickle
 import random
 
+from unittest import SkipTest
+from .util import IS_PY3
+if not IS_PY3:
+    raise SkipTest("This test requires Python 3.")
+
 from nose.plugins.attrib import attr
 
 from indra.literature import pubmed_client as pubc
 
 from indra.db import util as dbu
 from indra.db import client as dbc
+from indra.statements import stmts_from_json
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -116,8 +122,9 @@ def test_get_statements():
                                preassembled=False, db=db)
     pmids = {s.evidence[0].pmid for s in random.sample(stmts, 200)}
     assert pmids
-    assert None not in pmids
-    md_list = pubc.get_metadata_for_ids(list(pmids))
+    assert pmids != {None,}
+    md_list = pubc.get_metadata_for_ids([pmid for pmid in pmids
+                                         if pmid is not None])
     assert len(md_list) == len(pmids), (len(md_list), len(pmids))
 
     # Test getting some statements
@@ -142,18 +149,168 @@ def test_get_statements_by_grot():
     num_stmts = 10000
     db = _get_prepped_db(num_stmts)
 
-    stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False)
+    stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
+                                                 db=db)
     assert stmts
 
     stmts = dbc.get_statements_by_gene_role_type('MEK', agent_ns='FPLX',
-                                                 preassembled=False)
+                                                 preassembled=False, db=db)
     assert stmts
 
     stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
-                                                 fix_refs=False)
+                                                 fix_refs=False, db=db)
     assert stmts
 
     stmts = dbc.get_statements_by_gene_role_type('MAP2K1', preassembled=False,
-                                                 essentials_only=True)
+                                                 essentials_only=True, db=db)
     assert stmts
 
+
+@attr('nonpublic')
+def test_get_statement_jsons_by_agent():
+    # Note that this deliberately uses the primary (production) database in
+    # testing. This is only allowed because only retrieval is tested, however
+    # PLEASE PROCEED WITH CARE WHEN MODIFYING THIS TEST.
+
+    # TODO: don't rely on the primary database, because that's scary in a test.
+    agents = [(None, 'MEK', 'FPLX'), (None, 'ERK', 'FPLX')]
+    stmt_jsons = dbc.get_statement_jsons_from_agents(agents=agents,
+                                                     stmt_type='Phosphorylation')
+    assert stmt_jsons
+    assert stmt_jsons['statements']
+    assert stmt_jsons['total_evidence']
+    assert stmt_jsons['evidence_returned']
+    stmts = stmts_from_json(stmt_jsons['statements'].values())
+    assert len(stmts) == len(stmt_jsons['statements'])
+    for s in stmts:
+        s_agents = [(None, ag_id, ag_ns) for ag in s.agent_list()
+                    for ag_ns, ag_id in ag.db_refs.items()]
+        for ag_tpl in agents:
+            assert ag_tpl in s_agents
+
+
+@attr('nonpublic')
+def test_get_statement_jsons_options():
+    # Test all possible options regarding the number of statements returned.
+    # Note that this suffices to test the same options in other related
+    # functions as well (e.g. the paper version).
+    options = {'max_stmts': 10, 'ev_limit': 4, 'offset': 5, 'best_first': False}
+    agents = [('SUBJECT', 'MEK', 'FPLX'), ('OBJECT', 'ERK', 'FPLX')]
+    option_dicts = [{}]
+    for key, value in options.items():
+        nd = {key: value}
+        new_option_dicts = []
+        for option_dict in option_dicts:
+            new_option_dicts.append(option_dict)
+            new_option_dicts.append({k: v for d in [option_dict, nd]
+                                     for k, v in d.items()})
+        option_dicts = new_option_dicts
+
+    ev_counts = {}
+    total_stmts = None
+    for option_dict in option_dicts:
+        res = dbc.get_statement_jsons_from_agents(agents=agents,
+                                                  stmt_type='Phosphorylation',
+                                                  **option_dict)
+        assert res
+        assert len(res['statements'])
+        stmts = res['statements']
+        if 'max_stmts' in option_dict.keys():
+            assert len(stmts) == option_dict['max_stmts']
+        elif not 'offset' in option_dict.keys():
+            if total_stmts:
+                assert len(stmts) == total_stmts,\
+                    ("Number of statements returned changed incorrectly."
+                     "Actual: %d, expected: %d" % (len(stmts), total_stmts))
+            else:
+                total_stmts = len(stmts)
+
+        my_ev_counts = {}
+        for mk_hash, stmt in stmts.items():
+            my_ev_counts[mk_hash] = len(stmt['evidence'])
+        if 'ev_limit' in option_dict.keys():
+            assert all([c <= options['ev_limit']
+                        for c in my_ev_counts.values()]),\
+                "Evidence limit was not applied: %s." % my_ev_counts
+        else:
+            my_ev_counts = {}
+            for mk_hash, stmt in stmts.items():
+                my_ev_counts[mk_hash] = len(stmt['evidence'])
+
+            if ev_counts:
+                assert all([ev_counts[h] == c
+                            for h, c in my_ev_counts.items()]),\
+                    ("Evidence counts changed: %s vs. %s"
+                     % (my_ev_counts, ev_counts))
+            else:
+                ev_counts = my_ev_counts
+    return
+
+
+@attr('nonpublic')
+def test_nfkb_anomaly():
+    agents = [(None, 'NFkappaB', 'FPLX')]
+    res = dbc.get_statement_jsons_from_agents(agents=agents, max_stmts=1000,
+                                              ev_limit=10)
+    assert res
+    assert len(res['statements']) == 1000, len(res['statements'])
+
+
+@attr('nonpublic')
+def test_get_statement_jsons_by_paper_id():
+    paper_refs = [('pmid', '27769048'),
+                  ('doi', '10.3389/FIMMU.2017.00781'),
+                  ('pmcid', 'PMC4789553')]
+    stmt_jsons = dbc.get_statement_jsons_from_papers(paper_refs)
+    assert stmt_jsons
+    assert stmt_jsons['statements']
+    assert stmt_jsons['total_evidence']
+    stmts = stmts_from_json(stmt_jsons['statements'].values())
+    assert len(stmts) == len(stmt_jsons['statements'])
+    pmid_set = {ev.pmid for s in stmts for ev in s.evidence}
+    assert len(pmid_set) >= len(paper_refs)
+
+
+@attr('nonpublic')
+def test_get_statement_jsons_by_mk_hash():
+    mk_hashes = {-35990550780621697, -34509352007749723, -33762223064440060,
+                 -33265410753427801, -33264422871226821, -33006503639209361,
+                 -32655830663272427, -32156860839881910, -31266440463655983,
+                 -30976459682454095, -30134498128794870, -28378918778758360,
+                 -24358695784465547, -24150179679440010, -23629903237028340,
+                 -23464686784015252, -23180557592374280, -22224931284906368,
+                 -21436209384793545, -20730671023219399, -20628745469039833,
+                 -19678219086449831, -19263047787836948, -19233240978956273,
+                 -18854520239423344, -18777221295617488, -18371306000768702,
+                 -17790680150174704, -17652929178146873, -17157963869106438,
+                 -17130129999418301, -16284802852951883, -16037105293100219,
+                 -15490761426613291, -14975140226841255, -14082507581435438,
+                 -13857723711006775, -12377086298836870, -11313819223154032,
+                 -11213416806465629, -10533303510589718, -9966418144787259,
+                 -9862339997617041,  -9169838304025767, -7914540609802583,
+                 -5761487437008515, -5484899507470794, -4221831802677562,
+                 -3843980816183311, -3444432161721189, -2550187846777281,
+                 -1690192884583623, -1574988790414009, -776020752709166,
+                 -693617835322587, -616115799439746, 58075179102507,
+                 1218693303789519, 1858833736757788, 1865941926926838,
+                 1891718725870829, 3185457948420843, 3600108659508886,
+                 3858621152710053, 4594557398132265, 5499056407723241,
+                 6796567607348165, 6828272448940477, 6929632245307987,
+                 7584487035784255, 8424911311360927, 8837984832930769,
+                 10511090751198119, 10789407105295331, 10924988153490362,
+                 11707113199128693, 12528041861567565, 13094138872844955,
+                 13166641722496149, 13330125910711684, 13347703252882432,
+                 15002261599485956, 16397210433817325, 16975780060710533,
+                 17332680694583377, 17888579535249950, 19337587406307012,
+                 22774500444258387, 23665225082661845, 23783937267011041,
+                 24050979216195140, 24765024299377586, 25290573037450021,
+                 29491428193112311, 30289509021065753, 30992174235867673,
+                 31766667918079590, 31904387104764159, 34782800852366343,
+                 35686927318045812}
+    stmt_jsons = dbc.get_statement_jsons_from_hashes(mk_hashes)
+    assert stmt_jsons
+    assert stmt_jsons['statements']
+    assert stmt_jsons['total_evidence']
+    stmts = stmts_from_json(stmt_jsons['statements'].values())
+    assert len(stmts) == len(stmt_jsons['statements'])
+    assert len(stmts) == len(mk_hashes)

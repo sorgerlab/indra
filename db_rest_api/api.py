@@ -1,21 +1,26 @@
 import sys
+import json
 import logging
+from functools import wraps
 
-from flask import Flask, request, abort, jsonify, Response, make_response
+from flask import Flask, request, abort, Response
 from flask_compress import Compress
+from flask_cors import CORS
 
-from indra.db.client import get_statements_by_gene_role_type, \
-    get_statements_by_paper, get_evidence
+from indra.db.client import get_statement_jsons_from_agents,\
+    get_statement_jsons_from_hashes, get_statement_jsons_from_papers
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
+from indra.util import batch_iter
 
 logger = logging.getLogger("db-api")
 
 app = Flask(__name__)
 Compress(app)
+CORS(app)
 
 
-MAX_STATEMENTS = int(1e4)
+MAX_STATEMENTS = int(1e3)
 
 
 class DbAPIError(Exception):
@@ -47,65 +52,35 @@ def __process_agent(agent_param):
     return ag, ns
 
 
-def _filter_statements(stmts_in, ns, ag_id, role=None):
-    """Return statements filtered to ones where agent is at given position."""
-    # Make sure the role is good.
-    assert role in ['SUBJECT', 'OBJECT', None], \
-        "The value of role must be either 'SUBJECT', 'OBJECT', or None."
+def _query_wrapper(f):
+    @wraps(f)
+    def decorator():
+        logger.info("Got query for %s!" % f.__name__)
 
-    # Map the role to an index:
-    agent_pos = 0 if role == 'SUBJECT' else 1 if role == 'OBJECT' else None
+        query_dict = request.args.copy()
+        offs = query_dict.pop('offset', None)
+        ev_limit = query_dict.pop('ev_limit', 10)
+        best_first = query_dict.pop('best_first', True)
+        do_stream_str = query_dict.pop('stream', 'false')
+        do_stream = True if do_stream_str == 'true' else False
 
-    # Filter the statements.
-    stmts_out = []
-    for stmt in stmts_in:
-        # Make sure the statement has enough agents to get the one at the
-        # position of interest e.g. has only 1 agent but the agent_pos is not 0
-        agents = stmt.agent_list()
-        if agent_pos is not None:
-            if len(agents) <= agent_pos:
-                continue
-            # Get the agent at the position of interest and make sure it's an
-            # actual Agent
-            agent = agents[agent_pos]
-            if agent is not None:
-                # Check if the db_refs for the namespace of interest matches the
-                # value
-                if agent.db_refs.get(ns) == ag_id:
-                    stmts_out.append(stmt)
+        result = f(query_dict, offs, MAX_STATEMENTS, ev_limit, best_first)
+        result['offset'] = offs
+        result['evidence_limit'] = ev_limit
+        result['statement_limit'] = MAX_STATEMENTS
+
+        if do_stream:
+            # Returning a generator should stream the data.
+            resp_json_bts = json.dumps(result)
+            gen = batch_iter(resp_json_bts, 10000)
+            resp = Response(gen, mimetype='application/json')
         else:
-            # Search through all the agents looking for an agent with a matching
-            # db ref.
-            for agent in agents:
-                if agent is not None and agent.db_refs.get(ns) == ag_id:
-                    stmts_out.append(stmt)
-                    break
-    return stmts_out
-
-
-def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
-    """Get statements that are relevant to the criteria included.
-
-    If stmts is an empty list or None (bool evaluates to False), then get a
-    matching set of statements from the database. Otherwise, filter down the
-    existing list of statements.
-    """
-    logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
-    # TODO: This is a temporary measure, remove ASAP.
-    if role:
-        role = role.upper()
-
-    if not stmts:
-        # Get an initial list
-        stmts = get_statements_by_gene_role_type(agent_id=ag_id, agent_ns=ns,
-                                                 role=role, stmt_type=stmt_type,
-                                                 do_stmt_count=False,
-                                                 with_evidence=False,
-                                                 with_support=False)
-    else:
-        stmts = _filter_statements(stmts, ns, ag_id, role)
-
-    return stmts
+            resp = Response(json.dumps(result), mimetype='application/json')
+        logger.info("Exiting with %d statements with %d evidence of size %f MB."
+                    % (len(result['statements']), result['total_evidence'],
+                       sys.getsizeof(resp.data)/1e6))
+        return resp
+    return decorator
 
 
 @app.route('/')
@@ -142,20 +117,16 @@ def get_statements_query_format():
 
 
 @app.route('/statements/', methods=['GET'])
-def get_statements():
+@_query_wrapper
+def get_statements(query_dict, offs, max_stmts, ev_limit, best_first):
     """Get some statements constrained by query."""
-    logger.info("Got query for statements!")
-    query_dict = request.args.copy()
-    limit_behavior = query_dict.pop('on_limit', 'sample')
-    if limit_behavior not in ['sample', 'truncate', 'error']:
-        abort(Response('Unrecognized value for on_limit: %s' % limit_behavior,
-                       400))
-
     logger.info("Getting query details.")
     try:
         # Get the agents without specified locations (subject or object).
         free_agents = [__process_agent(ag)
                        for ag in query_dict.poplist('agent')]
+        ofaks = {k for k in query_dict.keys() if k.startswith('agent')}
+        free_agents += [__process_agent(query_dict.pop(k)) for k in ofaks]
 
         # Get the agents with specified roles.
         roled_agents = {role: __process_agent(query_dict.pop(role))
@@ -167,19 +138,15 @@ def get_statements():
         return
 
     # Get the raw name of the statement type (we allow for variation in case).
-    act_uncamelled = query_dict.pop('type', None)
+    act_raw = query_dict.pop('type', None)
 
     # Fix the case, if we got a statement type.
-    if act_uncamelled is not None:
-        act = make_statement_camel(act_uncamelled)
-    else:
-        act = None
+    act = None if act_raw is None else make_statement_camel(act_raw)
 
     # If there was something else in the query, there shouldn't be, so someone's
     # probably confused.
     if query_dict:
-        abort(Response("Unrecognized query options; %s." %
-                       list(query_dict.keys()),
+        abort(Response("Unrecognized query options; %s." % list(query_dict.keys()),
                        400))
         return
 
@@ -195,60 +162,40 @@ def get_statements():
         "None agents found. No agents should be None."
 
     # Now find the statements.
-    stmts = []
     logger.info("Getting statements...")
+    agent_iter = [(role, ag_dbid, ns)
+                  for role, (ag_dbid, ns) in roled_agents.items()]
+    agent_iter += [(None, ag_dbid, ns) for ag_dbid, ns in free_agents]
 
-    # First look for statements matching the role'd agents.
-    for role, (ag_id, ns) in roled_agents.items():
-        stmts = _get_relevant_statements(stmts, ag_id, ns, act, role)
-        if not len(stmts):
-            break
-    else:
-        # Second (if we're still looking), look for statements from free agents.
-        for ag_id, ns in free_agents:
-            stmts = _get_relevant_statements(stmts, ag_id, ns, act)
-            if not len(stmts):
-                break
+    result = \
+        get_statement_jsons_from_agents(agent_iter, stmt_type=act, offset=offs,
+                                        max_stmts=max_stmts, ev_limit=ev_limit,
+                                        best_first=best_first)
+    return result
 
-    # Check to make sure we didn't get too many statements
-    hit_limit = (len(stmts) > MAX_STATEMENTS)
-    if hit_limit:
-        if limit_behavior == 'error':
-            # Divide the statements up by type, and get counts of each type.
-            stmt_counts = {}
-            for stmt in stmts:
-                stmt_type = type(stmt).__name__
-                if stmt_type not in stmt_counts:
-                    stmt_counts[stmt_type] = {'count': 0}
-                stmt_counts[stmt_type]['count'] += 1
 
-            return jsonify({'limited': True, 'statements': stmt_counts}), 413
-        elif limit_behavior == 'truncate':
-            stmts = stmts[:MAX_STATEMENTS]
-        elif limit_behavior == 'sample':
-            from random import sample
-            stmts = sample(stmts, MAX_STATEMENTS)
+@app.route('/statements/from_hashes', methods=['POST', 'GET'])
+@_query_wrapper
+def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit, best_first):
+    hashes = request.json.get('hashes')
+    if not hashes:
+        logger.error("No hashes provided!")
+        abort(Response("No hashes given!", 400))
+    if len(hashes) > max_stmts:
+        logger.error("Too many hashes given!")
+        abort(Response("Too many hashes given, %d allowed." % max_stmts,
+                       400))
 
-    # Retrieve the evidence for the statements.
-    logger.info("Getting evidence for the %d resulting statements."
-                % len(stmts))
-    if stmts:
-        get_evidence(stmts, fix_refs=False)
-
-    # Create the json response, and send off.
-    resp = jsonify({'limited': hit_limit,
-                    'statements':[stmt.to_json() for stmt in stmts]})
-    logger.info("Exiting with %d statements of nominal size %f MB."
-                % (len(stmts), sys.getsizeof(resp.data)/1e6))
-    return resp
+    result = get_statement_jsons_from_hashes(hashes, max_stmts=max_stmts,
+                                             offset=offs, ev_limit=ev_limit,
+                                             best_first=best_first)
+    return result
 
 
 @app.route('/papers/', methods=['GET'])
-def get_paper_statements():
+@_query_wrapper
+def get_paper_statements(query_dict, offs, max_stmts, ev_limit, best_first):
     """Get and preassemble statements from a paper given by pmid."""
-    logger.info("Got query for statements from a paper!")
-    query_dict = request.args.copy()
-
     # Get the paper id.
     id_val = query_dict.get('id')
     if id_val is None:
@@ -260,16 +207,13 @@ def get_paper_statements():
 
     # Now get the statements.
     logger.info('Getting statements for %s=%s...' % (id_type, id_val))
-    stmts = get_statements_by_paper(id_val, id_type, do_stmt_count=False)
-    if stmts is None:
-        msg = "Invalid or unavailable id %s=%s!" % (id_type, id_val)
-        logger.error(msg)
-        abort(Response(msg, 404))
-    logger.info("Found %d statements." % len(stmts))
-
-    resp = jsonify({'statements': [stmt.to_json() for stmt in stmts]})
-    logger.info("Exiting with %d statements." % len(stmts))
-    return resp
+    if id_type in ['trid', 'tcid']:
+        id_val = int(id_val)
+    result = get_statement_jsons_from_papers([(id_type, id_val)],
+                                             max_stmts=max_stmts,
+                                             offset=offs, ev_limit=ev_limit,
+                                             best_first=best_first)
+    return result
 
 
 if __name__ == '__main__':
