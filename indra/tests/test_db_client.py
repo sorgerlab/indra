@@ -2,6 +2,11 @@ import os
 import pickle
 import random
 
+from unittest import SkipTest
+from .util import IS_PY3
+if not IS_PY3:
+    raise SkipTest("This test requires Python 3.")
+
 from nose.plugins.attrib import attr
 
 from indra.literature import pubmed_client as pubc
