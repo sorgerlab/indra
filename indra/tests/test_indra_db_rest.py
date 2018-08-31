@@ -26,7 +26,12 @@ def __check_request(seconds, *args, **kwargs):
 
 @attr('nonpublic')
 def test_simple_request():
-    __check_request(5, 'MAP2K1', 'MAPK1', stmt_type='Phosphorylation')
+    __check_request(6, 'MAP2K1', 'MAPK1', stmt_type='Phosphorylation')
+
+
+@attr('nonpublic')
+def test_request_for_complex():
+    __check_request(10, agents=['MEK@FPLX', 'ERK@FPLX'], stmt_type='Complex')
 
 
 @attr('nonpublic')

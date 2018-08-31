@@ -251,7 +251,8 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                          "the scope will be too large.")
 
     # Formulate inputs for the agents..
-    agent_strs = [] if agents is None else ['agent=%s' % ag for ag in agents]
+    agent_strs = [] if agents is None else ['agent%d=%s' % (i, ag)
+                                            for i, ag in enumerate(agents)]
     key_val_list = [('subject', subject), ('object', object)]
     params = {param_key: param_val for param_key, param_val in key_val_list
               if param_val is not None}
