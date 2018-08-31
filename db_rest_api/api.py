@@ -54,67 +54,6 @@ def __process_agent(agent_param):
     return ag, ns
 
 
-def _filter_statements(stmts_in, ns, ag_id, role=None):
-    """Return statements filtered to ones where agent is at given position."""
-    # Make sure the role is good.
-    assert role in ['SUBJECT', 'OBJECT', None], \
-        "The value of role must be either 'SUBJECT', 'OBJECT', or None."
-
-    # Map the role to an index:
-    agent_pos = 0 if role == 'SUBJECT' else 1 if role == 'OBJECT' else None
-
-    # Filter the statements.
-    stmts_out = []
-    for stmt in stmts_in:
-        # Make sure the statement has enough agents to get the one at the
-        # position of interest e.g. has only 1 agent but the agent_pos is not 0
-        agents = stmt.agent_list()
-        if agent_pos is not None:
-            if len(agents) <= agent_pos:
-                continue
-            # Get the agent at the position of interest and make sure it's an
-            # actual Agent
-            agent = agents[agent_pos]
-            if agent is not None:
-                # Check if the db_refs for the namespace of interest matches the
-                # value
-                if agent.db_refs.get(ns) == ag_id:
-                    stmts_out.append(stmt)
-        else:
-            # Search through all the agents looking for an agent with a matching
-            # db ref.
-            for agent in agents:
-                if agent is not None and agent.db_refs.get(ns) == ag_id:
-                    stmts_out.append(stmt)
-                    break
-    return stmts_out
-
-
-def _get_relevant_statements(stmts, ag_id, ns, stmt_type, role=None):
-    """Get statements that are relevant to the criteria included.
-
-    If stmts is an empty list or None (bool evaluates to False), then get a
-    matching set of statements from the database. Otherwise, filter down the
-    existing list of statements.
-    """
-    logger.debug("Checking agent %s in namespace %s." % (ag_id, ns))
-    # TODO: This is a temporary measure, remove ASAP.
-    if role:
-        role = role.upper()
-
-    if not stmts:
-        # Get an initial list
-        stmts = get_statements_by_gene_role_type(agent_id=ag_id, agent_ns=ns,
-                                                 role=role, stmt_type=stmt_type,
-                                                 do_stmt_count=False,
-                                                 with_evidence=False,
-                                                 with_support=False)
-    else:
-        stmts = _filter_statements(stmts, ns, ag_id, role)
-
-    return stmts
-
-
 def _query_wrapper(f):
     @wraps(f)
     def decorator():
@@ -188,6 +127,8 @@ def get_statements(query_dict, offs, max_stmts, ev_limit, best_first):
         # Get the agents without specified locations (subject or object).
         free_agents = [__process_agent(ag)
                        for ag in query_dict.poplist('agent')]
+        ofaks = {k for k in query_dict.keys() if k.startswith('agent')}
+        free_agents += [__process_agent(query_dict.pop(k)) for k in ofaks]
 
         # Get the agents with specified roles.
         roled_agents = {role: __process_agent(query_dict.pop(role))
