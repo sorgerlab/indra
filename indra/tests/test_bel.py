@@ -21,14 +21,15 @@ def assert_pmids(stmts):
             if ev.pmid is not None:
                 assert ev.pmid.isdigit(), ev.pmid 
 
-@attr('webservice')
+
+@attr('webservice', 'slow')
 def test_bel_ndex_query():
     bp = bel.process_ndex_neighborhood(['NFKB1'])
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
 
 
-@attr('webservice')
+@attr('slow')
 def test_pybel_neighborhood_query():
     corpus = path_this + '/../../data/small_corpus.bel'
     bp = bel.process_pybel_neighborhood(['TP63'], corpus)

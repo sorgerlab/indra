@@ -3,6 +3,7 @@ from builtins import dict, str
 
 from os.path import join, dirname
 from nose.tools import raises
+from nose.plugins.attrib import attr
 
 from indra.statements import *
 from indra.databases import hgnc_client
@@ -48,6 +49,7 @@ def test_parse_csv_from_file():
     assert sp.complex_map == {}
 
 
+@attr('webservice', 'slow') 
 def test_parse_csv_from_web():
     sp = process_from_web()
     assert isinstance(sp._data, list)

@@ -20,7 +20,7 @@ query_dict_BRAF_target = {'query': 'target',
                                      'limit': 1}}
 
 
-@attr('webservice')
+@attr('webservice', 'slow')
 def test_get_inhibitions():
     stmt = chembl_client.get_inhibition(vem, braf)
     assert(stmt is not None)
