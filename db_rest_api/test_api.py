@@ -218,7 +218,7 @@ class DbApiTestCase(unittest.TestCase):
     def test_query_with_text_ns(self):
         """Test specifying TEXT as a namespace."""
         resp = self.__check_good_statement_query(subject='ERK@TEXT',
-                                          type='Phosphorylation')
+                                                 type='Phosphorylation')
         _check_stmt_agents(resp, agents=[(0, 'TEXT', 'ERK')])
         return
 
@@ -257,6 +257,22 @@ class DbApiTestCase(unittest.TestCase):
                 (1, 'FPLX', 'PPP1C')])
         self.__check_time(dt)
         assert size <= SIZELIMIT, size
+
+    def test_complex_query(self):
+        resp = self.__check_good_statement_query('agent0=MEK@FPLX',
+                                                 'agent1=ERK@FPLX',
+                                                 type='Complex')
+        _check_stmt_agents(resp, agents=[(None, 'FPLX', 'MEK'),
+                                         (None, 'FPLX', 'ERK')])
+        resp_dict = json.loads(resp.data.decode())
+        print(len(resp_dict['statements']))
+        for h, sj in resp_dict['statements'].items():
+            fplx_set = {mem['db_refs'].get('FPLX') for mem in sj['members']}
+            assert {'MEK', 'ERK'}.issubset(fplx_set), \
+                ("Statement %s with hash %s does not have both members: %s."
+                 % (stmts_from_json([sj])[0], h, fplx_set))
+
+        return
 
     def test_statements_by_hashes_query(self):
         resp, dt, size = self.__time_query('get', 'statements/from_hashes',
