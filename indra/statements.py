@@ -1119,6 +1119,8 @@ class Statement(object):
     supported_by : list of :py:class:`Statement`
         Statements supported by this statement.
     """
+    _agent_order = NotImplemented
+
     def __init__(self, evidence=None, supports=None, supported_by=None):
         if evidence is None:
             self.evidence = []
@@ -1208,6 +1210,24 @@ class Statement(object):
                 bc_agents = [bc.agent for bc in a.bound_conditions]
                 l.extend(bc_agents)
         return l
+
+    def agent_list(self):
+        """Get the canonicallized agent list."""
+        ag_list = []
+        for ag_name in self._agent_order:
+            ag_attr = getattr(self, ag_name)
+            if isinstance(ag_attr, Agent):
+                ag_list.append(ag_attr)
+            elif isinstance(ag_attr, list):
+                ag_types = {type(ag) for ag in ag_attr}
+                if ag_types == {Agent}:
+                    raise TypeError("Expected all elements of list to be Agent,"
+                                    "but got: %s" % ag_types)
+                ag_list.extend(sorted(ag_attr))
+            else:
+                raise TypeError("Expected type Agent or list, got type %s."
+                                % type(ag_attr))
+        return ag_list
 
     def entities_match(self, other):
         self_key = self.entities_match_key()
@@ -1400,6 +1420,8 @@ class Modification(Statement):
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
+    _agent_order = ['enz', 'sub']
+
     def __init__(self, enz, sub, residue=None, position=None, evidence=None):
         super(Modification, self).__init__(evidence)
         self.enz = enz
@@ -1418,9 +1440,6 @@ class Modification(Statement):
         key = (type(self), enz_key, self.sub.matches_key(),
                str(self.residue), str(self.position))
         return str(key)
-
-    def agent_list(self):
-        return [self.enz, self.sub]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1559,6 +1578,8 @@ class SelfModification(Statement):
     evidence : list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
+    _agent_order = ['enz']
+
     def __init__(self, enz, residue=None, position=None, evidence=None):
         super(SelfModification, self).__init__(evidence)
         self.enz = enz
@@ -1579,9 +1600,6 @@ class SelfModification(Statement):
         key = (type(self), self.enz.matches_key(),
                str(self.residue), str(self.position))
         return str(key)
-
-    def agent_list(self):
-        return [self.enz]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -1819,6 +1837,8 @@ class RegulateActivity(Statement):
     # be directly instantiated.
     __metaclass__ = abc.ABCMeta
 
+    _agent_order = ['subj', 'obj']
+
     @abc.abstractmethod
     def __init__(self):
         pass
@@ -1834,9 +1854,6 @@ class RegulateActivity(Statement):
                self.obj.matches_key(), str(self.obj_activity),
                str(self.is_activation))
         return str(key)
-
-    def agent_list(self):
-        return [self.subj, self.obj]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -2040,6 +2057,8 @@ class ActiveForm(Statement):
     is_active : bool
         Whether the conditions are activating (True) or inactivating (False).
     """
+    _agent_order = ['agent']
+
     def __init__(self, agent, activity, is_active, evidence=None):
         super(ActiveForm, self).__init__(evidence)
         self.agent = agent
@@ -2056,9 +2075,6 @@ class ActiveForm(Statement):
         key = (type(self), self.agent.matches_key(),
                str(self.activity), str(self.is_active))
         return str(key)
-
-    def agent_list(self):
-        return [self.agent]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -2174,6 +2190,8 @@ class HasActivity(Statement):
         Whether the given Agent has the given activity (True) or
         not (False).
     """
+    _agent_order = ['agent']
+
     def __init__(self, agent, activity, has_activity, evidence=None):
         super(HasActivity, self).__init__(evidence)
         if agent.activity is not None:
@@ -2190,9 +2208,6 @@ class HasActivity(Statement):
         key = (type(self), self.agent.matches_key(),
                str(self.activity), str(self.has_activity))
         return str(key)
-
-    def agent_list(self):
-        return [self.agent]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -2250,6 +2265,8 @@ class Gef(Statement):
     >>> kras = Agent('KRAS')
     >>> gef = Gef(sos, kras)
     """
+    _agent_order = ['gef', 'ras']
+
     def __init__(self, gef, ras, evidence=None):
         super(Gef, self).__init__(evidence)
         self.gef = gef
@@ -2259,9 +2276,6 @@ class Gef(Statement):
         key = (type(self), self.gef.matches_key(),
                self.ras.matches_key())
         return str(key)
-
-    def agent_list(self):
-        return [self.gef, self.ras]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -2336,6 +2350,8 @@ class Gap(Statement):
     >>> kras = Agent('KRAS')
     >>> gap = Gap(rasa1, kras)
     """
+    _agent_order = ['gap', 'ras']
+
     def __init__(self, gap, ras, evidence=None):
         super(Gap, self).__init__(evidence)
         self.gap = gap
@@ -2345,9 +2361,6 @@ class Gap(Statement):
         key = (type(self), self.gap.matches_key(),
                self.ras.matches_key())
         return str(key)
-
-    def agent_list(self):
-        return [self.gap, self.ras]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -2417,6 +2430,8 @@ class Complex(Statement):
     >>> raf1 = Agent('RAF1')
     >>> cplx = Complex([braf, raf1])
     """
+    _agent_order = ['members']
+
     def __init__(self, members, evidence=None):
         super(Complex, self).__init__(evidence)
         self.members = members
@@ -2431,9 +2446,6 @@ class Complex(Statement):
                     else None for a in sorted(self.members,
                                               key=lambda x: x.matches_key()))
         return key
-
-    def agent_list(self):
-        return self.members
 
     def set_agent_list(self, agent_list):
         self.members = agent_list
@@ -2520,15 +2532,14 @@ class Translocation(Statement):
         The location to which the agent translocates. This must
         be a valid GO cellular component name or ID.
     """
+    _agent_order = ['agent']
+
     def __init__(self, agent, from_location=None, to_location=None,
                  evidence=None):
         super(Translocation, self).__init__(evidence)
         self.agent = agent
         self.from_location = get_valid_location(from_location)
         self.to_location = get_valid_location(to_location)
-
-    def agent_list(self):
-        return [self.agent]
 
     def set_agent_list(self, agent_list):
         if(len(agent_list) != 1):
@@ -2596,6 +2607,8 @@ class Translocation(Statement):
 @python_2_unicode_compatible
 class RegulateAmount(Statement):
     """Superclass handling operations on directed, two-element interactions."""
+    _agent_order = ['subj', 'obj']
+
     def __init__(self, subj, obj, evidence=None):
         super(RegulateAmount, self).__init__(evidence)
         self.subj = subj
@@ -2611,9 +2624,6 @@ class RegulateAmount(Statement):
             subj_key = self.subj.matches_key()
         key = (type(self), subj_key, self.obj.matches_key())
         return str(key)
-
-    def agent_list(self):
-        return [self.subj, self.obj]
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -2918,6 +2928,8 @@ class Conversion(Statement):
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the synthesis statement.
     """
+    _agent_order = ['subj', 'obj_from', 'obj_to']
+
     def __init__(self, subj, obj_from=None, obj_to=None, evidence=None):
         super(Conversion, self).__init__(evidence=evidence)
         self.subj = subj
@@ -2934,9 +2946,6 @@ class Conversion(Statement):
         keys += [agent.matches_key() for agent in self.obj_to]
         keys += [agent.matches_key() for agent in self.obj_from]
         return str(keys)
-
-    def agent_list(self):
-        return [self.subj] + self.obj_from + self.obj_to
 
     def set_agent_list(self, agent_list):
         num_obj_from = len(self.obj_from)
