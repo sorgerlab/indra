@@ -129,22 +129,20 @@ class Preassembler(object):
         ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
+        ev_keys = set()
         for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
+            new_stmt = duplicates[0].make_generic_copy()
             for stmt_ix, stmt in enumerate(duplicates):
-                if stmt_ix == 0:
-                    ev_keys = [ev.matches_key() for ev in stmt.evidence]
-                    first_stmt = stmt
-                else:
-                    for ev in stmt.evidence:
-                        key = ev.matches_key()
-                        if key not in ev_keys:
-                            first_stmt.evidence.append(ev)
-                            ev_keys.append(key)
+                for ev in stmt.evidence:
+                    ev_key = ev.matches_key()
+                    if ev_key not in ev_keys:
+                        new_stmt.evidence.append(ev)
+                        ev_keys.add(ev_key)
             # This should never be None or anything else
-            assert isinstance(first_stmt, Statement)
-            unique_stmts.append(first_stmt)
+            assert isinstance(new_stmt, Statement)
+            unique_stmts.append(new_stmt)
         return unique_stmts
 
     def _get_entities(self, stmt, stmt_type, eh):
