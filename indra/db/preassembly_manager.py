@@ -75,13 +75,13 @@ if __name__ == '__main__':
         db_logger.setLevel(logging.DEBUG)
 
 
-from indra.util import batch_iter
+from indra.util import batch_iter, clockit
 from indra.statements import Statement
 from indra.tools import assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
-from indra.db.util import insert_pa_stmts, distill_stmts, get_db, _clockit
+from indra.db.util import insert_pa_stmts, distill_stmts, get_db
 
 
 HERE = path.dirname(path.abspath(__file__))
@@ -199,7 +199,7 @@ class PreassemblyManager(object):
             else:
                 yield [(sid, _stmt_from_json(s_json)) for sid, s_json in subres]
 
-    @_clockit
+    @clockit
     def _get_unique_statements(self, db, raw_sids, num_stmts, mk_done=None):
         """Get the unique Statements from the raw statements."""
         self._log("There are %d distilled raw statement ids to preassemble."
@@ -237,7 +237,7 @@ class PreassemblyManager(object):
                     % len(new_mk_set))
         return new_mk_set
 
-    @_clockit
+    @clockit
     def _condense_statements(self, cleaned_stmts, mk_done, new_mk_set,
                              uuid_sid_dict):
         self._log("Condense into unique statements...")
@@ -534,7 +534,7 @@ class PreassemblyManager(object):
                   % (datetime.now(), self.__tag, msg))
         getattr(logger, level)("(%s) %s" % (self.__tag, msg))
 
-    @_clockit
+    @clockit
     def _clean_statements(self, stmts):
         """Perform grounding, sequence mapping, and find unique set from stmts.
 
@@ -548,7 +548,7 @@ class PreassemblyManager(object):
         stmts = ac.map_sequence(stmts, use_cache=True)
         return stmts
 
-    @_clockit
+    @clockit
     def _get_support_links(self, unique_stmts, **generate_id_map_kwargs):
         """Find the links of refinement/support between statements."""
         id_maps = self.pa._generate_id_maps(unique_stmts,

@@ -5,6 +5,8 @@ import csv
 import gzip
 import zlib
 from io import BytesIO
+from functools import wraps
+from datetime import datetime
 import xml.etree.ElementTree as ET
 try:  # Python 3
     from itertools import zip_longest
@@ -18,6 +20,17 @@ if sys.version_info[0] >= 3:
 else:
     non_unicode = str
     import cPickle as pickle
+
+
+def clockit(func):
+    @wraps(func)
+    def timed_func(*args, **kwargs):
+        start = datetime.now()
+        ret = func(*args, **kwargs)
+        end = datetime.now()
+        print('%s %-30s %s %s' % ('~'*5, func.__name__, end-start, '~'*5))
+        return ret
+    return timed_func
 
 
 def unicode_strs(obj, attr_filter=None):

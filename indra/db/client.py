@@ -12,10 +12,10 @@ from indra.statements import Unresolved, Evidence
 
 logger = logging.getLogger('db_client')
 
-from indra.util import batch_iter
+from indra.util import batch_iter, clockit
 from indra.databases import hgnc_client
 from .util import get_primary_db, get_raw_stmts_frm_db_list, \
-    unpack, _get_statement_object, _clockit
+    unpack, _get_statement_object
 
 
 class DbClientError(Exception):
@@ -145,7 +145,7 @@ def get_content_by_refs(db, pmid_list=None, trid_list=None, sources=None,
     return content_dict
 
 
-@_clockit
+@clockit
 def get_statements_by_gene_role_type(agent_id=None, agent_ns='HGNC-SYMBOL',
                                      role=None, stmt_type=None, count=1000,
                                      db=None, do_stmt_count=False,
@@ -309,7 +309,7 @@ def get_statements_by_paper(id_val, id_type='pmid', count=1000, db=None,
     return stmts
 
 
-@_clockit
+@clockit
 def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
                    preassembled=True, with_support=False, fix_refs=True,
                    with_evidence=True):
@@ -400,7 +400,7 @@ def get_statements(clauses, count=1000, do_stmt_count=False, db=None,
     return stmts
 
 
-@_clockit
+@clockit
 def _process_pa_statement_res_wev(db, stmt_iterable, count=1000, fix_refs=True):
     # Iterate over the batches to create the statement objects.
     stmt_dict = {}
@@ -440,7 +440,7 @@ def _process_pa_statement_res_wev(db, stmt_iterable, count=1000, fix_refs=True):
     return stmt_dict
 
 
-@_clockit
+@clockit
 def _process_pa_statement_res_nev(stmt_iterable, count=1000):
     # Iterate over the batches to create the statement objects.
     stmt_dict = {}
@@ -455,7 +455,7 @@ def _process_pa_statement_res_nev(stmt_iterable, count=1000):
     return stmt_dict
 
 
-@_clockit
+@clockit
 def get_evidence(pa_stmt_list, db=None, fix_refs=True, use_views=True):
     """Fill in the evidence for a list of pre-assembled statements.
 
@@ -616,7 +616,7 @@ def _get_trids(db, id_val, id_type):
 # ==============================================================================
 
 
-@_clockit
+@clockit
 def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
                                          max_stmts=None, offset=None,
                                          ev_limit=None):
@@ -677,7 +677,7 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
     return ret
 
 
-@_clockit
+@clockit
 def get_statement_jsons_from_agents(agents=None, stmt_type=None, db=None,
                                     **kwargs):
     """Get json's for statements given agent refs and Statement type.
@@ -757,7 +757,7 @@ def get_statement_jsons_from_agents(agents=None, stmt_type=None, db=None,
     return _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
-@_clockit
+@clockit
 def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
     """Get the statements from a list of papers.
 
@@ -819,7 +819,7 @@ def get_statement_jsons_from_papers(paper_refs, db=None, **kwargs):
     return _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
-@_clockit
+@clockit
 def get_statement_jsons_from_hashes(mk_hashes, db=None, **kwargs):
     """Get statement jsons using the appropriate hashes."""
     if db is None:
@@ -829,7 +829,7 @@ def get_statement_jsons_from_hashes(mk_hashes, db=None, **kwargs):
     return _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, **kwargs)
 
 
-@_clockit
+@clockit
 def get_statement_essentials(clauses, count=1000, db=None, preassembled=True):
     """Get the type, agents, and id data for the specified statements.
 

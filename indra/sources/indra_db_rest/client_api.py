@@ -12,7 +12,7 @@ from os.path import join
 from threading import Thread
 from datetime import datetime
 
-from indra.db.util import _clockit
+from indra.util import clockit
 
 from indra import get_config
 from indra.statements import stmts_from_json, get_statement_by_name, \
@@ -173,7 +173,7 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
     return ret
 
 
-@_clockit
+@clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, offset=None, persist=True, block=True,
                    simple_response=True, ev_limit=10, best_first=True, tries=2):
@@ -292,7 +292,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     return ret
 
 
-@_clockit
+@clockit
 def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     """Get fully formed statements from a list of hashes.
 
@@ -320,7 +320,7 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     return stmts_from_json(resp.json()['statements'].values())
 
 
-@_clockit
+@clockit
 def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
                              best_first=True, tries=2):
     """Get the set of raw Statements extracted from a paper given by the id.
@@ -373,7 +373,7 @@ def _submit_query_request(end_point, *args, **kwargs):
                            best_first=best_first, tries=tries)
 
 
-@_clockit
+@clockit
 def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
                     best_first=True, tries=2):
     """Even lower level function to make the request."""

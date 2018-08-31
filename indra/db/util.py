@@ -13,13 +13,12 @@ import zlib
 import logging
 from datetime import datetime
 from itertools import groupby
-from functools import partial, wraps
+from functools import partial
 from multiprocessing.pool import Pool
 
-from indra.util import batch_iter
 from indra.util.nested_dict import NestedDict
 from indra.util.get_version import get_version
-from indra.util import batch_iter
+from indra.util import batch_iter, clockit
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
 
@@ -30,22 +29,6 @@ logger = logging.getLogger('db_util')
 
 
 __PRIMARY_DB = None
-
-
-def _clockit(func):
-    @wraps(func)
-    def timed_func(*args, **kwargs):
-        start = datetime.now()
-        ret = func(*args, **kwargs)
-        end = datetime.now()
-        # print(u'\033[0;35;40m%s \033[1;36;40m%-30s\033[0;35;40m %s %s \033[0m'
-        #       % ('~'*5, func.__name__, end-start, '~'*5))
-        print('%s %-30s %s %s' % ('~'*5, func.__name__, end-start, '~'*5))
-        #fname = '%s-%s_times.log' % (abspath(__file__), func.__name__)
-        #with open(fname, 'a') as f:
-        #    f.write('%s: %s\n' % (start, end-start))
-        return ret
-    return timed_func
 
 
 def get_primary_db(force_new=False):
@@ -140,7 +123,7 @@ def get_db(db_label):
     return DatabaseManager(db_name, sqltype=sqltype, label=db_label)
 
 
-@_clockit
+@clockit
 def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     """Get a generator for db orm statement objects which do not have agents."""
     num_per_yield = kwargs.pop('num_per_yield', 100)
@@ -179,7 +162,7 @@ def get_statements_without_agents(db, prefix, *other_stmt_clauses, **kwargs):
     return stmts_wo_agents_q.yield_per(num_per_yield), num_stmts
 
 
-@_clockit
+@clockit
 def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     """Insert agents for statements that don't have any agents.
 
@@ -260,7 +243,7 @@ def insert_agents(db, prefix, stmts_wo_agents=None, **kwargs):
     return
 
 
-@_clockit
+@clockit
 def insert_pa_agents_directly(db, stmts, verbose=False):
     """Insert agents for preasembled statements.
 
@@ -448,7 +431,7 @@ def _set_evidence_text_ref(stmt, tr):
         ev.pmid = tr.pmid
 
 
-@_clockit
+@clockit
 def _fix_evidence_refs(db, rid_stmt_trios):
     """Get proper id data for a raw statement from the database.
 
@@ -475,7 +458,7 @@ def _fix_evidence_refs(db, rid_stmt_trios):
     return
 
 
-@_clockit
+@clockit
 def get_raw_stmts_frm_db_list(db, db_stmt_objs, fix_refs=True, with_sids=True):
     """Convert table objects of raw statements into INDRA Statement objects."""
     rid_stmt_sid_trios = [(db_stmt.reading_id, db_stmt.id,
@@ -742,7 +725,7 @@ def _get_filtered_db_statements(db, get_full_stmts=False, clauses=None,
     return stmts, duplicate_ids
 
 
-@_clockit
+@clockit
 def distill_stmts(db, get_full_stmts=False, clauses=None, num_procs=1,
                   handle_duplicates='ignore', weed_evidence=True,
                   batch_size=1000):
