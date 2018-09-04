@@ -1224,7 +1224,7 @@ class Statement(object):
                                     "and/or Concept, but got: %s"
                                     % {type(ag) for ag in ag_attr})
                 if deep_sorted:
-                    ag_attr = sorted(ag_attr, key=lambda ag: ag.matches_key())
+                    ag_attr = sorted_agents(ag_attr)
                 ag_list.extend(ag_attr)
             else:
                 raise TypeError("Expected type Agent, Concept, or list, got "
@@ -1397,6 +1397,10 @@ class Statement(object):
         for attr in ['_full_hash', '_shallow_hash']:
             my_hash = kwargs.pop(attr, None)
             my_shallow_hash = kwargs.pop(attr, None)
+        for attr in self._agent_order:
+            attr_value = kwargs.get(attr)
+            if isinstance(attr_value, list):
+                kwargs[attr] = sorted_agents(attr_value)
         new_instance = self.__class__(**kwargs)
         new_instance._full_hash = my_hash
         new_instance._shallow_hash = my_shallow_hash
@@ -3380,6 +3384,10 @@ def draw_stmt_graph(stmts):
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
     plt.show()
+
+
+def sorted_agents(agent_list):
+    return sorted(agent_list, key=lambda ag: ag.matches_key())
 
 
 def get_all_descendants(parent):
