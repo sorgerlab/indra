@@ -607,8 +607,11 @@ def test_conversion():
     assert stmt.obj_from[0].name == '1-Phosphatidyl-D-myo-inositol ' \
                                     '4,5-bisphosphate'
     assert len(stmt.obj_to) == 2
-    assert stmt.obj_to[0].name == 'Diacylglycerol'
-    assert stmt.obj_to[1].name == 'Inositol 1,4,5-trisphosphate'
+    # why do these not appear in alphabetical order?
+    # PyBEL sorts the nodes based on their BEL, and
+    # Inositol 1,4,5-trisphosphate gets quoted.
+    assert stmt.obj_to[0].name == 'Inositol 1,4,5-trisphosphate'
+    assert stmt.obj_to[1].name == 'Diacylglycerol'
     assert len(stmt.evidence) == 1
 
 
