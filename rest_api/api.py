@@ -5,12 +5,16 @@ from bottle import route, run, request, default_app, response
 from indra.sources import trips, reach, bel, biopax
 from indra.databases import hgnc_client
 from indra.statements import *
-from indra.assemblers import PysbAssembler, CxAssembler, GraphAssembler,\
-    CyJSAssembler, SifAssembler, EnglishAssembler
+from indra.assemblers.pysb import PysbAssembler
+from indra.assemblers.cx import CxAssembler
+from indra.assemblers.graph import GraphAssembler
+from indra.assemblers.cyjs import CyJSAssembler
+from indra.assemblers.sif import SifAssembler
+from indra.assemblers.english import EnglishAssembler
 import indra.tools.assemble_corpus as ac
 from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
-from indra.sources.ndex_cx.ndex_cx_api import process_ndex_network
+from indra.sources.ndex_cx.api import process_ndex_network
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
