@@ -2949,8 +2949,8 @@ class Conversion(Statement):
     def matches_key(self):
         keys = [type(self)]
         keys += [self.subj.matches_key() if self.subj else None]
-        keys += [agent.matches_key() for agent in self.obj_to]
-        keys += [agent.matches_key() for agent in self.obj_from]
+        keys += [agent.matches_key() for agent in sorted_agents(self.obj_to)]
+        keys += [agent.matches_key() for agent in sorted_agents(self.obj_from)]
         return str(keys)
 
     def set_agent_list(self, agent_list):
