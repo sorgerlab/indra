@@ -66,9 +66,7 @@ class PybelProcessor(object):
 
     # FIXME: Handle reactions
     def get_statements(self):
-        for u, v, k, d in self.graph.edges(keys=True, data=True):
-            u_data = self.graph.node[u]
-            v_data = self.graph.node[v]
+        for u_data, v_data, k, d in self.graph.edges(keys=True, data=True):
             # We only interpret causal relations, not correlations
             if d[pc.RELATION] not in pc.CAUSAL_RELATIONS:
                 self.unhandled.append((u_data, v_data, k, d))
