@@ -93,7 +93,7 @@ class PybelProcessor(object):
             #   x(Foo) -> p(Bar, pmod(Ph))
             #   act(x(Foo)) -> p(Bar, pmod(Ph))
             if v_func == pc.PROTEIN and \
-               has_protein_modification(self.graph, v):
+               has_protein_modification(v_data):
                 if obj_activity:
                     logger.info("Ignoring object activity modifier in "
                                 "modification statement: %s, %s, %s, %s",
