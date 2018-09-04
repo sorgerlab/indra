@@ -79,15 +79,16 @@ def test_combine_duplicates():
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
-    assert(len(pa.unique_stmts) == 4)
-    assert(pa.unique_stmts[0].matches(p6)) # MEK dephos ERK
-    assert(len(pa.unique_stmts[0].evidence) == 3)
-    assert(pa.unique_stmts[1].matches(p9)) # SRC dephos KRAS
-    assert(len(pa.unique_stmts[1].evidence) == 1)
-    assert(pa.unique_stmts[2].matches(p5)) # MEK phos ERK
-    assert(len(pa.unique_stmts[2].evidence) == 1)
-    assert(pa.unique_stmts[3].matches(p1)) # RAF phos MEK
-    assert(len(pa.unique_stmts[3].evidence) == 4)
+    assert len(pa.unique_stmts) == 4, len(pa.unique_stmts)
+    num_evs =[len(s.evidence) for s in pa.unique_stmts]
+    assert pa.unique_stmts[0].matches(p6) # MEK dephos ERK
+    assert num_evs[0] == 3, num_evs[0]
+    assert pa.unique_stmts[1].matches(p9) # SRC dephos KRAS
+    assert num_evs[1] == 1, num_evs[1]
+    assert pa.unique_stmts[2].matches(p5) # MEK phos ERK
+    assert num_evs[2] == 1, num_evs[2]
+    assert pa.unique_stmts[3].matches(p1) # RAF phos MEK
+    assert num_evs[3] == 4, num_evs[3]
 
 def test_combine_evidence_exact_duplicates():
     raf = Agent('RAF1')

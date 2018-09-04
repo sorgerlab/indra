@@ -129,8 +129,8 @@ class Preassembler(object):
         ['evidence 1', 'evidence 2']
         """
         unique_stmts = []
-        ev_keys = set()
         for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
+            ev_keys = set()
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
