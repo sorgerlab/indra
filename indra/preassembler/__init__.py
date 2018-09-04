@@ -133,9 +133,11 @@ class Preassembler(object):
         for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
-            new_stmt = duplicates[0].make_generic_copy()
             for stmt_ix, stmt in enumerate(duplicates):
-                raw_text = [ag.db_refs.get('TEXT') for ag in stmt.agent_list()]
+                if stmt_ix is 0:
+                    new_stmt = stmt.make_generic_copy()
+                raw_text = [None if ag is None else ag.db_refs.get('TEXT')
+                            for ag in stmt.agent_list()]
                 for ev in stmt.evidence:
                     ev_key = ev.matches_key()
                     if ev_key not in ev_keys:
