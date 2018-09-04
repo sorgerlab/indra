@@ -1216,17 +1216,17 @@ class Statement(object):
         ag_list = []
         for ag_name in self._agent_order:
             ag_attr = getattr(self, ag_name)
-            if isinstance(ag_attr, Agent):
+            if isinstance(ag_attr, Concept):
                 ag_list.append(ag_attr)
             elif isinstance(ag_attr, list):
-                ag_types = {type(ag) for ag in ag_attr}
-                if ag_types == {Agent}:
-                    raise TypeError("Expected all elements of list to be Agent,"
-                                    "but got: %s" % ag_types)
+                if not all([isinstance(ag, Concept) for ag in ag_attr]):
+                    raise TypeError("Expected all elements of list to be Agent "
+                                    "and/or Concept, but got: %s"
+                                    % {type(ag) for ag in ag_attr})
                 ag_list.extend(sorted(ag_attr))
             else:
-                raise TypeError("Expected type Agent or list, got type %s."
-                                % type(ag_attr))
+                raise TypeError("Expected type Agent, Concept, or list, got "
+                                "type %s." % type(ag_attr))
         return ag_list
 
     def entities_match(self, other):
