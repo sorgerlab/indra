@@ -6,7 +6,8 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from indra.sources import trips
-from indra.assemblers import PysbAssembler, SBGNAssembler
+from indra.assemblers.pysb import PysbAssembler
+from indra.assemblers.sbgn import SBGNAssembler
 from indra.util.plot_formatting import *
 from pysb import Observable, Parameter
 from pysb.integrate import Solver

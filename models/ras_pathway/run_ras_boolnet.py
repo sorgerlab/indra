@@ -2,7 +2,7 @@ import pickle
 import boolean2
 import matplotlib.pyplot as plt
 from indra.util import plot_formatting as pf
-from indra.assemblers import SifAssembler
+from indra.assemblers.sif import SifAssembler
 from indra.tools import assemble_corpus as ac
 
 def get_sim_avgs(bn_str, nsim=100, nsteps=20, off=None, on=None):

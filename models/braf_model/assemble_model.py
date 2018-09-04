@@ -4,7 +4,7 @@ import os
 from pysb import *
 import pysb.export
 from indra.sources import trips
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 
 def apply_patch(original, patch):
     orig_lines = [s.strip() for s in original.strip().split('\n')]
