@@ -1211,7 +1211,7 @@ class Statement(object):
                 l.extend(bc_agents)
         return l
 
-    def agent_list(self):
+    def agent_list(self, deep_sorted=False):
         """Get the canonicallized agent list."""
         ag_list = []
         for ag_name in self._agent_order:
@@ -1223,7 +1223,9 @@ class Statement(object):
                     raise TypeError("Expected all elements of list to be Agent "
                                     "and/or Concept, but got: %s"
                                     % {type(ag) for ag in ag_attr})
-                ag_list.extend(sorted(ag_attr, key=lambda ag: ag.matches_key()))
+                if deep_sorted:
+                    ag_attr = sorted(ag_attr, key=lambda ag: ag.matches_key())
+                ag_list.extend(ag_attr)
             else:
                 raise TypeError("Expected type Agent, Concept, or list, got "
                                 "type %s." % type(ag_attr))

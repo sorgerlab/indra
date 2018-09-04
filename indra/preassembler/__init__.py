@@ -137,7 +137,7 @@ class Preassembler(object):
                 if stmt_ix is 0:
                     new_stmt = stmt.make_generic_copy()
                 raw_text = [None if ag is None else ag.db_refs.get('TEXT')
-                            for ag in stmt.agent_list()]
+                            for ag in stmt.agent_list(deep_sorted=True)]
                 for ev in stmt.evidence:
                     ev_key = ev.matches_key()
                     if ev_key not in ev_keys:
