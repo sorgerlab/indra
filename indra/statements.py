@@ -1216,7 +1216,7 @@ class Statement(object):
         ag_list = []
         for ag_name in self._agent_order:
             ag_attr = getattr(self, ag_name)
-            if isinstance(ag_attr, Concept):
+            if isinstance(ag_attr, Concept) or ag_attr is None:
                 ag_list.append(ag_attr)
             elif isinstance(ag_attr, list):
                 if not all([isinstance(ag, Concept) for ag in ag_attr]):
