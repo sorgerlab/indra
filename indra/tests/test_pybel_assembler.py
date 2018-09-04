@@ -51,6 +51,10 @@ def get_edge_data(g, u, v):
     return list(g.get_edge_data(u, v).values())[0]
 
 
+def get_first_edge_data(g):
+    return list(g.edges(data=True))[0][2]
+
+
 def test_simple_modification_no_evidence():
     braf = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
     braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
@@ -126,7 +130,7 @@ def test_activation():
         assert braf_dsl in belgraph
         assert map2k1_dsl in belgraph
         assert belgraph.number_of_edges() == 1
-        _, _, edge_data = list(belgraph.edges(data=True))[0]
+        edge_data = get_first_edge_data(belgraph)
         assert edge_data == edge
 
 
@@ -152,7 +156,7 @@ def test_inhibition():
     assert braf_dsl in belgraph
     assert map2k1_dsl in belgraph
     assert belgraph.number_of_edges() == 1
-    _, _, edge_data = list(belgraph.edges(data=True))[0]
+    edge_data = get_first_edge_data(belgraph)
     assert edge_data == edge
 
 
@@ -167,7 +171,7 @@ def test_increase_amount():
     assert mdm2_dsl in belgraph
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
-    _, _, edge_data = list(belgraph.edges(data=True))[0]
+    edge_data = get_first_edge_data(belgraph)
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
 
@@ -183,7 +187,7 @@ def test_increase_amount_tscript():
     assert mdm2_dsl in belgraph
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
-    _, _, edge_data = list(belgraph.edges(data=True))[0]
+    edge_data = get_first_edge_data(belgraph)
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
     assert edge_data[pc.SUBJECT] == {
             pc.MODIFIER: pc.ACTIVITY,
