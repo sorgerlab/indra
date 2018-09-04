@@ -32,7 +32,7 @@ install:
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask nltk reportlab
   - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
-  - pip install git+https://github.com/pybel/pybel.git@f9d4e6ab2eed
+  - pip install git+https://github.com/pybel/pybel.git
   - mkdir -p $HOME/.pybel/data
   - wget -nv http://sorger.med.harvard.edu/data/bgyori/pybel_cache.db --directory-prefix=$HOME/.pybel/data
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
