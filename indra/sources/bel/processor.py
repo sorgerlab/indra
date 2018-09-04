@@ -1,6 +1,5 @@
 import re
 import logging
-from copy import copy
 import pybel.constants as pc
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
@@ -9,6 +8,10 @@ from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client
 from indra.assemblers.pybel.assembler import _pybel_indra_act_map
 
+__all__ = [
+    'PybelProcessor',
+    'get_agent',
+]
 
 logger = logging.getLogger('pybel_processor')
 
@@ -116,7 +119,7 @@ class PybelProcessor(object):
                 # Gap
                 #   act(p(Foo)) =| gtp(p(Foo))
                 elif subj_activity and _rel_is_direct(d) and \
-                     obj_activity.activity_type == 'gtpbound':
+                    obj_activity.activity_type == 'gtpbound':
                     self._get_gef_gap(u_data, v_data, k, d)
                 # Activation/Inhibition
                 #   x(Foo) -> act(x(Foo))
@@ -135,7 +138,7 @@ class PybelProcessor(object):
             #   act(x(Foo)) -> p(Bar):
             #   x(Foo) -> deg(p(Bar))
             #   act(x(Foo)) ->/-| deg(p(Bar))
-            elif v_data[pc.FUNCTION] in (pc.PROTEIN, pc.RNA, pc.ABUNDANCE,
+            elif v_data.function in (pc.PROTEIN, pc.RNA, pc.ABUNDANCE,
                  pc.COMPLEX, pc.MIRNA) and not obj_activity:
                 self._get_regulate_amount(u_data, v_data, k, d)
             # Controlled conversions
@@ -144,7 +147,7 @@ class PybelProcessor(object):
             # Note that we can't really handle statements where the relation
             # is decreases, as inhibition of a reaction match the semantics
             # of a controlled conversion
-            elif v_data[pc.FUNCTION] == pc.REACTION and \
+            elif v_data.function == pc.REACTION and \
                  d[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
                 self._get_conversion(u_data, v_data, k, d)
             # UNHANDLED
@@ -161,7 +164,7 @@ class PybelProcessor(object):
         # Get an agent with bound conditions from the Complex
         assert node_ix in (0, 1)
         node_data = [u_data, v_data][node_ix]
-        cplx_agent = _get_agent(node_data, None)
+        cplx_agent = get_agent(node_data, None)
         if cplx_agent is None:
             return
         agents = [bc.agent for bc in cplx_agent.bound_conditions]
@@ -172,8 +175,8 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_regulate_amount(self, u_data, v_data, k, edge_data):
-        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
-        obj_agent = _get_agent(v_data, edge_data.get(pc.OBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        obj_agent = get_agent(v_data, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))
             return
@@ -193,10 +196,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_modification(self, u_data, v_data, k, edge_data):
-        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
-        mods, muts = _get_all_pmods(v_data, edge_data)
-        v_data_no_mods = _remove_pmods(v_data)
-        obj_agent = _get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        mods, muts = _get_all_pmods(v_data)
+        v_data_no_mods = v_data.get_parent()
+        obj_agent = get_agent(v_data_no_mods, edge_data.get(pc.OBJECT))
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
@@ -209,14 +212,14 @@ class PybelProcessor(object):
 
     def _get_regulate_activity(self, u_data, v_data, k, edge_data):
         # Subject info
-        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
         subj_activity = _get_activity_condition(edge_data.get(pc.SUBJECT))
-        subj_function = u_data.get(pc.FUNCTION)
+        subj_function = u_data.function
         # Object info
         # Note: Don't pass the object modifier data because we don't want to
         # put an activity on the agent
-        obj_agent = _get_agent(v_data, None)
-        obj_function = v_data.get(pc.FUNCTION)
+        obj_agent = get_agent(v_data, None)
+        obj_function = v_data.function
         # If it's a bioprocess object, we won't have an activity in the edge
         if obj_function in (pc.BIOPROCESS, pc.PATHOLOGY):
             activity_type = 'activity'
@@ -244,10 +247,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_active_form(self, u_data, v_data, k, edge_data):
-        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
         # Don't pass the object modifier info because we don't want an activity
         # condition applied to the agent
-        obj_agent = _get_agent(v_data)
+        obj_agent = get_agent(v_data)
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, edge_data))
             return
@@ -262,8 +265,8 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_gef_gap(self, u_data, v_data, k, edge_data):
-        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
-        obj_agent = _get_agent(v_data)
+        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
+        obj_agent = get_agent(v_data)
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
@@ -276,10 +279,10 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
     def _get_conversion(self, u_data, v_data, k, edge_data):
-        subj_agent = _get_agent(u_data, edge_data.get(pc.SUBJECT))
+        subj_agent = get_agent(u_data, edge_data.get(pc.SUBJECT))
         # Get the nodes for the reactants and products
-        reactant_agents = [_get_agent(r) for r in v_data[pc.REACTANTS]]
-        product_agents = [_get_agent(p) for p in v_data[pc.PRODUCTS]]
+        reactant_agents = [get_agent(r) for r in v_data[pc.REACTANTS]]
+        product_agents = [get_agent(p) for p in v_data[pc.PRODUCTS]]
         if subj_agent is None or \
            any([r is None for r in reactant_agents]) or \
            any([p is None for p in product_agents]):
@@ -291,7 +294,7 @@ class PybelProcessor(object):
         self.statements.append(stmt)
 
 
-def _get_agent(node_data, node_modifier_data=None):
+def get_agent(node_data, node_modifier_data=None):
     # FIXME: Handle translocations on the agent for ActiveForms, turn into
     # location conditions
     # Check the node type/function
@@ -299,7 +302,7 @@ def _get_agent(node_data, node_modifier_data=None):
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
         mod_data = ('No node data' if not node_modifier_data
-                                   else node_modifier_data.get(pc.CNAME))
+                    else node_modifier_data.get(pc.CNAME))
         logger.info("Nodes of type %s not handled: %s",
                     node_func, mod_data)
         return None
@@ -317,11 +320,11 @@ def _get_agent(node_data, node_modifier_data=None):
             return None
         # Otherwise, get the "main" agent, to which the other members will be
         # attached as bound conditions
-        main_agent = _get_agent(members[0])
+        main_agent = get_agent(members[0])
         # If we can't get the main agent, return None
         if main_agent is None:
             return None
-        bound_conditions = [BoundCondition(_get_agent(m), True)
+        bound_conditions = [BoundCondition(get_agent(m), True)
                             for m in members[1:]]
         # Check the bound_conditions for any None agents
         if any([bc.agent is None for bc in bound_conditions]):
@@ -426,8 +429,8 @@ def _get_agent(node_data, node_modifier_data=None):
             print("Unhandled namespace with identifier: %s: %s (%s)" %
                   (ns, name, node_data))
     if db_refs is None:
-        logger.info('Unable to get identifier information for node: %s'
-                     % node_data)
+        logger.info('Unable to get identifier information for node: %s',
+                    node_data)
         return None
     # Get modification conditions
     mods, muts = _get_all_pmods(node_data)
@@ -490,18 +493,10 @@ def _get_up_id(hgnc_id):
     return up_id
 
 
-def _remove_pmods(node_data):
-    node_data_no_pmods = copy(node_data)
-    variants = node_data.get(pc.VARIANTS)
-    if variants:
-        node_data_no_pmods[pc.VARIANTS] = [
-            var for var in variants
-            if var[pc.KIND] != pc.PMOD
-        ]
-    return node_data_no_pmods
 
 
-def _get_all_pmods(node_data, remove_pmods=False):
+
+def _get_all_pmods(node_data):
     mods = []
     muts = []
     variants = node_data.get(pc.VARIANTS)
@@ -538,7 +533,7 @@ def _get_all_pmods(node_data, remove_pmods=False):
             logger.debug('Unhandled node variant FRAG: %s' % node_data)
         else:
             logger.debug('Unknown node variant type: %s' % node_data)
-    return (mods, muts)
+    return mods, muts
 
 
 def _get_activity_condition(node_modifier_data):
@@ -616,7 +611,6 @@ _hgvs_protein_mutation = re.compile('^p.([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})')
 def _parse_mutation(s):
     m = _hgvs_protein_mutation.match(s)
     if not m:
-        return (None, None, None)
+        return None, None, None
     from_aa, position, to_aa = m.groups()
     return position, from_aa, to_aa
-
