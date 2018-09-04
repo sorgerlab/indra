@@ -1,29 +1,55 @@
 import networkx as nx
-import pybel
 import pybel.constants as pc
 from indra.statements import *
 from indra.databases import hgnc_client
+from pybel.dsl import protein, pmod, hgvs, reaction, abundance, complex_abundance
 from indra.assemblers.pybel import assembler as pa
-from indra.preassembler.hierarchy_manager import hierarchies
+
 
 def id(gene_name):
     return hgnc_client.get_hgnc_id(gene_name)
 
-phostuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Ser', 218)
-ubtuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ub'), 'Ser', 218)
-braf_node = (pc.PROTEIN, 'HGNC', 'BRAF')
-map2k1_node = (pc.PROTEIN, 'HGNC', 'MAP2K1')
-tp53_node = (pc.PROTEIN, 'HGNC', 'TP53')
-mdm2_node = (pc.PROTEIN, 'HGNC', 'MDM2')
-egfr_node = (pc.PROTEIN, 'HGNC', 'EGFR')
-egfr_phostuple = (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Tyr', 1173)
+
+phos_dsl = pmod('Ph', 'Ser', 218)
+ub_dsl = pmod('Ub', 'Ser', 218)
+egfr_phos_dsl = pmod('Ph', 'Tyr', 1173)
+
+braf_dsl = protein(namespace='HGNC', name='BRAF')
+map2k1_dsl = protein(namespace='HGNC', name='MAP2K1')
+tp53_dsl = protein(namespace='HGNC', name='TP53')
+mdm2_dsl = protein(namespace='HGNC', name='MDM2')
+egfr_dsl = protein(namespace='HGNC', name='EGFR')
+
+chebi_17534 = abundance(namespace='CHEBI', name='17634')
+chebi_4170 = abundance(namespace='CHEBI', name='4170')
+chebi_17534_to_4170 = reaction(chebi_17534, chebi_4170)
+
+grb2_dsl = protein(namespace='HGNC', name='GRB2')
+sos1_dsl = protein(namespace='HGNC', name='SOS1')
+sos1_phosphorylated_dsl = sos1_dsl.with_variants(pmod('Ph'))
+kras_node = protein(namespace='HGNC', name='KRAS')
+
+egfr_grb2_sos1_complex_dsl = complex_abundance([
+    egfr_dsl,
+    grb2_dsl,
+    sos1_dsl,
+])
+
+egfr_grb2_sos1_phos_complex_dsl = complex_abundance([
+    egfr_dsl,
+    grb2_dsl,
+    sos1_phosphorylated_dsl,
+])
+
 
 def draw(g, filename):
     ag = nx.nx_agraph.to_agraph(g)
     ag.draw(filename, prog='dot')
 
+
 def get_edge_data(g, u, v):
     return list(g.get_edge_data(u, v).values())[0]
+
 
 def test_simple_modification_no_evidence():
     braf = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
@@ -45,32 +71,17 @@ def test_simple_modification_no_evidence():
              pc.EFFECT: {
                  pc.NAME: 'cat',
                  pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
-    for stmt, modtuple, subj_edge in ((stmt1, phostuple, edge1),
-                                     (stmt2, phostuple, edge2),
-                                     (stmt3, ubtuple, edge3)):
+    for stmt, modtuple, subj_edge in ((stmt1, phos_dsl, edge1),
+                                      (stmt2, phos_dsl, edge2),
+                                      (stmt3, ub_dsl, edge3)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
         assert len(belgraph.nodes()) == 3
-        assert braf_node in belgraph
-        map2k1_mod_node = map2k1_node + tuple([modtuple])
-        assert map2k1_mod_node in belgraph
-        assert belgraph.node[braf_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'BRAF'}
-        assert belgraph.node[map2k1_mod_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'MAP2K1',
-                pc.VARIANTS: [{
-                    pc.KIND: pc.PMOD,
-                    pc.IDENTIFIER: {
-                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
-                        pc.NAME: modtuple[1][1]},
-                    pc.PMOD_CODE: modtuple[2],
-                    pc.PMOD_POSITION: modtuple[3]}]}
+        assert braf_dsl in belgraph
+        map2k1_mod_dsl = map2k1_dsl.with_variants(modtuple)
+        assert map2k1_mod_dsl in belgraph
         assert belgraph.number_of_edges() == 2
-        edge_data = get_edge_data(belgraph, braf_node, map2k1_mod_node)
+        edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
         assert edge_data.get(pc.SUBJECT) == subj_edge
         assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
@@ -84,15 +95,8 @@ def test_modification_with_mutation():
     belgraph = pba.make_model()
     # Adds in the base protein nodes as well as the variants (so 4 nodes)
     assert len(belgraph.nodes()) == 4
-    braf_mut_node = braf_node + ((pc.HGVS, 'p.Val600Glu'),)
-    assert braf_mut_node in belgraph
-    assert belgraph.node[braf_mut_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'BRAF',
-                pc.VARIANTS: [{
-                    pc.KIND: pc.HGVS,
-                    pc.IDENTIFIER: 'p.Val600Glu'}]}
+    braf_mut_dsl = braf_dsl.with_variants(hgvs('p.Val600Glu'))
+    assert braf_mut_dsl in belgraph
 
 
 def test_activation():
@@ -119,15 +123,8 @@ def test_activation():
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
         assert len(belgraph.nodes()) == 2
-        assert braf_node in belgraph
-        assert belgraph.node[braf_node] == {
-                    pc.FUNCTION: pc.PROTEIN,
-                    pc.NAMESPACE: 'HGNC',
-                    pc.NAME: 'BRAF'}
-        assert belgraph.node[map2k1_node] == {
-                    pc.FUNCTION: pc.PROTEIN,
-                    pc.NAMESPACE: 'HGNC',
-                    pc.NAME: 'MAP2K1'}
+        assert braf_dsl in belgraph
+        assert map2k1_dsl in belgraph
         assert belgraph.number_of_edges() == 1
         _, _, edge_data = list(belgraph.edges(data=True))[0]
         assert edge_data == edge
@@ -139,12 +136,12 @@ def test_inhibition():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt = Inhibition(braf_kin, mek, 'kinase')
     edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
-             pc.SUBJECT: {
+            pc.SUBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
                  pc.EFFECT: {
                      pc.NAME: 'kin',
                      pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-             pc.OBJECT: {
+            pc.OBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
                  pc.EFFECT: {
                      pc.NAME: 'kin',
@@ -152,15 +149,8 @@ def test_inhibition():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph.nodes()) == 2
-    assert braf_node in belgraph
-    assert belgraph.node[braf_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'BRAF'}
-    assert belgraph.node[map2k1_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'MAP2K1'}
+    assert braf_dsl in belgraph
+    assert map2k1_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     _, _, edge_data = list(belgraph.edges(data=True))[0]
     assert edge_data == edge
@@ -174,14 +164,8 @@ def test_increase_amount():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph.nodes()) == 2
-    assert mdm2_node in belgraph
-    assert tp53_node in belgraph
-    assert belgraph.node[tp53_node] == {pc.FUNCTION: pc.PROTEIN,
-                                        pc.NAMESPACE: 'HGNC',
-                                        pc.NAME: 'TP53'}
-    assert belgraph.node[mdm2_node] == {pc.FUNCTION: pc.PROTEIN,
-                                        pc.NAMESPACE: 'HGNC',
-                                        pc.NAME: 'MDM2'}
+    assert mdm2_dsl in belgraph
+    assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     _, _, edge_data = list(belgraph.edges(data=True))[0]
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
@@ -196,14 +180,8 @@ def test_increase_amount_tscript():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph.nodes()) == 2
-    assert mdm2_node in belgraph
-    assert tp53_node in belgraph
-    assert belgraph.node[tp53_node] == {pc.FUNCTION: pc.PROTEIN,
-                                        pc.NAMESPACE: 'HGNC',
-                                        pc.NAME: 'TP53'}
-    assert belgraph.node[mdm2_node] == {pc.FUNCTION: pc.PROTEIN,
-                                        pc.NAMESPACE: 'HGNC',
-                                        pc.NAME: 'MDM2'}
+    assert mdm2_dsl in belgraph
+    assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     _, _, edge_data = list(belgraph.edges(data=True))[0]
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
@@ -215,26 +193,28 @@ def test_increase_amount_tscript():
 
 def test_gef():
     gef = Agent('SOS1', mods=[ModCondition('phosphorylation')],
-                db_refs={'HGNC':'11187'})
-    ras = Agent('KRAS', db_refs={'HGNC':'6407'})
+                db_refs={'HGNC': '11187'})
+    ras = Agent('KRAS', db_refs={'HGNC': '6407'})
     stmt = Gef(gef, ras)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 3
     assert belgraph.number_of_edges() == 2
-    gef_node = (pc.PROTEIN, 'HGNC', 'SOS1',
-                (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph')))
-    kras_node = (pc.PROTEIN, 'HGNC', 'KRAS')
+
+    gef_reference_node = protein(namespace='HGNC', name='SOS1')
+    gef_node = gef_reference_node.with_variants(pmod('Ph'))
+    assert gef_reference_node in belgraph
     assert gef_node in belgraph
     assert kras_node in belgraph
+
     edge_data = get_edge_data(belgraph, gef_node, kras_node)
     edge = {pc.RELATION: pc.DIRECTLY_INCREASES,
-             pc.SUBJECT: {
+            pc.SUBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
                  pc.EFFECT: {
                      pc.NAME: 'gef',
                      pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-             pc.OBJECT: {
+            pc.OBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
                  pc.EFFECT: {
                      pc.NAME: 'gtp',
@@ -244,26 +224,29 @@ def test_gef():
 
 def test_gap():
     gap = Agent('RASA1', mods=[ModCondition('phosphorylation')],
-                db_refs={'HGNC':'9871'})
-    ras = Agent('KRAS', db_refs={'HGNC':'6407'})
+                db_refs={'HGNC': '9871'})
+    ras = Agent('KRAS', db_refs={'HGNC': '6407'})
     stmt = Gap(gap, ras)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 3
     assert belgraph.number_of_edges() == 2
-    gap_node = (pc.PROTEIN, 'HGNC', 'RASA1',
-                 (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph')))
-    ras_node = (pc.PROTEIN, 'HGNC', 'KRAS')
+
+    gap_reference_node = protein(namespace='HGNC', name='RASA1')
+    gap_node = gap_reference_node.with_variants(pmod('Ph'))
+    ras_node = protein(namespace='HGNC', name='KRAS')
+
+    assert gap_reference_node in belgraph
     assert gap_node in belgraph
     assert ras_node in belgraph
     edge_data = get_edge_data(belgraph, gap_node, ras_node)
     edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
-             pc.SUBJECT: {
+            pc.SUBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
                  pc.EFFECT: {
                      pc.NAME: 'gap',
                      pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-             pc.OBJECT: {
+            pc.OBJECT: {
                  pc.MODIFIER: pc.ACTIVITY,
                  pc.EFFECT: {
                      pc.NAME: 'gtp',
@@ -273,7 +256,7 @@ def test_gap():
 
 def test_active_form():
     ras = Agent('KRAS', mutations=[MutCondition('12', 'G', 'V')],
-                db_refs={'HGNC':'6407'})
+                db_refs={'HGNC': '6407'})
     mapk1_p = Agent('MAP2K1',
                     mods=[ModCondition('phosphorylation', 'T', '185')],
                     db_refs={'HGNC': hgnc_client.get_hgnc_id('MAP2K1')})
@@ -300,26 +283,13 @@ def test_complex():
     # The graph should contain the node for the complex as well as nodes
     # for all of the members
     assert len(belgraph) == 4
-    complex_tuple = [n for n in belgraph.nodes() if n[0] == pc.COMPLEX][0]
-    # Don't bother to check the tuple, which is now generated by
-    # PyBEL directly, but check the node data
-    assert belgraph.node[complex_tuple] == {
-        pc.FUNCTION: pc.COMPLEX,
-        pc.MEMBERS: [
-            {pc.FUNCTION: pc.PROTEIN,
-             pc.NAMESPACE: 'HGNC',
-             pc.NAME: 'EGFR'},
-            {pc.FUNCTION: pc.PROTEIN,
-             pc.NAMESPACE: 'HGNC',
-             pc.NAME: 'GRB2'},
-            {pc.FUNCTION: pc.PROTEIN,
-             pc.NAMESPACE: 'HGNC',
-             pc.NAME: 'SOS1'},
-        ]}
+    assert egfr_grb2_sos1_complex_dsl in belgraph
+    for member in egfr_grb2_sos1_complex_dsl.members:
+        assert member in belgraph
 
 
 def test_rxn_no_controller():
-    glu = Agent('D-GLUCOSE', db_refs = {'CHEBI': 'CHEBI:17634'})
+    glu = Agent('D-GLUCOSE', db_refs={'CHEBI': 'CHEBI:17634'})
     g6p = Agent('GLUCOSE-6-PHOSPHATE', db_refs={'CHEBI': 'CHEBI:4170'})
     stmt = Conversion(None, [glu], [g6p])
     pba = pa.PybelAssembler([stmt])
@@ -327,24 +297,16 @@ def test_rxn_no_controller():
     # The graph should contain the node for the reaction as well as nodes
     # for all of the members
     assert len(belgraph) == 3
-    rxn_tuple = [n for n in belgraph.nodes() if n[0] == pc.REACTION][0]
-    assert belgraph.node[rxn_tuple] == {
-        pc.FUNCTION: pc.REACTION,
-        pc.REACTANTS: [
-            {
-                pc.FUNCTION: pc.ABUNDANCE,
-                pc.NAMESPACE: 'CHEBI',
-                pc.NAME: '17634',
-            }
-        ],
-        pc.PRODUCTS: [
-            {
-                pc.FUNCTION: pc.ABUNDANCE,
-                pc.NAMESPACE: 'CHEBI',
-                pc.NAME: '4170'
-            }
-        ]
-    }
+
+    assert chebi_17534_to_4170 in belgraph
+
+    for reactant in chebi_17534_to_4170.reactants:
+        assert reactant in belgraph
+    # TODO check edge chebi_17534_to_4170 hasReactant chebi_17534
+
+    for product in chebi_17534_to_4170.products:
+        assert product in belgraph
+    # TODO check edge chebi_17534_to_4170 hasProduct chebi_4170
 
 
 def test_rxn_with_controller():
@@ -357,25 +319,14 @@ def test_rxn_with_controller():
     # The graph should contain the node for the reaction as well as nodes
     # for all of the members
     assert len(belgraph) == 4
-    rxn_tuple = [n for n in belgraph.nodes() if n[0] == pc.REACTION][0]
+
+    # check the catalyst makes it
+    assert protein(namespace='HGNC', name='HK1') in belgraph
+
     # The reaction data should be the same as before
-    assert belgraph.node[rxn_tuple] == {
-        pc.FUNCTION: pc.REACTION,
-        pc.REACTANTS: [
-            {
-                pc.FUNCTION: pc.ABUNDANCE,
-                pc.NAMESPACE: 'CHEBI',
-                pc.NAME: '17634',
-            }
-        ],
-        pc.PRODUCTS: [
-            {
-                pc.FUNCTION: pc.ABUNDANCE,
-                pc.NAMESPACE: 'CHEBI',
-                pc.NAME: '4170'
-            }
-        ]
-    }
+    assert chebi_17534 in belgraph
+    assert chebi_4170 in belgraph
+    assert chebi_17534_to_4170 in belgraph
 
 
 def test_autophosphorylation():
@@ -384,27 +335,14 @@ def test_autophosphorylation():
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 2
-    assert egfr_node in belgraph.nodes()
-    egfr_phos_node = egfr_node + tuple([egfr_phostuple])
-    assert egfr_phos_node in belgraph.nodes()
-    assert belgraph.node[egfr_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'EGFR'}
-    assert belgraph.node[egfr_phos_node] == {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'EGFR',
-                pc.VARIANTS: [{
-                    pc.KIND: pc.PMOD,
-                    pc.IDENTIFIER: {
-                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
-                        pc.NAME: egfr_phostuple[1][1]},
-                    pc.PMOD_CODE: egfr_phostuple[2],
-                    pc.PMOD_POSITION: egfr_phostuple[3]}]}
+    assert egfr_dsl in belgraph
+    egfr_phos_node = egfr_dsl.with_variants(egfr_phos_dsl)
+    assert egfr_dsl in belgraph
+    assert egfr_phos_node in belgraph
+    assert belgraph.number_of_nodes() == 2
     assert belgraph.number_of_edges() == 2
     # There will be two edges between these nodes
-    edge_dicts = list(belgraph.get_edge_data(egfr_node,
+    edge_dicts = list(belgraph.get_edge_data(egfr_dsl,
                                              egfr_phos_node).values())
     assert {pc.RELATION: pc.DIRECTLY_INCREASES} in edge_dicts
 
@@ -415,52 +353,32 @@ def test_autophosphorylation():
     stmt = Autophosphorylation(p38_tab1, 'Y', '100')
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph) == 4
+    assert belgraph.number_of_nodes() == 4
     assert belgraph.number_of_edges() == 4
 
 
 def test_bound_condition():
     egfr = Agent('EGFR', db_refs={'HGNC': id('EGFR')})
     grb2 = Agent('GRB2', db_refs={'HGNC': id('GRB2')})
-    ras = Agent('KRAS', db_refs={'HGNC':'6407'})
+    ras = Agent('KRAS', db_refs={'HGNC': '6407'})
     sos1_bound = Agent('SOS1', mods=[ModCondition('phosphorylation')],
-                  bound_conditions=[BoundCondition(egfr), BoundCondition(grb2)],
-                  db_refs={'HGNC': id('SOS1')})
+                       bound_conditions=[BoundCondition(egfr), BoundCondition(grb2)],
+                       db_refs={'HGNC': id('SOS1')})
     stmt = Gef(sos1_bound, ras)
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph) == 6
     assert belgraph.number_of_edges() == 5
-    complex_tuple = [n for n in belgraph.nodes() if n[0] == pc.COMPLEX][0]
     # Don't bother to check the tuple, which is now generated by
     # PyBEL directly, but check the node data
-    assert belgraph.node[complex_tuple][pc.FUNCTION] == pc.COMPLEX
-    complex_members = belgraph.node[complex_tuple][pc.MEMBERS]
-    members_list = [{
-                 pc.FUNCTION: pc.PROTEIN,
-                 pc.NAMESPACE: 'HGNC',
-                 pc.NAME: 'EGFR'
-             }, {
-                 pc.FUNCTION: pc.PROTEIN,
-                 pc.NAMESPACE: 'HGNC',
-                 pc.NAME: 'GRB2'
-             }, {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'SOS1',
-                pc.VARIANTS: [{
-                    pc.KIND: pc.PMOD,
-                    pc.IDENTIFIER: {
-                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
-                        pc.NAME: 'Ph'}}]}]
-    for member in members_list:
-        assert member in complex_members
-    kras_node = (pc.PROTEIN, 'HGNC', 'KRAS')
-    assert kras_node in belgraph.nodes()
-    assert (complex_tuple, kras_node) in belgraph.edges()
-    edge_data = (complex_tuple, kras_node,
-                {pc.RELATION: pc.DIRECTLY_INCREASES,
-                 pc.OBJECT: {
+
+    assert egfr_grb2_sos1_phos_complex_dsl in belgraph
+    assert kras_node in belgraph
+    assert (egfr_grb2_sos1_phos_complex_dsl, kras_node) in belgraph.edges()
+
+    edge_data = (egfr_grb2_sos1_phos_complex_dsl, kras_node,
+                 {pc.RELATION: pc.DIRECTLY_INCREASES,
+                  pc.OBJECT: {
                      pc.MODIFIER: pc.ACTIVITY,
                      pc.EFFECT: {
                          pc.NAME: 'gtp',
@@ -475,14 +393,14 @@ def test_transphosphorylation():
     stmt = Transphosphorylation(egfr_dimer, 'Y', '1173')
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph) == 3
+    assert belgraph.number_of_nodes() == 3
     assert belgraph.number_of_edges() == 3
-    egfr_dimer_node = (pc.COMPLEX, (pc.PROTEIN, 'HGNC', 'EGFR'),
-                                   (pc.PROTEIN, 'HGNC', 'EGFR'))
-    egfr_phos_node = (pc.PROTEIN, 'HGNC', 'EGFR',
-                      (pc.PMOD, (pc.BEL_DEFAULT_NAMESPACE, 'Ph'), 'Tyr', 1173))
+
+    egfr_dimer_node = complex_abundance([egfr_dsl, egfr_dsl])
+    egfr_phos_node = egfr_dsl.with_variants(pmod('Ph', 'Tyr', 1173))
     edge_data = get_edge_data(belgraph, egfr_dimer_node, egfr_phos_node)
     assert edge_data == {pc.RELATION: pc.DIRECTLY_INCREASES}
+
 
 """
 def test_translocation():
@@ -495,6 +413,7 @@ def test_translocation():
     assert len(belgraph) == 1
 """
 
+
 def test_complex_with_pmod():
     sos1_phos = Agent('SOS1',
                       mods=[ModCondition('phosphorylation', 'Y', '100')],
@@ -504,35 +423,19 @@ def test_complex_with_pmod():
     stmt = Complex([sos1_phos, grb2, egfr])
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
-    assert len(belgraph) == 5
-    members_list = [{
-                 pc.FUNCTION: pc.PROTEIN,
-                 pc.NAMESPACE: 'HGNC',
-                 pc.NAME: 'EGFR'
-             }, {
-                 pc.FUNCTION: pc.PROTEIN,
-                 pc.NAMESPACE: 'HGNC',
-                 pc.NAME: 'GRB2'
-             }, {
-                pc.FUNCTION: pc.PROTEIN,
-                pc.NAMESPACE: 'HGNC',
-                pc.NAME: 'SOS1',
-                pc.VARIANTS: [{
-                    pc.KIND: pc.PMOD,
-                    pc.IDENTIFIER: {
-                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE,
-                        pc.NAME: 'Ph'},
-                    pc.PMOD_CODE: 'Tyr',
-                    pc.PMOD_POSITION: 100}]}]
-    # Get the complex node
-    cplx_node_list = [n for n in belgraph.nodes(data=True)
-                 if n[0][0] == pc.COMPLEX]
-    assert len(cplx_node_list) == 1
-    cplx_node = cplx_node_list[0]
-    cplx_node_data = cplx_node[1]
-    # Check the constituents of the complex node
-    for member in members_list:
-        assert member in cplx_node_data[pc.MEMBERS]
+    assert belgraph.number_of_nodes() == 5
+    assert belgraph.number_of_edges() == 4
+
+    egfr_grb2_sos_phos_tyr_100 = complex_abundance([
+        egfr_dsl,
+        grb2_dsl,
+        sos1_dsl.with_variants(pmod('Ph', 'Tyr', 100))
+    ])
+
+    assert sos1_dsl in belgraph
+    assert egfr_grb2_sos_phos_tyr_100 in belgraph
+    for member in egfr_grb2_sos_phos_tyr_100.members:
+        assert member in belgraph
 
 
 def test_complex_with_complex():
@@ -547,6 +450,17 @@ def test_complex_with_complex():
     belgraph = pba.make_model()
     assert len(belgraph) == 6
     assert belgraph.number_of_edges() == 5
-    cplx_node_list = [n for n in belgraph.nodes() if n[0] == pc.COMPLEX]
-    assert len(cplx_node_list) == 2
 
+    egfr_grb2_complex = complex_abundance([egfr_dsl, grb2_dsl])
+    egfr_grb2_complex_sos1_phos_complex = complex_abundance([
+        egfr_grb2_complex,
+        sos1_dsl.with_variants(pmod('Ph', 'Tyr', 100))
+    ])
+
+    assert egfr_grb2_complex in belgraph
+    for member in egfr_grb2_complex.members:
+        assert member in belgraph
+
+    assert egfr_grb2_complex_sos1_phos_complex in belgraph
+    for member in egfr_grb2_complex_sos1_phos_complex.members:
+        assert member in belgraph
