@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import pickle
 from indra.databases import relevance_client
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 
 def get_subnetwork(statements, nodes, relevance_network=None,
                    relevance_node_lim=10):

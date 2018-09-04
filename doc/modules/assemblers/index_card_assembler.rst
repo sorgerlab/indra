@@ -1,6 +1,6 @@
-MITRE "index cards" (:py:mod:`indra.assemblers.index_card_assembler`)
+MITRE "index cards" (:py:mod:`indra.assemblers.index_card.assembler`)
 =====================================================================
 
-.. automodule:: indra.assemblers.index_card_assembler
+.. automodule:: indra.assemblers.index_card.assembler
     :members:
 

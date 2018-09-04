@@ -14,7 +14,7 @@ from indra.sources import reach
 from collections import defaultdict
 from indra.databases import ndex_client
 import indra.tools.assemble_corpus as ac
-from indra.assemblers import CxAssembler
+from indra.assemblers.cx import CxAssembler
 from indra.tools.machine import gmail_client
 from indra.tools.machine import twitter_client
 from indra.tools.gene_network import GeneNetwork

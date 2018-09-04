@@ -4,7 +4,7 @@ import pickle
 import sys
 import csv
 import numpy as np
-from indra.assemblers.english_assembler import EnglishAssembler
+from indra.assemblers.english import EnglishAssembler
 from indra.util import write_unicode_csv
 
 if __name__ == '__main__':

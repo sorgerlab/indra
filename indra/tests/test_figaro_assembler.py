@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-from indra.assemblers import FigaroAssembler
+from indra.assemblers.figaro import FigaroAssembler
 from indra.statements import Agent, Influence
 
 

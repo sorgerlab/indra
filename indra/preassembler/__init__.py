@@ -650,7 +650,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         :alt: Example statement graph rendered by Graphviz
 
     """
-    from indra.assemblers.english_assembler import EnglishAssembler
+    from indra.assemblers.english import EnglishAssembler
     # Set the default agent formatting properties
     if agent_style is None:
         agent_style = {'color': 'lightgray', 'style': 'filled',

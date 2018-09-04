@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from indra.sources import biopax
 from indra.sources import bel, trips
 from indra.util import plot_formatting as pf
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 
 def plot_result(model, sol):
     pf.set_fig_params()

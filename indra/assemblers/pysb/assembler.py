@@ -2676,7 +2676,7 @@ def export_sbgn(model):
     import lxml.etree
     import lxml.builder
     from pysb.bng import generate_equations
-    from indra.assemblers.sbgn_assembler import SBGNAssembler
+    from indra.assemblers.sbgn import SBGNAssembler
 
     logger.info('Generating reaction network with BNG for SBGN export. ' +
                 'This could take a long time.')

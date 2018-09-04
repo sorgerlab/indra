@@ -1,6 +1,6 @@
-Tabular output (:py:mod:`indra.assemblers.tsv_assembler`)
+Tabular output (:py:mod:`indra.assemblers.tsv.assembler`)
 =========================================================
 
-.. automodule:: indra.assemblers.tsv_assembler
+.. automodule:: indra.assemblers.tsv.assembler
     :members:
 

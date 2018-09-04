@@ -14,14 +14,16 @@ For example to access the BEL API, one has to
 
     from indra.sources import bel
 
-For convenience, the output assembler classes are imported directly under
-`indra.assemblers` so they can be imported as, for instance,
+Similarly, each model output assembler has its own submodule under
+`indra.assemblers` with the assembler class accessible at the submodule
+level, so they can be imported as, for instance,
 
 .. code:: python
 
-    from indra.assemblers import PysbAssembler
+    from indra.assemblers.pysb import PysbAssembler
 
-To get a detailed overview of INDRA's submodule structure, take a look at the :ref:`indra_modules_ref`.
+To get a detailed overview of INDRA's submodule structure, take a look at
+the :ref:`indra_modules_ref`.
 
 Basic usage examples
 --------------------
@@ -112,7 +114,7 @@ instantiate a PysbAssembler, which produces a PySB model from INDRA Statements.
 
 .. code:: python
 
-    from indra.assemblers import PysbAssembler
+    from indra.assemblers.pysb import PysbAssembler
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()

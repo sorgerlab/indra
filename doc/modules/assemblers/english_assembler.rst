@@ -1,6 +1,6 @@
-Natural language (:py:mod:`indra.assemblers.english_assembler`)
+Natural language (:py:mod:`indra.assemblers.english.assembler`)
 ===============================================================
 
-.. automodule:: indra.assemblers.english_assembler
+.. automodule:: indra.assemblers.english.assembler
     :members:
 
