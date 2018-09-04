@@ -1,5 +1,5 @@
 from indra.statements import *
-from indra.assemblers import PysbAssembler
+from indra.assemblers.pysb import PysbAssembler
 from indra.assemblers.pysb.bmi_wrapper import BMIModel
 
 stmts = [Influence(Concept('rainfall'), Concept('flood')),
