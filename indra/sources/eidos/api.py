@@ -11,7 +11,7 @@ logger = logging.getLogger('eidos')
 
 try:
     # For text reading
-    from .eidos_reader import EidosReader
+    from .reader import EidosReader
     eidos_reader = EidosReader()
 except Exception as e:
     logger.warning('Could not instantiate Eidos reader, text reading '

@@ -4,7 +4,7 @@ import pybel.constants as pc
 from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
-from indra.sources.bel import pybel_processor as pb
+from indra.sources.bel import processor as pb
 from indra.databases import hgnc_client
 
 

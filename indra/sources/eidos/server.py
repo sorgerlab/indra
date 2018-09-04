@@ -1,6 +1,6 @@
 import json
 from flask import Flask, request
-from indra.sources.eidos.eidos_reader import EidosReader
+from indra.sources.eidos.reader import EidosReader
 
 
 app = Flask(__name__)

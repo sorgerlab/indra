@@ -4,9 +4,9 @@ import numpy as np
 from os import path
 import codecs
 import inspect
-from indra.sources.geneways.geneways_actionmention_parser \
+from indra.sources.geneways.actionmention_parser \
         import GenewaysActionMentionParser
-from indra.sources.geneways.geneways_symbols_parser import GenewaysSymbols
+from indra.sources.geneways.symbols_parser import GenewaysSymbols
 
 
 class GenewaysAction(object):

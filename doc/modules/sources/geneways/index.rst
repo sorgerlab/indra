@@ -1,10 +1,10 @@
 Geneways (:py:mod:`indra.sources.geneways`)
 ===========================================
 
-Geneways API (:py:mod:`indra.sources.geneways.geneways_api`)
-------------------------------------------------------------
+Geneways API (:py:mod:`indra.sources.geneways.api`)
+---------------------------------------------------
 
-.. automodule:: indra.sources.geneways.geneways_api
+.. automodule:: indra.sources.geneways.api
     :members:
 
 Geneways Processor (:py:mod:`indra.sources.geneways.processor`)

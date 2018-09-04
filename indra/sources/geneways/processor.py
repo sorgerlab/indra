@@ -17,7 +17,7 @@ from indra.statements import Evidence, Agent
 import indra.databases.hgnc_client as hgc
 from indra.literature import *
 from indra.statements import Complex, Phosphorylation
-from indra.sources.geneways.geneways_action_parser import GenewaysActionParser
+from indra.sources.geneways.action_parser import GenewaysActionParser
 try:
     from indra.sources.geneways.find_full_text_sentence import FullTextMention
     get_ft_mention = True

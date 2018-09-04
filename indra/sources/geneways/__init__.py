@@ -1,1 +1,1 @@
-from .geneways_api import process_geneways_files
+from .api import process_geneways_files

@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 from .processor import TripsProcessor
-from indra.sources.trips import trips_client
+from indra.sources.trips import client
 
 logger = logging.getLogger('trips')
 
@@ -44,8 +44,8 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
         in tp.statements.
     """
     if not offline:
-        html = trips_client.send_query(text, service_endpoint)
-        xml = trips_client.get_xml(html)
+        html = client.send_query(text, service_endpoint)
+        xml = client.get_xml(html)
     else:
         if offline_reading:
             try:
@@ -76,7 +76,7 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
             logger.error(msg)
             return None
     if save_xml_name:
-        trips_client.save_xml(xml, save_xml_name, save_xml_pretty)
+        client.save_xml(xml, save_xml_name, save_xml_pretty)
     return process_xml(xml)
 
 

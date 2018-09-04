@@ -1,5 +1,5 @@
 from indra.literature import *
-from indra.sources.geneways.geneways_actionmention_parser import \
+from indra.sources.geneways.actionmention_parser import \
         GenewaysActionMentionParser
 import random
 import pickle

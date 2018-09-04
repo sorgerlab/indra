@@ -1,7 +1,7 @@
 import logging
 from indra.sources.cwms.processor import CWMSProcessor
 from indra.sources.cwms.rdf_processor import CWMSRDFProcessor
-from indra.sources.trips import trips_client
+from indra.sources.trips import client
 
 logger = logging.getLogger('cwms')
 
@@ -20,7 +20,7 @@ def process_text(text, save_xml='cwms_output.xml'):
         A CWMSProcessor, which contains a list of INDRA statements in its
         statements attribute.
     """
-    xml = trips_client.send_query(text, 'cwmsreader')
+    xml = client.send_query(text, 'cwmsreader')
 
     # There are actually two EKBs in the xml document. Extract the second.
     first_end = xml.find('</ekb>')  # End of first EKB

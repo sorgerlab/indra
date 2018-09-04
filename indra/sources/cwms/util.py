@@ -2,7 +2,7 @@ import os
 import rdflib
 import logging
 from rdflib.tools import rdf2dot
-from indra.sources.trips import trips_client as tc
+from indra.sources.trips import client as tc
 
 try:
     import pydot
