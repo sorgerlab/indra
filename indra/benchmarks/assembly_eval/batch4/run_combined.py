@@ -35,8 +35,6 @@ if __name__ == '__main__':
         rasmodel_stmts = rasmodel.get_statements()
         # Combine all statements
         all_statements = tp.statements + reach_stmts_for_pmcid
-        for stmt in all_statements:
-            stmt.uuid = str(uuid.uuid4())
         # Run assembly
         run_assembly(all_statements, 'combined', pmcid,
                      background_assertions=rasmodel_stmts)
