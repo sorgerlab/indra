@@ -62,8 +62,8 @@ class PybelAssembler(object):
     >>> stmt = Phosphorylation(map2k1, mapk1, 'T', '185')
     >>> pba = PybelAssembler([stmt])
     >>> belgraph = pba.make_model()
-    >>> sorted(belgraph.nodes()) # doctest:+IGNORE_UNICODE
-    [('Protein', 'HGNC', 'MAP2K1'), ('Protein', 'HGNC', 'MAPK1'), ('Protein', 'HGNC', 'MAPK1', ('pmod', ('bel', 'Ph'), 'Thr', 185))]
+    >>> sorted(node.as_bel() for node in belgraph) # doctest:+IGNORE_UNICODE
+    ['p(HGNC:MAP2K1)', 'p(HGNC:MAPK1)', 'p(HGNC:MAPK1, pmod(Ph, Thr, 185))']
     >>> len(belgraph)
     3
     >>> belgraph.number_of_edges()
