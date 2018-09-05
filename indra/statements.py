@@ -1198,11 +1198,13 @@ class Statement(object):
             A long integer hash.
         """
         if shallow:
-            if self._shallow_hash is None or refresh:
+            if not hasattr(self, '_shallow_hash') or self._shallow_hash is None\
+                    or refresh:
                 self._shallow_hash = self._make_hash(self.matches_key(), 14)
             ret = self._shallow_hash
         else:
-            if self._full_hash is None or refresh:
+            if not hasattr(self, '_full_hash') or self._full_hash is None \
+                    or refresh:
                 ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
                 self._full_hash =\
                     self._make_hash(self.matches_key() + str(ev_mk_list), 16)
