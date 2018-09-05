@@ -314,3 +314,18 @@ def test_get_statement_jsons_by_mk_hash():
     stmts = stmts_from_json(stmt_jsons['statements'].values())
     assert len(stmts) == len(stmt_jsons['statements'])
     assert len(stmts) == len(mk_hashes)
+
+
+@attr('nonpublic')
+def test_get_statement_jsons_by_mk_hash_sparser_bug():
+    mk_hashes = {7066059628266471, -3738332857231047}
+    stmt_jsons = dbc.get_statement_jsons_from_hashes(mk_hashes)
+    assert stmt_jsons
+    assert len(stmt_jsons['statements']) == 1, len(stmt_jsons['statements'])
+    stmts = stmts_from_json(stmt_jsons['statements'].values())
+    ev_list = [ev for s in stmts for ev in s.evidence]
+    assert any([ev.source_api == 'sparser' for ev in ev_list]), \
+        'No evidence from sparser.'
+    assert all([(ev.source_api not in ['reach', 'sparser']
+                 or (hasattr(ev, 'pmid') and ev.pmid is not None))
+                for ev in ev_list])
