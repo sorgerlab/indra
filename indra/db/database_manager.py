@@ -445,22 +445,6 @@ class DatabaseManager(object):
         self.FastRawPaLink = FastRawPaLink
         self.m_views[FastRawPaLink.__tablename__] = FastRawPaLink
 
-        class AgentToRawMeta(self.Base):
-            __tablename__ = 'agent_to_raw_meta'
-            ag_id = Column(Integer, primary_key=True)
-            db_name = Column(String(40))
-            db_id = Column(String)
-            role = Column(String(20))
-            type = Column(String(100))
-            mk_hash = Column(BigInteger, ForeignKey('fast_raw_pa_link.mk_hash'))
-            raw_pa_link = relationship(FastRawPaLink)
-            sid = Column(Integer)
-            reading_id = Column(Integer, ForeignKey('reading_ref_link.rid'))
-            reading_ref = relationship(ReadingRefLink)
-            db_info_id = Column(Integer)
-        self.AgentToRawMeta = AgentToRawMeta
-        self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
-
         # pa_meta
         # -------
         # CREATE MATERIALIZED VIEW public.evidence_counts AS
