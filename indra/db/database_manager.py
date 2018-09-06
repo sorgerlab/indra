@@ -358,9 +358,31 @@ class DatabaseManager(object):
         self.PASupportLinks = PASupportLinks
         self.tables[PASupportLinks.__tablename__] = PASupportLinks
 
-        # Materialized Views ---------------------------------------------------
+        # Materialized Views
+        # ----------------------------------------------------------------------
+        # We use materialized views to allow fast and efficient load of data,
+        # and to add a layer of separation between the processes of updating the
+        # content of the database and accessing the content of the database.
+        # However, it is not practical to have the views created through
+        # sqlalchemy: instead they are generated and updated manually (or by
+        # other non-sqlalchemy scripts).
+        #
+        # The following views must be built in this specific order:
+        #   1. fast_raw_pa_link
+        #   2. evidence_counts
+        #   3. pa_meta
+        # The view, reading_ref_link, may be built at any point, as it has no
+        # relation to the above views.
+
         self.m_views = {}
 
+        # evidence_counts
+        # ---------------
+        # CREATE MATERIALIZED VIEW public.evidence_counts AS
+        #  SELECT count(id) AS ev_count, mk_hash
+        #   FROM fast_raw_pa_link
+        #   GROUP BY mk_hash
+        # WITH DATA;
         class EvidenceCounts(self.Base):
             __tablename__ = 'evidence_counts'
             mk_hash = Column(BigInteger, primary_key=True)
@@ -368,6 +390,17 @@ class DatabaseManager(object):
         self.EvidenceCounts = EvidenceCounts
         self.m_views[EvidenceCounts.__tablename__] = EvidenceCounts
 
+        # reading_ref_link
+        # ----------------
+        # CREATE MATERIALIZED VIEW public.evidence_counts AS
+        #   SELECT text_ref.pmid, text_ref.pmcid, text_ref.id AS trid,
+        #     text_ref.doi, text_ref.pii, text_ref.url, text_ref.manuscript_id,
+        #     text_content.id AS tcid, text_content.source, reading.id AS rid,
+        #     reading.reader
+        #    FROM text_ref, reading, text_content
+        #    WHERE text_ref.id = text_content.text_ref_id
+        #     AND text_content.id = reading.text_content_id;
+        # WITH DATA;
         class ReadingRefLink(self.Base):
             __tablename__ = 'reading_ref_link'
             trid = Column(Integer)
@@ -384,6 +417,20 @@ class DatabaseManager(object):
         self.ReadingRefLink = ReadingRefLink
         self.m_views[ReadingRefLink.__tablename__] = ReadingRefLink
 
+        # fast_raw_pa_link
+        # ----------------
+        # CREATE MATERIALIZED VIEW public.evidence_counts AS
+        #  SELECT raw_statements.id,
+        #    raw_statements.json AS raw_json,
+        #    raw_statements.reading_id,
+        #    raw_statements.db_info_id,
+        #    pa_statements.mk_hash,
+        #    pa_statements.json AS pa_json,
+        #    pa_statements.type
+        #   FROM raw_statements, pa_statements, raw_unique_links
+        #   WHERE raw_unique_links.raw_stmt_id = raw_statements.id
+        #    AND raw_unique_links.pa_stmt_mk_hash = pa_statements.mk_hash
+        # WITH DATA;
         class FastRawPaLink(self.Base):
             __tablename__ = 'fast_raw_pa_link'
             id = Column(Integer, primary_key=True)
@@ -414,6 +461,16 @@ class DatabaseManager(object):
         self.AgentToRawMeta = AgentToRawMeta
         self.m_views[AgentToRawMeta.__tablename__] = AgentToRawMeta
 
+        # pa_meta
+        # -------
+        # CREATE MATERIALIZED VIEW public.evidence_counts AS
+        #  SELECT pa_agents.db_name, pa_agents.db_id, pa_agents.id AS ag_id,
+        #    pa_agents.role, pa_statements.type, pa_statements.mk_hash,
+        #    evidence_counts.ev_count
+        #   FROM pa_agents,pa_statements,evidence_counts
+        #   WHERE pa_agents.stmt_mk_hash = pa_statements.mk_hash
+        #    AND pa_statements.mk_hash = evidence_counts.mk_hash
+        # WITH DATA;
         class PaMeta(self.Base):
             __tablename__ = 'pa_meta'
             ag_id = Column(Integer, primary_key=True)
@@ -429,6 +486,8 @@ class DatabaseManager(object):
 
         self.engine = create_engine(host)
 
+        # There are some useful shortcuts that can be used if
+        # networkx is available, specifically the DatabaseManager.link
         if WITH_NX:
             G = nx.Graph()
             G.add_edges_from([
