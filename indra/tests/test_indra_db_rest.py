@@ -46,7 +46,7 @@ def test_null_request():
 
 @attr('nonpublic')
 def test_large_request():
-    __check_request(20, agents=['AKT1'])
+    __check_request(25, agents=['AKT1'])
 
 
 @attr('nonpublic')
@@ -63,7 +63,7 @@ def test_too_big_request_no_persist():
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(90, agents=['TP53'], persist=True, block=True,
+    resp_all1 = __check_request(100, agents=['TP53'], persist=True, block=True,
                                 simple_response=False)
     return resp_all1
 
