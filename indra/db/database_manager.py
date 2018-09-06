@@ -371,8 +371,10 @@ class DatabaseManager(object):
         #   1. fast_raw_pa_link
         #   2. evidence_counts
         #   3. pa_meta
-        # The view, reading_ref_link, may be built at any point, as it has no
-        # relation to the above views.
+        # The following can be built at any time and in any order:
+        #   - reading_ref_link
+        # Note that the order of views below is determined not by the above
+        # order but by constraints imposed by use-case.
 
         self.m_views = {}
 
