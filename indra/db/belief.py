@@ -1,12 +1,19 @@
 class MockStatement(object):
     """A class to imitate real INDRA Statements for calculating belief."""
-    def __init__(self, evidence, mk_hash, supports):
+    def __init__(self, mk_hash, evidence, supports=None, supported_by=None):
         if isinstance(evidence, list):
             self.evidence = evidence
         else:
             self.evidence = [evidence]
         self.__mk_hash = mk_hash
-        self.supports = supports
+        if supports:
+            self.supports = supports
+        else:
+            self.supports = []
+        if supported_by:
+            self.supported_by = supported_by
+        else:
+            self.supported_by = []
         self.belief = None
 
     def matches_key(self):
