@@ -28,3 +28,22 @@ class MockEvidence(object):
         # Some annotations are used in indra.belief.tag_evidence_subtype.
         # TODO: optionally implement necessary annotations.
         self.annotations = {}
+
+
+def populate_support(stmts, links):
+    """Populate the supports supported_by lists of statements given links.
+
+    Parameters
+    ----------
+    stmts : list[MockStatement/Statement]
+        A list of objects with supports and supported_by attributes which are
+        lists or equivalent.
+    links : list[tuple]
+        A list of pairs of hashes or matches_keys, where the first supports the
+        second.
+    """
+    stmt_dict = {s.matches_key(): s for s in stmts}
+    for supped_idx, supping_idx in links:
+        stmt_dict[supping_idx].supports.append(stmt_dict[supped_idx])
+        stmt_dict[supped_idx].supported_by.append(stmt_dict[supping_idx])
+    return
