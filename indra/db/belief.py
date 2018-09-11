@@ -1,6 +1,10 @@
 class MockStatement(object):
+    """A class to imitate real INDRA Statements for calculating belief."""
     def __init__(self, evidence, mk_hash, supports):
-        self.evidence = evidence
+        if isinstance(evidence, list):
+            self.evidence = evidence
+        else:
+            self.evidence = [evidence]
         self.__mk_hash = mk_hash
         self.supports = supports
         self.belief = None
@@ -10,6 +14,7 @@ class MockStatement(object):
 
 
 class MockEvidence(object):
+    """A class to imitate real INDRA Evidence for calculating belief."""
     def __init__(self, source_api):
         self.source_api = source_api
 
