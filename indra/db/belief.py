@@ -1,8 +1,15 @@
+
+class LoadError(Exception):
+    pass
+
+
 class MockStatement(object):
     """A class to imitate real INDRA Statements for calculating belief."""
-    def __init__(self, mk_hash, evidence, supports=None, supported_by=None):
+    def __init__(self, mk_hash, evidence=None, supports=None, supported_by=None):
         if isinstance(evidence, list):
             self.evidence = evidence
+        elif evidence is None:
+            self.evidence = []
         else:
             self.evidence = [evidence]
         self.__mk_hash = mk_hash
@@ -22,12 +29,12 @@ class MockStatement(object):
 
 class MockEvidence(object):
     """A class to imitate real INDRA Evidence for calculating belief."""
-    def __init__(self, source_api):
+    def __init__(self, source_api, **annotations):
         self.source_api = source_api
 
         # Some annotations are used in indra.belief.tag_evidence_subtype.
         # TODO: optionally implement necessary annotations.
-        self.annotations = {}
+        self.annotations = annotations.copy()
 
 
 def populate_support(stmts, links):
@@ -47,3 +54,25 @@ def populate_support(stmts, links):
         stmt_dict[supping_idx].supports.append(stmt_dict[supped_idx])
         stmt_dict[supped_idx].supported_by.append(stmt_dict[supping_idx])
     return
+
+
+def load_mock_statements(db):
+    """Generate a list of mock statements from the pa statement table."""
+    res_rdg = db.select_all([db.Reading.reader,
+                             db.RawUniqueLinks.pa_stmt_mk_hash,
+                             db.RawUniqueLinks.raw_stmt_id],
+                            *db.link(db.Reading, db.RawUniqueLinks))
+    res_dbs = db.select_all([db.DBInfo.db_name,
+                             db.RawUniqueLinks.pa_stmt_mk_hash,
+                             db.RawUniqueLinks.raw_stmt_id],
+                            *db.link(db.DBInfo, db.RawUniqueLinks))
+    stmts_dict = {}
+    for src_api, mk_hash, sid in res_rdg + res_dbs:
+        # If the statement is new, add it to the dict.
+        if mk_hash not in stmts_dict.keys():
+            stmts_dict[mk_hash] = MockStatement(mk_hash)
+
+        # Add the new evidence.
+        stmts_dict[mk_hash].evidence.append(MockEvidence(src_api, raw_sid=sid))
+
+    return list(stmts_dict.values())

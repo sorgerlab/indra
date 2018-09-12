@@ -1,5 +1,7 @@
-from indra.db.belief import MockStatement, MockEvidence, populate_support
+from indra.db.belief import MockStatement, MockEvidence, populate_support, \
+    load_mock_statements
 from indra.belief import BeliefEngine
+from indra.tests.test_db_client import _PrePaDatabaseTestSetup
 
 
 def test_belief_calc_up_to_prior():
@@ -65,3 +67,19 @@ def test_belief_calc_up_to_hierarchy():
         deltas_dict[h] = res
     assert all_deltas_correct, deltas_dict
 
+
+def _get_prepped_db(num_stmts):
+    dts = _PrePaDatabaseTestSetup(num_stmts)
+    dts.load_background()
+    dts.add_statements()
+    return dts.test_db
+
+
+def test_mock_stmt_load():
+    db = _get_prepped_db(1000)
+    stmts = load_mock_statements(db)
+    assert len(stmts) == 1000, len(stmts)
+    assert all([len(s.evidence) >= 1 for s in stmts])
+    sid_list = [ev.annotations['raw_sid'] for s in stmts for ev in s.evidence]
+    sid_set = set(sid_list)
+    assert len(sid_list) == len(sid_set), (len(sid_list), len(sid_set))
