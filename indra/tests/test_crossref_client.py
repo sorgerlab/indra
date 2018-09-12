@@ -50,7 +50,7 @@ def test_get_fulltext_links():
 @attr('webservice')
 def test_get_license_links():
     links = crossref_client.get_license_links(test_doi)
-    assert(links[0] == 'http://www.elsevier.com/tdm/userlicense/1.0/')
+    assert(links[0] == 'https://www.elsevier.com/tdm/userlicense/1.0/')
     assert unicode_strs(links)
     links = crossref_client.get_license_links('xyz')
     assert(links is None)
