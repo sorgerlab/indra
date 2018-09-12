@@ -13,6 +13,7 @@ from indra.statements import Agent, Phosphorylation, BoundCondition, \
                              IncreaseAmount, DecreaseAmount
 from indra.preassembler.hierarchy_manager import hierarchies
 
+
 def test_duplicates():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
     ras = Agent('RAS', db_refs = {'FA': '03663'})
@@ -21,6 +22,7 @@ def test_duplicates():
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 1)
+
 
 def test_duplicates_copy():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
@@ -34,6 +36,7 @@ def test_duplicates_copy():
     assert(len(stmts) == 2)
     assert(len(stmts[0].evidence) == 1)
     assert(len(stmts[1].evidence) == 1)
+
 
 def test_duplicates_sorting():
     mc = ModCondition('phosphorylation')
@@ -52,6 +55,7 @@ def test_duplicates_sorting():
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     assert(len(pa.unique_stmts) == 2)
+
 
 def test_combine_duplicates():
     raf = Agent('RAF1')
@@ -79,15 +83,17 @@ def test_combine_duplicates():
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
-    assert(len(pa.unique_stmts) == 4)
-    assert(pa.unique_stmts[0].matches(p6)) # MEK dephos ERK
-    assert(len(pa.unique_stmts[0].evidence) == 3)
-    assert(pa.unique_stmts[1].matches(p9)) # SRC dephos KRAS
-    assert(len(pa.unique_stmts[1].evidence) == 1)
-    assert(pa.unique_stmts[2].matches(p5)) # MEK phos ERK
-    assert(len(pa.unique_stmts[2].evidence) == 1)
-    assert(pa.unique_stmts[3].matches(p1)) # RAF phos MEK
-    assert(len(pa.unique_stmts[3].evidence) == 4)
+    assert len(pa.unique_stmts) == 4, len(pa.unique_stmts)
+    num_evs =[len(s.evidence) for s in pa.unique_stmts]
+    assert pa.unique_stmts[0].matches(p6) # MEK dephos ERK
+    assert num_evs[0] == 3, num_evs[0]
+    assert pa.unique_stmts[1].matches(p9) # SRC dephos KRAS
+    assert num_evs[1] == 1, num_evs[1]
+    assert pa.unique_stmts[2].matches(p5) # MEK phos ERK
+    assert num_evs[2] == 1, num_evs[2]
+    assert pa.unique_stmts[3].matches(p1) # RAF phos MEK
+    assert num_evs[3] == 4, num_evs[3]
+
 
 def test_combine_evidence_exact_duplicates():
     raf = Agent('RAF1')
@@ -106,6 +112,7 @@ def test_combine_evidence_exact_duplicates():
     assert(len(pa.unique_stmts[0].evidence) == 2)
     assert(set(ev.text for ev in pa.unique_stmts[0].evidence) ==
            set(['foo', 'bar']))
+
 
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
@@ -157,6 +164,7 @@ def test_modification_refinement():
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
 
+
 def test_modification_refinement_residue_noenz():
     erbb3 = Agent('Erbb3')
     st1 = Phosphorylation(None, erbb3)
@@ -164,6 +172,7 @@ def test_modification_refinement_residue_noenz():
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
+
 
 def test_modification_refinement_noenz():
     """A more specific modification statement should be supported by a more
@@ -181,6 +190,7 @@ def test_modification_refinement_noenz():
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
     assert (stmts[0].supported_by[0].supports[0].equals(st1))
+
 
 def test_modification_refinement_noenz2():
     """A more specific modification statement should be supported by a more
@@ -206,6 +216,7 @@ def test_modification_refinement_noenz2():
     assert (stmts[0].supported_by[0].equals(st2))
     assert (stmts[0].supported_by[0].supports[0].equals(st1))
 
+
 def test_modification_norefinement_noenz():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
@@ -220,6 +231,7 @@ def test_modification_norefinement_noenz():
     # these statements shouldn't be combined. 
     assert(len(stmts) == 2)
     assert(len(stmts[1].evidence)==1)
+
 
 def test_modification_norefinement_subsfamily():
     """A more specific modification statement should be supported by a more
@@ -237,6 +249,7 @@ def test_modification_norefinement_subsfamily():
     assert(len(stmts) == 2)
     assert(len(stmts[1].evidence)==1)
 
+
 def test_modification_norefinement_enzfamily():
     """A more specific modification statement should be supported by a more
     generic modification statement."""
@@ -252,6 +265,7 @@ def test_modification_norefinement_enzfamily():
     # these statements shouldn't be combined. 
     assert(len(stmts) == 2)
     assert(len(stmts[1].evidence)==1)
+
 
 def test_bound_condition_refinement():
     """A statement with more specific bound context should be supported by a
@@ -272,6 +286,7 @@ def test_bound_condition_refinement():
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
 
+
 def test_bound_condition_norefinement():
     """A statement with more specific bound context should be supported by a
     less specific statement."""
@@ -287,6 +302,7 @@ def test_bound_condition_norefinement():
     # The bound condition is more specific in st2 but the modification is less
     # specific. Therefore these statements should not be combined.
     assert(len(stmts) == 2)
+
 
 def test_bound_condition_deep_refinement():
     """A statement with more specific bound context should be supported by a
@@ -310,6 +326,7 @@ def test_bound_condition_deep_refinement():
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
 
+
 def test_complex_refinement():
     ras = Agent('RAS')
     raf = Agent('RAF')
@@ -320,6 +337,7 @@ def test_complex_refinement():
     pa.combine_related()
     assert(len(pa.unique_stmts) == 2)
     assert(len(pa.related_stmts) == 2)
+
 
 def test_complex_agent_refinement():
     ras = Agent('RAS')
@@ -332,11 +350,13 @@ def test_complex_agent_refinement():
     assert(len(pa.unique_stmts) == 2)
     assert(len(pa.related_stmts) == 2)
 
+
 def test_mod_sites_refinement():
     """A statement with more specific modification context should be supported
     by a less-specific statement."""
     # TODO
     assert True
+
 
 def test_binding_site_refinement():
     """A statement with information about a binding site for an interaction
@@ -344,6 +364,7 @@ def test_binding_site_refinement():
     information."""
     # TODO
     assert True
+
 
 def test_activating_substitution_refinement():
     """Should only be refinement if entities are a refinement and all
@@ -388,6 +409,7 @@ def test_activating_substitution_refinement():
     assert(not st3.refinement_of(st5, hierarchies))
     assert(not st4.refinement_of(st5, hierarchies))
 
+
 def test_translocation():
     st1 = Translocation(Agent('AKT'), None, None)
     st2 = Translocation(Agent('AKT'), None, 'plasma membrane')
@@ -395,6 +417,7 @@ def test_translocation():
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
+
 
 def test_grounding_aggregation():
     braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
@@ -407,6 +430,7 @@ def test_grounding_aggregation():
     unique_stmts = pa.combine_duplicates()
     assert(len(unique_stmts) == 3)
 
+
 def test_grounding_aggregation_complex():
     mek = Agent('MEK')
     braf1 = Agent('BRAF', db_refs={'TEXT': 'braf', 'HGNC': '1097'})
@@ -418,6 +442,7 @@ def test_grounding_aggregation_complex():
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
     assert(len(unique_stmts) == 3)
+
 
 def test_render_stmt_graph():
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
@@ -447,6 +472,7 @@ def test_render_stmt_graph():
     # 6 + 5 + 1 + 1 + 2 = 15 edges
     assert len(graph.edges()) == 15
 
+
 def test_flatten_evidence_hierarchy():
     braf = Agent('BRAF')
     mek = Agent('MAP2K1')
@@ -467,6 +493,7 @@ def test_flatten_evidence_hierarchy():
     assert len(supporting_stmt.evidence) == 1
     assert supporting_stmt.evidence[0].text == 'foo'
 
+
 def test_flatten_stmts():
     st1 = Phosphorylation(Agent('MAP3K5'), Agent('RAF1'), 'S', '338')
     st2 = Phosphorylation(None, Agent('RAF1'), 'S', '338')
@@ -480,6 +507,7 @@ def test_flatten_stmts():
     assert(len(flatten_stmts(pa.unique_stmts)) == 4)
     assert(len(flatten_stmts(pa.related_stmts)) == 4)
 
+
 def test_complex_refinement_order():
     st1 = Complex([Agent('MED23'), Agent('ELK1')])
     st2 = Complex([Agent('ELK1', mods=[ModCondition('phosphorylation')]),
@@ -488,6 +516,7 @@ def test_complex_refinement_order():
     pa.combine_duplicates()
     pa.combine_related()
     assert(len(pa.related_stmts) == 1)
+
 
 def test_activation_refinement():
     subj = Agent('alcohol', db_refs={'CHEBI': 'CHEBI:16236',
@@ -503,6 +532,7 @@ def test_activation_refinement():
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
 
+
 def test_homodimer_refinement():
     egfr = Agent('EGFR')
     erbb = Agent('ERBB2')
@@ -513,6 +543,7 @@ def test_homodimer_refinement():
     assert(len(pa.unique_stmts) == 2)
     pa.combine_related()
     assert(len(pa.related_stmts) == 2)
+
 
 def test_return_toplevel():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
@@ -531,6 +562,7 @@ def test_return_toplevel():
     assert(len(stmts[1-ix].supported_by[0].supports) == 1)
     assert(len(stmts[ix].supports) == 1)
     assert(len(stmts[ix].supports[0].supported_by) == 1)
+
 
 def test_multiprocessing():
     braf = Agent('BRAF', db_refs={'HGNC': '1097'})
@@ -552,6 +584,7 @@ def test_multiprocessing():
     toplevel = pa.combine_related(return_toplevel=True, poolsize=1,
                                   size_cutoff=2)
     assert len(toplevel) == 3, 'Got %d toplevel statements.' % len(toplevel)
+
 
 def test_conversion_refinement():
     ras = Agent('RAS', db_refs={'FPLX': 'RAS'})
@@ -660,3 +693,61 @@ def test_preassemble_related_complex():
     top = pa.combine_related()
     assert len(top) == 1
 
+
+def test_agent_text_storage():
+    A1 = Agent('A', db_refs={'TEXT': 'A'})
+    A2 = Agent('A', db_refs={'TEXT': 'alpha'})
+    B1 = Agent('B', db_refs={'TEXT': 'bag'})
+    B2 = Agent('B', db_refs={'TEXT': 'bug'})
+    C = Agent('C')
+    D = Agent('D')
+    inp = [
+        Complex([A1, B1], evidence=Evidence(text='A complex bag.')),
+        Complex([B2, A2], evidence=Evidence(text='bug complex alpha once.')),
+        Complex([B2, A2], evidence=Evidence(text='bug complex alpha again.')),
+        Complex([A1, C, B2], evidence=Evidence(text='A complex C bug.')),
+        Phosphorylation(A1, B1, evidence=Evidence(text='A phospo bags.')),
+        Phosphorylation(A2, B2, evidence=Evidence(text='alpha phospho bugs.')),
+        Conversion(D, [A1, B1], [C, D],
+                   evidence=Evidence(text='D: A bag -> C D')),
+        Conversion(D, [B1, A2], [C, D],
+                   evidence=Evidence(text='D: bag a -> C D')),
+        Conversion(D, [B2, A2], [D, C],
+                   evidence=Evidence(text='D: bug a -> D C')),
+        Conversion(D, [B1, A1], [C, D],
+                   evidence=Evidence(text='D: bag A -> C D')),
+        Conversion(D, [A1], [A1, C],
+                   evidence=Evidence(text='D: A -> A C'))
+        ]
+    pa = Preassembler(hierarchies, inp)
+    unq1 = pa.combine_duplicates()
+    assert len(unq1) == 5, len(unq1)
+    assert all([len(ev.annotations['prior_uuids']) == 1
+                for s in unq1 for ev in s.evidence]),\
+        'There can only be one prior evidence per uuid at this stage.'
+    ev_uuid_dict = {ev.annotations['prior_uuids'][0]: ev.annotations['agents']
+                    for s in unq1 for ev in s.evidence}
+    for s in inp:
+        raw_text = [ag.db_refs.get('TEXT')
+                    for ag in s.agent_list(deep_sorted=True)]
+        assert raw_text == ev_uuid_dict[s.uuid]['raw_text'],\
+            str(raw_text) + '!=' + str(ev_uuid_dict[s.uuid]['raw_text'])
+
+    # Now run pa on the above corpus plus another statement.
+    inp2 = unq1 + [
+        Complex([A1, C, B1], evidence=Evidence(text='A complex C bag.'))
+        ]
+    pa2 = Preassembler(hierarchies, inp2)
+    unq2 = pa2.combine_duplicates()
+    assert len(unq2) == 5, len(unq2)
+    old_ev_list = []
+    new_ev = None
+    for s in unq2:
+        for ev in s.evidence:
+            if ev.text == inp2[-1].evidence[0].text:
+                new_ev = ev
+            else:
+                old_ev_list.append(ev)
+    assert all([len(ev.annotations['prior_uuids']) == 2 for ev in old_ev_list])
+    assert new_ev
+    assert len(new_ev.annotations['prior_uuids']) == 1

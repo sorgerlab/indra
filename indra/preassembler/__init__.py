@@ -130,21 +130,26 @@ class Preassembler(object):
         """
         unique_stmts = []
         for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
+            ev_keys = set()
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             for stmt_ix, stmt in enumerate(duplicates):
-                if stmt_ix == 0:
-                    ev_keys = [ev.matches_key() for ev in stmt.evidence]
-                    first_stmt = stmt
-                else:
-                    for ev in stmt.evidence:
-                        key = ev.matches_key()
-                        if key not in ev_keys:
-                            first_stmt.evidence.append(ev)
-                            ev_keys.append(key)
+                if stmt_ix is 0:
+                    new_stmt = stmt.make_generic_copy()
+                raw_text = [None if ag is None else ag.db_refs.get('TEXT')
+                            for ag in stmt.agent_list(deep_sorted=True)]
+                for ev in stmt.evidence:
+                    ev_key = ev.matches_key()
+                    if ev_key not in ev_keys:
+                        ev.annotations['agents'] = {'raw_text': raw_text}
+                        if 'prior_uuids' not in ev.annotations.keys():
+                            ev.annotations['prior_uuids'] = []
+                        ev.annotations['prior_uuids'].append(stmt.uuid)
+                        new_stmt.evidence.append(ev)
+                        ev_keys.add(ev_key)
             # This should never be None or anything else
-            assert isinstance(first_stmt, Statement)
-            unique_stmts.append(first_stmt)
+            assert isinstance(new_stmt, Statement)
+            unique_stmts.append(new_stmt)
         return unique_stmts
 
     def _get_entities(self, stmt, stmt_type, eh):

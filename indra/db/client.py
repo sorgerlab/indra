@@ -8,7 +8,7 @@ from collections import defaultdict
 from itertools import groupby, permutations, product
 from sqlalchemy import or_, desc, func, true, select, distinct
 
-from indra.statements import Unresolved, Evidence
+from indra.statements import Unresolved, Evidence, get_statement_by_name
 
 logger = logging.getLogger('db_client')
 
@@ -663,13 +663,35 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
     for mk_hash, ev_count, raw_json_bts, pa_json_bts, pmid in res:
         returned_evidence += 1
         raw_json = json.loads(raw_json_bts.decode('utf-8'))
+        ev_json = raw_json['evidence'][0]
+
+        # Add a new statements if the hash is new
         if mk_hash not in stmts_dict.keys():
             total_evidence += ev_count
             stmts_dict[mk_hash] = json.loads(pa_json_bts.decode('utf-8'))
             stmts_dict[mk_hash]['evidence'] = []
+
+        # Fix the pmid
         if pmid:
-            raw_json['evidence'][0]['pmid'] = pmid
-        stmts_dict[mk_hash]['evidence'].append(raw_json['evidence'][0])
+            ev_json['pmid'] = pmid
+
+        # Add agents' raw text to annotations.
+        raw_text = []
+        for ag_name in get_statement_by_name(raw_json['type'])._agent_order:
+            ag_value = raw_json[ag_name]
+            if isinstance(ag_value, dict):
+                raw_text.append(ag_value['db_refs'].get('TEXT'))
+            else:
+                for ag in ag_value:
+                    raw_text.append(ag['db_refs'].get('TEXT'))
+        if 'annotations' not in ev_json.keys():
+            ev_json['annotations'] = {}
+        ev_json['annotations']['agents'] = {'raw_text': raw_text}
+        if 'prior_uuids' not in ev_json['annotations'].keys():
+            ev_json['annotations']['prior_uuids'] = []
+        ev_json['annotations']['prior_uuids'].append(raw_json['id'])
+
+        stmts_dict[mk_hash]['evidence'].append(ev_json)
 
     ret = {'statements': stmts_dict,
            'total_evidence': total_evidence,
