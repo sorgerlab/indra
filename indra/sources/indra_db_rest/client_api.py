@@ -381,8 +381,11 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
     url_path = join(url, end_point)
     if query_str:
-        url_path += '/' + query_str
-    headers={'x-api-key': api_key}
+        query_str += '&api-key=%s' % api_key
+    else:
+        query_str = '?api-key=%s' % api_key
+    url_path += '/' + query_str
+    headers = {}
     if data:
         # This is an assumption which applies to our use cases for now, but may
         # not generalize.
