@@ -358,6 +358,12 @@ class DatabaseManager(object):
         self.PASupportLinks = PASupportLinks
         self.tables[PASupportLinks.__tablename__] = PASupportLinks
 
+        class Auth(self.Base):
+            __tablename__ = 'auth'
+            id = Column(Integer, primary_key=True)
+            api_key = Column(String, unique=True)
+        self.__Auth = Auth
+
         # Materialized Views
         # ----------------------------------------------------------------------
         # We use materialized views to allow fast and efficient load of data,
@@ -498,6 +504,15 @@ class DatabaseManager(object):
             self.session.rollback()
         except:
             print("Failed to execute rollback of database upon deletion.")
+
+    def _init_auth(self):
+        """Create the auth table."""
+        self.__Auth.__table__.create(bind=self.engine)
+
+    def _check_auth(self, api_key):
+        """Check if an api key is valid."""
+        return self.filter_query(self.__Auth,
+                                 self.__Auth.api_key == api_key).exists()
 
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
