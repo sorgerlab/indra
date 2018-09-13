@@ -7,8 +7,8 @@ from flask import Flask, request, abort, Response
 from flask_compress import Compress
 from flask_cors import CORS
 
-from indra.db.client import get_statement_jsons_from_agents,\
-    get_statement_jsons_from_hashes, get_statement_jsons_from_papers
+from indra.db.client import get_statement_jsons_from_agents, \
+    get_statement_jsons_from_hashes, get_statement_jsons_from_papers, has_auth
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 from indra.util import batch_iter
@@ -64,7 +64,17 @@ def _query_wrapper(f):
         do_stream_str = query_dict.pop('stream', 'false')
         do_stream = True if do_stream_str == 'true' else False
 
+        api_key = query_dict.pop('api_key', None)
+
         result = f(query_dict, offs, MAX_STATEMENTS, ev_limit, best_first)
+
+        # Redact elsevier content for those without permission.
+        if api_key is None or not has_auth(api_key):
+            for stmt_json in result['statements'].values():
+                for ev_json in stmt_json['evidence']:
+                    if ev_json['source_api'].lower() == 'elsevier':
+                        ev_json['text'] = '[Redacted: missing/invalid api key]'
+
         result['offset'] = offs
         result['evidence_limit'] = ev_limit
         result['statement_limit'] = MAX_STATEMENTS
