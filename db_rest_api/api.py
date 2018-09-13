@@ -174,7 +174,7 @@ def get_statements(query_dict, offs, max_stmts, ev_limit, best_first):
     return result
 
 
-@app.route('/statements/from_hashes', methods=['POST', 'GET'])
+@app.route('/statements/from_hashes', methods=['POST'])
 @_query_wrapper
 def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit, best_first):
     hashes = request.json.get('hashes')
