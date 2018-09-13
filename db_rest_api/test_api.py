@@ -4,9 +4,11 @@ import sys
 
 from itertools import combinations
 from datetime import datetime
+from unittest import SkipTest
 from warnings import warn
 
 from db_rest_api.api import MAX_STATEMENTS
+from indra import get_config
 from indra.db import get_primary_db
 from indra.statements import stmts_from_json
 from indra.databases import hgnc_client
@@ -326,6 +328,52 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_trid_paper_query(self):
         self.__test_basic_paper_query('19649148', 'trid')
+
+    def __test_redaction(self, method, endpoint, baseline_query_str):
+        resp, dt, size = self.__time_query(method, endpoint, baseline_query_str)
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        stmt_dict_redact = resp_dict['statements']
+        elsevier_found = 0
+        for s in stmt_dict_redact.values():
+            for ev in s['evidence']:
+                if ev['source_api'] == 'elsevier':
+                    elsevier_found += 1
+                    assert ev['text'].startswith('[Redacted'), \
+                        'Found unredacted Elsevier text.'
+                else:
+                    if 'text' in ev.keys():
+                        assert not ev['text'].startswith('[Redacted'), \
+                            'Found redacted non-elsevier text.'
+        if elsevier_found == 0:
+            raise SkipTest("No redactable Elsevier content occurred.")
+
+        key = get_config('INDRA_DB_REST_API_KEY')
+        if key is None:
+            return  # Can't test the behavior with an API key.
+
+        new_qstr = '?' + '&'.join(baseline_query_str.replace('?', '').split('&')
+                                  + ['api_key=%s' % key])
+        resp, dt, size = self.__time_query(method, endpoint, new_qstr)
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        stmt_dict_intact = resp_dict['statements']
+        assert stmt_dict_intact.keys() == stmt_dict_redact.keys(), \
+            "Response content changed: different statements without redaction."
+        elsevier_found = 0
+        for s in stmt_dict_redact.values():
+            for ev in s['evidence']:
+                if ev['source_api'] == 'elsevier':
+                    elsevier_found += 1
+                if 'text' in ev.keys():
+                    assert not ev['text'].startswith('[Redacted'), \
+                        'Found redacted text despite api key.'
+        assert elsevier_found > 0, "Elsevier content references went missing."
+        return
+
+    def test_redaction_on_agents_query(self):
+        return self.__test_redaction('get', 'statements', 'agent=PDGFR@FPLX')
+
+    def test_redaction_on_paper_query(self):
+        return self.__test_redaction('get', 'papers', 'tcid=20914619')
 
 
 if __name__ == '__main__':
