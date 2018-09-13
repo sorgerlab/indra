@@ -1,6 +1,5 @@
-import pybel
+from pybel import BELGraph
 from pybel.dsl import *
-import pybel.constants as pc
 from pybel.examples import egf_graph
 from indra.statements import *
 from indra.sources import bel
@@ -19,7 +18,7 @@ def test_process_pybel():
 
 def test_get_agent_hgnc():
     mek = protein(name='MAP2K1', namespace='HGNC')
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
@@ -27,7 +26,7 @@ def test_get_agent_hgnc():
 
     # Now create an agent with an identifier
     mek = protein(name='Foo', namespace='HGNC', identifier='6840')
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
@@ -36,7 +35,7 @@ def test_get_agent_hgnc():
 
 def test_get_agent_up():
     mek = protein(namespace='UP', identifier='Q02750')
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert agent.db_refs.get('HGNC') == mek_hgnc_id
@@ -45,7 +44,7 @@ def test_get_agent_up():
 
 def test_get_agent_egid():
     node_data = {'function': 'Protein', 'name': '5008', 'namespace': 'EGID'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'OSM'
     assert len(agent.db_refs) == 3
@@ -56,7 +55,7 @@ def test_get_agent_egid():
 
 def test_get_agent_mgi():
     node = protein(namespace='MGI', name='Nr1h3')
-    agent = pb._get_agent(node, {})
+    agent = pb.get_agent(node, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'Nr1h3'
     assert len(agent.db_refs) == 1
@@ -65,7 +64,7 @@ def test_get_agent_mgi():
 
 def test_get_agent_rgd():
     node = protein(namespace='RGD', name='Tp53')
-    agent = pb._get_agent(node, {})
+    agent = pb.get_agent(node, {})
     assert isinstance(agent, Agent)
     assert agent.name == 'Tp53'
     assert len(agent.db_refs) == 1
@@ -78,7 +77,7 @@ def test_get_agent_sfam():
             'function': 'Protein',
             'name': 'PRKC Family',
             'namespace': 'SFAM'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert len(agent.db_refs) == 2
     assert agent.db_refs['SFAM'] == 'PRKC Family'
@@ -92,7 +91,7 @@ def test_get_agent_sdis():
             'function': 'Pathology',
             'name': 'metastasis',
             'namespace': 'SDIS'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'metastasis'
     assert len(agent.db_refs) == 1
@@ -105,7 +104,7 @@ def test_get_agent_chebi():
             'function': 'Abundance',
             'name': 'nitric oxide',
             'namespace': 'CHEBI'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'nitric oxide'
     assert len(agent.db_refs) == 1
@@ -118,7 +117,7 @@ def test_get_agent_schem():
             'function': 'Abundance',
             'name': 'Promegestone',
             'namespace': 'SCHEM'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'Promegestone'
     assert len(agent.db_refs) == 1
@@ -131,7 +130,7 @@ def test_get_agent_mirna():
             'function': 'miRNA',
             'name': 'MIR218-1',
             'namespace': 'HGNC'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'MIR218-1'
     assert len(agent.db_refs) == 1
@@ -145,19 +144,19 @@ def test_get_agent_fusion():
                      'range_5p': {'missing': '?'},
                      'range_3p': {'missing': '?'},
                      'partner_3p': {'namespace': 'HGNC', 'name': 'ABL1'}}}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert agent is None
 
 
 def test_get_agent_up_no_id():
     mek = protein(name='MAP2K1', namespace='UP')
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert agent is None
 
 
 def test_get_agent_meshpp():
     apoptosis = bioprocess(name='Apoptosis', namespace='MESHPP')
-    agent = pb._get_agent(apoptosis)
+    agent = pb.get_agent(apoptosis)
     assert isinstance(agent, Agent)
     assert agent.name == 'Apoptosis'
     assert agent.db_refs == {}
@@ -165,7 +164,7 @@ def test_get_agent_meshpp():
 
 def test_get_agent_meshd():
     hyperoxia = bioprocess(name='Hyperoxia', namespace='MESHD')
-    agent = pb._get_agent(hyperoxia)
+    agent = pb.get_agent(hyperoxia)
     assert isinstance(agent, Agent)
     assert agent.name == 'Hyperoxia'
     assert agent.db_refs == {}
@@ -174,7 +173,7 @@ def test_get_agent_meshd():
 def test_get_agent_with_mods():
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph')])
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -184,7 +183,7 @@ def test_get_agent_with_mods():
 
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', code='Ser')])
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -194,7 +193,7 @@ def test_get_agent_with_mods():
 
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', position=218)])
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -204,7 +203,7 @@ def test_get_agent_with_mods():
 
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[pmod('Ph', position=218, code='Ser')])
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mods) == 1
     mod = agent.mods[0]
@@ -216,7 +215,7 @@ def test_get_agent_with_mods():
 def test_get_agent_with_muts():
     mek = protein(name='MAP2K1', namespace='HGNC',
                   variants=[hgvs('p.Val600Glu')])
-    agent = pb._get_agent(mek, {})
+    agent = pb.get_agent(mek, {})
     assert isinstance(agent, Agent)
     assert len(agent.mutations) == 1
     mut = agent.mutations[0]
@@ -227,7 +226,7 @@ def test_get_agent_with_muts():
 
 def test_get_agent_with_activity():
     mek = protein(name='MAP2K1', namespace='HGNC')
-    agent = pb._get_agent(mek, activity('act'))
+    agent = pb.get_agent(mek, activity('act'))
     assert isinstance(agent, Agent)
     assert isinstance(agent.activity, ActivityCondition)
     assert agent.activity.activity_type == 'activity'
@@ -239,7 +238,7 @@ def test_get_agent_complex():
     erk = protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
     cplx = complex_abundance([mek, erk])
-    agent = pb._get_agent(cplx)
+    agent = pb.get_agent(cplx)
     assert isinstance(agent, Agent)
     assert agent.name == 'MAP2K1'
     assert len(agent.bound_conditions) == 1
@@ -262,7 +261,7 @@ def test_get_agent_complex_none_agent():
     erk = protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
     cplx = complex_abundance([mek, erk])
-    agent = pb._get_agent(cplx)
+    agent = pb.get_agent(cplx)
     assert agent is None
 
     # Bound agent is None
@@ -270,7 +269,7 @@ def test_get_agent_complex_none_agent():
     erk = protein(name='MAPK1', namespace='FOO',
                   variants=[pmod('Ph', position=185, code='Thr')])
     cplx = complex_abundance([mek, erk])
-    agent = pb._get_agent(cplx)
+    agent = pb.get_agent(cplx)
     assert agent is None
 
 
@@ -281,7 +280,7 @@ def test_get_agent_named_complex_go():
             'function': 'Complex',
             'name': '0043509',
             'namespace': 'GOCCID'}
-    agent = pb._get_agent(node_data)
+    agent = pb.get_agent(node_data)
     assert agent is None
 
 
@@ -289,8 +288,8 @@ def test_get_agent_with_translocation():
     node_data = protein(name='MAPK1', namespace='HGNC')
     # Some example edge data
     edge_data = translocation(from_loc=entity('GOCC', 'intracellular'),
-                             to_loc=entity('GOCC', 'extracellular space'))
-    agent = pb._get_agent(node_data, edge_data)
+                              to_loc=entity('GOCC', 'extracellular space'))
+    agent = pb.get_agent(node_data, edge_data)
     assert isinstance(agent, Agent)
     assert agent.name == 'MAPK1'
     assert agent.location == 'extracellular space'
@@ -300,12 +299,11 @@ def test_phosphorylation_one_site_with_evidence():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr')])
-    g = pybel.BELGraph()
+    g = BELGraph()
     ev_text = 'Some evidence.'
     ev_pmid = '123456'
-    edge_hash = g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
-                                     evidence=ev_text, citation=ev_pmid,
-                                     annotations={"TextLocation": 'Abstract'})
+    edge_hash = g.add_directly_increases(mek, erk, evidence=ev_text, citation=ev_pmid,
+                                         annotations={"TextLocation": 'Abstract'})
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -335,9 +333,9 @@ def test_phosphorylation_two_sites():
     erk = protein(name='MAPK1', namespace='HGNC',
                   variants=[pmod('Ph', position=185, code='Thr'),
                             pmod('Ph', position=187, code='Tyr')])
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.DIRECTLY_INCREASES,
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_directly_increases(mek, erk, evidence="Some evidence.",
+                             citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 2
@@ -355,9 +353,8 @@ def test_phosphorylation_two_sites():
 def test_regulate_amount1_prot_obj():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(mek, erk, evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -369,9 +366,8 @@ def test_regulate_amount2_rna_obj():
     # FIXME: Create a transcription-specific statement for p->rna
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = rna(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(mek, erk, evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -383,10 +379,9 @@ def test_regulate_amount3_deg():
     # FIXME: Create a stability-specific statement for p->deg(p(Foo))
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         object_modifier=degradation(),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(mek, erk, object_modifier=degradation(),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -397,10 +392,9 @@ def test_regulate_amount3_deg():
 def test_regulate_amount4_subj_act():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         subject_modifier=activity(name='tscript'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(mek, erk, subject_modifier=activity(name='tscript'),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -409,13 +403,12 @@ def test_regulate_amount4_subj_act():
     assert subj.name == 'MAP2K1'
     assert isinstance(subj.activity, ActivityCondition)
     assert subj.activity.activity_type == 'transcription'
-    assert subj.activity.is_active == True
+    assert subj.activity.is_active
     assert len(pbp.statements[0].evidence) == 1
 
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         subject_modifier=activity(name='act'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(mek, erk, subject_modifier=activity(name='act'),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -424,18 +417,17 @@ def test_regulate_amount4_subj_act():
     assert subj.name == 'MAP2K1'
     assert isinstance(subj.activity, ActivityCondition)
     assert subj.activity.activity_type == 'activity'
-    assert subj.activity.is_active == True
+    assert subj.activity.is_active
     assert len(pbp.statements[0].evidence) == 1
 
 
 def test_regulate_activity():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(mek, erk, relation=pc.INCREASES,
-                         subject_modifier=activity(name='kin'),
-                         object_modifier=activity(name='kin'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(mek, erk, subject_modifier=activity(name='kin'),
+                    object_modifier=activity(name='kin'),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -444,7 +436,7 @@ def test_regulate_activity():
     assert subj.name == 'MAP2K1'
     assert isinstance(subj.activity, ActivityCondition)
     assert subj.activity.activity_type == 'kinase'
-    assert subj.activity.is_active == True
+    assert subj.activity.is_active
     obj = pbp.statements[0].obj
     assert obj.name == 'MAPK1'
     assert obj.activity is None
@@ -456,10 +448,9 @@ def test_active_form():
     p53_pmod = protein(name='TP53', namespace='HGNC',
                        variants=[pmod('Ph', position=33, code='Ser')])
     p53_obj = protein(name='TP53', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(p53_pmod, p53_obj, relation=pc.INCREASES,
-                         object_modifier=activity(name='tscript'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(p53_pmod, p53_obj, object_modifier=activity(name='tscript'),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -480,11 +471,11 @@ def test_active_form():
 def test_gef():
     sos = protein(name='SOS1', namespace='HGNC')
     kras = protein(name='KRAS', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(sos, kras, relation=pc.DIRECTLY_INCREASES,
-                         subject_modifier=activity(name='activity'),
-                         object_modifier=activity(name='gtp'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_directly_increases(sos, kras,
+                             subject_modifier=activity(name='activity'),
+                             object_modifier=activity(name='gtp'),
+                             evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -501,11 +492,10 @@ def test_gef():
 def test_indirect_gef_is_activation():
     sos = protein(name='SOS1', namespace='HGNC')
     kras = protein(name='KRAS', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(sos, kras, relation=pc.INCREASES,
-                         subject_modifier=activity(name='activity'),
-                         object_modifier=activity(name='gtp'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(sos, kras, subject_modifier=activity(name='activity'),
+                    object_modifier=activity(name='gtp'),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -523,11 +513,11 @@ def test_indirect_gef_is_activation():
 def test_gap():
     sos = protein(name='RASA1', namespace='HGNC')
     kras = protein(name='KRAS', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(sos, kras, relation=pc.DIRECTLY_DECREASES,
-                         subject_modifier=activity(name='activity'),
-                         object_modifier=activity(name='gtp'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_directly_decreases(sos, kras,
+                             subject_modifier=activity(name='activity'),
+                             object_modifier=activity(name='gtp'),
+                             evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -544,9 +534,8 @@ def test_gap():
 def test_activation_bioprocess():
     bax = protein(name='BAX', namespace='HGNC')
     apoptosis = bioprocess(name='apoptosis', namespace='GOBP')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(bax, apoptosis, relation=pc.INCREASES,
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(bax, apoptosis, evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -554,18 +543,18 @@ def test_activation_bioprocess():
     assert isinstance(stmt, Activation)
     assert stmt.subj.name == 'BAX'
     assert stmt.obj.name == 'apoptosis'
-    assert stmt.obj.db_refs == {} # FIXME: Update when GO lookup is implemented
+    assert stmt.obj.db_refs == {}  # FIXME: Update when GO lookup is implemented
     assert len(pbp.statements[0].evidence) == 1
 
 
 def test_gtpactivation():
     kras = protein(name='KRAS', namespace='HGNC')
     braf = protein(name='BRAF', namespace='HGNC')
-    g = pybel.BELGraph()
-    g.add_qualified_edge(kras, braf, relation=pc.DIRECTLY_INCREASES,
-                         subject_modifier=activity(name='gtp'),
-                         object_modifier=activity(name='kin'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_directly_increases(kras, braf,
+                             subject_modifier=activity(name='gtp'),
+                             object_modifier=activity(name='kin'),
+                             evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -587,13 +576,13 @@ def test_conversion():
     p2 = abundance('SCHEM', 'Inositol 1,4,5-trisphosphate')
 
     rxn = reaction(
-        reactants=[react_1],
+        reactants=react_1,
         products=[p1, p2],
     )
-    g = pybel.BELGraph()
-    g.add_qualified_edge(enz, rxn, relation=pc.DIRECTLY_INCREASES,
-                         subject_modifier=activity(name='activity'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_directly_increases(enz, rxn,
+                             subject_modifier=activity(name='activity'),
+                             evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -607,8 +596,11 @@ def test_conversion():
     assert stmt.obj_from[0].name == '1-Phosphatidyl-D-myo-inositol ' \
                                     '4,5-bisphosphate'
     assert len(stmt.obj_to) == 2
-    assert stmt.obj_to[0].name == 'Diacylglycerol'
-    assert stmt.obj_to[1].name == 'Inositol 1,4,5-trisphosphate'
+    # why do these not appear in alphabetical order?
+    # PyBEL sorts the nodes based on their BEL, and
+    # Inositol 1,4,5-trisphosphate gets quoted.
+    assert stmt.obj_to[0].name == 'Inositol 1,4,5-trisphosphate'
+    assert stmt.obj_to[1].name == 'Diacylglycerol'
     assert len(stmt.evidence) == 1
 
 
@@ -616,12 +608,11 @@ def test_controlled_transloc_loc_cond():
     """Controlled translocations are currently not handled."""
     subj = protein(name='MAP2K1', namespace='HGNC')
     obj = protein(name='MAPK1', namespace='HGNC')
-    g = pybel.BELGraph()
+    g = BELGraph()
     transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
                              to_loc=entity('GOCC', 'extracellular space'))
-    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
-                         object_modifier=transloc,
-                         evidence="Some evidence.", citation='123456')
+    g.add_increases(subj, obj, object_modifier=transloc,
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert not pbp.statements
 
@@ -633,10 +624,9 @@ def test_subject_transloc_loc_cond():
     obj = protein(name='MAPK1', namespace='HGNC')
     transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
                              to_loc=entity('GOCC', 'extracellular space'))
-    g = pybel.BELGraph()
-    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
-                         subject_modifier=transloc,
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(subj, obj, subject_modifier=transloc,
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -654,11 +644,10 @@ def test_subject_transloc_active_form():
     obj = protein(name='MAP2K1', namespace='HGNC')
     transloc = translocation(from_loc=entity('GOCC', 'intracellular'),
                              to_loc=entity('GOCC', 'extracellular space'))
-    g = pybel.BELGraph()
-    g.add_qualified_edge(subj, obj, relation=pc.INCREASES,
-                         subject_modifier=transloc,
-                         object_modifier=activity(name='kin'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_increases(subj, obj, subject_modifier=transloc,
+                    object_modifier=activity(name='kin'),
+                    evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 1
@@ -676,10 +665,10 @@ def test_complex_stmt_with_activation():
     mek = protein(name='MAP2K1', namespace='HGNC')
     erk = protein(name='MAPK1', namespace='HGNC')
     cplx = complex_abundance([raf, mek])
-    g = pybel.BELGraph()
-    g.add_qualified_edge(cplx, erk, relation=pc.DIRECTLY_INCREASES,
-                         object_modifier=activity(name='kin'),
-                         evidence="Some evidence.", citation='123456')
+    g = BELGraph()
+    g.add_directly_increases(cplx, erk,
+                             object_modifier=activity(name='kin'),
+                             evidence="Some evidence.", citation='123456')
     pbp = bel.process_pybel_graph(g)
     assert pbp.statements
     assert len(pbp.statements) == 2
@@ -699,4 +688,3 @@ def test_complex_stmt_with_activation():
 
 if __name__ == '__main__':
     test_get_agent_fusion()
-
