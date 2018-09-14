@@ -1,3 +1,5 @@
+from nose.plugins.attrib import attr
+
 from indra.db.belief import MockStatement, MockEvidence, populate_support, \
     load_mock_statements
 from indra.belief import BeliefEngine
@@ -72,13 +74,15 @@ def _get_prepped_db(num_stmts):
     dts = _PrePaDatabaseTestSetup(num_stmts)
     dts.load_background()
     dts.add_statements()
+    dts.insert_pa_statements()
     return dts.test_db
 
 
+@attr('nonpublic')
 def test_mock_stmt_load():
     db = _get_prepped_db(1000)
     stmts = load_mock_statements(db)
-    assert len(stmts) == 1000, len(stmts)
+    assert 500 <= len(stmts) <= 1000, len(stmts)
     assert all([len(s.evidence) >= 1 for s in stmts])
     sid_list = [ev.annotations['raw_sid'] for s in stmts for ev in s.evidence]
     sid_set = set(sid_list)
