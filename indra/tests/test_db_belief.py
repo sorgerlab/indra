@@ -1,7 +1,7 @@
 from nose.plugins.attrib import attr
 
 from indra.db.belief import MockStatement, MockEvidence, populate_support, \
-    load_mock_statements
+    load_mock_statements, calculate_belief
 from indra.belief import BeliefEngine
 from indra.tests.test_db_client import _PrePaDatabaseTestSetup
 
@@ -88,4 +88,8 @@ def test_mock_stmt_load():
     sid_set = set(sid_list)
     assert len(sid_list) == len(sid_set), (len(sid_list), len(sid_set))
     assert len([sup for s in stmts for sup in s.supports]) \
-           == db.count(db.PASupportLinks), "Support is missing."
+        == db.count(db.PASupportLinks), "Support is missing."
+    belief_dict = calculate_belief(stmts)
+    assert len(belief_dict) == len(stmts), (len(belief_dict), len(stmts))
+    assert all([0 < b < 1 for b in belief_dict.values()]),\
+        'Belief values out of range.'

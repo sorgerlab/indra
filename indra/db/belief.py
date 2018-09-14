@@ -1,3 +1,5 @@
+from indra.belief import BeliefEngine
+
 
 class LoadError(Exception):
     pass
@@ -76,10 +78,18 @@ def load_mock_statements(db):
             stmts_dict[mk_hash] = MockStatement(mk_hash)
 
         # Add the new evidence.
-        stmts_dict[mk_hash].evidence.append(MockEvidence(src_api, raw_sid=sid))
+        stmts_dict[mk_hash].evidence.append(MockEvidence(src_api.lower(),
+                                                         raw_sid=sid))
 
     sup_links = db.select_all([db.PASupportLinks.supported_mk_hash,
                                db.PASupportLinks.supporting_mk_hash])
     populate_support(stmts_dict, sup_links)
 
     return list(stmts_dict.values())
+
+
+def calculate_belief(stmts):
+    be = BeliefEngine()
+    be.set_prior_probs(stmts)
+    be.set_hierarchy_probs(stmts)
+    return {s.matches_key(): s.belief for s in stmts}
