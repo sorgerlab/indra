@@ -49,7 +49,10 @@ def populate_support(stmts, links):
         A list of pairs of hashes or matches_keys, where the first supports the
         second.
     """
-    stmt_dict = {s.matches_key(): s for s in stmts}
+    if isinstance(stmts, dict):
+        stmt_dict = stmts
+    else:
+        stmt_dict = {s.matches_key(): s for s in stmts}
     for supped_idx, supping_idx in links:
         stmt_dict[supping_idx].supports.append(stmt_dict[supped_idx])
         stmt_dict[supped_idx].supported_by.append(stmt_dict[supping_idx])
@@ -74,5 +77,9 @@ def load_mock_statements(db):
 
         # Add the new evidence.
         stmts_dict[mk_hash].evidence.append(MockEvidence(src_api, raw_sid=sid))
+
+    sup_links = db.select_all([db.PASupportLinks.supported_mk_hash,
+                               db.PASupportLinks.supporting_mk_hash])
+    populate_support(stmts_dict, sup_links)
 
     return list(stmts_dict.values())

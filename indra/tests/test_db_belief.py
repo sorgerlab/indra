@@ -87,3 +87,5 @@ def test_mock_stmt_load():
     sid_list = [ev.annotations['raw_sid'] for s in stmts for ev in s.evidence]
     sid_set = set(sid_list)
     assert len(sid_list) == len(sid_set), (len(sid_list), len(sid_set))
+    assert len([sup for s in stmts for sup in s.supports]) \
+           == db.count(db.PASupportLinks), "Support is missing."
