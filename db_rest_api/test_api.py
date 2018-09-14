@@ -7,7 +7,7 @@ from datetime import datetime
 from unittest import SkipTest
 from warnings import warn
 
-from db_rest_api.api import MAX_STATEMENTS
+from db_rest_api.api import MAX_STATEMENTS, get_source
 from indra import get_config
 from indra.db import get_primary_db
 from indra.statements import stmts_from_json
@@ -336,10 +336,10 @@ class DbApiTestCase(unittest.TestCase):
         elsevier_found = 0
         for s in stmt_dict_redact.values():
             for ev in s['evidence']:
-                if ev['source_api'] == 'elsevier':
+                if get_source(ev) == 'elsevier':
                     elsevier_found += 1
-                    assert ev['text'].startswith('[Redacted'), \
-                        'Found unredacted Elsevier text.'
+                    assert ev['text'].startswith('[REDACTED'), \
+                        'Found unredacted Elsevier text: %s.' % ev['text']
                 else:
                     if 'text' in ev.keys():
                         assert not ev['text'].startswith('[Redacted'), \
@@ -370,7 +370,8 @@ class DbApiTestCase(unittest.TestCase):
         return
 
     def test_redaction_on_agents_query(self):
-        return self.__test_redaction('get', 'statements', 'agent=PDGFR@FPLX')
+        return self.__test_redaction('get', 'statements',
+                                     'agent1=STAT5@FPLX&agent2=CRKL')
 
     def test_redaction_on_paper_query(self):
         return self.__test_redaction('get', 'papers', 'tcid=20914619')

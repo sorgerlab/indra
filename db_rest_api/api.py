@@ -52,6 +52,16 @@ def __process_agent(agent_param):
     return ag, ns
 
 
+def get_source(ev_json):
+    notes = ev_json.get('annotations')
+    if notes is None:
+        return
+    src = notes.get('content_source')
+    if src is None:
+        return
+    return src.lower()
+
+
 def _query_wrapper(f):
     @wraps(f)
     def decorator():
@@ -72,9 +82,8 @@ def _query_wrapper(f):
         if api_key is None or not has_auth(api_key):
             for stmt_json in result['statements'].values():
                 for ev_json in stmt_json['evidence']:
-                    if ev_json['source_api'].lower() == 'elsevier':
-                        ev_json['text'] = '[Redacted: missing/invalid api key]'
-
+                    if get_source(ev_json) == 'elsevier':
+                        ev_json['text'] = '[REDACTED: MISSING/INVALID API KEY]'
         result['offset'] = offs
         result['evidence_limit'] = ev_limit
         result['statement_limit'] = MAX_STATEMENTS
