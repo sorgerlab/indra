@@ -1074,6 +1074,7 @@ def export_relation_dict_to_tsv(relation_dict, out_base, out_types=None):
 
 
 def has_auth(api_key, db=None):
+    logger.info("Checking auth of secret key.")
     if db is None:
         db = get_primary_db()
     return db._check_auth(api_key)

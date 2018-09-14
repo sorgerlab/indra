@@ -511,8 +511,18 @@ class DatabaseManager(object):
 
     def _check_auth(self, api_key):
         """Check if an api key is valid."""
-        return self.filter_query(self.__Auth,
-                                 self.__Auth.api_key == api_key).exists()
+        matches = self.filter_query(self.__Auth,
+                                    self.__Auth.api_key == api_key).all()
+        assert len(matches) <= 1, "Multiple matches found."
+        if len(matches) == 0:
+            return False
+        else:
+            return True
+
+    def _add_auth(self, new_api_key):
+        """Add a new api key to the database."""
+        return self.insert(self.__Auth, api_key=new_api_key)
+
 
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."

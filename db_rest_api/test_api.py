@@ -351,8 +351,8 @@ class DbApiTestCase(unittest.TestCase):
         if key is None:
             return  # Can't test the behavior with an API key.
 
-        new_qstr = '?' + '&'.join(baseline_query_str.replace('?', '').split('&')
-                                  + ['api_key=%s' % key])
+        new_qstr = '&'.join(baseline_query_str.replace('?', '').split('&')
+                            + ['api_key=%s' % key])
         resp, dt, size = self.__time_query(method, endpoint, new_qstr)
         resp_dict = json.loads(resp.data.decode('utf-8'))
         stmt_dict_intact = resp_dict['statements']
@@ -361,7 +361,7 @@ class DbApiTestCase(unittest.TestCase):
         elsevier_found = 0
         for s in stmt_dict_redact.values():
             for ev in s['evidence']:
-                if ev['source_api'] == 'elsevier':
+                if get_source(ev) == 'elsevier':
                     elsevier_found += 1
                 if 'text' in ev.keys():
                     assert not ev['text'].startswith('[Redacted'), \
@@ -374,7 +374,7 @@ class DbApiTestCase(unittest.TestCase):
                                      'agent1=STAT5@FPLX&agent2=CRKL')
 
     def test_redaction_on_paper_query(self):
-        return self.__test_redaction('get', 'papers', 'tcid=20914619')
+        return self.__test_redaction('get', 'papers', 'id=20914619&type=tcid')
 
 
 if __name__ == '__main__':
