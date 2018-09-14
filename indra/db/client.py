@@ -678,9 +678,11 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
         # Add agents' raw text to annotations.
         raw_text = []
         for ag_name in get_statement_by_name(raw_json['type'])._agent_order:
-            ag_value = raw_json[ag_name]
+            ag_value = raw_json.get(ag_name, None)
             if isinstance(ag_value, dict):
                 raw_text.append(ag_value['db_refs'].get('TEXT'))
+            elif ag_value is None:
+                raw_text.append(None)
             else:
                 for ag in ag_value:
                     raw_text.append(ag['db_refs'].get('TEXT'))
