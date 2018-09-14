@@ -79,7 +79,7 @@ def _get_prepped_db(num_stmts):
 
 
 @attr('nonpublic')
-def test_mock_stmt_load():
+def test_mock_stmt_load_and_belief_calc():
     db = _get_prepped_db(1000)
     stmts = load_mock_statements(db)
     assert 500 <= len(stmts) <= 1000, len(stmts)

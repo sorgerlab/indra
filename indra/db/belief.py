@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger('db_belief')
+
 from indra.belief import BeliefEngine
 
 
@@ -55,7 +59,13 @@ def populate_support(stmts, links):
         stmt_dict = stmts
     else:
         stmt_dict = {s.matches_key(): s for s in stmts}
-    for supped_idx, supping_idx in links:
+    for link in links:
+        invalid_idx = [idx for idx in link if idx not in stmt_dict.keys()]
+        if invalid_idx:
+            logger.warning("Found at least one invalid index %s, from support "
+                           "link pair %s." % (invalid_idx, link))
+            continue
+        supped_idx, supping_idx = link
         stmt_dict[supping_idx].supports.append(stmt_dict[supped_idx])
         stmt_dict[supped_idx].supported_by.append(stmt_dict[supping_idx])
     return
