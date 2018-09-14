@@ -61,10 +61,11 @@ class DbApiTestCase(unittest.TestCase):
     def __time_get_query(self, end_point, query_str):
         return self.__time_query('get', end_point, query_str)
 
-    def __time_query(self, method, end_point, query_str=None, **data):
+    def __time_query(self, method, end_point, query_str=None, url_fmt='/%s/?%s',
+                     **data):
         start_time = datetime.now()
-        if query_str is not None:
-            url = '/%s/?%s' % (end_point, query_str)
+        if query_str is not None and query_str != '':
+            url = url_fmt % (end_point, query_str)
         else:
             url = end_point
         meth_func = getattr(self.app, method)
@@ -329,8 +330,8 @@ class DbApiTestCase(unittest.TestCase):
     def test_trid_paper_query(self):
         self.__test_basic_paper_query('19649148', 'trid')
 
-    def __test_redaction(self, method, endpoint, baseline_query_str):
-        resp, dt, size = self.__time_query(method, endpoint, baseline_query_str)
+    def __test_redaction(self, method, endpoint, base_qstr, **data):
+        resp, dt, size = self.__time_query(method, endpoint, base_qstr, **data)
         resp_dict = json.loads(resp.data.decode('utf-8'))
         stmt_dict_redact = resp_dict['statements']
         elsevier_found = 0
@@ -351,9 +352,13 @@ class DbApiTestCase(unittest.TestCase):
         if key is None:
             return  # Can't test the behavior with an API key.
 
-        new_qstr = '&'.join(baseline_query_str.replace('?', '').split('&')
-                            + ['api_key=%s' % key])
-        resp, dt, size = self.__time_query(method, endpoint, new_qstr)
+        key_param = 'api_key=%s' % key
+        if base_qstr != '':
+            new_qstr = '&'.join(base_qstr.replace('?', '').split('&')
+                                + [key_param])
+        else:
+            new_qstr = key_param
+        resp, dt, size = self.__time_query(method, endpoint, new_qstr, **data)
         resp_dict = json.loads(resp.data.decode('utf-8'))
         stmt_dict_intact = resp_dict['statements']
         assert stmt_dict_intact.keys() == stmt_dict_redact.keys(), \
@@ -375,6 +380,16 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_redaction_on_paper_query(self):
         return self.__test_redaction('get', 'papers', 'id=20914619&type=tcid')
+
+    def test_redactino_on_hash_query(self):
+        sample_hashes = [
+            -32827941998109538, -20158153585845131, 15974582929874023,
+            -11800901683709001, 32808234842849068, -31465406544763237,
+            35045936321307934, -21857044700777238, 26048368199546337,
+            -13784512593103829
+            ]
+        return self.__test_redaction('post', 'statements/from_hashes', '',
+                                     url_fmt='%s?%s', hashes=sample_hashes)
 
 
 if __name__ == '__main__':
