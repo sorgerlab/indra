@@ -64,7 +64,7 @@ class DbApiTestCase(unittest.TestCase):
     def __time_query(self, method, end_point, query_str=None, url_fmt='/%s/?%s',
                      **data):
         start_time = datetime.now()
-        if query_str is not None and query_str != '':
+        if query_str is not None:
             url = url_fmt % (end_point, query_str)
         else:
             url = end_point
@@ -278,7 +278,7 @@ class DbApiTestCase(unittest.TestCase):
         return
 
     def test_statements_by_hashes_query(self):
-        resp, dt, size = self.__time_query('get', 'statements/from_hashes',
+        resp, dt, size = self.__time_query('post', 'statements/from_hashes',
                                            hashes=[-36028793042562873,
                                                    -12978096432588272,
                                                    -12724735151233845])
@@ -295,7 +295,7 @@ class DbApiTestCase(unittest.TestCase):
         hash_cnt_dict = {ev_cts.mk_hash: ev_cts.ev_count for ev_cts in res}
 
         # Run the test.
-        resp, dt, size = self.__time_query('get', 'statements/from_hashes',
+        resp, dt, size = self.__time_query('post', 'statements/from_hashes',
                                            hashes=list(hash_cnt_dict.keys()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
         self.__check_stmts(resp_dict['statements'].values())
@@ -353,7 +353,7 @@ class DbApiTestCase(unittest.TestCase):
             return  # Can't test the behavior with an API key.
 
         key_param = 'api_key=%s' % key
-        if base_qstr != '':
+        if base_qstr:
             new_qstr = '&'.join(base_qstr.replace('?', '').split('&')
                                 + [key_param])
         else:
@@ -381,14 +381,14 @@ class DbApiTestCase(unittest.TestCase):
     def test_redaction_on_paper_query(self):
         return self.__test_redaction('get', 'papers', 'id=20914619&type=tcid')
 
-    def test_redactino_on_hash_query(self):
+    def test_redaction_on_hash_query(self):
         sample_hashes = [
             -32827941998109538, -20158153585845131, 15974582929874023,
             -11800901683709001, 32808234842849068, -31465406544763237,
             35045936321307934, -21857044700777238, 26048368199546337,
             -13784512593103829
             ]
-        return self.__test_redaction('post', 'statements/from_hashes', '',
+        return self.__test_redaction('post', 'statements/from_hashes', None,
                                      url_fmt='%s?%s', hashes=sample_hashes)
 
 
