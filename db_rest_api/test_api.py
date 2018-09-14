@@ -364,12 +364,12 @@ class DbApiTestCase(unittest.TestCase):
         assert stmt_dict_intact.keys() == stmt_dict_redact.keys(), \
             "Response content changed: different statements without redaction."
         elsevier_found = 0
-        for s in stmt_dict_redact.values():
+        for s in stmt_dict_intact.values():
             for ev in s['evidence']:
                 if get_source(ev) == 'elsevier':
                     elsevier_found += 1
                 if 'text' in ev.keys():
-                    assert not ev['text'].startswith('[Redacted'), \
+                    assert not ev['text'].startswith('[REDACTED'), \
                         'Found redacted text despite api key.'
         assert elsevier_found > 0, "Elsevier content references went missing."
         return

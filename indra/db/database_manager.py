@@ -511,6 +511,8 @@ class DatabaseManager(object):
 
     def _check_auth(self, api_key):
         """Check if an api key is valid."""
+        if api_key is None:
+            return False
         matches = self.filter_query(self.__Auth,
                                     self.__Auth.api_key == api_key).all()
         assert len(matches) <= 1, "Multiple matches found."
