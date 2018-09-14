@@ -1,4 +1,7 @@
 import logging
+import pickle
+
+from indra.db import get_primary_db
 
 logger = logging.getLogger('db_belief')
 
@@ -103,3 +106,15 @@ def calculate_belief(stmts):
     be.set_prior_probs(stmts)
     be.set_hierarchy_probs(stmts)
     return {s.matches_key(): s.belief for s in stmts}
+
+
+def run():
+    db = get_primary_db()
+    stmts = load_mock_statements(db)
+    return calculate_belief(stmts)
+
+
+if __name__ == '__main__':
+    belief_dict = run()
+    with open('belief_dict.pkl', 'wb') as f:
+        pickle.dump(belief_dict, f)
