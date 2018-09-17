@@ -5,7 +5,7 @@ import json
 import numpy
 import networkx
 import logging
-from os import path
+from os import path, pardir
 
 try:
     from indra.sources.reach.processor import determine_reach_subtype
@@ -20,7 +20,9 @@ THIS_DIR = path.dirname(path.abspath(__file__))
 
 
 def load_default_probs():
-    with open(path.join(THIS_DIR, 'default_belief_probs.json'), 'r') as f:
+    json_path = path.join(THIS_DIR, pardir, 'resources',
+                          'default_belief_probs.json') 
+    with open(json_path, 'r') as f:
         prior_probs = json.load(f)
     return prior_probs
 
