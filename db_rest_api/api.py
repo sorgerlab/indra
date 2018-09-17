@@ -77,7 +77,7 @@ def _query_wrapper(f):
         do_stream_str = query_dict.pop('stream', 'false')
         do_stream = True if do_stream_str == 'true' else False
 
-        api_key = query_dict.pop('api_key', None)
+        api_key = query_dict.pop('api-key', None)
 
         result = f(query_dict, offs, MAX_STATEMENTS, ev_limit, best_first)
 
