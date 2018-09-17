@@ -316,7 +316,7 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     """
     resp = _submit_request('post', 'statements/from_hashes',
                            data={'hashes': hash_list}, ev_limit=ev_limit,
-                           best_first=best_first, tries=tries)
+                           best_first=best_first, tries=tries, div='')
     return stmts_from_json(resp.json()['statements'].values())
 
 
@@ -375,7 +375,7 @@ def _submit_query_request(end_point, *args, **kwargs):
 
 @clockit
 def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
-                    best_first=True, tries=2):
+                    best_first=True, tries=2, div='/'):
     """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
@@ -384,7 +384,7 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         query_str += '&api-key=%s' % api_key
     else:
         query_str = '?api-key=%s' % api_key
-    url_path += '/' + query_str
+    url_path += div + query_str
     headers = {}
     if data:
         # This is an assumption which applies to our use cases for now, but may
@@ -397,7 +397,6 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
     print('headers:', headers)
     print('data:', data)
     method_func = getattr(requests, meth.lower())
-    tries = 2
     while tries > 0:
         tries -= 1
         resp = method_func(url_path, headers=headers, data=json_data,
