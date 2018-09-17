@@ -494,6 +494,26 @@ def test_flatten_evidence_hierarchy():
     assert supporting_stmt.evidence[0].text == 'foo'
 
 
+def test_flatten_evidence_hierarchy_supports():
+    braf = Agent('BRAF')
+    mek = Agent('MAP2K1')
+    st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
+    st2 = Phosphorylation(braf, mek, 'S', '218',
+                          evidence=[Evidence(text='bar')])
+    pa = Preassembler(hierarchies, stmts=[st1, st2])
+    pa_stmts = pa.combine_related(return_toplevel=False)
+    assert len(pa_stmts) == 2
+    flattened = flatten_evidence(pa_stmts, collect_from='supports')
+    assert len(flattened) == 2
+    top_stmt = flattened[1]
+    assert len(top_stmt.evidence) == 1
+    assert 'bar' in [e.text for e in top_stmt.evidence]
+    assert len(top_stmt.supported_by) == 1
+    supporting_stmt = top_stmt.supported_by[0]
+    assert len(supporting_stmt.evidence) == 2
+    assert set([e.text for e in supporting_stmt.evidence]) == {'foo', 'bar'}
+
+
 def test_flatten_stmts():
     st1 = Phosphorylation(Agent('MAP3K5'), Agent('RAF1'), 'S', '338')
     st2 = Phosphorylation(None, Agent('RAF1'), 'S', '338')
@@ -751,3 +771,4 @@ def test_agent_text_storage():
     assert all([len(ev.annotations['prior_uuids']) == 2 for ev in old_ev_list])
     assert new_ev
     assert len(new_ev.annotations['prior_uuids']) == 1
+

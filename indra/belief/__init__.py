@@ -52,12 +52,56 @@ default_probs = {
     }
 
 
-class BeliefEngine(object):
-    """Assigns beliefs to INDRA Statements based on supporting evidence.
+class BeliefScorer(object):
+    """Base class for a belief engine scorer, which computes the
+    prior probability of a statement given its type and evidence.
+
+    To use with the belief engine, make a subclass with methods implemented.
+    """
+    def score_statement(self, st):
+        """Computes the prior belief probability for an INDRA Statement.
+
+        The Statement is assumed to be de-duplicated. In other words,
+        the Statement is assumed to have
+        a list of Evidence objects that supports it. The prior probability of
+        the Statement is calculated based on the number of Evidences it has
+        and their sources.
+
+        Parameters
+        ----------
+        statement : indra.statements.Statement
+            An INDRA Statements whose belief scores are to
+            be calculated.
+
+        Returns
+        -------
+        belief_score : float
+            The computed prior probability for the statement
+        """
+        raise NotImplementedError('Need to subclass BeliefScorer and '
+                                  'implement methods.')
+
+    def check_prior_probs(self, statements):
+        """Make sure the scorer has all the information needed to compute
+        belief scores of each statement in the provided list, and raises an
+        exception otherwise.
+
+        Parameters
+        ----------
+        statements : list<indra.statements.Statement>
+            List of statements to check
+        """
+        raise NotImplementedError('Need to subclass BeliefScorer and '
+                                  'implement methods.')
+
+
+class SimpleScorer(BeliefScorer):
+    """Computes the prior probability of a statement given its type and
+    evidence.
 
     Parameters
     ----------
-    prior_probs : Optional[dict[dict]]
+    prior_probs : dict[dict]
         A dictionary of prior probabilities used to override/extend the
         default ones. There are two types of prior probabilities: rand and syst
         corresponding to random error and systematic error rate for each
@@ -68,23 +112,100 @@ class BeliefEngine(object):
         ps1 ... psn are error probabilities.
         Examples: {'rand': {'some_source': 0.1}} sets the random error rate
         for some_source to 0.1; {'rand': {''}}
-
-    Attributes
-    ----------
-    prior_probs : dict[dict]
-        A dictionary of prior systematic and random error probabilities for
-        each knowledge source.
-    subtype_probs: dict[dict]
+    subtype_probs : dict[dict]
         A dictionary of random error probabilities for knowledge sources.
         When a subtype random error probability is not specified, will just
         use the overall type prior in prior_probs. If None, will
         only use the priors for each rule.
     """
-    def __init__(self, prior_probs=None, subtype_probs=None):
+    def __init__(self, prior_probs, subtype_probs=None):
         self.prior_probs = default_probs
-        if prior_probs:
-            self.prior_probs.update(prior_probs)
+        self.prior_probs.update(prior_probs)
         self.subtype_probs = subtype_probs
+
+    def score_statement(self, st):
+        """Computes the prior belief probability for an INDRA Statement.
+
+        The Statement is assumed to be de-duplicated. In other words,
+        the Statement is assumed to have
+        a list of Evidence objects that supports it. The prior probability of
+        the Statement is calculated based on the number of Evidences it has
+        and their sources.
+
+        Parameters
+        ----------
+        statement : indra.statements.Statement
+            An INDRA Statements whose belief scores are to
+            be calculated.
+
+        Returns
+        -------
+        belief_score : float
+            The computed prior probability for the statement
+        """
+
+        sources = [ev.source_api for ev in st.evidence]
+        uniq_sources = numpy.unique(sources)
+        syst_factors = {s: self.prior_probs['syst'][s]
+                        for s in uniq_sources}
+        rand_factors = {k: [] for k in uniq_sources}
+        for ev in st.evidence:
+            rand_factors[ev.source_api].append(
+                    evidence_random_noise_prior(
+                        ev,
+                        self.prior_probs['rand'],
+                        self.subtype_probs))
+
+        neg_prob_prior = 1
+        for s in uniq_sources:
+            neg_prob_prior *= (syst_factors[s] +
+                               numpy.prod(rand_factors[s]))
+        prob_prior = 1 - neg_prob_prior
+        return prob_prior
+
+    def check_prior_probs(self, statements):
+        """Make sure the scorer has all the information needed to compute
+        belief scores of each statement in the provided list, and raises an
+        exception otherwise.
+
+        Parameters
+        ----------
+        statements : list<indra.statements.Statement>
+            List of statements to check
+        """
+        sources = set()
+        for stmt in statements:
+            sources |= set([ev.source_api for ev in stmt.evidence])
+        for err_type in ('rand', 'syst'):
+            for source in sources:
+                if source not in self.prior_probs[err_type]:
+                    msg = 'BeliefEngine missing probability parameter' + \
+                        ' for source: %s' % source
+                    raise Exception(msg)
+
+
+default_scorer = SimpleScorer(default_probs, None)
+
+
+class BeliefEngine(object):
+    """Assigns beliefs to INDRA Statements based on supporting evidence.
+
+    Attributes
+    ----------
+    scorer : object
+        An object that computes the prior probability of a statement given its
+        its statment type and evidence. Must support type methods:
+        * score_statement: takes indra.statements.Statement
+            computes the belief score of a statement
+        * check_prior_probs: takes list<indra.statements.Statement>
+            Verifies that the scorer has all the information it needs to score
+            every statement in the list, and raises an exception if not
+    """
+    def __init__(self, scorer=None):
+        if scorer is None:
+            scorer = default_scorer
+        assert(isinstance(scorer, BeliefScorer))
+        self.scorer = scorer
 
     def set_prior_probs(self, statements):
         """Sets the prior belief probabilities for a list of INDRA Statements.
@@ -105,26 +226,9 @@ class BeliefEngine(object):
         if not use_reach_subtypes:
             logger.info('Belief engine could not import REACH subtypes, they '
                         'will be ignored.')
-        self._check_prior_probs(statements)
+        self.scorer.check_prior_probs(statements)
         for st in statements:
-            sources = [ev.source_api for ev in st.evidence]
-            uniq_sources = numpy.unique(sources)
-            syst_factors = {s: self.prior_probs['syst'][s]
-                            for s in uniq_sources}
-            rand_factors = {k: [] for k in uniq_sources}
-            for ev in st.evidence:
-                rand_factors[ev.source_api].append(
-                        evidence_random_noise_prior(
-                            ev,
-                            self.prior_probs['rand'],
-                            self.subtype_probs))
-
-            neg_prob_prior = 1
-            for s in uniq_sources:
-                neg_prob_prior *= (syst_factors[s] +
-                                   numpy.prod(rand_factors[s]))
-            prob_prior = 1 - neg_prob_prior
-            st.belief = prob_prior
+            st.belief = self.scorer.score_statement(st)
 
     def set_hierarchy_probs(self, statements):
         """Sets hierarchical belief probabilities for a list of INDRA Statements.
@@ -185,18 +289,6 @@ class BeliefEngine(object):
         for st in linked_statements:
             source_probs = [s.belief for s in st.source_stmts]
             st.inferred_stmt.belief = numpy.prod(source_probs)
-
-    def _check_prior_probs(self, statements):
-        """Check that we have probabilities  for sources in statements."""
-        sources = set()
-        for stmt in statements:
-            sources |= set([ev.source_api for ev in stmt.evidence])
-        for err_type in ('rand', 'syst'):
-            for source in sources:
-                if source not in self.prior_probs[err_type]:
-                    msg = 'BeliefEngine missing probability parameter' + \
-                        ' for source: %s' % source
-                    raise Exception(msg)
 
 
 def _get_belief_package(stmt, n=1):

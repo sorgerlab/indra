@@ -190,6 +190,10 @@ def run_preassembly(stmts_in, **kwargs):
         processes, while smaller groups are compared in the parent process.
         Default value is 100. Not relevant when parallelization is not
         used.
+    belief_scorer : instance of indra.belief.BeliefScorer
+        Instance of BeliefScorer class to use in calculating Statement
+        probabilities. If None is provided (default), then the default
+        scorer is used.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -201,7 +205,8 @@ def run_preassembly(stmts_in, **kwargs):
         A list of preassembled top-level statements.
     """
     dump_pkl_unique = kwargs.get('save_unique')
-    be = BeliefEngine()
+    belief_scorer = kwargs.get('belief_scorer')
+    be = BeliefEngine(scorer=belief_scorer)
     pa = Preassembler(hierarchies, stmts_in)
     run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
 
@@ -222,7 +227,7 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     preassembler : indra.preassembler.Preassembler
         A Preassembler instance
     beliefengine : indra.belief.BeliefEngine
-        A BeliefEngine instance
+        A BeliefEngine instance.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -250,7 +255,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         A Preassembler instance which already has a set of unique statements
         internally.
     beliefengine : indra.belief.BeliefEngine
-        A BeliefEngine instance
+        A BeliefEngine instance.
     return_toplevel : Optional[bool]
         If True, only the top-level statements are returned. If False,
         all statements are returned irrespective of level of specificity.
