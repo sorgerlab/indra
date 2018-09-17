@@ -62,7 +62,7 @@ def get_source(ev_json):
     return src.lower()
 
 
-REDACT_MESSAGE = '[REDACTED: MISSING/INVALID API KEY]'
+REDACT_MESSAGE = '[MISSING/INVALID API KEY: limited to 200 char for Elsevier]'
 
 
 def _query_wrapper(f):
