@@ -4,6 +4,7 @@ import os
 import re
 import logging
 import requests
+from indra.config import has_config, get_config
 from indra.literature import pubmed_client
 # Python3
 try:
@@ -18,21 +19,14 @@ logger = logging.getLogger('crossref')
 crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/dois'
 
-# THIS FILE IS NOT UNDER VERSION CONTROL
-# For more information see:
-# http://clickthroughsupport.crossref.org/click-through-service-for-researchers/
-api_key_file = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            'cr_clickthrough_key')
 
-# Read the API key
-api_key = None
-try:
-    with open(api_key_file, 'rt') as fh:
-        api_key = fh.read().strip()
-except IOError:
+# http://clickthroughsupport.crossref.org/click-through-service-for-researchers/
+if not has_config('CROSSREF_CLICKTHROUGH_KEY'):
     logger.debug('CrossRef Clickthrough API key could not be found at:')
-    logger.debug(api_key_file)
     api_key = None
+else:
+    api_key = get_config('CROSSREF_CLICKTHROUGH_KEY')
+
 
 @lru_cache(maxsize=100)
 def get_metadata(doi):
