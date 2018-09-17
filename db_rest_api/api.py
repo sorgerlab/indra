@@ -62,6 +62,9 @@ def get_source(ev_json):
     return src.lower()
 
 
+REDACT_MESSAGE = '[REDACTED: MISSING/INVALID API KEY]'
+
+
 def _query_wrapper(f):
     @wraps(f)
     def decorator():
@@ -83,7 +86,9 @@ def _query_wrapper(f):
             for stmt_json in result['statements'].values():
                 for ev_json in stmt_json['evidence']:
                     if get_source(ev_json) == 'elsevier':
-                        ev_json['text'] = '[REDACTED: MISSING/INVALID API KEY]'
+                        text = ev_json['text']
+                        if len(text) > 200:
+                            ev_json['text'] = text[:200] + REDACT_MESSAGE
         result['offset'] = offs
         result['evidence_limit'] = ev_limit
         result['statement_limit'] = MAX_STATEMENTS

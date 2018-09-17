@@ -7,7 +7,7 @@ from datetime import datetime
 from unittest import SkipTest
 from warnings import warn
 
-from db_rest_api.api import MAX_STATEMENTS, get_source
+from db_rest_api.api import MAX_STATEMENTS, get_source, REDACT_MESSAGE
 from indra import get_config
 from indra.db import get_primary_db
 from indra.statements import stmts_from_json
@@ -335,18 +335,24 @@ class DbApiTestCase(unittest.TestCase):
         resp_dict = json.loads(resp.data.decode('utf-8'))
         stmt_dict_redact = resp_dict['statements']
         elsevier_found = 0
+        elsevier_long_found = 0
         for s in stmt_dict_redact.values():
             for ev in s['evidence']:
                 if get_source(ev) == 'elsevier':
                     elsevier_found += 1
-                    assert ev['text'].startswith('[REDACTED'), \
-                        'Found unredacted Elsevier text: %s.' % ev['text']
+                    if len(ev['text']) > 200:
+                        elsevier_long_found += 1
+                        assert ev['text'].endswith(REDACT_MESSAGE), \
+                            'Found unredacted Elsevier text: %s.' % ev['text']
                 else:
                     if 'text' in ev.keys():
                         assert not ev['text'].startswith('[Redacted'), \
                             'Found redacted non-elsevier text.'
         if elsevier_found == 0:
-            raise SkipTest("No redactable Elsevier content occurred.")
+            raise SkipTest("No Elsevier content occurred.")
+        if elsevier_long_found == 0:
+            raise SkipTest("No redactable (>200 char) Elsevier content "
+                           "occurred.")
 
         key = get_config('INDRA_DB_REST_API_KEY')
         if key is None:
@@ -368,8 +374,8 @@ class DbApiTestCase(unittest.TestCase):
             for ev in s['evidence']:
                 if get_source(ev) == 'elsevier':
                     elsevier_found += 1
-                if 'text' in ev.keys():
-                    assert not ev['text'].startswith('[REDACTED'), \
+                if 'text' in ev.keys() and len(ev['text']) > 200:
+                    assert not ev['text'].endswith(REDACT_MESSAGE), \
                         'Found redacted text despite api key.'
         assert elsevier_found > 0, "Elsevier content references went missing."
         return
