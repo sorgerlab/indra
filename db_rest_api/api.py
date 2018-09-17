@@ -7,8 +7,8 @@ from flask import Flask, request, abort, Response
 from flask_compress import Compress
 from flask_cors import CORS
 
-from indra.db.client import get_statement_jsons_from_agents,\
-    get_statement_jsons_from_hashes, get_statement_jsons_from_papers
+from indra.db.client import get_statement_jsons_from_agents, \
+    get_statement_jsons_from_hashes, get_statement_jsons_from_papers, has_auth
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 from indra.util import batch_iter
@@ -52,6 +52,19 @@ def __process_agent(agent_param):
     return ag, ns
 
 
+def get_source(ev_json):
+    notes = ev_json.get('annotations')
+    if notes is None:
+        return
+    src = notes.get('content_source')
+    if src is None:
+        return
+    return src.lower()
+
+
+REDACT_MESSAGE = '[MISSING/INVALID API KEY: limited to 200 char for Elsevier]'
+
+
 def _query_wrapper(f):
     @wraps(f)
     def decorator():
@@ -64,7 +77,18 @@ def _query_wrapper(f):
         do_stream_str = query_dict.pop('stream', 'false')
         do_stream = True if do_stream_str == 'true' else False
 
+        api_key = query_dict.pop('api_key', None)
+
         result = f(query_dict, offs, MAX_STATEMENTS, ev_limit, best_first)
+
+        # Redact elsevier content for those without permission.
+        if api_key is None or not has_auth(api_key):
+            for stmt_json in result['statements'].values():
+                for ev_json in stmt_json['evidence']:
+                    if get_source(ev_json) == 'elsevier':
+                        text = ev_json['text']
+                        if len(text) > 200:
+                            ev_json['text'] = text[:200] + REDACT_MESSAGE
         result['offset'] = offs
         result['evidence_limit'] = ev_limit
         result['statement_limit'] = MAX_STATEMENTS
@@ -174,7 +198,7 @@ def get_statements(query_dict, offs, max_stmts, ev_limit, best_first):
     return result
 
 
-@app.route('/statements/from_hashes', methods=['POST', 'GET'])
+@app.route('/statements/from_hashes', methods=['POST'])
 @_query_wrapper
 def get_statements_by_hash(query_dict, offs, max_stmts, ev_limit, best_first):
     hashes = request.json.get('hashes')

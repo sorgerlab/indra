@@ -650,7 +650,7 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
 
     selection = (select([mk_hashes_al.c.mk_hash, mk_hashes_al.c.ev_count,
                          json_content_al.c.raw_json, json_content_al.c.pa_json,
-                         db.ReadingRefLink.pmid])
+                         db.ReadingRefLink.pmid, db.ReadingRefLink.source])
                  .select_from(stmts_q))
     logger.debug("Executing sql to get statements:\n%s" % str(selection))
 
@@ -660,7 +660,7 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
     stmts_dict = {}
     total_evidence = 0
     returned_evidence = 0
-    for mk_hash, ev_count, raw_json_bts, pa_json_bts, pmid in res:
+    for mk_hash, ev_count, raw_json_bts, pa_json_bts, pmid, src in res:
         returned_evidence += 1
         raw_json = json.loads(raw_json_bts.decode('utf-8'))
         ev_json = raw_json['evidence'][0]
@@ -678,9 +678,11 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
         # Add agents' raw text to annotations.
         raw_text = []
         for ag_name in get_statement_by_name(raw_json['type'])._agent_order:
-            ag_value = raw_json[ag_name]
+            ag_value = raw_json.get(ag_name, None)
             if isinstance(ag_value, dict):
                 raw_text.append(ag_value['db_refs'].get('TEXT'))
+            elif ag_value is None:
+                raw_text.append(None)
             else:
                 for ag in ag_value:
                     raw_text.append(ag['db_refs'].get('TEXT'))
@@ -690,6 +692,9 @@ def _get_pa_stmt_jsons_w_mkhash_subquery(db, mk_hashes_q, best_first=True,
         if 'prior_uuids' not in ev_json['annotations'].keys():
             ev_json['annotations']['prior_uuids'] = []
         ev_json['annotations']['prior_uuids'].append(raw_json['id'])
+
+        if src:
+            ev_json['annotations']['content_source'] = src
 
         stmts_dict[mk_hash]['evidence'].append(ev_json)
 
@@ -1068,3 +1073,8 @@ def export_relation_dict_to_tsv(relation_dict, out_base, out_types=None):
     return relation_dict
 
 
+def has_auth(api_key, db=None):
+    logger.info("Checking auth of secret key.")
+    if db is None:
+        db = get_primary_db()
+    return db._check_auth(api_key)

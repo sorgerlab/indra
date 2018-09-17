@@ -4,9 +4,11 @@ import sys
 
 from itertools import combinations
 from datetime import datetime
+from unittest import SkipTest
 from warnings import warn
 
-from db_rest_api.api import MAX_STATEMENTS
+from db_rest_api.api import MAX_STATEMENTS, get_source, REDACT_MESSAGE
+from indra import get_config
 from indra.db import get_primary_db
 from indra.statements import stmts_from_json
 from indra.databases import hgnc_client
@@ -59,10 +61,11 @@ class DbApiTestCase(unittest.TestCase):
     def __time_get_query(self, end_point, query_str):
         return self.__time_query('get', end_point, query_str)
 
-    def __time_query(self, method, end_point, query_str=None, **data):
+    def __time_query(self, method, end_point, query_str=None, url_fmt='/%s/?%s',
+                     **data):
         start_time = datetime.now()
         if query_str is not None:
-            url = '/%s/?%s' % (end_point, query_str)
+            url = url_fmt % (end_point, query_str)
         else:
             url = end_point
         meth_func = getattr(self.app, method)
@@ -275,7 +278,7 @@ class DbApiTestCase(unittest.TestCase):
         return
 
     def test_statements_by_hashes_query(self):
-        resp, dt, size = self.__time_query('get', 'statements/from_hashes',
+        resp, dt, size = self.__time_query('post', 'statements/from_hashes',
                                            hashes=[-36028793042562873,
                                                    -12978096432588272,
                                                    -12724735151233845])
@@ -292,7 +295,7 @@ class DbApiTestCase(unittest.TestCase):
         hash_cnt_dict = {ev_cts.mk_hash: ev_cts.ev_count for ev_cts in res}
 
         # Run the test.
-        resp, dt, size = self.__time_query('get', 'statements/from_hashes',
+        resp, dt, size = self.__time_query('post', 'statements/from_hashes',
                                            hashes=list(hash_cnt_dict.keys()))
         resp_dict = json.loads(resp.data.decode('utf-8'))
         self.__check_stmts(resp_dict['statements'].values())
@@ -326,6 +329,73 @@ class DbApiTestCase(unittest.TestCase):
 
     def test_trid_paper_query(self):
         self.__test_basic_paper_query('19649148', 'trid')
+
+    def __test_redaction(self, method, endpoint, base_qstr, **data):
+        resp, dt, size = self.__time_query(method, endpoint, base_qstr, **data)
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        stmt_dict_redact = resp_dict['statements']
+        elsevier_found = 0
+        elsevier_long_found = 0
+        for s in stmt_dict_redact.values():
+            for ev in s['evidence']:
+                if get_source(ev) == 'elsevier':
+                    elsevier_found += 1
+                    if len(ev['text']) > 200:
+                        elsevier_long_found += 1
+                        assert ev['text'].endswith(REDACT_MESSAGE), \
+                            'Found unredacted Elsevier text: %s.' % ev['text']
+                else:
+                    if 'text' in ev.keys():
+                        assert not ev['text'].startswith('[Redacted'), \
+                            'Found redacted non-elsevier text.'
+        if elsevier_found == 0:
+            raise SkipTest("No Elsevier content occurred.")
+        if elsevier_long_found == 0:
+            raise SkipTest("No redactable (>200 char) Elsevier content "
+                           "occurred.")
+
+        key = get_config('INDRA_DB_REST_API_KEY')
+        if key is None:
+            return  # Can't test the behavior with an API key.
+
+        key_param = 'api_key=%s' % key
+        if base_qstr:
+            new_qstr = '&'.join(base_qstr.replace('?', '').split('&')
+                                + [key_param])
+        else:
+            new_qstr = key_param
+        resp, dt, size = self.__time_query(method, endpoint, new_qstr, **data)
+        resp_dict = json.loads(resp.data.decode('utf-8'))
+        stmt_dict_intact = resp_dict['statements']
+        assert stmt_dict_intact.keys() == stmt_dict_redact.keys(), \
+            "Response content changed: different statements without redaction."
+        elsevier_found = 0
+        for s in stmt_dict_intact.values():
+            for ev in s['evidence']:
+                if get_source(ev) == 'elsevier':
+                    elsevier_found += 1
+                if 'text' in ev.keys() and len(ev['text']) > 200:
+                    assert not ev['text'].endswith(REDACT_MESSAGE), \
+                        'Found redacted text despite api key.'
+        assert elsevier_found > 0, "Elsevier content references went missing."
+        return
+
+    def test_redaction_on_agents_query(self):
+        return self.__test_redaction('get', 'statements',
+                                     'agent1=STAT5@FPLX&agent2=CRKL')
+
+    def test_redaction_on_paper_query(self):
+        return self.__test_redaction('get', 'papers', 'id=20914619&type=tcid')
+
+    def test_redaction_on_hash_query(self):
+        sample_hashes = [
+            -32827941998109538, -20158153585845131, 15974582929874023,
+            -11800901683709001, 32808234842849068, -31465406544763237,
+            35045936321307934, -21857044700777238, 26048368199546337,
+            -13784512593103829
+            ]
+        return self.__test_redaction('post', 'statements/from_hashes', None,
+                                     url_fmt='%s?%s', hashes=sample_hashes)
 
 
 if __name__ == '__main__':
