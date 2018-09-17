@@ -96,8 +96,8 @@ class SimpleScorer(BeliefScorer):
         if prior_probs:
             self.prior_probs.update(prior_probs)
         for err_type, source_dict in self.prior_probs.items():
-            logger.info("Prior probabilities for %s errors: %s"
-                        % (err_type, source_dict))
+            logger.debug("Prior probabilities for %s errors: %s"
+                         % (err_type, source_dict))
         self.subtype_probs = subtype_probs
         return
 
@@ -370,8 +370,8 @@ def tag_evidence_subtype(evidence):
             else:
                 subtype = None
         else:
-            logger.warning('Could not find found_by attribute in reach '
-                           'statement annoations')
+            logger.debug('Could not find found_by attribute in reach '
+                         'statement annoations')
             subtype = None
     elif source_api == 'geneways':
         subtype = annotations['actiontype']
