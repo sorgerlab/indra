@@ -1147,16 +1147,8 @@ class Statement(object):
         # Make it a signed int.
         return 16**n_bytes//2 - raw_h
 
-    def _make_matches_key(self):
-        raise NotImplementedError("Method must be implemented in child class.")
-
     def matches_key(self):
-        key = self._make_matches_key()
-        rep_chars = '\'\"\\<>'
-        for c in rep_chars:
-            key = key.replace(c, '')
-        key = key.replace('class indra.statements.', '')[1:-1]
-        return key
+        raise NotImplementedError("Method must be implemented in child class.")
 
     def matches(self, other):
         return self.matches_key() == other.matches_key()
@@ -1448,7 +1440,7 @@ class Modification(Statement):
         else:
             self.position = position
 
-    def _make_matches_key(self):
+    def matches_key(self):
         if self.enz is None:
             enz_key = None
         else:
@@ -1612,7 +1604,7 @@ class SelfModification(Statement):
              (type(self).__name__, self.enz, res_str, pos_str))
         return s
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.enz.matches_key(),
                str(self.residue), str(self.position))
         return str(key)
@@ -1865,7 +1857,7 @@ class RegulateActivity(Statement):
         state.pop('subj_activity', None)
         self.__dict__.update(state)
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.subj.matches_key(),
                self.obj.matches_key(), str(self.obj_activity),
                str(self.is_activation))
@@ -2087,7 +2079,7 @@ class ActiveForm(Statement):
         self.activity = activity
         self.is_active = is_active
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.agent.matches_key(),
                str(self.activity), str(self.is_active))
         return str(key)
@@ -2220,7 +2212,7 @@ class HasActivity(Statement):
         self.activity = activity
         self.has_activity = has_activity
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.agent.matches_key(),
                str(self.activity), str(self.has_activity))
         return str(key)
@@ -2288,7 +2280,7 @@ class Gef(Statement):
         self.gef = gef
         self.ras = ras
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.gef.matches_key(),
                self.ras.matches_key())
         return str(key)
@@ -2373,7 +2365,7 @@ class Gap(Statement):
         self.gap = gap
         self.ras = ras
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.gap.matches_key(),
                self.ras.matches_key())
         return str(key)
@@ -2452,7 +2444,7 @@ class Complex(Statement):
         super(Complex, self).__init__(evidence)
         self.members = members
 
-    def _make_matches_key(self):
+    def matches_key(self):
         members = sorted(self.members, key=lambda x: x.matches_key())
         key = (type(self), tuple(m.matches_key() for m in members))
         return str(key)
@@ -2590,7 +2582,7 @@ class Translocation(Statement):
         matches = matches and (self.to_location == other.to_location)
         return matches
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.agent.matches_key(), str(self.from_location),
                str(self.to_location))
         return str(key)
@@ -2633,7 +2625,7 @@ class RegulateAmount(Statement):
                              type(self).__name__)
         self.obj = obj
 
-    def _make_matches_key(self):
+    def matches_key(self):
         if self.subj is None:
             subj_key = None
         else:
@@ -2831,7 +2823,7 @@ class Influence(IncreaseAmount):
             delta_equals(self.obj_delta, other.obj_delta)
         return matches
 
-    def _make_matches_key(self):
+    def matches_key(self):
         key = (type(self), self.subj.matches_key(),
                self.obj.matches_key(),
                self.subj_delta['polarity'],
@@ -2956,7 +2948,7 @@ class Conversion(Statement):
         if isinstance(obj_to, Agent):
             self.obj_to = [obj_to]
 
-    def _make_matches_key(self):
+    def matches_key(self):
         keys = [type(self)]
         keys += [self.subj.matches_key() if self.subj else None]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_to)]
