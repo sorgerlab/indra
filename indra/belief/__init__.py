@@ -1,9 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import copy
+
+import json
 import numpy
 import networkx
 import logging
+from os import path
 
 try:
     from indra.sources.reach.processor import determine_reach_subtype
@@ -13,44 +15,14 @@ except ImportError:
 
 logger = logging.getLogger("belief")
 
-default_probs = {
-    'rand': {
-        'biopax': 0.2,
-        'bel': 0.1,
-        'trips': 0.3,
-        'reach': 0.3,
-        'isi': 0.3,
-        'eidos': 0.3,
-        'hume': 0.3,
-        'cwms': 0.3,
-        'sofia': 0.3,
-        'biogrid': 0.01,
-        'sparser': 0.3,
-        'r3': 0.1,
-        'phosphosite': 0.01,
-        'ndex': 0.049,
-        'signor': 0.049,
-        'assertion': 0.0,
-        },
-    'syst': {
-        'biopax': 0.01,
-        'bel': 0.01,
-        'trips': 0.05,
-        'reach': 0.05,
-        'isi': 0.05,
-        'eidos': 0.05,
-        'hume': 0.05,
-        'cwms': 0.05,
-        'sofia': 0.05,
-        'biogrid': 0.01,
-        'sparser': 0.05,
-        'r3': 0.05,
-        'phosphosite': 0.01,
-        'ndex': 0.01,
-        'signor': 0.01,
-        'assertion': 0.0,
-        }
-    }
+
+THIS_DIR = path.dirname(path.abspath(__file__))
+
+
+def load_default_probs():
+    with open(path.join(THIS_DIR, 'default_belief_probs.json'), 'r') as f:
+        prior_probs = json.load(f)
+    return prior_probs
 
 
 class BeliefScorer(object):
@@ -120,7 +92,7 @@ class SimpleScorer(BeliefScorer):
         only use the priors for each rule.
     """
     def __init__(self, prior_probs=None, subtype_probs=None):
-        self.prior_probs = copy.deepcopy(default_probs)
+        self.prior_probs = load_default_probs()
         if prior_probs:
             self.prior_probs.update(prior_probs)
         for err_type, source_dict in self.prior_probs.items():
@@ -190,7 +162,7 @@ class SimpleScorer(BeliefScorer):
                     raise Exception(msg)
 
 
-default_scorer = SimpleScorer(default_probs, None)
+default_scorer = SimpleScorer()
 
 
 class BeliefEngine(object):

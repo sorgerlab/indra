@@ -2,10 +2,11 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from nose.tools import raises
 from indra.statements import *
-from indra.belief import BeliefEngine
-from indra.belief import _get_belief_package, default_probs, \
-        sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
-        SimpleScorer
+from indra.belief import BeliefEngine, load_default_probs, _get_belief_package,\
+    sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
+    SimpleScorer
+
+default_probs = load_default_probs()
 
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')

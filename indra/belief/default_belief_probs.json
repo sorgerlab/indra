@@ -1,0 +1,38 @@
+{
+  "syst": {
+    "eidos": 0.05,
+    "assertion": 0.0,
+    "trips": 0.05,
+    "sparser": 0.05,
+    "isi": 0.05,
+    "biopax": 0.01,
+    "ndex": 0.01,
+    "bel": 0.01,
+    "r3": 0.05,
+    "reach": 0.05,
+    "phosphosite": 0.01,
+    "signor": 0.01,
+    "biogrid": 0.01,
+    "cwms": 0.05,
+    "hume": 0.05,
+    "sofia": 0.05
+  },
+  "rand": {
+    "eidos": 0.3,
+    "assertion": 0.0,
+    "trips": 0.3,
+    "sparser": 0.3,
+    "isi": 0.3,
+    "biopax": 0.2,
+    "ndex": 0.049,
+    "bel": 0.1,
+    "r3": 0.1,
+    "reach": 0.3,
+    "phosphosite": 0.01,
+    "signor": 0.049,
+    "biogrid": 0.01,
+    "cwms": 0.3,
+    "hume": 0.3,
+    "sofia": 0.3
+  }
+}
