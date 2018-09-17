@@ -120,8 +120,13 @@ class SimpleScorer(BeliefScorer):
     """
     def __init__(self, prior_probs, subtype_probs=None):
         self.prior_probs = default_probs
-        self.prior_probs.update(prior_probs)
+        if prior_probs:
+            self.prior_probs.update(prior_probs)
+        for err_type, source_dict in self.prior_probs.items():
+            logger.info("Prior probabilities for %s errors: %s"
+                        % (err_type, source_dict))
         self.subtype_probs = subtype_probs
+        return
 
     def score_statement(self, st):
         """Computes the prior belief probability for an INDRA Statement.
