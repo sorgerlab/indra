@@ -29,7 +29,7 @@ def main():
                                   'pyyaml', 'click'],
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       # AWS interface and database
-                      'aws': ['boto3'],
+                      'aws': ['boto3', 'reportlab'],
                       'db': ['sqlalchemy', 'boto3'],
                       # Utilities
                       'graph': ['pygraphviz'],
