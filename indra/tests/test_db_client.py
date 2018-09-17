@@ -88,8 +88,8 @@ class _PrePaDatabaseTestSetup(object):
 
     def insert_the_statements(self, input_tuples):
         print("Loading %d statements..." % len(input_tuples))
-        self.test_db.copy('raw_statements', [t[1:] for t in input_tuples],
-                          self.test_data['raw_statements']['cols'][1:])
+        self.test_db.copy('raw_statements', [t for t in input_tuples],
+                          self.test_data['raw_statements']['cols'])
         print("Inserting agents...")
         dbu.insert_agents(self.test_db, 'raw')
         return
@@ -99,6 +99,29 @@ class _PrePaDatabaseTestSetup(object):
         input_tuples = self.get_available_stmt_tuples()
         self.insert_the_statements(input_tuples)
         self.used_stmt_tuples |= set(input_tuples)
+        return
+
+    def insert_pa_statements(self):
+        """Insert pickled preassembled statements."""
+        existing_sids = {t[0] for t in self.used_stmt_tuples}
+        link_tuples = []
+        pa_tuples = []
+        hash_set = set()
+        pa_stmt_dict = self.test_data['pa_statements']['dict']
+        for mk_hash, sid in self.test_data['raw_unique_links']['tuples']:
+            if sid in existing_sids:
+                link_tuples.append((mk_hash, sid))
+                if mk_hash not in hash_set:
+                    pa_tuples.append(pa_stmt_dict[mk_hash])
+                    hash_set.add(mk_hash)
+        self.test_db.copy('pa_statements', pa_tuples,
+                          self.test_data['pa_statements']['cols'])
+        self.test_db.copy('raw_unique_links', link_tuples,
+                          self.test_data['raw_unique_links']['cols'])
+        supps_tuples = {t for t in self.test_data['pa_support_links']['tuples']
+                        if set(t).issubset(hash_set)}
+        self.test_db.copy('pa_support_links', supps_tuples,
+                          self.test_data['pa_support_links']['cols'])
         return
 
 
