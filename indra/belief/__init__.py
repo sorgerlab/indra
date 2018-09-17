@@ -120,7 +120,7 @@ class SimpleScorer(BeliefScorer):
         only use the priors for each rule.
     """
     def __init__(self, prior_probs=None, subtype_probs=None):
-        self.prior_probs = copy.copy(default_probs)
+        self.prior_probs = copy.deepcopy(default_probs)
         if prior_probs:
             self.prior_probs.update(prior_probs)
         for err_type, source_dict in self.prior_probs.items():
