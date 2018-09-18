@@ -743,7 +743,8 @@ def test_agent_text_storage():
     unq1 = pa.combine_duplicates()
     assert len(unq1) == 5, len(unq1)
     assert all([len(ev.annotations['prior_uuids']) == 1
-                for s in unq1 for ev in s.evidence]),\
+                for s in unq1 for ev in s.evidence
+                if len(s.evidence) > 1]),\
         'There can only be one prior evidence per uuid at this stage.'
     ev_uuid_dict = {ev.annotations['prior_uuids'][0]: ev.annotations['agents']
                     for s in unq1 for ev in s.evidence}

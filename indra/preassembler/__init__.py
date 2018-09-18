@@ -133,9 +133,12 @@ class Preassembler(object):
             ev_keys = set()
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
+            duplicates = list(duplicates)
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix is 0:
                     new_stmt = stmt.make_generic_copy()
+                if len(duplicates) == 1:
+                    new_stmt.uuid = stmt.uuid
                 raw_text = [None if ag is None else ag.db_refs.get('TEXT')
                             for ag in stmt.agent_list(deep_sorted=True)]
                 for ev in stmt.evidence:
