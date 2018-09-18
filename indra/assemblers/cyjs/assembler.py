@@ -9,7 +9,6 @@ import numpy as np
 from indra.statements import *
 from indra.databases import hgnc_client
 from indra.databases import context_client, get_identifiers_url
-from indra.preassembler import Preassembler
 from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
 
@@ -64,7 +63,6 @@ class CyJSAssembler(object):
             A list of :py:class:`indra.statements.Statement`
             to be added to the statement list of the assembler.
         """
-        stmts = Preassembler.combine_duplicate_stmts(stmts)
         for stmt in stmts:
             self.statements.append(stmt)
 
