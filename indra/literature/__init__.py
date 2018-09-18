@@ -15,6 +15,7 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 
 logger = logging.getLogger('literature')
 
+
 def id_lookup(paper_id, idtype):
     """Take an ID of type PMID, PMCID, or DOI and lookup the other IDs.
 
@@ -23,10 +24,10 @@ def id_lookup(paper_id, idtype):
 
     Parameters
     ----------
-    paper_id : string
+    paper_id : str
         ID of the article.
-    idtype : 'pmid', 'pmcid', or 'doi
-        Type of the ID.
+    idtype : str
+        Type of the ID: 'pmid', 'pmcid', or 'doi
 
     Returns
     -------
@@ -145,9 +146,9 @@ def get_full_text(paper_id, idtype, preferred_content_type='text/xml'):
             headers = {}
             # Set the Cross Ref Clickthrough API key in the header, if we've
             # got one
-            if crossref_client.api_key is not None:
-                headers['CR-Clickthrough-Client-Token'] = \
-                        crossref_client.api_key
+            cr_api_key = crossref_client.get_api_key()
+            if cr_api_key is not None:
+                headers['CR-Clickthrough-Client-Token'] = cr_api_key
             # Utility function to get particular links by content-type
             def lookup_content_type(link_list, content_type):
                 content_list = [l.get('URL') for l in link_list

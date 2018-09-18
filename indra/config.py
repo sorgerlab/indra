@@ -89,12 +89,12 @@ def get_config(key, failure_ok=True):
 
     Parameters
     ----------
-    key: str
+    key : str
         The key for the configuration value to fetch
 
     Returns
     -------
-    value: str
+    value : str
         The configuration value
     """
     err_msg = "Key %s not in environment or config file." % key
@@ -114,12 +114,12 @@ def has_config(key):
 
     Parmeters
     ---------
-    key: str
+    key : str
         The key for the configuration value to fetch
 
     Returns
     -------
-    value: bool
+    value : bool
         Whether the configuration value is present
     """
     return get_config(key) is not None

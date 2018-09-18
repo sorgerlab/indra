@@ -4,7 +4,7 @@ import os
 import re
 import logging
 import requests
-from indra.config import has_config, get_config
+from indra.config import get_config
 from indra.literature import pubmed_client
 # Python3
 try:
@@ -20,12 +20,10 @@ crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/dois'
 
 
+
 # http://clickthroughsupport.crossref.org/click-through-service-for-researchers/
-if not has_config('CROSSREF_CLICKTHROUGH_KEY'):
-    logger.debug('CrossRef Clickthrough API key could not be found at:')
-    api_key = None
-else:
-    api_key = get_config('CROSSREF_CLICKTHROUGH_KEY')
+def get_api_key():
+    return get_config('CROSSREF_CLICKTHROUGH_KEY')
 
 
 @lru_cache(maxsize=100)
