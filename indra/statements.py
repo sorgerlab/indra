@@ -3445,7 +3445,7 @@ def get_statement_by_name(stmt_name):
     for stmt_class in stmt_classes:
         if stmt_class.__name__.lower() == stmt_name.lower():
             return stmt_class
-    raise NotAStatementName('%s is not recognized as a statement type: %s'
+    raise NotAStatementName('\"%s\" is not recognized as a statement type!'
                             % stmt_name)
 
 
