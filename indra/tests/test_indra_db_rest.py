@@ -30,7 +30,7 @@ def test_simple_request():
 
 @attr('nonpublic')
 def test_request_for_complex():
-    __check_request(10, agents=['MEK@FPLX', 'ERK@FPLX'], stmt_type='Complex')
+    __check_request(30, agents=['MEK@FPLX', 'ERK@FPLX'], stmt_type='Complex')
 
 
 @attr('nonpublic')
@@ -56,14 +56,14 @@ def test_bigger_request():
 
 @attr('nonpublic')
 def test_too_big_request_no_persist():
-    resp_some = __check_request(40, agents=['TP53'], persist=False,
+    resp_some = __check_request(60, agents=['TP53'], persist=False,
                                 simple_response=False)
     return resp_some
 
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(100, agents=['TP53'], persist=True, block=True,
+    resp_all1 = __check_request(120, agents=['TP53'], persist=True, block=True,
                                 simple_response=False)
     return resp_all1
 
