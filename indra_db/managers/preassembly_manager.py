@@ -81,7 +81,7 @@ from indra.tools import assemble_corpus as ac
 from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 
-from indra.db.util import insert_pa_stmts, distill_stmts, get_db
+from indra_db.util import insert_pa_stmts, distill_stmts, get_db
 
 
 HERE = path.dirname(path.abspath(__file__))

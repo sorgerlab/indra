@@ -14,7 +14,8 @@ logger = logging.getLogger('db_client')
 
 from indra.util import batch_iter, clockit
 from indra.databases import hgnc_client
-from .util import get_primary_db, get_raw_stmts_frm_db_list, \
+
+from indra_db.util import get_primary_db, get_raw_stmts_frm_db_list, \
     unpack, _get_statement_object
 
 

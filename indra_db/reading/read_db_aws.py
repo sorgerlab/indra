@@ -12,10 +12,11 @@ import botocore
 import logging
 import random
 from datetime import datetime
-from indra.tools.reading.db_reading.read_db import produce_readings, \
-    produce_statements, get_id_dict
 from indra.tools.reading.readers import get_readers
-from indra.tools.reading.db_reading.report_db_aws import DbAwsStatReporter
+
+from indra_db.reading.read_db import produce_readings, \
+    produce_statements, get_id_dict
+from indra_db.reading.report_db_aws import DbAwsStatReporter
 
 
 if __name__ == '__main__':

@@ -111,11 +111,12 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
 
 from indra.literature.elsevier_client import extract_text as process_elsevier
-from indra.db import get_primary_db, formats, texttypes
-from indra.db import sql_expressions as sql
-from indra.db.util import insert_agents
 from indra.tools.reading.readers import ReadingData, _get_dir, get_reader, \
     Content
+
+from indra_db import get_primary_db, formats, texttypes
+from indra_db import sql_expressions as sql
+from indra_db.util import insert_agents
 
 
 class ReadDBError(Exception):

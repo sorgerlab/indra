@@ -22,8 +22,9 @@ from indra.util import batch_iter, clockit
 from indra.statements import Complex, SelfModification, ActiveForm,\
     stmts_from_json, Conversion, Translocation, Statement
 
-from .database_manager import DatabaseManager, IndraDatabaseError
-from .config import get_databases as get_defaults
+from indra_db.managers.database_manager import DatabaseManager,\
+    IndraDatabaseError
+from indra_db.config import get_databases as get_defaults
 
 logger = logging.getLogger('db_util')
 

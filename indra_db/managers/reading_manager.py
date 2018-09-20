@@ -5,9 +5,10 @@ import logging
 from os import path
 from functools import wraps
 from datetime import datetime, timedelta
-from indra.db.util import get_primary_db, get_test_db, get_db
-from indra.tools.reading.submit_reading_pipeline import submit_db_reading,\
+from indra.tools.reading.submit_reading_pipeline import submit_db_reading, \
     wait_for_complete
+
+from indra_db.util import get_primary_db, get_test_db, get_db
 
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
@@ -90,8 +91,8 @@ if __name__ == '__main__':
         )
     args = parser.parse_args()
 
-from indra.tools.reading.db_reading import read_db as rdb
 from indra.tools.reading.readers import get_reader_class
+from indra_db.reading import read_db as rdb
 
 logger = logging.getLogger('reading_manager')
 THIS_DIR = path.dirname(path.abspath(__file__))

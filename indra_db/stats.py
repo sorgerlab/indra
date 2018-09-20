@@ -6,7 +6,7 @@ from datetime import datetime
 import boto3
 from sqlalchemy import func
 
-from indra.db.util import get_primary_db
+from indra_db.util import get_primary_db
 
 
 def __report_stat(report_str, fname=None, do_print=True):

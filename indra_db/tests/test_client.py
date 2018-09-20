@@ -3,17 +3,17 @@ import pickle
 import random
 
 from unittest import SkipTest
-from .util import IS_PY3
+from indra.tests.util import IS_PY3
 if not IS_PY3:
     raise SkipTest("This test requires Python 3.")
 
 from nose.plugins.attrib import attr
 
 from indra.literature import pubmed_client as pubc
-
-from indra.db import util as dbu
-from indra.db import client as dbc
 from indra.statements import stmts_from_json
+
+from indra_db import util as dbu
+from indra_db import client as dbc
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 

@@ -1,9 +1,9 @@
 from nose.plugins.attrib import attr
 
-from indra.db.belief import MockStatement, MockEvidence, populate_support, \
-    load_mock_statements, calculate_belief
 from indra.belief import BeliefEngine
-from indra.tests.test_db_client import _PrePaDatabaseTestSetup
+from indra_db.belief import MockStatement, MockEvidence, populate_support, \
+    load_mock_statements, calculate_belief
+from indra_db.tests.test_client import _PrePaDatabaseTestSetup
 
 
 def test_belief_calc_up_to_prior():

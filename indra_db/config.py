@@ -8,7 +8,7 @@ else:
     from ConfigParser import ConfigParser
 
 FILE_PATH = path.dirname(path.abspath(__file__))
-DEFAULT_DB_CONFIG_PATH = path.join(FILE_PATH, 'default_db_config.ini')
+DEFAULT_DB_CONFIG_PATH = path.join(FILE_PATH, 'resources/default_db_config.ini')
 
 DB_CONFIG_DIR = path.expanduser('~/.config/indra')
 DB_CONFIG_PATH = path.join(DB_CONFIG_DIR, 'db_config.ini')

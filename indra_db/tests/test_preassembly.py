@@ -7,7 +7,6 @@ import random
 import logging
 from datetime import datetime
 
-
 gm_logger = logging.getLogger('grounding_mapper')
 gm_logger.setLevel(logging.WARNING)
 
@@ -20,20 +19,18 @@ ps_logger.setLevel(logging.WARNING)
 pa_logger = logging.getLogger('preassembler')
 pa_logger.setLevel(logging.WARNING)
 
-from indra.db import util as db_util
-from indra.db import client as db_client
-from indra.db import preassembly_manager as pm
-from indra.db.preassembly_manager import shash
-from indra.statements import Statement
+from indra.statements import Statement, Phosphorylation, Agent, Evidence
+from indra.util.nested_dict import NestedDict
 from indra.tools import assemble_corpus as ac
+from indra.tests.util import needs_py3
+
+from indra_db import util as db_util
+from indra_db import client as db_client
+from indra_db.managers import preassembly_manager as pm
+from indra_db.managers.preassembly_manager import shash
+from indra_db.tests.test_client import _PrePaDatabaseTestSetup
 
 from nose.plugins.attrib import attr
-from .util import needs_py3
-from .test_db_client import _PrePaDatabaseTestSetup
-
-from indra.statements import Phosphorylation, Agent, Evidence
-from indra.db.util import NestedDict
-from indra.db.util import reader_versions as rv_dict
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 MAX_NUM_STMTS = 11721
@@ -41,7 +38,7 @@ BATCH_SIZE = 2017
 STMTS = None
 
 # ==============================================================================
-# Support clases and functions
+# Support classes and functions
 # ==============================================================================
 
 
@@ -102,7 +99,7 @@ def make_raw_statement_set_for_distillation():
                 assert stmts[-1].get_hash() != stmts[-2].get_hash()
 
         # Populate the provenance for the dict.
-        rv = rv_dict[reader][rv_idx]
+        rv = db_util.reader_versions[reader][rv_idx]
         r_dict = d[trid][src][tcid][reader][rv][rid]
 
         # If the evidence variation was specified, the evidence in any copies is

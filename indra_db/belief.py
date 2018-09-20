@@ -1,7 +1,7 @@
 import logging
 import pickle
 
-from indra.db import get_primary_db
+from indra_db import get_primary_db
 
 logger = logging.getLogger('db_belief')
 

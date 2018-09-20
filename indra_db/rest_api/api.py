@@ -7,11 +7,12 @@ from flask import Flask, request, abort, Response
 from flask_compress import Compress
 from flask_cors import CORS
 
-from indra.db.client import get_statement_jsons_from_agents, \
-    get_statement_jsons_from_hashes, get_statement_jsons_from_papers, has_auth
 from indra.statements import make_statement_camel
 from indra.databases import hgnc_client
 from indra.util import batch_iter
+
+from indra_db.client import get_statement_jsons_from_agents, \
+    get_statement_jsons_from_hashes, get_statement_jsons_from_papers, has_auth
 
 logger = logging.getLogger("db-api")
 

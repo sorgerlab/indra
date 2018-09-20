@@ -10,11 +10,11 @@ from nose import SkipTest
 from nose.tools import assert_equal
 from nose.plugins.attrib import attr
 
-from indra.db.util import NestedDict, get_test_db
-from indra.db.client import get_content_by_refs
-from indra.db.reading_manager import BulkLocalReadingManager
+from indra_db.util import NestedDict, get_test_db
+from indra_db.client import get_content_by_refs
+from indra_db.managers.reading_manager import BulkLocalReadingManager
 
-from .util import needs_py3, IS_PY3
+from indra.tests.util import needs_py3, IS_PY3
 
 if IS_PY3:
     from indra.db.content_manager import Pubmed, PmcOA, Manuscripts, Elsevier
