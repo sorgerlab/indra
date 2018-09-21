@@ -256,7 +256,7 @@ def _get_opa_input_stmts(db):
     reading_stmts, _, _ =\
         db_util._get_filtered_rdg_statements(stmt_nd, get_full_stmts=True,
                                              ignore_duplicates=True)
-    db_stmts = db_client.get_statements([db.RawStatements.reading_id == None],
+    db_stmts = db_client.get_statements([db.RawStatements.reading_id.is_(None)],
                                         preassembled=False, db=db)
     stmts = reading_stmts | set(db_stmts)
     print("Got %d statements for opa." % len(stmts))

@@ -3,19 +3,23 @@ from builtins import dict, str
 
 import pickle
 import random
-import zlib
-from os import path
+from os import path, chdir
+from subprocess import check_call
+
+import boto3
 from nose.plugins.attrib import attr
 
-from indra.tools.reading.db_reading import read_db as rdb
-from indra.tools.reading.db_reading.read_db import process_content
+from indra.util import zip_string
 from indra.tools.reading.read_files import read_files
 from indra.tools.reading.util.script_tools import make_statements
 from indra.tools.reading.readers import SparserReader
 from indra.tools.reading.readers import get_readers as get_all_readers
 
-from indra.tests.test_db import get_db as get_test_db
-from indra.tests.test_db import get_db_with_pubmed_content
+from indra_db import util as dbu
+from indra_db.reading import read_db as rdb
+from indra_db.tests.test_content_manager import get_db as get_test_db
+from indra_db.tests.test_content_manager import get_db_with_pubmed_content
+from indra_db.reading.submit_reading_pipeline import DbReadingSubmitter
 
 
 # ==============================================================================
@@ -112,7 +116,7 @@ def test_reading_content_insert():
     readers = get_readers()
     reading_output = []
     for reader in readers:
-        reading_output += reader.read([process_content(tc) for tc in tc_list],
+        reading_output += reader.read([rdb.process_content(tc) for tc in tc_list],
                                       verbose=True)
     expected_output_len = len(tc_list)*len(readers)
     assert len(reading_output) == expected_output_len, \
@@ -279,7 +283,7 @@ def test_sparser_parallel():
     db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
-    result = sparser_reader.read([process_content(tc) for tc in tc_list],
+    result = sparser_reader.read([rdb.process_content(tc) for tc in tc_list],
                                  verbose=True, log=True)
     N_exp = len(tc_list)
     N_res = len(result)
@@ -293,7 +297,7 @@ def test_sparser_parallel_one_batch():
     db = get_db_with_pubmed_content()
     sparser_reader = SparserReader(n_proc=2)
     tc_list = db.select_all(db.TextContent)
-    result = sparser_reader.read([process_content(tc) for tc in tc_list],
+    result = sparser_reader.read([rdb.process_content(tc) for tc in tc_list],
                                  verbose=True, n_per_proc=1)
     N_exp = len(tc_list)
     N_res = len(result)
@@ -327,3 +331,55 @@ def test_multiproc_statements():
     outputs = rdb.make_db_readings(id_dict, readers, db=db)
     stmts = make_statements(outputs, 2)
     assert len(stmts)
+
+
+@attr('nonpublic')
+def test_db_reading_help():
+    chdir(path.expanduser('~'))
+    check_call(['python', '-m', 'indra_db.reading.read_db_aws',
+                '--help'])
+
+
+@attr('nonpublic')
+def test_normal_db_reading_call():
+    s3 = boto3.client('s3')
+    chdir(path.expanduser('~'))
+    # Put some basic stuff in the test databsae
+    N = 6
+    db = dbu.get_test_db()
+    db._clear(force=True)
+    db.copy('text_ref', [(i, 'PMID80945%d' % i) for i in range(N)],
+            cols=('id', 'pmid'))
+    text_content = [
+        (i, i, 'pubmed', 'text', 'abstract',
+         zip_string('MEK phosphorylates ERK in test %d.' % i))
+        for i in range(N)
+        ]
+    text_content += [
+        (N, N-1, 'pmc_oa', 'text', 'fulltext',
+         zip_string('MEK phosphorylates ERK. EGFR activates SHC.'))
+        ]
+    db.copy('text_content', text_content,
+            cols=('id', 'text_ref_id', 'source', 'format', 'text_type',
+                  'content'))
+
+    # Put an id file on s3
+    basename = 'local_db_test_run'
+    s3_prefix = 'reading_results/%s/' % basename
+    s3.put_object(Bucket='bigmech', Key=s3_prefix + 'id_list',
+                  Body='\n'.join(['tcid: %d' % i
+                                  for i in range(len(text_content))]))
+
+    # Call the reading tool
+    sub = DbReadingSubmitter(basename, ['sparser'])
+    job_name, cmd = sub._make_command(0, len(text_content))
+    cmd += ['--test']
+    check_call(cmd)
+    sub.produce_report()
+
+    # Remove garbage on s3
+    res = s3.list_objects(Bucket='bigmech', Prefix=s3_prefix)
+    for entry in res['Contents']:
+        print("Removing %s..." % entry['Key'])
+        s3.delete_object(Bucket='bigmech', Key=entry['Key'])
+    return
