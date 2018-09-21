@@ -128,6 +128,12 @@ class ReadDBError(Exception):
 # =============================================================================
 
 
+def _get_matches_clause(db, reader):
+    "Make the clauses to get content that match Reader version and name."
+    return sql.and_(db.Reading.reader == reader.name,
+                    db.Reading.reader_version == reader.version[:20])
+
+
 def _convert_id_entry(id_entry, allowed_types=None):
     ret = [s.strip() for s in id_entry.split(':')]
     if len(ret) != 2:
@@ -363,7 +369,7 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
             logger.debug("Getting content to be read.")
             # Each sub query is a set of content that has been read by one of
             # the readers.
-            tc_q_subs = [tc_query.filter(rd_tc_binding, r.matches_clause(db))
+            tc_q_subs = [tc_query.filter(rd_tc_binding, _get_matches_clause(db, r))
                          for r in readers]
             tc_tbr_query = tc_query.except_(sql.intersect(*tc_q_subs))
         else:
@@ -424,7 +430,7 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
         db.TextContent.text_ref_id == db.TextRef.id,
 
         # Check if at least one of the readers has read the content
-        sql.or_(*[reader.matches_clause(db) for reader in readers])
+        sql.or_(*[_get_matches_clause(db, reader) for reader in readers])
         ]
     if force_fulltext:
         clauses.append(db.TextContent.text_type == texttypes.FULLTEXT)
@@ -447,7 +453,7 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
             db.TextContent.text_ref_id == db.TextRef.id,
 
             # Check if at least one of the readers has read the content
-            sql.or_(*[reader.matches_clause(db) for reader in readers]),
+            sql.or_(*[_get_matches_clause(db, reader) for reader in readers]),
 
             # Conditions generated from the list of ids. These include a
             # text-ref text-content binding to connect with id data.
@@ -550,7 +556,7 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
                         reading = db.select_one(
                             db.Reading,
                             db.Reading.text_content_id == text_content.id,
-                            r.matches_clause(db)
+                            _get_matches_clause(db, r)
                             )
                         if reading is not None:
                             continue

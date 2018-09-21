@@ -525,7 +525,6 @@ class DatabaseManager(object):
         """Add a new api key to the database."""
         return self.insert(self.__Auth, api_key=new_api_key)
 
-
     def create_tables(self, tbl_list=None):
         "Create the tables for INDRA database."
         ordered_tables = ['text_ref', 'text_content', 'reading', 'db_info',
