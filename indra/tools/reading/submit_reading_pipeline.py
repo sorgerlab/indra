@@ -300,7 +300,7 @@ def get_ecs_cluster_for_queue(queue_name, batch_client=None):
         compute_env = compute_envs[0]
     else:
         raise BatchReadingError("Error getting compute environment %s for %s. "
-                                "Got %d enviornments instead of 1."
+                                "Got %d environments instead of 1."
                                 % (compute_env_name, queue_name,
                                    len(compute_envs)))
 
@@ -319,7 +319,7 @@ def tag_instances_on_cluster(cluster_name, project='cwc'):
     project : str
         The name of the project to tag instances with.
     """
-    # Get the relevent instance ids from the ecs cluster
+    # Get the relevant instance ids from the ecs cluster
     ecs = boto3.client('ecs')
     task_arns = ecs.list_tasks(cluster=cluster_name)['taskArns']
     if not task_arns:
@@ -650,8 +650,8 @@ if __name__ == '__main__':
     read_parser = subparsers.add_parser(
         'read',
         parents=[parent_read_parser, parent_submit_parser],
-        help='Run REACH and cache INDRA Statements on S3.',
-        description='Run REACH and cache INDRA Statements on S3.',
+        help='Run reading on AWS batch and cache INDRA Statements on S3.',
+        description='Run reading on batch and cache INDRA Statements on S3.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
     combine_parser = subparsers.add_parser(
@@ -663,8 +663,8 @@ if __name__ == '__main__':
     full_parser = subparsers.add_parser(
         'full',
         parents=[parent_read_parser, parent_submit_parser],
-        help='Run REACH and combine INDRA Statements when done.',
-        description='Run REACH and combine INDRA Statements when done.',
+        help='Run reading and combine INDRA Statements when done.',
+        description='Run reading and combine INDRA Statements when done.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
 

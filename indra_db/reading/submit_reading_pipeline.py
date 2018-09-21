@@ -1,19 +1,15 @@
-
 import re
 import boto3
 import pickle
 import logging
 from numpy import median, arange, array
-import matplotlib as mpl
-mpl.use('Agg')
+import matplotlib as mpl; mpl.use('Agg')
 from matplotlib import pyplot as plt
 from datetime import datetime, timedelta
 
-from indra.tools.reading.util.reporter import Reporter
 from indra.util.get_version import get_git_info
-
 from indra.util.nested_dict import NestedDict
-
+from indra.tools.reading.util.reporter import Reporter
 from indra.tools.reading.submit_reading_pipeline import create_submit_parser, \
     create_read_parser, Submitter
 
@@ -42,7 +38,7 @@ class DbReadingSubmitter(Submitter):
         stmt_mode = 'none' if self.options.get('no_stmts', False) else 'all'
 
         job_name = '%s_%d_%d' % (self.basename, start_ix, end_ix)
-        base = ['python', '-m', 'indra.tools.reading.db_reading.read_db_aws',
+        base = ['python', '-m', 'indra_db.reading.read_db_aws',
                 self.basename]
         base += [job_name]
         base += ['/tmp', read_mode, stmt_mode, '32', str(start_ix), str(end_ix)]
@@ -459,7 +455,6 @@ if __name__ == '__main__':
     parent_submit_parser = create_submit_parser()
     parent_read_parser = create_read_parser()
 
-    # Make db parser and get subparsers.
     parser = argparse.ArgumentParser(
         'indra_db.reading.submig_reading_pipeline.py',
         parents=[parent_submit_parser, parent_read_parser],
@@ -468,6 +463,9 @@ if __name__ == '__main__':
                      'format \'<id type>:<id>\'. Unlike no-db, there is no '
                      'need to combine pickles, and therefore no need to '
                      'specify your task further.'),
+        epilog=('Note that `python wait_for_complete.py ...` should be run as '
+                'soon as this command completes successfully. For more '
+                'details use `python wait_for_complete.py -h`.')
         )
     '''Not currently supported
     parent_db_parser.add_argument(
@@ -498,6 +496,7 @@ if __name__ == '__main__':
         help='Set the maximum length of content that REACH will read.',
         default=None
     )
+    parser.add_argument()
     args = parser.parse_args()
 
     sub = DbReadingSubmitter(args.basename, args.readers, args.project)

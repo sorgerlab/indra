@@ -5,10 +5,10 @@ import logging
 from os import path
 from functools import wraps
 from datetime import datetime, timedelta
-from indra.tools.reading.submit_reading_pipeline import submit_db_reading, \
-    wait_for_complete
+from indra.tools.reading.submit_reading_pipeline import wait_for_complete
 
 from indra_db.util import get_primary_db, get_test_db, get_db
+from indra_db.reading.submit_reading_pipeline import submit_db_reading
 
 if __name__ == '__main__':
     # NOTE: PEP8 will complain about this, however having the args parsed up
@@ -238,19 +238,16 @@ class BulkAwsReadingManager(BulkReadingManager):
         with open(job_prefix + '.txt', 'w') as f:
             f.write('\n'.join(['trid:%s' % trid for trid in trids]))
         logger.info("Submitting jobs...")
-        job_ids = submit_db_reading(job_prefix, job_prefix + '.txt',
-                                    readers=[self.reader.name.lower()],
-                                    start_ix=0, end_ix=None,
-                                    pmids_per_job=max_refs, num_tries=2,
-                                    force_read=False, force_fulltext=False,
-                                    read_all_fulltext=False,
-                                    project_name=self.project_name)
+        sub = submit_db_reading(job_prefix, job_prefix + '.txt',
+                                readers=[self.reader.name.lower()],
+                                start_ix=0, end_ix=None,
+                                pmids_per_job=max_refs, num_tries=2,
+                                force_read=False, force_fulltext=False,
+                                read_all_fulltext=False,
+                                project_name=self.project_name)
         logger.info("Waiting for complete...")
-        wait_for_complete('run_db_reading_queue', job_list=job_ids,
-                          job_name_prefix=job_prefix,
-                          idle_log_timeout=1200,
-                          kill_on_log_timeout=True,
-                          stash_log_method='s3')
+        sub.watch_and_wait(idle_log_timeout=1200, kill_on_log_timeout=True,
+                           stash_log_method='s3')
         return
 
 
