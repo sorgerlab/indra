@@ -9,15 +9,17 @@ from sqlalchemy.exc import IntegrityError
 from nose import SkipTest
 from nose.tools import assert_equal
 from nose.plugins.attrib import attr
+from indra.util.nested_dict import NestedDict
 
-from indra_db.util import NestedDict, get_test_db
+from indra_db.util import get_test_db
 from indra_db.client import get_content_by_refs
 from indra_db.managers.reading_manager import BulkLocalReadingManager
 
 from indra.tests.util import needs_py3, IS_PY3
 
 if IS_PY3:
-    from indra.db.content_manager import Pubmed, PmcOA, Manuscripts, Elsevier
+    from indra_db.managers.content_manager import Pubmed, PmcOA, Manuscripts,\
+        Elsevier
 
 if '-a' in argv:
     attr_str = argv[argv.index('-a')+1]
@@ -197,10 +199,11 @@ def test_get_abstracts():
 # includes uploading data from Medline, PMC, Springer, and Elsevier. These
 # tend to make greater use of the database, and are likely to be slower.
 #==============================================================================
-TEST_FTP = path.abspath(path.join(path.dirname(__file__), 'test_ftp'))
+TEST_FTP = path.abspath(path.join(path.dirname(__file__), path.pardir,
+                                  'resources', 'test_ftp'))
 if IS_PY3 and not path.exists(TEST_FTP):
     print("Creating test directory. This could take a while...")
-    from indra.db.build_sample_set import build_set
+    from indra_db.resources.build_sample_set import build_set
     build_set(2, TEST_FTP)
 
 

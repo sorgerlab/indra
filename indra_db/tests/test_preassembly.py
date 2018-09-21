@@ -301,7 +301,8 @@ def _check_against_opa_stmts(db, raw_stmts, pa_stmts):
                                 new_stmt_dict.keys())
     print(hash_diffs)
     tests = [{'funcs': {'list': lambda s: s.evidence[:],
-                        'comp': lambda ev: ev.matches_key()},
+                        'comp': lambda ev: '%s-%s-%s' % (ev.source_api, ev.pmid,
+                                                         ev.text)},
               'label': 'evidence text',
               'results': []},
              {'funcs': {'list': lambda s: s.supports[:],
@@ -546,9 +547,9 @@ def test_statement_distillation_large():
     _check_statement_distillation(11721)
 
 
-@attr('nonpublic', 'slow')
-def test_statement_distillation_extra_large():
-    _check_statement_distillation(1001721)
+# @attr('nonpublic', 'slow')
+# def test_statement_distillation_extra_large():
+#     _check_statement_distillation(1001721)
 
 
 @attr('nonpublic')
@@ -561,14 +562,14 @@ def test_db_preassembly_large():
     _check_preassembly_with_database(11721, 2017)
 
 
-@attr('nonpublic', 'slow')
-def test_db_preassembly_extra_large():
-    _check_preassembly_with_database(101721, 20017)
+# @attr('nonpublic', 'slow')
+# def test_db_preassembly_extra_large():
+#     _check_preassembly_with_database(101721, 20017)
 
 
-@attr('nonpublic', 'slow')
-def test_db_preassembly_supremely_large():
-    _check_preassembly_with_database(1001721, 200017)
+# @attr('nonpublic', 'slow')
+# def test_db_preassembly_supremely_large():
+#     _check_preassembly_with_database(1001721, 200017)
 
 
 @attr('nonpublic')
@@ -581,11 +582,11 @@ def test_db_incremental_preassembly_large():
     _check_db_pa_supplement(11721, 2017)
 
 
-@attr('nonpublic', 'slow')
-def test_db_incremental_preassembly_very_large():
-    _check_db_pa_supplement(100000, 20000, n_proc=2)
+# @attr('nonpublic', 'slow')
+# def test_db_incremental_preassembly_very_large():
+#     _check_db_pa_supplement(100000, 20000, n_proc=2)
 
 
-@attr('nonpublic', 'slow')
-def test_db_incremental_preassembly_1M():
-    _check_db_pa_supplement(1000000, 200000, n_proc=6)
+# @attr('nonpublic', 'slow')
+# def test_db_incremental_preassembly_1M():
+#     _check_db_pa_supplement(1000000, 200000, n_proc=6)

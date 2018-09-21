@@ -238,7 +238,7 @@ def get_clauses(id_dict, db):
         empty, returns an empty condition. Note that id types of 'trid' and
         'tcid' will be mapped to text ref ids and text content ids,
         respectively.
-    db : indra.db.DatabaseManager instance
+    db : indra_db.DatabaseManager instance
         This instance is only used for forming the query, and will not be
         accessed or queried.
 
@@ -314,7 +314,7 @@ def get_content_query(ids, readers, db=None, force_fulltext=False,
     readers : list [Reader child instances]
         A list of the reader objects, which contain the required metadata (name
         and version of the reader) used to find content that needs to be read.
-    db : indra.db.DatabaseManager instance
+    db : indra_db.DatabaseManager instance
         Optional, default None, in which case the primary database is used. If
         specified, the alternative database will be used. This function should
         not alter the database.
@@ -405,7 +405,7 @@ def get_readings_query(ids, readers, db=None, force_fulltext=False):
     readers : list [Reader child instances]
         A list of the readers whose names and versions you wish to match in the
         readings queried from the database.
-    db : indra.db.DatabaseManager instance
+    db : indra_db.DatabaseManager instance
         Optional, default None, in which case the primary database is used. If
         specified, the alternative database will be used. This function should
         not alter the database.
@@ -515,9 +515,9 @@ def make_db_readings(id_dict, readers, batch_size=1000, force_fulltext=False,
         If True, read even if text_content id is found in skip_dict.
     skip_dict : dict {<reader> : list [int]}
         A dict containing text content id's to be skipped.
-    db : indra.db.DatabaseManager instance
+    db : indra_db.DatabaseManager instance
         A handle to a database. Default None; if None, a handle to the primary
-        database (see indra.db) is retrieved.
+        database (see indra_db) is retrieved.
 
     Other keyword arguments are passed to the `read` methods of the readers.
 
@@ -680,7 +680,7 @@ def produce_readings(id_dict, reader_list, verbose=False, read_mode='unread',
     pickle_file : str or None
         Optional, default None - otherwise the path to a file in which the
         reading data will be saved.
-    db : indra.db.DatabaseManager instance
+    db : indra_db.DatabaseManager instance
         Optional, default is None, in which case the primary database provided
         by `get_primary_db` function is used. Used to interface with a
         different databse.
