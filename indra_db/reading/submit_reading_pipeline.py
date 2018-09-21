@@ -496,7 +496,27 @@ if __name__ == '__main__':
         help='Set the maximum length of content that REACH will read.',
         default=None
     )
-    parser.add_argument()
+    parser.add_argument(
+        '--no_wait',
+        type=bool,
+        action='store_true',
+        help=('Don\'t run wait_for_complete at the end of the script. '
+              'NOTE: wait_for_complete should always be run, so if it is not '
+              'run here, it should be run manually.')
+    )
+    parser.add_argument(
+        '--idle_log_timeout',
+        type=int,
+        default=600,
+        help=("Set the time to wait for any given reading job to continue "
+              "without any updates to the logs (at what point do you want it "
+              "assumed dead).")
+    )
+    parser.add_argument(
+        '--no_kill_on_timeout',
+        action='store_true',
+        help="If set, do not kill processes that have timed out."
+    )
     args = parser.parse_args()
 
     sub = DbReadingSubmitter(args.basename, args.readers, args.project)
@@ -505,3 +525,6 @@ if __name__ == '__main__':
                     args.max_reach_input_len, args.max_reach_space_ratio)
     sub.submit_reading(args.input_file, args.start_ix, args.end_ix,
                        args.ids_per_job)
+    if not args.now_wait:
+        sub.watch_and_wait(idle_log_timeout=args.idle_log_timeout,
+                           kill_on_timeout=not args.no_kill_on_timeout)
