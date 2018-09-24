@@ -184,8 +184,10 @@ class EidosJsonLdProcessor(object):
                 if timexes:
                     time_text = timexes[0].get('text')
                     constraint = timexes[0]['intervals'][0]
-                    start = constraint['start']
-                    end = constraint['end']
+                    start = None if constraint['start'] == 'Undef' else \
+                        constraint['start']
+                    end = None if constraint['end'] == 'Undef' else \
+                        constraint['end']
                     duration = constraint['duration']
                     time_annot = {'text': time_text, 'start': start,
                                   'end': end, 'duration': duration}
