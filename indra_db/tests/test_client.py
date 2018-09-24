@@ -190,6 +190,14 @@ def test_get_statements_by_grot():
 
 
 @attr('nonpublic')
+def test_get_content_by_refs():
+    db = _get_prepped_db(100)
+    tcid = db.select_one(db.TextContent.id)[0]
+    reading_dict = dbc.get_reader_output(db, tcid)
+    assert reading_dict
+
+
+@attr('nonpublic')
 def test_get_statement_jsons_by_agent():
     # Note that this deliberately uses the primary (production) database in
     # testing. This is only allowed because only retrieval is tested, however

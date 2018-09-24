@@ -68,11 +68,16 @@ def get_reader_output(db, ref_id, ref_type='tcid', reader=None,
     if reader_version:
         clauses.append(db.Reading.reader_version == reader_version)
 
-    res = db.select_all([db.Reading.text_content_id, db.Readings.reader,
+    res = db.select_all([db.Reading.text_content_id, db.Reading.reader,
                          db.Reading.bytes], *clauses)
     reading_dict = defaultdict(lambda: defaultdict(lambda: []))
     for tcid, reader, result in res:
-        reading_dict[tcid][reader].append(unpack(result))
+        unpacked_result = None
+        if len(result) == 0:
+            logger.warning("Got reading result with zero content.")
+        else:
+            unpacked_result = unpack(result)
+        reading_dict[tcid][reader].append(unpacked_result)
     return reading_dict
 
 
