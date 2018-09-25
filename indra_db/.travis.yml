@@ -1,0 +1,55 @@
+language: python
+cache:
+  directories:
+    - $HOME/.cache/pip
+python:
+  - "3.5"
+  - "3.6"
+before_install:
+  - sudo apt-get update
+  - pip install numpy scipy sympy cython nose lxml matplotlib==1.5.0 pandas
+  - sudo pip2 install numpy
+install:
+  # INDRA dependencies
+  - pip install coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask nltk reportlab
+  - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
+  - pip install doctest-ignore-unicode
+  - pip install .[all]
+  # DB Preassembly pickles
+  - cd $TRAVIS_BUILD_DIR/indra/tests
+  - wget http://sorger.med.harvard.edu/data/bgyori/test_text_ref_tuples.pkl -nv
+  - wget http://sorger.med.harvard.edu/data/bgyori/test_text_content_tuples.pkl -nv
+  - wget http://sorger.med.harvard.edu/data/bgyori/test_reading_tuples.pkl -nv
+  - wget http://sorger.med.harvard.edu/data/bgyori/test_db_info_tuples.pkl -nv
+  - wget http://sorger.med.harvard.edu/data/bgyori/test_stmts_tuples.pkl -nv
+  - pip install -U networkx>=2
+  - pip list
+before_script:
+  # Enable plotting on fake display
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3
+script:
+  - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
+  # Run standard unit tests
+  - cd $TRAVIS_BUILD_DIR
+  # doctests on Travis would otherwise fail
+  - export NOSEATTR="";
+  - if [[ $TRAVIS_PULL_REQUEST ]]; then
+      export NOSEATTR="!nonpublic";
+    fi
+  - if [[ $RUN_SLOW != "true" ]]; then
+      export NOSEATTR="!slow,$NOSEATTR";
+    fi
+  # Now run all INDRA_DB tests
+  - nosetests indra -v -a $NOSEATTR
+        --with-coverage --cover-inclusive --cover-package=indra
+        --with-doctest --with-doctest-ignore-unicode
+        --with-timer --timer-top-n 10
+  - cd $TRAVIS_BUILD_DIR
+  # Run code style report on diff
+  - git remote set-branches --add origin master
+  - git fetch
+  - git diff origin/master | pycodestyle --diff > pep8.txt; cat pep8.txt;
+after_success:
+  - coveralls
