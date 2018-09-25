@@ -16,28 +16,36 @@ class GeneNetwork(object):
 
     Parameters
     ----------
-    gene_list : string
+    gene_list : str
         List of gene names.
-    basename : string or None (default)
+    basename : str or None (default)
         Filename prefix to be used for caching of intermediates (Biopax OWL
         file, pickled statement lists, etc.). If None, no results are cached
         and no cached files are used.
+    bel_corpus : str
+        Path to a BEL corpus to use. The default uses the BEL Large Corpus.
 
     Attributes
     ----------
-    gene_list : string
+    gene_list : str
         List of gene names
-    basename : string or None
+    basename : str or None
         Filename prefix for cached intermediates, or None if no cached used.
     results : dict
         Dict containing results of preassembly (see return type for
         :py:meth:`run_preassembly`.
     """
-    def __init__(self, gene_list, basename=None):
+    def __init__(self, gene_list, basename=None, bel_corpus=None):
         if not gene_list:
             raise ValueError("Gene list must contain at least one element.")
         self.gene_list = gene_list
         self.basename = basename
+        # Use Large Corpus by default
+        default_bel_corpus = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.path.pardir, os.path.pardir, 'data', 'large_corpus.bel')
+        self.bel_corpus = default_bel_corpus if bel_corpus is None \
+            else bel_corpus
 
     def get_bel_stmts(self, filter=False):
         """Get relevant statements from the BEL large corpus.
@@ -70,7 +78,8 @@ class GeneNetwork(object):
                 bel_statements = pickle.load(f)
         # No cache, so perform the queries
         else:
-            bel_proc = bel.process_pybel_neighborhood(self.gene_list)
+            bel_proc = bel.process_pybel_neighborhood(self.gene_list,
+                network_file=self.bel_corpus)
             bel_statements = bel_proc.statements
             # Save to pickle file if we're caching
             if self.basename is not None:
@@ -158,13 +167,11 @@ class GeneNetwork(object):
                 pickle.dump(bp.statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
-            if len(self.gene_list) > 1:
-                bp_statements = ac.filter_gene_list(bp_statements,
-                                                     self.gene_list, 'one')
-            else:
-                bp_statements = ac.filter_gene_list(bp_statements,
-                                                     self.gene_list, 'all')
-        return bp.statements
+            policy = 'one' if len(self.gene_list) > 1 else 'all'
+            stmts = ac.filter_gene_list(bp.statements, self.gene_list, policy)
+        else:
+            stmts = bp.statements
+        return stmts
 
     def get_statements(self, filter=False):
         """Return the combined list of statements from BEL and Pathway Commons.

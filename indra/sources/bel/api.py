@@ -100,8 +100,8 @@ def process_pybel_neighborhood(gene_names, network_file=None,
     if network_file is None:
         # Use large corpus as base network
         network_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    '../../..',
-                                    'data', 'large_corpus.bel')
+                                    os.path.pardir, os.path.pardir,
+                                    os.path.pardir, 'data', 'large_corpus.bel')
     if network_type == 'belscript':
         bp = process_belscript(network_file)
     elif network_type == 'json':
