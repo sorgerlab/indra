@@ -158,13 +158,11 @@ class GeneNetwork(object):
                 pickle.dump(bp.statements, f, protocol=2)
         # Optionally filter out statements not involving only our gene set
         if filter:
-            if len(self.gene_list) > 1:
-                bp_statements = ac.filter_gene_list(bp_statements,
-                                                     self.gene_list, 'one')
-            else:
-                bp_statements = ac.filter_gene_list(bp_statements,
-                                                     self.gene_list, 'all')
-        return bp.statements
+            policy = 'one' if len(self.gene_list) > 1 else 'all'
+            stmts = ac.filter_gene_list(bp.statements, self.gene_list, policy)
+        else:
+            stmts = bp.statements
+        return stmts
 
     def get_statements(self, filter=False):
         """Return the combined list of statements from BEL and Pathway Commons.
