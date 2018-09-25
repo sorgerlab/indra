@@ -5,9 +5,9 @@ __all__ = ['process_from_web']
 
 from indra.sources.lincs.processor import LincsProcessor
 
-from .lincs_client import get_lincs_drug_target_data
+from .lincs_client import get_drug_target_data
 
 
 def process_from_web():
-    lincs_data = get_lincs_drug_target_data()
+    lincs_data = get_drug_target_data()
     return LincsProcessor(lincs_data)

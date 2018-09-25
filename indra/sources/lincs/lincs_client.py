@@ -1,26 +1,27 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_lincs_drug_target_data']
+__all__ = ['get_drug_target_data', 'get_small_molecule_data']
 
+import csv
 import requests
 from os import path
 
 LINCS_URL = 'http://lincs.hms.harvard.edu/db'
 
 
-def get_lincs_drug_target_data():
-    url = path.join(LINCS_URL, '/datasets/20000/results')
+def get_drug_target_data():
+    url = path.join(LINCS_URL, 'datasets/20000/results')
     return _load_lincs_csv(url)
 
 
-def get_lincs_small_molecule_data():
+def get_small_molecule_data():
     url = path.join(LINCS_URL, 'sm/')  # The trailing / is deliberate
     return _load_lincs_csv(url)
 
 
 def _load_lincs_csv(url):
-    resp = requests.get(url, params={'output_type', '.csv'})
+    resp = requests.get(url, params={'output_type': '.csv'})
     assert resp.status_code == 200, resp.text
     csv_str = resp.content.decode('utf-8')
     csv_lines = csv_str.splitlines()
