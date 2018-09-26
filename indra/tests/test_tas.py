@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-from indra.sources.tas.processor import _load_data
+from indra.sources.tas.api import _load_data
 
 
 def test_load_data():
