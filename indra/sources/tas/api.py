@@ -1,10 +1,11 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = []
+__all__ = ['process_csv']
 
 import csv
 from os import path
+from .processor import TasProcessor
 
 HERE = path.dirname(path.abspath(__file__))
 DATAFILE_NAME = 'classification_hms_cmpds_symbol.csv'
@@ -42,3 +43,8 @@ def _load_data():
     # rest, or with the usual key-style for dicts.
     headers[headers.index('Approved.Symbol')] = 'approved_symbol'
     return [{headers[i]: val for i, val in enumerate(line)} for line in reader]
+
+
+def process_csv():
+    """Process the contents of the csv contained in data."""
+    return TasProcessor(_load_data())
