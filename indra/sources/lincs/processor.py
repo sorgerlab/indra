@@ -53,12 +53,19 @@ class LincsProcessor(object):
 
     def _extract_protein(self, line):
         prot_name = line['Protein Name']
-        lincs_id = line['Protein HMS LINCS ID']
-        # TODO: We could get phosphorylation states from the prtein data.
-        if not lincs_id:
-            print('ack')
-        db_refs = _build_db_refs(lincs_id, self._prot_data[lincs_id],
-                                 hgnc='Gene ID', uniprot='UniProt ID')
+        prot_id = line['Protein HMS LINCS ID']
+        sm_id = line['Small Molecule HMS LINCS ID']
+        db_refs = {}
+        if prot_id:
+            # TODO: We could get phosphorylation states from the prtein data.
+            db_refs.update(_build_db_refs(prot_id, self._prot_data[prot_id],
+                                          hgnc='Gene ID', uniprot='UniProt ID'))
+        if sm_id:
+            db_refs.update(_build_db_refs(sm_id, self._sm_data[sm_id],
+                                          chembl='ChEMBL ID', chebi='ChEBI ID',
+                                          pubchem='PubChem CID',
+                                          inchi='InChi Key', lincs='LINCS ID'))
+        assert db_refs, "We didn't get any refs for: %s" % prot_name
         return Agent(prot_name, db_refs=db_refs)
 
     def _make_evidence(self, line):
