@@ -11,6 +11,24 @@ from os import path
 LINCS_URL = 'http://lincs.hms.harvard.edu/db'
 
 
+class LincsClient(object):
+    def __init__(self):
+        self._sm_data = get_small_molecule_data()
+        self._prot_data = get_protein_data()
+        return
+
+    def get_small_molecule_ref(self, lincs_id):
+        return _build_db_refs(lincs_id, self._sm_data[lincs_id],
+                              chembl='ChEMBL ID', chebi='ChEBI ID',
+                              pubchem='PubChem CID', inchi='InChi Key',
+                              lincs='LINCS ID')
+
+    def get_protein_ref(self, lincs_id):
+        # TODO: We could get phosphorylation states from the prtein data.
+        return _build_db_refs(lincs_id, self._prot_data[lincs_id],
+                              hgnc='Gene ID', uniprot='UniProt ID')
+
+
 def get_drug_target_data():
     """Load the csv into a list of dicts containing the LINCS drug target data.
 
@@ -66,3 +84,11 @@ def _load_lincs_csv(url):
     headers = csv_lines[0].split(',')
     return [{headers[i]: val for i, val in enumerate(line_elements)}
             for line_elements in csv.reader(csv_lines[1:])]
+
+
+def _build_db_refs(lincs_id, data, **mappings):
+    db_refs = {'HMS-LINCS': lincs_id}
+    for db_ref, key in mappings.items():
+        if data[key]:
+            db_refs[db_ref.upper()] = data[key]
+    return db_refs

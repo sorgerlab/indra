@@ -5,7 +5,7 @@ __all__ = ['LincsProcessor']
 import re
 
 from indra.statements import Agent, Inhibition, Evidence
-from indra.databases.lincs_client import get_small_molecule_data, get_protein_data
+from indra.databases.lincs_client import LincsClient
 
 
 class LincsProcessor(object):
@@ -25,8 +25,7 @@ class LincsProcessor(object):
 
     def __init__(self, lincs_data):
         self._data = lincs_data
-        self._sm_data = get_small_molecule_data()
-        self._prot_data = get_protein_data()
+        self._lc = LincsClient()
 
         # Process all the lines (skipping the header)
         self.statements = []
@@ -44,10 +43,7 @@ class LincsProcessor(object):
     def _extract_drug(self, line):
         drug_name = line['Small Molecule Name']
         lincs_id = line['Small Molecule HMS LINCS ID']
-        db_refs = _build_db_refs(lincs_id, self._sm_data[lincs_id],
-                                 chembl='ChEMBL ID', chebi='ChEBI ID',
-                                 pubchem='PubChem CID', inchi='InChi Key',
-                                 lincs='LINCS ID')
+        db_refs = self._lc.get_small_molecule_ref(lincs_id)
         return Agent(drug_name, db_refs=db_refs)
 
     def _extract_protein(self, line):
@@ -56,14 +52,9 @@ class LincsProcessor(object):
         sm_id = line['Small Molecule HMS LINCS ID']
         db_refs = {}
         if prot_id:
-            # TODO: We could get phosphorylation states from the prtein data.
-            db_refs.update(_build_db_refs(prot_id, self._prot_data[prot_id],
-                                          hgnc='Gene ID', uniprot='UniProt ID'))
+            db_refs.update(self._lc.get_protein_ref(prot_id))
         if sm_id:
-            db_refs.update(_build_db_refs(sm_id, self._sm_data[sm_id],
-                                          chembl='ChEMBL ID', chebi='ChEBI ID',
-                                          pubchem='PubChem CID',
-                                          inchi='InChi Key', lincs='LINCS ID'))
+            db_refs.update(self._lc.get_small_molecule_ref(sm_id))
         assert db_refs, "We didn't get any refs for: %s" % prot_name
         return Agent(prot_name, db_refs=db_refs)
 
@@ -90,9 +81,3 @@ class LincsProcessor(object):
         return ev_list
 
 
-def _build_db_refs(lincs_id, data, **mappings):
-    db_refs = {'HMS-LINCS': lincs_id}
-    for db_ref, key in mappings.items():
-        if data[key]:
-            db_refs[db_ref.upper()] = data[key]
-    return db_refs
