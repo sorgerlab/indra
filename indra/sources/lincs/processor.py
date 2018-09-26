@@ -6,7 +6,8 @@ __all__ = ['LincsProcessor']
 import re
 
 from indra.statements import Agent, Inhibition, Evidence
-from indra.sources.lincs.lincs_client import get_small_molecule_data
+from indra.sources.lincs.lincs_client import get_small_molecule_data, \
+    get_protein_data
 
 
 class LincsProcessor(object):
@@ -26,6 +27,7 @@ class LincsProcessor(object):
     def __init__(self, lincs_data):
         self._data = lincs_data
         self._sm_data = get_small_molecule_data()
+        self._prot_data = get_protein_data()
 
         # Process all the lines (skipping the header)
         self.statements = []
@@ -43,19 +45,20 @@ class LincsProcessor(object):
     def _extract_drug(self, line):
         drug_name = line['Small Molecule Name']
         lincs_id = line['Small Molecule HMS LINCS ID']
-        db_refs = {'HMS-LINCS': lincs_id}
-        sm_data = self._sm_data[lincs_id]
-        for db_ref, key in [('CHEMBL', 'ChEMBL ID'), ('CHEBI', 'ChEBI ID'),
-                            ('PUBCHEM', 'PubChem CID'), ('INCHI', 'InChi Key'),
-                            ('LINCS', 'LINCS ID')]:
-            if sm_data[key]:
-                db_refs[db_ref] = sm_data[key]
+        db_refs = _build_db_refs(lincs_id, self._sm_data[lincs_id],
+                                 chembl='ChEMBL ID', chebi='ChEBI ID',
+                                 pubchem='PubChem CID', inchi='InChi Key',
+                                 lincs='LINCS ID')
         return Agent(drug_name, db_refs=db_refs)
 
     def _extract_protein(self, line):
         prot_name = line['Protein Name']
         lincs_id = line['Protein HMS LINCS ID']
-        db_refs = {'HMS-LINCS': lincs_id}
+        # TODO: We could get phosphorylation states from the prtein data.
+        if not lincs_id:
+            print('ack')
+        db_refs = _build_db_refs(lincs_id, self._prot_data[lincs_id],
+                                 hgnc='Gene ID', uniprot='UniProt ID')
         return Agent(prot_name, db_refs=db_refs)
 
     def _make_evidence(self, line):
@@ -79,3 +82,10 @@ class LincsProcessor(object):
             ev_list.append(ev)
         return ev_list
 
+
+def _build_db_refs(lincs_id, data, **mappings):
+    db_refs = {'HMS-LINCS': lincs_id}
+    for db_ref, key in mappings.items():
+        if data[key]:
+            db_refs[db_ref.upper()] = data[key]
+    return db_refs
