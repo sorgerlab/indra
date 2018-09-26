@@ -3,9 +3,13 @@ from builtins import dict, str
 
 __all__ = ['TasProcessor']
 
-from indra.statements import Inhibition, Agent
+from indra.statements import Inhibition, Agent, Evidence
 from indra.databases.lincs_client import LincsClient
 from indra.databases.hgnc_client import get_hgnc_from_entrez
+
+
+CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM', '3': '1uM < Kd < 10uM',
+             '10': 'Kd > 10uM'}
 
 
 class TasProcessor(object):
@@ -26,8 +30,9 @@ class TasProcessor(object):
     def _process_row(self, row):
         drug = self._extract_drug(row['hms_id'])
         prot = self._extract_protein(row['approved_symbol'], row['gene_id'])
-        ev_list = self._make_evidence(row)
-        return Inhibition(drug, prot, evidence=ev_list)
+        ev = self._make_evidence(row['class_min'])
+        self.statements.append(Inhibition(drug, prot, evidence=ev))
+        return
 
     def _extract_drug(self, hms_id):
         refs = self._lc.get_small_molecule_ref(hms_id,
@@ -39,9 +44,11 @@ class TasProcessor(object):
     def _extract_protein(self, name, gene_id):
         hgnc_id = get_hgnc_from_entrez(gene_id)
         refs = self._lc.get_protein_ref(gene_id, id_type='entrez')
-        refs['HGNC'] = hgnc_id
+        if hgnc_id is not None:
+            refs['HGNC'] = hgnc_id
         return Agent(name, db_refs=refs)
 
-    def _make_evidence(self, row):
-        ev_list = []
-        return ev_list
+    def _make_evidence(self, class_min):
+        ev = Evidence(source_api='tas', epistemics={'direct': True},
+                      annotations={'class_min': CLASS_MAP[class_min]})
+        return ev

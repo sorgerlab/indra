@@ -17,3 +17,5 @@ def test_processor():
     num_data = len(_load_data())
     assert num_stmts == num_data, \
         "Expected %d stmts, got %d." % (num_data, num_stmts)
+    assert all(len(s.evidence) == 1 for s in tp.statements), \
+        "Some statements lack evidence, or have extra evidence."

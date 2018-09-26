@@ -105,7 +105,7 @@ class LincsClient(object):
                     continue
                 return _build_db_refs(hms_id, info_dict, entrez='Gene ID',
                                       uniprot='UniProt ID')
-
+            return {}
 
 
 def get_drug_target_data():

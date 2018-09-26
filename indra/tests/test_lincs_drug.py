@@ -13,3 +13,5 @@ def test_process_from_web():
     assert num_stmts == data_len, \
         ("Did not convert all statements: expected %d, got %d."
          % (data_len, num_stmts))
+    assert all(len(s.evidence) > 0 for s in lincs_p.statements),\
+        "Some statements lack evidence."
