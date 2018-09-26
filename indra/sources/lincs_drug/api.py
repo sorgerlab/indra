@@ -1,10 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
 
 __all__ = ['process_from_web']
 
 from .processor import LincsProcessor
-from .lincs_client import get_drug_target_data
+from indra.databases.lincs_client import get_drug_target_data
 
 
 def process_from_web():
