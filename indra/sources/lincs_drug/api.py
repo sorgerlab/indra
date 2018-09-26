@@ -3,11 +3,11 @@ from builtins import dict, str
 
 __all__ = ['process_from_web']
 
-from indra.sources.lincs.processor import LincsProcessor
-
+from .processor import LincsProcessor
 from .lincs_client import get_drug_target_data
 
 
 def process_from_web():
+    """Get a processor for the LINCS drug target data."""
     lincs_data = get_drug_target_data()
     return LincsProcessor(lincs_data)

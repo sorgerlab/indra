@@ -6,8 +6,7 @@ __all__ = ['LincsProcessor']
 import re
 
 from indra.statements import Agent, Inhibition, Evidence
-from indra.sources.lincs.lincs_client import get_small_molecule_data, \
-    get_protein_data
+from .lincs_client import get_small_molecule_data, get_protein_data
 
 
 class LincsProcessor(object):
@@ -15,8 +14,9 @@ class LincsProcessor(object):
 
     Parameters
     ----------
-    lincs_csv : str
-        A csv of the lincs data.
+    lincs_data : list[dict]
+        A list of dicts with keys set by the header of the csv, and values from
+        the data in the csv.
 
     Attributes
     ----------

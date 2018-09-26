@@ -1,9 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-from indra.sources.lincs.lincs_client import get_drug_target_data, \
+from indra.sources.lincs_drug.lincs_client import get_drug_target_data, \
     get_small_molecule_data, get_protein_data
-from indra.sources.lincs.api import process_from_web
+from indra.sources.lincs_drug import process_from_web
 
 
 def test_get_drug_target_data():
