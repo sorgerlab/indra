@@ -17,33 +17,95 @@ class LincsClient(object):
         self._prot_data = get_protein_data()
         return
 
-    def get_small_molecule_name(self, lincs_id, abbreviated=False):
-        if abbreviated:
-            ret = {}
-            for hms_lincs_id, info_dict in self._sm_data.items():
-                if hms_lincs_id.split('-')[0] == lincs_id:
-                    ret[hms_lincs_id] = info_dict['Name']
-        else:
-            return self._sm_data[lincs_id]['Name']
+    def get_small_molecule_name(self, id_val, id_type='hms-lincs'):
+        """Get the name of a small molecule from the LINCS sm metadata.
 
-    def get_small_molecule_ref(self, lincs_id, abbreviated=False):
+        Parameters
+        ----------
+        id_val : str
+            The value of the id
+        id_type : str
+            An indication of the type of id. Handles options are: 'hms-lincs',
+            'short-hms-lincs', and 'chebi'.
+
+        Returns
+        -------
+        The returns vary. If the id is hms-lincs, it will return a single value,
+        however if there are multiple entries for the value, it will return a
+        dict keyed by hms-lincs ids.
+        """
+        return self.__harvest_sm_data(lambda _, info_dict: info_dict['Name'],
+                                      id_val, id_type)
+
+    def get_small_molecule_ref(self, id_val, id_type='hms-lincs'):
+        """Get the id refs of a small molecule from the LINCS sm metadata.
+
+        Parameters
+        ----------
+        id_val : str
+            The value of the id
+        id_type : str
+            An indication of the type of id. Handles options are: 'hms-lincs',
+            'short-hms-lincs', and 'chebi'.
+
+        Returns
+        -------
+        The returns vary. If the id is hms-lincs, it will return a single value,
+        however if there are multiple entries for the value, it will return a
+        dict of values keyed by hms-lincs ids.
+        """
         mappings = dict(chembl='ChEMBL ID', chebi='ChEBI ID',
                         pubchem='PubChem CID', inchi='InChi Key',
                         lincs='LINCS ID')
-        if abbreviated:
+
+        def ret_func(lincs_id, info_dict):
+            return _build_db_refs(lincs_id, info_dict, **mappings)
+
+        return self.__harvest_sm_data(ret_func, id_val, id_type)
+
+    def __harvest_sm_data(self, ret_func, id_val, id_type):
+        if id_type not in ['hms-lincs', 'short-hms-lincs', 'chebi']:
+            raise ValueError('Unexpected value for input id_type: %s' % id_type)
+
+        if id_type == 'short-hms-lincs':
             ret = {}
             for hms_lincs_id, info_dict in self._sm_data.items():
-                if hms_lincs_id.split('-')[0] == lincs_id:
-                    ret[hms_lincs_id] = _build_db_refs(hms_lincs_id, info_dict,
-                                                       **mappings)
+                if hms_lincs_id.split('-')[0] == id_val:
+                    ret[hms_lincs_id] = ret_func(hms_lincs_id, info_dict)
+        elif id_type == 'chebi':
+            ret = {}
+            for hms_lincs_id, info_dict in self._sm_data.items():
+                if info_dict['ChEBI ID'] == id_val:
+                    ret[hms_lincs_id] = ret_func(hms_lincs_id, info_dict)
         else:
-            ret = _build_db_refs(lincs_id, self._sm_data[lincs_id], **mappings)
+            ret = ret_func(id_val, self._sm_data[id_val])
         return ret
 
-    def get_protein_ref(self, lincs_id):
+    def get_protein_ref(self, id_val, id_type='hms-lincs'):
+        """Get the refs for a protein from the LINCs protein metadata.
+
+        Parameters
+        ----------
+        id_val : str
+            The value of the id
+        id_type : str
+            An indication of the type of id. Handles options are: 'hms-lincs'
+            and 'entrez'.
+        """
+        if id_type not in ['hms-lincs', 'entrez']:
+            raise ValueError("Unexpected value for input id_type: %s" % id_type)
+
         # TODO: We could get phosphorylation states from the prtein data.
-        return _build_db_refs(lincs_id, self._prot_data[lincs_id],
-                              entrez='Gene ID', uniprot='UniProt ID')
+        if id_type == 'hms-lincs':
+            return _build_db_refs(id_val, self._prot_data[id_val],
+                                  entrez='Gene ID', uniprot='UniProt ID')
+        elif id_type == 'entrez':
+            for hms_id, info_dict in self._prot_data.items():
+                if info_dict['Gene ID'] != id_val:
+                    continue
+                return _build_db_refs(hms_id, info_dict, entrez='Gene ID',
+                                      uniprot='UniProt ID')
+
 
 
 def get_drug_target_data():

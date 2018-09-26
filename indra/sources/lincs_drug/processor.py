@@ -1,13 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
-from indra.databases.hgnc_client import get_hgnc_from_entrez
-
 __all__ = ['LincsProcessor']
 
 import re
 
 from indra.statements import Agent, Inhibition, Evidence
 from indra.databases.lincs_client import LincsClient
+from indra.databases.hgnc_client import get_hgnc_from_entrez
 
 
 class LincsProcessor(object):
