@@ -17,11 +17,28 @@ class LincsClient(object):
         self._prot_data = get_protein_data()
         return
 
-    def get_small_molecule_ref(self, lincs_id):
-        return _build_db_refs(lincs_id, self._sm_data[lincs_id],
-                              chembl='ChEMBL ID', chebi='ChEBI ID',
-                              pubchem='PubChem CID', inchi='InChi Key',
-                              lincs='LINCS ID')
+    def get_small_molecule_name(self, lincs_id, abbreviated=False):
+        if abbreviated:
+            ret = {}
+            for hms_lincs_id, info_dict in self._sm_data.items():
+                if hms_lincs_id.split('-')[0] == lincs_id:
+                    ret[hms_lincs_id] = info_dict['Name']
+        else:
+            return self._sm_data[lincs_id]['Name']
+
+    def get_small_molecule_ref(self, lincs_id, abbreviated=False):
+        mappings = dict(chembl='ChEMBL ID', chebi='ChEBI ID',
+                        pubchem='PubChem CID', inchi='InChi Key',
+                        lincs='LINCS ID')
+        if abbreviated:
+            ret = {}
+            for hms_lincs_id, info_dict in self._sm_data.items():
+                if hms_lincs_id.split('-')[0] == lincs_id:
+                    ret[hms_lincs_id] = _build_db_refs(hms_lincs_id, info_dict,
+                                                       **mappings)
+        else:
+            ret = _build_db_refs(lincs_id, self._sm_data[lincs_id], **mappings)
+        return ret
 
     def get_protein_ref(self, lincs_id):
         # TODO: We could get phosphorylation states from the prtein data.
