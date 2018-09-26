@@ -2,7 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 __all__ = ['get_drug_target_data', 'get_small_molecule_data',
-           'get_protein_data']
+           'get_protein_data', 'LincsClient']
 
 import csv
 import requests
@@ -26,7 +26,7 @@ class LincsClient(object):
             The value of the id
         id_type : str
             An indication of the type of id. Handles options are: 'hms-lincs',
-            'short-hms-lincs', and 'chebi'.
+            'short-hms-lincs', and 'chembl'.
 
         Returns
         -------
@@ -46,7 +46,7 @@ class LincsClient(object):
             The value of the id
         id_type : str
             An indication of the type of id. Handles options are: 'hms-lincs',
-            'short-hms-lincs', and 'chebi'.
+            'short-hms-lincs', and 'chembl'.
 
         Returns
         -------
@@ -64,7 +64,7 @@ class LincsClient(object):
         return self.__harvest_sm_data(ret_func, id_val, id_type)
 
     def __harvest_sm_data(self, ret_func, id_val, id_type):
-        if id_type not in ['hms-lincs', 'short-hms-lincs', 'chebi']:
+        if id_type not in ['hms-lincs', 'short-hms-lincs', 'chembl']:
             raise ValueError('Unexpected value for input id_type: %s' % id_type)
 
         if id_type == 'short-hms-lincs':
@@ -72,10 +72,10 @@ class LincsClient(object):
             for hms_lincs_id, info_dict in self._sm_data.items():
                 if hms_lincs_id.split('-')[0] == id_val:
                     ret[hms_lincs_id] = ret_func(hms_lincs_id, info_dict)
-        elif id_type == 'chebi':
+        elif id_type == 'chembl':
             ret = {}
             for hms_lincs_id, info_dict in self._sm_data.items():
-                if info_dict['ChEBI ID'] == id_val:
+                if info_dict['ChEMBL ID'] == id_val:
                     ret[hms_lincs_id] = ret_func(hms_lincs_id, info_dict)
         else:
             ret = ret_func(id_val, self._sm_data[id_val])
@@ -100,12 +100,14 @@ class LincsClient(object):
             return _build_db_refs(id_val, self._prot_data[id_val],
                                   entrez='Gene ID', uniprot='UniProt ID')
         elif id_type == 'entrez':
+            ret = {}
             for hms_id, info_dict in self._prot_data.items():
                 if info_dict['Gene ID'] != id_val:
                     continue
-                return _build_db_refs(hms_id, info_dict, entrez='Gene ID',
-                                      uniprot='UniProt ID')
-            return {}
+                ret[hms_id] = _build_db_refs(hms_id, info_dict,
+                                             entrez='Gene ID',
+                                             uniprot='UniProt ID')
+            return ret
 
 
 def get_drug_target_data():
