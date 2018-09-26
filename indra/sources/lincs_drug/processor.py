@@ -1,5 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
+from indra.databases.hgnc_client import get_hgnc_from_entrez
+
 __all__ = ['LincsProcessor']
 
 import re
@@ -47,15 +49,26 @@ class LincsProcessor(object):
         return Agent(drug_name, db_refs=db_refs)
 
     def _extract_protein(self, line):
+        # Extract key information from the line.
         prot_name = line['Protein Name']
         prot_id = line['Protein HMS LINCS ID']
         sm_id = line['Small Molecule HMS LINCS ID']
+
+        # Get available db-refs.
         db_refs = {}
         if prot_id:
             db_refs.update(self._lc.get_protein_ref(prot_id))
         if sm_id:
             db_refs.update(self._lc.get_small_molecule_ref(sm_id))
         assert db_refs, "We didn't get any refs for: %s" % prot_name
+
+        # Get HGNC from entrez id, if present.
+        if 'ENTREZ' in db_refs.keys():
+            hgnc_id = get_hgnc_from_entrez(db_refs['ENTREZ'])
+            if hgnc_id is not None:
+                db_refs['HGNC'] = hgnc_id
+
+        # Create the agent.
         return Agent(prot_name, db_refs=db_refs)
 
     def _make_evidence(self, line):

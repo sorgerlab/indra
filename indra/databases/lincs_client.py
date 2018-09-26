@@ -26,7 +26,7 @@ class LincsClient(object):
     def get_protein_ref(self, lincs_id):
         # TODO: We could get phosphorylation states from the prtein data.
         return _build_db_refs(lincs_id, self._prot_data[lincs_id],
-                              hgnc='Gene ID', uniprot='UniProt ID')
+                              entrez='Gene ID', uniprot='UniProt ID')
 
 
 def get_drug_target_data():
