@@ -1,7 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_drug_target_data', 'get_small_molecule_data']
+__all__ = ['get_drug_target_data', 'get_small_molecule_data',
+           'get_protein_data']
 
 import csv
 import requests
@@ -19,6 +20,12 @@ def get_small_molecule_data():
     url = path.join(LINCS_URL, 'sm/')  # The trailing / is deliberate
     sm_data = _load_lincs_csv(url)
     return {d['HMS LINCS ID']: d.copy() for d in sm_data}
+
+
+def get_protein_data():
+    url = path.join(LINCS_URL, 'proteins/')
+    prot_data = _load_lincs_csv(url)
+    return {d['HMS LINCS ID']: d.copy() for d in prot_data}
 
 
 def _load_lincs_csv(url):
