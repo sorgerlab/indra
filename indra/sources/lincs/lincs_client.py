@@ -17,7 +17,8 @@ def get_drug_target_data():
 
 def get_small_molecule_data():
     url = path.join(LINCS_URL, 'sm/')  # The trailing / is deliberate
-    return _load_lincs_csv(url)
+    sm_data = _load_lincs_csv(url)
+    return {d['HMS LINCS ID']: d.copy() for d in sm_data}
 
 
 def _load_lincs_csv(url):
