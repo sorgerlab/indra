@@ -358,7 +358,7 @@ class DbApiTestCase(unittest.TestCase):
         if key is None:
             return  # Can't test the behavior with an API key.
 
-        key_param = 'api_key=%s' % key
+        key_param = 'api-key=%s' % key
         if base_qstr:
             new_qstr = '&'.join(base_qstr.replace('?', '').split('&')
                                 + [key_param])
