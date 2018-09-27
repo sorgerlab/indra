@@ -1,8 +1,8 @@
 import os
+import json
+import requests
 from indra.sources import eidos
 from indra.statements import Influence
-import requests
-import json
 from indra.assemblers.cag import CAGAssembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
@@ -22,15 +22,14 @@ def __get_remote_jsonld():
 
 def __get_stmts_from_remote_jsonld():
     ex_json = __get_remote_jsonld()
-    ep = eidos.process_json_ld(ex_json)
+    ep = eidos.process_json(ex_json)
     assert ep is not None, 'Failed to handle json with eidos processor.'
     assert len(ep.statements), 'Did not get statements from json.'
     return ep.statements
 
 
 def test_process_text():
-    ep = eidos.process_text('The cost of fuel decreases water trucking.',
-                            out_format='json_ld')
+    ep = eidos.process_text('The cost of fuel decreases water trucking.')
     assert ep is not None
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
@@ -43,8 +42,7 @@ def test_process_text():
 
 
 def test_process_text_json_ld():
-    ep = eidos.process_text('The cost of fuel decreases water trucking.',
-                            out_format='json_ld')
+    ep = eidos.process_text('The cost of fuel decreases water trucking.')
     assert ep is not None
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
@@ -68,10 +66,11 @@ def test_process_text_json_ld():
 
 
 def test_process_json_ld_file():
-    ep = eidos.process_json_ld_file(test_jsonld)
+    ep = eidos.process_json_file(test_jsonld)
     assert len(ep.statements) == 1
     assert 'UN' in ep.statements[0].subj.db_refs
     assert 'UN' in ep.statements[0].obj.db_refs
+
 
 def test_eidos_to_cag():
     stmts = __get_stmts_from_remote_jsonld()

@@ -9,7 +9,7 @@ import glob
 import logging
 import subprocess
 from indra import get_config
-from .api import process_json_ld_file
+from .api import process_json_file
 
 
 eip = get_config('EIDOSPATH')
@@ -85,7 +85,7 @@ def extract_and_process(path_in, path_out):
                 (len(jsons), path_out))
     stmts = []
     for json in jsons:
-        ep = process_json_ld_file(json)
+        ep = process_json_file(json)
         if ep:
             stmts += ep.statements
     return stmts
