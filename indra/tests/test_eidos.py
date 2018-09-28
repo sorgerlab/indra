@@ -60,8 +60,11 @@ def test_process_text_json_ld():
     # this should work
     # assert len(stmt.subj.db_refs['UN']) > 5
     # assert len(stmt.obj.db_refs['UN']) > 5
+
+
+def test_sanitize():
     # Make sure sanitization works
-    sanitized = ep._sanitize('-LRB-something-RRB-')
+    sanitized = eidos.processor._sanitize('-LRB-something-RRB-')
     assert sanitized == '(something)'
 
 
