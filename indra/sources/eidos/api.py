@@ -63,8 +63,8 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
 def process_json_file(file_name):
     """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
-    The output from the Eidos reader is in JSON-LD format. This function is
-    useful if the output is saved as a file and needs to be processed.
+    This function is useful if the output from Eidos is saved as a file and
+    needs to be processed.
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def process_json_file(file_name):
     -------
     ep : EidosProcessor
         A EidosProcessor containing the extracted INDRA Statements
-        in ep.statements.
+        in its statements attribute.
     """
     try:
         with open(file_name, 'rb') as fh:
@@ -88,18 +88,16 @@ def process_json_file(file_name):
 def process_json_str(json_str):
     """Return an EidosProcessor by processing the Eidos JSON-LD string.
 
-    The output from the Eidos parser is in JSON-LD format.
-
     Parameters
     ----------
     json_str : str
-        The json-LD string to be processed.
+        The JSON-LD string to be processed.
 
     Returns
     -------
     ep : EidosProcessor
         A EidosProcessor containing the extracted INDRA Statements
-        in ep.statements.
+        in its statements attribute.
     """
     json_dict = json.loads(json_str)
     return process_json(json_dict)
@@ -117,7 +115,7 @@ def process_json(json_dict):
     -------
     ep : EidosProcessor
         A EidosProcessor containing the extracted INDRA Statements
-        in ep.statements.
+        in its statements attribute.
     """
     ep = EidosProcessor(json_dict)
     ep.get_causal_relations()
