@@ -331,7 +331,7 @@ def _get_is_hypothesis_adverb(stmt):
 
 def _mod_process_verb(stmt):
     mod_name = stmt.__class__.__name__.lower()
-    return mod_process_prefix.get(mod_name)
+    return mod_process_prefix(mod_name)
 
 def _mod_process_noun(stmt):
     mod_name = stmt.__class__.__name__.lower()
@@ -339,46 +339,39 @@ def _mod_process_noun(stmt):
 
 def _mod_state_stmt(stmt):
     mod_name = stmt.__class__.__name__.lower()
-    return mod_state_prefix.get(mod_name)
+    return mod_state_prefix(mod_name)
 
 def _mod_state_str(s):
-    return mod_state_prefix.get(s)
+    return mod_state_prefix(s)
 
-mod_state_prefix = {
-    'phosphorylation': 'phosphorylated',
-    'dephosphorylation': 'dephosphorylated',
-    'ubiquitination': 'ubiquitinated',
-    'deubiquitination': 'deubiquitinated',
-    'acetylation': 'acetylated',
-    'deacetylation': 'deacetylated',
-    'hydroxylation': 'hydroxylated',
-    'dehydroxylation': 'dehydroxylated',
-    'sumoylation': 'sumoylated',
-    'desumoylation': 'desumoylated',
-    'farnesylation': 'farnesylated',
-    'defarnesylation': 'defarnesylated',
-    'glycosylation': 'glycosylated',
-    'deglycosylation': 'deglycosylated',
-    'ribosylation': 'ribosylated',
-    'deribosylation': 'deribosylated',
+
+def mod_state_prefix(mod_type):
+    # Handle explicit overrides first
+    prefix = mod_state_prefix_override.get(mod_type)
+    # If there is no specific rule, then we generate the state from the type
+    if not prefix:
+        # In general, the mod type will be '*ion' which we have to map to
+        # '*ed' e.g. 'phosphorylat[ion]' -> 'phosphorylat[ed]'
+        prefix = mod_type[:-3] + 'ed'
+    return prefix
+
+
+def mod_process_prefix(mod_type):
+    # Handle explicit overrides first
+    prefix = mod_process_prefix_override.get(mod_type)
+    # If there is no specific rule, then we generate the process from the type
+    if not prefix:
+        # In general, the mod type will be '*ion' which we have to map to
+        # '*es' e.g. 'phosphorylat[ion]' -> 'phosphorylat[es]'
+        prefix = mod_type[:-3] + 'es'
+    return prefix
+
+
+mod_state_prefix_override = {
     'modification': 'modified',
 }
 
-mod_process_prefix = {
-    'phosphorylation': 'phosphorylates',
-    'dephosphorylation': 'dephosphorylates',
-    'ubiquitination': 'ubiquitinates',
-    'deubiquitination': 'deubiquitinates',
-    'acetylation': 'acetylates',
-    'deacetylation': 'deacetylates',
-    'hydroxylation': 'hydroxylates',
-    'dehydroxylation': 'dehydroxylates',
-    'sumoylation': 'sumoylates',
-    'desumoylation': 'desumoylates',
-    'farnesylation': 'farnesylates',
-    'defarnesylation': 'defarnesylates',
-    'glycosylation': 'glycosylates',
-    'deglycosylation': 'deglycosylates',
-    'ribosylation': 'ribosylates',
-    'deribosylation': 'deribosylates'
+
+mod_process_prefix_override = {
+    'modification': 'modifies',
     }

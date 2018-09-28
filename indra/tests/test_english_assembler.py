@@ -308,3 +308,23 @@ def test_gap():
     s = e.make_model()
     print(s)
     assert(s == 'RASA1 is a GAP for KRAS.')
+
+
+def test_methylation():
+    st = Methylation(None, Agent('SLF11'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert s == 'SLF11 is methylated.'
+
+
+def test_generic_mod_state():
+    mc = ModCondition('modification')
+    st = Activation(Agent('MEK', mods=[mc]), Agent('ERK'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert s == 'Modified MEK activates ERK.'
+
