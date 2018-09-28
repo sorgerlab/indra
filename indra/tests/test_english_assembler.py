@@ -358,3 +358,7 @@ def test_activity_conditions():
         'Catalytically inactive MEK activates ERK.'
     assert to_english('kinase', True) == \
         'Kinase-active MEK activates ERK.'
+    assert to_english('gap', True) == \
+        'GAP-active MEK activates ERK.'
+    assert to_english('gef', False) == \
+        'GEF-inactive MEK activates ERK.'
