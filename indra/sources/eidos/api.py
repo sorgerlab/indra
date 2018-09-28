@@ -123,7 +123,7 @@ def process_json(json_dict):
         in ep.statements.
     """
     ep = EidosProcessor(json_dict)
-    ep.get_events()
+    ep.get_causal_relations()
     return ep
 
 
