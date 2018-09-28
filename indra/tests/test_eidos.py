@@ -72,6 +72,18 @@ def test_process_json_ld_file():
     assert 'UN' in ep.statements[0].obj.db_refs
 
 
+def test_process_corefs():
+    coref_jsonld = os.path.join(path_this, 'eidos_coref.json')
+    ep = eidos.process_json_file(coref_jsonld)
+    assert ep.coreferences.get('_:Extraction_6') == '_:Extraction_4'
+    assert len(ep.statements) == 2
+    # Get summaru of subj/objs from statements
+    concepts = [(s.subj.name, s.obj.name) for s in ep.statements]
+    assert ('rainfall', 'flood') in concepts, concepts
+    # This ensures that the coreference was successfully resolved
+    assert ('flood', 'displacement') in concepts, concepts
+
+
 def test_eidos_to_cag():
     stmts = __get_stmts_from_remote_jsonld()
     ca = CAGAssembler()

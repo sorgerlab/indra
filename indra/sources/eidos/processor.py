@@ -31,6 +31,7 @@ class EidosProcessor(object):
         self.extractions = []
         self.sentence_dict = {}
         self.entity_dict = {}
+        self.coreferences = {}
         self._preprocess_extractions()
 
     def _preprocess_extractions(self):
@@ -53,6 +54,13 @@ class EidosProcessor(object):
             sentences = document.get('sentences', [])
             self.sentence_dict = {sent['@id']: sent for sent in sentences}
 
+        # Build a dictionary of coreferences
+        for extraction in self.extractions:
+            if 'Coreference' in extraction['labels']:
+                reference = self.find_arg(extraction, 'reference')
+                anchor = self.find_arg(extraction, 'anchor')
+                self.coreferences[reference] = anchor
+
     def get_causal_relations(self):
         """Extract causal relations as Statements."""
         # Get the events that are labeled as directed and causal
@@ -67,6 +75,11 @@ class EidosProcessor(object):
             if subj_id is None or obj_id is None:
                 continue
 
+            # Resolve coreferences by ID
+            subj_id = self.coreferences.get(subj_id, subj_id)
+            obj_id = self.coreferences.get(obj_id, obj_id)
+
+            # Get the actual entities
             subj = self.entity_dict[subj_id]
             obj = self.entity_dict[obj_id]
 
