@@ -9,6 +9,7 @@ from indra.statements import Influence, Concept, Evidence
 
 logger = logging.getLogger('eidos')
 
+
 class EidosProcessor(object):
     """This processor extracts INDRA Statements from Eidos JSON-LD output.
 
@@ -38,7 +39,7 @@ class EidosProcessor(object):
         if not extractions:
             return
         # Listify for multiple reuse
-        self.extractions = list(self.extractions)
+        self.extractions = list(extractions)
 
         # Build a dictionary of entities and sentences by ID for convenient
         # lookup
@@ -46,13 +47,11 @@ class EidosProcessor(object):
                     e.get('labels', [])]
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
-        documents = \
-            self.tree.execute("$.documents[(@.@type is 'Document')]")
+        documents = self.tree.execute("$.documents[(@.@type is 'Document')]")
         self.sentence_dict = {}
         for document in documents:
             sentences = document.get('sentences', [])
             self.sentence_dict = {sent['@id']: sent for sent in sentences}
-
 
     def get_causal_relations(self):
         """Extract causal relations as Statements."""
@@ -63,22 +62,22 @@ class EidosProcessor(object):
         for event in events:
             # For now, just take the first source and first destination.
             # Later, might deal with hypergraph representation.
-            subj_id = find_arg(event, 'source')
-            obj_id = find_arg(event, 'destination')
+            subj_id = self.find_arg(event, 'source')
+            obj_id = self.find_arg(event, 'destination')
             if subj_id is None or obj_id is None:
                 continue
 
             subj = self.entity_dict[subj_id]
             obj = self.entity_dict[obj_id]
 
-            subj_delta = {'adjectives': get_adjectives(subj),
-                          'polarity': get_polarity(subj)}
-            obj_delta = {'adjectives': get_adjectives(obj),
-                         'polarity': get_polarity(obj)}
+            subj_delta = {'adjectives': self.get_adjectives(subj),
+                          'polarity': self.get_polarity(subj)}
+            obj_delta = {'adjectives': self.get_adjectives(obj),
+                         'polarity': self.get_polarity(obj)}
 
-            evidence = self._get_evidence(event)
+            evidence = self.get_evidence(event)
 
-            st = Influence(_make_concept(subj), _make_concept(obj),
+            st = Influence(self.get_concept(subj), self.get_concept(obj),
                            subj_delta, obj_delta, evidence=evidence)
 
             self.statements.append(st)
@@ -112,12 +111,10 @@ class EidosProcessor(object):
 
         # If that fails, we can still get the text of the event
         if text is None:
-            text = sanitize(event.get('text'))
+            text = _sanitize(event.get('text'))
 
-        annotations = {
-                'found_by'   : event.get('rule'),
-                'provenance' : provenance,
-                }
+        annotations = {'found_by': event.get('rule'),
+                       'provenance' : provenance}
         if time_annot:
             annotations['time'] = time_annot
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
@@ -125,19 +122,20 @@ class EidosProcessor(object):
 
     @staticmethod
     def get_polarity(entity):
+        """Return the polarity of an entity."""
         # The first state corresponds to increase/decrease
-        if 'states' in x:
-            if entity['states'][0]['type'] == 'DEC':
-                return -1
-            elif entity['states'][0]['type'] == 'INC':
-                return 1
-            else:
-                return None
+        if 'states' not in entity:
+            return None
+        if entity['states'][0]['type'] == 'DEC':
+            return -1
+        elif entity['states'][0]['type'] == 'INC':
+            return 1
         else:
             return None
 
     @staticmethod
     def get_adjectives(entity):
+        """Return the adjectives of an entity."""
         if 'states' in entity:
             if 'modifiers' in entity['states'][0]:
                 return [mod['text'] for mod in
@@ -149,7 +147,7 @@ class EidosProcessor(object):
 
     @staticmethod
     def get_groundings(entity):
-        """Return db_refs for a given entity."""
+        """Return groundings as db_refs for an entity."""
         def get_grounding_entries(grounding):
             if not grounding:
                 return None
@@ -160,7 +158,7 @@ class EidosProcessor(object):
                 value = entry.get('value')
                 if ont_concept is None or value is None:
                     continue
-                entries.appens(ont_concept, value)
+                entries.append((ont_concept, value))
             return entries
 
         # Save raw text and Eidos scored groundings as db_refs
@@ -168,7 +166,7 @@ class EidosProcessor(object):
         for g in entity.get('groundings', []):
             entries = get_grounding_entries(g)
             # Only add these groundings if there are actual values listed
-            if values:
+            if entries:
                 key = g['name'].upper()
                 db_refs[key] = entries
         return db_refs
@@ -178,7 +176,7 @@ class EidosProcessor(object):
         """Return Concept from an Eidos entity."""
         # Use the canonical name as the name of the Concept
         name = entity['canonicalName']
-        db_refs = self.get_groundings(entity)
+        db_refs = EidosProcessor.get_groundings(entity)
         concept = Concept(name, db_refs=db_refs)
         return concept
 

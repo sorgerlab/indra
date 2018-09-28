@@ -101,9 +101,6 @@ def process_json_str(json_str):
         A EidosProcessor containing the extracted INDRA Statements
         in ep.statements.
     """
-    logger.warning('This method is deprecated and will be removed in the next'
-                   ' version, please use the equivalent process_json_str'
-                   ' instead.')
     json_dict = json.loads(json_str)
     return process_json(json_dict)
 
@@ -129,16 +126,15 @@ def process_json(json_dict):
 
 def initialize_reader():
     """Instantiate an Eidos reader for fast subsequent reading."""
-    eidos_reader.process_text('', 'json_ld')
+    eidos_reader.process_text('')
 
 
 def process_json_ld_file(file_name):
     """DEPRECATED: see process_json_file"""
     logger.warning('This method is deprecated and will be removed in the next'
-                   ' version, please use the equivalent process_json_ld_file'
+                   ' version, please use the equivalent process_json_file'
                    ' instead.')
     return process_json_file(file_name)
-
 
 
 def process_json_ld_str(json_str):
