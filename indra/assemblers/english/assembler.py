@@ -85,15 +85,24 @@ def _assemble_agent_str(agent):
 
     # Handle mutation conditions
     if agent.mutations:
+        is_generic = False
         mut_strs = []
         for mut in agent.mutations:
             res_to = mut.residue_to if mut.residue_to else ''
             res_from = mut.residue_from if mut.residue_from else ''
             pos = mut.position if mut.position else ''
             mut_str = '%s%s%s' % (res_from, pos, res_to)
+            # If this is the only mutation and there are no details
+            # then this is a generic mutant
+            if not mut_str and len(agent.mutations) == 1:
+                is_generic = True
+                break
             mut_strs.append(mut_str)
-        mut_strs = '/'.join(mut_strs)
-        agent_str = '%s-%s' % (agent_str, mut_strs)
+        if is_generic:
+            agent_str = 'mutated ' + agent_str
+        else:
+            mut_strs = '/'.join(mut_strs)
+            agent_str = '%s-%s' % (agent_str, mut_strs)
 
     # Handle location
     if agent.location is not None:

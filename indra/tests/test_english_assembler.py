@@ -328,3 +328,13 @@ def test_generic_mod_state():
     print(s)
     assert s == 'Modified MEK activates ERK.'
 
+
+def test_generic_mutation():
+    mc = MutCondition(None, None, None)
+    st = Activation(Agent('MEK', mutations=[mc]), Agent('ERK'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert s == 'Mutated MEK activates ERK.'
+
