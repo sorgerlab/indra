@@ -338,3 +338,23 @@ def test_generic_mutation():
     print(s)
     assert s == 'Mutated MEK activates ERK.'
 
+
+def test_activity_conditions():
+    def to_english(act_type, is_act):
+        ac = ActivityCondition(act_type, is_act)
+        st = Activation(Agent('MEK', activity=ac), Agent('ERK'))
+        e = ea.EnglishAssembler()
+        e.add_statements([st])
+        s = e.make_model()
+        return s
+
+    assert to_english('activity', True) == 'Active MEK activates ERK.'
+    assert to_english('activity', False) == 'Inactive MEK activates ERK.'
+    assert to_english('gtpbound', True) == \
+        'GTP-bound active MEK activates ERK.'
+    assert to_english('gtpbound', False) == \
+        'GDP-bound inactive MEK activates ERK.'
+    assert to_english('catalytic', False) == \
+        'Catalytically inactive MEK activates ERK.'
+    assert to_english('kinase', True) == \
+        'Kinase-active MEK activates ERK.'

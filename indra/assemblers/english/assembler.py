@@ -158,11 +158,17 @@ def _assemble_agent_str(agent):
 
     # Handle activity conditions
     if agent.activity is not None:
-        # TODO: handle activity types
+        # Get the modifier specific to the activity type, if any
+        pre_prefix = \
+            activity_type_prefix.get(agent.activity.activity_type, '')
         if agent.activity.is_active:
-            prefix = 'active'
+            prefix = pre_prefix + 'active'
         else:
-            prefix = 'inactive'
+            # See if there is a special override for the inactive form
+            if agent.activity.activity_type in inactivity_type_prefix_override:
+                pre_prefix = inactivity_type_prefix_override[
+                    agent.activity.activity_type]
+            prefix = pre_prefix + 'inactive'
         agent_str = prefix + ' ' + agent_str
 
     return agent_str
@@ -383,4 +389,20 @@ mod_state_prefix_override = {
 
 mod_process_prefix_override = {
     'modification': 'modifies',
+    }
+
+
+activity_type_prefix = {
+    'catalytic': 'catalytically ',
+    'gap': 'GAP-',
+    'gef': 'GEF-',
+    'gtpbound': 'GTP-bound ',
+    'kinase': 'kinase-',
+    'phosphatase': 'phosphatase-',
+    'transcription': 'transcriptionally ',
+    }
+
+
+inactivity_type_prefix_override = {
+    'gtpbound': 'GDP-bound ',
     }
