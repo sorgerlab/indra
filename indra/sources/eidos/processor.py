@@ -1,15 +1,15 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
-import json
 import logging
 import objectpath
-from indra.statements import Influence, Concept, Evidence
+from indra.statements import Influence, Association, Concept, Evidence
 
 
 logger = logging.getLogger('eidos')
 
-class EidosJsonLdProcessor(object):
+
+class EidosProcessor(object):
     """This processor extracts INDRA Statements from Eidos JSON-LD output.
 
     Parameters
@@ -27,145 +27,99 @@ class EidosJsonLdProcessor(object):
     def __init__(self, json_dict):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
+        self.extractions = []
         self.sentence_dict = {}
         self.entity_dict = {}
+        self.coreferences = {}
+        self._preprocess_extractions()
 
-    def get_events(self):
+    def _preprocess_extractions(self):
         extractions = \
             self.tree.execute("$.extractions[(@.@type is 'Extraction')]")
         if not extractions:
             return
         # Listify for multiple reuse
-        extractions = list(extractions)
-
-        events = [e for e in extractions if 'DirectedRelation' in
-                  e.get('labels', [])]
+        self.extractions = list(extractions)
 
         # Build a dictionary of entities and sentences by ID for convenient
         # lookup
-        entities = [e for e in extractions if 'Concept' in
+        entities = [e for e in self.extractions if 'Concept' in
                     e.get('labels', [])]
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
-        documents = \
-            self.tree.execute("$.documents[(@.@type is 'Document')]")
+        documents = self.tree.execute("$.documents[(@.@type is 'Document')]")
         self.sentence_dict = {}
         for document in documents:
             sentences = document.get('sentences', [])
             self.sentence_dict = {sent['@id']: sent for sent in sentences}
 
-        # The first state corresponds to increase/decrease
-        def get_polarity(x):
-            # x is either subj or obj
-            if 'states' in x:
-                if x['states'][0]['type'] == 'DEC':
-                    return -1
-                elif x['states'][0]['type'] == 'INC':
-                    return 1
-                else:
-                    return None
-            else:
-                return None
+        # Build a dictionary of coreferences
+        for extraction in self.extractions:
+            if 'Coreference' in extraction['labels']:
+                reference = self.find_arg(extraction, 'reference')
+                anchor = self.find_arg(extraction, 'anchor')
+                self.coreferences[reference] = anchor
 
-        def get_adjectives(x):
-            # x is either subj or obj
-            if 'states' in x:
-                if 'modifiers' in x['states'][0]:
-                    return [mod['text'] for mod in
-                            x['states'][0]['modifiers']]
-                else:
-                    return []
-            else:
-                return []
-
-        def _get_grounding_tuples(grounding):
-            if not grounding or "values" not in grounding:
-                return None
-
-            grounding_values = grounding.get("values", [])
-
-            grounding_tuples = map(
-                # For some versions of eidos, groundings may erroneously have
-                # the /examples suffix; strip that off if present
-                lambda t: (
-                    (t[0][: -len("/examples")], t[1])
-                    if t[0].endswith("/examples")
-                    else (t[0][: -len("/description")], t[1])
-                    if t[0].endswith("/description")
-                    else t
-                ),
-                map(
-                    lambda x: (
-                        (x["ontologyConcept"][1:], x["value"])
-                        if x["ontologyConcept"].startswith("/")
-                        else (x["ontologyConcept"], x["value"])
-                    ),
-                    # get all the groundings that have non-zero score
-                    filter(lambda x: x["value"] > 0, grounding_values),
-                ),
-            )
-
-            return list(grounding_tuples)
-
-        def _get_groundings(entity):
-            """Return Eidos groundings as a list of tuples with scores."""
-            refs = {'TEXT': entity['text']}
-            groundings = entity.get('groundings', [])
-            for g in groundings:
-                values = _get_grounding_tuples(g)
-                # Only add these groundings if there are actual values listed
-                if values:
-                    key = g['name'].upper()
-                    refs[key] = values
-            return refs
-
-        def _make_concept(entity):
-            """Return Concept from an Eidos entity."""
-            # Use the canonical name as the name of the Concept
-            name = entity['canonicalName']
-            # Save raw text and Eidos scored groundings as db_refs
-            db_refs = {'TEXT': entity['text']}
-            groundings = _get_groundings(entity)
-            db_refs.update(groundings)
-            concept = Concept(name, db_refs=db_refs)
-            return concept
-
-        def find_arg(event, arg_type):
-            args = event.get('arguments', {})
-            obj_tag = [arg for arg in args if arg['type'] == arg_type]
-            if obj_tag:
-                obj_id = obj_tag[0]['value']['@id']
-            else:
-                obj_id = None
-            return obj_id
-
+    def get_causal_relations(self):
+        """Extract causal relations as Statements."""
+        # Get the events that are labeled as directed and causal
+        events = [e for e in self.extractions if
+                  'DirectedRelation' in e['labels'] and
+                  'Causal' in e['labels']]
         for event in events:
-            if not 'Causal' in event['labels']:
-                continue
-
             # For now, just take the first source and first destination.
             # Later, might deal with hypergraph representation.
-            subj_id = find_arg(event, 'source')
-            obj_id = find_arg(event, 'destination')
+            subj_id = self.find_arg(event, 'source')
+            obj_id = self.find_arg(event, 'destination')
             if subj_id is None or obj_id is None:
                 continue
 
+            # Resolve coreferences by ID
+            subj_id = self.coreferences.get(subj_id, subj_id)
+            obj_id = self.coreferences.get(obj_id, obj_id)
+
+            # Get the actual entities
             subj = self.entity_dict[subj_id]
             obj = self.entity_dict[obj_id]
 
-            subj_delta = {'adjectives': get_adjectives(subj),
-                          'polarity': get_polarity(subj)}
-            obj_delta = {'adjectives': get_adjectives(obj),
-                         'polarity': get_polarity(obj)}
+            subj_delta = {'adjectives': self.get_adjectives(subj),
+                          'polarity': self.get_polarity(subj)}
+            obj_delta = {'adjectives': self.get_adjectives(obj),
+                         'polarity': self.get_polarity(obj)}
 
-            evidence = self._get_evidence(event)
+            evidence = self.get_evidence(event)
 
-            st = Influence(_make_concept(subj), _make_concept(obj),
+            st = Influence(self.get_concept(subj), self.get_concept(obj),
                            subj_delta, obj_delta, evidence=evidence)
 
             self.statements.append(st)
 
-    def _get_evidence(self, event):
+    def get_correlations(self):
+        events = [e for e in self.extractions if
+                  'UndirectedRelation' in e['labels'] and
+                  'Correlation' in e['labels']]
+        for event in events:
+            # For now, just take the first source and first destination.
+            # Later, might deal with hypergraph representation.
+            arg_ids = self.find_args(event, 'argument')
+            if len(arg_ids) != 2:
+                logger.warning('Skipping correlation with not 2 arguments.')
+
+            # Resolve coreferences by ID
+            arg_ids = [self.coreferences.get(arg_id, arg_id)
+                       for arg_id in arg_ids]
+
+            # Get the actual entities
+            args = [self.entity_dict[arg_id] for arg_id in arg_ids]
+            # Make Concepts from the entities
+            members = [self.get_concept(arg) for arg in args]
+            # Get the evidence
+            evidence = self.get_evidence(event)
+
+            st = Association(members, evidence=evidence)
+            self.statements.append(st)
+
+    def get_evidence(self, event):
         """Return the Evidence object for the INDRA Statment."""
         provenance = event.get('provenance')
 
@@ -178,133 +132,112 @@ class EidosJsonLdProcessor(object):
                 sentence_id = sentence_tag['@id']
                 sentence = self.sentence_dict.get(sentence_id)
                 if sentence is not None:
-                    text = self._sanitize(sentence['text'])
+                    text = _sanitize(sentence['text'])
                 # Get temporal constraints if available
                 timexes = sentence.get('timexes', [])
                 if timexes:
                     time_text = timexes[0].get('text')
                     constraint = timexes[0]['intervals'][0]
-                    start = constraint['start']
-                    end = constraint['end']
+                    start = None if constraint['start'] == 'Undef' else \
+                        constraint['start']
+                    end = None if constraint['end'] == 'Undef' else \
+                        constraint['end']
                     duration = constraint['duration']
                     time_annot = {'text': time_text, 'start': start,
                                   'end': end, 'duration': duration}
 
         # If that fails, we can still get the text of the event
         if text is None:
-            text = self._sanitize(event.get('text'))
+            text = _sanitize(event.get('text'))
 
-        annotations = {
-                'found_by'   : event.get('rule'),
-                'provenance' : provenance,
-                }
+        annotations = {'found_by': event.get('rule'),
+                       'provenance' : provenance}
         if time_annot:
             annotations['time'] = time_annot
         ev = Evidence(source_api='eidos', text=text, annotations=annotations)
         return [ev]
 
     @staticmethod
-    def _sanitize(text):
-        """Return sanitized Eidos text field for human readability."""
-        d = {'-LRB-': '(', '-RRB-': ')'}
-        return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+    def get_polarity(entity):
+        """Return the polarity of an entity."""
+        # The first state corresponds to increase/decrease
+        if 'states' not in entity:
+            return None
+        if entity['states'][0]['type'] == 'DEC':
+            return -1
+        elif entity['states'][0]['type'] == 'INC':
+            return 1
+        else:
+            return None
 
-
-
-class EidosJsonProcessor(object):
-    """This processor extracts INDRA Statements from Eidos JSON (not JSON-LD)
-    output.
-
-    Parameters
-    ----------
-    json_dict : dict
-        A JSON dictionary containing the Eidos extractions in JSON
-        (not JSON-LD) format.
-
-    Attributes
-    ----------
-    tree : objectpath.Tree
-        The objectpath Tree object representing the extractions.
-    statements : list[indra.statements.Statement]
-        A list of INDRA Statements that were extracted by the processor.
-    """
-    def __init__(self, json_dict):
-        self.tree = objectpath.Tree(json_dict)
-        self.statements = []
-
-    def get_events(self):
-        events = self.tree.execute("$.mentions[(@.type is 'EventMention')]")
-        events = list(events)
-
-        # Skip events that only have one argument
-        #events = [e for e in events if len(e['arguments']) == 2]
-
-        for event in events:
-            # Skip events with missing arguments
-            if len(event['arguments']) != 2:
-                continue
-            # Process causal events
-            if 'Causal' in event['labels']:
-                subj = event['arguments']['cause'][0]
-                obj = event['arguments']['effect'][0]
-            # Process origin/theme events
-            elif 'Origin' in event['labels']:
-                subj = event['arguments']['origin'][0]
-                obj = event['arguments']['theme'][0]
-            # Skip correlation events for now
-            elif 'Correlation' in event['labels']:
-                logger.warning('Correlation event %s skipped.' % event['id'])
-                continue
+    @staticmethod
+    def get_adjectives(entity):
+        """Return the adjectives of an entity."""
+        if 'states' in entity:
+            if 'modifiers' in entity['states'][0]:
+                return [mod['text'] for mod in
+                        entity['states'][0]['modifiers']]
             else:
-                logger.warning('Could not classify event with labels: %s' %
-                               ', '.join(event['labels']))
-                continue
-            subj_concept = self._get_concept(subj)
-            obj_concept = self._get_concept(obj)
-            subj_mods = self._get_mods(subj)
-            obj_mods = self._get_mods(obj)
-            # The interpretation of multiple mods is not clear yet so we
-            # choose the first mod if available
-            subj_delta = subj_mods[0] if subj_mods else \
-                {'adjectives': [], 'polarity': None}
-            obj_delta = obj_mods[0] if obj_mods else \
-                {'adjectives': [], 'polarity': None}
-            evidence = self._get_evidence(event)
-            st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
-                           evidence=evidence)
-            self.statements.append(st)
+                return []
+        else:
+            return []
 
     @staticmethod
-    def _get_evidence(event):
-        text = event.get('text')
-        annotations = {'found_by' : event['foundBy']}
-        ev = Evidence(source_api='eidos', text=text, annotations=annotations)
-        return [ev]
+    def get_groundings(entity):
+        """Return groundings as db_refs for an entity."""
+        def get_grounding_entries(grounding):
+            if not grounding:
+                return None
+
+            entries = []
+            for entry in grounding.get('values', []):
+                ont_concept = entry.get('ontologyConcept')
+                value = entry.get('value')
+                if ont_concept is None or value is None:
+                    continue
+                entries.append((ont_concept, value))
+            return entries
+
+        # Save raw text and Eidos scored groundings as db_refs
+        db_refs = {'TEXT': entity['text']}
+        for g in entity.get('groundings', []):
+            entries = get_grounding_entries(g)
+            # Only add these groundings if there are actual values listed
+            if entries:
+                key = g['name'].upper()
+                db_refs[key] = entries
+        return db_refs
 
     @staticmethod
-    def _get_mods(term):
-        mods = []
-        attachments = term.get('attachments', [])
-        if len(attachments) > 1:
-            logger.warning('More than one attachment to event.')
-        for attachment in attachments:
-            # Get the polarity
-            if attachment['type'] == 'Increase':
-                polarity = 1
-            elif attachment['type'] == 'Decrease':
-                polarity = -1
-            else:
-                polarity = None
-            # Get the adjective
-            mod = attachment.get('mod')
-            mod_dict = json.loads(mod)
-            adjectives = mod_dict.get('quantifier', [])
-            entry = {'adjectives': adjectives, 'polarity': polarity}
-            mods.append(entry)
-        return mods
-
-    @staticmethod
-    def _get_concept(term):
-        name = term.get('text')
-        concept = Concept(name)
+    def get_concept(entity):
+        """Return Concept from an Eidos entity."""
+        # Use the canonical name as the name of the Concept
+        name = entity['canonicalName']
+        db_refs = EidosProcessor.get_groundings(entity)
+        concept = Concept(name, db_refs=db_refs)
         return concept
+
+    @staticmethod
+    def find_arg(event, arg_type):
+        """Return ID of the first argument of a given type"""
+        obj_ids = EidosProcessor.find_args(event, arg_type)
+        if not obj_ids:
+            return None
+        else:
+            return obj_ids[0]
+
+    @staticmethod
+    def find_args(event, arg_type):
+        """Return IDs of all arguments of a given type"""
+        args = event.get('arguments', {})
+        obj_tags = [arg for arg in args if arg['type'] == arg_type]
+        if obj_tags:
+            return [o['value']['@id'] for o in obj_tags]
+        else:
+            return []
+
+
+def _sanitize(text):
+    """Return sanitized Eidos text field for human readability."""
+    d = {'-LRB-': '(', '-RRB-': ')'}
+    return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)

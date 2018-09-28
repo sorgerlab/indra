@@ -171,6 +171,7 @@ __all__ = [
     'Activation', 'GtpActivation', 'ActiveForm', 'HasActivity', 'Gef', 'Gap',
     'Complex', 'Translocation', 'RegulateAmount', 'DecreaseAmount',
     'IncreaseAmount', 'Influence', 'Conversion', 'Unresolved',
+    'Association',
 
     # Error classes
     'InputError', 'UnresolvedUuidError', 'InvalidLocationError',
@@ -2459,7 +2460,8 @@ class Complex(Statement):
         self.members = agent_list
 
     def __str__(self):
-        s = "Complex(%s)" % (', '.join([('%s' % m) for m in self.members]))
+        s = '%s(%s)' % (type(self).__name__,
+                        (', '.join([('%s' % m) for m in self.members])))
         return s
 
     def refinement_of(self, other, hierarchies):
@@ -2893,7 +2895,6 @@ class Influence(IncreaseAmount):
         stmt = cls(subj, obj, subj_delta, obj_delta)
         return stmt
 
-
     def __repr__(self):
         if sys.version_info[0] >= 3:
             return self.__str__()
@@ -2920,6 +2921,10 @@ class Influence(IncreaseAmount):
                              _influence_concept_str(self.obj,
                                                     self.obj_delta)))
         return s
+
+
+class Association(Complex):
+    pass
 
 
 class Conversion(Statement):

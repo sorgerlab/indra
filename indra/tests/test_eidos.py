@@ -1,8 +1,8 @@
 import os
-from indra.sources import eidos
-from indra.statements import Influence
-import requests
 import json
+import requests
+from indra.sources import eidos
+from indra.statements import Influence, Association
 from indra.assemblers.cag import CAGAssembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
@@ -22,15 +22,14 @@ def __get_remote_jsonld():
 
 def __get_stmts_from_remote_jsonld():
     ex_json = __get_remote_jsonld()
-    ep = eidos.process_json_ld(ex_json)
+    ep = eidos.process_json(ex_json)
     assert ep is not None, 'Failed to handle json with eidos processor.'
     assert len(ep.statements), 'Did not get statements from json.'
     return ep.statements
 
 
 def test_process_text():
-    ep = eidos.process_text('The cost of fuel decreases water trucking.',
-                            out_format='json_ld')
+    ep = eidos.process_text('The cost of fuel decreases water trucking.')
     assert ep is not None
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
@@ -43,8 +42,7 @@ def test_process_text():
 
 
 def test_process_text_json_ld():
-    ep = eidos.process_text('The cost of fuel decreases water trucking.',
-                            out_format='json_ld')
+    ep = eidos.process_text('The cost of fuel decreases water trucking.')
     assert ep is not None
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
@@ -62,16 +60,42 @@ def test_process_text_json_ld():
     # this should work
     # assert len(stmt.subj.db_refs['UN']) > 5
     # assert len(stmt.obj.db_refs['UN']) > 5
+
+
+def test_sanitize():
     # Make sure sanitization works
-    sanitized = ep._sanitize('-LRB-something-RRB-')
+    sanitized = eidos.processor._sanitize('-LRB-something-RRB-')
     assert sanitized == '(something)'
 
 
 def test_process_json_ld_file():
-    ep = eidos.process_json_ld_file(test_jsonld)
+    ep = eidos.process_json_file(test_jsonld)
     assert len(ep.statements) == 1
     assert 'UN' in ep.statements[0].subj.db_refs
     assert 'UN' in ep.statements[0].obj.db_refs
+
+
+def test_process_corefs():
+    coref_jsonld = os.path.join(path_this, 'eidos_coref.json')
+    ep = eidos.process_json_file(coref_jsonld)
+    assert ep.coreferences.get('_:Extraction_6') == '_:Extraction_4'
+    assert len(ep.statements) == 2
+    # Get summaru of subj/objs from statements
+    concepts = [(s.subj.name, s.obj.name) for s in ep.statements]
+    assert ('rainfall', 'flood') in concepts, concepts
+    # This ensures that the coreference was successfully resolved
+    assert ('flood', 'displacement') in concepts, concepts
+
+
+def test_process_correlations():
+    correl_jsonld = os.path.join(path_this, 'eidos_correlation.json')
+    ep = eidos.process_json_file(correl_jsonld)
+    assert len(ep.statements) == 1
+    st = ep.statements[0]
+    assert isinstance(st, Association)
+    names = {c.name for c in st.members}
+    assert names == {'harvest', 'requirement'}, names
+
 
 def test_eidos_to_cag():
     stmts = __get_stmts_from_remote_jsonld()

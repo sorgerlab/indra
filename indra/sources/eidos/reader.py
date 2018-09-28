@@ -1,5 +1,6 @@
 import os
 import json
+import datetime
 from indra import get_config
 
 # Before the import, we have to deal with the CLASSPATH to avoid clashes
@@ -69,10 +70,21 @@ class EidosReader(object):
             eidos = autoclass(eidos_package + '.EidosSystem')
             self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
-        annot_doc = self.eidos_reader.extractFromText(text, False, False, None)
+        default_arg = lambda x: autoclass('scala.Some')(x)
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        fname = 'default_file_name'
+
+        annot_doc = self.eidos_reader.extractFromText(
+            text,
+            True, # keep text
+            False, # CAG-relevant only
+            default_arg(today), # doc creation time
+            default_arg(fname) # file name
+            )
         if format == 'json':
             mentions = annot_doc.odinMentions()
-            ser = autoclass(eidos_package + '.serialization.json.WMJSONSerializer')
+            ser = autoclass(eidos_package +
+                            '.serialization.json.WMJSONSerializer')
             mentions_json = ser.toJsonStr(mentions)
         elif format == 'json_ld':
             # We need to get a Scala Seq of annot docs here

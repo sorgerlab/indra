@@ -4,7 +4,7 @@ from past.builtins import basestring
 import json
 import logging
 import requests
-from .processor import EidosJsonProcessor, EidosJsonLdProcessor
+from .processor import EidosProcessor
 
 logger = logging.getLogger('eidos')
 
@@ -31,9 +31,9 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
     ----------
     text : str
         The text to be processed.
-    out_format : str
-        The type of Eidos output to read into and process. Can be one of
-        "json" or "json_ld". Default: "json_ld"
+    out_format : Optional[str]
+        The type of Eidos output to read into and process. Currently only
+        'json-ld' is supported which is also the default value used.
     save_json : Optional[str]
         The name of a file in which to dump the JSON output of Eidos.
     webservice : Optional[str]
@@ -41,9 +41,9 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
 
     Returns
     -------
-    ep : EidosJsonProcessor or EidosJsonLdProcessor depending on out_format
-        A EidosJsonProcessor or EidosJsonLdProcessor containing the extracted
-        INDRA Statements in ep.statements.
+    ep : EidosProcessor
+        An EidosProcessor containing the extracted INDRA Statements in its
+        statements attribute.
     """
     if not webservice:
         if eidos_reader is None:
@@ -57,31 +57,25 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
     if save_json:
         with open(save_json, 'wt') as fh:
             json.dump(json_dict, fh, indent=2)
-    if out_format == 'json':
-        return process_json(json_dict)
-    elif out_format == 'json_ld':
-        return process_json_ld(json_dict)
-    else:
-        logger.error('Output format %s is invalid.' % output_format)
-        return None
+    return process_json(json_dict)
 
 
 def process_json_file(file_name):
-    """Return an EidosProcessor by processing the given Eidos json file.
+    """Return an EidosProcessor by processing the given Eidos JSON-LD file.
 
-    The output from the Eidos reader is in json format. This function is
-    useful if the output is saved as a file and needs to be processed.
+    This function is useful if the output from Eidos is saved as a file and
+    needs to be processed.
 
     Parameters
     ----------
     file_name : str
-        The name of the json file to be processed.
+        The name of the JSON-LD file to be processed.
 
     Returns
     -------
-    ep : EidosJsonProcessor
-        A EidosJsonProcessor containing the extracted INDRA Statements
-        in ep.statements.
+    ep : EidosProcessor
+        A EidosProcessor containing the extracted INDRA Statements
+        in its statements attribute.
     """
     try:
         with open(file_name, 'rb') as fh:
@@ -91,109 +85,26 @@ def process_json_file(file_name):
         logger.exception('Could not read file %s.' % file_name)
 
 
-def process_json_ld_file(file_name):
-    """Return an EidosProcessor by processing the given Eidos JSON-LD file.
-
-    The output from the Eidos reader is in json-LD format. This function is
-    useful if the output is saved as a file and needs to be processed.
-
-    Parameters
-    ----------
-    file_name : str
-        The name of the JSON-LD file to be processed.
-
-    Returns
-    -------
-    ep : EidosJsonLdProcessor
-        A EidosJsonLdProcessor containing the extracted INDRA Statements
-        in ep.statements.
-    """
-    try:
-        with open(file_name, 'rb') as fh:
-            json_str = fh.read().decode('utf-8')
-            return process_json_ld_str(json_str)
-    except IOError:
-        logger.exception('Could not read file %s.' % file_name)
-
-
 def process_json_str(json_str):
-    """Return an EidosProcessor by processing the given Eidos json string.
-
-    The output from the Eidos parser is in json format.
+    """Return an EidosProcessor by processing the Eidos JSON-LD string.
 
     Parameters
     ----------
     json_str : str
-        The json string to be processed.
+        The JSON-LD string to be processed.
 
     Returns
     -------
-    ep : EidosJsonProcessor
+    ep : EidosProcessor
         A EidosProcessor containing the extracted INDRA Statements
-        in ep.statements.
+        in its statements attribute.
     """
-    if not isinstance(json_str, basestring):
-        raise TypeError('{} is {} instead of {}'.format(json_str,
-                                                        json_str.__class__,
-                                                        basestring))
-    try:
-        json_dict = json.loads(json_str)
-    except ValueError:
-        logger.error('Could not decode JSON string.')
-        return None
+    json_dict = json.loads(json_str)
     return process_json(json_dict)
 
 
-def process_json_ld_str(json_str):
-    """Return an EidosJsonLdProcessor by processing the Eidos JSON-LD string.
-
-    The output from the Eidos parser is in JSON-LD format.
-
-    Parameters
-    ----------
-    json_str : str
-        The json-LD string to be processed.
-
-    Returns
-    -------
-    ep : EidosJsonLdProcessor
-        A EidosJsonLdProcessor containing the extracted INDRA Statements
-        in ep.statements.
-    """
-    if not isinstance(json_str, basestring):
-        raise TypeError('{} is {} instead of {}'.format(json_str,
-                                                        json_str.__class__,
-                                                        basestring))
-    try:
-        json_dict = json.loads(json_str)
-    except ValueError:
-        logger.error('Could not decode JSON-LD string.')
-        return None
-    return process_json_ld(json_dict)
-
-
 def process_json(json_dict):
-    """Return an EidosJsonProcessor by processing the given Eidos JSON dict.
-
-    Parameters
-    ----------
-    json_dict : dict
-        The JSON dict to be processed.
-
-    Returns
-    -------
-    ep : EidosJsonProcessor
-        A EidosJsonProcessor containing the extracted INDRA Statements
-        in ep.statements.
-    """
-
-    ep = EidosJsonProcessor(json_dict)
-    ep.get_events()
-    return ep
-
-
-def process_json_ld(json_dict):
-    """Return an EidosJsonLdProcessor by processing a Eidos JSON-LD dict.
+    """Return an EidosProcessor by processing a Eidos JSON-LD dict.
 
     Parameters
     ----------
@@ -202,16 +113,39 @@ def process_json_ld(json_dict):
 
     Returns
     -------
-    ep : EidosJsonLdProcessor
-        A EidosJsonLdProcessor containing the extracted INDRA Statements
-        in ep.statements.
+    ep : EidosProcessor
+        A EidosProcessor containing the extracted INDRA Statements
+        in its statements attribute.
     """
-
-    ep = EidosJsonLdProcessor(json_dict)
-    ep.get_events()
+    ep = EidosProcessor(json_dict)
+    ep.get_causal_relations()
+    ep.get_correlations()
     return ep
 
 
 def initialize_reader():
     """Instantiate an Eidos reader for fast subsequent reading."""
-    eidos_reader.process_text('', 'json_ld')
+    eidos_reader.process_text('')
+
+
+def process_json_ld_file(file_name):
+    """DEPRECATED: see process_json_file"""
+    logger.warning('This method is deprecated and will be removed in the next'
+                   ' version, please use the equivalent process_json_file'
+                   ' instead.')
+    return process_json_file(file_name)
+
+
+def process_json_ld_str(json_str):
+    """DEPRECATED: see process_json_str"""
+    logger.warning('This method is deprecated and will be removed in the next'
+                   ' version, please use the equivalent process_json_str'
+                   ' instead.')
+    return process_json_str(json_str)
+
+
+def process_json_ld(json_dict):
+    """DEPRECATED: see process_json"""
+    logger.warning('This method is deprecated and will be removed in the next'
+                   ' version, please use the equivalent process_json instead.')
+    return process_json(json_dict)
