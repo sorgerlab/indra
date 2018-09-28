@@ -311,11 +311,7 @@ MOCK_MODULES = [
     'networkx.drawing', 'networkx.algorithms.isomorphism',
     'networkx.algorithms.isomorphism.vf2userfunc',
     'functools32', 'ndex2', 'ndex2.client', 'ndex2.niceCXNetwork',
-    'sqlalchemy', 'sqlalchemy.ext', 'sqlalchemy.ext.declarative',
-    'sqlalchemy.orm', 'sqlalchemy.orm.attributes', 'sqlalchemy.dialects',
-    'sqlalchemy.dialects.postgresql', 'sqlalchemy.schema', 'sqlalchemy.ext.compiler',
-    'sqlalchemy.sql', 'sqlalchemy.sql.expression', 'nltk', 'kappy', 'openpyxl',
-    'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
+    'nltk', 'kappy', 'openpyxl', 'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
     'reportlab.lib.pagesizes', 'reportlab.platypus', 'reportlab.lib.styles',
     'reportlab.lib.units'
     ]

@@ -29,7 +29,7 @@ install:
   - sudo update-java-alternatives -s java-8-oracle
   - sudo apt-get install oracle-java8-set-default
   - export JAVA_HOME="/usr/lib/jvm/java-8-oracle/"
-  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 sqlalchemy psycopg2-binary pgcopy nose-timer flask nltk reportlab
+  - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 nose-timer flask nltk reportlab
   - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
   - pip install git+https://github.com/pybel/pybel.git
@@ -66,13 +66,6 @@ install:
         tar xjf TEES.tar.bz2;
         mv TEES ~/TEES;
     fi
-  # DB Preassembly pickles
-  - cd $TRAVIS_BUILD_DIR/indra/tests
-  - wget http://sorger.med.harvard.edu/data/bgyori/test_text_ref_tuples.pkl -nv
-  - wget http://sorger.med.harvard.edu/data/bgyori/test_text_content_tuples.pkl -nv
-  - wget http://sorger.med.harvard.edu/data/bgyori/test_reading_tuples.pkl -nv
-  - wget http://sorger.med.harvard.edu/data/bgyori/test_db_info_tuples.pkl -nv
-  - wget http://sorger.med.harvard.edu/data/bgyori/test_stmts_tuples.pkl -nv
   - pip install -U networkx>=2
   - pip list
 before_script:
@@ -91,7 +84,7 @@ script:
   # These files are ignored in Python 2 because they only work in Python 3 and
   # doctests on Travis would otherwise fail
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-        export NOSE_IGNORE_FILES=$NOSE_IGNORE_FILES,"content_manager.py,build_sample_set.py,_require_python3.py";
+        export NOSE_IGNORE_FILES=$NOSE_IGNORE_FILES,"_require_python3.py";
     fi
   - export NOSEATTR="";
   - if [[ $TRAVIS_PULL_REQUEST ]]; then

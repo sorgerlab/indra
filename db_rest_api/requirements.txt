@@ -1,3 +1,0 @@
-flask
-flask_compress
-flask_cors

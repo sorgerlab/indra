@@ -30,7 +30,6 @@ def main():
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
-                      'db': ['sqlalchemy', 'boto3'],
                       # Utilities
                       'graph': ['pygraphviz'],
                       'plot': ['matplotlib'],
@@ -57,7 +56,7 @@ def main():
                     'indra.assemblers.pysb', 'indra.assemblers.sbgn',
                     'indra.assemblers.sif', 'indra.assemblers.tsv',
                     'indra.belief',
-                    'indra.benchmarks', 'indra.databases', 'indra.db',
+                    'indra.benchmarks', 'indra.databases',
                     'indra.explanation',
                     'indra.literature', 'indra.mechlinker',
                     'indra.preassembler', 'indra.sources',
@@ -73,7 +72,6 @@ def main():
                     'indra.sources.trips', 'indra.resources',
                     'indra.resources.famplex', 'indra.tests',
                     'indra.tools', 'indra.tools.reading',
-                    'indra.tools.reading.db_reading',
                     'indra.tools.reading.pmid_reading',
                     'indra.tools.reading.starcluster_reading',
                     'indra.tools.reading.util',

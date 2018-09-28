@@ -248,8 +248,6 @@ of dependencies.
 +-----------------+------------------------------------------------------+
 |aws              |Accessing AWS compute and storage resources           |
 +-----------------+------------------------------------------------------+
-|db               |Setting up and using a DB instance to store Statements|
-+-----------------+------------------------------------------------------+
 |graph            |Assembling into a visualizing Graphviz graphs         |
 +-----------------+------------------------------------------------------+
 |plot             |Create and display plots                              |

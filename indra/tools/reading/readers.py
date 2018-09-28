@@ -18,8 +18,6 @@ from multiprocessing import Pool
 from platform import system
 
 from indra import get_config
-from indra.db import formats
-from indra.db import sql_expressions as sql
 from indra.util import zip_string
 from indra.sources import sparser, reach
 
@@ -69,6 +67,12 @@ class ReachError(ReadingError):
 
 class SparserError(ReadingError):
     pass
+
+
+class formats:
+    JSON = 'json'
+    TEXT = 'text'
+    XML = 'xml'
 
 
 class Content(object):
@@ -231,11 +235,6 @@ class Reader(object):
     def read(self, read_list, verbose=False, log=False):
         "Read a list of items and return a dict of output files."
         raise NotImplementedError()
-
-    def matches_clause(self, db):
-        "Make the clauses to get content that match Reader version and name."
-        return sql.and_(db.Reading.reader == self.name,
-                        db.Reading.reader_version == self.version[:20])
 
 
 class ReachReader(Reader):
