@@ -1,10 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
-import json
 import logging
 import objectpath
-from indra.statements import Influence, Concept, Evidence
+from indra.statements import Influence, Association, Concept, Evidence
 
 
 logger = logging.getLogger('eidos')
@@ -93,6 +92,31 @@ class EidosProcessor(object):
             st = Influence(self.get_concept(subj), self.get_concept(obj),
                            subj_delta, obj_delta, evidence=evidence)
 
+            self.statements.append(st)
+
+    def get_correlations(self):
+        events = [e for e in self.extractions if
+                  'UndirectedRelation' in e['labels'] and
+                  'Correlation' in e['labels']]
+        for event in events:
+            # For now, just take the first source and first destination.
+            # Later, might deal with hypergraph representation.
+            arg_ids = self.find_args(event, 'argument')
+            if len(arg_ids) != 2:
+                logger.warning('Skipping correlation with not 2 arguments.')
+
+            # Resolve coreferences by ID
+            arg_ids = [self.coreferences.get(arg_id, arg_id)
+                       for arg_id in arg_ids]
+
+            # Get the actual entities
+            args = [self.entity_dict[arg_id] for arg_id in arg_ids]
+            # Make Concepts from the entities
+            members = [self.get_concept(arg) for arg in args]
+            # Get the evidence
+            evidence = self.get_evidence(event)
+
+            st = Association(members, evidence=evidence)
             self.statements.append(st)
 
     def get_evidence(self, event):
@@ -195,13 +219,22 @@ class EidosProcessor(object):
 
     @staticmethod
     def find_arg(event, arg_type):
-        args = event.get('arguments', {})
-        obj_tag = [arg for arg in args if arg['type'] == arg_type]
-        if obj_tag:
-            obj_id = obj_tag[0]['value']['@id']
+        """Return ID of the first argument of a given type"""
+        obj_ids = EidosProcessor.find_args(event, arg_type)
+        if not obj_ids:
+            return None
         else:
-            obj_id = None
-        return obj_id
+            return obj_ids[0]
+
+    @staticmethod
+    def find_args(event, arg_type):
+        """Return IDs of all arguments of a given type"""
+        args = event.get('arguments', {})
+        obj_tags = [arg for arg in args if arg['type'] == arg_type]
+        if obj_tags:
+            return [o['value']['@id'] for o in obj_tags]
+        else:
+            return []
 
 
 def _sanitize(text):

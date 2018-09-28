@@ -2,7 +2,7 @@ import os
 import json
 import requests
 from indra.sources import eidos
-from indra.statements import Influence
+from indra.statements import Influence, Association
 from indra.assemblers.cag import CAGAssembler
 from indra.assemblers.cx import CxAssembler
 from indra.assemblers.pysb import PysbAssembler
@@ -82,6 +82,16 @@ def test_process_corefs():
     assert ('rainfall', 'flood') in concepts, concepts
     # This ensures that the coreference was successfully resolved
     assert ('flood', 'displacement') in concepts, concepts
+
+
+def test_process_correlations():
+    correl_jsonld = os.path.join(path_this, 'eidos_correlation.json')
+    ep = eidos.process_json_file(correl_jsonld)
+    assert len(ep.statements) == 1
+    st = ep.statements[0]
+    assert isinstance(st, Association)
+    names = {c.name for c in st.members}
+    assert names == {'harvest', 'requirement'}, names
 
 
 def test_eidos_to_cag():
