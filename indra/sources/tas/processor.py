@@ -13,11 +13,7 @@ CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM', '3': '1uM < Kd < 10uM',
 
 
 class TasProcessor(object):
-    """A processor for Target Affinity Spectrum data compiled by N. Moret.
-
-    This data was compiled in the HMS LSP as an improvement on the "arbitrary"
-    selection of targets present in the similar LINCS dataset.
-    """
+    """A processor for the Target Affinity Spectrum data table."""
     def __init__(self, data, affinity_class_limit):
         self._data = data
         self._lc = LincsClient()

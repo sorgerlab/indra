@@ -20,3 +20,4 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    biogrid/index
    ndex_cx/index
    indra_db_rest/index
+   tas/index

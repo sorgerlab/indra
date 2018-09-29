@@ -43,10 +43,10 @@ def process_csv(affinity_class_limit=2):
     """Return a TasProcessor for the contents of the csv contained in data.
 
     Interactions are classified into the following classes based on affinity:
-        1  -- Kd < 100nM
-        2  -- 100nM < Kd < 1uM
-        3  -- 1uM < Kd < 10uM
-        10 -- Kd > 10uM
+      | 1  -- Kd < 100nM
+      | 2  -- 100nM < Kd < 1uM
+      | 3  -- 1uM < Kd < 10uM
+      | 10 -- Kd > 10uM
     By default, only classes 1 and 2 are extracted but the affinity_class_limit
     parameter can be used to change the upper limit of extracted classes.
 
