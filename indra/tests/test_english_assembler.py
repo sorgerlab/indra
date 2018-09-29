@@ -308,3 +308,57 @@ def test_gap():
     s = e.make_model()
     print(s)
     assert(s == 'RASA1 is a GAP for KRAS.')
+
+
+def test_methylation():
+    st = Methylation(None, Agent('SLF11'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert s == 'SLF11 is methylated.'
+
+
+def test_generic_mod_state():
+    mc = ModCondition('modification')
+    st = Activation(Agent('MEK', mods=[mc]), Agent('ERK'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert s == 'Modified MEK activates ERK.'
+
+
+def test_generic_mutation():
+    mc = MutCondition(None, None, None)
+    st = Activation(Agent('MEK', mutations=[mc]), Agent('ERK'))
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    assert s == 'Mutated MEK activates ERK.'
+
+
+def test_activity_conditions():
+    def to_english(act_type, is_act):
+        ac = ActivityCondition(act_type, is_act)
+        st = Activation(Agent('MEK', activity=ac), Agent('ERK'))
+        e = ea.EnglishAssembler()
+        e.add_statements([st])
+        s = e.make_model()
+        return s
+
+    assert to_english('activity', True) == 'Active MEK activates ERK.'
+    assert to_english('activity', False) == 'Inactive MEK activates ERK.'
+    assert to_english('gtpbound', True) == \
+        'GTP-bound active MEK activates ERK.'
+    assert to_english('gtpbound', False) == \
+        'GDP-bound inactive MEK activates ERK.'
+    assert to_english('catalytic', False) == \
+        'Catalytically inactive MEK activates ERK.'
+    assert to_english('kinase', True) == \
+        'Kinase-active MEK activates ERK.'
+    assert to_english('gap', True) == \
+        'GAP-active MEK activates ERK.'
+    assert to_english('gef', False) == \
+        'GEF-inactive MEK activates ERK.'

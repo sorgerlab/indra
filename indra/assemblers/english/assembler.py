@@ -85,15 +85,24 @@ def _assemble_agent_str(agent):
 
     # Handle mutation conditions
     if agent.mutations:
+        is_generic = False
         mut_strs = []
         for mut in agent.mutations:
             res_to = mut.residue_to if mut.residue_to else ''
             res_from = mut.residue_from if mut.residue_from else ''
             pos = mut.position if mut.position else ''
             mut_str = '%s%s%s' % (res_from, pos, res_to)
+            # If this is the only mutation and there are no details
+            # then this is a generic mutant
+            if not mut_str and len(agent.mutations) == 1:
+                is_generic = True
+                break
             mut_strs.append(mut_str)
-        mut_strs = '/'.join(mut_strs)
-        agent_str = '%s-%s' % (agent_str, mut_strs)
+        if is_generic:
+            agent_str = 'mutated ' + agent_str
+        else:
+            mut_strs = '/'.join(mut_strs)
+            agent_str = '%s-%s' % (agent_str, mut_strs)
 
     # Handle location
     if agent.location is not None:
@@ -149,11 +158,17 @@ def _assemble_agent_str(agent):
 
     # Handle activity conditions
     if agent.activity is not None:
-        # TODO: handle activity types
+        # Get the modifier specific to the activity type, if any
+        pre_prefix = \
+            activity_type_prefix.get(agent.activity.activity_type, '')
         if agent.activity.is_active:
-            prefix = 'active'
+            prefix = pre_prefix + 'active'
         else:
-            prefix = 'inactive'
+            # See if there is a special override for the inactive form
+            if agent.activity.activity_type in inactivity_type_prefix_override:
+                pre_prefix = inactivity_type_prefix_override[
+                    agent.activity.activity_type]
+            prefix = pre_prefix + 'inactive'
         agent_str = prefix + ' ' + agent_str
 
     return agent_str
@@ -331,7 +346,7 @@ def _get_is_hypothesis_adverb(stmt):
 
 def _mod_process_verb(stmt):
     mod_name = stmt.__class__.__name__.lower()
-    return mod_process_prefix.get(mod_name)
+    return mod_process_prefix(mod_name)
 
 def _mod_process_noun(stmt):
     mod_name = stmt.__class__.__name__.lower()
@@ -339,46 +354,55 @@ def _mod_process_noun(stmt):
 
 def _mod_state_stmt(stmt):
     mod_name = stmt.__class__.__name__.lower()
-    return mod_state_prefix.get(mod_name)
+    return mod_state_prefix(mod_name)
 
 def _mod_state_str(s):
-    return mod_state_prefix.get(s)
+    return mod_state_prefix(s)
 
-mod_state_prefix = {
-    'phosphorylation': 'phosphorylated',
-    'dephosphorylation': 'dephosphorylated',
-    'ubiquitination': 'ubiquitinated',
-    'deubiquitination': 'deubiquitinated',
-    'acetylation': 'acetylated',
-    'deacetylation': 'deacetylated',
-    'hydroxylation': 'hydroxylated',
-    'dehydroxylation': 'dehydroxylated',
-    'sumoylation': 'sumoylated',
-    'desumoylation': 'desumoylated',
-    'farnesylation': 'farnesylated',
-    'defarnesylation': 'defarnesylated',
-    'glycosylation': 'glycosylated',
-    'deglycosylation': 'deglycosylated',
-    'ribosylation': 'ribosylated',
-    'deribosylation': 'deribosylated',
+
+def mod_state_prefix(mod_type):
+    # Handle explicit overrides first
+    prefix = mod_state_prefix_override.get(mod_type)
+    # If there is no specific rule, then we generate the state from the type
+    if not prefix:
+        # In general, the mod type will be '*ion' which we have to map to
+        # '*ed' e.g. 'phosphorylat[ion]' -> 'phosphorylat[ed]'
+        prefix = mod_type[:-3] + 'ed'
+    return prefix
+
+
+def mod_process_prefix(mod_type):
+    # Handle explicit overrides first
+    prefix = mod_process_prefix_override.get(mod_type)
+    # If there is no specific rule, then we generate the process from the type
+    if not prefix:
+        # In general, the mod type will be '*ion' which we have to map to
+        # '*es' e.g. 'phosphorylat[ion]' -> 'phosphorylat[es]'
+        prefix = mod_type[:-3] + 'es'
+    return prefix
+
+
+mod_state_prefix_override = {
     'modification': 'modified',
 }
 
-mod_process_prefix = {
-    'phosphorylation': 'phosphorylates',
-    'dephosphorylation': 'dephosphorylates',
-    'ubiquitination': 'ubiquitinates',
-    'deubiquitination': 'deubiquitinates',
-    'acetylation': 'acetylates',
-    'deacetylation': 'deacetylates',
-    'hydroxylation': 'hydroxylates',
-    'dehydroxylation': 'dehydroxylates',
-    'sumoylation': 'sumoylates',
-    'desumoylation': 'desumoylates',
-    'farnesylation': 'farnesylates',
-    'defarnesylation': 'defarnesylates',
-    'glycosylation': 'glycosylates',
-    'deglycosylation': 'deglycosylates',
-    'ribosylation': 'ribosylates',
-    'deribosylation': 'deribosylates'
+
+mod_process_prefix_override = {
+    'modification': 'modifies',
+    }
+
+
+activity_type_prefix = {
+    'catalytic': 'catalytically ',
+    'gap': 'GAP-',
+    'gef': 'GEF-',
+    'gtpbound': 'GTP-bound ',
+    'kinase': 'kinase-',
+    'phosphatase': 'phosphatase-',
+    'transcription': 'transcriptionally ',
+    }
+
+
+inactivity_type_prefix_override = {
+    'gtpbound': 'GDP-bound ',
     }
