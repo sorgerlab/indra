@@ -30,9 +30,8 @@ class LincsClient(object):
 
         Returns
         -------
-        The returns vary. If the id is hms-lincs, it will return a single value,
-        however if there are multiple entries for the value, it will return a
-        dict keyed by hms-lincs ids.
+        str
+            The name of the small molecule.
         """
         res = self.__harvest_sm_data(lambda _, info_dict: info_dict['Name'],
                                      id_val, id_type)

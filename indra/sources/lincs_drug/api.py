@@ -7,6 +7,13 @@ from indra.databases.lincs_client import get_drug_target_data
 
 
 def process_from_web():
-    """Get a processor for the LINCS drug target data."""
+    """Return a processor for the LINCS drug target data.
+
+    Returns
+    -------
+    LincsProcessor
+        A LincsProcessor object which contains extracted INDRA Statements
+        in its statements attribute.
+    """
     lincs_data = get_drug_target_data()
     return LincsProcessor(lincs_data)
