@@ -27,9 +27,7 @@ def test_lincs_client():
     prot_ref_2 = lc.get_protein_ref('200020')  # id_type='hms-lincs'
     assert prot_refs['200020'] == prot_ref_2
     sm_name = lc.get_small_molecule_name('10001', id_type='short-hms-lincs')
-    assert sm_name
-    assert len(sm_name) == 1
-    assert list(sm_name.values())[0] == 'Seliciclib'
+    assert sm_name == 'Selicilib'
     sm_refs = lc.get_small_molecule_ref('10001', id_type='short-hms-lincs')
     assert sm_refs
     assert set(sm_name.keys()) == set(sm_refs.keys())

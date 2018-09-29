@@ -25,7 +25,7 @@ class LincsClient(object):
         id_val : str
             The value of the id
         id_type : str
-            An indication of the type of id. Handles options are: 'hms-lincs',
+            An indication of the type of id. Handled options are: 'hms-lincs',
             'short-hms-lincs', and 'chembl'.
 
         Returns
@@ -34,8 +34,17 @@ class LincsClient(object):
         however if there are multiple entries for the value, it will return a
         dict keyed by hms-lincs ids.
         """
-        return self.__harvest_sm_data(lambda _, info_dict: info_dict['Name'],
-                                      id_val, id_type)
+        res = self.__harvest_sm_data(lambda _, info_dict: info_dict['Name'],
+                                     id_val, id_type)
+        # To end up with a name, here we take the value of the result dict.
+        # Note that in every case in this dataset, there is only
+        # one unique value in the dict i.e. len(set(res.values())) == 1
+        # so it is safe to do this.
+        if isinstance(res, dict):
+            return list(res.values())[0]
+        else:
+            return res
+
 
     def get_small_molecule_ref(self, id_val, id_type='hms-lincs'):
         """Get the id refs of a small molecule from the LINCS sm metadata.
@@ -65,7 +74,8 @@ class LincsClient(object):
 
     def __harvest_sm_data(self, ret_func, id_val, id_type):
         if id_type not in ['hms-lincs', 'short-hms-lincs', 'chembl']:
-            raise ValueError('Unexpected value for input id_type: %s' % id_type)
+            raise ValueError('Unexpected value for input id_type: %s'
+                             % id_type)
 
         if id_type == 'short-hms-lincs':
             ret = {}

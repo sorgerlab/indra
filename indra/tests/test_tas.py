@@ -10,7 +10,7 @@ def test_load_data():
 
 
 def test_processor():
-    tp = process_csv()
+    tp = process_csv(affinity_class_limit=10)
     assert tp
     assert tp.statements
     num_stmts = len(tp.statements)
