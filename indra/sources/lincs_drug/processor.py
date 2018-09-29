@@ -92,7 +92,7 @@ class LincsProcessor(object):
                 pmid = m.groups()[0]
             annotations = {'reference': ref}
             annotations.update(generic_notes)
-            ev = Evidence('lincs', pmid=pmid, annotations=annotations,
+            ev = Evidence('lincs_drug', pmid=pmid, annotations=annotations,
                           epistemics={'direct': True})
             ev_list.append(ev)
         return ev_list
