@@ -1,21 +1,29 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_drug_target_data', 'get_small_molecule_data',
-           'get_protein_data', 'LincsClient']
+__all__ = ['get_drug_target_data', 'LincsClient']
 
+import os
 import csv
+import json
 import requests
 
 
 LINCS_URL = 'http://lincs.hms.harvard.edu/db'
 
 
+resources = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                         os.path.pardir, 'resources')
+lincs_sm = os.path.join(resources, 'lincs_small_molecules.json')
+lincs_prot = os.path.join(resources, 'lincs_proteins.json')
+
+
 class LincsClient(object):
     def __init__(self):
-        self._sm_data = get_small_molecule_data()
-        self._prot_data = get_protein_data()
-        return
+        with open(lincs_sm, 'r') as fh:
+            self._sm_data = json.load(fh)
+        with open(lincs_prot, 'r') as fh:
+            self._prot_data = json.load(fh)
 
     def get_small_molecule_name(self, id_val, id_type='hms-lincs'):
         """Get the name of a small molecule from the LINCS sm metadata.
@@ -130,50 +138,6 @@ def get_drug_target_data():
     """
     url = LINCS_URL + '/datasets/20000/results'
     return _load_lincs_csv(url)
-
-
-def get_small_molecule_data():
-    """Load the csv of LINCS small molecule metadata into a dict.
-
-    Returns
-    -------
-    sm_dict : dict[dict]
-        A dict keyed by HMS LINCS small molecule ids, with the metadata
-        contained in a dict of row values keyed by the column headers extracted
-        from the csv.
-    """
-    url = LINCS_URL + '/sm/'  # The trailing / is deliberate
-    sm_data = _load_lincs_csv(url)
-    sm_dict = {d['HMS LINCS ID']: d.copy() for d in sm_data}
-    assert len(sm_dict) == len(sm_data), "We lost data."
-    return sm_dict
-
-
-def get_protein_data():
-    """Load the csv of LINCS protein metadata into a dict.
-
-    Returns
-    -------
-    prot_dict : dict[dict]
-        A dict keyed by HMS LINCS protein ids, with the metadata contained in a
-        dict of row values keyed by the column headers extracted from the csv.
-    """
-    url = LINCS_URL + '/proteins/'
-    prot_data = _load_lincs_csv(url)
-    prot_dict = {d['HMS LINCS ID']: d.copy() for d in prot_data}
-    assert len(prot_dict) == len(prot_data), "We lost data."
-    return prot_dict
-
-
-def _load_lincs_csv(url):
-    """Helper function to turn csv rows into dicts."""
-    resp = requests.get(url, params={'output_type': '.csv'}, timeout=120)
-    assert resp.status_code == 200, resp.text
-    csv_str = resp.content.decode('utf-8')
-    csv_lines = csv_str.splitlines()
-    headers = csv_lines[0].split(',')
-    return [{headers[i]: val for i, val in enumerate(line_elements)}
-            for line_elements in csv.reader(csv_lines[1:])]
 
 
 def _build_db_refs(lincs_id, data, **mappings):
