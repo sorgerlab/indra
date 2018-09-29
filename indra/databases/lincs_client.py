@@ -104,7 +104,7 @@ class LincsClient(object):
         if id_type not in ['hms-lincs', 'entrez']:
             raise ValueError("Unexpected value for input id_type: %s" % id_type)
 
-        # TODO: We could get phosphorylation states from the prtein data.
+        # TODO: We could get phosphorylation states from the protein data.
         if id_type == 'hms-lincs':
             return _build_db_refs(id_val, self._prot_data[id_val],
                                   entrez='Gene ID', uniprot='UniProt ID')
@@ -167,7 +167,7 @@ def get_protein_data():
 
 def _load_lincs_csv(url):
     """Helper function to turn csv rows into dicts."""
-    resp = requests.get(url, params={'output_type': '.csv'})
+    resp = requests.get(url, params={'output_type': '.csv'}, timeout=120)
     assert resp.status_code == 200, resp.text
     csv_str = resp.content.decode('utf-8')
     csv_lines = csv_str.splitlines()
