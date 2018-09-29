@@ -6,7 +6,7 @@ import re
 
 from indra.statements import Agent, Inhibition, Evidence
 from indra.databases.lincs_client import LincsClient
-from indra.databases import uniprot_client, hgnc_client
+from indra.databases import uniprot_client, hgnc_client, chebi_client
 
 
 class LincsProcessor(object):
@@ -45,8 +45,14 @@ class LincsProcessor(object):
     def _extract_drug(self, line):
         drug_name = line['Small Molecule Name']
         lincs_id = line['Small Molecule HMS LINCS ID']
-        db_refs = self._lc.get_small_molecule_refs(lincs_id)
-        return Agent(drug_name, db_refs=db_refs)
+        refs = self._lc.get_small_molecule_refs(lincs_id)
+        if 'PUBCHEM' in refs:
+            chebi_id = chebi_client.get_chebi_id_from_pubchem(refs['PUBCHEM'])
+            if chebi_id:
+                print(chebi_id)
+                refs['CHEBI'] = 'CHEBI:%s' % chebi_id
+
+        return Agent(drug_name, db_refs=refs)
 
     def _extract_protein(self, line):
         # Extract key information from the lines.
