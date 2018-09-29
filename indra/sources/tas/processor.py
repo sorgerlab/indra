@@ -4,8 +4,8 @@ from builtins import dict, str
 __all__ = ['TasProcessor']
 
 from indra.statements import Inhibition, Agent, Evidence
+from indra.databases import hgnc_client
 from indra.databases.lincs_client import LincsClient
-from indra.databases.hgnc_client import get_hgnc_from_entrez
 
 
 CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM', '3': '1uM < Kd < 10uM',
@@ -40,10 +40,12 @@ class TasProcessor(object):
         return Agent(name, db_refs=refs)
 
     def _extract_protein(self, name, gene_id):
-        hgnc_id = get_hgnc_from_entrez(gene_id)
-        refs = self._lc.get_protein_ref(gene_id, id_type='entrez')
+        hgnc_id = hgnc_client.get_hgnc_from_entrez(gene_id)
         if hgnc_id is not None:
             refs['HGNC'] = hgnc_id
+            up_id = hgnc_client.get_uniprot_id(hgnc_id)
+            if up_id:
+                refs['UP'] = up_id
         return Agent(name, db_refs=refs)
 
     def _make_evidence(self, class_min):

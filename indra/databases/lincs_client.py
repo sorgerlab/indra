@@ -1,7 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
-__all__ = ['get_drug_target_data', 'LincsClient']
+__all__ = ['get_drug_target_data', 'LincsClient', 'load_lincs_csv']
 
 import os
 import csv
@@ -38,7 +38,7 @@ class LincsClient(object):
         str
             The name of the small molecule.
         """
-        entry = self._get_entry_by_id(hms_lincs_id)
+        entry = self._get_entry_by_id(self._sm_data, hms_lincs_id)
         if not entry:
             return None
         name = entry['Name']
@@ -59,7 +59,7 @@ class LincsClient(object):
         """
         refs = {'HMS-LINCS': hms_lincs_id}
 
-        entry = self._get_entry_by_id(hms_lincs_id)
+        entry = self._get_entry_by_id(self._sm_data, hms_lincs_id)
         # If there is no entry for this ID
         if not entry:
             return refs
@@ -72,50 +72,47 @@ class LincsClient(object):
                 refs[k.upper()] = entry.get(v)
         return refs
 
-    def _get_entry_by_id(self, hms_lincs_id):
-        # This means it's a short ID
-        if '-' not in hms_lincs_id:
-            keys = [k for k in self._sm_data.keys() if
-                    k.startswith(hms_lincs_id)]
-            if not keys:
-                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
-                return None
-            entry = self._sm_data[keys[0]]
-        # This means it's a full ID
-        else:
-            entry = self._sm_data.get(hms_lincs_id)
-            if not entry:
-                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
-                return None
-        return entry
-
-    def get_protein_ref(self, id_val, id_type='hms-lincs'):
+    def get_protein_refs(self, hms_lincs_id):
         """Get the refs for a protein from the LINCs protein metadata.
 
         Parameters
         ----------
-        id_val : str
-            The value of the id
-        id_type : str
-            An indication of the type of id. Handles options are: 'hms-lincs'
-            and 'entrez'.
-        """
-        if id_type not in ['hms-lincs', 'entrez']:
-            raise ValueError("Unexpected value for input id_type: %s" % id_type)
+        hms_lincs_id : str
+            The HMS LINCS ID for the protein
 
+        Returns
+        -------
+        dict
+            A dictionary of protein references.
+        """
         # TODO: We could get phosphorylation states from the protein data.
-        if id_type == 'hms-lincs':
-            return _build_db_refs(id_val, self._prot_data[id_val],
-                                  egid='Gene ID', up='UniProt ID')
-        elif id_type == 'entrez':
-            ret = {}
-            for hms_id, info_dict in self._prot_data.items():
-                if info_dict['Gene ID'] != id_val:
-                    continue
-                ret[hms_id] = _build_db_refs(hms_id, info_dict,
-                                             entrez='Gene ID',
-                                             uniprot='UniProt ID')
-            return ret
+        refs = {'HMS-LINCS': hms_lincs_id}
+
+        entry = self._get_entry_by_id(self._prot_data, hms_lincs_id)
+        # If there is no entry for this ID
+        if not entry:
+            return refs
+        mappings = dict(egid='Gene ID', up='UniProt ID')
+        for k, v in mappings.items():
+            if entry.get(v):
+                refs[k.upper()] = entry.get(v)
+        return refs
+
+    def _get_entry_by_id(self, resource, hms_lincs_id):
+        # This means it's a short ID
+        if '-' not in hms_lincs_id:
+            keys = [k for k in resource.keys() if k.startswith(hms_lincs_id)]
+            if not keys:
+                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
+                return None
+            entry = resource[keys[0]]
+        # This means it's a full ID
+        else:
+            entry = resource.get(hms_lincs_id)
+            if not entry:
+                logger.error('Couldn\'t find entry for %s' % hms_lincs_id)
+                return None
+        return entry
 
 
 def get_drug_target_data():
@@ -128,7 +125,7 @@ def get_drug_target_data():
         as the corresponding column values.
     """
     url = LINCS_URL + '/datasets/20000/results'
-    return _load_lincs_csv(url)
+    return load_lincs_csv(url)
 
 
 def _build_db_refs(lincs_id, data, **mappings):
@@ -138,3 +135,15 @@ def _build_db_refs(lincs_id, data, **mappings):
             db_refs[db_ref.upper()] = data[key]
     print(db_refs)
     return db_refs
+
+
+def load_lincs_csv(url):
+    """Helper function to turn csv rows into dicts."""
+    resp = requests.get(url, params={'output_type': '.csv'}, timeout=120)
+    assert resp.status_code == 200, resp.text
+    csv_str = resp.content.decode('utf-8')
+    csv_lines = csv_str.splitlines()
+    headers = csv_lines[0].split(',')
+    return [{headers[i]: val for i, val in enumerate(line_elements)}
+            for line_elements in csv.reader(csv_lines[1:])]
+

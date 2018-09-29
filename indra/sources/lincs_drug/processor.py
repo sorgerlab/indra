@@ -6,7 +6,7 @@ import re
 
 from indra.statements import Agent, Inhibition, Evidence
 from indra.databases.lincs_client import LincsClient
-from indra.databases.hgnc_client import get_hgnc_from_entrez
+from indra.databases import uniprot_client, hgnc_client
 
 
 class LincsProcessor(object):
@@ -37,35 +37,40 @@ class LincsProcessor(object):
     def _process_line(self, line):
         drug = self._extract_drug(line)
         prot = self._extract_protein(line)
+        if prot is None:
+            return
         evidence = self._make_evidence(line)
         self.statements.append(Inhibition(drug, prot, evidence=evidence))
-        return
 
     def _extract_drug(self, line):
         drug_name = line['Small Molecule Name']
         lincs_id = line['Small Molecule HMS LINCS ID']
-        db_refs = self._lc.get_small_molecule_ref(lincs_id)
+        db_refs = self._lc.get_small_molecule_refs(lincs_id)
         return Agent(drug_name, db_refs=db_refs)
 
     def _extract_protein(self, line):
-        # Extract key information from the line.
+        # Extract key information from the lines.
         prot_name = line['Protein Name']
         prot_id = line['Protein HMS LINCS ID']
-        sm_id = line['Small Molecule HMS LINCS ID']
 
         # Get available db-refs.
         db_refs = {}
         if prot_id:
-            db_refs.update(self._lc.get_protein_ref(prot_id))
-        if sm_id:
-            db_refs.update(self._lc.get_small_molecule_ref(sm_id))
-        assert db_refs, "We didn't get any refs for: %s" % prot_name
-
-        # Get HGNC from entrez id, if present.
-        if 'ENTREZ' in db_refs.keys():
-            hgnc_id = get_hgnc_from_entrez(db_refs['ENTREZ'])
-            if hgnc_id is not None:
-                db_refs['HGNC'] = hgnc_id
+            db_refs.update(self._lc.get_protein_refs(prot_id))
+            # Since the resource only gives us an UP ID (not HGNC), we
+            # try to get that and standardize the name to the gene name
+            up_id = db_refs.get('UP')
+            if up_id:
+                gene_name = uniprot_client.get_gene_name(up_id)
+                if gene_name:
+                    prot_name = gene_name
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id:
+                        db_refs['HGNC'] = hgnc_id
+        # In some cases lines are missing protein information in which
+        # case we return None
+        else:
+            return None
 
         # Create the agent.
         return Agent(prot_name, db_refs=db_refs)
@@ -91,5 +96,4 @@ class LincsProcessor(object):
                           epistemics={'direct': True})
             ev_list.append(ev)
         return ev_list
-
 

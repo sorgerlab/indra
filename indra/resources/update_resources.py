@@ -14,6 +14,7 @@ import logging
 import requests
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases import uniprot_client
+from indra.databases.lincs_client import load_lincs_csv
 from indra.preassembler.make_cellular_component_hierarchy import \
     get_cellular_components
 from indra.preassembler.make_cellular_component_hierarchy import \
@@ -438,7 +439,7 @@ def update_lincs_small_molecules():
     from the csv.
     """
     url = 'http://lincs.hms.harvard.edu/db/sm/'
-    sm_data = _load_lincs_csv(url)
+    sm_data = load_lincs_csv(url)
     sm_dict = {d['HMS LINCS ID']: d.copy() for d in sm_data}
     assert len(sm_dict) == len(sm_data), "We lost data."
     fname = os.path.join(path, 'lincs_small_molecules.json')
@@ -454,23 +455,12 @@ def update_lincs_proteins():
     from the csv.
     """
     url = 'http://lincs.hms.harvard.edu/db/proteins/'
-    prot_data = _load_lincs_csv(url)
+    prot_data = load_lincs_csv(url)
     prot_dict = {d['HMS LINCS ID']: d.copy() for d in prot_data}
     assert len(prot_dict) == len(prot_data), "We lost data."
     fname = os.path.join(path, 'lincs_proteins.json')
     with open(fname, 'w') as fh:
         json.dump(fh, prot_dict, indent=1)
-
-
-def _load_lincs_csv(url):
-    """Helper function to turn csv rows into dicts."""
-    resp = requests.get(url, params={'output_type': '.csv'}, timeout=120)
-    assert resp.status_code == 200, resp.text
-    csv_str = resp.content.decode('utf-8')
-    csv_lines = csv_str.splitlines()
-    headers = csv_lines[0].split(',')
-    return [{headers[i]: val for i, val in enumerate(line_elements)}
-            for line_elements in csv.reader(csv_lines[1:])]
 
 
 if __name__ == '__main__':
