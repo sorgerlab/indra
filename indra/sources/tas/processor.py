@@ -31,8 +31,15 @@ class TasProcessor(object):
         drug = self._extract_drug(row['hms_id'])
         prot = self._extract_protein(row['approved_symbol'], row['gene_id'])
         ev = self._make_evidence(row['class_min'])
+        # NOTE: there are several entries in this data set that refer to
+        # non-human Entrez genes, e.g.
+        # https://www.ncbi.nlm.nih.gov/gene/3283880
+        # We skip these for now because since resources for Entrez-based
+        # mappings for non-human genes are not integrated, and would cause
+        # pre-assembly issues.
+        if 'HGNC' not in prot.db_refs:
+            return
         self.statements.append(Inhibition(drug, prot, evidence=ev))
-        return
 
     def _extract_drug(self, hms_id):
         refs = self._lc.get_small_molecule_refs(hms_id)
@@ -47,6 +54,8 @@ class TasProcessor(object):
             up_id = hgnc_client.get_uniprot_id(hgnc_id)
             if up_id:
                 refs['UP'] = up_id
+            # If there is a HGNC ID, we standardize the gene name
+            name = hgnc_client.get_hgnc_name(hgnc_id)
         return Agent(name, db_refs=refs)
 
     def _make_evidence(self, class_min):

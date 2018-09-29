@@ -14,8 +14,7 @@ def test_processor():
     assert tp
     assert tp.statements
     num_stmts = len(tp.statements)
-    num_data = len(_load_data())
-    assert num_stmts == num_data, \
-        "Expected %d stmts, got %d." % (num_data, num_stmts)
+    # This is the total number of statements about human genes
+    assert num_stmts == 51641, num_stmts
     assert all(len(s.evidence) == 1 for s in tp.statements), \
         "Some statements lack evidence, or have extra evidence."
