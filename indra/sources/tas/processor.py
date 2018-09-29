@@ -40,6 +40,7 @@ class TasProcessor(object):
         return Agent(name, db_refs=refs)
 
     def _extract_protein(self, name, gene_id):
+        refs = {'EGID': gene_id}
         hgnc_id = hgnc_client.get_hgnc_from_entrez(gene_id)
         if hgnc_id is not None:
             refs['HGNC'] = hgnc_id
