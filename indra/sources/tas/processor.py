@@ -4,7 +4,7 @@ from builtins import dict, str
 __all__ = ['TasProcessor']
 
 from indra.statements import Inhibition, Agent, Evidence
-from indra.databases import hgnc_client
+from indra.databases import hgnc_client, chebi_client
 from indra.databases.lincs_client import LincsClient
 
 
@@ -44,6 +44,10 @@ class TasProcessor(object):
     def _extract_drug(self, hms_id):
         refs = self._lc.get_small_molecule_refs(hms_id)
         name = self._lc.get_small_molecule_name(hms_id)
+        if 'PUBCHEM' in refs:
+            chebi_id = chebi_client.get_chebi_id_from_pubchem(refs['PUBCHEM'])
+            if chebi_id:
+                refs['CHEBI'] = 'CHEBI:%s' % chebi_id
         return Agent(name, db_refs=refs)
 
     def _extract_protein(self, name, gene_id):
