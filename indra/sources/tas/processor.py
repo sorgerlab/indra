@@ -18,12 +18,16 @@ class TasProcessor(object):
     This data was compiled in the HMS LSP as an improvement on the "arbitrary"
     selection of targets present in the similar LINCS dataset.
     """
-    def __init__(self, data):
+    def __init__(self, data, affinity_class_limit):
         self._data = data
         self._lc = LincsClient()
+        self.affinity_class_limit = affinity_class_limit
 
         self.statements = []
         for row in data:
+            # Skip rows that are above the affinity class limit
+            if int(row['class_min']) > affinity_class_limit:
+                continue
             self._process_row(row)
         return
 

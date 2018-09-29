@@ -14,14 +14,8 @@ DATAFILE_NAME = 'classification_hms_cmpds_symbol.csv'
 def _load_data():
     """Load the data from the csv in data.
 
-    The "class_min" refers to the following classifications:
-        1  -- Kd < 100nM
-        2  -- 100nM < Kd < 1uM
-        3  -- 1uM < Kd < 10uM
-        10 -- Kd > 10uM
-
     The "gene_id" is the Entrez gene id, and the "approved_symbol" is the
-    standard protein symbol. The "hms_id" is the LINCS ID for the drug.
+    standard gene symbol. The "hms_id" is the LINCS ID for the drug.
 
     Returns
     -------
@@ -45,6 +39,28 @@ def _load_data():
     return [{headers[i]: val for i, val in enumerate(line)} for line in reader]
 
 
-def process_csv():
-    """Process the contents of the csv contained in data."""
-    return TasProcessor(_load_data())
+def process_csv(affinity_class_limit=2):
+    """Return a TasProcessor for the contents of the csv contained in data.
+
+    Interactions are classified into the following classes based on affinity:
+        1  -- Kd < 100nM
+        2  -- 100nM < Kd < 1uM
+        3  -- 1uM < Kd < 10uM
+        10 -- Kd > 10uM
+    By default, only classes 1 and 2 are extracted but the affinity_class_limit
+    parameter can be used to change the upper limit of extracted classes.
+
+    Parameters
+    ----------
+    affinity_class_limit : Optional[int]
+        Defines the highest class of binding affinity that is included in the
+        extractions. Default: 2
+
+    Returns
+    -------
+    TasProcessor
+        A TasProcessor object which has a list of INDRA Statements extracted
+        from the CSV file representing drug-target inhibitions in its
+        statements attribute.
+    """
+    return TasProcessor(_load_data(), affinity_class_limit)
