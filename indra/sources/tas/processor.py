@@ -35,10 +35,8 @@ class TasProcessor(object):
         return
 
     def _extract_drug(self, hms_id):
-        refs = self._lc.get_small_molecule_ref(hms_id,
-                                               id_type='short-hms-lincs')
-        name = self._lc.get_small_molecule_name(hms_id,
-                                                id_type='short-hms-lincs')
+        refs = self._lc.get_small_molecule_refs(hms_id)
+        name = self._lc.get_small_molecule_name(hms_id)
         return Agent(name, db_refs=refs)
 
     def _extract_protein(self, name, gene_id):
