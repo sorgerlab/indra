@@ -1,4 +1,4 @@
-from __future__ import absolute_import, print_function, unicode_literals
+from __future__ import absolute_import, unicode_literals
 from builtins import dict, str
 
 __all__ = ['get_statements', 'get_statements_for_paper',
@@ -393,9 +393,9 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         json_data = json.dumps(data)
     else:
         json_data = None
-    print('url and query string:', url_path)
-    print('headers:', headers)
-    print('data:', data)
+    logger.info('url and query string: %s', url_path)
+    logger.info('headers: %s', headers)
+    logger.info('data: %s', data)
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
