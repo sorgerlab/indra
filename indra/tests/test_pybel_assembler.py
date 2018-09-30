@@ -2,7 +2,7 @@ import networkx as nx
 import pybel.constants as pc
 from indra.statements import *
 from indra.databases import hgnc_client
-from pybel.dsl import protein, pmod, hgvs, reaction, abundance, complex_abundance
+from pybel.dsl import activity, protein, pmod, hgvs, reaction, abundance, complex_abundance
 from indra.assemblers.pybel import assembler as pa
 
 
@@ -67,14 +67,8 @@ def test_simple_modification_no_evidence():
     stmt3 = Ubiquitination(braf_cat, mek, 'S', '218')
     # Edge info for subject
     edge1 = None
-    edge2 = {pc.MODIFIER: pc.ACTIVITY,
-             pc.EFFECT: {
-                 pc.NAME: 'kin',
-                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
-    edge3 = {pc.MODIFIER: pc.ACTIVITY,
-             pc.EFFECT: {
-                 pc.NAME: 'cat',
-                 pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+    edge2 = activity('kin')
+    edge3 = activity('cat')
     for stmt, modtuple, subj_edge in ((stmt1, phos_dsl, edge1),
                                       (stmt2, phos_dsl, edge2),
                                       (stmt3, ub_dsl, edge3)):
@@ -113,16 +107,8 @@ def test_activation():
     edge1 = {pc.RELATION: pc.DIRECTLY_INCREASES,
              pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY}}
     edge2 = {pc.RELATION: pc.DIRECTLY_INCREASES,
-             pc.SUBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'kin',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-             pc.OBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'kin',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+             pc.SUBJECT: activity('kin'),
+             pc.OBJECT: activity('kin')}
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
@@ -140,16 +126,8 @@ def test_inhibition():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt = Inhibition(braf_kin, mek, 'kinase')
     edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
-            pc.SUBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'kin',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-            pc.OBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'kin',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+            pc.SUBJECT: activity('kin'),
+            pc.OBJECT: activity('kin')}
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph.nodes()) == 2
@@ -189,10 +167,7 @@ def test_increase_amount_tscript():
     assert belgraph.number_of_edges() == 1
     edge_data = get_first_edge_data(belgraph)
     assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
-    assert edge_data[pc.SUBJECT] == {
-            pc.MODIFIER: pc.ACTIVITY,
-            pc.EFFECT: {pc.NAME: 'tscript',
-                        pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}
+    assert edge_data[pc.SUBJECT] == activity('tscript')
 
 
 def test_gef():
@@ -213,16 +188,8 @@ def test_gef():
 
     edge_data = get_edge_data(belgraph, gef_node, kras_node)
     edge = {pc.RELATION: pc.DIRECTLY_INCREASES,
-            pc.SUBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'gef',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-            pc.OBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'gtp',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+            pc.SUBJECT: activity('gef'),
+            pc.OBJECT: activity('gtp')}
     assert edge_data == edge
 
 
@@ -245,16 +212,8 @@ def test_gap():
     assert ras_node in belgraph
     edge_data = get_edge_data(belgraph, gap_node, ras_node)
     edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
-            pc.SUBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'gap',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}},
-            pc.OBJECT: {
-                 pc.MODIFIER: pc.ACTIVITY,
-                 pc.EFFECT: {
-                     pc.NAME: 'gtp',
-                     pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}}
+            pc.SUBJECT: activity('gap'),
+            pc.OBJECT: activity('gtp')}
     assert edge_data == edge
 
 
@@ -382,11 +341,7 @@ def test_bound_condition():
 
     edge_data = (egfr_grb2_sos1_phos_complex_dsl, kras_node,
                  {pc.RELATION: pc.DIRECTLY_INCREASES,
-                  pc.OBJECT: {
-                     pc.MODIFIER: pc.ACTIVITY,
-                     pc.EFFECT: {
-                         pc.NAME: 'gtp',
-                         pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}}})
+                  pc.OBJECT: activity('gtp')})
     assert edge_data in belgraph.edges(data=True)
 
 
