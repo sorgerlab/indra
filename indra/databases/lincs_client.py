@@ -4,9 +4,15 @@ from builtins import dict, str
 __all__ = ['get_drug_target_data', 'LincsClient', 'load_lincs_csv']
 
 import os
-import csv
+import sys
 import json
+import logging
 import requests
+from io import StringIO, BytesIO
+from indra.util import read_unicode_csv_fileobj
+
+
+logger = logging.getLogger('lincs_client')
 
 
 LINCS_URL = 'http://lincs.hms.harvard.edu/db'
@@ -140,10 +146,13 @@ def _build_db_refs(lincs_id, data, **mappings):
 def load_lincs_csv(url):
     """Helper function to turn csv rows into dicts."""
     resp = requests.get(url, params={'output_type': '.csv'}, timeout=120)
-    assert resp.status_code == 200, resp.text
-    csv_str = resp.content.decode('utf-8')
-    csv_lines = csv_str.splitlines()
-    headers = csv_lines[0].split(',')
-    return [{headers[i]: val for i, val in enumerate(line_elements)}
-            for line_elements in csv.reader(csv_lines[1:])]
+    resp.raise_for_status()
+    if sys.version_info[0] < 3:
+        csv_io = BytesIO(resp.content)
+    else:
+        csv_io = StringIO(resp.text)
+    data_rows = list(read_unicode_csv_fileobj(csv_io, delimiter=','))
+    headers = data_rows[0]
+    return [{header: val for header, val in zip(headers, line_elements)}
+            for line_elements in data_rows[1:]]
 

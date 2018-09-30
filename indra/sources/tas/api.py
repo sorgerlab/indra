@@ -3,9 +3,10 @@ from builtins import dict, str
 
 __all__ = ['process_csv']
 
-import csv
 from os import path
 from .processor import TasProcessor
+from indra.util import read_unicode_csv
+
 
 HERE = path.dirname(path.abspath(__file__))
 DATAFILE_NAME = 'classification_hms_cmpds_symbol.csv'
@@ -26,17 +27,16 @@ def _load_data():
     # Get the cwv reader object.
     csv_path = path.join(HERE, path.pardir, path.pardir, path.pardir, 'data',
                          DATAFILE_NAME)
-    with open(csv_path, 'r') as f:
-        csv_lines = f.readlines()
-    reader = csv.reader(csv_lines)
+    data_iter = list(read_unicode_csv(csv_path))
 
     # Get the headers.
-    headers = reader.__next__()
+    headers = data_iter[0]
 
     # For some reason this heading is oddly formatted and inconsistent with the
     # rest, or with the usual key-style for dicts.
     headers[headers.index('Approved.Symbol')] = 'approved_symbol'
-    return [{headers[i]: val for i, val in enumerate(line)} for line in reader]
+    return [{header: val for header, val in zip(headers, line)}
+            for line in data_iter[1:]]
 
 
 def process_csv(affinity_class_limit=2):
