@@ -123,34 +123,61 @@ class SimpleScorer(BeliefScorer):
         belief_score : float
             The computed prior probability for the statement
         """
-
-        sources = [ev.source_api for ev in st.evidence]
-        uniq_sources = numpy.unique(sources)
-        syst_factors = {s: self.prior_probs['syst'][s]
-                        for s in uniq_sources}
-        rand_factors = {k: [] for k in uniq_sources}
-        for ev in st.evidence:
-            rand_factors[ev.source_api].append(
-                    evidence_random_noise_prior(
-                        ev,
-                        self.prior_probs['rand'],
-                        self.subtype_probs))
-
-        neg_prob_prior = 1
-        for s in uniq_sources:
-            neg_prob_prior *= (syst_factors[s] +
-                               numpy.prod(rand_factors[s]))
-        prob_prior = 1 - neg_prob_prior
-        return prob_prior
+        def _score(evidences):
+            if not evidences:
+                return 0
+            # Collect all unique sources
+            sources = [ev.source_api for ev in evidences]
+            uniq_sources = numpy.unique(sources)
+            # Calculate the systematic error factors given unique sources
+            syst_factors = {s: self.prior_probs['syst'][s]
+                            for s in uniq_sources}
+            # Calculate the radom error factors for each source
+            rand_factors = {k: [] for k in uniq_sources}
+            for ev in evidences:
+                rand_factors[ev.source_api].append(
+                        evidence_random_noise_prior(
+                            ev,
+                            self.prior_probs['rand'],
+                            self.subtype_probs))
+            # The probability of incorrectness is the product of the
+            # source-specific probabilities
+            neg_prob_prior = 1
+            for s in uniq_sources:
+                neg_prob_prior *= (syst_factors[s] +
+                                   numpy.prod(rand_factors[s]))
+            # Finally, the probability of correctness is one minus incorrect
+            prob_prior = 1 - neg_prob_prior
+            return prob_prior
+        pos_evidence = [ev for ev in st.evidence if
+                        not ev.epistemics.get('negated')]
+        neg_evidence = [ev for ev in st.evidence if
+                        ev.epistemics.get('negated')]
+        print(pos_evidence, neg_evidence)
+        pp = _score(pos_evidence)
+        np = _score(neg_evidence)
+        # The basic assumption is that the positive and negative evidence
+        # can't simultaneously be correct.
+        # There are two cases to consider. (1) If the positive evidence is
+        # incorrect then there is no Statement and the belief should be 0,
+        # irrespective of the negative evidence.
+        # (2) If the positive evidence is correct and the negative evidence
+        # is incorrect.
+        # This amounts to the following formula:
+        # 0 * (1-pp) + 1 * (pp * (1-np)) which we simplify below
+        score = pp * (1 - np)
+        return score
 
     def check_prior_probs(self, statements):
-        """Make sure the scorer has all the information needed to compute
+        """Throw Exception if BeliefEngine parameter is missing.
+
+        Make sure the scorer has all the information needed to compute
         belief scores of each statement in the provided list, and raises an
         exception otherwise.
 
         Parameters
         ----------
-        statements : list<indra.statements.Statement>
+        statements : list[indra.statements.Statement]
             List of statements to check
         """
         sources = set()
@@ -211,7 +238,7 @@ class BeliefEngine(object):
             st.belief = self.scorer.score_statement(st)
 
     def set_hierarchy_probs(self, statements):
-        """Sets hierarchical belief probabilities for a list of INDRA Statements.
+        """Sets hierarchical belief probabilities for INDRA Statements.
 
         The Statements are assumed to be in a hierarchical relation graph with
         the supports and supported_by attribute of each Statement object having
