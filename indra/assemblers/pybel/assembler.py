@@ -521,12 +521,12 @@ def _get_agent_activity(agent):
     if not ac.is_active:
         logger.warning('Cannot represent negative activity in PyBEL: %s' %
                        agent)
-    edge_data = {pc.MODIFIER: pc.ACTIVITY}
-    if not ac.activity_type == 'activity':
-        pybel_activity = _indra_pybel_act_map[ac.activity_type]
-        edge_data[pc.EFFECT] = {pc.NAME: pybel_activity,
-                                pc.NAMESPACE: pc.BEL_DEFAULT_NAMESPACE}
-    return edge_data
+    if ac.activity_type == 'activity':
+        return activity()
+
+    pybel_activity = _indra_pybel_act_map[ac.activity_type]
+    return activity(pybel_activity)
+
 
 
 def _get_evidence(evidence):
@@ -545,5 +545,12 @@ def _get_evidence(evidence):
         citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_OTHER,
                     pc.CITATION_REFERENCE: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
+
     pybel_ev[pc.ANNOTATIONS] = {}
+    if evidence.source_api:
+        pybel_ev[pc.ANNOTATIONS]['source_api'] = evidence.source_api
+    if evidence.source_id:
+        pybel_ev[pc.ANNOTATIONS]['source_id'] = evidence.source_id
+    pybel_ev[pc.ANNOTATIONS].update(evidence.epistemics)
+
     return pybel_ev

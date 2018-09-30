@@ -1426,7 +1426,7 @@ class Modification(Statement):
     position : str or None
         The position of the modified amino acid, or None if it is unknown or
         unspecified.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
     _agent_order = ['enz', 'sub']
@@ -1584,7 +1584,7 @@ class SelfModification(Statement):
     position : str or None
         The position of the modified amino acid, or None if it is unknown or
         unspecified.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
     _agent_order = ['enz']
