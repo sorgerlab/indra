@@ -84,6 +84,32 @@ def test_simple_modification_no_evidence():
         assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
 
 
+def test_modification_with_evidences():
+    braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                     db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    evidence = Evidence(source_api='test', text='evidence text', pmid='1234')
+    stmt = Phosphorylation(braf_kin, mek, 'S', '218', evidence=evidence)
+    pba = pa.PybelAssembler([stmt])
+    belgraph = pba.make_model()
+    assert len(belgraph.nodes()) == 3
+    assert braf_dsl in belgraph
+    map2k1_mod_dsl = map2k1_dsl.with_variants(phos_dsl)
+    assert map2k1_mod_dsl in belgraph
+    assert belgraph.number_of_edges() == 2
+    edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
+    assert edge_data.get(pc.SUBJECT) == activity('kin')
+    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.EVIDENCE] == 'evidence text'
+    assert edge_data[pc.CITATION] == {
+        pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
+        pc.CITATION_REFERENCE: '1234',
+    }
+    assert 'source_api' in edge_data[pc.ANNOTATIONS]
+    assert edge_data[pc.ANNOTATIONS]['source_api'] == 'test'
+    assert 'source_id' not in edge_data[pc.ANNOTATIONS]
+
+
 def test_modification_with_mutation():
     braf = Agent('BRAF', mutations=[MutCondition('600', 'V', 'E')],
                  db_refs={'HGNC': '1097', 'UP': 'P15056'})

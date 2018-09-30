@@ -545,5 +545,12 @@ def _get_evidence(evidence):
         citation = {pc.CITATION_TYPE: pc.CITATION_TYPE_OTHER,
                     pc.CITATION_REFERENCE: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
+
     pybel_ev[pc.ANNOTATIONS] = {}
+    if evidence.source_api:
+        pybel_ev[pc.ANNOTATIONS]['source_api'] = evidence.source_api
+    if evidence.source_id:
+        pybel_ev[pc.ANNOTATIONS]['source_id'] = evidence.source_id
+    pybel_ev[pc.ANNOTATIONS].update(evidence.epistemics)
+
     return pybel_ev
