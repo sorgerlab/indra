@@ -465,6 +465,8 @@ def _get_evidence(u_data, v_data, k, edge_data):
     if ev_ref:  # FIXME what if ev_citation is Falsy?
         annotations['citation_ref'] = ev_ref
 
+    context = extract_context(annotations)
+
     text_location = annotations.pop('TextLocation', None)
     if text_location:
         # Handle dictionary text_location like {'Abstract': True}
@@ -481,6 +483,43 @@ def _get_evidence(u_data, v_data, k, edge_data):
                   annotations=annotations)
     return ev
 
+
+def extract_context(annotations):
+    """Return a BioContext object extracted from the annotations.
+
+    The entries that are extracted into the BioContext are popped from the
+    annotations.
+
+    Parameters
+    ----------
+    annotations : dict
+        PyBEL annotations dict
+
+    Returns
+    -------
+    bc : BioContext
+        An INDRA BioContext object
+    """
+    def get_annot(annotations, key):
+        """Return a specific annotation given a key."""
+        val = annotations.pop(key, None)
+        if val:
+            val_list = [v for v, tf in val.items() if tf]
+            if len(val_list) > 1:
+                logger.warning('More than one "%s" in annotations' % key)
+            elif not val_list:
+                return None
+            return val_list[0]
+        return None
+
+    bc = BioContext()
+    species = get_annot(annotations, 'Species')
+    if species:
+        bc.species = {'TAXONOMY': species}
+    cell_line = get_annot(annotations, 'CellLine')
+    if cell_line:
+        bc.species = {'TEXT': cell_line}
+    
 
 def _rel_is_direct(d):
     return d[pc.RELATION] in (pc.DIRECTLY_INCREASES, pc.DIRECTLY_DECREASES)
