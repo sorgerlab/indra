@@ -139,7 +139,6 @@ def _build_db_refs(lincs_id, data, **mappings):
     for db_ref, key in mappings.items():
         if data[key]:
             db_refs[db_ref.upper()] = data[key]
-    print(db_refs)
     return db_refs
 
 
