@@ -99,7 +99,7 @@ def test_process_timex():
         datetime.datetime(year=2018, month=1, day=1, hour=0, minute=0), \
         ev.context.time.start
     assert ev.context.time.end == \
-           datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0), \
+        datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0), \
         ev.context.time.end
 
 

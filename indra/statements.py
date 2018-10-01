@@ -183,6 +183,7 @@ __all__ = [
 
     # Other classes
     'Concept', 'Agent', 'Evidence', 'BioContext', 'WorldContext', 'TimeContext',
+    'RefContext',
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
@@ -3102,6 +3103,23 @@ class Context(object):
 
 
 class BioContext(Context):
+    """An oject representing the context of a Statement in biology.
+
+    Parameters
+    ----------
+    location : Optional[RefContext]
+        Cellular location, typically a sub-cellular compartment.
+    cell_line : Optional[RefContext]
+        Cell line context, e.g., a specific cell line, like BT20.
+    cell_type : Optional[RefContext]
+        Cell type context, broader than a cell line, like macrophage.
+    organ : Optional[RefContext]
+        Organ context.
+    disease : Optional[RefContext]
+        Disease context.
+    species : Optional[RefContext]
+        Species context.
+    """
     def __init__(self, location=None, cell_line=None, cell_type=None,
                  organ=None, disease=None, species=None):
         self.location = location
@@ -3111,12 +3129,35 @@ class BioContext(Context):
         self.disease = disease
         self.species = species
 
+    attrs = ['location', 'cell_line', 'cell_type', 'organ', 'disease',
+             'species']
+
     @classmethod
-    def from_json(cls, json_dict):
-        return cls()
+    def from_json(cls, jd):
+        # For all the attributes, we deserialize them if they have a value,
+        # and make a dict that can be passed to the constructor
+        ref_contexts = {attr: (RefContext.from_json(jd.get(attr))
+                               if jd.get(attr) else None)
+                        for attr in cls.attrs}
+        bs = cls(**ref_contexts)
+        return bs
+
+    def to_json(self):
+        jd = {attr: getattr(self, attr).to_json() for attr in self.attrs
+              if getattr(self, attr, None) is not None}
+        return jd
 
 
 class WorldContext(Context):
+    """An object representing the context of a Statement in time and space.
+
+    Parameters
+    ----------
+    time : Optional[TimeContext]
+        A TimeContext object representing the temporal context of the Statement.
+    geo_location : Optional[RefContext]
+        The geographical location context represented as a RefContext
+    """
     def __init__(self, time=None, geo_location=None):
         self.time = time
         self.geo_location = geo_location
@@ -3126,7 +3167,35 @@ class WorldContext(Context):
         return cls()
 
 
-class TimeContext(Context):
+class RefContext(Context):
+    """An object representing a context with a name and references.
+
+    Parameters
+    ----------
+    name : Optional[str]
+        The name of the given context. In some cases a text name will not be
+        available so this is an optional parameter with the default being
+        None.
+    db_refs : Optional[dict]
+        A dictionary where each key is a namespace and each value is an
+        identifier in that namespace, similar to the db_refs associated with
+        Concepts/Agents.
+    """
+    def __init__(self, name=None, db_refs=None):
+        self.name = name
+        self.db_refs = {} if db_refs is None else db_refs
+
+    def to_json(self):
+        jd = {'name': self.name, 'db_refs': self.db_refs}
+        return jd
+
+    @classmethod
+    def from_json(cls, jd):
+        rc = cls(name=jd.get('name'), db_refs=jd.get('db_refs'))
+        return rc
+
+
+class TimeContext(object):
     """An object representing the time context of a Statement
 
     Parameters

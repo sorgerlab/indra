@@ -225,3 +225,28 @@ def test_time_context():
     assert jd['duration'] == 365 * 86400
 
     assert TimeContext.from_json(jd).__dict__ == tc.__dict__
+
+
+def test_ref_context():
+    rc1 = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    rc2 = RefContext(name='x')
+    rc3 = RefContext(db_refs={'y'})
+    rj1 = rc1.to_json()
+    assert rj1['name'] == 'x'
+    assert rj1['db_refs'] == {'y': '1', 'z': '2'}
+    assert rc1.to_json() == RefContext.from_json(rc1.to_json()).to_json()
+    assert rc2.to_json() == RefContext.from_json(rc2.to_json()).to_json()
+    assert rc3.to_json() == RefContext.from_json(rc3.to_json()).to_json()
+
+
+def test_bio_context():
+    rc1 = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    rc2 = RefContext(name='x')
+    rc3 = RefContext(db_refs={'y'})
+
+    bc = BioContext(location=rc1, cell_line=rc2, species=rc3)
+
+    bcj = bc.to_json()
+    assert bcj['location']['name'] == 'x'
+    assert bcj['location']['db_refs'] == {'y': '1', 'z': '2'}
+    assert bc.to_json() == BioContext.from_json(bc.to_json()).to_json()
