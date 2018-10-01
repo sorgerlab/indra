@@ -247,6 +247,21 @@ def test_bio_context():
     bc = BioContext(location=rc1, cell_line=rc2, species=rc3)
 
     bcj = bc.to_json()
+    assert bcj['type'] == 'bio'
     assert bcj['location']['name'] == 'x'
     assert bcj['location']['db_refs'] == {'y': '1', 'z': '2'}
-    assert bc.to_json() == BioContext.from_json(bc.to_json()).to_json()
+    assert bc.to_json() == Context.from_json(bc.to_json()).to_json()
+
+
+def test_world_context():
+    gl = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    tc = TimeContext(text='2018')
+
+    wc = WorldContext(time=tc, geo_location=gl)
+
+    wcj = wc.to_json()
+    assert wcj['type'] == 'world'
+    assert wcj['time']['text'] == '2018'
+    assert wcj['geo_location']['name'] == 'x'
+    assert wcj['geo_location']['db_refs'] == {'y': '1', 'z': '2'}
+    assert wc.to_json() == Context.from_json(wc.to_json()).to_json()

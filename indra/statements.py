@@ -182,8 +182,10 @@ __all__ = [
     'InvalidResidueError', 'NotAStatementName',
 
     # Other classes
-    'Concept', 'Agent', 'Evidence', 'BioContext', 'WorldContext', 'TimeContext',
-    'RefContext',
+    'Concept', 'Agent', 'Evidence',
+
+    # Context classes
+    'BioContext', 'WorldContext', 'TimeContext', 'RefContext', 'Context',
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
@@ -3099,7 +3101,15 @@ class Unresolved(Statement):
 
 
 class Context(object):
-    pass
+    @classmethod
+    def from_json(cls, jd):
+        context_type = jd.get('type')
+        if context_type == 'bio':
+            return BioContext.from_json(jd)
+        elif context_type == 'world':
+            return WorldContext.from_json(jd)
+        else:
+            raise ValueError('Unknown context type %s' % context_type)
 
 
 class BioContext(Context):
@@ -3152,6 +3162,7 @@ class BioContext(Context):
     def to_json(self):
         jd = {attr: getattr(self, attr).to_json() for attr in self.attrs
               if getattr(self, attr, None) is not None}
+        jd['type'] = 'bio'
         return jd
 
 
@@ -3177,8 +3188,19 @@ class WorldContext(Context):
         return not self.__eq__(other)
 
     @classmethod
-    def from_json(cls, json_dict):
-        return cls()
+    def from_json(cls, jd):
+        time_entry = jd.get('time')
+        time = TimeContext.from_json(time_entry) if time_entry else None
+        geo_entry = jd.get('geo_location')
+        geo_location = RefContext.from_json(geo_entry) if geo_entry else None
+        return cls(time=time, geo_location=geo_location)
+
+    def to_json(self):
+        jd = {'type': 'world',
+              'time': self.time.to_json() if self.time else None,
+              'geo_location': (self.geo_location.to_json()
+                               if self.geo_location else None)}
+        return jd
 
 
 class RefContext(Context):
