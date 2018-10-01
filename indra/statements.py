@@ -182,7 +182,7 @@ __all__ = [
     'InvalidResidueError', 'NotAStatementName',
 
     # Other classes
-    'Concept', 'Agent', 'Evidence',
+    'Concept', 'Agent', 'Evidence', 'BioContext',
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
@@ -1033,7 +1033,7 @@ class Evidence(object):
         certainty associated with the statement.
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
-                 annotations=None, epistemics=None):
+                 annotations=None, epistemics=None, context=None):
         self.source_api = source_api
         self.source_id = source_id
         self.pmid = pmid
@@ -1046,6 +1046,7 @@ class Evidence(object):
             self.epistemics = epistemics
         else:
             self.epistemics = {}
+        self.context = context
 
     def matches_key(self):
         key_lst = [self.source_api, self.source_id, self.pmid,
@@ -1063,7 +1064,8 @@ class Evidence(object):
                   (self.pmid == other.pmid) and\
                   (self.text == other.text) and\
                   (self.annotations == other.annotations) and\
-                  (self.epistemics == other.epistemics)
+                  (self.epistemics == other.epistemics) and\
+                  (self.context == other.context)
         return matches
 
     def to_json(self):
@@ -1080,6 +1082,8 @@ class Evidence(object):
             json_dict['annotations'] = self.annotations
         if self.epistemics:
             json_dict['epistemics'] = self.epistemics
+        if self.context:
+            json_dict['context'] = self.context.to_json()
         return json_dict
 
     @classmethod
@@ -1090,9 +1094,14 @@ class Evidence(object):
         text = json_dict.get('text')
         annotations = json_dict.get('annotations', {}).copy()
         epistemics = json_dict.get('epistemics', {}).copy()
+        context_entry = json_dict.get('context')
+        if context_entry:
+            context = Context.from_json(context_entry)
+        else:
+            context = None
         ev = Evidence(source_api=source_api, source_id=source_id,
                       pmid=pmid, text=text, annotations=annotations,
-                      epistemics=epistemics)
+                      epistemics=epistemics, context=context)
         return ev
 
     def __str__(self):
@@ -3085,6 +3094,34 @@ class Unresolved(Statement):
         else:
             return "%s(full_hash=%s)" % (type(self).__name__,
                                          self._full_hash)
+
+
+def Context(object):
+    pass
+
+
+def BioContext(Context):
+    def __init__(self, location=None, cell_line=None, cell_type=None,
+                 organ=None, disease=None, species=None):
+        self.location = location
+        self.cell_line = cell_line
+        self.cell_type = cell_type
+        self.organ = organ
+        self.disease = disease
+        self.species = species
+
+
+    def from_json(json_dict):
+        return BioContext()
+
+
+def WorldContext(Context):
+    def __init__(self, time, geo_location):
+        self.time = time
+        self.geo_location = geo_location
+
+    def from_json(json_dict):
+        return WorldContext()
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
