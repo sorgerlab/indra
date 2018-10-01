@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import logging
+import datetime
 import objectpath
 from indra.statements import Influence, Association, Concept, Evidence, \
     WorldContext, TimeContext
@@ -122,6 +123,20 @@ class EidosProcessor(object):
 
     def get_evidence(self, event):
         """Return the Evidence object for the INDRA Statment."""
+        def get_time_stamp(entry):
+            """Return datetime object from a timex constraint start/end entry.
+
+            Example string format to convert: 2018-01-01T00:00
+            """
+            if not entry or entry == 'Undef':
+                return None
+            try:
+                dt = datetime.datetime.strptime(entry, '%Y-%m-%dT%H:%M')
+            except Exception as e:
+                logger.warning('Could not parse %s format' % entry)
+                return None
+            return dt
+
         provenance = event.get('provenance')
 
         # First try looking up the full sentence through provenance
@@ -139,10 +154,8 @@ class EidosProcessor(object):
                 if timexes:
                     time_text = timexes[0].get('text')
                     constraint = timexes[0]['intervals'][0]
-                    start = None if constraint['start'] == 'Undef' else \
-                        constraint['start']
-                    end = None if constraint['end'] == 'Undef' else \
-                        constraint['end']
+                    start = get_time_stamp(constraint['start'])
+                    end = get_time_stamp(constraint['end'])
                     duration = constraint['duration']
                     tc = TimeContext(text=time_text, start=start, end=end,
                                      duration=duration)

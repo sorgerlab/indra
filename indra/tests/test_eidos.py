@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import datetime
 from indra.sources import eidos
 from indra.statements import Influence, Association
 from indra.assemblers.cag import CAGAssembler
@@ -94,6 +95,12 @@ def test_process_timex():
     ev = ep.statements[0].evidence[0]
     assert ev.context is not None
     assert ev.context.time.duration == 365 * 86400, ev.context.time.duration
+    assert ev.context.time.start == \
+        datetime.datetime(year=2018, month=1, day=1, hour=0, minute=0), \
+        ev.context.time.start
+    assert ev.context.time.end == \
+           datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0), \
+        ev.context.time.end
 
 
 def test_process_correlations():
