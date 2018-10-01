@@ -1,0 +1,673 @@
+{
+  "@context": {
+    "Argument": "https://github.com/clulab/eidos/wiki/JSON-LD#Argument",
+    "Corpus": "https://github.com/clulab/eidos/wiki/JSON-LD#Corpus",
+    "Dependency": "https://github.com/clulab/eidos/wiki/JSON-LD#Dependency",
+    "Document": "https://github.com/clulab/eidos/wiki/JSON-LD#Document",
+    "Extraction": "https://github.com/clulab/eidos/wiki/JSON-LD#Extraction",
+    "Grounding": "https://github.com/clulab/eidos/wiki/JSON-LD#Grounding",
+    "Groundings": "https://github.com/clulab/eidos/wiki/JSON-LD#Groundings",
+    "Interval": "https://github.com/clulab/eidos/wiki/JSON-LD#Interval",
+    "Provenance": "https://github.com/clulab/eidos/wiki/JSON-LD#Provenance",
+    "Sentence": "https://github.com/clulab/eidos/wiki/JSON-LD#Sentence",
+    "TimeExpression": "https://github.com/clulab/eidos/wiki/JSON-LD#TimeExpression",
+    "TimeInterval": "https://github.com/clulab/eidos/wiki/JSON-LD#TimeInterval",
+    "Trigger": "https://github.com/clulab/eidos/wiki/JSON-LD#Trigger",
+    "Word": "https://github.com/clulab/eidos/wiki/JSON-LD#Word"
+  },
+  "@type": "Corpus",
+  "documents": [
+    {
+      "@type": "Document",
+      "@id": "_:Document_1",
+      "title": "default_file_name",
+      "text": "hunger caused displacement in 2018",
+      "sentences": [
+        {
+          "@type": "Sentence",
+          "@id": "_:Sentence_1",
+          "text": "hunger caused displacement in 2018",
+          "words": [
+            {
+              "@type": "Word",
+              "@id": "_:Word_1",
+              "text": "hunger",
+              "tag": "NN",
+              "entity": "O",
+              "startOffset": 0,
+              "endOffset": 6,
+              "lemma": "hunger",
+              "chunk": "B-NP",
+              "norm": "O"
+            },
+            {
+              "@type": "Word",
+              "@id": "_:Word_2",
+              "text": "caused",
+              "tag": "VBD",
+              "entity": "O",
+              "startOffset": 7,
+              "endOffset": 13,
+              "lemma": "cause",
+              "chunk": "B-VP",
+              "norm": "O"
+            },
+            {
+              "@type": "Word",
+              "@id": "_:Word_3",
+              "text": "displacement",
+              "tag": "NN",
+              "entity": "O",
+              "startOffset": 14,
+              "endOffset": 26,
+              "lemma": "displacement",
+              "chunk": "B-NP",
+              "norm": "O"
+            },
+            {
+              "@type": "Word",
+              "@id": "_:Word_4",
+              "text": "in",
+              "tag": "IN",
+              "entity": "O",
+              "startOffset": 27,
+              "endOffset": 29,
+              "lemma": "in",
+              "chunk": "B-PP",
+              "norm": "O"
+            },
+            {
+              "@type": "Word",
+              "@id": "_:Word_5",
+              "text": "2018",
+              "tag": "CD",
+              "entity": "DATE",
+              "startOffset": 30,
+              "endOffset": 34,
+              "lemma": "2018",
+              "chunk": "B-NP",
+              "norm": "B-Time"
+            }
+          ],
+          "dependencies": [
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_2"
+              },
+              "destination": {
+                "@id": "_:Word_1"
+              },
+              "relation": "nsubj"
+            },
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_2"
+              },
+              "destination": {
+                "@id": "_:Word_3"
+              },
+              "relation": "dobj"
+            },
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_2"
+              },
+              "destination": {
+                "@id": "_:Word_5"
+              },
+              "relation": "nmod_in"
+            },
+            {
+              "@type": "Dependency",
+              "source": {
+                "@id": "_:Word_5"
+              },
+              "destination": {
+                "@id": "_:Word_4"
+              },
+              "relation": "case"
+            }
+          ],
+          "timexes": [
+            {
+              "@type": "TimeExpression",
+              "@id": "_:TimeExpression_1",
+              "startOffset": 30,
+              "endOffset": 34,
+              "text": "2018",
+              "intervals": [
+                {
+                  "@type": "TimeInterval",
+                  "@id": "_:TimeInterval_1",
+                  "start": "2018-01-01T00:00",
+                  "end": "2019-01-01T00:00",
+                  "duration": 31536000
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "extractions": [
+    {
+      "@type": "Extraction",
+      "@id": "_:Extraction_2",
+      "type": "concept",
+      "subtype": "entity",
+      "labels": [
+        "Concept",
+        "Entity"
+      ],
+      "text": "displacement",
+      "rule": "simple-np",
+      "canonicalName": "displacement",
+      "groundings": [
+        {
+          "@type": "Groundings",
+          "name": "un",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/human_migration",
+              "value": 0.6546270763202365
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/physical_insecurity",
+              "value": 0.5671727886043954
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/famine",
+              "value": 0.5569336505634456
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/entities/human/financial/economic/poverty",
+              "value": 0.4764737470607766
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/entities/human/food/food_insecurity",
+              "value": 0.4283068640558835
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/natural_disaster/drought",
+              "value": 0.41650638042599636
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/nature_impact/pollution/climate_change",
+              "value": 0.40917020219348643
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/conflict",
+              "value": 0.38051240824949834
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/interventions/provision of goods and services/protection/provision of legal aid for displaced persons",
+              "value": 0.37166802229289825
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/intervention/intervention",
+              "value": 0.367468114798105
+            }
+          ]
+        },
+        {
+          "@type": "Groundings",
+          "name": "wdi",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Internally_displaced_persons,_total_displaced_by_conflict_and_violence_(number_of_people)",
+              "value": 0.5188317090209378
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Internally_displaced_persons,_new_displacement_associated_with_disasters_(number_of_cases)",
+              "value": 0.5022043752824866
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Internally_displaced_persons,_new_displacement_associated_with_conflict_and_violence_(number_of_cases)",
+              "value": 0.5022043752824866
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Droughts,_floods,_extreme_temperatures_(%_of_population,_average_1990-2009)",
+              "value": 0.46678378443611845
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Rural_poverty_gap_at_national_poverty_lines_(%)",
+              "value": 0.43441694024698546
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Urban_poverty_gap_at_national_poverty_lines_(%)",
+              "value": 0.43126518636252725
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Intentional_homicides_(per_100,000_people)",
+              "value": 0.41879478458419633
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Battle-related_deaths_(number_of_people)",
+              "value": 0.40916073966520444
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Rural_poverty_headcount_ratio_at_national_poverty_lines_(%_of_rural_population)",
+              "value": 0.40098559359431146
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Urban_poverty_headcount_ratio_at_national_poverty_lines_(%_of_urban_population)",
+              "value": 0.39733830102505346
+            }
+          ]
+        },
+        {
+          "@type": "Groundings",
+          "name": "fao",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Prevalence of severe food insecurity in the total population",
+              "value": 0.5134661984857619
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Rural population/Population - Est. & Proj.",
+              "value": 0.4080055031379335
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Urban population/Population - Est. & Proj.",
+              "value": 0.4080055031379335
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Gross Production Value (constant 2004-2006 1000 I$)/Meat indigenous, total",
+              "value": 0.348034511855539
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Net Production Value (constant 2004-2006 1000 I$)/Meat indigenous, total",
+              "value": 0.348034511855539
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Per capita food production variability (I$ per person constant 2004-06)",
+              "value": 0.3305800488856844
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Political stability and absence of violence\\/terrorism (index)",
+              "value": 0.3286796004901052
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Number of people undernourished (millions) (3-year average)",
+              "value": 0.3193548825158809
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Prevalence of undernourishment (%) (3-year average)",
+              "value": 0.3134795705369154
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Production/Meat indigenous, total",
+              "value": 0.29557280987826856
+            }
+          ]
+        }
+      ],
+      "provenance": [
+        {
+          "@type": "Provenance",
+          "document": {
+            "@id": "_:Document_1"
+          },
+          "documentCharInterval": [
+            {
+              "@type": "Interval",
+              "start": 15,
+              "end": 26
+            }
+          ],
+          "sentence": {
+            "@id": "_:Sentence_1"
+          },
+          "positions": [
+            {
+              "@type": "Interval",
+              "start": 3,
+              "end": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "Extraction",
+      "@id": "_:Extraction_3",
+      "type": "concept",
+      "subtype": "entity",
+      "labels": [
+        "Concept",
+        "Entity"
+      ],
+      "text": "hunger",
+      "rule": "simple-np",
+      "canonicalName": "hunger",
+      "groundings": [
+        {
+          "@type": "Groundings",
+          "name": "un",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/famine",
+              "value": 0.8011714168505154
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/entities/human/food/food_insecurity",
+              "value": 0.5596131625888734
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/entities/human/financial/economic/poverty",
+              "value": 0.5062081980899468
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/physical_insecurity",
+              "value": 0.4304670951826235
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/death",
+              "value": 0.38668481882680444
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/human_migration",
+              "value": 0.3713260657502345
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/natural_disaster/drought",
+              "value": 0.3623545927522337
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/entities/human/health/disease",
+              "value": 0.35344156085814393
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/nature_impact/pollution/climate_change",
+              "value": 0.3471733895810956
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "UN/events/human/agriculture/farming",
+              "value": 0.30246466697106805
+            }
+          ]
+        },
+        {
+          "@type": "Groundings",
+          "name": "wdi",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Use_of_insecticide-treated_bed_nets_(%_of_under-5_population)",
+              "value": 0.3985446609661958
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Cause_of_death,_by_communicable_diseases_and_maternal,_prenatal_and_nutrition_conditions_(%_of_total)",
+              "value": 0.38745262200098546
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Number_of_neonatal_deaths",
+              "value": 0.3706471904538178
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Number_of_under-five_deaths",
+              "value": 0.3700837279733295
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Urban_poverty_gap_at_national_poverty_lines_(%)",
+              "value": 0.3694102774754288
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Maternal_mortality_ratio_(national_estimate,_per_100,000_live_births)",
+              "value": 0.36667250366734755
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Rural_poverty_gap_at_national_poverty_lines_(%)",
+              "value": 0.3651718088697936
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Maternal_mortality_ratio_(modeled_estimate,_per_100,000_live_births)",
+              "value": 0.3516352414998364
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Diarrhea_treatment_(%_of_children_under_5_receiving_oral_rehydration_and_continued_feeding)",
+              "value": 0.348151628947713
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "WDI/Mortality_from_CVD,_cancer,_diabetes_or_CRD_between_exact_ages_30_and_70_(%)",
+              "value": 0.34762964584721784
+            }
+          ]
+        },
+        {
+          "@type": "Groundings",
+          "name": "fao",
+          "values": [
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Prevalence of severe food insecurity in the total population",
+              "value": 0.44798882711793603
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Percentage of children under 5 years of age affected by wasting (%)",
+              "value": 0.4069674306950103
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Prevalence of undernourishment (%) (3-year average)",
+              "value": 0.38209566928144445
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Number of severely food insecure people",
+              "value": 0.32865839556272824
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Number of people undernourished (millions) (3-year average)",
+              "value": 0.32761291896060324
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Per capita food production variability (I$ per person constant 2004-06)",
+              "value": 0.3197076485847902
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Prevalence of anemia among women of reproductive age (15-49 years)",
+              "value": 0.3183020692139657
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Value/Percentage of children under 5 years of age who are stunted (%)",
+              "value": 0.3151573823464965
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Emissions (CH4) (Enteric)/Cattle, non-dairy",
+              "value": 0.31188440808261686
+            },
+            {
+              "@type": "Grounding",
+              "ontologyConcept": "FAO/events/Emissions (CO2eq) (Enteric)/Cattle, non-dairy",
+              "value": 0.31188440808261686
+            }
+          ]
+        }
+      ],
+      "provenance": [
+        {
+          "@type": "Provenance",
+          "document": {
+            "@id": "_:Document_1"
+          },
+          "documentCharInterval": [
+            {
+              "@type": "Interval",
+              "start": 1,
+              "end": 6
+            }
+          ],
+          "sentence": {
+            "@id": "_:Sentence_1"
+          },
+          "positions": [
+            {
+              "@type": "Interval",
+              "start": 1,
+              "end": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "Extraction",
+      "@id": "_:Extraction_1",
+      "type": "relation",
+      "subtype": "causation",
+      "labels": [
+        "Causal",
+        "DirectedRelation",
+        "EntityLinker",
+        "Event"
+      ],
+      "text": "hunger caused displacement",
+      "rule": "ported_syntax_1_verb-Causal",
+      "canonicalName": "hunger cause displacement",
+      "groundings": [
+        {
+          "@type": "Groundings",
+          "name": "un"
+        },
+        {
+          "@type": "Groundings",
+          "name": "wdi"
+        },
+        {
+          "@type": "Groundings",
+          "name": "fao"
+        }
+      ],
+      "provenance": [
+        {
+          "@type": "Provenance",
+          "document": {
+            "@id": "_:Document_1"
+          },
+          "documentCharInterval": [
+            {
+              "@type": "Interval",
+              "start": 1,
+              "end": 26
+            }
+          ],
+          "sentence": {
+            "@id": "_:Sentence_1"
+          },
+          "positions": [
+            {
+              "@type": "Interval",
+              "start": 1,
+              "end": 3
+            }
+          ]
+        }
+      ],
+      "trigger": {
+        "@type": "Trigger",
+        "text": "caused",
+        "provenance": [
+          {
+            "@type": "Provenance",
+            "document": {
+              "@id": "_:Document_1"
+            },
+            "documentCharInterval": [
+              {
+                "@type": "Interval",
+                "start": 8,
+                "end": 13
+              }
+            ],
+            "sentence": {
+              "@id": "_:Sentence_1"
+            },
+            "positions": [
+              {
+                "@type": "Interval",
+                "start": 2,
+                "end": 2
+              }
+            ]
+          }
+        ]
+      },
+      "arguments": [
+        {
+          "@type": "Argument",
+          "type": "source",
+          "value": {
+            "@id": "_:Extraction_3"
+          }
+        },
+        {
+          "@type": "Argument",
+          "type": "destination",
+          "value": {
+            "@id": "_:Extraction_2"
+          }
+        }
+      ]
+    }
+  ]
+}
