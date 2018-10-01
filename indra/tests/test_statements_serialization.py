@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
+import datetime
 from indra.statements import *
 
 ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},
@@ -211,3 +211,17 @@ def test_supports_missing_uuids():
         except UnresolvedUuidError:
             pass
     return
+
+
+def test_time_context():
+    tc = TimeContext(text='2018',
+                     start=datetime.datetime(2018, 1, 1, 0, 0),
+                     end=datetime.datetime(2019, 1, 1, 0, 0),
+                     duration=(365 * 86400))
+    jd = tc.to_json()
+    assert jd['text'] == '2018'
+    assert jd['start'] == '2018-01-01T00:00'
+    assert jd['end'] == '2019-01-01T00:00'
+    assert jd['duration'] == 365 * 86400
+
+    assert TimeContext.from_json(jd).__dict__ == tc.__dict__

@@ -200,6 +200,7 @@ import sys
 import uuid
 import rdflib
 import logging
+import datetime
 import itertools
 from hashlib import md5
 from copy import deepcopy
@@ -3126,11 +3127,53 @@ class WorldContext(Context):
 
 
 class TimeContext(Context):
+    """An object representing the time context of a Statement
+
+    Parameters
+    ----------
+    text : Optional[str]
+        A string representation of the time constraint, typically as seen in
+        text.
+    start : Optional[datetime]
+        A `datetime` object representing the start time
+    end : Optional[datetime]
+        A `datetime` object representing the end time
+    duration : int
+        The duration of the time constraint in seconds
+    """
     def __init__(self, text=None, start=None, end=None, duration=None):
         self.text = text
         self.start = start
         self.end = end
         self.duration = duration
+
+    def to_json(self):
+        def date_to_str(date):
+            if date is None:
+                return None
+            else:
+                return date.strftime('%Y-%m-%dT%H:%M')
+        jd = {'text': self.text,
+              'start': date_to_str(self.start),
+              'end': date_to_str(self.end),
+              'duration': self.duration}
+        return jd
+
+    @classmethod
+    def from_json(cls, jd):
+        def date_from_str(date_str):
+            if not date_str:
+                return None
+            try:
+                dt = datetime.datetime.strptime(date_str, '%Y-%m-%dT%H:%M')
+            except Exception as e:
+                return None
+            return dt
+        tc = cls(text=jd.get('text'),
+                 start=date_from_str(jd.get('start')),
+                 end=date_from_str(jd.get('end')),
+                 duration=jd.get('duration'))
+        return tc
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
