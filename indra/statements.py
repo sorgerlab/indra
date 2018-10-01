@@ -3132,6 +3132,13 @@ class BioContext(Context):
     attrs = ['location', 'cell_line', 'cell_type', 'organ', 'disease',
              'species']
 
+    def __eq__(self, other):
+        return all([getattr(self, attr, None) == getattr(self, attr, None)
+                    for attr in self.attrs])
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @classmethod
     def from_json(cls, jd):
         # For all the attributes, we deserialize them if they have a value,
@@ -3162,6 +3169,13 @@ class WorldContext(Context):
         self.time = time
         self.geo_location = geo_location
 
+    def __eq__(self, other):
+        return (self.time == other.time) and  \
+            (self.geo_location == other.geo_location)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     @classmethod
     def from_json(cls, json_dict):
         return cls()
@@ -3184,6 +3198,13 @@ class RefContext(Context):
     def __init__(self, name=None, db_refs=None):
         self.name = name
         self.db_refs = {} if db_refs is None else db_refs
+
+    def __eq__(self, other):
+        return (self.name == other.name) and \
+               (self.db_refs == other.db_refs)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def to_json(self):
         jd = {'name': self.name, 'db_refs': self.db_refs}
@@ -3215,6 +3236,15 @@ class TimeContext(object):
         self.start = start
         self.end = end
         self.duration = duration
+
+    def __eq__(self, other):
+        return (self.text == other.text) and \
+               (self.start == other.start) and \
+               (self.end == other.end) and \
+               (self.duration == other.duration)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def to_json(self):
         def date_to_str(date):
