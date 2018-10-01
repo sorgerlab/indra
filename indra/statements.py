@@ -182,7 +182,7 @@ __all__ = [
     'InvalidResidueError', 'NotAStatementName',
 
     # Other classes
-    'Concept', 'Agent', 'Evidence', 'BioContext',
+    'Concept', 'Agent', 'Evidence', 'BioContext', 'WorldContext', 'TimeContext',
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
@@ -3116,13 +3116,21 @@ class BioContext(Context):
 
 
 class WorldContext(Context):
-    def __init__(self, time, geo_location):
+    def __init__(self, time=None, geo_location=None):
         self.time = time
         self.geo_location = geo_location
 
     @classmethod
     def from_json(cls, json_dict):
         return cls()
+
+
+class TimeContext(Context):
+    def __init__(self, text=None, start=None, end=None, duration=None):
+        self.text = text
+        self.start = start
+        self.end = end
+        self.duration = duration
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
