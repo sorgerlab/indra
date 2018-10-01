@@ -3096,11 +3096,11 @@ class Unresolved(Statement):
                                          self._full_hash)
 
 
-def Context(object):
+class Context(object):
     pass
 
 
-def BioContext(Context):
+class BioContext(Context):
     def __init__(self, location=None, cell_line=None, cell_type=None,
                  organ=None, disease=None, species=None):
         self.location = location
@@ -3110,18 +3110,19 @@ def BioContext(Context):
         self.disease = disease
         self.species = species
 
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls()
 
-    def from_json(json_dict):
-        return BioContext()
 
-
-def WorldContext(Context):
+class WorldContext(Context):
     def __init__(self, time, geo_location):
         self.time = time
         self.geo_location = geo_location
 
-    def from_json(json_dict):
-        return WorldContext()
+    @classmethod
+    def from_json(cls, json_dict):
+        return cls()
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):
