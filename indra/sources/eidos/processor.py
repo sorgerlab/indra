@@ -3,7 +3,8 @@ from builtins import dict, str
 import re
 import logging
 import objectpath
-from indra.statements import Influence, Association, Concept, Evidence
+from indra.statements import Influence, Association, Concept, Evidence, \
+    WorldContext, TimeContext
 
 
 logger = logging.getLogger('eidos')
@@ -125,7 +126,7 @@ class EidosProcessor(object):
 
         # First try looking up the full sentence through provenance
         text = None
-        time_annot = {}
+        context = None
         if provenance:
             sentence_tag = provenance[0].get('sentence')
             if sentence_tag and '@id' in sentence_tag:
@@ -143,8 +144,9 @@ class EidosProcessor(object):
                     end = None if constraint['end'] == 'Undef' else \
                         constraint['end']
                     duration = constraint['duration']
-                    time_annot = {'text': time_text, 'start': start,
-                                  'end': end, 'duration': duration}
+                    tc = TimeContext(text=time_text, start=start, end=end,
+                                     duration=duration)
+                    context = WorldContext(time=tc)
 
         # If that fails, we can still get the text of the event
         if text is None:
@@ -152,9 +154,8 @@ class EidosProcessor(object):
 
         annotations = {'found_by': event.get('rule'),
                        'provenance' : provenance}
-        if time_annot:
-            annotations['time'] = time_annot
-        ev = Evidence(source_api='eidos', text=text, annotations=annotations)
+        ev = Evidence(source_api='eidos', text=text, annotations=annotations,
+                      context=context)
         return [ev]
 
     @staticmethod

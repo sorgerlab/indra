@@ -87,6 +87,15 @@ def test_process_corefs():
     assert ('flood', 'displacement') in concepts, concepts
 
 
+def test_process_timex():
+    timex_jsonld = os.path.join(path_this, 'eidos_timex.json')
+    ep = eidos.process_json_file(timex_jsonld)
+    assert len(ep.statements) == 1
+    ev = ep.statements[0].evidence[0]
+    assert ev.context is not None
+    assert ev.context.time.duration == 365 * 86400, ev.context.time.duration
+
+
 def test_process_correlations():
     correl_jsonld = os.path.join(path_this, 'eidos_correlation.json')
     ep = eidos.process_json_file(correl_jsonld)
