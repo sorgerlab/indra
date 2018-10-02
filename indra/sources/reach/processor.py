@@ -523,6 +523,10 @@ class ReachProcessor(object):
         context.organ = get_ref_context(organ)
         # NOTE: we can't handle tissue currently
         #context['tissue'] = tissue
+        # This is so we don't add a blank BioContext as context and rather
+        # just add None
+        if not context:
+            context = None
         return annotations, context
 
     def _get_epistemics(self, event):

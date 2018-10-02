@@ -3149,6 +3149,9 @@ class BioContext(Context):
     def __ne__(self, other):
         return not self.__eq__(other)
 
+    def __bool__(self):
+        return any([attr is not None for attr in self.attrs])
+
     @classmethod
     def from_json(cls, jd):
         # For all the attributes, we deserialize them if they have a value,
@@ -3195,6 +3198,9 @@ class WorldContext(Context):
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __bool__(self):
+        return self.time is not None or self.geo_location is not None
 
     @classmethod
     def from_json(cls, jd):
