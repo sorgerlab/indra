@@ -101,7 +101,7 @@ class ReachProcessor(object):
             if epistemics.get('negative'):
                 continue
 
-            context = self._get_context(r)
+            annotations, context = self._get_annot_context(r)
             frame_id = r['frame_id']
             args = r['arguments']
             site = None
@@ -154,8 +154,8 @@ class ReachProcessor(object):
 
                     sentence = reg['verbose-text']
                     ev = Evidence(source_api='reach', text=sentence,
-                                  annotations=context, pmid=self.citation,
-                                  epistemics=epistemics)
+                                  annotations=annotations, pmid=self.citation,
+                                  context=context, epistemics=epistemics)
                     args = [controller_agent, theme_agent, residue, pos, ev]
 
                     # Here ModStmt is a sub-class of Modification
@@ -187,7 +187,7 @@ class ReachProcessor(object):
             epistemics = self._get_epistemics(r)
             if epistemics.get('negative'):
                 continue
-            context = self._get_context(r)
+            annotations, context = self._get_annot_context(r)
             frame_id = r['frame_id']
             args = r['arguments']
             theme = None
@@ -211,7 +211,7 @@ class ReachProcessor(object):
 
                 ev = Evidence(source_api='reach', text=sentence,
                               annotations=context, pmid=self.citation,
-                              epistemics=epistemics)
+                              context=context, epistemics=epistemics)
                 args = [controller_agent, theme_agent, ev]
                 subtype = reg.get('subtype')
                 if subtype == 'positive-regulation':
@@ -238,7 +238,7 @@ class ReachProcessor(object):
             # for here
             if epistemics.get('direct') is None:
                 continue
-            context = self._get_context(r)
+            annotations, context = self._get_annot_context(r)
             args = r['arguments']
             sentence = r['verbose-text']
             members = []
@@ -246,8 +246,8 @@ class ReachProcessor(object):
                 agent = self._get_agent_from_entity(a['arg'])
                 members.append(agent)
             ev = Evidence(source_api='reach', text=sentence,
-                          annotations=context, pmid=self.citation,
-                          epistemics=epistemics)
+                          annotations=annotations, pmid=self.citation,
+                          context=context, epistemics=epistemics)
             stmt = Complex(members, ev)
             self.statements.append(stmt)
 
@@ -262,10 +262,10 @@ class ReachProcessor(object):
             if epistemics.get('negative'):
                 continue
             sentence = r['verbose-text']
-            context = self._get_context(r)
+            annotations, context = self._get_annot_context(r)
             ev = Evidence(source_api='reach', text=sentence,
-                          pmid=self.citation, annotations=context,
-                          epistemics=epistemics)
+                          pmid=self.citation, annotations=annotations,
+                          context=context, epistemics=epistemics)
             args = r['arguments']
             for a in args:
                 if self._get_arg_type(a) == 'controller':
@@ -292,10 +292,10 @@ class ReachProcessor(object):
             if epistemics.get('negative'):
                 continue
             sentence = r['verbose-text']
-            context = self._get_context(r)
+            annotations, context = self._get_annot_context(r)
             ev = Evidence(source_api='reach', text=sentence,
-                          pmid=self.citation, annotations=context,
-                          epistemics=epistemics)
+                          pmid=self.citation, annotations=annotations,
+                          context=context, epistemics=epistemics)
             args = r['arguments']
             from_location = None
             to_location = None
@@ -474,13 +474,12 @@ class ReachProcessor(object):
                                % mod_type_str)
         return mcs
 
-    def _get_context(self, frame_term):
-        context = {}
-        context['found_by'] = frame_term['found_by']
+    def _get_annot_context(self, frame_term):
+        annotations = {'found_by': frame_term['found_by']}
         try:
             context_id = frame_term['context']
         except KeyError:
-            return context
+            return annotations, None
         # For backwards compatibility with older versions
         # of REACH
         if isinstance(context_id, dict):
@@ -495,7 +494,7 @@ class ReachProcessor(object):
             qstr = "$.entities.frames[(@.frame_id is \'%s\')]" % context_id[0]
             res = self.tree.execute(qstr)
             if res is None:
-                return context
+                return annotations, None
             context_frame = next(res)
             facets = context_frame['facets']
             cell_line = facets.get('cell-line')
@@ -504,13 +503,27 @@ class ReachProcessor(object):
             location = facets.get('location')
             tissue = facets.get('tissue_type')
             organ = facets.get('organ')
-        context['species'] = species
-        context['cell_type'] = cell_type
-        context['cell_line'] = cell_line
-        context['location'] = location
-        context['tissue'] = tissue
-        context['organ'] = organ
-        return context
+
+        def get_ref_context(lst):
+            if not lst:
+                return None
+            db_name, db_id = lst[0].split(':', maxsplit=1)
+            return RefContext(db_refs={db_name.upper(): db_id})
+
+        context = BioContext()
+        # Example: ['taxonomy:9606']
+        context.species = get_ref_context(species)
+        # Example: ['cl:CL:0000148']
+        context.cell_type = get_ref_context(cell_type)
+        # Example: ['cellosaurus:CVCL_0504']
+        context.cell_line = get_ref_context(cell_line)
+        # Example: ['go:GO:0005886']
+        context.location = get_ref_context(location)
+        # Example: ['uberon:UBERON:0000105']
+        context.organ = get_ref_context(organ)
+        # NOTE: we can't handle tissue currently
+        #context['tissue'] = tissue
+        return annotations, context
 
     def _get_epistemics(self, event):
         epistemics = {}
