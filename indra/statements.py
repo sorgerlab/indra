@@ -3150,7 +3150,8 @@ class BioContext(Context):
         return not self.__eq__(other)
 
     def __bool__(self):
-        return any([attr is not None for attr in self.attrs])
+        return any([getattr(self, attr, None) is not None
+                    for attr in self.attrs])
 
     @classmethod
     def from_json(cls, jd):

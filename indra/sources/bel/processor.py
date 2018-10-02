@@ -538,6 +538,9 @@ def extract_context(annotations):
     location = get_annot(annotations, 'CellStructure')
     if location:
         bc.location = RefContext(name=location)
+    # Overwrite blank BioContext
+    if not bc:
+        bc = None
     return bc
     
 

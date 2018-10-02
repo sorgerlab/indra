@@ -1827,3 +1827,11 @@ def test_agent_list_with_bound_condition_agents():
     assert agents[0] is None
     assert agents[1].name == 'EGFR'
     assert agents[2].name == 'EGF'
+
+
+def test_context_bool():
+    assert not BioContext()
+    assert BioContext(cell_type=RefContext(name='x'))
+    assert not WorldContext()
+    assert WorldContext(time=TimeContext())
+    assert WorldContext(geo_location=RefContext(name='x'))
