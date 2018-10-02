@@ -281,9 +281,6 @@ class SignorProcessor(object):
         # TODO: Refactor to exclude keys that are just Nones
         annotations = {
                 'SEQUENCE': _n(row.SEQUENCE),
-                'TAX_ID': _n(row.TAX_ID),
-                'CELL_DATA': _n(row.CELL_DATA),
-                'TISSUE_DATA': _n(row.TISSUE_DATA),
                 'MODULATOR_COMPLEX': _n(row.MODULATOR_COMPLEX),
                 'TARGET_COMPLEX': _n(row.TARGET_COMPLEX),
                 'MODIFICATIONA': _n(row.MODIFICATIONA),
@@ -292,9 +289,27 @@ class SignorProcessor(object):
                 'MODBSEQ': _n(row.MODBSEQ),
                 'NOTES': _n(row.NOTES),
                 'ANNOTATOR': _n(row.ANNOTATOR)}
+        context = BioContext()
+        if row.TAX_ID:
+            context.species = RefContext(db_refs={'TAXONOMY': row.TAX_ID})
+        # NOTE: do we know if this is always a cell type, or can it be
+        # a cell line?
+        if row.CELL_DATA:
+            db_name, db_id = row.CELL_DATA.split(':')
+            context.cell_type = RefContext(db_refs={db_name: db_id})
+        # NOTE: is it okay to map this to organ?
+        if row.TISSUE_DATA:
+            db_name, db_id = row.TISSUE_DATA.split(':')
+            context.organ = RefContext(db_refs={db_name: db_id})
+        # This is so that we don't add a blank BioContext as context and rather
+        # just add None
+        if not context:
+            context = None
+
         return Evidence(source_api='signor', source_id=row.SIGNOR_ID,
                         pmid=row.PMID, text=row.SENTENCE,
-                        epistemics=epistemics, annotations=annotations)
+                        epistemics=epistemics, annotations=annotations,
+                        context=context)
 
     def _process_row(self, row):
         agent_a = self._get_agent(row.ENTITYA, row.TYPEA, row.IDA,
