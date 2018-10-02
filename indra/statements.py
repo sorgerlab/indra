@@ -3165,6 +3165,15 @@ class BioContext(Context):
         jd['type'] = 'bio'
         return jd
 
+    def __str__(self):
+        pieces = ['%s=%s' % (attr, getattr(self, attr)) for attr in self.attrs
+                  if getattr(self, attr, None) is not None]
+        args = ', '.join(pieces)
+        return 'BioContext(%s)' % args
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class WorldContext(Context):
     """An object representing the context of a Statement in time and space.
@@ -3202,6 +3211,18 @@ class WorldContext(Context):
                                if self.geo_location else None)}
         return jd
 
+    def __str__(self):
+        pieces = []
+        if self.time:
+            pieces.append('time=%s' % self.time)
+        if self.geo_location:
+            pieces.append('geo_location=%s' % self.geo_location)
+        args = ', '.join(pieces)
+        return 'WorldContext(%s)' % args
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class RefContext(Context):
     """An object representing a context with a name and references.
@@ -3236,6 +3257,18 @@ class RefContext(Context):
     def from_json(cls, jd):
         rc = cls(name=jd.get('name'), db_refs=jd.get('db_refs'))
         return rc
+
+    def __str__(self):
+        pieces = []
+        if self.name:
+            pieces.append('name="%s"' % self.name)
+        if self.db_refs:
+            pieces.append('db_refs=%s' % self.db_refs)
+        args = ', '.join(pieces)
+        return 'RefContext(%s)' % args
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class TimeContext(object):
@@ -3295,6 +3328,22 @@ class TimeContext(object):
                  end=date_from_str(jd.get('end')),
                  duration=jd.get('duration'))
         return tc
+
+    def __str__(self):
+        pieces = []
+        if self.text:
+            pieces.append('text="%s"' % self.text)
+        if self.start:
+            pieces.append('start=%s' % self.start)
+        if self.end:
+            pieces.append('end=%s' % self.end)
+        if self.duration:
+            pieces.append('end=%s' % self.duration)
+        args = ', '.join(pieces)
+        return 'TimeContext(%s)' % args
+
+    def __repr__(self):
+        return self.__str__()
 
 
 def _promote_support(sup_list, uuid_dict, on_missing='handle'):

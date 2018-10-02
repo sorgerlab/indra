@@ -94,6 +94,7 @@ def test_process_timex():
     assert len(ep.statements) == 1
     ev = ep.statements[0].evidence[0]
     assert ev.context is not None
+    assert ev.context.__repr__() == ev.context.__str__()
     assert ev.context.time.duration == 365 * 86400, ev.context.time.duration
     assert ev.context.time.start == \
         datetime.datetime(year=2018, month=1, day=1, hour=0, minute=0), \

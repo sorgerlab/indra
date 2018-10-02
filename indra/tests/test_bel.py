@@ -38,6 +38,8 @@ def test_pybel_neighborhood_query():
     unicode_strs(bp.statements)
     assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
                 for s in bp.statements])
+    assert bp.statements[0].evidence[0].context.__repr__() == \
+        bp.statements[0].evidence[0].context.__str__()
 
 
 def test_process_belrdf():
