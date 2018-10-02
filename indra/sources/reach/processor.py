@@ -522,7 +522,7 @@ class ReachProcessor(object):
         # Example: ['uberon:UBERON:0000105']
         context.organ = get_ref_context(organ)
         # NOTE: we can't handle tissue currently
-        #context['tissue'] = tissue
+        # context['tissue'] = tissue
         # This is so we don't add a blank BioContext as context and rather
         # just add None
         if not context:

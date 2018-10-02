@@ -70,11 +70,11 @@ class SofiaProcessor(object):
             ref = row_dict.get('Source_File')
 
             all_contexts = []
-            for cause_index, effect_index in itertools.product(causes, effects):
-                cause_name = event_dict[cause_index]['Relation']
-                cause_grounding = event_dict[cause_index]['Event_Type']
-                effect_name = event_dict[effect_index]['Relation']
-                effect_grounding = event_dict[effect_index]['Event_Type']
+            for cause_idx, effect_idx in itertools.product(causes, effects):
+                cause_name = event_dict[cause_idx]['Relation']
+                cause_grounding = event_dict[cause_idx]['Event_Type']
+                effect_name = event_dict[effect_idx]['Relation']
+                effect_grounding = event_dict[effect_idx]['Event_Type']
                 cause_concept = Concept(cause_name,
                                         db_refs={'TEXT': cause_name,
                                                  'SOFIA': cause_grounding})
@@ -87,8 +87,8 @@ class SofiaProcessor(object):
                 # level, and so we need to choose which event's context
                 # we will associate with the relation
                 def choose_context(context_type):
-                    locs = [event_dict[cause_index].get(context_type),
-                            event_dict[effect_index].get(context_type)]
+                    locs = [event_dict[cause_idx].get(context_type),
+                            event_dict[effect_idx].get(context_type)]
                     if locs[0]:
                         return locs[0].strip()
                     elif locs[1]:

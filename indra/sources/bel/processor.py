@@ -542,7 +542,7 @@ def extract_context(annotations):
     if not bc:
         bc = None
     return bc
-    
+
 
 def _rel_is_direct(d):
     return d[pc.RELATION] in (pc.DIRECTLY_INCREASES, pc.DIRECTLY_DECREASES)

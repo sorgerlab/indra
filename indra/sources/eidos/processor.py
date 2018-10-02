@@ -166,7 +166,7 @@ class EidosProcessor(object):
             text = _sanitize(event.get('text'))
 
         annotations = {'found_by': event.get('rule'),
-                       'provenance' : provenance}
+                       'provenance': provenance}
         ev = Evidence(source_api='eidos', text=text, annotations=annotations,
                       context=context)
         return [ev]

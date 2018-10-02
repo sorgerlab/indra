@@ -3185,7 +3185,8 @@ class WorldContext(Context):
     Parameters
     ----------
     time : Optional[TimeContext]
-        A TimeContext object representing the temporal context of the Statement.
+        A TimeContext object representing the temporal context of the
+        Statement.
     geo_location : Optional[RefContext]
         The geographical location context represented as a RefContext
     """
