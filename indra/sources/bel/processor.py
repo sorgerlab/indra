@@ -480,7 +480,7 @@ def _get_evidence(u_data, v_data, k, edge_data):
 
     ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
                   source_id=k, epistemics=epistemics,
-                  annotations=annotations)
+                  annotations=annotations, context=context)
     return ev
 
 
@@ -513,12 +513,32 @@ def extract_context(annotations):
         return None
 
     bc = BioContext()
+    # TODO: get species string name from belns and set as name
     species = get_annot(annotations, 'Species')
     if species:
-        bc.species = {'TAXONOMY': species}
+        bc.species = RefContext(db_refs={'TAXONOMY': species})
+    # TODO: get cell line ID from belns and set as db_refs
     cell_line = get_annot(annotations, 'CellLine')
     if cell_line:
-        bc.species = {'TEXT': cell_line}
+        bc.cell_line = RefContext(name=cell_line)
+    # TODO: get disease ID from belns and set as db_refs
+    disease = get_annot(annotations, 'Disease')
+    if disease:
+        bc.disease = RefContext(name=disease)
+    # TODO: get anatomy ID from belns and set as db_refs
+    organ = get_annot(annotations, 'Anatomy')
+    if organ:
+        bc.organ = RefContext(name=organ)
+    # TODO: get cell type ID from belns and set as db_refs
+    cell_type = get_annot(annotations, 'Cell')
+    if cell_type:
+        bc.cell_type = RefContext(name=cell_type)
+    # TODO: get cellular compartment ID from belns and set as db_refs
+    # We should ideally use GO IDs here
+    location = get_annot(annotations, 'CellStructure')
+    if location:
+        bc.location = RefContext(name=location)
+    return bc
     
 
 def _rel_is_direct(d):
