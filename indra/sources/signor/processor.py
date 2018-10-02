@@ -295,11 +295,17 @@ class SignorProcessor(object):
         # NOTE: do we know if this is always a cell type, or can it be
         # a cell line?
         if row.CELL_DATA:
-            db_name, db_id = row.CELL_DATA.split(':')
+            # FIXME: we currently can't handle multiple pieces so we take
+            # the first
+            entry = row.CELL_DATA.split(';')[0]
+            db_name, db_id = entry.split(':')
             context.cell_type = RefContext(db_refs={db_name: db_id})
         # NOTE: is it okay to map this to organ?
         if row.TISSUE_DATA:
-            db_name, db_id = row.TISSUE_DATA.split(':')
+            # FIXME: we currently can't handle multiple pieces so we take
+            # the first
+            entry = row.TISSUE_DATA.split(';')[0]
+            db_name, db_id = entry.split(':')
             context.organ = RefContext(db_refs={db_name: db_id})
         # This is so that we don't add a blank BioContext as context and rather
         # just add None
