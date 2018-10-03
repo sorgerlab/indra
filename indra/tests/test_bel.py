@@ -40,6 +40,9 @@ def test_pybel_neighborhood_query():
                 for s in bp.statements])
     assert bp.statements[0].evidence[0].context.__repr__() == \
         bp.statements[0].evidence[0].context.__str__()
+    # Test annotation manager
+    assert bp.annot_manager.get_mapping('Species', '9606') == \
+        'Homo sapiens'
 
 
 def test_process_belrdf():

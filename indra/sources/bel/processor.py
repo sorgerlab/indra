@@ -486,7 +486,7 @@ def get_agent(node_data, node_modifier_data=None):
     return ag
 
 
-def extract_context(annotations, annotation_urls):
+def extract_context(annotations, annot_manager):
     """Return a BioContext object extracted from the annotations.
 
     The entries that are extracted into the BioContext are popped from the
@@ -496,6 +496,9 @@ def extract_context(annotations, annotation_urls):
     ----------
     annotations : dict
         PyBEL annotations dict
+    annot_manager : AnnotationManager
+        An annotation manager to get name/db reference mappings for each ot the
+        annotation types.
 
     Returns
     -------
@@ -515,31 +518,23 @@ def extract_context(annotations, annotation_urls):
         return None
 
     bc = BioContext()
-    # TODO: get species string name from belns and set as name
     species = get_annot(annotations, 'Species')
     if species:
-        bc.species = RefContext(db_refs={'TAXONOMY': species})
-    # TODO: get cell line ID from belns and set as db_refs
-    cell_line = get_annot(annotations, 'CellLine')
-    if cell_line:
-        bc.cell_line = RefContext(name=cell_line)
-    # TODO: get disease ID from belns and set as db_refs
-    disease = get_annot(annotations, 'Disease')
-    if disease:
-        bc.disease = RefContext(name=disease)
-    # TODO: get anatomy ID from belns and set as db_refs
-    organ = get_annot(annotations, 'Anatomy')
-    if organ:
-        bc.organ = RefContext(name=organ)
-    # TODO: get cell type ID from belns and set as db_refs
-    cell_type = get_annot(annotations, 'Cell')
-    if cell_type:
-        bc.cell_type = RefContext(name=cell_type)
-    # TODO: get cellular compartment ID from belns and set as db_refs
-    # We should ideally use GO IDs here
-    location = get_annot(annotations, 'CellStructure')
-    if location:
-        bc.location = RefContext(name=location)
+        name = annot_manager.get_mapping('Species', species)
+        bc.species = RefContext(name=name, db_refs={'TAXONOMY': species})
+
+    mappings = {'CellLine': 'cell_line',
+                'Disease': 'disease',
+                'Anatomy': 'organ',
+                'Cell': 'cell_type',
+                'CellStructure': 'location'}
+    for bel_name, indra_name in mappings.items():
+        ann = get_annot(annotations, bel_name)
+        if ann:
+            ref = annot_manager.get_mapping(bel_name, ann)
+            db_ns, db_id = ref.split('_', maxsplit=2)
+            setattr(bc, indra_name,
+                    RefContext(name=ann, db_refs={db_ns: db_id}))
     # Overwrite blank BioContext
     if not bc:
         bc = None
