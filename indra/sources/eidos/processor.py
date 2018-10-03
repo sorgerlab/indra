@@ -161,6 +161,21 @@ class EidosProcessor(object):
                                      duration=duration)
                     context = WorldContext(time=tc)
 
+        annotations = {'found_by': event.get('rule'),
+                       'provenance': provenance}
+
+        epistemics = {}
+        negations = self.get_negation(event)
+        hedgings = self.get_hedging(event)
+        if hedgings:
+            epistemics['hedgings'] = hedgings
+        if negations:
+            # This is the INDRA standard to show negation
+            epistemics['negated'] = True
+            # But we can also save the texts associated with the negation
+            # under annotations, just in case it's needed
+            annotations['negated_text'] = negations
+
         # If that fails, we can still get the text of the event
         if text is None:
             text = _sanitize(event.get('text'))
@@ -170,6 +185,31 @@ class EidosProcessor(object):
         ev = Evidence(source_api='eidos', text=text, annotations=annotations,
                       context=context)
         return [ev]
+
+    @staticmethod
+    def get_negation(event):
+        """Return negation attached to an event.
+
+        Example: "states": [{"@type": "State", "type": "NEGATION",
+                             "text": "n't"}]
+        """
+        negs = [state for state in event.get('states', [])
+                if state.get('type') == 'NEGATION']
+        neg_texts = [neg['text'] for neg in negs]
+        return neg_texts
+
+    @staticmethod
+    def get_hedging(event):
+        """Return hedging markers attached to an event.
+
+        Example: "states": [{"@type": "State", "type": "HEDGE",
+                             "text": "could"}
+        """
+        hedgings = [state for state in event.get('states', [])
+                    if state.get('type') == 'HEDGE']
+        hedging_texts = [hedging['text'] for hedging in hedgings]
+        return hedging_texts
+
 
     @staticmethod
     def get_polarity(entity):
