@@ -333,6 +333,18 @@ def test_filter_no_hypothesis():
     st1 = Phosphorylation(None, a, evidence=[ev1, ev2])
     st2 = Phosphorylation(None, a, evidence=[ev1, ev1])
     st_out = ac.filter_no_hypothesis([st1, st2])
+    assert len(st_out) == 1
+
+
+def test_filter_no_negated():
+    a = Agent('MAPK1')
+    ev1 = Evidence(epistemics={'negated': True})
+    ev2 = Evidence(epistemics={'negated': False})
+    st1 = Phosphorylation(None, a, evidence=[ev1, ev2])
+    st2 = Phosphorylation(None, a, evidence=[ev1, ev1])
+    st_out = ac.filter_no_negated([st1, st2])
+    assert len(st_out) == 1
+
 
 def test_belief_cut_plus_filter_top():
     st1 = Phosphorylation(None, Agent('a'))
