@@ -15,7 +15,9 @@
     "biogrid": 0.01,
     "cwms": 0.05,
     "hume": 0.05,
-    "sofia": 0.05
+    "sofia": 0.05,
+    "lincs_drug": 0.01,
+    "tas": 0.01
   },
   "rand": {
     "eidos": 0.3,
@@ -33,6 +35,8 @@
     "biogrid": 0.01,
     "cwms": 0.3,
     "hume": 0.3,
-    "sofia": 0.3
+    "sofia": 0.3,
+    "lincs_drug": 0.3,
+    "tas": 0.1
   }
 }

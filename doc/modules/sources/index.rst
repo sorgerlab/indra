@@ -18,5 +18,7 @@ Processors for knowledge input (:py:mod:`indra.sources`)
    biopax/index
    signor/index
    biogrid/index
+   tas/index
+   lincs_drug/index
    ndex_cx/index
    indra_db_rest/index

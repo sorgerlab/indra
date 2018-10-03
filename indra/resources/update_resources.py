@@ -14,6 +14,7 @@ import logging
 import requests
 from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases import uniprot_client
+from indra.databases.lincs_client import load_lincs_csv
 from indra.preassembler.make_cellular_component_hierarchy import \
     get_cellular_components
 from indra.preassembler.make_cellular_component_hierarchy import \
@@ -429,6 +430,39 @@ def update_hierarchy_pickle():
         pickle.dump(hierarchies, fh, protocol=2)
 
 
+
+def update_lincs_small_molecules():
+    """Load the csv of LINCS small molecule metadata into a dict.
+
+    Produces a dict keyed by HMS LINCS small molecule ids, with the metadata
+    contained in a dict of row values keyed by the column headers extracted
+    from the csv.
+    """
+    url = 'http://lincs.hms.harvard.edu/db/sm/'
+    sm_data = load_lincs_csv(url)
+    sm_dict = {d['HMS LINCS ID']: d.copy() for d in sm_data}
+    assert len(sm_dict) == len(sm_data), "We lost data."
+    fname = os.path.join(path, 'lincs_small_molecules.json')
+    with open(fname, 'w') as fh:
+        json.dump(fh, sm_dict, indent=1)
+
+
+def update_lincs_proteins():
+    """Load the csv of LINCS protein metadata into a dict.
+
+    Produces a dict keyed by HMS LINCS protein ids, with the metadata
+    contained in a dict of row values keyed by the column headers extracted
+    from the csv.
+    """
+    url = 'http://lincs.hms.harvard.edu/db/proteins/'
+    prot_data = load_lincs_csv(url)
+    prot_dict = {d['HMS LINCS ID']: d.copy() for d in prot_data}
+    assert len(prot_dict) == len(prot_data), "We lost data."
+    fname = os.path.join(path, 'lincs_proteins.json')
+    with open(fname, 'w') as fh:
+        json.dump(fh, prot_dict, indent=1)
+
+
 if __name__ == '__main__':
     update_famplex()
     update_famplex_map()
@@ -449,3 +483,5 @@ if __name__ == '__main__':
     update_cellular_component_hierarchy()
     update_hierarchy_pickle()
     update_ncit_map()
+    update_lincs_small_molecules()
+    update_lincs_proteins()
