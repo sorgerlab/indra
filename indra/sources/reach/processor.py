@@ -98,8 +98,6 @@ class ReachProcessor(object):
 
             # Skip negated events (i.e. something doesn't happen)
             epistemics = self._get_epistemics(r)
-            if epistemics.get('negative'):
-                continue
 
             annotations, context = self._get_annot_context(r)
             frame_id = r['frame_id']
@@ -229,8 +227,6 @@ class ReachProcessor(object):
 
         for r in res:
             epistemics = self._get_epistemics(r)
-            if epistemics.get('negative'):
-                continue
             # Due to an issue with the REACH output serialization
             # (though seemingly not with the raw mentions), sometimes
             # a redundant complex-assembly event is reported which can
@@ -259,8 +255,6 @@ class ReachProcessor(object):
             return
         for r in res:
             epistemics = self._get_epistemics(r)
-            if epistemics.get('negative'):
-                continue
             sentence = r['verbose-text']
             annotations, context = self._get_annot_context(r)
             ev = Evidence(source_api='reach', text=sentence,
@@ -289,8 +283,6 @@ class ReachProcessor(object):
             return
         for r in res:
             epistemics = self._get_epistemics(r)
-            if epistemics.get('negative'):
-                continue
             sentence = r['verbose-text']
             annotations, context = self._get_annot_context(r)
             ev = Evidence(source_api='reach', text=sentence,
@@ -534,7 +526,7 @@ class ReachProcessor(object):
         # Check whether information is negative
         neg = event.get('is_negated')
         if neg is True:
-            epistemics['negative'] = True
+            epistemics['negated'] = True
         # Check if it is a hypothesis
         hyp = event.get('is_hypothesis')
         if hyp is True:
