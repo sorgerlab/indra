@@ -114,6 +114,18 @@ def test_process_correlations():
     assert names == {'harvest', 'requirement'}, names
 
 
+def test_process_negation_hedging():
+    nh_jsonld = os.path.join(path_this, 'eidos_neg_hedge.json')
+    ep = eidos.process_json_file(nh_jsonld)
+    assert len(ep.statements) == 1
+    st = ep.statements[0]
+    epi = st.evidence[0].epistemics
+    assert epi.get('hedgings') == ['may'], epi
+    assert epi.get('negated') is True, epi
+    annot = st.evidence[0].annotations
+    assert annot.get('negated_texts') == ['not']
+
+
 def test_eidos_to_cag():
     stmts = __get_stmts_from_remote_jsonld()
     ca = CAGAssembler()

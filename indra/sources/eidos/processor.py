@@ -174,7 +174,7 @@ class EidosProcessor(object):
             epistemics['negated'] = True
             # But we can also save the texts associated with the negation
             # under annotations, just in case it's needed
-            annotations['negated_text'] = negations
+            annotations['negated_texts'] = negations
 
         # If that fails, we can still get the text of the event
         if text is None:
