@@ -3,6 +3,7 @@ import logging
 import pybel.constants as pc
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
+from pybel.resources.definitions.definitions import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client
@@ -66,6 +67,7 @@ class PybelProcessor(object):
         self.graph = graph
         self.statements = []
         self.unhandled = []
+        self.annot_manager = AnnotationManager(self.graph.annotation_url)
 
     # FIXME: Handle reactions
     def get_statements(self):
@@ -170,7 +172,7 @@ class PybelProcessor(object):
         agents = [bc.agent for bc in cplx_agent.bound_conditions]
         cplx_agent.bound_conditions = []
         agents.append(cplx_agent)
-        ev = _get_evidence(u_data, v_data, k, edge_data)
+        ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = Complex(agents, evidence=[ev])
         self.statements.append(stmt)
 
@@ -191,7 +193,7 @@ class PybelProcessor(object):
             stmt_class = IncreaseAmount
         else:
             stmt_class = DecreaseAmount
-        ev = _get_evidence(u_data, v_data, k, edge_data)
+        ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, evidence=[ev])
         self.statements.append(stmt)
 
@@ -205,7 +207,7 @@ class PybelProcessor(object):
             return
         for mod in mods:
             modclass = modtype_to_modclass[mod.mod_type]
-            ev = _get_evidence(u_data, v_data, k, edge_data)
+            ev = self._get_evidence(u_data, v_data, k, edge_data)
             stmt = modclass(subj_agent, obj_agent, mod.residue, mod.position,
                             evidence=[ev])
             self.statements.append(stmt)
@@ -242,7 +244,7 @@ class PybelProcessor(object):
             stmt_class = Activation
         else:
             stmt_class = Inhibition
-        ev = _get_evidence(u_data, v_data, k, edge_data)
+        ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = stmt_class(subj_agent, obj_agent, activity_type, evidence=[ev])
         self.statements.append(stmt)
 
@@ -260,7 +262,7 @@ class PybelProcessor(object):
         # If the relation is DECREASES, this means that this agent state
         # is inactivating
         is_active = edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS
-        ev = _get_evidence(u_data, v_data, k, edge_data)
+        ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = ActiveForm(subj_agent, activity_type, is_active, evidence=[ev])
         self.statements.append(stmt)
 
@@ -270,7 +272,7 @@ class PybelProcessor(object):
         if subj_agent is None or obj_agent is None:
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
-        ev = _get_evidence(u_data, v_data, k, edge_data)
+        ev = self._get_evidence(u_data, v_data, k, edge_data)
         if edge_data[pc.RELATION] in pc.CAUSAL_INCREASE_RELATIONS:
             stmt_class = Gef
         else:
@@ -288,10 +290,48 @@ class PybelProcessor(object):
            any([p is None for p in product_agents]):
             self.unhandled.append((u_data, v_data, k, edge_data))
             return
-        ev = _get_evidence(u_data, v_data, k, edge_data)
+        ev = self._get_evidence(u_data, v_data, k, edge_data)
         stmt = Conversion(subj_agent, obj_from=reactant_agents,
                           obj_to=product_agents, evidence=ev)
         self.statements.append(stmt)
+
+    def _get_evidence(self, u_data, v_data, k, edge_data):
+        ev_text = edge_data.get(pc.EVIDENCE)
+        ev_citation = edge_data.get(pc.CITATION)
+        ev_pmid = None
+        if ev_citation:
+            cit_type = ev_citation[pc.CITATION_TYPE]
+            cit_ref = ev_citation[pc.CITATION_REFERENCE]
+            if cit_type == pc.CITATION_TYPE_PUBMED:
+                ev_pmid = cit_ref
+                ev_ref = None
+            else:
+                ev_pmid = None
+                ev_ref = '%s: %s' % (cit_type, cit_ref)
+        epistemics = {'direct': _rel_is_direct(edge_data)}
+        annotations = edge_data.get(pc.ANNOTATIONS, {})
+        annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
+        if ev_ref:  # FIXME what if ev_citation is Falsy?
+            annotations['citation_ref'] = ev_ref
+
+        context = extract_context(annotations, self.annot_manager)
+
+        text_location = annotations.pop('TextLocation', None)
+        if text_location:
+            # Handle dictionary text_location like {'Abstract': True}
+            if isinstance(text_location, dict):
+                # FIXME: INDRA's section_type entry is meant to contain
+                # a single section string like "abstract" but in principle
+                # pybel could have a list of entries in the TextLocation dict.
+                # Here we just take the first one.
+                text_location = list(text_location.keys())[0]
+            epistemics['section_type'] = \
+                _pybel_text_location_map.get(text_location)
+
+        ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
+                      source_id=k, epistemics=epistemics,
+                      annotations=annotations, context=context)
+        return ev
 
 
 def get_agent(node_data, node_modifier_data=None):
@@ -446,45 +486,7 @@ def get_agent(node_data, node_modifier_data=None):
     return ag
 
 
-def _get_evidence(u_data, v_data, k, edge_data):
-    ev_text = edge_data.get(pc.EVIDENCE)
-    ev_citation = edge_data.get(pc.CITATION)
-    ev_pmid = None
-    if ev_citation:
-        cit_type = ev_citation[pc.CITATION_TYPE]
-        cit_ref = ev_citation[pc.CITATION_REFERENCE]
-        if cit_type == pc.CITATION_TYPE_PUBMED:
-            ev_pmid = cit_ref
-            ev_ref = None
-        else:
-            ev_pmid = None
-            ev_ref = '%s: %s' % (cit_type, cit_ref)
-    epistemics = {'direct': _rel_is_direct(edge_data)}
-    annotations = edge_data.get(pc.ANNOTATIONS, {})
-    annotations['bel'] = edge_to_bel(u_data, v_data, edge_data)
-    if ev_ref:  # FIXME what if ev_citation is Falsy?
-        annotations['citation_ref'] = ev_ref
-
-    context = extract_context(annotations)
-
-    text_location = annotations.pop('TextLocation', None)
-    if text_location:
-        # Handle dictionary text_location like {'Abstract': True}
-        if isinstance(text_location, dict):
-            # FIXME: INDRA's section_type entry is meant to contain
-            # a single section string like "abstract" but in principle
-            # pybel could have a list of entries in the TextLocation dict.
-            # Here we just take the first one.
-            text_location = list(text_location.keys())[0]
-        epistemics['section_type'] = _pybel_text_location_map.get(text_location)
-
-    ev = Evidence(text=ev_text, pmid=ev_pmid, source_api='bel',
-                  source_id=k, epistemics=epistemics,
-                  annotations=annotations, context=context)
-    return ev
-
-
-def extract_context(annotations):
+def extract_context(annotations, annotation_urls):
     """Return a BioContext object extracted from the annotations.
 
     The entries that are extracted into the BioContext are popped from the
@@ -555,7 +557,15 @@ def _get_up_id(hgnc_id):
     return up_id
 
 
+class AnnotationManager(object):
+    def __init__(self, annotation_urls):
+        self.resources = {}
+        for key, url in annotation_urls.items():
+            res = get_bel_resource(url)
+            self.resources[key] = res
 
+    def get_mapping(self, key, value):
+        return self.resources[key]['Values'][value]
 
 
 def _get_all_pmods(node_data):
@@ -676,3 +686,5 @@ def _parse_mutation(s):
         return None, None, None
     from_aa, position, to_aa = m.groups()
     return position, from_aa, to_aa
+
+
