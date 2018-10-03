@@ -523,16 +523,19 @@ def extract_context(annotations, annot_manager):
         name = annot_manager.get_mapping('Species', species)
         bc.species = RefContext(name=name, db_refs={'TAXONOMY': species})
 
-    mappings = {'CellLine': 'cell_line',
-                'Disease': 'disease',
-                'Anatomy': 'organ',
-                'Cell': 'cell_type',
-                'CellStructure': 'location'}
-    for bel_name, indra_name in mappings.items():
+    mappings = (('CellLine', 'cell_line', None),
+                ('Disease', 'disease', None),
+                ('Anatomy', 'organ', None),
+                ('Cell', 'cell_type', None),
+                ('CellStructure', 'location', 'MESH'))
+    for bel_name, indra_name, ns in mappings:
         ann = get_annot(annotations, bel_name)
         if ann:
             ref = annot_manager.get_mapping(bel_name, ann)
-            db_ns, db_id = ref.split('_', maxsplit=2)
+            if not ns:
+                db_ns, db_id = ref.split('_', maxsplit=2)
+            else:
+                db_ns, db_id = ns, ref
             setattr(bc, indra_name,
                     RefContext(name=ann, db_refs={db_ns: db_id}))
     # Overwrite blank BioContext

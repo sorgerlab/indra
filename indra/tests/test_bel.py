@@ -4,7 +4,7 @@ import os
 from indra.util import unicode_strs
 from indra.sources import bel
 from indra.sources.bel.rdf_processor import BelRdfProcessor
-from indra.statements import RegulateAmount
+from indra.statements import RegulateAmount, BioContext, RefContext
 from nose.plugins.attrib import attr
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
@@ -40,6 +40,19 @@ def test_pybel_neighborhood_query():
                 for s in bp.statements])
     assert bp.statements[0].evidence[0].context.__repr__() == \
         bp.statements[0].evidence[0].context.__str__()
+    assert bp.statements[0].evidence[0].context == \
+        BioContext(location=RefContext(name="Cytoplasm",
+                                       db_refs={'MESH': 'D003593'}),
+                   cell_line=RefContext(name="MCF 10A",
+                                        db_refs={'EFO': '0001200'}),
+                   cell_type=RefContext(name="keratinocyte",
+                                        db_refs={'CL': '0000312'}),
+                   organ=RefContext(name="colon",
+                                    db_refs={'UBERON': '0001155'}),
+                   disease=RefContext(name="cancer",
+                                      db_refs={'DOID': '162'}),
+                   species=RefContext(name="Rattus norvegicus",
+                                      db_refs={'TAXONOMY': '10116'}))
     # Test annotation manager
     assert bp.annot_manager.get_mapping('Species', '9606') == \
         'Homo sapiens'
