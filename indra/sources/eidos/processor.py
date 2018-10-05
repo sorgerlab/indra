@@ -180,10 +180,8 @@ class EidosProcessor(object):
         if text is None:
             text = _sanitize(event.get('text'))
 
-        annotations = {'found_by': event.get('rule'),
-                       'provenance': provenance}
         ev = Evidence(source_api='eidos', text=text, annotations=annotations,
-                      context=context)
+                      context=context, epistemics=epistemics)
         return [ev]
 
     @staticmethod
