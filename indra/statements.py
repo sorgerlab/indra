@@ -1052,6 +1052,11 @@ class Evidence(object):
             self.epistemics = {}
         self.context = context
 
+    def __setstate__(self, state):
+        if 'context' not in state:
+            state['context'] = None
+        self.__dict__ = state
+
     def matches_key(self):
         key_lst = [self.source_api, self.source_id, self.pmid,
                    self.text]
