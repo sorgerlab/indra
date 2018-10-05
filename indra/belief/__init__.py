@@ -153,7 +153,6 @@ class SimpleScorer(BeliefScorer):
                         not ev.epistemics.get('negated')]
         neg_evidence = [ev for ev in st.evidence if
                         ev.epistemics.get('negated')]
-        print(pos_evidence, neg_evidence)
         pp = _score(pos_evidence)
         np = _score(neg_evidence)
         # The basic assumption is that the positive and negative evidence
