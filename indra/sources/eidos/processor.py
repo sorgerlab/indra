@@ -154,8 +154,8 @@ class EidosProcessor(object):
                 if timexes:
                     time_text = timexes[0].get('text')
                     constraint = timexes[0]['intervals'][0]
-                    start = get_time_stamp(constraint['start'])
-                    end = get_time_stamp(constraint['end'])
+                    start = get_time_stamp(constraint.get('start'))
+                    end = get_time_stamp(constraint.get('end'))
                     duration = constraint['duration']
                     tc = TimeContext(text=time_text, start=start, end=end,
                                      duration=duration)
