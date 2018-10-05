@@ -119,7 +119,7 @@ def filter_pmids(pmid_list, source_type):
         fulltext_list_path = os.path.join(os.path.dirname(__file__),
                                      'pmids_%s.txt' % source_type)
         with open(fulltext_list_path, 'rb') as f:
-            fulltext_list = set([line.strip('\n').decode('utf-8')
+            fulltext_list = set([line.strip().decode('utf-8')
                                  for line in f.readlines()])
             pmids_fulltext_dict[source_type] = fulltext_list
     return list(set(pmid_list).intersection(
