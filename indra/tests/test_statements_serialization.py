@@ -1,6 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
+import datetime
 from indra.statements import *
 
 ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},
@@ -211,3 +211,67 @@ def test_supports_missing_uuids():
         except UnresolvedUuidError:
             pass
     return
+
+
+def test_time_context():
+    tc = TimeContext(text='2018',
+                     start=datetime.datetime(2018, 1, 1, 0, 0),
+                     end=datetime.datetime(2019, 1, 1, 0, 0),
+                     duration=(365 * 86400))
+    jd = tc.to_json()
+    assert jd['text'] == '2018'
+    assert jd['start'] == '2018-01-01T00:00'
+    assert jd['end'] == '2019-01-01T00:00'
+    assert jd['duration'] == 365 * 86400
+
+    assert TimeContext.from_json(jd).__dict__ == tc.__dict__
+
+
+def test_ref_context():
+    rc1 = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    rc2 = RefContext(name='x')
+    rc3 = RefContext(db_refs={'y'})
+    rj1 = rc1.to_json()
+    assert rj1['name'] == 'x'
+    assert rj1['db_refs'] == {'y': '1', 'z': '2'}
+    assert rc1.to_json() == RefContext.from_json(rc1.to_json()).to_json()
+    assert rc2.to_json() == RefContext.from_json(rc2.to_json()).to_json()
+    assert rc3.to_json() == RefContext.from_json(rc3.to_json()).to_json()
+
+
+def test_bio_context():
+    rc1 = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    rc2 = RefContext(name='x')
+    rc3 = RefContext(db_refs={'y'})
+    bc = BioContext(location=rc1, cell_line=rc2, species=rc3)
+    bcj = bc.to_json()
+    assert bcj['type'] == 'bio'
+    assert bcj['location']['name'] == 'x'
+    assert bcj['location']['db_refs'] == {'y': '1', 'z': '2'}
+    assert bc.to_json() == Context.from_json(bc.to_json()).to_json()
+
+
+def test_world_context():
+    gl = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    tc = TimeContext(text='2018')
+    wc = WorldContext(time=tc, geo_location=gl)
+    wcj = wc.to_json()
+    assert wcj['type'] == 'world'
+    assert wcj['time']['text'] == '2018'
+    assert wcj['geo_location']['name'] == 'x'
+    assert wcj['geo_location']['db_refs'] == {'y': '1', 'z': '2'}
+    assert wc.to_json() == Context.from_json(wc.to_json()).to_json()
+
+
+def test_evidence_context():
+    gl = RefContext(name='x', db_refs={'y': '1', 'z': '2'})
+    tc = TimeContext(text='2018')
+    wc = WorldContext(time=tc, geo_location=gl)
+    ev = Evidence(pmid='1', text='x', annotations={'a': '2'},
+                  context=wc)
+    evj = ev.to_json()
+    assert evj['context']['type'] == 'world'
+    assert evj['context']['geo_location']['name'] == 'x'
+    assert evj['pmid'] == '1'
+    assert evj['annotations'] == {'a': '2'}
+    assert ev.to_json() == Evidence._from_json(ev.to_json()).to_json()

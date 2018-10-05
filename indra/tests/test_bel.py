@@ -1,11 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-from rdflib.term import URIRef
 from indra.util import unicode_strs
 from indra.sources import bel
 from indra.sources.bel.rdf_processor import BelRdfProcessor
-from indra.statements import RegulateAmount
+from indra.statements import RegulateAmount, BioContext, RefContext
 from nose.plugins.attrib import attr
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
@@ -14,6 +13,7 @@ entity_prefix = 'http://www.openbel.org/bel/'
 path_this = os.path.dirname(os.path.abspath(__file__))
 test_rdf_nfkb = os.path.join(path_this, 'bel_rdfs', 'NFKB1_neighborhood.rdf')
 test_rdf_myc = os.path.join(path_this, 'bel_rdfs', 'MYC_neighborhood.rdf')
+
 
 def assert_pmids(stmts):
     for stmt in stmts:
@@ -36,6 +36,26 @@ def test_pybel_neighborhood_query():
     assert bp.statements
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
+    assert all([s.evidence[0].context.cell_line.name == 'MCF 10A'
+                for s in bp.statements])
+    assert bp.statements[0].evidence[0].context.__repr__() == \
+        bp.statements[0].evidence[0].context.__str__()
+    assert bp.statements[0].evidence[0].context == \
+        BioContext(location=RefContext(name="Cytoplasm",
+                                       db_refs={'MESH': 'D003593'}),
+                   cell_line=RefContext(name="MCF 10A",
+                                        db_refs={'EFO': '0001200'}),
+                   cell_type=RefContext(name="keratinocyte",
+                                        db_refs={'CL': '0000312'}),
+                   organ=RefContext(name="colon",
+                                    db_refs={'UBERON': '0001155'}),
+                   disease=RefContext(name="cancer",
+                                      db_refs={'DOID': '162'}),
+                   species=RefContext(name="Rattus norvegicus",
+                                      db_refs={'TAXONOMY': '10116'}))
+    # Test annotation manager
+    assert bp.annot_manager.get_mapping('Species', '9606') == \
+        'Homo sapiens'
 
 
 def test_process_belrdf():
@@ -44,6 +64,7 @@ def test_process_belrdf():
     bp = bel.process_belrdf(rdf_str_nfkb)
     assert_pmids(bp.statements)
     unicode_strs(bp.statements)
+
 
 def test_get_agent_up_from_hgnc():
     hgnc_sym = 'MAPK1'
@@ -54,6 +75,7 @@ def test_get_agent_up_from_hgnc():
     assert ag.db_refs.get('HGNC') == '6871'
     assert ag.db_refs.get('UP') == 'P28482'
     assert unicode_strs((concept, entity, ag))
+
 
 def test_get_agent_hgnc_up_from_egid():
     entrez_id = '5594'
@@ -75,7 +97,7 @@ def test_get_transcription():
     bp = bel.process_belrdf(rdf_str_myc)
     transcription_stmts = []
     for stmt in bp.statements + bp.indirect_stmts:
-       if isinstance(stmt, RegulateAmount):
+        if isinstance(stmt, RegulateAmount):
             transcription_stmts.append(stmt)
     assert len(transcription_stmts) == 8
     pass

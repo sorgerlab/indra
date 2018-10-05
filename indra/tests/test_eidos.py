@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import datetime
 from indra.sources import eidos
 from indra.statements import Influence, Association
 from indra.assemblers.cag import CAGAssembler
@@ -85,6 +86,22 @@ def test_process_corefs():
     assert ('rainfall', 'flood') in concepts, concepts
     # This ensures that the coreference was successfully resolved
     assert ('flood', 'displacement') in concepts, concepts
+
+
+def test_process_timex():
+    timex_jsonld = os.path.join(path_this, 'eidos_timex.json')
+    ep = eidos.process_json_file(timex_jsonld)
+    assert len(ep.statements) == 1
+    ev = ep.statements[0].evidence[0]
+    assert ev.context is not None
+    assert ev.context.__repr__() == ev.context.__str__()
+    assert ev.context.time.duration == 365 * 86400, ev.context.time.duration
+    assert ev.context.time.start == \
+        datetime.datetime(year=2018, month=1, day=1, hour=0, minute=0), \
+        ev.context.time.start
+    assert ev.context.time.end == \
+        datetime.datetime(year=2019, month=1, day=1, hour=0, minute=0), \
+        ev.context.time.end
 
 
 def test_process_correlations():

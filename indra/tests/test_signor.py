@@ -104,9 +104,6 @@ def test_get_evidence():
     assert ev.pmid == '19530226'
     assert ev.annotations == {
             'SEQUENCE': None,
-            'TAX_ID': '10090',
-            'CELL_DATA': 'BTO:0002895',
-            'TISSUE_DATA': None,
             'MODULATOR_COMPLEX': None,
             'TARGET_COMPLEX': None,
             'MODIFICATIONA': None,
@@ -116,6 +113,8 @@ def test_get_evidence():
             'NOTES': None,
             'ANNOTATOR': 'gcesareni',
         }
+    assert ev.context.species.db_refs['TAXONOMY'] == '10090'
+    assert ev.context.cell_type.db_refs['BTO'] == '0002895'
     assert ev.epistemics['direct']
     assert ev.source_api == 'signor'
     assert ev.source_id == 'SIGNOR-241929'
@@ -768,7 +767,3 @@ def test_recursively_expand_complex_constituents():
     constituents = sp._recursively_lookup_complex('SIGNOR-C91')
     assert(constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
                             'Q15291'])
-
-
-if __name__ == '__main__':
-    test_recursive_complexes()
