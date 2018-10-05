@@ -198,14 +198,14 @@ class BeliefEngine(object):
 
     Attributes
     ----------
-    scorer : object
-        An object that computes the prior probability of a statement given its
-        its statment type and evidence. Must support type methods:
-        * score_statement: takes indra.statements.Statement
-            computes the belief score of a statement
-        * check_prior_probs: takes list<indra.statements.Statement>
-            Verifies that the scorer has all the information it needs to score
-            every statement in the list, and raises an exception if not
+    scorer : BeliefScorer
+        A BeliefScorer object that computes the prior probability of a
+        statement given its its statment type and evidence.
+        Must implement the `score_statement` method which takes
+        Statements and computes the belief score of a statement, and the
+        `check_prior_probs` method which takes a list of INDRA Statements and
+        verifies that the scorer has all the information it needs to score
+        every statement in the list, and raises an exception if not.
     """
     def __init__(self, scorer=None):
         if scorer is None:
