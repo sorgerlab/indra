@@ -45,7 +45,7 @@ the enzyme-substrate complex produces and releases a product irreversibly.
 
 .. ipython:: python
 
-    from indra.assemblers.pysb_assembler import PysbAssembler
+    from indra.assemblers.pysb import PysbAssembler
 
     pa = PysbAssembler()
     pa.add_statements(tp.statements)
