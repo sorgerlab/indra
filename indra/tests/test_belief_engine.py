@@ -335,3 +335,24 @@ def test_evidence_random_noise_prior():
     assert(statements[1].belief == 1 - 0.4)
     assert(statements[2].belief == 1 - 0.9)
 
+
+def test_negative_evidence():
+    def close_enough(b1, b2):
+        return abs(b1 - b2) < 1e-6
+    prior_probs = {'rand': {'new_source': 0.1},
+                   'syst': {'new_source': 0.05}}
+    getev = lambda x: Evidence(source_api='new_source',
+                               epistemics={'negated': x})
+    evs1 = [getev(x) for x in [True, True, False]]
+    evs2 = [getev(x) for x in [False, False, False]]
+    evs3 = [getev(x) for x in [True, True, True]]
+    stmts = [Phosphorylation(None, Agent('a'), evidence=e)
+             for e in [evs1, evs2, evs3]]
+    scorer = SimpleScorer(prior_probs)
+    engine = BeliefEngine(scorer)
+    engine.set_prior_probs(stmts)
+    pr = prior_probs['rand']['new_source']
+    ps = prior_probs['syst']['new_source']
+    assert close_enough(stmts[0].belief, ((1-pr)-ps)*(1-((1-pr*pr)-ps)))
+    assert close_enough(stmts[1].belief, (1-pr*pr*pr)-ps)
+    assert stmts[2].belief == 0

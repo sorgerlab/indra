@@ -938,6 +938,7 @@ def filter_direct(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_no_hypothesis(stmts_in, **kwargs):
     """Filter to statements that are not marked as hypothesis in epistemics.
 
@@ -971,6 +972,42 @@ def filter_no_hypothesis(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
+
+def filter_no_negated(stmts_in, **kwargs):
+    """Filter to statements that are not marked as negated in epistemics.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of statements to filter.
+    save : Optional[str]
+        The name of a pickle file to save the results (stmts_out) into.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        A list of filtered statements.
+    """
+    logger.info('Filtering %d statements to not negated...' % len(stmts_in))
+    stmts_out = []
+    for st in stmts_in:
+        all_negated = True
+        ev = None
+        for ev in st.evidence:
+            if not ev.epistemics.get('negated', False):
+                all_negated = False
+                break
+        if ev is None:
+            all_negated = False
+        if not all_negated:
+            stmts_out.append(st)
+    logger.info('%d statements after filter...' % len(stmts_out))
+    dump_pkl = kwargs.get('save')
+    if dump_pkl:
+        dump_statements(stmts_out, dump_pkl)
+    return stmts_out
+
 
 def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
     """Filter to statements that have evidence from a given set of sources.
