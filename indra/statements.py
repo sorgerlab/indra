@@ -1320,6 +1320,7 @@ class Statement(object):
                 st.uuid = '%s' % uuid.uuid4()
         ##################
         json_dict = _o({'type': stmt_type})
+        json_dict['belief'] = self.belief
         if self.evidence:
             evidence = [ev.to_json() for ev in self.evidence]
             json_dict['evidence'] = evidence
