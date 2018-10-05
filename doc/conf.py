@@ -303,7 +303,9 @@ texinfo_documents = [
 # Note that for sub-modules, all parent modules must be listed explicitly.
 MOCK_MODULES = [
     'pybel', 'pybel.constants', 'pybel.struct', 'pybel.canonicalize',
-    'pybel.language', 'pybel.dsl',
+    'pybel.language', 'pybel.dsl', 'pybel.resources',
+    'pybel.resources.definitions',
+    'pybel.resources.definitions.definitions',
     'pygraphviz', 'jnius', 'jnius_config', 'flask',
     'networkx.drawing.nx_agraph',
     'objectpath', 'lxml', 'lxml.etree', 'lxml.builder',
