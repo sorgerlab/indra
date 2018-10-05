@@ -2533,7 +2533,7 @@ class PysbPreassembler(object):
         self._gather_active_forms()
         # Iterate over all statements
         for j, stmt in enumerate(self.statements):
-            logger.debug('%d/%d %s' % (j, len(self.statements), stmt))
+            logger.debug('%d/%d %s' % (j + 1, len(self.statements), stmt))
             # If the Statement doesn't have any activities, we can just
             # keep it and move on
             if not has_agent_activity(stmt):
