@@ -98,6 +98,8 @@ class ReachProcessor(object):
 
             # Skip negated events (i.e. something doesn't happen)
             epistemics = self._get_epistemics(r)
+            if epistemics.get('negated'):
+                continue
 
             annotations, context = self._get_annot_context(r)
             frame_id = r['frame_id']
@@ -183,7 +185,7 @@ class ReachProcessor(object):
         for r in all_res:
             subtype = r.get('subtype')
             epistemics = self._get_epistemics(r)
-            if epistemics.get('negative'):
+            if epistemics.get('negated'):
                 continue
             annotations, context = self._get_annot_context(r)
             frame_id = r['frame_id']
@@ -227,6 +229,8 @@ class ReachProcessor(object):
 
         for r in res:
             epistemics = self._get_epistemics(r)
+            if epistemics.get('negated'):
+                continue
             # Due to an issue with the REACH output serialization
             # (though seemingly not with the raw mentions), sometimes
             # a redundant complex-assembly event is reported which can
@@ -255,6 +259,8 @@ class ReachProcessor(object):
             return
         for r in res:
             epistemics = self._get_epistemics(r)
+            if epistemics.get('negated'):
+                continue
             sentence = r['verbose-text']
             annotations, context = self._get_annot_context(r)
             ev = Evidence(source_api='reach', text=sentence,
@@ -283,6 +289,8 @@ class ReachProcessor(object):
             return
         for r in res:
             epistemics = self._get_epistemics(r)
+            if epistemics.get('negated'):
+                continue
             sentence = r['verbose-text']
             annotations, context = self._get_annot_context(r)
             ev = Evidence(source_api='reach', text=sentence,
