@@ -213,6 +213,16 @@ def test_supports_missing_uuids():
     return
 
 
+def test_belief():
+    stmt = Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev])
+    jd = stmt.to_json()
+    assert 'belief' in jd
+    assert jd['belief'] == 1
+    stmt.belief  = 0.5
+    jd2 = Statement._from_json(stmt.to_json()).to_json()
+    assert jd2['belief'] == 0.5
+
+
 def test_time_context():
     tc = TimeContext(text='2018',
                      start=datetime.datetime(2018, 1, 1, 0, 0),
