@@ -25,9 +25,9 @@ def get_eidos_scorer():
     rand_error = 1 - precision - syst_error
     prior_probs = {'rand': {'eidos': rand_error}, 'syst': {'eidos': syst_error}}
 
-    # Get a dict of rule-specific errors
+    # Get a dict of rule-specific errors.
     subtype_probs = {'eidos':
-                     {k: 1.0-v for k, v
+                     {k: 1.0-min(v, 0.95)-syst_error for k, v
                       in zip(table['RULE'], table['% correct'])}}
 
     scorer = SimpleScorer(prior_probs, subtype_probs)
