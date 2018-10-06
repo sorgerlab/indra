@@ -44,7 +44,7 @@ class BeliefScorer(object):
 
         Parameters
         ----------
-        statement : indra.statements.Statement
+        st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
 
@@ -114,7 +114,7 @@ class SimpleScorer(BeliefScorer):
 
         Parameters
         ----------
-        statement : indra.statements.Statement
+        st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
 
