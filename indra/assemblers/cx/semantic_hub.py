@@ -1,3 +1,5 @@
+import math
+import random
 import networkx
 from collections import defaultdict
 
@@ -76,6 +78,37 @@ def cx_to_networkx(cx):
     return graph
 
 
+def get_quadrant_from_class(node_class):
+    up, edge_type, _ = node_class
+    if up == 0:
+        return 0
+    mappings = {(1, 'modification'): 1,
+                (1, 'amount'): 2,
+                (1, 'activity'): 3,
+                (-1, 'activity'): 4,
+                (-1, 'amount'): 5,
+                (-1, 'modification'): 6}
+    return mappings[(up, edge_type)]
+
+
+def get_coordinates(node, node_class):
+    quadrant_size = (2 * math.pi / 8.0)
+    quadrant = get_quadrant_from_class(node_class)
+    center_angle = (quadrant_size / 2.0) + quadrant_size * quadrant
+    r = 100 + 200*random.random()
+    alpha = center_angle - (quadrant_size / 2.0) * random.random() * quadrant_size
+    x = r / math.sqrt(1 + math.tan(alpha)**2)
+    y = math.sqrt(r**2 - x**2)
+    return (x, y)
+
+
+def layout(graph, hub, node_classes):
+    networkx.set_node_attributes(graph, {hub: {'x': 0.0, 'y': 0.0}})
+    for node in graph.nodes():
+        x, y = get_coordinates(node, node_classes[node])
+        networkx.set_node_attributes(graph, {node: {'x': x, 'y': y}})
+
+
 def get_node_by_name(graph, name):
     for id, attrs in graph.nodes(data=True):
         if attrs['n'] == name:
@@ -87,5 +120,6 @@ if __name__ == '__main__':
     with open('CDK13.cx', 'r') as fh:
         cx = json.load(fh)
     graph = cx_to_networkx(cx)
-
-    node_classes = classify_nodes(graph, get_node_by_name(graph, 'CDK13'))
+    hub = 'CDK13'
+    node_classes = classify_nodes(graph, get_node_by_name(graph, hub))
+    layout(graph, hub, node_classes)
