@@ -44,7 +44,7 @@ class BeliefScorer(object):
 
         Parameters
         ----------
-        statement : indra.statements.Statement
+        st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
 
@@ -114,7 +114,7 @@ class SimpleScorer(BeliefScorer):
 
         Parameters
         ----------
-        statement : indra.statements.Statement
+        st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
 
@@ -391,10 +391,12 @@ def tag_evidence_subtype(evidence):
 
     if source_api == 'biopax':
         subtype = annotations.get('source_sub_id')
-    elif source_api == 'reach':
+    elif source_api in ('reach', 'eidos'):
         if 'found_by' in annotations:
-            if use_reach_subtypes:
+            if source_api == 'reach' and use_reach_subtypes:
                 subtype = determine_reach_subtype(annotations['found_by'])
+            elif source_api == 'eidos':
+                subtype = annotations['found_by']
             else:
                 subtype = None
         else:
