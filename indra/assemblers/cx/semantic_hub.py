@@ -11,24 +11,37 @@ def get_aspect(cx, aspect_name):
             return entry[aspect_name]
 
 
+def edge_type_to_class(edge_type):
+    if 'Amount' in edge_type:
+        return 'amount'
+    if edge_type in ('Activation', 'Inhibition'):
+        return 'activity'
+    if edge_type == 'Complex':
+        return 'complex'
+    else:
+        return 'modification'
+
+
 def classify_nodes(graph, hub):
     node_stats = defaultdict(lambda: defaultdict(list))
     for u, v, data in graph.edges(data=True):
+        # This means the node is downstream of the hub
         if hub == u:
             h, o = u, v
-            if data['i'] != 'Complex':
-                node_stats[o]['up'].append(1)
-            else:
-                node_stats[o]['up'].append(0)
-        elif hub == v:
-            h, o = v, u
             if data['i'] != 'Complex':
                 node_stats[o]['up'].append(-1)
             else:
                 node_stats[o]['up'].append(0)
+        # This means the node is upstream of the hub
+        elif hub == v:
+            h, o = v, u
+            if data['i'] != 'Complex':
+                node_stats[o]['up'].append(1)
+            else:
+                node_stats[o]['up'].append(0)
         else:
             continue
-        node_stats[o]['interaction'].append(data['i'])
+        node_stats[o]['interaction'].append(edge_type_to_class(data['i']))
 
     node_classes = {}
     for node_id, stats in node_stats.items():
