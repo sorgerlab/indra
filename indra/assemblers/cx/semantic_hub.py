@@ -9,6 +9,8 @@ def find_hub(graph):
 
 
 def get_aspect(cx, aspect_name):
+    if isinstance(cx, dict):
+        return cx.get(aspect_name)
     for entry in cx:
         if list(entry.keys())[0] == aspect_name:
             return entry[aspect_name]
@@ -82,22 +84,22 @@ def cx_to_networkx(cx):
 def get_quadrant_from_class(node_class):
     up, edge_type, _ = node_class
     if up == 0:
-        return 0
-    mappings = {(1, 'modification'): 1,
-                (1, 'amount'): 2,
-                (1, 'activity'): 3,
-                (-1, 'activity'): 4,
-                (-1, 'amount'): 5,
-                (-1, 'modification'): 6}
+        return 0 if random.random() < 0.5 else 7
+    mappings = {(-1, 'modification'): 1,
+                (-1, 'amount'): 2,
+                (-1, 'activity'): 3,
+                (1, 'activity'): 4,
+                (1, 'amount'): 5,
+                (1, 'modification'): 6}
     return mappings[(up, edge_type)]
 
 
 def get_coordinates(node, node_class):
     quadrant_size = (2 * math.pi / 8.0)
     quadrant = get_quadrant_from_class(node_class)
-    center_angle = (quadrant_size / 2.0) + quadrant_size * quadrant
-    r = 100 + 200*random.random()
-    alpha = center_angle - (quadrant_size / 2.0) * random.random() * quadrant_size
+    begin_angle = quadrant_size * quadrant
+    r = 200 + 800*random.random()
+    alpha = begin_angle + random.random() * quadrant_size
     x = r * math.cos(alpha)
     y = r * math.sin(alpha)
     return (x, y)
@@ -105,12 +107,12 @@ def get_coordinates(node, node_class):
 
 def get_layout_aspect(graph, hub, node_classes):
     aspect = []
-    aspect.append({'@id': hub, 'x': 0.0, 'y': 0.0})
+    aspect.append({'node': hub, 'x': 0.0, 'y': 0.0})
     for node, node_class in node_classes.items():
         if node == hub:
             continue
         x, y = get_coordinates(node, node_class)
-        aspect.append({'@id': node, 'x': x, 'y': y})
+        aspect.append({'node': node, 'x': x, 'y': y})
     return aspect
 
 
