@@ -533,7 +533,7 @@ def extract_context(annotations, annot_manager):
         if ann:
             ref = annot_manager.get_mapping(bel_name, ann)
             if not ns:
-                db_ns, db_id = ref.split('_', maxsplit=2)
+                db_ns, db_id = ref.split('_', 1)
             else:
                 db_ns, db_id = ns, ref
             setattr(bc, indra_name,

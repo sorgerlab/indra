@@ -507,7 +507,7 @@ class ReachProcessor(object):
         def get_ref_context(lst):
             if not lst:
                 return None
-            db_name, db_id = lst[0].split(':', maxsplit=1)
+            db_name, db_id = lst[0].split(':', 1)
             return RefContext(db_refs={db_name.upper(): db_id})
 
         context = BioContext()
