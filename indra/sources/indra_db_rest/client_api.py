@@ -11,6 +11,7 @@ from time import sleep
 from os.path import join
 from threading import Thread
 from datetime import datetime
+from collections import OrderedDict
 
 from indra.util import clockit
 
@@ -103,7 +104,7 @@ class IndraDBRestResponse(object):
 
 def _query_and_extract(agent_strs, params):
     resp = _submit_query_request('statements', *agent_strs, **params)
-    resp_dict = resp.json()
+    resp_dict = resp.json(object_pairs_hook=OrderedDict)
     stmts_json = resp_dict['statements']
     total_ev = resp_dict['total_evidence']
     stmt_limit = resp_dict['statement_limit']
