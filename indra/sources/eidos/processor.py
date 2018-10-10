@@ -33,7 +33,7 @@ class EidosProcessor(object):
         self.sentence_dict = {}
         self.entity_dict = {}
         self.coreferences = {}
-        self.dct = {}
+        self.timexes = {}
         self._preprocess_extractions()
 
     def _preprocess_extractions(self):
@@ -53,12 +53,16 @@ class EidosProcessor(object):
         documents = self.tree.execute("$.documents[(@.@type is 'Document')]")
         self.sentence_dict = {}
         for document in documents:
-            sentences = document.get('sentences', [])
-            self.sentence_dict = {sent['@id']: sent for sent in sentences}
             dct = document.get('dct')
             # We stash the DCT here as a TimeContext object
             if dct is not None:
-                self.dct = {dct['@id']: self.time_context_from_dct(dct)}
+                self.timexes[dct['@id']] = self.time_context_from_dct(dct)
+            sentences = document.get('sentences', [])
+            for sent in sentences:
+                self.sentence_dict[sent['@id']] = sent
+                for timex in sent.get('timexes', []):
+                    tc = self.time_context_from_timex(timex)
+                    self.timexes[timex['@id']] = tc
 
         # Build a dictionary of coreferences
         for extraction in self.extractions:
@@ -94,8 +98,16 @@ class EidosProcessor(object):
 
             evidence = self.get_evidence(event)
 
+            # It is currently the case that time constraints for concepts
+            # are better stored as annotations and the Evidence level,
+            # we therefore move them over there.
+            subj_timex = subj_delta.pop('time_context', None)
+            obj_timex = obj_delta.pop('time_context', None)
+            evidence.annotations['subj_context'] = WorldContext(time=subj_timex).to_json()
+            evidence.annotations['obj_context'] = WorldContext(time=obj_timex).to_json()
+
             st = Influence(self.get_concept(subj), self.get_concept(obj),
-                           subj_delta, obj_delta, evidence=evidence)
+                           subj_delta, obj_delta, evidence=[evidence])
 
             self.statements.append(st)
 
@@ -121,7 +133,7 @@ class EidosProcessor(object):
             # Get the evidence
             evidence = self.get_evidence(event)
 
-            st = Association(members, evidence=evidence)
+            st = Association(members, evidence=[evidence])
             self.statements.append(st)
 
     def get_evidence(self, event):
@@ -167,7 +179,7 @@ class EidosProcessor(object):
 
         ev = Evidence(source_api='eidos', text=text, annotations=annotations,
                       context=context, epistemics=epistemics)
-        return [ev]
+        return ev
 
     @staticmethod
     def get_negation(event):
@@ -208,8 +220,7 @@ class EidosProcessor(object):
                     adjectives = [mod['text'] for mod in
                                   state.get('modifiers', [])]
             if state['type'] == 'TIMEX':
-                tc = self.time_context_from_dct_ref(state)
-                time_context = tc.to_json() if tc else None
+                time_context = self.time_context_from_ref(state)
         return {'polarity': polarity, 'adjectives': adjectives,
                 'time_context': time_context}
 
@@ -304,15 +315,15 @@ class EidosProcessor(object):
                          duration=duration)
         return tc
 
-    def time_context_from_dct_ref(self, timex):
-        # If the timex has a value set, it means that it refers to a DCT e.g.
-        # "value": {"@id": "_:DCT_1"} and the parameters need to be taken from
-        # there
+    def time_context_from_ref(self, timex):
+        # If the timex has a value set, it means that it refers to a DCT or
+        # a TimeExpression e.g. "value": {"@id": "_:DCT_1"} and the parameters
+        # need to be taken from there
         value = timex.get('value')
         if value:
             # Here we get the TimeContext directly from the stashed DCT
             # dictionary
-            tc = self.dct.get(value['@id'])
+            tc = self.timexes.get(value['@id'])
             if tc is None:
                 import ipdb; ipdb.set_trace()
             return tc
