@@ -203,6 +203,11 @@ class SignorProcessor(object):
             elif gnd_type is not None:
                 if database not in ('PUBCHEM', 'SIGNOR', 'ChEBI', 'miRBase'):
                     raise ValueError('Unexpected database %s' % database)
+                if database == 'PUBCHEM' and id.startswith('CID:'):
+                    # We take off the CID: prefix plus fix an issue with
+                    # SIGNOR's format in which it leaves extra spaces around
+                    # the ID, as in 'CID: 923'
+                    id = id[4:].strip()
                 db_refs = {gnd_type: id}
                 name = ent_name
             # If no grounding, include as an untyped/ungrounded node
