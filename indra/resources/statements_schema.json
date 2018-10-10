@@ -449,7 +449,7 @@
                     "properties": {
                         "type": {
                             "type": "string",
-                            "pattern": "^Complex$",
+                            "pattern": "^((Complex)|(Association))$",
                             "description": "The type of the statement"
                         },
                         "members": {
@@ -460,6 +460,14 @@
                         }
                     },
                     "required": ["type"]
+                }
+            ]
+        },
+        "Association": {
+            "description": "A set of unordered concepts that are associated with each other.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Complex"
                 }
             ]
         },
@@ -602,6 +610,7 @@
             {"$ref": "#/definitions/Gef"},
             {"$ref": "#/definitions/Gap"},
             {"$ref": "#/definitions/Complex"},
+            {"$ref": "#/definitions/Association"},
             {"$ref": "#/definitions/Translocation"},
             {"$ref": "#/definitions/RegulateAmount"},
             {"$ref": "#/definitions/Influence"},
