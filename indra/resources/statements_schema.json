@@ -142,13 +142,48 @@
                 }
             }
         },
+        "BioContext": {
+            "type": "object",
+            "description": "The biological context of a Statement.",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "pattern": "^bio$",
+                    "description": "The type of context, in this case 'bio'."
+                },
+                "location": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Cellular location, typically a sub-cellular compartment."
+                },
+                "cell_line": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Cell line context, e.g., a specific cell line, like BT20."
+                },
+                "cell_type": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Cell type context, broader than a cell line, like macrophage."
+                },
+                "organ": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Organ context."
+                },
+                "disease": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Disease context."
+                },
+                "species": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Species context."
+                }
+            }
+        },
         "WorldContext": {
             "type": "object",
             "description": "The temporal and spatial context of a Statement.",
             "properties": {
                 "type": {
                     "type": "string",
-                    "pattern": "^(world)$",
+                    "pattern": "^world$",
                     "description": "The type of context, in this case 'world'."
                 },
                 "time": {
