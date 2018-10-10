@@ -75,7 +75,7 @@ def test_get_agent():
     assert test_ag.matches(sp_ag)
     # Chemical
     test_ag = Agent('AZD1480', db_refs={'PUBCHEM': '16659841'})
-    sp_ag = sp._get_agent('AZD1480', 'chemical', '16659841',
+    sp_ag = sp._get_agent('AZD1480', 'chemical', 'CID: 16659841',
                                        'PUBCHEM')
     assert test_ag.matches(sp_ag)
     # Signor phenotype
