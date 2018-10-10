@@ -228,33 +228,6 @@ class EidosProcessor(object):
         return {'polarity': polarity, 'adjectives': adjectives,
                 'time_context': time_context}
 
-    '''
-    @staticmethod
-    def get_polarity(entity):
-        """Return the polarity of an entity."""
-        # The first state corresponds to increase/decrease
-        if 'states' not in entity:
-            return None
-        if entity['states'][0]['type'] == 'DEC':
-            return -1
-        elif entity['states'][0]['type'] == 'INC':
-            return 1
-        else:
-            return None
-
-    @staticmethod
-    def get_adjectives(entity):
-        """Return the adjectives of an entity."""
-        if 'states' in entity:
-            if 'modifiers' in entity['states'][0]:
-                return [mod['text'] for mod in
-                        entity['states'][0]['modifiers']]
-            else:
-                return []
-        else:
-            return []
-    '''
-
     @staticmethod
     def get_groundings(entity):
         """Return groundings as db_refs for an entity."""
@@ -311,6 +284,7 @@ class EidosProcessor(object):
 
     @staticmethod
     def time_context_from_dct(dct):
+        """Return a time context object given a DCT entry."""
         time_text = dct.get('text')
         start = _get_time_stamp(dct.get('start'))
         end = _get_time_stamp(dct.get('end'))
@@ -320,6 +294,7 @@ class EidosProcessor(object):
         return tc
 
     def time_context_from_ref(self, timex):
+        """Return a time context object given a timex reference entry."""
         # If the timex has a value set, it means that it refers to a DCT or
         # a TimeExpression e.g. "value": {"@id": "_:DCT_1"} and the parameters
         # need to be taken from there
@@ -328,11 +303,7 @@ class EidosProcessor(object):
             # Here we get the TimeContext directly from the stashed DCT
             # dictionary
             tc = self.timexes.get(value['@id'])
-            if tc is None:
-                import ipdb; ipdb.set_trace()
             return tc
-        else:
-            import ipdb; ipdb.set_trace()
         return None
 
     @staticmethod
