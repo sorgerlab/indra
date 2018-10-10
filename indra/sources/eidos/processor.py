@@ -33,7 +33,7 @@ class EidosProcessor(object):
         self.sentence_dict = {}
         self.entity_dict = {}
         self.coreferences = {}
-        self.dcts = {}
+        self.dct = {}
         self._preprocess_extractions()
 
     def _preprocess_extractions(self):
@@ -55,10 +55,10 @@ class EidosProcessor(object):
         for document in documents:
             sentences = document.get('sentences', [])
             self.sentence_dict = {sent['@id']: sent for sent in sentences}
-            dcts = document.get('dct', [])
-            # For each DCT we stash it here as a TimeContext object
-            self.dcts = {dct['@id']: self.time_context_from_timex(dct)
-                         for dct in dcts}
+            dct = document.get('dct')
+            # We stash the DCT here as a TimeContext object
+            if dct is not None:
+                self.dct = {dct['@id']: self.time_context_from_dct(dct)}
 
         # Build a dictionary of coreferences
         for extraction in self.extractions:
@@ -276,21 +276,17 @@ class EidosProcessor(object):
             return []
 
     @staticmethod
+    def time_context_from_dct(dct):
+        time_text = dct.get('text')
+        start = _get_time_stamp(dct.get('start'))
+        end = _get_time_stamp(dct.get('end'))
+        duration = dct.get('duration')
+        tc = TimeContext(text=time_text, start=start, end=end,
+                         duration=duration)
+        return tc
+
     def time_context_from_timex(self, timex):
         """Return a TimeContext object given a timex entry."""
-        def get_time_stamp(entry):
-            """Return datetime object from a timex constraint start/end entry.
-
-            Example string format to convert: 2018-01-01T00:00
-            """
-            if not entry or entry == 'Undef':
-                return None
-            try:
-                dt = datetime.datetime.strptime(entry, '%Y-%m-%dT%H:%M')
-            except Exception as e:
-                logger.warning('Could not parse %s format' % entry)
-                return None
-            return dt
         # If the timex has a value set, it means that it refers to a DCT e.g.
         # "value": {"@id": "_:DCT_1"} and the parameters need to be taken from
         # there
@@ -298,14 +294,14 @@ class EidosProcessor(object):
         if value:
             # Here we get the TimeContext directly from the stashed DCT
             # dictionary
-            tc = self.dcts.get(value['@id'])
+            tc = self.dct.get(value['@id'])
             return tc
         # Otherwise we need to process the timex entry itself
         else:
             time_text = timex.get('text')
             constraint = timex['intervals'][0]
-            start = get_time_stamp(constraint.get('start'))
-            end = get_time_stamp(constraint.get('end'))
+            start = _get_time_stamp(constraint.get('start'))
+            end = _get_time_stamp(constraint.get('end'))
             duration = constraint['duration']
             tc = TimeContext(text=time_text, start=start, end=end,
                              duration=duration)
@@ -316,3 +312,18 @@ def _sanitize(text):
     """Return sanitized Eidos text field for human readability."""
     d = {'-LRB-': '(', '-RRB-': ')'}
     return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+
+
+def _get_time_stamp(entry):
+    """Return datetime object from a timex constraint start/end entry.
+
+    Example string format to convert: 2018-01-01T00:00
+    """
+    if not entry or entry == 'Undef':
+        return None
+    try:
+        dt = datetime.datetime.strptime(entry, '%Y-%m-%dT%H:%M')
+    except Exception as e:
+        logger.warning('Could not parse %s format' % entry)
+        return None
+    return dt
