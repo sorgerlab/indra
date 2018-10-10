@@ -34,6 +34,7 @@ class EidosProcessor(object):
         self.entity_dict = {}
         self.coreferences = {}
         self.timexes = {}
+        self.dct = None
         self._preprocess_extractions()
 
     def _preprocess_extractions(self):
@@ -56,7 +57,8 @@ class EidosProcessor(object):
             dct = document.get('dct')
             # We stash the DCT here as a TimeContext object
             if dct is not None:
-                self.timexes[dct['@id']] = self.time_context_from_dct(dct)
+                self.dct = self.time_context_from_dct(dct)
+                self.timexes[dct['@id']] = self.dct
             sentences = document.get('sentences', [])
             for sent in sentences:
                 self.sentence_dict[sent['@id']] = sent
@@ -160,6 +162,8 @@ class EidosProcessor(object):
 
         annotations = {'found_by': event.get('rule'),
                        'provenance': provenance}
+        if self.dct is not None:
+            annotations['document_creation_time'] = self.dct.to_json()
 
         epistemics = {}
         negations = self.get_negation(event)
