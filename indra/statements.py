@@ -3329,8 +3329,9 @@ class TimeContext(object):
                 return date.strftime('%Y-%m-%dT%H:%M')
         jd = {'text': self.text,
               'start': date_to_str(self.start),
-              'end': date_to_str(self.end),
-              'duration': self.duration}
+              'end': date_to_str(self.end)}
+        if self.duration is not None:
+            jd['duration'] = self.duration
         return jd
 
     @classmethod

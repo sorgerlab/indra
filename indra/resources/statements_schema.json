@@ -131,6 +131,107 @@
             },
             "required": ["name", "db_refs"]
         },
+        "Context": {
+            "type": "object",
+            "description": "The context in which a given Statement was reported.",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "pattern": "^((bio)|(world))$",
+                    "description": "Either 'world' or 'bio', depending on the type of context being repersented."
+                }
+            }
+        },
+        "BioContext": {
+            "type": "object",
+            "description": "The biological context of a Statement.",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "pattern": "^bio$",
+                    "description": "The type of context, in this case 'bio'."
+                },
+                "location": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Cellular location, typically a sub-cellular compartment."
+                },
+                "cell_line": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Cell line context, e.g., a specific cell line, like BT20."
+                },
+                "cell_type": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Cell type context, broader than a cell line, like macrophage."
+                },
+                "organ": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Organ context."
+                },
+                "disease": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Disease context."
+                },
+                "species": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "Species context."
+                }
+            }
+        },
+        "WorldContext": {
+            "type": "object",
+            "description": "The temporal and spatial context of a Statement.",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "pattern": "^world$",
+                    "description": "The type of context, in this case 'world'."
+                },
+                "time": {
+                    "$ref": "#/definitions/TimeContext",
+                    "description": "The temporal context of a Statement."
+                },
+                "geo_location": {
+                    "$ref": "#/definitions/RefContext",
+                    "description": "The geographical context of a Statement."
+                }
+            }
+        },
+        "TimeContext": {
+            "type": "object",
+            "description": "Represents a temporal context.",
+            "properties": {
+                "text": {
+                    "type": "string",
+                    "description": "The text associated with the temporal context."
+                },
+                "start": {
+                    "type": "string",
+                    "description": "The start time of the temporal context."
+                },
+                "end": {
+                    "type": "string",
+                    "description": "The end time of the temporal context."
+                },
+                "duration": {
+                    "type": "string",
+                    "description": "The duration of the temporal context."
+                }
+            }
+        },
+        "RefContext": {
+            "type": "object",
+            "description": "Represents a context identified by name and grounding references.",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name associated with the context."
+                },
+                "db_refs": {
+                    "type": "object",
+                    "description": "Dictionary of database identifiers associated with this context."
+                }
+            }
+        },
         "Evidence": {
             "type": "object",
             "description": "Container for evidence supporting a given statement.",
@@ -383,7 +484,7 @@
                     "properties": {
                         "type": {
                             "type": "string",
-                            "pattern": "^Complex$",
+                            "pattern": "^((Complex)|(Association))$",
                             "description": "The type of the statement"
                         },
                         "members": {
@@ -394,6 +495,14 @@
                         }
                     },
                     "required": ["type"]
+                }
+            ]
+        },
+        "Association": {
+            "description": "A set of unordered concepts that are associated with each other.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Complex"
                 }
             ]
         },
@@ -536,6 +645,7 @@
             {"$ref": "#/definitions/Gef"},
             {"$ref": "#/definitions/Gap"},
             {"$ref": "#/definitions/Complex"},
+            {"$ref": "#/definitions/Association"},
             {"$ref": "#/definitions/Translocation"},
             {"$ref": "#/definitions/RegulateAmount"},
             {"$ref": "#/definitions/Influence"},

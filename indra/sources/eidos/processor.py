@@ -33,6 +33,8 @@ class EidosProcessor(object):
         self.sentence_dict = {}
         self.entity_dict = {}
         self.coreferences = {}
+        self.timexes = {}
+        self.dct = None
         self._preprocess_extractions()
 
     def _preprocess_extractions(self):
@@ -43,17 +45,26 @@ class EidosProcessor(object):
         # Listify for multiple reuse
         self.extractions = list(extractions)
 
-        # Build a dictionary of entities and sentences by ID for convenient
-        # lookup
+        # Build a dictionary of entities
         entities = [e for e in self.extractions if 'Concept' in
                     e.get('labels', [])]
         self.entity_dict = {entity['@id']: entity for entity in entities}
 
+        # Build a dictionary of sentences and document creation times (DCTs)
         documents = self.tree.execute("$.documents[(@.@type is 'Document')]")
         self.sentence_dict = {}
         for document in documents:
+            dct = document.get('dct')
+            # We stash the DCT here as a TimeContext object
+            if dct is not None:
+                self.dct = self.time_context_from_dct(dct)
+                self.timexes[dct['@id']] = self.dct
             sentences = document.get('sentences', [])
-            self.sentence_dict = {sent['@id']: sent for sent in sentences}
+            for sent in sentences:
+                self.sentence_dict[sent['@id']] = sent
+                for timex in sent.get('timexes', []):
+                    tc = self.time_context_from_timex(timex)
+                    self.timexes[timex['@id']] = tc
 
         # Build a dictionary of coreferences
         for extraction in self.extractions:
@@ -84,15 +95,21 @@ class EidosProcessor(object):
             subj = self.entity_dict[subj_id]
             obj = self.entity_dict[obj_id]
 
-            subj_delta = {'adjectives': self.get_adjectives(subj),
-                          'polarity': self.get_polarity(subj)}
-            obj_delta = {'adjectives': self.get_adjectives(obj),
-                         'polarity': self.get_polarity(obj)}
+            subj_delta = self.extract_entity_states(subj.get('states', []))
+            obj_delta = self.extract_entity_states(obj.get('states', []))
 
             evidence = self.get_evidence(event)
 
+            # It is currently the case that time constraints for concepts
+            # are better stored as annotations and the Evidence level,
+            # we therefore move them over there.
+            subj_timex = subj_delta.pop('time_context', None)
+            obj_timex = obj_delta.pop('time_context', None)
+            evidence.annotations['subj_context'] = WorldContext(time=subj_timex).to_json()
+            evidence.annotations['obj_context'] = WorldContext(time=obj_timex).to_json()
+
             st = Influence(self.get_concept(subj), self.get_concept(obj),
-                           subj_delta, obj_delta, evidence=evidence)
+                           subj_delta, obj_delta, evidence=[evidence])
 
             self.statements.append(st)
 
@@ -118,25 +135,11 @@ class EidosProcessor(object):
             # Get the evidence
             evidence = self.get_evidence(event)
 
-            st = Association(members, evidence=evidence)
+            st = Association(members, evidence=[evidence])
             self.statements.append(st)
 
     def get_evidence(self, event):
         """Return the Evidence object for the INDRA Statment."""
-        def get_time_stamp(entry):
-            """Return datetime object from a timex constraint start/end entry.
-
-            Example string format to convert: 2018-01-01T00:00
-            """
-            if not entry or entry == 'Undef':
-                return None
-            try:
-                dt = datetime.datetime.strptime(entry, '%Y-%m-%dT%H:%M')
-            except Exception as e:
-                logger.warning('Could not parse %s format' % entry)
-                return None
-            return dt
-
         provenance = event.get('provenance')
 
         # First try looking up the full sentence through provenance
@@ -152,17 +155,15 @@ class EidosProcessor(object):
                 # Get temporal constraints if available
                 timexes = sentence.get('timexes', [])
                 if timexes:
-                    time_text = timexes[0].get('text')
-                    constraint = timexes[0]['intervals'][0]
-                    start = get_time_stamp(constraint.get('start'))
-                    end = get_time_stamp(constraint.get('end'))
-                    duration = constraint['duration']
-                    tc = TimeContext(text=time_text, start=start, end=end,
-                                     duration=duration)
+                    # We currently handle just one timex per statement
+                    timex = timexes[0]
+                    tc = self.time_context_from_timex(timex)
                     context = WorldContext(time=tc)
 
         annotations = {'found_by': event.get('rule'),
                        'provenance': provenance}
+        if self.dct is not None:
+            annotations['document_creation_time'] = self.dct.to_json()
 
         epistemics = {}
         negations = self.get_negation(event)
@@ -182,7 +183,7 @@ class EidosProcessor(object):
 
         ev = Evidence(source_api='eidos', text=text, annotations=annotations,
                       context=context, epistemics=epistemics)
-        return [ev]
+        return ev
 
     @staticmethod
     def get_negation(event):
@@ -208,31 +209,24 @@ class EidosProcessor(object):
         hedging_texts = [hedging['text'] for hedging in hedgings]
         return hedging_texts
 
-
-    @staticmethod
-    def get_polarity(entity):
-        """Return the polarity of an entity."""
-        # The first state corresponds to increase/decrease
-        if 'states' not in entity:
-            return None
-        if entity['states'][0]['type'] == 'DEC':
-            return -1
-        elif entity['states'][0]['type'] == 'INC':
-            return 1
-        else:
-            return None
-
-    @staticmethod
-    def get_adjectives(entity):
-        """Return the adjectives of an entity."""
-        if 'states' in entity:
-            if 'modifiers' in entity['states'][0]:
-                return [mod['text'] for mod in
-                        entity['states'][0]['modifiers']]
-            else:
-                return []
-        else:
-            return []
+    def extract_entity_states(self, states):
+        polarity = None
+        adjectives = []
+        time_context = None
+        for state in states:
+            if polarity is None:
+                if state['type'] == 'DEC':
+                    polarity = -1
+                    adjectives = [mod['text'] for mod in
+                                  state.get('modifiers', [])]
+                elif state['type'] == 'INC':
+                    polarity = 1
+                    adjectives = [mod['text'] for mod in
+                                  state.get('modifiers', [])]
+            if state['type'] == 'TIMEX':
+                time_context = self.time_context_from_ref(state)
+        return {'polarity': polarity, 'adjectives': adjectives,
+                'time_context': time_context}
 
     @staticmethod
     def get_groundings(entity):
@@ -288,8 +282,59 @@ class EidosProcessor(object):
         else:
             return []
 
+    @staticmethod
+    def time_context_from_dct(dct):
+        """Return a time context object given a DCT entry."""
+        time_text = dct.get('text')
+        start = _get_time_stamp(dct.get('start'))
+        end = _get_time_stamp(dct.get('end'))
+        duration = dct.get('duration')
+        tc = TimeContext(text=time_text, start=start, end=end,
+                         duration=duration)
+        return tc
+
+    def time_context_from_ref(self, timex):
+        """Return a time context object given a timex reference entry."""
+        # If the timex has a value set, it means that it refers to a DCT or
+        # a TimeExpression e.g. "value": {"@id": "_:DCT_1"} and the parameters
+        # need to be taken from there
+        value = timex.get('value')
+        if value:
+            # Here we get the TimeContext directly from the stashed DCT
+            # dictionary
+            tc = self.timexes.get(value['@id'])
+            return tc
+        return None
+
+    @staticmethod
+    def time_context_from_timex(timex):
+        """Return a TimeContext object given a timex entry."""
+        time_text = timex.get('text')
+        constraint = timex['intervals'][0]
+        start = _get_time_stamp(constraint.get('start'))
+        end = _get_time_stamp(constraint.get('end'))
+        duration = constraint['duration']
+        tc = TimeContext(text=time_text, start=start, end=end,
+                         duration=duration)
+        return tc
+
 
 def _sanitize(text):
     """Return sanitized Eidos text field for human readability."""
     d = {'-LRB-': '(', '-RRB-': ')'}
     return re.sub('|'.join(d.keys()), lambda m: d[m.group(0)], text)
+
+
+def _get_time_stamp(entry):
+    """Return datetime object from a timex constraint start/end entry.
+
+    Example string format to convert: 2018-01-01T00:00
+    """
+    if not entry or entry == 'Undef':
+        return None
+    try:
+        dt = datetime.datetime.strptime(entry, '%Y-%m-%dT%H:%M')
+    except Exception as e:
+        logger.warning('Could not parse %s format' % entry)
+        return None
+    return dt
