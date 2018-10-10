@@ -46,19 +46,23 @@ class IndraDBRestError(Exception):
 
 class IndraDBRestResponse(object):
     """The packaging for query responses."""
-    def __init__(self, statement_jsons):
+    def __init__(self, statement_jsons, ev_totals):
         self.statements = []
         self.statements_sample = None
         self.statement_jsons = statement_jsons
         self.done = False
+        self.evidence_counts = ev_totals.copy()
         return
+
+    def get_ev_count(self, stmt):
+        """Get the total evidence count for a statement."""
+        return self.evidence_counts.get(str(stmt.get_hash(shallow=True)))
 
     def extend_statements(self, other_response):
         """Extend this object with new statements."""
         if not isinstance(other_response, self.__class__):
             raise ValueError("Can only extend with another %s instance."
                              % self.__class__.__name__)
-
         self.statements.extend(other_response.statements)
         if other_response.statements_sample is not None:
             if self.statements_sample is None:
@@ -66,11 +70,16 @@ class IndraDBRestResponse(object):
             else:
                 self.statements_sample.extend(other_response.statements_sample)
 
-        self.merge_json(other_response.statement_jsons)
+        self.merge_json(other_response.statement_jsons,
+                        other_response.evidence_counts)
         return
 
-    def merge_json(self, stmt_json):
+    def merge_json(self, stmt_json, ev_counts):
         """Merge these statement jsons with new jsons."""
+
+        # Where there is overlap, there _should_ be agreement.
+        self.evidence_counts.update(ev_counts)
+
         for k, sj in stmt_json.items():
             if k not in self.statement_jsons:
                 self.statement_jsons[k] = sj  # This should be most of them
@@ -107,13 +116,14 @@ def _query_and_extract(agent_strs, params):
     resp_dict = resp.json(object_pairs_hook=OrderedDict)
     stmts_json = resp_dict['statements']
     total_ev = resp_dict['total_evidence']
+    ev_totals = resp_dict['evidence_totals']
     stmt_limit = resp_dict['statement_limit']
 
     # NOTE: this is technically not a direct conclusion, and could be wrong,
     # resulting in an unnecessary extra query, but that should almost never
     # happen.
     limited = (len(stmts_json) == stmt_limit)
-    return stmts_json, limited, stmt_limit
+    return stmts_json, limited, stmt_limit, ev_totals
 
 
 def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
@@ -125,11 +135,11 @@ def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
         # Get the next page.
         offset = offset + offset_step
         params['offset'] = offset
-        new_stmts_json, limited, _ = \
+        new_stmts_json, limited, _, ev_totals = \
             _query_and_extract(agent_strs, params)
 
         # Merge in the new results
-        ret.merge_json(new_stmts_json)
+        ret.merge_json(new_stmts_json, ev_totals)
 
     # Create the actual statements.
     ret.compile_statements()
@@ -140,10 +150,11 @@ def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
 def _make_stmts_query(agent_strs, params, persist=True, block=True):
     """Slightly lower level function to get statements from the REST API."""
     # Perform the first (and last?) query
-    stmts_json, limited, stmt_limit = _query_and_extract(agent_strs, params)
+    stmts_json, limited, stmt_limit, ev_totals = \
+        _query_and_extract(agent_strs, params)
 
     # Initialize the return dict.
-    ret = IndraDBRestResponse(stmts_json)
+    ret = IndraDBRestResponse(stmts_json, ev_totals)
 
     # Handle the content if we were limited.
     if limited:
