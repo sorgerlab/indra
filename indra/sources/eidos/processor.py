@@ -89,10 +89,8 @@ class EidosProcessor(object):
             subj = self.entity_dict[subj_id]
             obj = self.entity_dict[obj_id]
 
-            subj_delta = {'adjectives': self.get_adjectives(subj),
-                          'polarity': self.get_polarity(subj)}
-            obj_delta = {'adjectives': self.get_adjectives(obj),
-                         'polarity': self.get_polarity(obj)}
+            subj_delta = self.extract_entity_states(subj.get('states', []))
+            obj_delta = self.extract_entity_states(obj.get('states', []))
 
             evidence = self.get_evidence(event)
 
@@ -195,7 +193,24 @@ class EidosProcessor(object):
         hedging_texts = [hedging['text'] for hedging in hedgings]
         return hedging_texts
 
+    def extract_entity_states(self, states):
+        polarity = None
+        adjectives = []
+        time_context = None
+        for state in states:
+            if polarity is None:
+                if state['type'] == 'DEC':
+                    polarity = -1
+                    adjectives = state.get('modifiers', [])
+                elif state['type'] == 'INC':
+                    polarity = 1
+                    adjectives = state.get('modifiers', [])
+            if state['type'] == 'TIMEX':
+                time_context = self.time_context_from_timex(state)
+        return {'polarity': polarity, 'adjectives': adjectives,
+                'time_context': time_context}
 
+    '''
     @staticmethod
     def get_polarity(entity):
         """Return the polarity of an entity."""
@@ -220,6 +235,7 @@ class EidosProcessor(object):
                 return []
         else:
             return []
+    '''
 
     @staticmethod
     def get_groundings(entity):
