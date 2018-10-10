@@ -201,12 +201,15 @@ class EidosProcessor(object):
             if polarity is None:
                 if state['type'] == 'DEC':
                     polarity = -1
-                    adjectives = state.get('modifiers', [])
+                    adjectives = [mod['text'] for mod in
+                                  state.get('modifiers', [])]
                 elif state['type'] == 'INC':
                     polarity = 1
-                    adjectives = state.get('modifiers', [])
+                    adjectives = [mod['text'] for mod in
+                                  state.get('modifiers', [])]
             if state['type'] == 'TIMEX':
-                time_context = self.time_context_from_timex(state)
+                tc = self.time_context_from_dct_ref(state)
+                time_context = tc.to_json() if tc else None
         return {'polarity': polarity, 'adjectives': adjectives,
                 'time_context': time_context}
 
@@ -301,8 +304,7 @@ class EidosProcessor(object):
                          duration=duration)
         return tc
 
-    def time_context_from_timex(self, timex):
-        """Return a TimeContext object given a timex entry."""
+    def time_context_from_dct_ref(self, timex):
         # If the timex has a value set, it means that it refers to a DCT e.g.
         # "value": {"@id": "_:DCT_1"} and the parameters need to be taken from
         # there
@@ -311,16 +313,23 @@ class EidosProcessor(object):
             # Here we get the TimeContext directly from the stashed DCT
             # dictionary
             tc = self.dct.get(value['@id'])
+            if tc is None:
+                import ipdb; ipdb.set_trace()
             return tc
-        # Otherwise we need to process the timex entry itself
         else:
-            time_text = timex.get('text')
-            constraint = timex['intervals'][0]
-            start = _get_time_stamp(constraint.get('start'))
-            end = _get_time_stamp(constraint.get('end'))
-            duration = constraint['duration']
-            tc = TimeContext(text=time_text, start=start, end=end,
-                             duration=duration)
+            import ipdb; ipdb.set_trace()
+        return None
+
+    @staticmethod
+    def time_context_from_timex(timex):
+        """Return a TimeContext object given a timex entry."""
+        time_text = timex.get('text')
+        constraint = timex['intervals'][0]
+        start = _get_time_stamp(constraint.get('start'))
+        end = _get_time_stamp(constraint.get('end'))
+        duration = constraint['duration']
+        tc = TimeContext(text=time_text, start=start, end=end,
+                         duration=duration)
         return tc
 
 
