@@ -17,11 +17,12 @@ ndex_base_url = 'http://52.37.175.128'
 
 def get_default_ndex_cred(ndex_cred):
     """Gets the NDEx credentials from the dict, or tries the environment if None"""
-    username = ndex_cred.get('user')
-    password = ndex_cred.get('password')
+    if ndex_cred:
+        username = ndex_cred.get('user')
+        password = ndex_cred.get('password')
 
-    if username is not None and password is not None:
-        return username, password
+        if username is not None and password is not None:
+            return username, password
 
     username = get_config('NDEX_USERNAME')
     password = get_config('NDEX_PASSWORD')
@@ -88,7 +89,7 @@ def send_request(ndex_service_url, params, is_json=True, use_get=False):
         return res.text
 
 
-def create_network(cx_str, ndex_cred, private=True):
+def create_network(cx_str, ndex_cred=None, private=True):
     """Creates a new NDEx network of the assembled CX model.
 
     To upload the assembled CX model to NDEx, you need to have
@@ -130,7 +131,7 @@ def create_network(cx_str, ndex_cred, private=True):
     return network_id
 
 
-def update_network(cx_str, network_id, ndex_cred):
+def update_network(cx_str, network_id, ndex_cred=None):
     """Update an existing CX network on NDEx with new CX content.
 
     Parameters
@@ -188,7 +189,7 @@ def update_network(cx_str, network_id, ndex_cred):
     set_style(network_id, ndex_cred)
 
 
-def set_style(network_id, ndex_cred):
+def set_style(network_id, ndex_cred=None):
     # Update network style
     template_uuid = "ea4ea3b7-6903-11e7-961c-0ac135e8bacf"
 
@@ -206,7 +207,7 @@ def set_style(network_id, ndex_cred):
                              password=password)
 
 
-def set_provenance(provenance, network_id, ndex_cred):
+def set_provenance(provenance, network_id, ndex_cred=None):
     server = 'http://public.ndexbio.org'
     username, password = get_default_ndex_cred(ndex_cred)
     nd = ndex2.client.Ndex2(server, username, password)

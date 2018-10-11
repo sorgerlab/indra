@@ -140,7 +140,7 @@ class CxAssembler(object):
         full_cx['numberVerification'] = [{'longNumber': 281474976710655}]
         aspects = ['nodes', 'edges', 'supports', 'citations', 'edgeAttributes',
                    'edgeCitations', 'edgeSupports', 'networkAttributes',
-                   'nodeAttributes']
+                   'nodeAttributes', 'cartesianLayout']
         full_cx['metaData'] = []
         for aspect in aspects:
             metadata = _get_aspect_metadata(aspect)
@@ -182,7 +182,7 @@ class CxAssembler(object):
             A dictionary with the following entries:
             'user': NDEx user name
             'password': NDEx password
-        
+
         private : Optional[bool]
             Whether or not the created network will be private on NDEX.
 
@@ -512,6 +512,7 @@ def _get_agent_type(agent):
     pubchem_id = agent.db_refs.get('PUBCHEM')
     be_id = agent.db_refs.get('FPLX')
     go_id = agent.db_refs.get('GO')
+    mir_id = agent.db_refs.get('MIRBASEM') or agent.db_refs.get('MIRBASE')
     if hgnc_id or uniprot_id:
         agent_type = 'protein'
     elif pfam_id or fa_id or be_id:
@@ -520,6 +521,8 @@ def _get_agent_type(agent):
         agent_type = 'chemical'
     elif go_id:
         agent_type = 'bioprocess'
+    elif mir_id:
+        agent_type = 'microrna'
     else:
         agent_type = 'other'
     return agent_type
