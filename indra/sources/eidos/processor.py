@@ -108,6 +108,12 @@ class EidosProcessor(object):
             evidence.annotations['subj_context'] = WorldContext(time=subj_timex).to_json()
             evidence.annotations['obj_context'] = WorldContext(time=obj_timex).to_json()
 
+            # In addition, for the time being we also put the adjectives into
+            # annotations since they could otherwise get squashed upon
+            # preassembly
+            evidence.annotations['subj_adjectives'] = subj_delta['adjectives']
+            evidence.annotations['obj_adjectives'] = obj_delta['adjectives']
+
             st = Influence(self.get_concept(subj), self.get_concept(obj),
                            subj_delta, obj_delta, evidence=[evidence])
 
