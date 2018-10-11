@@ -2899,6 +2899,7 @@ class Influence(IncreaseAmount):
         json_dict['obj'] = generic['obj']
         json_dict['obj_delta'] = self.obj_delta
         json_dict.update(generic)
+        del json_dict['sbo']
         if json_dict['subj'].get('sbo'):
             json_dict['subj'].pop('sbo')
         if json_dict['obj'].get('sbo'):
