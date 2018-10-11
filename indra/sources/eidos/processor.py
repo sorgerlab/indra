@@ -217,12 +217,14 @@ class EidosProcessor(object):
             if polarity is None:
                 if state['type'] == 'DEC':
                     polarity = -1
-                    adjectives = [mod['text'] for mod in
-                                  state.get('modifiers', [])]
+                    adjectives += [mod['text'] for mod in
+                                   state.get('modifiers', [])]
                 elif state['type'] == 'INC':
                     polarity = 1
-                    adjectives = [mod['text'] for mod in
-                                  state.get('modifiers', [])]
+                    adjectives += [mod['text'] for mod in
+                                   state.get('modifiers', [])]
+                elif state['type'] == 'QUANT':
+                    adjectives.append(state['text'])
             if state['type'] == 'TIMEX':
                 time_context = self.time_context_from_ref(state)
         return {'polarity': polarity, 'adjectives': adjectives,
