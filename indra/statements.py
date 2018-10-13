@@ -1547,7 +1547,7 @@ class Modification(Statement):
         return mc
 
     def to_json(self, use_sbo=True):
-        generic = super(Modification, self).to_json()
+        generic = super(Modification, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
@@ -1674,7 +1674,7 @@ class SelfModification(Statement):
         return mc
 
     def to_json(self, use_sbo=True):
-        generic = super(SelfModification, self).to_json()
+        generic = super(SelfModification, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
@@ -1945,7 +1945,7 @@ class RegulateActivity(Statement):
         return True
 
     def to_json(self, use_sbo=True):
-        generic = super(RegulateActivity, self).to_json()
+        generic = super(RegulateActivity, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
@@ -2168,7 +2168,7 @@ class ActiveForm(Statement):
         return False
 
     def to_json(self, use_sbo=True):
-        generic = super(ActiveForm, self).to_json()
+        generic = super(ActiveForm, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
@@ -2345,7 +2345,7 @@ class Gef(Statement):
         return matches
 
     def to_json(self, use_sbo=True):
-        generic = super(Gef, self).to_json()
+        generic = super(Gef, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
@@ -2432,7 +2432,7 @@ class Gap(Statement):
         return matches
 
     def to_json(self, use_sbo=True):
-        generic = super(Gap, self).to_json()
+        generic = super(Gap, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
@@ -2547,8 +2547,8 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
-    def to_json(self):
-        generic = super(Complex, self).to_json()
+    def to_json(self, use_sbo=True):
+        generic = super(Complex, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
@@ -2626,8 +2626,8 @@ class Translocation(Statement):
                str(self.to_location))
         return str(key)
 
-    def to_json(self):
-        generic = super(Translocation, self).to_json()
+    def to_json(self, use_sbo=True):
+        generic = super(Translocation, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict['agent'] = self.agent.to_json()
         if self.from_location is not None:
@@ -2680,7 +2680,7 @@ class RegulateAmount(Statement):
         self.obj = agent_list[1]
 
     def to_json(self, use_sbo=True):
-        generic = super(RegulateAmount, self).to_json()
+        generic = super(RegulateAmount, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
@@ -3006,7 +3006,7 @@ class Conversion(Statement):
         self.obj_to = agent_list[num_obj_from+1:]
 
     def to_json(self, use_sbo=True):
-        generic = super(Conversion, self).to_json()
+        generic = super(Conversion, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
