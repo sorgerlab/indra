@@ -6,7 +6,7 @@ import sys
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
     # for Python 3)
-    install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
+    install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.2',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
                     'networkx>=2', 'pandas']
     if sys.version_info[0] == 2:
