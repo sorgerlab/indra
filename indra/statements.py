@@ -1311,7 +1311,19 @@ class Statement(object):
         return False
 
     def to_json(self, use_sbo=False):
-        """Return serialized Statement as a json dict."""
+        """Return serialized Statement as a JSON dict.
+
+        Parameters
+        ----------
+        use_sbo : Optional[bool]
+            If True, SBO annotations are added to each applicable element of
+            the JSON. Default: False
+
+        Returns
+        -------
+        json_dict : dict
+            The JSON-serialized INDRA Statement.
+        """
         stmt_type = type(self).__name__
         # Original comment: For backwards compatibility, could be removed later
         all_stmts = [self] + self.supports + self.supported_by
@@ -3460,6 +3472,21 @@ def get_unresolved_support_uuids(stmts):
 
 
 def stmts_to_json(stmts_in, use_sbo=False):
+    """Return the JSON-serialized form of one or more INDRA Statements.
+
+    Parameters
+    ----------
+    stmts_in : Statement or list[Statement]
+        A Statement or list of Statement objects to serialize into JSON.
+    use_sbo : Optional[bool]
+        If True, SBO annotations are added to each applicable element of the
+        JSON. Default: False
+
+    Returns
+    -------
+    json_dict : dict
+        JSON-serialized INDRA Statements.
+    """
     if not isinstance(stmts_in, list):
         json_dict = stmts_in.to_json(use_sbo)
         return json_dict
