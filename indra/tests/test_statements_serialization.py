@@ -104,6 +104,9 @@ def test_influence():
     jd = stmt.to_json()
     assert 'sbo' not in jd['subj']
     assert 'sbo' not in jd['obj']
+    jd_sbo = stmt.to_json(use_sbo=True)
+    assert 'sbo' in jd_sbo['subj']
+    assert 'sbo' in jd_sbo['obj']
     stmt.to_graph()
     st_deserialize = Statement._from_json(jd)
     assert st_deserialize.subj_delta['polarity'] == 1

@@ -1310,7 +1310,7 @@ class Statement(object):
         # Placeholder for implementation in subclasses
         return False
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         """Return serialized Statement as a json dict."""
         stmt_type = type(self).__name__
         # Original comment: For backwards compatibility, could be removed later
@@ -1546,7 +1546,7 @@ class Modification(Statement):
         mc = ModCondition(mod_type, self.residue, self.position, True)
         return mc
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(Modification, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
@@ -1673,7 +1673,7 @@ class SelfModification(Statement):
         mc = ModCondition(mod_type, self.residue, self.position, True)
         return mc
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(SelfModification, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
@@ -1944,7 +1944,7 @@ class RegulateActivity(Statement):
         # Otherwise they are contradicting
         return True
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(RegulateActivity, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
@@ -2167,7 +2167,7 @@ class ActiveForm(Statement):
                 return True
         return False
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(ActiveForm, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict.update({'agent': self.agent.to_json(),
@@ -2344,7 +2344,7 @@ class Gef(Statement):
         matches = super(Gef, self).equals(other)
         return matches
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(Gef, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.gef is not None:
@@ -2431,7 +2431,7 @@ class Gap(Statement):
         matches = super(Gap, self).equals(other)
         return matches
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(Gap, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.gap is not None:
@@ -2547,7 +2547,7 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(Complex, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         members = [m.to_json() for m in self.members]
@@ -2626,7 +2626,7 @@ class Translocation(Statement):
                str(self.to_location))
         return str(key)
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(Translocation, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict['agent'] = self.agent.to_json()
@@ -2679,7 +2679,7 @@ class RegulateAmount(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(RegulateAmount, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
@@ -3005,7 +3005,7 @@ class Conversion(Statement):
         self.obj_from = agent_list[1:num_obj_from+1]
         self.obj_to = agent_list[num_obj_from+1:]
 
-    def to_json(self, use_sbo=True):
+    def to_json(self, use_sbo=False):
         generic = super(Conversion, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
@@ -3459,7 +3459,7 @@ def get_unresolved_support_uuids(stmts):
             if isinstance(s, Unresolved)}
 
 
-def stmts_to_json(stmts_in, use_sbo=True):
+def stmts_to_json(stmts_in, use_sbo=False):
     if not isinstance(stmts_in, list):
         json_dict = stmts_in.to_json(use_sbo)
         return json_dict
