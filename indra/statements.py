@@ -1310,10 +1310,22 @@ class Statement(object):
         # Placeholder for implementation in subclasses
         return False
 
-    def to_json(self):
-        """Return serialized Statement as a json dict."""
+    def to_json(self, use_sbo=False):
+        """Return serialized Statement as a JSON dict.
+
+        Parameters
+        ----------
+        use_sbo : Optional[bool]
+            If True, SBO annotations are added to each applicable element of
+            the JSON. Default: False
+
+        Returns
+        -------
+        json_dict : dict
+            The JSON-serialized INDRA Statement.
+        """
         stmt_type = type(self).__name__
-        # Oringal comment: For backwards compatibility, could be removed later
+        # Original comment: For backwards compatibility, could be removed later
         all_stmts = [self] + self.supports + self.supported_by
         for st in all_stmts:
             if not hasattr(st, 'uuid'):
@@ -1339,9 +1351,10 @@ class Statement(object):
                 sbo_term = stmt_sbo_map.get(cls.__name__.lower())
             return sbo_term
 
-        sbo_term = get_sbo_term(self.__class__)
-        json_dict['sbo'] = \
-            'http://identifiers.org/sbo/SBO:%s' % sbo_term
+        if use_sbo:
+            sbo_term = get_sbo_term(self.__class__)
+            json_dict['sbo'] = \
+                'http://identifiers.org/sbo/SBO:%s' % sbo_term
         return json_dict
 
     @classmethod
@@ -1545,17 +1558,21 @@ class Modification(Statement):
         mc = ModCondition(mod_type, self.residue, self.position, True)
         return mc
 
-    def to_json(self):
-        generic = super(Modification, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Modification, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
-            json_dict['enz']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000460'  # enzymatic catalyst
+            if use_sbo:
+                # enzymatic catalyst
+                json_dict['enz']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000460'
         if self.sub is not None:
             json_dict['sub'] = self.sub.to_json()
-            json_dict['sub']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000015'  # substrate
+            if use_sbo:
+                # substrate
+                json_dict['sub']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000015'
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1668,13 +1685,15 @@ class SelfModification(Statement):
         mc = ModCondition(mod_type, self.residue, self.position, True)
         return mc
 
-    def to_json(self):
-        generic = super(SelfModification, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(SelfModification, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.enz is not None:
             json_dict['enz'] = self.enz.to_json()
-            json_dict['enz']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000460'  # enzymatic catalyst
+            if use_sbo:
+                # enzymatic catalyst
+                json_dict['enz']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000460'
         if self.residue is not None:
             json_dict['residue'] = self.residue
         if self.position is not None:
@@ -1937,25 +1956,27 @@ class RegulateActivity(Statement):
         # Otherwise they are contradicting
         return True
 
-    def to_json(self):
-        generic = super(RegulateActivity, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(RegulateActivity, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
-            if self.is_activation:
-                json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000459'  # stimulator
-            else:
-                json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
+            if use_sbo:
+                if self.is_activation:
+                    json_dict['subj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000459'  # stimulator
+                else:
+                    json_dict['subj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
-            if self.is_activation:
-                json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000643'  # stimulated
-            else:
-                json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000642'  # inhibited
+            if use_sbo:
+                if self.is_activation:
+                    json_dict['obj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000643'  # stimulated
+                else:
+                    json_dict['obj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000642'  # inhibited
         if self.obj_activity is not None:
             json_dict['obj_activity'] = self.obj_activity
         json_dict.update(generic)
@@ -2158,14 +2179,15 @@ class ActiveForm(Statement):
                 return True
         return False
 
-    def to_json(self):
-        generic = super(ActiveForm, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(ActiveForm, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict.update({'agent': self.agent.to_json(),
                           'activity': self.activity,
                           'is_active': self.is_active})
-        json_dict['agent']['sbo'] = \
-            'http://identifiers.org/sbo/SBO:0000644'  # modified
+        if use_sbo:
+            json_dict['agent']['sbo'] = \
+                'http://identifiers.org/sbo/SBO:0000644'  # modified
         json_dict.update(generic)
         return json_dict
 
@@ -2334,17 +2356,19 @@ class Gef(Statement):
         matches = super(Gef, self).equals(other)
         return matches
 
-    def to_json(self):
-        generic = super(Gef, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Gef, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.gef is not None:
             json_dict['gef'] = self.gef.to_json()
-            json_dict['gef']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000013'  # catalyst
+            if use_sbo:
+                json_dict['gef']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000013'  # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
-            json_dict['ras']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000015'  # substrate
+            if use_sbo:
+                json_dict['ras']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000015'  # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -2419,17 +2443,19 @@ class Gap(Statement):
         matches = super(Gap, self).equals(other)
         return matches
 
-    def to_json(self):
-        generic = super(Gap, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Gap, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.gap is not None:
             json_dict['gap'] = self.gap.to_json()
-            json_dict['gap']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000013'  # catalyst
+            if use_sbo:
+                json_dict['gap']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000013'  # catalyst
         if self.ras is not None:
             json_dict['ras'] = self.ras.to_json()
-            json_dict['ras']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000015'  # substrate
+            if use_sbo:
+                json_dict['ras']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000015'  # substrate
         json_dict.update(generic)
         return json_dict
 
@@ -2533,8 +2559,8 @@ class Complex(Statement):
         matches = super(Complex, self).equals(other)
         return matches
 
-    def to_json(self):
-        generic = super(Complex, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Complex, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         members = [m.to_json() for m in self.members]
         json_dict['members'] = members
@@ -2612,8 +2638,8 @@ class Translocation(Statement):
                str(self.to_location))
         return str(key)
 
-    def to_json(self):
-        generic = super(Translocation, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Translocation, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict['agent'] = self.agent.to_json()
         if self.from_location is not None:
@@ -2665,25 +2691,27 @@ class RegulateAmount(Statement):
         self.subj = agent_list[0]
         self.obj = agent_list[1]
 
-    def to_json(self):
-        generic = super(RegulateAmount, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(RegulateAmount, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
-            if isinstance(self, IncreaseAmount):
-                json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000459'  # stimulator
-            else:
-                json_dict['subj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
+            if use_sbo:
+                if isinstance(self, IncreaseAmount):
+                    json_dict['subj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000459'  # stimulator
+                else:
+                    json_dict['subj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000020'  # inhibitor
         if self.obj is not None:
             json_dict['obj'] = self.obj.to_json()
-            if isinstance(self, IncreaseAmount):
-                json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000011'  # product
-            else:
-                json_dict['obj']['sbo'] = \
-                    'http://identifiers.org/sbo/SBO:0000010'  # reactant
+            if use_sbo:
+                if isinstance(self, IncreaseAmount):
+                    json_dict['obj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000011'  # product
+                else:
+                    json_dict['obj']['sbo'] = \
+                        'http://identifiers.org/sbo/SBO:0000010'  # reactant
         json_dict.update(generic)
         return json_dict
 
@@ -2891,19 +2919,14 @@ class Influence(IncreaseAmount):
             pol = p1 * p2
         return pol
 
-    def to_json(self):
-        generic = super(Influence, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Influence, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         json_dict['subj'] = generic['subj']
         json_dict['subj_delta'] = self.subj_delta
         json_dict['obj'] = generic['obj']
         json_dict['obj_delta'] = self.obj_delta
         json_dict.update(generic)
-        del json_dict['sbo']
-        if json_dict['subj'].get('sbo'):
-            json_dict['subj'].pop('sbo')
-        if json_dict['obj'].get('sbo'):
-            json_dict['obj'].pop('sbo')
         return json_dict
 
     @classmethod
@@ -2994,21 +3017,24 @@ class Conversion(Statement):
         self.obj_from = agent_list[1:num_obj_from+1]
         self.obj_to = agent_list[num_obj_from+1:]
 
-    def to_json(self):
-        generic = super(Conversion, self).to_json()
+    def to_json(self, use_sbo=False):
+        generic = super(Conversion, self).to_json(use_sbo)
         json_dict = _o({'type': generic['type']})
         if self.subj is not None:
             json_dict['subj'] = self.subj.to_json()
-            json_dict['subj']['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000013'  # catalyst
+            if use_sbo:
+                json_dict['subj']['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000013'  # catalyst
         json_dict['obj_from'] = [o.to_json() for o in self.obj_from]
-        for of in json_dict['obj_from']:
-            of['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000010'  # reactant
+        if use_sbo:
+            for of in json_dict['obj_from']:
+                of['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000010'  # reactant
         json_dict['obj_to'] = [o.to_json() for o in self.obj_to]
-        for ot in json_dict['obj_to']:
-            ot['sbo'] = \
-                'http://identifiers.org/sbo/SBO:0000011'  # product
+        if use_sbo:
+            for ot in json_dict['obj_to']:
+                ot['sbo'] = \
+                    'http://identifiers.org/sbo/SBO:0000011'  # product
         json_dict.update(generic)
         return json_dict
 
@@ -3445,12 +3471,27 @@ def get_unresolved_support_uuids(stmts):
             if isinstance(s, Unresolved)}
 
 
-def stmts_to_json(stmts_in):
+def stmts_to_json(stmts_in, use_sbo=False):
+    """Return the JSON-serialized form of one or more INDRA Statements.
+
+    Parameters
+    ----------
+    stmts_in : Statement or list[Statement]
+        A Statement or list of Statement objects to serialize into JSON.
+    use_sbo : Optional[bool]
+        If True, SBO annotations are added to each applicable element of the
+        JSON. Default: False
+
+    Returns
+    -------
+    json_dict : dict
+        JSON-serialized INDRA Statements.
+    """
     if not isinstance(stmts_in, list):
-        json_dict = stmts_in.to_json()
+        json_dict = stmts_in.to_json(use_sbo)
         return json_dict
     else:
-        json_dict = [st.to_json() for st in stmts_in]
+        json_dict = [st.to_json(use_sbo) for st in stmts_in]
     return json_dict
 
 
