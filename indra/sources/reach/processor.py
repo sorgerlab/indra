@@ -210,7 +210,7 @@ class ReachProcessor(object):
                 sentence = reg['verbose-text']
 
                 ev = Evidence(source_api='reach', text=sentence,
-                              annotations=context, pmid=self.citation,
+                              annotations=annotations, pmid=self.citation,
                               context=context, epistemics=epistemics)
                 args = [controller_agent, theme_agent, ev]
                 subtype = reg.get('subtype')
