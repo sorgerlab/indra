@@ -30,8 +30,9 @@ class EidosProcessor(object):
         self.tree = objectpath.Tree(json_dict)
         self.statements = []
         self.extractions = []
-        self.sentence_dict = {}
-        self.entity_dict = {}
+        self.sentences = {}
+        self.entities = {}
+        self.documents = {}
         self.coreferences = {}
         self.timexes = {}
         self.dct = None
@@ -48,20 +49,22 @@ class EidosProcessor(object):
         # Build a dictionary of entities
         entities = [e for e in self.extractions if 'Concept' in
                     e.get('labels', [])]
-        self.entity_dict = {entity['@id']: entity for entity in entities}
+        self.entities = {entity['@id']: entity for entity in entities}
 
         # Build a dictionary of sentences and document creation times (DCTs)
         documents = self.tree.execute("$.documents[(@.@type is 'Document')]")
-        self.sentence_dict = {}
+        self.sentences = {}
         for document in documents:
             dct = document.get('dct')
+            title = document.get('title')
+            self.documents[document['@id']] = {'title': title}
             # We stash the DCT here as a TimeContext object
             if dct is not None:
                 self.dct = self.time_context_from_dct(dct)
                 self.timexes[dct['@id']] = self.dct
             sentences = document.get('sentences', [])
             for sent in sentences:
-                self.sentence_dict[sent['@id']] = sent
+                self.sentences[sent['@id']] = sent
                 for timex in sent.get('timexes', []):
                     tc = self.time_context_from_timex(timex)
                     self.timexes[timex['@id']] = tc
@@ -92,8 +95,8 @@ class EidosProcessor(object):
             obj_id = self.coreferences.get(obj_id, obj_id)
 
             # Get the actual entities
-            subj = self.entity_dict[subj_id]
-            obj = self.entity_dict[obj_id]
+            subj = self.entities[subj_id]
+            obj = self.entities[obj_id]
 
             subj_delta = self.extract_entity_states(subj.get('states', []))
             obj_delta = self.extract_entity_states(obj.get('states', []))
@@ -135,7 +138,7 @@ class EidosProcessor(object):
                        for arg_id in arg_ids]
 
             # Get the actual entities
-            args = [self.entity_dict[arg_id] for arg_id in arg_ids]
+            args = [self.entities[arg_id] for arg_id in arg_ids]
             # Make Concepts from the entities
             members = [self.get_concept(arg) for arg in args]
             # Get the evidence
@@ -155,7 +158,7 @@ class EidosProcessor(object):
             sentence_tag = provenance[0].get('sentence')
             if sentence_tag and '@id' in sentence_tag:
                 sentence_id = sentence_tag['@id']
-                sentence = self.sentence_dict.get(sentence_id)
+                sentence = self.sentences.get(sentence_id)
                 if sentence is not None:
                     text = _sanitize(sentence['text'])
                 # Get temporal constraints if available
@@ -165,9 +168,17 @@ class EidosProcessor(object):
                     timex = timexes[0]
                     tc = self.time_context_from_timex(timex)
                     context = WorldContext(time=tc)
+            # Here we try to get the title of the document and set it
+            # in the provenance
+            doc_id = provenance[0].get('document', {}).get('@id')
+            if doc_id:
+                title = self.documents.get(doc_id, {}).get('title')
+                if title:
+                    provenance[0]['document']['title'] = title
 
         annotations = {'found_by': event.get('rule'),
                        'provenance': provenance}
+        print(provenance)
         if self.dct is not None:
             annotations['document_creation_time'] = self.dct.to_json()
 
