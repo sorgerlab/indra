@@ -347,7 +347,7 @@ def get_piis_for_date(query_str, date):
     return all_piis
 
 
-def download_from_search(query_str, folder):
+def download_from_search(query_str, folder, do_extract_text=True):
     """Save raw text files based on a search for papers on ScienceDirect.
 
     This performs a search to get PIIs, downloads the XML corresponding to
@@ -361,6 +361,9 @@ def download_from_search(query_str, folder):
     folder : str
         The local path to an existing folder in which the text files
         will be dumped
+    do_extract_text : bool
+        Choose whether to extract text from the xml, or simply save the raw xml
+        files. Default is True, so text is extracted.
     """
     piis = get_piis(query_str)
     for pii in piis:
@@ -369,12 +372,17 @@ def download_from_search(query_str, folder):
         logger.info('Downloading %s' % pii)
         xml = download_article(pii, 'pii')
         sleep(1)
-        txt = extract_text(xml)
-        if not txt:
-            continue
+        if do_extract_text:
+            txt = extract_text(xml)
+            if not txt:
+                continue
 
-        with open(os.path.join(folder, '%s.txt' % pii), 'wb') as fh:
-            fh.write(txt.encode('utf-8'))
+            with open(os.path.join(folder, '%s.txt' % pii), 'wb') as fh:
+                fh.write(txt.encode('utf-8'))
+        else:
+            with open(os.path.join(folder, '%s.xml' % pii), 'wb') as fh:
+                fh.write(xml.encode('utf-8'))
+    return
 
 
 def _get_article_body(full_text_elem):
