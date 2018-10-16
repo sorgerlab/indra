@@ -347,7 +347,8 @@ def get_piis_for_date(query_str, date):
     return all_piis
 
 
-def download_from_search(query_str, folder, do_extract_text=True):
+def download_from_search(query_str, folder, do_extract_text=True,
+                         max_results=None):
     """Save raw text files based on a search for papers on ScienceDirect.
 
     This performs a search to get PIIs, downloads the XML corresponding to
@@ -364,9 +365,12 @@ def download_from_search(query_str, folder, do_extract_text=True):
     do_extract_text : bool
         Choose whether to extract text from the xml, or simply save the raw xml
         files. Default is True, so text is extracted.
+    max_results : int or None
+        Default is None. If specified, limit the number of results to the given
+        maximum.
     """
     piis = get_piis(query_str)
-    for pii in piis:
+    for pii in piis[:max_results]:
         if os.path.exists(os.path.join(folder, '%s.txt' % pii)):
             continue
         logger.info('Downloading %s' % pii)
