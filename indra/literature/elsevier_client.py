@@ -40,7 +40,8 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'xocs': 'http://www.elsevier.com/xml/xocs/dtd',
                'common': 'http://www.elsevier.com/xml/common/dtd',
                'atom': 'http://www.w3.org/2005/Atom',
-               'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
+               'prism': 'http://prismstandard.org/namespaces/basic/2.0/',
+               'book': 'http://www.elsevier.com/xml/bk/dtd'}
 ELSEVIER_KEYS = None
 API_KEY_ENV_NAME = 'ELSEVIER_API_KEY'
 INST_KEY_ENV_NAME = 'ELSEVIER_INST_KEY'
