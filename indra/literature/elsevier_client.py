@@ -408,11 +408,15 @@ def _get_article_body(full_text_elem):
 
 def _get_sections(main_body_elem):
     # Get content sections
-    sections = main_body_elem.findall('common:sections/common:section',
-                                      elsevier_ns)
-    if len(sections) == 0:
-        logger.info("Found no sections in main body")
+    for pth in ['common:sections/common:section', 'common:section']:
+        sections = main_body_elem.findall(pth, elsevier_ns)
+        if len(sections):
+            logger.info("Found sections in main body using \"%s\"" % pth)
+            break
+        logger.info("Found no sections in main body with \"%s\"" % pth)
+    else:
         return None
+
     # Concatenate the section content
     full_txt = ''
     for s in sections:
