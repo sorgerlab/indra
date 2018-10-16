@@ -391,25 +391,18 @@ def download_from_search(query_str, folder, do_extract_text=True,
 
 
 def _get_article_body(full_text_elem):
-    # Look for ja:article
-    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
-                                    'ja:article/ja:body', elsevier_ns)
-    if main_body is not None:
-        logger.info("Found main body element "
-                    "xocs:doc/xocs:serial-item/ja:article/ja:body")
-        return _get_sections(main_body)
-    logger.info("Could not find main body element "
-                "xocs:doc/xocs:serial-item/ja:article/ja:body")
-    # If no luck with ja:article, try ja:converted_article
-    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
-                                    'ja:converted-article/ja:body', elsevier_ns)
-    if main_body is not None:
-        logger.info("Found main body element "
-                    "xocs:doc/xocs:serial-item/ja:converted-article/ja:body")
-        return _get_sections(main_body)
-    logger.info("Could not find main body element "
-                "xocs:doc/xocs:serial-item/ja:converted-article/ja:body")
-    # If we haven't returned by this point, then return None
+    possible_paths = [
+        'xocs:doc/xocs:serial-item/ja:article/ja:body',
+        'xocs:doc/xocs:serial-item/ja:converted-article/ja:body',
+        'xocs:doc/xocs:nonserial-item/book:chapter',
+        'xocs:doc/xocs:nonserial-item/book:fb-non-chapter'
+        ]
+    for pth in possible_paths:
+        main_body = full_text_elem.find(pth, elsevier_ns)
+        if main_body is not None:
+            logger.info("Found main body element: \"%s\"" % pth)
+            return _get_sections(main_body)
+        logger.info("Could not find main body element: \"%s\"." % pth)
     return None
 
 
