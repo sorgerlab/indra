@@ -393,6 +393,7 @@ def download_from_search(query_str, folder, do_extract_text=True,
 def _get_article_body(full_text_elem):
     possible_paths = [
         'xocs:doc/xocs:serial-item/ja:article/ja:body',
+        'xocs:doc/xocs:serial-item/ja:simple-article/ja:body',
         'xocs:doc/xocs:serial-item/ja:converted-article/ja:body',
         'xocs:doc/xocs:nonserial-item/book:chapter',
         'xocs:doc/xocs:nonserial-item/book:fb-non-chapter'
