@@ -40,7 +40,8 @@ elsevier_ns = {'dc': 'http://purl.org/dc/elements/1.1/',
                'xocs': 'http://www.elsevier.com/xml/xocs/dtd',
                'common': 'http://www.elsevier.com/xml/common/dtd',
                'atom': 'http://www.w3.org/2005/Atom',
-               'prism': 'http://prismstandard.org/namespaces/basic/2.0/'}
+               'prism': 'http://prismstandard.org/namespaces/basic/2.0/',
+               'book': 'http://www.elsevier.com/xml/bk/dtd'}
 ELSEVIER_KEYS = None
 API_KEY_ENV_NAME = 'ELSEVIER_API_KEY'
 INST_KEY_ENV_NAME = 'ELSEVIER_INST_KEY'
@@ -347,7 +348,8 @@ def get_piis_for_date(query_str, date):
     return all_piis
 
 
-def download_from_search(query_str, folder):
+def download_from_search(query_str, folder, do_extract_text=True,
+                         max_results=None):
     """Save raw text files based on a search for papers on ScienceDirect.
 
     This performs a search to get PIIs, downloads the XML corresponding to
@@ -361,52 +363,63 @@ def download_from_search(query_str, folder):
     folder : str
         The local path to an existing folder in which the text files
         will be dumped
+    do_extract_text : bool
+        Choose whether to extract text from the xml, or simply save the raw xml
+        files. Default is True, so text is extracted.
+    max_results : int or None
+        Default is None. If specified, limit the number of results to the given
+        maximum.
     """
     piis = get_piis(query_str)
-    for pii in piis:
+    for pii in piis[:max_results]:
         if os.path.exists(os.path.join(folder, '%s.txt' % pii)):
             continue
         logger.info('Downloading %s' % pii)
         xml = download_article(pii, 'pii')
         sleep(1)
-        txt = extract_text(xml)
-        if not txt:
-            continue
+        if do_extract_text:
+            txt = extract_text(xml)
+            if not txt:
+                continue
 
-        with open(os.path.join(folder, '%s.txt' % pii), 'wb') as fh:
-            fh.write(txt.encode('utf-8'))
+            with open(os.path.join(folder, '%s.txt' % pii), 'wb') as fh:
+                fh.write(txt.encode('utf-8'))
+        else:
+            with open(os.path.join(folder, '%s.xml' % pii), 'wb') as fh:
+                fh.write(xml.encode('utf-8'))
+    return
 
 
 def _get_article_body(full_text_elem):
-    # Look for ja:article
-    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
-                                    'ja:article/ja:body', elsevier_ns)
-    if main_body is not None:
-        logger.info("Found main body element "
-                    "xocs:doc/xocs:serial-item/ja:article/ja:body")
-        return _get_sections(main_body)
-    logger.info("Could not find main body element "
-                "xocs:doc/xocs:serial-item/ja:article/ja:body")
-    # If no luck with ja:article, try ja:converted_article
-    main_body = full_text_elem.find('xocs:doc/xocs:serial-item/'
-                                    'ja:converted-article/ja:body', elsevier_ns)
-    if main_body is not None:
-        logger.info("Found main body element "
-                    "xocs:doc/xocs:serial-item/ja:converted-article/ja:body")
-        return _get_sections(main_body)
-    logger.info("Could not find main body element "
-                "xocs:doc/xocs:serial-item/ja:converted-article/ja:body")
-    # If we haven't returned by this point, then return None
+    possible_paths = [
+        'xocs:doc/xocs:serial-item/ja:article/ja:body',
+        'xocs:doc/xocs:serial-item/ja:simple-article/ja:body',
+        'xocs:doc/xocs:serial-item/ja:converted-article/ja:body',
+        'xocs:doc/xocs:nonserial-item/book:chapter',
+        'xocs:doc/xocs:nonserial-item/book:fb-non-chapter'
+        ]
+    for pth in possible_paths:
+        main_body = full_text_elem.find(pth, elsevier_ns)
+        if main_body is not None:
+            logger.info("Found main body element: \"%s\"" % pth)
+            return _get_sections(main_body)
+        logger.info("Could not find main body element: \"%s\"." % pth)
     return None
 
 
 def _get_sections(main_body_elem):
     # Get content sections
-    sections = main_body_elem.findall('common:sections/common:section',
-                                      elsevier_ns)
-    if len(sections) == 0:
-        logger.info("Found no sections in main body")
+    possible_paths = ['common:sections/common:section', 'common:section',
+                      'common:sections']
+    for pth in possible_paths:
+        sections = main_body_elem.findall(pth, elsevier_ns)
+        if len(sections):
+            logger.info("Found sections in main body using \"%s\"" % pth)
+            break
+        logger.info("Found no sections in main body with \"%s\"" % pth)
+    else:
         return None
+
     # Concatenate the section content
     full_txt = ''
     for s in sections:
