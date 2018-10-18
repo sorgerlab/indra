@@ -187,8 +187,9 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
 
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, offset=None, persist=True, block=True,
-                   simple_response=True, ev_limit=10, best_first=True, tries=2):
+                   use_exact_type=False, offset=None, persist=True,
+                   timeout=None, simple_response=True, ev_limit=10,
+                   best_first=True, tries=2):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -223,12 +224,13 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         results returned), just give up and pass along what was returned.
         Otherwise, make further queries to get the rest of the data (which may
         take some time).
-    block : bool
-        If True, (and persist is True) block until all statements are retrieved.
-        Otherwise (if False), the statements will be retrieved in a thread and
-        may be accessed when ready. In the meantime the original sample will be
-        available. (Note, False is not really compatible with simple_response).
-        Default is True.
+    timeout : positive int or None
+        If an int, block until the work is done and statements are retrieved, or
+        until the timeout has expired, in which case the results so far will be
+        returned in the response object, and further results will be added in
+        a separate thread as they become available. If simple_response is True,
+        all statements available will be returned. Otherwise (if None), block
+        indefinitely until all statements are retrieved. Default is None.
     simple_response : bool
         If True, a simple list of statements is returned (thus block should also
         be True). If block is False, only the original sample will be returned
@@ -278,7 +280,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     if stmt_type is not None:
         if use_exact_type:
             params['type'] = stmt_type
-            resp = _make_stmts_query(agent_strs, params, persist, block)
+            resp = _make_stmts_query(agent_strs, params, persist, timeout)
         else:
             stmt_class = get_statement_by_name(stmt_type)
             descendant_classes = get_all_descendants(stmt_class)
@@ -295,7 +297,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                 else:
                     resp.extend_statements(new_resp)
     else:
-        resp = _make_stmts_query(agent_strs, params, persist, block)
+        resp = _make_stmts_query(agent_strs, params, persist, timeout)
 
     if simple_response:
         ret = resp.statements
