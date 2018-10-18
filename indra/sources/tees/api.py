@@ -30,6 +30,8 @@ import re
 from indra.sources.tees.parse_tees import tees_parse_networkx_to_dot
 import networkx.algorithms.dag as dag
 
+__all__ = ['run_on_text', 'process_text', 'extract_output']
+
 logger = logging.getLogger('tees')
 
 # If TEES isn't specified, we will check to see if any of these directories
@@ -224,7 +226,7 @@ def extract_output(output_dir):
 
     # Locate the file of sentences segmented by the TEES system, described
     # in a compressed xml document
-    sentences_glob = os.path.join(output_dir, '*-sentences.xml.gz')
+    sentences_glob = os.path.join(output_dir, '*-preprocessed.xml.gz')
     sentences_filename_candidates = glob.glob(sentences_glob)
 
     # Make sure there is exactly one such file
