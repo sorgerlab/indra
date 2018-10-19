@@ -46,12 +46,14 @@ class IndraDBRestError(Exception):
 
 class IndraDBRestResponse(object):
     """The packaging for query responses."""
-    def __init__(self, statement_jsons, ev_totals):
+    def __init__(self, statement_jsons=None, ev_totals=None):
         self.statements = []
         self.statements_sample = None
-        self.statement_jsons = statement_jsons
+        self.statement_jsons = []
         self.done = False
-        self.evidence_counts = ev_totals.copy()
+        self.evidence_counts = {}
+        self.started = False
+        self.merge_json(statement_jsons, ev_totals)
         return
 
     def get_ev_count(self, stmt):
@@ -76,7 +78,6 @@ class IndraDBRestResponse(object):
 
     def merge_json(self, stmt_json, ev_counts):
         """Merge these statement jsons with new jsons."""
-
         # Where there is overlap, there _should_ be agreement.
         self.evidence_counts.update(ev_counts)
 
@@ -87,6 +88,10 @@ class IndraDBRestResponse(object):
                 # This should only happen rarely.
                 for evj in sj['evidence']:
                     self.statement_jsons[k]['evidence'].append(evj)
+
+        if not self.started:
+            self.statements_sample = stmts_from_json(self.statement_jsons)
+            self.started = True
         return
 
     def compile_statements(self):
@@ -111,7 +116,7 @@ class IndraDBRestResponse(object):
         return
 
 
-def _query_and_extract(agent_strs, params):
+def _query_and_extract(agent_strs, params, result):
     resp = _submit_query_request('statements', *agent_strs, **params)
     resp_dict = resp.json(object_pairs_hook=OrderedDict)
     stmts_json = resp_dict['statements']
@@ -123,7 +128,10 @@ def _query_and_extract(agent_strs, params):
     # resulting in an unnecessary extra query, but that should almost never
     # happen.
     limited = (len(stmts_json) == stmt_limit)
-    return stmts_json, limited, stmt_limit, ev_totals
+
+    # update the result
+    result.merge_json(stmts_json, ev_totals)
+    return limited, stmt_limit
 
 
 def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
@@ -135,11 +143,7 @@ def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
         # Get the next page.
         offset = offset + offset_step
         params['offset'] = offset
-        new_stmts_json, limited, _, ev_totals = \
-            _query_and_extract(agent_strs, params)
-
-        # Merge in the new results
-        ret.merge_json(new_stmts_json, ev_totals)
+        limited, _ = _query_and_extract(agent_strs, params, ret)
 
     # Create the actual statements.
     ret.compile_statements()
@@ -147,14 +151,13 @@ def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
     return
 
 
-def _make_stmts_query(agent_strs, params, persist=True, block=True):
+def _make_stmts_query(agent_strs, params, persist=True, block_secs=None):
     """Slightly lower level function to get statements from the REST API."""
-    # Perform the first (and last?) query
-    stmts_json, limited, stmt_limit, ev_totals = \
-        _query_and_extract(agent_strs, params)
-
     # Initialize the return dict.
-    ret = IndraDBRestResponse(stmts_json, ev_totals)
+    ret = IndraDBRestResponse()
+
+    # Perform the first (and last?) query
+    limited, stmt_limit = _query_and_extract(agent_strs, params, ret)
 
     # Handle the content if we were limited.
     if limited:
@@ -162,17 +165,16 @@ def _make_stmts_query(agent_strs, params, persist=True, block=True):
         if persist:
             offset = params.get('offset', 0)
             args = [agent_strs, params, offset, stmt_limit, ret]
-            if block:
-                logger.info("You chose to persist, so I will paginate through "
-                            "the rest until I have everything!")
-                _get_statements_persistently(*args)
-                assert ret.done
-            else:
-                logger.info("You chose to persist without blocking. Pagination "
-                            "is being performed in a thread.")
-                ret.statements_sample = stmts_from_json(stmts_json.values())
-                th = Thread(target=_get_statements_persistently, args=args)
-                th.start()
+            logger.info("You chose to persist without blocking. Pagination "
+                        "is being performed in a thread.")
+            th = Thread(target=_get_statements_persistently, args=args)
+            th.start()
+
+            if block_secs is None:
+                th.join()
+            elif block_secs:  # is not 0
+                logger.info("Waiting for %d seconds..." % block_secs)
+                th.join(block_secs)
         else:
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
