@@ -746,10 +746,13 @@ class ModelChecker(object):
 
         # First, remove all self-loops
         logger.info('Removing self loops')
+        edges_to_remove = []
         for e in im.edges():
             if e[0] == e[1]:
                 logger.info('Removing self loop: %s', e)
-                im.remove_edge(e[0], e[1])
+                edges_to_remove.append((e[0], e[1]))
+        # Now remove all the edges to be removed with a single call
+        im.remove_edges_from(edges_to_remove)
 
         # Remove parameter nodes from influence map
         remove_im_params(self.model, im)
