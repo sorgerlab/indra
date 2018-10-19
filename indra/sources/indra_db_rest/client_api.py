@@ -46,7 +46,7 @@ class IndraDBRestError(Exception):
 
 class IndraDBRestResponse(object):
     """The packaging for query responses."""
-    def __init__(self, statement_jsons=None, ev_totals=None):
+    def __init__(self, statement_jsons=None, ev_totals=None, page=0):
         self.statements = []
         self.statements_sample = None
         self.statement_jsons = []
@@ -54,6 +54,8 @@ class IndraDBRestResponse(object):
         self.evidence_counts = {}
         self.started = False
         self.merge_json(statement_jsons, ev_totals)
+        self.__page_step = None
+        self.__page = page
         return
 
     def get_ev_count(self, stmt):
@@ -115,59 +117,52 @@ class IndraDBRestResponse(object):
                     % dt.total_seconds())
         return
 
+    def _query_and_extract(self, agent_strs, params):
+        params['offset'] = self.__page
+        resp = _submit_query_request('statements', *agent_strs, **params)
+        resp_dict = resp.json(object_pairs_hook=OrderedDict)
+        stmts_json = resp_dict['statements']
+        total_ev = resp_dict['total_evidence']
+        ev_totals = resp_dict['evidence_totals']
+        self.__page_step = resp_dict['statement_limit']
 
-def _query_and_extract(agent_strs, params, result):
-    resp = _submit_query_request('statements', *agent_strs, **params)
-    resp_dict = resp.json(object_pairs_hook=OrderedDict)
-    stmts_json = resp_dict['statements']
-    total_ev = resp_dict['total_evidence']
-    ev_totals = resp_dict['evidence_totals']
-    stmt_limit = resp_dict['statement_limit']
+        # NOTE: this is technically not a direct conclusion, and could be wrong,
+        # resulting in a single unnecessary extra query, but that should almost
+        # never happen, and if it does, it isn't the end of the world.
+        self.done = len(stmts_json) < self.__page_step
+        self.__page += self.__page_step
 
-    # NOTE: this is technically not a direct conclusion, and could be wrong,
-    # resulting in an unnecessary extra query, but that should almost never
-    # happen.
-    limited = (len(stmts_json) == stmt_limit)
+        # update the result
+        self.merge_json(stmts_json, ev_totals)
+        return
 
-    # update the result
-    result.merge_json(stmts_json, ev_totals)
-    return limited, stmt_limit
+    def _get_statements_persistently(self, agent_strs, params):
+        """Use paging to get all statements."""
+        # Get the rest of the content.
+        while not self.done:
+            self._query_and_extract(agent_strs, params)
 
-
-def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
-    """Use paging to get all statements."""
-    limited = True
-
-    # Get the rest of the content.
-    while limited:
-        # Get the next page.
-        offset = offset + offset_step
-        params['offset'] = offset
-        limited, _ = _query_and_extract(agent_strs, params, ret)
-
-    # Create the actual statements.
-    ret.compile_statements()
-    ret.done = True
-    return
+        # Create the actual statements.
+        self.compile_statements()
+        return
 
 
 def _make_stmts_query(agent_strs, params, persist=True, block_secs=None):
     """Slightly lower level function to get statements from the REST API."""
     # Initialize the return dict.
-    ret = IndraDBRestResponse()
+    ret = IndraDBRestResponse(page=params.get('offset', 0))
 
     # Perform the first (and last?) query
-    limited, stmt_limit = _query_and_extract(agent_strs, params, ret)
+    ret._query_and_extract(agent_strs, params)
 
     # Handle the content if we were limited.
-    if limited:
+    if not ret.done:
         logger.info("Some results could not be returned directly.")
         if persist:
-            offset = params.get('offset', 0)
-            args = [agent_strs, params, offset, stmt_limit, ret]
+            args = [agent_strs, params]
             logger.info("You chose to persist without blocking. Pagination "
                         "is being performed in a thread.")
-            th = Thread(target=_get_statements_persistently, args=args)
+            th = Thread(target=ret._get_statements_persistently, args=args)
             th.start()
 
             if block_secs is None:
