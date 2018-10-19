@@ -313,6 +313,11 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     if not isinstance(hash_list, list):
         raise ValueError("The `hash_list` input is a list, not %s."
                          % type(hash_list))
+    if isinstance(hash_list[0], str):
+        hash_list = [int(h) for h in hash_list]
+    if not all([isinstance(h, int) for h in hash_list]):
+        raise ValueError("Hashes must be ints or strings that can be converted "
+                         "into ints.")
     resp = _submit_request('post', 'statements/from_hashes',
                            data={'hashes': hash_list}, ev_limit=ev_limit,
                            best_first=best_first, tries=tries, div='')
