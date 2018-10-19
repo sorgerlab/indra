@@ -146,23 +146,16 @@ class IndraDBRestResponse(object):
         self.compile_statements()
         return
 
-
-def _make_stmts_query(agent_strs, params, persist=True, block_secs=None):
-    """Slightly lower level function to get statements from the REST API."""
-    # Initialize the return dict.
-    ret = IndraDBRestResponse(page=params.get('offset', 0))
-
-    # Perform the first (and last?) query
-    ret._query_and_extract(agent_strs, params)
-
-    # Handle the content if we were limited.
-    if not ret.done:
+    def make_stmts_query(self, agent_strs, params, persist=True,
+                         block_secs=None):
+        """Slightly lower level function to get statements from the REST API."""
+        # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         if persist:
             args = [agent_strs, params]
             logger.info("You chose to persist without blocking. Pagination "
                         "is being performed in a thread.")
-            th = Thread(target=ret._get_statements_persistently, args=args)
+            th = Thread(target=self._get_statements_persistently, args=args)
             th.start()
 
             if block_secs is None:
@@ -171,15 +164,11 @@ def _make_stmts_query(agent_strs, params, persist=True, block_secs=None):
                 logger.info("Waiting for %d seconds..." % block_secs)
                 th.join(block_secs)
         else:
+            self._query_and_extract(agent_strs, params)
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
-            ret.compile_statements()
-            ret.statements_sample = ret.statements[:]
-            ret.done = True
-    else:
-        ret.compile_statements()
-        ret.done = True
-    return ret
+            self.done = True
+        return
 
 
 @clockit
@@ -274,27 +263,23 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     params['tries'] = tries
 
     # Handle the type(s).
-    if stmt_type is not None:
-        if use_exact_type:
+    resp = IndraDBRestResponse(page=offset)
+    if stmt_type is not None and not use_exact_type:
+        stmt_class = get_statement_by_name(stmt_type)
+        descendant_classes = get_all_descendants(stmt_class)
+        stmt_types = [cls.__name__ for cls in descendant_classes] \
+            + [stmt_type]
+        count = 0
+        for stmt_type in stmt_types:
             params['type'] = stmt_type
-            resp = _make_stmts_query(agent_strs, params, persist, timeout)
-        else:
-            stmt_class = get_statement_by_name(stmt_type)
-            descendant_classes = get_all_descendants(stmt_class)
-            stmt_types = [cls.__name__ for cls in descendant_classes] \
-                + [stmt_type]
-            resp = None
-            for stmt_type in stmt_types:
-                params['type'] = stmt_type
-                new_resp = _make_stmts_query(agent_strs, params, persist)
-                logger.info("Found %d %s statements."
-                            % (len(new_resp.statements), stmt_type))
-                if resp is None:
-                    resp = new_resp
-                else:
-                    resp.extend_statements(new_resp)
+            resp.make_stmts_query(agent_strs, params, persist)
+            new_count = len(resp.statements)
+            logger.info("Found %d %s statements."
+                        % (new_count - count, stmt_type))
+            count = new_count
     else:
-        resp = _make_stmts_query(agent_strs, params, persist, timeout)
+        params['type'] = stmt_type
+        resp.make_stmts_query(agent_strs, params, persist, timeout)
 
     if simple_response:
         ret = resp.statements
