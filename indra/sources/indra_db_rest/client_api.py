@@ -310,6 +310,9 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 2.
     """
+    if not isinstance(hash_list, list):
+        raise ValueError("The `hash_list` input is a list, not %s."
+                         % type(hash_list))
     resp = _submit_request('post', 'statements/from_hashes',
                            data={'hashes': hash_list}, ev_limit=ev_limit,
                            best_first=best_first, tries=tries, div='')
