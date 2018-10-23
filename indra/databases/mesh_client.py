@@ -1,7 +1,11 @@
+from os.path import abspath, dirname, join
 import csv
 import requests
+from indra.util import read_unicode_csv
 
 mesh_url = 'http://id.nlm.nih.gov/mesh/'
+mesh_file = join(dirname(abspath(__file__)), '..', 'resources',
+                 'mesh_id_label_mappings.tsv')
 
 # Python3
 try:
@@ -10,10 +14,12 @@ try:
 except ImportError:
     from functools32 import lru_cache
 
+mesh_mappings = {}
+for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
+    mesh_mappings[mesh_id] = mesh_label
 
-def 
 
-def get_mesh_name(mesh_id):
+def get_mesh_name_from_web(mesh_id):
     """Get the MESH label for the given MESH ID.
 
     Parameters
@@ -39,17 +45,26 @@ def get_mesh_name(mesh_id):
     return label
 
 
-if __name__ == '__main__':
-    with open('mesh_ids.txt', 'rt') as f:
-        mesh_ids = [line.strip() for line in f.readlines()]
-    mesh_mappings = []
-    for mid in mesh_ids:
-        if mid.startswith('MESH:'):
-            mid = mid[5:]
-        mesh_label = get_mesh_name(mid)
-        mesh_mappings.append((mid, mesh_label))
-        print(f"{mid} -> {mesh_label}")
-    with open('mesh_id_label_mappings.tsv', 'wt') as f:
-        csvwriter = csv.writer(f, delimiter='\t')
-        csvwriter.writerows(mesh_mappings)
+def get_mesh_name(mesh_id, offline=False):
+    """Get the MESH label for the given MESH ID.
 
+    Parameters
+    ----------
+    mesh_id : str
+        MESH Identifier, e.g. 'D003094'.
+    offline : boolean
+        Whether to allow queries to the NLM REST API if the given MESH ID is not
+        contained in INDRA's internal MESH mappings file. Default is False
+        (allows REST API queries).
+
+    Returns
+    -------
+    str
+        Label for the MESH ID, or None if the query failed or no label was
+        found.
+    """
+    indra_mesh_mapping = mesh_mappings.get(mesh_id)
+    if offline or indra_mesh_mapping is not None:
+        return indra_mesh_mapping
+    # Look up the MESH mapping from NLM if we don't have it locally
+    return get_mesh_name_from_web(mesh_id)
