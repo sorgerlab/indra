@@ -50,7 +50,7 @@ class IndraDBRestResponse(object):
         self.statements = []
         self.statements_sample = None
         self.statement_jsons = {}
-        self.done = False
+        self.__done = False
         self.evidence_counts = {}
         self.started = False
         if statement_jsons is not None:
@@ -62,6 +62,12 @@ class IndraDBRestResponse(object):
         self.__page = page
         self.__th = None
         return
+
+    def is_working(self):
+        """Check if the thread is running."""
+        if not self.__th:
+            return False
+        return self.__th.is_alive()
 
     def get_ev_count(self, stmt):
         """Get the total evidence count for a statement."""
@@ -85,7 +91,7 @@ class IndraDBRestResponse(object):
 
     def reset(self, page=0):
         """Reset the response before loading more statements."""
-        self.done = False
+        self.__done = False
         self.__page = page
         self.started = False
         self.__th = None
@@ -125,10 +131,12 @@ class IndraDBRestResponse(object):
         if self.__th.is_alive():
             logger.warning("Timed out after %0.3f seconds waiting for "
                            "statement load to complete." % dt.total_seconds())
+            ret = False
         else:
             logger.info("Waited %0.3f seconds for statements to finish loading."
                         % dt.total_seconds())
-        return
+            ret = True
+        return ret
 
     def _query_and_extract(self, agent_strs, params):
         params['offset'] = self.__page
@@ -145,7 +153,7 @@ class IndraDBRestResponse(object):
         # NOTE: this is technically not a direct conclusion, and could be wrong,
         # resulting in a single unnecessary extra query, but that should almost
         # never happen, and if it does, it isn't the end of the world.
-        self.done = len(stmts_json) < self.__page_step
+        self.__done = len(stmts_json) < self.__page_step
         self.__page += self.__page_step
 
         return
@@ -153,7 +161,7 @@ class IndraDBRestResponse(object):
     def _get_statements_persistently(self, agent_strs, params):
         """Use paging to get all statements."""
         # Get the rest of the content.
-        while not self.done:
+        while not self.__done:
             self._query_and_extract(agent_strs, params)
 
         # Create the actual statements.
@@ -165,7 +173,7 @@ class IndraDBRestResponse(object):
         """Slightly lower level function to get statements from the REST API."""
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
-        self.done = False
+        self.__done = False
         if 'offset' in params:
             self.__page = params['offset']
         if persist:
@@ -185,7 +193,7 @@ class IndraDBRestResponse(object):
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
             self.compile_statements()
-            self.done = True
+            self.__done = True
         return
 
 
