@@ -52,7 +52,7 @@ class IndraDBRestResponse(object):
         self.statement_jsons = {}
         self.__done = False
         self.evidence_counts = {}
-        self.started = False
+        self.__started = False
         if statement_jsons is not None:
             if ev_totals is None:
                 raise IndraDBRestError("If statement_jsons is given, ev_totals "
@@ -93,7 +93,7 @@ class IndraDBRestResponse(object):
         """Reset the response before loading more statements."""
         self.__done = False
         self.__page = page
-        self.started = False
+        self.__started = False
         self.__th = None
         return
 
@@ -110,10 +110,10 @@ class IndraDBRestResponse(object):
                 for evj in sj['evidence']:
                     self.statement_jsons[k]['evidence'].append(evj)
 
-        if not self.started:
+        if not self.__started:
             self.statements_sample = stmts_from_json(
                 self.statement_jsons.values())
-            self.started = True
+            self.__started = True
         return
 
     def compile_statements(self):
