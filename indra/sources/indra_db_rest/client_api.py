@@ -55,21 +55,17 @@ class IndraDBRestAPIError(IndraDBRestClientError):
 
 class IndraDBRestResponse(object):
     """The packaging for query responses."""
-    def __init__(self, statement_jsons=None, ev_totals=None, page=0):
+    def __init__(self, page=0, max_stmts=None):
         self.statements = []
         self.statements_sample = None
-        self.statement_jsons = {}
+        self.__statement_jsons = {}
         self.__done = False
-        self.evidence_counts = {}
+        self.__evidence_counts = {}
         self.__started = False
-        if statement_jsons is not None:
-            if ev_totals is None:
-                raise IndraDBRestResponseError("If statement_jsons is given, "
-                                               "ev_totals must also be given.")
-            self.merge_json(statement_jsons, ev_totals)
         self.__page_step = None
         self.__page = page
         self.__th = None
+        self.__quota = max_stmts
         return
 
     def is_working(self):
@@ -80,7 +76,7 @@ class IndraDBRestResponse(object):
 
     def get_ev_count(self, stmt):
         """Get the total evidence count for a statement."""
-        return self.evidence_counts.get(str(stmt.get_hash(shallow=True)))
+        return self.__evidence_counts.get(str(stmt.get_hash(shallow=True)))
 
     def extend_statements(self, other_response):
         """Extend this object with new statements."""
@@ -94,8 +90,8 @@ class IndraDBRestResponse(object):
             else:
                 self.statements_sample.extend(other_response.statements_sample)
 
-        self.merge_json(other_response.statement_jsons,
-                        other_response.evidence_counts)
+        self.merge_json(other_response.__statement_jsons,
+                        other_response.__evidence_counts)
         return
 
     def reset(self, page=0):
@@ -109,25 +105,25 @@ class IndraDBRestResponse(object):
     def merge_json(self, stmt_json, ev_counts):
         """Merge these statement jsons with new jsons."""
         # Where there is overlap, there _should_ be agreement.
-        self.evidence_counts.update(ev_counts)
+        self.__evidence_counts.update(ev_counts)
 
         for k, sj in stmt_json.items():
-            if k not in self.statement_jsons:
-                self.statement_jsons[k] = sj  # This should be most of them
+            if k not in self.__statement_jsons:
+                self.__statement_jsons[k] = sj  # This should be most of them
             else:
                 # This should only happen rarely.
                 for evj in sj['evidence']:
-                    self.statement_jsons[k]['evidence'].append(evj)
+                    self.__statement_jsons[k]['evidence'].append(evj)
 
         if not self.__started:
             self.statements_sample = stmts_from_json(
-                self.statement_jsons.values())
+                self.__statement_jsons.values())
             self.__started = True
         return
 
     def compile_statements(self):
         """Generate statements from the jsons."""
-        self.statements = stmts_from_json(self.statement_jsons.values())
+        self.statements = stmts_from_json(self.__statement_jsons.values())
 
     def wait_until_done(self, timeout=None):
         """Wait for the background load to complete."""
@@ -150,12 +146,14 @@ class IndraDBRestResponse(object):
 
     def _query_and_extract(self, agent_strs, params):
         params['offset'] = self.__page
+        params['max_stmts'] = self.__quota
         resp = _submit_query_request('statements', *agent_strs, **params)
         resp_dict = resp.json(object_pairs_hook=OrderedDict)
         stmts_json = resp_dict['statements']
-        total_ev = resp_dict['total_evidence']
         ev_totals = resp_dict['evidence_totals']
         self.__page_step = resp_dict['statement_limit']
+        num_returned = len(stmts_json)
+        self.__quota -= num_returned
 
         # update the result
         self.merge_json(stmts_json, ev_totals)
@@ -163,8 +161,9 @@ class IndraDBRestResponse(object):
         # NOTE: this is technically not a direct conclusion, and could be wrong,
         # resulting in a single unnecessary extra query, but that should almost
         # never happen, and if it does, it isn't the end of the world.
-        self.__done = len(stmts_json) < self.__page_step
-        self.__page += self.__page_step
+        self.__done = num_returned < self.__page_step or self._quota <= 0
+        if not self.__done:
+            self.__page += self.__page_step
 
         return
 
@@ -207,7 +206,7 @@ class IndraDBRestResponse(object):
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, offset=0, persist=True,
                    timeout=None, simple_response=True, ev_limit=10,
-                   best_first=True, tries=2):
+                   best_first=True, tries=2, max_stmts=None):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -268,6 +267,10 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 2.
+    max_stmts : int or None
+        Select the maximum number of statements to return. When set less than
+        1000 the effect is much the same as setting persist to false, and will
+        guarantee a faster response. Default is None.
 
     Returns
     -------
@@ -293,7 +296,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     params['tries'] = tries
 
     # Handle the type(s).
-    resp = IndraDBRestResponse(page=offset)
+    resp = IndraDBRestResponse(page=offset, max_stmts=max_stmts)
     if stmt_type is not None and not use_exact_type:
         stmt_class = get_statement_by_name(stmt_type)
         descendant_classes = get_all_descendants(stmt_class)
@@ -360,7 +363,7 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
 
 @clockit
 def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
-                             best_first=True, tries=2):
+                             best_first=True, tries=2, max_stmts=None):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
@@ -384,6 +387,8 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
         timeout will often succeed fast enough to avoid a timeout. This can also
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 2.
+    max_stmts : int or None
+        Select a maximum number of statements to be returned. Default is None.
 
     Returns
     -------
@@ -392,7 +397,7 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
     """
     resp = _submit_query_request('papers', id=id_val, type=id_type,
                                  ev_limit=ev_limit, best_first=best_first,
-                                 tries=tries)
+                                 tries=tries, max_stmts=max_stmts)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json.values())
 
@@ -405,7 +410,8 @@ def _submit_query_request(end_point, *args, **kwargs):
     # This isn't handled by requests because of the multiple identical agent
     # keys, e.g. {'agent': 'MEK', 'agent': 'ERK'} which is not supported in
     # python, but is allowed and necessary in these query strings.
-    query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()]
+    query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()
+                                if v is not None]
                                + list(args))
     return _submit_request('get', end_point, query_str, ev_limit=ev_limit,
                            best_first=best_first, tries=tries)
