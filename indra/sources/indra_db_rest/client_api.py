@@ -2,7 +2,8 @@ from __future__ import absolute_import, unicode_literals
 from builtins import dict, str
 
 __all__ = ['get_statements', 'get_statements_for_paper',
-           'get_statements_by_hash', 'IndraDBRestError']
+           'get_statements_by_hash', 'IndraDBRestAPIError',
+           'IndraDBRestClientError', 'IndraDBRestResponseError']
 
 import json
 import logging
@@ -23,7 +24,15 @@ from indra.statements import stmts_from_json, get_statement_by_name, \
 logger = logging.getLogger('db_rest_client')
 
 
-class IndraDBRestError(Exception):
+class IndraDBRestClientError(Exception):
+    pass
+
+
+class IndraDBRestResponseError(IndraDBRestClientError):
+    pass
+
+
+class IndraDBRestAPIError(IndraDBRestClientError):
     def __init__(self, resp):
         self.status_code = resp.status_code
         if hasattr(resp, 'text'):
@@ -55,8 +64,8 @@ class IndraDBRestResponse(object):
         self.__started = False
         if statement_jsons is not None:
             if ev_totals is None:
-                raise IndraDBRestError("If statement_jsons is given, ev_totals "
-                                       "must also be given.")
+                raise IndraDBRestResponseError("If statement_jsons is given, "
+                                               "ev_totals must also be given.")
             self.merge_json(statement_jsons, ev_totals)
         self.__page_step = None
         self.__page = page
@@ -124,7 +133,8 @@ class IndraDBRestResponse(object):
         """Wait for the background load to complete."""
         start = datetime.now()
         if not self.__th:
-            raise IndraDBRestError("There is no thread waiting to complete.")
+            raise IndraDBRestResponseError("There is no thread waiting to "
+                                           "complete.")
         self.__th.join(timeout)
         now = datetime.now()
         dt = now - start
@@ -438,4 +448,4 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         elif resp.status_code == 504 and tries > 0:
             logger.warning("Endpoint timed out. Trying again...")
         else:
-            raise IndraDBRestError(resp)
+            raise IndraDBRestAPIError(resp)

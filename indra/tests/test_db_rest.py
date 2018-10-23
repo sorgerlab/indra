@@ -5,7 +5,7 @@ from datetime import datetime
 
 from nose.plugins.attrib import attr
 from indra.sources import indra_db_rest as dbr
-from indra.sources.indra_db_rest import IndraDBRestError
+from indra.sources.indra_db_rest import IndraDBRestAPIError
 
 
 def __check_request(seconds, *args, **kwargs):
