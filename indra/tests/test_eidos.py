@@ -35,30 +35,17 @@ def test_process_text():
     assert len(ep.statements) == 1
     stmt = ep.statements[0]
     assert isinstance(stmt, Influence)
-    assert stmt.subj.name == 'cost fuel'
-    assert stmt.obj.name == 'water trucking'
-    assert stmt.obj_delta.get('polarity') == -1
-    assert(stmt.evidence[0].annotations['found_by']
-           == 'ported_syntax_1_verb-Causal')
-
-
-def test_process_text_json_ld():
-    ep = eidos.process_text('The cost of fuel decreases water trucking.')
-    assert ep is not None
-    assert len(ep.statements) == 1
-    stmt = ep.statements[0]
-    assert isinstance(stmt, Influence)
-    assert stmt.subj.name == 'cost fuel'
-    assert stmt.obj.name == 'water trucking'
+    assert stmt.subj.name == 'fuel', stmt.subj.name
+    assert stmt.obj.name == 'water trucking', stmt.obj.name
     assert stmt.obj_delta.get('polarity') == -1
     assert(stmt.evidence[0].annotations['found_by']
            == 'ported_syntax_1_verb-Causal')
     assert 'TEXT' in stmt.subj.db_refs
     assert 'TEXT' in stmt.obj.db_refs
+    # NOTE: groundings are turned off in Travis tests so these are commented
+    # out
     # assert 'UN' in stmt.subj.db_refs
     # assert 'UN' in stmt.obj.db_refs
-    # FIXME: once groundings are propagated well from offline reading
-    # this should work
     # assert len(stmt.subj.db_refs['UN']) > 5
     # assert len(stmt.obj.db_refs['UN']) > 5
 
