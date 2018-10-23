@@ -168,11 +168,14 @@ class IndraDBRestResponse(object):
 
         return
 
-    def _get_statements_persistently(self, agent_strs, params):
-        """Use paging to get all statements."""
+    def _run_queries(self, agent_strs, params, persist):
+        """Use paging to get all statements requested."""
+        self._query_and_extract(agent_strs, params)
+
         # Get the rest of the content.
-        while not self.__done:
-            self._query_and_extract(agent_strs, params)
+        if persist:
+            while not self.__done:
+                self._query_and_extract(agent_strs, params)
 
         # Create the actual statements.
         self.compile_statements()
@@ -186,24 +189,17 @@ class IndraDBRestResponse(object):
         self.__done = False
         if 'offset' in params:
             self.__page = params['offset']
-        if persist:
-            args = [agent_strs, params]
-            logger.info("You chose to persist without blocking. Pagination "
-                        "is being performed in a thread.")
-            self.__th = Thread(target=self._get_statements_persistently, args=args)
-            self.__th.start()
+        args = [agent_strs, params, persist]
+        logger.info("You chose to persist without blocking. Pagination "
+                    "is being performed in a thread.")
+        self.__th = Thread(target=self._run_queries, args=args)
+        self.__th.start()
 
-            if block_secs is None:
-                self.__th.join()
-            elif block_secs:  # is not 0
-                logger.info("Waiting for %d seconds..." % block_secs)
-                self.__th.join(block_secs)
-        else:
-            self._query_and_extract(agent_strs, params)
-            logger.warning("You did not choose persist=True, therefore this is "
-                           "all you get.")
-            self.compile_statements()
-            self.__done = True
+        if block_secs is None:
+            self.__th.join()
+        elif block_secs:  # is not 0
+            logger.info("Waiting for %d seconds..." % block_secs)
+            self.__th.join(block_secs)
         return
 
 
