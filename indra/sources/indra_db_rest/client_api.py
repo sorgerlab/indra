@@ -46,12 +46,21 @@ class IndraDBRestError(Exception):
 
 class IndraDBRestResponse(object):
     """The packaging for query responses."""
-    def __init__(self, statement_jsons, ev_totals):
+    def __init__(self, statement_jsons=None, ev_totals=None, page=0):
         self.statements = []
         self.statements_sample = None
-        self.statement_jsons = statement_jsons
+        self.statement_jsons = {}
         self.done = False
-        self.evidence_counts = ev_totals.copy()
+        self.evidence_counts = {}
+        self.started = False
+        if statement_jsons is not None:
+            if ev_totals is None:
+                raise IndraDBRestError("If statement_jsons is given, ev_totals "
+                                       "must also be given.")
+            self.merge_json(statement_jsons, ev_totals)
+        self.__page_step = None
+        self.__page = page
+        self.__th = None
         return
 
     def get_ev_count(self, stmt):
@@ -74,9 +83,16 @@ class IndraDBRestResponse(object):
                         other_response.evidence_counts)
         return
 
+    def reset(self, page=0):
+        """Reset the response before loading more statements."""
+        self.done = False
+        self.__page = page
+        self.started = False
+        self.__th = None
+        return
+
     def merge_json(self, stmt_json, ev_counts):
         """Merge these statement jsons with new jsons."""
-
         # Where there is overlap, there _should_ be agreement.
         self.evidence_counts.update(ev_counts)
 
@@ -87,6 +103,11 @@ class IndraDBRestResponse(object):
                 # This should only happen rarely.
                 for evj in sj['evidence']:
                     self.statement_jsons[k]['evidence'].append(evj)
+
+        if not self.started:
+            self.statements_sample = stmts_from_json(
+                self.statement_jsons.values())
+            self.started = True
         return
 
     def compile_statements(self):
@@ -96,99 +117,83 @@ class IndraDBRestResponse(object):
     def wait_until_done(self, timeout=None):
         """Wait for the background load to complete."""
         start = datetime.now()
-        while not self.done:
-            sleep(2)
-            if timeout is not None:
-                now = datetime.now()
-                dt = now - start
-                if dt.total_seconds() > timeout:
-                    logger.warning("Timed out waiting for statement load to"
-                                   "complete.")
-                    break
-        dt = datetime.now() - start
-        logger.info("Waited %d seconds for statements to finish loading."
-                    % dt.total_seconds())
+        if not self.__th:
+            raise IndraDBRestError("There is no thread waiting to complete.")
+        self.__th.join(timeout)
+        now = datetime.now()
+        dt = now - start
+        if self.__th.is_alive():
+            logger.warning("Timed out after %0.3f seconds waiting for "
+                           "statement load to complete." % dt.total_seconds())
+        else:
+            logger.info("Waited %0.3f seconds for statements to finish loading."
+                        % dt.total_seconds())
         return
 
+    def _query_and_extract(self, agent_strs, params):
+        params['offset'] = self.__page
+        resp = _submit_query_request('statements', *agent_strs, **params)
+        resp_dict = resp.json(object_pairs_hook=OrderedDict)
+        stmts_json = resp_dict['statements']
+        total_ev = resp_dict['total_evidence']
+        ev_totals = resp_dict['evidence_totals']
+        self.__page_step = resp_dict['statement_limit']
 
-def _query_and_extract(agent_strs, params):
-    resp = _submit_query_request('statements', *agent_strs, **params)
-    resp_dict = resp.json(object_pairs_hook=OrderedDict)
-    stmts_json = resp_dict['statements']
-    total_ev = resp_dict['total_evidence']
-    ev_totals = resp_dict['evidence_totals']
-    stmt_limit = resp_dict['statement_limit']
+        # update the result
+        self.merge_json(stmts_json, ev_totals)
 
-    # NOTE: this is technically not a direct conclusion, and could be wrong,
-    # resulting in an unnecessary extra query, but that should almost never
-    # happen.
-    limited = (len(stmts_json) == stmt_limit)
-    return stmts_json, limited, stmt_limit, ev_totals
+        # NOTE: this is technically not a direct conclusion, and could be wrong,
+        # resulting in a single unnecessary extra query, but that should almost
+        # never happen, and if it does, it isn't the end of the world.
+        self.done = len(stmts_json) < self.__page_step
+        self.__page += self.__page_step
 
+        return
 
-def _get_statements_persistently(agent_strs, params, offset, offset_step, ret):
-    """Use paging to get all statements."""
-    limited = True
+    def _get_statements_persistently(self, agent_strs, params):
+        """Use paging to get all statements."""
+        # Get the rest of the content.
+        while not self.done:
+            self._query_and_extract(agent_strs, params)
 
-    # Get the rest of the content.
-    while limited:
-        # Get the next page.
-        offset = offset + offset_step
-        params['offset'] = offset
-        new_stmts_json, limited, _, ev_totals = \
-            _query_and_extract(agent_strs, params)
+        # Create the actual statements.
+        self.compile_statements()
+        return
 
-        # Merge in the new results
-        ret.merge_json(new_stmts_json, ev_totals)
-
-    # Create the actual statements.
-    ret.compile_statements()
-    ret.done = True
-    return
-
-
-def _make_stmts_query(agent_strs, params, persist=True, block=True):
-    """Slightly lower level function to get statements from the REST API."""
-    # Perform the first (and last?) query
-    stmts_json, limited, stmt_limit, ev_totals = \
-        _query_and_extract(agent_strs, params)
-
-    # Initialize the return dict.
-    ret = IndraDBRestResponse(stmts_json, ev_totals)
-
-    # Handle the content if we were limited.
-    if limited:
+    def make_stmts_query(self, agent_strs, params, persist=True,
+                         block_secs=None):
+        """Slightly lower level function to get statements from the REST API."""
+        # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
+        self.done = False
+        if 'offset' in params:
+            self.__page = params['offset']
         if persist:
-            offset = params.get('offset', 0)
-            args = [agent_strs, params, offset, stmt_limit, ret]
-            if block:
-                logger.info("You chose to persist, so I will paginate through "
-                            "the rest until I have everything!")
-                _get_statements_persistently(*args)
-                assert ret.done
-            else:
-                logger.info("You chose to persist without blocking. Pagination "
-                            "is being performed in a thread.")
-                ret.statements_sample = stmts_from_json(stmts_json.values())
-                th = Thread(target=_get_statements_persistently, args=args)
-                th.start()
+            args = [agent_strs, params]
+            logger.info("You chose to persist without blocking. Pagination "
+                        "is being performed in a thread.")
+            self.__th = Thread(target=self._get_statements_persistently, args=args)
+            self.__th.start()
+
+            if block_secs is None:
+                self.__th.join()
+            elif block_secs:  # is not 0
+                logger.info("Waiting for %d seconds..." % block_secs)
+                self.__th.join(block_secs)
         else:
+            self._query_and_extract(agent_strs, params)
             logger.warning("You did not choose persist=True, therefore this is "
                            "all you get.")
-            ret.compile_statements()
-            ret.statements_sample = ret.statements[:]
-            ret.done = True
-    else:
-        ret.compile_statements()
-        ret.done = True
-    return ret
+            self.compile_statements()
+            self.done = True
+        return
 
 
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, offset=None, persist=True, block=True,
-                   simple_response=True, ev_limit=10, best_first=True, tries=2):
+                   use_exact_type=False, offset=0, persist=True,
+                   timeout=None, simple_response=True, ev_limit=10,
+                   best_first=True, tries=2):
     """Get statements from INDRA's database using the web api.
 
     Parameters
@@ -213,22 +218,23 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
-    offset : int or None
+    offset : int
         Set the initial offset of this load. Given a query, start returning
         statements from the n'th in the list. This may be somewhat arbitrary,
         but if best_first is True, this will move down the list of statements in
-        order of quantity of supporting evidence.
+        order of quantity of supporting evidence. Default is 0.
     persist : bool
         Default is True. When False, if a query comes back limited (not all
         results returned), just give up and pass along what was returned.
         Otherwise, make further queries to get the rest of the data (which may
         take some time).
-    block : bool
-        If True, (and persist is True) block until all statements are retrieved.
-        Otherwise (if False), the statements will be retrieved in a thread and
-        may be accessed when ready. In the meantime the original sample will be
-        available. (Note, False is not really compatible with simple_response).
-        Default is True.
+    timeout : positive int or None
+        If an int, block until the work is done and statements are retrieved, or
+        until the timeout has expired, in which case the results so far will be
+        returned in the response object, and further results will be added in
+        a separate thread as they become available. If simple_response is True,
+        all statements available will be returned. Otherwise (if None), block
+        indefinitely until all statements are retrieved. Default is None.
     simple_response : bool
         If True, a simple list of statements is returned (thus block should also
         be True). If block is False, only the original sample will be returned
@@ -268,34 +274,30 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     key_val_list = [('subject', subject), ('object', object)]
     params = {param_key: param_val for param_key, param_val in key_val_list
               if param_val is not None}
-    if offset is not None:
-        params['offset'] = offset
     params['best_first'] = best_first
     params['ev_limit'] = ev_limit
     params['tries'] = tries
 
     # Handle the type(s).
-    if stmt_type is not None:
-        if use_exact_type:
+    resp = IndraDBRestResponse(page=offset)
+    if stmt_type is not None and not use_exact_type:
+        stmt_class = get_statement_by_name(stmt_type)
+        descendant_classes = get_all_descendants(stmt_class)
+        stmt_types = [cls.__name__ for cls in descendant_classes] \
+            + [stmt_type]
+        count = 0
+        for stmt_type in stmt_types:
+            resp.reset(page=offset)
             params['type'] = stmt_type
-            resp = _make_stmts_query(agent_strs, params, persist, block)
-        else:
-            stmt_class = get_statement_by_name(stmt_type)
-            descendant_classes = get_all_descendants(stmt_class)
-            stmt_types = [cls.__name__ for cls in descendant_classes] \
-                + [stmt_type]
-            resp = None
-            for stmt_type in stmt_types:
-                params['type'] = stmt_type
-                new_resp = _make_stmts_query(agent_strs, params, persist)
-                logger.info("Found %d %s statements."
-                            % (len(new_resp.statements), stmt_type))
-                if resp is None:
-                    resp = new_resp
-                else:
-                    resp.extend_statements(new_resp)
+            resp.make_stmts_query(agent_strs, params, persist, timeout)
+            new_count = len(resp.statements)
+            logger.info("Found %d %s statements."
+                        % (new_count - count, stmt_type))
+            count = new_count
     else:
-        resp = _make_stmts_query(agent_strs, params, persist, block)
+        if stmt_type:
+            params['type'] = stmt_type
+        resp.make_stmts_query(agent_strs, params, persist, timeout)
 
     if simple_response:
         ret = resp.statements
@@ -326,6 +328,16 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
         help gracefully handle an unreliable connection, if you're willing to
         wait. Default is 2.
     """
+    if not isinstance(hash_list, list):
+        raise ValueError("The `hash_list` input is a list, not %s."
+                         % type(hash_list))
+    if not hash_list:
+        return []
+    if isinstance(hash_list[0], str):
+        hash_list = [int(h) for h in hash_list]
+    if not all([isinstance(h, int) for h in hash_list]):
+        raise ValueError("Hashes must be ints or strings that can be converted "
+                         "into ints.")
     resp = _submit_request('post', 'statements/from_hashes',
                            data={'hashes': hash_list}, ev_limit=ev_limit,
                            best_first=best_first, tries=tries, div='')

@@ -66,7 +66,7 @@ def test_too_big_request_no_persist():
 
 @attr('nonpublic', 'slow')
 def test_too_big_request_persist_and_block():
-    resp_all1 = __check_request(120, agents=['TP53'], persist=True, block=True,
+    resp_all1 = __check_request(120, agents=['TP53'], persist=True, timeout=None,
                                 simple_response=False)
     assert sum(resp_all1.get_ev_count(s) is not None
                for s in resp_all1.statements) > 0.9*len(resp_all1.statements), \
@@ -79,7 +79,7 @@ def test_too_big_request_persist_no_block():
     resp_some = test_too_big_request_no_persist()
     resp_all1 = test_too_big_request_persist_and_block()
     resp_all2 = __check_request(60, agents=['TP53'], persist=True,
-                                block=False, check_stmts=False,
+                                timeout=10, check_stmts=False,
                                 simple_response=False)
     num_counts = sum(resp_all2.get_ev_count(s) is not None
                      for s in resp_all2.statements)
@@ -91,8 +91,11 @@ def test_too_big_request_persist_no_block():
     assert len(resp_all2.statements_sample) == len(resp_some.statements)
     resp_all2.wait_until_done(120)
     assert resp_all2.done
-    assert sum(resp_all2.get_ev_count(s) is not None
-               for s in resp_all2.statements) > 0.9*len(resp_all2.statements), \
+    assert resp_all2.statements
+    num_counts = sum(resp_all2.get_ev_count(s) is not None
+                     for s in resp_all2.statements)
+    num_stmts = len(resp_all2.statements)
+    assert num_counts > 0.9*num_stmts, \
         "Counts dict was improperly handled after completing."
     assert len(resp_all2.statements) == len(resp_all1.statements), \
         'Expected: %d, actual: %d' % (len(resp_all1.statements),
@@ -139,10 +142,5 @@ def test_get_statements_by_hash():
 
 @attr('nonpublic')
 def test_get_statements_by_hash_no_hash():
-    try:
-        stmts = dbr.get_statements_by_hash([])
-    except IndraDBRestError as e:
-        assert e.status_code == 400, \
-            "Query failed for wrong reason:\n%s" % str(e)
-        return
-    assert False, "Query with no hashes did not get an exception."
+    stmts = dbr.get_statements_by_hash([])
+    assert not stmts, "Got statements without giving a hash."
