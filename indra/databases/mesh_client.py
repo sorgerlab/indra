@@ -19,8 +19,9 @@ for mesh_id, mesh_label in read_unicode_csv(mesh_file, delimiter='\t'):
     mesh_mappings[mesh_id] = mesh_label
 
 
+@lru_cache(maxsize=1000)
 def get_mesh_name_from_web(mesh_id):
-    """Get the MESH label for the given MESH ID.
+    """Get the MESH label for the given MESH ID using the NLM REST API.
 
     Parameters
     ----------
@@ -47,6 +48,9 @@ def get_mesh_name_from_web(mesh_id):
 
 def get_mesh_name(mesh_id, offline=False):
     """Get the MESH label for the given MESH ID.
+
+    Uses the mappings table in `indra/resources`; if the MESH ID is not listed
+    there, falls back on the NLM REST API.
 
     Parameters
     ----------
