@@ -25,6 +25,7 @@ lincs_prot = os.path.join(resources, 'lincs_proteins.json')
 
 
 class LincsClient(object):
+    """Client for querying LINCS small molecules and proteins."""
     def __init__(self):
         with open(lincs_sm, 'r') as fh:
             self._sm_data = json.load(fh)

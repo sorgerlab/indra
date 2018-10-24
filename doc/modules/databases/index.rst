@@ -55,6 +55,12 @@ ChEMBL client (:py:mod:`indra.databases.chembl_client`)
 .. automodule:: indra.databases.chembl_client
     :members:
 
+LINCS client (:py:mod:`indra.databases.lincs_client`)
+-----------------------------------------------------
+
+.. automodule:: indra.databases.lincs_client
+    :members:
+
 MeSH client (:py:mod:`indra.databases.mesh_client`)
 ---------------------------------------------------
 
