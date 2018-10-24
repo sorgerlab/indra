@@ -245,7 +245,11 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         sensitive. If the statement class given has sub-classes
         (e.g. RegulateAmount has IncreaseAmount and DecreaseAmount), then both
         the class itself, and its subclasses, will be queried, by default. If
-        you do not want this behavior, set use_exact_type=True.
+        you do not want this behavior, set use_exact_type=True. Note that if
+        max_stmts is set, it is possible only the exact statement type will
+        be returned, as this is the first searched. The processor then cycles
+        through the types, getting a page of results for each type and adding it
+        to the quota, until the max number of statements is reached.
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
