@@ -7,7 +7,6 @@ graft data
 graft doc
 graft models
 graft rest_api
-graft db_rest_api
 include indra/sources/biopax/jars/paxtools.jar
 include indra/sources/cwms/trips_ontology.rdf
 include indra/sources/eidos/eidos_ontology.rdf
@@ -18,8 +17,6 @@ include indra/tools/machine/default-config.yaml
 include indra/tools/reading/util/reach_conf_fmt.txt
 include indra/assemblers/cag/cag_style.json
 include indra/assemblers/cag/cag_template.js
-include indra/db/default_db_config.ini
-include indra/db/elsevier_titles.txt
 include indra/literature/pmids_auth_xml.txt
 include indra/literature/pmids_fulltext.txt
 include indra/literature/pmids_oa_txt.txt
