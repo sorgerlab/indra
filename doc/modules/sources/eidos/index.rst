@@ -27,3 +27,9 @@ Eidos CLI (:py:mod:`indra.sources.eidos.cli`)
 
 .. automodule:: indra.sources.eidos.cli
     :members:
+
+Eidos Webserver (:py:mod:`indra.sources.eidos.server`)
+------------------------------------------------------
+
+.. automodule:: indra.sources.eidos.server
+    :members:
