@@ -55,15 +55,13 @@ class IndraDBRestAPIError(IndraDBRestClientError):
 
 class IndraDBRestResponse(object):
     """The packaging for query responses."""
-    def __init__(self, page=0, max_stmts=None):
+    def __init__(self, max_stmts=None):
         self.statements = []
         self.statements_sample = None
         self.__statement_jsons = {}
         self.__done = False
         self.__evidence_counts = {}
         self.__started = False
-        self.__page_step = None
-        self.__page_start = page
         self.__page_dict = {}
         self.__th = None
         self.__quota = max_stmts
@@ -147,9 +145,8 @@ class IndraDBRestResponse(object):
             resp_dict = resp.json(object_pairs_hook=OrderedDict)
             stmts_json = resp_dict['statements']
             ev_totals = resp_dict['evidence_totals']
-            self.__page_step = resp_dict['statement_limit']
+            page_step = resp_dict['statement_limit']
             num_returned = len(stmts_json)
-            self.__quota -= num_returned
 
             # Update the result
             self.merge_json(stmts_json, ev_totals)
@@ -158,11 +155,17 @@ class IndraDBRestResponse(object):
             # wrong, resulting in a single unnecessary extra query, but that
             # should almost never happen, and if it does, it isn't the end of
             # the world.
-            self.__done = num_returned < self.__page_step or self._quota <= 0
-            if not self.__done:
-                self.__page_dict[stmt_type] += self.__page_step
-            else:
-                break
+            self.__done = num_returned < page_step
+
+            # Check the quota
+            if self.__quota is not None:
+                self.__quota -= num_returned
+                if self.__quota <= 0:
+                    self.__done = True
+                    break
+
+            # Increment the page
+            self.__page_dict[stmt_type] += page_step
 
         return
 
@@ -189,7 +192,7 @@ class IndraDBRestResponse(object):
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         self.__done = False
-        self.__page_dict = {st: self.__page_start for st in stmt_types}
+        self.__page_dict = {st: 0 for st in stmt_types}
         args = [agent_strs, stmt_types, params, persist]
         logger.info("You chose to persist without blocking. Pagination "
                     "is being performed in a thread.")
@@ -206,9 +209,9 @@ class IndraDBRestResponse(object):
 
 @clockit
 def get_statements(subject=None, object=None, agents=None, stmt_type=None,
-                   use_exact_type=False, offset=0, persist=True,
-                   timeout=None, simple_response=True, ev_limit=10,
-                   best_first=True, tries=2, max_stmts=None):
+                   use_exact_type=False, persist=True, timeout=None,
+                   simple_response=True, ev_limit=10, best_first=True, tries=2,
+                   max_stmts=None):
     """Get Statements from the INDRA DB web API matching given agents and type.
 
     There are two types of response available. You can just get a list of
@@ -241,11 +244,6 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     use_exact_type : bool
         If stmt_type is given, and you only want to search for that specific
         statement type, set this to True. Default is False.
-    offset : int
-        Set the initial offset of this load. Given a query, start returning
-        statements from the n'th in the list. This may be somewhat arbitrary,
-        but if best_first is True, this will move down the list of statements in
-        order of quantity of supporting evidence. Default is 0.
     persist : bool
         Default is True. When False, if a query comes back limited (not all
         results returned), just give up and pass along what was returned.
@@ -313,7 +311,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         stmt_types += [cls.__name__ for cls in descendant_classes]
 
     # Get the response object
-    resp = IndraDBRestResponse(page=offset, max_stmts=max_stmts)
+    resp = IndraDBRestResponse(max_stmts=max_stmts)
     resp.make_stmts_query(agent_strs, stmt_types, params, persist, timeout)
 
     # Format the result appropriately.
