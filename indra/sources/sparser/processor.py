@@ -145,6 +145,12 @@ def _fix_agent(agent):
         elif db_ns == 'XFAM':
             db_refs_tmp.pop('XFAM', None)
             db_refs_tmp['PF'] = db_id.split('.')[0]
+        elif db_ns == 'GO':
+            db_refs_tmp.pop('GO', None)
+            if db_id.startswith('GO:'):
+                db_refs_tmp['GO'] = db_id
+            else:
+                db_refs_tmp['GO'] = 'GO:' + db_id
     agent.db_refs = db_refs_tmp
     # Check if we have a FPLX entry and handle old BE mappings
     if 'BE' in agent.db_refs:
