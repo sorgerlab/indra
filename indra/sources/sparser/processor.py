@@ -146,7 +146,6 @@ def _fix_agent(agent):
             db_refs_tmp.pop('XFAM', None)
             db_refs_tmp['PF'] = db_id.split('.')[0]
         elif db_ns == 'GO':
-            db_refs_tmp.pop('GO', None)
             if db_id.startswith('GO:'):
                 db_refs_tmp['GO'] = db_id
             else:
