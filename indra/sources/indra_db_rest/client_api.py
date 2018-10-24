@@ -63,7 +63,8 @@ class IndraDBRestResponse(object):
         self.__evidence_counts = {}
         self.__started = False
         self.__page_step = None
-        self.__page = page
+        self.__page_start = page
+        self.__page_dict = {}
         self.__th = None
         self.__quota = max_stmts
         return
@@ -92,14 +93,6 @@ class IndraDBRestResponse(object):
 
         self.merge_json(other_response.__statement_jsons,
                         other_response.__evidence_counts)
-        return
-
-    def reset(self, page=0):
-        """Reset the response before loading more statements."""
-        self.__done = False
-        self.__page = page
-        self.__started = False
-        self.__th = None
         return
 
     def merge_json(self, stmt_json, ev_counts):
@@ -144,51 +137,60 @@ class IndraDBRestResponse(object):
             ret = True
         return ret
 
-    def _query_and_extract(self, agent_strs, params):
-        params['offset'] = self.__page
-        params['max_stmts'] = self.__quota
-        resp = _submit_query_request('statements', *agent_strs, **params)
-        resp_dict = resp.json(object_pairs_hook=OrderedDict)
-        stmts_json = resp_dict['statements']
-        ev_totals = resp_dict['evidence_totals']
-        self.__page_step = resp_dict['statement_limit']
-        num_returned = len(stmts_json)
-        self.__quota -= num_returned
+    def _query_and_extract(self, agent_strs, stmt_types, params):
+        assert not self.__done, "Tried to run a page query but I'm done!"
+        for stmt_type in stmt_types:
+            params['offset'] = self.__page_dict[stmt_type]
+            params['max_stmts'] = self.__quota
+            params['stmt_type'] = stmt_type
+            resp = _submit_query_request('statements', *agent_strs, **params)
+            resp_dict = resp.json(object_pairs_hook=OrderedDict)
+            stmts_json = resp_dict['statements']
+            ev_totals = resp_dict['evidence_totals']
+            self.__page_step = resp_dict['statement_limit']
+            num_returned = len(stmts_json)
+            self.__quota -= num_returned
 
-        # update the result
-        self.merge_json(stmts_json, ev_totals)
+            # Update the result
+            self.merge_json(stmts_json, ev_totals)
 
-        # NOTE: this is technically not a direct conclusion, and could be wrong,
-        # resulting in a single unnecessary extra query, but that should almost
-        # never happen, and if it does, it isn't the end of the world.
-        self.__done = num_returned < self.__page_step or self._quota <= 0
-        if not self.__done:
-            self.__page += self.__page_step
+            # NOTE: this is technically not a direct conclusion, and could be
+            # wrong, resulting in a single unnecessary extra query, but that
+            # should almost never happen, and if it does, it isn't the end of
+            # the world.
+            self.__done = num_returned < self.__page_step or self._quota <= 0
+            if not self.__done:
+                self.__page_dict[stmt_type] += self.__page_step
+            else:
+                break
 
         return
 
-    def _run_queries(self, agent_strs, params, persist):
+    def _run_queries(self, agent_strs, stmt_types, params, persist):
         """Use paging to get all statements requested."""
-        self._query_and_extract(agent_strs, params)
+        self._query_and_extract(agent_strs, stmt_types, params.copy())
+
+        # Check if we want to keep going.
+        if not persist:
+            self.compile_statements()
+            return
 
         # Get the rest of the content.
-        if persist:
-            while not self.__done:
-                self._query_and_extract(agent_strs, params)
+        while not self.__done:
+            self._query_and_extract(agent_strs, stmt_types, params.copy())
 
         # Create the actual statements.
         self.compile_statements()
         return
 
-    def make_stmts_query(self, agent_strs, params, persist=True,
+    def make_stmts_query(self, agent_strs, stmt_types, params, persist=True,
                          block_secs=None):
         """Slightly lower level function to get statements from the REST API."""
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         self.__done = False
-        if 'offset' in params:
-            self.__page = params['offset']
-        args = [agent_strs, params, persist]
+        self.__page_dict = {st: self.__page_start for st in stmt_types}
+        args = [agent_strs, stmt_types, params, persist]
         logger.info("You chose to persist without blocking. Pagination "
                     "is being performed in a thread.")
         self.__th = Thread(target=self._run_queries, args=args)
@@ -207,7 +209,15 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, offset=0, persist=True,
                    timeout=None, simple_response=True, ev_limit=10,
                    best_first=True, tries=2, max_stmts=None):
-    """Get statements from INDRA's database using the web api.
+    """Get Statements from the INDRA DB web API matching given agents and type.
+
+    There are two types of response available. You can just get a list of
+    INDRA Statements, or you can get an IndraRestResponse object, which allows
+    Statements to be loaded in a background thread, providing a sample of the
+    best* content available promptly in the sample_statements attribute, and
+    populates the statements attribute when the paged load is complete.
+
+    *In the sense of having the most supporting evidence.
 
     Parameters
     ----------
@@ -296,26 +306,17 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     params['tries'] = tries
 
     # Handle the type(s).
-    resp = IndraDBRestResponse(page=offset, max_stmts=max_stmts)
+    stmt_types = [stmt_type] if stmt_type else []
     if stmt_type is not None and not use_exact_type:
         stmt_class = get_statement_by_name(stmt_type)
         descendant_classes = get_all_descendants(stmt_class)
-        stmt_types = [cls.__name__ for cls in descendant_classes] \
-            + [stmt_type]
-        count = 0
-        for stmt_type in stmt_types:
-            resp.reset(page=offset)
-            params['type'] = stmt_type
-            resp.make_stmts_query(agent_strs, params, persist, timeout)
-            new_count = len(resp.statements)
-            logger.info("Found %d %s statements."
-                        % (new_count - count, stmt_type))
-            count = new_count
-    else:
-        if stmt_type:
-            params['type'] = stmt_type
-        resp.make_stmts_query(agent_strs, params, persist, timeout)
+        stmt_types += [cls.__name__ for cls in descendant_classes]
 
+    # Get the response object
+    resp = IndraDBRestResponse(page=offset, max_stmts=max_stmts)
+    resp.make_stmts_query(agent_strs, stmt_types, params, persist, timeout)
+
+    # Format the result appropriately.
     if simple_response:
         ret = resp.statements
     else:
