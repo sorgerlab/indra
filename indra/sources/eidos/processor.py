@@ -178,7 +178,6 @@ class EidosProcessor(object):
 
         annotations = {'found_by': event.get('rule'),
                        'provenance': provenance}
-        print(provenance)
         if self.dct is not None:
             annotations['document_creation_time'] = self.dct.to_json()
 
