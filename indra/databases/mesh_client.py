@@ -56,7 +56,7 @@ def get_mesh_name(mesh_id, offline=False):
     ----------
     mesh_id : str
         MESH Identifier, e.g. 'D003094'.
-    offline : boolean
+    offline : bool
         Whether to allow queries to the NLM REST API if the given MESH ID is not
         contained in INDRA's internal MESH mappings file. Default is False
         (allows REST API queries).
