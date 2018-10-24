@@ -8,11 +8,10 @@ __all__ = ['get_statements', 'get_statements_for_paper',
 import json
 import logging
 import requests
-from time import sleep
 from os.path import join
 from threading import Thread
 from datetime import datetime
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 from indra.util import clockit
 
@@ -59,10 +58,10 @@ class IndraDBRestResponse(object):
         self.statements = []
         self.statements_sample = None
         self.__statement_jsons = {}
-        self.__done = False
+        self.__done_dict = defaultdict(lambda: False)
         self.__evidence_counts = {}
         self.__started = False
-        self.__page_dict = {}
+        self.__page_dict = defaultdict(lambda: 0)
         self.__th = None
         self.__quota = max_stmts
         return
@@ -135,9 +134,15 @@ class IndraDBRestResponse(object):
             ret = True
         return ret
 
+    def _all_done(self):
+        return all(self.__done_dict.values()) or self.__quota <= 0
+
     def _query_and_extract(self, agent_strs, stmt_types, params):
-        assert not self.__done, "Tried to run a page query but I'm done!"
+        assert not self._all_done(), "Tried to run query but I'm done!"
         for stmt_type in stmt_types:
+            if self.__done_dict[stmt_type]:
+                continue
+
             params['offset'] = self.__page_dict[stmt_type]
             params['max_stmts'] = self.__quota
             params['stmt_type'] = stmt_type
@@ -155,13 +160,12 @@ class IndraDBRestResponse(object):
             # wrong, resulting in a single unnecessary extra query, but that
             # should almost never happen, and if it does, it isn't the end of
             # the world.
-            self.__done = num_returned < page_step
+            self.__done_dict[stmt_types] = num_returned < page_step
 
             # Check the quota
             if self.__quota is not None:
                 self.__quota -= num_returned
                 if self.__quota <= 0:
-                    self.__done = True
                     break
 
             # Increment the page
@@ -173,26 +177,27 @@ class IndraDBRestResponse(object):
         """Use paging to get all statements requested."""
         self._query_and_extract(agent_strs, stmt_types, params.copy())
 
+        assert len(self.__done_dict) == len(stmt_types), \
+            "Done was not initiated for all stmt_type's."
+
         # Check if we want to keep going.
         if not persist:
             self.compile_statements()
             return
 
         # Get the rest of the content.
-        while not self.__done:
+        while not self._all_done():
             self._query_and_extract(agent_strs, stmt_types, params.copy())
 
         # Create the actual statements.
         self.compile_statements()
         return
 
-    def make_stmts_query(self, agent_strs, stmt_types, params, persist=True,
-                         block_secs=None):
+    def make_stmts_queries(self, agent_strs, stmt_types, params, persist=True,
+                           block_secs=None):
         """Slightly lower level function to get statements from the REST API."""
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
-        self.__done = False
-        self.__page_dict = {st: 0 for st in stmt_types}
         args = [agent_strs, stmt_types, params, persist]
         logger.info("You chose to persist without blocking. Pagination "
                     "is being performed in a thread.")
@@ -312,7 +317,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     # Get the response object
     resp = IndraDBRestResponse(max_stmts=max_stmts)
-    resp.make_stmts_query(agent_strs, stmt_types, params, persist, timeout)
+    resp.make_stmts_queries(agent_strs, stmt_types, params, persist, timeout)
 
     # Format the result appropriately.
     if simple_response:
