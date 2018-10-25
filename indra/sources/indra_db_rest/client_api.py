@@ -135,7 +135,10 @@ class IndraDBRestResponse(object):
         return ret
 
     def _all_done(self):
-        return all(self.__done_dict.values()) or self.__quota <= 0
+        every_type_done = (len(self.__done_dict) > 0
+                           and all(self.__done_dict.values()))
+        quota_done = (self.__quota is not None and self.__quota <= 0)
+        return every_type_done or quota_done
 
     def _query_and_extract(self, agent_strs, stmt_types, params):
         assert not self._all_done(), "Tried to run query but I'm done!"
@@ -145,7 +148,7 @@ class IndraDBRestResponse(object):
 
             params['offset'] = self.__page_dict[stmt_type]
             params['max_stmts'] = self.__quota
-            params['stmt_type'] = stmt_type
+            params['type'] = stmt_type
             resp = _submit_query_request('statements', *agent_strs, **params)
             resp_dict = resp.json(object_pairs_hook=OrderedDict)
             stmts_json = resp_dict['statements']
@@ -160,7 +163,7 @@ class IndraDBRestResponse(object):
             # wrong, resulting in a single unnecessary extra query, but that
             # should almost never happen, and if it does, it isn't the end of
             # the world.
-            self.__done_dict[stmt_types] = num_returned < page_step
+            self.__done_dict[stmt_type] = num_returned < page_step
 
             # Check the quota
             if self.__quota is not None:
