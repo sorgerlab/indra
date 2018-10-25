@@ -376,8 +376,11 @@ class Preassembler(object):
                                     "preassembly in the child processes.")
                 else:
                     stmt_ix_map += res.get()
+                logger.debug("Closing pool...")
                 pool.close()
+                logger.debug("Joining pool...")
                 pool.join()
+                logger.debug("Pool closed and joined.")
             time.sleep(1)
         logger.debug("Done.")
         # Combine all redundant map edges
@@ -572,6 +575,11 @@ class Preassembler(object):
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
                              check_entities_match=False):
+    logger.debug("Getting support pairs for %d tuples with idx %s and stmts %s "
+                 "split at %s."
+                 % (len(stmt_tuples), [idx for idx, _ in stmt_tuples],
+                    [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
+                    split_idx))
     # Make the iterator by one of two methods, depending on the case
     if split_idx is None:
         stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
@@ -587,6 +595,7 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
 
     # Actually create the index maps.
     ix_map = []
+    logger.debug("Finding links...")
     for stmt_tuple1, stmt_tuple2 in stmt_pair_iter:
         stmt_ix1, stmt1 = stmt_tuple1
         stmt_ix2, stmt2 = stmt_tuple2
@@ -596,7 +605,7 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
             ix_map.append((stmt_ix1, stmt_ix2))
         elif stmt2.refinement_of(stmt1, hierarchies):
             ix_map.append((stmt_ix2, stmt_ix1))
-
+    logger.debug('Found %d links.' % len(ix_map))
     return ix_map
 
 
@@ -668,6 +677,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
     nodes = set([])
     edges = set([])
     stmt_dict = {}
+
     # Recursive function for processing all statements
     def process_stmt(stmt):
         nodes.add(str(stmt.matches_key()))
@@ -675,6 +685,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         for sby_ix, sby_stmt in enumerate(stmt.supported_by):
             edges.add((str(stmt.matches_key()), str(sby_stmt.matches_key())))
             process_stmt(sby_stmt)
+
     # Process all of the top-level statements, getting the supporting statements
     # recursively
     for stmt in statements:
@@ -705,7 +716,6 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
                            **agent_style)
     pgv_graph.add_edges_from(nx_graph.edges())
     return pgv_graph
-
 
 
 def flatten_stmts(stmts):
