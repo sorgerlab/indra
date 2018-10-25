@@ -329,7 +329,13 @@ class Preassembler(object):
 
             # Divide statements by group size
             # If we're not using multiprocessing, then all groups are local
-            for g in stmt_by_group.values():
+            for g_name, g in stmt_by_group.items():
+                if len(g) < 2:
+                    logger.debug("Skipping group %s with only %d members..."
+                                 % (g_name, len(g)))
+                    continue
+                logger.debug("Considering group %s with %d members..."
+                             % (g_name, len(g)))
                 if use_mp and len(g) >= size_cutoff:
                     child_proc_groups.append(g)
                 else:
