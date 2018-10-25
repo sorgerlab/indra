@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import json
 from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -1154,6 +1155,57 @@ def test_related_complex_refinement():
     assert st1.refinement_of(st4, hierarchies)
     assert not st2.refinement_of(st1, hierarchies)
     assert not st4.refinement_of(st1, hierarchies)
+
+
+def test_big_complex_refinement():
+    c1js = ('{"type": "Complex", "members": [{"name": "MMP2", "db_refs": '
+            '{"UP": "P08253", "TEXT": "MMP-2", "HGNC": "7166"}},'
+            '{"name": "MMP9", "db_refs": {"UP": "P14780", "TEXT": "MMP-9", '
+            '"HGNC": "7176"}}, {"name": "ERVK-6", "db_refs": {"UP": "Q9Y6I0", '
+            '"HGNC": "13915"}}, {"name": "ERVK-7", "db_refs": {"UP": "P63131", '
+            '"HGNC": "31828"}}, {"name": "ERVK-24", "db_refs": '
+            '{"UP": "P63129", "HGNC": "39038"}}, {"name": "ERVK-9", "db_refs": '
+            '{"UP": "P63127", "HGNC": "39005"}}, {"name": "ERVK-25", '
+            '"db_refs": {"UP": "P63125", "HGNC": "39039"}}, '
+            '{"name": "HERV-K104", "db_refs": {"UP": "P63124"}}, '
+            '{"name": "ERVK-18", "db_refs": {"UP": "P63123", '
+            '"HGNC": "39025"}}, {"name": "ERVK-8", "db_refs": {"UP": "P63122", '
+            '"HGNC": "32302"}}, {"name": "HERVK_113", "db_refs": '
+            '{"UP": "P63121"}}, {"name": "ERVK-19", "db_refs": '
+            '{"UP": "P63120", "HGNC": "39026"}}, {"name": "F2RL1", "db_refs": '
+            '{"UP": "P55085", "HGNC": "3538"}}, {"name": "ERVK-10", "db_refs": '
+            '{"UP": "P10265", "HGNC": "39004"}}], "belief": 1.0, "evidence": '
+            '[{"source_api": "sparser", "text": "The results suggest that for '
+            'the completion of invasion and migration of H-ras MCF10A cells, '
+            'not only matrix-degrading proteinase activities of MMP-2 and '
+            'MMP-9 but also other intracellular events through activation of '
+            'ERKs signaling pathways are essential.", "annotations": '
+            '{"found_by": "BIO-ACTIVITY"}}], "id": '
+            '"c41869d1-d48b-4756-8a76-052515ae3a6d"}')
+    c2js = ('{"type": "Complex", "members": [{"name": "MMP3", "db_refs": '
+            '{"UP": "P08254", "TEXT": "MMP-3", "HGNC": "7173"}}, '
+            '{"name": "MMP7", "db_refs": {"UP": "P09237", "TEXT": "MMP-7", '
+            '"HGNC": "7174"}}, {"name": "ERVK-6", "db_refs": {"UP": "Q9Y6I0", '
+            '"HGNC": "13915"}}, {"name": "ERVK-7", "db_refs": {"UP": "P63131", '
+            '"HGNC": "31828"}}, {"name": "ERVK-24", "db_refs": '
+            '{"UP": "P63129", "HGNC": "39038"}}, {"name": "ERVK-9", "db_refs": '
+            '{"UP": "P63127", "HGNC": "39005"}}, {"name": "ERVK-25", '
+            '"db_refs": {"UP": "P63125", "HGNC": "39039"}}, '
+            '{"name": "HERV-K104", "db_refs": {"UP": "P63124"}}, '
+            '{"name": "ERVK-18", "db_refs": {"UP": "P63123", '
+            '"HGNC": "39025"}}, {"name": "ERVK-8", "db_refs": {"UP": "P63122", '
+            '"HGNC": "32302"}}, {"name": "HERVK_113", "db_refs": '
+            '{"UP": "P63121"}}, {"name": "ERVK-19", "db_refs": {"UP": "P63120",'
+            ' "HGNC": "39026"}}, {"name": "F2RL1", "db_refs": {"UP": "P55085", '
+            '"HGNC": "3538"}}, {"name": "ERVK-10", "db_refs": {"UP": "P10265", '
+            '"HGNC": "39004"}}], "belief": 1.0, "evidence": [{"source_api": '
+            '"sparser", "text": "Proteinase activities of MMP-3 and MMP-7 were '
+            'quantified by means of casein zymography (,  and ).", '
+            '"annotations": {"found_by": "BIO-ACTIVITY"}}], "id": '
+            '"5a03d72c-755e-4262-b8c8-9f632305c703"}')
+    c1 = Statement._from_json(json.loads(c1js))
+    c2 = Statement._from_json(json.loads(c2js))
+    c1.refinement_of(c2, hierarchies)
 
 
 @raises(InvalidResidueError)
