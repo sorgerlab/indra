@@ -2525,7 +2525,7 @@ class Complex(Statement):
 
         def match_members(self_members, other_members):
             # First build a bipartite graph of refinement links
-            G = networkx.DiGraph()
+            G = networkx.Graph()
             for (self_idx, self_member), (other_idx, other_member) in \
                 itertools.product(enumerate(self_members),
                                   enumerate(other_members)):

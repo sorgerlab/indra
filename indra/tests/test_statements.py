@@ -1208,6 +1208,16 @@ def test_big_complex_refinement():
     c1.refinement_of(c2, hierarchies)
 
 
+def test_mtor_rictor_refinement():
+    mt = Agent('MTOR')
+    mtm = Agent('MTOR', mods=[ModCondition('phosphorylation')])
+    rt = Agent('RICTOR')
+    c1 = Complex([mt, rt, rt])
+    c2 = Complex([mtm, mt, mt])
+    assert not c1.refinement_of(c2, hierarchies)
+    assert not c2.refinement_of(c1, hierarchies)
+
+
 @raises(InvalidResidueError)
 def test_residue_mod_condition():
     ModCondition('phosphorylation', 'xyz')
