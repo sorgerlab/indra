@@ -23,6 +23,7 @@ except:
 def _fix_json_agents(ag_obj):
     """Fix the json representation of an agent."""
     if isinstance(ag_obj, str):
+        logger.info("Fixing string agent: %s." % ag_obj)
         ret = {'name': ag_obj, 'db_refs': {'TEXT': ag_obj}}
     elif isinstance(ag_obj, list):
         # Recursive for complexes and similar.
@@ -57,6 +58,7 @@ class SparserJSONProcessor(object):
             try:
                 # If type isn't there, we have a very serious problem.
                 stmt_type = json_stmt['type']
+
                 # Step 1: fix JSON directly to reduce errors when deserializing
                 # 1.1 - Check for string agents.
                 stmt_class = get_statement_by_name(stmt_type)
@@ -83,7 +85,8 @@ class SparserJSONProcessor(object):
                     obj_activity = json_stmt.get('obj_activity')
                     if isinstance(obj_activity, list):
                         if len(obj_activity) != 1:
-                            print('Invalid object activity: %s' % obj_activity)
+                            logger.error('Invalid object activity: %s'
+                                         % obj_activity)
                         else:
                             json_stmt['obj_activity'] = obj_activity[0]
                     obj = json_stmt.get('obj')
