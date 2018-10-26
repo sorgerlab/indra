@@ -96,7 +96,6 @@ def test_process_json_str_with_bad_agents():
     sp = sparser.process_json_dict(json.loads(json_str2))
     assert sp is not None
     assert len(sp.statements) == 2, len(sp.statements)
-    print(sp.statements)
     types = {type(s) for s in sp.statements}
     assert types == {Complex, Phosphorylation}, types
     assert all(len(s.agent_list()) == 2 for s in sp.statements)

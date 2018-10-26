@@ -34,17 +34,17 @@ def _fix_json_agents(ag_obj):
 
 
 class SparserJSONProcessor(object):
-    """The SparserJSONProcessor extracts INDRA Statements from Sparser's output.
+    """Processor extracting INDRA Statements from Sparser's JSON output.
 
     Parameters
     ----------
-    json_dict : dict
-        A JSON dictionary containing the REACH extractions.
+    json_dict : list
+        JSON containing the raw Sparser extractions.
 
     Attributes
     ----------
-    json_stmts : json dictionary
-        A json list of dictionaries containing the raw sparser output.
+    json_stmts : list
+        JSON containing the raw Sparser extractions.
     statements : list[indra.statements.Statement]
         A list of INDRA Statements that were extracted by the processor.
     """
@@ -148,6 +148,8 @@ class SparserJSONProcessor(object):
     def set_statements_pmid(self, pmid):
         """Set the evidence PMID of Statements that have been extracted.
 
+        Parameters
+        ----------
         pmid : str
             The PMID to be used in the Evidence objects of the Statements
             that were extracted by the processor.
@@ -233,12 +235,12 @@ def _fix_agent(agent):
 
 
 class SparserXMLProcessor(object):
-    """The SparserJSONProcessor extracts INDRA Statements from Sparser's output.
+    """Processor extracting INDRA Statements from Sparser's XML output.
 
     Parameters
     ----------
     xml_etree : xml.etree.ElementTree
-        An xml ElementTree containing the xml output of sparser.
+        An ElementTree containing the XML output of Sparser.
 
     Attributes
     ----------
