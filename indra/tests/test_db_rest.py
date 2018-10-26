@@ -87,10 +87,11 @@ def test_too_big_request_persist_no_block():
     assert num_counts == num_stmts, \
         ("Counts dict was improperly handled before completing: %d counts "
          "for %d statements." % (num_counts, num_stmts))
-    assert not resp_all2.done, "Background complete resolved too fast."
+    assert resp_all2.is_working(), "Background complete resolved too fast."
     assert len(resp_all2.statements_sample) == len(resp_some.statements)
     resp_all2.wait_until_done(120)
-    assert resp_all2.done
+    assert not resp_all2.is_working(), \
+        "Response is still working. Took too long."
     assert resp_all2.statements
     num_counts = sum(resp_all2.get_ev_count(s) is not None
                      for s in resp_all2.statements)
