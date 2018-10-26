@@ -320,24 +320,29 @@ class Preassembler(object):
 
         child_proc_groups = []
         parent_proc_groups = []
+        skipped_groups = 0
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
-            logger.info('Preassembling %s (%s)' %
+            logger.info('Grouping %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
             stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
                                                     eh)
 
             # Divide statements by group size
             # If we're not using multiprocessing, then all groups are local
-            for g in stmt_by_group.values():
+            for g_name, g in stmt_by_group.items():
+                if len(g) < 2:
+                    skipped_groups += 1
+                    continue
                 if use_mp and len(g) >= size_cutoff:
                     child_proc_groups.append(g)
                 else:
                     parent_proc_groups.append(g)
 
         # Now run preassembly!
-        logger.debug("Groups: %d parent, %d worker" %
-                     (len(parent_proc_groups), len(child_proc_groups)))
+        logger.debug("Groups: %d parent, %d worker, %d skipped." %
+                     (len(parent_proc_groups), len(child_proc_groups),
+                      skipped_groups))
 
         supports_func = functools.partial(_set_supports_stmt_pairs,
                                           hierarchies=self.hierarchies,
@@ -376,8 +381,11 @@ class Preassembler(object):
                                     "preassembly in the child processes.")
                 else:
                     stmt_ix_map += res.get()
+                logger.debug("Closing pool...")
                 pool.close()
+                logger.debug("Joining pool...")
                 pool.join()
+                logger.debug("Pool closed and joined.")
             time.sleep(1)
         logger.debug("Done.")
         # Combine all redundant map edges
@@ -572,7 +580,13 @@ class Preassembler(object):
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
                              check_entities_match=False):
-    # Make the iterator by one of two methods, depending on the case
+    # This is useful when deep-debugging, but even for normal debug is too much.
+    # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
+    #              "%s split at %s."
+    #              % (len(stmt_tuples), [idx for idx, _ in stmt_tuples],
+    #                 [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
+    #                 split_idx))
+    #  Make the iterator by one of two methods, depending on the case
     if split_idx is None:
         stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
     else:
@@ -596,7 +610,6 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
             ix_map.append((stmt_ix1, stmt_ix2))
         elif stmt2.refinement_of(stmt1, hierarchies):
             ix_map.append((stmt_ix2, stmt_ix1))
-
     return ix_map
 
 
@@ -668,6 +681,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
     nodes = set([])
     edges = set([])
     stmt_dict = {}
+
     # Recursive function for processing all statements
     def process_stmt(stmt):
         nodes.add(str(stmt.matches_key()))
@@ -675,6 +689,7 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
         for sby_ix, sby_stmt in enumerate(stmt.supported_by):
             edges.add((str(stmt.matches_key()), str(sby_stmt.matches_key())))
             process_stmt(sby_stmt)
+
     # Process all of the top-level statements, getting the supporting statements
     # recursively
     for stmt in statements:
@@ -705,7 +720,6 @@ def render_stmt_graph(statements, reduce=True, english=False, rankdir=None,
                            **agent_style)
     pgv_graph.add_edges_from(nx_graph.edges())
     return pgv_graph
-
 
 
 def flatten_stmts(stmts):

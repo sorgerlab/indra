@@ -1,16 +1,19 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
 from builtins import dict, str
 import os
+from collections import OrderedDict
+
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.sources import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
-                             Dephosphorylation, Evidence, ModCondition, \
-                             ActiveForm, MutCondition, Complex, \
-                             Translocation, Activation, Inhibition, \
-                             Deacetylation, Conversion, Concept, Influence, \
-                             IncreaseAmount, DecreaseAmount
+    Dephosphorylation, Evidence, ModCondition, \
+    ActiveForm, MutCondition, Complex, \
+    Translocation, Activation, Inhibition, \
+    Deacetylation, Conversion, Concept, Influence, \
+    IncreaseAmount, DecreaseAmount, Statement
 from indra.preassembler.hierarchy_manager import hierarchies
 
 
@@ -772,4 +775,3 @@ def test_agent_text_storage():
     assert all([len(ev.annotations['prior_uuids']) == 2 for ev in old_ev_list])
     assert new_ev
     assert len(new_ev.annotations['prior_uuids']) == 1
-

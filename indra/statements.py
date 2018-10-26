@@ -203,6 +203,7 @@ import sys
 import uuid
 import rdflib
 import logging
+import networkx
 import datetime
 import itertools
 from hashlib import md5
@@ -1375,7 +1376,6 @@ class Statement(object):
 
     def to_graph(self):
         """Return Statement as a networkx graph."""
-        import networkx
         def json_node(graph, element, prefix):
             if not element:
                 return None
@@ -2522,36 +2522,19 @@ class Complex(Statement):
         # than as a refinement.
         if len(self.members) != len(other.members):
             return False
-        # Check that every member in other is refined in self, but only once!
 
         def match_members(self_members, other_members):
-            # Build all the permutations of the other complex's members
-            other_member_perms = \
-                itertools.permutations(other_members, len(other_members))
-            # Compare self with all orders of other
-            for other_member_perm in other_member_perms:
-                self_match_indices = set([])
-                # See if each of the members in other has a corresponding
-                # member in self
-                for other_agent in other_member_perm:
-                    for self_agent_ix, self_agent in enumerate(self_members):
-                        # This is when the agent is already matched so we
-                        # don't want to match it (use it) again
-                        if self_agent_ix in self_match_indices:
-                            continue
-                        # If self member is a refinement of other, record
-                        # self's index to make sure we know it's matched
-                        # and don't match it again
-                        if self_agent.refinement_of(other_agent, hierarchies):
-                            self_match_indices.add(self_agent_ix)
-                            break
-                # If we matches all self members to other members, this is
-                # a refinement and we can return
-                if len(self_match_indices) == len(other_members):
-                    return True
-            # If none of the orderings resulted in refinement then this
-            # is not a refinement
-            return False
+            # First build a bipartite graph of refinement links
+            G = networkx.Graph()
+            for (self_idx, self_member), (other_idx, other_member) in \
+                itertools.product(enumerate(self_members),
+                                  enumerate(other_members)):
+                if self_member.refinement_of(other_member, hierarchies):
+                    G.add_edge('S%d' % self_idx, 'O%d' % other_idx)
+            # Then find a maximal matching in the bipartite graph
+            match = networkx.algorithms.max_weight_matching(G)
+            # If every member has a pair, it is a valid refinement
+            return len(match) == len(self_members)
 
         return match_members(self.members, other.members)
 
