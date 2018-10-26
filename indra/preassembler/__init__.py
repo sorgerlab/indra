@@ -320,9 +320,10 @@ class Preassembler(object):
 
         child_proc_groups = []
         parent_proc_groups = []
+        skipped_groups = 0
         # Each Statement type can be preassembled independently
         for stmt_type, stmts_this_type in stmts_by_type.items():
-            logger.info('Preassembling %s (%s)' %
+            logger.info('Grouping %s (%s)' %
                         (stmt_type.__name__, len(stmts_this_type)))
             stmt_by_group = self._get_stmt_by_group(stmt_type, stmts_this_type,
                                                     eh)
@@ -331,19 +332,17 @@ class Preassembler(object):
             # If we're not using multiprocessing, then all groups are local
             for g_name, g in stmt_by_group.items():
                 if len(g) < 2:
-                    logger.debug("Skipping group %s with only %d members..."
-                                 % (g_name, len(g)))
+                    skipped_groups += 1
                     continue
-                logger.debug("Considering group %s with %d members..."
-                             % (g_name, len(g)))
                 if use_mp and len(g) >= size_cutoff:
                     child_proc_groups.append(g)
                 else:
                     parent_proc_groups.append(g)
 
         # Now run preassembly!
-        logger.debug("Groups: %d parent, %d worker" %
-                     (len(parent_proc_groups), len(child_proc_groups)))
+        logger.debug("Groups: %d parent, %d worker, %d skipped." %
+                     (len(parent_proc_groups), len(child_proc_groups),
+                      skipped_groups))
 
         supports_func = functools.partial(_set_supports_stmt_pairs,
                                           hierarchies=self.hierarchies,
@@ -581,12 +580,13 @@ class Preassembler(object):
 
 def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
                              check_entities_match=False):
-    logger.debug("Getting support pairs for %d tuples with idx %s and stmts %s "
-                 "split at %s."
-                 % (len(stmt_tuples), [idx for idx, _ in stmt_tuples],
-                    [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
-                    split_idx))
-    # Make the iterator by one of two methods, depending on the case
+    # This is useful when deep-debugging, but even for normal debug is too much.
+    # logger.debug("Getting support pairs for %d tuples with idx %s and stmts "
+    #              "%s split at %s."
+    #              % (len(stmt_tuples), [idx for idx, _ in stmt_tuples],
+    #                 [(s.get_hash(shallow=True), s) for _, s in stmt_tuples],
+    #                 split_idx))
+    #  Make the iterator by one of two methods, depending on the case
     if split_idx is None:
         stmt_pair_iter = itertools.combinations(stmt_tuples, 2)
     else:
@@ -601,7 +601,6 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
 
     # Actually create the index maps.
     ix_map = []
-    logger.debug("Finding links...")
     for stmt_tuple1, stmt_tuple2 in stmt_pair_iter:
         stmt_ix1, stmt1 = stmt_tuple1
         stmt_ix2, stmt2 = stmt_tuple2
@@ -611,7 +610,6 @@ def _set_supports_stmt_pairs(stmt_tuples, split_idx=None, hierarchies=None,
             ix_map.append((stmt_ix1, stmt_ix2))
         elif stmt2.refinement_of(stmt1, hierarchies):
             ix_map.append((stmt_ix2, stmt_ix1))
-    logger.debug('Found %d links.' % len(ix_map))
     return ix_map
 
 
