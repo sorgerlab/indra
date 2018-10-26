@@ -20,8 +20,34 @@ except:
     basestring = str
 
 
+def _fix_json_agents(ag_obj):
+    """Fix the json representation of an agent."""
+    if isinstance(ag_obj, str):
+        logger.info("Fixing string agent: %s." % ag_obj)
+        ret = {'name': ag_obj, 'db_refs': {'TEXT': ag_obj}}
+    elif isinstance(ag_obj, list):
+        # Recursive for complexes and similar.
+        ret = [_fix_json_agents(ag) for ag in ag_obj]
+    else:
+        ret = ag_obj
+    return ret
+
 
 class SparserJSONProcessor(object):
+    """Processor extracting INDRA Statements from Sparser's JSON output.
+
+    Parameters
+    ----------
+    json_dict : list
+        JSON containing the raw Sparser extractions.
+
+    Attributes
+    ----------
+    json_stmts : list
+        JSON containing the raw Sparser extractions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    """
     def __init__(self, json_dict):
         self.json_stmts = json_dict
         self.statements = []
@@ -30,8 +56,17 @@ class SparserJSONProcessor(object):
         mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
         for json_stmt in self.json_stmts:
             try:
+                # If type isn't there, we have a very serious problem.
+                stmt_type = json_stmt['type']
+
                 # Step 1: fix JSON directly to reduce errors when deserializing
-                if json_stmt.get('type') in mod_class_names:
+                # 1.1 - Check for string agents.
+                stmt_class = get_statement_by_name(stmt_type)
+                for ag_key in stmt_class._agent_order:
+                    json_stmt[ag_key] = _fix_json_agents(json_stmt[ag_key])
+
+                # 1.2 - Fix other misc things.
+                if stmt_type in mod_class_names:
                     position = json_stmt.get('position')
                     residue = json_stmt.get('residue')
                     if isinstance(position, list):
@@ -46,17 +81,18 @@ class SparserJSONProcessor(object):
                             logger.error('Invalid residue: %s' % residue)
                         else:
                             json_stmt['residue'] = residue[0]
-                elif json_stmt.get('type') in ('Activation', 'Inhibition'):
+                elif stmt_type in ('Activation', 'Inhibition'):
                     obj_activity = json_stmt.get('obj_activity')
                     if isinstance(obj_activity, list):
                         if len(obj_activity) != 1:
-                            print('Invalid object activity: %s' % obj_activity)
+                            logger.error('Invalid object activity: %s'
+                                         % obj_activity)
                         else:
                             json_stmt['obj_activity'] = obj_activity[0]
                     obj = json_stmt.get('obj')
                     if isinstance(obj, (list, str)):
                         continue
-                elif json_stmt.get('type') == 'Translocation':
+                elif stmt_type == 'Translocation':
                     # Fix locations if possible
                     for loc_param in ('from_location', 'to_location'):
                         loc = json_stmt.get(loc_param)
@@ -71,7 +107,7 @@ class SparserJSONProcessor(object):
                     if (json_stmt.get('from_location') is None
                        and json_stmt.get('to_location') is None):
                         continue
-                elif json_stmt.get('type') == 'GeneTranscriptExpress':
+                elif stmt_type == 'GeneTranscriptExpress':
                     continue
 
                 # Step 2: Deserialize into INDRA Statement
@@ -112,6 +148,8 @@ class SparserJSONProcessor(object):
     def set_statements_pmid(self, pmid):
         """Set the evidence PMID of Statements that have been extracted.
 
+        Parameters
+        ----------
         pmid : str
             The PMID to be used in the Evidence objects of the Statements
             that were extracted by the processor.
@@ -145,6 +183,11 @@ def _fix_agent(agent):
         elif db_ns == 'XFAM':
             db_refs_tmp.pop('XFAM', None)
             db_refs_tmp['PF'] = db_id.split('.')[0]
+        elif db_ns == 'GO':
+            if db_id.startswith('GO:'):
+                db_refs_tmp['GO'] = db_id
+            else:
+                db_refs_tmp['GO'] = 'GO:' + db_id
     agent.db_refs = db_refs_tmp
     # Check if we have a FPLX entry and handle old BE mappings
     if 'BE' in agent.db_refs:
@@ -192,6 +235,22 @@ def _fix_agent(agent):
 
 
 class SparserXMLProcessor(object):
+    """Processor extracting INDRA Statements from Sparser's XML output.
+
+    Parameters
+    ----------
+    xml_etree : xml.etree.ElementTree
+        An ElementTree containing the XML output of Sparser.
+
+    Attributes
+    ----------
+    tree : objectpath.Tree
+        The objectpath Tree object representing the extractions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    pmid : str
+        The pmid of the content the statements were extracted from.
+    """
     def __init__(self, xml_etree):
         self.tree = xml_etree
         self.statements = []
@@ -283,7 +342,8 @@ class SparserXMLProcessor(object):
                 continue
             for event, sentence in events:
                 # Get the subject of the activation
-                subj_ref = event.find("ref/var/[@name='by-means-of-or-agent']/ref")
+                subj_ref = event.find("ref/var/[@name='by-means-of-or-agent']"
+                                      "/ref")
                 if subj_ref is None:
                     subj_ref = event.find("ref/var/[@name='agent']/ref")
                 if subj_ref is None:
