@@ -20,6 +20,18 @@ except:
     basestring = str
 
 
+def _fix_json_agents(ag_obj):
+    """Fix the json representation of an agent."""
+    if isinstance(ag_obj, str):
+        ret = {'name': ag_obj, 'db_refs': {'TEXT': ag_obj}}
+    elif isinstance(ag_obj, list):
+        # Recursive for complexes and similar.
+        ret = [_fix_json_agents(ag) for ag in ag_obj]
+    else:
+        ret = ag_obj
+    return ret
+
+
 class SparserJSONProcessor(object):
     """The SparserJSONProcessor extracts INDRA Statements from Sparser's output.
 
@@ -43,8 +55,16 @@ class SparserJSONProcessor(object):
         mod_class_names = [cls.__name__ for cls in modclass_to_modtype.keys()]
         for json_stmt in self.json_stmts:
             try:
+                # If type isn't there, we have a very serious problem.
+                stmt_type = json_stmt['type']
                 # Step 1: fix JSON directly to reduce errors when deserializing
-                if json_stmt.get('type') in mod_class_names:
+                # 1.1 - Check for string agents.
+                stmt_class = get_statement_by_name(stmt_type)
+                for ag_key in stmt_class._agent_order:
+                    json_stmt[ag_key] = _fix_json_agents(json_stmt[ag_key])
+
+                # 1.2 - Fix other misc things.
+                if stmt_type in mod_class_names:
                     position = json_stmt.get('position')
                     residue = json_stmt.get('residue')
                     if isinstance(position, list):
@@ -59,7 +79,7 @@ class SparserJSONProcessor(object):
                             logger.error('Invalid residue: %s' % residue)
                         else:
                             json_stmt['residue'] = residue[0]
-                elif json_stmt.get('type') in ('Activation', 'Inhibition'):
+                elif stmt_type in ('Activation', 'Inhibition'):
                     obj_activity = json_stmt.get('obj_activity')
                     if isinstance(obj_activity, list):
                         if len(obj_activity) != 1:
@@ -69,7 +89,7 @@ class SparserJSONProcessor(object):
                     obj = json_stmt.get('obj')
                     if isinstance(obj, (list, str)):
                         continue
-                elif json_stmt.get('type') == 'Translocation':
+                elif stmt_type == 'Translocation':
                     # Fix locations if possible
                     for loc_param in ('from_location', 'to_location'):
                         loc = json_stmt.get(loc_param)
@@ -84,7 +104,7 @@ class SparserJSONProcessor(object):
                     if (json_stmt.get('from_location') is None
                        and json_stmt.get('to_location') is None):
                         continue
-                elif json_stmt.get('type') == 'GeneTranscriptExpress':
+                elif stmt_type == 'GeneTranscriptExpress':
                     continue
 
                 # Step 2: Deserialize into INDRA Statement
