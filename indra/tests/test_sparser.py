@@ -1,7 +1,7 @@
 import json
 from indra.sources import sparser
 from indra.sources.sparser.processor import _fix_agent
-from indra.statements import Agent, Phosphorylation
+from indra.statements import Agent, Phosphorylation, Complex
 from nose.plugins.attrib import attr
 
 # ############################
@@ -92,6 +92,16 @@ def test_process_json_str():
     assert sp.json_stmts[0]['evidence'][0]['pmid'] == '1234567'
 
 
+def test_process_json_str_with_bad_agents():
+    sp = sparser.process_json_dict(json.loads(json_str2))
+    assert sp is not None
+    assert len(sp.statements) == 2, len(sp.statements)
+    print(sp.statements)
+    types = {type(s) for s in sp.statements}
+    assert types == {Complex, Phosphorylation}, types
+    assert all(len(s.agent_list()) == 2 for s in sp.statements)
+
+
 xml_str1 = '''
 <article pmid="54321">
  <interpretation>
@@ -177,4 +187,36 @@ json_str1 = '''
       "TEXT": "MEK"},
     "TEXT": "MEK"}
  }
+]'''
+
+json_str2 = '''
+[
+  {
+    "type": "Phosphorylation",
+    "evidence": [
+      {
+          "source_api": "sparser",
+          "text": "MEK phosphorylates ERK",
+          "pmid": "PMC_3500"}],
+    "sub": "ERK",
+    "enz": {
+      "name": "MEK",
+      "db_refs": {
+          "FPLX": "MEK",
+          "TEXT": "MEK"},
+      "TEXT": "MEK"}
+  },
+  {
+    "type": "Complex",
+    "members": [
+      "MEK",
+      {
+        "name": "ERK",
+        "db_refs": {"FPLX": "ERK",
+                    "TEXT": "ERK"}
+      }
+    ],
+    "belief": 1,
+    "id": "3eedc7a9-fbbd-4e2e-b227-07d96f4bcff5"
+  }
 ]'''
