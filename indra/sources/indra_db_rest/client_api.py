@@ -76,6 +76,12 @@ class IndraDBRestResponse(object):
         """Get the total evidence count for a statement."""
         return self.__evidence_counts.get(str(stmt.get_hash(shallow=True)))
 
+    def get_hash_statements_dict(self):
+        """Return a dict of Statements keyed by hashes."""
+        res = {stmt_hash: stmts_from_json([stmt])[0]
+               for stmt_hash, stmt in self.__statement_jsons.items()}
+        return res
+
     def extend_statements(self, other_response):
         """Extend this object with new statements."""
         if not isinstance(other_response, self.__class__):
