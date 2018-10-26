@@ -3407,7 +3407,7 @@ def stmts_from_json(json_in, on_missing_support='handle'):
 
     Parameters
     ----------
-    json_in : list[dict]
+    json_in : iterable[dict]
         A json list containing json dict representations of INDRA Statements,
         as produced by the `to_json` methods of subclasses of Statement, or
         equivalently by `stmts_to_json`.
