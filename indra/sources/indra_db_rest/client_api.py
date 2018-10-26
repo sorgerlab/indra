@@ -140,48 +140,58 @@ class IndraDBRestResponse(object):
         quota_done = (self.__quota is not None and self.__quota <= 0)
         return every_type_done or quota_done
 
-    def _query_and_extract(self, agent_strs, stmt_types, params):
+    def _query_and_extract(self, agent_strs, params, stmt_type=None):
         assert not self._all_done(), "Tried to run query but I'm done!"
-        for stmt_type in stmt_types:
-            if self.__done_dict[stmt_type]:
-                continue
-
-            params['offset'] = self.__page_dict[stmt_type]
-            params['max_stmts'] = self.__quota
+        params['offset'] = self.__page_dict[stmt_type]
+        params['max_stmts'] = self.__quota
+        if stmt_type is not None:
             params['type'] = stmt_type
-            resp = _submit_query_request('statements', *agent_strs, **params)
-            resp_dict = resp.json(object_pairs_hook=OrderedDict)
-            stmts_json = resp_dict['statements']
-            ev_totals = resp_dict['evidence_totals']
-            page_step = resp_dict['statement_limit']
-            num_returned = len(stmts_json)
+        resp = _submit_query_request('statements', *agent_strs, **params)
+        resp_dict = resp.json(object_pairs_hook=OrderedDict)
+        stmts_json = resp_dict['statements']
+        ev_totals = resp_dict['evidence_totals']
+        page_step = resp_dict['statement_limit']
+        num_returned = len(stmts_json)
 
-            # Update the result
-            self.merge_json(stmts_json, ev_totals)
+        # Update the result
+        self.merge_json(stmts_json, ev_totals)
 
-            # NOTE: this is technically not a direct conclusion, and could be
-            # wrong, resulting in a single unnecessary extra query, but that
-            # should almost never happen, and if it does, it isn't the end of
-            # the world.
-            self.__done_dict[stmt_type] = num_returned < page_step
+        # NOTE: this is technically not a direct conclusion, and could be
+        # wrong, resulting in a single unnecessary extra query, but that
+        # should almost never happen, and if it does, it isn't the end of
+        # the world.
+        self.__done_dict[stmt_type] = num_returned < page_step
 
-            # Check the quota
-            if self.__quota is not None:
-                self.__quota -= num_returned
-                if self.__quota <= 0:
+        # Update the quota
+        if self.__quota is not None:
+            self.__quota -= num_returned
+
+        # Increment the page
+        self.__page_dict[stmt_type] += page_step
+
+        return
+
+    def _query_over_statement_types(self, agent_strs, stmt_types, params):
+        if not stmt_types:
+            self._query_and_extract(agent_strs, params.copy())
+        else:
+            for stmt_type in stmt_types:
+                if self.__done_dict[stmt_type]:
+                    continue
+                self._query_and_extract(agent_strs, params.copy(), stmt_type)
+
+                # Check the quota
+                if self.__quota is not None and self.__quota <= 0:
                     break
-
-            # Increment the page
-            self.__page_dict[stmt_type] += page_step
-
         return
 
     def _run_queries(self, agent_strs, stmt_types, params, persist):
         """Use paging to get all statements requested."""
-        self._query_and_extract(agent_strs, stmt_types, params.copy())
+        self._query_over_statement_types(agent_strs, stmt_types, params)
 
-        assert len(self.__done_dict) == len(stmt_types), \
-            "Done was not initiated for all stmt_type's."
+        assert len(self.__done_dict) == len(stmt_types) \
+            or None in self.__done_dict.keys(), \
+            "Done dict was not initiated for all stmt_type's."
 
         # Check if we want to keep going.
         if not persist:
@@ -190,7 +200,7 @@ class IndraDBRestResponse(object):
 
         # Get the rest of the content.
         while not self._all_done():
-            self._query_and_extract(agent_strs, stmt_types, params.copy())
+            self._query_over_statement_types(agent_strs, stmt_types, params)
 
         # Create the actual statements.
         self.compile_statements()
