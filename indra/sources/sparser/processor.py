@@ -20,8 +20,21 @@ except:
     basestring = str
 
 
-
 class SparserJSONProcessor(object):
+    """The SparserJSONProcessor extracts INDRA Statements from Sparser's output.
+
+    Parameters
+    ----------
+    json_dict : dict
+        A JSON dictionary containing the REACH extractions.
+
+    Attributes
+    ----------
+    json_stmts : json dictionary
+        A json list of dictionaries containing the raw sparser output.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    """
     def __init__(self, json_dict):
         self.json_stmts = json_dict
         self.statements = []
@@ -197,6 +210,22 @@ def _fix_agent(agent):
 
 
 class SparserXMLProcessor(object):
+    """The SparserJSONProcessor extracts INDRA Statements from Sparser's output.
+
+    Parameters
+    ----------
+    xml_etree : xml.etree.ElementTree
+        An xml ElementTree containing the xml output of sparser.
+
+    Attributes
+    ----------
+    tree : objectpath.Tree
+        The objectpath Tree object representing the extractions.
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements that were extracted by the processor.
+    pmid : str
+        The pmid of the content the statements were extracted from.
+    """
     def __init__(self, xml_etree):
         self.tree = xml_etree
         self.statements = []
@@ -288,7 +317,8 @@ class SparserXMLProcessor(object):
                 continue
             for event, sentence in events:
                 # Get the subject of the activation
-                subj_ref = event.find("ref/var/[@name='by-means-of-or-agent']/ref")
+                subj_ref = event.find("ref/var/[@name='by-means-of-or-agent']"
+                                      "/ref")
                 if subj_ref is None:
                     subj_ref = event.find("ref/var/[@name='agent']/ref")
                 if subj_ref is None:
