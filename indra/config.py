@@ -91,11 +91,16 @@ def get_config(key, failure_ok=True):
     ----------
     key : str
         The key for the configuration value to fetch
+    failure_ok : Optional[bool]
+        If False and the configuration is missing, an IndraConfigError is
+        raised. If True, None is returned and no error is raised in case
+        of a missing configuration. Default: True
 
     Returns
     -------
-    value : str
-        The configuration value
+    value : str or None
+        The configuration value or None if the configuration value doesn't
+        exist and failure_ok is set to True.
     """
     err_msg = "Key %s not in environment or config file." % key
     if key in os.environ:
