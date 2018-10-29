@@ -200,10 +200,12 @@ __all__ = [
 import os
 import abc
 import sys
+import json
 import uuid
 import rdflib
 import logging
 import networkx
+import textwrap
 import datetime
 import itertools
 from hashlib import md5
@@ -1162,8 +1164,15 @@ class Evidence(object):
     def __str__(self):
         ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
         ev_str += '         pmid=\'%s\',\n' % self.pmid
-        ev_str += '         text=\'%s\',\n' % self.text
-        ev_str += '         annotations=%s)' % self.annotations
+        if self.text:
+            txt_lines = textwrap.wrap(self.text, width=65)
+            txt = textwrap.indent('\n'.join(txt_lines), prefix=' '*15).lstrip(' ')
+            ev_str += '         text=\'%s\',\n' % txt
+        if self.annotations:
+            annot = json.dumps(self.annotations, indent=1)
+            annot = textwrap.indent(annot, prefix=' '*22).lstrip(' ')
+            ev_str += '         annotations=%s' % annot
+        ev_str += ')\n\n'
         return ev_str
 
     def __repr__(self):
