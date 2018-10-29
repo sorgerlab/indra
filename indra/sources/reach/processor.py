@@ -115,7 +115,7 @@ class ReachProcessor(object):
                 elif self._get_arg_type(a) == 'site':
                     site = a['text']
             theme_agent, coords = self._get_agent_from_entity(theme)
-            annotations['agent_coordinates'].append(coords)
+            annotations['agents']['coordinates'].append(coords)
             if site is not None:
                 mods = self._parse_site_text(site)
             else:
@@ -139,10 +139,12 @@ class ReachProcessor(object):
                             if controller is not None:
                                 controller_agent, coords = \
                                     self._get_agent_from_entity(controller)
-                                annotations['agent_coordinates'].append(coords)
+                                temp = annotations['agents']['coordinates']
+                                temp.append(coords)
                                 break
                             else:
-                                annotations['agent_coordinates'].append(None)
+                                temp = annotations['agents']['coordinates']
+                                temp.append(None)
                     # Check the polarity of the regulation and if negative,
                     # flip the modification type.
                     # For instance, negative-regulation of a phosphorylation
@@ -200,7 +202,7 @@ class ReachProcessor(object):
                     theme = a['arg']
                     break
             if theme is None:
-                annotations['agent_coordinates'].append(None)
+                annotations['agents']['coordinates'].append(None)
                 continue
             theme_agent, coords = self._get_agent_from_entity(theme)
             annotations['agent_coordinates'].append(coords)
@@ -214,9 +216,9 @@ class ReachProcessor(object):
                         controller_agent, coords = \
                             self._get_controller_agent(a)
                 if controller_agent is None:
-                    annotations['agent_coordinates'].append(None)
+                    annotations['agents']['coordinates'].append(None)
                 else:
-                    annotations['agent_coordinates'].append(coords)
+                    annotations['agents']['coordinates'].append(coords)
                 sentence = reg['verbose-text']
 
                 ev = Evidence(source_api='reach', text=sentence,
@@ -255,7 +257,7 @@ class ReachProcessor(object):
             for a in args:
                 agent, coords = self._get_agent_from_entity(a['arg'])
                 members.append(agent)
-                annotations['agent_coordinates'].append(coords)
+                annotations['agents']['coordinates'].append(coords)
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=annotations, pmid=self.citation,
                           context=context, epistemics=epistemics)
@@ -281,11 +283,11 @@ class ReachProcessor(object):
             for a in args:
                 if self._get_arg_type(a) == 'controller':
                     controller_agent, coords = self._get_controller_agent(a)
-                    annotations['agent_coordinates'].append(coords)
+                    annotations['agents']['coordinates'].append(coords)
                 if self._get_arg_type(a) == 'controlled':
                     controlled = a['arg']
             controlled_agent, coords = self._get_agent_from_entity(controlled)
-            annotations['agent_coordinates'].append(coords)
+            annotations['agents']['coordinates'].append(coords)
             if r['subtype'] == 'positive-activation':
                 st = Activation(controller_agent, controlled_agent,
                                 evidence=ev)
@@ -316,9 +318,9 @@ class ReachProcessor(object):
                 if self._get_arg_type(a) == 'theme':
                     agent, coords = self._get_agent_from_entity(a['arg'])
                     if agent is None:
-                        annotations['agent_coordinates'].append(None)
+                        annotations['agents']['coordinates'].append(None)
                         continue
-                    annotations['agent_coordinates'].append(coords)
+                    annotations['agents']['coordinates'].append(coords)
                 elif self._get_arg_type(a) == 'source':
                     from_location = self._get_location_by_id(a['arg'])
                 elif self._get_arg_type(a) == 'destination':
@@ -525,7 +527,7 @@ class ReachProcessor(object):
 
     def _get_annot_context(self, frame_term):
         annotations = {'found_by': frame_term['found_by'],
-                       'agent_coordinates': []}
+                       'agents': {'coordinates': []}}
         try:
             context_id = frame_term['context']
         except KeyError:
