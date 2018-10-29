@@ -3662,7 +3662,7 @@
 (S)-2-(4-(2-bromoacetamido)benzyl)-DOTA	CHEBI:63643
 (S)-2-(4-chloro-2-methylphenoxy)propanoate	CHEBI:75285
 (S)-2-(4-nitrobenzyl)-DOTA	CHEBI:42034
-(S)-2-Hydroxymonocarboxylic acid	CHEBI:381
+(S)-2-Hydroxymonocarboxylic acid	CHEBI:17375
 (S)-2-Methylbutanoyl-CoA	CHEBI:90222
 (S)-2-O-sulfolactic acid	CHEBI:17943
 (S)-2-O-sulfonatolactate(2-)	CHEBI:61287
@@ -11662,7 +11662,7 @@
 3-hydroxy-9-oxo-9,10-seco-23,24-bisnorchola-1,3,5(10)-trien-22-oyl-CoA	CHEBI:84618
 3-hydroxy-9-oxo-9,10-seco-23,24-bisnorchola-1,3,5(10)-trien-22-oyl-CoA(4-)	CHEBI:83794
 3-hydroxy-D-aspartic acid	CHEBI:60887
-3-hydroxy-L-aspartate residue	CHEBI:75591
+3-hydroxy-L-aspartate residue	CHEBI:17427
 3-hydroxy-L-aspartic acid	CHEBI:48423
 3-hydroxy-L-glutamate(1-)	CHEBI:32810
 3-hydroxy-L-glutamate(2-)	CHEBI:17652
@@ -20377,7 +20377,7 @@ Gambiriin B2	CHEBI:81329
 Gambiriin B3	CHEBI:81330
 Gambiriin C	CHEBI:5271
 Gambirtannine	CHEBI:81165
-Ganglioside GD3(2-)	CHEBI:78437
+Ganglioside GD3(2-)	CHEBI:78436
 Ganodermanontriol	CHEBI:68858
 Ganschisandrin	CHEBI:69668
 Garcinol	CHEBI:5276
@@ -38314,7 +38314,7 @@ di-trans,poly-cis-Hexaprenyl diphosphate	CHEBI:81085
 di-trans,poly-cis-Nonaprenyl diphosphate	CHEBI:81089
 di-trans,poly-cis-Octaprenyl diphosphate	CHEBI:81088
 di-trans,poly-cis-Pentaprenyl diphosphate	CHEBI:81086
-di-trans,poly-cis-Undecaprenol	CHEBI:81181
+di-trans,poly-cis-Undecaprenol	CHEBI:61216
 di-trans,poly-cis-decaprenyl diphosphate	CHEBI:18239
 di-trans,poly-cis-decaprenyl diphosphate(3-)	CHEBI:58418
 di-trans,poly-cis-dodecaprenyl diphosphate	CHEBI:60461
@@ -55824,7 +55824,7 @@ trichloroethene	CHEBI:16602
 trichloroethyl beta-D-glucoside	CHEBI:74542
 trichloroferrate(1-)	CHEBI:30810
 trichlorofluoromethane	CHEBI:48236
-trichlorohydroquinone	CHEBI:27101
+trichlorohydroquinone	CHEBI:28263
 trichloromethyl group	CHEBI:30736
 trichloromethyl(.)	CHEBI:30737
 trichloromuconic acid	CHEBI:38448

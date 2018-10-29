@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import json
 import gzip
 import pickle
 import pandas
@@ -445,7 +446,7 @@ def update_lincs_small_molecules():
     assert len(sm_dict) == len(sm_data), "We lost data."
     fname = os.path.join(path, 'lincs_small_molecules.json')
     with open(fname, 'w') as fh:
-        json.dump(fh, sm_dict, indent=1)
+        json.dump(sm_dict, fh, indent=1)
 
 
 def update_lincs_proteins():
@@ -461,28 +462,28 @@ def update_lincs_proteins():
     assert len(prot_dict) == len(prot_data), "We lost data."
     fname = os.path.join(path, 'lincs_proteins.json')
     with open(fname, 'w') as fh:
-        json.dump(fh, prot_dict, indent=1)
+        json.dump(prot_dict, fh, indent=1)
 
 
 if __name__ == '__main__':
-    update_famplex()
-    update_famplex_map()
-    update_hgnc_entries()
-    update_kinases()
-    update_uniprot_entries()
-    update_uniprot_sec_ac()
-    update_uniprot_subcell_loc()
-    update_chebi_entries()
-    update_chebi_names()
-    update_chebi_primary_map()
-    update_cas_to_chebi()
-    update_cellular_components()
-    update_bel_chebi_map()
-    update_entity_hierarchy()
-    update_modification_hierarchy()
-    update_activity_hierarchy()
-    update_cellular_component_hierarchy()
-    update_hierarchy_pickle()
-    update_ncit_map()
+    #update_famplex()
+    #update_famplex_map()
+    #update_hgnc_entries()
+    #update_kinases()
+    #update_uniprot_entries()
+    #update_uniprot_sec_ac()
+    #update_uniprot_subcell_loc()
+    #update_chebi_entries()
+    #update_chebi_names()
+    #update_chebi_primary_map()
+    #update_cas_to_chebi()
+    #update_cellular_components()
+    #update_bel_chebi_map()
+    #update_entity_hierarchy()
+    #update_modification_hierarchy()
+    #update_activity_hierarchy()
+    #update_cellular_component_hierarchy()
+    #update_hierarchy_pickle()
+    #update_ncit_map()
     update_lincs_small_molecules()
     update_lincs_proteins()

@@ -11,12 +11,13 @@ COMPOUND_ID	NAME
 15	(+)-Bornyl-diphosphate
 16	(+)-Camphor
 18	(+)-Catechin
-20	(+)-Comphene
 20	(1R,4S)-camphene
+20	(+)-Comphene
 21	(+)-Dihydromyricetin
 21	Dihydromyricetin
 25	(+)-Iridodial
 26	(+)-Iridodial
+26	(+)-cis-trans-nepetalactol
 27	(+)-Limonene
 28	(R)-linalool
 31	(1S,4R)-menthone
@@ -80,8 +81,8 @@ COMPOUND_ID	NAME
 122	(-)-Usnic acid
 124	(-)-Viburnitol
 127	(-)-alpha-Pinene
-128	(S)-alpha-terpineol
 128	(-)-alpha-Terpineol
+128	(S)-alpha-terpineol
 129	(-)-beta-phellandrene
 129	(-)-beta-Phellandrene
 130	(-)-beta-Pinene
@@ -111,8 +112,8 @@ COMPOUND_ID	NAME
 155	(1R,4S)-Iso-dihydrocarvone
 155	(1R,4S)-isodihydrocarvone
 156	(1S,2R,4R)-Neoiso-dihydrocarveol
-158	(1S,2R,4S)-Neo-dihydrocarveol
 158	(1S,2R,4S)-neodihydrocarveol
+158	(1S,2R,4S)-Neo-dihydrocarveol
 161	(1S,2S,4R)-Iso-dihydrocarveol
 162	(1S,2S,4S)-Dihydrocarveol
 163	(1S,3R)-Nanaomycin A
@@ -153,8 +154,8 @@ COMPOUND_ID	NAME
 206	(3S)-3,6-Diaminohexanoate
 207	(3S)-3-Carboxy-3-hydroxypropanoyl-CoA
 208	(3S)-3-Hydroxyacyl-CoA
-211	(3S)-3-isopropenyl-6-oxoheptanoate
 211	(3S)-3-Isopropenyl-6-oxoheptanoate
+211	(3S)-3-isopropenyl-6-oxoheptanoate
 212	(3S)-3-Isopropenyl-6-oxoheptanoyl-CoA
 215	(3S)-Citramalyl-CoA
 216	(3S)-Citryl-CoA
@@ -170,8 +171,8 @@ COMPOUND_ID	NAME
 228	(4R,7R)-4-Isopropenyl-7-methyl-2-oxo-oxepanone
 229	(4S)-4,6-Dihydroxy-2,5-dioxohexanoate
 231	(4S,5S)-4,5-Dihydroxy-2,6-dioxohexanoate
-232	(4S,6S)-cis-Carveol
 232	(1S,5S)-carveol
+232	(4S,6S)-cis-Carveol
 233	(4S,7R)-4-Isopropenyl-7-methyl-2-oxo-oxepanone
 233	(4S,7R)-4-isopropenyl-7-methyloxepan-2-one
 243	(5Z)-(15S)-11alpha-Hydroxy-9,15-dioxoprosta-13-enoate
@@ -182,8 +183,8 @@ COMPOUND_ID	NAME
 248	(5Z,13E)-6,9alpha-Epoxy-11alpha-hydroxy-15-oxoprosta-5,13-dienoate
 249	(5Z,13E)-9alpha-Hydroxy-11,15-dioxoprosta-5,13-dienoate
 250	(5Z,8Z,10E,14Z)-(12S)-12-Hydroperoxyeicosa-5,8,10,14-tetraenoate
-251	(5Z,9E,11Z,14Z)-(8R)-8-Hydroxyperoxyeicosa-5,9,11,14-tetraenoate
 251	8(R)-HPETE
+251	(5Z,9E,11Z,14Z)-(8R)-8-Hydroxyperoxyeicosa-5,9,11,14-tetraenoate
 252	(5Z,9E,14Z)-(8xi,11R,12S)-11,12-Epoxy-8-hydroxyicosa-5,9,14-trienoic acid
 253	(5Z,9E,14Z)-(8xi,11xi,12S)-8,11,12-Trihydroxyicosa-5,9,14-trienoate
 254	(6R)-6-(L-erythro-1,2-Dihydroxypropyl)-5,6,7,8-tetrahydro-4a-hydroxypterin
@@ -197,8 +198,8 @@ COMPOUND_ID	NAME
 264	(9Z,11E)-(13S)-13-Hydroperoxyoctadeca-9,11-dienoate
 266	(9Z,12Z)-(11S)-11-Hydroperoxyoctadeca-9,12-dienoate
 266	(9Z,12Z)-(11S)-11-Hydroperoxyoctadeca-9,12-dienoic acid
-267	(7S,8S)-DiHODE
 267	(9Z,12Z)-(7S,8S)-Dihydroxyoctadeca-9,12-dienoate
+267	(7S,8S)-DiHODE
 271	(Alginate)n
 273	(E)-11-Tetradecenoyl-CoA
 274	(E)-2-(2-Furyl)-3-(5-nitro-2-furyl)acrylamide
@@ -228,8 +229,8 @@ COMPOUND_ID	NAME
 311	(R)-2-Hydroxypropyl-CoM
 313	(R)-2-Methyl-3-oxopropanoyl-CoA
 314	(R)-2-Methylimino-1-phenylpropan-1-ol
-316	(3R)-3-Methyl-2-oxopentanoic acid
 316	(R)-2-Oxo-3-methylpentanoate
+316	(3R)-3-Methyl-2-oxopentanoic acid
 317	(R)-3,3-Dimethylmalate
 320	(R)-3-Amino-2-methylpropanoate
 323	(R)-3-Hydroxybutanoyl-CoA
@@ -279,6 +280,7 @@ COMPOUND_ID	NAME
 378	(S)-2-Hydroxy acid
 379	(S)-3-Hydroxy-3-methyl-2-oxopentanoate
 380	(S)-2-Hydroxyglutarate
+381	(S)-2-Hydroxymonocarboxylic acid
 382	(S)-2-Hydroxypropyl-CoM
 384	(S)-2-Methyl-3-oxopropanoyl-CoA
 386	(S)-2-O-Sulfolactate
@@ -447,6 +449,7 @@ COMPOUND_ID	NAME
 606	1-Amino-1-deoxy-scyllo-inositol
 607	1-Amino-1-deoxy-scyllo-inositol 4-phosphate
 612	1-Butanol
+614	1-O-(trans-caffeoyl)-beta-D-glucose
 615	1-Carbapen-2-em-3-carboxylic acid
 617	1-Carboxyvinyl carboxyphosphonate
 618	1-Chloro-2,2-bis(4'-chlorophenyl)ethane
@@ -524,6 +527,8 @@ COMPOUND_ID	NAME
 729	11-cis-Retinyl palmitate
 730	11-epi-Prostaglandin F2alpha
 731	11alpha-Hydroxyprogesterone
+732	11beta,17alpha,21-Trihydroxy-5beta-pregnane-3,20-dione
+732	5beta-dihydrocortisol
 733	11beta,17alpha,21-Trihydroxypregnenolone
 734	11beta,21-Dihydroxy-3,20-oxo-5beta-pregnan-18-al
 736	11beta-Hydroxyandrost-4-ene-3,17-dione
@@ -632,6 +637,7 @@ COMPOUND_ID	NAME
 862	2,3,2',3'-Tetrakis(3-hydroxytetradecanoyl)-D-glucosaminyl-1,6-beta-D-glucosamine 1-phosphate
 863	2,3,2'3'-Tetrakis(3-hydroxytetradecanoyl)-D-glucosaminyl-1,6-beta-D-glucosamine 1,4'-bisphosphate
 866	2,3,5-Trihydroxytoluene
+867	2,3,6-Trichlorohydroquinone
 868	2,3,6-Trihydroxypyridine
 869	2,3,7,8-Tetrachlorodibenzodioxin
 871	2,3-Bis-O-(geranylgeranyl)glycerol 1-phosphate
@@ -694,6 +700,7 @@ COMPOUND_ID	NAME
 955	2,6-Dimethoxyphenol
 956	2,6-Dimethylaniline
 957	2,6-Dinitrotoluene
+957	2,6-dinitrotoluene
 958	2,6-Dioxo-6-phenylhexanoate
 959	2,7,11-Cembratrien-4,6-diol
 960	2,7-Anhydro-alpha-N-acetylneuraminic acid
@@ -807,8 +814,8 @@ COMPOUND_ID	NAME
 1107	2-Hexaprenyl-6-hydroxyphenol
 1107	3-(all-trans-hexaprenyl)benzene-1,2-diol
 1108	2-Hexaprenyl-6-methoxy-1,4-benzoquinone
-1109	2-methoxy-6-(all-trans-hexaprenyl)phenol
 1109	2-Hexaprenyl-6-methoxyphenol
+1109	2-methoxy-6-(all-trans-hexaprenyl)phenol
 1110	2-all-trans-hexaprenylphenol
 1110	2-Hexaprenylphenol
 1111	2-Hydroxy carboxylate
@@ -894,8 +901,8 @@ COMPOUND_ID	NAME
 1233	3-(all-trans-octaprenyl)benzene-1,2-diol
 1233	2-Octaprenyl-6-hydroxyphenol
 1234	2-Octaprenyl-6-methoxy-1,4-benzoquinone
-1235	2-methoxy-6-(all-trans-octaprenyl)phenol
 1235	2-Octaprenyl-6-methoxyphenol
+1235	2-methoxy-6-(all-trans-octaprenyl)phenol
 1236	2-Octaprenylphenol
 1237	2-Oxazolidinone
 1238	2-Oxo acid
@@ -905,8 +912,8 @@ COMPOUND_ID	NAME
 1247	2-Oxoadipate
 1248	2-Oxoaldehyde
 1254	2-Oxohept-3-enedioate
-1255	2-Oxohex-trans-4-enoate
 1255	(4E)-2-Oxohexenoic acid
+1255	2-Oxohex-trans-4-enoate
 1256	2-Oxohexanoic acid
 1257	2-Oxopentanoate
 1258	2-Oxophytanate
@@ -930,8 +937,8 @@ COMPOUND_ID	NAME
 1280	2-Undecanone
 1281	2-[3-Carboxy-3-(methylammonio)propyl]-L-histidine
 1282	2-cis,6-trans-Farnesol
-1283	(E,E)-2-methyl-6-oxohepta-2,4-dienal
 1283	2-Methyl-6-oxohepta-2,4-dienal
+1283	(E,E)-2-methyl-6-oxohepta-2,4-dienal
 1285	2-trans,6-trans-Farnesal
 1286	2-trans,6-trans-Farnesol
 1287	2-trans-Dodecenoyl-CoA
@@ -941,8 +948,8 @@ COMPOUND_ID	NAME
 1291	20-Hydroxy-leukotriene E4
 1292	20-Hydroxyecdysone
 1293	20-OH-Leukotriene B4
-1294	20alpha,22beta-Dihydroxycholesterol
 1294	(20R,22R)-20,22-dihydroxycholesterol
+1294	20alpha,22beta-Dihydroxycholesterol
 1295	20alpha-Hydroxy-4-pregnen-3-one
 1296	20alpha-Hydroxycholesterol
 1299	21-Hydroxypregnenolone
@@ -1076,8 +1083,8 @@ COMPOUND_ID	NAME
 1493	3-Deoxy-D-manno-octulosonate
 1494	3-Deoxy-D-manno-octulosonate 8-phosphate
 1496	3-Deoxy-D-manno-octulosonyl-lipid IV(A)
-1497	3-Deoxyleucocyanidin
 1497	Luteoforol
+1497	3-Deoxyleucocyanidin
 1499	3-Ethoxybenzoate
 1500	3-Ethylcatechol
 1501	3-Ethylmalate
@@ -1153,8 +1160,8 @@ COMPOUND_ID	NAME
 1610	3-Nitroacrylate
 1614	3-O-Methyl-myo-inositol
 1616	3-O-Mycarosylerythronolide B
-1617	3-Octaprenyl-4-hydroxybenzoate
 1617	4-hydroxy-3-all-trans-octaprenylbenzoate
+1617	3-Octaprenyl-4-hydroxybenzoate
 1619	3-Oxo acid
 1620	3-Oxo-13,17-secoandrost-4-ene-17,13alpha-lactone
 1621	3-Oxo-4-methylpentanoic acid
@@ -1235,8 +1242,8 @@ COMPOUND_ID	NAME
 1729	(-)-4'-desmethyl-deoxypodophyllotoxin
 1730	4'-Demethylpodophyllotoxin
 1732	4'-Hydroxyacetophenone
-1734	4'-O-Methylisoflavone
 1734	4'-methoxyisoflavone
+1734	4'-O-Methylisoflavone
 1738	4,21-Dehydrogeissoschizine
 1740	4,4'-Dihydroxy-3,5-dimethoxydihydrostilbene
 1742	4,4-Dimethyl-5alpha-cholest-7-en-3beta-ol
@@ -1280,8 +1287,8 @@ COMPOUND_ID	NAME
 1797	4-Carboxy-4-hydroxy-2-oxoadipate
 1798	4-Carboxymethyl-3-methylbut-2-en-1,4-olide
 1799	4-Carboxymethyl-4-methylbut-2-en-1,4-olide
-1800	4-Chloro-2-methylphenol
 1800	2-methyl-4-chlorophenol
+1800	4-Chloro-2-methylphenol
 1804	4-Chlorobenzoyl-CoA
 1805	4-Chlorobiphenyl
 1806	4-Chlorocatechol
@@ -1335,8 +1342,8 @@ COMPOUND_ID	NAME
 1879	4-Hydroxyphenylethanol
 1880	4-Hydroxyphenylglyoxylate
 1882	4-Hydroxyphthalate
-1883	4-Hydroxystyrene
 1883	4-hydroxystyrene
+1883	4-Hydroxystyrene
 1884	4-Imidazolone
 1885	4-Imidazolone-5-acetate
 1886	4-Imidazolone-5-propanoate
@@ -1344,8 +1351,8 @@ COMPOUND_ID	NAME
 1890	4-Methoxyglucobrassicin
 1891	4-Methyl-2-oxopentanoate
 1892	4-Methyl-5-(2-phosphoethyl)-thiazole
-1895	4-Methylbenzyl alcohol
 1895	4-methylbenzyl alcohol
+1895	4-Methylbenzyl alcohol
 1897	4-Methylcatechol
 1899	4-Methylene-L-glutamate
 1900	4-Methylene-L-glutamine
@@ -1379,15 +1386,15 @@ COMPOUND_ID	NAME
 1946	4alpha-Methyl-5alpha-ergosta-8,14,24(28)-trien-3beta-ol
 1947	4alpha-Methyl-5alpha-cholest-7-en-3-one
 1948	4alpha-Methylcholesta-8-en-3beta-ol
-1949	4alpha-Methylzymosterol
 1949	4alpha-methyl-5alpha-cholesta-8,24-dien-3beta-ol
+1949	4alpha-Methylzymosterol
 1950	4beta-Hydroxymethyl-4alpha-methyl-5alpha-cholest-7-en-3beta-ol
 1951	5'-Acetylphosphoadenosine
 1952	5'-Acylphosphoadenosine
 1953	5'-Acylphosphoinosine
 1954	5'-Acylphosphouridine
-1958	5'-dehydroadenosine
 1958	5'-Dehydroadenosine
+1958	5'-dehydroadenosine
 1960	5'-Deoxyadenosine
 1963	5'-Guanosyl-methylene-triphosphate
 1966	5'-Methylthioadenosine
@@ -1660,8 +1667,8 @@ COMPOUND_ID	NAME
 2372	Acalyphin
 2373	Acamelin
 2374	Acanthicifoline
-2375	Liriodendrin
 2375	Acanthoside D
+2375	Liriodendrin
 2376	Acarbose
 2377	Acceptor
 2379	Acebutolol
@@ -1675,8 +1682,8 @@ COMPOUND_ID	NAME
 2388	Acetazolamide
 2390	Acetoacetamide
 2392	Acetoacetyl-CoA
-2393	Acetoacetyl-[acp]
 2393	acetoacetyl-[acyl-carrier protein]
+2393	Acetoacetyl-[acp]
 2394	acetochlor
 2394	Acetochlor
 2395	Acetohexamide
@@ -1689,8 +1696,8 @@ COMPOUND_ID	NAME
 2403	Acetophenone
 2404	Acetosyringone
 2405	Acetyl adenylate
-2406	Acetic ester
 2406	Acetyl ester
+2406	Acetic ester
 2407	Acetyl phosphate
 2408	Acetyl-CoA
 2409	Acetyl-[acyl-carrier protein]
@@ -1748,13 +1755,13 @@ COMPOUND_ID	NAME
 2480	adenosylcob(III)inamide
 2481	Adenosyl cobinamide phosphate
 2482	Adenosyl cobyrinate a,c diamide
-2483	Adenosyl cobyrinate hexaamide
 2483	adenosylcobyric acid
+2483	Adenosyl cobyrinate hexaamide
 2485	Adenylylselenate
 2486	Adenylylsulfate
 2491	Adonitoxin
-2495	androst-4-ene-3,11,17-trione
 2495	Adrenosterone
+2495	androst-4-ene-3,11,17-trione
 2496	Adriamycin
 2499	Aerobactin
 2504	aflatoxin B1
@@ -1771,8 +1778,8 @@ COMPOUND_ID	NAME
 2523	Ajaconine
 2525	Ajmaline
 2526	Ajugalactone
-2533	Alachlor
 2533	alachlor
+2533	Alachlor
 2534	Alamarine
 2535	Alangicine
 2536	Alangimarckine
@@ -1796,8 +1803,8 @@ COMPOUND_ID	NAME
 2564	Aldrin
 2567	Alendronic acid
 2569	Alfentanil
-2571	an aliphatic alcohol
 2571	Aliphatic alcohol
+2571	an aliphatic alcohol
 2572	Aliphatic amide
 2574	Alizarin
 2576	Alkane
@@ -1863,12 +1870,12 @@ COMPOUND_ID	NAME
 2693	Amylopectin
 2694	Amylose
 2695	Anabasine
-2700	Anandamide
 2700	N-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-ethanolamine
+2700	Anandamide
 2704	Anastrozole
 2709	Androst-4-ene-3,17-dione
-2710	Androst-5-ene-3beta,17beta-diol
 2710	androst-5-en-3beta,17beta-diol
+2710	Androst-5-ene-3beta,17beta-diol
 2711	Androstan-3alpha,17beta-diol
 2712	Androstane
 2713	Androstanediol
@@ -1950,8 +1957,8 @@ COMPOUND_ID	NAME
 2926	Aureusidin
 2934	Avadharidine
 2935	Avenacin A-1
-2937	Avenacoside A
 2937	avenacoside A
+2937	Avenacoside A
 2938	Avenacoside B
 2938	avenacoside B
 2942	Azadirachtin A
@@ -2075,8 +2082,8 @@ COMPOUND_ID	NAME
 3150	Borneol
 3152	Boron
 3157	Boschniakine
-3159	Botrydial
 3159	botrydial
+3159	Botrydial
 3162	Bowdichione
 3163	Bracteatin
 3165	Bradykinin
@@ -2159,13 +2166,13 @@ COMPOUND_ID	NAME
 3369	Capillin
 3373	Caprylic acid
 3374	Capsaicin
-3375	Capsanthin
 3375	all-trans-capsanthin
+3375	Capsanthin
 3377	Capsidiol
 3378	all-trans-capsorubin
 3378	Capsorubin
-3381	Car-3-ene
 3381	(-)-car-3-ene
+3381	Car-3-ene
 3383	Caranine
 3385	(2-Carbamoyloxy-ethyl)-trimethyl-ammonium(Carbachol)
 3386	Carbamate
@@ -2207,6 +2214,7 @@ COMPOUND_ID	NAME
 3473	Cation
 3478	Cefaclor
 3478	7-(2-Amino-2-phenyl-acetylamino)-3-chloro-8-oxo-5-thia-1-aza-bicyclo[4.2.0]oct-2-ene-2-carboxylic acid
+3484	Cefclidin
 3486	Cefepime
 3487	Cefixime
 3489	Cefmetazole
@@ -2215,7 +2223,10 @@ COMPOUND_ID	NAME
 3492	Cefonicid sodium
 3493	Cefoperazone
 3495	Ceforanide
+3496	Cefoselis
 3499	Cefotetan
+3502	Cefozopran
+3503	Cefpirome
 3506	Cefprozil
 3507	Cefsulodin
 3511	Ceftizoxime
@@ -2295,8 +2306,8 @@ COMPOUND_ID	NAME
 3660	Cholesterol ester
 3661	Cholesterol-5alpha,6beta-epoxide
 3662	Cholesterol-5beta,6beta-epoxide
-3663	cholesteryl hexadecanoate
 3663	Cholesteryl palmitate
+3663	cholesteryl hexadecanoate
 3664	Cholesteryl-beta-D-glucoside
 3665	Choline
 3666	Choline ester
@@ -2402,8 +2413,8 @@ COMPOUND_ID	NAME
 3894	Cortisol 21-acetate
 3895	Cortisol 21-sulfate
 3896	Cortisone
-3900	Costunolide
 3900	(+)-costunolide
+3900	Costunolide
 3901	Cosyntropin
 3903	Coumaphos
 3906	Coumarine
@@ -2418,14 +2429,14 @@ COMPOUND_ID	NAME
 3930	Cryptolepine
 3932	Cryptopleurine
 3933	Crystal violet
-3941	cucurbitacin B
 3941	Cucurbitacin B
+3941	cucurbitacin B
 3943	Cucurbitacin D
 3944	Cucurbitacin E
 3959	Cupreine
 3960	Cupressuflavone
-3962	Curcumin
 3962	curcumin
+3962	Curcumin
 3963	Cuscohygrine
 3967	Cyanamide
 3969	Cyanide
@@ -2492,8 +2503,8 @@ COMPOUND_ID	NAME
 4072	Cytosine
 4074	Cytosine arabinoside
 4076	D-1-Aminopropan-2-ol O-phosphate
-4077	D-2,3-Diketo 4-deoxy-epi-inositol
 4077	D-2,3-diketo-4-deoxy-epi-inositol
+4077	D-2,3-Diketo 4-deoxy-epi-inositol
 4078	D-2-Amino-hexano-6-lactam
 4079	D-2-Aminobutyrate
 4082	D-4'-Phosphopantothenate
@@ -2548,8 +2559,8 @@ COMPOUND_ID	NAME
 4147	D-Galactosyl-3-N-acetyl-beta-D-galactosamine
 4148	D-Galactosyl-D-galactosyl-D-glucosyl-N-acylsphingosine
 4149	D-Galactosyl-N-acetyl-D-galactosaminyl-(N-acetylneuraminyl)-D-galactosyl-D-glucosylceramide
-4151	D-Galactosyldiacylglycerol
 4151	1,2-Diacyl-3-beta-D-galactosyl-sn-glycerol
+4151	D-Galactosyldiacylglycerol
 4157	D-Gluconic acid
 4158	D-Glucono-1,4-lactone
 4159	D-Glucono-1,5-lactone
@@ -2577,8 +2588,8 @@ COMPOUND_ID	NAME
 4191	D-Gulose
 4192	D-Hamamelose
 4193	D-Hamamelose 2(1)-phosphate
-4194	D-Hexose
 4194	D-hexose
+4194	D-Hexose
 4195	D-Hexose 6-phosphate
 4196	D-Hexose phosphate
 4197	D-Histidine
@@ -2592,8 +2603,8 @@ COMPOUND_ID	NAME
 4205	D-Mannitol 1-phosphate
 4206	D-Mannonate
 4207	D-Mannosamine
-4208	D-Mannose
 4208	D-mannose
+4208	D-Mannose
 4210	D-Mannose 1-phosphate
 4211	D-Mannose 6-phosphate
 4215	D-Methionine
@@ -2624,8 +2635,8 @@ COMPOUND_ID	NAME
 4244	D-Sedoheptulose 7-phosphate
 4245	D-Serine
 4246	D-Sorbitol
-4247	D-Sorbitol 6-phosphate
 4247	Sorbitol 6-phosphate
+4247	D-Sorbitol 6-phosphate
 4248	D-Sorbose
 4249	D-Tagatose
 4250	D-Tagatose 1,6-bisphosphate
@@ -2663,6 +2674,7 @@ COMPOUND_ID	NAME
 4288	DL-Cycloserine
 4290	DMPP
 4291	DNA
+4302	DTP
 4306	Daidzein
 4307	Daidzin
 4317	Dantrolene
@@ -2715,8 +2727,8 @@ COMPOUND_ID	NAME
 4421	Deoxynucleoside
 4423	Deoxynucleoside 5'-phosphate
 4425	Deoxynucleoside phosphate
-4429	Deoxypodophyllotoxin
 4429	(-)-deoxypodophyllotoxin
+4429	Deoxypodophyllotoxin
 4430	Deoxyribonolactone
 4432	Deoxyribose
 4434	Deoxyuridine
@@ -2737,6 +2749,7 @@ COMPOUND_ID	NAME
 4466	Dexmedetomidine
 4469	Dextroamphetamine
 4470	Dextromethorphan
+4471	Dextromethorphan hydrobromide
 4474	Dezocine
 4475	Dhurrin
 4476	Di[3-deoxy-D-manno-octulosonyl]-lipid A
@@ -2787,8 +2800,8 @@ COMPOUND_ID	NAME
 4551	Digoxin
 4551	Digoxin
 4552	Dihydro-4,4-dimethyl-2,3-Furandione
-4553	Dihydroanhydropodorhizol
 4553	(-)-yatein
+4553	Dihydroanhydropodorhizol
 4554	Dihydrobiochanin A
 4557	Dihydrochelirubine
 4558	Dihydroclavaminic acid
@@ -2831,8 +2844,8 @@ COMPOUND_ID	NAME
 4619	Dimethylarsinate
 4620	Dimethylbenzimidazole
 4622	Dimethylmaleate
-4623	dimethylsulfonioacetic acid
 4623	Dimethylsulfonioacetate
+4623	dimethylsulfonioacetic acid
 4626	Dinucleotide
 4627	Dioscin
 4629	Diosgenin
@@ -2861,8 +2874,8 @@ COMPOUND_ID	NAME
 4665	Divalent cation
 4670	Dobutamine
 4672	Docetaxel anhydrous
-4673	(4Z,7Z,10Z,13Z,16Z,19Z)-Docosahexaenoic acid
 4673	Docosahexaenoic acid
+4673	(4Z,7Z,10Z,13Z,16Z,19Z)-Docosahexaenoic acid
 4675	Dodecane
 4676	Dodecanedioic acid
 4678	Dodecylalcohol
@@ -2886,6 +2899,8 @@ COMPOUND_ID	NAME
 4706	Doxacurium
 4708	Doxazosin
 4710	Doxepin
+4712	1alpha-hydroxyvitamin D2
+4712	Doxercalciferol
 4713	Doxycycline
 4716	Dronabinol
 4724	Dyclonine
@@ -2944,8 +2959,8 @@ COMPOUND_ID	NAME
 4828	ergothioneine thiol
 4831	Eriocitrin
 4832	Eriodictyol
-4836	Erucic acid
 4836	(13Z)-Docosenoic acid
+4836	Erucic acid
 4840	Erythritol
 4841	Erythromycin
 4842	Erythromycin B
@@ -2992,6 +3007,7 @@ COMPOUND_ID	NAME
 4898	Ethylbenzene
 4899	Ethylene
 4900	Ethylene oxide
+4903	17alpha-ethynylestradiol
 4903	Ethynyl estradiol
 4904	Etidocaine
 4907	Etidronic acid
@@ -3071,15 +3087,15 @@ COMPOUND_ID	NAME
 5075	Flavomycin
 5076	Flavone
 5077	Flavonoid
-5078	Flavonol
 5078	flavonol
+5078	Flavonol
 5080	Flavonol 3-O-D-glucoside
 5081	Flavonol 3-O-D-xylosylgalactoside
 5082	Flavonol 3-O-D-xylosylglucoside
 5083	Flavonol 3-O-D-xylosylglycoside
 5085	Flavonol 3-O-beta-D-glucoside
-5086	flavoprotein
 5086	Flavoprotein
+5086	flavoprotein
 5088	Flavoxate
 5090	Flecainide
 5097	Fluazifop butyl
@@ -3112,6 +3128,7 @@ COMPOUND_ID	NAME
 5157	Formylmethanofuran
 5161	Foscarnet sodium
 5163	Fosinopril
+5169	Fraxetin
 5171	Friedelin
 5171	friedelin
 5172	Fructose
@@ -3202,8 +3219,8 @@ COMPOUND_ID	NAME
 5341	Gibberellin 1
 5341	Gibberellin A1
 5342	Gibberellin A12 aldehyde
-5343	Gibberellin A19
 5343	Gibberellin 19
+5343	Gibberellin A19
 5345	Gibberellin A20
 5345	Gibberellin 20
 5346	Gibberellin A29
@@ -3275,7 +3292,6 @@ COMPOUND_ID	NAME
 5476	Glycolipid
 5481	Glycoprotein
 5484	Glycoprotein alpha-D-galactosyl-(1,3)-[alpha-L-fucosyl-(1,2)]-D-galactose
-5484	alpha-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->2)]-D-galactosyl group
 5495	Glycosaminoglycan
 5503	Glycyl-tRNA(Gly)
 5504	Glycylglycine
@@ -3287,8 +3303,8 @@ COMPOUND_ID	NAME
 5524	Gossypetin 8-rhamnoside
 5530	Gramicidin S
 5531	Gramine
-5533	granaticin
 5533	Granaticin
+5533	granaticin
 5537	Granisetron
 5542	Grayanotoxin I
 5546	Griseofulvin
@@ -3400,6 +3416,7 @@ COMPOUND_ID	NAME
 5775	Hydralazine
 5777	Hydrazine
 5779	Hydrocodone
+5784	Hydroflumethiazide
 5785	Hydrogen
 5786	Hydrogen cyanide
 5787	Hydrogen sulfide
@@ -3536,8 +3553,8 @@ COMPOUND_ID	NAME
 6061	Isosorbide dinitrate
 6062	Isosorbide mononitrate
 6066	Isothebaine
-6069	3-Methylbutanoic acid
 6069	Isovaleric acid
+6069	3-Methylbutanoic acid
 6071	Isovitexin 2''-O-beta-D-glucoside
 6075	Itaconyl-CoA
 6078	Ivermectin
@@ -3674,8 +3691,8 @@ COMPOUND_ID	NAME
 6283	L-Phenylalanyl-tRNA(Phe)
 6286	L-Proline
 6287	L-Prolyl-tRNA(Pro)
-6288	L-Rhamnono-1,4-lactone
 6288	L-Rhamno-1,4-lactone
+6288	L-Rhamnono-1,4-lactone
 6289	L-Rhamnofuranose
 6290	L-Rhamnonate
 6293	L-Rhamnulose
@@ -3710,8 +3727,8 @@ COMPOUND_ID	NAME
 6327	L-Xylulose 1-phosphate
 6328	L-Xylulose 5-phosphate
 6330	L-erythro-3-Methylmalyl-CoA
-6331	L-erythro-4-Hydroxyglutamate
 6331	erythro-4-hydroxy-L-glutamate
+6331	L-erythro-4-Hydroxyglutamate
 6333	L-myo-Inositol 5-phosphate
 6334	L-threo-3-Methylaspartate
 6335	L-threo-3-Methylmalate
@@ -3801,8 +3818,8 @@ COMPOUND_ID	NAME
 6523	Long-chain acyl-CoA
 6524	Long-chain alcohol
 6528	Long-chain fatty acid
-6530	longifolene
 6530	Longifolene
+6530	longifolene
 6532	Loperamide
 6533	Loperamide hydrochloride
 6534	Lophenol
@@ -3850,8 +3867,8 @@ COMPOUND_ID	NAME
 6637	Magnesium hydroxide
 6638	Magnesium protoporphyrin
 6639	Magnesium protoporphyrin monomethyl ester
-6641	magnoflorine
 6641	Magnoflorine
+6641	magnoflorine
 6648	Makisterone B
 6651	Malathion
 6653	Maleic acid
@@ -3896,14 +3913,15 @@ COMPOUND_ID	NAME
 6733	Melibiose
 6736	Melitten
 6741	Meloxicam
-6746	menadiol
 6746	Menadiol
+6746	menadiol
 6747	Menadione
 6748	Menaquinol
 6749	Menaquinone
-6750	Menthofuran
 6750	(R)-menthofuran
+6750	Menthofuran
 6751	Mepanipyrim
+6757	Mephenytoin
 6758	Mephobarbital
 6759	Mepivacaine
 6762	Mepyramine
@@ -3957,8 +3975,8 @@ COMPOUND_ID	NAME
 6873	Methylenediurea
 6875	Methylglyoxal
 6876	Methylguanidine
-6877	trans-isomethyleugenol
 6877	Methylisoeugenol
+6877	trans-isomethyleugenol
 6878	Methylitaconate
 6879	Methyl jasmonate
 6882	Methylmalonyl-CoA
@@ -3984,8 +4002,8 @@ COMPOUND_ID	NAME
 6940	Minocycline hydrochloride
 6950	Mirtazapine
 6951	Miserotoxin
-6953	Mitomycin
 6953	Mitomycin C
+6953	Mitomycin
 6955	Mitoxantrone
 6967	Molybdate
 6968	Molybdenum
@@ -4109,6 +4127,7 @@ COMPOUND_ID	NAME
 7183	N-Acetyl-beta-D-hexosaminide
 7186	N-Acetyl-beta-alanine
 7194	N-Acetylanthranilate
+7196	N-Acetylarylalkylamine
 7199	N-Acetyldiamine
 7200	N-Acetylgalactosaminate
 7201	N-Acetylgalactosamine
@@ -4225,8 +4244,8 @@ COMPOUND_ID	NAME
 7365	N2-(D-1,3-Dicarboxypropyl)-L-arginine
 7366	N2-(D-1-Carboxyethyl)-L-arginine
 7367	N2-(D-1-Carboxyethyl)-L-lysine
-7368	N-Acetylornithine
 7368	N2-Acetyl-L-ornithine
+7368	N-Acetylornithine
 7371	N2-Malonyl-D-tryptophan
 7372	N2-Succinyl-L-arginine
 7373	N2-Succinyl-L-glutamate
@@ -4235,8 +4254,8 @@ COMPOUND_ID	NAME
 7380	N3'-Acetylkanamycin
 7384	N3-Oxalyl-L-2,3-diaminopropanoate
 7385	N4-(Acetyl-beta-D-glucosaminyl)asparagine
-7386	N4-Acetylaminobutanal
 7386	4-acetamidobutanal
+7386	N4-Acetylaminobutanal
 7387	N4-Phosphoagmatine
 7392	N5-(L-1-Carboxyethyl)-L-ornithine
 7393	N5-Acyl-L-ornithine
@@ -4285,8 +4304,8 @@ COMPOUND_ID	NAME
 7463	Nalpha-Acetylpeptide
 7464	Nalpha-Methylhistidine
 7465	Naltrexone
-7466	17beta-hydroxyestr-4-en-3-one
 7466	Nandrolone
+7466	17beta-hydroxyestr-4-en-3-one
 7468	Nandrolone phenpropionate
 7472	Naphthalene
 7473	Naphthalene-1,2-diol
@@ -4455,6 +4474,7 @@ COMPOUND_ID	NAME
 7771	Olsalazine sodium
 7772	Omeprazole
 7775	Ononin
+7775	ononin
 7777	Ophiobolin A
 7780	Orcinol
 7781	Orientin
@@ -4466,8 +4486,8 @@ COMPOUND_ID	NAME
 7794	Orthophosphoric monoester
 7794	phosphate monoester (0)
 7796	Oryzalexin A
-7798	(3R,4R,5S)-4-Acetylamino-5-amino-3-(1-ethyl-propoxy)-cyclohex-1-enecarboxylic acid
 7798	Oseltamivir
+7798	(3R,4R,5S)-4-Acetylamino-5-amino-3-(1-ethyl-propoxy)-cyclohex-1-enecarboxylic acid
 7799	Oseltamivir phosphate
 7805	Ouabain
 7809	Oxacillin
@@ -4539,8 +4559,8 @@ COMPOUND_ID	NAME
 7934	Paromomycin
 7936	Paroxetine
 7939	Parthenolide
-7940	Patchouli alcohol
 7940	patchoulol
+7940	Patchouli alcohol
 7942	Patuletin
 7946	Pectin
 7947	Pedalitin
@@ -4570,6 +4590,7 @@ COMPOUND_ID	NAME
 7983	Pentobarbital
 7987	Peonidin
 7990	Peptide
+7991	Peptide 3-hydroxy-L-aspartate
 7994	Peptide diphthamide
 8005	Peptidoglycan
 8007	Peptidyl amide
@@ -4629,14 +4650,15 @@ COMPOUND_ID	NAME
 8101	Phenylmercury acetate
 8102	Phenylmethanesulfonyl fluoride
 8103	Phenylpropanoate
+8104	Phenylpropanolamine
 8105	Phenylpyruvate
 8106	Phenylthioacetohydroximate
 8107	Phenytoin
-8108	Pheophytins
 8108	pheophytin
+8108	Pheophytins
 8111	Phloretin
-8113	phlorizin
 8113	Phlorizin
+8113	phlorizin
 8114	Phloroglucinol
 8116	Phorbol
 8117	Phorbol 12,13-dibutanoate
@@ -4677,8 +4699,8 @@ COMPOUND_ID	NAME
 8184	Physcion 8-gentiobioside
 8187	Physostigmine
 8190	Phytanoyl-CoA
-8191	Phytoene
 8191	all-trans-phytoene
+8191	Phytoene
 8192	Phytofluene
 8193	Phytol
 8196	Phytuberin
@@ -4689,8 +4711,8 @@ COMPOUND_ID	NAME
 8205	Picrotin
 8206	Picrotoxinin
 8207	Pilocarpine
-8210	Pimaradiene
 8210	pimara-8(14),15-diene
+8210	Pimaradiene
 8212	Pimozide
 8214	Pindolol
 8215	Pinene
@@ -4708,9 +4730,10 @@ COMPOUND_ID	NAME
 8238	Piperidine
 8239	Piperitenone
 8240	Piperonal
+8242	Pipobroman
 8248	Pirimicarb
-8249	Piroxicam
 8249	piroxicam
+8249	Piroxicam
 8250	Pisatin
 8250	(+)-pisatin
 8257	Plasmenylcholine
@@ -4723,8 +4746,8 @@ COMPOUND_ID	NAME
 8280	Podophyllotoxin
 8282	Podorhizol beta-D-glucoside
 8292	Poly(ribitol phosphate)
-8298	[(3R)-hydroxybutanoate]n
 8298	Poly[(R)-3-hydroxybutanoate]x
+8298	[(3R)-hydroxybutanoate]n
 8301	Polyamine
 8302	Polyarginine
 8304	Polygalacturonide
@@ -4866,8 +4889,8 @@ COMPOUND_ID	NAME
 8626	Pteridine
 8627	Pterin
 8628	Pteroic acid
-8630	Pterostilbene
 8630	pterostilbene
+8630	Pterostilbene
 8635	Pulegone
 8638	Punicic acid
 8639	Purine
@@ -4933,6 +4956,7 @@ COMPOUND_ID	NAME
 8736	R (+)-Propanolol
 8741	R-CHOH-R'
 8742	R-CO-R'
+8745	R-S-Glutathione
 8746	R-Salbutamol
 8749	RCH2NH2
 8764	RS 61443
@@ -5127,15 +5151,15 @@ COMPOUND_ID	NAME
 9170	Sitosterol
 9171	Skatole
 9174	Smilagenin
-9177	sodium deoxycholate
 9177	Sodium deoxycholate
+9177	sodium deoxycholate
 9178	Sodium fluoride
 9179	Sodium nitroprusside dihydrate
 9186	Solanesyl pyrophosphate
 9187	Solanidine
 9188	Solanine
-9192	Solavetivone
 9192	solavetivone
+9192	Solavetivone
 9197	Sophoraisoflavanone A
 9199	Sophoranone
 9200	Soraphen A
@@ -5144,8 +5168,8 @@ COMPOUND_ID	NAME
 9203	Sorbose
 9206	Sotalol
 9207	Sotalol hydrochloride
-9209	Soyasapogenol B
 9209	soyasapogenol B
+9209	Soyasapogenol B
 9211	Soyasaponin I
 9212	Sparfloxacin
 9215	Spectinomycin
@@ -5233,8 +5257,8 @@ COMPOUND_ID	NAME
 9345	Sulfoacetaldehyde
 9347	Sulfoglycolithocholate
 9348	Sulfometuron methyl
-9349	Sulfonylbismethane
 9349	dimethyl sulfone
+9349	Sulfonylbismethane
 9350	Sulfur
 9351	Sulfur dioxide
 9352	Sulindac
@@ -5247,6 +5271,7 @@ COMPOUND_ID	NAME
 9375	Symphytine
 9378	Syringetin
 9380	Syringin
+9380	4-O-(beta-D-glucosyl)-trans-4-sinapyl alcohol
 9382	TCE epoxide
 9387	Tabersonine
 9389	Tacrine
@@ -5343,6 +5368,7 @@ COMPOUND_ID	NAME
 9544	Thiethylperazine
 9546	Thimerosal
 9551	Thiocysteine
+9555	6-thioguanine
 9555	Thioguanine
 9556	Thiol
 9559	Thiomorpholine 3-carboxylate
@@ -5477,8 +5503,8 @@ COMPOUND_ID	NAME
 9832	UDP-N-acetylmuramoyl-L-alanyl-D-glutamate
 9833	UDP-N-acetylmuramoyl-L-alanyl-D-glutamyl-6-carboxy-L-lysyl-D-alanyl-D-alanine
 9836	UDP-N-acetylmuramoyl-L-alanyl-D-glutamyl-N6-(L-alanyl)-L-lysyl-D-alanyl-D-alanine
-9837	UDP-N-acetylmuramoyl-L-alanyl-alpha-D-glutamyl-L-lysine
 9837	UDP-N-acetylmuramoyl-L-alanyl-D-glutamyl-L-lysine
+9837	UDP-N-acetylmuramoyl-L-alanyl-alpha-D-glutamyl-L-lysine
 9838	UDP-N-acetylmuramoyl-L-alanyl-gamma-D-glutamyl-L-lysine
 9839	UDP-alpha-D-galacto-1,4-furanose
 9840	UDP-sugar
@@ -5545,8 +5571,8 @@ COMPOUND_ID	NAME
 9964	Vernolic acid
 9968	Verrucarin A
 9972	Vestitone
-9973	Vibriobactin
 9973	vibriobactin
+9973	Vibriobactin
 9975	Vicianose
 9977	Victorin C
 9979	Vigabatrin
@@ -5564,6 +5590,7 @@ COMPOUND_ID	NAME
 9995	Viomycin
 9997	Virginiamycin M1
 9998	Virginiamycin S1
+10002	Visnagin
 10007	Vitamin D2
 10008	Vitamin D3
 10009	Vitamin K
@@ -5615,8 +5642,8 @@ COMPOUND_ID	NAME
 10108	Zeaxanthin
 10110	Zidovudine
 10114	Zinc protoporphyrin-9
-10115	Zingiberene
 10115	alpha-zingiberene
+10115	Zingiberene
 10119	Ziprasidone
 10124	Zolmitriptan
 10125	Zolpidem
@@ -5632,8 +5659,8 @@ COMPOUND_ID	NAME
 10194	all-trans-Octaprenyl diphosphate
 10195	all-trans-Pentaprenyl diphosphate
 10196	all-trans-Retinoyl-beta-glucuronide
-10197	alpha(omega)-Dicarboxylic acid
 10197	alpha,omega-Dicarboxylic acid
+10197	alpha(omega)-Dicarboxylic acid
 10198	alpha,alpha'-Trehalose 6,6'-bismycolate
 10199	alpha,alpha'-Trehalose 6-mycolate
 10201	alpha,alpha'-Trehalose 6-phosphate
@@ -5653,8 +5680,8 @@ COMPOUND_ID	NAME
 10218	alpha-Cellobiose
 10221	alpha-copaene
 10221	alpha-Copaene
-10223	alpha-cryptoxanthin
 10223	alpha-Cryptoxanthin
+10223	alpha-cryptoxanthin
 10225	alpha-Curcumene
 10227	alpha-Cyclopiazonate
 10228	alpha-D-Aldosyl beta-D-fructoside
@@ -5692,13 +5719,13 @@ COMPOUND_ID	NAME
 10271	alpha-D-Ribulose
 10272	alpha-D-Xylose
 10273	alpha-D-Xylose 1-phosphate
-10275	(9Z,11E,13E)-Octadecatrienoic acid
 10275	alpha-Eleostearic acid
+10275	(9Z,11E,13E)-Octadecatrienoic acid
 10276	alpha-Ergocryptine
 10278	alpha-Eudesmol
 10278	alpha-eudesmol
-10280	(3E,6E)-alpha-farnesene
 10280	alpha-Farnesene
+10280	(3E,6E)-alpha-farnesene
 10281	alpha-Galactosyl-(1-6)-alpha-galactosyl-(1-6)-alpha-galactosyl-(1-6)-alpha-galactosyl-(1-6)-alpha-glucosyl-(1-2)-beta-fructose
 10283	alpha-Hydroxy fatty acid
 10284	alpha-Irone
@@ -5713,8 +5740,8 @@ COMPOUND_ID	NAME
 10295	alpha-L-Sorbopyranose
 10297	(9Z,11E,13E)-4-Oxooctadeca-9,11,13-trienoic acid
 10297	alpha-Licanic acid
-10298	(9Z,12Z,15Z)-Octadecatrienoic acid
 10298	alpha-Linolenic acid
+10298	(9Z,12Z,15Z)-Octadecatrienoic acid
 10300	alpha-Maltose
 10305	alpha-N-Acetylneuraminyl-2,3-beta-D-galactose-1,3-(alpha-N-acetylneuraminyl-2,6)-N-acetyl-D-galactosaminyl-R
 10306	alpha-N-Acetylneuraminyl-2,3-beta-D-galactosyl-1,3-N-acetyl-D-galactosaminyl-R
@@ -5735,8 +5762,8 @@ COMPOUND_ID	NAME
 10329	alpha-ribazole
 10330	alpha-Santalol
 10331	alpha-Santonin
-10334	alpha-Terpinene
 10334	alpha-terpinene
+10334	alpha-Terpinene
 10335	alpha-Terthienyl
 10336	alpha-Tocopherol
 10343	beta-Alanine
@@ -5752,14 +5779,14 @@ COMPOUND_ID	NAME
 10354	beta-Cadinene
 10355	beta-Carotene
 10356	beta-Carotene 5,6-epoxide
-10357	beta-Caryophyllene
 10357	(-)-beta-caryophyllene
+10357	beta-Caryophyllene
 10358	beta-Cellobiose
 10359	beta-Chamigrene
 10362	beta-Cryptoxanthin
 10362	beta-cryptoxanthin
-10363	beta-cubebene
 10363	beta-Cubebene
+10363	beta-cubebene
 10365	beta-Cyclopiazonate
 10367	beta-D-Apiose
 10368	beta-D-Digitalopyranose
@@ -5801,10 +5828,10 @@ COMPOUND_ID	NAME
 10413	beta-D-Xyloside
 10415	beta-Endorphin
 10416	beta-Erythroidine
-10417	beta-Eudesmol
 10417	beta-eudesmol
-10418	beta-Farnesene
+10417	beta-Eudesmol
 10418	(E)-beta-farnesene
+10418	beta-Farnesene
 10421	beta-L-Arabinose 1-phosphate
 10422	beta-L-Arabinoside
 10424	beta-L-Rhamnose
@@ -5822,8 +5849,8 @@ COMPOUND_ID	NAME
 10440	beta-Santalene
 10441	beta-Santalol
 10442	beta-Santonin
-10443	beta-Selinene
 10443	(+)-beta-selinene
+10443	beta-Selinene
 10447	beta-Thujaplicin
 10449	beta-Zeacarotene
 10450	cis,cis-3,6-Dodecadienoyl-CoA
@@ -5906,15 +5933,15 @@ COMPOUND_ID	NAME
 10569	gamma-L-Glutamyl-D-alanine
 10570	gamma-L-Glutamyl-L-cysteine
 10571	gamma-L-Glutamyl-L-cysteinyl-beta-alanine
-10573	gamma-Linolenic acid
 10573	(6Z,9Z,12Z)-Octadecatrienoic acid
+10573	gamma-Linolenic acid
 10574	gamma-Linolenoyl-CoA
 10577	gamma-Terpinene
 10577	gamma-terpinene
 10579	gamma-Tocopherol
 10581	hn
-10583	kappa-carrageenans
 10583	kappa-Carrageenan
+10583	kappa-carrageenans
 10585	m-Aminophenol
 10586	m-Carboxyphenyl phenylacetamidomethylphosphonate
 10588	m-Chlorophenylpiperazine
@@ -5953,8 +5980,8 @@ COMPOUND_ID	NAME
 10647	sn-glycero-3-Phosphoethanolamine
 10648	sn-Glycerol 3-phosphate
 10649	sn-Glyceryl phosphate
-10651	Homospermidine
 10651	sym-Homospermidine
+10651	Homospermidine
 10652	tRNA
 10672	tRNA(Ala)
 10673	tRNA(Arg)
@@ -6058,7 +6085,7 @@ COMPOUND_ID	NAME
 10973	(R)-2-hydroxyacid
 10975	(R)-2-hydroxystearic acid
 10978	(R)-3,3-dimethylmalic acid
-10979	(R)-3-[(R)-3-hydroxybutanoyloxy]butanoate
+10979	(3R)-hydroxybutanoate dimer
 10980	(2R)-2-hydroxy-3-(4-hydroxyphenyl)propanoate
 10981	(2R)-3-amino-2-methylpropanoic acid
 10983	(R)-3-hydroxybutanoate
@@ -6080,8 +6107,6 @@ COMPOUND_ID	NAME
 11152	1,2-didecanoylglycerol
 11165	beta-D-Gal-(1->3)-beta-D-GlcNAc-(1->3)-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1')-N-acylsphing-4-enine
 11168	1,4,5,6-tetrahydro-6-oxonicotinic acid
-11169	1,4-alpha-D-glucooligosaccharide
-11170	beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-D-glucosaminyl group
 11173	1,4-dihydroxy-2-naphthoate
 11181	1,6-dihydroxy-5-methylcyclohexa-2,4-dienecarboxylate
 11182	1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate
@@ -6117,7 +6142,6 @@ COMPOUND_ID	NAME
 11391	2''-nucleotidylgentamicin
 11394	a 2'-deoxyribonucleoside
 11396	2'-deoxyribonucleoside diphosphate
-11397	2'-deoxyribonucleoside triphosphate
 11403	2-(alpha-D-mannosyl)-D-glyceric acid
 11408	2,3,4,5-tetrahydrodipicolinate
 11412	(2R,3S,4S)-leucocyanidin
@@ -6162,13 +6186,13 @@ COMPOUND_ID	NAME
 11596	2-hydroxyglutarate
 11604	2-isopropylmaleic acid
 11612	(4-amino-2-methylpyrimidin-5-yl)methyl diphosphate
+11618	2-methylcitrate
 11621	2-methylideneglutaric acid
 11634	2-oxo acid
 11641	2-oxopent-4-enoate
 11642	2-oxophytanic acid
 11646	2-oxosuccinamic acid
 11652	2-phosphoglycolic acid
-11655	2-oxo-2H-pyran-4,6-dicarboxylic acid
 11656	2-succinyl-6-hydroxycyclohexa-2,4-diene-1-carboxylate
 11662	23,24-dihydrocucurbitacin
 11681	3(3-sn-phosphatidyl)-sn-glycerol 1-phosphate
@@ -6246,28 +6270,25 @@ COMPOUND_ID	NAME
 12205	6-amino-2-oxohexanoic acid
 12257	7-methoxyisoflavone
 12258	7-methyl-3-oxooctanoyl-CoA
-12298	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-D-galactosaminyl group
 12301	alpha-N-acetylneuraminyl-(2->6)-beta-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
 12303	alpha-D-aldosyl beta-D-fructoside
-12310	an alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-acylsphing-4-enine
+12310	globoside Gb3Cer (d18:1(4E))
 12311	alpha-D-galactosyl-1,3-beta-D-galactosyl-1,4-N-acetyl-D-glucosamine
 12320	D-Glucose 1-phosphate
 12322	alpha-D-glucosyl-(1->6)-alpha-D-glucosyl-(1->6)-alpha-D-glucosyl-(1->3')-1-alkyl-2-acylglycerol
 12331	alpha-D-ribose 5-phosphate
-12333	alpha-L-fucosyl-(1->2)-beta-D-galactosyl group
-12354	beta-D-galactosyl-(1->3)-N-acetyl-D-glucosaminyl group
-12355	beta-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->4)]-N-acetyl-beta-D-glucosaminyl group
 12357	beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl group
 12359	beta-D-galactosyl-(1->3)-[N-acetyl-beta-D-glucosaminyl-(1->6)]-N-acetyl-D-galactosaminyl group
 12364	beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
-12372	beta-D-galactosyl group
 12393	beta-cyclopiazonic acid
 12401	gamma-L-glutamyl-L-cysteinyl-beta-alanine
+12414	(S)-N-methylcanadine
 12418	Co-methyl-Co-5-hydroxybenzimidazolylcob(III)amide
 12446	N-acetyl-beta-D-glucosaminyl-(1->6)-[N-acetyl-beta-D-glucosaminyl-(1->3)]-N-acetyl-D-galactosaminyl group
 12447	N-acetyl-beta-D-glycosaminyl-glycopeptide
 12450	N-acetyl-O-acetylneuraminate
 12457	beta-D-GlcNAc-(1->3)-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1)-N-acylsphing-4-enine
+12466	N-acetylarylalkylamine
 12485	N-acylneuraminic acid
 12489	N-benzoyl-D-arginine
 12490	N-benzoyl-D-arginine-4-nitroanilide
@@ -6275,16 +6296,15 @@ COMPOUND_ID	NAME
 12537	N-(long-chain fatty acyl)ethanolamine
 12549	N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-D-glucosaminyl group
 12553	N-acetyl-beta-D-mannosaminyl-1,4-N-acetyl-D-glucosaminyldiphosphoundecaprenol
-12561	an N-acetyl-alpha-D-galactosaminyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->3)-alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
+12561	globoside Forssman (d18:1(4E))
 12566	beta-D-GlcNAc-(1->3)-beta-D-Gal-(1->4)-beta-D-GlcNAc-(1->3)-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1')-N-acylsphing-4-enine
 12567	beta-D-GlcNA-(1->6)-beta-D-Gal-(1->4)-beta-D-GlcNAc-(1->3)-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1)-ceramide
 12569	N-acetyl-D-glucosaminyl-poly(ribitol phosphate)
-12578	N-acetyl-LL-2,6-diaminoheptanedioate
 12580	alpha-N-acetylneuraminyl-(2->3)-alpha-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
 12592	N-carbamoyl-L-2-amino acid (a 2-ureido carboxylate)
 12598	N-glucosylnicotinate
 12612	N-phospho-L-arginine
-12667	a N(6)-alkylaminopurine
+12667	an N(6)-alkylaminopurine
 12681	O-1-alk-1-enyl-2-acyl-sn-glycero-3-phosphoethanolamine
 12682	O-1-alkyl-2-acyl-sn-glycero-3-phosphoethanolamine
 12687	O-alkylglycerone
@@ -6297,12 +6317,12 @@ COMPOUND_ID	NAME
 12807	cis-p-coumaric acid
 12812	ent-7alpha-hydroxykaur-16-en-19-oic acid
 12815	ent-kaur-16-en-19-oic acid
-12819	erythro-3-hydroxy-L-aspartate
 12819	erythro-3-Hydroxy-L-aspartate
+12819	erythro-3-hydroxy-L-aspartate
 12833	myo-inositol polyphosphate
 12834	an n-alkanal
 12838	p-menthane-3,8-diol
-12840	2-acyl-3-O-(beta-D-galactosyl)-sn-glycerol
+12840	a 2-acyl-3-O-(beta-D-galactosyl)-sn-glycerol
 12852	threo-3-hydroxy-L-aspartate
 12875	trans-2-coumarate
 12876	trans-4-coumarate
@@ -6311,9 +6331,7 @@ COMPOUND_ID	NAME
 12896	D-myo-inositol 4,5-bisphosphate
 12908	D-altronate
 12931	D-galactonate
-12939	D-galactosyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl group
-12940	D-galactosyl-(1->4)-beta-D-glucosyl group
-12941	beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-acylsphing-4-enine
+12941	beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide(d18:1(4E))
 12942	beta-D-Gal-(1->4)-beta-D-GlcNAc-(1->3)-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1')-N-acylsphing-4-enine
 12952	D-Galacturonate
 12952	aldehydo-D-galacturonate
@@ -6340,12 +6358,12 @@ COMPOUND_ID	NAME
 13158	L-rhamnonic acid
 13172	L-sorbose
 13174	L-threonic acid
-13192	LL-2,6-diaminoheptanedioate
 13193	A
 13194	a 1,4-lactone
 13196	A 3'-phosphopolynucleotide
 13197	a ribonucleoside 3'-phosphate
 13202	a 7beta-hydroxysteroid
+13203	a beta-lactam
 13204	a carboxylic ester
 13209	a long-chain fatty acyl ethyl ester
 13210	dicarboxylic acid monoamide
@@ -6362,6 +6380,7 @@ COMPOUND_ID	NAME
 13264	CDP-glucose
 13343	GlcNAc-(1->4)-Mur2Ac(oyl-L-Ala-gamma-D-Glu-L-Lys-D-Ala-D-Ala)-diphosphoundecaprenol
 13346	L-glutamyl-tRNA(Glx)
+13347	glycine residue
 13364	HCl
 13366	CoM
 13368	HX
@@ -6373,7 +6392,7 @@ COMPOUND_ID	NAME
 13534	[acyl-carrier protein]
 13583	a 16-oxosteroid
 13595	2-oxoaldehyde
-13597	a 3'-hydroxyflavonoid
+13597	a 3'-hydroxyflavone
 13601	a 3-oxo-5alpha-steroid
 13603	a 3-oxo-Delta(1)-steroid
 13604	a 3-oxo-Delta(4)-steroid
@@ -6428,8 +6447,6 @@ COMPOUND_ID	NAME
 13769	aminohydroquinone
 13773	an 11-oxosteroid
 13774	an 11beta-hydroxysteroid
-13780	alphaomega-dicarboxylic acid
-13782	omega-carboxyacyl-CoA
 13784	an N-D-ribosylpyrimidine
 13789	an N-acetoxyarylamine
 13790	an N-acetylarylamine
@@ -6442,7 +6459,7 @@ COMPOUND_ID	NAME
 13820	aromatic amino acid
 13823	an aromatic primary alcohol
 13824	an aryl beta-D-glucoside
-13825	aryl alcohol
+13825	a phenol
 13828	an epoxide
 13829	an hydroxyanthraquinone
 13837	anthocyanidin
@@ -6468,7 +6485,6 @@ COMPOUND_ID	NAME
 13954	a ceramide
 13956	ceramide phosphate
 13961	taurochenodeoxycholic acid
-13963	chitobiosyldiphosphodolichol
 13970	chloride
 13992	chondroitin D-glucuronic acid
 13996	cinnamyl alcohol
@@ -6482,6 +6498,7 @@ COMPOUND_ID	NAME
 14033	cucurbitacin
 14038	cyanide
 14055	cyclohexylsulfamic acid
+14056	cyclomaltodextrin
 14059	cystathionine
 14087	dTDP-D-galacturonic acid
 14113	deoxyamidinoproclavaminic acid
@@ -6514,7 +6531,6 @@ COMPOUND_ID	NAME
 14434	imidazole
 14450	indole-3-acetyl-1D-myo-inositol
 14469	isomethyleugenol
-14491	keratan 6'-sulfate
 14506	limonene
 14510	limonoic acid
 14514	linear maltodextrin
@@ -6579,12 +6595,10 @@ COMPOUND_ID	NAME
 15243	threonate
 15245	thymidine 5'-phosphate
 15253	triacetic acid
-15258	trichlorophenol
 15277	tyrosine
 15284	undecaprenyl diphosphate
 15289	uracil 5-carboxylic acid
 15299	uroporphyrin III
-15330	xyloglucan
 15332	xylose
 15333	zeatin
 15335	Acacetin
@@ -6615,11 +6629,11 @@ COMPOUND_ID	NAME
 15390	(2S)-bisdechlorogeodin
 15391	(2R)-bisdechlorogeodin
 15392	(1R,4R)-bornane-2,5-dione
-15393	(+)-borneol
+15393	(1R,2S,4R)-borneol
 15394	(1S,2R,4S)-borneol
 15396	(1R,4R)-camphor
 15397	(1S,4S)-camphor
-15398	(+)-exo-5-hydroxycamphor
+15398	(1R,4R,5R)-5-hydroxycamphor
 15399	(S)-carvone
 15400	(R)-carvone
 15402	(+)-neomenthol
@@ -6667,7 +6681,7 @@ COMPOUND_ID	NAME
 15660	(Z)-2-(2-furyl)-3-(5-nitro-2-furyl)acrylamide
 15662	(6E)-8-hydroxylinalool
 15667	(Z)-(4-hydroxyphenyl)acetaldehyde oxime
-15669	(E)-cinnamate
+15669	trans-cinnamate
 15673	meso-tartaric acid
 15677	(R)-(-)-allantoin
 15678	(S)-allantoin
@@ -6679,7 +6693,7 @@ COMPOUND_ID	NAME
 15690	20-hydroxy-3-oxopregn-4-en-21-al
 15693	an aldose
 15698	2'-deoxycytidine
-15704	a N(6)-alkylamino-7-beta-D-glucosylpurine
+15704	an N(6)-alkylamino-7-beta-D-glucosylpurine
 15708	trans-aconitate
 15709	xanthotoxol
 15710	betaine aldehyde
@@ -6743,7 +6757,7 @@ COMPOUND_ID	NAME
 15942	2-aminobenzenesulfonate
 15945	D-galactono-1,5-lactone
 15947	N-acetyl-beta-D-glucosaminylamine
-15948	lycopene
+15948	all-trans-lycopene
 15951	phlorisovalerophenone
 15963	D-ribitol
 15975	1D-5-O-methyl-myo-inositol
@@ -6753,7 +6767,7 @@ COMPOUND_ID	NAME
 15984	4-nitrophenyl-3-ketovalidamine
 15987	trithionate
 15992	1-hydroxy-2-naphthoate
-15994	5alpha-androstane-3,17-dione
+15994	5alpha-androstan-3,17-dione
 16004	(R)-lactate
 16007	methanethiol
 16008	salicylaldehyde
@@ -6829,7 +6843,7 @@ COMPOUND_ID	NAME
 16207	3-hydroxybenzaldehyde
 16215	phosphonate
 16217	D-glucono-1,5-lactone
-16220	(E)-coniferin
+16220	4-O-(beta-D-glucosyl)-trans-coniferol
 16222	D-galacto-hexodialdose
 16223	dimethylarsinate
 16226	limonin
@@ -6849,7 +6863,7 @@ COMPOUND_ID	NAME
 16267	taxiphyllin
 16269	N,N-dimethylaniline
 16271	2-exo-hydroxy-1,8-cineole
-16279	1-O-trans-cinnamoyl-beta-D-glucopyranose
+16279	1-O-(trans-cinnamoyl)-beta-D-glucose
 16286	3beta-hydroxy-4beta-methyl-5alpha-cholest-7-ene-4alpha-carbaldehyde
 16290	5alpha-cholesta-7,24-dien-3beta-ol
 16292	D-arabinono-1,4-lactone
@@ -6885,7 +6899,7 @@ COMPOUND_ID	NAME
 16413	2-butyne-1,4-diol
 16415	protopine
 16422	androst-4-ene-3,17-dione
-16424	phenylacetaldehyde
+16424	2-phenylacetaldehyde
 16425	16-epivellosimine
 16431	limonene 1,2-epoxide
 16434	N-hydroxy-4-acetylaminobiphenyl
@@ -6909,7 +6923,7 @@ COMPOUND_ID	NAME
 16485	18-hydroxycorticosterone
 16486	cyclopentanone
 16489	2,4-dihydroxypteridine
-16490	S-adenosyl-4-methylthio-2-oxobutanoate
+16490	S-adenosyl-4-methylsulfanyl-2-oxobutanoate
 16495	4alpha-methyl-5alpha-cholest-7-en-3-one
 16509	1,4-benzoquinone
 16510	3-hydroxypropanoate
@@ -6923,8 +6937,8 @@ COMPOUND_ID	NAME
 16537	galactarate
 16540	2-hydroxypyridine
 16545	5-valerolactone
-16546	1-O-sinapoyl-beta-D-glucose
-16547	(E)-coniferyl aldehyde
+16546	1-O-(trans-sinapoyl)-beta-D-glucose
+16547	trans-coniferyl aldehyde
 16548	chlordecone
 16551	alpha,alpha-trehalose
 16562	2-phenylacetamide
@@ -6966,7 +6980,7 @@ COMPOUND_ID	NAME
 16669	5-dehydro-2-deoxy-D-gluconate
 16683	2,3,6-trihydroxypyridine
 16688	ecdysone
-16689	D-apiose
+16689	aldehydo-D-apiose
 16692	diphthamide residue
 16694	5D-(5/6)-5-C-(hydroxymethyl)-2,6-dihydroxycyclohex-2-en-1-one
 16697	indan-1-ol
@@ -7002,7 +7016,7 @@ COMPOUND_ID	NAME
 16768	mycothiol
 16769	2-oxoglutaramate
 16774	(2Z,6E)-farnesol
-16782	(2S)-hydroxyglutarate
+16782	(S)-2-hydroxyglutarate
 16784	6beta-hydroxyestradiol-17beta
 16786	(3R)-vestitone
 16789	D-lyxose
@@ -7123,7 +7137,7 @@ COMPOUND_ID	NAME
 17151	xylitol
 17153	1-propanal
 17154	nicotinamide
-17158	2-oxopropanal
+17158	methylglyoxal
 17159	(R)-carnitinamide
 17160	17alpha-estradiol
 17162	2-oxostearate
@@ -7162,7 +7176,6 @@ COMPOUND_ID	NAME
 17253	1,2-benzoquinone
 17254	4-methylcatechol
 17256	2'-deoxyadenosine
-17258	purine
 17263	estrone
 17268	myo-inositol
 17269	Latia luciferin
@@ -7254,7 +7267,6 @@ COMPOUND_ID	NAME
 17566	(indol-3-yl)acetonitrile
 17568	uracil
 17573	glycyrrhetinate
-17574	biochanin A
 17576	erythro-3-hydroxy-L-aspartic acid
 17578	toluene
 17579	all-trans-beta-carotene
@@ -7291,8 +7303,8 @@ COMPOUND_ID	NAME
 17698	chloramphenicol
 17700	2-undecanone
 17702	D-apiitol
-17703	Cholest-5-ene-3beta,26-diol
 17703	26-hydroxycholesterol
+17703	Cholest-5-ene-3beta,26-diol
 17712	xanthine
 17715	quinoline-2,8-diol
 17716	lactose
@@ -7303,7 +7315,7 @@ COMPOUND_ID	NAME
 17738	N-methyl-2-oxoglutaramate
 17741	N,N-dimethylformamide
 17742	4-hydroxy-2-oxoglutarate
-17745	(E)-coniferol
+17745	trans-coniferol
 17746	D-xylonate
 17747	bis(2-ethylhexyl)phthalate
 17748	thymidine
@@ -7416,20 +7428,20 @@ COMPOUND_ID	NAME
 18099	cyclohexanol
 18102	O-octanoyl-(R)-carnitine
 18107	xanthosine
-18110	3-phosphonooxypyruvate
+18110	3-phosphooxypyruvate
 18112	2-aminophenol
 18113	D-galactosyl-N-acetyl-beta-D-galactosamine
 18115	4-hydroxymandelonitrile
 18118	L-xylono-1,4-lactone
 18119	ethyl 3-oxohexanoate
 18123	N-methylnicotinate
-18130	(-)-5-oxo-1,2-campholide
+18130	(1R,4R)-5-oxo-1,2-campholide
 18138	biuret
 18145	(+)-alpha-tocopherol
 18146	(R)-canadine
 18147	beta-maltose
 18149	aureusidin
-18153	ethylene
+18153	ethene
 18155	1,2-didecanoyl-sn-glycerol
 18160	ubiquinone-9
 18162	nonaprenyl 4-hydroxybenzoate
@@ -7438,7 +7450,7 @@ COMPOUND_ID	NAME
 18171	8-O-methylsterigmatocystin
 18172	fluoroacetate
 18174	isoflavone 7-O-beta-D-glucoside
-18177	N-acetylphenylethylamine
+18177	N-(2-phenylethyl)acetamide
 18185	gamma-tocopherol
 18193	10-deacetylbaccatin III
 18195	alpha,alpha'-trehalose 6,6'-bismycolate
@@ -7454,8 +7466,8 @@ COMPOUND_ID	NAME
 18236	6-demethylsterigmatocystin
 18249	ergosta-5,7,22,24(28)-tetraen-3beta-ol
 18252	5alpha-cholesta-8,24-dien-3beta-ol
-18255	N-D-ribosylpurine
-18259	an N-acetyl-beta-D-galactosaminyl-(1->3)-alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+18255	nebularine
+18259	globoside Gb4Cer (d18:1(4E))
 18262	dodecanoate
 18265	2-amino-4-hydroxypteridine
 18266	1D-4-O-methyl-myo-inositol
@@ -7491,9 +7503,9 @@ COMPOUND_ID	NAME
 18390	an N-acyl-beta-D-galactosyl-sphing-4-enine
 18391	D-gluconate
 18393	1,3,8-trihydroxynaphthalene
-18394	6-O-alpha-D-glucopyranosyl-D-fructofuranose
+18394	6-O-alpha-D-glucopyranosyl-D-fructose
 18395	2-dehydropantolactone
-18401	phenylacetate
+18401	2-phenylacetate
 18403	L-arabinitol
 18404	3-methylcatechol
 18407	hydrogen cyanide
@@ -7616,6 +7628,7 @@ COMPOUND_ID	NAME
 18866	1,2-beta-D-glucuronosyl-D-glucuronate
 18870	1,2-bis-O-sinapoyl-beta-D-glucoside
 18887	1,2-dihydrobenzene-1,2-diol
+18904	(3R,6R)-1,3,4,6-tetrachlorocyclohexa-1,4-diene
 18911	1,3-alpha-D-mannosyl-1,2alpha-D-mannosyl-1,2alpha-D-mannosyl-D-mannose
 18913	1,3-alpha-D-mannosyloligosaccharides
 18914	1,3-beta-D-galactosyl-(alpha-1,4-l-fucosyl)-N-acetyl-D-glucosaminyl group
@@ -7723,6 +7736,7 @@ COMPOUND_ID	NAME
 19324	2,3-diphosphoglycerate
 19327	2-hydroxy-6-(2-hydroxyphenoxy)-6-oxo-cis,cis-hexa-2,4-dienoate
 19333	2,4,6-trichloroanisole
+19333	2,4,6-trichloroanisole
 19341	2,4-diamino-6-hydroxylaminotoluene
 19342	2,4-diamino-6-nitrotoluene
 19351	(2,4-dichlorophenoxy)acetate
@@ -7782,8 +7796,8 @@ COMPOUND_ID	NAME
 19613	2-hydroxy-5-methyl-cis,cis-muconate
 19615	2-hydroxy-6-oxonona-2,4-diene-1,9-dioate
 19632	2-hydroxychromene-2-carboxylate
-19641	2-hydroxyisobutanoate
 19641	2-hydroxyisobutyrate
+19641	2-hydroxy-2-methylpropanoate
 19644	2-hydroxylamino-4,6-dinitrotoluene
 19651	2-hydroxymethylserine
 19662	2-hydroxytetrahydrofuran
@@ -7846,6 +7860,7 @@ COMPOUND_ID	NAME
 19976	3-carboxy-cis,cis-muconate
 19977	3-carboxymethylmuconate
 19978	3-chloro-D-alanine
+19981	(1R,2R)-3-chlorocyclohexa-3,5-diene-1,2-diol
 19982	3-chloroacrylic acids
 19990	3-dehydro-2-deoxy-D-gluconate
 19991	3-dehydro-D-sphinganine
@@ -7956,6 +7971,7 @@ COMPOUND_ID	NAME
 20541	5-amino-4-chloro-2-(2,3-dihydroxyphenyl)-3(2H)-pyridazinone
 20542	5-amino-4-chloro-2-(2-hydroxymuconoyl)-3(2H)-pyridazinone
 20550	5-aminosalicylaldehyde
+20551	5-amino-2-hydroxybenzoate
 20553	5-bromouridine
 20563	5-dehydro-D-fructose
 20564	5-dehydro-D-gluconate
@@ -8069,8 +8085,8 @@ COMPOUND_ID	NAME
 21134	[2Fe-2S] cluster
 21137	[3Fe-4S] cluster
 21139	[4Fe-4S] cluster
-21143	[8Fe-7S] cluster
 21143	Fe8S7 iron-sulfur clusters
+21143	[8Fe-7S] cluster
 21147	G(M3) ganglioside
 21148	GA1
 21150	GD1b
@@ -8136,8 +8152,8 @@ COMPOUND_ID	NAME
 21485	N-(long-chain-acyl)ethanolamines
 21494	N-acetoxyarylamines
 21505	N-acetyl-D-galactosaminide
-21507	N-acetyl-D-galactosaminyl group
 21507	N-acetyl-D-galactosaminyl groups
+21507	N-acetyl-D-galactosaminyl group
 21521	N-acetyl-D-glucosamine 6-phosphate
 21523	N-acetyl-D-glucosaminide
 21524	N-acetyl-D-glucosaminyl groups
@@ -8239,6 +8255,7 @@ COMPOUND_ID	NAME
 21993	O4-glycosyl-L-hydroxyproline
 21999	P1,P4-bis(5'-guanosyl) tetraphosphate
 22000	P1,P4-bis(5'-uridyl) tetraphosphate
+22005	R-S-glutathione
 22007	S(5)-methyl-5-thio-D-ribose
 22017	S-(5-hydroxy-2-furoyl)-CoA
 22024	S-12-hydroxyfarnesyl-L-cysteine
@@ -8417,8 +8434,8 @@ COMPOUND_ID	NAME
 22783	beta-D-Galactosyl-1,3-N-acetyl-alpha-D-galactosaminyl-R
 22784	beta-D-galactosyl-1,3-N-acetyl-alpha-D-galactosamine
 22798	beta-D-glucosides
-22801	beta-D-glucosylceramide
 22801	a beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+22801	beta-D-glucosylceramide
 22803	beta-D-glucuronosides
 22806	beta-D-isovitexin
 22825	beta-alanyl-CoA
@@ -8739,8 +8756,8 @@ COMPOUND_ID	NAME
 24215	gentiobiosides
 24216	gentiobiosylthevetosides
 24228	geranylfarnesyl diphosphates
-24229	geranylgeraniol
 24229	geranylgeraniols
+24229	geranylgeraniol
 24232	geranylgeranylglycerol 1-phosphates
 24233	geranylhydroquinone
 24234	geranylneryl diphosphates
@@ -8791,8 +8808,8 @@ COMPOUND_ID	NAME
 24353	glycerol ether
 24356	glycerone phosphates
 24358	glycerones
-24360	glycerophosphoglycerols
 24360	Glycerophosphoglycerol
+24360	glycerophosphoglycerols
 24362	glycerophospholipids
 24367	glycinamide ribonucleotides
 24373	glycine derivatives
@@ -9015,8 +9032,8 @@ COMPOUND_ID	NAME
 25197	mercury ions
 25199	mercury(2+) ion
 25200	mercury(II)
-25203	meso-2,6-Diaminoheptanedioate
 25203	meso-2,6-diaminopimelate
+25203	meso-2,6-Diaminoheptanedioate
 25209	mesobiliverdin IXalpha
 25212	metabolites
 25213	a metal cation
@@ -9059,8 +9076,8 @@ COMPOUND_ID	NAME
 25370	molybdenum compounds
 25372	molybdopterin cofactors
 25373	molybdopterin cytosine dinucleotide
-25375	monamines
 25375	monoamine
+25375	monamines
 25377	mono-O-acylglycerols
 25381	monoalkyl phosphates
 25382	monocarboxylates
@@ -9192,8 +9209,8 @@ COMPOUND_ID	NAME
 25928	peptidyl-proline (omega=180)
 25938	perillylaldehyde
 25939	permanganate ion
-25940	a peroxide
 25940	peroxides
+25940	a peroxide
 25941	peroxynitrite
 25942	peroxynitrous acid
 25943	pesticide synergists
@@ -9277,6 +9294,7 @@ COMPOUND_ID	NAME
 26375	pterins
 26381	pulegones
 26385	purine alkaloids
+26386	a purine nucleobase
 26386	purine bases
 26387	purine deoxyribonucleoside diphosphates
 26388	purine deoxyribonucleoside monophosphates
@@ -9302,8 +9320,8 @@ COMPOUND_ID	NAME
 26416	pyridine alkaloids
 26420	pyridinecarboxylic acids
 26421	pyridines
-26432	a pyrimidine nucleobase
 26432	pyrimidine bases
+26432	a pyrimidine nucleobase
 26433	pyrimidine deoxyribonucleoside diphosphates
 26434	pyrimidine deoxyribonucleoside monophosphates
 26435	pyrimidine deoxyribonucleoside triphosphates
@@ -9588,7 +9606,7 @@ COMPOUND_ID	NAME
 27616	psoralen
 27628	4-isopropylbenzyl alcohol
 27632	acetophenone
-27636	L-glycol
+27636	an L-glycol
 27660	pyrrole-2-carboxylate
 27667	beta-D-galactose
 27670	1,2-bis-(3,4-dimethoxyphenyl)propane-1,3-diol
@@ -9608,6 +9626,7 @@ COMPOUND_ID	NAME
 27798	nitrobenzene
 27810	resorcinol
 27826	dhurrin
+27827	paraoxon
 27852	3,4-dihydroxymandelaldehyde
 27856	acetamide
 27867	all-trans-antheraxanthin
@@ -9621,8 +9640,8 @@ COMPOUND_ID	NAME
 27913	L-erythrulose
 27914	hydrogenobyrinic acid a,c-diamide
 27931	alpha-maltotriose
-27938	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-27949	(E)-sinapoyl aldehyde
+27938	ganglioside GA1 (d18:1(4E))
+27949	trans-sinapoyl aldehyde
 27957	hydroxyacetone
 27961	1,8-cineole
 27967	11beta-hydroxyandrost-4-ene-3,17-dione
@@ -9633,7 +9652,7 @@ COMPOUND_ID	NAME
 27977	erythronolide B
 27978	3,4-dihydroxyphenylacetaldehyde
 27986	nitrosobenzene
-27993	1,2-bis-O-sinapoyl beta-D-glucoside
+27993	1,2-di-O-sinapoyl beta-D-glucose
 27995	3-methylbenzyl alcohol
 28009	N-Acetyl-D-hexosamine
 28009	N-acetyl-beta-D-glucosamine
@@ -9643,18 +9662,21 @@ COMPOUND_ID	NAME
 28037	N-acetyl-D-galactosamine
 28047	5beta-cholestane-3alpha,7alpha-diol
 28053	melibiose
+28054	2-hydroxytoluene
 28059	cis-1,2-dithiane-4,5-diol
 28061	alpha-D-galactose
 28068	all-trans-zeta-carotene
 28071	(indol-3-yl)acetyl-myo-inositol 3-L-arabinoside
 28080	(2Z,4E)-2-hydroxyhexa-2,4-dienedioate
 28082	5alpha-cholestane-3beta,5,6beta-triol
+28097	chlorobenzene
 28100	(1->3)-alpha-D-glucan
 28113	24,25-dihydrolanosterol
 28115	methylcob(III)alamin
 28129	all-trans-phytofluene
 28134	ammelide
 28145	dibenzofuran
+28157	(S)-pinocembrin
 28164	5,6beta-epoxy-5beta-cholestan-3beta-ol
 28177	theophylline
 28180	but-3-ynal
@@ -9664,6 +9686,7 @@ COMPOUND_ID	NAME
 28199	Fe(III)enterobactin
 28200	2-chloroethanol
 28206	a 2'-hydroxyisoflavone
+28222	1,2,4-trichlorobenzene
 28230	hesperetin
 28250	a 6-acetyl-beta-D-galactoside
 28255	N-glycolyl-D-mannosamine
@@ -9671,6 +9694,7 @@ COMPOUND_ID	NAME
 28261	(1R,5R)-alpha-pinene
 28262	dimethyl sulfoxide
 28272	beta-L-arabinofuranose
+28279	6-methylthiopurine
 28283	capsidiol
 28303	2-chlorobenzoate
 28304	heparin
@@ -9685,6 +9709,7 @@ COMPOUND_ID	NAME
 28395	(+-)-trans-acenaphthene-1,2-diol
 28396	1,2-diacyl-3-O-[alpha-D-galactosyl-(1->6)-beta-D-galactosyl]-sn-glycerol
 28398	butan-2-one
+28412	(S)-eriodictyol
 28423	6-methoxy-2-all-trans-octaprenyl-1,4-benzoquinone
 28425	alpha-carotene
 28433	phylloquinol
@@ -9703,17 +9728,17 @@ COMPOUND_ID	NAME
 28534	1,2-dibromoethane
 28536	3-hydroxyindolin-2-one
 28537	all-trans-3,4-didehydroretinal
-28548	D-Pinitol
 28548	5D-5-O-methyl-chiro-inositol
+28548	D-Pinitol
 28563	beta-D-mannose
 28587	D-threose
-28591	2-methoxyphenol
+28591	guaiacol
 28619	acrylamide
 28630	3-hydroxy-4H-pyrid-4-one
 28636	3-methyl-6-methoxy-2-all-trans-octaprenyl-1,4-benzoquinone
 28638	2-methylpropanenitrile
 28644	2-oxopentanoate
-28645	beta-D-fructofuranose
+28645	beta-D-fructose
 28646	ammeline
 28660	(1S,5S)-alpha-pinene
 28664	7-methylguanine
@@ -9729,8 +9754,8 @@ COMPOUND_ID	NAME
 28750	17alpha-hydroxypregnenolone
 28768	p-cymene
 28775	hesperidin
-28777	liquiritigenin
 28777	(2S)-liquiritigenin
+28777	liquiritigenin
 28788	quinoline-3,4-diol
 28802	a flavonol
 28816	aldehydo-2-deoxy-D-ribose
@@ -9764,10 +9789,12 @@ COMPOUND_ID	NAME
 28955	2-methoxy-17beta-estradiol
 28971	(2S,5R,6R)-6-((R)-2-amino-2-phenylacetamido)-3,3-dimethyl-7-oxo-4-thia-1-aza-bicyclo[3.2.0]heptane-2-carboxylic acid
 28972	(R)-propane-1,2-diol
+28975	2,5-dichlorocyclohexa-2,5-dien-1,4-diol
 28976	carbonic acid
 28977	3-carboxy-2-hydroxy-7-methyl-6-oxo-(2Z,4Z)-octadienoate
 28982	(S)-1,2-epoxypropane
 28985	(R)-1,2-epoxypropane
+28989	2,4,5-trichlorocyclohexa-2,5-dien-1-ol
 28997	2'-deoxyinosine
 28999	N-acetyl-9-O-acetylneuraminate
 29001	(3R)-3-isopropenyl-6-oxoheptanoate
@@ -9811,8 +9838,8 @@ COMPOUND_ID	NAME
 29454	(+)-Sandaracopimaradiene
 29455	(+)-cis-Isopulegone
 29456	(1S,4R)-1-Hydroxy-2-oxolimonene
-29457	(5Z,7E,9E,14Z,17Z)-Eicosapentaenoate
 29457	(5Z,7E,9E,14Z,17Z)-Eicosapentaenoic acid
+29457	(5Z,7E,9E,14Z,17Z)-Eicosapentaenoate
 29459	1,3-Dihydroxy-N-methyl-acridone
 29460	10-Deacetyl-2-debenzoylbaccatin III
 29461	10-Deoxymethynolide
@@ -9828,8 +9855,8 @@ COMPOUND_ID	NAME
 29476	3-Amino-4-hydroxybenzoic acid
 29479	3-Hydroxy-palmitic acid methyl ester
 29481	3-Isopropenylpimelyl-CoA
-29484	(S)-4,5-dihydroxypentane-2,3-dione
 29484	4,5-Dihydroxy-2,3-pentanedione
+29484	(S)-4,5-dihydroxypentane-2,3-dione
 29489	4-Isopropenyl-2-oxy-cyclohexanecarboxyl-CoA
 29491	5-O-beta-D-Mycaminosyltylactone
 29503	7,4'-Dihydroxyflavone
@@ -9838,12 +9865,12 @@ COMPOUND_ID	NAME
 29508	(-)-Abietadiene
 29508	Abietadiene
 29509	Abietal
-29510	Abietinol
 29510	abieta-7,13-dien-18-ol
+29510	Abietinol
 29514	AminoDHS
 29515	Ansamitocin P3
-29519	Aphidicolan-16beta-ol
 29519	aphidicolan-16beta-ol
+29519	Aphidicolan-16beta-ol
 29520	Apiforol
 29534	Avermectin B1a
 29537	Avermectin B1b
@@ -9860,8 +9887,8 @@ COMPOUND_ID	NAME
 29572	Demethyllactenocin
 29576	Divinyl chlorophyllide a
 29578	Divinylprotochlorophyllide
-29579	Epothilone D
 29579	epothilone D
+29579	Epothilone D
 29582	FK520
 29587	Gibberellin A12
 29588	Gibberellin A14
@@ -9882,10 +9909,10 @@ COMPOUND_ID	NAME
 29612	L-Cladinose
 29613	L-Oleandrosyl-oleandolide
 29613	L-oleandrosyl-oleandolide
-29614	L-Olivosyl-oleandolide
 29614	L-olivosyl-oleandolide
-29616	Levopimaradiene
+29614	L-Olivosyl-oleandolide
 29616	abieta-8(14),12-diene
+29616	Levopimaradiene
 29620	Luteoliflavan
 29628	Methanophenazine
 29630	Methymycin
@@ -9895,8 +9922,8 @@ COMPOUND_ID	NAME
 29643	N-Butyryl-L-homoserine lactone
 29645	N-Methylanthraniloyl-CoA
 29649	Narbomycin
-29650	Narbonolide
 29650	narbonolide
+29650	Narbonolide
 29651	neoabietadiene
 29651	Neoabietadiene
 29655	Neocarzinostatin chromophore
@@ -9921,8 +9948,8 @@ COMPOUND_ID	NAME
 29696	Tigecycline
 29697	Triclosan
 29699	Tunicamycin
-29700	tylactone
 29700	Tylactone
+29700	tylactone
 29701	Tyrocidine
 29703	Validamycin A
 29704	Valiolone
@@ -9939,7 +9966,7 @@ COMPOUND_ID	NAME
 29743	3-oxododecanoate
 29744	lithocholate
 29748	chorismate
-29749	ferulate
+29749	trans-ferulate
 29751	Quinate
 29751	L-quinate
 29780	isochorismate
@@ -9952,21 +9979,28 @@ COMPOUND_ID	NAME
 29934	prephenate
 29949	D-alanine residue
 29950	L-cysteine residue
+29955	D-tryptophan residue
 29959	quinolinate
 29961	L-aspartate residue
 29965	L-arginine residue
 29969	L-lysine residue
 29973	L-glutamate residue
 29979	L-histidine residue
+29984	D-methionine residue
 29985	L-glutamate
 29986	D-glutamate
 29990	D-aspartate
 29991	L-aspartate
+29996	D-phenylalanine residue
 29998	D-serine residue
 29999	L-serine residue
+30000	L-selenocysteine residue
+30005	D-leucine residue
+30007	D-alloisoleucine residue
 30011	L-glutamine residue
 30013	L-threonine residue
-30023	sinapate
+30014	D-threonine residue
+30023	trans-sinapate
 30031	succinate
 30037	taxa-4,11-diene
 30038	taxa-4(20),11-dien-5alpha-ol
@@ -9996,6 +10030,7 @@ COMPOUND_ID	NAME
 30616	ATP
 30620	(S)-2,3-dihydrodipicolinate
 30623	oxalate
+30697	beta-D-glucosyl group
 30719	2-methylmaleate
 30742	ethylene glycol
 30755	guanin-9-yl group
@@ -10040,7 +10075,9 @@ COMPOUND_ID	NAME
 31044	1-Naphthylacetic acid
 31046	1-Oxa-2-oxo-3-hydroxycycloheptane
 31047	10-Carboxy-13-deoxycarminomycin
+31056	13-Deoxycarminomycin
 31057	13-Deoxydaunorubicin
+31058	13-Dihydrocarminomycin
 31059	13-Dihydrodaunorubicin
 31062	19-Hydroxy-8-O-methyltetrangulol
 31063	19-Hydroxytetrangulol
@@ -10067,21 +10104,20 @@ COMPOUND_ID	NAME
 31123	4,4-Disubstituted cyclohexenone
 31126	4-Ethylphenol
 31127	4-Hydroxyphenacyl alcohol
-31128	4-hydroxyphenyl acetate
 31128	4-Hydroxyphenyl acetate
+31128	4-hydroxyphenyl acetate
 31132	5-Hydroxy-2-oxo-4-ureido-2,5-dihydro-1H-imidazole-5-carboxylate
 31133	5-Hydroxybisphenol
 31135	5-Hydroxyconiferyl alcohol
-31135	(E)-5-hydroxyconiferyl alcohol
 31136	5-Hydroxyferuloyl-CoA
 31138	5alpha-Androstan-3beta,17beta-diol
-31144	8-demethyltetracenomycin C
 31144	8-Demethyltetracenomycin C
+31144	8-demethyltetracenomycin C
 31145	8-O-Methyltetrangulol
 31146	9'-cis-Neoxanthin
 31155	9-cis-Violaxanthin
-31157	Abscisic aldehyde
 31157	2-cis-(+)-abscisic aldehyde
+31157	Abscisic aldehyde
 31159	Aceclofenac (TN)
 31162	Acemetacin
 31168	Acetylspiramycin
@@ -10090,8 +10126,8 @@ COMPOUND_ID	NAME
 31174	Adapalene
 31179	Aklanonic acid methyl ester
 31180	Aklaviketone
-31181	aklavinone
 31181	Aklavinone
+31181	aklavinone
 31183	Alclofenac
 31186	Alfacalcidol
 31186	alfacalcidol
@@ -10134,14 +10170,15 @@ COMPOUND_ID	NAME
 31367	Cefditoren pivoxil
 31368	Cefepime hydrochloride
 31377	Cefpiramide sodium
+31379	Cefroxadine
 31388	Chelerythrine
 31389	Chelidonine
 31402	Cinnamyl acetate
 31402	cinnamyl acetate
 31407	Cladribine
 31427	Cocarboxylase
-31432	corynebactin
 31432	Corynebactin
+31432	corynebactin
 31440	Cupric sulfate
 31441	Cutivate (TN)
 31442	Cyanidin 3-O-(6-O-malonyl-beta-D-glucoside)
@@ -10162,8 +10199,8 @@ COMPOUND_ID	NAME
 31475	Dibekacin sulfate
 31478	Dibromobisphenol A
 31487	Dihydro-alpha-ergocryptine mesylate
-31488	N-acylsphinganine
 31488	Dihydroceramide
+31488	N-acylsphinganine
 31490	Dihydroergocristine mesylate
 31503	Dioncopeltine A
 31504	Dioncophylline A
@@ -10216,6 +10253,7 @@ COMPOUND_ID	NAME
 31745	Kaempferol 3-O-glucoside
 31746	Kainic acid
 31748	Kanosamine 6-phosphate
+31750	Ketotifen fumarate
 31751	Kinamycin D
 31753	Leucomycin V
 31757	L-Threonine O-3-phosphate
@@ -10228,18 +10266,22 @@ COMPOUND_ID	NAME
 31811	Meglumine
 31823	Mercuric chloride
 31829	Methixene hydrochloride monohydrate
+31830	Methoxyphenamine hydrochloride
 31832	Methyl salicylate
 31832	methyl salicylate
 31850	Militarinone A
 31856	Mithramycin
 31863	Monobromobisphenol A
 31882	N-Methyl-D-aspartic acid
+31883	N-(9Z-octadecanoyl)-dopamine
+31883	N-Oleoyl dopamine
 31885	N2-Acetyl-L-aminoadipate
 31887	N2-Acetyl-L-aminoadipyl-delta-phosphate
 31888	N2-Acetyl-L-lysine
 31892	Naloxone hydrochloride
 31897	Nateglinide
 31898	Nedaplatin
+31900	Neticonazole hydrochloride
 31905	Nicorandil
 31906	Nicotinic acid adenine dinucleotide phosphate
 31915	Nogalonic acid
@@ -10276,8 +10318,8 @@ COMPOUND_ID	NAME
 32060	Propagermanium
 32062	Propicillin potassium
 32076	Pyrithione zinc
-32079	pyrrolnitrin
 32079	Pyrrolnitrin
+32079	pyrrolnitrin
 32084	Quercetin 7-O-beta-D-glucoside
 32095	Retinol acetate
 32096	Rhodomycin D
@@ -10341,8 +10383,8 @@ COMPOUND_ID	NAME
 32325	beta-ionone
 32328	cis-3-(2-carboxyethenyl)-3,5-cyclohexadiene-1,2-diol
 32329	cis-Cyclohexane-1,2-diol
-32330	(2S,3R)-dihydroquercetin
 32330	cis-Dihydroquercetin
+32330	(2S,3R)-dihydroquercetin
 32333	dTDP-5-dimethyl-L-lyxose
 32335	dTDP-L-epivancosamine
 32336	dTDP-L-vancosamine
@@ -10356,8 +10398,8 @@ COMPOUND_ID	NAME
 32360	eicosanoate
 32361	nonanoate
 32362	heptanoate
-32364	3-dehydroquinate
 32364	3-Dehydroquinate
+32364	3-dehydroquinate
 32366	heptadecanoate
 32369	undecanoate
 32370	(9Z)-tetradecenoate
@@ -10393,12 +10435,14 @@ COMPOUND_ID	NAME
 32814	N-carbamoyl-L-aspartate
 32875	methyl group
 32879	propane
+32888	gamma-hexachlorocyclohexane
 32897	10-deacetyl-2-debenzoylbaccatin III
 32898	baccatin III
 32966	beta-D-fructose 1,6-bisphosphate
 33007	Cr(6+)
 33019	diphosphate
 33076	D-mannonic acid
+33098	2-nitrotoluene
 33163	9-decenoate
 33190	3-oxopropanoate
 33203	(Z)-24-ethylidenelophenol
@@ -10483,8 +10527,8 @@ COMPOUND_ID	NAME
 34129	11,12-DHET
 34130	11,12-EET
 34131	11,14,15-THETA
-34133	17beta-hydroxyandrost-4-ene-3,11-dione
 34133	11-Keto-testosterone
+34133	17beta-hydroxyandrost-4-ene-3,11-dione
 34144	12(R)-HETE
 34145	12(R)-HPETE
 34146	12(S)-HETE
@@ -10496,6 +10540,8 @@ COMPOUND_ID	NAME
 34159	15-Deoxy-delta-12,14-PGJ2
 34162	16(R)-HETE
 34168	16alpha,17alpha-Dihydroxyprogesterone acetophenide
+34172	16alpha-Hydroxytestosterone
+34172	16alpha,17beta-dihydroxyandrost-4-en-3-one
 34185	19(S)-HETE
 34189	2',3',4',5'-Tetrachloro-3-biphenylol
 34192	2',5'-Dichloro-3-biphenylol
@@ -10521,8 +10567,8 @@ COMPOUND_ID	NAME
 34230	2,3-Dinor-8-iso prostaglandin F2alpha
 34232	2,4'-Dichlorobiphenyl
 34233	2,4,4',6-Tetrachlorobiphenyl
-34238	2,4-dibromphenol
 34238	2,4-Dibromophenol
+34238	2,4-dibromophenol
 34239	2,4-Dichloroaniline
 34242	2,4-Dinitroaniline
 34245	2,5-Dichloroaniline
@@ -10537,6 +10583,8 @@ COMPOUND_ID	NAME
 34261	2-Arachidonoylglycerol
 34267	2-Chloro-4,4'-biphenyldiol
 34269	2-Chlorobiphenyl
+34270	2-Chloronitrobenzene
+34270	1-chloro-2-nitrobenzene
 34271	2-Chlorophenol
 34272	2-Ethoxyethanol
 34276	2-Ethyltoluene
@@ -10612,8 +10660,8 @@ COMPOUND_ID	NAME
 34480	7-Ethoxyresorufin
 34483	7-Hydroxyflavanone
 34484	8(R)-HETE
-34485	8(R)-HPODE
 34485	(8R,9Z,12Z)-8-hydroperoxyoctadeca-9,12-dienoic acid
+34485	8(R)-HPODE
 34486	8(S)-HETE
 34487	8(S)-HPETE
 34488	8,11,14-Eicosatrienoylethanolamide
@@ -10645,8 +10693,8 @@ COMPOUND_ID	NAME
 34570	Benzofuran
 34572	Bioallethrin
 34575	Bis(4-hydroxyphenyl)methane
-34584	17beta-hydroxyandrosta-1,4-dien-3-one
 34584	Boldenone
+34584	17beta-hydroxyandrosta-1,4-dien-3-one
 34590	Bromobutide
 34591	Bromodichloromethane
 34592	Bromoform
@@ -10713,8 +10761,8 @@ COMPOUND_ID	NAME
 34706	Dihydroergotoxine mesylate
 34707	Dihydrogenistein
 34714	Dimethoate
-34718	1-chloro-2,4-dinitrobenzene
 34718	Dinitrochlorobenzene
+34718	1-chloro-2,4-dinitrobenzene
 34720	Diphenhydramine salicylate
 34722	Diphenyl carbonate
 34728	Dopamine 3-O-sulfate
@@ -10741,6 +10789,8 @@ COMPOUND_ID	NAME
 34783	Hepoxilin A3
 34784	Hepoxilin B3
 34785	Heptachlor
+34787	Heptanal
+34787	heptanal
 34789	Hetacillin potassium
 34795	IBMX
 34800	Isophorone
@@ -10854,6 +10904,7 @@ COMPOUND_ID	NAME
 35173	2-dehydro-3-deoxy-L-arabinonate
 35177	2-oxohexanoate
 35194	isoprene
+35227	4-nitrotoluene
 35235	L-cysteine
 35236	D-cysteine
 35247	D-serine
@@ -10876,7 +10927,7 @@ COMPOUND_ID	NAME
 35680	abieta-7,13-dien-18-oate
 35681	a secondary alcohol
 35746	a fatty aldehyde
-35759	1-acylglycerol
+35759	a 1-acylglycerol
 35766	Glycerophosphoserine
 35785	sphingoid base
 35811	2-endo-hydroxy-1,8-cineole
@@ -10930,6 +10981,7 @@ COMPOUND_ID	NAME
 36727	1-O-alkyl-2,3-diacylglycerol
 36729	(20R)-20-hydroxypregn-4-en-3-one
 36740	alpha-pinene
+36776	(1S,4S)-bornane-2,5-dione
 36781	1-pyrroline
 37047	(2R,5R)-isopulegone
 37080	acrylate
@@ -10987,8 +11039,8 @@ COMPOUND_ID	NAME
 39557	12-HYDROXYDODECANOIC ACID
 39558	POLYETHYLENE GLYCOL (N=34)
 39561	CETYL-TRIMETHYL-AMMONIUM
-39564	2-(3-CARBOXYPROPIONYL)-6-HYDROXY-CYCLOHEXA-2,4-DIENE CARBOXYLIC ACID
 39564	(1R,6R)-6-Hydroxy-2-succinylcyclohexa-2,4-diene-1-carboxylate
+39564	2-(3-CARBOXYPROPIONYL)-6-HYDROXY-CYCLOHEXA-2,4-DIENE CARBOXYLIC ACID
 39568	1-(4-TERT-BUTYLCARBAMOYL-PIPERAZINE-1-CARBONYL)-3-(3-GUANIDINO-PROPYL)-4-OXO-AZETIDINE-2-CARBOXYLIC ACID
 39571	1,3-DIHYDROXYACETONEPHOSPHATE
 39573	13(R)-HYDROPEROXY-9(Z),11(E)-OCTADECADIENOIC ACID
@@ -11064,6 +11116,7 @@ COMPOUND_ID	NAME
 39924	3-NITROTOLUENE
 39930	(3R)-3-HYDROXY-8'-APOCAROTENOL
 39930	(3R)-3-hydroxy-8'-apo-beta-carotenol
+39931	3-nitrotoluene
 39932	1-OCTEN-3-OL
 39934	1,2-DIACYL-SN-GLYCERO-3-PHOSPHOETHANOLAMINE
 39942	TRIPHOSPHATE
@@ -11187,7 +11240,6 @@ COMPOUND_ID	NAME
 40604	ADAMANTANONE
 40615	ADENOSINE-5'-DIPHOSPHATE-GLUCOSE
 40618	AMINOGUANIDINE
-40619	2-AMINO-4-[1-CARBOXYMETHYL-CARBAMOYL)-2-HYDROXYMETHYLSULFANYL-ETHYLCARBAMOYL]-BUTYRIC ACID
 40622	AETIOCHOLANOLONE
 40628	ALPHA-L-ARABINOFURANOSE
 40645	2-ACETYLAMINOFLUORENE-3-YL
@@ -11233,8 +11285,8 @@ COMPOUND_ID	NAME
 40785	C-GAMMA-HYDROXY ARGININE
 40796	ANILINE
 40798	ACENAPHTHENEQUINONE
-40799	ANDROSTA-1,4-DIENE-3,17-DIONE
 40799	androsta-1,4-diene-3,17-dione
+40799	ANDROSTA-1,4-DIENE-3,17-DIONE
 40804	N-ACETYL SEROTONIN
 40806	2,5-DINITROPHENOL
 40807	4-METHOXYBENZOIC ACID
@@ -11249,7 +11301,6 @@ COMPOUND_ID	NAME
 40859	ASPARAGINE
 40862	5-AMINO-1H-[1,2,3]TRIAZOLO[4,5-D]PYRIMIDIN-7-OL
 40863	ALIZARIN RED
-40877	[6,7-BIS(2-METHOXY-ETHOXY)QUINAZOLINE-4-YL]-(3-ETHYNYLPHENYL)AMINE
 40886	BETA-L-ARABINOSE
 40889	2-AMINOTHIAZOLINE
 40892	ASCORBIC ACID
@@ -11275,6 +11326,7 @@ COMPOUND_ID	NAME
 40950	BICINE
 40961	BICARBONATE ION
 40963	ASTAXANTHIN
+40968	all-trans-(3S,3'S)-astaxanthin
 40980	2-AMINOBENZOIC ACID
 40986	N-ACETYLALANINE
 40987	BETA-CAROTENE
@@ -11323,8 +11375,8 @@ COMPOUND_ID	NAME
 41197	HEXADECA-10,12-DIEN-1-OL
 41198	4-[3-(3-NITROPHENYL)-1,2,4-OXADIAZOL-5-YL]BUTANOIC ACID
 41208	BUTANOIC ACID
-41213	BACTERIOPHEOPHYTIN A
 41213	bacteriopheophytin a
+41213	BACTERIOPHEOPHYTIN A
 41214	PARANITROBENZYL ALCOHOL
 41215	BETA-MERCAPTOETHANOL
 41216	BIPHENYL-2,3-DIOL
@@ -11482,8 +11534,8 @@ COMPOUND_ID	NAME
 41834	2,4-DIAMINOBUTYRIC ACID
 41837	oxidized dithiothreitol
 41838	2'-DEOXYCYTIDINE-5'-MONOPHOSPHATE
-41847	DIACYL GLYCEROL
 41847	1,2-dioctadecanoyl-sn-glycerol
+41847	DIACYL GLYCEROL
 41855	D-ARGININE
 41856	DIGOXIN
 41860	SEBACIC ACID
@@ -11575,6 +11627,7 @@ COMPOUND_ID	NAME
 42135	(4S,4AR,5S,5AR,6R,12AS)-4-(DIMETHYLAMINO)-3,5,10,12,12A-PENTAHYDROXY-6-METHYL-1,11-DIOXO-1,4,4A,5,5A,6,11,12A-OCTAHYDROTETRACENE-2-CARBOXAMIDE
 42136	DIMETHYLAMINE
 42138	DIMETHYL SULFOXIDE
+42142	AC-(D)PHE-PRO-BOROARG-OH
 42144	DITHIANE DIOL
 42154	DITHIONITE
 42155	DIAMMINOPROPANOIC ACID
@@ -11586,6 +11639,7 @@ COMPOUND_ID	NAME
 42177	5-METHYL-5H-INDOLO[3,2-B]QUINOLINE
 42189	{[-(BIS-CARBOXYMETHYL-AMINO)-ETHYL]-CARBOXYMETHYL-AMINO}-ACETIC ACID
 42197	DAIDZIN
+42202	daidzein 7-O-beta-D-glucoside
 42206	D-tryptophan
 42207	D-PHENYLALANINE
 42209	9-OCTADECENOIC ACID
@@ -11715,8 +11769,8 @@ COMPOUND_ID	NAME
 42670	GELDANAMYCIN
 42672	FARNESOL
 42675	3-AMINOBENZOIC ACID
-42677	(R)-1-aminopropan-2-ol
 42677	2-HYDROXY-PROPYL-AMMONIUM
+42677	(R)-1-aminopropan-2-ol
 42679	N-(P-CYANOPHENYL)-N'-DIPHENYLMETHYL-GUANIDINE-ACETIC ACID
 42683	(2R,3R,4S,5R)-2-({[(1R)-2-HYDROXY-1-PHENYLETHYL]AMINO}METHYL)-5-METHYLPYRROLIDINE-3,4-DIOL
 42688	GLYCINAMIDE RIBONUCLEOTIDE
@@ -11785,8 +11839,8 @@ COMPOUND_ID	NAME
 42929	GALACTURONIC ACID
 42934	GUANOSINE-5'-TRIPHOSPHATE
 42935	(-)-GALANTHAMINE
-42939	cyclohexylamine
 42939	CYCLOHEXYLAMMONIUM ION
+42939	cyclohexylamine
 42940	GLYCOLURIL
 42948	GUANINE
 42955	METHYL 4-AMINOBUTANOATE
@@ -11820,8 +11874,8 @@ COMPOUND_ID	NAME
 43061	ALPHA-HYDROXY-BETA-PHENYL-PROPIONIC ACID
 43063	5,6,7,8-TETRAHYDROBIOPTERIN
 43073	(2S,3S)-TRANS-2,3-DIHYDRO-3-HYDROXYANTHRANILIC ACID
-43074	(3S)-hydroxy-3-methylglutaryl-CoA
 43074	3-HYDROXY-3-METHYLGLUTARYL-COENZYME A
+43074	(3S)-hydroxy-3-methylglutaryl-CoA
 43081	N-{[2-({[1-(4-CARBOXYBUTANOYL)AMINO]-2-PHENYLETHYL}-HYDROXYPHOSPHINYL)OXY]ACETYL}-2-PHENYLETHYLAMINE
 43082	4-METHYL-HISTIDINE
 43088	N-OMEGA-HYDROXY-L-ARGININE
@@ -11965,8 +12019,8 @@ COMPOUND_ID	NAME
 43701	LACTIC ACID
 43704	5-KETO-4-DEOXYGLUCARATE
 43706	(2R,3R,4R,5R)-2-((1S,2S,3R,4S,6R)-4,6-DIAMINO-3-((2R,3R,6S)-3-AMINO-6-(AMINOMETHYL)-TETRAHYDRO-2H-PYRAN-2-YLOXY)-2-HYDROXYCYCLOHEXYLOXY)-5-METHYL-4-(METHYLAMINO)-TETRAHYDRO-2H-PYRAN-3,5-DIOL
-43711	(R)-dihydrolipoamide
 43711	6,8-DIMERCAPTO-OCTANOIC ACID AMIDE
+43711	(R)-dihydrolipoamide
 43714	3-METHYL-2-OXOBUTANOIC ACID
 43720	4-(METHYLSULFANYL)-2-OXOBUTANOIC ACID
 43725	L-NOREPINEPHRINE
@@ -12006,8 +12060,8 @@ COMPOUND_ID	NAME
 43894	ALPHA-D-MANNOSE-6-PHOSPHATE
 43895	MALONALDEHYDE
 43901	LOBELINE
-43903	N1-METHYLATED HISTIDINE
 43903	N(pros)-methyl-L-histidine residue
+43903	N1-METHYLATED HISTIDINE
 43917	N5-METHYLGLUTAMINE
 43919	1,4-DIHYDROXY-5,8-BIS({2-[(2-HYDROXYETHYL)AMINO]ETHYL}AMINO)-9,10-ANTHRACENEDIONE
 43923	METHYLENE CARBONYL GROUP
@@ -12048,8 +12102,8 @@ COMPOUND_ID	NAME
 44012	2-AMINO-5,6-DIMERCAPTO-7-METHYL-3,7,8A,9-TETRAHYDRO-8-OXA-1,3,9,10-TETRAAZA-ANTHRACEN-4-ONE GUANOSINE DINUCLEOTIDE
 44019	MILRINONE
 44023	TOLUENE
-44027	MENAQUINONE 8
 44027	menaquinone-8
+44027	MENAQUINONE 8
 44029	N-[2(R)-HYDROXY-1(S)-INDANYL]-5-[(2(S)-TERTIARY BUTYLAMINOCARBONYL)-4(3-PYRIDYLMETHYL)PIPERAZINO]-4(S)-HYDROXY-2(R)-PHENYLMETHYLPENTANAMIDE
 44042	3-O-METHYL-ALPHA-L-RHAMNOPYRANOSIDE
 44047	MONOISOPROPYL ESTER PHOSPHONIC ACID
@@ -12074,8 +12128,8 @@ COMPOUND_ID	NAME
 44111	BETA-MERCAPTOPROPIONIC ACID
 44113	MOXALACTAM
 44116	[METHYLTHIO]ACETATE
-44120	L-methionine (S)-S-oxide residue
 44120	S-OXYMETHIONINE
+44120	L-methionine (S)-S-oxide residue
 44137	TIAMULIN
 44141	5-S-METHYL-1-O-PHOSPHONO-5-THIO-D-RIBULOSE
 44143	6-BENZYL-1-ETHOXYMETHYL-5-ISOPROPYL URACIL
@@ -12397,7 +12451,6 @@ COMPOUND_ID	NAME
 45199	PSEUDOTROPINE
 45202	PYRIDOXINE-5'-PHOSPHATE
 45208	PYROPHOSPHATE 2-
-45210	PHOSPHATIDYLETHANOLAMINE
 45214	RIBOFLAVINE
 45218	ALPHA-RIBAZOLE-5'-PHOSPHATE
 45223	2-PYRIDINETHIOL
@@ -12431,8 +12484,8 @@ COMPOUND_ID	NAME
 45353	N-ALPHA-L-RHAMNOPYRANOSYLOXY(HYDROXYPHOSPHINYL)-L-LEUCYL-L-TRYPTOPHAN
 45355	RALOXIFENE
 45358	N,N'-TETRAMETHYL-ROSAMINE
-45360	pyruvoyl group
 45360	PYRUVOYL GROUP
+45360	pyruvoyl group
 45364	RIFABUTIN
 45366	6-{[4-(HYDROXYMETHYL)-5-METHYL-2,6-DIOXOHEXAHYDROPYRIMIDIN-5-YL]METHYL}-5-METHYLPYRIMIDINE-2,4(1H,3H)-DIONE
 45370	SULFANILAMIDE
@@ -12478,8 +12531,8 @@ COMPOUND_ID	NAME
 45515	L-THIALYSINE
 45517	1-{3-METHYL-2-[4-(MORPHOLINE-4-CARBONYL)-BENZOYLAMINO]-BUTYRYL}-PYRROLIDINE-2-CARBOXYLIC ACID (3,3,4,4,4-PENTAFLUORO-1-ISOPROPYL-2-OXO-BUTYL)-AMIDE
 45521	2-HYDROXYBENZOIC ACID
-45522	O-phospho-L-serine residue (OLD)
 45522	PHOSPHOSERINE
+45522	O-phospho-L-serine residue (OLD)
 45523	2-METHYLBUTANOIC ACID
 45531	SARCOSINE
 45532	SULFONATE GROUP
@@ -12579,8 +12632,8 @@ COMPOUND_ID	NAME
 45902	3-(HYDROXY-PHENYL-PHOSPHINOYLOXY)-8-METHYL-8-AZA-BICYCLO[3.2.1]OCTANE-2-CARBOXYLIC ACID METHYL ESTER
 45904	8,8'-[CARBONYLBIS[IMINO-3,1-PHENYLENECARBONYLIMINO(4-METHYL-3,1-PHENYLENE)CARBONYLIMINO]]BIS-1,3,5-NAPHTHALENETRISULFONIC ACID
 45910	6-BENZYL-1-BENZYLOXYMETHYL-5-ISOPROPYL URACIL
-45912	THREONATE ION
 45912	D-threonate
+45912	THREONATE ION
 45916	N-TRIDECANOIC ACID
 45921	TRIMETHOPRIM
 45922	TETRATHIONATE
@@ -12642,6 +12695,7 @@ COMPOUND_ID	NAME
 46171	PARA ACETAMIDO BENZOIC ACID
 46175	THYMIDINE-5'-TRIPHOSPHATE
 46182	4-METHYL-5-HYDROXYETHYLTHIAZOLE PHOSPHATE
+46188	TYROSINAL
 46189	THIAMIN PHOSPHATE
 46196	3,5-DIIODOTYROSINE
 46211	TREHALOSE
@@ -12753,8 +12807,8 @@ COMPOUND_ID	NAME
 47097	4-{2-[4-(3,10-DIBROMO-8-CHLORO-6,11-DIHYDRO-5H-BENZO[5,6]CYCLOHEPTA[1,2-B]PYRIDIN-11-YL)PIPERIDIN-1-YL]-2-OXOETHYL}PIPERIDINE-1-CARBOXAMIDE
 47121	4-METHYLBENZOIC ACID
 47131	5-BROMO-URIDINE-5'-MONOPHOSPHATE
-47133	5'-CHLORO-5'-DEOXYADENOSINE
 47133	5'-chloro-5'-deoxyadenosine
+47133	5'-CHLORO-5'-DEOXYADENOSINE
 47135	1,2,3,4,5-PENTACHLOROBENZENE
 47146	[1-TERT-BUTYL-3-(2,4-DICHLOROPHENYL)-5-HYDROXY-1H-PYRAZOL-4-YL][2-CHLORO-4-(METHYLSULFONYL)PHENYL]METHANONE
 47157	6-CHLORO-L-TRYPTOPHAN
@@ -12772,9 +12826,10 @@ COMPOUND_ID	NAME
 47265	bromo group
 47265	BROMO GROUP
 47273	5-(5-chloro-2,4-dihydroxyphenyl)-N-ethyl-4-(4-methoxyphenyl)-1H-pyrazole-3-carboxamide
-47291	3-chloro-D-alanine
 47291	B-CHLORO-D-ALANINE
+47291	3-chloro-D-alanine
 47297	CYPROTERONE ACETATE
+47319	2-[[[[(4-CHLORO-6-METHOXY-2-PYRIMIDINYL)AMINO]CARBONYL]AMINO]SULFONYL]BENZOIC ACID ETHYL ESTER
 47322	N-(2-AMINOETHYL)-5-CHLOROISOQUINOLINE-8-SULFONAMIDE
 47327	CHLORAMPHENICOL
 47328	CHLORO GROUP
@@ -12783,11 +12838,12 @@ COMPOUND_ID	NAME
 47344	2-(2-CHLORO-PHENYL)-5,7-DIHYDROXY-8-(3-HYDROXY-1-METHYL-PIPERIDIN-4-YL)-4H-BENZOPYRAN-4-ONE
 47351	((1RS,3SR)-2,2-DICHLORO-N-[(R)-1-(4-CHLOROPHENYL)ETHYL]-1-ETHYL-3-METHYLCYCLOPROPANECARBOXAMIDE
 47356	7-CHLOROTRYPTOPHAN
-47357	DINUCLEAR COPPER ION
 47357	binuclear copper center (CuA)
+47357	DINUCLEAR COPPER ION
 47359	3-(3-CHLORO-5H-DIBENZO[B,F]AZEPIN-5-YL)-N,N-DIMETHYLPROPAN-1-AMINE
 47378	N-ACETYL-L-PHENYLALANYL-4-[DIFLUORO(PHOSPHONO)METHYL]-L-PHENYLALANINAMIDE
 47393	3-(10,11-DIHYDRO-5H-DIBENZO[B,F]AZEPIN-5-YL)-N-METHYLPROPAN-1-AMINE
+47394	7-CL-D-TRYPTOPHAN
 47396	(-)-6-CHLORO-4-CYCLOPROPYLETHYNYL-4-TRIFLUOROMETHYL-1,4-DIHYDRO-2H-3,1-BENZOXAZIN-2-ONE
 47397	1,7,8,9,10,10-HEXACHLORO-4-METHYL-4-AZA-TRICYCLO[5.2.1.0(2,6)]DEC-8-ENE-3,5-DIONE
 47401	FE3-S4 CLUSTER
@@ -12825,14 +12881,14 @@ COMPOUND_ID	NAME
 47675	SELENIUM ATOM
 47676	2-AMINO-3-SELENINO-PROPIONIC ACID
 47680	7,8-DICHLORO-1,2,3,4-TETRAHYDROISOQUINOLINE
-47693	keto-D-tagatose
 47693	D-tagatose
+47693	keto-D-tagatose
 47700	TRICLOSAN
 47708	(CHLOROACETYL)CARBAMIC ACID (3R,4S,5S,5R)-5-METHOXY-4-[(2R,3R)-2-METHYL-3-(3-METHYL-2-BUTENYL)OXIRANYL]-1-OXASPIRO[2.5]OCT-6-YL ESTER
 47711	THYMIDINE-5'-MONOPHOSPHATE
 47724	VANCOMYCIN AGLYCON
-47739	FE(4)-NI(1)-S(4) CLUSTER
 47739	[Ni-4Fe-4S] cluster
+47739	FE(4)-NI(1)-S(4) CLUSTER
 47771	beta-tocopherol
 47772	delta-tocopherol
 47777	a 1,3-diacylglycerol
@@ -12855,7 +12911,6 @@ COMPOUND_ID	NAME
 47961	(2E,4Z)-5-hydroxypenta-2,4-diene-1,2,5-tricarboxylate
 47962	aldehydo-D-galacturonic acid
 47980	threo-3-methyl-L-aspartic acid
-48024	a 3'-hydroxyflavanone
 48025	a 3',5'-dihydroxyflavanone
 48037	a dihydroflavonol
 48040	2,3-dihydroflavon-3-ol
@@ -12934,10 +12989,10 @@ COMPOUND_ID	NAME
 49017	3-methylsulfanylpropanal
 49031	L-Methionine (S)-S-oxide
 49032	L-Methionine (R)-S-oxide
-49039	3-Dehydro-L-gulonate 6-phosphate
 49039	3-dehydro-L-gulonic acid 6-phosphate
-49044	(-)-Germacrene D
+49039	3-Dehydro-L-gulonate 6-phosphate
 49044	(-)-germacrene D
+49044	(-)-Germacrene D
 49046	(+)-germacrene D
 49047	3-Oxo-3-ureidopropanoate
 49072	(2R)-2,3-dihydroxy-3-methylbutanoate
@@ -12969,7 +13024,7 @@ COMPOUND_ID	NAME
 49238	(Z)-gamma-bisabolene
 49239	(E)-gamma-bisabolene
 49243	(E,R)-alpha-bisabolene
-49252	acireductone
+49252	1,2-dihydroxy-5-(methylsulfanyl)pent-1-en-3-one
 49256	(S)-2-ethyl-2-hydroxy-3-oxobutanoate
 49257	(R)-3-hydroxy-3-methyl-2-oxopentanoate
 49258	(2R,3R)-2,3-dihydroxy-3-methylpentanoate
@@ -13058,7 +13113,6 @@ COMPOUND_ID	NAME
 49660	INDOMETHACIN
 49663	INDIUM (III) ION
 49665	IRIDIUM ION
-49667	3-chloro-4-fluoro-N-[(4Z)-7-methoxy-6-(3-morpholin-4-ylpropoxy)quinazolin-4(1H)-ylidene]aniline
 49685	POTASSIUM ION
 49695	KRYPTON
 49698	IODIDE ION
@@ -13171,8 +13225,8 @@ COMPOUND_ID	NAME
 50157	(5-hydroxyindol-3-yl)acetaldehyde
 50169	3alpha-hydroxy-5alpha-pregnan-20-one
 50205	3,4-dihydroxybenzaldehyde
-50207	Sophoraflavanone B
 50207	sophoraflavanone B
+50207	Sophoraflavanone B
 50208	leachianone G
 50209	sophoraflavanone G
 50211	retinol
@@ -13188,26 +13242,29 @@ COMPOUND_ID	NAME
 50250	(4R,7S)-7-isopropyl-4-methyloxepan-2-one
 50271	5-enolpyruvoyl-6-hydroxy-2-succinyl-cyclohex-3-ene-1-carboxylic acid
 50302	terpentetriene
+50328	D-valine residue
 50342	L-proline residue
 50347	L-asparagine residue
 50348	N-terminal L-asparagine residue
+50349	D-asparagine residue
 50375	dihydromethanophenazine
 50387	tuberculosinol
 50436	10beta-hydroxytaxa-4(20),11-dien-5alpha-yl acetate
 50446	3-hydroxyaminophenol
+50471	an arylamine
 50477	butanoate ester
 50515	24-hydroxycholesterol
 50516	(24R)-hydroxycholesterol
 50517	7alpha,24-dihydroxycholesterol
-50540	(S)-cis-N-methylcanadine
 50545	trans-isoeugenol
 50547	urate D-ribonucleoside
 50586	Episterol
-50593	3-Keto-4-methylzymosterol
 50593	4alpha-methyl-5alpha-cholesta-8,24-dien-3-one
+50593	3-Keto-4-methylzymosterol
 50626	2-hydroxyhexadecanal
 50634	acetazolamide
 50661	loliose
+50667	mercaptopurine
 50670	N-acetyl-beta-D-glucosaminyl-(1->4)-N-acetyl-beta-D-glucosamine
 50681	methotrexate
 50699	an oligosaccharide
@@ -13226,6 +13283,8 @@ COMPOUND_ID	NAME
 51283	Hydroxypyruvaldehyde phosphate
 51284	6-Deoxy-5-ketofructose 1-phosphate
 51354	penicillin G
+51397	1,3-dinitrobenzene
+51398	1,4-dinitrobenzene
 51458	(+)-epi-isozizaene
 51460	albaflavenone
 51479	(5R)-albaflavenol
@@ -13261,7 +13320,6 @@ COMPOUND_ID	NAME
 52268	a flavonol 3-O-[6-(4-coumaroyl)-beta-D-glucosyl-(1->2)-beta-D-glucosyl-(1->2)-beta-D-glucoside]
 52280	isopimara-7,15-diene
 52317	thalianol
-52318	thalianol epoxide
 52320	ergosteryl ester
 52322	zymosterol ester
 52323	1,2-di-(9Z-octadecenoyl)-glycerol
@@ -13288,7 +13346,7 @@ COMPOUND_ID	NAME
 52486	dehydroabietadienol
 52487	dehydroabietadienal
 52501	a 2-hydroxycarbonyl
-52570	alpha-D-galactosyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+52570	isogloboside iGb3Cer (d18:1(4E))
 52589	2-alkylglycero-3-phosphocholine
 52595	1-O-alkyl-2-acyl-sn-glycerol
 52615	4alpha-formyl-5alpha-cholesta-8,24-dien-3beta-ol
@@ -13339,6 +13397,7 @@ COMPOUND_ID	NAME
 55409	6-iminocyclohexa-2,4-dienone
 55437	a 2-demethylmenaquinol
 55458	1-(beta-D-ribofuranosyl)-1,4-dihydronicotinamide
+55465	a 7-hydroxyisoflavone
 55467	dalpatein beta-D-apiofuranosyl-(1->6)-beta-D-glucopyranoside
 55469	N-acetyl-2-arylethylamine
 55474	an N-acyl-L-homoserine lactone
@@ -13359,7 +13418,7 @@ COMPOUND_ID	NAME
 57264	4-fluoro-L-threonine
 57265	a 6-(N-acetyl-alpha-D-glucosaminyl)-1-phosphatidyl-1D-myo-inositol
 57266	(S)-usnate
-57267	beta-D-fructofuranose 2-phosphate
+57267	beta-D-fructose 2-phosphate
 57268	beta-L-fucose 1-phosphate
 57269	N,N'-diacetylchitobiosyldiphosphodolichol
 57270	N,N-dihydroxy-L-tyrosine
@@ -13370,7 +13429,7 @@ COMPOUND_ID	NAME
 57275	dTDP-D-galactose
 57276	feruloyl-CoA
 57277	3-(3-hydroxyphenyl)propanoate
-57278	3-acylpyruvate
+57278	a 3-acylpyruvate
 57279	3-amino-2-oxopropyl phosphate
 57283	N(alpha)-methyl-L-tryptophan
 57284	acacetin
@@ -13406,8 +13465,8 @@ COMPOUND_ID	NAME
 57315	(3R)-hydroxybutanoyl-CoA
 57316	(3S)-hydroxybutanoyl-CoA
 57317	(S)-malyl-CoA
-57318	(3S)-hydroxyacyl-CoA
-57319	(3R)-hydroxyacyl-CoA
+57318	a (3S)-hydroxyacyl-CoA
+57319	a (3R)-hydroxyacyl-CoA
 57320	citramalyl-CoA
 57321	(3S)-citryl-CoA
 57322	(11E)-tetradecenoyl-CoA
@@ -13453,7 +13512,7 @@ COMPOUND_ID	NAME
 57363	(6Z,9Z,12Z)-octadecatrienoyl-CoA
 57364	2-succinylbenzoyl-CoA
 57365	5-hydroxy-2-furoyl-CoA
-57366	(S)-3-aminobutanoyl-CoA
+57366	(3S)-3-aminobutanoyl-CoA
 57367	acryloyl-CoA
 57368	(5Z,8Z,11Z,14Z)-eicosatetraenoyl-CoA
 57369	benzoyl-CoA
@@ -13530,7 +13589,7 @@ COMPOUND_ID	NAME
 57440	N-ethylglycine
 57441	2,3-dioxo-L-gulonate
 57442	(4S,5S)-4,5-dihydroxy-2,6-dioxohexanoate
-57443	S-adenosyl 3-(methylthio)propylamine
+57443	S-adenosyl 3-(methylsulfanyl)propylamine
 57444	(12S)-hydroperoxy-(5Z,8Z,10E,14Z)-eicosatetraenoate
 57445	thromboxane A2
 57446	(15S)-hydroperoxy-(5Z,8Z,11Z,13E)-eicosatetraenoate
@@ -13551,7 +13610,6 @@ COMPOUND_ID	NAME
 57462	leukotriene E4
 57463	leukotriene A4
 57464	XMP
-57465	(9Z, 13S)-12,13-epoxyoctadeca-9,11-dienoate
 57466	(13S)-hydroperoxy-(9Z,11E)-octadecadienoate
 57467	(11S)-hydroperoxy-(9Z,12Z)-octadecadienoate
 57468	(7S,8S,9Z,12Z)-7,8-dihydroxyoctadeca-9,12-dienoate
@@ -13601,7 +13659,6 @@ COMPOUND_ID	NAME
 57516	deoxylimononate D-ring-lactone
 57517	D-alanyl-alanyl-poly(glycerolphosphate)
 57518	1-hexadecanoyl-sn-glycero-3-phosphate
-57519	alpha,beta-didehydrotryptophan (OLD)
 57520	D-octopine
 57521	beta-L-arabinose 1-phosphate
 57522	5a,11a-dehydrotetracycline
@@ -13675,7 +13732,7 @@ COMPOUND_ID	NAME
 57606	5-oxoproline
 57607	oleandomycin 2'-O-phosphate
 57608	CDP-L-ribitol
-57609	LL-2,6-diaminopimelate
+57609	LL-2,6-diaminoheptanedioate
 57610	N(alpha),N(alpha)-dimethyl-L-histidine
 57612	phosphoguanidinoacetate
 57613	1,2-diacylglycero-3-phosphoethanolamine
@@ -13704,7 +13761,7 @@ COMPOUND_ID	NAME
 57642	dihydroxyacetone phosphate
 57643	a 1,2-diacyl-sn-glycero-3-phosphocholine
 57644	chlorogenate
-57646	N-acetyl-beta-D-galactosaminyl-(1->4)-beta-N-acetylneuraminyl-(2->3)-alpha-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
+57646	beta-D-GalNAc-(1->4)-alpha-Neu5Ac-(2->3)-alpha-D-Gal-(1->4)-beta-D-Glc-(1<->1)-Cer
 57647	3-(3,5-diiodo-4-hydroxyphenyl)lactate
 57649	dTDP-4-dehydro-6-deoxy-alpha-D-glucose
 57651	aldehydo-2-deoxy-D-ribose 5-phosphate
@@ -13743,7 +13800,7 @@ COMPOUND_ID	NAME
 57688	S-formylglutathione
 57689	2,2-dialkylglycine
 57690	cis-4-hydroxy-D-proline
-57691	N(6)-acyl-L-lysine
+57691	an N(6)-acyl-L-lysine
 57692	FAD
 57693	D-arabinose 5-phosphate
 57694	quercetin
@@ -13769,7 +13826,6 @@ COMPOUND_ID	NAME
 57714	ureidoglycine
 57715	UDP-N-acetyl-D-mannosamine
 57716	O-acetyl-L-homoserine
-57718	barbiturate (OLD)
 57719	D-tryptophan
 57720	alpha-D-ribose 1-phosphate
 57721	(S)-2,3-diaminopropanoate
@@ -13798,7 +13854,6 @@ COMPOUND_ID	NAME
 57746	3',5'-cyclic GMP
 57747	3-(pyrazol-1-yl)-L-alanine
 57748	cholate
-57751	CDP-acylglycerol
 57752	(S)-3-(imidazol-5-yl)lactate
 57753	vindoline
 57754	trans-5-O-caffeoyl-D-quinate
@@ -13806,7 +13861,6 @@ COMPOUND_ID	NAME
 57756	sphing-4-enine
 57757	D-threonine
 57758	N(3)-oxalyl-L-2,3-diaminopropanoate
-57759	3,3',4',5,7,8-hexahydroxyflavone (OLD)
 57760	3-oxoglycyrrhetinate
 57761	pyridoxamine
 57762	L-valine
@@ -13852,7 +13906,6 @@ COMPOUND_ID	NAME
 57811	sym-homospermidine
 57812	CMP-N-acetyl-beta-neuraminate
 57814	triacetate
-57815	luteolin 7-O-[(beta-D-glucosiduronate)-(1->2)-(beta-D-glucosiduronate)] (OLD)
 57817	sphinganine
 57818	5,10-methylenetetrahydromethanopterin
 57820	N(6)-hydroxy-L-lysine
@@ -13866,7 +13919,7 @@ COMPOUND_ID	NAME
 57829	L-xylulose 5-phosphate
 57830	cyanidin 3-O-rutinoside 5-O-beta-D-glucoside
 57831	glycerol 1,2-cyclic phosphate
-57832	1,2-diacyl-3-[3-(alpha-D-N-acetylneuraminyl)-beta-D-galactosyl]-sn-glycerol
+57832	1,2-diacyl-3-[3-(N-acetyl-alpha-D-neuraminyl)-beta-D-galactosyl]-sn-glycerol
 57833	N-benzoyl-4-hydroxyanthranilate
 57834	spermidine
 57835	glutathionylspermidine
@@ -13875,7 +13928,7 @@ COMPOUND_ID	NAME
 57838	N-phosphotaurocyamine
 57839	3-dehydro-2-deoxy-D-gluconate
 57840	methylguanidine
-57841	4-amino-2-methyl-5-(diphosphonooxymethyl)pyrimidine
+57841	4-amino-2-methyl-5-(diphosphooxymethyl)pyrimidine
 57842	vitexin 2''-O-beta-D-glucoside
 57843	L-selenocysteine
 57844	L-methionine
@@ -13909,7 +13962,7 @@ COMPOUND_ID	NAME
 57878	4-deoxy-beta-D-gluc-4-enuronosyl-(1->3)-N-acetyl-D-galactosamine 6-sulfate
 57879	4-methylene-L-glutamine
 57880	a 1,2-diacyl-sn-glycero-3-phospho-(1D-myo-inositol)
-57882	5-phosphonooxy-L-lysine
+57882	(5R)-5-phosphooxy-L-lysine
 57883	4-carboxymethyl-3-methylbut-2-en-1,4-olide
 57884	chenodeoxycholate
 57885	3-dehydrocarnitine
@@ -13944,7 +13997,7 @@ COMPOUND_ID	NAME
 57919	4-CDP-2-C-methyl-D-erythritol 2-phosphate
 57920	norspermidine
 57921	a N(3')-acetyl-2-deoxystreptamine antibiotic
-57922	oxidized coenzyme F420
+57922	oxidized coenzyme F420-2
 57923	a 1,2-diacyl-sn-glycero-3-phospho-(1D-myo-inositol-3,5-bisphosphate)
 57924	L-dopaquinone
 57925	glutathione
@@ -13958,7 +14011,6 @@ COMPOUND_ID	NAME
 57934	psychosine
 57935	oxidized Watasenia luciferin
 57936	N-acetyl-L-glutamyl 5-phosphate
-57937	2-aminomuconate (OLD)
 57938	trans-3-hydroxy-L-proline
 57939	sphinganine 1-phosphate
 57940	3-sulfopyruvate
@@ -13984,7 +14036,7 @@ COMPOUND_ID	NAME
 57966	beta-alanine
 57967	ADP-D-ribose
 57969	imidazole-4-acetate
-57970	1-acyl-sn-glycero-3-phosphate
+57970	a 1-acyl-sn-glycero-3-phosphate
 57971	hygromycin B
 57972	L-alanine
 57973	leukotriene C4
@@ -14010,6 +14062,7 @@ COMPOUND_ID	NAME
 57995	all-trans-undecaprenyl diphosphate
 57996	nororientaline
 57997	a 6-(alpha-D-glucosaminyl)-1-phosphatidyl-1D-myo-inositol
+57998	3-phosphoglycerate
 57999	1-carboxyvinyl carboxyphosphonate
 58000	D-glutamine
 58001	an aliphatic amine
@@ -14118,7 +14171,7 @@ COMPOUND_ID	NAME
 58114	2-carboxy-cis,cis-muconate
 58115	GMP
 58116	5-methyl-5,6,7,8-tetrahydromethanopterin
-58117	L-2-acetamido-6-oxopimelate
+58117	L-2-acetamido-6-oxoheptanedioate
 58118	L-rhamnonate
 58119	N(4)-phosphoagmatine
 58120	CMP
@@ -14158,8 +14211,7 @@ COMPOUND_ID	NAME
 58157	2-O-caffeoylglucarate
 58158	aminomalonate
 58159	uracil 5-carboxylate
-58161	L-cystathionine
-58163	homocystine
+58161	L,L-cystathionine
 58164	L-hyoscyamine
 58165	3',5'-cyclic AMP
 58166	CDP-4-dehydro-6-deoxy-D-glucose
@@ -14171,7 +14223,7 @@ COMPOUND_ID	NAME
 58173	L-gamma-glutamyl-L-cysteine
 58174	cis-homoaconitate
 58175	N-methyl-L-alanine
-58176	phenylthioacetohydroximate
+58176	(Z)-2-phenyl-1-thioacetohydroximate
 58177	testolate
 58178	1,2-diacyl-sn-glycero-3-phospho-(1D-myo-inositol 4-phosphate)
 58179	all-trans-hexaprenyl diphosphate
@@ -14188,6 +14240,7 @@ COMPOUND_ID	NAME
 58191	1-O-alkyl-2-acetyl-sn-glycerol 3-phosphate
 58192	quercitrin
 58193	3alpha(S)-strictosidine
+58194	biochanin A
 58195	S-(5-deoxy-D-ribos-5-yl)-L-homocysteine
 58196	(3R)-3-hydroxy-L-aspartate
 58198	L-gulono-1,4-lactone
@@ -14273,9 +14326,8 @@ COMPOUND_ID	NAME
 58290	trypanothione
 58291	1D-1-guanidino-1-deoxy-3-dehydro-scyllo-inositol
 58293	1-acyl-2-(9Z)-octadecenoyl-sn-glycero-3-phosphocholine
-58294	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->3)-[N-acetyl-alpha-neuraminyl-(2->6)]-N-acetyl-D-galactosaminyl group
 58295	S-acetylcysteamine
-58296	4-methyl-5-(2-phosphonooxyethyl)-thiazole
+58296	4-methyl-5-(2-phosphooxyethyl)-thiazole
 58297	glutathione disulfide
 58298	2-dehydro-3-deoxy-6-phospho-D-galactonate
 58299	3-oxosphinganine
@@ -14327,7 +14379,7 @@ COMPOUND_ID	NAME
 58353	quercetin 3,4'-bissulfate
 58354	4-amino-2-methyl-5-(phosphooxymethyl)pyrimidine
 58356	N-phospho-L-lombricine
-58357	(2S,5R)-5-hydroxy-L-lysine
+58357	(5R)-5-hydroxy-L-lysine
 58358	4-carboxy-2-hydroxy-cis,cis-muconate 6-semialdehyde
 58359	L-glutamine
 58360	1-aminocyclopropane-1-carboxylate
@@ -14335,7 +14387,6 @@ COMPOUND_ID	NAME
 58363	oxamate
 58365	4-guanidinobutanamide
 58366	deacetylcephalosporin C
-58367	UDP-D-glucose
 58368	3-deoxy-D-manno-oct-2-ulosonate 8-phosphate
 58369	dTDP
 58370	dTTP(3-)
@@ -14412,7 +14463,7 @@ COMPOUND_ID	NAME
 58448	L-thyroxine
 58450	adenosine 5'-tetraphosphate
 58451	pyridoxamine 5'-phosphate
-58452	4-(phosphonooxy)-L-threonine
+58452	4-(phosphooxy)-L-threonine
 58453	5-amino-6-(5-phospho-D-ribosylamino)uracil
 58454	kynurenate
 58455	L-2-aminohexanoate
@@ -14471,7 +14522,7 @@ COMPOUND_ID	NAME
 58519	(E)-2-benzylidenesuccinyl-CoA
 58520	N-succinyl-L-glutamate 5-semialdehyde
 58521	a (3E)-enoyl-CoA
-58523	(S)-5-amino-3-oxo-hexanoate
+58523	(5S)-5-amino-3-oxo-hexanoate
 58524	gibberellin A1
 58525	5-[(5-phospho-1-deoxy-D-ribulos-1-ylimino)methylamino]-1-(5-phospho-beta-D-ribosyl)imidazole-4-carboxamide
 58526	gibberellin A20
@@ -14484,7 +14535,7 @@ COMPOUND_ID	NAME
 58533	S-methyl-5-thio-alpha-D-ribose 1-phosphate
 58534	a 6-phospho-beta-D-galactoside
 58535	N(8)-acetylspermidine
-58538	(R)-3-hydroxy-2-oxo-4-phosphonooxybutanoate
+58538	(R)-3-hydroxy-2-oxo-4-phosphooxybutanoate
 58539	L-dehydroascorbate
 58540	alpha-Kdo-(2->4)-alpha-Kdo-(2->6)-lipid A
 58541	5-methyldeoxycytidine diphosphate
@@ -14493,7 +14544,7 @@ COMPOUND_ID	NAME
 58544	3,3',4',5,7-pentahydroxy-8-methoxyflavone
 58546	cyanidin 3-O-rutinoside
 58547	N-hydroxy-L-tyrosine
-58548	S-methyl-5-thio-D-ribulose 1-phosphate
+58548	5-methylsulfanyl-D-ribulose 1-phosphate
 58549	kanamycin B
 58550	N(1),N(12)-diacetylspermine
 58551	UDP-3-O-(3-hydroxytetradecanoyl)-N-acetylglucosamine
@@ -14535,7 +14586,7 @@ COMPOUND_ID	NAME
 58595	dGDP
 58596	coenzyme B
 58597	a 1,2-diacyl-sn-glycero-3-phospho-(1D-myo-inositol-4,5-bisphosphate)
-58598	1-acyl-sn-glycero-3-phospho-(1D-myo-inositol)
+58598	a 1-acyl-sn-glycero-3-phospho-(1D-myo-inositol)
 58599	N'-phosphoguanidinoethyl methylphosphate
 58600	N(tau)-methylhistamine
 58601	alpha-D-glucose 1-phosphate
@@ -14576,7 +14627,7 @@ COMPOUND_ID	NAME
 58659	(8R,9Z,12Z)-8-hydroperoxyoctadeca-9,12-dienoate
 58660	CDP-D-glucose
 58661	trypanothione disulfide
-58665	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+58665	N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
 58666	1-O-alkyl-2-acyl-sn-glycero-3-phosphocholine
 58667	(R)-1-pyrroline-5-carboxylate
 58668	(3S)-citramalyl-CoA
@@ -14623,7 +14674,7 @@ COMPOUND_ID	NAME
 58721	N-acetyl-beta-D-muramate 6-phosphate
 58722	N-acetyl-D-muramate 6-phosphate
 58723	D-glucosamine
-58724	threo-3-methyl-L-aspartate
+58724	(2S,3S)-3-methyl-L-aspartate
 58725	D-glucosamine 6-phosphate
 58726	N-hydroxy-L-phenylalanine
 58727	N,N-dihydroxy-L-phenylalanine
@@ -14660,7 +14711,7 @@ COMPOUND_ID	NAME
 58764	(2S,3S)-2,3-dihydroxy-2,3-dihydrobenzoate
 58765	N(2)-acetyl-L-citrulline
 58766	4-phospho-D-erythronate
-58767	N-acetyl-LL-2,6-diaminopimelate
+58767	N-acetyl-LL-2,6-diaminoheptanedioate
 58768	(1R,6S)-1,6-dihydroxy-4-methylcyclohexa-2,4-diene-1-carboxylate
 58770	N-acetyl-alpha-neuraminate
 58771	(R)-2-(carboxymethyl)-5-oxo-2,5-dihydro-2-furoate
@@ -14684,7 +14735,7 @@ COMPOUND_ID	NAME
 58792	(2S)-2-amino-4-deoxychorismate
 58793	2-O-sinapoyl-D-glucarate
 58794	(3Z)-4-(2-carboxyphenyl)-2-oxobut-3-enoate
-58796	(9S,10S)-10-hydroxy-9-(phosphonooxy)octadecanoate
+58796	(9S,10S)-10-hydroxy-9-(phosphooxy)octadecanoate
 58797	(9S,10S)-9,10-dihydroxyoctadecanoate
 58798	N-(6-aminohexanoyl)-6-aminohexanoate
 58799	(2S)-2-[(R)-1-carboxyethylamino]pentanoate
@@ -14699,7 +14750,7 @@ COMPOUND_ID	NAME
 58810	deoxycholoyl-CoA
 58811	phenylglyoxylyl-CoA
 58814	beta-D-allofuranose
-58815	5-methylthio-2-oxopentanoate
+58815	2-(5-methylsulfanyl)oxopentanoate
 58816	2-(2-methylsulfanyl)ethylmalate
 58817	2-(3-methylsulfanyl)propylmalate
 58818	5-enolpyruvoyl-6-hydroxy-2-succinyl-cyclohex-3-ene-1-carboxylate
@@ -14712,8 +14763,8 @@ COMPOUND_ID	NAME
 58825	(R)-beta-alanopine
 58826	N-acetyl-beta-D-glucosamine 6-phosphate
 58827	precorrin-2
-58828	5-(methylthio)-2,3-dioxopentyl phosphate
-58829	2-hydroxy-5-(methylsulfanyl)-3-oxopent-1-enyl phosphate
+58828	5-methylsulfanyl-2,3-dioxopentyl phosphate
+58829	2-hydroxy-5-methylsulfanyl-3-oxopent-1-enyl phosphate
 58830	(2S)-2-hydroxy-3-oxobutyl phosphate
 58837	2,3-bis-(O-geranylgeranyl)-sn-glycerol 1-phosphate
 58838	CDP-2,3-bis-(O-geranylgeranyl)-sn-glycerol
@@ -14796,7 +14847,6 @@ COMPOUND_ID	NAME
 58951	a short-chain fatty acid
 58953	a saturated fatty acid
 58955	a branched-chain fatty acid
-58958	an organosulfate
 59002	N-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-glycine
 59080	N(4)-(alpha-D-Glc-(1->3)-alpha-D-Man-(1->2)-alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->6)]-alpha-D-Man-(1->6)]-beta-D-Man-(1->4)-beta-D-GlcNAc-(1->4)-alpha-D-GlcNAc)-L-Asn residue
 59082	N(4)-(alpha-D-Glc-(1->3)-alpha-D-Glc-(1->3)-alpha-D-Man-(1->2)-alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->6)]-alpha-D-Man-(1->6)]-beta-D-Man-(1->4)-beta-D-GlcNAc-(1->4)-alpha-D-GlcNAc)-L-Asn residue
@@ -14888,7 +14938,7 @@ COMPOUND_ID	NAME
 60025	(5Z,7E,9E,14Z,17Z)-icosapentaenoate
 60032	Mur2Ac(oyl-L-Ala-gamma-D-Glu-L-Lys-D-Ala-D-Ala)-diphospho-di-trans,octa-cis-undecaprenol
 60033	beta-D-GlcNAc-(1->4)-Mur2Ac(oyl-L-Ala-gamma-D-Glu-L-Lys-D-Ala-D-Ala)-diphospho-di-trans,octa-cis-undecaprenol
-60040	alpha-N-acetylneuraminyl-(2->6)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosamine
+60040	N-acetyl-alpha-neuraminyl-(2->6)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosamine
 60041	cis-3-hydroxy-L-proline
 60043	5'-acylphosphoadenosine
 60045	tricetin
@@ -14907,7 +14957,7 @@ COMPOUND_ID	NAME
 60062	Co-precorrin-5A
 60063	Co-precorrin-5B
 60064	Co-precorrin-6A
-60065	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-acylsphing-4-enine
+60065	ganglioside GM3 (d18:1(4E))
 60073	an N-acylneuraminate
 60076	6-O-sinapoyl-D-glucono-1,5-lactone
 60078	4-O-feruloyl-D-quinate
@@ -14923,7 +14973,7 @@ COMPOUND_ID	NAME
 60092	2-O-sulfo-2'-O-hexadecanoyl-alpha,alpha-trehalose
 60100	alanyl poly(glycerol phosphate)
 60101	UDP-2-acetamido-2,6-dideoxy-beta-L-arabino-hex-4-ulose
-60105	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-D-glucosaminyl group
+60105	N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-D-glucosaminyl group
 60106	streptidine 6-phosphate
 60107	N(omega)-hydroxy-L-arginine
 60110	1,2-diacyl-sn-glycero-3-phospho-(1'-sn-glycero-3'-phosphate)
@@ -14933,7 +14983,7 @@ COMPOUND_ID	NAME
 60129	(1R,6S)-1,6-dihydroxycyclohexa-2,4-diene-1-carboxylate
 60152	beta-D-galactosyl-(1->4)-N-acetyl-D-glucosamine
 60158	(3E)-4,8-dimethylnona-1,3,7-triene
-60189	4-(4-deoxy-alpha-D-gluc-4-enuronosyl)-D-galacturonate
+60189	4-(4-deoxy-alpha-D-galact-4-enuronosyl)-D-galacturonate
 60203	D-glycero-alpha-D-manno-heptose 7-phosphate
 60204	D-glycero-beta-D-manno-heptose 7-phosphate
 60207	D-glycero-alpha-D-manno-heptose 1,7-bisphosphate
@@ -14954,7 +15004,6 @@ COMPOUND_ID	NAME
 60364	alpha-Kdo-(2->6)-lipid IVA
 60365	alpha-Kdo-(2->4)-alpha-Kdo-(2->6)-lipid IVA
 60367	alpha-Kdo-(2->4)-alpha-Kdo-(2->4)-alpha-Kdo-(2->6)-lipid IVA
-60369	trans,octa-cis-decaprenyl diphosphate
 60374	(2Z,6Z)-farnesyl diphosphate
 60384	N-(2,3-dihydroxyhexacosanoyl)-(4S)-hydroxysphinganine
 60385	di-trans,deca-cis-tridecaprenyl diphosphate
@@ -15064,7 +15113,7 @@ COMPOUND_ID	NAME
 61143	(E)-2-methylpropanal oxime
 61144	(Z)-2-methylpropanal oxime
 61146	4-nitrophenyl phosphate
-61148	(-)-drimenol
+61148	(5S,9S,10S)-drim-7-en-11-ol
 61158	3''-hydroxy-geranylhydroquinone
 61166	D-alanyl-(R)-lactate
 61185	L-pipecolate
@@ -15144,7 +15193,7 @@ COMPOUND_ID	NAME
 61522	((9Z)-hexadecenoyl-tetradecanoyl)-(Kdo)2-lipid A
 61524	dodecanoyl-(Kdo)2-lipid IVA
 61526	(2E)-hexadecenoyl-CoA
-61527	D-fructofuranose 6-phosphate
+61527	D-fructose 6-phosphate
 61540	(9Z)-hexadecenoyl-CoA
 61548	D-glucose 6-phosphate
 61555	dUTP
@@ -15161,8 +15210,6 @@ COMPOUND_ID	NAME
 61610	beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
 61623	fluoroacetyl-CoA
 61631	an N-acetyl-beta-D-glucosaminyl derivative
-61644	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-[alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->6)]-beta-D-galactosyl-(1->4)- N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
-61648	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
 61663	3-alpha-D-mannopyranosyl-alpha-D-mannopyranose
 61665	3-O-(6-O-alpha-D-xylosylphospho-alpha-D-mannopyranosyl)-alpha-D-mannopyranose
 61669	2-methylbutyronitrile
@@ -15342,15 +15389,13 @@ COMPOUND_ID	NAME
 62526	(2S,3S,5R,10R,12S,14S,15R,16R)-2-amino-12,16-dimethylicosane-3,5,10,14,15-pentol
 62527	(3-phenoxyphenyl)methanol
 62531	(1S,3R)-3-(2,2-dichlorovinyl)-2,2-dimethylcyclopropanecarboxylate
-62537	1,2-diacyl-sn-glycero-3-phospho-(N-acyl)-ethanolamine
-62540	N-acetyl-alpha-D-galactosaminyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
-62541	N-acetyl-alpha-D-galactosaminyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-[N-acetyl-alpha-D-galactosaminyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->6)]-beta-D-galactosyl-(1->4)- N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+62537	N-acyl-1,2-diacyl-sn-glycero-3-phosphoethanolamine
 62543	3-oxotetradecanoyl-CoA
 62548	3-oxodecanoyl-CoA
 62554	fumonisin B1
 62555	3-hydroxyisovaleryl-CoA
 62558	(3S)-hydroxydodecanoyl-CoA
-62571	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->3)-alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+62571	globoside GalGb4Cer (d18:1(4E))
 62573	CDP-1L-myo-inositol
 62576	bis(1L-myo-inositol) 3,1'-phosphate 1-phosphate
 62600	2-O-(alpha-D-glucopyranosyl)-3-O-phospho-D-glycerate
@@ -15374,8 +15419,8 @@ COMPOUND_ID	NAME
 62638	(S)-3-hydroxy-2-methylpropanoate
 62639	2-cis,6-trans,10-trans-geranylgeranyl diphosphate
 62641	perillate
-62649	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->3)-alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-62655	alpha-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+62649	globoside Globo-H (d18:1(4E))
+62653	globoside Globo-A (d18:1(4E))
 62727	adenylyl-molybdopterin
 62729	3-(all-trans-polyprenyl)benzene-1,2-diol
 62731	2-methoxy-6-(all-trans-polyprenyl)phenol
@@ -15447,7 +15492,7 @@ COMPOUND_ID	NAME
 63243	pentalen-13-ol
 63244	pentalen-13-al
 63245	3-hydroxy-9,10-secoandrosta-1,3,5(10)-triene-9,17-dione
-63249	(Z)-2-methyl-ureidoacrylate peracid
+63249	(Z)-2-methylureidoacrylate peracid
 63250	(Z)-2-hydroxy-3-aminoperacrylic acid
 63252	2-oxepin-2(3H)-ylideneacetyl-CoA
 63254	beta-D-4-deoxy-Delta(4)-GlcpA-(1->4)-beta-D-Glcp-(1->4)-alpha-L-Rhap-(1->3)-beta-D-Glcp
@@ -15503,7 +15548,7 @@ COMPOUND_ID	NAME
 63552	1-phenyl-1,2-propanedione
 63553	2-hydroxy-1-phenyl-1-propanone
 63558	DIBOA
-63559	HBOA
+63559	2-hydroxy-2H-1,4-benzoxazin-3(4H)-one
 63576	alpha-maltose 1-phosphate
 63582	1-palmitoylglycerol 3-phosphate
 63590	18-hydroxy-(5Z,8Z,11Z,14Z)-eicosatetraenoate
@@ -15575,10 +15620,10 @@ COMPOUND_ID	NAME
 64015	(3Z)-2-oxohex-3-enedioate
 64016	(2E,4Z)-2-hydroxyhexa-2,4-dienedioate
 64032	linoleoyl ethanolamide
-64074	(6S)-6beta-hydroxy-1,4,5,6-tetrahydronicotinamide adenine dinucleotide
-64075	(6R)-6beta-hydroxy-1,4,5,6-tetrahydronicotinamide adenine dinucleotide
-64076	(6S)-6beta-hydroxy-1,4,5,6-tetrahydronicotinamide adenine dinucleotide phosphate
-64077	(6R)-6beta-hydroxy-1,4,5,6-tetrahydronicotinamide adenine dinucleotide phosphate
+64074	(6S)-NADHX
+64075	(6R)-NADHX
+64076	(6S)-NADPHX
+64077	(6R)-NADPHX
 64124	4-hydroxysphinganine
 64178	(2S)-2-amino-3-oxo-4-(phosphonatooxy)butanoate (OLD)
 64180	2-methoxy-6-all-trans-decaprenyl-1,4-benzoquinol
@@ -15619,7 +15664,7 @@ COMPOUND_ID	NAME
 64280	(E)-beta-ocimene
 64281	sclarene
 64282	(Z)-biformene
-64283	copal-8-ol diphosphate
+64283	8-hydroxycopalyl diphosphate
 64285	(2R,4S)-bornyl diphosphate
 64286	6-amino-6-deoxyfutalosine
 64292	a coniferyl ester
@@ -15629,6 +15674,7 @@ COMPOUND_ID	NAME
 64326	lysidine
 64327	agmatidine
 64335	N(1)-aminopropylagmatine
+64344	2-acetylphloroglucinol
 64351	4-O-beta-D-mannopyranosyl-D-glucopyranose
 64353	UDP-N-acetyl-alpha-D-glucosamine 3'-phosphate
 64361	beta-sesquiphellandrene
@@ -15647,7 +15693,7 @@ COMPOUND_ID	NAME
 64549	lysophosphatidylcholine 18:2
 64552	2-hydroxybutanoate
 64555	(E)-4-coumaryl alcohol
-64557	(E)-sinapyl alcohol
+64557	trans-sinapyl alcohol
 64558	methionine
 64560	hexadecenoyl-sn-glycero-3-phosphocholine
 64563	hexadecanoyl-sn-glycero-3-phosphocholine
@@ -15731,16 +15777,16 @@ COMPOUND_ID	NAME
 64853	N(epsilon)-(5'-guanylyl)-N(alpha)-acetyl-L-lysine methyl ester
 64854	N(alpha)-acetyl-L-lysine methyl ester
 64858	aminopropylcadaverine
-64861	1-acyl-2-octadecanoyl-sn-glycero-3-phosphate
+64861	a 1-acyl-2-octadecanoyl-sn-glycero-3-phosphate
 64862	1-acyl-2-hexadecanoyl-sn-glycero-3-phosphate
-64863	1-acyl-2-tetradecanoyl-sn-glycero-3-phosphate
-64865	1-acyl-2-dodecanoyl-sn-glycero-3-phosphate
+64863	a 1-acyl-2-tetradecanoyl-sn-glycero-3-phosphate
+64865	a 1-acyl-2-dodecanoyl-sn-glycero-3-phosphate
 64866	1-acyl-2-decanoyl-sn-glycero-3-phosphate
 64868	hexacosanoyl-CoA
 64870	(S)-malyl N-acetyl-alpha-D-glucosaminide
 64871	(S)-malyl alpha-D-glucosaminide
 64872	2-acyl-sn-glycero-3-phospho-D-myo-inositol
-64874	1-acyl-2-hexadecanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
+64874	a 1-acyl-2-hexadecanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
 64875	1-hexadecanoyl-2-acyl-sn-glycero-3-phospho-1D-myo-inositol
 64876	bacillithiol
 64883	diacetylchitobiose-6'-phosphate
@@ -15816,18 +15862,20 @@ COMPOUND_ID	NAME
 65094	Ins-1-P-Cer(d18:0/2-OH-26:0)
 65097	2-hydroxyhexadecanoate
 65102	a 3-hydroxyacyl-CoA
-65103	(2E)-enoyl CoA
+65103	a (2E)-enoyl CoA
 65107	N-hexadecanoyl-4-hydroxysphinganine
 65111	a 2,3-saturated acyl-CoA
 65115	3-oxoeicosanoyl-CoA
 65117	CDP-N,N-dimethylethanolamine
 65156	Man-beta1-2-Ins-1-P-Cer(d18:0/24:0)
-65213	2-acyl-sn-glycero-3-phosphoethanolamine
+65211	1,2-didodecanoyl-sn-glycero-3-phosphocholine
+65213	a 2-acyl-sn-glycero-3-phosphoethanolamine
 65214	a 2-acyl-sn-glycero-3-phospho-L-serine
 65216	1-acyl-2-O-alkyl-sn-glycero-3-phosphoethanolamine
 65219	a 1-acyl-2-alkyl-sn-glycero-3-phospho-L-serine
 65220	1-O-alkyl-2-acyl-sn-glycero-3-phospho-L-serine
 65221	1,2-dioctanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
+65244	zeinoxanthin
 65248	L-tyrosyl group
 65249	L-lysyl group
 65250	N-terminal L-cysteine residue
@@ -15836,7 +15884,7 @@ COMPOUND_ID	NAME
 65253	O-phospho-L-seryl group
 65261	purine residue
 65262	pyrimidine residue
-65263	cyclobutadipyrimidine residue
+65263	cyclobutadithymidine residue
 65264	dodecanoyl-pantetheine-4-phosphoryl-serine residue
 65266	(3R)-3-hydroxypalmitoyl-pantetheine-4-phosphoryl-serine residue
 65267	hexadec-2-enoyl-pantetheine-4-phosphoryl-serine residue
@@ -15871,7 +15919,7 @@ COMPOUND_ID	NAME
 66887	(2Z,4E)-2-hydroxy-6-oxonona-2,4-dienedioate
 66888	(2Z,4E,7E)-2-hydroxy-6-oxonona-2,4,7-trienedioate
 66893	4-(6-hydroxypyridin-3-yl)-4-oxobutanoate
-66896	(+)-5-oxo-1,2-campholide
+66896	(1S,4S)-5-oxo-1,2-campholide
 66898	(3R)-11-cis-3-hydroxyretinal
 66905	aureusidin 6-O-beta-glucoside
 66907	bracteatin 6-O-beta-glucoside
@@ -15958,6 +16006,7 @@ COMPOUND_ID	NAME
 67263	tetrahydrocurcumin
 67269	cyclo(L-leucyl-L-leucyl)
 67274	monoacyl-sn-glycero-3-phosphoethanolamine
+67410	4-hydroxybenzyl alcohol
 67939	erythrodiol
 67987	ginsenoside Rg1
 67988	ginsenoside Rd
@@ -16009,7 +16058,6 @@ COMPOUND_ID	NAME
 68688	alpha-D-ribose 1,5-bisphosphate
 68823	alpha-D-ribose 1-methylphosphonate 5-triphosphate
 68828	1-deoxy-3-dehydrosphinganine
-68837	pectate
 68852	an all-trans-polyprenyl phosphate
 68853	polyprenylphosphate-D-glucose
 68854	(cis-polyprenyl)n diphosphate 
@@ -16041,7 +16089,7 @@ COMPOUND_ID	NAME
 70792	Co-precorrin-8X
 70793	cob(II)yrinate c monoamide
 70794	a (2S)-2-hydroxycarboxylate
-70795	a 2-oxo carboxylate
+70795	a 2-oxocarboxylate
 70815	N-acyl-1-beta-D-glucosyl-15-methylhexadecasphing-4-enine
 70819	O-3-methylbutanoyl-(R)-carnitine
 70826	13-methyltetradecanoate
@@ -16160,11 +16208,10 @@ COMPOUND_ID	NAME
 71491	(8Z,11Z,14Z,17Z)-3-oxoicosatetraenoyl-CoA
 71492	(2R)-3-(3,4-dihydroxyphenyl)lactate
 71493	(R)-rosmarinate
-71494	cis-trans-nepetalactol
-71498	1-O-(4-coumaroyl)-beta-D-glucose
+71498	1-O-(trans-4-coumaroyl)-beta-D-glucose
 71500	c-di-AMP
 71501	cyclic G(3'-5')pA(3'-5')p
-71502	beta-D-GalNAc-(1->4)-[alpha-Neu5Ac-(2->3)]-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1)-N-acylsphing-4-enine
+71502	ganglioside GM2 (d18:1(4E))
 71505	an anthocyanidin 3-O-[6-O-(4-hydroxycinnamoyl)-beta-D--glucoside]
 71511	cyanidin 3,5-di-O-beta-D-glucoside
 71512	1-O-(4-hydroxy-3-methoxybenzoyl)-beta-D-glucose
@@ -16217,7 +16264,7 @@ COMPOUND_ID	NAME
 71959	3-amino-5-hydroxybenzoate
 71963	5-deoxy-5-amino-3-dehydroshikimate
 71964	UDP-alpha-D-kanosamine
-71965	UDP-3-keto-alpha-D-glucose
+71965	UDP-3-oxo-alpha-D-glucose
 71970	proansamycin X
 71980	N-retinylidene-N-retinylethanolamine
 71983	eicosasphing-4-enine
@@ -16225,6 +16272,7 @@ COMPOUND_ID	NAME
 71985	N-acyl-4-hydroxyeicosasphinganine
 71986	N-acyleicosasphing-4-enine
 72019	N-(octacosanoyl)-sphinganine
+72388	octadecenoyl-sn-glycero-3-phosphoethanolamine
 72582	mannosylinositol phosphorylphytoceramide
 72587	(R)-noradrenaline
 72646	(3R,4R)-7,2'-dihydroxy-4'-methoxyisoflavanol
@@ -16265,7 +16313,6 @@ COMPOUND_ID	NAME
 72781	6-tuliposide A
 72782	methyl (indol-3-yl)acetate
 72788	7,8-dihydromethanopterin
-72810	2-deoxy-N-D-ribosylpurine
 72825	1-hexadecanoyl-sn-glycero-3-phospho-(1'-sn-glycerol)
 72826	1-tetradecanoyl-sn-glycero-3-phospho-(1'-sn-glycerol)
 72827	1-octadecanoyl-sn-glycero-3-phospho-(1'-sn-glycerol)
@@ -16325,7 +16372,7 @@ COMPOUND_ID	NAME
 73094	Se-Mo-molybdopterin cytosine dinucleotide
 73095	divinyl chlorophyll a
 73096	divinyl chlorophyll b
-73110	alpha-N-acetylneuraminosyl-(2->3)-[beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
+73110	ganglioside GM1 (d18:1(4E)/18:0)
 73125	2,3-bis-(O-phytanyl)-sn-glycerol 1-phosphate
 73142	(S)-4-hydroxy-2-oxohexanoate
 73143	(S)-4-hydroxy-2-oxopentanoate
@@ -16337,6 +16384,7 @@ COMPOUND_ID	NAME
 73194	17alpha-(N-acetyl-alpha-D-glucosaminyl)estradiol 3-glucosiduronate
 73202	N-(acyl)-sphingoid 1-phosphoethanolamine
 73203	N-acylsphing-4-enine 1-phosphoethanolamine
+73237	noscapine
 73244	O-methyl anthranilate
 73250	O-methyl gibberellin A1
 73251	gibberellin A4
@@ -16558,8 +16606,8 @@ COMPOUND_ID	NAME
 74328	(11Z,14Z,17Z)-eicosatrienoyl-CoA
 74329	3-oxo-(13Z,16Z,19Z)-docosatrienoyl-CoA
 74334	3-oxo-(10Z,13Z,16Z,19Z)-docosatetraenoyl-CoA
-74335	1-acyl-2-(5Z,8Z,11Z,14Z,17Z-eicosapentaenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
-74336	1-acyl-2-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
+74335	a 1-acyl-2-(5Z,8Z,11Z,14Z,17Z-eicosapentaenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
+74336	a 1-acyl-2-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
 74337	D-asparagine
 74338	D-valine
 74339	(6Z)-hexadecenoyl-CoA
@@ -16677,9 +16725,9 @@ COMPOUND_ID	NAME
 74907	1-hexadecanoyl-2-(9Z-hexadecenoyl)-sn-glycero-3-phosphocholine
 74908	1-hexadecanoyl-2-(9Z)-hexadecenoyl-sn-glycero-3-phosphoethanolamine
 74909	1-(9Z)-octadecenoyl-2-hexadecanoyl-sn-glycero-3-phosphoserine
-74917	1-acyl-2-(9Z-octadecenoyl)-sn-glycero-3-phosphate
-74920	1-acyl-2-(9Z,12Z)-octadecadienoyl-sn-glycero-3-phosphate
-74922	1-acyl-2-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-sn-glycero-3-phosphate
+74917	a 1-acyl-2-(9Z-octadecenoyl)-sn-glycero-3-phosphate
+74920	a 1-acyl-2-(9Z,12Z)-octadecadienoyl-sn-glycero-3-phosphate
+74922	a 1-acyl-2-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-sn-glycero-3-phosphate
 74928	1-(9Z)-octadecenoyl-2-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-sn-glycero-3-phosphate
 74931	tetracenomycin F1
 74937	1-(9Z)-octadecenoyl-2-eicosanoyl-sn-glycero-3-phosphate
@@ -16705,7 +16753,7 @@ COMPOUND_ID	NAME
 75020	1-hexadecanoyl-sn-glycero-3-phospho-L-serine
 75023	an inositol phosphomannosylnositol-1-phospho-N-(2-hydroxyacyl)-4R-hydroxysphingoid base
 75026	1-octadecanoyl-2-hexadecanoyl-sn-glycero-3-phosphocholine
-75028	1-(alpha,beta-saturated alkyl)-2-acyl-sn-glycero-3-phosphoethanolamine
+75028	1-(1,2-saturated alkyl)-2-acyl-sn-glycero-3-phosphoethanolamine
 75029	1-hexadecanoyl-2-(9Z-octadecenoyl)-sn-glycero-3-phospho-L-serine
 75031	1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phospho-L-serine
 75032	1-hexadecanoyl-2-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-sn-glycero-3-phospho-L-serine
@@ -16725,7 +16773,7 @@ COMPOUND_ID	NAME
 75104	1-(9Z)-octadecenoyl-2-nonadecanoyl-sn-glycero-3-phosphate
 75105	nonadecanoyl-CoA
 75111	1-acyl-sn-glycero-3-phosphoglycerol
-75116	1-acyl-2-(9Z-octadecenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
+75116	a 1-acyl-2-(9Z-octadecenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
 75119	1-(10Z-heptadecenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
 75120	1-(10Z-heptadecenoyl)-2-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-sn-glycero-3-phospho-(1D-myo-inositol)
 75121	(11Z)-octadecenoyl-CoA
@@ -16887,6 +16935,7 @@ COMPOUND_ID	NAME
 75586	hexadecane-1,2-diol
 75587	2-hydroxyhexadecyl hexadecanoate
 75590	1-octadecanoyl-2-(9Z)-octadecenoylglycerol
+75591	3-hydroxy-L-aspartate residue
 75608	1,2-O,O-dihexadecanoyl-1,2-hexadecanediol
 75609	1-(9Z,12Z,15Z-octadecatrienoyl)-2-(9Z-octadecenoyl)-glycerol
 75610	1-(9Z,12Z,15Z-octadecatrienoyl)-glycerol
@@ -16998,7 +17047,7 @@ COMPOUND_ID	NAME
 76042	an aromatic amino-acid
 76044	omega-hydroxy-triacontanoate
 76045	omega-hydroxy-dotriacontanoate
-76054	1-(9Z)-octadecenoyl-N-acetylsphing-4-enine
+76054	1-(9Z-octadecenoyl)-N-acetylsphing-4-enine
 76055	1-O-hexadecyl-2-acetyl-3-(9Z)-octadecenoyl-sn-glycerol
 76061	1-O-hexadecylglycerol
 76062	1-O-hexadecyl-3-(9Z)-octadecenoylglycerol
@@ -17015,7 +17064,7 @@ COMPOUND_ID	NAME
 76078	2-hexadecanoyl-sn-glycero-3-phosphocholine
 76079	2-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-sn-glycero-3-phosphocholine
 76080	1-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-N-acetylsphingosine
-76083	(9Z-octadecenoyl)-glycero-3-phosphocholine
+76083	(9Z-octadecenoyl)-sn-glycero-3-phosphocholine
 76084	2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphocholine
 76085	2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycero-3-phosphocholine
 76086	1-(9Z,12Z-octadecadienoyl)-N-acetylsphing-4-enine
@@ -17070,7 +17119,7 @@ COMPOUND_ID	NAME
 76282	octanedioate
 76283	decanedioate
 76291	nonanoyl-CoA
-76292	trans-2-nonenoyl-CoA
+76292	(2E)-nonenoyl-CoA
 76296	1D-myo-inositol 3,5-bisphosphate
 76298	22-oxodocosanoate
 76299	docosanedioate
@@ -17081,7 +17130,7 @@ COMPOUND_ID	NAME
 76311	26-oxohexacosanoate
 76312	hexacosanedioate
 76315	dodecanedioyl-CoA
-76316	Decanedioyl-CoA
+76316	decanedioyl-CoA
 76317	octanedioyl-CoA
 76327	hexanedioyl-CoA
 76330	(2E)-octenedioyl-CoA
@@ -17208,7 +17257,7 @@ COMPOUND_ID	NAME
 76615	3,18-dihydroxyoctadecanoate
 76616	3-hydroxydodecanoate
 76618	3,12-dihydroxydodecanoate
-76619	omega-methyl fatty acid
+76619	an omega-methyl fatty acid
 76624	20-hydroxy-(5Z,8Z,11Z,14Z)-eicosatetraenoate
 76625	11,12-epoxy-(5Z,8Z,14Z)-eicosatrienoate
 76627	19-hydroxy-(5Z,8Z,11Z,14Z)-eicosatetraenoate
@@ -17324,8 +17373,8 @@ COMPOUND_ID	NAME
 77129	1-octadecanoyl-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycerol
 77130	1-octadecanoyl-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycero-3-phosphate
 77132	6-sulfo-D-quinovose
-77133	6-deoxy-6-sulfo-D-fructofuranose
-77134	6-deoxy-6-sulfo-D-fructofuranose 1-phosphate
+77133	6-deoxy-6-sulfo-D-fructose
+77134	6-deoxy-6-sulfo-D-fructose 1-phosphate
 77135	3-sulfolactaldehyde
 77136	1-octadecanoyl-2-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-sn-glycero-3-phospho-1D-myo-inositol 4-phosphate
 77137	1-octadecanoyl-2-(5Z,8Z,11Z,14Z)-eicosatetraenoyl-sn-glycero-3-phospho-1D-myo-inositol 4,5-biphosphate
@@ -17493,6 +17542,7 @@ COMPOUND_ID	NAME
 77492	1-(9Z)-octadecenoylglycerone 3-phosphate
 77493	1-(9Z,12Z)-octadecadienoylglycerone 3-phosphate
 77494	1-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-glycerone 3-phosphate
+77530	all-trans-retinol derivative
 77537	(9E)-octadecenoyl-CoA
 77545	(2E)-pentadecenoyl-CoA
 77547	undecanoyl-CoA
@@ -17543,7 +17593,7 @@ COMPOUND_ID	NAME
 77664	Mg-13(1)-hydroxyprotoporphyrin 13-monomethyl ester
 77665	Mg-13(1)-oxoprotoporphyrin 13-monomethyl ester
 77670	primary fluorescent chlorophyll catabolite
-77671	luteolin 7-O-beta-D-glucosiduronate
+77671	luteolin 7-O-beta-D-glucuronide
 77674	queuine
 77675	epoxyqueuine
 77676	1-O-hexadecyl-2-acetyl-3-(9Z,12Z)-octadecadienoyl-sn-glycerol
@@ -17566,7 +17616,7 @@ COMPOUND_ID	NAME
 77699	methyl formate
 77700	methyl acetate
 77708	1-octadecanoyl-2-(9Z,12Z)-octadecadienoyl-sn-glycero-3-phosphocholine
-77709	beta-D-Gal-(1->3)-beta-D-GalNAc-(1->4)-[alpha-Neu5Ac-(2->3)]-beta-D-Gal-(1->4)-beta-D-Glc-(1<->1')-N-acylsphing-4-enine
+77709	ganglioside GM1 (d18:1(4E))
 77710	3',4',5-trihydroxy-3,7-dimethoxyflavone
 77711	licodione
 77712	xanthoaphin
@@ -17606,7 +17656,7 @@ COMPOUND_ID	NAME
 77811	1-acyl-2-hexadecenoyl-sn-glycero-3-phosphate
 77812	9-oxononanoate
 77824	cyanidin 3-O-(2-O-beta-D-glucuronosyl)-beta-D-glucoside
-77825	luteolin 7-O-[(beta-D-glucosiduronate)-(1->2)-(beta-D-glucosiduronate)] 4'-O-beta-D-glucosiduronate
+77825	luteolin 7-O-[(beta-D-glucuronosyl)-(1->2)-(beta-D-glucuronide)] 4'-O-beta-D-glucuronide
 77826	mugineate
 77827	2-arylethylamine
 77828	guanosine 3',5'-bis(diphosphate)
@@ -17622,7 +17672,7 @@ COMPOUND_ID	NAME
 77846	2-iminoacetate
 77847	glycerol 1-phosphodiester
 77848	3-(3,4-dihydroxypyridin-1-yl)-L-alanine
-77851	(2S)-2-amino-3-oxo-4-(phosphonooxy)butanoate
+77851	(2S)-2-amino-3-oxo-4-(phosphooxy)butanoate
 77857	cyanidin 3-O-beta-D-glucoside
 77858	4-hydroxycoumarin
 77859	(2Z,4E)-2-aminomuconate
@@ -17693,7 +17743,7 @@ COMPOUND_ID	NAME
 77985	aclacinomycin Y
 77987	aklanonate
 77988	methyl aklanonate
-77989	luteolin 7-O-[(beta-D-glucosiduronate)-(1->2)-(beta-D-glucosiduronate)]
+77989	luteolin 7-O-[(beta-D-glucuronosyl)-(1->2)-(beta-D-glucuronide)]
 77990	tetracenomycin D3
 77991	aclacinomycin N
 77992	calycosin
@@ -17735,7 +17785,7 @@ COMPOUND_ID	NAME
 78094	octatriacontapentaenoate
 78095	hexadecenoate
 78096	hexadecadienoate
-78097	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-hexadecanoyl)-ethanolamine
+78097	N-hexadecanoyl-1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
 78099	(10,11S,12R)-trihydroxy-(5Z,8Z,14Z)-eicosatrienoate
 78100	(8,11R,12S)-trihydroxy-(5Z,9E,14Z)-eicosatrienoate
 78101	2-O-acetyl-1-O-tetradecyl-sn-glycero-3-phosphocholine
@@ -17842,7 +17892,7 @@ COMPOUND_ID	NAME
 78255	ent-sandaracopimaradien-3beta-ol
 78256	oryzalexin D
 78259	oryzalexin E
-78260	1-octadecanoyl-2-(9Z)-octadecenoyl-sn-glycero-3-phosphoserine
+78260	1-octadecanoyl-2-(9Z-octadecenoyl)-sn-glycero-3-phospho-L-serine
 78261	1-hexadecanoyl-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycero-3-phosphoethanolamine
 78262	1-hexadecanoyl-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycero-3-phosphoserine
 78263	1-(1Z-octadecenyl)-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycero-3-phosphoethanolamine
@@ -17890,7 +17940,7 @@ COMPOUND_ID	NAME
 78341	1-(1Z-octadecenyl)-2-(9Z-octadecenoyl)-sn-glycero-3-phospho-L-serine
 78342	1-(1Z-octadecenyl)-2-(5Z,8Z,11Z,14Z- eicosatetraenoyl)-sn-glycero-3-phosphoethanolamine
 78343	1-(1Z-octadecenyl)-2-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-sn-glycero-3-phospho-L-serine
-78345	D-ribofuranose 2,5-bisphosphate
+78345	D-ribose 2,5-bisphosphate
 78346	D-ribose 5-phosphate
 78347	3-linalylflaviolin
 78349	3-sulfinopropanoyl-CoA
@@ -17903,6 +17953,7 @@ COMPOUND_ID	NAME
 78367	1-O-hexadecyl-2-propanoyl-sn-glycero-3-phosphocholine
 78368	1-O-hexadecyl-2-butanoyl-sn-glycero-3-phosphocholine
 78369	1-O-hexadecyl-2-succinyl-sn-glycero-3-phosphocholine
+78370	cyclooctatin
 78371	1-O-hexadecyl-2-glutaryl-sn-glycero-3-phosphocholine
 78373	chelerythrine
 78375	N(5)-phenyl-L-glutamine
@@ -17923,18 +17974,19 @@ COMPOUND_ID	NAME
 78429	a 1-O-alkyl-2-acyl-3-(beta-D-3-sulfogalactosyl)-sn-glycerol
 78430	3-O-sulfo-beta-D-galactosyl-diacylglycerol
 78435	[GlcNAc-(1->4)-Mur2Ac(oyl-L-Ala-gamma-D-Glu-L-Lys-D-Ala-D-Ala)]n-diphospho-ditrans,octacis-undecaprenol
-78438	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78437	ganglioside GD3 (d18:1(4E))
+78438	ganglioside GT3 (d18:1(4E))
 78442	AMP 3'-end residue
-78445	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78445	ganglioside GD1a (18:1(4E))
 78446	O-(S-acetylpantetheine-4'-phosphoryl)-L-serine residue
-78447	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78447	ganglioside GT1a (d18:1(4E))
 78449	O-(S-malonylpantetheine-4'-phosphoryl)-L-serine residue
 78450	O-(S-3-oxobutanoylpantetheine-4'-phosphoryl)-L-serine residue
 78451	O-(S-3R-hydroxybutanoylpantetheine-4'-phosphoryl)-L-serine residue
-78452	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78452	ganglioside GT1b (d18:1(4E))
 78453	O-(S-2E-butenoylpantetheine-4'-phosphoryl)-L-serine residue
 78454	O-(S-butanoylpantetheine-4'-phosphoryl)-L-serine residue
-78455	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78455	ganglioside GQ1b (d18:1(4E))
 78456	O-(S-3-oxohexanoylpantetheine-4'-phosphoryl)-L-serine residue
 78457	O-(S-3R-hydroxyhexanoylpantetheine-4'-phosphoryl)-L-serine residue
 78458	O-(S-2E-hexenoylpantetheine-4'-phosphoryl)-L-serine residue
@@ -17956,11 +18008,11 @@ COMPOUND_ID	NAME
 78478	O-(S-3-oxohexadecanoylpantetheine-4'-phosphoryl)-L-serine residue
 78480	O-(S-3R-hydroxyhexadecanoylpantetheine-4'-phosphoryl)-L-serine residue
 78481	O-(S-2E-hexadecenoylpantetheine-4'-phosphoryl)-L-serine residue
-78482	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1<->1')-N-acylsphing-4-enine
+78482	ganglioside GM4 (d18:1(4E))
 78483	O-(S-hexadecanoylpantetheine-4'-phosphoryl)-L-serine residue
-78484	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
-78485	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
-78486	N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
+78484	asialo-GM1a ganglioside (d18:1(4E)/18:0)
+78485	ganglioside GM2 (d18:1(4E)/18:0)
+78486	ganglioside GA2 (d18:1(4E)/18:0)
 78487	O-(S-3-oxooctadecanoylpantetheine-4'-phosphoryl)-L-serine residue
 78488	O-(S-3R-hydroxyoctadecanoylpantetheine-4'-phosphoryl)-L-serine residue
 78489	O-(S-2E-octadecenoylpantetheine-4'-phosphoryl)-L-serine residue
@@ -17990,8 +18042,8 @@ COMPOUND_ID	NAME
 78535	3'-(L-tryptophyl)adenylyl group
 78536	3'-(L-tyrosyl)adenylyl group
 78537	3'-(L-valyl)adenylyl group
-78542	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-Gal-(1->4)-beta-Glc-(1<->1')-N-acylsphing-4-enine
-78545	N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78542	ganglioside GD2 (d18:1(4E))
+78545	ganglioside GA2 (d18:1(4E))
 78550	(3Z,6Z)-dodecadienoyl-CoA
 78551	3'-(O-phosphonato-L-seryl)adenylyl group
 78552	a nucleoside 2'-phosphate
@@ -18000,10 +18052,10 @@ COMPOUND_ID	NAME
 78559	(2S)-methyl-(3S)-hydroxybutanoate
 78565	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
 78566	1-O-(1Z)-alkenyl-2-acetyl-sn-glycero-3-phosphocholine
-78568	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-78569	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl-(1->4)- beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-78571	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-78572	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+78568	ganglioside GM1b (d18:1(4E))
+78569	ganglioside GD1aalpha (d18:1(4E))
+78571	ganglioside GT1aalpha (d18:1(4E))
+78572	ganglioside GQ1b alpha (d18:1(4E))
 78573	3'-(L-selenocysteinyl)adenylyl group
 78588	6-linalyl-2-O,3-dimethylflaviolin
 78589	2-O,3-dimethylflaviolin
@@ -18021,7 +18073,7 @@ COMPOUND_ID	NAME
 78603	3beta-hydroxy-7-oxo-5beta-cholan-24-oate
 78604	ursodeoxycholate
 78605	7-oxolithocholate
-78607	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+78607	fucosyl ganglioside GM1 (d18:1(4E))
 78608	an alpha-amino acid
 78611	3-hydroxybutanoyl-CoA
 78612	C-terminal L-Cys-L-Leu-L-Val-L-Cys residue
@@ -18112,8 +18164,8 @@ COMPOUND_ID	NAME
 78904	4,4-dimethyl-8,14-cholestadien-3beta-ol
 78907	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(1'-sn-glycerol-3'-phosphate)
 78911	1,2-dioctanoyl-sn-glycero-3-phospho-(1D-myo-inositol-5-phosphate)
-78930	1-acyl-2-hexanoyl-sn-glycero-3-phospho-(1D-myo-inositol-5-phosphate)
-78931	1-acyl-2-hexanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
+78930	a 1-acyl-2-hexanoyl-sn-glycero-3-phospho-(1D-myo-inositol-5-phosphate)
+78931	a 1-acyl-2-hexanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
 78934	1,2-dioctanoyl-sn-glycero-3-phospho-(1-D-myo-inositol-3-phosphate)
 78948	(2S)-2-amino-3-oxobutanoate
 78981	UDP-2-acetamido-3-dehydro-2-deoxy-alpha-D-glucopyranose
@@ -18135,7 +18187,7 @@ COMPOUND_ID	NAME
 79026	molybdenum cofactor
 79027	L-topaquinone
 79031	dihydromonacolin L carboxylate
-79032	O-(dihydromonacolin L carboxyl-pantetheine-4'-phosphoryl)-L-serine residue
+79032	O-[S-(dihydromonacolin L carboxy)pantetheine-4'-phosphoryl]-L-serine residue
 79035	monacolin J carboxylate
 79036	3alpha-hydroxy-3,5-dihydromonacolin L carboxylate
 79038	lovastatin carboxylate
@@ -18143,7 +18195,7 @@ COMPOUND_ID	NAME
 79063	all-trans-4,4'-diapolycopene-4,4'-dioate
 79064	4,4'-diaponeurosporenoate
 79065	4,4'-diaponeurosporenal
-79066	4-O-beta-D-glucosyl-trans-4-coumarate
+79066	4-O-(beta-D-glucosyl)-trans-4-coumarate
 79072	15-oxoprostaglandin F1alpha
 79073	CHOH group
 79080	lactose 6-phosphate
@@ -18157,25 +18209,37 @@ COMPOUND_ID	NAME
 79193	5-acetamidopentanoate
 79200	(R)-dihydrocamalexate
 79208	beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
-79210	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
-79214	alpha-N-acetylneuraminyl-(2->8)-alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
+79210	ganglioside GM3
+79214	ganglioside GD3
 79215	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
 79216	alpha-N-acetylneuraminyl-(2->8)-alpha-N-acetylneuraminyl-(2->8)-alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
-79218	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
-79220	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminyl-(2->8)-alpha-N-acetylneuraminyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
+79218	ganglioside GM2
+79220	ganglioside GD2
 79284	trehalulose
 79333	O-adenylyl-D-amino acid group
 79380	2-hydroxy-7-methyl-6-oxo-(2E,4E)-octadienoate
 79985	flavanone 7-O-[alpha-L-rhamnosyl-(1->2)-beta-D-glucoside]
 80029	epothilone C
 80214	3'-hydroxyechinenone
+80217	all-trans-adonixanthin
 80291	an aliphatic nitrile
 80535	methyl (2E,6E)-farnesoate
 80545	indolylmethyl-desulfoglucosinolate
+80651	1,2-ditetradecanoyl-sn-glycerol
+80729	toxoflavin
 80788	1,4-cineole
 80946	octan-3-one
+81013	7alpha,25-dihydroxy-4-cholesten-3-one
 81200	(S)-corytuberine
+81321	1-O-(trans-feruloyl)-beta-D-glucose
+81377	(+)-nootkatone
+81378	nootkatol
+81467	7alpha-hydroxypregnenolone
+81471	3beta,7alpha-dihydroxyandrost-5-en-17-one
+81481	11beta,17beta-dihydroxyandrost-4-ene-3-one
+81485	osthenol
 81666	4-methyl-5-nitrocatechol
+82420	1-chloro-3-nitrobenzene
 82605	1,2-dibutyryl-sn-glycero-3-phospho-(1D-myo-inositol-5-phosphate)
 82606	1,2-dibutyryl-sn-glycero-3-phospho-(1D-myo-inositol)
 82612	S-methyl-L-cysteine residue
@@ -18188,7 +18252,7 @@ COMPOUND_ID	NAME
 82629	prostaglandin G2
 82633	N-acetyl-alpha-neuraminosyl-(2->3)-D-galactosylceramide
 82635	4-nitrophenyl acetate
-82637	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+82637	ganglioside GD1a
 82643	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosylceramide
 82657	deoxyhypusine residue
 82683	O-[2'-(5-phosphoribosyl)-3'-dephospho-CoA]-L-serine residue
@@ -18293,11 +18357,11 @@ COMPOUND_ID	NAME
 82930	3-[(3S)-3-amino-3-carboxypropyl]-uridine 5'-phosphate residue
 82934	N-acyl-beta-D-glucosyl-(1<->1')-(4E,8E)-9-methyl-sphinga-4,8-dienine
 82936	N-acyl-beta-D-galactosyl-(1<->1')-(4E,8E)-9-methyl-sphinga-4,8-dienine
-82938	alpha-N-acetylneuraminosyl-(2->3)-[beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-82939	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-82940	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+82938	ganglioside GM1a
+82939	ganglioside GD1b
+82940	ganglioside GT1b
 82943	1-hexadecanoyl-2-eicosanoyl-sn-glycero-3-phosphocholine
-82945	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+82945	N-acetyl-beta-D-galactosaminyl-(1->4)-[N-acetyl-alpha-neuraminosyl-(2->3)]-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[N-acetyl-alpha-neuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 82949	1-hexadecanoyl-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycerol
 82950	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-glycoloylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 82951	alpha-N-glycoloylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
@@ -18326,7 +18390,7 @@ COMPOUND_ID	NAME
 83139	a long-chain fatty acyl-CoA
 83142	(R)-N(6)-(S(8)-2-methylpropanoyldihydrolipoyl)-L-lysine residue
 83143	(R)-N(6)-(S(8)-aminomethyldihydrolipoyl)-L-lysine residue
-83144	biotinyl-L-lysine residue
+83144	N(6)-biotinyl-L-lysine residue
 83145	carboxybiotinyl-L-lysine residue
 83148	C-terminal glycine residue
 83150	thiocarboxyglycine residue
@@ -18389,6 +18453,7 @@ COMPOUND_ID	NAME
 83363	N-2-hydroxyhexacosanoylsphing-4-enine
 83364	N-octacosanoylsphing-4-enine
 83373	3-deacetyl-3-vinylbacteriochlorophyllide a
+83374	polycis-polyprenyl diphosphate
 83377	7(1)-hydroxychlorophyll a
 83383	D-galactaro-1,5-lactone
 83384	D-glucaro-1,5-lactone
@@ -18454,8 +18519,8 @@ COMPOUND_ID	NAME
 83675	hexadecanoyl-10-hydroxyoctadecanoate ester
 83677	12-hexadecanoyloxy-octadecanoate
 83678	hexadecanoyl-13-hydroxyoctadecanoate ester
-83683	N-terminal N-acetyl-L-alanine residue
-83690	N-terminal N-acetyl-L-serine residue
+83683	N-terminal N(alpha)-acetyl-L-alanine residue
+83690	N-terminal N(alpha)-acetyl-L-serine residue
 83697	N(5)-alkyl-L-glutamine residue
 83700	hexadecanoyl-7-hydroxyoctadecanoate ester
 83701	hexadecanoyl-8-hydroxyoctadecanoate ester
@@ -18543,7 +18608,7 @@ COMPOUND_ID	NAME
 83935	15-hydroxy-hexadecanoic acid
 83936	15-hydroxyhexadecanoate
 83938	14-hydroxyhexadecanoate
-83939	1-acyl-2-octadecanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
+83939	a 1-acyl-2-octadecanoyl-sn-glycero-3-phospho-(1D-myo-inositol)
 83940	1-octadecanoyl-2-acyl-sn-glycero-3-phospho-(1D-myo-inositol)
 83941	N-acetyl-D-muramoyl-L-alanine
 83951	(2E,6E)-omega-hydroxy-farnesol
@@ -18588,6 +18653,7 @@ COMPOUND_ID	NAME
 84097	2-carboxytetradecanoyl-CoA
 84099	2-carboxydodecanoyl-CoA
 84106	O-(S-2-carboxytetradecanoylpantetheine-4'-phosphoryl)-L-serine(2-) residue
+84125	globoside Gb4Cer(d18:1(4E)/24:1(15Z))
 84131	O-(S-2-alkyl-3-oxoacyl-pantetheine-4'-phosphoryl)-L-serine residue
 84132	O-(S-2-alkyl-3-oxoacyl-pantetheine-4'-phosphoryl)-L-serine(1-) residue
 84134	O-(S-2-tetradecyl-3-oxooctadecanoylpantetheine-4'-phosphoryl)-L-serine(1-) residue
@@ -18774,7 +18840,7 @@ COMPOUND_ID	NAME
 84733	Sulfodihexosyl ceramide
 84755	2-deoxy-D-glucose
 84760	2-deoxy-D-glucose 6-phosphate
-84786	1-palmitoyl-2-(6Z,9Z,12Z-octadecatrienoyl)-sn-glycero-3-phosphocholine
+84786	1-hexadecanoyl-2-(6Z,9Z,12Z-octadecatrienoyl)-sn-glycero-3-phosphocholine
 84787	1,2-hexadecanoyl-sn-glycero-3-phosphoethanol
 84788	(2E,4E)-hexadienoyl-CoA
 84789	1-hexadecanoyl-2-(9Z,12Z,15Z-octadecatrienoyl)-sn-glycero-3-phosphocholine
@@ -18841,9 +18907,9 @@ COMPOUND_ID	NAME
 85110	a (3E,5Z)-dienoyl-CoA
 85111	a (2E,4E)-(5,6-saturated)-dienoyl-CoA
 85130	7,8-dihydroxanthopterin
-85134	12-phosphonooxyoctadecanoate
-85137	12-phosphonooxy-(9E)-octadecenoate
-85141	12-phosphonooxy-(9Z)-octadecenoate
+85134	12-(phosphooxy)octadecanoate
+85137	12-phosphooxy-(9E)-octadecenoate
+85141	12-phosphooxy-(9Z)-octadecenoate
 85144	(9S,10R)-10-hydroxy-9-(phosphonooxy)octadecanoate
 85147	(9S,10R)-dihydroxyoctadecanoate
 85150	12-hydroxy-(9Z)-octadecenoate
@@ -18864,12 +18930,12 @@ COMPOUND_ID	NAME
 85204	N-(9Z-octadecenoyl)-4-hydroxysphinganine
 85206	N-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-sphinganine
 85207	N-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-4-hydroxysphinganine
-85216	1-acyl-sn-glycero-3-phospho-(N-acyl)-ethanolamine
-85217	1-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-hexadecanoyl)-ethanolamine
-85219	1-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-octadecanoyl)-ethanolamine
-85221	1-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-eicosanoyl)-ethanolamine
-85222	1-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-(9Z-octadecenoyl))-ethanolamine
-85223	1-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-(5Z,8Z,11Z,14Z-eicosatetraenoyl))-ethanolamine
+85216	N,1-diacyl-sn-glycero-3-phosphoethanolamine
+85217	N-hexadecanoyl-1-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85219	N-octadecanoyl-1-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85221	N-eicosanoyl-1-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85222	N,1-di-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85223	N-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-1-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
 85224	C-terminal 2-hydoxyglycine residue
 85225	N-acyl-sn-glycero-3-phosphoethanolamine
 85226	N-hexadecanoyl-sn-glycero-3-phosphoethanolamine
@@ -18893,7 +18959,7 @@ COMPOUND_ID	NAME
 85271	(Kdo)2-lipid A 1-diphosphate
 85275	(2R,3E)-phycocyanobilin
 85276	(2R,3E)-phycoerythrobilin
-85277	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-(5Z,8Z,11Z,14Z-eicosatetraenoyl))-ethanolamine
+85277	N-(5Z,8Z,11Z,14Z-eicosatetraenoyl)-1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
 85278	17beta-hydroxyandrostanone
 85279	S-3-[(2R)-phycoerythrobilin]-L-cysteine residue
 85280	S-3-[(2R)-phycocyanobilin]-L-cysteine residue
@@ -18902,14 +18968,14 @@ COMPOUND_ID	NAME
 85286	N-(11Z-eicosenoyl)-4-hydroxysphinganine
 85288	S-3-[(2R)-phycoviolobilin]-L-cysteine residue
 85289	phenyl sulfate
-85291	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-(9Z-octadecenoyl))-ethanolamine
-85292	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-octadecanoyl)-ethanolamine
-85293	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-tetradecanoyl)-ethanolamine
-85294	1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phospho-(N-dodecanoyl)-ethanolamine
-85295	1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phospho-(N-decanoyl)-ethanolamine
-85296	1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phospho-(N-octanoyl)-ethanolamine
-85297	1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phospho-(N-hexanoyl)-ethanolamine
-85298	1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phospho-(N-butanoyl)-ethanolamine
+85291	N,1,2-tri-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85292	N-octadecanoyl-1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85293	N-tetradecanoyl-1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85294	N-dodecanoyl-1,2-di-(9Z-octadecenoyl)-sn-glycero-3-phosphoethanolamine
+85295	N-decanoyl-1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphoethanolamine
+85296	N-octanoyl-1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphoethanolamine
+85297	N-hexanoyl-1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphoethanolamine
+85298	N-butanoyl-1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphoethanolamine
 85299	N-octadecanoyl ethanolamine
 85301	N-decanoyl ethanolamine
 85302	N-octanoyl ethanolamine
@@ -18925,8 +18991,8 @@ COMPOUND_ID	NAME
 85316	(2R)-ethylmalonyl-CoA
 85317	D-galactaro-1,4-lactone
 85329	UDP-4-dehydro-6-deoxy-alpha-D-glucose
-85334	1-hexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phospho-(N-hexadecanoyl)-ethanolamine
-85335	1-hexadecanoyl-sn-glycero-3-phospho-(N-hexadecanoyl)-ethanolamine
+85334	N,1-dihexadecanoyl-2-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphoethanolamine
+85335	N,1-dihexadecanoyl-sn-glycero-3-phosphoethanolamine
 85336	D-glucaro-1,4-lactone
 85338	L-alloisoleucine
 85339	O-(S-L-alloisoleucylpantetheine-4'-phosphoryl)serine residue
@@ -19003,6 +19069,7 @@ COMPOUND_ID	NAME
 85586	glutathione S,S-dioxide
 85602	an N-carbamoyl-D-amino acid
 85603	1-tuberculosinyladenosine
+85606	1-methylsulfanyl-D-ribulose 5-phosphate
 85621	L-3-oxoalanine residue
 85634	an (R)-3-hydroxycarboxylate
 85635	(3R)-hydroxytetradecanoate
@@ -19104,7 +19171,9 @@ COMPOUND_ID	NAME
 86120	(11Z)-hexadecenoyl-CoA
 86121	1-hexadecanoyl-2-(8Z,11Z,14Z-eicosatrienoyl)-sn-glycero-3-phosphocholine
 86122	(10E,12Z)-hexadecadienoyl-CoA
+86129	1,2-di-(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphocholine
 86131	5alpha-cholest-8,14-dien-3beta-ol
+86133	1-(9Z-octadecaenoyl)-2-(9Z,12Z,15Z-octadecatrienoyl)-sn-glycero-3-phosphocholine
 86137	1-hexadecanoyl-2-(5Z,8Z,11Z,14Z,17Z-eicosapentaenoyl)-sn-glycero-3-phosphocholine
 86139	an N-methyl-L-amino acid
 86145	(22R,7alpha)-dihydroxycholesterol
@@ -19292,17 +19361,17 @@ COMPOUND_ID	NAME
 87746	prenyl-FMN
 87747	7alpha-hydroxy-3-oxochol-4-en-24-oate
 87748	3-oxochola-4,6-dien-24-oate
-87785	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-87787	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-87788	N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-87789	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-87791	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
-87792	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+87785	ganglioside GD1b (d18:1(4E))
+87787	ganglioside GD1c (d18:1(4E))
+87788	ganglioside GT2 (d18:1(4E))
+87789	ganglioside GT1c (d18:1(4E))
+87791	ganglioside GQ1c (d18:1(4E))
+87792	ganglioside GP1c (d18:1(4E))
 87793	(14Z,17Z,20Z,23Z,26Z)-dotriacontapentaenoyl-CoA
 87794	(16Z,19Z,22Z,25Z,28Z)-tetratriacontapentaenoyl-CoA
 87795	(18Z,21Z,24Z,27Z,30Z)-hexatriacontapentaenoyl-CoA
 87796	(20Z,23Z,26Z,29Z,32Z)-octatriacontapentaenoyl-CoA
-87802	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
+87802	ganglioside GP1calpha (d18:1(4E))
 87803	3-(3-hydroxyphenyl)-propanoyl-CoA
 87804	3,3',5-trihydroxybibenzyl
 87805	ethionamide S-oxide
@@ -19332,7 +19401,7 @@ COMPOUND_ID	NAME
 87844	demethylphylloquinol
 87846	5-hydroxy-3-methyl-O-methyl-L-tyrosine
 87847	O-[S-(2E-eicosenoylpantetheine)-4'-phosphoryl]-L-serine residue
-87848	O-(S-eicosanoylpantetheine-4'-phosphoryl)-L-serine
+87848	O-(S-eicosanoylpantetheine-4'-phosphoryl)-L-serine residue
 87849	O-(S-3-oxodocosanoylpantetheine-4'-phosphoryl)-L-serine residue
 87850	O-[S-(3R-hydroxydocosanoylpantetheine)-4'-phosphoryl]-L-serine residue
 87851	O-[S-(2E-docosenoylpantetheine)-4'-phosphoryl]-L-serine residue
@@ -19462,6 +19531,7 @@ COMPOUND_ID	NAME
 87991	(2R)-2-[(1R)-14-{2-[(15Z)-hexatriacont-15-en-1-yl]cyclopropyl}-1-hydroxytetradecyl]hexacosanoate
 88021	an archaeal dolichyl N-acetyl-alpha-D-glucosaminyl phosphate
 88026	an archaeal dolichyl 3-O-(2,3-diacetamido-2,3-dideoxy- beta-D-glucuronsyl)-N-acetyl- alpha-D-glucosaminyl phosphate
+88039	(Z)-Delta-(Z)-cyclopropyl-oxomycolate
 88041	CDP-3,6-dideoxy-alpha-D-mannose
 88042	UDP-beta-L-iduronate
 88052	dimethylallyl phosphate
@@ -19469,12 +19539,12 @@ COMPOUND_ID	NAME
 88054	[5-(aminomethyl)furan-3-yl]methyl diphosphate
 88055	(4-{4-[2-(gamma-L-glutamylamino)ethyl]phenoxymethyl}furan-2-yl)methanamine
 88066	dioctanoylglycerol
-88069	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+88069	ganglioside GA1
 88070	octanoylglycerol
-88073	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
-88079	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
-88088	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-alpha-L-fucosyl-(1->4)-[N-acetyl-beta-D-glucosaminyl-(1->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
-88089	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-alpha-L-fucosyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->6)-N-acetyl-beta-D-glucosaminyl-(1->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+88073	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+88079	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[N-acetyl-alpha-neuraminosyl-(2->6)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+88088	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-alpha-L-fucosyl-(1->4)-[N-acetyl-beta-D-glucosaminyl-(1->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+88089	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-alpha-L-fucosyl-(1->4)-[N-acetyl-alpha-neuraminosyl-(2->6)-N-acetyl-beta-D-glucosaminyl-(1->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
 88091	6-deoxy-6-sulfo-D-glucono-1,5-lactone
 88093	6-deoxy-6-sulfo-D-gluconate
 88094	2-dehydro-3,6-dideoxy-6-sulfo-D-gluconate
@@ -19493,21 +19563,21 @@ COMPOUND_ID	NAME
 88147	2,5-dihydroxybenzoyl-CoA
 88148	a 2,3-saturated fatty acyl-CoA
 88153	1,2,3-tripropanoylglycerol
-88154	alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide
+88154	globoside Gb3Cer
 88155	dipropanoylglycerol
 88156	diacetylglycerol
 88166	(2S)-methylbutanoyl-CoA
-88167	N-acetyl-beta-D-galactosaminyl-(1->3)-alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+88167	globoside Gb4Cer
 88190	2-hydroxy-5-methylquinone
 88221	N(omega),N(omega)'-dimethyl-L-arginine residue
 88222	N(5)-methyl-arginine residue
 88226	(2E,6E)-farnesyl phosphate
-88228	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
-88229	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
+88228	N-acetyl-alpha-neuraminosyl-(2->8)-N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[N-acetyl-alpha-neuraminosyl-(2->8)-N-acetyl-alpha-neuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
+88229	ganglioside GT1b (d18:1(4E)/C18:0)
 88233	epoxypheophorbide a
-88234	alpha-N-acetylneuraminyl-(2->8)-alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-(octadecanoyl)-sphing-4-enine
-88235	alpha-N-acetylneuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-(octadecanoyl)-sphing-4-enine
-88236	beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
+88234	N-acetyl-alpha-neuraminyl-(2->8)-N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-(octadecanoyl)-sphing-4-enine
+88235	N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-N-(octadecanoyl)-sphing-4-enine
+88236	ganglioside GD1b(d18:1(4E)/18:0)
 88238	a (5Z,9Z,12Z)-octadecatrienoyl-containing glycerolipid
 88239	a (5Z,9Z,12Z,15Z)-octadecatetraenoyl-containing glycerolipid
 88240	a (9Z)-octadecenoyl-containing glycerolipid
@@ -19534,7 +19604,10 @@ COMPOUND_ID	NAME
 88390	1-hydroxy-2-butanone
 88514	butyl formate
 88528	hexanal
+88752	cholesteryl (5Z,8Z,11Z)-eicosatrienoate
+88756	cholesteryl (6Z,9Z,12Z)-octadecatrienoate
 88764	ethyl butanoate
+89268	2-hydroxy-3-methoxy-17beta-estradiol
 89484	heptan-4-one
 89540	(3E)-pent-3-en-2-one
 89719	propyl butanoate
@@ -19551,30 +19624,29 @@ COMPOUND_ID	NAME
 90109	(S)-3-sulfolactaldehyde
 90118	tricosanoyl-CoA
 90119	(2E)-tricosenoyl-CoA
-90151	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90153	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-(octadecanoyl)-sphing-4-enine
-90154	alpha-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
+90151	ganglioside GM1b
+90153	ganglioside GD1a (18:1(4E)/18:0)
 90155	alpha-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-[alpha-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->6)]-beta-D-galactosyl-(1->4)- N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyl-sphing-4-enine
 90156	2-methylhexanoyl-CoA
 90157	2-methylhexenoyl-CoA
 90163	beta-D-3-sulfogalactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90164	N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-3-sulfogalactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90189	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->3)-beta-D-N-acetylgalactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90189	fucosyl ganglioside GM1
 90218	a gentamycin
 90219	a gentamycin 2''-phosphate
 90226	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90230	prostaglandin E2 1-glyceryl ester
 90233	prostaglandin F2alpha 1-glyceryl ester
-90246	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90262	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90265	alpha-L-fucosyl-(1->2)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90246	ganglioside GD1aalpha
+90262	fucosyl ganglioside GA1
+90265	ganglioside fucosyl GD1b
 90292	beta-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->4)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
 90307	beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acylsphing-4-enine
 90310	acyl-3-O-[alpha-D-galactosyl-(1->6)-beta-D-galactosyl]-sn-glycerol
-90335	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90336	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90335	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90336	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90337	1,2-didodecanoyl-3-O-[alpha-D-galactosyl-(1->6)-beta-D-galactosyl]-sn-glycerol
-90339	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90339	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90340	1,2-didodecanoyl-3-beta-D-galactosyl-sn-glycerol
 90342	1-beta-D-galactosyl-2,3-didodecanoyl-sn-glycerol
 90356	dibenzothiophene 5,5-dioxide
@@ -19588,11 +19660,11 @@ COMPOUND_ID	NAME
 90381	alpha-D-galactosyl-(1->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90383	alpha-N-glycoloylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90384	alpha-N-glycoloylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90390	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90392	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90390	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90392	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
 90397	1-(3,5-dichloro-2,6-dihydroxy-4-methoxyphenyl)hexan-1-one
 90398	(3,5-dichloro-2,4,6-trihydroxyphenyl)hexan-1-one
-90400	N-acetyl-alpha-D-galactosaminyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->3)-alpha-D-galactosyl-(1->4)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90400	globoside IV3GalNAc-Gb4Cer
 90450	alpha-N-acetylneuraminosyl-(2->3)-[beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyleicosasphing-4-enine
 90451	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-N-acyleicosasphing-4-enine
 90453	1,2-dioctanoyl-3-O-beta-D-galactosyl-sn-glycerol
@@ -19606,13 +19678,13 @@ COMPOUND_ID	NAME
 90477	long chain 1,2-diacyl-3-O-beta-D-galactosyl-sn-glycerol
 90481	2-octanoyl-3-O-beta-D-galactosyl-sn-glycerol
 90493	2-octanoyl-3-O-[alpha-D-galactosyl-(1->6)-beta-D-galactosyl]-sn-glycerol
-90501	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90501	ganglioside GT1a
 90506	1,2-di-(9Z,12Z-octadecadienoyl)-3-beta-D-galactosyl-sn-glycerol
 90507	1-(9Z-octadecenoyl)-2-hexadecanoyl-3-beta-D-galactosyl-sn-glycerol
 90510	C-terminal S-[(2E,6E)-farnesyl]-L-cysteine residue
 90511	C-terminal S-[(2E,6E)-farnesyl]-L-cysteine methyl ester residue
-90512	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
-90513	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90512	ganglioside GP1c
+90513	ganglioside GQ1c
 90514	1-beta-D-galactosyl-dodecanoyl-sn-glycerol
 90515	dodecanoyl-3-beta-D-galactosyl-sn-glycerol
 90516	C-terminal L-leucine residue
@@ -19649,12 +19721,12 @@ COMPOUND_ID	NAME
 90722	20-carboxy-leukotriene B4
 90723	6-trans-leukotriene B4
 90725	a very-long-chain 3-oxoacyl-CoA
-90726	3-oxoacyl-CoA
+90726	a 3-oxoacyl-CoA
 90731	a very-long-chain 2,3,4-saturated fatty acyl CoA
 90732	20-hydroxy-6-trans-leukotriene B4
 90736	a very-long-chain acyl-CoA
 90737	5-HEPE
-90761	2-deoxy-D-ribose
+90761	2'-deoxy-D-ribose
 90762	N-acetyl-D-glucosaminyl-N-acetylmuramoyl-L-alanyl-D-glutamyl-6-carboxy-L-lysyl-D-alanine
 90763	N-acetyl-D-glucosaminyl-N-acetylmuramoyl-L-alanyl-D-glutamyl-6-carboxy-L-lysyl
 90768	octanoyl-3-O-[alpha-D-galactosyl-(1->6)-beta-D-galactosyl]-sn-glycerol
@@ -19706,10 +19778,10 @@ COMPOUND_ID	NAME
 90849	geranylgeranyl-bacteriochlorophyllide a
 90850	(13S)-hydroxy-(9Z,11E)-octadecadienoate
 90857	bacteriochlorophyllide g
-90858	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1<->1')-N-acylsphing-4-enine
-90859	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1<->1')-ceramide
+90858	N-acetyl-alpha-neuraminosyl-(2->8)-N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1<->1')-N-acylsphing-4-enine
+90859	N-acetyl-alpha-neuraminosyl-(2->8)-N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1<->1')-ceramide
 90860	4-hydroxy-L-proline residue
-90862	alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminyl-(1->4)-[alpha-N-acetylneuraminosyl-(2->8)-alpha-N-acetylneuraminosyl-(2->3)]-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1')-ceramide
+90862	ganglioside GQ1b
 90866	14-hydroxy-(4Z,7Z,10Z,12E,16Z,19Z)-docosahexaenoate
 90867	14-oxo-(4Z,7Z,10Z,12E,16Z,19Z)-docosahexaenoate
 90868	validamycin B
@@ -19740,7 +19812,7 @@ COMPOUND_ID	NAME
 90910	deoxyviolaceinate
 90940	N-acetyl-L-phosphinothricin
 90944	dTDP-4-dehydro-2,3,6-trideoxy-alpha-D-hexopyranose
-90945	dTDP-4-amino-2,3,4,6-tetradeoxy-alpha-D-hexopyranose
+90945	dTDP-4-amino-2,3,4,6-tetradeoxy-alpha-D-erythro-hexopyranose
 90946	dTDP-4-(methylamino)-2,3,4,6-tetradeoxy-alpha-D-erythro-hexopyranose
 90947	dTDP-alpha-D-forosamine
 90955	a bacteriochlorophyllide d
@@ -19859,9 +19931,11 @@ COMPOUND_ID	NAME
 119712	1-(2-Ethoxy-ethyl)-2-(4-methyl-[1,4]diazepan-1-yl)-1H-benzoimidazole
 119915	N-(1-Phenethyl-piperidin-4-yl)-N-phenyl-propionamide
 120616	5-Oxo-icosa-6,8,11,14-tetraenoic acid
+121196	reumycin
 121741	copper sulphate(5.H2O)
 123115	5-(3,4-Dimethoxy-benzyl)-pyrimidine-2,4-diamine
 125204	4-Guanidino-benzoic acid
+125678	N-acetyl-dopamine
 126351	3-(2-Hydroxy-2,2-diphenyl-acetoxy)-1-methyl-1-azonia-bicyclo[2.2.2]octane
 126431	(1,8-Diethyl-1,3,4,9-tetrahydro-pyrano[3,4-b]indol-1-yl)-acetic acid
 127105	3,5-Dibromo-N-(4-bromo-phenyl)-2-hydroxy-benzamide
@@ -19890,9 +19964,9 @@ COMPOUND_ID	NAME
 131705	a 2'-deoxyribonucleoside 3'-phosphate
 131706	(2Z,4S,5R)-2-amino-4,5,6-trihydroxyhex-2-enoate
 131707	(4S,5R)-4,5,6-trihydroxy-2-iminohexanoate
-131708	N(omega)-(1-hydroxypropan-2-one)-L-arginine resdue
-131709	N(6)-(1-hydroxypropan-2-one)-L-lysine residue
-131710	S-(1-hydroxypropan-2-one)-L-cysteine residue
+131708	N(omega)-(1-hydroxy-2-oxopropyl)-L-arginine residue
+131709	N(6)-(1-hydroxy-2-oxopropyl)-L-lysine residue
+131710	S-(1-hydroxy-2-oxopropyl)-L-cysteine residue
 131711	(S)-demethyl-4-deoxygadusol
 131717	2-epi-valiolone
 131718	2-glutathionyl-2-methylbut-3-en-1-ol
@@ -20027,7 +20101,8 @@ COMPOUND_ID	NAME
 132151	3-(4-deoxy-beta-D-gluc-4-enuronosyl)-N-acetyl-D-glucosamine
 132153	hyaluronan
 132154	N-acetyl-beta-D-glucosaminyl-(1->4)-[hyaluronan]
-132174	beta-D-glucosyl-(1->4)-N-acetyl-alpha-D-glucosaminyl undecaprenyl diphosphate
+132173	all-trans-7,8-dihydroretinol
+132174	beta-D-glucosyl-(1->4)-N-acetyl-alpha-D-glucosaminyl di-trans,octa-cis-undecaprenyl diphosphate
 132200	(11S,15S)-dihydroxy-14(R)-S-glutathionyl-(5Z,8Z,12E)-eicosatrienoate
 132201	11(S)-hydroxy-14(S),15(S)-epoxy-(5Z,8Z,12E)-eicosatrienoate
 132210	N-acetyl-beta-D-mannosaminyl-(1->4)-N-acetyl-alpha-D-glucosaminyl di-trans,octa-cis-undecaprenyl diphosphate
@@ -20088,7 +20163,7 @@ COMPOUND_ID	NAME
 133043	N-terminal L-leucyl-L-lysine residue
 133044	N-terminal L-leucyl-L-arginine residue
 133045	N-terminal L-methionyl-L-aspartate residue
-133050	N-terminal N-myristoylglycine residue
+133050	N-terminal N-tetradecanoylglycyl residue
 133063	N-terminal N(alpha)-acetyl-L-methionyl-L-aspartate residue
 133084	prostaglandin G1
 133105	(3beta,5alpha,17beta)-3-hydroxy-androstan-17-yl sulfate
@@ -20180,11 +20255,11 @@ COMPOUND_ID	NAME
 133490	a saturated fatty acyl-AMP
 133491	alpha-D-Gal-(1->3)-alpha-D-GlcNAc-diphospho-di-trans,octa-cis-undecaprenol
 133492	a polyunsaturated dicarboxylic fatty acid
-133493	an omega-(methylthio)-2-oxoalkanoate
-133494	a 2-(omega-methylthio)alkylmalate
-133496	a 3-(omega-methylthio)alkylmalate
+133493	an omega-(methylsulfanyl)-2-oxoalkanoate
+133494	a 2-omega-(methylsulfanyl)alkylmalate
+133496	a 3-(omega-methylsulfanyl)alkylmalate
 133497	3-(2-methylsulfanyl)ethylmalate
-133498	a 2-(omega-methylthio)alkylmaleate
+133498	a 2-(omega-methylsulfanyl)alkylmaleate
 133499	2-(2-methylsulfanyl)ethylmaleate
 133500	2-(2-methylsulfanyl)propylmaleate
 133501	3-(3-methylsulfanyl)propylmalate
@@ -20353,7 +20428,7 @@ COMPOUND_ID	NAME
 134326	2-methyl-1-(2,4,6-trihydroxyphenyl)butan-1-one
 134340	4-prenylphlormethylbutanophenone
 134341	4-prenylphlorisovalerophenone
-134342	4-prenylphlorisobutyrophenone
+134342	4-prenylphlorisobutanophenone
 134343	lupulone
 134344	ergothioneine
 134345	deoxyhumulone
@@ -20376,6 +20451,7 @@ COMPOUND_ID	NAME
 134390	beta-D-Delta(4)-GlcpA-(1->4)-beta-D-Glcp-(1->4)-alpha-L-Rhap-(1->3)-D-Glcp
 134391	3,4,6-trichlorocatechol
 134398	D-proline betaine
+134408	N-acetylcadaverine
 134413	10-formyl-tetrahydrofolyl-(Glu)n
 134414	2-hydroxy-hexacosanoyl-CoA
 134464	[(2->6)-beta-D-fructofuranosyl-]n alpha-D-glucopyranoside
@@ -20431,7 +20507,7 @@ COMPOUND_ID	NAME
 136057	18S-resolvin E1
 136061	an (E)-1-(glutathione-S-yl)-omega-(methylsulfanyl)alkylhydroximate
 136065	1-aci-nitro-omega-(methylthio)alkane
-136067	3-aci-nitropropanoate
+136067	propionate 3-nitronate
 136097	poly[(1->4)-N-acetyl-beta-D-glucosamyl]-(1->4)-N-acetyl-2-deoxy-2-amino-D-glucono-1,5-lactone
 136107	8,9-epoxy-(5Z,11Z,14Z)-eicosatrienoyl-CoA
 136115	11,12-epoxy-(5Z,8Z,14Z)-eicosatrienoyl-CoA
@@ -20458,27 +20534,25 @@ COMPOUND_ID	NAME
 136373	9-octadecanoyloxy-octadecanoate
 136389	5-(9Z-octadecenoyloxy)-octadecanoate
 136398	an N-acetyl-alpha-neuraminyl-(2->6)-beta-D-galactosyl derivative
-136399	N-acetyl-alpha-neuraminyl-(2->8)-N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl group
-136402	N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl group
 136407	5-HETE-CoA
 136408	12-hydroxy-(5Z,8Z,10E,14Z)-eicosatetraenoyl-CoA
 136409	15-hydroxy-(5Z,8Z,11Z,13E)-eicosatetraenoyl-CoA
 136410	(19R,20S)-epoxy-(4Z,7Z,10Z,13Z,16Z)-docosapentaenoate
 136411	(19S,20R)-epoxy-(4Z,7Z,10Z,13Z,16Z)-docosapentaenoate
-136412	5'-phosphate 2'-deoxynucleotide residue
+136412	5'-phosphate 2'-deoxynucleoside residue
 136413	adenosine-5'-diphospho-5'-(2'-deoxyribonucleotide) residue
 136414	adenosine-5'-diphospho-5'-ribonucleotide-(2'-deoxyribonucleotide) residue
 136415	5'-phosphate ribonucleotide-(2'-deoxyribonucleotide) residue
-136416	5'-end 5'-dephospho-2'-deoxyribonucleotide
+136416	5'-end 2'-deoxyribonucleoside
 136418	guanosine-5'-diphospho-5'-(2'-deoxyribonucleotide) residue
 136419	3'-end 2'-deoxyribonucleotide-3'-diphospho-5'-guanosine residue
 136420	3'-end 5'-phosphate-ribonucleotide residue
 136422	(Z)-desulfoglucotropeolin
-136424	an (E)-omega-(methylsulfany)alkyl-thiohydroximate
+136424	an (E)-omega-(methylsulfanyl)alkyl-thiohydroximate
 136425	an aliphatic desulfo-glucosinolate
 136432	(E)-2-(1H-indol-3-yl)-1-thioacetohydroximate
-136434	an omega-(methylsulfany)-N-sulfo-alkylhydroximate S-glucoside
-136435	an omega-(methylsulfany)-alkyl-glucosinolate
+136434	an omega-(methylsulfanyl)-N-sulfo-alkylhydroximate S-glucoside
+136435	an omega-(methylsulfinyl)-alkyl-glucosinolate
 136436	(2-hydroxy-1H-indol-3-yl)acetate
 136439	8,9-epoxy-(5Z,11Z,14Z,17Z)-eicosatetraenoate
 136441	11,12-epoxy-(5Z,8Z,14Z,17Z)-eicosatetraenoate
@@ -20531,7 +20605,7 @@ COMPOUND_ID	NAME
 136567	(24S)-hydroxycholesterol 3-sulfate
 136568	(24S)-hydroxycholesterol 3,24-disulfate
 136570	(6R)-5,6,7,8-tetrahydrobiopterin
-136571	4a-hydroxy-L-erythro-5,6,7,8-tetrahydrobiopterin
+136571	(4aS,6R)-4a-hydroxy-L-erythro-5,6,7,8-tetrahydrobiopterin
 136572	(6R)-5,10-methylenetetrahydrofolyl-(gamma-L-Glu)n
 136577	11-oxo-(5Z,8Z,12E,14Z)-eicosatetraenoyl-CoA
 136578	15-oxo-(5Z,8Z,11Z,13E)-eicosatetraenoyl-CoA
@@ -20567,10 +20641,10 @@ COMPOUND_ID	NAME
 136669	2-dehydro-L-erythronate
 136670	3-dehydro-L-erythronate
 136673	epitestosterone 17-O-(beta-D-glucuronate)
-136698	3-oxo-chenodeoxycholoyl-CoA
-136700	3-oxo-choloyl-CoA
-136701	3-oxo-deoxycholoyl-CoA
-136703	3-oxo-lithocholoyl-CoA
+136698	7alpha-hydroxy-3-oxochol-24-oyl-CoA
+136700	7alpha,12alpha-dihydroxy-3-oxochol-24-oyl-CoA
+136701	12alpha-hydroxy-3-oxocholan-24-oyl-CoA
+136703	3-oxocholan-24-oyl-CoA
 136704	N-propanoyl-L-methioninate
 136707	N-acetyl-beta-D-galactosaminyl-(1->3)-N-acetyl-beta-D-glucosaminyl-(1->4)-alpha-D-mannosyl-L-serine residue
 136708	N-acetyl-beta-D-galactosaminyl-(1->3)-N-acetyl-beta-D-glucosaminyl-(1->4)-6-O-phosphonato-alpha-D-mannosyl-L-serine residue
@@ -20604,6 +20678,8 @@ COMPOUND_ID	NAME
 136811	a 12-sulfojasmonate
 136812	an 11-hydroxyjasmonate
 136813	an 11-sulfojasmonate
+136820	RNA polyanion 2',3'-cyclic phosphate
+136821	RNA polyanion nucleotide 2'-phosphate
 136822	cyclobis-(1->3)-alpha-isomaltosyl
 136823	alpha-isomaltosyl-(1->3)-isomaltose
 136825	an S-[(1E)-1-(hydroxyimino)-omega-(methylsulfanyl)alkyl]-L-cysteinylglycine
@@ -20620,6 +20696,7 @@ COMPOUND_ID	NAME
 136844	3-oxo-Delta5-steroid group
 136845	a 3beta-hydroxy-Delta(5)-steroid
 136849	a 3-oxo-Delta4-steroid group
+136854	a 3-hydroxyacyl group of bacterial toxin
 136856	O-succinyl-L-serine
 136857	an N-acetyl-beta-D-glucosaminyl-(1->4)-N-acetyl-beta-D-glucosaminyl derivative
 136873	an oligoglycosyl-(1->4)-beta-D-glucose
@@ -20628,7 +20705,7 @@ COMPOUND_ID	NAME
 136877	5-(hydroxy)uridine 5'-phosphate residue
 136878	O-(S-[C2-C8-saturated long-chain fatty acyl]pantetheine-4'-phosphoryl)-L-serine residue
 136879	5-(carboxymethoxy)uridine 5'-phosphate residue
-136880	alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-beta-N-acetyl-D-glucosaminyl-group
+136880	N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-beta-N-acetyl-D-glucosaminyl-group
 136881	3-carboxy-3-hydroxypropanoyl-CoA
 136882	16alpha,17alpha-estriol 3-O-(beta-D-glucuronate)
 136883	16alpha,17alpha-estriol 17-O-(beta-D-glucuronate)
@@ -20651,7 +20728,7 @@ COMPOUND_ID	NAME
 136904	hyocholoyl-24-O-(beta-D-glucuronate)
 136905	hyodeoxycholate 6-O-(beta-D-glucuronate)
 136906	hyocholate 6-O-(beta-D-glucuronate)
-136907	An O-(S-[(7S)-hydroxy-C2-C8-saturated long-chain fatty acyl]pantetheine-4'-phosphoryl)-L-serine residue
+136907	an O-(S-[(7S)-hydroxy-C2-C8-saturated long-chain fatty acyl]pantetheine-4'-phosphoryl)-L-serine residue
 136908	a (7R,8R)-7,8-dihydroxy-C2-C8-saturated long-chain fatty acyl pantetheine-4-phosphorylserine residue
 136910	O-(S-7-oxoheptanoylpantetheine-4'-phosphoryl)serine residue
 136911	N-(4-aminobutylidene)-L-lysine residue
@@ -20663,6 +20740,7 @@ COMPOUND_ID	NAME
 136933	17beta-estradiol 2-O-(beta-D-glucuronate)
 136936	4-hydroxy-17beta-estradiol 3-O-(beta-D-glucuronate)
 136937	17beta-estradiol 4-O-(beta-D-glucuronate)
+136949	4-O-(beta-D-glucosyl)-4-trans-coniferyl aldehyde
 136960	di-trans,poly-cis-polyprenyl diphosphate
 136961	peptidylamidoglycolate
 136962	peptidylamide
@@ -20695,7 +20773,6 @@ COMPOUND_ID	NAME
 137000	C-terminal Xaa-Gly residue
 137001	C-terminal alpha-amino-acid amide residue
 137003	C-terminal Xaa-hydroxyglycino residue
-137008	1-O-(alk-1Z-enyl)-sn-glycero-3-phospho-(N-acyl)-ethanolamine
 137009	1-O-(1Z-octadecenyl)-sn-glycero-3-phospho-(N-hexadecanoyl)-ethanolamine
 137010	1-(1Z-octadecenyl)-sn-glycero-3-phospho-(N-9Z-octadecenoyl)-ethanolamine
 137015	3-dehydro-scyllo-inosose
@@ -20718,8 +20795,8 @@ COMPOUND_ID	NAME
 137108	5-dehydro-L-gluconate
 137110	17beta-hydroxy-3-oxo-19-nor-5alpha-androst-1-ene
 137116	N-carbamoyl-L-methionine
-137117	L-5-(2-methylthioethyl)hydantoin
-137150	D-5-(2-methylthioethyl)hydantoin
+137117	L-5-[2-(methysulfanyl)ethyl]hydantoin
+137150	D-5-[2-(methylsulfanyl)ethyl]hydantoin
 137152	N-carbamoyl-D-methionine
 137165	(3S)-6-acetamido-3-aminohexanoate
 137166	16(R)-hydroxy-(5Z,8Z,11Z,14Z)-eicosatetraenoate
@@ -20742,7 +20819,7 @@ COMPOUND_ID	NAME
 137326	13,14,15-trihydroxyeicosa-(5Z,8Z,11Z)-trienoate
 137327	11,14,15-trihydroxyeicosa-(5Z,8Z,12E)-trienoate
 137341	11,12,15-trihydroxyeicosa-(5Z,8Z,13E)-trienoate
-137353	pyridinium-3,5-biscarboxylate mononucleotide
+137353	pyridinium-3,5-dicarboxylate mononucleotide
 137355	5-carboxy-1-(5-O-phospho-beta-D-ribofuranosyl)pyridinium-3-carbonyl adenylate
 137356	S-[5-carboxy-1-(5-O-phospho-beta-D-ribofuranosyl)pyridinium-3-carbonyl]-L-cysteine residue
 137357	S-[1-(5-O-phospho-beta-D-ribofuranosyl)-5-(sulfanylcarbonyl)pyridinium-3-carbonyl]-L-cysteine residue
@@ -20768,6 +20845,7 @@ COMPOUND_ID	NAME
 137412	cholesteryl (11Z,14Z,17Z)-eicosatrienoate
 137419	a secondary amine
 137429	N-(9Z-octadecenoyl)-1,2-diacyl-sn-glycero-3-phosphoethanolamine
+137430	an L-dipeptide
 137434	(9Z)-heptadecenoate
 137442	(13R,14S)-dihydroxy-(4Z,7Z,9E,11E,16Z,19Z)-docosahexaenoate
 137444	(7R,14S)-dihydroxy-(4Z,8E,10E,12Z,16Z,19Z)-docosahexaenoate
@@ -20805,7 +20883,7 @@ COMPOUND_ID	NAME
 137546	(5S)-hydroxy-(15S)-hydroperoxy-(6E,8Z,11Z,13E)-eicosatetraenoate
 137547	(5S,6R)-dihydroxy-(15S)-hydroperoxy-(7E,9E,11Z,13E)-eicosatetraenoate
 137548	hydroperoxy-hydroxy-eicosatetraenoate
-137549	pyridinestrone acid
+137549	pyridinestrone carboxylate
 137559	(5S,6S)-dihydroxy-(7E,9E,11Z,14Z)-eicosatetraenoate
 137562	(+)-eremophilene
 137563	(1R,4R,5S)-(-)-guaia-6,10(14)-diene
@@ -20855,7 +20933,7 @@ COMPOUND_ID	NAME
 137934	polyprenal
 137935	an S-prenyl-L-cysteine
 137941	a beta-D-galactosyl-(1->4)-[alpha-L-fucosyl-(1->3)]-N-acetyl-beta-D-glucosaminyl derivative
-137942	an alpha-N-acetylneuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[alpha-N-acetylneuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl derivative
+137942	an N-acetyl-alpha-neuraminosyl-(2->3)-beta-D-galactosyl-(1->3)-[N-acetyl-alpha-neuraminosyl-(2->6)]-N-acetyl-beta-D-galactosaminyl derivative
 137943	S-hydroxy-S-oxo-L-cysteine residue
 137949	O(3)-(beta-D-galactosyl-(1->3)-N-acetyl-alpha-D-galactosaminyl)-L-serine residue
 137950	O(3)-(beta-D-galactosyl-(1->3)-N-acetyl-alpha-D-galactosaminyl)-L-threonine residue
@@ -20889,6 +20967,7 @@ COMPOUND_ID	NAME
 138009	6-(N-acetyl-alpha-D-glucosaminyl-1-phospho)-alpha-D-mannose derivative
 138010	6-phospho-alpha-D-mannose derivative
 138011	6-(alpha-D-glucose-1-phospho)-alpha-D-mannose derivative
+138012	alpha-D-mannose derivative
 138019	N(6)-propanoyl-L-lysine residue
 138021	(3S)-3-hydroxy-L-histidine residue
 138024	an alpha-D-galactosyl-(1->3)-beta-D-galactosyl-(1->4)-N-acetyl-beta-D-glucosaminyl derivative
@@ -21080,7 +21159,7 @@ COMPOUND_ID	NAME
 138462	(3R)-1,2-didehydro-3-hydroxy-2,3-dihydrotabersonine
 138463	a 12-oxojasmonyl-L-alpha-amino acid
 138464	a 12-hydroxy-12-oxojasmonyl-L-alpha-amino acid
-138473	an ornithine lipid
+138473	an N(2)-[(3R)-3-(1,2-saturated-acyloxy)acyl]-L-ornithine lipid
 138478	an N-methylornithine lipid
 138480	an N,N-dimethylornithine lipid
 138481	an N,N,N-trimethylornithine lipid
@@ -21142,10 +21221,10 @@ COMPOUND_ID	NAME
 138723	1-(9Z-octadecenoyl)-2-(4Z,7Z,10Z,13Z,16Z,19Z-docosahexaenoyl)-sn-glycero-3-phosphate
 138724	all-trans-retinyl heptanoate
 138725	9-cis-retinyl hexadecanoate
-138726	3'-hydroflavonoid
-138730	a 3'-methoxyflavonoid
-138731	a 5'-hydroxy-3'-methoxyflavonoid
-138732	a 3',5'-dimethoxyflavonoid
+138726	a 3'-unsubstituted flavone
+138730	a 3'-methoxyflavone
+138731	a 5'-hydroxy-3'-methoxyflavone
+138732	a 3',5'-dimethoxyflavone
 138733	alpha-D-galactosyl di-trans,octa-cis-undecaprenyl diphosphate
 138734	1-O-(9Z-octadecenyl)-mono-(9Z-octadecenoyl)-glycerol
 138735	1-O-(9Z-octadecenyl)-2,3-di-(9Z-octadecenoyl)glycerol
@@ -21181,7 +21260,7 @@ COMPOUND_ID	NAME
 138968	ent-cassa-12,15-dien-2beta,3beta-ol
 138969	ent-cassa-12,15-dien-2-one
 138970	ent-3beta-hydroxycassa-12,15-dien-2-one
-138971	drimendiol
+138971	(5S,10S)-(9R)-7-drimene-11,12-diol
 138972	11-hydroxycucurbitadienol
 138973	11-oxocucurbitadienol
 138974	mogrol
@@ -21214,7 +21293,7 @@ COMPOUND_ID	NAME
 139093	an inositol phosphomannosylinositol-1-phospho-N-acyleicosasphinganine
 139095	a 2'-deoxyribose 5'-monophosphate in DNA
 139096	a 1-methyldeoxyadenosine  5'-monophosphate in DNA
-139097	a 7-methyldeoxyguanosine 5'-monophosphate in DNA
+139097	N(7)-methyl-dGMP residue
 139104	(3R)-3-[(3R)-3-hydroxydecanoyloxy]decanoate
 139126	C-terminal S-carboxamide-L-cysteinyl residue
 139127	S-cyanate-L-cysteinyl residue
@@ -21237,10 +21316,10 @@ COMPOUND_ID	NAME
 139162	oleuropein aglycone
 139164	2-{[(4-methoxybenzyl)(methyl)amino]methyl}-2-methylpropane-1,3-diol
 139171	a 2-hydroxyornithine lipid
-139181	all-trans-retinoate 1-O-(beta-D-glucuronate)
+139181	all-trans-retinoyl-1-O-(beta-D-glucuronate)
 139182	4-hydroxy-4-O-(beta-D-glucuronide)-all-trans-retinoate
 139183	all-trans-5,6-epoxyretinoate
-139184	all-trans-5,6-epoxyretinoate 1-O-(beta-D-glucuronate)
+139184	all-trans-5,6-epoxyretinoyl-1-O-(beta-D-glucuronate)
 139185	all-trans-4-oxoretinoate 1-O-(beta-D-glucuronate)
 139186	retinoid glucuronate
 139187	2-hydroxy fatty acid 14:0
@@ -21288,8 +21367,8 @@ COMPOUND_ID	NAME
 139289	[(2->6)-alpha-D-glucosyl-(1->4)-N,O(9)-diacetyl-alpha-D-neuraminosyl]n
 139291	a chlorophyll
 139292	a chlorophyllide
-139319	a S-disulfanyl-L-cysteine residue
-139321	a S-sulfosulfanyl-L-cysteine residue
+139319	an S-disulfanyl-L-cysteine residue
+139321	an S-sulfosulfanyl-L-cysteine residue
 139323	coelenterazine-2-hydroperoxide
 139324	coelenterazine dioxetanone
 139332	5-chloro-L-tryptophan
@@ -21297,6 +21376,7 @@ COMPOUND_ID	NAME
 139336	6,7-dichloro-L-tryptophan
 139337	(4Z,8Z)-4,8-dimethyl-12-oxotrideca-4,8-dienal
 139346	all-trans-4-hydroxyretinal
+139371	an aryl sulfate
 139480	(+)-O-methylkolavelool
 139493	N(4)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->6)]-alpha-D-Man-(1->6)]-beta-D-Man-(1->4)-beta-D-GlcNAc-(1->4)-beta-D-GlcNAc]-L-Asn residue
 139497	N(4)-(alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->2)-alpha-D-Man-(1->3)-[alpha-D-Man-(1->6)]-alpha-D-Man-(1->6)]-beta-D-Man-(1->4)-beta-D-GlcNAc-(1->4)-beta-D-GlcNAc)-L-Asn residue
@@ -21315,8 +21395,8 @@ COMPOUND_ID	NAME
 139517	[(1->4)-beta-D-glucosyl](n)-(1<->1)-ceramide
 139518	(5R)-5,6-dihydro-5-(thymidin-7-yl)thymidine dimer residue
 139519	thymidine dimer residue
-139559	12-hydroxy-(9Z)-octadecenoyl-CoA
-139560	2-[(12)-hydroxy-oleoyl]-sn-glycero-3-phosphocholine
+139559	(12R)-hydroxy-(9Z)-octadecenoyl-CoA
+139560	2-(12-hydroxy-9Z-octadecenoyl)-sn-glycero-3-phosphocholine
 139561	an archaeal dolichyl beta-D-glucosyl phosphate
 139562	an archaeal dolichyl beta-D-glucuronosyl-(1->3)-beta-D-glucosyl phosphate
 139563	octadecatrienoyl-CoA
@@ -21352,21 +21432,161 @@ COMPOUND_ID	NAME
 140181	a (3R,4R)-4,2'-dihydroxyisoflavan
 140182	hydroxyalbendazole
 140183	a (3R)-2'-hydroxyisoflavanone
-140184	hydroxyfenbendazole
+140184	4'-hydroxyfenbendazole
 140185	O-hexadecanoyl-L-serine residue
 140188	ent-isokauren-2beta-ol
 140189	omega-hydroxy-beta-dihydromenaquinone-9
 140195	21-phosphorifampicin
 140203	3-bromo-4-hydroxybenzoate
 140211	3-bromo-4,5-dihydroxybenzoate
-140214	3,5-dibromocatechol
-140219	O-[S-(4,5-dichromopyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
-140221	O-[S-(5-chromopyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
+140214	3,5-dibromobenzene-1,2-diol
+140219	O-[S-(4,5-dichloropyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
+140221	O-[S-(5-chloropyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
 140229	O-[S-(3,4,5-trichromopyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
 140232	sordaricin
 140233	4'-O-demethylsordarin
+140275	ent-isokaurene-2beta,3beta-diol
+140277	a 5-hydroxy anthocyanidin
+140278	an anthocyanin 5-O-beta-D-glucoside
+140284	a deoxyribonucleotide residue
+140286	a methylphosphotriester deoxyribonucleoside residue
+140294	5'-triphosphoadenylyl-(2'->5')-adenosine
+140301	a 7-hydroxyisoflavone 7-O-beta-D-glucoside
+140302	a beta-D-galactosyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosaminyl derivative
+140303	a beta-D-galactosyl-(1->4)-beta-D-glucosyl derivative
+140304	a beta-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->4)]-N-acetyl-beta-D-glucosaminyl derivative
+140305	genistein 7-O-beta-D-glucoside
+140306	2'-hydroxygenistein
+140308	an N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl derivative
+140309	an N-acetyl-alpha-neuraminyl-(2->8)-N-acetyl-alpha-neuraminyl-(2->3)-beta-D-galactosyl derivative
+140310	a phenyl acetate
+140311	FMNH(.)
+140312	[beta-GlcNAc-(1->4)-Mur2Ac(oyl-L-Ala-gamma-D-Glu-N-(beta-D-Asp)-L-Lys-D-Ala-D-Ala)]n
+140317	a phenyl sulfate
+140327	an alpha-L-fucosyl-(1->2)-beta-D-galactosyl derivative
+140328	an alpha-D-galactosyl-(1->3)-[alpha-L-fucosyl-(1->2)]-beta-D-galactosyl derivative
+140329	13-deoxycarminomycin
+140330	13-dihydrocarminomycin
+140331	a 4'-hydroxyflavanone
+140332	a 4'-methoxyflavanone
+140335	glucuronoxylan D-glucuronate
+140336	glucuronoxylan 4-O-methyl-D-glucuronate
+140347	a substituted beta-amino acid
+140351	a 3'-methoxyflavanone
+140356	a 7-methoxyisoflavone
+140357	N(4)-[alpha-D-mannosyl-(1->2)-alpha-D-mannosyl-glycan]-L-asparagine residue
+140358	a monosaccharide 1-phosphate
+140359	a UDP-monosaccharide
+140369	N(4)-[6-(N-acetyl-alpha-D-glucosaminyl-1-phospho)-alpha-D-mannosyl-(1->2)-alpha-D-mannosyl-glycan]-L-asparagine residue
+140371	N(4)-[6-phospho-alpha-D-mannosyl-(1->2)-alpha-D-mannosyl-glycan]-L-asparagine residue
+140372	3,5-bis(diphospho)-1D-myo-inositol 1,2,4,6-tetrakisphosphate
+140374	3-diphospho-1D-myo-inositol 1,2,4,5,6-pentakisphosphate
+140377	a (2S)-flavan-4-one
+140383	(3R)-hydroxybutanoate pentamer
+140384	(3R)-hydroxybutanoate tetramer
+140385	(3R)-hydroxybutanoate trimer
+140395	(nucleoside 5'-monophosphate)n
+140403	N-acyl-1-O-(1Z-alkenyl)-sn-glycero-3-phosphoethanolamine
+140404	N-acyl-1-O-alkyl-sn-glycero-3-phosphoethanolamine
+140426	2,4,6-trichlorophenol
+140432	(9Z-hexadecenoyl)-sn-glycero-3-phosphocholine
+140433	GDP-6-deoxy-alpha-D-altrose
+140434	3-[(Z)-2-isocyanoethenyl]-1H-indole
+140439	3-geranyl-3-[(Z)-2-isocyanoethenyl]-1H-indole
+140440	hapalindole H
+140441	12-epi-hapalindole U
+140442	12-epi-fischerindole U
+140444	(9Z,12Z-octadecadienoyl)-sn-glycero-3-phosphocholine
+140445	(9Z,12Z,15Z-octadecatrienoyl)-sn-glycero-3-phosphocholine
+140446	(12R-hydroxy-9Z-octadecenoyl)-sn-glycero-3-phosphocholine
+140451	N-acyl-1-O-(1Z-alkenyl)-2-acyl-sn-glycero-3-phosphoethanolamine
+140452	1-O-(1Z-octadecenoyl)-2-(9Z-octadecenoyl)-sn-glycero-3-phosphate
+140454	O-[S-(5-bromopyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
+140455	O-[S-(4,5-dibromopyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
+140456	O-[S-(3,4,5-tribromopyrrole-2-carbonyl)pantetheine-4'-phosphoryl]serine residue
+140466	hederagenin
+140467	gypsogenin
+140468	gypsogenate
+140471	1,2,3-tri-(12R-hydroxy-9Z-octadecenoyl)-glycerol
+140509	6-chloro-D-tryptophan
+140526	1,2-dihexanoyl-sn-glycerol
+140533	3-acetylamino-4-hydroxybenzoate
 140536	Sodium; [2-amino-3-(4-bromo-benzoyl)-phenyl]-acetate
+140564	delta-cadinene
+140596	a monosubstituted aliphatic (S)-hydroxynitrile
+140597	a disubstituted aliphatic (S)-hydroxynitrile
+140758	N-carbamoyl-D-phenylglycine
+140858	N-terminal N(alpha)-acetyl-L-isoleucine residue
+140859	N-terminal N(alpha)-acetyl-L-proline residue
+140860	N-terminal N(alpha)-acetyl-L-tyrosine residue
+140992	an omega-hydroxy-long-chain fatty acid
+140994	4-nitrophenyl sulfate
+141002	12-epi-fischerindole G
+141003	(+)-piperitol
+141004	alpha-D-galacturonosyl-(1->4)-D-galacturonate
+141005	(6S)-5,6,7,8-tetrahydrofolyl-(gamma-L-Glu)n
+141018	4-chloro-L-threonine residue
+141020	cyclooctat-9-ene-5,7-diol
+141023	2,3,6-trichlorohydroquinone
+141024	2,6-dichlorohydroquinone
+141047	(2Z,4E)-4-amino-6-oxohepta-2,4-dienedioate
+141048	nocamycin E
+141049	nocamycin I
+141057	validoxylamine B
 141059	(S)-2,5,5-Trimethyl-thiazolidine-4-carboxylic acid
+141108	(S)-1-phenylethylamine
+141109	(S)-N-acetyl-1-phenylethylamine
+141111	(R)-N-acetyl-1-phenylethylamine
+141112	(R)-1-phenylethylamine
+141113	globoside GalGb4Cer V3-sulfate
+141127	(2S,3R)-3-geranyl-2,3-dihydro-2,N(alpha)-cyclo-L-tryptophan residue
+141184	2-(methylthio)acetaldehyde
+141402	2,2',3-trihydroxy-3'-methoxy-5,5'-dicarboxybiphenyl
+141434	an acyl-3-O-(beta-D-galactosyl)-sn-glycerol
+141453	2-thiocytidine 5'-monophosphate residue
+141467	S-methyl glutathione
+141612	(2R)-(2-amino-1-hydroxyethyl)phosphonate
+141613	hapalindole U
+141614	hapalindole G
+141633	(S)-1-hydroxy-N-methylcanadine
+141639	(13S,14R)-1,13-dihydroxy-N-methylcanadine
+141640	(13S,14R)-1-hydroxy-13-O-acetyl-N-methylcanadine
+141667	narcotine hemiacetal
+141668	L-tyrosinal
+141700	3-methoxycatechol
+141701	guaethol
+141702	2-methylanisole
+141821	15,16-epoxydolabrene
+141822	dolabradiene
+141852	zealexin A1
+141988	7-deoxyloganetic alcohol
+141989	7-deoxyloganetic aldehyde
+141992	a 2-hydroxyflavanone
+141994	(2S)-2-hydroxynaringenin
+141995	(2S)-2hydroxyeriodictyol
+141996	(2S)-2-hydroxypinocembrin
+142043	alpha-nootkatol
+142050	compactin carboxylate
+142060	equisetin
+142061	trichosetin
+142082	2beta-hydroxy-5-epi-aristolochene
+142083	4-epi-eremophilene
+142084	4-epi-eremophilene-2beta-ol
+142126	4-O-(beta-D-glucosyl)-4-trans-sinapyl aldehyde
+142198	a purine 2'-deoxyribonucleoside 5'-phosphate
+142209	a pyrimidine 2'-deoxyribonucleoside 5'-phosphate
+142217	beta-D-galacturonosyl di-trans,nona-cis-dodecaprenyl phosphate
+142280	3-methyl-4-nitrocatechol
+142281	2-chloro-6-nitrotoluene
+142282	4-chloro-3-methylcatechol
+142283	2-chloro-4-nitrotoluene
+142284	3-chloro-4-methylcatechol
+142285	3,4-dinitrotoluene
+142286	4-methyl-6-nitrocatechol
+142287	2,3-dinitrotoluene
+142288	4-methyl-3-nitrocatechol
+142345	di-trans,nona-cis-dodecaprenyl phosphate
+142355	a purine D-ribonucleoside
 142402	4-Fluoro-phenylamine
 143261	(Z)-7-((R)-2-Amino-2-carboxy-ethylsulfanyl)-2-[((S)-2,2-dimethyl-cyclopropanecarbonyl)-amino]-hept-2-enoic acid
 143354	3-[4-(2-Hydroxy-3-isopropylamino-propoxy)-phenyl]-propionic acid methyl ester
@@ -21393,8 +21613,8 @@ COMPOUND_ID	NAME
 181858	(E)-phenylvinyl aldehyde
 184505	4-{2-[3-(4-Hydroxy-phenyl)-1-methyl-propylamino]-ethyl}-benzene-1,2-diol
 184624	(6R,7R)-7-{2-(2-Amino-thiazol-4-yl)-2-[(Z)-hydroxyimino]-acetylamino}-8-oxo-3-vinyl-5-thia-1-aza-bicyclo[4.2.0]oct-2-ene-2-carboxylic acid
-185566	L-tyrosine methyl ester
 185566	2-Amino-3-(4-hydroxy-phenyl)-propionic acid methyl ester
+185566	L-tyrosine methyl ester
 188648	3,5-Dichloro-N-(3,4-dichloro-phenyl)-2-hydroxy-benzamide
 189357	[2-(4-Amino-2-chloro-benzoyloxy)-ethyl]-diethyl-ammonium; chloride
 190253	3-Fluoro-phenylamine
@@ -21410,7 +21630,7 @@ COMPOUND_ID	NAME
 222169	(S)-Piperidine-3-carboxylic acid
 224366	tert-butylamine
 224366	tert-Butyl-ammonium
-225237	phenylethylamine
+225237	2-phenylethylamine
 225237	Phenethyl-ammonium
 225238	benzylamine
 231935	glycerol 1-phosphate
@@ -21461,12 +21681,12 @@ COMPOUND_ID	NAME
 341937	Dimethylallyl pyrophosphate
 348530	2-Mercapto-pyrimidin-4-ol
 350546	serotonin
-354984	candicidin
 354984	Candicidin
+354984	candicidin
 355221	Acetic acid 4-(2-hydroxy-3-isopropylamino-propoxy)-2,3,6-trimethyl-phenyl ester
 355508	1-[4-(4-Chloro-phenyl)-2-(2,6-dichloro-phenylsulfanyl)-butyl]-1H-imidazole
-356010	5-aminopentanoate
 356010	5-ammoniopentanoate
+356010	5-aminopentanoate
 356416	5-aminolevulinate
 356416	5-ammonio-4-oxopentanoate
 356445	glycylglycine
@@ -21513,8 +21733,8 @@ COMPOUND_ID	NAME
 480431	chlorphenesin
 481318	neamine
 486417	(2S,3R)-S-2-acetamidoethyl 3-hydroxy-2-methylpentanethioate
-487869	clavulanate
 487869	(2R,5R,Z)-3-(2-hydroxyethylidene)-7-oxo-4-oxa-1-aza-bicyclo[3.2.0]heptane-2-carboxylate
+487869	clavulanate
 490095	esculetin
 490877	9-((2R,5S)-5-Hydroxymethyl-tetrahydro-furan-2-yl)-1,9-dihydro-purin-6-one
 494229	4-hydroxy-3-(1-phenylpropyl)-2H-chromen-2-one
@@ -21540,10 +21760,10 @@ COMPOUND_ID	NAME
 528967	N-((2S,3S,4R)-3,4-dihydroxy-1-((2S,3R,4S,5R,6R)-3,4,5-trihydroxy-6-(hydroxymethyl)-tetrahydro-2H-pyran-2-yloxy)octadecan-2-yl)-6-phenylhexanamide
 529204	riboflavin
 530615	cidofovir
-533015	(S)-2-Amino-3-[4-(4-hydroxy-3-iodo-phenoxy)-3,5-diiodo-phenyl]-propionic acid
 533015	3,3',5-triiodo-L-thyronine
-537519	aspartate semi-aldehyde
+533015	(S)-2-Amino-3-[4-(4-hydroxy-3-iodo-phenoxy)-3,5-diiodo-phenyl]-propionic acid
 537519	L-aspartate 4-semialdehyde
+537519	aspartate semi-aldehyde
 541975	3beta-hydroxy-5alpha-androstan-17-one
 543841	dihydrocubebin
 545432	lupanine
