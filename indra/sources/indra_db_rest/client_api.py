@@ -449,7 +449,7 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
                     best_first=True, tries=2, div='/'):
     """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
-    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
     url_path = join(url, end_point)
     if query_str:
         query_str += '&api-key=%s' % api_key
