@@ -697,11 +697,11 @@ class UniprotMapper(object):
 um = UniprotMapper()
 
 
-def _build_uniprot_entries():
+def _build_uniprot_entries(from_pickle=True):
     # Try the pickle file first if it exists (not in version control)
     up_entries_pkl = os.path.dirname(os.path.abspath(__file__)) + \
         '/../resources/uniprot_entries.pkl'
-    if os.path.exists(up_entries_pkl):
+    if from_pickle and os.path.exists(up_entries_pkl):
         import pickle
         with open(up_entries_pkl, 'rb') as fh:
             entries = pickle.load(fh)

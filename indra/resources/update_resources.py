@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import gzip
+import pickle
 import pandas
 import rdflib
 from indra.util import read_unicode_csv, write_unicode_csv
@@ -105,7 +106,7 @@ def update_uniprot_entries():
     with open(fname, 'wb') as fh:
         fh.write(full_table.encode('utf-8'))
     # Make pickle too
-    entries = uniprot_client._build_uniprot_entries()
+    entries = uniprot_client._build_uniprot_entries(from_pickle=False)
     fname = os.path.join(path, 'uniprot_entries.pkl')
     with open(fname, 'wb') as fh:
         pickle.dump(entries, fh, protocol=2)
