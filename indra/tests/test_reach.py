@@ -358,3 +358,53 @@ def test_get_db_refs_up_non_human():
     name, db_refs = ReachProcessor._get_db_refs(entity_term)
     assert name == 'MYC', name
     assert db_refs == {'UP': 'Q9MZT7', 'TEXT': 'MYC'}, db_refs
+
+
+def test_get_agent_coordinates_phosphorylation():
+    test_case = ('This sentence is filler. '
+                 'Two filler sentences will work. '
+                 'MEK that is phosphorylated phosphorylates ERK.')
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+
+        coords = [{'start_pos': 0, 'end_pos': 3},
+                  {'start_pos': 42, 'end_pos': 45}]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_activation():
+    test_case = 'MEK1 activates ERK2'
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+
+        coords = [{'start_pos': 0, 'end_pos': 4},
+                  {'start_pos': 15, 'end_pos': 19}]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_regulate_amount():
+    test_case = 'ERK increases the transcription of DUSP'
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+
+        coords = [{'start_pos': 0, 'end_pos': 3},
+                  {'start_pos': 35, 'end_pos': 39}]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_binding():
+    test_case = 'Everyone has observed that MEK1 binds ERK2'
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+
+        coords = [{'start_pos': 27, 'end_pos': 31},
+                  {'start_pos': 38, 'end_pos': 42}]
+        assert annotations['agents']['coords'] == coords
