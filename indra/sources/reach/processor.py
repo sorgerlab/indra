@@ -114,7 +114,8 @@ class ReachProcessor(object):
                     theme = a['arg']
                 elif self._get_arg_type(a) == 'site':
                     site = a['text']
-            theme_agent = self._get_agent_from_entity(theme)
+            theme_agent, coords = self._get_agent_from_entity(theme)
+            annotations['agent_coordinates'].append(coords)
             if site is not None:
                 mods = self._parse_site_text(site)
             else:
@@ -136,9 +137,12 @@ class ReachProcessor(object):
                         if self._get_arg_type(a) == 'controller':
                             controller = a.get('arg')
                             if controller is not None:
-                                controller_agent = \
+                                controller_agent, coords = \
                                     self._get_agent_from_entity(controller)
+                                annotations['agent_coordinates'].append(coords)
                                 break
+                            else:
+                                annotations['agent_coordinates'].append(None)
                     # Check the polarity of the regulation and if negative,
                     # flip the modification type.
                     # For instance, negative-regulation of a phosphorylation
@@ -196,8 +200,10 @@ class ReachProcessor(object):
                     theme = a['arg']
                     break
             if theme is None:
+                annotations['agent_coordinates'].append(None)
                 continue
-            theme_agent = self._get_agent_from_entity(theme)
+            theme_agent, coords = self._get_agent_from_entity(theme)
+            annotations['agent_coordinates'].append(coords)
             qstr = "$.events.frames[(@.type is 'regulation') and " + \
                    "(@.arguments[0].arg is '%s')]" % frame_id
             reg_res = self.tree.execute(qstr)
@@ -205,8 +211,12 @@ class ReachProcessor(object):
                 controller_agent = None
                 for a in reg['arguments']:
                     if self._get_arg_type(a) == 'controller':
-                        controller_agent = self._get_controller_agent(a)
-
+                        controller_agent, coords = \
+                            self._get_controller_agent(a)
+                if controller_agent is None:
+                    annotations['agent_coordinates'].append(None)
+                else:
+                    annotations['agent_coordinates'].append(coords)
                 sentence = reg['verbose-text']
 
                 ev = Evidence(source_api='reach', text=sentence,
@@ -243,8 +253,9 @@ class ReachProcessor(object):
             sentence = r['verbose-text']
             members = []
             for a in args:
-                agent = self._get_agent_from_entity(a['arg'])
+                agent, coords = self._get_agent_from_entity(a['arg'])
                 members.append(agent)
+                annotations['agent_coordinates'].append(coords)
             ev = Evidence(source_api='reach', text=sentence,
                           annotations=annotations, pmid=self.citation,
                           context=context, epistemics=epistemics)
@@ -269,10 +280,12 @@ class ReachProcessor(object):
             args = r['arguments']
             for a in args:
                 if self._get_arg_type(a) == 'controller':
-                    controller_agent = self._get_controller_agent(a)
+                    controller_agent, coords = self._get_controller_agent(a)
+                    annotations['agent_coordinates'].append(coords)
                 if self._get_arg_type(a) == 'controlled':
                     controlled = a['arg']
-            controlled_agent = self._get_agent_from_entity(controlled)
+            controlled_agent, coords = self._get_agent_from_entity(controlled)
+            annotations['agent_coordinates'].append(coords)
             if r['subtype'] == 'positive-activation':
                 st = Activation(controller_agent, controlled_agent,
                                 evidence=ev)
@@ -301,9 +314,11 @@ class ReachProcessor(object):
             to_location = None
             for a in args:
                 if self._get_arg_type(a) == 'theme':
-                    agent = self._get_agent_from_entity(a['arg'])
+                    agent, coords = self._get_agent_from_entity(a['arg'])
                     if agent is None:
+                        annotations['agent_coordinates'].append(None)
                         continue
+                    annotations['agent_coordinates'].append(coords)
                 elif self._get_arg_type(a) == 'source':
                     from_location = self._get_location_by_id(a['arg'])
                 elif self._get_arg_type(a) == 'destination':
@@ -361,8 +376,42 @@ class ReachProcessor(object):
         mod_terms = entity_term.get('modifications')
         mods, muts = self._get_mods_and_muts_from_mod_terms(mod_terms)
 
+        # get sentence coordinates of the entity
+        coords = self._get_entity_coordinates(entity_term)
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
-        return agent
+        return agent, coords
+
+    def _get_entity_coordinates(self, entity_term):
+        """Given an entity term return the associated sentence coordinates.
+        Returns a dict of the form {'start_pos': int  'end_pos': int}.
+        If for any reason, sentence coordinates cannot be found, it returns
+        an empty dictionary.
+        """
+        # the following lines get the starting coordinate of the sentence
+        # containing the entity.
+        sent_id = entity_term.get('sentence')
+        if not(sent_id):
+            return {}
+        qstr = "$.entities.frames[(@.frame_id is \'%s')]" % sent_id
+        res = self.tree.execute(qstr)
+        if res is None:
+            return {}
+        try:
+            sentence = next(res)
+        except StopIteration:
+            return {}
+        sent_start = sentence.get('start_pos').get('offset')
+        if not sent_start:
+            return {}
+
+        coords = {}
+        entity_start = entity_term.get('start_pos').get('offset')
+        if entity_start:
+            coords['start_pos'] = entity_start - sent_start
+        entity_stop = entity_term.get('end_pos').get('offset')
+        if entity_stop:
+            coords['stop_pos'] = entity_stop - sent_start
+        return coords
 
     @staticmethod
     def _get_db_refs(entity_term):
@@ -475,7 +524,8 @@ class ReachProcessor(object):
         return mcs
 
     def _get_annot_context(self, frame_term):
-        annotations = {'found_by': frame_term['found_by']}
+        annotations = {'found_by': frame_term['found_by'],
+                       'agent_coordinates': []}
         try:
             context_id = frame_term['context']
         except KeyError:
@@ -594,17 +644,18 @@ class ReachProcessor(object):
         controller = arg.get('arg')
         # There is either a single controller here
         if controller is not None:
-            controller_agent = self._get_agent_from_entity(controller)
+            controller_agent, coords = self._get_agent_from_entity(controller)
         # Or the controller is a complex
         elif arg['argument-type'] == 'complex':
             controllers = list(arg.get('args').values())
-            controller_agent = self._get_agent_from_entity(controllers[0])
+            controller_agent, coords = \
+                self._get_agent_from_entity(controllers[0])
             bound_agents = [self._get_agent_from_entity(c)
                             for c in controllers[1:]]
             bound_conditions = [BoundCondition(ba, True) for
                                 ba in bound_agents]
             controller_agent.bound_conditions = bound_conditions
-        return controller_agent
+        return controller_agent, coords
 
     @staticmethod
     def _get_arg_type(arg):
