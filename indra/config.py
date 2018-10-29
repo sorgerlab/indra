@@ -106,7 +106,13 @@ def get_config(key, failure_ok=True):
     if key in os.environ:
         return os.environ[key]
     elif key in CONFIG_DICT:
-        return CONFIG_DICT[key]
+        val = CONFIG_DICT[key]
+        # We interpret an empty value in the config file as a failure
+        if val is None and not failure_ok:
+            msg = 'Key %s is set to an empty value in config file.' % key
+            raise IndraConfigError(msg)
+        else:
+            return val
     elif not failure_ok:
         raise IndraConfigError(err_msg)
     else:
