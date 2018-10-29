@@ -428,6 +428,14 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
     return stmts_from_json(stmts_json.values())
 
 
+def submit_curation(level, hash_val, tag, text, curator,
+                    source='indra_rest_client'):
+    """Submit a curation for the given statement at the relevant level."""
+    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source}
+    return _make_request('post', 'curation/%s/%s' % (level, hash_val),
+                        data=data)
+
+
 def _submit_query_request(end_point, *args, **kwargs):
     """Low level function to format the query string."""
     ev_limit = kwargs.pop('ev_limit', 10)
@@ -450,18 +458,19 @@ def _submit_query_request(end_point, *args, **kwargs):
 def _submit_statement_request(meth, end_point, query_str='', data=None,
                               ev_limit=50, best_first=True, tries=2):
     """Even lower level function to make the request."""
+    params = {'ev_limit': ev_limit, 'best_first': best_first}
+    full_end_point = 'statements/' + end_point.lstrip('/')
+    return _make_request(meth, full_end_point, query_str, data, params, tries)
+
+
+def _make_request(meth, end_point, query_str, data=None, params=None, tries=2):
     if end_point is None:
         logger.error("Exception in submit request with args: %s"
-                     % str([meth, end_point, query_str, data, ev_limit,
-                            best_first, tries]))
+                     % str([meth, end_point, query_str, data, params, tries]))
         raise ValueError("end_point cannot be None.")
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
-    url_path = url.rstrip('/') + '/statements/' + end_point.lstrip('/')
-    if query_str:
-        query_str += '&api-key=%s' % api_key
-    else:
-        query_str = '?api-key=%s' % api_key
+    url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
     url_path += query_str
     headers = {}
     if data:
@@ -471,16 +480,17 @@ def _submit_statement_request(meth, end_point, query_str='', data=None,
         json_data = json.dumps(data)
     else:
         json_data = None
-    print(url_path)
+    params['api-key'] = api_key
     logger.info('url and query string: %s',
                 url_path.replace(str(api_key), '[api-key]'))
     logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
     logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
+    logger.info('params: %s', str(params).replace(str(api_key), '[api-key]'))
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
         resp = method_func(url_path, headers=headers, data=json_data,
-                           params={'ev_limit': ev_limit, 'best_first': best_first})
+                           params=params)
         if resp.status_code == 200:
             return resp
         elif resp.status_code == 504 and tries > 0:
