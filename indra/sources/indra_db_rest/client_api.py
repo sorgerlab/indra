@@ -464,9 +464,10 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         json_data = json.dumps(data)
     else:
         json_data = None
-    logger.info('url and query string: %s', url_path)
-    logger.info('headers: %s', headers)
-    logger.info('data: %s', data)
+    logger.info('url and query string: %s',
+                url_path.replace(str(api_key), '[api-key]'))
+    logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
+    logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
