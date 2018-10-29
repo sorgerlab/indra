@@ -151,7 +151,8 @@ class IndraDBRestResponse(object):
         params['max_stmts'] = self.__quota
         if stmt_type is not None:
             params['type'] = stmt_type
-        resp = _submit_query_request('statements', *agent_strs, **params)
+        resp = _submit_query_request('statements/from_agents', *agent_strs,
+                                     **params)
         resp_dict = resp.json(object_pairs_hook=OrderedDict)
         stmts_json = resp_dict['statements']
         ev_totals = resp_dict['evidence_totals']
@@ -367,9 +368,9 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
-        timeout will often succeed fast enough to avoid a timeout. This can also
-        help gracefully handle an unreliable connection, if you're willing to
-        wait. Default is 2.
+        timeout will often succeed fast enough to avoid a timeout. This can
+        also help gracefully handle an unreliable connection, if you're
+        willing to wait. Default is 2.
     """
     if not isinstance(hash_list, list):
         raise ValueError("The `hash_list` input is a list, not %s."
@@ -379,8 +380,8 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     if isinstance(hash_list[0], str):
         hash_list = [int(h) for h in hash_list]
     if not all([isinstance(h, int) for h in hash_list]):
-        raise ValueError("Hashes must be ints or strings that can be converted "
-                         "into ints.")
+        raise ValueError("Hashes must be ints or strings that can be "
+                         "converted into ints.")
     resp = _submit_request('post', 'statements/from_hashes',
                            data={'hashes': hash_list}, ev_limit=ev_limit,
                            best_first=best_first, tries=tries, div='')
@@ -421,9 +422,10 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
     stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
-    resp = _submit_query_request('papers', id=id_val, type=id_type,
-                                 ev_limit=ev_limit, best_first=best_first,
-                                 tries=tries, max_stmts=max_stmts)
+    resp = _submit_query_request('statements/from_papers', id=id_val,
+                                 type=id_type, ev_limit=ev_limit,
+                                 best_first=best_first, tries=tries,
+                                 max_stmts=max_stmts)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json.values())
 
@@ -445,12 +447,12 @@ def _submit_query_request(end_point, *args, **kwargs):
 
 @clockit
 def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
-                    best_first=True, tries=2, div='/'):
+                    best_first=True, tries=2):
     """Even lower level function to make the request."""
     if end_point is None:
         logger.error("Exception in submit request with args: %s"
                      % str([meth, end_point, query_str, data, ev_limit,
-                            best_first, tries, div]))
+                            best_first, tries]))
         raise ValueError("end_point cannot be None.")
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
@@ -459,7 +461,7 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         query_str += '&api-key=%s' % api_key
     else:
         query_str = '?api-key=%s' % api_key
-    url_path += div + query_str
+    url_path += query_str
     headers = {}
     if data:
         # This is an assumption which applies to our use cases for now, but may
