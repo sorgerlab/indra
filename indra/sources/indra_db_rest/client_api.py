@@ -8,7 +8,6 @@ __all__ = ['get_statements', 'get_statements_for_paper',
 import json
 import logging
 import requests
-from os.path import join
 from threading import Thread
 from datetime import datetime
 from collections import OrderedDict, defaultdict
@@ -214,7 +213,7 @@ class IndraDBRestResponse(object):
 
     def make_stmts_queries(self, agent_strs, stmt_types, params, persist=True,
                            block_secs=None):
-        """Slightly lower level function to get statements from the REST API."""
+        """Slightly lower level function gets statements from the REST API."""
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         args = [agent_strs, stmt_types, params, persist]
@@ -448,9 +447,14 @@ def _submit_query_request(end_point, *args, **kwargs):
 def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
                     best_first=True, tries=2, div='/'):
     """Even lower level function to make the request."""
+    if end_point is None:
+        logger.error("Exception in submit request with args: %s"
+                     % str([meth, end_point, query_str, data, ev_limit,
+                            best_first, tries, div]))
+        raise ValueError("end_point cannot be None.")
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
-    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=False)
-    url_path = join(url, end_point)
+    api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
+    url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
     if query_str:
         query_str += '&api-key=%s' % api_key
     else:
@@ -464,9 +468,11 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         json_data = json.dumps(data)
     else:
         json_data = None
-    logger.info('url and query string: %s', url_path)
-    logger.info('headers: %s', headers)
-    logger.info('data: %s', data)
+    print(url_path)
+    logger.info('url and query string: %s',
+                url_path.replace(str(api_key), '[api-key]'))
+    logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
+    logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
