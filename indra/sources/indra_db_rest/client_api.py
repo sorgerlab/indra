@@ -213,7 +213,7 @@ class IndraDBRestResponse(object):
 
     def make_stmts_queries(self, agent_strs, stmt_types, params, persist=True,
                            block_secs=None):
-        """Slightly lower level function to get statements from the REST API."""
+        """Slightly lower level function gets statements from the REST API."""
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         args = [agent_strs, stmt_types, params, persist]
@@ -447,6 +447,11 @@ def _submit_query_request(end_point, *args, **kwargs):
 def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
                     best_first=True, tries=2, div='/'):
     """Even lower level function to make the request."""
+    if end_point is None:
+        logger.error("Exception in submit request with args: %s"
+                     % str([meth, end_point, query_str, data, ev_limit,
+                            best_first, tries, div]))
+        raise ValueError("end_point cannot be None.")
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
     url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
