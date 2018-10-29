@@ -8,10 +8,10 @@ __all__ = ['get_statements', 'get_statements_for_paper',
 import json
 import logging
 import requests
-from os.path import join
 from threading import Thread
 from datetime import datetime
 from collections import OrderedDict, defaultdict
+from urllib.parse import urljoin
 
 from indra.util import clockit
 
@@ -450,7 +450,7 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
     """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
-    url_path = join(url, end_point)
+    url_path = urljoin(url, end_point)
     if query_str:
         query_str += '&api-key=%s' % api_key
     else:
