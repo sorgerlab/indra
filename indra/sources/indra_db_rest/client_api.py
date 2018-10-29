@@ -11,7 +11,6 @@ import requests
 from threading import Thread
 from datetime import datetime
 from collections import OrderedDict, defaultdict
-from urllib.parse import urljoin
 
 from indra.util import clockit
 
@@ -450,7 +449,7 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
     """Even lower level function to make the request."""
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
-    url_path = urljoin(url, end_point)
+    url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
     if query_str:
         query_str += '&api-key=%s' % api_key
     else:
@@ -464,6 +463,7 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         json_data = json.dumps(data)
     else:
         json_data = None
+    print(url_path)
     logger.info('url and query string: %s',
                 url_path.replace(str(api_key), '[api-key]'))
     logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
