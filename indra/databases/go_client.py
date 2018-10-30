@@ -100,7 +100,7 @@ def update_id_mappings(g):
     for id_lit, label_lit in sorted(res, key=lambda x: x[0]):
         mappings.append((id_lit.value, label_lit.value))
     # Write to file
-    write_unicode_csv(go_mappings_file, mappings)
+    write_unicode_csv(go_mappings_file, mappings, delimiter='\t')
 
 
 def get_cellular_components(g):
