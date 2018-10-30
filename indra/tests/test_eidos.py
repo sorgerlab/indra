@@ -116,10 +116,13 @@ def test_process_negation_hedging():
 def test_process_geoids():
     geo_jsonld = os.path.join(path_this, 'eidos_geoid.json')
     ep = eidos.process_json_file(geo_jsonld)
+    # Make sure we collect all geoids up front
+    ss_loc = {'name': 'South Sudan', 'db_refs': {'GEOID': '7909807'}}
     assert len(ep.geoids) == 5
-    assert ep.geoids['_:GeoidPhrases_1'].to_json() == {'name': 'South Sudan',
-                                                       'db_refs': {'GEOID': '7909807'}}
-    print(ep.statements)
+    assert ep.geoids['_:GeoidPhrases_1'].to_json() == ss_loc
+    # Make sure this event has the right geoid
+    assert ep.statements[1].evidence[0].context.geo_location.to_json() == \
+        ss_loc
 
 
 def test_eidos_to_cag():

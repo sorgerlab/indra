@@ -172,6 +172,16 @@ class EidosProcessor(object):
                     timex = timexes[0]
                     tc = self.time_context_from_timex(timex)
                     context = WorldContext(time=tc)
+                # Get geolocation if available
+                geoids = sentence.get('geoids', [])
+                if geoids:
+                    geoid = geoids[0]
+                    rc = self.ref_context_from_geoid(geoid)
+                    if context:
+                        context.geo_location = rc
+                    else:
+                        context = WorldContext(geo_location=rc)
+
             # Here we try to get the title of the document and set it
             # in the provenance
             doc_id = provenance[0].get('document', {}).get('@id')
