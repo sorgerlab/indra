@@ -1,0 +1,5951 @@
+{
+  "@context" : {
+    "Argument" : "https://github.com/clulab/eidos/wiki/JSON-LD#Argument",
+    "Corpus" : "https://github.com/clulab/eidos/wiki/JSON-LD#Corpus",
+    "Dependency" : "https://github.com/clulab/eidos/wiki/JSON-LD#Dependency",
+    "Document" : "https://github.com/clulab/eidos/wiki/JSON-LD#Document",
+    "Extraction" : "https://github.com/clulab/eidos/wiki/JSON-LD#Extraction",
+    "GeoidPhrases" : "https://github.com/clulab/eidos/wiki/JSON-LD#GeoidPhrases",
+    "Interval" : "https://github.com/clulab/eidos/wiki/JSON-LD#Interval",
+    "Provenance" : "https://github.com/clulab/eidos/wiki/JSON-LD#Provenance",
+    "Sentence" : "https://github.com/clulab/eidos/wiki/JSON-LD#Sentence",
+    "State" : "https://github.com/clulab/eidos/wiki/JSON-LD#State",
+    "Trigger" : "https://github.com/clulab/eidos/wiki/JSON-LD#Trigger",
+    "Word" : "https://github.com/clulab/eidos/wiki/JSON-LD#Word"
+  },
+  "@type" : "Corpus",
+  "documents" : [ {
+    "@type" : "Document",
+    "@id" : "_:Document_1",
+    "text" : "Floods caused by rain have displaced more than 100,000 people in South Sudan, an official said, raising fears about the devastating impact this could have on food security in the war-torn nation.\n\n\"We are talking of over 70,000 individuals and 1,590 households affected in Awiel and 40,000 others in Maban county. Other regions like Jonglei and Lol have also reported high figures,\" Gatwech Peter Kulang, the undersecretary for the Ministry of Humanitarian Affairs and Disaster Risk Management told Xinhua Tuesday.\n\n\"The situation is alarming which demands urgent intervention,\" he added.\n\nThe official expressed concerns that the floods could worsen the already dire humanitarian situation across the country, including the spread of cholera, which has killed over 300 people and infected nearly 20,000 others last year.\n\n\"We call upon the humanitarian community to join hands with the government to rescue this alarming situation,\" stressed Kulang.\n\nMuch of South Sudan receives little rainfall and only 5% of the arable land is currently cultivated. Nonetheless, the country has significant potential for increased cereal production, especially in the southern regions with the highest annual rainfall. Accurate data on crop area and production for South Sudan are scarce, and there is considerable uncertainty in estimates.\n\nNearly 5 million people or more than 40% of the population in South Sudan were in need of urgent food, agriculture and nutrition assistance, the Integrated Food Security Phase Classification (IPC) projected early this year.\n",
+    "sentences" : [ {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_1",
+      "text" : "Floods caused by rain have displaced more than 100,000 people in South Sudan , an official said , raising fears about the devastating impact this could have on food security in the war-torn nation .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_1",
+        "text" : "Floods",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 0,
+        "endOffset" : 6,
+        "lemma" : "flood",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_2",
+        "text" : "caused",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 7,
+        "endOffset" : 13,
+        "lemma" : "cause",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_3",
+        "text" : "by",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 14,
+        "endOffset" : 16,
+        "lemma" : "by",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_4",
+        "text" : "rain",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 17,
+        "endOffset" : 21,
+        "lemma" : "rain",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_5",
+        "text" : "have",
+        "tag" : "VBP",
+        "entity" : "O",
+        "startOffset" : 22,
+        "endOffset" : 26,
+        "lemma" : "have",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_6",
+        "text" : "displaced",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 27,
+        "endOffset" : 36,
+        "lemma" : "displace",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_7",
+        "text" : "more",
+        "tag" : "JJR",
+        "entity" : "O",
+        "startOffset" : 37,
+        "endOffset" : 41,
+        "lemma" : "more",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_8",
+        "text" : "than",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 42,
+        "endOffset" : 46,
+        "lemma" : "than",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_9",
+        "text" : "100,000",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 47,
+        "endOffset" : 54,
+        "lemma" : "100,000",
+        "chunk" : "I-NP",
+        "norm" : ">100000.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_10",
+        "text" : "people",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 55,
+        "endOffset" : 61,
+        "lemma" : "people",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_11",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 62,
+        "endOffset" : 64,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_12",
+        "text" : "South",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 65,
+        "endOffset" : 70,
+        "lemma" : "South",
+        "chunk" : "B-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_13",
+        "text" : "Sudan",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 71,
+        "endOffset" : 76,
+        "lemma" : "Sudan",
+        "chunk" : "I-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_14",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 76,
+        "endOffset" : 77,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_15",
+        "text" : "an",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 78,
+        "endOffset" : 80,
+        "lemma" : "a",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_16",
+        "text" : "official",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 81,
+        "endOffset" : 89,
+        "lemma" : "official",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_17",
+        "text" : "said",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 90,
+        "endOffset" : 94,
+        "lemma" : "say",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_18",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 94,
+        "endOffset" : 95,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_19",
+        "text" : "raising",
+        "tag" : "VBG",
+        "entity" : "O",
+        "startOffset" : 96,
+        "endOffset" : 103,
+        "lemma" : "raise",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_20",
+        "text" : "fears",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 104,
+        "endOffset" : 109,
+        "lemma" : "fear",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_21",
+        "text" : "about",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 110,
+        "endOffset" : 115,
+        "lemma" : "about",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_22",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 116,
+        "endOffset" : 119,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_23",
+        "text" : "devastating",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 120,
+        "endOffset" : 131,
+        "lemma" : "devastating",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_24",
+        "text" : "impact",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 132,
+        "endOffset" : 138,
+        "lemma" : "impact",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_25",
+        "text" : "this",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 139,
+        "endOffset" : 143,
+        "lemma" : "this",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_26",
+        "text" : "could",
+        "tag" : "MD",
+        "entity" : "O",
+        "startOffset" : 144,
+        "endOffset" : 149,
+        "lemma" : "could",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_27",
+        "text" : "have",
+        "tag" : "VB",
+        "entity" : "O",
+        "startOffset" : 150,
+        "endOffset" : 154,
+        "lemma" : "have",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_28",
+        "text" : "on",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 155,
+        "endOffset" : 157,
+        "lemma" : "on",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_29",
+        "text" : "food",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 158,
+        "endOffset" : 162,
+        "lemma" : "food",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_30",
+        "text" : "security",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 163,
+        "endOffset" : 171,
+        "lemma" : "security",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_31",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 172,
+        "endOffset" : 174,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_32",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 175,
+        "endOffset" : 178,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_33",
+        "text" : "war-torn",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 179,
+        "endOffset" : 187,
+        "lemma" : "war-torn",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_34",
+        "text" : "nation",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 188,
+        "endOffset" : 194,
+        "lemma" : "nation",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_35",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 194,
+        "endOffset" : 195,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_1"
+        },
+        "destination" : {
+          "@id" : "_:Word_2"
+        },
+        "relation" : "acl"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_2"
+        },
+        "destination" : {
+          "@id" : "_:Word_4"
+        },
+        "relation" : "nmod_by"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_4"
+        },
+        "destination" : {
+          "@id" : "_:Word_3"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_1"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_18"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_19"
+        },
+        "relation" : "xcomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_35"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_5"
+        },
+        "relation" : "aux"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_10"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_6"
+        },
+        "destination" : {
+          "@id" : "_:Word_13"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_7"
+        },
+        "destination" : {
+          "@id" : "_:Word_8"
+        },
+        "relation" : "mwe"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_9"
+        },
+        "destination" : {
+          "@id" : "_:Word_7"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_10"
+        },
+        "destination" : {
+          "@id" : "_:Word_9"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_13"
+        },
+        "destination" : {
+          "@id" : "_:Word_17"
+        },
+        "relation" : "acl:relcl"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_13"
+        },
+        "destination" : {
+          "@id" : "_:Word_11"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_13"
+        },
+        "destination" : {
+          "@id" : "_:Word_12"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_13"
+        },
+        "destination" : {
+          "@id" : "_:Word_14"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_16"
+        },
+        "destination" : {
+          "@id" : "_:Word_15"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_17"
+        },
+        "destination" : {
+          "@id" : "_:Word_16"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_19"
+        },
+        "destination" : {
+          "@id" : "_:Word_20"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_19"
+        },
+        "destination" : {
+          "@id" : "_:Word_27"
+        },
+        "relation" : "dep"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_20"
+        },
+        "destination" : {
+          "@id" : "_:Word_24"
+        },
+        "relation" : "nmod_about"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_24"
+        },
+        "destination" : {
+          "@id" : "_:Word_21"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_24"
+        },
+        "destination" : {
+          "@id" : "_:Word_22"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_24"
+        },
+        "destination" : {
+          "@id" : "_:Word_23"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_27"
+        },
+        "destination" : {
+          "@id" : "_:Word_25"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_27"
+        },
+        "destination" : {
+          "@id" : "_:Word_26"
+        },
+        "relation" : "aux"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_27"
+        },
+        "destination" : {
+          "@id" : "_:Word_30"
+        },
+        "relation" : "nmod_on"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_30"
+        },
+        "destination" : {
+          "@id" : "_:Word_34"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_30"
+        },
+        "destination" : {
+          "@id" : "_:Word_28"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_30"
+        },
+        "destination" : {
+          "@id" : "_:Word_29"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_34"
+        },
+        "destination" : {
+          "@id" : "_:Word_32"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_34"
+        },
+        "destination" : {
+          "@id" : "_:Word_33"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_34"
+        },
+        "destination" : {
+          "@id" : "_:Word_31"
+        },
+        "relation" : "case"
+      } ],
+      "geoids" : [ {
+        "@type" : "GeoidPhrases",
+        "@id" : "_:GeoidPhrases_1",
+        "startOffset" : 65,
+        "endOffset" : 77,
+        "text" : "South Sudan",
+        "geoID" : "7909807"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_2",
+      "text" : "\" We are talking of over 70,000 individuals and 1,590 households affected in Awiel and 40,000 others in Maban county .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_36",
+        "text" : "\"",
+        "tag" : "``",
+        "entity" : "O",
+        "startOffset" : 197,
+        "endOffset" : 198,
+        "lemma" : "``",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_37",
+        "text" : "We",
+        "tag" : "PRP",
+        "entity" : "O",
+        "startOffset" : 198,
+        "endOffset" : 200,
+        "lemma" : "we",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_38",
+        "text" : "are",
+        "tag" : "VBP",
+        "entity" : "O",
+        "startOffset" : 201,
+        "endOffset" : 204,
+        "lemma" : "be",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_39",
+        "text" : "talking",
+        "tag" : "VBG",
+        "entity" : "O",
+        "startOffset" : 205,
+        "endOffset" : 212,
+        "lemma" : "talk",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_40",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 213,
+        "endOffset" : 215,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_41",
+        "text" : "over",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 216,
+        "endOffset" : 220,
+        "lemma" : "over",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_42",
+        "text" : "70,000",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 221,
+        "endOffset" : 227,
+        "lemma" : "70,000",
+        "chunk" : "I-NP",
+        "norm" : ">70000.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_43",
+        "text" : "individuals",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 228,
+        "endOffset" : 239,
+        "lemma" : "individual",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_44",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 240,
+        "endOffset" : 243,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_45",
+        "text" : "1,590",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 244,
+        "endOffset" : 249,
+        "lemma" : "1,590",
+        "chunk" : "B-NP",
+        "norm" : "1590.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_46",
+        "text" : "households",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 250,
+        "endOffset" : 260,
+        "lemma" : "household",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_47",
+        "text" : "affected",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 261,
+        "endOffset" : 269,
+        "lemma" : "affect",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_48",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 270,
+        "endOffset" : 272,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_49",
+        "text" : "Awiel",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 273,
+        "endOffset" : 278,
+        "lemma" : "Awiel",
+        "chunk" : "B-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_50",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 279,
+        "endOffset" : 282,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_51",
+        "text" : "40,000",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 283,
+        "endOffset" : 289,
+        "lemma" : "40,000",
+        "chunk" : "B-NP",
+        "norm" : "40000.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_52",
+        "text" : "others",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 290,
+        "endOffset" : 296,
+        "lemma" : "other",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_53",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 297,
+        "endOffset" : 299,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_54",
+        "text" : "Maban",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 300,
+        "endOffset" : 305,
+        "lemma" : "Maban",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_55",
+        "text" : "county",
+        "tag" : "NN",
+        "entity" : "LOCATION",
+        "startOffset" : 306,
+        "endOffset" : 312,
+        "lemma" : "county",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_56",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 312,
+        "endOffset" : 313,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_39"
+        },
+        "destination" : {
+          "@id" : "_:Word_38"
+        },
+        "relation" : "aux"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_39"
+        },
+        "destination" : {
+          "@id" : "_:Word_56"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_39"
+        },
+        "destination" : {
+          "@id" : "_:Word_43"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_39"
+        },
+        "destination" : {
+          "@id" : "_:Word_46"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_39"
+        },
+        "destination" : {
+          "@id" : "_:Word_37"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_42"
+        },
+        "destination" : {
+          "@id" : "_:Word_41"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_43"
+        },
+        "destination" : {
+          "@id" : "_:Word_40"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_43"
+        },
+        "destination" : {
+          "@id" : "_:Word_42"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_43"
+        },
+        "destination" : {
+          "@id" : "_:Word_44"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_43"
+        },
+        "destination" : {
+          "@id" : "_:Word_46"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_43"
+        },
+        "destination" : {
+          "@id" : "_:Word_47"
+        },
+        "relation" : "acl"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_46"
+        },
+        "destination" : {
+          "@id" : "_:Word_45"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_47"
+        },
+        "destination" : {
+          "@id" : "_:Word_55"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_47"
+        },
+        "destination" : {
+          "@id" : "_:Word_49"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_47"
+        },
+        "destination" : {
+          "@id" : "_:Word_52"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_49"
+        },
+        "destination" : {
+          "@id" : "_:Word_48"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_49"
+        },
+        "destination" : {
+          "@id" : "_:Word_50"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_49"
+        },
+        "destination" : {
+          "@id" : "_:Word_52"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_52"
+        },
+        "destination" : {
+          "@id" : "_:Word_51"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_55"
+        },
+        "destination" : {
+          "@id" : "_:Word_54"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_55"
+        },
+        "destination" : {
+          "@id" : "_:Word_53"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_36"
+        },
+        "destination" : {
+          "@id" : "_:Word_39"
+        },
+        "relation" : "root"
+      } ],
+      "geoids" : [ {
+        "@type" : "GeoidPhrases",
+        "@id" : "_:GeoidPhrases_2",
+        "startOffset" : 273,
+        "endOffset" : 282,
+        "text" : "Awiel",
+        "geoID" : "geoID_not_found"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_3",
+      "text" : "Other regions like Jonglei and Lol have also reported high figures , \" Gatwech Peter Kulang , the undersecretary for the Ministry of Humanitarian Affairs and Disaster Risk Management told Xinhua Tuesday .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_57",
+        "text" : "Other",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 314,
+        "endOffset" : 319,
+        "lemma" : "other",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_58",
+        "text" : "regions",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 320,
+        "endOffset" : 327,
+        "lemma" : "region",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_59",
+        "text" : "like",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 328,
+        "endOffset" : 332,
+        "lemma" : "like",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_60",
+        "text" : "Jonglei",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 333,
+        "endOffset" : 340,
+        "lemma" : "Jonglei",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_61",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 341,
+        "endOffset" : 344,
+        "lemma" : "and",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_62",
+        "text" : "Lol",
+        "tag" : "NNP",
+        "entity" : "O",
+        "startOffset" : 345,
+        "endOffset" : 348,
+        "lemma" : "Lol",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_63",
+        "text" : "have",
+        "tag" : "VBP",
+        "entity" : "O",
+        "startOffset" : 349,
+        "endOffset" : 353,
+        "lemma" : "have",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_64",
+        "text" : "also",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 354,
+        "endOffset" : 358,
+        "lemma" : "also",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_65",
+        "text" : "reported",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 359,
+        "endOffset" : 367,
+        "lemma" : "report",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_66",
+        "text" : "high",
+        "tag" : "JJ",
+        "entity" : "B-Quantifier",
+        "startOffset" : 368,
+        "endOffset" : 372,
+        "lemma" : "high",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_67",
+        "text" : "figures",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 373,
+        "endOffset" : 380,
+        "lemma" : "figure",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_68",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 380,
+        "endOffset" : 381,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_69",
+        "text" : "\"",
+        "tag" : "''",
+        "entity" : "O",
+        "startOffset" : 381,
+        "endOffset" : 382,
+        "lemma" : "''",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_70",
+        "text" : "Gatwech",
+        "tag" : "NNP",
+        "entity" : "PERSON",
+        "startOffset" : 383,
+        "endOffset" : 390,
+        "lemma" : "Gatwech",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_71",
+        "text" : "Peter",
+        "tag" : "NNP",
+        "entity" : "PERSON",
+        "startOffset" : 391,
+        "endOffset" : 396,
+        "lemma" : "Peter",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_72",
+        "text" : "Kulang",
+        "tag" : "NNP",
+        "entity" : "PERSON",
+        "startOffset" : 397,
+        "endOffset" : 403,
+        "lemma" : "Kulang",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_73",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 403,
+        "endOffset" : 404,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_74",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 405,
+        "endOffset" : 408,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_75",
+        "text" : "undersecretary",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 409,
+        "endOffset" : 423,
+        "lemma" : "undersecretary",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_76",
+        "text" : "for",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 424,
+        "endOffset" : 427,
+        "lemma" : "for",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_77",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 428,
+        "endOffset" : 431,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_78",
+        "text" : "Ministry",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 432,
+        "endOffset" : 440,
+        "lemma" : "Ministry",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_79",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 441,
+        "endOffset" : 443,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_80",
+        "text" : "Humanitarian",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 444,
+        "endOffset" : 456,
+        "lemma" : "Humanitarian",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_81",
+        "text" : "Affairs",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 457,
+        "endOffset" : 464,
+        "lemma" : "Affairs",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_82",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 465,
+        "endOffset" : 468,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_83",
+        "text" : "Disaster",
+        "tag" : "NN",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 469,
+        "endOffset" : 477,
+        "lemma" : "disaster",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_84",
+        "text" : "Risk",
+        "tag" : "NN",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 478,
+        "endOffset" : 482,
+        "lemma" : "risk",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_85",
+        "text" : "Management",
+        "tag" : "NN",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 483,
+        "endOffset" : 493,
+        "lemma" : "management",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_86",
+        "text" : "told",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 494,
+        "endOffset" : 498,
+        "lemma" : "tell",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_87",
+        "text" : "Xinhua",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 499,
+        "endOffset" : 505,
+        "lemma" : "Xinhua",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_88",
+        "text" : "Tuesday",
+        "tag" : "NNP",
+        "entity" : "DATE",
+        "startOffset" : 506,
+        "endOffset" : 513,
+        "lemma" : "Tuesday",
+        "chunk" : "I-NP",
+        "norm" : "XXXX-WXX-2"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_89",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 513,
+        "endOffset" : 514,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_65"
+        },
+        "destination" : {
+          "@id" : "_:Word_63"
+        },
+        "relation" : "aux"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_65"
+        },
+        "destination" : {
+          "@id" : "_:Word_64"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_65"
+        },
+        "destination" : {
+          "@id" : "_:Word_67"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_65"
+        },
+        "destination" : {
+          "@id" : "_:Word_58"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_67"
+        },
+        "destination" : {
+          "@id" : "_:Word_66"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_72"
+        },
+        "destination" : {
+          "@id" : "_:Word_70"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_72"
+        },
+        "destination" : {
+          "@id" : "_:Word_71"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_72"
+        },
+        "destination" : {
+          "@id" : "_:Word_73"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_72"
+        },
+        "destination" : {
+          "@id" : "_:Word_75"
+        },
+        "relation" : "appos"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_75"
+        },
+        "destination" : {
+          "@id" : "_:Word_78"
+        },
+        "relation" : "nmod_for"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_75"
+        },
+        "destination" : {
+          "@id" : "_:Word_85"
+        },
+        "relation" : "nmod_for"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_75"
+        },
+        "destination" : {
+          "@id" : "_:Word_74"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_78"
+        },
+        "destination" : {
+          "@id" : "_:Word_81"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_78"
+        },
+        "destination" : {
+          "@id" : "_:Word_82"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_78"
+        },
+        "destination" : {
+          "@id" : "_:Word_85"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_78"
+        },
+        "destination" : {
+          "@id" : "_:Word_76"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_78"
+        },
+        "destination" : {
+          "@id" : "_:Word_77"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_81"
+        },
+        "destination" : {
+          "@id" : "_:Word_79"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_81"
+        },
+        "destination" : {
+          "@id" : "_:Word_80"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_85"
+        },
+        "destination" : {
+          "@id" : "_:Word_83"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_85"
+        },
+        "destination" : {
+          "@id" : "_:Word_84"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_86"
+        },
+        "destination" : {
+          "@id" : "_:Word_65"
+        },
+        "relation" : "ccomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_86"
+        },
+        "destination" : {
+          "@id" : "_:Word_68"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_86"
+        },
+        "destination" : {
+          "@id" : "_:Word_69"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_86"
+        },
+        "destination" : {
+          "@id" : "_:Word_72"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_86"
+        },
+        "destination" : {
+          "@id" : "_:Word_88"
+        },
+        "relation" : "nmod:tmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_86"
+        },
+        "destination" : {
+          "@id" : "_:Word_89"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_88"
+        },
+        "destination" : {
+          "@id" : "_:Word_87"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_58"
+        },
+        "destination" : {
+          "@id" : "_:Word_62"
+        },
+        "relation" : "nmod_like"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_58"
+        },
+        "destination" : {
+          "@id" : "_:Word_57"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_58"
+        },
+        "destination" : {
+          "@id" : "_:Word_60"
+        },
+        "relation" : "nmod_like"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_60"
+        },
+        "destination" : {
+          "@id" : "_:Word_62"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_60"
+        },
+        "destination" : {
+          "@id" : "_:Word_59"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_60"
+        },
+        "destination" : {
+          "@id" : "_:Word_61"
+        },
+        "relation" : "cc"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_4",
+      "text" : "\" The situation is alarming which demands urgent intervention , \" he added .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_90",
+        "text" : "\"",
+        "tag" : "``",
+        "entity" : "O",
+        "startOffset" : 516,
+        "endOffset" : 517,
+        "lemma" : "``",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_91",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 517,
+        "endOffset" : 520,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_92",
+        "text" : "situation",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 521,
+        "endOffset" : 530,
+        "lemma" : "situation",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_93",
+        "text" : "is",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 531,
+        "endOffset" : 533,
+        "lemma" : "be",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_94",
+        "text" : "alarming",
+        "tag" : "JJ",
+        "entity" : "B-Quantifier",
+        "startOffset" : 534,
+        "endOffset" : 542,
+        "lemma" : "alarming",
+        "chunk" : "B-ADJP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_95",
+        "text" : "which",
+        "tag" : "WDT",
+        "entity" : "O",
+        "startOffset" : 543,
+        "endOffset" : 548,
+        "lemma" : "which",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_96",
+        "text" : "demands",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 549,
+        "endOffset" : 556,
+        "lemma" : "demand",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_97",
+        "text" : "urgent",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 557,
+        "endOffset" : 563,
+        "lemma" : "urgent",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_98",
+        "text" : "intervention",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 564,
+        "endOffset" : 576,
+        "lemma" : "intervention",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_99",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 576,
+        "endOffset" : 577,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_100",
+        "text" : "\"",
+        "tag" : "''",
+        "entity" : "O",
+        "startOffset" : 577,
+        "endOffset" : 578,
+        "lemma" : "''",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_101",
+        "text" : "he",
+        "tag" : "PRP",
+        "entity" : "O",
+        "startOffset" : 579,
+        "endOffset" : 581,
+        "lemma" : "he",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_102",
+        "text" : "added",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 582,
+        "endOffset" : 587,
+        "lemma" : "add",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_103",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 587,
+        "endOffset" : 588,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_98"
+        },
+        "destination" : {
+          "@id" : "_:Word_97"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_102"
+        },
+        "destination" : {
+          "@id" : "_:Word_99"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_102"
+        },
+        "destination" : {
+          "@id" : "_:Word_100"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_102"
+        },
+        "destination" : {
+          "@id" : "_:Word_101"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_102"
+        },
+        "destination" : {
+          "@id" : "_:Word_103"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_102"
+        },
+        "destination" : {
+          "@id" : "_:Word_90"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_102"
+        },
+        "destination" : {
+          "@id" : "_:Word_94"
+        },
+        "relation" : "ccomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_92"
+        },
+        "destination" : {
+          "@id" : "_:Word_91"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_94"
+        },
+        "destination" : {
+          "@id" : "_:Word_92"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_94"
+        },
+        "destination" : {
+          "@id" : "_:Word_93"
+        },
+        "relation" : "cop"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_94"
+        },
+        "destination" : {
+          "@id" : "_:Word_96"
+        },
+        "relation" : "ccomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_96"
+        },
+        "destination" : {
+          "@id" : "_:Word_98"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_96"
+        },
+        "destination" : {
+          "@id" : "_:Word_95"
+        },
+        "relation" : "nsubj"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_5",
+      "text" : "The official expressed concerns that the floods could worsen the already dire humanitarian situation across the country , including the spread of cholera , which has killed over 300 people and infected nearly 20,000 others last year .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_104",
+        "text" : "The",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 590,
+        "endOffset" : 593,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_105",
+        "text" : "official",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 594,
+        "endOffset" : 602,
+        "lemma" : "official",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_106",
+        "text" : "expressed",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 603,
+        "endOffset" : 612,
+        "lemma" : "express",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_107",
+        "text" : "concerns",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 613,
+        "endOffset" : 621,
+        "lemma" : "concern",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_108",
+        "text" : "that",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 622,
+        "endOffset" : 626,
+        "lemma" : "that",
+        "chunk" : "B-SBAR",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_109",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 627,
+        "endOffset" : 630,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_110",
+        "text" : "floods",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 631,
+        "endOffset" : 637,
+        "lemma" : "flood",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_111",
+        "text" : "could",
+        "tag" : "MD",
+        "entity" : "O",
+        "startOffset" : 638,
+        "endOffset" : 643,
+        "lemma" : "could",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_112",
+        "text" : "worsen",
+        "tag" : "VB",
+        "entity" : "O",
+        "startOffset" : 644,
+        "endOffset" : 650,
+        "lemma" : "worsen",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_113",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 651,
+        "endOffset" : 654,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_114",
+        "text" : "already",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 655,
+        "endOffset" : 662,
+        "lemma" : "already",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_115",
+        "text" : "dire",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 663,
+        "endOffset" : 667,
+        "lemma" : "dire",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_116",
+        "text" : "humanitarian",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 668,
+        "endOffset" : 680,
+        "lemma" : "humanitarian",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_117",
+        "text" : "situation",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 681,
+        "endOffset" : 690,
+        "lemma" : "situation",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_118",
+        "text" : "across",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 691,
+        "endOffset" : 697,
+        "lemma" : "across",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_119",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 698,
+        "endOffset" : 701,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_120",
+        "text" : "country",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 702,
+        "endOffset" : 709,
+        "lemma" : "country",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_121",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 709,
+        "endOffset" : 710,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_122",
+        "text" : "including",
+        "tag" : "VBG",
+        "entity" : "O",
+        "startOffset" : 711,
+        "endOffset" : 720,
+        "lemma" : "include",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_123",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 721,
+        "endOffset" : 724,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_124",
+        "text" : "spread",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 725,
+        "endOffset" : 731,
+        "lemma" : "spread",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_125",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 732,
+        "endOffset" : 734,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_126",
+        "text" : "cholera",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 735,
+        "endOffset" : 742,
+        "lemma" : "cholera",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_127",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 742,
+        "endOffset" : 743,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_128",
+        "text" : "which",
+        "tag" : "WDT",
+        "entity" : "O",
+        "startOffset" : 744,
+        "endOffset" : 749,
+        "lemma" : "which",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_129",
+        "text" : "has",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 750,
+        "endOffset" : 753,
+        "lemma" : "have",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_130",
+        "text" : "killed",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 754,
+        "endOffset" : 760,
+        "lemma" : "kill",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_131",
+        "text" : "over",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 761,
+        "endOffset" : 765,
+        "lemma" : "over",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_132",
+        "text" : "300",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 766,
+        "endOffset" : 769,
+        "lemma" : "300",
+        "chunk" : "B-NP",
+        "norm" : ">300.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_133",
+        "text" : "people",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 770,
+        "endOffset" : 776,
+        "lemma" : "people",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_134",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 777,
+        "endOffset" : 780,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_135",
+        "text" : "infected",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 781,
+        "endOffset" : 789,
+        "lemma" : "infected",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_136",
+        "text" : "nearly",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 790,
+        "endOffset" : 796,
+        "lemma" : "nearly",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_137",
+        "text" : "20,000",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 797,
+        "endOffset" : 803,
+        "lemma" : "20,000",
+        "chunk" : "I-NP",
+        "norm" : "~20000.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_138",
+        "text" : "others",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 804,
+        "endOffset" : 810,
+        "lemma" : "other",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_139",
+        "text" : "last",
+        "tag" : "JJ",
+        "entity" : "DATE",
+        "startOffset" : 811,
+        "endOffset" : 815,
+        "lemma" : "last",
+        "chunk" : "B-NP",
+        "norm" : "THIS P1Y OFFSET P-1Y"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_140",
+        "text" : "year",
+        "tag" : "NN",
+        "entity" : "DATE",
+        "startOffset" : 816,
+        "endOffset" : 820,
+        "lemma" : "year",
+        "chunk" : "I-NP",
+        "norm" : "THIS P1Y OFFSET P-1Y"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_141",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 820,
+        "endOffset" : 821,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_115"
+        },
+        "destination" : {
+          "@id" : "_:Word_114"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_117"
+        },
+        "destination" : {
+          "@id" : "_:Word_115"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_117"
+        },
+        "destination" : {
+          "@id" : "_:Word_116"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_117"
+        },
+        "destination" : {
+          "@id" : "_:Word_120"
+        },
+        "relation" : "nmod_across"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_117"
+        },
+        "destination" : {
+          "@id" : "_:Word_121"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_117"
+        },
+        "destination" : {
+          "@id" : "_:Word_124"
+        },
+        "relation" : "nmod_including"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_117"
+        },
+        "destination" : {
+          "@id" : "_:Word_113"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_120"
+        },
+        "destination" : {
+          "@id" : "_:Word_118"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_120"
+        },
+        "destination" : {
+          "@id" : "_:Word_119"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_124"
+        },
+        "destination" : {
+          "@id" : "_:Word_122"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_124"
+        },
+        "destination" : {
+          "@id" : "_:Word_123"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_124"
+        },
+        "destination" : {
+          "@id" : "_:Word_126"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_124"
+        },
+        "destination" : {
+          "@id" : "_:Word_127"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_124"
+        },
+        "destination" : {
+          "@id" : "_:Word_128"
+        },
+        "relation" : "ref"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_124"
+        },
+        "destination" : {
+          "@id" : "_:Word_130"
+        },
+        "relation" : "acl:relcl"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_126"
+        },
+        "destination" : {
+          "@id" : "_:Word_125"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_130"
+        },
+        "destination" : {
+          "@id" : "_:Word_133"
+        },
+        "relation" : "nmod_over"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_130"
+        },
+        "destination" : {
+          "@id" : "_:Word_135"
+        },
+        "relation" : "nmod_over"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_130"
+        },
+        "destination" : {
+          "@id" : "_:Word_124"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_130"
+        },
+        "destination" : {
+          "@id" : "_:Word_129"
+        },
+        "relation" : "aux"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_133"
+        },
+        "destination" : {
+          "@id" : "_:Word_131"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_133"
+        },
+        "destination" : {
+          "@id" : "_:Word_132"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_133"
+        },
+        "destination" : {
+          "@id" : "_:Word_134"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_133"
+        },
+        "destination" : {
+          "@id" : "_:Word_135"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_135"
+        },
+        "destination" : {
+          "@id" : "_:Word_138"
+        },
+        "relation" : "dep"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_135"
+        },
+        "destination" : {
+          "@id" : "_:Word_140"
+        },
+        "relation" : "nmod:tmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_137"
+        },
+        "destination" : {
+          "@id" : "_:Word_136"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_138"
+        },
+        "destination" : {
+          "@id" : "_:Word_137"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_140"
+        },
+        "destination" : {
+          "@id" : "_:Word_139"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_105"
+        },
+        "destination" : {
+          "@id" : "_:Word_104"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_106"
+        },
+        "destination" : {
+          "@id" : "_:Word_105"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_106"
+        },
+        "destination" : {
+          "@id" : "_:Word_107"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_106"
+        },
+        "destination" : {
+          "@id" : "_:Word_141"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_107"
+        },
+        "destination" : {
+          "@id" : "_:Word_112"
+        },
+        "relation" : "ccomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_110"
+        },
+        "destination" : {
+          "@id" : "_:Word_109"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_112"
+        },
+        "destination" : {
+          "@id" : "_:Word_117"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_112"
+        },
+        "destination" : {
+          "@id" : "_:Word_108"
+        },
+        "relation" : "mark"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_112"
+        },
+        "destination" : {
+          "@id" : "_:Word_110"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_112"
+        },
+        "destination" : {
+          "@id" : "_:Word_111"
+        },
+        "relation" : "aux"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_6",
+      "text" : "\" We call upon the humanitarian community to join hands with the government to rescue this alarming situation , \" stressed Kulang .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_142",
+        "text" : "\"",
+        "tag" : "``",
+        "entity" : "O",
+        "startOffset" : 823,
+        "endOffset" : 824,
+        "lemma" : "``",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_143",
+        "text" : "We",
+        "tag" : "PRP",
+        "entity" : "O",
+        "startOffset" : 824,
+        "endOffset" : 826,
+        "lemma" : "we",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_144",
+        "text" : "call",
+        "tag" : "VBP",
+        "entity" : "O",
+        "startOffset" : 827,
+        "endOffset" : 831,
+        "lemma" : "call",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_145",
+        "text" : "upon",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 832,
+        "endOffset" : 836,
+        "lemma" : "upon",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_146",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 837,
+        "endOffset" : 840,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_147",
+        "text" : "humanitarian",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 841,
+        "endOffset" : 853,
+        "lemma" : "humanitarian",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_148",
+        "text" : "community",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 854,
+        "endOffset" : 863,
+        "lemma" : "community",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_149",
+        "text" : "to",
+        "tag" : "TO",
+        "entity" : "O",
+        "startOffset" : 864,
+        "endOffset" : 866,
+        "lemma" : "to",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_150",
+        "text" : "join",
+        "tag" : "VB",
+        "entity" : "O",
+        "startOffset" : 867,
+        "endOffset" : 871,
+        "lemma" : "join",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_151",
+        "text" : "hands",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 872,
+        "endOffset" : 877,
+        "lemma" : "hand",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_152",
+        "text" : "with",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 878,
+        "endOffset" : 882,
+        "lemma" : "with",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_153",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 883,
+        "endOffset" : 886,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_154",
+        "text" : "government",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 887,
+        "endOffset" : 897,
+        "lemma" : "government",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_155",
+        "text" : "to",
+        "tag" : "TO",
+        "entity" : "O",
+        "startOffset" : 898,
+        "endOffset" : 900,
+        "lemma" : "to",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_156",
+        "text" : "rescue",
+        "tag" : "VB",
+        "entity" : "O",
+        "startOffset" : 901,
+        "endOffset" : 907,
+        "lemma" : "rescue",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_157",
+        "text" : "this",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 908,
+        "endOffset" : 912,
+        "lemma" : "this",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_158",
+        "text" : "alarming",
+        "tag" : "JJ",
+        "entity" : "B-Quantifier",
+        "startOffset" : 913,
+        "endOffset" : 921,
+        "lemma" : "alarming",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_159",
+        "text" : "situation",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 922,
+        "endOffset" : 931,
+        "lemma" : "situation",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_160",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 931,
+        "endOffset" : 932,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_161",
+        "text" : "\"",
+        "tag" : "''",
+        "entity" : "O",
+        "startOffset" : 932,
+        "endOffset" : 933,
+        "lemma" : "''",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_162",
+        "text" : "stressed",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 934,
+        "endOffset" : 942,
+        "lemma" : "stress",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_163",
+        "text" : "Kulang",
+        "tag" : "NNP",
+        "entity" : "PERSON",
+        "startOffset" : 943,
+        "endOffset" : 949,
+        "lemma" : "Kulang",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_164",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 949,
+        "endOffset" : 950,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_156"
+        },
+        "destination" : {
+          "@id" : "_:Word_159"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_156"
+        },
+        "destination" : {
+          "@id" : "_:Word_155"
+        },
+        "relation" : "mark"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_159"
+        },
+        "destination" : {
+          "@id" : "_:Word_157"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_159"
+        },
+        "destination" : {
+          "@id" : "_:Word_158"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_162"
+        },
+        "destination" : {
+          "@id" : "_:Word_142"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_162"
+        },
+        "destination" : {
+          "@id" : "_:Word_144"
+        },
+        "relation" : "ccomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_162"
+        },
+        "destination" : {
+          "@id" : "_:Word_160"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_162"
+        },
+        "destination" : {
+          "@id" : "_:Word_161"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_162"
+        },
+        "destination" : {
+          "@id" : "_:Word_163"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_162"
+        },
+        "destination" : {
+          "@id" : "_:Word_164"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_144"
+        },
+        "destination" : {
+          "@id" : "_:Word_143"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_144"
+        },
+        "destination" : {
+          "@id" : "_:Word_148"
+        },
+        "relation" : "nmod_upon"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_144"
+        },
+        "destination" : {
+          "@id" : "_:Word_150"
+        },
+        "relation" : "xcomp"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_148"
+        },
+        "destination" : {
+          "@id" : "_:Word_145"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_148"
+        },
+        "destination" : {
+          "@id" : "_:Word_146"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_148"
+        },
+        "destination" : {
+          "@id" : "_:Word_147"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_150"
+        },
+        "destination" : {
+          "@id" : "_:Word_156"
+        },
+        "relation" : "advcl_to"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_150"
+        },
+        "destination" : {
+          "@id" : "_:Word_143"
+        },
+        "relation" : "nsubj:xsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_150"
+        },
+        "destination" : {
+          "@id" : "_:Word_149"
+        },
+        "relation" : "mark"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_150"
+        },
+        "destination" : {
+          "@id" : "_:Word_151"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_150"
+        },
+        "destination" : {
+          "@id" : "_:Word_154"
+        },
+        "relation" : "nmod_with"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_154"
+        },
+        "destination" : {
+          "@id" : "_:Word_152"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_154"
+        },
+        "destination" : {
+          "@id" : "_:Word_153"
+        },
+        "relation" : "det"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_7",
+      "text" : "Much of South Sudan receives little rainfall and only 5 % of the arable land is currently cultivated .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_165",
+        "text" : "Much",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 952,
+        "endOffset" : 956,
+        "lemma" : "much",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_166",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 957,
+        "endOffset" : 959,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_167",
+        "text" : "South",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 960,
+        "endOffset" : 965,
+        "lemma" : "South",
+        "chunk" : "B-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_168",
+        "text" : "Sudan",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 966,
+        "endOffset" : 971,
+        "lemma" : "Sudan",
+        "chunk" : "I-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_169",
+        "text" : "receives",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 972,
+        "endOffset" : 980,
+        "lemma" : "receive",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_170",
+        "text" : "little",
+        "tag" : "JJ",
+        "entity" : "B-Quantifier",
+        "startOffset" : 981,
+        "endOffset" : 987,
+        "lemma" : "little",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_171",
+        "text" : "rainfall",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 988,
+        "endOffset" : 996,
+        "lemma" : "rainfall",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_172",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 997,
+        "endOffset" : 1000,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_173",
+        "text" : "only",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 1001,
+        "endOffset" : 1005,
+        "lemma" : "only",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_174",
+        "text" : "5",
+        "tag" : "CD",
+        "entity" : "PERCENT",
+        "startOffset" : 1006,
+        "endOffset" : 1007,
+        "lemma" : "5",
+        "chunk" : "I-NP",
+        "norm" : "%5.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_175",
+        "text" : "%",
+        "tag" : "NN",
+        "entity" : "PERCENT",
+        "startOffset" : 1007,
+        "endOffset" : 1008,
+        "lemma" : "%",
+        "chunk" : "I-NP",
+        "norm" : "%5.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_176",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1009,
+        "endOffset" : 1011,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_177",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 1012,
+        "endOffset" : 1015,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_178",
+        "text" : "arable",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 1016,
+        "endOffset" : 1022,
+        "lemma" : "arable",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_179",
+        "text" : "land",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1023,
+        "endOffset" : 1027,
+        "lemma" : "land",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_180",
+        "text" : "is",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 1028,
+        "endOffset" : 1030,
+        "lemma" : "be",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_181",
+        "text" : "currently",
+        "tag" : "RB",
+        "entity" : "DATE",
+        "startOffset" : 1031,
+        "endOffset" : 1040,
+        "lemma" : "currently",
+        "chunk" : "I-VP",
+        "norm" : "PRESENT_REF"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_182",
+        "text" : "cultivated",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 1041,
+        "endOffset" : 1051,
+        "lemma" : "cultivate",
+        "chunk" : "I-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_183",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 1051,
+        "endOffset" : 1052,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_182"
+        },
+        "destination" : {
+          "@id" : "_:Word_183"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_182"
+        },
+        "destination" : {
+          "@id" : "_:Word_169"
+        },
+        "relation" : "csubjpass"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_182"
+        },
+        "destination" : {
+          "@id" : "_:Word_180"
+        },
+        "relation" : "auxpass"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_182"
+        },
+        "destination" : {
+          "@id" : "_:Word_181"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_165"
+        },
+        "destination" : {
+          "@id" : "_:Word_168"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_168"
+        },
+        "destination" : {
+          "@id" : "_:Word_166"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_168"
+        },
+        "destination" : {
+          "@id" : "_:Word_167"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_169"
+        },
+        "destination" : {
+          "@id" : "_:Word_171"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_169"
+        },
+        "destination" : {
+          "@id" : "_:Word_175"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_169"
+        },
+        "destination" : {
+          "@id" : "_:Word_165"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_171"
+        },
+        "destination" : {
+          "@id" : "_:Word_170"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_171"
+        },
+        "destination" : {
+          "@id" : "_:Word_172"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_171"
+        },
+        "destination" : {
+          "@id" : "_:Word_175"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_174"
+        },
+        "destination" : {
+          "@id" : "_:Word_173"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_175"
+        },
+        "destination" : {
+          "@id" : "_:Word_174"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_175"
+        },
+        "destination" : {
+          "@id" : "_:Word_179"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_179"
+        },
+        "destination" : {
+          "@id" : "_:Word_176"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_179"
+        },
+        "destination" : {
+          "@id" : "_:Word_177"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_179"
+        },
+        "destination" : {
+          "@id" : "_:Word_178"
+        },
+        "relation" : "amod"
+      } ],
+      "geoids" : [ {
+        "@type" : "GeoidPhrases",
+        "@id" : "_:GeoidPhrases_3",
+        "startOffset" : 960,
+        "endOffset" : 980,
+        "text" : "South Sudan",
+        "geoID" : "7909807"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_8",
+      "text" : "Nonetheless , the country has significant potential for increased cereal production , especially in the southern regions with the highest annual rainfall .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_184",
+        "text" : "Nonetheless",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 1053,
+        "endOffset" : 1064,
+        "lemma" : "nonetheless",
+        "chunk" : "B-ADVP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_185",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 1064,
+        "endOffset" : 1065,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_186",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 1066,
+        "endOffset" : 1069,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_187",
+        "text" : "country",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1070,
+        "endOffset" : 1077,
+        "lemma" : "country",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_188",
+        "text" : "has",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 1078,
+        "endOffset" : 1081,
+        "lemma" : "have",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_189",
+        "text" : "significant",
+        "tag" : "JJ",
+        "entity" : "B-Quantifier",
+        "startOffset" : 1082,
+        "endOffset" : 1093,
+        "lemma" : "significant",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_190",
+        "text" : "potential",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1094,
+        "endOffset" : 1103,
+        "lemma" : "potential",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_191",
+        "text" : "for",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1104,
+        "endOffset" : 1107,
+        "lemma" : "for",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_192",
+        "text" : "increased",
+        "tag" : "VBN",
+        "entity" : "O",
+        "startOffset" : 1108,
+        "endOffset" : 1117,
+        "lemma" : "increase",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_193",
+        "text" : "cereal",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1118,
+        "endOffset" : 1124,
+        "lemma" : "cereal",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_194",
+        "text" : "production",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1125,
+        "endOffset" : 1135,
+        "lemma" : "production",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_195",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 1135,
+        "endOffset" : 1136,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_196",
+        "text" : "especially",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 1137,
+        "endOffset" : 1147,
+        "lemma" : "especially",
+        "chunk" : "B-ADVP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_197",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1148,
+        "endOffset" : 1150,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_198",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 1151,
+        "endOffset" : 1154,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_199",
+        "text" : "southern",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 1155,
+        "endOffset" : 1163,
+        "lemma" : "southern",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_200",
+        "text" : "regions",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 1164,
+        "endOffset" : 1171,
+        "lemma" : "region",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_201",
+        "text" : "with",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1172,
+        "endOffset" : 1176,
+        "lemma" : "with",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_202",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 1177,
+        "endOffset" : 1180,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_203",
+        "text" : "highest",
+        "tag" : "JJS",
+        "entity" : "O",
+        "startOffset" : 1181,
+        "endOffset" : 1188,
+        "lemma" : "highest",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_204",
+        "text" : "annual",
+        "tag" : "JJ",
+        "entity" : "SET",
+        "startOffset" : 1189,
+        "endOffset" : 1195,
+        "lemma" : "annual",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_205",
+        "text" : "rainfall",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 1196,
+        "endOffset" : 1204,
+        "lemma" : "rainfall",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_206",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 1204,
+        "endOffset" : 1205,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_205"
+        },
+        "destination" : {
+          "@id" : "_:Word_204"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_205"
+        },
+        "destination" : {
+          "@id" : "_:Word_201"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_205"
+        },
+        "destination" : {
+          "@id" : "_:Word_202"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_205"
+        },
+        "destination" : {
+          "@id" : "_:Word_203"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_187"
+        },
+        "destination" : {
+          "@id" : "_:Word_186"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_190"
+        },
+        "relation" : "dobj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_206"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_195"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_184"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_200"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_185"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_188"
+        },
+        "destination" : {
+          "@id" : "_:Word_187"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_190"
+        },
+        "destination" : {
+          "@id" : "_:Word_189"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_190"
+        },
+        "destination" : {
+          "@id" : "_:Word_194"
+        },
+        "relation" : "nmod_for"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_194"
+        },
+        "destination" : {
+          "@id" : "_:Word_191"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_194"
+        },
+        "destination" : {
+          "@id" : "_:Word_192"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_194"
+        },
+        "destination" : {
+          "@id" : "_:Word_193"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_200"
+        },
+        "destination" : {
+          "@id" : "_:Word_205"
+        },
+        "relation" : "nmod_with"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_200"
+        },
+        "destination" : {
+          "@id" : "_:Word_196"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_200"
+        },
+        "destination" : {
+          "@id" : "_:Word_197"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_200"
+        },
+        "destination" : {
+          "@id" : "_:Word_198"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_200"
+        },
+        "destination" : {
+          "@id" : "_:Word_199"
+        },
+        "relation" : "amod"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_9",
+      "text" : "Accurate data on crop area and production for South Sudan are scarce , and there is considerable uncertainty in estimates .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_207",
+        "text" : "Accurate",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 1206,
+        "endOffset" : 1214,
+        "lemma" : "accurate",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_208",
+        "text" : "data",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 1215,
+        "endOffset" : 1219,
+        "lemma" : "datum",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_209",
+        "text" : "on",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1220,
+        "endOffset" : 1222,
+        "lemma" : "on",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_210",
+        "text" : "crop",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1223,
+        "endOffset" : 1227,
+        "lemma" : "crop",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_211",
+        "text" : "area",
+        "tag" : "NN",
+        "entity" : "B-Property",
+        "startOffset" : 1228,
+        "endOffset" : 1232,
+        "lemma" : "area",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_212",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 1233,
+        "endOffset" : 1236,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_213",
+        "text" : "production",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1237,
+        "endOffset" : 1247,
+        "lemma" : "production",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_214",
+        "text" : "for",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1248,
+        "endOffset" : 1251,
+        "lemma" : "for",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_215",
+        "text" : "South",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 1252,
+        "endOffset" : 1257,
+        "lemma" : "South",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_216",
+        "text" : "Sudan",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 1258,
+        "endOffset" : 1263,
+        "lemma" : "Sudan",
+        "chunk" : "I-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_217",
+        "text" : "are",
+        "tag" : "VBP",
+        "entity" : "O",
+        "startOffset" : 1264,
+        "endOffset" : 1267,
+        "lemma" : "be",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_218",
+        "text" : "scarce",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 1268,
+        "endOffset" : 1274,
+        "lemma" : "scarce",
+        "chunk" : "B-ADJP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_219",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 1274,
+        "endOffset" : 1275,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_220",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 1276,
+        "endOffset" : 1279,
+        "lemma" : "and",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_221",
+        "text" : "there",
+        "tag" : "EX",
+        "entity" : "O",
+        "startOffset" : 1280,
+        "endOffset" : 1285,
+        "lemma" : "there",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_222",
+        "text" : "is",
+        "tag" : "VBZ",
+        "entity" : "O",
+        "startOffset" : 1286,
+        "endOffset" : 1288,
+        "lemma" : "be",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_223",
+        "text" : "considerable",
+        "tag" : "JJ",
+        "entity" : "B-Quantifier",
+        "startOffset" : 1289,
+        "endOffset" : 1301,
+        "lemma" : "considerable",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_224",
+        "text" : "uncertainty",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1302,
+        "endOffset" : 1313,
+        "lemma" : "uncertainty",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_225",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1314,
+        "endOffset" : 1316,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_226",
+        "text" : "estimates",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 1317,
+        "endOffset" : 1326,
+        "lemma" : "estimate",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_227",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 1326,
+        "endOffset" : 1327,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_208"
+        },
+        "destination" : {
+          "@id" : "_:Word_216"
+        },
+        "relation" : "nmod_for"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_208"
+        },
+        "destination" : {
+          "@id" : "_:Word_207"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_208"
+        },
+        "destination" : {
+          "@id" : "_:Word_211"
+        },
+        "relation" : "nmod_on"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_208"
+        },
+        "destination" : {
+          "@id" : "_:Word_213"
+        },
+        "relation" : "nmod_on"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_211"
+        },
+        "destination" : {
+          "@id" : "_:Word_209"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_211"
+        },
+        "destination" : {
+          "@id" : "_:Word_210"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_211"
+        },
+        "destination" : {
+          "@id" : "_:Word_212"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_211"
+        },
+        "destination" : {
+          "@id" : "_:Word_213"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_216"
+        },
+        "destination" : {
+          "@id" : "_:Word_214"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_216"
+        },
+        "destination" : {
+          "@id" : "_:Word_215"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_218"
+        },
+        "destination" : {
+          "@id" : "_:Word_217"
+        },
+        "relation" : "cop"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_218"
+        },
+        "destination" : {
+          "@id" : "_:Word_219"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_218"
+        },
+        "destination" : {
+          "@id" : "_:Word_220"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_218"
+        },
+        "destination" : {
+          "@id" : "_:Word_222"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_218"
+        },
+        "destination" : {
+          "@id" : "_:Word_208"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_218"
+        },
+        "destination" : {
+          "@id" : "_:Word_227"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_222"
+        },
+        "destination" : {
+          "@id" : "_:Word_221"
+        },
+        "relation" : "expl"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_222"
+        },
+        "destination" : {
+          "@id" : "_:Word_224"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_224"
+        },
+        "destination" : {
+          "@id" : "_:Word_223"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_224"
+        },
+        "destination" : {
+          "@id" : "_:Word_226"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_226"
+        },
+        "destination" : {
+          "@id" : "_:Word_225"
+        },
+        "relation" : "case"
+      } ],
+      "geoids" : [ {
+        "@type" : "GeoidPhrases",
+        "@id" : "_:GeoidPhrases_4",
+        "startOffset" : 1258,
+        "endOffset" : 1267,
+        "text" : "Sudan",
+        "geoID" : "8056717"
+      } ]
+    }, {
+      "@type" : "Sentence",
+      "@id" : "_:Sentence_10",
+      "text" : "Nearly 5 million people or more than 40 % of the population in South Sudan were in need of urgent food , agriculture and nutrition assistance , the Integrated Food Security Phase Classification ( IPC ) projected early this year .",
+      "words" : [ {
+        "@type" : "Word",
+        "@id" : "_:Word_228",
+        "text" : "Nearly",
+        "tag" : "RB",
+        "entity" : "O",
+        "startOffset" : 1329,
+        "endOffset" : 1335,
+        "lemma" : "nearly",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_229",
+        "text" : "5",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 1336,
+        "endOffset" : 1337,
+        "lemma" : "5",
+        "chunk" : "I-NP",
+        "norm" : "~5000000.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_230",
+        "text" : "million",
+        "tag" : "CD",
+        "entity" : "NUMBER",
+        "startOffset" : 1338,
+        "endOffset" : 1345,
+        "lemma" : "million",
+        "chunk" : "I-NP",
+        "norm" : "~5000000.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_231",
+        "text" : "people",
+        "tag" : "NNS",
+        "entity" : "O",
+        "startOffset" : 1346,
+        "endOffset" : 1352,
+        "lemma" : "people",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_232",
+        "text" : "or",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 1353,
+        "endOffset" : 1355,
+        "lemma" : "or",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_233",
+        "text" : "more",
+        "tag" : "JJR",
+        "entity" : "O",
+        "startOffset" : 1356,
+        "endOffset" : 1360,
+        "lemma" : "more",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_234",
+        "text" : "than",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1361,
+        "endOffset" : 1365,
+        "lemma" : "than",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_235",
+        "text" : "40",
+        "tag" : "CD",
+        "entity" : "PERCENT",
+        "startOffset" : 1366,
+        "endOffset" : 1368,
+        "lemma" : "40",
+        "chunk" : "I-NP",
+        "norm" : ">%40.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_236",
+        "text" : "%",
+        "tag" : "NN",
+        "entity" : "PERCENT",
+        "startOffset" : 1368,
+        "endOffset" : 1369,
+        "lemma" : "%",
+        "chunk" : "I-NP",
+        "norm" : ">%40.0"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_237",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1370,
+        "endOffset" : 1372,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_238",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 1373,
+        "endOffset" : 1376,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_239",
+        "text" : "population",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1377,
+        "endOffset" : 1387,
+        "lemma" : "population",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_240",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1388,
+        "endOffset" : 1390,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_241",
+        "text" : "South",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 1391,
+        "endOffset" : 1396,
+        "lemma" : "South",
+        "chunk" : "B-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_242",
+        "text" : "Sudan",
+        "tag" : "NNP",
+        "entity" : "LOCATION",
+        "startOffset" : 1397,
+        "endOffset" : 1402,
+        "lemma" : "Sudan",
+        "chunk" : "I-NP",
+        "norm" : "LOC"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_243",
+        "text" : "were",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 1403,
+        "endOffset" : 1407,
+        "lemma" : "be",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_244",
+        "text" : "in",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1408,
+        "endOffset" : 1410,
+        "lemma" : "in",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_245",
+        "text" : "need",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1411,
+        "endOffset" : 1415,
+        "lemma" : "need",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_246",
+        "text" : "of",
+        "tag" : "IN",
+        "entity" : "O",
+        "startOffset" : 1416,
+        "endOffset" : 1418,
+        "lemma" : "of",
+        "chunk" : "B-PP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_247",
+        "text" : "urgent",
+        "tag" : "JJ",
+        "entity" : "O",
+        "startOffset" : 1419,
+        "endOffset" : 1425,
+        "lemma" : "urgent",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_248",
+        "text" : "food",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1426,
+        "endOffset" : 1430,
+        "lemma" : "food",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_249",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 1430,
+        "endOffset" : 1431,
+        "lemma" : ",",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_250",
+        "text" : "agriculture",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1432,
+        "endOffset" : 1443,
+        "lemma" : "agriculture",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_251",
+        "text" : "and",
+        "tag" : "CC",
+        "entity" : "O",
+        "startOffset" : 1444,
+        "endOffset" : 1447,
+        "lemma" : "and",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_252",
+        "text" : "nutrition",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1448,
+        "endOffset" : 1457,
+        "lemma" : "nutrition",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_253",
+        "text" : "assistance",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1458,
+        "endOffset" : 1468,
+        "lemma" : "assistance",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_254",
+        "text" : ",",
+        "tag" : ",",
+        "entity" : "O",
+        "startOffset" : 1468,
+        "endOffset" : 1469,
+        "lemma" : ",",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_255",
+        "text" : "the",
+        "tag" : "DT",
+        "entity" : "O",
+        "startOffset" : 1470,
+        "endOffset" : 1473,
+        "lemma" : "the",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_256",
+        "text" : "Integrated",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 1474,
+        "endOffset" : 1484,
+        "lemma" : "Integrated",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_257",
+        "text" : "Food",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 1485,
+        "endOffset" : 1489,
+        "lemma" : "Food",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_258",
+        "text" : "Security",
+        "tag" : "NNP",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 1490,
+        "endOffset" : 1498,
+        "lemma" : "Security",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_259",
+        "text" : "Phase",
+        "tag" : "NN",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 1499,
+        "endOffset" : 1504,
+        "lemma" : "phase",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_260",
+        "text" : "Classification",
+        "tag" : "NN",
+        "entity" : "ORGANIZATION",
+        "startOffset" : 1505,
+        "endOffset" : 1519,
+        "lemma" : "classification",
+        "chunk" : "I-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_261",
+        "text" : "(",
+        "tag" : "-LRB-",
+        "entity" : "O",
+        "startOffset" : 1520,
+        "endOffset" : 1521,
+        "lemma" : "-lrb-",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_262",
+        "text" : "IPC",
+        "tag" : "NN",
+        "entity" : "O",
+        "startOffset" : 1521,
+        "endOffset" : 1524,
+        "lemma" : "ipc",
+        "chunk" : "B-NP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_263",
+        "text" : ")",
+        "tag" : "-RRB-",
+        "entity" : "O",
+        "startOffset" : 1524,
+        "endOffset" : 1525,
+        "lemma" : "-rrb-",
+        "chunk" : "O",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_264",
+        "text" : "projected",
+        "tag" : "VBD",
+        "entity" : "O",
+        "startOffset" : 1526,
+        "endOffset" : 1535,
+        "lemma" : "project",
+        "chunk" : "B-VP",
+        "norm" : "O"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_265",
+        "text" : "early",
+        "tag" : "RB",
+        "entity" : "DATE",
+        "startOffset" : 1536,
+        "endOffset" : 1541,
+        "lemma" : "early",
+        "chunk" : "B-NP",
+        "norm" : "THIS P1Y"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_266",
+        "text" : "this",
+        "tag" : "DT",
+        "entity" : "DATE",
+        "startOffset" : 1542,
+        "endOffset" : 1546,
+        "lemma" : "this",
+        "chunk" : "I-NP",
+        "norm" : "THIS P1Y"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_267",
+        "text" : "year",
+        "tag" : "NN",
+        "entity" : "DATE",
+        "startOffset" : 1547,
+        "endOffset" : 1551,
+        "lemma" : "year",
+        "chunk" : "I-NP",
+        "norm" : "THIS P1Y"
+      }, {
+        "@type" : "Word",
+        "@id" : "_:Word_268",
+        "text" : ".",
+        "tag" : ".",
+        "entity" : "O",
+        "startOffset" : 1551,
+        "endOffset" : 1552,
+        "lemma" : ".",
+        "chunk" : "O",
+        "norm" : "O"
+      } ],
+      "dependencies" : [ {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_230"
+        },
+        "destination" : {
+          "@id" : "_:Word_228"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_230"
+        },
+        "destination" : {
+          "@id" : "_:Word_229"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_231"
+        },
+        "destination" : {
+          "@id" : "_:Word_230"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_231"
+        },
+        "destination" : {
+          "@id" : "_:Word_232"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_231"
+        },
+        "destination" : {
+          "@id" : "_:Word_236"
+        },
+        "relation" : "conj_or"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_233"
+        },
+        "destination" : {
+          "@id" : "_:Word_234"
+        },
+        "relation" : "mwe"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_235"
+        },
+        "destination" : {
+          "@id" : "_:Word_233"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_236"
+        },
+        "destination" : {
+          "@id" : "_:Word_239"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_236"
+        },
+        "destination" : {
+          "@id" : "_:Word_235"
+        },
+        "relation" : "nummod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_239"
+        },
+        "destination" : {
+          "@id" : "_:Word_238"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_239"
+        },
+        "destination" : {
+          "@id" : "_:Word_242"
+        },
+        "relation" : "nmod_in"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_239"
+        },
+        "destination" : {
+          "@id" : "_:Word_237"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_242"
+        },
+        "destination" : {
+          "@id" : "_:Word_240"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_242"
+        },
+        "destination" : {
+          "@id" : "_:Word_241"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_254"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_243"
+        },
+        "relation" : "cop"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_244"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_231"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_248"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_264"
+        },
+        "relation" : "acl:relcl"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_250"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_236"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_268"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_245"
+        },
+        "destination" : {
+          "@id" : "_:Word_253"
+        },
+        "relation" : "nmod_of"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_248"
+        },
+        "destination" : {
+          "@id" : "_:Word_246"
+        },
+        "relation" : "case"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_248"
+        },
+        "destination" : {
+          "@id" : "_:Word_247"
+        },
+        "relation" : "amod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_248"
+        },
+        "destination" : {
+          "@id" : "_:Word_249"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_248"
+        },
+        "destination" : {
+          "@id" : "_:Word_250"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_248"
+        },
+        "destination" : {
+          "@id" : "_:Word_251"
+        },
+        "relation" : "cc"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_248"
+        },
+        "destination" : {
+          "@id" : "_:Word_253"
+        },
+        "relation" : "conj_and"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_253"
+        },
+        "destination" : {
+          "@id" : "_:Word_252"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_260"
+        },
+        "destination" : {
+          "@id" : "_:Word_255"
+        },
+        "relation" : "det"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_260"
+        },
+        "destination" : {
+          "@id" : "_:Word_256"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_260"
+        },
+        "destination" : {
+          "@id" : "_:Word_257"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_260"
+        },
+        "destination" : {
+          "@id" : "_:Word_258"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_260"
+        },
+        "destination" : {
+          "@id" : "_:Word_259"
+        },
+        "relation" : "compound"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_260"
+        },
+        "destination" : {
+          "@id" : "_:Word_262"
+        },
+        "relation" : "appos"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_262"
+        },
+        "destination" : {
+          "@id" : "_:Word_261"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_262"
+        },
+        "destination" : {
+          "@id" : "_:Word_263"
+        },
+        "relation" : "punct"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_264"
+        },
+        "destination" : {
+          "@id" : "_:Word_260"
+        },
+        "relation" : "nsubj"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_264"
+        },
+        "destination" : {
+          "@id" : "_:Word_267"
+        },
+        "relation" : "nmod:tmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_267"
+        },
+        "destination" : {
+          "@id" : "_:Word_265"
+        },
+        "relation" : "advmod"
+      }, {
+        "@type" : "Dependency",
+        "source" : {
+          "@id" : "_:Word_267"
+        },
+        "destination" : {
+          "@id" : "_:Word_266"
+        },
+        "relation" : "det"
+      } ],
+      "geoids" : [ {
+        "@type" : "GeoidPhrases",
+        "@id" : "_:GeoidPhrases_5",
+        "startOffset" : 1391,
+        "endOffset" : 1407,
+        "text" : "South Sudan",
+        "geoID" : "7909807"
+      } ]
+    } ]
+  } ],
+  "extractions" : [ {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_1",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "Floods",
+    "rule" : "simple-np",
+    "canonicalName" : "flood",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 6
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 1
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_2",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "rain",
+    "rule" : "simple-np",
+    "canonicalName" : "rain",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 18,
+        "end" : 21
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 4,
+        "end" : 4
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_6",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "fears about the devastating impact",
+    "rule" : "simple-np++Increase_ported_syntax_1_verb",
+    "canonicalName" : "fear",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 105,
+        "end" : 138
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 20,
+        "end" : 24
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "raising",
+      "provenance" : {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharInterval" : [ {
+          "@type" : "Interval",
+          "start" : 97,
+          "end" : 103
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_1"
+        },
+        "positions" : [ {
+          "@type" : "Interval",
+          "start" : 19,
+          "end" : 19
+        } ]
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_7",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "Floods caused by rain have displaced more than 100,000 people in South Sudan",
+    "rule" : "simple-np++simple-vp",
+    "canonicalName" : "flood cause rain have displace",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 76
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 13
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "LocationExp",
+      "text" : "South Sudan",
+      "value" : {
+        "@id" : "_:GeoidPhrases_1"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_8",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "floods",
+    "rule" : "simple-np",
+    "canonicalName" : "flood",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 632,
+        "end" : 637
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_5"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 7,
+        "end" : 7
+      } ]
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_9",
+    "type" : "concept",
+    "subtype" : "entity",
+    "labels" : [ "Concept", "Entity" ],
+    "text" : "already dire humanitarian situation across the country, including the spread of cholera",
+    "rule" : "simple-np++Decrease_ported_syntax_1_verb",
+    "canonicalName" : "include cholera",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 656,
+        "end" : 742
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_5"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 11,
+        "end" : 23
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "DEC",
+      "text" : "worsen",
+      "provenance" : {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharInterval" : [ {
+          "@type" : "Interval",
+          "start" : 645,
+          "end" : 650
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_5"
+        },
+        "positions" : [ {
+          "@type" : "Interval",
+          "start" : 9,
+          "end" : 9
+        } ]
+      }
+    }, {
+      "@type" : "State",
+      "type" : "INC",
+      "text" : "spread",
+      "provenance" : {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharInterval" : [ {
+          "@type" : "Interval",
+          "start" : 726,
+          "end" : 731
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_5"
+        },
+        "positions" : [ {
+          "@type" : "Interval",
+          "start" : 21,
+          "end" : 21
+        } ]
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_3",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "floods could worsen the already dire humanitarian situation across the country, including the spread of cholera",
+    "rule" : "ported_syntax_1_verb-Causal",
+    "canonicalName" : "flood worsen include cholera",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 632,
+        "end" : 742
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_5"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 7,
+        "end" : 23
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "HEDGE",
+      "text" : "could"
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "worsen",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharInterval" : [ {
+          "@type" : "Interval",
+          "start" : 645,
+          "end" : 650
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_5"
+        },
+        "positions" : [ {
+          "@type" : "Interval",
+          "start" : 9,
+          "end" : 9
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_8"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_9"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_4",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "Floods caused by rain have displaced more than 100,000 people in South Sudan, an official said, raising fears about the devastating impact",
+    "rule" : "ported_syntax_5_verb-Causal",
+    "canonicalName" : "flood cause rain have displace raise fear",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 138
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 24
+      } ]
+    } ],
+    "states" : [ {
+      "@type" : "State",
+      "type" : "HEDGE",
+      "text" : "could"
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "raising",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharInterval" : [ {
+          "@type" : "Interval",
+          "start" : 97,
+          "end" : 103
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_1"
+        },
+        "positions" : [ {
+          "@type" : "Interval",
+          "start" : 19,
+          "end" : 19
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_7"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_6"
+      }
+    } ]
+  }, {
+    "@type" : "Extraction",
+    "@id" : "_:Extraction_5",
+    "type" : "relation",
+    "subtype" : "causation",
+    "labels" : [ "Causal", "DirectedRelation", "EntityLinker", "Event" ],
+    "text" : "Floods caused by rain",
+    "rule" : "ported_syntax_1c_verb-Causal",
+    "canonicalName" : "flood cause rain",
+    "provenance" : [ {
+      "@type" : "Provenance",
+      "document" : {
+        "@id" : "_:Document_1"
+      },
+      "documentCharInterval" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 21
+      } ],
+      "sentence" : {
+        "@id" : "_:Sentence_1"
+      },
+      "positions" : [ {
+        "@type" : "Interval",
+        "start" : 1,
+        "end" : 4
+      } ]
+    } ],
+    "trigger" : {
+      "@type" : "Trigger",
+      "text" : "caused",
+      "provenance" : [ {
+        "@type" : "Provenance",
+        "document" : {
+          "@id" : "_:Document_1"
+        },
+        "documentCharInterval" : [ {
+          "@type" : "Interval",
+          "start" : 8,
+          "end" : 13
+        } ],
+        "sentence" : {
+          "@id" : "_:Sentence_1"
+        },
+        "positions" : [ {
+          "@type" : "Interval",
+          "start" : 2,
+          "end" : 2
+        } ]
+      } ]
+    },
+    "arguments" : [ {
+      "@type" : "Argument",
+      "type" : "source",
+      "value" : {
+        "@id" : "_:Extraction_2"
+      }
+    }, {
+      "@type" : "Argument",
+      "type" : "destination",
+      "value" : {
+        "@id" : "_:Extraction_1"
+      }
+    } ]
+  } ]
+}
