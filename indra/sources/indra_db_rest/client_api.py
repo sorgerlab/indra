@@ -151,7 +151,7 @@ class IndraDBRestResponse(object):
         params['max_stmts'] = self.__quota
         if stmt_type is not None:
             params['type'] = stmt_type
-        resp = _submit_query_request('statements', *agent_strs, **params)
+        resp = _submit_query_request('from_agents', *agent_strs, **params)
         resp_dict = resp.json(object_pairs_hook=OrderedDict)
         stmts_json = resp_dict['statements']
         ev_totals = resp_dict['evidence_totals']
@@ -367,9 +367,9 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     tries : int > 0
         Set the number of times to try the query. The database often caches
         results, so if a query times out the first time, trying again after a
-        timeout will often succeed fast enough to avoid a timeout. This can also
-        help gracefully handle an unreliable connection, if you're willing to
-        wait. Default is 2.
+        timeout will often succeed fast enough to avoid a timeout. This can
+        also help gracefully handle an unreliable connection, if you're
+        willing to wait. Default is 2.
     """
     if not isinstance(hash_list, list):
         raise ValueError("The `hash_list` input is a list, not %s."
@@ -379,11 +379,11 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
     if isinstance(hash_list[0], str):
         hash_list = [int(h) for h in hash_list]
     if not all([isinstance(h, int) for h in hash_list]):
-        raise ValueError("Hashes must be ints or strings that can be converted "
-                         "into ints.")
-    resp = _submit_request('post', 'statements/from_hashes',
-                           data={'hashes': hash_list}, ev_limit=ev_limit,
-                           best_first=best_first, tries=tries, div='')
+        raise ValueError("Hashes must be ints or strings that can be "
+                         "converted into ints.")
+    resp = _submit_statement_request('post', 'from_hashes', ev_limit=ev_limit,
+                                     data={'hashes': hash_list},
+                                     best_first=best_first, tries=tries)
     return stmts_from_json(resp.json()['statements'].values())
 
 
@@ -421,11 +421,19 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
     stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
-    resp = _submit_query_request('papers', id=id_val, type=id_type,
+    resp = _submit_query_request('from_papers', id=id_val, type=id_type,
                                  ev_limit=ev_limit, best_first=best_first,
                                  tries=tries, max_stmts=max_stmts)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json.values())
+
+
+def submit_curation(level, hash_val, tag, text, curator,
+                    source='indra_rest_client'):
+    """Submit a curation for the given statement at the relevant level."""
+    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source}
+    return _make_request('post', 'curation/%s/%s' % (level, hash_val),
+                        data=data)
 
 
 def _submit_query_request(end_point, *args, **kwargs):
@@ -436,30 +444,34 @@ def _submit_query_request(end_point, *args, **kwargs):
     # This isn't handled by requests because of the multiple identical agent
     # keys, e.g. {'agent': 'MEK', 'agent': 'ERK'} which is not supported in
     # python, but is allowed and necessary in these query strings.
+    # TODO because we use the API Gateway, this feature is not longer needed.
+    # We should just use the requests parameters dict.
     query_str = '?' + '&'.join(['%s=%s' % (k, v) for k, v in kwargs.items()
                                 if v is not None]
                                + list(args))
-    return _submit_request('get', end_point, query_str, ev_limit=ev_limit,
-                           best_first=best_first, tries=tries)
+    return _submit_statement_request('get', end_point, query_str,
+                                     ev_limit=ev_limit, best_first=best_first,
+                                     tries=tries)
 
 
 @clockit
-def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
-                    best_first=True, tries=2, div='/'):
+def _submit_statement_request(meth, end_point, query_str='', data=None,
+                              ev_limit=50, best_first=True, tries=2):
     """Even lower level function to make the request."""
+    params = {'ev_limit': ev_limit, 'best_first': best_first}
+    full_end_point = 'statements/' + end_point.lstrip('/')
+    return _make_request(meth, full_end_point, query_str, data, params, tries)
+
+
+def _make_request(meth, end_point, query_str, data=None, params=None, tries=2):
     if end_point is None:
         logger.error("Exception in submit request with args: %s"
-                     % str([meth, end_point, query_str, data, ev_limit,
-                            best_first, tries, div]))
+                     % str([meth, end_point, query_str, data, params, tries]))
         raise ValueError("end_point cannot be None.")
     url = get_config('INDRA_DB_REST_URL', failure_ok=False)
     api_key = get_config('INDRA_DB_REST_API_KEY', failure_ok=True)
     url_path = url.rstrip('/') + '/' + end_point.lstrip('/')
-    if query_str:
-        query_str += '&api-key=%s' % api_key
-    else:
-        query_str = '?api-key=%s' % api_key
-    url_path += div + query_str
+    url_path += query_str
     headers = {}
     if data:
         # This is an assumption which applies to our use cases for now, but may
@@ -468,16 +480,17 @@ def _submit_request(meth, end_point, query_str='', data=None, ev_limit=50,
         json_data = json.dumps(data)
     else:
         json_data = None
-    print(url_path)
+    params['api-key'] = api_key
     logger.info('url and query string: %s',
                 url_path.replace(str(api_key), '[api-key]'))
     logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
     logger.info('data: %s', str(data).replace(str(api_key), '[api-key]'))
+    logger.info('params: %s', str(params).replace(str(api_key), '[api-key]'))
     method_func = getattr(requests, meth.lower())
     while tries > 0:
         tries -= 1
         resp = method_func(url_path, headers=headers, data=json_data,
-                           params={'ev_limit': ev_limit, 'best_first': best_first})
+                           params=params)
         if resp.status_code == 200:
             return resp
         elif resp.status_code == 504 and tries > 0:
