@@ -15,12 +15,10 @@ except ImportError:
 import logging
 import requests
 from indra.util import read_unicode_csv, write_unicode_csv
+from indra.databases import go_client
 from indra.databases import uniprot_client
 from indra.databases.lincs_client import load_lincs_csv
-from indra.preassembler.make_cellular_component_hierarchy import \
-    get_cellular_components
-from indra.preassembler.make_cellular_component_hierarchy import \
-    main as make_ccomp_hierarchy
+from indra.preassembler import make_cellular_component_hierarchy as mcch
 from indra.preassembler.make_entity_hierarchy import \
     main as make_ent_hierarchy
 from indra.preassembler.make_activity_hierarchy import \
@@ -36,6 +34,20 @@ logger = logging.getLogger('update_resources')
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('requests').setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)
+
+# Set a global variable indicating whether we've downloaded the latest GO
+# during this update cycle so that we don't do it more than once
+go_updated = False
+
+def load_latest_go():
+    global go_updated
+    go_fname = go_client.go_owl_path
+    if not go_updated:
+        url = 'http://purl.obolibrary.org/obo/go.owl'
+        print("Downloading latest GO from %s" % url)
+        save_from_http(url, go_fname)
+        go_updated = True
+    return go_client.load_go_graph(go_fname)
 
 def load_from_http(url):
     logger.info('Downloading %s' % url)
@@ -230,22 +242,25 @@ def update_chebi_primary_map():
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
 
-def update_cellular_components():
+def update_cellular_component_hierarchy():
     logger.info('--Updating GO cellular components----')
-    url = 'http://purl.obolibrary.org/obo/go.owl'
-    fname = os.path.join(path, '../../data/go.owl')
-    save_from_http(url, fname)
-    g = rdflib.Graph()
-    g.parse(os.path.abspath(fname))
-    component_map, component_part_map = get_cellular_components(g)
+    g = load_latest_go()
+    component_map, component_part_map = go_client.get_cellular_components(g)
+    # Save the cellular component ID->name mappings
     fname = os.path.join(path, 'cellular_components.tsv')
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
         fh.write('id\tname\n'.encode('utf-8'))
-
         for comp_id, comp_name in sorted(component_map.items(),
                                           key=lambda x: x[0]):
             fh.write(('%s\t%s\n' % (comp_id, comp_name)).encode('utf-8'))
+    # Create the cellular component hierarchy
+    gg = mcch.make_component_hierarchy(component_map, component_part_map)
+    mcch.save_hierarchy(gg, mcch.rdf_file)
+
+def update_go_id_mappings():
+    g = load_latest_go()
+    go_client.update_id_mappings(g)
 
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
@@ -324,10 +339,6 @@ def update_activity_hierarchy():
     logger.info('--Updating activity hierarchy----')
     make_act_hierarchy()
 
-def update_cellular_component_hierarchy():
-    logger.info('--Updating cellular component hierarchy----')
-    make_ccomp_hierarchy()
-
 def update_famplex_map():
     logger.info('--Updating FamPlex map----')
     # Currently this is a trivial "copy" of the FamPlex equivalences.csv
@@ -348,6 +359,10 @@ def update_ncit_map():
 
     url_chebi = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' + \
                 'export_mapping&dictionary=NCIt_to_ChEBI_Mapping&version=1.0'
+
+    url_swissprot = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' \
+                    'export_mapping&uri=https://evs.nci.nih.gov/ftp1/' \
+                    'NCI_Thesaurus/Mappings/NCIt-SwissProt_Mapping.txt'
 
     def get_ncit_df(url):
         df = pandas.read_csv(url)
@@ -370,21 +385,23 @@ def update_ncit_map():
     df_chebi.replace('ChEBI', 'CHEBI', inplace=True)
 
     # Add the old HGNC mappings
-    df_hgnc_old = pandas.read_csv('ncit_hgnc_map_old.tsv', sep='\t',
+    df_hgnc_old = pandas.read_csv('ncit_allele_map.tsv', sep='\t',
                                   index_col=None, dtype=str)
     df_hgnc = df_hgnc.append(df_hgnc_old)
     df_hgnc.sort_values(['Source Code', 'Target Code'], ascending=True,
                         inplace=True)
 
     # Add UniProt mappings
-    df_uniprot = pandas.read_csv('Feb2017NCIt-SwissProt.txt', sep='\t',
+    ncit_swissprot_file = 'NCIt-SwissProt.txt'
+    save_from_http(url_swissprot, ncit_swissprot_file)
+    df_uniprot = pandas.read_csv(ncit_swissprot_file, sep='\t',
                                  index_col=None)
     up_entries = {'Source Code': [], 'Target Coding Scheme': [],
                   'Target Code': []}
     for entry in df_uniprot.iterrows():
-        up_entries['Source Code'].append(entry[1]['code'].strip())
+        up_entries['Source Code'].append(entry[1]['NCIt Code'].strip())
         up_entries['Target Coding Scheme'].append('UP')
-        up_entries['Target Code'].append(entry[1]['Swiss_Prot'].strip())
+        up_entries['Target Code'].append(entry[1]['SwissProt ID'].strip())
     df_uniprot = pandas.DataFrame.from_dict(up_entries)
     df_uniprot.sort_values(['Source Code', 'Target Code'], ascending=True,
                            inplace=True)
@@ -393,9 +410,9 @@ def update_ncit_map():
 
     fname = os.path.join(path, 'ncit_map.tsv')
     df_all.to_csv(fname, sep='\t', columns=['Source Code',
-                                        'Target Coding Scheme',
-                                        'Target Code'],
-              header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
+                                            'Target Coding Scheme',
+                                            'Target Code'],
+                  header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
 
 def update_chebi_names():
     logger.info('--Updating ChEBI names----')
@@ -466,6 +483,8 @@ def update_lincs_proteins():
 
 
 if __name__ == '__main__':
+    update_go_id_mappings()
+    update_cellular_component_hierarchy()
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()
@@ -477,12 +496,10 @@ if __name__ == '__main__':
     update_chebi_names()
     update_chebi_primary_map()
     update_cas_to_chebi()
-    update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
-    update_cellular_component_hierarchy()
     update_hierarchy_pickle()
     update_ncit_map()
     update_lincs_small_molecules()

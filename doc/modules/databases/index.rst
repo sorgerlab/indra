@@ -66,3 +66,11 @@ MeSH client (:py:mod:`indra.databases.mesh_client`)
 
 .. automodule:: indra.databases.mesh_client
     :members:
+
+GO client (:py:mod:`indra.databases.go_client`)
+-----------------------------------------------
+
+.. automodule:: indra.databases.go_client
+    :members:
+
+

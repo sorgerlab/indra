@@ -87,6 +87,12 @@ phosphatases.tsv
 - A list of human phospharases with their HGNC symbols and IDs
 - Compiled based on: http://journals.plos.org/plosone/article/file?type=supplementary&id=info:doi/10.1371/journal.pone.0049943.s009
 
+ncit_allele_map.tsv
+This file was automatically generated earlier but can't be reproduced easily
+since the entries for genes here were reclassified as alleles by NCIT and
+now don't map to HGNC anymore. To still be able to maintain allele to HGNC
+mappings, this file is incorporated into the overall NCIT mapping file here.
+
 Files that don't need periodical updates
 ========================================
 amino_acids.tsv
