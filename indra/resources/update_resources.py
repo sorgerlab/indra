@@ -15,10 +15,9 @@ except ImportError:
 import logging
 import requests
 from indra.util import read_unicode_csv, write_unicode_csv
+from indra.databases import go_client
 from indra.databases import uniprot_client
 from indra.databases.lincs_client import load_lincs_csv
-from indra.preassembler.make_cellular_component_hierarchy import \
-    get_cellular_components
 from indra.preassembler.make_cellular_component_hierarchy import \
     main as make_ccomp_hierarchy
 from indra.preassembler.make_entity_hierarchy import \
@@ -36,6 +35,20 @@ logger = logging.getLogger('update_resources')
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('requests').setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)
+
+# Set a global variable indicating whether we've downloaded the latest GO
+# during this update cycle so that we don't do it more than once
+go_updated = False
+
+def load_latest_go():
+    global go_updated
+    go_fname = go_client.go_owl_path
+    if not go_updated:
+        url = 'http://purl.obolibrary.org/obo/go.owl'
+        print("Downloading latest GO from %s" % url)
+        save_from_http(url, fname)
+        go_updated = True
+    return go_client.load_go_graph()
 
 def load_from_http(url):
     logger.info('Downloading %s' % url)
@@ -232,17 +245,12 @@ def update_chebi_primary_map():
 
 def update_cellular_components():
     logger.info('--Updating GO cellular components----')
-    url = 'http://purl.obolibrary.org/obo/go.owl'
-    fname = os.path.join(path, '../../data/go.owl')
-    save_from_http(url, fname)
-    g = rdflib.Graph()
-    g.parse(os.path.abspath(fname))
-    component_map, component_part_map = get_cellular_components(g)
+    g = load_latest_go()
+    component_map, component_part_map = go_client.get_cellular_components(g)
     fname = os.path.join(path, 'cellular_components.tsv')
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
         fh.write('id\tname\n'.encode('utf-8'))
-
         for comp_id, comp_name in sorted(component_map.items(),
                                           key=lambda x: x[0]):
             fh.write(('%s\t%s\n' % (comp_id, comp_name)).encode('utf-8'))
@@ -466,6 +474,10 @@ def update_lincs_proteins():
 
 
 if __name__ == '__main__':
+    update_cellular_component_hierarchy()
+    update_cellular_components()
+    import sys; sys.exit()
+
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()
