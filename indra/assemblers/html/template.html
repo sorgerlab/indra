@@ -194,8 +194,7 @@
     <div class="statement">
         <h4 class="align-middle">{{ stmt_info['english'] }}
             <a href="./from_hash/{{ stmt_info['hash'] }}?format=html">
-                <span class="badge">{{ stmt_info['evidence_returned'] }}
-                / {{ stmt_info['total_evidence'] }}</span></a>
+                <span class="badge">{{ stmt_info['evidence_count'] }}</span></a>
         </h4>
     </div>
     <div class="evidence">
@@ -222,17 +221,19 @@
     </div> <!-- evidence -->
     {% endfor %}
 
+    {% if rest_api_results %}
     <div class="page-header">
         <h4>About this result</h4>
     </div>
     <ul>
-        <li>Statements returned: {{ statements_returned }}</li>
-        <li>Statement limit: {{ statement_limit }}</li>
-        <li>Total evidence: {{ total_evidence }}</li>
-        <li>Evidence limit: {{ evidence_limit }}</li>
-        <li>Evidence returned: {{ evidence_returned }}</li>
-        <li>Offset: {{ offset }}</li>
+        <li>Statements returned: {{ rest_api_results['statements_returned'] }}</li>
+        <li>Statement limit: {{ rest_api_results['statement_limit'] }}</li>
+        <li>Total evidence: {{ rest_api_results['total_evidence'] }}</li>
+        <li>Evidence limit: {{ rest_api_results['evidence_limit'] }}</li>
+        <li>Evidence returned: {{ rest_api_results['evidence_returned'] }}</li>
+        <li>Offset: {{ rest_api_results['offset'] }}</li>
     </ul>
+    {% endif %}
 
     </div> <!-- /container -->
   </body>
