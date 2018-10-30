@@ -1046,8 +1046,8 @@ class Evidence(object):
         self.text_references = {}
         if pmid is not None:
             self.text_references['pmid'] = pmid
-        if other_refs is not None:
-            self.text_references.update(other_refs)
+        if text_references is not None:
+            self.text_references.update(text_references)
         self.text = text
         if annotations:
             self.annotations = annotations
