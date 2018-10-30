@@ -7,7 +7,7 @@ from collections import OrderedDict
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
 from indra.preassembler.hierarchy_manager import HierarchyManager
-from indra.sources import trips, reach
+from indra.sources import trips
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
     Dephosphorylation, Evidence, ModCondition, \
     ActiveForm, MutCondition, Complex, \
@@ -775,20 +775,3 @@ def test_agent_text_storage():
     assert all([len(ev.annotations['prior_uuids']) == 2 for ev in old_ev_list])
     assert new_ev
     assert len(new_ev.annotations['prior_uuids']) == 1
-
-
-def test_reach_extraction_agent_coordinates():
-    texts = ('ERK2 is activated by MEK1', 'MEK1 activates ERK2')
-    stmts = [reach.process_text(text).statements[0] for text in texts]
-    pa = Preassembler(hierarchies, stmts)
-    unique_stmt = pa.combine_duplicates()[0]
-    evidence_list = unique_stmt.evidence
-    # sort evidence list alphabetically on text for easy comparison with
-    # the tuple of texts above. at the time this test was written, evidences
-    # already appear
-    evidence_list = sorted(evidence_list, key=lambda x: x.text)
-    for ev, coords in zip(evidence_list, [[(21, 25), (0, 4)],
-                                          [(0, 4), (15, 19)]]):
-        agents = ev.annotations['agents']
-        assert agents['raw_text'] == ['MEK1', 'ERK2']
-        assert agents['coords'] == coords
