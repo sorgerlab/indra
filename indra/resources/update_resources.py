@@ -1,7 +1,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import json
 import gzip
+import pickle
 import pandas
 import rdflib
 from indra.util import read_unicode_csv, write_unicode_csv
@@ -105,7 +107,7 @@ def update_uniprot_entries():
     with open(fname, 'wb') as fh:
         fh.write(full_table.encode('utf-8'))
     # Make pickle too
-    entries = uniprot_client._build_uniprot_entries()
+    entries = uniprot_client._build_uniprot_entries(from_pickle=False)
     fname = os.path.join(path, 'uniprot_entries.pkl')
     with open(fname, 'wb') as fh:
         pickle.dump(entries, fh, protocol=2)
@@ -444,7 +446,7 @@ def update_lincs_small_molecules():
     assert len(sm_dict) == len(sm_data), "We lost data."
     fname = os.path.join(path, 'lincs_small_molecules.json')
     with open(fname, 'w') as fh:
-        json.dump(fh, sm_dict, indent=1)
+        json.dump(sm_dict, fh, indent=1)
 
 
 def update_lincs_proteins():
@@ -460,7 +462,7 @@ def update_lincs_proteins():
     assert len(prot_dict) == len(prot_data), "We lost data."
     fname = os.path.join(path, 'lincs_proteins.json')
     with open(fname, 'w') as fh:
-        json.dump(fh, prot_dict, indent=1)
+        json.dump(prot_dict, fh, indent=1)
 
 
 if __name__ == '__main__':
