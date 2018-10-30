@@ -1038,10 +1038,16 @@ class Evidence(object):
         certainty associated with the statement.
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
-                 annotations=None, epistemics=None, context=None):
+                 annotations=None, epistemics=None, context=None,
+                 text_references=None):
         self.source_api = source_api
         self.source_id = source_id
         self.pmid = pmid
+        self.text_references = {}
+        if pmid is not None:
+            self.text_references['pmid'] = pmid
+        if other_refs is not None:
+            self.text_references.update(other_refs)
         self.text = text
         if annotations:
             self.annotations = annotations
@@ -1094,6 +1100,8 @@ class Evidence(object):
             json_dict['epistemics'] = self.epistemics
         if self.context:
             json_dict['context'] = self.context.to_json()
+        if self.text_references:
+            json_dict['text_references'] = self.text_references
         return json_dict
 
     @classmethod
@@ -1105,13 +1113,15 @@ class Evidence(object):
         annotations = json_dict.get('annotations', {}).copy()
         epistemics = json_dict.get('epistemics', {}).copy()
         context_entry = json_dict.get('context')
+        text_refs = json_dict.get('text_references', {}).copy()
         if context_entry:
             context = Context.from_json(context_entry)
         else:
             context = None
         ev = Evidence(source_api=source_api, source_id=source_id,
                       pmid=pmid, text=text, annotations=annotations,
-                      epistemics=epistemics, context=context)
+                      epistemics=epistemics, context=context,
+                      text_references=text_refs)
         return ev
 
     def __str__(self):
