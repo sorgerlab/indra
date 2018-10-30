@@ -113,6 +113,15 @@ def test_process_negation_hedging():
     assert annot.get('negated_texts') == ['not']
 
 
+def test_process_geoids():
+    geo_jsonld = os.path.join(path_this, 'eidos_geoid.json')
+    ep = eidos.process_json_file(geo_jsonld)
+    assert len(ep.geoids) == 5
+    assert ep.geoids['_:GeoidPhrases_1'].to_json() == {'name': 'South Sudan',
+                                                       'db_refs': {'GEOID': '7909807'}}
+    print(ep.statements)
+
+
 def test_eidos_to_cag():
     stmts = __get_stmts_from_remote_jsonld()
     ca = CAGAssembler()

@@ -5,7 +5,7 @@ import logging
 import datetime
 import objectpath
 from indra.statements import Influence, Association, Concept, Evidence, \
-    WorldContext, TimeContext
+    WorldContext, TimeContext, RefContext
 
 
 logger = logging.getLogger('eidos')
@@ -35,6 +35,7 @@ class EidosProcessor(object):
         self.documents = {}
         self.coreferences = {}
         self.timexes = {}
+        self.geoids = {}
         self.dct = None
         self._preprocess_extractions()
 
@@ -68,6 +69,9 @@ class EidosProcessor(object):
                 for timex in sent.get('timexes', []):
                     tc = self.time_context_from_timex(timex)
                     self.timexes[timex['@id']] = tc
+                for geoid in sent.get('geoids', []):
+                    rc = self.ref_context_from_geoid(geoid)
+                    self.geoids[geoid['@id']] = rc
 
         # Build a dictionary of coreferences
         for extraction in self.extractions:
@@ -335,6 +339,14 @@ class EidosProcessor(object):
         tc = TimeContext(text=time_text, start=start, end=end,
                          duration=duration)
         return tc
+
+    @staticmethod
+    def ref_context_from_geoid(geoid):
+        """Return a RefContext object given a geoid entry."""
+        text = geoid.get('text')
+        geoid_ref = geoid.get('geoID')
+        rc = RefContext(name=text, db_refs={'GEOID': geoid_ref})
+        return rc
 
 
 def _sanitize(text):
