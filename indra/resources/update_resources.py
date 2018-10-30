@@ -18,8 +18,7 @@ from indra.util import read_unicode_csv, write_unicode_csv
 from indra.databases import go_client
 from indra.databases import uniprot_client
 from indra.databases.lincs_client import load_lincs_csv
-from indra.preassembler.make_cellular_component_hierarchy import \
-    main as make_ccomp_hierarchy
+from indra.preassembler import make_cellular_component_hierarchy as mcch
 from indra.preassembler.make_entity_hierarchy import \
     main as make_ent_hierarchy
 from indra.preassembler.make_activity_hierarchy import \
@@ -243,10 +242,11 @@ def update_chebi_primary_map():
               columns=['CHEBI_ACCESSION', 'PARENT_ID'], 
               header=['Secondary', 'Primary'], index=False)
 
-def update_cellular_components():
+def update_cellular_component_hierarchy():
     logger.info('--Updating GO cellular components----')
     g = load_latest_go()
     component_map, component_part_map = go_client.get_cellular_components(g)
+    # Save the cellular component ID->name mappings
     fname = os.path.join(path, 'cellular_components.tsv')
     logger.info('Saving into %s' % fname)
     with open(fname, 'wb') as fh:
@@ -254,6 +254,13 @@ def update_cellular_components():
         for comp_id, comp_name in sorted(component_map.items(),
                                           key=lambda x: x[0]):
             fh.write(('%s\t%s\n' % (comp_id, comp_name)).encode('utf-8'))
+    # Create the cellular component hierarchy
+    gg = mcch.make_component_hierarchy(component_map, component_part_map)
+    mcch.save_hierarchy(gg, mcch.rdf_file)
+
+def update_go_id_mappings():
+    g = load_latest_go()
+    go_client.update_id_mappings(g)
 
 def update_bel_chebi_map():
     logger.info('--Updating BEL ChEBI map----')
@@ -331,10 +338,6 @@ def update_modification_hierarchy():
 def update_activity_hierarchy():
     logger.info('--Updating activity hierarchy----')
     make_act_hierarchy()
-
-def update_cellular_component_hierarchy():
-    logger.info('--Updating cellular component hierarchy----')
-    make_ccomp_hierarchy()
 
 def update_famplex_map():
     logger.info('--Updating FamPlex map----')
@@ -474,10 +477,7 @@ def update_lincs_proteins():
 
 
 if __name__ == '__main__':
-    update_cellular_component_hierarchy()
-    update_cellular_components()
-    import sys; sys.exit()
-
+    update_go_id_mappings()
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()

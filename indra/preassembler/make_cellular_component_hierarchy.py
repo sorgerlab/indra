@@ -6,6 +6,11 @@ import rdflib
 from rdflib import Namespace, Literal
 from indra.databases import go_client
 
+
+rdf_file = join(dirname(abspath(__file__)), '..', 'resources',
+                'cellular_component_hierarchy.rdf')
+
+
 def save_hierarchy(g, path):
     with open(path, 'wb') as out_file:
         g_bytes = g.serialize(format='nt')
@@ -34,25 +39,9 @@ def make_component_hierarchy(component_map, component_part_map):
     return g
 
 
-def main():
-    # This file can be donwloaded from:
-    # http://geneontology.org/ontology/go.owl
-    pkl_file = join(dirname(abspath(__file__)), '../../data/go.pkl')
-    rdf_file = join(dirname(abspath(__file__)),
-                    '../resources/cellular_component_hierarchy.rdf')
-    if not exists(pkl_file):
-        g = go_client.load_go_graph()
-        print("Pickling GO graph in %s" % pkl_file)
-        with open(pkl_file, 'wb') as fh:
-            pickle.dump(g, fh, protocol=2)
-    else:
-        print('Loading cached RDF graph from %s' % pkl_file)
-        with open(pkl_file, 'rb') as fh:
-            g = pickle.load(fh)
-    print('Getting cellular components')
+if __name__ == '__main__':
+    g = go_client.load_go_graph()
     component_map, component_part_map = go_client.get_cellular_components(g)
     gg = make_component_hierarchy(component_map, component_part_map)
     save_hierarchy(gg, rdf_file)
 
-if __name__ == '__main__':
-    main()

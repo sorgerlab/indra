@@ -13,6 +13,7 @@ go_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',
                  'go_id_label_mappings.tsv')
 
 
+# This file can be donwloaded from: http://geneontology.org/ontology/go.owl
 go_owl_path = join(dirname(abspath(__file__)), '..', '..', 'data', 'go.owl')
 
 
@@ -50,7 +51,7 @@ def get_go_label(go_id):
     return go_mappings.get(go_id)
 
 
-def get_id_mappings(g):
+def update_id_mappings(g):
     """Compile all ID->label mappings from the GO OWL file."""
     g = load_go_graph(go_owl_path)
 
@@ -61,7 +62,7 @@ def get_id_mappings(g):
             ?class rdfs:label ?label
         }
     """
-    print("Running query")
+    logger.info("Querying for GO ID mappings")
     res = g.query(query)
     mappings = []
     for id_lit, label_lit in res:
@@ -84,6 +85,7 @@ def get_cellular_components(g):
             ?sup rdfs:label ?suplabel
             }
         """
+    logger.info("Running cellular component query 1")
     res1 = g.query(query)
     query = _prefixes + """
         SELECT ?id ?label ?supid ?suplabel
@@ -100,6 +102,7 @@ def get_cellular_components(g):
             ?sup rdfs:label ?suplabel
             }
         """
+    logger.info("Running cellular component query 2")
     res2 = g.query(query)
     res = list(res1) + list(res2)
     component_map = {}
