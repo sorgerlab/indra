@@ -1082,8 +1082,8 @@ class Evidence(object):
         The resulting value is stored in the source_hash attribute of the class
         and is preserved in the json dictionary.
         """
-        if hasattr('source_hash') and self.source_hash is not None and not \
-                refresh:
+        if hasattr(self, 'source_hash') and self.source_hash is not None \
+                and not refresh:
             return self.source_hash
         s = str(self.text) + str(self.source_api) + str(self.source_id)
         self.source_hash = _make_hash(s, 16)
