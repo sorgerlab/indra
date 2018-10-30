@@ -8,8 +8,8 @@ from indra.databases import hgnc_client, chebi_client
 from indra.databases.lincs_client import LincsClient
 
 
-CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM', '3': '1uM < Kd < 10uM',
-             '10': 'Kd > 10uM'}
+CLASS_MAP = {'1': 'Kd < 100nM', '2': '100nM < Kd < 1uM',
+             '3': '1uM < Kd < 10uM', '10': 'Kd > 10uM'}
 
 
 class TasProcessor(object):
@@ -34,7 +34,7 @@ class TasProcessor(object):
         # NOTE: there are several entries in this data set that refer to
         # non-human Entrez genes, e.g.
         # https://www.ncbi.nlm.nih.gov/gene/3283880
-        # We skip these for now because since resources for Entrez-based
+        # We skip these for now because resources for Entrez-based
         # mappings for non-human genes are not integrated, and would cause
         # pre-assembly issues.
         if 'HGNC' not in prot.db_refs:
