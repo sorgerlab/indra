@@ -39,6 +39,19 @@ _go_graph = None
 
 
 def load_go_graph(go_fname):
+    """Load the GO data from an OWL file and parse into an RDF graph.
+
+    Parameters
+    ----------
+    go_fname : str
+        Path to the GO OWL file. Can be downloaded from
+        http://geneontology.org/ontology/go.owl.
+
+    Returns
+    -------
+    rdflib.Graph
+        RDF graph containing GO data.
+    """
     global _go_graph
     if _go_graph is None:
         _go_graph = rdflib.Graph()
@@ -48,11 +61,30 @@ def load_go_graph(go_fname):
 
 
 def get_go_label(go_id):
+    """Get label corresponding to a given GO identifier.
+
+    Parameters
+    ----------
+    go_id : str
+        The GO identifier. Should include the `GO:` prefix, e.g., `GO:1903793`
+        (positive regulation of anion transport).
+
+    Returns
+    -------
+    str
+        Label corresponding to the GO ID.
+    """
     return go_mappings.get(go_id)
 
 
 def update_id_mappings(g):
-    """Compile all ID->label mappings from the GO OWL file."""
+    """Compile all ID->label mappings and save to a TSV file.
+
+    Parameters
+    ----------
+    g : rdflib.Graph
+        RDF graph containing GO data.
+    """
     g = load_go_graph(go_owl_path)
 
     query = _prefixes + """
@@ -65,7 +97,7 @@ def update_id_mappings(g):
     logger.info("Querying for GO ID mappings")
     res = g.query(query)
     mappings = []
-    for id_lit, label_lit in res:
+    for id_lit, label_lit in sorted(res, key=lambda x: x[0]):
         mappings.append((id_lit.value, label_lit.value))
     # Write to file
     write_unicode_csv(go_mappings_file, mappings)
