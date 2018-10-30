@@ -107,13 +107,19 @@ class EidosProcessor(object):
 
             evidence = self.get_evidence(event)
 
-            # It is currently the case that time constraints for concepts
-            # are better stored as annotations and the Evidence level,
-            # we therefore move them over there.
+            # It is currently the case that time constraints and locations for
+            #  concepts are better stored as annotations and the Evidence
+            # level, we therefore move them over there.
             subj_timex = subj_delta.pop('time_context', None)
             obj_timex = obj_delta.pop('time_context', None)
-            evidence.annotations['subj_context'] = WorldContext(time=subj_timex).to_json()
-            evidence.annotations['obj_context'] = WorldContext(time=obj_timex).to_json()
+            subj_geo = subj_delta.pop('geo_context', None)
+            obj_geo = obj_delta.pop('geo_context', None)
+            if subj_timex or subj_geo:
+                wc = WorldContext(time=subj_timex, geo_location=subj_geo).to_json()
+                evidence.annotations['subj_context'] = wc
+            if obj_timex or obj_geo:
+                wc = WorldContext(time=obj_timex, geo_location=obj_geo).to_json()
+                evidence.annotations['obj_context'] = wc
 
             # In addition, for the time being we also put the adjectives into
             # annotations since they could otherwise get squashed upon
@@ -243,6 +249,7 @@ class EidosProcessor(object):
         polarity = None
         adjectives = []
         time_context = None
+        geo_context = None
         for state in states:
             if polarity is None:
                 if state['type'] == 'DEC':
@@ -257,8 +264,10 @@ class EidosProcessor(object):
                     adjectives.append(state['text'])
             if state['type'] == 'TIMEX':
                 time_context = self.time_context_from_ref(state)
+            elif state['type'] == 'LocationExp':
+                geo_context = self.geo_context_from_ref(state)
         return {'polarity': polarity, 'adjectives': adjectives,
-                'time_context': time_context}
+                'time_context': time_context, 'geo_context': geo_context}
 
     @staticmethod
     def get_groundings(entity):
@@ -336,6 +345,15 @@ class EidosProcessor(object):
             # dictionary
             tc = self.timexes.get(value['@id'])
             return tc
+        return None
+
+    def geo_context_from_ref(self, ref):
+        """Return a ref context object given a location reference entry."""
+        value = ref.get('value')
+        if value:
+            # Here we get the RefContext from the stashed geoid dictionary
+            rc = self.geoids.get(value['@id'])
+            return rc
         return None
 
     @staticmethod

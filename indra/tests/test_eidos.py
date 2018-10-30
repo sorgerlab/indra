@@ -121,8 +121,10 @@ def test_process_geoids():
     assert len(ep.geoids) == 5
     assert ep.geoids['_:GeoidPhrases_1'].to_json() == ss_loc
     # Make sure this event has the right geoid
-    assert ep.statements[1].evidence[0].context.geo_location.to_json() == \
-        ss_loc
+    ev = ep.statements[1].evidence[0]
+    assert ev.context.geo_location.to_json() == ss_loc
+    # And that the subject context is captured in annotations
+    assert ev.annotations['subj_context']['geo_location'] == ss_loc
 
 
 def test_eidos_to_cag():
