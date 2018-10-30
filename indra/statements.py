@@ -1012,6 +1012,13 @@ class Agent(Concept):
         return '%s(%s)' % (agent_name, attr_str)
 
 
+def _make_hash(s, n_bytes):
+    """Make the has from a matches key."""
+    raw_h = int(md5(s.encode('utf-8')).hexdigest()[:n_bytes], 16)
+    # Make it a signed int.
+    return 16**n_bytes//2 - raw_h
+
+
 @python_2_unicode_compatible
 class Evidence(object):
     """Container for evidence supporting a given statement.
@@ -1061,11 +1068,26 @@ class Evidence(object):
         else:
             self.epistemics = {}
         self.context = context
+        self.source_hash = None
+        self.get_source_hash()
 
     def __setstate__(self, state):
         if 'context' not in state:
             state['context'] = None
         self.__dict__ = state
+
+    def get_source_hash(self, refresh=False):
+        """Get a hash based off of the source of this statement.
+
+        The resulting value is stored in the source_hash attribute of the class
+        and is preserved in the json dictionary.
+        """
+        if hasattr('source_hash') and self.source_hash is not None and not \
+                refresh:
+            return self.source_hash
+        s = str(self.text) + str(self.source_api) + str(self.source_id)
+        self.source_hash = _make_hash(s, 16)
+        return self.source_hash
 
     def matches_key(self):
         key_lst = [self.source_api, self.source_id, self.pmid,
@@ -1105,6 +1127,7 @@ class Evidence(object):
             json_dict['context'] = self.context.to_json()
         if self.text_references:
             json_dict['text_references'] = self.text_references
+        json_dict['source_hash'] = self.get_source_hash()
         return json_dict
 
     @classmethod
@@ -1121,6 +1144,9 @@ class Evidence(object):
             context = Context.from_json(context_entry)
         else:
             context = None
+        # Note that the source hash will be re-generated upon loading, so if
+        # any of the relevant attributes used to create the hash changed, the
+        # hash will also have changed.
         ev = Evidence(source_api=source_api, source_id=source_id,
                       pmid=pmid, text=text, annotations=annotations,
                       epistemics=epistemics, context=context,
@@ -1178,12 +1204,6 @@ class Statement(object):
         self._shallow_hash = None
         return
 
-    def _make_hash(self, matches_key, n_bytes):
-        """Make the has from a matches key."""
-        raw_h = int(md5(matches_key.encode('utf-8')).hexdigest()[:n_bytes], 16)
-        # Make it a signed int.
-        return 16**n_bytes//2 - raw_h
-
     def matches_key(self):
         raise NotImplementedError("Method must be implemented in child class.")
 
@@ -1229,14 +1249,14 @@ class Statement(object):
         if shallow:
             if not hasattr(self, '_shallow_hash') or self._shallow_hash is None\
                     or refresh:
-                self._shallow_hash = self._make_hash(self.matches_key(), 14)
+                self._shallow_hash = _make_hash(self.matches_key(), 14)
             ret = self._shallow_hash
         else:
             if not hasattr(self, '_full_hash') or self._full_hash is None \
                     or refresh:
                 ev_mk_list = sorted([ev.matches_key() for ev in self.evidence])
-                self._full_hash =\
-                    self._make_hash(self.matches_key() + str(ev_mk_list), 16)
+                self._full_hash = \
+                    _make_hash(self.matches_key() + str(ev_mk_list), 16)
             ret = self._full_hash
         return ret
 
