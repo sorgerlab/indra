@@ -131,7 +131,7 @@ class ReachProcessor(object):
                 reg_res = self.tree.execute(qstr)
                 reg_res = list(reg_res)
                 for reg in reg_res:
-                    controller_agent = None
+                    controller_agent, controller_coords = None, None
                     for a in reg['arguments']:
                         if self._get_arg_type(a) == 'controller':
                             controller = a.get('arg')
@@ -150,7 +150,7 @@ class ReachProcessor(object):
                         if not modification_type:
                             logger.warning('Unhandled modification type: %s' %
                                            modification_type)
-                            continue
+                            continue 
 
                     sentence = reg['verbose-text']
                     annotations['agents']['coords'] = [controller_coords,
@@ -198,14 +198,13 @@ class ReachProcessor(object):
                     theme = a['arg']
                     break
             if theme is None:
-                theme_coords = None
                 continue
             theme_agent, theme_coords = self._get_agent_from_entity(theme)
             qstr = "$.events.frames[(@.type is 'regulation') and " + \
                    "(@.arguments[0].arg is '%s')]" % frame_id
             reg_res = self.tree.execute(qstr)
             for reg in reg_res:
-                controller_agent = None
+                controller_agent, controller_coords = None, None
                 for a in reg['arguments']:
                     if self._get_arg_type(a) == 'controller':
                         controller_agent, controller_coords = \
@@ -375,7 +374,7 @@ class ReachProcessor(object):
 
         # get sentence coordinates of the entity
         coords = self._get_entity_coordinates(entity_term)
-        
+
         agent = Agent(agent_name, db_refs=db_refs, mods=mods, mutations=muts)
         return agent, coords
 
@@ -490,42 +489,46 @@ class ReachProcessor(object):
         return mcs
 
     def _get_entity_coordinates(self, entity_term):
-        """Given an entity term return the associated sentence coordinates.
-        Returns a dict of the form {'start_pos': int  'end_pos': int}.
-        If for any reason, sentence coordinates cannot be found, it returns
-        an empty dictionary.
+        """Given an entity term return the associated sentence coordinates as
+        a tuple of the form (int, int). Returns None if for any reason the
+        sentence coordinates cannot be found.
         """
         # the following lines get the starting coordinate of the sentence
         # containing the entity.
         sent_id = entity_term.get('sentence')
         if sent_id is None:
-            return {}
+            return None
         qstr = "$.sentences.frames[(@.frame_id is \'%s')]" % sent_id
         res = self.tree.execute(qstr)
         if res is None:
-            return {}
+            return None
         try:
             sentence = next(res)
         except StopIteration:
-            return {}
-        sent_start = sentence.get('start_pos').get('offset')
+            return None
+        sent_start = sentence.get('start_pos')
         if sent_start is None:
-            return {}
-
-        coords = {}
-        entity_start = entity_term.get('start_pos').get('offset')
-
-        if entity_start is not None:
-            coords['start_pos'] = entity_start - sent_start
-        entity_stop = entity_term.get('end_pos').get('offset')
-        if entity_stop is not None:
-            coords['end_pos'] = entity_stop - sent_start
-        return coords
-
+            return None
+        sent_start = sent_start.get('offset')
+        if sent_start is None:
+            return None
+        # get the entity coordinate in the entire text and subtract the
+        # coordinate of the first character in the associated sentence to
+        # get the sentence coordinate of the entity. Return none if entity
+        # coordinates are missing
+        entity_start = entity_term.get('start_pos')
+        entity_stop = entity_term.get('end_pos')
+        if entity_start is None or entity_stop is None:
+            return None
+        entity_start = entity_start.get('offset')
+        entity_stop = entity_stop.get('offset')
+        if entity_start is None or entity_stop is None:
+            return None
+        return (entity_start - sent_start, entity_stop - sent_start)
+    
     def _get_annot_context(self, frame_term):
         annotations = {'found_by': frame_term['found_by'],
                        'agents': {}}
-                  
         try:
             context_id = frame_term['context']
         except KeyError:
