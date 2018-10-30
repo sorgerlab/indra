@@ -45,9 +45,9 @@ def load_latest_go():
     if not go_updated:
         url = 'http://purl.obolibrary.org/obo/go.owl'
         print("Downloading latest GO from %s" % url)
-        save_from_http(url, fname)
+        save_from_http(url, go_fname)
         go_updated = True
-    return go_client.load_go_graph()
+    return go_client.load_go_graph(go_fname)
 
 def load_from_http(url):
     logger.info('Downloading %s' % url)
@@ -478,6 +478,7 @@ def update_lincs_proteins():
 
 if __name__ == '__main__':
     update_go_id_mappings()
+    update_cellular_component_hierarchy()
     update_famplex()
     update_famplex_map()
     update_hgnc_entries()
@@ -489,12 +490,10 @@ if __name__ == '__main__':
     update_chebi_names()
     update_chebi_primary_map()
     update_cas_to_chebi()
-    update_cellular_components()
     update_bel_chebi_map()
     update_entity_hierarchy()
     update_modification_hierarchy()
     update_activity_hierarchy()
-    update_cellular_component_hierarchy()
     update_hierarchy_pickle()
     update_ncit_map()
     update_lincs_small_molecules()
