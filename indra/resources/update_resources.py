@@ -392,7 +392,7 @@ def update_ncit_map():
                         inplace=True)
 
     # Add UniProt mappings
-    ncit_swissprot_file = 'Feb2017NCIt-SwissProt.txt'
+    ncit_swissprot_file = 'NCIt-SwissProt.txt'
     save_from_http(url_swissprot, ncit_swissprot_file)
     df_uniprot = pandas.read_csv(ncit_swissprot_file, sep='\t',
                                  index_col=None)
