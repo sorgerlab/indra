@@ -1036,6 +1036,9 @@ class Evidence(object):
     epistemics : dict
         A dictionary describing various forms of epistemic
         certainty associated with the statement.
+    text_references : dict
+        Include a dictionary of various reference ids to the source text, e.g.
+        doi, pmid, url, etc.
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None, context=None,
