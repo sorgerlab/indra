@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../../favicon.ico">
+
+    <title>Results Browser</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <script>
+        // get a pubmed xml based on a pmid
+        function getPubMedMETAxmlByPMID(pmid) {
+            var pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
+            params_dict = {'db': 'pubmed',
+                'retmode': 'xml',
+                'rettype': 'docsum',
+                'id': pmid
+            };
+            PubMedMETAxml = $.ajax({
+                url: pubmed_fetch,
+                type: "POST",
+                dataType: "xml",
+                data: params_dict,
+            });
+            return PubMedMETAxml
+        };
+
+        // Get a dictionary from pubmed xml
+        function pmidXML2dict(XML) {
+            xml_dict = {};
+            for (child of XML.children) {
+                name = child.getAttribute("Name");
+                type = child.getAttribute("Type");
+                if (child.hasChildNodes() & type == "List") {
+                    // Javascript can't really do nice recursive functions...
+                    // special cases for "History" and "ArticleIds" which has unique inner Names
+                    if (name == "ArticleIds" | name == "History") {
+                        innerDict = {};
+                        for (c of child.children) {
+                            innerDict[c.getAttribute("Name")] = c.textContent;
+                        }
+                        innerItems = innerDict;
+                    } else {
+                        innerList = [];
+                        for (c of child.children) {
+                            innerList.push(c.textContent);
+                        }
+                        innerItems = innerList;
+                    }
+                    xml_dict[name] = innerItems
+                } else if (child.tagName == "Item") {
+                    // Here just get the inner strings
+                    xml_dict[name] = child.textContent;
+                } else if (child.tagName == "Id") {
+                    // Special case
+                    xml_dict["Id"] = child.textContent;
+                } else {
+                    if (!xml_dict["no_key"]) {
+                        xml_dict["no_key"] = [child.textContent]
+                    } else {
+                        xml_dict["no_key"].push(child.textContent)
+                    }
+                }
+            }
+            return xml_dict;
+        }
+
+        // Modify link hover text
+        function setPMIDlinkTitle(pmid, link_tag) {
+            let pubmed_xml_promise = getPubMedMETAxmlByPMID(pmid);
+            pubmed_xml_promise.then(function(responseXML) {
+                docsum_XML = docsum_xml = responseXML.getElementsByTagName('DocSum')[0];
+                pmid_meta_dict = pmidXML2dict(docsum_xml);
+                console.log('DEBUG: pmid_meta_dict')
+                console.log(pmid_meta_dict)
+                authorlist = pmid_meta_dict.AuthorList
+                if (authorlist.length > 3) {
+                    authors = authorlist[0] + ", ... " + authorlist[authorlist.length-1];
+                } else {
+                    authors = authorlist.join(", ");
+                }
+                // Shortened journal name is in .Source, while full name is in .FullJournalName
+                journal = pmid_meta_dict.Source
+                SO = pmid_meta_dict.SO
+                title = pmid_meta_dict.Title
+
+                pmid_hover_string = authors + ", \"" + title + "\", " + journal + ", " + SO
+                link_tag.title = pmid_hover_string;
+            })
+        }
+
+        function populatePMIDlinkTitles () {
+            var pmid_link_array = document.getElementsByClassName("pmid_link");
+            for (link_obj of pmid_link_array) {
+                pmid = link_obj.textContent;
+                setPMIDlinkTitle(pmid, link_obj)
+            }
+        }
+
+        var readyStateCheckInterval = setInterval(function() {
+            // options are "loading", "interactive", "complete"
+            if (document.readyState === "complete") {
+                clearInterval(readyStateCheckInterval);
+                populatePMIDlinkTitles();
+            }
+        }, 1000); // Time interval in milliseconds
+
+    </script>
+    <!-- /KLAS USER SCRIPTS -->
+
+  <style>
+.label-subject {
+  background-color: #4a36aa;
+}
+.label-object {
+  background-color: #2d8e4c;
+}
+.label-other {
+  background-color: #606060;
+}
+  </style>
+
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Results Home</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+         <!--
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#">Home</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+              <ul class="dropdown-menu">
+                <li><a href="#">Action</a></li>
+                <li><a href="#">Another action</a></li>
+                <li><a href="#">Something else here</a></li>
+                <li role="separator" class="divider"></li>
+                <li class="dropdown-header">Nav header</li>
+                <li><a href="#">Separated link</a></li>
+                <li><a href="#">One more separated link</a></li>
+              </ul>
+            </li>
+          </ul>
+           -->
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container theme-showcase" role="main">
+
+      <div>
+          <p>&nbsp;
+      </div>
+      <div class="page-header">
+        <a name='index'></a>
+        <h1>Index of Results</h1>
+      </div>
+      <p>Statements are sorted according to amount of evidence.
+
+    <div class="page-header">
+        <h1>Detailed Results</h1>
+    </div>
+    {% for stmt_info in statements %}
+    <a name='{{ stmt_info['hash'] }}'></a>
+    <div class="statement">
+        <h4 class="align-middle">{{ stmt_info['english'] }}
+            <a href="./from_hash/{{ stmt_info['hash'] }}?format=html">
+                <span class="badge">{{ stmt_info['evidence_returned'] }}
+                / {{ stmt_info['total_evidence'] }}</span></a>
+        </h4>
+    </div>
+    <div class="evidence">
+    <p><a href='#index'>Back to index</a>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Evidence</th>
+                <th>PMID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ev in stmt_info['evidence'] %}
+              <tr>
+                  <td>&#9998;
+                  <td>{{ ev['source_api'] }}</td>
+                  <td>"{{ ev['text'] }}"</td>
+                  <td><a class="pmid_link" href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>{{ ev['pmid'] }}</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+    </div> <!-- evidence -->
+    {% endfor %}
+
+    <div class="page-header">
+        <h4>About this result</h4>
+    </div>
+    <ul>
+        <li>Statements returned: {{ statements_returned }}</li>
+        <li>Statement limit: {{ statement_limit }}</li>
+        <li>Total evidence: {{ total_evidence }}</li>
+        <li>Evidence limit: {{ evidence_limit }}</li>
+        <li>Evidence returned: {{ evidence_returned }}</li>
+        <li>Offset: {{ offset }}</li>
+    </ul>
+
+    </div> <!-- /container -->
+  </body>
+</html>
+
