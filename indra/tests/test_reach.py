@@ -428,4 +428,3 @@ def test_get_agent_coordinates_phosphorylation_missing_controller():
         annotations = stmt.evidence[0].annotations
         coords = [None, (57, 60)]
         assert annotations['agents']['coords'] == coords
- 

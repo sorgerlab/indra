@@ -506,7 +506,7 @@ class ReachProcessor(object):
             sentence = next(res)
         except StopIteration:
             return None
-        sent_start = sentence.get('start_pos')
+        sent_start = sentence.get('start-pos')
         if sent_start is None:
             return None
         sent_start = sent_start.get('offset')
@@ -516,8 +516,8 @@ class ReachProcessor(object):
         # coordinate of the first character in the associated sentence to
         # get the sentence coordinate of the entity. Return none if entity
         # coordinates are missing
-        entity_start = entity_term.get('start_pos')
-        entity_stop = entity_term.get('end_pos')
+        entity_start = entity_term.get('start-pos')
+        entity_stop = entity_term.get('end-pos')
         if entity_start is None or entity_stop is None:
             return None
         entity_start = entity_start.get('offset')
@@ -525,7 +525,7 @@ class ReachProcessor(object):
         if entity_start is None or entity_stop is None:
             return None
         return (entity_start - sent_start, entity_stop - sent_start)
-    
+
     def _get_annot_context(self, frame_term):
         annotations = {'found_by': frame_term['found_by'],
                        'agents': {}}
