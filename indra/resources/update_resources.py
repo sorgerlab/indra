@@ -360,6 +360,10 @@ def update_ncit_map():
     url_chebi = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' + \
                 'export_mapping&dictionary=NCIt_to_ChEBI_Mapping&version=1.0'
 
+    url_swissprot = 'https://ncit.nci.nih.gov/ncitbrowser/ajax?action=' \
+                    'export_mapping&uri=https://evs.nci.nih.gov/ftp1/' \
+                    'NCI_Thesaurus/Mappings/NCIt-SwissProt_Mapping.txt'
+
     def get_ncit_df(url):
         df = pandas.read_csv(url)
         df = df[df['Association Name'] == 'mapsTo']
@@ -388,14 +392,16 @@ def update_ncit_map():
                         inplace=True)
 
     # Add UniProt mappings
-    df_uniprot = pandas.read_csv('Feb2017NCIt-SwissProt.txt', sep='\t',
+    ncit_swissprot_file = 'Feb2017NCIt-SwissProt.txt'
+    save_from_http(url_swissprot, ncit_swissprot_file)
+    df_uniprot = pandas.read_csv(ncit_swissprot_file, sep='\t',
                                  index_col=None)
     up_entries = {'Source Code': [], 'Target Coding Scheme': [],
                   'Target Code': []}
     for entry in df_uniprot.iterrows():
-        up_entries['Source Code'].append(entry[1]['code'].strip())
+        up_entries['Source Code'].append(entry[1]['NCIt Code'].strip())
         up_entries['Target Coding Scheme'].append('UP')
-        up_entries['Target Code'].append(entry[1]['Swiss_Prot'].strip())
+        up_entries['Target Code'].append(entry[1]['SwissProt ID'].strip())
     df_uniprot = pandas.DataFrame.from_dict(up_entries)
     df_uniprot.sort_values(['Source Code', 'Target Code'], ascending=True,
                            inplace=True)
@@ -404,9 +410,9 @@ def update_ncit_map():
 
     fname = os.path.join(path, 'ncit_map.tsv')
     df_all.to_csv(fname, sep='\t', columns=['Source Code',
-                                        'Target Coding Scheme',
-                                        'Target Code'],
-              header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
+                                            'Target Coding Scheme',
+                                            'Target Code'],
+                  header=['NCIT ID', 'Target NS', 'Target ID'], index=False)
 
 def update_chebi_names():
     logger.info('--Updating ChEBI names----')
