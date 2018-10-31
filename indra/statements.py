@@ -1085,7 +1085,11 @@ class Evidence(object):
         if hasattr(self, 'source_hash') and self.source_hash is not None \
                 and not refresh:
             return self.source_hash
-        s = str(self.text) + str(self.source_api) + str(self.source_id)
+        s = str(self.source_api) + str(self.source_id)
+        if self.text and isinstance(self.text, str):
+            s += self.text
+        elif self.pmid and isinstance(self.pmid, str):
+            s += self.pmid
         self.source_hash = _make_hash(s, 16)
         return self.source_hash
 
