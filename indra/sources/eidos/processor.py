@@ -35,7 +35,7 @@ class EidosProcessor(object):
         self.documents = {}
         self.coreferences = {}
         self.timexes = {}
-        self.geoids = {}
+        self.geolocs = {}
         self.dct = None
         self._preprocess_extractions()
 
@@ -69,9 +69,9 @@ class EidosProcessor(object):
                 for timex in sent.get('timexes', []):
                     tc = self.time_context_from_timex(timex)
                     self.timexes[timex['@id']] = tc
-                for geoid in sent.get('geoids', []):
-                    rc = self.ref_context_from_geoid(geoid)
-                    self.geoids[geoid['@id']] = rc
+                for geoloc in sent.get('geolocs', []):
+                    rc = self.ref_context_from_geoloc(geoloc)
+                    self.geolocs[geoloc['@id']] = rc
 
         # Build a dictionary of coreferences
         for extraction in self.extractions:
@@ -179,10 +179,10 @@ class EidosProcessor(object):
                     tc = self.time_context_from_timex(timex)
                     context = WorldContext(time=tc)
                 # Get geolocation if available
-                geoids = sentence.get('geoids', [])
-                if geoids:
-                    geoid = geoids[0]
-                    rc = self.ref_context_from_geoid(geoid)
+                geolocs = sentence.get('geolocs', [])
+                if geolocs:
+                    geoloc = geolocs[0]
+                    rc = self.ref_context_from_geoloc(geoloc)
                     if context:
                         context.geo_location = rc
                     else:
@@ -351,8 +351,8 @@ class EidosProcessor(object):
         """Return a ref context object given a location reference entry."""
         value = ref.get('value')
         if value:
-            # Here we get the RefContext from the stashed geoid dictionary
-            rc = self.geoids.get(value['@id'])
+            # Here we get the RefContext from the stashed geoloc dictionary
+            rc = self.geolocs.get(value['@id'])
             return rc
         return None
 
@@ -369,11 +369,11 @@ class EidosProcessor(object):
         return tc
 
     @staticmethod
-    def ref_context_from_geoid(geoid):
-        """Return a RefContext object given a geoid entry."""
-        text = geoid.get('text')
-        geoid_ref = geoid.get('geoID')
-        rc = RefContext(name=text, db_refs={'GEOID': geoid_ref})
+    def ref_context_from_geoloc(geoloc):
+        """Return a RefContext object given a geoloc entry."""
+        text = geoloc.get('text')
+        geoid = geoloc.get('geoID')
+        rc = RefContext(name=text, db_refs={'GEOID': geoid})
         return rc
 
 
