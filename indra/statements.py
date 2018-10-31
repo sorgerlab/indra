@@ -1049,15 +1049,15 @@ class Evidence(object):
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None, context=None,
-                 text_references=None):
+                 text_refs=None):
         self.source_api = source_api
         self.source_id = source_id
         self.pmid = pmid
-        self.text_references = {}
+        self.text_refs = {}
         if pmid is not None:
-            self.text_references['pmid'] = pmid
-        if text_references is not None:
-            self.text_references.update(text_references)
+            self.text_refs['pmid'] = pmid
+        if text_refs is not None:
+            self.text_refs.update(text_refs)
         self.text = text
         if annotations:
             self.annotations = annotations
@@ -1125,8 +1125,8 @@ class Evidence(object):
             json_dict['epistemics'] = self.epistemics
         if self.context:
             json_dict['context'] = self.context.to_json()
-        if self.text_references:
-            json_dict['text_references'] = self.text_references
+        if self.text_refs:
+            json_dict['text_refs'] = self.text_refs
         json_dict['source_hash'] = self.get_source_hash()
         return json_dict
 
@@ -1139,7 +1139,7 @@ class Evidence(object):
         annotations = json_dict.get('annotations', {}).copy()
         epistemics = json_dict.get('epistemics', {}).copy()
         context_entry = json_dict.get('context')
-        text_refs = json_dict.get('text_references', {}).copy()
+        text_refs = json_dict.get('text_refs', {}).copy()
         if context_entry:
             context = Context.from_json(context_entry)
         else:
@@ -1150,7 +1150,7 @@ class Evidence(object):
         ev = Evidence(source_api=source_api, source_id=source_id,
                       pmid=pmid, text=text, annotations=annotations,
                       epistemics=epistemics, context=context,
-                      text_references=text_refs)
+                      text_refs=text_refs)
         return ev
 
     def __str__(self):
