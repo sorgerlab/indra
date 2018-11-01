@@ -6,7 +6,7 @@ from indra.sources import reach
 from indra.sources.reach.processor import ReachProcessor
 from indra.util import unicode_strs
 from indra.statements import IncreaseAmount, DecreaseAmount, \
-    Dephosphorylation, Complex
+    Dephosphorylation, Complex, Phosphorylation, Translocation
 
 # Change this list to control what modes of
 # reading are enabled in tests
@@ -358,3 +358,73 @@ def test_get_db_refs_up_non_human():
     name, db_refs = ReachProcessor._get_db_refs(entity_term)
     assert name == 'MYC', name
     assert db_refs == {'UP': 'Q9MZT7', 'TEXT': 'MYC'}, db_refs
+
+
+def test_get_agent_coordinates_phosphorylation():
+    test_case = ('This sentence is filler. '
+                 'Two filler sentences will work. '
+                 'MEK that is phosphorylated phosphorylates ERK.')
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+
+        coords = [(0, 3), (42, 45)]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_activation():
+    test_case = 'MEK1 activates ERK2'
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+        coords = [(0, 4), (15, 19)]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_regulate_amount():
+    test_case = 'ERK increases the transcription of DUSP'
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+        coords = [(0, 3), (35, 39)]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_binding():
+    test_case = 'Everyone has observed that MEK1 binds ERK2'
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = rp.statements[0]
+        annotations = stmt.evidence[0].annotations
+        coords = [(27, 31), (38, 42)]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_translocation():
+    test_case = ('The length of time that ERK phosphorylation '
+                 'is sustained may determine whether active ERK '
+                 'translocates to the nucleus promotes cell growth.')
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = [stmt for stmt in rp.statements if
+                isinstance(stmt, Translocation)][0]
+        annotations = stmt.evidence[0].annotations
+        coords = [(86, 89)]
+        assert annotations['agents']['coords'] == coords
+
+
+def test_get_agent_coordinates_phosphorylation_missing_controller():
+    test_case = ('The ability of uPA and PAI-1 complex to induce '
+                 'sustained ERK phosphorylation in MCF-7 cells '
+                 'requires the recruitment of uPAR and VLDLr, which '
+                 'function cooperatively')
+    for offline in offline_modes:
+        rp = reach.process_text(test_case)
+        stmt = [stmt for stmt in rp.statements if
+                isinstance(stmt, Phosphorylation)][0]
+        annotations = stmt.evidence[0].annotations
+        coords = [None, (57, 60)]
+        assert annotations['agents']['coords'] == coords

@@ -7,7 +7,7 @@ from collections import OrderedDict
 from indra.preassembler import Preassembler, render_stmt_graph, \
                                flatten_evidence, flatten_stmts
 from indra.preassembler.hierarchy_manager import HierarchyManager
-from indra.sources import trips
+from indra.sources import trips, reach
 from indra.statements import Agent, Phosphorylation, BoundCondition, \
     Dephosphorylation, Evidence, ModCondition, \
     ActiveForm, MutCondition, Complex, \
@@ -775,3 +775,16 @@ def test_agent_text_storage():
     assert all([len(ev.annotations['prior_uuids']) == 2 for ev in old_ev_list])
     assert new_ev
     assert len(new_ev.annotations['prior_uuids']) == 1
+
+
+def test_agent_coordinates():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        'reach_coordinates.json')
+    stmts = reach.process_json_file(path).statements
+    pa = Preassembler(hierarchies, stmts)
+    unique_stmt = pa.combine_duplicates()[0]
+    evidence_list = unique_stmt.evidence
+    agent_annots = [ev.annotations['agents'] for ev in unique_stmt.evidence]
+    assert all(a['raw_text'] == ['MEK1', 'ERK2'] for a in agent_annots)
+    assert {tuple(a['coords']) for a in agent_annots} == {((21, 25), (0, 4)),
+                                                          ((0, 4), (15, 19))}

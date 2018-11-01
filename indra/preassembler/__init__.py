@@ -144,7 +144,13 @@ class Preassembler(object):
                 for ev in stmt.evidence:
                     ev_key = ev.matches_key()
                     if ev_key not in ev_keys:
-                        ev.annotations['agents'] = {'raw_text': raw_text}
+                        # In case there are already agents annotations, we
+                        # just add a new key for raw_text, otherwise create
+                        # a new key
+                        if 'agents' in ev.annotations:
+                            ev.annotations['agents']['raw_text'] = raw_text
+                        else:
+                            ev.annotations['agents'] = {'raw_text': raw_text}
                         if 'prior_uuids' not in ev.annotations.keys():
                             ev.annotations['prior_uuids'] = []
                         ev.annotations['prior_uuids'].append(stmt.uuid)
