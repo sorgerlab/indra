@@ -5,7 +5,7 @@
     "Dependency" : "https://github.com/clulab/eidos/wiki/JSON-LD#Dependency",
     "Document" : "https://github.com/clulab/eidos/wiki/JSON-LD#Document",
     "Extraction" : "https://github.com/clulab/eidos/wiki/JSON-LD#Extraction",
-    "GeoidPhrases" : "https://github.com/clulab/eidos/wiki/JSON-LD#GeoidPhrases",
+    "GeoLocation" : "https://github.com/clulab/eidos/wiki/JSON-LD#GeoLocation",
     "Interval" : "https://github.com/clulab/eidos/wiki/JSON-LD#Interval",
     "Provenance" : "https://github.com/clulab/eidos/wiki/JSON-LD#Provenance",
     "Sentence" : "https://github.com/clulab/eidos/wiki/JSON-LD#Sentence",
@@ -715,11 +715,11 @@
         },
         "relation" : "case"
       } ],
-      "geoids" : [ {
-        "@type" : "GeoidPhrases",
-        "@id" : "_:GeoidPhrases_1",
+      "geolocs" : [ {
+        "@type" : "GeoLocation",
+        "@id" : "_:GeoLocation_1",
         "startOffset" : 65,
-        "endOffset" : 77,
+        "endOffset" : 76,
         "text" : "South Sudan",
         "geoID" : "7909807"
       } ]
@@ -1158,13 +1158,12 @@
         },
         "relation" : "root"
       } ],
-      "geoids" : [ {
-        "@type" : "GeoidPhrases",
-        "@id" : "_:GeoidPhrases_2",
+      "geolocs" : [ {
+        "@type" : "GeoLocation",
+        "@id" : "_:GeoLocation_2",
         "startOffset" : 273,
-        "endOffset" : 282,
-        "text" : "Awiel",
-        "geoID" : "geoID_not_found"
+        "endOffset" : 278,
+        "text" : "Awiel"
       } ]
     }, {
       "@type" : "Sentence",
@@ -3745,11 +3744,11 @@
         },
         "relation" : "amod"
       } ],
-      "geoids" : [ {
-        "@type" : "GeoidPhrases",
-        "@id" : "_:GeoidPhrases_3",
+      "geolocs" : [ {
+        "@type" : "GeoLocation",
+        "@id" : "_:GeoLocation_3",
         "startOffset" : 960,
-        "endOffset" : 980,
+        "endOffset" : 971,
         "text" : "South Sudan",
         "geoID" : "7909807"
       } ]
@@ -4636,11 +4635,11 @@
         },
         "relation" : "case"
       } ],
-      "geoids" : [ {
-        "@type" : "GeoidPhrases",
-        "@id" : "_:GeoidPhrases_4",
+      "geolocs" : [ {
+        "@type" : "GeoLocation",
+        "@id" : "_:GeoLocation_4",
         "startOffset" : 1258,
-        "endOffset" : 1267,
+        "endOffset" : 1263,
         "text" : "Sudan",
         "geoID" : "8056717"
       } ]
@@ -5488,11 +5487,11 @@
         },
         "relation" : "det"
       } ],
-      "geoids" : [ {
-        "@type" : "GeoidPhrases",
-        "@id" : "_:GeoidPhrases_5",
+      "geolocs" : [ {
+        "@type" : "GeoLocation",
+        "@id" : "_:GeoLocation_5",
         "startOffset" : 1391,
-        "endOffset" : 1407,
+        "endOffset" : 1402,
         "text" : "South Sudan",
         "geoID" : "7909807"
       } ]
@@ -5639,7 +5638,7 @@
       "type" : "LocationExp",
       "text" : "South Sudan",
       "value" : {
-        "@id" : "_:GeoidPhrases_1"
+        "@id" : "_:GeoLocation_1"
       }
     } ]
   }, {

@@ -118,8 +118,8 @@ def test_process_geoids():
     ep = eidos.process_json_file(geo_jsonld)
     # Make sure we collect all geoids up front
     ss_loc = {'name': 'South Sudan', 'db_refs': {'GEOID': '7909807'}}
-    assert len(ep.geoids) == 5
-    assert ep.geoids['_:GeoidPhrases_1'].to_json() == ss_loc
+    assert len(ep.geolocs) == 5, len(ep.geoids)
+    assert ep.geolocs['_:GeoLocation_1'].to_json() == ss_loc
     # Make sure this event has the right geoid
     ev = ep.statements[1].evidence[0]
     assert ev.context.geo_location.to_json() == ss_loc
