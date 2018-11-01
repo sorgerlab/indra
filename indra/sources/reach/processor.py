@@ -489,11 +489,13 @@ class ReachProcessor(object):
         return mcs
 
     def _get_entity_coordinates(self, entity_term):
-        """Given an entity term return the associated sentence coordinates as
+        """Return sentence coordinates for a given entity.
+
+        Given an entity term return the associated sentence coordinates as
         a tuple of the form (int, int). Returns None if for any reason the
         sentence coordinates cannot be found.
         """
-        # the following lines get the starting coordinate of the sentence
+        # The following lines get the starting coordinate of the sentence
         # containing the entity.
         sent_id = entity_term.get('sentence')
         if sent_id is None:
@@ -512,9 +514,9 @@ class ReachProcessor(object):
         sent_start = sent_start.get('offset')
         if sent_start is None:
             return None
-        # get the entity coordinate in the entire text and subtract the
+        # Get the entity coordinate in the entire text and subtract the
         # coordinate of the first character in the associated sentence to
-        # get the sentence coordinate of the entity. Return none if entity
+        # get the sentence coordinate of the entity. Return None if entity
         # coordinates are missing
         entity_start = entity_term.get('start-pos')
         entity_stop = entity_term.get('end-pos')

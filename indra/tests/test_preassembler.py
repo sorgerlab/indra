@@ -777,20 +777,14 @@ def test_agent_text_storage():
     assert len(new_ev.annotations['prior_uuids']) == 1
 
 
-def test_reach_extraction_agent_coordinates():
-    texts = ('ERK2 is activated by MEK1', 'MEK1 activates ERK2')
-    stmts = [reach.process_text(text).statements[0] for text in texts]
+def test_agent_coordinates():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        'reach_coordinates.json')
+    stmts = reach.process_json_file(path).statements
     pa = Preassembler(hierarchies, stmts)
     unique_stmt = pa.combine_duplicates()[0]
     evidence_list = unique_stmt.evidence
-    # sort evidence list alphabetically on text for easy comparison with
-    # the tuple of texts above. at the time this test was written, evidences
-    # already appear
-    evidence_list = sorted(evidence_list, key=lambda x: x.text)
-    for ev, coords in zip(evidence_list, [[(21, 25), (0, 4)],
-                                          [(0, 4), (15, 19)]]):
-        print(ev)
-        print(coords)
-        agents = ev.annotations['agents']
-        assert agents['raw_text'] == ['MEK1', 'ERK2']
-        assert agents['coords'] == coords
+    agent_annots = [ev.annotations['agents'] for ev in unique_stmt.evidence]
+    assert all(a['raw_text'] == ['MEK1', 'ERK2'] for a in agent_annots)
+    assert {tuple(a['coords']) for a in agent_annots} == {((21, 25), (0, 4)),
+                                                          ((0, 4), (15, 19))}

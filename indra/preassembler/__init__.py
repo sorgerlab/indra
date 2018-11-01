@@ -144,9 +144,9 @@ class Preassembler(object):
                 for ev in stmt.evidence:
                     ev_key = ev.matches_key()
                     if ev_key not in ev_keys:
-                        # REACH extractions contain the sentence coordinates
-                        # of entities in agents annotations. make sure they
-                        # are not overwrittern
+                        # In case there are already agents annotations, we
+                        # just add a new key for raw_text, otherwise create
+                        # a new key
                         if 'agents' in ev.annotations:
                             ev.annotations['agents']['raw_text'] = raw_text
                         else:
