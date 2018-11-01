@@ -1044,8 +1044,8 @@ class Evidence(object):
         A dictionary describing various forms of epistemic
         certainty associated with the statement.
     text_refs : dict
-        Include a dictionary of various reference ids to the source text, e.g.
-        doi, pmid, url, etc.
+        A dictionary of various reference ids to the source text, e.g.
+        DOI, PMID, URL, etc.
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None, context=None,
@@ -1055,7 +1055,7 @@ class Evidence(object):
         self.pmid = pmid
         self.text_refs = {}
         if pmid is not None:
-            self.text_refs['pmid'] = pmid
+            self.text_refs['PMID'] = pmid
         if text_refs is not None:
             self.text_refs.update(text_refs)
         self.text = text
@@ -1074,6 +1074,8 @@ class Evidence(object):
     def __setstate__(self, state):
         if 'context' not in state:
             state['context'] = None
+        if 'text_refs' not in state:
+            state['text_refs'] = {}
         self.__dict__ = state
 
     def get_source_hash(self, refresh=False):
