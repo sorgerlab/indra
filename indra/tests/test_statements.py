@@ -1337,6 +1337,7 @@ def test_serialize():
     st2 = stmts_from_json([jstr])[0]
     assert(st.equals(st2))
     assert unicode_strs((ev1, st, st2))
+    assert st.evidence[0].source_hash == st2.evidence[0].source_hash
 
 
 def test_location_refinement():
