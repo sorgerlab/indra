@@ -388,18 +388,16 @@ def get_statements_by_hash(hash_list, ev_limit=100, best_first=True, tries=2):
 
 
 @clockit
-def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
-                             best_first=True, tries=2, max_stmts=None):
+def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
+                             max_stmts=None):
     """Get the set of raw Statements extracted from a paper given by the id.
 
     Parameters
     ----------
-    id_val : str or int
-        The value of the id of the paper of interest.
-    id_type : str
-        This may be one of 'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or
-        'trid', which is the primary key id of the text references in the
-        database. The default is 'pmid'.
+    ids : list[(<id type>, <id value>)]
+        A list of tuples with ids and their type. The type can be any one of
+        'pmid', 'pmcid', 'doi', 'pii', 'manuscript id', or 'trid', which is the
+        primary key id of the text references in the database.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
     best_first : bool
@@ -421,9 +419,9 @@ def get_statements_for_paper(id_val, id_type='pmid', ev_limit=10,
     stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
-    resp = _submit_query_request('from_papers', id=id_val, type=id_type,
-                                 ev_limit=ev_limit, best_first=best_first,
-                                 tries=tries, max_stmts=max_stmts)
+    resp = _submit_statement_request('post', 'from_papers', data={'ids': ids},
+                                     ev_limit=ev_limit, best_first=best_first,
+                                     tries=tries, max_stmts=max_stmts)
     stmts_json = resp.json()['statements']
     return stmts_from_json(stmts_json.values())
 
