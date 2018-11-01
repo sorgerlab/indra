@@ -148,6 +148,60 @@
             return response;
         };
 
+        function buttonClick(pn, btn_row_tag) {
+            // DROPDOWN ERROR SELECT
+            // Get div node for dropdown, then the select tag
+            s = pn.getElementsByClassName("dropdown")[0]
+                .getElementsByTagName("select")[0]
+            // Get the selected option from the select tag
+            err_select = s.options[s.selectedIndex].value;
+
+            // TEXT BOX
+            // Get "form" node, then the value of "input"
+            user_text = pn
+                        .getElementsByClassName("form")[0]
+                        .getElementsByTagName("input")[0]
+                        .value;
+
+            // PMID
+            // Step back to the preceding tr tag
+            pmid_row = btn_row_tag.prev();
+            // Get pmid_linktext content
+            pmid_text = pmid_row[0]
+                    .getElementsByClassName("pmid_link")[0]
+                    .textContent;
+
+            // IMPLEMENT HASH UUID ETC HERE
+            hash = "";
+            stmt_level = "pa"
+            uuid = ""
+            hash = ""
+            source = ""
+            curator = ""
+
+            // example: curation_dict = {'tag': 'Reading', 'source': '', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas'};
+            cur_dict = {
+                        'tag': err_select, 
+                        'source': source, 
+                        'text': user_text, 
+                        'curator': curator
+                    };
+
+            console.log("Error selected: " + err_select)
+            console.log("User feedback: " + user_text)
+            console.log("PMID: " + pmid_text)
+            console.log("cur_dict")
+            console.log(cur_dict)
+
+            // ajx_response = submitCuration(cur_dict, stmt_level, hash);
+
+            // ajx_response.then(function(responseXML) {
+            //     if (responseXML.status != 200) {
+            //         alert("Curation was not submitted...")
+            //     }
+            // })
+        };
+
     </script>
     <!-- /KLAS USER SCRIPTS -->
 
@@ -287,60 +341,11 @@
                         </button>
                         <script type="text/javascript">
                         $(".btn-submit").on("click", function(b){
-
-                            // DROPDOWN ERROR SELECT
                             // Get parent node
-                            pn = b.target.parentNode.parentNode
-                            // Get div node for dropdown, then the select tag
-                            s = pn.getElementsByClassName("dropdown")[0]
-                                .getElementsByTagName("select")[0]
-                            // Get the selected option from the select tag
-                            err_select = s.options[s.selectedIndex].value;
-
-                            // TEXT BOX
-                            // Get "form" node, then the value of "input"
-                            user_text = pn
-                                        .getElementsByClassName("form")[0]
-                                        .getElementsByTagName("input")[0]
-                                        .value;
-
-                            // PMID
-                            // Select this row (jquery)
+                            parent_node = b.target.parentNode.parentNode
+                            // Get reference to closest row tag (jquery)
                             this_row = $(this).closest("tr")
-                            // Step back to the preceding tr tag
-                            pmid_row = this_row.prev();
-                            // Get pmid_lin ktext content
-                            pmid_text = pmid_row[0]
-                                    .getElementsByClassName("pmid_link")[0]
-                                    .textContent;
-
-                            // IMPLEMENT HASH UUID ETC HERE
-                            hash = "";
-                            stmt_level = "pa"
-                            uuid = ""
-                            hash = ""
-                            source = ""
-                            curator = ""
-
-                            // example: curation_dict = {'tag': 'Reading', 'source': '', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas'};
-                            cur_dict = {
-                                        'tag': err_select, 
-                                        'source': source, 
-                                        'text': user_text, 
-                                        'curator': curator
-                                    };
-
-                            console.log("Error selected: " + err_select)
-                            console.log("User feedback: " + user_text)
-                            console.log("PMID: " + pmid_text)
-
-                            // ajx_response = submitCuration(cur_dict, stmt_level, hash);
-
-                            // ajx_response.then(function(responseXML) {
-                            //     if (responseXML.status != 200) {
-                            //         alert("Curation was not submitted...")
-                            //     }
-                            // })
+                            buttonClick(parent_node, this_row)
                         })
                         </script>
                     </div>
