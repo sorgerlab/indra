@@ -86,8 +86,8 @@
             pubmed_xml_promise.then(function(responseXML) {
                 docsum_XML = docsum_xml = responseXML.getElementsByTagName('DocSum')[0];
                 pmid_meta_dict = pmidXML2dict(docsum_xml);
-                console.log('DEBUG: pmid_meta_dict')
-                console.log(pmid_meta_dict)
+                // console.log('DEBUG: pmid_meta_dict')
+                // console.log(pmid_meta_dict)
                 authorlist = pmid_meta_dict.AuthorList
                 if (authorlist.length > 3) {
                     authors = authorlist[0] + ", ... " + authorlist[authorlist.length-1];
@@ -252,8 +252,7 @@
                         <form name="user_feedback_form">
                             <input type="text" 
                                    name="user_feedback" 
-                                   placeholder="Describe the error 
-                                                with 240 characters" 
+                                   placeholder="Describe the error with 240 characters" 
                                    value="" 
                                    style="width: 360px;">
                         </form>
