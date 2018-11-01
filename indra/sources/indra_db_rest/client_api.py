@@ -480,7 +480,7 @@ def _make_request(meth, end_point, query_str, data=None, params=None, tries=2):
         json_data = json.dumps(data)
     else:
         json_data = None
-    params['api-key'] = api_key
+    params['api_key'] = api_key
     logger.info('url and query string: %s',
                 url_path.replace(str(api_key), '[api-key]'))
     logger.info('headers: %s', str(headers).replace(str(api_key), '[api-key]'))
