@@ -419,7 +419,8 @@ def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
     stmts : list[:py:class:`indra.statements.Statement`]
         A list of INDRA Statement instances.
     """
-    resp = _submit_statement_request('post', 'from_papers', data={'ids': ids},
+    id_l = [{'id': id_val, 'type': id_type} for id_type, id_val in ids]
+    resp = _submit_statement_request('post', 'from_papers', data={'ids': id_l},
                                      ev_limit=ev_limit, best_first=best_first,
                                      tries=tries, max_stmts=max_stmts)
     stmts_json = resp.json()['statements']
