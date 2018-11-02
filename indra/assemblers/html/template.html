@@ -144,12 +144,16 @@
         });
 
         // Submit curation
-        function submitCuration(curation_dict, stmt_lvl, hash) {
-            var api_key = "";
+        function submitCuration(curation_dict, stmt_lvl, hash, test) {
+            var api_key = document.getElementById("api_key_input").value;
             console.log("api key: " + api_key)
             curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
             // stmt_lvl = {'pa', 'raw'}
-            _url = curation_addr + stmt_lvl + "/" + hash;
+            if (test) {
+                _url = curation_addr + stmt_lvl + "/" + hash + "?api_key=" + api_key + "&test";
+            } else {
+                _url = curation_addr + stmt_lvl + "/" + hash + "?api_key=" + api_key;
+            }
             console.log("url: " + _url);
             response = $.ajax({
                 url: _url,
