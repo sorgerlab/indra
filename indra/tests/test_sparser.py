@@ -101,6 +101,12 @@ def test_process_json_str_with_bad_agents():
     assert all(len(s.agent_list()) == 2 for s in sp.statements)
 
 
+def test_process_json_str_with_missing_agent():
+    sp = sparser.process_json_dict(json.loads(json_str3))
+    assert sp is not None
+    assert len(sp.statements) == 1, len(sp.statements)
+
+
 xml_str1 = '''
 <article pmid="54321">
  <interpretation>
@@ -219,3 +225,28 @@ json_str2 = '''
     "id": "3eedc7a9-fbbd-4e2e-b227-07d96f4bcff5"
   }
 ]'''
+
+
+json_str3 = '''
+[
+    {
+      "type": "Inhibition",
+      "obj_activity": "activity",
+      "evidence": [
+        {
+          "text": "The in vivo and in vitro studies suggested that NR enzyme is inhibited by NO in a mediated process that requires the cell integrity.",
+          "source_api": "sparser",
+          "pmid": "PMC10191200"
+        }
+      ],
+      "obj": {
+        "db_refs": {
+          "UP": "P22945"
+        },
+        "name": "NIA_EMENI",
+        "TEXT": "NR"
+      }
+    }
+]
+'''
+
