@@ -1,5 +1,5 @@
 from indra.statements import *
-from indra.assemblers.html import HtmlAssembler
+from indra.assemblers.html.assembler import HtmlAssembler, template_path
 
 def make_stmt():
     src = Agent('SRC', db_refs = {'HGNC': '11283'})
@@ -11,6 +11,7 @@ def make_stmt():
                                                        'Ras proteins']}})
     st = Phosphorylation(src, ras, 'tyrosine', '32', evidence=[ev])
     return st
+
 
 def test_format_evidence_text():
     stmt = make_stmt()
@@ -26,3 +27,16 @@ def test_format_evidence_text():
                           'was able to phosphorylate '
                           '<span class="label label-object">'
                           'Ras proteins</span>.')
+
+
+def test_assembler():
+    stmt = make_stmt()
+    ha = HtmlAssembler([stmt])
+    result = ha.make_model()
+    assert isinstance(result, str)
+    # Read from the template file and make sure the beginning and end of the
+    # content matches
+    with open(template_path, 'rt') as f:
+        template = f.read().strip()
+    assert result.startswith(template[0:100])
+    assert result.strip().endswith(template[-10:])
