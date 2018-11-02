@@ -116,10 +116,9 @@ def test_famplex_namespace():
 
 @attr('nonpublic')
 def test_paper_query():
-    stmts_1 = dbr.get_statements_for_paper('PMC5770457', 'pmcid')
+    stmts_1 = dbr.get_statements_for_paper([('pmcid', 'PMC5770457'),
+                                            ('pmid', '27014235')])
     assert len(stmts_1)
-    stmts_2 = dbr.get_statements_for_paper('27014235')
-    assert len(stmts_2)
 
 
 @attr('nonpublic')
