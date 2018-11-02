@@ -188,12 +188,14 @@
                     .getElementsByClassName("pmid_link")[0]
                     .textContent;
 
+            // CURATOR
+            curator = document.getElementById("curator_input").value;
+
             // IMPLEMENT HASH UUID ETC HERE
-            hash = "";
+            hash = ""; // Look at <a href="http://127.0.0.1:5000/statements/from_hash/[hash]?format=html"
             stmt_level = "pa";
             uuid = "";
             source = "";
-            curator = "";
 
             // example: curation_dict = {'tag': 'Reading', 'source': '', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas'};
             cur_dict = {
@@ -296,7 +298,7 @@
             <div class="curator_form" id="curator_form">
                 <form name="curatorForm">
                     Your curation will get priority if you provide your email or name.<br>
-                    <input type="text" name="api_key" id="api_key_input" placeholder="Enter your name or email..." style="width: 360px;">
+                    <input type="text" name="curator" id="curator_input" placeholder="Enter your name or email..." style="width: 360px;">
                 </form>
             </div>
         </div>
