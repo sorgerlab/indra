@@ -188,14 +188,26 @@
                     .getElementsByClassName("pmid_link")[0]
                     .textContent;
 
+            // HASH
+            // Step though the parents to <div class="evidence"> and get previous siblings
+            pa_hash = btn_row_tag.parent()[0].parentNode.parentNode.previousElementSibling.previousElementSibling.name;
+            raw_hash = "";
+
             // CURATOR
             curator = document.getElementById("curator_input").value;
 
-            // IMPLEMENT HASH UUID ETC HERE
-            hash = ""; // Look at <a href="http://127.0.0.1:5000/statements/from_hash/[hash]?format=html"
+            // STATEMENT LEVEL
             stmt_level = "pa";
+            if (stmt_level == "pa") {
+                hash = pa_hash;
+            } else if (stmt_level == "raw") {
+                hash = raw_hash;
+            }
             uuid = "";
+
+            // SOURCE : indicates where the query came from, e.g. DepMap Explainer, INDRA-bot
             source = "";
+
 
             // example: curation_dict = {'tag': 'Reading', 'source': '', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas'};
             cur_dict = {
@@ -205,13 +217,18 @@
                         'curator': curator
                     };
 
-            console.log("Error selected: " + err_select)
-            console.log("User feedback: " + user_text)
-            console.log("PMID: " + pmid_text)
-            console.log("cur_dict")
-            console.log(cur_dict)
+            console.log("Error selected: " + err_select);
+            console.log("source: " + source);
+            console.log("User feedback: " + user_text);
+            console.log("PMID: " + pmid_text);
+            console.log("cur_dict");
+            console.log(cur_dict);
 
-            // ajx_response = submitCuration(cur_dict, stmt_level, hash);
+            // Real submission: test == false
+            // ajx_response = submitCuration(cur_dict, stmt_level, hash, false);
+            // test submission: test == true
+            ajx_response = submitCuration(cur_dict, stmt_level, hash, true);
+            console.log(ajx_response);
 
             // ajx_response.then(function(responseXML) {
             //     if (responseXML.status != 200) {
