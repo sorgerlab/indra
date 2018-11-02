@@ -4,7 +4,7 @@ from builtins import dict, str
 import os
 import logging
 import collections
-from copy import copy
+from copy import copy, deepcopy
 
 from indra.util import read_unicode_csv
 from indra.literature import id_lookup
@@ -28,6 +28,10 @@ def _fix_json_agents(ag_obj):
     elif isinstance(ag_obj, list):
         # Recursive for complexes and similar.
         ret = [_fix_json_agents(ag) for ag in ag_obj]
+    elif isinstance(ag_obj, dict) and 'TEXT' in ag_obj.keys():
+        ret = deepcopy(ag_obj)
+        text = ret.pop('TEXT')
+        ret['db_refs']['TEXT'] = text
     else:
         ret = ag_obj
     return ret
@@ -63,7 +67,7 @@ class SparserJSONProcessor(object):
                 # 1.1 - Check for string agents.
                 stmt_class = get_statement_by_name(stmt_type)
                 for ag_key in stmt_class._agent_order:
-                    json_stmt[ag_key] = _fix_json_agents(json_stmt[ag_key])
+                    json_stmt[ag_key] = _fix_json_agents(json_stmt.get(ag_key))
 
                 # 1.2 - Fix other misc things.
                 if stmt_type in mod_class_names:
