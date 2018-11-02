@@ -190,11 +190,10 @@
 
             // IMPLEMENT HASH UUID ETC HERE
             hash = "";
-            stmt_level = "pa"
-            uuid = ""
-            hash = ""
-            source = ""
-            curator = ""
+            stmt_level = "pa";
+            uuid = "";
+            source = "";
+            curator = "";
 
             // example: curation_dict = {'tag': 'Reading', 'source': '', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas'};
             cur_dict = {
@@ -275,25 +274,34 @@
     </nav>
 
     <div class="container theme-showcase" role="main">
-
-      <div>
-          <p>&nbsp;
-      </div>
-      <div class="page-header">
-        <a name='index'></a>
+        <div>
+            <p>&nbsp;
+        </div>
+        <div class="page-header">
+            <a name='index'></a>
+            <h1>Curator Information</h1>
+        </div>
+        
+        <div class="user_data">
+            <h3>API key</h3>
+            <div class="api_key_form" id="api_key_form">
+                <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
+                    If no key is provided, your curation will be rejected.<br>
+                    <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 360px;">
+                    <input type="submit" name="store_button" value="submit key">
+                    <div id="ensure_user_on_api_key">No key given.</div>
+                </form>
+            </div>
+            <h3>Author</h3>
+            <div class="curator_form" id="curator_form">
+                <form name="curatorForm">
+                    Your curation will get priority if you provide your email or name.<br>
+                    <input type="text" name="api_key" id="api_key_input" placeholder="Enter your name or email..." style="width: 360px;">
+                </form>
+            </div>
+        </div>
         <h1>Index of Results</h1>
-      </div>
-      <div class="user_data">
-          <div class="api_key_form" id="api_key_form">
-            <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
-                If no key is provided, your curation will be rejected.<br>
-                <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 360px;">
-                <input type="submit" name="store_button" value="submit key">
-                <div id="ensure_user_on_api_key">No key given.</div>
-            </form>
-          </div>
-      </div>
-      <p>Statements are sorted according to amount of evidence.</p>
+        <p>Statements are sorted according to amount of evidence.</p>
 
     <div class="page-header">
         <h1>Detailed Results</h1>
