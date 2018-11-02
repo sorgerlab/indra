@@ -655,7 +655,7 @@ class ReachProcessor(object):
             controllers = list(arg.get('args').values())
             controller_agent, coords = \
                 self._get_agent_from_entity(controllers[0])
-            bound_agents = [self._get_agent_from_entity(c)
+            bound_agents = [self._get_agent_from_entity(c)[0]
                             for c in controllers[1:]]
             bound_conditions = [BoundCondition(ba, True) for
                                 ba in bound_agents]
