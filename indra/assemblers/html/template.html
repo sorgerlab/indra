@@ -309,13 +309,15 @@
                         <select>
                             <!-- "option" before choosing an option -->
                             <option value="" selected disabled hidden>
-                                Select error type
+                                Select error type...
                             </option>
                             <!-- ERROR DROP DOWN OPTIONS -->
-                            <option value="evidence">evidence</option>
-                            <option value="polarity">polarity</option>
-                            <option value="grounding">grounding</option>
-                            <option value="other">other...</option>
+                            <option value="grounding">Grounding</option>
+                            <option value="polarity">Polarity</option>
+                            <option value="relation">Relation</option>
+                            <option value="negative_result">Negative Result</option>
+                            <option value="hypothesis">Hypothesis</option>
+                            <option value="other">Other...</option>
                         </select>
                     </div>
                     <div class="form" 
@@ -325,8 +327,8 @@
                         <form name="user_feedback_form">
                             <input type="text" 
                                    name="user_feedback" 
-                                   placeholder="Describe the error with 240 characters" 
-                                   value="" 
+                                   placeholder="Optional description (240 chars)" 
+                                   value=""
                                    style="width: 360px;">
                         </form>
                     </div>
@@ -336,8 +338,9 @@
                                 vertical-align: middle;">
                         <button
                             id="n"
+                            type="button"
                             class="btn btn-default btn-submit pull-right"
-                            style="padding: 2px 6px">submit
+                            style="padding: 2px 6px">Submit
                         </button>
                         <script type="text/javascript">
                         $(".btn-submit").on("click", function(b){
