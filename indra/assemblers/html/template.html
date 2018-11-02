@@ -23,6 +23,19 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
     <script>
+        // Check the API key input
+        function keySubmit (key_value) {
+            var ensure_user = document.getElementById("ensure_user_on_api_key")
+            // Default value still there or nothing entered 
+            if (key_value == "No key given." | !key_value) {
+                return;
+            // something entered that is not default value
+            } else {
+                console.log("document.getElementById(\"api_key_input\").value: " + document.getElementById("api_key_input").value);
+                ensure_user.textContent = "Key stored: " + key_value;
+            }
+        }
+
         // get a pubmed xml based on a pmid
         function getPubMedMETAxmlByPMID(pmid) {
             var pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
@@ -266,7 +279,16 @@
         <a name='index'></a>
         <h1>Index of Results</h1>
       </div>
-
+      <div class="user_data">
+          <div class="api_key_form" id="api_key_form">
+            <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
+                If no key is provided, your curation will be rejected.<br>
+                <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 360px;">
+                <input type="submit" name="store_button" value="submit key">
+                <div id="ensure_user_on_api_key">No key given.</div>
+            </form>
+          </div>
+      </div>
       <p>Statements are sorted according to amount of evidence.</p>
 
     <div class="page-header">
