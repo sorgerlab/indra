@@ -74,7 +74,8 @@ class HtmlAssembler(object):
                                      rest_api_results=self.rest_api_results)
         return self.model
 
-    def format_evidence_text(self, stmt):
+    @staticmethod
+    def format_evidence_text(stmt):
         """Returns evidence metadata with highlighted evidence text.
 
         Parameters
