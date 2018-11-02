@@ -298,26 +298,23 @@
         </div>
         <div class="page-header">
             <a name='index'></a>
-            <h1>Curator Information</h1>
-        </div>
-        
-        <div class="user_data">
-            <h3>API key</h3>
-            <div class="api_key_form" id="api_key_form">
+            <h4>Curator Information</h4>
+            <div class="user_data">
+            <div class="api_key_form" id="api_key_form" style="display:inline-block; vertical-align: top; width: 330">
                 <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
-                    If no key is provided, your curation will be rejected.<br>
-                    <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 360px;">
+                    <b>API key</b><br>If no key is provided your curation will be rejected.<br>
+                    <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 200px;">
                     <input type="submit" name="store_button" value="submit key">
                     <div id="ensure_user_on_api_key">No key given.</div>
                 </form>
             </div>
-            <h3>Author</h3>
-            <div class="curator_form" id="curator_form">
+            <div class="curator_form" id="curator_form" style="display:inline-block; vertical-align: top; width: 330">
                 <form name="curatorForm">
-                    Your curation will get priority if you provide your email or name.<br>
-                    <input type="text" name="curator" id="curator_input" placeholder="Enter your name or email..." style="width: 360px;">
+                    <b>Curator ID</b><br>Your curation will get priority if you provide your email or name.<br>
+                    <input type="text" name="curator" id="curator_input" placeholder="Enter your name or email..." style="width: 200px;">
                 </form>
             </div>
+        </div>
         </div>
         <h1>Index of Results</h1>
         <p>Statements are sorted according to amount of evidence.</p>
