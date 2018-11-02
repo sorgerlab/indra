@@ -1,17 +1,12 @@
 """
-Format a set of INDRA Statements into an HTML-based format.
+Format a set of INDRA Statements into an HTML-formatted report.
 """
-import sys
-import csv
-from os.path import abspath, dirname, join
 import re
-import json
-from collections import defaultdict
+from os.path import abspath, dirname, join
 from jinja2 import Template
-from indra.sources import indra_db_rest
-from indra.assemblers.english import EnglishAssembler
 from indra.statements import *
-from indra.databases import get_identifiers_url
+from indra.assemblers.english import EnglishAssembler
+
 
 # Create a template object from the template file, load once
 template_path = join(dirname(abspath(__file__)), 'template.html')
@@ -19,16 +14,12 @@ with open(template_path, 'rt') as f:
     template_str = f.read()
     template = Template(template_str)
 
-# TODO:
-# - Highlight text in english assembled sentences
-# - For both, add links to identifiers.org
-
 
 class HtmlAssembler(object):
     """Generates an HTML-formatted report from INDRA Statements.
 
     The HTML report format includes statements formatted in English
-    (formatted by the EnglishAssembler), text and metadata for the Evidence
+    (by the EnglishAssembler), text and metadata for the Evidence
     object associated with each Statement, and a Javascript-based curation
     interface linked to the INDRA database (access permitting).
 
@@ -46,6 +37,9 @@ class HtmlAssembler(object):
         A list of INDRA Statements to assemble.
     model : str
         The HTML report formatted as a single string.
+    rest_api_results : dict
+        Dictionary of query metadata provided by the INDRA REST API.
+
     """
     def __init__(self, stmts=None, rest_api_results=None):
         if stmts is None:
@@ -76,12 +70,27 @@ class HtmlAssembler(object):
                 'english': english,
                 'evidence': ev_list,
                 'evidence_count': evidence_count_str})
-        return template.render(statements=stmts_formatted,
-                               rest_api_results=self.rest_api_results)
-
+        self.model = template.render(statements=stmts_formatted,
+                                     rest_api_results=self.rest_api_results)
+        return self.model
 
     def format_evidence_text(self, stmt):
-        """Highlight subject and object in raw text strings."""
+        """Returns evidence metadata with highlighted evidence text.
+
+        Parameters
+        ----------
+        stmt : indra.Statement
+            The Statement with Evidence to be formatted.
+
+        Returns
+        -------
+        list of dicts
+            List of dictionaries corresponding to each Evidence object in the
+            Statement's evidence list. Each dictionary has keys 'source_api',
+            'pmid' and 'text', drawn from the corresponding fields in the
+            Evidence objects. The text entry of the dict includes
+            `<span>` tags identifying the agents referenced by the Statement.
+        """
         def get_role(ag_ix):
             if isinstance(stmt, Complex) or \
                isinstance(stmt, SelfModification) or \
