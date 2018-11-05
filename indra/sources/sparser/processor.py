@@ -139,6 +139,9 @@ class SparserJSONProcessor(object):
 
                 # Step 5: Append to list of Statements
                 self.statements.append(stmt)
+            except NotAStatementName:
+                logger.error("%s is not a valid Statement type." %
+                             json_stmt.get('type'))
             except Exception as e:
                 # Keep an eye on these and try to fix them as they come up, but
                 # at least a reading job won't fail because of a couple
