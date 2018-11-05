@@ -102,9 +102,10 @@ def test_process_json_str_with_bad_agents():
 
 
 def test_process_json_str_with_missing_agent():
+    """This makes sure an error isn't raised in this case."""
     sp = sparser.process_json_dict(json.loads(json_str3))
     assert sp is not None
-    assert len(sp.statements) == 1, len(sp.statements)
+    assert len(sp.statements) == 0, len(sp.statements)
 
 
 xml_str1 = '''
