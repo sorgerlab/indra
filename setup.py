@@ -8,7 +8,7 @@ def main():
     # for Python 3)
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx>=2', 'pandas', 'ndex2==2.0.0.8']
+                    'networkx>=2', 'pandas', 'ndex2==2.0.0.8', 'jinja2']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 

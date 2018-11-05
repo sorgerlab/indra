@@ -315,7 +315,7 @@ MOCK_MODULES = [
     'functools32', 'ndex2', 'ndex2.client', 'ndex2.nice_cx_network',
     'nltk', 'kappy', 'openpyxl', 'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
     'reportlab.lib.pagesizes', 'reportlab.platypus', 'reportlab.lib.styles',
-    'reportlab.lib.units'
+    'reportlab.lib.units', 'jinja2'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()
