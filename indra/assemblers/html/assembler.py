@@ -1,6 +1,8 @@
 """
 Format a set of INDRA Statements into an HTML-formatted report.
 """
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import re
 from os.path import abspath, dirname, join
 from jinja2 import Template

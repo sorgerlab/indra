@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 from indra.statements import *
 from indra.assemblers.html.assembler import HtmlAssembler, template_path
 
