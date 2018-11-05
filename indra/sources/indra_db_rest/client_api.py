@@ -2,8 +2,9 @@ from __future__ import absolute_import, unicode_literals
 from builtins import dict, str
 
 __all__ = ['get_statements', 'get_statements_for_paper',
-           'get_statements_by_hash', 'IndraDBRestAPIError',
-           'IndraDBRestClientError', 'IndraDBRestResponseError']
+           'get_statements_by_hash', 'submit_curation',
+           'IndraDBRestAPIError', 'IndraDBRestClientError',
+           'IndraDBRestResponseError']
 
 import json
 import logging

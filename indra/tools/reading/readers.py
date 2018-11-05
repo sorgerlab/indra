@@ -554,6 +554,7 @@ class SparserReader(Reader):
         return reading_data_list
 
     def read_one(self, fpath, outbuf=None, verbose=False):
+        fpath = path.abspath(fpath)
         if outbuf is None:
             outbuf = BytesIO()
         outbuf.write(b'\nReading %s.\n' % fpath.encode('utf8'))
@@ -568,7 +569,9 @@ class SparserReader(Reader):
                 logger.error('Failed to run sparser on %s.' %
                              fpath)
                 logger.exception(e)
-            outbuf.write(b'Reading failed.\n')
+            outbuf.write(b'Reading failed.----------\n')
+            outbuf.write(str(e).encode('utf-8') + b'\n')
+            outbuf.write(b'-------------------------\n')
         return outpath, outbuf
 
     def read_some(self, fpath_list, outbuf=None, verbose=False):

@@ -254,7 +254,8 @@ def run_sparser(fname, output_fmt, outbuf=None, timeout=600):
     if outbuf is not None:
         outbuf.write(out_bts)
         outbuf.flush()
-    assert os.path.exists(output_path), 'No output file created by sparser.'
+    assert os.path.exists(output_path),\
+        'No output file \"%s\" created by sparser.' % output_path
     return output_path
 
 
