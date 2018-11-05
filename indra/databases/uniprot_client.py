@@ -1,9 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
-import logging
 import rdflib
+import logging
 import requests
+from xml.etree import ElementTree
 try:
     # Python 3
     from functools import lru_cache
@@ -611,6 +612,29 @@ def get_rat_id(human_protein_id):
         The UniProt ID of a rat protein orthologous to the given human protein
     """
     return um.uniprot_human_rat.get(human_protein_id)
+
+
+def get_function(protein_id):
+    """Return the function description of a given protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        The UniProt ID of the protein.
+
+    Returns
+    -------
+    str
+        The function description of the protein.
+    """
+    url = uniprot_url + protein_id + '.xml'
+    ret = requests.get(url)
+    et = ElementTree.fromstring(ret.content)
+    function = et.find('up:entry/up:comment[@type="function"]/up:text',
+                       namespaces={'up': 'http://uniprot.org/uniprot'})
+    if function is None:
+        return None
+    return function.text
 
 
 class UniprotMapper(object):
