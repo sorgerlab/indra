@@ -14,3 +14,18 @@ def needs_py3(func):
             raise SkipTest("This tests features only supported in Python 3.x")
         return func(*args, **kwargs)
     return test_with_py3_func
+
+
+def skip_if(condition, reason=None):
+    """Skip test if condition is true"""
+    def decorate(func):
+        wraps(func)
+        func_name = func.__name__
+
+        def f(*args, **kwargs):
+            if not condition:
+                raise SkipTest("'%s' skipped: %s" % (func_name, reason))
+            else:
+                return func(*args, **kwargs)
+        return f
+    return decorate
