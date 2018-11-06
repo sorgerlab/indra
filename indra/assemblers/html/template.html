@@ -146,15 +146,17 @@
         // Submit curation
         function submitCuration(curation_dict, stmt_lvl, hash, test) {
             var api_key = document.getElementById("api_key_input").value;
-            console.log("api key: " + api_key)
             curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
             // stmt_lvl = {'pa', 'raw'}
             if (test) {
+                console.log("Submitting test curation...");
+                console.log("api key: " + api_key)
                 _url = curation_addr + stmt_lvl + "/" + hash + "?api_key=" + api_key + "&test";
+                console.log("url: " + _url);
             } else {
                 _url = curation_addr + stmt_lvl + "/" + hash + "?api_key=" + api_key;
             }
-            console.log("url: " + _url);
+            
             response = $.ajax({
                 url: _url,
                 type: "POST",
@@ -227,8 +229,8 @@
             // Real submission: test == false
             // ajx_response = submitCuration(cur_dict, stmt_level, hash, false);
             // test submission: test == true
-            // ajx_response = submitCuration(cur_dict, stmt_level, hash, true);
-            // console.log(ajx_response);
+            ajx_response = submitCuration(cur_dict, stmt_level, hash, true);
+            console.log(ajx_response);
 
             // ajx_response.then(function(responseXML) {
             //     if (responseXML.status != 200) {
@@ -385,18 +387,18 @@
                                    style="width: 360px;">
                         </form>
                     </div>
-                    <div id="n" 
+                    <div id="btn_{{loop.index0}}"
                          class="curation_button"
                          style="display:inline-block; 
                                 vertical-align: middle;">
                         <button
-                            id="n"
+                            id="btn_{{loop.index0}}"
                             type="button"
                             class="btn btn-default btn-submit pull-right"
                             style="padding: 2px 6px">Submit
                         </button>
                         <script type="text/javascript">
-                        $(".btn-submit").on("click", function(b){
+                        $(".btn-submit").off("click").on("click", function(b){
                             // Get parent node
                             parent_node = b.target.parentNode.parentNode
                             // Get reference to closest row tag (jquery)
