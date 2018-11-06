@@ -97,9 +97,18 @@ class GroundingMapper(object):
         return
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
+        """Map the agents within a statement, returning a new statement
+
+        Parameters
+        ----------
+        stmt: indra.statements.Statement
+        statement whose agents need mapping
+
+        do_rename: bool
+        Whether to rename the agent text
+        """
         mapped_stmt = deepcopy(stmt)
         # Iterate over the agents
-        mapped_agent_list = mapped_stmt.agent_list()
 
         # Update agents directly participating in the statement
         agent_list = mapped_stmt.agent_list()
