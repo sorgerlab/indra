@@ -6,7 +6,6 @@ from indra.sources import bel
 from indra.sources.bel.rdf_processor import BelRdfProcessor
 from indra.statements import RegulateAmount, BioContext, RefContext
 from nose.plugins.attrib import attr
-from nose.plugins.skip import SkipTest
 from indra.tests.util import skip_if, IS_PY3
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
