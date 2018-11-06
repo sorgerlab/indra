@@ -32,6 +32,8 @@ class GroundingMapper(object):
         self.agent_map = agent_map if agent_map is not None else {}
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
+        """
+        """
         gene_name = None
         map_db_refs = deepcopy(self.gm.get(agent_text))
         up_id = map_db_refs.get('UP')
@@ -223,6 +225,27 @@ class GroundingMapper(object):
         return mapped_stmts
 
     def rename_agents(self, stmts):
+        """Update the names of the agents in a statement
+
+        Creates a new list of statements without modifying the original list.
+
+        The agents in a statement should be renamed if the grounding map has
+        updated their db_refs. If an agent contains a FamPlex grounding, the
+        FamPlex ID is used as a name. Otherwise if it contains a Uniprot ID,
+        an attempt is made to find the associated HGNC gene name. If one can
+        be found it is used as the agent name and the associated HGNC ID is
+        added as an entry to the db_refs. If neither a FamPlex ID or HGNC name
+        can be found, falls back to the original name.
+
+        Parameters
+        __________
+        stmts: list[indra.statements.Statement]
+        list of statements whose agents need their names updated
+        Returns
+        _______
+        mapped_stmts: list[indra.statements.Statement]
+        a new list of statements with updated agent names
+        """
         # Make a copy of the stmts
         mapped_stmts = deepcopy(stmts)
         # Iterate over the statements
