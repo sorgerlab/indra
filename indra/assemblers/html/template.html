@@ -232,11 +232,13 @@
             ajx_response = submitCuration(cur_dict, stmt_level, hash, true);
             console.log(ajx_response);
 
-            // ajx_response.then(function(responseXML) {
-            //     if (responseXML.status != 200) {
-            //         alert("Curation was not submitted...")
-            //     }
-            // })
+            ajx_response.then(function(responseXML) {
+                if (responseXML.status == 200) {
+                    console.log("Curation was submitted!")
+                } else {
+                    console.log("Curation was not submitted...")
+                }
+            })
         };
 
     </script>
@@ -337,6 +339,7 @@
           <table class="table" style="border-collapse: collapse;">
             <thead>
               <tr>
+                <th></th>
                 <th>Source</th>
                 <th>Evidence</th>
                 <th>PMID</th>
