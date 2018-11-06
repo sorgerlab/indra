@@ -181,6 +181,24 @@ class GroundingMapper(object):
         return agent, False
 
     def map_agents(self, stmts, do_rename=True):
+        """Ground the agents in each statement in a list of statements.
+
+        Produces a new list of statements without modifying the original list
+
+        Parameters
+        ----------
+        stmts: list[indra.statements.Statement]
+        The statements whose agents need mapping
+
+        do_rename: bool
+        Whether to rename the agent text
+
+        Returns
+        -------
+        mapped_stmts: list[indra.statements.Statement]
+        A list of statements given by mapping the agents from each statement
+        in the input list
+        """
         # Make a copy of the stmts
         mapped_stmts = []
         num_skipped = 0
