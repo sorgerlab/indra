@@ -1,4 +1,4 @@
-NDEx CX API (:py:mod:`indra.sources.api`)
+NDEx CX API (:py:mod:`indra.sources.ndex_cx.api`)
 =================================================
 
 .. automodule:: indra.sources.ndex_cx.api

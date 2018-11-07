@@ -15,14 +15,14 @@ Biological Reading Systems
    sparser/index
    medscan/index
    tees/index
+   isi/index
+   geneways/index
 
 General Purpose Reading Systems
 -------------------------------
 .. toctree::
    :maxdepth: 3
 
-   isi/index
-   geneways/index
    eidos/index
    cwms/index
    sofia/index
