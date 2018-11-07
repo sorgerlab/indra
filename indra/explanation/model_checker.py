@@ -54,14 +54,14 @@ class PathResult(object):
     ----------
     path_found : bool
     result_code : string
-        STATEMENT_TYPE_NOT_HANDLED
-        SUBJECT_MONOMERS_NOT_FOUND
-        OBSERVABLES_NOT_FOUND
-        NO_PATHS_FOUND
-        MAX_PATH_LENGTH_EXCEEDED
-        PATHS_FOUND
-        INPUT_RULES_NOT_FOUND
-        MAX_PATHS_ZERO
+        STATEMENT_TYPE_NOT_HANDLED - The provided statement was not handled
+        SUBJECT_MONOMERS_NOT_FOUND - Statement enzyme could not be mapped
+        OBSERVABLES_NOT_FOUND - Statement has no associated observable
+        NO_PATHS_FOUND - Statement has no path for any observable
+        MAX_PATH_LENGTH_EXCEEDED - Statement has no path len <= MAX_PATH_LENGTH
+        PATHS_FOUND - Statement has path len <= MAX_PATH_LENGTH
+        INPUT_RULES_NOT_FOUND - No rules with statement subject found
+        MAX_PATHS_ZERO - Path found but MAX_PATHS is set to zero
     max_paths : int
         The maximum number of specific paths to return for each Statement
         to be explained.
