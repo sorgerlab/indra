@@ -32,7 +32,37 @@ class GroundingMapper(object):
         self.agent_map = agent_map if agent_map is not None else {}
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
-        """
+        """Update db_refs of agent by mapping agent_text in the grounding map
+
+        Parameters
+        ----------
+        agent: indra.statements.Agent
+        The agent whose db_refs will be updated
+
+        If the grounding map is missing one of the HGNC symbol or Uniprot ID,
+        attempts to reconstruct one from the other.
+
+        agent_text: str
+        The agent_text to find a grounding for in the grounding map dictionary.
+        Typically this will be agent.db_refs['TEXT'] but there may be
+        situations where a different value should be used.
+
+        do_rename: bool
+        Whether to rename the agent text. If do_rename is True the priority
+        for setting the name is
+        1. FamPlex ID
+        2. HGNC symbol from the grounding map_agent
+        3. Gene name associated with Uniprot ID in Uniprot
+
+        Raises
+        ------
+        ValueError: If the the grounding map contains and HGNC symbol for
+        agent_text but no HGNC ID can be found for it.
+
+        ValueError: If the grounding map contains both an HGNC symbol and a
+        Uniprot ID, but the HGNC symbol and the gene name associated with the
+        gene in Uniprot do not match or if there is no associated gene name in
+        Uniprot.
         """
         gene_name = None
         map_db_refs = deepcopy(self.gm.get(agent_text))
@@ -107,7 +137,7 @@ class GroundingMapper(object):
         statement whose agents need mapping
 
         do_rename: bool
-        Whether to rename the agent text
+        Whether to rename the agent texts
         """
         mapped_stmt = deepcopy(stmt)
         # Iterate over the agents
@@ -202,7 +232,7 @@ class GroundingMapper(object):
         The statements whose agents need mapping
 
         do_rename: bool
-        Whether to rename the agent text
+        Whether to rename the agent texts
 
         Returns
         -------
@@ -280,7 +310,31 @@ class GroundingMapper(object):
 
 # TODO: handle the cases when there is more than one entry for the same
 # key (e.g., ROS, ER)
-def load_grounding_map(grounding_map_path, ignore_path=None):
+def load_grounding_map(grounding_map_path, ignore_path=None,
+                       lineterminator='\r\n'):
+    """ Load the grounding map dictionary from a csv file. Optionally, specify
+    another csv file containing agent texts that are degenerate and should be
+    ignored
+
+    Parameters
+    ----------
+    grounding_map_path: str
+    Path to csv file containing grounding map information. Rows of the file
+    should be of the form
+    <agent_text>,<name_space_1>,<ID_1>,...<name_space_n>,<ID_n>
+
+    Where the number of name_space ID pairs varies per row and commas are
+    used to pad out entries containing fewer than the maximum amount of
+    name spaces appearing in the file. Lines should be terminated with \r\n
+    both a carriage return and a new line.
+
+    ignore_path: str or None
+    Path to csv file containing terms that should not be included in the
+    grounding map dict, though they occur in the grounding_map csv file.
+
+    Should be of the form <agent_text>,,..., where the number of commas that
+    appear is the same as in the csv file at grounding_map_path
+    """
     g_map = {}
     map_rows = read_unicode_csv(grounding_map_path, delimiter=',',
                                 quotechar='"',
@@ -290,7 +344,7 @@ def load_grounding_map(grounding_map_path, ignore_path=None):
         ignore_rows = read_unicode_csv(ignore_path, delimiter=',',
                                        quotechar='"',
                                        quoting=csv.QUOTE_MINIMAL,
-                                       lineterminator='\r\n')
+                                       lineterminator=lineterminator)
     else:
         ignore_rows = []
     csv_rows = chain(map_rows, ignore_rows)
@@ -315,6 +369,7 @@ def load_grounding_map(grounding_map_path, ignore_path=None):
 # Some useful functions for analyzing the grounding of sets of statements
 # Put together all agent texts along with their grounding
 def all_agents(stmts):
+    """ Returns a list of all of the agents from a list of statements"""
     agents = []
     for stmt in stmts:
         for agent in stmt.agent_list():
@@ -326,10 +381,18 @@ def all_agents(stmts):
 
 
 def agent_texts(agents):
+    """Returns a list of all agent texts from a list of agents. With None
+    values associated to agents without an agent text (such as those from
+    database statements.)
+    """
     return [ag.db_refs.get('TEXT') for ag in agents]
 
 
 def get_sentences_for_agent(text, stmts, max_sentences=None):
+    """Given a list of statements and an agent text, return a list of
+    evidence sentences for all stmts containing an agent with that particular
+    text
+    """
     sentences = []
     for stmt in stmts:
         for agent in stmt.agent_list():
@@ -343,6 +406,24 @@ def get_sentences_for_agent(text, stmts, max_sentences=None):
 
 
 def agent_texts_with_grounding(stmts):
+    """Given a list of statements, return a list of agents in the statements
+    along with their groundings with counts of how many times the agent appears
+    with that grounding.
+
+    Parameters
+    ----------
+    stmts: list[indra.statements.Statement]
+
+    Returns:
+    list(tuple) list of tuples of the form
+    (agent_text: str, ((name_space: str, ID: str, count: int)...),
+    total_count: int)
+
+    Where the counts within the tuple of groundings give the number of times
+    an agent with the given agent_text appears grounded with the particular
+    name space and ID. The total_count gives the total number of times an agent
+    with the given agent text appears in the list of statements.
+    """
     allag = all_agents(stmts)
     # Convert PFAM-DEF lists into tuples so that they are hashable and can
     # be tabulated with a Counter
@@ -389,6 +470,9 @@ def agent_texts_with_grounding(stmts):
 
 # List of all ungrounded entities by number of mentions
 def ungrounded_texts(stmts):
+    """Given a list of statements, return a list of all ungrounded entities
+    sorted in descending order by the number of mentions.
+    """
     ungrounded = [ag.db_refs['TEXT']
                   for s in stmts
                   for ag in s.agent_list()
@@ -400,11 +484,15 @@ def ungrounded_texts(stmts):
 
 
 def get_agents_with_name(name, stmts):
+    """Return all agents within a list of statements with a particular name."""
     return [ag for stmt in stmts for ag in stmt.agent_list()
             if ag is not None and ag.name == name]
 
 
 def save_base_map(filename, grouped_by_text):
+    """Dump a list of agents along with groundings and their counts as output
+    by agent_texts_with_grounding into a csv file.
+    """
     rows = []
     for group in grouped_by_text:
         text_string = group[0]
@@ -421,7 +509,7 @@ def save_base_map(filename, grouped_by_text):
 
 
 def protein_map_from_twg(twg):
-    """Build map of entity texts to validated protein grounding.
+    """Build map of entity texts to validate protein grounding.
 
     Looks at the grounding of the entity texts extracted from the statements
     and finds proteins where there is grounding to a human protein that maps to
@@ -465,6 +553,23 @@ def protein_map_from_twg(twg):
 
 
 def save_sentences(twg, stmts, filename, agent_limit=300):
+    """Get all sentences for the top agents that whose texts could not be
+    mapped. Outputs results into csv file.
+
+    twg: iterable
+    contains agent texts which could not be mapped sorted by the number
+    of mentions. It can be generated from a list of statements with the
+    function ungrounded_texts.
+
+    stmts: list[indra.statements.Statement]
+
+    filename: str
+    path to output file
+
+    agent_limit: int
+    cutoff when selecting only the most frequently mentioned ungrounded
+    agent texts
+    """
     sentences = []
     unmapped_texts = [t[0] for t in twg]
     counter = 0
