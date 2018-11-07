@@ -32,37 +32,37 @@ class GroundingMapper(object):
         self.agent_map = agent_map if agent_map is not None else {}
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
-        """Update db_refs of agent by mapping agent_text in the grounding map
-
-        Parameters
-        ----------
-        agent: indra.statements.Agent
-        The agent whose db_refs will be updated
+        """Update db_refs of agent using the grounding map
 
         If the grounding map is missing one of the HGNC symbol or Uniprot ID,
         attempts to reconstruct one from the other.
 
-        agent_text: str
-        The agent_text to find a grounding for in the grounding map dictionary.
-        Typically this will be agent.db_refs['TEXT'] but there may be
-        situations where a different value should be used.
+        Parameters
+        ----------
+        agent : :py:class:`indra.statements.Agent`
+            The agent whose db_refs will be updated
+
+        agent_text : str
+            The agent_text to find a grounding for in the grounding map
+            dictionary. Typically this will be agent.db_refs['TEXT'] but
+            there may be situations where a different value should be used.
 
         do_rename: bool
-        Whether to rename the agent text. If do_rename is True the priority
-        for setting the name is
-        1. FamPlex ID
-        2. HGNC symbol from the grounding map_agent
-        3. Gene name associated with Uniprot ID in Uniprot
+            Whether to rename the agent text. If do_rename is True the priority
+            for setting the name is FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot.
 
         Raises
         ------
-        ValueError: If the the grounding map contains and HGNC symbol for
-        agent_text but no HGNC ID can be found for it.
+        ValueError
+            If the the grounding map contains and HGNC symbol for
+            agent_text but no HGNC ID can be found for it.
 
-        ValueError: If the grounding map contains both an HGNC symbol and a
-        Uniprot ID, but the HGNC symbol and the gene name associated with the
-        gene in Uniprot do not match or if there is no associated gene name in
-        Uniprot.
+        ValueError
+            If the grounding map contains both an HGNC symbol and a
+            Uniprot ID, but the HGNC symbol and the gene name associated with
+            the gene in Uniprot do not match or if there is no associated gene
+            name in Uniprot.
         """
         gene_name = None
         map_db_refs = deepcopy(self.gm.get(agent_text))
@@ -133,7 +133,7 @@ class GroundingMapper(object):
 
         Parameters
         ----------
-        stmt : indra.statements.Statement
+        stmt : :py:class:`indra.statements.Statement`
             The Statement whose agents need mapping.
 
         do_rename : Optional[bool]
@@ -142,7 +142,7 @@ class GroundingMapper(object):
 
         Returns
         -------
-        mapped_stmt : indra.statements.Statement
+        mapped_stmt : :py:class:`indra.statements.Statement`
             The mapped Statement.
         """
         mapped_stmt = deepcopy(stmt)
@@ -192,7 +192,7 @@ class GroundingMapper(object):
 
         Parameters
         ----------
-        agent : indra.statements.Agent
+        agent : :py:class:`indra.statements.Agent`
             The Agent to map.
         do_rename : bool
             If True, the agent names will be changed to the new standard name
@@ -201,7 +201,7 @@ class GroundingMapper(object):
 
         Returns
         -------
-        grounded_agent : indra.statements.Agent
+        grounded_agent : :py:class:`indra.statements.Agent`
             The grounded Agent.
         maps_to_none : bool
             True if the Agent is in the grounding map and maps to None.
@@ -233,23 +233,22 @@ class GroundingMapper(object):
         return agent, False
 
     def map_agents(self, stmts, do_rename=True):
-        """Ground the agents in each statement in a list of statements.
-
-        Produces a new list of statements without modifying the original list
+        """Return a new list of statements whose agents have been mapped
 
         Parameters
         ----------
-        stmts: list[indra.statements.Statement]
-        The statements whose agents need mapping
+            stmts : list of :py:class:`indra.statements.Statement`
+                The statements whose agents need mapping
 
-        do_rename: bool
-        Whether to rename the agent texts
+            do_rename : bool
+                If True, the agent names will be changed to the new standard
+                name implied by grounding. Default: True
 
         Returns
         -------
-        mapped_stmts: list[indra.statements.Statement]
-        A list of statements given by mapping the agents from each statement
-        in the input list
+        mapped_stmts : list of :py:class`indra.statements.Statement`
+            A list of statements given by mapping the agents from each
+            statement in the input list
         """
         # Make a copy of the stmts
         mapped_stmts = []
