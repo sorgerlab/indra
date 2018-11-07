@@ -62,6 +62,11 @@ class PathResult(object):
         PATHS_FOUND
         INPUT_RULES_NOT_FOUND
         MAX_PATHS_ZERO
+    max_paths : int
+        The maximum number of specific paths to return for each Statement
+        to be explained.
+    max_path_length : int
+        The maximum length of specific paths to return.
 
     Attributes
     ----------
@@ -69,8 +74,8 @@ class PathResult(object):
     result_code : string
     path_metrics : list of PathMetric
     paths : list of paths
-    max_paths :
-    max_path_length :
+    max_paths : int
+    max_path_length : int
     """
     def __init__(self, path_found, result_code, max_paths, max_path_length):
         self.path_found = path_found
@@ -103,6 +108,7 @@ class PathResult(object):
         else:
             pm_str = ws + ws.join(['%d: %s' % (pm_ix, pm) for pm_ix, pm in
                                             enumerate(self.path_metrics)])
+
         def format_path(path, num_spaces=11):
             path_ws = '\n' + (' ' * num_spaces)
             return path_ws.join([str(p) for p in path])
