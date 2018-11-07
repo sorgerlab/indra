@@ -456,9 +456,8 @@ def _submit_query_request(end_point, *args, **kwargs):
 
 @clockit
 def _submit_statement_request(meth, end_point, query_str='', data=None,
-                              ev_limit=50, best_first=True, tries=2):
+                              tries=2, **params):
     """Even lower level function to make the request."""
-    params = {'ev_limit': ev_limit, 'best_first': best_first}
     full_end_point = 'statements/' + end_point.lstrip('/')
     return _make_request(meth, full_end_point, query_str, data, params, tries)
 
