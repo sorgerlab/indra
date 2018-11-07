@@ -6,6 +6,7 @@ from indra.sources import bel
 from indra.sources.bel.rdf_processor import BelRdfProcessor
 from indra.statements import RegulateAmount, BioContext, RefContext
 from nose.plugins.attrib import attr
+from indra.tests.util import skip_if, IS_PY3
 
 concept_prefix = 'http://www.openbel.org/bel/namespace//'
 entity_prefix = 'http://www.openbel.org/bel/'
@@ -19,10 +20,11 @@ def assert_pmids(stmts):
     for stmt in stmts:
         for ev in stmt.evidence:
             if ev.pmid is not None:
-                assert ev.pmid.isdigit(), ev.pmid 
+                assert ev.pmid.isdigit(), ev.pmid
 
 
 @attr('webservice', 'slow')
+@skip_if(not IS_PY3, 'Python 2 detected. Runtime may be excessive')
 def test_bel_ndex_query():
     bp = bel.process_ndex_neighborhood(['NFKB1'])
     assert_pmids(bp.statements)
