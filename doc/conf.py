@@ -312,7 +312,7 @@ MOCK_MODULES = [
     'networkx', 'networkx.algorithms', 'networkx.algorithms.dag',
     'networkx.drawing', 'networkx.algorithms.isomorphism',
     'networkx.algorithms.isomorphism.vf2userfunc',
-    'functools32', 'ndex2', 'ndex2.client', 'ndex2.niceCXNetwork',
+    'functools32', 'ndex2', 'ndex2.client', 'ndex2.nice_cx_network',
     'nltk', 'kappy', 'openpyxl', 'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
     'reportlab.lib.pagesizes', 'reportlab.platypus', 'reportlab.lib.styles',
     'reportlab.lib.units'
