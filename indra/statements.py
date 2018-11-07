@@ -1165,12 +1165,11 @@ class Evidence(object):
         ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
         ev_str += '         pmid=\'%s\',\n' % self.pmid
         if self.text:
-            txt_lines = textwrap.wrap(self.text, width=65)
-            txt = textwrap.indent('\n'.join(txt_lines), prefix=' '*15).lstrip(' ')
+            txt = _indented_join(textwrap.wrap(self.text, width=65), 15)
             ev_str += '         text=\'%s\',\n' % txt
         if self.annotations:
             annot = json.dumps(self.annotations, indent=1)
-            annot = textwrap.indent(annot, prefix=' '*22).lstrip(' ')
+            annot = _indented_join(annot.splitlines(), 22)
             ev_str += '         annotations=%s' % annot
         ev_str += ')\n\n'
         return ev_str
@@ -1180,6 +1179,10 @@ class Evidence(object):
             return str(self)
         else:
             return str(self).encode('utf-8')
+
+
+def _indented_join(s_list, depth):
+    return '\n'.join(' '*depth + s for s in s_list).lstrip(' ')
 
 
 class Statement(object):
