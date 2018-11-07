@@ -129,15 +129,21 @@ class GroundingMapper(object):
         return
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
-        """Map the agents within a statement, returning a new statement
+        """Return a new Statement whose agents have been grounding mapped.
 
         Parameters
         ----------
-        stmt: indra.statements.Statement
-        statement whose agents need mapping
+        stmt : indra.statements.Statement
+            The Statement whose agents need mapping.
 
-        do_rename: bool
-        Whether to rename the agent texts
+        do_rename : Optional[bool]
+            If True, the agent names will be changed to the new standard name
+            implied by grounding. Default: True
+
+        Returns
+        -------
+        mapped_stmt : indra.statements.Statement
+            The mapped Statement.
         """
         mapped_stmt = deepcopy(stmt)
         # Iterate over the agents
@@ -178,22 +184,27 @@ class GroundingMapper(object):
         return mapped_stmt
 
     def map_agent(self, agent, do_rename):
-        """Grounds an agent; returns the new agent object (which might be
-        a different object if we load a new agent state from javascript).
+        """Return the given Agent with its grounding mapped.
+
+        This function grounds a single agent. It returns the new Agent object
+        (which might be a different object if we load a new agent state
+        from json) or the same object otherwise.
 
         Parameters
         ----------
-        agent: indra.statements.Agent
-            The agent to map
-        do_rename: bool
-            Whether to rename the agent text
+        agent : indra.statements.Agent
+            The Agent to map.
+        do_rename : bool
+            If True, the agent names will be changed to the new standard name
+            implied by grounding. Otherwise the name is not updated even though
+            the grounding may have changed.
 
         Returns
         -------
-        grounded_agent: indra.statements.Agent
-            The grounded agent
-        maps_to_none: bool
-            Whether the agent is in the grounding map and maps to None
+        grounded_agent : indra.statements.Agent
+            The grounded Agent.
+        maps_to_none : bool
+            True if the Agent is in the grounding map and maps to None.
         """
 
         agent_text = agent.db_refs.get('TEXT')
