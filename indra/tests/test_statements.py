@@ -1898,3 +1898,13 @@ def test_context_bool():
     assert not WorldContext()
     assert WorldContext(time=TimeContext())
     assert WorldContext(geo_location=RefContext(name='x'))
+
+
+def test_deprecated_cellular_location():
+    stmt = Translocation(Agent('x'), 'HCN4 channel complex',
+                         'pre-autophagosomal structure')
+    assert stmt.from_location == 'HCN4 channel complex'
+    assert stmt.to_location == 'pre-autophagosomal structure'
+    stmt = Statement._from_json(stmt.to_json())
+    assert stmt.from_location == 'HCN4 channel complex'
+    assert stmt.to_location == 'pre-autophagosomal structure'
