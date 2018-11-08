@@ -8,7 +8,7 @@ def main():
     # for Python 3)
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx>=2', 'pandas']
+                    'networkx>=2', 'pandas', 'ndex2==2.0.0.8']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
@@ -21,12 +21,11 @@ def main():
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'hume': ['rdflib-jsonld'],
-                      'ndex': ['ndex2==1.2.0.58'],
                       'bel': ['pybel'],
                       'sbml': ['python-libsbml'],
                       # Tools and analysis
-                      'machine': ['pytz', 'tzlocal', 'tweepy',
-                                  'ndex2==1.2.0.58', 'pyyaml', 'click'],
+                      'machine': ['pytz', 'tzlocal', 'tweepy', 'pyyaml',
+                                  'click'],
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
