@@ -1169,11 +1169,17 @@ class Evidence(object):
     def __str__(self):
         ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
         ev_str += '         pmid=\'%s\',\n' % self.pmid
+        if self.source_id:
+            ev_str += ' '*9 + 'source_id=%s' % self.source_id
         if self.text:
             txt = _indented_join(textwrap.wrap(self.text, width=65), 15)
             ev_str += '         text=\'%s\',\n' % txt
         if self.annotations:
             ev_str += _format_dict(self.annotations, 'annotations')
+        if self.context:
+            ev_str += _format_dict(self.context.to_json(), 'context')
+        if self.epistemics:
+            ev_str += _format_dict(self.epistemics, 'epistemics')
         ev_str += ')\n\n'
         return ev_str
 
