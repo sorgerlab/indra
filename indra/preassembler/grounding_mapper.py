@@ -274,12 +274,12 @@ class GroundingMapper(object):
 
         Parameters
         ----------
-        stmts : list of `:py:class:indra.statements.Statement`
+        stmts : list of :py:class:`indra.statements.Statement`
             List of statements whose Agents need their names updated.
 
         Returns
         -------
-        mapped_stmts : list of `:py:class:`indra.statements.Statement`
+        mapped_stmts : list of :py:class:`indra.statements.Statement`
             A new list of Statements with updated Agent names
         """
         # Make a copy of the stmts
