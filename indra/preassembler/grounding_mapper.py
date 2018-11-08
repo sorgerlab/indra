@@ -32,6 +32,36 @@ class GroundingMapper(object):
         self.agent_map = agent_map if agent_map is not None else {}
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
+        """Update db_refs of agent using the grounding map
+
+        If the grounding map is missing one of the HGNC symbol or Uniprot ID,
+        attempts to reconstruct one from the other.
+
+        Parameters
+        ----------
+        agent : :py:class:`indra.statements.Agent`
+            The agent whose db_refs will be updated
+        agent_text : str
+            The agent_text to find a grounding for in the grounding map
+            dictionary. Typically this will be agent.db_refs['TEXT'] but
+            there may be situations where a different value should be used.
+        do_rename: Optional[bool]
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot. Default: True
+
+        Raises
+        ------
+        ValueError
+            If the the grounding map contains and HGNC symbol for
+            agent_text but no HGNC ID can be found for it.
+        ValueError
+            If the grounding map contains both an HGNC symbol and a
+            Uniprot ID, but the HGNC symbol and the gene name associated with
+            the gene in Uniprot do not match or if there is no associated gene
+            name in Uniprot.
+        """
         gene_name = None
         map_db_refs = deepcopy(self.gm.get(agent_text))
         up_id = map_db_refs.get('UP')
@@ -97,9 +127,25 @@ class GroundingMapper(object):
         return
 
     def map_agents_for_stmt(self, stmt, do_rename=True):
+        """Return a new Statement whose agents have been grounding mapped.
+
+        Parameters
+        ----------
+        stmt : :py:class:`indra.statements.Statement`
+            The Statement whose agents need mapping.
+        do_rename: Optional[bool]
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot. Default: True
+
+        Returns
+        -------
+        mapped_stmt : :py:class:`indra.statements.Statement`
+            The mapped Statement.
+        """
         mapped_stmt = deepcopy(stmt)
         # Iterate over the agents
-        mapped_agent_list = mapped_stmt.agent_list()
 
         # Update agents directly participating in the statement
         agent_list = mapped_stmt.agent_list()
@@ -137,22 +183,28 @@ class GroundingMapper(object):
         return mapped_stmt
 
     def map_agent(self, agent, do_rename):
-        """Grounds an agent; returns the new agent object (which might be
-        a different object if we load a new agent state from javascript).
+        """Return the given Agent with its grounding mapped.
+
+        This function grounds a single agent. It returns the new Agent object
+        (which might be a different object if we load a new agent state
+        from json) or the same object otherwise.
 
         Parameters
         ----------
-        agent: indra.statements.Agent
-            The agent to map
+        agent : :py:class:`indra.statements.Agent`
+            The Agent to map.
         do_rename: bool
-            Whether to rename the agent text
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot.
 
         Returns
         -------
-        grounded_agent: indra.statements.Agent
-            The grounded agent
-        maps_to_none: bool
-            Whether the agent is in the grounding map and maps to None
+        grounded_agent : :py:class:`indra.statements.Agent`
+            The grounded Agent.
+        maps_to_none : bool
+            True if the Agent is in the grounding map and maps to None.
         """
 
         agent_text = agent.db_refs.get('TEXT')
@@ -181,6 +233,24 @@ class GroundingMapper(object):
         return agent, False
 
     def map_agents(self, stmts, do_rename=True):
+        """Return a new list of statements whose agents have been mapped
+
+        Parameters
+        ----------
+        stmts : list of :py:class:`indra.statements.Statement`
+            The statements whose agents need mapping
+        do_rename: Optional[bool]
+            If True, the Agent name is updated based on the mapped grounding.
+            If do_rename is True the priority for setting the name is
+            FamPlex ID, HGNC symbol, then the gene name
+            from Uniprot. Default: True
+
+        Returns
+        -------
+        mapped_stmts : list of :py:class:`indra.statements.Statement`
+            A list of statements given by mapping the agents from each
+            statement in the input list
+        """
         # Make a copy of the stmts
         mapped_stmts = []
         num_skipped = 0
@@ -196,6 +266,28 @@ class GroundingMapper(object):
         return mapped_stmts
 
     def rename_agents(self, stmts):
+        """Return a list of mapped statements with updated agent names.
+
+        Creates a new list of statements without modifying the original list.
+
+        The agents in a statement should be renamed if the grounding map has
+        updated their db_refs. If an agent contains a FamPlex grounding, the
+        FamPlex ID is used as a name. Otherwise if it contains a Uniprot ID,
+        an attempt is made to find the associated HGNC gene name. If one can
+        be found it is used as the agent name and the associated HGNC ID is
+        added as an entry to the db_refs. If neither a FamPlex ID or HGNC name
+        can be found, falls back to the original name.
+
+        Parameters
+        ----------
+        stmts : list of :py:class:`indra.statements.Statement`
+            List of statements whose Agents need their names updated.
+
+        Returns
+        -------
+        mapped_stmts : list of :py:class:`indra.statements.Statement`
+            A new list of Statements with updated Agent names
+        """
         # Make a copy of the stmts
         mapped_stmts = deepcopy(stmts)
         # Iterate over the statements
@@ -230,7 +322,39 @@ class GroundingMapper(object):
 
 # TODO: handle the cases when there is more than one entry for the same
 # key (e.g., ROS, ER)
-def load_grounding_map(grounding_map_path, ignore_path=None):
+def load_grounding_map(grounding_map_path, ignore_path=None,
+                       lineterminator='\r\n'):
+    """Return a grounding map dictionary loaded from a csv file.
+
+    In the file pointed to by grounding_map_path, the number of name_space ID
+    pairs can vary per row and commas are
+    used to pad out entries containing fewer than the maximum amount of
+    name spaces appearing in the file. Lines should be terminated with \r\n
+    both a carriage return and a new line by default.
+
+    Optionally, one can specify another csv file (pointed to by ignore_path)
+    containing agent texts that are degenerate and should be filtered out.
+
+    Parameters
+    ----------
+    grounding_map_path : str
+        Path to csv file containing grounding map information. Rows of the file
+        should be of the form <agent_text>,<name_space_1>,<ID_1>,...
+        <name_space_n>,<ID_n>
+    ignore_path : Optional[str]
+        Path to csv file containing terms that should be filtered out during
+        the grounding mapping process. The file Should be of the form
+        <agent_text>,,..., where the number of commas that
+        appear is the same as in the csv file at grounding_map_path.
+        Default: None
+    lineterminator : Optional[str]
+        Line terminator used in input csv file. Default: \r\n
+
+    Returns
+    -------
+    g_map : dict
+        The grounding map constructed from the given files.
+    """
     g_map = {}
     map_rows = read_unicode_csv(grounding_map_path, delimiter=',',
                                 quotechar='"',
@@ -240,7 +364,7 @@ def load_grounding_map(grounding_map_path, ignore_path=None):
         ignore_rows = read_unicode_csv(ignore_path, delimiter=',',
                                        quotechar='"',
                                        quoting=csv.QUOTE_MINIMAL,
-                                       lineterminator='\r\n')
+                                       lineterminator=lineterminator)
     else:
         ignore_rows = []
     csv_rows = chain(map_rows, ignore_rows)
@@ -265,6 +389,19 @@ def load_grounding_map(grounding_map_path, ignore_path=None):
 # Some useful functions for analyzing the grounding of sets of statements
 # Put together all agent texts along with their grounding
 def all_agents(stmts):
+    """Return a list of all of the agents from a list of statements.
+
+    Only agents that are not None and have a TEXT entry are returned.
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+
+    Returns
+    -------
+    agents : list of :py:class:`indra.statements.Agent`
+        List of agents that appear in the input list of indra statements.
+    """
     agents = []
     for stmt in stmts:
         for agent in stmt.agent_list():
@@ -276,10 +413,42 @@ def all_agents(stmts):
 
 
 def agent_texts(agents):
+    """Return a list of all agent texts from a list of agents.
+
+    None values are associated to agents without agent texts
+
+    Parameters
+    ----------
+    agents : list of :py:class:`indra.statements.Agent`
+
+    Returns
+    -------
+    list of str/None
+        agent texts from input list of agents
+    """
     return [ag.db_refs.get('TEXT') for ag in agents]
 
 
 def get_sentences_for_agent(text, stmts, max_sentences=None):
+    """Returns evidence sentences with a given agent text from a list of statements
+
+    Parameters
+    ----------
+    text : str
+        An agent text
+
+    stmts : list of :py:class:`indra.statements.Statement`
+        INDRA Statements to search in for evidence statements.
+
+    max_sentences : Optional[int/None]
+        Cap on the number of evidence sentences to return. Default: None
+
+    Returns
+    -------
+    sentences : list of str
+        Evidence sentences from the list of statements containing
+        the given agent text.
+    """
     sentences = []
     for stmt in stmts:
         for agent in stmt.agent_list():
@@ -293,6 +462,24 @@ def get_sentences_for_agent(text, stmts, max_sentences=None):
 
 
 def agent_texts_with_grounding(stmts):
+    """Return agent text groundings in a list of statements with their counts
+
+    Parameters
+    ----------
+    stmts: list of :py:class:`indra.statements.Statement`
+
+    Returns
+    -------
+    list of tuple
+        List of tuples of the form
+        (text: str, ((name_space: str, ID: str, count: int)...),
+        total_count: int)
+
+        Where the counts within the tuple of groundings give the number of
+        times an agent with the given agent_text appears grounded with the
+        particular name space and ID. The total_count gives the total number
+        of times an agent with text appears in the list of statements.
+    """
     allag = all_agents(stmts)
     # Convert PFAM-DEF lists into tuples so that they are hashable and can
     # be tabulated with a Counter
@@ -339,6 +526,18 @@ def agent_texts_with_grounding(stmts):
 
 # List of all ungrounded entities by number of mentions
 def ungrounded_texts(stmts):
+    """Return a list of all ungrounded entities ordered by number of mentions
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+
+    Returns
+    -------
+    ungroundc : list of tuple
+       list of tuples of the form (text: str, count: int) sorted in descending
+       order by count.
+    """
     ungrounded = [ag.db_refs['TEXT']
                   for s in stmts
                   for ag in s.agent_list()
@@ -350,11 +549,21 @@ def ungrounded_texts(stmts):
 
 
 def get_agents_with_name(name, stmts):
+    """Return all agents within a list of statements with a particular name."""
     return [ag for stmt in stmts for ag in stmt.agent_list()
             if ag is not None and ag.name == name]
 
 
 def save_base_map(filename, grouped_by_text):
+    """Dump a list of agents along with groundings and counts into a csv file
+
+    Parameters
+    ----------
+    filename : str
+        Filepath for output file
+    grouped_by_text : list of tuple
+        List of tuples of the form output by agent_texts_with_grounding
+    """
     rows = []
     for group in grouped_by_text:
         text_string = group[0]
@@ -371,12 +580,25 @@ def save_base_map(filename, grouped_by_text):
 
 
 def protein_map_from_twg(twg):
-    """Build map of entity texts to validated protein grounding.
+    """Build  map of entity texts to validate protein grounding.
 
     Looks at the grounding of the entity texts extracted from the statements
     and finds proteins where there is grounding to a human protein that maps to
     an HGNC name that is an exact match to the entity text. Returns a dict that
     can be used to update/expand the grounding map.
+
+    Parameters
+    ----------
+    twg : list of tuple
+        list of tuples of the form output by agent_texts_with_grounding
+
+    Returns
+    -------
+    protein_map : dict
+        dict keyed on agent text with associated values
+        {'TEXT': agent_text, 'UP': uniprot_id}. Entries are for agent texts
+        where the grounding map was able to find human protein grounded to
+        this agent_text in Uniprot.
     """
 
     protein_map = {}
@@ -415,6 +637,25 @@ def protein_map_from_twg(twg):
 
 
 def save_sentences(twg, stmts, filename, agent_limit=300):
+    """Write evidence sentences for stmts with ungrounded agents to csv file.
+
+    Parameters
+    ----------
+    twg: list of tuple
+        list of tuples of ungrounded agent_texts with counts of the
+        number of times they are mentioned in the list of statements.
+        Should be sorted in descending order by the counts.
+        This is of the form output by the function ungrounded texts.
+
+    stmts: list of :py:class:`indra.statements.Statement`
+
+    filename : str
+        Path to output file
+
+    agent_limit : Optional[int]
+        Number of agents to include in output file. Takes the top agents
+        by count.
+    """
     sentences = []
     unmapped_texts = [t[0] for t in twg]
     counter = 0
