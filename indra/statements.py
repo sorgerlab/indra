@@ -1173,9 +1173,7 @@ class Evidence(object):
             txt = _indented_join(textwrap.wrap(self.text, width=65), 15)
             ev_str += '         text=\'%s\',\n' % txt
         if self.annotations:
-            annot = json.dumps(self.annotations, indent=1)
-            annot = _indented_join(annot.splitlines(), 22)
-            ev_str += '         annotations=%s' % annot
+            ev_str += _format_dict(self.annotations, 'annotations')
         ev_str += ')\n\n'
         return ev_str
 
@@ -1188,6 +1186,12 @@ class Evidence(object):
 
 def _indented_join(s_list, depth):
     return '\n'.join(' '*depth + s for s in s_list).lstrip(' ')
+
+
+def _format_dict(d, name, indent=9):
+    s = json.dumps(d, indent=1)
+    s = _indented_join(s.splitlines(), indent+len(name)+1)
+    return ' '*9 + name + s
 
 
 class Statement(object):
