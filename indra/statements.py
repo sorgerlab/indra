@@ -3561,16 +3561,30 @@ activity_types = _read_activity_types()
 
 def _read_cellular_components():
     """Read cellular components from a resource file."""
+    # Here we load a patch file in addition to the current cellular components
+    # file to make sure we don't error with InvalidLocationError with some
+    # deprecated cellular location names
     this_dir = os.path.dirname(os.path.abspath(__file__))
     cc_file = this_dir + '/resources/cellular_components.tsv'
+    cc_patch_file = this_dir + '/resources/cellular_components_patch.tsv'
     cellular_components = {}
     cellular_components_reverse = {}
     with open(cc_file, 'rt') as fh:
-        lines = fh.readlines()
+        lines = list(fh.readlines())
+    # We add the patch to the end of the lines list
+    with open(cc_patch_file, 'rt') as fh:
+        lines += list(fh.readlines())
     for lin in lines[1:]:
         terms = lin.strip().split('\t')
         cellular_components[terms[1]] = terms[0]
-        cellular_components_reverse[terms[0]] = terms[1]
+        # If the GO -> name mapping doesn't exist yet, we add a mapping
+        # but if it already exists (i.e. the try doesn't error) then
+        # we don't add the GO -> name mapping. This ensures that names from
+        # the patch file aren't mapped to in the reverse list.
+        try:
+            cellular_components_reverse[terms[0]]
+        except KeyError:
+            cellular_components_reverse[terms[0]] = terms[1]
     return cellular_components, cellular_components_reverse
 
 
