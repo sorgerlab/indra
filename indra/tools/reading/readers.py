@@ -25,8 +25,8 @@ from indra.sources import sparser, reach
 logger = logging.getLogger('readers')
 
 # Set a character limit for reach reading
-REACH_CHARACTER_LIMIT = 5e5
-REACH_MAX_SPACE_RATIO = 0.5
+CONTENT_CHARACTER_LIMIT = 5e5
+CONTENT_MAX_SPACE_RATIO = 0.5
 
 
 def _get_dir(*args):
@@ -214,7 +214,9 @@ class Reader(object):
     """This abstract object defines and some general methods for readers."""
     name = NotImplemented
 
-    def __init__(self, base_dir=None, n_proc=1):
+    def __init__(self, base_dir=None, n_proc=1, check_content=True,
+                 input_character_limit=CONTENT_CHARACTER_LIMIT,
+                 max_space_ratio=CONTENT_MAX_SPACE_RATIO):
         if base_dir is None:
             base_dir = 'run_' + self.name.lower()
         self.n_proc = n_proc
@@ -226,7 +228,22 @@ class Reader(object):
         self.tmp_dir = tmp_dir
         self.input_dir = _get_dir(tmp_dir, 'input')
         self.id_maps = {}
+        self.do_content_check = check_content
+        self.input_character_limit = input_character_limit
+        self.max_space_ratio = max_space_ratio
         return
+
+    def _check_content(self, content_str):
+        """Check if the content is likely to be successfully read."""
+        if self.do_content_check:
+            space_ratio = float(content_str.count(' '))/len(content_str)
+            if space_ratio > self.max_space_ratio:
+                return "space-ratio: %f > %f" % (space_ratio,
+                                                 self.max_space_ratio)
+            if len(content_str) > self.input_character_limit:
+                return "too long: %d > %d" % (len(content_str),
+                                              self.input_character_limit)
+        return None
 
     @classmethod
     def get_version(cls):
@@ -245,11 +262,6 @@ class ReachReader(Reader):
 
     def __init__(self, *args, **kwargs):
         self.exec_path, self.version = self._check_reach_env()
-        self.do_content_check = kwargs.pop("check_content", True)
-        self.input_character_limit = kwargs.pop('input_character_limit',
-                                                REACH_CHARACTER_LIMIT)
-        self.max_space_ratio = kwargs.pop('max_space_ratio',
-                                          REACH_MAX_SPACE_RATIO)
         super(ReachReader, self).__init__(*args, **kwargs)
         conf_fmt_fname = path.join(path.dirname(__file__),
                                    'util/reach_conf_fmt.txt')
@@ -337,18 +349,6 @@ class ReachReader(Reader):
         _, version = cls._check_reach_env()
         return version
 
-    def _check_content(self, content_str):
-        """Check if the content is likely to be successfully read."""
-        if self.do_content_check:
-            space_ratio = float(content_str.count(' '))/len(content_str)
-            if space_ratio > self.max_space_ratio:
-                return "space-ratio: %f > %f" % (space_ratio,
-                                                 self.max_space_ratio)
-            if len(content_str) > self.input_character_limit:
-                return "too long: %d > %d" % (len(content_str),
-                                              self.input_character_limit)
-        return None
-
     def prep_input(self, read_list):
         """Apply the readers to the content."""
         logger.info("Prepping input.")
@@ -399,7 +399,7 @@ class ReachReader(Reader):
                 content = self._join_json_files(prefix, clear=True)
             except Exception as e:
                 logger.exception(e)
-                logger.error("Coule not load result for prefix %s." % prefix)
+                logger.error("Could not load result for prefix %s." % prefix)
                 continue
             reading_data_list.append(ReadingData(
                 base_prefix,
@@ -486,6 +486,12 @@ class SparserReader(Reader):
         self.file_list = []
 
         for content in read_list:
+            quality_issue = self._check_content(content.get_text())
+            if quality_issue is not None:
+                logger.warning("Skipping %d due to: %s"
+                               % (content.get_id(), quality_issue))
+                continue
+
             if content.is_format('nxml'):
                 # If it is already an nxml, we just need to adjust the
                 # name a bit, if anything.
