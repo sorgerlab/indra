@@ -246,7 +246,7 @@ class GroundingMapper(object):
 
         Returns
         -------
-        mapped_stmts : list of :py:class`indra.statements.Statement`
+        mapped_stmts : list of :py:class:`indra.statements.Statement`
             A list of statements given by mapping the agents from each
             statement in the input list
         """
@@ -279,12 +279,12 @@ class GroundingMapper(object):
 
         Parameters
         ----------
-        stmts : list[indra.statements.Statement]
+        stmts : list of `:py:class:indra.statements.Statement`
             List of statements whose Agents need their names updated.
 
         Returns
         -------
-        mapped_stmts : list[indra.statements.Statement]
+        mapped_stmts : list of `:py:class:`indra.statements.Statement`
             A new list of Statements with updated Agent names
         """
         # Make a copy of the stmts
@@ -323,7 +323,7 @@ class GroundingMapper(object):
 # key (e.g., ROS, ER)
 def load_grounding_map(grounding_map_path, ignore_path=None,
                        lineterminator='\r\n'):
-    """Load the grounding map dictionary from a csv file.
+    """Returns a grounding map dictionary loaded from a csv file.
 
     Where the number of name_space ID pairs varies per row and commas are
     used to pad out entries containing fewer than the maximum amount of
@@ -331,7 +331,7 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
     both a carriage return and a new line.
 
     Optionally, specify another csv file containing agent texts that are
-    degenerate and should be ignored. 
+    degenerate and should be ignored.
 
     Parameters
     ----------
@@ -346,6 +346,10 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
         <agent_text>,,..., where the number of commas that
         appear is the same as in the csv file at grounding_map_path.
         Default: None
+
+    lineterminator : Optional[str]
+        Line terminator used in input csv file.
+        Default: '\r\n'
 
     Returns
     -------
@@ -386,7 +390,17 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
 # Some useful functions for analyzing the grounding of sets of statements
 # Put together all agent texts along with their grounding
 def all_agents(stmts):
-    """ Returns a list of all of the agents from a list of statements"""
+    """ Returns a list of all of the agents from a list of statements
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+
+    Returns
+    -------
+    agents : list of :py:class:`indra.statements.Agent`
+        list of agents that appear in the input list of indra statements
+    """
     agents = []
     for stmt in stmts:
         for agent in stmt.agent_list():
@@ -400,16 +414,39 @@ def all_agents(stmts):
 def agent_texts(agents):
     """Return a list of all agent texts from a list of agents.
 
-    With None values associated to agents without an agent text (such as those
-    from database statements.)
+    None values are associated to agents without agent texts
+
+    Parameters
+    ----------
+    agents : list of :py:class:`indra.statements.Agent`
+
+    Returns
+    -------
+    list of str/None
+        agent texts from input list of agents
     """
     return [ag.db_refs.get('TEXT') for ag in agents]
 
 
 def get_sentences_for_agent(text, stmts, max_sentences=None):
-    """Given a list of statements and an agent text, return a list of
-    evidence sentences for all stmts containing an agent with that particular
-    text
+    """Returns evidence sentences with a given agent text from a list of statements
+
+    Parameters
+    ----------
+    text : str
+        an agent text
+
+    stmts : list of :py:class:`indra.statements.Statement`
+        indra statements to search in for evidence statements
+
+    max_sentences : Optional[int/None]
+        Cap on the number of evidence sentences to return. Default: None
+
+    Returns
+    -------
+    sentences : list of str
+        Evidence sentences from the list of statements containing
+        the given agent text.
     """
     sentences = []
     for stmt in stmts:
@@ -424,23 +461,23 @@ def get_sentences_for_agent(text, stmts, max_sentences=None):
 
 
 def agent_texts_with_grounding(stmts):
-    """Given a list of statements, return a list of agents in the statements
-    along with their groundings with counts of how many times the agent appears
-    with that grounding.
+    """Return agent text groundings in a list of statements with their counts
 
     Parameters
     ----------
     stmts: list[indra.statements.Statement]
 
-    Returns:
-    list(tuple) list of tuples of the form
-    (agent_text: str, ((name_space: str, ID: str, count: int)...),
-    total_count: int)
+    Returns
+    _______
+    list of tuple
+        List of tuples of the form
+        (text: str, ((name_space: str, ID: str, count: int)...),
+        total_count: int)
 
-    Where the counts within the tuple of groundings give the number of times
-    an agent with the given agent_text appears grounded with the particular
-    name space and ID. The total_count gives the total number of times an agent
-    with the given agent text appears in the list of statements.
+        Where the counts within the tuple of groundings give the number of
+        times an agent with the given agent_text appears grounded with the
+        particular name space and ID. The total_count gives the total number
+        of times an agent with text appears in the list of statements.
     """
     allag = all_agents(stmts)
     # Convert PFAM-DEF lists into tuples so that they are hashable and can
@@ -488,8 +525,17 @@ def agent_texts_with_grounding(stmts):
 
 # List of all ungrounded entities by number of mentions
 def ungrounded_texts(stmts):
-    """Given a list of statements, return a list of all ungrounded entities
-    sorted in descending order by the number of mentions.
+    """Return a list of all ungrounded entities ordered by number of mentions
+
+    Parameters
+    ----------
+    stmts : list of :py:class:`indra.statements.Statement`
+
+    Returns
+    -------
+    ungroundc : list of tuple
+       list of tuples of the form (text: str, count: int) sorted in descending
+       order by count.
     """
     ungrounded = [ag.db_refs['TEXT']
                   for s in stmts
