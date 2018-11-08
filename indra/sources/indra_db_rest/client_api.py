@@ -218,15 +218,17 @@ class IndraDBRestResponse(object):
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         args = [agent_strs, stmt_types, params, persist]
-        logger.info("You chose to persist without blocking. Pagination "
-                    "is being performed in a thread.")
+        logger.info("The remainder of the query will be performed in a "
+                    "thread...")
         self.__th = Thread(target=self._run_queries, args=args)
         self.__th.start()
 
         if block_secs is None:
+            logger.info("Waiting for thread to complete...")
             self.__th.join()
         elif block_secs:  # is not 0
-            logger.info("Waiting for %d seconds..." % block_secs)
+            logger.info("Waiting at most %d seconds for thread to complete..."
+                        % block_secs)
             self.__th.join(block_secs)
         return
 
