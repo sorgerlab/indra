@@ -41,12 +41,10 @@ class GroundingMapper(object):
         ----------
         agent : :py:class:`indra.statements.Agent`
             The agent whose db_refs will be updated
-
         agent_text : str
             The agent_text to find a grounding for in the grounding map
             dictionary. Typically this will be agent.db_refs['TEXT'] but
             there may be situations where a different value should be used.
-
         do_rename: bool
             Whether to rename the agent text. If do_rename is True the priority
             for setting the name is FamPlex ID, HGNC symbol, then the gene name
@@ -57,7 +55,6 @@ class GroundingMapper(object):
         ValueError
             If the the grounding map contains and HGNC symbol for
             agent_text but no HGNC ID can be found for it.
-
         ValueError
             If the grounding map contains both an HGNC symbol and a
             Uniprot ID, but the HGNC symbol and the gene name associated with
@@ -135,7 +132,6 @@ class GroundingMapper(object):
         ----------
         stmt : :py:class:`indra.statements.Statement`
             The Statement whose agents need mapping.
-
         do_rename : Optional[bool]
             If True, the agent names will be changed to the new standard name
             implied by grounding. Default: True
@@ -239,7 +235,6 @@ class GroundingMapper(object):
         ----------
         stmts : list of :py:class:`indra.statements.Statement`
             The statements whose agents need mapping
-
         do_rename : bool
             If True, the agent names will be changed to the new standard
             name implied by grounding. Default: True
@@ -323,15 +318,16 @@ class GroundingMapper(object):
 # key (e.g., ROS, ER)
 def load_grounding_map(grounding_map_path, ignore_path=None,
                        lineterminator='\r\n'):
-    """Returns a grounding map dictionary loaded from a csv file.
+    """Return a grounding map dictionary loaded from a csv file.
 
-    Where the number of name_space ID pairs varies per row and commas are
+    In the file pointed to by grounding_map_path, the number of name_space ID
+    pairs can vary per row and commas are
     used to pad out entries containing fewer than the maximum amount of
     name spaces appearing in the file. Lines should be terminated with \r\n
-    both a carriage return and a new line.
+    both a carriage return and a new line by default.
 
-    Optionally, specify another csv file containing agent texts that are
-    degenerate and should be ignored.
+    Optionally, one can specify another csv file (pointed to by ignore_path)
+    containing agent texts that are degenerate and should be filtered out.
 
     Parameters
     ----------
@@ -339,17 +335,14 @@ def load_grounding_map(grounding_map_path, ignore_path=None,
         Path to csv file containing grounding map information. Rows of the file
         should be of the form <agent_text>,<name_space_1>,<ID_1>,...
         <name_space_n>,<ID_n>
-
     ignore_path : Optional[str]
         Path to csv file containing terms that should be filtered out during
         the grounding mapping process. The file Should be of the form
         <agent_text>,,..., where the number of commas that
         appear is the same as in the csv file at grounding_map_path.
         Default: None
-
     lineterminator : Optional[str]
-        Line terminator used in input csv file.
-        Default: '\r\n'
+        Line terminator used in input csv file. Default: \r\n
 
     Returns
     -------
