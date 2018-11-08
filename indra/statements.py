@@ -1167,20 +1167,46 @@ class Evidence(object):
         return ev
 
     def __str__(self):
-        ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
-        ev_str += '         pmid=\'%s\',\n' % self.pmid
+        ev_str = 'Evidence('
+        tab_len = len(ev_str)
+
+        def _indented_join(s_list, depth):
+            return '\n'.join(' '*depth + s for s in s_list).lstrip(' ')
+
+        lines = []
+
+        def _add_line(name, s):
+            lines.append('%s=%s' % (name, s))
+
+        def _format_line(name, s):
+            return _add_line(name, "'%s'" % s)
+
+        def _format_dict(d, name, indent=9):
+            s = json.dumps(d, indent=1)
+            s = _indented_join(s.splitlines(), indent+len(name)+1)
+            return _add_line(name, s)
+
+        if self.source_api:
+            _format_line('source_api', self.source_api)
+        if self.pmid:
+            _format_line('pmid', self.pmid)
         if self.source_id:
-            ev_str += ' '*9 + 'source_id=\'%s\',\n' % self.source_id
+            _format_line('source_id', self.source_id)
         if self.text:
-            txt = _indented_join(textwrap.wrap(self.text, width=65), 15)
-            ev_str += '         text=\'%s\'' % txt
+            txt = _indented_join(textwrap.wrap(self.text, width=65),
+                                 tab_len+6)
+            _format_line('text', txt)
         if self.annotations:
-            ev_str += ',\n' + _format_dict(self.annotations, 'annotations')
+            _format_dict(self.annotations, 'annotations')
         if self.context:
-            ev_str += ',\n' + _format_dict(self.context.to_json(), 'context')
+            _format_dict(self.context.to_json(), 'context')
         if self.epistemics:
-            ev_str += ',\n' + _format_dict(self.epistemics, 'epistemics')
-        ev_str += '\n'
+            _format_dict(self.epistemics, 'epistemics')
+
+        div = ',\n' + ' '*9
+        ev_str += div.join(lines)
+        if len(lines) > 1:
+            ev_str += '\n' + ' '*9
         ev_str += ')\n\n'
         return ev_str
 
@@ -1191,14 +1217,6 @@ class Evidence(object):
             return str(self).encode('utf-8')
 
 
-def _indented_join(s_list, depth):
-    return '\n'.join(' '*depth + s for s in s_list).lstrip(' ')
-
-
-def _format_dict(d, name, indent=9):
-    s = json.dumps(d, indent=1)
-    s = _indented_join(s.splitlines(), indent+len(name)+1)
-    return ' '*9 + name + '=' + s
 
 
 class Statement(object):
