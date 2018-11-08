@@ -21,12 +21,12 @@ def main():
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
                       'hume': ['rdflib-jsonld'],
-                      'ndex': ['ndex2>=2.0'],
+                      'ndex': ['ndex2==1.2.0.58'],
                       'bel': ['pybel'],
                       'sbml': ['python-libsbml'],
                       # Tools and analysis
                       'machine': ['pytz', 'tzlocal', 'tweepy',
-                                  'ndex2>=2.0', 'pyyaml', 'click'],
+                                  'ndex2==1.2.0.58', 'pyyaml', 'click'],
                       'explanation': ['kappy==4.0.0rc1', 'paths-graph'],
                       # AWS interface and database
                       'aws': ['boto3', 'reportlab'],
