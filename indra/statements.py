@@ -1205,7 +1205,7 @@ class Evidence(object):
 
         div = ',\n' + ' '*9
         ev_str += div.join(lines)
-        if len(lines) > 1:
+        if len(ev_str.splitlines()) > 1:
             ev_str += '\n' + ' '*9
         ev_str += ')\n\n'
         return ev_str
