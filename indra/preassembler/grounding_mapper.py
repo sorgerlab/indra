@@ -237,12 +237,12 @@ class GroundingMapper(object):
 
         Parameters
         ----------
-            stmts : list of :py:class:`indra.statements.Statement`
-                The statements whose agents need mapping
+        stmts : list of :py:class:`indra.statements.Statement`
+            The statements whose agents need mapping
 
-            do_rename : bool
-                If True, the agent names will be changed to the new standard
-                name implied by grounding. Default: True
+        do_rename : bool
+            If True, the agent names will be changed to the new standard
+            name implied by grounding. Default: True
 
         Returns
         -------
@@ -278,13 +278,14 @@ class GroundingMapper(object):
         can be found, falls back to the original name.
 
         Parameters
-        __________
-        stmts: list[indra.statements.Statement]
-        list of statements whose agents need their names updated
+        ----------
+        stmts : list[indra.statements.Statement]
+            List of statements whose Agents need their names updated.
+
         Returns
-        _______
-        mapped_stmts: list[indra.statements.Statement]
-        a new list of statements with updated agent names
+        -------
+        mapped_stmts : list[indra.statements.Statement]
+            A new list of Statements with updated Agent names
         """
         # Make a copy of the stmts
         mapped_stmts = deepcopy(stmts)
@@ -322,28 +323,34 @@ class GroundingMapper(object):
 # key (e.g., ROS, ER)
 def load_grounding_map(grounding_map_path, ignore_path=None,
                        lineterminator='\r\n'):
-    """ Load the grounding map dictionary from a csv file. Optionally, specify
-    another csv file containing agent texts that are degenerate and should be
-    ignored
-
-    Parameters
-    ----------
-    grounding_map_path: str
-    Path to csv file containing grounding map information. Rows of the file
-    should be of the form
-    <agent_text>,<name_space_1>,<ID_1>,...<name_space_n>,<ID_n>
+    """Load the grounding map dictionary from a csv file.
 
     Where the number of name_space ID pairs varies per row and commas are
     used to pad out entries containing fewer than the maximum amount of
     name spaces appearing in the file. Lines should be terminated with \r\n
     both a carriage return and a new line.
 
-    ignore_path: str or None
-    Path to csv file containing terms that should not be included in the
-    grounding map dict, though they occur in the grounding_map csv file.
+    Optionally, specify another csv file containing agent texts that are
+    degenerate and should be ignored. 
 
-    Should be of the form <agent_text>,,..., where the number of commas that
-    appear is the same as in the csv file at grounding_map_path
+    Parameters
+    ----------
+    grounding_map_path : str
+        Path to csv file containing grounding map information. Rows of the file
+        should be of the form <agent_text>,<name_space_1>,<ID_1>,...
+        <name_space_n>,<ID_n>
+
+    ignore_path : Optional[str]
+        Path to csv file containing terms that should be filtered out during
+        the grounding mapping process. The file Should be of the form
+        <agent_text>,,..., where the number of commas that
+        appear is the same as in the csv file at grounding_map_path.
+        Default: None
+
+    Returns
+    -------
+    g_map : dict
+        The grounding map constructed from the given files.
     """
     g_map = {}
     map_rows = read_unicode_csv(grounding_map_path, delimiter=',',
@@ -391,9 +398,10 @@ def all_agents(stmts):
 
 
 def agent_texts(agents):
-    """Returns a list of all agent texts from a list of agents. With None
-    values associated to agents without an agent text (such as those from
-    database statements.)
+    """Return a list of all agent texts from a list of agents.
+
+    With None values associated to agents without an agent text (such as those
+    from database statements.)
     """
     return [ag.db_refs.get('TEXT') for ag in agents]
 
