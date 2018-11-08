@@ -1,12 +1,13 @@
 Processors for knowledge input (:py:mod:`indra.sources`)
 ========================================================
 
-INDRA can draw content from many sources, some specifically for biological
-content, and some for more generic causal knowledge; some are from machine
-readers and some are from human-curated or data driven databases.
+INDRA interfaces with and draws knowledge from many sources including
+reading systems (some that extract biological mechanisms, and some that extract
+general causal interactions from text) and also from structured databases,
+which are typically human-curated or derived from experimental data.
 
-Biological Reading Systems
---------------------------
+Biology-oriented Reading Systems
+--------------------------------
 .. toctree::
    :maxdepth: 3
 
