@@ -637,22 +637,24 @@ def protein_map_from_twg(twg):
 
 
 def save_sentences(twg, stmts, filename, agent_limit=300):
-    """Get all sentences for the top agents that whose texts could not be
-    mapped. Outputs results into csv file.
+    """Write evidence sentences for stmts with ungrounded agents to csv file
 
-    twg: iterable
-    contains agent texts which could not be mapped sorted by the number
-    of mentions. It can be generated from a list of statements with the
-    function ungrounded_texts.
+    Parameters
+    ----------
+        twg: list of tuple
+            list of tuples of ungrounded agent_texts with counts of the
+            number of times they are mentioned in the list of statements.
+            Should be sorted in descending order by the counts.
+            This is of the form output by the function ungrounded texts.
 
-    stmts: list[indra.statements.Statement]
+        stmts: list of :py:class:`indra.statements.Statement`
 
-    filename: str
-    path to output file
+        filename : str
+            Path to output file
 
-    agent_limit: int
-    cutoff when selecting only the most frequently mentioned ungrounded
-    agent texts
+        agent_limit : Optional[int]
+            Number of agents to include in output file. Takes the top agents
+            by count.
     """
     sentences = []
     unmapped_texts = [t[0] for t in twg]
