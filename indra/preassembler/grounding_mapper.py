@@ -554,8 +554,15 @@ def get_agents_with_name(name, stmts):
 
 
 def save_base_map(filename, grouped_by_text):
-    """Dump a list of agents along with groundings and their counts as output
-    by agent_texts_with_grounding into a csv file.
+    """Dump a list of agents along with groundings and counts into a csv file
+
+    Parameters
+    ----------
+    filename : str
+        filepath for output file
+
+    grouped_by_text : list of tuple
+        list of tuples of the form output by agent_texts_with_grounding
     """
     rows = []
     for group in grouped_by_text:
@@ -573,12 +580,25 @@ def save_base_map(filename, grouped_by_text):
 
 
 def protein_map_from_twg(twg):
-    """Build map of entity texts to validate protein grounding.
+    """Build  map of entity texts to validate protein grounding.
 
     Looks at the grounding of the entity texts extracted from the statements
     and finds proteins where there is grounding to a human protein that maps to
     an HGNC name that is an exact match to the entity text. Returns a dict that
     can be used to update/expand the grounding map.
+
+    Parameters
+    ----------
+    twg : list of tuple
+        list of tuples of the form output by agent_texts_with_grounding
+
+    Returns
+    -------
+    protein_map : dict
+        dict keyed on agent text with associated values
+        {'TEXT': agent_text, 'UP': uniprot_id}. Entries are for agent texts
+        where the grounding map was able to find human protein grounded to
+        this agent_text in Uniprot.
     """
 
     protein_map = {}
