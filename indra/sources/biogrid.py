@@ -140,7 +140,7 @@ class BiogridProcessor(object):
             object.
         """
         db_refs = {}
-        if text_id != '-':
+        if text_id != '-' and text_id is not None:
             db_refs['TEXT'] = text_id
 
         hgnc_id = hgnc_client.get_hgnc_from_entrez(entrez_id)
