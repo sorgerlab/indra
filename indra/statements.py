@@ -1170,7 +1170,7 @@ class Evidence(object):
         ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
         ev_str += '         pmid=\'%s\',\n' % self.pmid
         if self.source_id:
-            ev_str += ' '*9 + 'source_id=%s,\n' % self.source_id
+            ev_str += ' '*9 + 'source_id=\'%s\',\n' % self.source_id
         if self.text:
             txt = _indented_join(textwrap.wrap(self.text, width=65), 15)
             ev_str += '         text=\'%s\'' % txt
@@ -1198,7 +1198,7 @@ def _indented_join(s_list, depth):
 def _format_dict(d, name, indent=9):
     s = json.dumps(d, indent=1)
     s = _indented_join(s.splitlines(), indent+len(name)+1)
-    return ' '*9 + name + s
+    return ' '*9 + name + '=' + s
 
 
 class Statement(object):
@@ -3191,6 +3191,7 @@ class Unresolved(Statement):
 
 
 class Context(object):
+    """An abstract class for Contexts."""
     @classmethod
     def from_json(cls, jd):
         context_type = jd.get('type')
@@ -3203,7 +3204,7 @@ class Context(object):
 
 
 class BioContext(Context):
-    """An oject representing the context of a Statement in biology.
+    """An object representing the context of a Statement in biology.
 
     Parameters
     ----------
