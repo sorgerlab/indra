@@ -1072,6 +1072,7 @@ class Evidence(object):
         self.context = context
         self.source_hash = None
         self.get_source_hash()
+        self.stmt_tag = None
 
     def __setstate__(self, state):
         if 'context' not in state:
@@ -1136,6 +1137,8 @@ class Evidence(object):
         if self.text_refs:
             json_dict['text_refs'] = self.text_refs
         json_dict['source_hash'] = self.get_source_hash()
+        if self.stmt_tag:
+            json_dict['stmt_tag'] = self.stmt_tag
         return json_dict
 
     @classmethod
@@ -1152,6 +1155,7 @@ class Evidence(object):
             context = Context.from_json(context_entry)
         else:
             context = None
+        stmt_tag = json_dict.get('stmt_tag')
         # Note that the source hash will be re-generated upon loading, so if
         # any of the relevant attributes used to create the hash changed, the
         # hash will also have changed.
@@ -1159,6 +1163,7 @@ class Evidence(object):
                       pmid=pmid, text=text, annotations=annotations,
                       epistemics=epistemics, context=context,
                       text_refs=text_refs)
+        ev.stmt_tag = stmt_tag
         return ev
 
     def __str__(self):
@@ -1277,6 +1282,13 @@ class Statement(object):
                     _make_hash(self.matches_key() + str(ev_mk_list), 16)
             ret = self._full_hash
         return ret
+
+    def _tag_evidence(self):
+        """Set all the Evidence stmt_tag to my deep matches-key hash."""
+        h = self.get_hash(shallow=False)
+        for ev in self.evidence:
+            ev.stmt_tag = h
+        return
 
     def agent_list_with_bound_condition_agents(self):
         # Returns the list of agents both directly participating in the
