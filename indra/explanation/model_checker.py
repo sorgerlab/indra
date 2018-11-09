@@ -588,7 +588,7 @@ class ModelChecker(object):
         obs_name : str
             Name of the PySB model Observable corresponding to the
             object/target of the Statement being checked.
-        target_polarity : 1 or -1
+        target_polarity : int
             Whether the influence in the Statement is positive (1) or negative
             (-1).
 
