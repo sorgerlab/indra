@@ -31,7 +31,19 @@ logger = logging.getLogger('model_checker')
 
 
 class PathMetric(object):
-    """Describes results of simple path search (path existence)."""
+    """Describes results of simple path search (path existence).
+
+    Attributes
+    ----------
+    source_node : str
+        The source node of the path
+    target_node : str
+        The target node of the path
+    polarity : int
+        The polarity of the path between source and target
+    length : int
+        The length of the path
+    """
     def __init__(self, source_node, target_node, polarity, length):
         self.source_node = source_node
         self.target_node = target_node
