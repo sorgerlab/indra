@@ -429,11 +429,12 @@ def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
 
 
 def submit_curation(level, hash_val, tag, text, curator,
-                    source='indra_rest_client'):
+                    source='indra_rest_client', ev_hash=None):
     """Submit a curation for the given statement at the relevant level."""
-    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source}
-    return _make_request('post', 'curation/%s/%s' % (level, hash_val),
-                        data=data)
+    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source,
+            'ev_hash': ev_hash}
+    return _make_request('post', 'curation/%s' % (hash_val),
+                         data=data)
 
 
 def _submit_query_request(end_point, *args, **kwargs):
