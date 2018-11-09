@@ -82,11 +82,7 @@ class PathResult(object):
         The maximum length of specific paths to return.
     path_metrics : list[:py:class:`indra.explanation.model_checker.PathMetric`]
         A list of PathMetric objects, each describing the results of a simple
-        path search (path existence). PathMetric attributes:
-        *source_node* - The source node of the path
-        *target_node* - The target node of the path
-        *polarity* - The overall polarity of the path
-        *length* - The length of the path
+        path search (path existence).
     paths : list[list[tuple[str, int]]]
         A list of paths obtained from path finding. Each path is a list of
         tuples (which are edges in the path), with the first element of the
