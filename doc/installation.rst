@@ -265,17 +265,18 @@ the value in the configuration file. In other words, an environment variable,
 when set, takes precedence over the value set in the config file.
 
 Configuration values include:
+
 - REACHPATH: The location of the JAR file containing a local instance of the
-REACH reading system
+  REACH reading system
 
 - EIDOSPATH: The location of the JAR file containing a local instance of the
-Eidos reading system
+  Eidos reading system
 
 - SPARSERPATH: The location of a local instance of the Sparser
-reading system (path to a folder)
+  reading system (path to a folder)
 
 - DRUMPATH: The location of a local installation of the DRUM reading system
-(path to a folder)
+  (path to a folder)
 
 - NDEX_USERNAME, NDEX_PASSWORD: Credentials for accessing the NDEx web service
 
