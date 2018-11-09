@@ -31,7 +31,19 @@ logger = logging.getLogger('model_checker')
 
 
 class PathMetric(object):
-    """Describes results of simple path search (path existence)."""
+    """Describes results of simple path search (path existence).
+
+    Attributes
+    ----------
+    source_node : str
+        The source node of the path
+    target_node : str
+        The target node of the path
+    polarity : int
+        The polarity of the path between source and target
+    length : int
+        The length of the path
+    """
     def __init__(self, source_node, target_node, polarity, length):
         self.source_node = source_node
         self.target_node = target_node
@@ -50,27 +62,32 @@ class PathMetric(object):
 class PathResult(object):
     """Describes results of running the ModelChecker on a single Statement.
 
-    Parameters
-    ----------
-    path_found : bool
-    result_code : string
-        STATEMENT_TYPE_NOT_HANDLED
-        SUBJECT_MONOMERS_NOT_FOUND
-        OBSERVABLES_NOT_FOUND
-        NO_PATHS_FOUND
-        MAX_PATH_LENGTH_EXCEEDED
-        PATHS_FOUND
-        INPUT_RULES_NOT_FOUND
-        MAX_PATHS_ZERO
-
     Attributes
     ----------
-    path_found : boolean
+    path_found : bool
+        True if a path was found, False otherwise.
     result_code : string
-    path_metrics : list of PathMetric
-    paths : list of paths
-    max_paths :
-    max_path_length :
+        - *STATEMENT_TYPE_NOT_HANDLED* - The provided statement type is not handled
+        - *SUBJECT_MONOMERS_NOT_FOUND* - Statement subject not found in model
+        - *OBSERVABLES_NOT_FOUND* - Statement has no associated observable
+        - *NO_PATHS_FOUND* - Statement has no path for any observable
+        - *MAX_PATH_LENGTH_EXCEEDED* - Statement has no path len <= MAX_PATH_LENGTH
+        - *PATHS_FOUND* - Statement has path len <= MAX_PATH_LENGTH
+        - *INPUT_RULES_NOT_FOUND* - No rules with Statement subject found
+        - *MAX_PATHS_ZERO* - Path found but MAX_PATHS is set to zero
+    max_paths : int
+        The maximum number of specific paths to return for each Statement
+        to be explained.
+    max_path_length : int
+        The maximum length of specific paths to return.
+    path_metrics : list[:py:class:`indra.explanation.model_checker.PathMetric`]
+        A list of PathMetric objects, each describing the results of a simple
+        path search (path existence).
+    paths : list[list[tuple[str, int]]]
+        A list of paths obtained from path finding. Each path is a list of
+        tuples (which are edges in the path), with the first element of the
+        tuple the name of a rule, and the second element its polarity in the
+        path.
     """
     def __init__(self, path_found, result_code, max_paths, max_path_length):
         self.path_found = path_found
@@ -103,6 +120,7 @@ class PathResult(object):
         else:
             pm_str = ws + ws.join(['%d: %s' % (pm_ix, pm) for pm_ix, pm in
                                             enumerate(self.path_metrics)])
+
         def format_path(path, num_spaces=11):
             path_ws = '\n' + (' ' * num_spaces)
             return path_ws.join([str(p) for p in path])
@@ -563,10 +581,10 @@ class ModelChecker(object):
         subj_mp : pysb.MonomerPattern
             MonomerPattern corresponding to the subject of the Statement
             being checked.
-        obs_name : string
+        obs_name : str
             Name of the PySB model Observable corresponding to the
             object/target of the Statement being checked.
-        target_polarity : 1 or -1
+        target_polarity : int
             Whether the influence in the Statement is positive (1) or negative
             (-1).
 
@@ -867,10 +885,10 @@ def _find_sources_with_paths(im, target, sources, polarity):
     ----------
     im : networkx.MultiDiGraph
         Graph containing the influence map.
-    target : string
+    target : str
         The node (rule name) in the influence map to start looking upstream for
         marching sources.
-    sources : list of strings
+    sources : list of str
         The nodes (rules) corresponding to the subject or upstream influence
         being checked.
     polarity : int
@@ -955,10 +973,10 @@ def _find_sources(im, target, sources, polarity):
     ----------
     im : networkx.MultiDiGraph
         Graph containing the influence map.
-    target : string
+    target : str
         The node (rule name) in the influence map to start looking upstream for
         marching sources.
-    sources : list of strings
+    sources : list of str
         The nodes (rules) corresponding to the subject or upstream influence
         being checked.
     polarity : int
@@ -1021,7 +1039,7 @@ def _get_signed_predecessors(im, node, polarity):
     ----------
     im : networkx.MultiDiGraph
         Graph containing the influence map.
-    node : string
+    node : str
         The node (rule name) in the influence map to get predecessors (upstream
         nodes) for.
     polarity : int
@@ -1275,5 +1293,3 @@ def _stmt_from_rule(model, rule_name, stmts):
         for stmt in stmts:
             if stmt.uuid == stmt_uuid:
                 return stmt
-
-
