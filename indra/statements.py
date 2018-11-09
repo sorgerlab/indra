@@ -1049,8 +1049,9 @@ class Evidence(object):
         A dictionary of various reference ids to the source text, e.g.
         DOI, PMID, URL, etc.
 
-    Additional Attributes
-    ---------------------
+
+    There are some attributes which are not set by the parameters above:
+
     source_hash : int
         A hash calculated from the evidence text, source api, and pmid and/or
         source_id if available. This is generated automatcially when the object
@@ -1134,6 +1135,7 @@ class Evidence(object):
         return matches
 
     def to_json(self):
+        """Convert the evidence object into a JSON dict."""
         json_dict = _o({})
         if self.source_api:
             json_dict['source_api'] = self.source_api
@@ -1230,8 +1232,6 @@ class Evidence(object):
             return str(self)
         else:
             return str(self).encode('utf-8')
-
-
 
 
 class Statement(object):
