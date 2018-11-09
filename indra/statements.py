@@ -200,10 +200,12 @@ __all__ = [
 import os
 import abc
 import sys
+import json
 import uuid
 import rdflib
 import logging
 import networkx
+import textwrap
 import datetime
 import itertools
 from hashlib import md5
@@ -1046,6 +1048,18 @@ class Evidence(object):
     text_refs : dict
         A dictionary of various reference ids to the source text, e.g.
         DOI, PMID, URL, etc.
+
+
+    There are some attributes which are not set by the parameters above:
+
+    source_hash : int
+        A hash calculated from the evidence text, source api, and pmid and/or
+        source_id if available. This is generated automatcially when the object
+        is instantiated.
+    stmt_tag : int
+        This is a hash calculated by a Statement to which this evidence refers,
+        and is set by said Statement. It is useful for tracing ownership of
+        an Evidence object.
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None, context=None,
@@ -1070,12 +1084,17 @@ class Evidence(object):
         self.context = context
         self.source_hash = None
         self.get_source_hash()
+        self.stmt_tag = None
 
     def __setstate__(self, state):
         if 'context' not in state:
             state['context'] = None
         if 'text_refs' not in state:
             state['text_refs'] = {}
+        if 'stmt_tag' not in state:
+            state['stmt_tag'] = None
+        if 'source_hash' not in state:
+            state['source_hash'] = None
         self.__dict__ = state
 
     def get_source_hash(self, refresh=False):
@@ -1116,6 +1135,7 @@ class Evidence(object):
         return matches
 
     def to_json(self):
+        """Convert the evidence object into a JSON dict."""
         json_dict = _o({})
         if self.source_api:
             json_dict['source_api'] = self.source_api
@@ -1134,6 +1154,8 @@ class Evidence(object):
         if self.text_refs:
             json_dict['text_refs'] = self.text_refs
         json_dict['source_hash'] = self.get_source_hash()
+        if self.stmt_tag:
+            json_dict['stmt_tag'] = self.stmt_tag
         return json_dict
 
     @classmethod
@@ -1150,6 +1172,7 @@ class Evidence(object):
             context = Context.from_json(context_entry)
         else:
             context = None
+        stmt_tag = json_dict.get('stmt_tag')
         # Note that the source hash will be re-generated upon loading, so if
         # any of the relevant attributes used to create the hash changed, the
         # hash will also have changed.
@@ -1157,13 +1180,51 @@ class Evidence(object):
                       pmid=pmid, text=text, annotations=annotations,
                       epistemics=epistemics, context=context,
                       text_refs=text_refs)
+        ev.stmt_tag = stmt_tag
         return ev
 
     def __str__(self):
-        ev_str = 'Evidence(source_api=\'%s\',\n' % self.source_api
-        ev_str += '         pmid=\'%s\',\n' % self.pmid
-        ev_str += '         text=\'%s\',\n' % self.text
-        ev_str += '         annotations=%s)' % self.annotations
+        ev_str = 'Evidence('
+        tab_len = len(ev_str)
+
+        def _indented_join(s_list, depth):
+            return '\n'.join(' '*depth + s for s in s_list).lstrip(' ')
+
+        lines = []
+
+        def _add_line(name, s):
+            lines.append('%s=%s' % (name, s))
+
+        def _format_line(name, s):
+            return _add_line(name, "'%s'" % s)
+
+        def _format_dict(d, name, indent=9):
+            s = json.dumps(d, indent=1)
+            s = _indented_join(s.splitlines(), indent+len(name)+1)
+            return _add_line(name, s)
+
+        if self.source_api:
+            _format_line('source_api', self.source_api)
+        if self.pmid:
+            _format_line('pmid', self.pmid)
+        if self.source_id:
+            _format_line('source_id', self.source_id)
+        if self.text:
+            txt = _indented_join(textwrap.wrap(self.text, width=65),
+                                 tab_len+6)
+            _format_line('text', txt)
+        if self.annotations:
+            _format_dict(self.annotations, 'annotations')
+        if self.context:
+            _format_dict(self.context.to_json(), 'context')
+        if self.epistemics:
+            _format_dict(self.epistemics, 'epistemics')
+
+        div = ',\n' + ' '*9
+        ev_str += div.join(lines)
+        if len(ev_str.splitlines()) > 1:
+            ev_str += '\n' + ' '*9
+        ev_str += ')\n\n'
         return ev_str
 
     def __repr__(self):
@@ -1265,6 +1326,13 @@ class Statement(object):
                     _make_hash(self.matches_key() + str(ev_mk_list), 16)
             ret = self._full_hash
         return ret
+
+    def _tag_evidence(self):
+        """Set all the Evidence stmt_tag to my deep matches-key hash."""
+        h = self.get_hash(shallow=False)
+        for ev in self.evidence:
+            ev.stmt_tag = h
+        return
 
     def agent_list_with_bound_condition_agents(self):
         # Returns the list of agents both directly participating in the
@@ -3156,6 +3224,7 @@ class Unresolved(Statement):
 
 
 class Context(object):
+    """An abstract class for Contexts."""
     @classmethod
     def from_json(cls, jd):
         context_type = jd.get('type')
@@ -3168,7 +3237,7 @@ class Context(object):
 
 
 class BioContext(Context):
-    """An oject representing the context of a Statement in biology.
+    """An object representing the context of a Statement in biology.
 
     Parameters
     ----------
