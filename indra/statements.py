@@ -1048,6 +1048,17 @@ class Evidence(object):
     text_refs : dict
         A dictionary of various reference ids to the source text, e.g.
         DOI, PMID, URL, etc.
+
+    Additional Attributes
+    ---------------------
+    source_hash : int
+        A hash calculated from the evidence text, source api, and pmid and/or
+        source_id if available. This is generated automatcially when the object
+        is instantiated.
+    stmt_tag : int
+        This is a hash calculated by a Statement to which this evidence refers,
+        and is set by said Statement. It is useful for tracing ownership of
+        an Evidence object.
     """
     def __init__(self, source_api=None, source_id=None, pmid=None, text=None,
                  annotations=None, epistemics=None, context=None,
@@ -1079,6 +1090,10 @@ class Evidence(object):
             state['context'] = None
         if 'text_refs' not in state:
             state['text_refs'] = {}
+        if 'stmt_tag' not in state:
+            state['stmt_tag'] = None
+        if 'source_hash' not in state:
+            state['source_hash'] = None
         self.__dict__ = state
 
     def get_source_hash(self, refresh=False):
