@@ -55,19 +55,31 @@ class PathResult(object):
     path_found : bool
         True if a path was found, False otherwise.
     result_code : string
-        STATEMENT_TYPE_NOT_HANDLED - The provided statement type is not handled
-        SUBJECT_MONOMERS_NOT_FOUND - Statement subject not found in model
-        OBSERVABLES_NOT_FOUND - Statement has no associated observable
-        NO_PATHS_FOUND - Statement has no path for any observable
-        MAX_PATH_LENGTH_EXCEEDED - Statement has no path len <= MAX_PATH_LENGTH
-        PATHS_FOUND - Statement has path len <= MAX_PATH_LENGTH
-        INPUT_RULES_NOT_FOUND - No rules with Statement subject found
-        MAX_PATHS_ZERO - Path found but MAX_PATHS is set to zero
+        - *STATEMENT_TYPE_NOT_HANDLED* - The provided statement type is not handled
+        - *SUBJECT_MONOMERS_NOT_FOUND* - Statement subject not found in model
+        - *OBSERVABLES_NOT_FOUND* - Statement has no associated observable
+        - *NO_PATHS_FOUND* - Statement has no path for any observable
+        - *MAX_PATH_LENGTH_EXCEEDED* - Statement has no path len <= MAX_PATH_LENGTH
+        - *PATHS_FOUND* - Statement has path len <= MAX_PATH_LENGTH
+        - *INPUT_RULES_NOT_FOUND* - No rules with Statement subject found
+        - *MAX_PATHS_ZERO* - Path found but MAX_PATHS is set to zero
     max_paths : int
         The maximum number of specific paths to return for each Statement
         to be explained.
     max_path_length : int
         The maximum length of specific paths to return.
+    path_metrics : list[:py:class:`indra.explanation.model_checker.PathMetric`]
+        A list of PathMetric objects, each describing the results of a simple
+        path search (path existence). PathMetric attributes:
+        *source_node* - The source node of the path
+        *target_node* - The target node of the path
+        *polarity* - The overall polarity of the path
+        *length* - The length of the path
+    paths : list[list[tuple[str, int]]]
+        A list of paths obtained from path finding. Each path is a list of
+        tuples (which are edges in the path), with the first element of the
+        tuple the name of a rule, and the second element its polarity in the
+        path.
     """
     def __init__(self, path_found, result_code, max_paths, max_path_length):
         self.path_found = path_found
