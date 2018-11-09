@@ -6,6 +6,8 @@ import numpy
 import networkx
 import logging
 from os import path, pardir
+from collections import namedtuple
+
 
 try:
     from indra.sources.reach.processor import determine_reach_subtype
@@ -297,19 +299,27 @@ class BeliefEngine(object):
             st.inferred_stmt.belief = numpy.prod(source_probs)
 
 
+BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
+
+
 def _get_belief_package(stmt, n=1):
+    """Return the belief packages of a given statement recursively."""
     def belief_stmts(belief_pkgs):
-        return [pkg[1] for pkg in belief_pkgs]
+        """Return the list Statement keys included in the package."""
+        return [pkg['statement_key'] for pkg in belief_pkgs]
 
     belief_packages = []
+    # Iterate over all the support parents
     for st in stmt.supports:
+        # Recursively get all the belief packages of the parent
         parent_packages = _get_belief_package(st, n+1)
         belief_st = belief_stmts(belief_packages)
         for package in parent_packages:
-            if not package[1] in belief_st:
+            # Only add this belief package if it hasn't already been added
+            if not package['statement_key'] in belief_st:
                 belief_packages.append(package)
-
-    belief_package = (stmt.belief, stmt.matches_key())
+    # Now make the Statement's own belief package and append it to the list
+    belief_package = BeliefPackage(stmt.matches_key(), stmt.evidence)
     belief_packages.append(belief_package)
     return belief_packages
 
