@@ -318,6 +318,15 @@ def test_map_sequence():
     st_out = ac.map_sequence([st3])
     assert(len(st_out) == 0)
 
+def test_map_sequence_blank_entries():
+    """Make sure sites curated as erroneous with no mappings don't
+    get treated as valid mappings."""
+    mapk1 = Agent('MAPK1', db_refs={'UP': 'P28482'})
+    rps6 = Agent('RPS6', db_refs={'UP': 'P62753'})
+    st1 = Phosphorylation(mapk1, rps6, 'T', '389')
+    mapped = ac.map_sequence([st1])
+    assert len(mapped) == 0
+
 def test_filter_by_type():
     st_out = ac.filter_by_type([st1, st14], Phosphorylation)
     assert(len(st_out) == 1)

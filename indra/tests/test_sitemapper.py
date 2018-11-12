@@ -195,18 +195,6 @@ def test_site_map_hgnc():
     assert len(valid) == 0
     assert len(mapped) == 1
 
-def test_ignore_blank_entries():
-    """Make sure sites curated as erroneous with no mappings don't appear
-    to be valid mappings by setting the mapped_mods entry in the
-    MappedStatement to None."""
-    mapk1 = Agent('MAPK1', db_refs={'UP': 'P28482'})
-    rps6 = Agent('RPS6', db_refs={'UP': 'P62753'})
-    st1 = Phosphorylation(mapk1, rps6, 'T', '389')
-    (valid, mapped) = sm.map_sites([st1])
-    assert len(valid) == 0
-    assert len(mapped) == 1
-    ms = mapped[0]
-    assert ms.mapped_mods[0][1] is None
 
 def test_site_map_within_bound_condition():
     # Here, we test to make sure that agents within a bound condition are

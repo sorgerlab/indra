@@ -378,8 +378,7 @@ class SiteMapper(object):
         list
             A list of invalid sites, where each entry in the list has two
             elements: ((gene_name, residue, position), mapped_site).  If the
-            invalid position was not found in the site map, or if it is curated
-            in the site map as a known error with no mapping, mapped_site is
+            invalid position was not found in the site map, mapped_site is
             None; otherwise it is a tuple consisting of (residue, position,
             comment).
         """
@@ -479,14 +478,6 @@ class SiteMapper(object):
                         continue
             # Now check the site map
             mapped_site = self.site_map.get(site_key, None)
-            # If there is an entry in the site map that is intended to flag
-            # a site as incorrect, with no viable mapping (i.e., either of the
-            # the entries in the mapping tuple are None), then set the
-            # mapped_site to None (not a tuple) so that it doesn't get
-            # misinterpreted as an actual mapping
-            if mapped_site is not None and \
-               (mapped_site[0] is None or mapped_site[1] is None):
-                mapped_site = None
             # No entry in the site map, or no valid mapping; set site info
             # to None
             if mapped_site is None:
