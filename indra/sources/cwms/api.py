@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import logging
 from indra.sources.cwms.processor import CWMSProcessor
 from indra.sources.cwms.rdf_processor import CWMSRDFProcessor
@@ -51,8 +53,6 @@ def process_ekb_file(fname):
     with open(fname, 'rb') as fh:
         ekb_str = fh.read().decode('utf-8')
     return process_ekb(ekb_str)
-
-
 
 
 def process_ekb(ekb_str):
