@@ -38,7 +38,10 @@ class MappedStatement(object):
         elements: ((gene_name, residue, position), mapped_site).  If the
         invalid position was not found in the site map, mapped_site is
         None; otherwise it is a tuple consisting of (residue, position,
-        comment).
+        comment). Note that some entries in the site map are curated *errors*,
+        that is, sites that are known to be frequent misattributions
+        to certain proteins. Such sites are mapped to tuples
+        (None, None, comment).
     mapped_stmt : :py:class:`indra.statements.Statement`
         The statement after mapping. Note that if no information was found
         in the site map, it will be identical to the original statement.
