@@ -241,6 +241,136 @@
             })
         };
 
+        // Creates the dropdown div:
+        // <div class="dropdown" 
+        //      style="display:inline-block; vertical-align: middle;">
+        //     <select>
+        //         <option value="" selected disabled hidden>
+        //             Select error type...
+        //         </option>
+        //         <option value="no_error">No Error</option>
+        //         <option value="grounding">Grounding</option>
+        //         <option value="polarity">Polarity</option>
+        //         <option value="relation">Relation</option>
+        //         <option value="negative_result">Negative Result</option>
+        //         <option value="hypothesis">Hypothesis</option>
+        //         <option value="other">Other...</option>
+        //     </select>
+        // </div>
+        function createDDDiv () {
+            var ddContainer = document.createElement(div)
+            ddContainer.class = "dropdown"
+            ddContainer.style = "display:inline-block; vertical-align: middle;"
+            ddContainer.textContent = "Dropdown here" // delete later 
+
+            // add rest of dropdown here
+
+            return ddContainer;
+        }
+
+        // Creates the text box div:
+        // <div class="form" 
+        //      style="display:inline-block; 
+        //             vertical-align: middle; 
+        //             top: 0px">
+        //     <form name="user_feedback_form">
+        //         <input type="text" 
+        //                maxlength="240"
+        //                name="user_feedback" 
+        //                placeholder="Optional description (240 chars)" 
+        //                value=""
+        //                style="width: 360px;">
+        //     </form>
+        // </div>
+        function createTBDiv () {
+            var tbContainer = document.createElement(div)
+            tbContainer.class = "form"
+            tbContainer.style = "display:inline-block; vertical-align: middle; top: 0px"
+
+            let tbform = document.createElement(form)
+            tbform.name = "user_feedback_form"
+
+            let tbInput = document.createElement(input)
+            tbInput.type = "text";
+            tbInput.maxlength = "240"
+            tbInput.name = "user_feedback";
+            tbInput.placeholder = "Optional description (240 chars)";
+            tbInput.value = "";
+            tbInput.style = "width: 360px;"
+
+            tbform.appendChild(tbInput);
+
+            tbContainer.appendChild(tbform);
+
+            return tbContainer;
+        }
+
+        // Creates the submit button div
+        // <div id="btn_{{loop.index0}}"
+        //      class="curation_button"
+        //      style="display:inline-block; 
+        //             vertical-align: middle;">
+        //     <button
+        //         id="btn_{{loop.index0}}"
+        //         type="button"
+        //         class="btn btn-default btn-submit pull-right"
+        //         style="padding: 2px 6px">Submit
+        //     </button>
+        //     < script tag type="text/javascript">
+        //     $(".btn-submit").off("click").on("click", function(b){
+        //         // Get parent node
+        //         parent_node = b.target.parentNode.parentNode
+        //         // Get reference to closest row tag (jquery)
+        //         this_row = $(this).closest("tr")
+        //         buttonClick(parent_node, this_row)
+        //     })
+        //     </ script tag>
+        // </div>
+        function createSBDiv () {
+            var sbContainer = document.createElement(div);
+            sbContainer.class = "curation_button";
+            sbContainer.style = "display:inline-block; vertical-align: middle;";
+
+            // Temp: delete later
+            sbContainer.textContent = "Submit button goes here";
+
+            // let sbButton = document.createElement(button);
+            // sbButton.type = "button";
+            // sbButton.class = "btn btn-default btn-submit pull-right";
+            // sbButton.style = "padding: 2px 6px";
+            // sbButton.textContent = "Submit";
+            // sbButton.onclick = "buttonClick(this.parentNode, this.closest('tr'))"; // Completely improvised: check the called nodes
+
+            return sbContainer;
+        }
+
+        function curationRowGenerator() {
+
+            var newRow = document.createElement('tr');
+            let newTD = document.createElement('td');
+
+            // Add dropdown div
+            var dropdownDiv = createDDDiv();
+            newTD.appendChild(dropdownDiv);
+            // Add textbox 
+            var textBoxDiv = createTBDiv();
+            newTD.appendChild(textBoxDiv);
+            // Add submit button
+            var buttonDiv = createSBDiv();
+            newTD.appendChild(buttonDiv);
+
+            newRow.appendChild(newTD);
+            return newRow;
+        }
+
+        // Adds the curation row to current
+        function addCurationRow(clickedRow) {
+            var curationRow = curationRowGenerator();
+
+            // Append new row to provided row
+            clickedRow.parentNode.insertBefore(curationRow, clickedRow.nextSibling);
+        }
+
     </script>
     <!-- /KLAS USER SCRIPTS -->
 
