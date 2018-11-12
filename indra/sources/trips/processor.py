@@ -1709,6 +1709,7 @@ def _get_db_refs(term):
         'UP': 1,
         'FPLX': 2,
         'CHEBI': 3,
+        'PC': 3,
         'GO': 4,
         'FA': 5,
         'XFAM': 5,
