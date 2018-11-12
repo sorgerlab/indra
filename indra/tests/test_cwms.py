@@ -6,7 +6,7 @@ from os.path import join, dirname, abspath
 from nose.plugins.attrib import attr
 
 from indra.statements import *
-from indra.sources.cwms import process_rdf_file, process_text
+from indra.sources.cwms import *
 
 # Path to the CWMS test/dummy data folder
 path_this = dirname(abspath(__file__))
@@ -20,6 +20,8 @@ example2_txt = join(data_folder, 'example_2_sentence_3.txt')
 
 example3_rdf = join(data_folder, 'example_2_sentence_4.rdf')
 example3_txt = join(data_folder, 'example_2_sentence_4.txt')
+
+ekb_processing_test_file = join(data_folder, 'ekb_processing_test.ekb')
 
 
 def load_text(fname):
@@ -184,3 +186,8 @@ def test_three_sentences():
     assert cp is not None
     print(cp.statements)
     assert len(cp.statements) == 3, len(cp.statements)
+
+
+def test_ekb_process():
+    cp = process_ekb_file(ekb_processing_test_file)
+    assert len(cp.statements) == 1
