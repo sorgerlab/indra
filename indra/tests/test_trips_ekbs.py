@@ -29,9 +29,7 @@ def assert_grounding_value_or_none(st):
 def process_sentence_xml(sentence):
     fname = re.sub('[^a-zA-Z0-9]', '_', sentence[:-1]) + '.ekb'
     path = os.path.join(path_this, 'trips_ekbs', fname)
-    with open(path, 'rb') as fh:
-        xml = fh.read().decode('utf-8')
-    tp = trips.process_xml(xml)
+    tp = trips.process_xml_file(path)
     return tp
 
 def assert_onestmt(tp):
