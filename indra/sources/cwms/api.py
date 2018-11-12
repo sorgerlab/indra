@@ -33,6 +33,28 @@ def process_text(text, save_xml='cwms_output.xml'):
     return process_ekb(second_ekb)
 
 
+def process_ekb_file(fname):
+    """Processes an EKB file produced by CWMS.
+
+    Parameters
+    ----------
+    fname : str
+        Path to the EKB file to process.
+
+    Returns
+    -------
+    cp : indra.sources.cwms.CWMSProcessor
+        A CWMSProcessor, which contains a list of INDRA statements in its
+        statements attribute.
+    """
+    # Process EKB XML file into statements
+    with open(fname, 'rb') as fh:
+        ekb_str = fh.read().decode('utf-8')
+    return process_ekb(ekb_str)
+
+
+
+
 def process_ekb(ekb_str):
     """Processes an EKB string produced by CWMS.
 
