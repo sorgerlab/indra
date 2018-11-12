@@ -1,3 +1,5 @@
+from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 import logging
 from indra.sources.cwms.processor import CWMSProcessor
 from indra.sources.cwms.rdf_processor import CWMSRDFProcessor
@@ -31,6 +33,26 @@ def process_text(text, save_xml='cwms_output.xml'):
         with open(save_xml, 'wb') as fh:
             fh.write(second_ekb.encode('utf-8'))
     return process_ekb(second_ekb)
+
+
+def process_ekb_file(fname):
+    """Processes an EKB file produced by CWMS.
+
+    Parameters
+    ----------
+    fname : str
+        Path to the EKB file to process.
+
+    Returns
+    -------
+    cp : indra.sources.cwms.CWMSProcessor
+        A CWMSProcessor, which contains a list of INDRA statements in its
+        statements attribute.
+    """
+    # Process EKB XML file into statements
+    with open(fname, 'rb') as fh:
+        ekb_str = fh.read().decode('utf-8')
+    return process_ekb(ekb_str)
 
 
 def process_ekb(ekb_str):

@@ -29,9 +29,7 @@ def assert_grounding_value_or_none(st):
 def process_sentence_xml(sentence):
     fname = re.sub('[^a-zA-Z0-9]', '_', sentence[:-1]) + '.ekb'
     path = os.path.join(path_this, 'trips_ekbs', fname)
-    with open(path, 'rb') as fh:
-        xml = fh.read().decode('utf-8')
-    tp = trips.process_xml(xml)
+    tp = trips.process_xml_file(path)
     return tp
 
 def assert_onestmt(tp):
@@ -719,6 +717,18 @@ def test_56():
     assert tgfbr1.activity is not None
     assert tgfbr1.activity.activity_type == 'activity'
     assert tgfbr1.activity.is_active == True
+
+
+def test_57():
+    sentence = 'MEK not bound to Selumetinib phosphorylates ERK.'
+    tp = process_sentence_xml(sentence)
+    assert_onestmt(tp)
+    st = tp.statements[0]
+    assert(isinstance(st, Phosphorylation))
+    sel = st.enz.bound_conditions[0].agent
+    # Make sure we mapped PC to PUBCHEM correctly
+    assert 'PC' not in sel.db_refs
+    assert sel.db_refs['PUBCHEM'] == '10127622'
 
 
 def test_assoc_with():

@@ -80,6 +80,25 @@ def process_text(text, save_xml_name='trips_output.xml', save_xml_pretty=True,
     return process_xml(xml)
 
 
+def process_xml_file(file_name):
+    """Return a TripsProcessor by processing a TRIPS EKB XML file.
+
+    Parameters
+    ----------
+    file_name : str
+        Path to a TRIPS extraction knowledge base (EKB) file to be processed.
+
+    Returns
+    -------
+    tp : TripsProcessor
+        A TripsProcessor containing the extracted INDRA Statements
+        in tp.statements.
+    """
+    with open(file_name, 'rb') as fh:
+        ekb = fh.read().decode('utf-8')
+    return process_xml(ekb)
+
+
 def process_xml(xml_string):
     """Return a TripsProcessor by processing a TRIPS EKB XML string.
 

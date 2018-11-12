@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<ekb>
+  <input type="text">
+    <paragraphs>
+      <paragraph file="/Users/wbeaumont/drum/etc/Data/WP/TEXT10520_IO-16439913" id="paragraph10519">MEK not bound to Selumetinib phosphorylates ERK.\n</paragraph>
+    </paragraphs>
+    <sentences>
+      <sentence id="10788" pid="paragraph10519">MEK not bound to Selumetinib phosphorylates ERK.</sentence>
+    </sentences>
+  </input>
+  <EVENT end="47" id="V16440007" lisp="(ONT::EVENT ONT::V16440007 ONT::PHOSPHORYLATION :AGENT ONT::V16439916 :AFFECTED ONT::V16440012 :FORCE ONT::TRUE :DRUM ((:DRUM (TERM :ID GO::|0006468| :NAME &quot;protein phosphorylation&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;protein phosphorylation&quot; :STATUS &quot;name&quot; :EXACT 2)) :ONT-TYPES (ONT::POST-TRANSLATIONAL-MODIFICATION)))) :TENSE W::PRES)" paragraph="paragraph10519" rule="-RULE60_4_AGENT_AFFECTED" start="0" uttnum="10788">
+    <type>ONT::PHOSPHORYLATION</type>
+    <force>ONT::TRUE</force>
+    <predicate end="47" id="V16440007" start="0">
+      <type>ONT::PHOSPHORYLATION</type>
+      <text>MEK not bound to Selumetinib phosphorylates ERK</text>
+    </predicate>
+    <arg1 end="29" id="V16439916" role=":AGENT" start="0">
+      <type>ONT::PROTEIN-FAMILY</type>
+      <text normalization="">MEK not bound to Selumetinib</text>
+    </arg1>
+    <arg2 end="47" id="V16440012" role=":AFFECTED" start="44">
+      <type>ONT::GENE-PROTEIN</type>
+      <text normalization="">ERK</text>
+    </arg2>
+    <drum-terms>
+      <drum-term dbid="GO:0006468" match-score="0.85366" matched-name="protein phosphorylation" name="protein phosphorylation">
+        <types>
+          <type>ONT::POST-TRANSLATIONAL-MODIFICATION</type>
+        </types>
+      </drum-term>
+    </drum-terms>
+    <text>MEK not bound to Selumetinib phosphorylates ERK</text>
+  </EVENT>
+  <TERM dbid="FPLX:MEK|NCIT:C105947" end="29" id="V16439916" lisp="(ONT::TERM ONT::V16439916 ONT::PROTEIN-FAMILY :INEVENT ONT::V16439949 :NAME W::MEK :DRUM ((:DRUM (TERM :ID FPLX::MEK :NAME &quot;MEK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;MEK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C105947 :NAME &quot;mitogen-activated protein kinase kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;MEK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)))))" paragraph="paragraph10519" rule="-INEVENT2B,-SIMPLE-REF" start="0" uttnum="10788">
+    <type>ONT::PROTEIN-FAMILY</type>
+    <name>MEK</name>
+    <features>
+      <inevent id="V16439949"/>
+    </features>
+    <drum-terms>
+      <drum-term dbid="FPLX:MEK" match-score="1.0" matched-name="MEK" name="MEK">
+        <types>
+          <type>ONT::PROTEIN-FAMILY</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C105947" match-score="0.70732" matched-name="MEK" name="mitogen-activated protein kinase kinase">
+        <types>
+          <type>ONT::PROTEIN-FAMILY</type>
+        </types>
+      </drum-term>
+    </drum-terms>
+    <text>MEK not bound to Selumetinib</text>
+  </TERM>
+  <TERM dbid="FPLX:ERK|NCIT:C26166|NCIT:C16376|NCIT:C52872|UP:P29323|NCIT:C52164|NCIT:C26360|HGNC:3393|UP:P28482|HGNC:6871" end="47" id="V16440012" lisp="(ONT::TERM ONT::V16440012 ONT::GENE-PROTEIN :NAME W::ERK :DRUM ((:DRUM (TERM :ID FPLX::ERK :NAME &quot;ERK&quot; :SCORE 1.0 :MATCHES ((MATCH :SCORE 1.0 :MATCHED &quot;ERK&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN-FAMILY)) (TERM :ID NCIT::C16376 :NAME &quot;mitogen-activated protein kinase&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26166 :NAME &quot;ephrin receptor-ephB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C26360 :NAME &quot;MAP kinase gene&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52164 :NAME &quot;EPHB2&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C52872 :NAME &quot;MAPK1&quot; :SCORE 0.70732 :MATCHES ((MATCH :SCORE 0.70732 :MATCHED &quot;ERK&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.56098 :MATCHES ((MATCH :SCORE 0.56098 :MATCHED &quot;ERK&quot; :STATUS &quot;Synonym&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID HGNC::|3393| :NAME &quot;EPH receptor B2&quot; :SCORE 0.26829 :MATCHES ((MATCH :SCORE 0.26829 :MATCHED &quot;ERK&quot; :STATUS &quot;Previous Symbol&quot; :EXACT 1)) :DBXREFS (UP::P29323) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph10519" rule="-SIMPLE-REF" start="44" uttnum="10788">
+    <type>ONT::GENE-PROTEIN</type>
+    <name>ERK</name>
+    <drum-terms>
+      <drum-term dbid="FPLX:ERK" match-score="1.0" matched-name="ERK" name="ERK">
+        <types>
+          <type>ONT::PROTEIN-FAMILY</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C16376" match-score="0.70732" matched-name="ERK" name="mitogen-activated protein kinase">
+        <types>
+          <type>ONT::PROTEIN</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C26166" match-score="0.70732" matched-name="ERK" name="ephrin receptor-ephB2">
+        <types>
+          <type>ONT::PROTEIN</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C26360" match-score="0.70732" matched-name="ERK" name="MAP kinase gene">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C52164" match-score="0.70732" matched-name="ERK" name="EPHB2">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C52872" match-score="0.70732" matched-name="ERK" name="MAPK1">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="HGNC:6871" match-score="0.56098" matched-name="ERK" name="mitogen-activated protein kinase 1">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+        <xrefs>
+          <xref dbid="UP:P28482"/>
+        </xrefs>
+      </drum-term>
+      <drum-term dbid="HGNC:3393" match-score="0.26829" matched-name="ERK" name="EPH receptor B2">
+        <types>
+          <type>ONT::GENE</type>
+        </types>
+        <xrefs>
+          <xref dbid="UP:P29323"/>
+        </xrefs>
+      </drum-term>
+    </drum-terms>
+    <text>ERK</text>
+  </TERM>
+  <EVENT end="29" id="V16439949" lisp="(ONT::EVENT ONT::V16439949 ONT::BIND :AFFECTED ONT::V16439916 :AFFECTED1 ONT::V16439992 :FORCE ONT::FALSE :NEGATION +)" paragraph="paragraph10519" rule="-RULE40_4_AFFECTED_AFFECTED1" start="0" uttnum="10788">
+    <type>ONT::BIND</type>
+    <negation>+</negation>
+    <force>ONT::FALSE</force>
+    <predicate end="29" id="V16439949" start="0">
+      <type>ONT::BIND</type>
+      <text>MEK not bound to Selumetinib</text>
+    </predicate>
+    <arg1 end="29" id="V16439916" role=":AFFECTED" start="0">
+      <type>ONT::PROTEIN-FAMILY</type>
+      <text normalization="">MEK not bound to Selumetinib</text>
+    </arg1>
+    <arg2 end="29" id="V16439992" role=":AFFECTED1" start="14">
+      <type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+      <text normalization="">to Selumetinib</text>
+    </arg2>
+    <text>MEK not bound to Selumetinib</text>
+  </EVENT>
+  <TERM dbid="MESH:C517975|PC:10127622|NCIT:C66939" end="29" id="V16439992" lisp="(ONT::TERM ONT::V16439992 ONT::PHARMACOLOGIC-SUBSTANCE :NAME W::SELUMETINIB :DRUM ((:DRUM (TERM :ID PC::|10127622| :NAME &quot;Selumetinib&quot; :SCORE 0.85366 :MATCHES ((MATCH :SCORE 0.85366 :MATCHED &quot;Selumetinib&quot; :STATUS &quot;Name&quot; :EXACT 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)) (TERM :ID NCIT::C66939 :NAME &quot;AZD6244&quot; :SCORE 0.70379 :MATCHES ((MATCH :SCORE 0.70379 :MATCHED &quot;SELUMETINIB&quot; :STATUS &quot;synonym&quot; :INITIAL-CAP-ALL-CAPS 1) (MATCH :SCORE 0.70379 :MATCHED &quot;selumetinib&quot; :STATUS &quot;synonym&quot; :INITIAL-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)) (TERM :ID MESH::C517975 :NAME &quot;AZD 6244&quot; :SCORE 0.55745 :MATCHES ((MATCH :SCORE 0.55745 :MATCHED &quot;selumetinib&quot; :STATUS &quot;SY&quot; :INITIAL-CAP-NO-CAPS 1)) :ONT-TYPES (ONT::PHARMACOLOGIC-SUBSTANCE)))))" paragraph="paragraph10519" rule="-SIMPLE-REF" start="14" uttnum="10788">
+    <type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+    <name>SELUMETINIB</name>
+    <drum-terms>
+      <drum-term dbid="PC:10127622" match-score="0.85366" matched-name="Selumetinib" name="Selumetinib">
+        <types>
+          <type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="NCIT:C66939" match-score="0.70379" matched-name="SELUMETINIB" name="AZD6244">
+        <types>
+          <type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+        </types>
+      </drum-term>
+      <drum-term dbid="MESH:C517975" match-score="0.55745" matched-name="selumetinib" name="AZD 6244">
+        <types>
+          <type>ONT::PHARMACOLOGIC-SUBSTANCE</type>
+        </types>
+      </drum-term>
+    </drum-terms>
+    <text>to Selumetinib</text>
+  </TERM>
+</ekb>
