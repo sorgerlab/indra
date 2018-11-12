@@ -1813,6 +1813,11 @@ def _get_db_refs(term):
     if nxp_id:
         db_refs.pop('FA', None)
         db_refs['NXPFA'] = nxp_id
+    # We need to rename PC to PUBCHEM
+    pc_id = db_refs.get('PC')
+    if pc_id:
+        db_refs.pop('PC', None)
+        db_refs['PUBCHEM'] = pc_id
 
     # Here we also get and return the type, which is a TRIPS
     # ontology type. This is to be used in the context of
@@ -1974,6 +1979,7 @@ def _get_db_mappings(dbname, dbid):
                 hgnc_id = hgnc_client.get_hgnc_id(gene_name)
                 if hgnc_id:
                     db_mappings.append(('HGNC', hgnc_id))
+    # TODO: we could do some chemical mappings here i.e. CHEBI/PUBCHEM/CHEMBL
     return db_mappings
 
 
