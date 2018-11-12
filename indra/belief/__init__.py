@@ -256,6 +256,7 @@ class BeliefEngine(object):
             by this function.
         """
         def build_hierarchy_graph(stmts):
+            """Return a DiGraph based on matches keys and Statement supports"""
             g = networkx.DiGraph()
             for st1 in stmts:
                 g.add_node(st1.matches_key(), stmt=st1)
@@ -265,16 +266,27 @@ class BeliefEngine(object):
             return g
 
         def get_ranked_stmts(g):
+            """Return a topological sort of statement matches keys from a graph.
+            """
             node_ranks = networkx.algorithms.dag.topological_sort(g)
             node_ranks = reversed(list(node_ranks))
             stmts = [g.node[n]['stmt'] for n in node_ranks]
             return stmts
+
         g = build_hierarchy_graph(statements)
         ranked_stmts = get_ranked_stmts(g)
         new_beliefs = []
         for st in ranked_stmts:
             bps = _get_belief_package(st)
-            beliefs = [bp[0] for bp in bps]
+            # NOTE: the last belief package in the list is this statement's own
+            evidences_to_count = []
+            for bp in bps[:-1]:
+                # Iterate over all the parent evidences and add only
+                # non-negated ones
+                for ev in bp['evidences']:
+                    if not ev.epistemics.get('negated'):
+                        evidences_to_count.append(ev)
+
             belief = 1 - numpy.prod([(1-b) for b in beliefs])
             new_beliefs.append(belief)
         for st, bel in zip(ranked_stmts, new_beliefs):
