@@ -481,8 +481,7 @@ class SiteMapper(object):
                         continue
             # Now check the site map
             mapped_site = self.site_map.get(site_key, None)
-            # No entry in the site map, or no valid mapping; set site info
-            # to None
+            # No entry in the site map; set site info to None
             if mapped_site is None:
                 self._cache[site_key] = None
                 invalid_sites.append((site_key, None))

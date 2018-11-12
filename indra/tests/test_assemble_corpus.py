@@ -331,7 +331,6 @@ def test_map_sequence_blank_entries():
     mapped = ac.map_sequence([st1, st2])
     assert len(mapped) == 0
 
-    rps6 = Agent('RPS6', db_refs={'UP': 'P62753'})
 
 def test_filter_by_type():
     st_out = ac.filter_by_type([st1, st14], Phosphorylation)
