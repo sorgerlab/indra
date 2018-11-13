@@ -8,6 +8,7 @@ from os.path import abspath, dirname, join
 from jinja2 import Template
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
+from indra.databases import get_identifiers_url
 
 
 # Create a template object from the template file, load once
@@ -58,9 +59,8 @@ class HtmlAssembler(object):
         stmts_formatted = []
         for stmt in self.statements:
             stmt_hash = stmt.get_hash(shallow=True)
-            ea = EnglishAssembler([stmt])
-            english = ea.make_model()
             ev_list = self.format_evidence_text(stmt)
+            english = self.format_stmt_text(stmt)
             if self.rest_api_results:
                 total_evidence = self.rest_api_results['evidence_totals']\
                                                       [int(stmt_hash)]
@@ -114,11 +114,17 @@ class HtmlAssembler(object):
                     ag_text = ev.annotations['agents']['raw_text'][ix]
                     if ag_text is None:
                         continue
+                    role = get_role(ix)
+                    # Get the tag with the correct badge
+                    tag_start = '<span class="label label-%s">' % role
+                    tag_close = '</span>'
                     # Build up a set of indices
                     indices += [(m.start(), m.start() + len(ag_text),
-                                 ag_text, ix)
+                                 ag_text, tag_start, tag_close)
                                  for m in re.finditer(re.escape(ag_text),
                                                       ev.text)]
+                format_text = tag_text(ev.text, indices)
+                """
                 # Sort the indices by their start position
                 indices.sort(key=lambda x: x[0])
                 # Now, add the marker text for each occurrence of the strings
@@ -137,8 +143,59 @@ class HtmlAssembler(object):
                     start_pos = j
                 # Add the last section of text
                 format_text += ev.text[start_pos:]
+                """
             ev_list.append({'source_api': ev.source_api,
                             'pmid': ev.pmid, 'text': format_text })
+
         return ev_list
+
+    @staticmethod
+    def format_stmt_text(stmt):
+        # Get the English assembled statement
+        ea = EnglishAssembler([stmt])
+        english = ea.make_model()
+        indices = []
+        for ag in stmt.agent_list():
+            if ag is None or not ag.name:
+                continue
+            url = id_url(ag)
+            if url is None:
+                continue
+            # Build up a set of indices
+            tag_start = "<a href='%s'>" % url
+            tag_close = "</a>"
+            indices += [(m.start(), m.start() + len(ag.name), ag.name,
+                         tag_start, tag_close)
+                         for m in re.finditer(re.escape(ag.name), english)]
+        return tag_text(english, indices)
+
+
+def id_url(ag):
+    # Return identifier URLs in a prioritized order
+    for db_name in ('HGNC', 'FPLX', 'UP', 'IP', 'PF', 'NXPFA',
+                    'MIRBASEM', 'MIRBASE',
+                    'MESH', 'GO',
+                    'HMDB', 'PUBCHEM', 'CHEBI',
+                    'NCIT'):
+        if db_name in ag.db_refs:
+            return get_identifiers_url(db_name, ag.db_refs[db_name])
+
+
+def tag_text(text, tag_info_list):
+    # Sort the indices by their start position
+    tag_info_list.sort(key=lambda x: x[0])
+    # Now, add the marker text for each occurrence of the strings
+    format_text = ''
+    start_pos = 0
+    for i, j, ag_text, tag_start, tag_close in tag_info_list:
+        # Add the text before this agent, if any
+        format_text += text[start_pos:i]
+        # Add wrapper for this entity
+        format_text += tag_start + ag_text + tag_close
+        # Now set the next start position
+        start_pos = j
+    # Add the last section of text
+    format_text += text[start_pos:]
+    return format_text
 
 
