@@ -135,7 +135,7 @@
 
         // Expand/collapse row
         $(function() {
-            $("td[colspan=4]").find("div").hide();
+            $("td[colSpan=4]").find("div").hide();
             $("tr").click(function(event) {
                 event.stopPropagation();
                 var $target = $(event.target);
@@ -280,7 +280,7 @@
         function createDDDiv () {
             var ddContainer = document.createElement("div")
             ddContainer.className = "dropdown"
-            ddContainer.style = "display:inline-block; vertical-align: middle;"
+            ddContainer.style = "display:inline-block; vertical-align: middle; margin-right: 2%;"
             // ddContainer.textContent = "Dropdown here" // delete later 
 
             let ddSelect = document.createElement("select");
@@ -351,7 +351,7 @@
         function createTBDiv () {
             var tbContainer = document.createElement("div")
             tbContainer.className = "form"
-            tbContainer.style = "display:inline-block; vertical-align: middle; top: 0px"
+            tbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%; margin-right: 2%;"
 
             let tbForm = document.createElement("form")
             tbForm.name = "user_feedback_form"
@@ -395,7 +395,7 @@
         function createSBDiv () {
             var sbContainer = document.createElement("div");
             sbContainer.className = "curation_button";
-            sbContainer.style = "display:inline-block; vertical-align: middle;";
+            sbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%;";
 
             // sbContainer.textContent = "Submit button goes here"; // delete later
             let sbButton = document.createElement("button");
@@ -418,12 +418,11 @@
             newRow.innerHTML = null;
 
             newRow.className = "cchild";
-            newRow.style = "display: inline-block; border-top: 1px solid #FFFFFF;";
+            newRow.style = "border-top: 1px solid #FFFFFF;";
 
             let newTD = document.createElement('td');
-            newTD.colspan = "4";
-            newTD.style="padding: 0px; border-top: 1px solid #FFFFFF; white-space: nowrap;";
-
+            newTD.style="padding: 0px; border-top: 1px solid #FFFFFF; white-space: nowrap; text-align: center;";
+            newTD.setAttribute("colspan", "4");
 
             // Add dropdown div
             var dropdownDiv = createDDDiv();
