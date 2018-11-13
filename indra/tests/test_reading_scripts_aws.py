@@ -5,6 +5,7 @@ from subprocess import check_call
 from nose.plugins.attrib import attr
 
 from indra.tools.reading import submit_reading_pipeline as srp
+from indra.sources import sparser
 
 
 s3 = boto3.client('s3')
@@ -33,3 +34,11 @@ def test_normal_pmid_reading_call():
         print("Removing %s..." % entry['Key'])
         s3.delete_object(Bucket='bigmech', Key=entry['Key'])
     return
+
+
+@attr('nonpublic')
+def test_bad_sparser():
+    txt = ('Disruption of the AP-1 binding site reversed the transcriptional '
+           'responses seen with Fos and Jun.')
+    sp = sparser.process_text(txt, timeout=1)
+    assert sp is None, "Reading succeeded unexpectedly."
