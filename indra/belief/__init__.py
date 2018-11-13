@@ -285,11 +285,11 @@ class BeliefEngine(object):
         for st in ranked_stmts:
             bps = _get_belief_package(st)
             # NOTE: the last belief package in the list is this statement's own
-            evidences_to_count = []
+            evidences_to_count = st.evidence
             for bp in bps[:-1]:
                 # Iterate over all the parent evidences and add only
                 # non-negated ones
-                for ev in bp['evidences']:
+                for ev in bp.evidences:
                     if not ev.epistemics.get('negated'):
                         evidences_to_count.append(ev)
             # Now score all the evidences
@@ -322,7 +322,7 @@ def _get_belief_package(stmt, n=1):
     """Return the belief packages of a given statement recursively."""
     def belief_stmts(belief_pkgs):
         """Return the list Statement keys included in the package."""
-        return [pkg['statement_key'] for pkg in belief_pkgs]
+        return [pkg.statement_key for pkg in belief_pkgs]
 
     belief_packages = []
     # Iterate over all the support parents
@@ -332,7 +332,7 @@ def _get_belief_package(stmt, n=1):
         belief_st = belief_stmts(belief_packages)
         for package in parent_packages:
             # Only add this belief package if it hasn't already been added
-            if not package['statement_key'] in belief_st:
+            if package.statement_key not in belief_st:
                 belief_packages.append(package)
     # Now make the Statement's own belief package and append it to the list
     belief_package = BeliefPackage(stmt.matches_key(), stmt.evidence)
