@@ -124,26 +124,6 @@ class HtmlAssembler(object):
                                  for m in re.finditer(re.escape(ag_text),
                                                       ev.text)]
                 format_text = tag_text(ev.text, indices)
-                """
-                # Sort the indices by their start position
-                indices.sort(key=lambda x: x[0])
-                # Now, add the marker text for each occurrence of the strings
-                format_text = ''
-                start_pos = 0
-                for i, j, ag_text, ag_ix in indices:
-                    role = get_role(ag_ix)
-                    # Get the tag with the correct badge
-                    tag_start = '<span class="label label-%s">' % role
-                    tag_close = '</span>'
-                    # Add the text before this agent, if any
-                    format_text += ev.text[start_pos:i]
-                    # Add wrapper for this entity
-                    format_text += tag_start + ag_text + tag_close
-                    # Now set the next start position
-                    start_pos = j
-                # Add the last section of text
-                format_text += ev.text[start_pos:]
-                """
             ev_list.append({'source_api': ev.source_api,
                             'pmid': ev.pmid, 'text': format_text,
                             'source_hash': ev.source_hash })
@@ -183,8 +163,28 @@ def id_url(ag):
 
 
 def tag_text(text, tag_info_list):
+    """Apply start/end tags to spans of the given text.
+
+
+    Parameters
+    ----------
+    text : str
+        Text to be tagged
+    tag_info_list : list of tuples
+        Each tuple refers to a span of the given text. Fields are `(start_ix,
+        end_ix, substring, start_tag, close_tag)`, where substring, start_tag,
+        and close_tag are strings. If any of the given spans of text overlap,
+        the longest span is used.
+
+    Returns
+    -------
+    str
+        String where the specified substrings have been surrounded by the
+        given start and close tags.
+    """
     # Sort the indices by their start position
     tag_info_list.sort(key=lambda x: x[0])
+    # Check for overlapping indices
     # Now, add the marker text for each occurrence of the strings
     format_text = ''
     start_pos = 0
