@@ -258,15 +258,61 @@
         //     </select>
         // </div>
         function createDDDiv () {
-            var ddContainer = document.createElement(div)
-            ddContainer.class = "dropdown"
+            var ddContainer = document.createElement("div")
+            ddContainer.className = "dropdown"
             ddContainer.style = "display:inline-block; vertical-align: middle;"
-            ddContainer.textContent = "Dropdown here" // delete later 
+            // ddContainer.textContent = "Dropdown here" // delete later 
 
-            // add rest of dropdown here
+            let ddSelect = document.createElement("select");
+
+            // Options
+            defaultOption = document.createElement("option");
+            defaultOption.value = "";
+            defaultOption.textContent = "Select error type..."
+            ddSelect.appendChild(defaultOption);
+
+            // 1 "no_error" No Error;
+            option1 = document.createElement("option");
+            option1.value = "no_error";
+            option1.textContent = "No Error";
+            ddSelect.appendChild(option1);
+            // 2 "grounding" Grounding;
+            option2 = document.createElement("option");
+            option2.value = "grounding";
+            option2.textContent = "Grounding";
+            ddSelect.appendChild(option2);
+            // 3 "polarity" Polarity;
+            option3 = document.createElement("option");
+            option3.value = "polarity";
+            option3.textContent = "Polarity";
+            ddSelect.appendChild(option3);
+            // 4 "relation" Relation;
+            option4 = document.createElement("option");
+            option4.value = "relation";
+            option4.textContent = "Relation";
+            ddSelect.appendChild(option4);
+            // 5 "negative_result" Negative Result;
+            option5 = document.createElement("option");
+            option5.value = "negative_result";
+            option5.textContent = "Negative Result";
+            ddSelect.appendChild(option5);
+            // 6 "hypothesis" Hypothesis;
+            option6 = document.createElement("option");
+            option6.value = "hypothesis";
+            option6.textContent = "Hypothesis";
+            ddSelect.appendChild(option6);
+            // 7 "other" Other...
+            option7 = document.createElement("option");
+            option7.value = "other";
+            option7.textContent = "Other...";
+            ddSelect.appendChild(option7);
+            // Add more options below by following the structure above
+
+
+            ddContainer.appendChild(ddSelect);
 
             return ddContainer;
-        }
+        };
 
         // Creates the text box div:
         // <div class="form" 
@@ -283,14 +329,14 @@
         //     </form>
         // </div>
         function createTBDiv () {
-            var tbContainer = document.createElement(div)
-            tbContainer.class = "form"
+            var tbContainer = document.createElement("div")
+            tbContainer.className = "form"
             tbContainer.style = "display:inline-block; vertical-align: middle; top: 0px"
 
-            let tbform = document.createElement(form)
-            tbform.name = "user_feedback_form"
+            let tbForm = document.createElement("form")
+            tbForm.name = "user_feedback_form"
 
-            let tbInput = document.createElement(input)
+            let tbInput = document.createElement("input")
             tbInput.type = "text";
             tbInput.maxlength = "240"
             tbInput.name = "user_feedback";
@@ -298,20 +344,20 @@
             tbInput.value = "";
             tbInput.style = "width: 360px;"
 
-            tbform.appendChild(tbInput);
+            tbForm.appendChild(tbInput);
 
-            tbContainer.appendChild(tbform);
+            tbContainer.appendChild(tbForm);
 
             return tbContainer;
-        }
+        };
 
         // Creates the submit button div
-        // <div id="btn_{{loop.index0}}"
+        // <div id="btn_NNNN"
         //      class="curation_button"
         //      style="display:inline-block; 
         //             vertical-align: middle;">
         //     <button
-        //         id="btn_{{loop.index0}}"
+        //         id="btn_NNNN"
         //         type="button"
         //         class="btn btn-default btn-submit pull-right"
         //         style="padding: 2px 6px">Submit
@@ -322,32 +368,42 @@
         //         parent_node = b.target.parentNode.parentNode
         //         // Get reference to closest row tag (jquery)
         //         this_row = $(this).closest("tr")
-        //         buttonClick(parent_node, this_row)
+        //         buttonClick(mouseclick)
         //     })
         //     </ script tag>
         // </div>
         function createSBDiv () {
-            var sbContainer = document.createElement(div);
-            sbContainer.class = "curation_button";
+            var sbContainer = document.createElement("div");
+            sbContainer.className = "curation_button";
             sbContainer.style = "display:inline-block; vertical-align: middle;";
 
-            // Temp: delete later
-            sbContainer.textContent = "Submit button goes here";
+            // sbContainer.textContent = "Submit button goes here"; // delete later
+            let sbButton = document.createElement("button");
+            sbButton.type = "button";
+            sbButton.className = "btn btn-default btn-submit pull-right";
+            sbButton.style = "padding: 2px 6px";
+            sbButton.textContent = "Submit";
+            sbButton.onclick = buttonClick; // Completely improvised: check the called nodes
 
-            // let sbButton = document.createElement(button);
-            // sbButton.type = "button";
-            // sbButton.class = "btn btn-default btn-submit pull-right";
-            // sbButton.style = "padding: 2px 6px";
-            // sbButton.textContent = "Submit";
-            // sbButton.onclick = "buttonClick(this.parentNode, this.closest('tr'))"; // Completely improvised: check the called nodes
+            sbContainer.appendChild(sbButton);
 
             return sbContainer;
-        }
+        };
 
+        // Append row to the row that executed the click
+        // <tr class="cchild" style="border-top: 1px solid #FFFFFF;">
+        // <td colspan="4" style="padding: 0px; border-top: 1px solid #FFFFFF;">
         function curationRowGenerator() {
-
             var newRow = document.createElement('tr');
+            newRow.innerHTML = null;
+
+            newRow.className = "cchild";
+            newRow.style = "display: inline-block; border-top: 1px solid #FFFFFF;";
+
             let newTD = document.createElement('td');
+            newTD.colspan = "4";
+            newTD.style="padding: 0px; border-top: 1px solid #FFFFFF; white-space: nowrap;";
+
 
             // Add dropdown div
             var dropdownDiv = createDDDiv();
@@ -360,8 +416,9 @@
             newTD.appendChild(buttonDiv);
 
             newRow.appendChild(newTD);
+
             return newRow;
-        }
+        };
 
         // Adds the curation row to current
         function addCurationRow(clickedRow) {
@@ -369,7 +426,7 @@
 
             // Append new row to provided row
             clickedRow.parentNode.insertBefore(curationRow, clickedRow.nextSibling);
-        }
+        };
 
     </script>
     <!-- /KLAS USER SCRIPTS -->
