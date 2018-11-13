@@ -143,20 +143,93 @@
             });
         });
 
+        function buttonClick(mClick) {
+            console.log(mClick)
+            // DROPDOWN ERROR SELECT
+            // Get mouseclick target, then parent's parent
+            pn = mClick.target.parentNode.parentNode;
+            btn_row_tag = pn.closest('tr');
+            s = pn.getElementsByClassName("dropdown")[0]
+                .getElementsByTagName("select")[0]
+
+            // DROPDOWN SELECTION
+            err_select = s.options[s.selectedIndex].value;
+
+            // TEXT BOX CONTENT
+            // Get "form" node, then the value of "input"
+            user_text = pn
+                        .getElementsByClassName("form")[0]
+                        .getElementsByTagName("input")[0]
+                        .value;
+
+            // CURATOR
+            curator = document.getElementById("curator_input").value;
+
+            // PMID
+            // Step back to the preceding tr tag
+            pmid_row = btn_row_tag.previousElementSibling;
+            // Get pmid_linktext content
+            pmid_text = pmid_row
+                        .getElementsByClassName("pmid_link")[0]
+                        .textContent.trim()
+
+            // HASHES: source_hash & stmt_hash
+            // source_hash == ev['source_hash'] == pmid_row.id; "evidence level"
+            source_hash = pmid_row.id;
+            // stmt_hash == hash == stmt_info['hash'] == table ID; "(pa-) statement level"
+            stmt_hash = pmid_row.parentElement.parentElement.id;
+
+            // CURATION DICT
+            // example: curation_dict = {'tag': 'Reading', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas', 'ev_hash': ev_hash};
+            cur_dict = {
+                        'tag': err_select, 
+                        'text': user_text, 
+                        'curator': curator,
+                        'ev_hash': source_hash
+                    };
+
+            // console.log("User: " + curator);
+            // console.log("source hash: " + source_hash)
+            // console.log("stmt hash: " + stmt_hash)
+            // console.log("Error selected: " + err_select);
+            // console.log("User feedback: " + user_text);
+            // console.log("PMID: " + pmid_text);
+            // console.log("cur_dict");
+            // console.log(cur_dict);
+
+            // Real submission: test == false
+            // Test submission: test == true
+            // ajx_response = submitCuration(curation_dict, hash, test);
+            ajx_response = submitCuration(cur_dict, stmt_hash, false);
+            console.log("ajax response from submission: ");
+            console.log(ajx_response);
+
+            // ajx_response.then(function(responseXML) {
+            //     console.log("Submission status: " + responseXML)
+            //     if (responseXML.status == 200) {
+            //         console.log("Curation was submitted!")
+            //     } else {
+            //         console.log("Curation was not submitted...")
+            //     }
+            // })
+        };
+
         // Submit curation
-        function submitCuration(curation_dict, stmt_lvl, hash, test) {
+        function submitCuration(curation_dict, hash, test) {
+            // API KEY FOR ACCESSING DATABASE
             var api_key = document.getElementById("api_key_input").value;
             curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
-            // stmt_lvl = {'pa', 'raw'}
+            
+            _url = curation_addr + hash + "?api_key=" + api_key;
+
             if (test) {
                 console.log("Submitting test curation...");
-                console.log("api key: " + api_key)
-                _url = curation_addr + stmt_lvl + "/" + hash + "?api_key=" + api_key + "&test";
-                console.log("url: " + _url);
-            } else {
-                _url = curation_addr + stmt_lvl + "/" + hash + "?api_key=" + api_key;
-            }
+                _url += "&test";
+            };
             
+            console.log("api key: " + api_key)
+            console.log("url: " + _url);
+
             response = $.ajax({
                 url: _url,
                 type: "POST",
@@ -167,101 +240,7 @@
             return response;
         };
 
-        // The action of clicking the submit button
-        // $(".btn-submit").off("click").on("click", function(b){
-        //     // Get parent node
-        //     console.log("b");
-        //     console.log(b);
-        //     parent_node = b.target.parentNode;
-        //     console.log("parent_node");
-        //     console.log(b);
-        //     // Get reference to closest row tag
-        //     this_row = parent_node.closest("tr")
-        //     buttonClick(parent_node, this_row)
-        // })
-
-        function buttonClick(mClick) {
-            // DROPDOWN ERROR SELECT
-            // Get div node for dropdown, then the select tag
-
-            pn = mClick.target.parentNode.parentNode;
-            btn_row_tag = pn.closest('tr');
-            console.log("parent node:");
-            console.log(pn);
-            console.log("btn_row_tag");
-            console.log(btn_row_tag);
-            s = pn.getElementsByClassName("dropdown")[0]
-                .getElementsByTagName("select")[0]
-            // Get the selected option from the select tag
-            err_select = s.options[s.selectedIndex].value;
-
-            // TEXT BOX
-            // Get "form" node, then the value of "input"
-            user_text = pn
-                        .getElementsByClassName("form")[0]
-                        .getElementsByTagName("input")[0]
-                        .value;
-
-            // PMID
-            // Step back to the preceding tr tag
-            pmid_row = btn_row_tag.prev();
-            // Get pmid_linktext content
-            pmid_text = pmid_row[0]
-                    .getElementsByClassName("pmid_link")[0]
-                    .textContent;
-
-            // HASH
-            // Step though the parents to <div class="evidence"> and get previous siblings
-            pa_hash = btn_row_tag.parent()[0].parentNode.parentNode.previousElementSibling.previousElementSibling.name;
-            raw_hash = "";
-
-            // CURATOR
-            curator = document.getElementById("curator_input").value;
-
-            // STATEMENT LEVEL
-            stmt_level = "pa";
-            if (stmt_level == "pa") {
-                hash = pa_hash;
-            } else if (stmt_level == "raw") {
-                hash = raw_hash;
-            }
-            uuid = "";
-
-            // SOURCE : indicates where the query came from, e.g. DepMap Explainer, INDRA-bot
-            source = "";
-
-
-            // example: curation_dict = {'tag': 'Reading', 'source': '', 'text': '"3200 A" is picked up as an agent.', 'curator': 'Klas'};
-            cur_dict = {
-                        'tag': err_select, 
-                        'source': source, 
-                        'text': user_text, 
-                        'curator': curator
-                    };
-
-            console.log("Error selected: " + err_select);
-            console.log("source: " + source);
-            console.log("User feedback: " + user_text);
-            console.log("PMID: " + pmid_text);
-            console.log("cur_dict");
-            console.log(cur_dict);
-
-            // Real submission: test == false
-            // ajx_response = submitCuration(cur_dict, stmt_level, hash, false);
-            // test submission: test == true
-            ajx_response = submitCuration(cur_dict, stmt_level, hash, true);
-            console.log(ajx_response);
-
-            ajx_response.then(function(responseXML) {
-                if (responseXML.status == 200) {
-                    console.log("Curation was submitted!")
-                } else {
-                    console.log("Curation was not submitted...")
-                }
-            })
-        };
-
-        // Creates the dropdown div:
+        // Creates the dropdown div with the following structure
         // <div class="dropdown" 
         //      style="display:inline-block; vertical-align: middle;">
         //     <select>
