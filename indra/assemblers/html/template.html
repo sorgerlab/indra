@@ -167,9 +167,29 @@
             return response;
         };
 
-        function buttonClick(pn, btn_row_tag) {
+        // The action of clicking the submit button
+        // $(".btn-submit").off("click").on("click", function(b){
+        //     // Get parent node
+        //     console.log("b");
+        //     console.log(b);
+        //     parent_node = b.target.parentNode;
+        //     console.log("parent_node");
+        //     console.log(b);
+        //     // Get reference to closest row tag
+        //     this_row = parent_node.closest("tr")
+        //     buttonClick(parent_node, this_row)
+        // })
+
+        function buttonClick(mClick) {
             // DROPDOWN ERROR SELECT
             // Get div node for dropdown, then the select tag
+
+            pn = mClick.target.parentNode.parentNode;
+            btn_row_tag = pn.closest('tr');
+            console.log("parent node:");
+            console.log(pn);
+            console.log("btn_row_tag");
+            console.log(btn_row_tag);
             s = pn.getElementsByClassName("dropdown")[0]
                 .getElementsByTagName("select")[0]
             // Get the selected option from the select tag
