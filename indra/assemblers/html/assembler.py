@@ -145,7 +145,8 @@ class HtmlAssembler(object):
                 format_text += ev.text[start_pos:]
                 """
             ev_list.append({'source_api': ev.source_api,
-                            'pmid': ev.pmid, 'text': format_text })
+                            'pmid': ev.pmid, 'text': format_text,
+                            'source_hash': ev.source_hash })
 
         return ev_list
 

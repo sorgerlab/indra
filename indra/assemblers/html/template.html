@@ -543,7 +543,7 @@
     </div>
     <div class="evidence">
     <p><a href='#index'>Back to index</a>
-          <table class="table" style="border-collapse: collapse;">
+    <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
             <thead>
               <tr>
                 <th></th>
@@ -554,7 +554,7 @@
             </thead>
             <tbody id="table_{{loop.index0}}">
                 {% for ev in stmt_info['evidence'] %}
-                <tr class="parent" style="border-bottom: 1px solid #FFFFFF;">
+                <tr class="parent" id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
                     <td id="row{{loop.index0}}_click" class="curation_toggle" onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
                     <td>{{ ev['source_api'] }}</td>
                     <td>"{{ ev['text'] }}"</td>
