@@ -23,7 +23,7 @@ def test_format_evidence_text():
     assert len(ev_list) == 1
     ev = ev_list[0]
     assert isinstance(ev, dict)
-    assert set(ev.keys()) == set(['source_api', 'pmid', 'text'])
+    assert set(ev.keys()) == set(['source_api', 'pmid', 'text', 'source_hash'])
     assert ev['source_api'] == 'test'
     assert ev['pmid'] == '1234567'
     assert ev['text'] == ('We noticed that the '
@@ -52,7 +52,7 @@ def test_tag_text():
     indices = []
     for span in ('FooBarBaz', 'Foo'):
         tag_start = "<%s>" % span
-        tag_close = "<%s/>" % span
+        tag_close = "</%s>" % span
         indices += [(m.start(), m.start() + len(span), span,
                      tag_start, tag_close)
                      for m in re.finditer(re.escape(span), text)]

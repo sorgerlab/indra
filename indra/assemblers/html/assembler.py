@@ -4,6 +4,7 @@ Format a set of INDRA Statements into an HTML-formatted report.
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
+import itertools
 from os.path import abspath, dirname, join
 from jinja2 import Template
 from indra.statements import *
@@ -182,9 +183,29 @@ def tag_text(text, tag_info_list):
         String where the specified substrings have been surrounded by the
         given start and close tags.
     """
+    # Check to tags for overlap and if there is any, return the subsumed
+    # range. Return None if no overlap.
+    def overlap(t1, t2):
+        if range(max(t1[0], t2[0]), min(t1[1]-1, t2[1]-1)+1):
+            if t1[1] - t1[0] >= t2[1] - t2[0]:
+                return t2
+            else:
+                return t1
+        else:
+            return None
+    # Remove subsumed tags
+    for t1, t2 in list(itertools.combinations(tag_info_list, 2)):
+        subsumed_tag = overlap(t1, t2)
+        if subsumed_tag is not None:
+            # Delete the subsumed tag from the list
+            try:
+                tag_ix = tag_info_list.index(subsumed_tag)
+                del tag_info_list[tag_ix]
+            # Ignore case where tag has already been deleted
+            except ValueError:
+                pass
     # Sort the indices by their start position
     tag_info_list.sort(key=lambda x: x[0])
-    # Check for overlapping indices
     # Now, add the marker text for each occurrence of the strings
     format_text = ''
     start_pos = 0
