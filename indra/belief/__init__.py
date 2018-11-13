@@ -58,6 +58,10 @@ class BeliefScorer(object):
         raise NotImplementedError('Need to subclass BeliefScorer and '
                                   'implement methods.')
 
+    def score_evidence_list(self, evidences):
+        raise NotImplementedError('Need to subclass BeliefScorer and '
+                                  'implement methods.')
+
     def check_prior_probs(self, statements):
         """Make sure the scorer has all the information needed to compute
         belief scores of each statement in the provided list, and raises an
@@ -105,6 +109,51 @@ class SimpleScorer(BeliefScorer):
         self.subtype_probs = subtype_probs
         return
 
+    def score_evidence_list(self, evidences):
+        def _score(evidences):
+            if not evidences:
+                return 0
+            # Collect all unique sources
+            sources = [ev.source_api for ev in evidences]
+            uniq_sources = numpy.unique(sources)
+            # Calculate the systematic error factors given unique sources
+            syst_factors = {s: self.prior_probs['syst'][s]
+                            for s in uniq_sources}
+            # Calculate the radom error factors for each source
+            rand_factors = {k: [] for k in uniq_sources}
+            for ev in evidences:
+                rand_factors[ev.source_api].append(
+                    evidence_random_noise_prior(
+                        ev,
+                        self.prior_probs['rand'],
+                        self.subtype_probs))
+            # The probability of incorrectness is the product of the
+            # source-specific probabilities
+            neg_prob_prior = 1
+            for s in uniq_sources:
+                neg_prob_prior *= (syst_factors[s] +
+                                   numpy.prod(rand_factors[s]))
+            # Finally, the probability of correctness is one minus incorrect
+            prob_prior = 1 - neg_prob_prior
+            return prob_prior
+        pos_evidence = [ev for ev in evidences if
+                        not ev.epistemics.get('negated')]
+        neg_evidence = [ev for ev in evidences if
+                        ev.epistemics.get('negated')]
+        pp = _score(pos_evidence)
+        np = _score(neg_evidence)
+        # The basic assumption is that the positive and negative evidence
+        # can't simultaneously be correct.
+        # There are two cases to consider. (1) If the positive evidence is
+        # incorrect then there is no Statement and the belief should be 0,
+        # irrespective of the negative evidence.
+        # (2) If the positive evidence is correct and the negative evidence
+        # is incorrect.
+        # This amounts to the following formula:
+        # 0 * (1-pp) + 1 * (pp * (1-np)) which we simplify below
+        score = pp * (1 - np)
+        return score
+
     def score_statement(self, st):
         """Computes the prior belief probability for an INDRA Statement.
 
@@ -125,49 +174,7 @@ class SimpleScorer(BeliefScorer):
         belief_score : float
             The computed prior probability for the statement
         """
-        def _score(evidences):
-            if not evidences:
-                return 0
-            # Collect all unique sources
-            sources = [ev.source_api for ev in evidences]
-            uniq_sources = numpy.unique(sources)
-            # Calculate the systematic error factors given unique sources
-            syst_factors = {s: self.prior_probs['syst'][s]
-                            for s in uniq_sources}
-            # Calculate the radom error factors for each source
-            rand_factors = {k: [] for k in uniq_sources}
-            for ev in evidences:
-                rand_factors[ev.source_api].append(
-                        evidence_random_noise_prior(
-                            ev,
-                            self.prior_probs['rand'],
-                            self.subtype_probs))
-            # The probability of incorrectness is the product of the
-            # source-specific probabilities
-            neg_prob_prior = 1
-            for s in uniq_sources:
-                neg_prob_prior *= (syst_factors[s] +
-                                   numpy.prod(rand_factors[s]))
-            # Finally, the probability of correctness is one minus incorrect
-            prob_prior = 1 - neg_prob_prior
-            return prob_prior
-        pos_evidence = [ev for ev in st.evidence if
-                        not ev.epistemics.get('negated')]
-        neg_evidence = [ev for ev in st.evidence if
-                        ev.epistemics.get('negated')]
-        pp = _score(pos_evidence)
-        np = _score(neg_evidence)
-        # The basic assumption is that the positive and negative evidence
-        # can't simultaneously be correct.
-        # There are two cases to consider. (1) If the positive evidence is
-        # incorrect then there is no Statement and the belief should be 0,
-        # irrespective of the negative evidence.
-        # (2) If the positive evidence is correct and the negative evidence
-        # is incorrect.
-        # This amounts to the following formula:
-        # 0 * (1-pp) + 1 * (pp * (1-np)) which we simplify below
-        score = pp * (1 - np)
-        return score
+        return self.score_evidence_list(st.evidence)
 
     def check_prior_probs(self, statements):
         """Throw Exception if BeliefEngine parameter is missing.
@@ -275,7 +282,6 @@ class BeliefEngine(object):
 
         g = build_hierarchy_graph(statements)
         ranked_stmts = get_ranked_stmts(g)
-        new_beliefs = []
         for st in ranked_stmts:
             bps = _get_belief_package(st)
             # NOTE: the last belief package in the list is this statement's own
@@ -286,11 +292,9 @@ class BeliefEngine(object):
                 for ev in bp['evidences']:
                     if not ev.epistemics.get('negated'):
                         evidences_to_count.append(ev)
-
-            belief = 1 - numpy.prod([(1-b) for b in beliefs])
-            new_beliefs.append(belief)
-        for st, bel in zip(ranked_stmts, new_beliefs):
-            st.belief = bel
+            # Now score all the evidences
+            belief = self.scorer.score_evidence_list(evidences_to_count)
+            st.belief = belief
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
