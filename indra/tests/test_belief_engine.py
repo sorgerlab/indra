@@ -71,29 +71,24 @@ def test_hierarchy_probs1():
     st2 = Phosphorylation(None, Agent('b'), evidence=[ev2])
     st2.supports = [st1]
     st1.supported_by = [st2]
-    st1.belief = 0.5
-    st2.belief = 0.8
     be.set_hierarchy_probs([st1, st2])
-    assert(st1.belief == 0.5)
-    assert(st2.belief == 0.9)
+    assert close_enough(st1.belief, 0.65)
+    assert close_enough(st2.belief, 0.8775)
 
 
 def test_hierarchy_probs2():
     be = BeliefEngine()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
     st2 = Phosphorylation(None, Agent('b'), evidence=[ev2])
-    st3 = Phosphorylation(None, Agent('c'), evidence=[ev3])
+    st3 = Phosphorylation(None, Agent('c'), evidence=[ev2])
     st2.supports = [st1]
     st3.supports = [st1, st2]
     st1.supported_by = [st2, st3]
     st2.supported_by = [st3]
-    st1.belief = 0.5
-    st2.belief = 0.8
-    st3.belief = 0.2
     be.set_hierarchy_probs([st1, st2, st3])
-    assert(st1.belief == 0.5)
-    assert(st2.belief == 0.9)
-    assert(st3.belief == 0.92)
+    assert close_enough(st1.belief, 0.65)
+    assert close_enough(st2.belief, 0.8775)
+    assert close_enough(st3.belief, 0.9804)
 
 
 def test_hierarchy_probs3():
@@ -337,8 +332,6 @@ def test_evidence_random_noise_prior():
 
 
 def test_negative_evidence():
-    def close_enough(b1, b2):
-        return abs(b1 - b2) < 1e-6
     prior_probs = {'rand': {'new_source': 0.1},
                    'syst': {'new_source': 0.05}}
     getev = lambda x: Evidence(source_api='new_source',
@@ -356,3 +349,6 @@ def test_negative_evidence():
     assert close_enough(stmts[0].belief, ((1-pr)-ps)*(1-((1-pr*pr)-ps)))
     assert close_enough(stmts[1].belief, (1-pr*pr*pr)-ps)
     assert stmts[2].belief == 0
+
+def close_enough(b1, b2):
+    return abs(b1 - b2) < 1e-6
