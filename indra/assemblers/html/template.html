@@ -268,7 +268,7 @@
         //         <option value="" selected disabled hidden>
         //             Select error type...
         //         </option>
-        //         <option value="no_error">No Error</option>
+        //         <option value="correct">No Error</option>
         //         <option value="grounding">Grounding</option>
         //         <option value="polarity">Polarity</option>
         //         <option value="relation">Relation</option>
@@ -285,16 +285,16 @@
 
             let ddSelect = document.createElement("select");
 
-            // Options
+            // DROPDOWN OPTIONS
+            // Default; todo: set <option value="" selected disabled hidden>
             defaultOption = document.createElement("option");
             defaultOption.value = "";
             defaultOption.textContent = "Select error type..."
             ddSelect.appendChild(defaultOption);
-
-            // 1 "no_error" No Error;
+            // 1 "correct" No Error;
             option1 = document.createElement("option");
-            option1.value = "no_error";
-            option1.textContent = "No Error";
+            option1.value = "correct";
+            option1.textContent = "Correct";
             ddSelect.appendChild(option1);
             // 2 "grounding" Grounding;
             option2 = document.createElement("option");
@@ -326,15 +326,15 @@
             option7.value = "other";
             option7.textContent = "Other...";
             ddSelect.appendChild(option7);
-            // Add more options below by following the structure above
 
+            // Add more options by following the structure above
 
             ddContainer.appendChild(ddSelect);
 
             return ddContainer;
         };
 
-        // Creates the text box div:
+        // Creates the text box div with the following structure:
         // <div class="form" 
         //      style="display:inline-block; 
         //             vertical-align: middle; 
@@ -371,13 +371,11 @@
             return tbContainer;
         };
 
-        // Creates the submit button div
-        // <div id="btn_NNNN"
-        //      class="curation_button"
+        // Creates the submit button div with the following structure
+        // <div class="curation_button"
         //      style="display:inline-block; 
         //             vertical-align: middle;">
         //     <button
-        //         id="btn_NNNN"
         //         type="button"
         //         class="btn btn-default btn-submit pull-right"
         //         style="padding: 2px 6px">Submit
@@ -397,13 +395,12 @@
             sbContainer.className = "curation_button";
             sbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%;";
 
-            // sbContainer.textContent = "Submit button goes here"; // delete later
             let sbButton = document.createElement("button");
             sbButton.type = "button";
             sbButton.className = "btn btn-default btn-submit pull-right";
             sbButton.style = "padding: 2px 6px";
             sbButton.textContent = "Submit";
-            sbButton.onclick = buttonClick; // Completely improvised: check the called nodes
+            sbButton.onclick = buttonClick; // ATTACHES SCRIPT TO BUTTON
 
             sbContainer.appendChild(sbButton);
 
@@ -414,12 +411,13 @@
         // <tr class="cchild" style="border-top: 1px solid #FFFFFF;">
         // <td colspan="4" style="padding: 0px; border-top: 1px solid #FFFFFF;">
         function curationRowGenerator() {
+            // Create new row element
             var newRow = document.createElement('tr');
             newRow.innerHTML = null;
-
             newRow.className = "cchild";
             newRow.style = "border-top: 1px solid #FFFFFF;";
 
+            // Create new td element
             let newTD = document.createElement('td');
             newTD.style="padding: 0px; border-top: 1px solid #FFFFFF; white-space: nowrap; text-align: center;";
             newTD.setAttribute("colspan", "4");
@@ -434,6 +432,7 @@
             var buttonDiv = createSBDiv();
             newTD.appendChild(buttonDiv);
 
+            // Add td to table row
             newRow.appendChild(newTD);
 
             return newRow;
@@ -441,6 +440,7 @@
 
         // Adds the curation row to current
         function addCurationRow(clickedRow) {
+            // Generate new row
             var curationRow = curationRowGenerator();
 
             // Append new row to provided row
