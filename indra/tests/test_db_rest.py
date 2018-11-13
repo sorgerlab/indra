@@ -170,3 +170,9 @@ def test_get_statements_by_hash():
 def test_get_statements_by_hash_no_hash():
     stmts = dbr.get_statements_by_hash([])
     assert not stmts, "Got statements without giving a hash."
+
+
+@attr('nonpublic')
+def test_curation_submission():
+    dbr.submit_curation(-36028793042562873, 'TEST', 'This is a test.',
+                        'tester', is_test=True)

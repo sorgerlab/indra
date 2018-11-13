@@ -430,13 +430,17 @@ def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
     return stmts_from_json(stmts_json.values())
 
 
-def submit_curation(level, hash_val, tag, text, curator,
-                    source='indra_rest_client', ev_hash=None):
+def submit_curation(hash_val, tag, text, curator, source='indra_rest_client',
+                    ev_hash=None, is_test=False):
     """Submit a curation for the given statement at the relevant level."""
     data = {'tag': tag, 'text': text, 'curator': curator, 'source': source,
             'ev_hash': ev_hash}
-    return _make_request('post', 'curation/%s' % (hash_val),
-                         data=data)
+    url = 'curation/submit/%s' % hash_val
+    if is_test:
+        qstr = '?test'
+    else:
+        qstr = ''
+    return _make_request('post', url, qstr, data=data)
 
 
 def _submit_query_request(end_point, *args, **kwargs):
@@ -466,6 +470,9 @@ def _submit_statement_request(meth, end_point, query_str='', data=None,
 
 
 def _make_request(meth, end_point, query_str, data=None, params=None, tries=2):
+    if params is None:
+        params = {}
+
     if end_point is None:
         logger.error("Exception in submit request with args: %s"
                      % str([meth, end_point, query_str, data, params, tries]))
