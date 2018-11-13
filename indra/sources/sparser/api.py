@@ -13,7 +13,8 @@ __all__ = ['process_text', 'process_nxml_str', 'process_nxml_file',
 import os
 import json
 import logging
-import subprocess
+import signal as sig
+import subprocess as sp
 import xml.etree.ElementTree as ET
 import multiprocessing as mp
 
@@ -27,7 +28,8 @@ sparser_path_var = 'SPARSERPATH'
 sparser_path = get_config(sparser_path_var)
 
 
-def process_text(text, output_fmt='json', outbuf=None, cleanup=True, key=''):
+def process_text(text, output_fmt='json', outbuf=None, cleanup=True, key='',
+                 **kwargs):
     """Return processor with Statements extracted by reading text with Sparser.
 
     Parameters
@@ -53,11 +55,12 @@ def process_text(text, output_fmt='json', outbuf=None, cleanup=True, key=''):
     format was chosen.
     """
     nxml_str = make_nxml_from_text(text)
-    return process_nxml_str(nxml_str, output_fmt, outbuf, cleanup, key)
+    return process_nxml_str(nxml_str, output_fmt, outbuf, cleanup, key,
+                            **kwargs)
 
 
 def process_nxml_str(nxml_str, output_fmt='json', outbuf=None, cleanup=True,
-                     key=''):
+                     key='', **kwargs):
     """Return processor with Statements extracted by reading an NXML string.
 
     Parameters
@@ -86,14 +89,16 @@ def process_nxml_str(nxml_str, output_fmt='json', outbuf=None, cleanup=True,
     with open(tmp_fname, 'wb') as fh:
         fh.write(nxml_str.encode('utf-8'))
     try:
-        sp = process_nxml_file(tmp_fname, output_fmt, outbuf, cleanup)
+        sp = process_nxml_file(tmp_fname, output_fmt, outbuf, cleanup,
+                               **kwargs)
     finally:
         if cleanup and os.path.exists(tmp_fname):
             os.remove(tmp_fname)
     return sp
 
 
-def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
+def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True,
+                      **kwargs):
     """Return processor with Statements extracted by reading an NXML file.
 
     Parameters
@@ -117,7 +122,7 @@ def process_nxml_file(fname, output_fmt='json', outbuf=None, cleanup=True):
     sp = None
     out_fname = None
     try:
-        out_fname = run_sparser(fname, output_fmt, outbuf)
+        out_fname = run_sparser(fname, output_fmt, outbuf, **kwargs)
         sp = process_sparser_output(out_fname, output_fmt)
     except Exception as e:
         logger.error("Sparser failed to run on %s." % fname)
@@ -249,10 +254,33 @@ def run_sparser(fname, output_fmt, outbuf=None, timeout=600):
         if not os.path.exists(fpath):
             raise Exception("'%s' is not a valid path." % fpath)
 
-    out_bts = subprocess.check_output([sparser_exec_path, format_flag, fname],
-                                      timeout=timeout)
+    cmd_list = [sparser_exec_path, format_flag, fname]
+
+    # This is mostly a copy of the code found in subprocess.run, with the
+    # key change that proc.kill is replaced with os.killpg. This allows the
+    # process to be killed even if it has children. Solution developed from:
+    # https://stackoverflow.com/questions/36952245/subprocess-timeout-failure
+    with sp.Popen(cmd_list, stdout=sp.PIPE) as proc:
+        try:
+            stdout, stderr = proc.communicate(timeout=timeout)
+        except sp.TimeoutExpired:
+            # Yes, this is about as bad as it looks. But it is the only way to
+            # be sure the script actually dies.
+            sp.check_call(['pkill', '-f', 'r3.core.*%s' % fname])
+            stdout, stderr = proc.communicate()
+            raise sp.TimeoutExpired(proc.args, timeout, output=stdout,
+                                    stderr=stderr)
+        except BaseException:
+            # See comment on above instance.
+            sp.check_call(['pkill', '-f', fname])
+            proc.wait()
+            raise
+        retcode = proc.poll()
+        if retcode:
+            raise sp.CalledProcessError(retcode, proc.args, output=stdout,
+                                        stderr=stderr)
     if outbuf is not None:
-        outbuf.write(out_bts)
+        outbuf.write(stdout)
         outbuf.flush()
     assert os.path.exists(output_path),\
         'No output file \"%s\" created by sparser.' % output_path
