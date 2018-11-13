@@ -38,7 +38,10 @@ class MappedStatement(object):
         elements: ((gene_name, residue, position), mapped_site).  If the
         invalid position was not found in the site map, mapped_site is
         None; otherwise it is a tuple consisting of (residue, position,
-        comment).
+        comment). Note that some entries in the site map are curated *errors*,
+        that is, sites that are known to be frequent misattributions
+        to certain proteins. Such sites are mapped to tuples
+        (None, None, comment).
     mapped_stmt : :py:class:`indra.statements.Statement`
         The statement after mapping. Note that if no information was found
         in the site map, it will be identical to the original statement.
@@ -166,8 +169,6 @@ class SiteMapper(object):
                         )
                     invalid_sites += agent_invalid_sites
                     new_agent.bound_conditions[ind].agent = new_b
-
-
 
                 new_agent_list.append(new_agent)
             else:
@@ -480,8 +481,8 @@ class SiteMapper(object):
                         continue
             # Now check the site map
             mapped_site = self.site_map.get(site_key, None)
+            # No entry in the site map; set site info to None
             if mapped_site is None:
-                # No entry in the site map--set site info to None
                 self._cache[site_key] = None
                 invalid_sites.append((site_key, None))
             # Manually mapped in the site map

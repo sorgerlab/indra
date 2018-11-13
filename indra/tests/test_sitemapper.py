@@ -261,3 +261,4 @@ def validate_mapk1(agent1):
     assert len(agent1.mods) == 2
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))
     assert agent1.mods[1].matches(ModCondition('phosphorylation', 'Y', '187'))
+
