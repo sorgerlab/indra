@@ -527,7 +527,7 @@
                 <th></th>
                 <th>Source</th>
                 <th>Evidence</th>
-                <th>PMID</th>
+                <th>Source Refs</th>
               </tr>
             </thead>
             <tbody id="table_{{loop.index0}}">
@@ -536,11 +536,20 @@
                     <td id="row{{loop.index0}}_click" class="curation_toggle" onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
                     <td>{{ ev['source_api'] }}</td>
                     <td>"{{ ev['text'] }}"</td>
-                    <td>
+                    <td style="white-space: nowrap">
+                        {% if 'pmid' in ev['text_refs'] %}
                         <a class="pmid_link"
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>
-                        {{ ev['pmid'] }}
-                        </a>
+                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['text_refs']['pmid'] }}'>
+                        {{ ev['text_refs']['pmid'] }}</a>
+                       {% endif %}
+                       {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
+                       | <a class="pmcid_link"
+                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev['text_refs']['pmcid'] }}'>PMC</a>
+                        {% endif %}
+                       {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
+                       | <a class="doi_link"
+                href='https://dx.doi.org/{{ ev['text_refs']['doi'] }}'>DOI</a>
+                       {% endif %}
                     </td>
                 </tr>
               {% endfor %}

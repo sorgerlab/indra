@@ -153,7 +153,8 @@ class HtmlAssembler(object):
                                                       ev.text)]
                 format_text = tag_text(ev.text, indices)
             ev_list.append({'source_api': ev.source_api,
-                            'pmid': ev.pmid, 'text': format_text,
+                            'text_refs': ev.text_refs,
+                            'text': format_text,
                             'source_hash': ev.source_hash })
 
         return ev_list
