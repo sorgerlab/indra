@@ -19,7 +19,7 @@ def make_stmt():
 
 def test_format_evidence_text():
     stmt = make_stmt()
-    ev_list = HtmlAssembler.format_evidence_text(stmt)
+    ev_list = HtmlAssembler._format_evidence_text(stmt)
     assert len(ev_list) == 1
     ev = ev_list[0]
     assert isinstance(ev, dict)

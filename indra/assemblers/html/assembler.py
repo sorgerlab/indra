@@ -84,6 +84,20 @@ class HtmlAssembler(object):
                                      rest_api_results=self.rest_api_results)
         return self.model
 
+    def save_model(self, fname):
+        """Save the assembled HTML into a file.
+
+        Parameters
+        ----------
+        fname : str
+            The path to the file to save the HTML into.
+        """
+        if self.model is None:
+            self.make_model()
+
+        with open(fname, 'wb') as fh:
+            fh.write(self.model.encode('utf-8'))
+
     @staticmethod
     def _format_evidence_text(stmt):
         """Returns evidence metadata with highlighted evidence text.
