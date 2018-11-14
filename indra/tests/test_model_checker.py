@@ -1131,6 +1131,8 @@ def test_prune_influence_map():
     im = mc.get_im()
     assert len(im.nodes()) == 3
     assert len(im.edges()) == 2
+    # Smoke test to make sure drawing works
+    mc.draw_im(os.devnull)
 
 
 def test_prune_influence_map_subj_obj():
