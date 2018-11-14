@@ -1,5 +1,6 @@
 """
-Format a set of INDRA Statements into an HTML-formatted report.
+Format a set of INDRA Statements into an HTML-formatted report which also
+supports curation.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
@@ -43,7 +44,6 @@ class HtmlAssembler(object):
         The HTML report formatted as a single string.
     rest_api_results : dict
         Dictionary of query metadata provided by the INDRA REST API.
-
     """
     def __init__(self, stmts=None, rest_api_results=None):
         if stmts is None:
@@ -57,11 +57,18 @@ class HtmlAssembler(object):
         self.model = None
 
     def make_model(self):
+        """Return the assembled HTML content as a string.
+
+        Returns
+        -------
+        str
+            The assembled HTML as a string.
+        """
         stmts_formatted = []
         for stmt in self.statements:
             stmt_hash = stmt.get_hash(shallow=True)
-            ev_list = self.format_evidence_text(stmt)
-            english = self.format_stmt_text(stmt)
+            ev_list = self._format_evidence_text(stmt)
+            english = self._format_stmt_text(stmt)
             if self.rest_api_results:
                 total_evidence = self.rest_api_results['evidence_totals']\
                                                       [int(stmt_hash)]
@@ -78,7 +85,7 @@ class HtmlAssembler(object):
         return self.model
 
     @staticmethod
-    def format_evidence_text(stmt):
+    def _format_evidence_text(stmt):
         """Returns evidence metadata with highlighted evidence text.
 
         Parameters
@@ -138,7 +145,7 @@ class HtmlAssembler(object):
         return ev_list
 
     @staticmethod
-    def format_stmt_text(stmt):
+    def _format_stmt_text(stmt):
         # Get the English assembled statement
         ea = EnglishAssembler([stmt])
         english = ea.make_model()
