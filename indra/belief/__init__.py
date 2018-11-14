@@ -320,8 +320,8 @@ BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
 
 def _get_belief_package(stmt, n=1):
     """Return the belief packages of a given statement recursively."""
-    def belief_stmts(belief_pkgs):
-        """Return the list Statement keys included in the package."""
+    def get_package_stmt_keys(belief_pkgs):
+        """Return the list of Statement keys included in the package."""
         return [pkg.statement_key for pkg in belief_pkgs]
 
     belief_packages = []
@@ -329,14 +329,15 @@ def _get_belief_package(stmt, n=1):
     for st in stmt.supports:
         # Recursively get all the belief packages of the parent
         parent_packages = _get_belief_package(st, n+1)
-        belief_st = belief_stmts(belief_packages)
+        package_stmt_keys = get_package_stmt_keys(belief_packages)
         for package in parent_packages:
             # Only add this belief package if it hasn't already been added
-            if package.statement_key not in belief_st:
+            if package.statement_key not in package_stmt_keys:
                 belief_packages.append(package)
     # Now make the Statement's own belief package and append it to the list
-    belief_package = BeliefPackage(stmt.matches_key(), stmt.evidence)
-    belief_packages.append(belief_package)
+    for ev in stmt.evidence:
+        belief_package = BeliefPackage(stmt.matches_key(), ev)
+        belief_packages.append(belief_package)
     return belief_packages
 
 
