@@ -1,4 +1,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
+
+import random
 from builtins import dict, str
 
 from datetime import datetime
@@ -52,6 +54,30 @@ def test_large_request():
 @attr('nonpublic')
 def test_bigger_request():
     __check_request(30, agents=['MAPK1'])
+
+
+@attr('nonpublic')
+def test_timeout_no_persist_agent():
+    candidates = ['TP53', 'NFkappaB@FPLX', 'AKT@FPLX']
+    agent = random.choice(candidates)
+    print(agent)
+    resp = dbr.get_statements(agents=[agent], persist=False, timeout=0,
+                              simple_response=False)
+    assert resp.is_working(), "Lookup resolved too fast."
+    resp.wait_until_done(70)
+    assert len(resp.statements) == 1000, len(resp.statements)
+
+
+@attr('nonpublic')
+def test_timeout_no_persist_type_object():
+    candidates = ['TP53', 'NFkappaB@FPLX', 'AKT@FPLX']
+    agent = random.choice(candidates)
+    print(agent)
+    resp = dbr.get_statements(stmt_type='phosphorylation', object=agent,
+                              persist=False, timeout=0, simple_response=False)
+    assert resp.is_working(), "Lookup resolved too fast."
+    resp.wait_until_done(70)
+    assert len(resp.statements) == 1000, len(resp.statements)
 
 
 @attr('nonpublic')
@@ -144,3 +170,9 @@ def test_get_statements_by_hash():
 def test_get_statements_by_hash_no_hash():
     stmts = dbr.get_statements_by_hash([])
     assert not stmts, "Got statements without giving a hash."
+
+
+@attr('nonpublic')
+def test_curation_submission():
+    dbr.submit_curation(-36028793042562873, 'TEST', 'This is a test.',
+                        'tester', is_test=True)

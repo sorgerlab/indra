@@ -218,15 +218,17 @@ class IndraDBRestResponse(object):
         # Handle the content if we were limited.
         logger.info("Some results could not be returned directly.")
         args = [agent_strs, stmt_types, params, persist]
-        logger.info("You chose to persist without blocking. Pagination "
-                    "is being performed in a thread.")
+        logger.info("The remainder of the query will be performed in a "
+                    "thread...")
         self.__th = Thread(target=self._run_queries, args=args)
         self.__th.start()
 
         if block_secs is None:
+            logger.info("Waiting for thread to complete...")
             self.__th.join()
         elif block_secs:  # is not 0
-            logger.info("Waiting for %d seconds..." % block_secs)
+            logger.info("Waiting at most %d seconds for thread to complete..."
+                        % block_secs)
             self.__th.join(block_secs)
         return
 
@@ -428,12 +430,41 @@ def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
     return stmts_from_json(stmts_json.values())
 
 
-def submit_curation(level, hash_val, tag, text, curator,
-                    source='indra_rest_client'):
-    """Submit a curation for the given statement at the relevant level."""
-    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source}
-    return _make_request('post', 'curation/%s/%s' % (level, hash_val),
-                        data=data)
+def submit_curation(hash_val, tag, curator, text=None,
+                    source='indra_rest_client', ev_hash=None, is_test=False):
+    """Submit a curation for the given statement at the relevant level.
+
+    Parameters
+    ----------
+    hash_val : int
+        The hash corresponding to the statement.
+    tag : str
+        A very short phrase categorizing the error or type of curation,
+        e.g. "grounding" for a grounding error, or "correct" if you are
+        marking a statement as correct.
+    curator : str
+        The name or identifier for the curator.
+    text : str
+        A brief description of the problem.
+    source : str
+        The name of the access point through which the curation was performed.
+        The default is 'direct_client', meaning this function was used
+        directly. Any higher-level application should identify itself here.
+    ev_hash : int
+        A hash of the sentence and other evidence information. Elsewhere
+        referred to as `source_hash`.
+    is_test : bool
+        Used in testing. If True, no curation will actually be added to the
+        database.
+    """
+    data = {'tag': tag, 'text': text, 'curator': curator, 'source': source,
+            'ev_hash': ev_hash}
+    url = 'curation/submit/%s' % hash_val
+    if is_test:
+        qstr = '?test'
+    else:
+        qstr = ''
+    return _make_request('post', url, qstr, data=data)
 
 
 def _submit_query_request(end_point, *args, **kwargs):
@@ -463,6 +494,9 @@ def _submit_statement_request(meth, end_point, query_str='', data=None,
 
 
 def _make_request(meth, end_point, query_str, data=None, params=None, tries=2):
+    if params is None:
+        params = {}
+
     if end_point is None:
         logger.error("Exception in submit request with args: %s"
                      % str([meth, end_point, query_str, data, params, tries]))
