@@ -112,7 +112,13 @@ class HtmlAssembler(object):
             else:
                 indices = []
                 for ix, ag in enumerate(stmt.agent_list()):
-                    ag_text = ev.annotations['agents']['raw_text'][ix]
+                    # If the statement has been preassembled, it will have
+                    # this entry in annotations
+                    try:
+                        ag_text = ev.annotations['agents']['raw_text'][ix]
+                    # Otherwise we try to get the agent text from db_refs
+                    except KeyError:
+                        ag_text = ag.db_refs.get('TEXT')
                     if ag_text is None:
                         continue
                     role = get_role(ix)
