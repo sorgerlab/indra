@@ -3,6 +3,7 @@ import logging
 import requests
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from indra import get_config, has_config
+from indra.util.nested_dict import NestedDict
 
 logger = logging.getLogger('aws_utils')
 
@@ -197,6 +198,51 @@ def dump_logs(job_queue='run_reach_queue', job_status='RUNNING'):
     jobs = get_jobs(job_queue, job_status)
     for job in jobs:
         get_job_log(job, write_file=True)
+
+
+def get_s3_file_tree(s3, bucket, prefix):
+    """Overcome s3 response limit and return NestedDict tree of paths.
+
+    The NestedDict object also allows the user to search by the ends of a path.
+
+    The tree mimics a file directory structure, with the leave nodes being the
+    full unbroken key. For example, 'path/to/file.txt' would be retrieved by
+
+        ret['path']['to']['file.txt']['key']
+
+    The NestedDict object returned also has the capability to get paths that
+    lead to a certain value. So if you wanted all paths that lead to something
+    called 'file.txt', you could use
+
+        ret.get_paths('file.txt')
+
+    For more details, see the NestedDict docs.
+    """
+    def get_some_keys(keys, marker=None):
+        if marker:
+            relevant_files = s3.list_objects(Bucket=bucket, Prefix=prefix,
+                                             Marker=marker)
+        else:
+            relevant_files = s3.list_objects(Bucket=bucket, Prefix=prefix)
+        keys.extend([entry['Key'] for entry in relevant_files['Contents']
+                     if entry['Key'] != marker])
+        return relevant_files['IsTruncated']
+
+    file_keys = []
+    marker = None
+    while get_some_keys(file_keys, marker):
+        marker = file_keys[-1]
+
+    file_tree = NestedDict()
+    pref_path = prefix.split('/')[:-1]   # avoid the trailing empty str.
+    for key in file_keys:
+        full_path = key.split('/')
+        relevant_path = full_path[len(pref_path):]
+        curr = file_tree
+        for step in relevant_path:
+            curr = curr[step]
+        curr['key'] = key
+    return file_tree
 
 
 if __name__ == '__main__':
