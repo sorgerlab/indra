@@ -109,7 +109,7 @@ class StatementData(object):
     def make_tuple(self):
         """Make a tuple for copying into the database."""
         return (self.reading_id, self.db_info_id, self.statement.uuid,
-                self.statement.get_hash(),
+                self.statement.get_hash(shallow=False),
                 self.statement.evidence[0].get_source_hash(),
                 self.statement.__class__.__name__,
                 json.dumps(self.statement.to_json()), self.indra_version)

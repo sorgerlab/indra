@@ -1277,7 +1277,7 @@ class Statement(object):
     def matches(self, other):
         return self.matches_key() == other.matches_key()
 
-    def get_hash(self, shallow=False, refresh=False):
+    def get_hash(self, shallow=True, refresh=False):
         """Get a hash for this Statement.
 
         There are two types of hash, "shallow" and "full". A shallow hash is
@@ -1302,7 +1302,7 @@ class Statement(object):
         ----------
         shallow : bool
             Choose between the shallow and full hashes described above. Default
-            is false (e.g. a deep hash).
+            is true (e.g. a shallow hash).
         refresh : bool
             Used to get a new copy of the hash. Default is false, so the hash,
             if it has been already created, will be read from the attribute.
