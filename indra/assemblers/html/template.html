@@ -135,11 +135,18 @@
 
         // Expand/collapse row
         $(function() {
-            $("td[colSpan=4]").find("div").hide();
-            $("tr").click(function(event) {
+            $("td[class='curation_toggle']").click(function(event) {
                 event.stopPropagation();
                 var $target = $(event.target);
-                $target.closest("tr").next().find("div").slideToggle();
+                if (event.target.dataset.clicked == "true") {
+                    // Toggle (animation duration in msec)
+                    $target.closest("tr").next().find("div").slideToggle(200);
+                    
+                } else {
+                    // Stay down (animation duration in msec)
+                    $target.closest("tr").next().find("div").slideDown(400);
+                    event.target.dataset.clicked = "true"
+                }
             });
         });
 
@@ -260,7 +267,6 @@
             var ddContainer = document.createElement("div")
             ddContainer.className = "dropdown"
             ddContainer.style = "display:inline-block; vertical-align: middle; margin-right: 2%;"
-            // ddContainer.textContent = "Dropdown here" // delete later 
 
             let ddSelect = document.createElement("select");
 
@@ -533,7 +539,7 @@
             <tbody id="table_{{loop.index0}}">
                 {% for ev in stmt_info['evidence'] %}
                 <tr class="parent" id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    <td id="row{{loop.index0}}_click" class="curation_toggle" onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
+                    <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle" onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
                     <td>{{ ev['source_api'] }}</td>
                     <td>"{{ ev['text'] }}"</td>
                     <td style="white-space: nowrap">
