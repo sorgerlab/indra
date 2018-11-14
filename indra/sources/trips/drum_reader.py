@@ -93,7 +93,7 @@ class DrumReader(KQMLModule):
             articles in the open-access subset of PMC will work.
         """
         msg = KQMLPerformative('REQUEST')
-        msg.set('receiver', 'DRUM')
+        msg.set('receiver', 'READER')
         content = KQMLList('run-pmcid')
         content.sets('pmcid', pmcid)
         content.set('reply-when-done', 'true')
@@ -124,7 +124,7 @@ class DrumReader(KQMLModule):
             comment = content.gets('comment')
             logger.error('Got error reply: "%s"' % comment)
         else:
-            extractions = content.gets('extractions')
+            extractions = content.gets('ekb')
             self.extractions.append(extractions)
         self.reply_counter -= 1
         if self.reply_counter == 0:
@@ -155,7 +155,7 @@ class DrumReader(KQMLModule):
 def _get_perf(text, msg_id):
     """Return a request message for a given text."""
     msg = KQMLPerformative('REQUEST')
-    msg.set('receiver', 'DRUM')
+    msg.set('receiver', 'READER')
     content = KQMLList('run-text')
     content.sets('text', text)
     msg.set('content', content)
