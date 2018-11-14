@@ -276,11 +276,14 @@
             let ddSelect = document.createElement("select");
 
             // DROPDOWN OPTIONS
-            // Default; todo: set <option value="" selected disabled hidden>
-            defaultOption = document.createElement("option");
-            defaultOption.value = "";
-            defaultOption.textContent = "Select error type..."
-            ddSelect.appendChild(defaultOption);
+            // Default; This is the option placeholder
+            placeholderOption = document.createElement("option");
+            placeholderOption.value = "";
+            placeholderOption.selected = "selected";
+            placeholderOption.disabled = "disabled";
+            placeholderOption.hidden = "hidden";
+            placeholderOption.textContent = "Select error type..."
+            ddSelect.appendChild(placeholderOption);
             // 1 "correct" No Error;
             option1 = document.createElement("option");
             option1.value = "correct";
