@@ -99,8 +99,6 @@
             pubmed_xml_promise.then(function(responseXML) {
                 docsum_XML = docsum_xml = responseXML.getElementsByTagName('DocSum')[0];
                 pmid_meta_dict = pmidXML2dict(docsum_xml);
-                // console.log('DEBUG: pmid_meta_dict')
-                // console.log(pmid_meta_dict)
                 authorlist = pmid_meta_dict.AuthorList
                 if (authorlist.length > 3) {
                     authors = authorlist[0] + ", ... " + authorlist[authorlist.length-1];
@@ -211,26 +209,14 @@
             // console.log("cur_dict");
             // console.log(cur_dict);
 
-            // Real submission: test == false
-            // Test submission: test == true
-            // ajx_response = submitCuration(curation_dict, hash, test);
-            testing = true;
-            ajx_response = submitCuration(cur_dict, stmt_hash, testing);
+            testing = false;
+            ajx_response = submitCuration(cur_dict, stmt_hash, statusBox, testing);
             console.log("ajax response from submission: ");
             console.log(ajx_response);
-
-            // ajx_response.then(function(responseXML) {
-            //     console.log("Submission status: " + responseXML)
-            //     if (responseXML.status == 200) {
-            //         console.log("Curation was submitted!")
-            //     } else {
-            //         console.log("Curation was not submitted...")
-            //     }
-            // })
         };
 
         // Submit curation
-        function submitCuration(curation_dict, hash, test) {
+        function submitCuration(curation_dict, hash, statusBox, test) {
             // API KEY FOR ACCESSING DATABASE
             var api_key = document.getElementById("api_key_input").value;
             curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
@@ -251,7 +237,31 @@
                 dataType: "json",
                 contentType: "application/json",
                 data: JSON.stringify(curation_dict),
-                });
+                complete: function(xhr, statusText) {
+                    switch (xhr.status) {
+                        case 200:
+                            statusBox.textContent = "(200) Curation submitted successfully!";
+                            break;
+                        case 400:
+                            statusBox.textContent = "(400) Bad Curation Data...";
+                            break;
+                        case 404:
+                            statusBox.textContent = "(404) Bad Link...";
+                            break;
+                        case 500:
+                            statusBox.textContent = "(500) Internal Server Error...";
+                            break;
+                        case 504:
+                            statusBox.textContent = "(504) Server Timeout...";
+                            break;
+                        default:
+                            console.log("Uncaught submission error")
+                            statusBox.textContent = "Uncaught submission error";
+                            break;
+                    }
+                }
+            });
+
             return response;
         };
 
@@ -414,9 +424,8 @@
             statusContainer.className = "submission_status";
             statusContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%;";
             
-            let textContainer = document.createElement("p");
+            let textContainer = document.createElement("i");
             textContainer.textContent = "";
-            textContainer.textContent = "hello there"; // for debugging, delete later
 
             statusContainer.appendChild(textContainer);
 
