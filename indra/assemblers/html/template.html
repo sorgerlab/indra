@@ -145,6 +145,11 @@
                 } else {
                     // Stay down (animation duration in msec)
                     $target.closest("tr").next().find("div").slideDown(400);
+
+                    // Change color of icon
+                    event.target.style="color:#FF0000;"
+
+                    // Set clicked to true
                     event.target.dataset.clicked = "true"
                 }
             });
