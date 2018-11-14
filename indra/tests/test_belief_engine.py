@@ -11,6 +11,7 @@ default_probs = load_default_probs()
 ev1 = Evidence(source_api='reach')
 ev2 = Evidence(source_api='trips')
 ev3 = Evidence(source_api='assertion')
+ev4 = Evidence(source_api='biopax')
 
 
 def test_prior_prob_one():
@@ -72,47 +73,44 @@ def test_hierarchy_probs1():
     st2.supports = [st1]
     st1.supported_by = [st2]
     be.set_hierarchy_probs([st1, st2])
-    assert close_enough(st1.belief, 0.65)
-    assert close_enough(st2.belief, 0.8775)
+    assert_close_enough(st1.belief, 1-0.35)
+    assert_close_enough(st2.belief, 1-0.35*0.35)
 
 
 def test_hierarchy_probs2():
     be = BeliefEngine()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
     st2 = Phosphorylation(None, Agent('b'), evidence=[ev2])
-    st3 = Phosphorylation(None, Agent('c'), evidence=[ev2])
+    st3 = Phosphorylation(None, Agent('c'), evidence=[ev4])
     st2.supports = [st1]
     st3.supports = [st1, st2]
     st1.supported_by = [st2, st3]
     st2.supported_by = [st3]
     be.set_hierarchy_probs([st1, st2, st3])
-    assert close_enough(st1.belief, 0.65)
-    assert close_enough(st2.belief, 0.8775)
-    assert close_enough(st3.belief, 0.9804)
+    assert_close_enough(st1.belief, 1-0.35)
+    assert_close_enough(st2.belief, 1-0.35*0.35)
+    assert_close_enough(st3.belief, 1-0.35*0.35*0.21)
 
 
 def test_hierarchy_probs3():
     be = BeliefEngine()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
     st2 = Phosphorylation(None, Agent('b'), evidence=[ev2])
-    st3 = Phosphorylation(None, Agent('c'), evidence=[ev3])
+    st3 = Phosphorylation(None, Agent('c'), evidence=[ev4])
     st3.supports = [st1, st2]
     st1.supported_by = [st3]
     st2.supported_by = [st3]
-    st1.belief = 0.5
-    st2.belief = 0.8
-    st3.belief = 0.2
     be.set_hierarchy_probs([st1, st2, st3])
-    assert(st1.belief == 0.5)
-    assert(st2.belief == 0.8)
-    assert(st3.belief == 0.92)
+    assert_close_enough(st1.belief, 1-0.35)
+    assert_close_enough(st2.belief, 1-0.35)
+    assert_close_enough(st3.belief, 1-0.35*0.35*0.21)
 
 
 def test_hierarchy_probs4():
     be = BeliefEngine()
     st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
     st2 = Phosphorylation(None, Agent('b'), evidence=[ev2])
-    st3 = Phosphorylation(None, Agent('c'), evidence=[ev3])
+    st3 = Phosphorylation(None, Agent('c'), evidence=[ev1])
     st4 = Phosphorylation(None, Agent('d'), evidence=[ev1])
     st4.supports = [st1, st2, st3]
     st3.supports = [st1]
@@ -120,65 +118,53 @@ def test_hierarchy_probs4():
     st1.supported_by = [st2, st3, st4]
     st2.supported_by = [st4]
     st3.supported_by = [st4]
-    st1.belief = 0.5
-    st2.belief = 0.8
-    st3.belief = 0.2
-    st4.belief = 0.6
-    be.set_hierarchy_probs([st1, st2, st3])
-    assert(st1.belief == 0.5)
-    assert(st2.belief == 0.9)
-    assert(st3.belief == 0.6)
-    assert(st4.belief == 0.968)
+    be.set_hierarchy_probs([st1, st2, st3, st4])
+    assert_close_enough(st1.belief, 1-0.35)
+    assert_close_enough(st2.belief, 1-0.35*0.35)
+    assert_close_enough(st3.belief, 1-(0.05 + 0.3*0.3))
+    assert_close_enough(st4.belief, 1-0.35*(0.05 + 0.3*0.3*0.3))
 
 
 def test_get_belief_package1():
-    st1 = Phosphorylation(None, Agent('a'))
-    st1.belief = 0.53
+    st1 = Phosphorylation(None, Agent('a'), evidence=[ev1])
     package = _get_belief_package(st1)
-    assert(len(package) == 1)
-    assert(package[0][0] == 0.53)
-    assert(package[0][1] == st1.matches_key())
+    assert len(package) == 1
+    assert package[0][0] == st1.matches_key()
 
 
 def test_get_belief_package2():
-    st1 = Phosphorylation(None, Agent('A1'))
-    st2 = Phosphorylation(None, Agent('A'))
+    st1 = Phosphorylation(None, Agent('A1'), evidence=[ev1])
+    st2 = Phosphorylation(None, Agent('A'), evidence=[ev2])
     st1.supported_by = [st2]
     st2.supports = [st1]
-    st1.belief = 0.8
-    st2.belief = 0.6
     package = _get_belief_package(st1)
-    assert(len(package) == 1)
-    assert(package[0][0] == 0.8)
-    assert(package[0][1] == st1.matches_key())
+    assert len(package) == 1
+    assert package[0].statement_key == st1.matches_key()
+    assert len(package[0].evidences) == 1, package[0][1]
+    assert package[0].evidences[0].source_api == 'reach'
     package = _get_belief_package(st2)
-    assert(len(package) == 2)
-    assert(package[0][0] == 0.8)
-    assert(package[0][1] == st1.matches_key())
-    assert(package[1][0] == 0.6)
-    assert(package[1][1] == st2.matches_key())
+    assert len(package) == 2, package
+    assert package[0].statement_key == st1.matches_key()
+    assert package[1].statement_key == st2.matches_key()
 
 
 def test_get_belief_package3():
-    st1 = Phosphorylation(Agent('B'), Agent('A1'))
-    st2 = Phosphorylation(None, Agent('A1'))
-    st3 = Phosphorylation(None, Agent('A'))
+    st1 = Phosphorylation(Agent('B'), Agent('A1'), evidence=[ev1])
+    st2 = Phosphorylation(None, Agent('A1'), evidence=[ev2])
+    st3 = Phosphorylation(None, Agent('A'), evidence=[ev4])
     st1.supported_by = [st2, st3]
     st2.supported_by = [st3]
     st2.supports = [st1]
     st3.supports = [st1, st2]
-    st1.belief = 0.8
-    st2.belief = 0.6
-    st3.belief = 0.7
     package = _get_belief_package(st1)
-    assert(len(package) == 1)
-    assert(set([p[0] for p in package]) == set([0.8]))
+    assert len(package) == 1
     package = _get_belief_package(st2)
-    assert(len(package) == 2)
-    assert(set([p[0] for p in package]) == set([0.6, 0.8]))
+    assert len(package) == 2
     package = _get_belief_package(st3)
-    assert(len(package) == 3)
-    assert(set([p[0] for p in package]) == set([0.6, 0.7, 0.8]))
+    assert len(package) == 3
+    sources = [pkg.evidences[0].source_api for pkg in package]
+    assert sources == ['reach', 'trips', 'biopax']
+
 
 def test_default_probs():
     """Make sure default probs are set with empty constructor."""
@@ -219,6 +205,7 @@ def test_default_probs_extend():
             else:
                 assert default_probs[err_type][k] == v
 
+
 def test_sample_statements():
     st1 = Phosphorylation(Agent('B'), Agent('A1'))
     st2 = Phosphorylation(None, Agent('A1'))
@@ -237,12 +224,14 @@ def test_sample_statements():
     assert st2 in stmts
     assert st3 not in stmts
 
+
 @raises(Exception)
 def test_check_prior_probs():
     be = BeliefEngine()
     st = Phosphorylation(None, Agent('ERK'),
                          evidence=[Evidence(source_api='xxx')])
     be.set_prior_probs([st])
+
 
 def test_evidence_subtype_tagger():
     #Test for reach evidence
@@ -346,9 +335,10 @@ def test_negative_evidence():
     engine.set_prior_probs(stmts)
     pr = prior_probs['rand']['new_source']
     ps = prior_probs['syst']['new_source']
-    assert close_enough(stmts[0].belief, ((1-pr)-ps)*(1-((1-pr*pr)-ps)))
-    assert close_enough(stmts[1].belief, (1-pr*pr*pr)-ps)
+    assert_close_enough(stmts[0].belief, ((1-pr)-ps)*(1-((1-pr*pr)-ps)))
+    assert_close_enough(stmts[1].belief, (1-pr*pr*pr)-ps)
     assert stmts[2].belief == 0
 
-def close_enough(b1, b2):
-    return abs(b1 - b2) < 1e-6
+
+def assert_close_enough(b1, b2):
+    assert abs(b1 - b2) < 1e-6, 'Got %.6f, Expected: %.6f' % (b1, b2)
