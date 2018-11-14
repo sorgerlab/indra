@@ -156,8 +156,7 @@
         });
 
         function buttonClick(mClick) {
-            console.log(mClick)
-            // DROPDOWN ERROR SELECT
+
             // Get mouseclick target, then parent's parent
             pn = mClick.target.parentNode.parentNode;
             btn_row_tag = pn.closest('tr');
@@ -173,6 +172,9 @@
                         .getElementsByClassName("form")[0]
                         .getElementsByTagName("input")[0]
                         .value;
+
+            // GET REFERENCE TO STATUS BOX (EMPTY UNTIL STATUS RECEIVED)
+            var statusBox = pn.getElementsByClassName("submission_status")[0].children[0];
 
             // CURATOR
             curator = document.getElementById("curator_input").value;
@@ -212,7 +214,8 @@
             // Real submission: test == false
             // Test submission: test == true
             // ajx_response = submitCuration(curation_dict, hash, test);
-            ajx_response = submitCuration(cur_dict, stmt_hash, false);
+            testing = true;
+            ajx_response = submitCuration(cur_dict, stmt_hash, testing);
             console.log("ajax response from submission: ");
             console.log(ajx_response);
 
@@ -386,7 +389,7 @@
         function createSBDiv () {
             var sbContainer = document.createElement("div");
             sbContainer.className = "curation_button";
-            sbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%;";
+            sbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%; margin-right: 2%;";
 
             let sbButton = document.createElement("button");
             sbButton.type = "button";
@@ -399,6 +402,27 @@
 
             return sbContainer;
         };
+
+        // Creates the textbox that tells the user the status of the submission
+        // <div class="submission_status"
+        //      style="display:inline-block; 
+        //             vertical-align: middle;">
+        // <a class="submission_status"></a>
+        // </div>
+        function createStatusDiv () {
+            var statusContainer = document.createElement("div");
+            statusContainer.className = "submission_status";
+            statusContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%;";
+            
+            let textContainer = document.createElement("p");
+            textContainer.textContent = "";
+            textContainer.textContent = "hello there"; // for debugging, delete later
+
+            statusContainer.appendChild(textContainer);
+
+            return statusContainer;
+
+        }
 
         // Append row to the row that executed the click
         // <tr class="cchild" style="border-top: 1px solid #FFFFFF;">
@@ -424,6 +448,9 @@
             // Add submit button
             var buttonDiv = createSBDiv();
             newTD.appendChild(buttonDiv);
+            // Add submission response textbox
+            var statusDiv = createStatusDiv();
+            newTD.appendChild(statusDiv);
 
             // Add td to table row
             newRow.appendChild(newTD);
