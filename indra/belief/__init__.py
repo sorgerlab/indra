@@ -3,8 +3,8 @@ from builtins import dict, str
 
 import json
 import numpy
-import networkx
 import logging
+import networkx
 from os import path, pardir
 from collections import namedtuple
 
@@ -284,14 +284,16 @@ class BeliefEngine(object):
         ranked_stmts = get_ranked_stmts(g)
         for st in ranked_stmts:
             bps = _get_belief_package(st)
+            # The slicing here is critical to make sure we don't assign by ref
+            evidences_to_count = st.evidence[:]
             # NOTE: the last belief package in the list is this statement's own
-            evidences_to_count = st.evidence
             for bp in bps[:-1]:
                 # Iterate over all the parent evidences and add only
                 # non-negated ones
                 for ev in bp.evidences:
                     if not ev.epistemics.get('negated'):
                         evidences_to_count.append(ev)
+            # Now add the Statement's own evidence
             # Now score all the evidences
             belief = self.scorer.score_evidence_list(evidences_to_count)
             st.belief = belief
@@ -318,26 +320,22 @@ class BeliefEngine(object):
 BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
 
 
-def _get_belief_package(stmt, n=1):
+def _get_belief_package(stmt):
     """Return the belief packages of a given statement recursively."""
-    def get_package_stmt_keys(belief_pkgs):
-        """Return the list of Statement keys included in the package."""
-        return [pkg.statement_key for pkg in belief_pkgs]
-
+    # This list will contain the belief packages for the given statement
     belief_packages = []
     # Iterate over all the support parents
     for st in stmt.supports:
         # Recursively get all the belief packages of the parent
-        parent_packages = _get_belief_package(st, n+1)
-        package_stmt_keys = get_package_stmt_keys(belief_packages)
+        parent_packages = _get_belief_package(st)
+        package_stmt_keys = [pkg.statement_key for pkg in belief_packages]
         for package in parent_packages:
             # Only add this belief package if it hasn't already been added
             if package.statement_key not in package_stmt_keys:
                 belief_packages.append(package)
     # Now make the Statement's own belief package and append it to the list
-    for ev in stmt.evidence:
-        belief_package = BeliefPackage(stmt.matches_key(), ev)
-        belief_packages.append(belief_package)
+    belief_package = BeliefPackage(stmt.matches_key(), stmt.evidence)
+    belief_packages.append(belief_package)
     return belief_packages
 
 
