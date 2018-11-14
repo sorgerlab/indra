@@ -430,9 +430,33 @@ def get_statements_for_paper(ids, ev_limit=10, best_first=True, tries=2,
     return stmts_from_json(stmts_json.values())
 
 
-def submit_curation(hash_val, tag, text, curator, source='indra_rest_client',
-                    ev_hash=None, is_test=False):
-    """Submit a curation for the given statement at the relevant level."""
+def submit_curation(hash_val, tag, curator, text=None,
+                    source='indra_rest_client', ev_hash=None, is_test=False):
+    """Submit a curation for the given statement at the relevant level.
+
+    Parameters
+    ----------
+    hash_val : int
+        The hash corresponding to the statement.
+    tag : str
+        A very short phrase categorizing the error or type of curation,
+        e.g. "grounding" for a grounding error, or "correct" if you are
+        marking a statement as correct.
+    curator : str
+        The name or identifier for the curator.
+    text : str
+        A brief description of the problem.
+    source : str
+        The name of the access point through which the curation was performed.
+        The default is 'direct_client', meaning this function was used
+        directly. Any higher-level application should identify itself here.
+    ev_hash : int
+        A hash of the sentence and other evidence information. Elsewhere
+        referred to as `source_hash`.
+    is_test : bool
+        Used in testing. If True, no curation will actually be added to the
+        database.
+    """
     data = {'tag': tag, 'text': text, 'curator': curator, 'source': source,
             'ev_hash': ev_hash}
     url = 'curation/submit/%s' % hash_val
