@@ -9,7 +9,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>Results Browser</title>
+    <title>INDRA DB Query Results</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
@@ -461,7 +461,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Results Home</a>
+          <a class="navbar-brand" href="#">INDRA DB Query Results</a>
         </div>
         <div id="navbar" class="navbar-collapse collapse">
          <!--
@@ -511,12 +511,11 @@
             </div>
         </div>
         </div>
-        <h1>Index of Results</h1>
-        <p>Statements are sorted according to amount of evidence.</p>
 
-    <div class="page-header">
+    <!--<div class="page-header">
         <h1>Detailed Results</h1>
-    </div>
+        <p>Statements are sorted according to amount of evidence.</p>
+    </div>-->
     {% for stmt_info in statements %}
     <a name='{{ stmt_info['hash'] }}'></a>
     <div class="statement">
