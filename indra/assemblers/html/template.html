@@ -153,16 +153,32 @@
             });
         });
 
-        function buttonClick(mClick) {
+        function submitButtonClick(clickEvent) {
+            // CURATOR
+            curator = document.getElementById("curator_input").value;
+            if (!curator) {
+                alert("Please enter a curator ID");
+                return;
+            }
+
+            api_key = document.getElementById("api_key_input").value;
+            if (!api_key) {
+                alert("Please enter an API key!");
+                return;
+            }
 
             // Get mouseclick target, then parent's parent
-            pn = mClick.target.parentNode.parentNode;
+            pn = clickEvent.target.parentNode.parentNode;
             btn_row_tag = pn.closest('tr');
             s = pn.getElementsByClassName("dropdown")[0]
                 .getElementsByTagName("select")[0]
 
             // DROPDOWN SELECTION
             err_select = s.options[s.selectedIndex].value;
+            if (!err_select) {
+                alert('Please select an error type or "correct" for the statement in the dropdown menu');
+                return;
+            }
 
             // TEXT BOX CONTENT
             // Get "form" node, then the value of "input"
@@ -173,9 +189,6 @@
 
             // GET REFERENCE TO STATUS BOX (EMPTY UNTIL STATUS RECEIVED)
             var statusBox = pn.getElementsByClassName("submission_status")[0].children[0];
-
-            // CURATOR
-            curator = document.getElementById("curator_input").value;
 
             // Step back to the preceding tr tag
             pmid_row = btn_row_tag.previousElementSibling;
@@ -213,7 +226,7 @@
             // console.log("cur_dict");
             // console.log(cur_dict);
 
-            testing = false;
+            testing = false; // Set to true to test the curation endpoint of the API
             ajx_response = submitCuration(cur_dict, stmt_hash, statusBox, icon, testing);
             console.log("ajax response from submission: ");
             console.log(ajx_response);
@@ -248,19 +261,19 @@
                             icon.style = "color: #00FF00" // Brightest green
                             break;
                         case 400:
-                            statusBox.textContent = xhr.status + ": Bad Curation Data...";
+                            statusBox.textContent = xhr.status + ": Bad Curation Data";
                             icon.style = "color: #FF0000"; // Super red
                             break;
                         case 404:
-                            statusBox.textContent = xhr.status + ": Bad Link...";
+                            statusBox.textContent = xhr.status + ": Bad Link";
                             icon.style = "color: #FF0000";
                             break;
                         case 500:
-                            statusBox.textContent = xhr.status + ": Internal Server Error...";
+                            statusBox.textContent = xhr.status + ": Internal Server Error";
                             icon.style = "color: #FF0000";
                             break;
                         case 504:
-                            statusBox.textContent = xhr.status + ": Server Timeout...";
+                            statusBox.textContent = xhr.status + ": Server Timeout";
                             icon.style = "color: #58D3F7"; // Icy blue
                             break;
                         default:
@@ -296,7 +309,7 @@
         function createDDDiv () {
             var ddContainer = document.createElement("div")
             ddContainer.className = "dropdown"
-            ddContainer.style = "display:inline-block; vertical-align: middle; margin-right: 2%;"
+            ddContainer.style = "display:inline-block; vertical-align: middle; margin-left: 9%;"
 
             let ddSelect = document.createElement("select");
 
@@ -369,7 +382,7 @@
         function createTBDiv () {
             var tbContainer = document.createElement("div")
             tbContainer.className = "form"
-            tbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%; margin-right: 2%;"
+            tbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 4%;"
 
             let tbForm = document.createElement("form")
             tbForm.name = "user_feedback_form"
@@ -404,21 +417,21 @@
         //         parent_node = b.target.parentNode.parentNode
         //         // Get reference to closest row tag (jquery)
         //         this_row = $(this).closest("tr")
-        //         buttonClick(mouseclick)
+        //         submitButtonClick(clickEvent)
         //     })
         //     </ script tag>
         // </div>
         function createSBDiv () {
             var sbContainer = document.createElement("div");
             sbContainer.className = "curation_button";
-            sbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%; margin-right: 2%;";
+            sbContainer.style = "display:inline-block; vertical-align: middle; margin-left: 4%;";
 
             let sbButton = document.createElement("button");
             sbButton.type = "button";
             sbButton.className = "btn btn-default btn-submit pull-right";
             sbButton.style = "padding: 2px 6px";
             sbButton.textContent = "Submit";
-            sbButton.onclick = buttonClick; // ATTACHES SCRIPT TO BUTTON
+            sbButton.onclick = submitButtonClick; // ATTACHES SCRIPT TO BUTTON
 
             sbContainer.appendChild(sbButton);
 
@@ -434,7 +447,7 @@
         function createStatusDiv () {
             var statusContainer = document.createElement("div");
             statusContainer.className = "submission_status";
-            statusContainer.style = "display:inline-block; vertical-align: middle; margin-left: 2%;";
+            statusContainer.style = "display:inline-block; vertical-align: middle; margin-left: 4%;";
             
             let textContainer = document.createElement("i");
             textContainer.textContent = "";
@@ -457,7 +470,7 @@
 
             // Create new td element
             let newTD = document.createElement('td');
-            newTD.style="padding: 0px; border-top: 1px solid #FFFFFF; white-space: nowrap; text-align: center;";
+            newTD.style="padding: 0px; border-top: 1px solid #FFFFFF; white-space: nowrap; text-align: left;";
             newTD.setAttribute("colspan", "4");
 
             // Add dropdown div
