@@ -9,13 +9,14 @@ def build_event_graph(graph, tree, node):
     if node in graph:
         return
     type = get_type(node)
-    graph.add_node(node_key(node), type=type, label=type,
-                   text=get_text(node))
+    text = get_text(node)
+    label = '%s (%s)' % (type, text)
+    graph.add_node(node_key(node), type=type, label=label, text=text)
     args = get_args(node)
-    for arg_role, arg_id in args.items():
+    for arg_role, (arg_id, arg_tag) in args.items():
         arg = get_node_by_id(tree, arg_id)
         if arg is None:
-            continue
+            arg = arg_tag
         build_event_graph(graph, tree, arg)
         graph.add_edge(node_key(node), node_key(arg), type=arg_role,
                        label=arg_role)
@@ -39,7 +40,7 @@ def get_args(node):
         if arg is not None:
             id = arg.attrib.get('id')
             if id is not None:
-                arg_roles[arg.attrib['role']] = arg.attrib['id']
+                arg_roles[arg.attrib['role']] = (arg.attrib['id'], arg)
     return arg_roles
 
 
