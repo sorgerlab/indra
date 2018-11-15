@@ -139,13 +139,13 @@
                 if (event.target.dataset.clicked == "true") {
                     // Toggle (animation duration in msec)
                     $target.closest("tr").next().find("div").slideToggle(200);
-                    
+                // First click event
                 } else {
                     // Stay down (animation duration in msec)
                     $target.closest("tr").next().find("div").slideDown(400);
 
-                    // Change color of icon
-                    event.target.style="color:#FF0000;"
+                    // Change color of icon to light gray
+                    event.target.style="color:#A4A4A4;"
 
                     // Set clicked to true
                     event.target.dataset.clicked = "true"
@@ -177,13 +177,17 @@
             // CURATOR
             curator = document.getElementById("curator_input").value;
 
-            // PMID
             // Step back to the preceding tr tag
             pmid_row = btn_row_tag.previousElementSibling;
+
+            // PMID
             // Get pmid_linktext content
             pmid_text = pmid_row
                         .getElementsByClassName("pmid_link")[0]
                         .textContent.trim()
+
+            // Icon 
+            var icon = pmid_row.getElementsByClassName("curation_toggle")[0]
 
             // HASHES: source_hash & stmt_hash
             // source_hash == ev['source_hash'] == pmid_row.id; "evidence level"
@@ -210,13 +214,13 @@
             // console.log(cur_dict);
 
             testing = false;
-            ajx_response = submitCuration(cur_dict, stmt_hash, statusBox, testing);
+            ajx_response = submitCuration(cur_dict, stmt_hash, statusBox, icon, testing);
             console.log("ajax response from submission: ");
             console.log(ajx_response);
         };
 
         // Submit curation
-        function submitCuration(curation_dict, hash, statusBox, test) {
+        function submitCuration(curation_dict, hash, statusBox, icon, test) {
             // API KEY FOR ACCESSING DATABASE
             var api_key = document.getElementById("api_key_input").value;
             curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
@@ -241,24 +245,30 @@
                     switch (xhr.status) {
                         case 200:
                             statusBox.textContent = "Curation submitted successfully!";
+                            icon.style = "color: #00FF00" // Brightest green
                             break;
                         case 400:
                             statusBox.textContent = xhr.status + ": Bad Curation Data...";
+                            icon.style = "color: #FF0000"; // Super red
                             break;
                         case 404:
                             statusBox.textContent = xhr.status + ": Bad Link...";
+                            icon.style = "color: #FF0000";
                             break;
                         case 500:
                             statusBox.textContent = xhr.status + ": Internal Server Error...";
+                            icon.style = "color: #FF0000";
                             break;
                         case 504:
                             statusBox.textContent = xhr.status + ": Server Timeout...";
+                            icon.style = "color: #58D3F7"; // Icy blue
                             break;
                         default:
                             console.log("Uncaught submission error: check ajax response")
                             console.log("xhr: ")
                             console.log(xhr)
                             statusBox.textContent = "Uncaught submission error; Code " + xhr.status;
+                            icon.style = "color: #FF8000"; // Warning orange
                             break;
                     }
                 }
