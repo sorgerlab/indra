@@ -1,3 +1,4 @@
+import sys
 import glob
 import networkx
 import xml.etree.ElementTree as ET
@@ -18,6 +19,10 @@ def build_event_graph(graph, tree, node):
         build_event_graph(graph, tree, arg)
         graph.add_edge(node_key(node), node_key(arg), type=arg_role,
                        label=arg_role)
+
+
+def node_key(term):
+    return term.attrib.get('id')
 
 
 def get_text(tag):
@@ -68,12 +73,26 @@ def print_subtree(node, level):
     return s
 
 
+def type_match(a, b):
+    # If the types are the same, return True
+    if a['type'] == b['type']:
+        return True
+    # Otherwise, look at some special cases
+    eq_groups = [
+        {'ONT::GENE-PROTEIN', 'ONT::GENE', 'ONT::PROTEIN'},
+        {'ONT::PHARMACOLOGIC-SUBSTANCE', 'ONT::CHEMICAL'}
+        ]
+    for eq_group in eq_groups:
+        if a['type'] in eq_group and b['type'] in eq_group:
+            return True
+    return False
+
+
 def add_graph(patterns, G):
     if not patterns:
         patterns.append([G])
         return
     for i, graphs in enumerate(patterns):
-        type_match = lambda a, b: a['type'] == b['type']
         if networkx.is_isomorphic(graphs[0], G, node_match=type_match,
                                   edge_match=type_match):
             patterns[i].append(G)
@@ -86,8 +105,7 @@ def draw(graph, fname):
     ag.draw(fname, prog='dot')
 
 
-if __name__ == '__main__':
-    fnames = glob.glob('ekbs/*.ekb')
+def build_patterns(fnames):
     patterns = []
     for fn in fnames:
         et = ET.parse(fn)
@@ -96,6 +114,14 @@ if __name__ == '__main__':
             G = networkx.DiGraph()
             build_event_graph(G, et, event)
             add_graph(patterns, G)
+    patterns = sorted(patterns, key=lambda x: len(x), reverse=True)
+    return patterns
+
+
+if __name__ == '__main__':
+    search_folder = sys.argv[1]
+    fnames = glob.glob('%s/*.ekb' % search_folder)
+    patterns = build_patterns(fnames)
 
     """
     cc_types = {}
@@ -170,7 +196,5 @@ def node_matches(n1, n2):
 def edge_matches(e1, e2):
     return e1['type'] == e2['type']
 
-def node_key(term):
-    return term.attrib.get('id')
 """
 
