@@ -240,23 +240,25 @@
                 complete: function(xhr, statusText) {
                     switch (xhr.status) {
                         case 200:
-                            statusBox.textContent = "(200) Curation submitted successfully!";
+                            statusBox.textContent = "Curation submitted successfully!";
                             break;
                         case 400:
-                            statusBox.textContent = "(400) Bad Curation Data...";
+                            statusBox.textContent = xhr.status + ": Bad Curation Data...";
                             break;
                         case 404:
-                            statusBox.textContent = "(404) Bad Link...";
+                            statusBox.textContent = xhr.status + ": Bad Link...";
                             break;
                         case 500:
-                            statusBox.textContent = "(500) Internal Server Error...";
+                            statusBox.textContent = xhr.status + ": Internal Server Error...";
                             break;
                         case 504:
-                            statusBox.textContent = "(504) Server Timeout...";
+                            statusBox.textContent = xhr.status + ": Server Timeout...";
                             break;
                         default:
-                            console.log("Uncaught submission error")
-                            statusBox.textContent = "Uncaught submission error";
+                            console.log("Uncaught submission error: check ajax response")
+                            console.log("xhr: ")
+                            console.log(xhr)
+                            statusBox.textContent = "Uncaught submission error; Code " + xhr.status;
                             break;
                     }
                 }
