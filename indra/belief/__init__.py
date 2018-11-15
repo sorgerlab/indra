@@ -3,9 +3,11 @@ from builtins import dict, str
 
 import json
 import numpy
-import networkx
 import logging
+import networkx
 from os import path, pardir
+from collections import namedtuple
+
 
 try:
     from indra.sources.reach.processor import determine_reach_subtype
@@ -33,7 +35,7 @@ class BeliefScorer(object):
 
     To use with the belief engine, make a subclass with methods implemented.
     """
-    def score_statement(self, st):
+    def score_statement(self, st, extra_evidence=None):
         """Computes the prior belief probability for an INDRA Statement.
 
         The Statement is assumed to be de-duplicated. In other words,
@@ -47,6 +49,9 @@ class BeliefScorer(object):
         st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
+        extra_evidence : list[indra.statements.Evidence]
+            A list of Evidences that are supporting the Statement (that aren't
+            already included in the Statement's own evidence list.
 
         Returns
         -------
@@ -103,26 +108,7 @@ class SimpleScorer(BeliefScorer):
         self.subtype_probs = subtype_probs
         return
 
-    def score_statement(self, st):
-        """Computes the prior belief probability for an INDRA Statement.
-
-        The Statement is assumed to be de-duplicated. In other words,
-        the Statement is assumed to have
-        a list of Evidence objects that supports it. The prior probability of
-        the Statement is calculated based on the number of Evidences it has
-        and their sources.
-
-        Parameters
-        ----------
-        st : indra.statements.Statement
-            An INDRA Statements whose belief scores are to
-            be calculated.
-
-        Returns
-        -------
-        belief_score : float
-            The computed prior probability for the statement
-        """
+    def score_evidence_list(self, evidences):
         def _score(evidences):
             if not evidences:
                 return 0
@@ -136,10 +122,10 @@ class SimpleScorer(BeliefScorer):
             rand_factors = {k: [] for k in uniq_sources}
             for ev in evidences:
                 rand_factors[ev.source_api].append(
-                        evidence_random_noise_prior(
-                            ev,
-                            self.prior_probs['rand'],
-                            self.subtype_probs))
+                    evidence_random_noise_prior(
+                        ev,
+                        self.prior_probs['rand'],
+                        self.subtype_probs))
             # The probability of incorrectness is the product of the
             # source-specific probabilities
             neg_prob_prior = 1
@@ -149,9 +135,9 @@ class SimpleScorer(BeliefScorer):
             # Finally, the probability of correctness is one minus incorrect
             prob_prior = 1 - neg_prob_prior
             return prob_prior
-        pos_evidence = [ev for ev in st.evidence if
+        pos_evidence = [ev for ev in evidences if
                         not ev.epistemics.get('negated')]
-        neg_evidence = [ev for ev in st.evidence if
+        neg_evidence = [ev for ev in evidences if
                         ev.epistemics.get('negated')]
         pp = _score(pos_evidence)
         np = _score(neg_evidence)
@@ -166,6 +152,34 @@ class SimpleScorer(BeliefScorer):
         # 0 * (1-pp) + 1 * (pp * (1-np)) which we simplify below
         score = pp * (1 - np)
         return score
+
+    def score_statement(self, st, extra_evidence=None):
+        """Computes the prior belief probability for an INDRA Statement.
+
+        The Statement is assumed to be de-duplicated. In other words,
+        the Statement is assumed to have
+        a list of Evidence objects that supports it. The prior probability of
+        the Statement is calculated based on the number of Evidences it has
+        and their sources.
+
+        Parameters
+        ----------
+        st : indra.statements.Statement
+            An INDRA Statements whose belief scores are to
+            be calculated.
+        extra_evidence : list[indra.statements.Evidence]
+            A list of Evidences that are supporting the Statement (that aren't
+            already included in the Statement's own evidence list.
+
+        Returns
+        -------
+        belief_score : float
+            The computed prior probability for the statement
+        """
+        if extra_evidence is None:
+            extra_evidence = []
+        all_evidence = st.evidence + extra_evidence
+        return self.score_evidence_list(all_evidence)
 
     def check_prior_probs(self, statements):
         """Throw Exception if BeliefEngine parameter is missing.
@@ -254,6 +268,7 @@ class BeliefEngine(object):
             by this function.
         """
         def build_hierarchy_graph(stmts):
+            """Return a DiGraph based on matches keys and Statement supports"""
             g = networkx.DiGraph()
             for st1 in stmts:
                 g.add_node(st1.matches_key(), stmt=st1)
@@ -263,20 +278,29 @@ class BeliefEngine(object):
             return g
 
         def get_ranked_stmts(g):
+            """Return a topological sort of statement matches keys from a graph.
+            """
             node_ranks = networkx.algorithms.dag.topological_sort(g)
             node_ranks = reversed(list(node_ranks))
             stmts = [g.node[n]['stmt'] for n in node_ranks]
             return stmts
+
         g = build_hierarchy_graph(statements)
         ranked_stmts = get_ranked_stmts(g)
-        new_beliefs = []
         for st in ranked_stmts:
             bps = _get_belief_package(st)
-            beliefs = [bp[0] for bp in bps]
-            belief = 1 - numpy.prod([(1-b) for b in beliefs])
-            new_beliefs.append(belief)
-        for st, bel in zip(ranked_stmts, new_beliefs):
-            st.belief = bel
+            supporting_evidences = []
+            # NOTE: the last belief package in the list is this statement's own
+            for bp in bps[:-1]:
+                # Iterate over all the parent evidences and add only
+                # non-negated ones
+                for ev in bp.evidences:
+                    if not ev.epistemics.get('negated'):
+                        supporting_evidences.append(ev)
+            # Now add the Statement's own evidence
+            # Now score all the evidences
+            belief = self.scorer.score_statement(st, supporting_evidences)
+            st.belief = belief
 
     def set_linked_probs(self, linked_statements):
         """Sets the belief probabilities for a list of linked INDRA Statements.
@@ -297,19 +321,24 @@ class BeliefEngine(object):
             st.inferred_stmt.belief = numpy.prod(source_probs)
 
 
-def _get_belief_package(stmt, n=1):
-    def belief_stmts(belief_pkgs):
-        return [pkg[1] for pkg in belief_pkgs]
+BeliefPackage = namedtuple('BeliefPackage', 'statement_key evidences')
 
+
+def _get_belief_package(stmt):
+    """Return the belief packages of a given statement recursively."""
+    # This list will contain the belief packages for the given statement
     belief_packages = []
+    # Iterate over all the support parents
     for st in stmt.supports:
-        parent_packages = _get_belief_package(st, n+1)
-        belief_st = belief_stmts(belief_packages)
+        # Recursively get all the belief packages of the parent
+        parent_packages = _get_belief_package(st)
+        package_stmt_keys = [pkg.statement_key for pkg in belief_packages]
         for package in parent_packages:
-            if not package[1] in belief_st:
+            # Only add this belief package if it hasn't already been added
+            if package.statement_key not in package_stmt_keys:
                 belief_packages.append(package)
-
-    belief_package = (stmt.belief, stmt.matches_key())
+    # Now make the Statement's own belief package and append it to the list
+    belief_package = BeliefPackage(stmt.matches_key(), stmt.evidence)
     belief_packages.append(belief_package)
     return belief_packages
 
