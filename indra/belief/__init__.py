@@ -35,7 +35,7 @@ class BeliefScorer(object):
 
     To use with the belief engine, make a subclass with methods implemented.
     """
-    def score_statement(self, st):
+    def score_statement(self, st, extra_evidence=None):
         """Computes the prior belief probability for an INDRA Statement.
 
         The Statement is assumed to be de-duplicated. In other words,
@@ -49,16 +49,15 @@ class BeliefScorer(object):
         st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
+        extra_evidence : list[indra.statements.Evidence]
+            A list of Evidences that are supporting the Statement (that aren't
+            already included in the Statement's own evidence list.
 
         Returns
         -------
         belief_score : float
             The computed prior probability for the statement
         """
-        raise NotImplementedError('Need to subclass BeliefScorer and '
-                                  'implement methods.')
-
-    def score_evidence_list(self, evidences):
         raise NotImplementedError('Need to subclass BeliefScorer and '
                                   'implement methods.')
 
@@ -154,7 +153,7 @@ class SimpleScorer(BeliefScorer):
         score = pp * (1 - np)
         return score
 
-    def score_statement(self, st):
+    def score_statement(self, st, extra_evidence=None):
         """Computes the prior belief probability for an INDRA Statement.
 
         The Statement is assumed to be de-duplicated. In other words,
@@ -168,13 +167,19 @@ class SimpleScorer(BeliefScorer):
         st : indra.statements.Statement
             An INDRA Statements whose belief scores are to
             be calculated.
+        extra_evidence : list[indra.statements.Evidence]
+            A list of Evidences that are supporting the Statement (that aren't
+            already included in the Statement's own evidence list.
 
         Returns
         -------
         belief_score : float
             The computed prior probability for the statement
         """
-        return self.score_evidence_list(st.evidence)
+        if extra_evidence is None:
+            extra_evidence = []
+        all_evidence = st.evidence + extra_evidence
+        return self.score_evidence_list(all_evidence)
 
     def check_prior_probs(self, statements):
         """Throw Exception if BeliefEngine parameter is missing.
@@ -284,18 +289,17 @@ class BeliefEngine(object):
         ranked_stmts = get_ranked_stmts(g)
         for st in ranked_stmts:
             bps = _get_belief_package(st)
-            # The slicing here is critical to make sure we don't assign by ref
-            evidences_to_count = st.evidence[:]
+            supporting_evidences = []
             # NOTE: the last belief package in the list is this statement's own
             for bp in bps[:-1]:
                 # Iterate over all the parent evidences and add only
                 # non-negated ones
                 for ev in bp.evidences:
                     if not ev.epistemics.get('negated'):
-                        evidences_to_count.append(ev)
+                        supporting_evidences.append(ev)
             # Now add the Statement's own evidence
             # Now score all the evidences
-            belief = self.scorer.score_evidence_list(evidences_to_count)
+            belief = self.scorer.score_statement(st, supporting_evidences)
             st.belief = belief
 
     def set_linked_probs(self, linked_statements):
