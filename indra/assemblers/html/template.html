@@ -187,6 +187,11 @@
                         .getElementsByTagName("input")[0]
                         .value;
 
+            if (!user_text & err_select == "other") {
+                alert('Must describe error when using option "other..."!')
+                return;
+            }
+
             // GET REFERENCE TO STATUS BOX (EMPTY UNTIL STATUS RECEIVED)
             var statusBox = pn.getElementsByClassName("submission_status")[0].children[0];
 
