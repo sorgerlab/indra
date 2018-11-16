@@ -161,6 +161,7 @@
                 return;
             }
 
+            // API KEY
             api_key = document.getElementById("api_key_input").value;
             if (!api_key) {
                 alert("Please enter an API key!");
@@ -187,6 +188,7 @@
                         .getElementsByTagName("input")[0]
                         .value;
 
+            // Refuse submission if 'other' is selected without providing a description
             if (!user_text & err_select == "other") {
                 alert('Must describe error when using option "other..."!')
                 return;
