@@ -26,7 +26,10 @@ class HtmlAssembler(object):
     The HTML report format includes statements formatted in English
     (by the EnglishAssembler), text and metadata for the Evidence
     object associated with each Statement, and a Javascript-based curation
-    interface linked to the INDRA database (access permitting).
+    interface linked to the INDRA database (access permitting). The interface
+    allows for curation of statements at the evidence level by letting the
+    user specify type of error and (optionally) provide a short description of
+    of the error.
 
     Parameters
     ----------
