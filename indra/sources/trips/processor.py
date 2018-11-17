@@ -546,6 +546,7 @@ class TripsProcessor(object):
 
                 ev = self._get_evidence(event)
                 location = self._get_event_location(event)
+                self._add_extracted(_get_type(event), event.attrib['id'])
                 for subj, obj in \
                         _agent_list_product((agent_agent, affected_agent)):
                     if obj is None:
@@ -1046,6 +1047,7 @@ class TripsProcessor(object):
                 st = Conversion(subj, obj_from, obj_to, evidence=ev)
                 location = self._get_event_location(event)
                 _stmt_location_to_agents(st, location)
+                self._add_extracted(_get_type(event), event.attrib['id'])
                 self.statements.append(st)
 
     def get_agents(self):
