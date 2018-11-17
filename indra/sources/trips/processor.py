@@ -1216,6 +1216,8 @@ class TripsProcessor(object):
                 agent_name = hgnc_name
             # If no HGNC name (for instance non-human protein) then
             # look at UP and try to get gene name
+            # FIXME: sometimes ONT::CELL-PARTs end up here with UniProt IDs
+            # like SL-0118, those should be handled separately
             elif up_id:
                 gene_name = up_client.get_gene_name(up_id)
                 if gene_name:

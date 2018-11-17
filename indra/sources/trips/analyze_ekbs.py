@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 def build_event_graph(graph, tree, node):
     # If we have already added this node then let's return
-    if node in graph:
+    if node_key(node) in graph:
         return
     type = get_type(node)
     text = get_text(node)
@@ -41,6 +41,23 @@ def get_args(node):
             id = arg.attrib.get('id')
             if id is not None:
                 arg_roles[arg.attrib['role']] = (arg.attrib['id'], arg)
+    # Now look at possible inevent links
+    if node.find('features') is not None:
+        inevents = node.findall('features/inevent')
+        for inevent in inevents:
+            if 'id' in inevent.attrib:
+                arg_roles['inevent'] = (inevent.attrib['id'], inevent)
+
+        ptms = node.findall('features/ptm') + node.findall('features/no-ptm')
+        for ptm in ptms:
+            if 'id' in inevent.attrib:
+                arg_roles['ptm'] = (inevent.attrib['id'], ptm)
+
+    # And also look for assoc-with links
+    aw = node.find('assoc-with')
+    if aw is not None:
+        aw_id = aw.attrib['id']
+        arg_roles['assoc-with'] = (aw_id, aw)
     return arg_roles
 
 
