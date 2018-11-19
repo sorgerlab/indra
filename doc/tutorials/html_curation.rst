@@ -82,11 +82,14 @@ indicates a successful submission:
 
 while a **red** indicates something went wrong with the submission:
 
-.. figure:: images/bad_submission.png
-    :align: center
-    :figwidth: 75 %
-
-    *A red icon indicates that something went wrong during the submission*
++--------------------------------------------------------------------------+
+| .. figure:: images/bad_submission.png                                    |
+|   :align: center                                                         |
+|   :figwidth: 75 %                                                        |
+|                                                                          |
+|   *A red icon indicates that something went wrong during the submission* |
+|                                                                          |
++--------------------------------------------------------------------------+
 
 Curation Best Practices
 -----------------------
