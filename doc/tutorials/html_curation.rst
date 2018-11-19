@@ -73,10 +73,14 @@ indicates a successful submission:
 .. figure:: images/curation_submitted_successfully.png
     :align: center
 
+    A green icon indicates a successfully submitted curation
+
 while a **red** indicates something went wrong with the submission:
 
 .. figure:: images/bad_submission.png
     :align: center
+
+    A red icon indicates that something went wrong during the submission
 
 Curation Best Practices
 -----------------------
