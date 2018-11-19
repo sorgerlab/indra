@@ -91,8 +91,8 @@ def test_agent_from_entity():
     # Test entity
     entity = MedscanEntity(name='kinesin-I',
                            urn='urn:agi-gocomplex:0016938',
-                           type=None, properties={})
-                           #ch_start=0, ch_end=10)
+                           type=None, properties={},
+                           ch_start=0, ch_end=10)
 
     # Test relation
     tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
@@ -133,20 +133,6 @@ def test_expressioncontrol_positive():
                               'UP': 'P01588'})
 
 
-"""
-   "agents": {
-                        "coords": [
-                         [
-                          0,
-                          5
-                         ],
-                         [
-                          21,
-                          24
-                         ]
-                        ]
-"""
-
 def test_evidence():
     # Test that evidence object is created correctly
     fname = os.path.join(data_folder, 'test_ExpressionControl_positive.csxml')
@@ -171,6 +157,7 @@ def test_evidence():
     assert len(coords) == 2
     assert coords[0] == [90, 97]
     assert coords[1] == [106, 120]
+
 
 def test_molsynthesis_positive():
     fname = os.path.join(data_folder, 'test_MolSynthesis-positive.csxml')
@@ -405,7 +392,4 @@ def test_site_text_parser():
     assert(sites[0].position == '10')
     assert(sites[1].residue == 'S')
     assert(sites[1].position == '20')
-
-if __name__ == '__main__':
-    test_evidence()
 
