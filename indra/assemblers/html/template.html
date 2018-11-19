@@ -9,7 +9,7 @@
     <meta name="author" content="">
     <link rel="icon" href="../../favicon.ico">
 
-    <title>INDRA DB Query Results</title>
+    <title>INDRA Results</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 
@@ -244,14 +244,14 @@
             // API KEY FOR ACCESSING DATABASE
             var api_key = document.getElementById("api_key_input").value;
             curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
-            
+
             _url = curation_addr + hash + "?api_key=" + api_key;
 
             if (test) {
                 console.log("Submitting test curation...");
                 _url += "&test";
             };
-            
+
             console.log("api key: " + api_key)
             console.log("url: " + _url);
 
@@ -293,7 +293,6 @@
                     }
                 }
             });
-
             return response;
         };
 
@@ -366,9 +365,7 @@
             ddSelect.appendChild(option7);
 
             // Add more options by following the structure above
-
             ddContainer.appendChild(ddSelect);
-
             return ddContainer;
         };
 
@@ -455,7 +452,7 @@
             var statusContainer = document.createElement("div");
             statusContainer.className = "submission_status";
             statusContainer.style = "display:inline-block; vertical-align: middle; margin-left: 4%;";
-            
+
             let textContainer = document.createElement("i");
             textContainer.textContent = "";
 
@@ -534,35 +531,15 @@
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
+          <!--
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">INDRA DB Query Results</a>
+          </button>-->
+          <a class="navbar-brand" href="#">INDRA Results</a>
         </div>
-        <div id="navbar" class="navbar-collapse collapse">
-         <!--
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="#">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#contact">Contact</a></li>
-            <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li><a href="#">Action</a></li>
-                <li><a href="#">Another action</a></li>
-                <li><a href="#">Something else here</a></li>
-                <li role="separator" class="divider"></li>
-                <li class="dropdown-header">Nav header</li>
-                <li><a href="#">Separated link</a></li>
-                <li><a href="#">One more separated link</a></li>
-              </ul>
-            </li>
-          </ul>
-           -->
-        </div><!--/.nav-collapse -->
       </div>
     </nav>
 
@@ -591,10 +568,6 @@
         </div>
         </div>
 
-    <!--<div class="page-header">
-        <h1>Detailed Results</h1>
-        <p>Statements are sorted according to amount of evidence.</p>
-    </div>-->
     {% for stmt_info in statements %}
     <a name='{{ stmt_info['hash'] }}'></a>
     <div class="statement">
@@ -617,7 +590,8 @@
             <tbody id="table_{{loop.index0}}">
                 {% for ev in stmt_info['evidence'] %}
                 <tr class="parent" id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle" onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
+                    <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle"
+                        onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
                     <td>{{ ev['source_api'] }}</td>
                     <td>"{{ ev['text'] }}"</td>
                     <td style="white-space: nowrap">
