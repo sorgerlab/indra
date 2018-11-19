@@ -2,7 +2,23 @@ The HTML Curation Interface
 ======================================
 Accessing the Interface
 -----------------------
-*See more in readthedocs and the HTML assembler docs*
+You will usually access this interface from any INDRA application that
+exposes statements to you. However if you just want to try out the interface
+or don't want to take the detour through any of the applications, you can
+follow the format below to access the interface directly in your browser from
+the rest API::
+
+    http://api.host/statements/from_agents?subject=SUBJ&object=OBJ&api_key=12345&format=html
+
+where `api.host` is the address to the REST API service. Entering this
+address in your browser will query for statements where `SUBJ` is the
+subject and `OBJ` is the object of the statements.
+
+For more details about the REST API, please refer to its `documentation`__.
+
+.. _restAPIdocsHTML: https://github.com/indralab/indra_db/tree/master/rest_api/README.md#example-2
+
+__ _restAPIdocsHTML
 
 Curating a statement
 --------------------
