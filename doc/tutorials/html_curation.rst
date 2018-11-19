@@ -70,7 +70,6 @@ indicating if the submission was successful or which problem arose if not.
 The pen icon will also change color based in the returned status. **Green**
 indicates a successful submission:
 
-.. class:: with-border
 .. figure:: images/curation_submitted_successfully.png
     :align: center
 
@@ -80,19 +79,10 @@ while a **red** indicates something went wrong with the submission:
 
 .. figure:: images/bad_submission.png
     :align: center
+    :scale: 80 %
 
-    A red icon indicates that something went wrong during the submission
+    *A red icon indicates that something went wrong during the submission*
 
 Curation Best Practices
 -----------------------
 Text here.
-
-
-{
- "styles" : [
-        [ "with-border", {"parent": "figure",
-                          "borderWidth": 0.5,
-                          "borderColor": "black",
-                          "backColor": "white",
-                          "borderPadding": 8
-} ] ] }
