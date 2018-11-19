@@ -35,6 +35,7 @@ dropdown menu, a text box and a submit button:
 
 .. figure:: images/curation_row_created_circled.png
     :align: center
+    :figwidth: 85 %
 
 The **dropdown menu** contains common errors and also the possibility to mark the
 statement as 'correct'. If none of the types fit, select the *other...*
@@ -44,6 +45,7 @@ grounded to *ROS*, so we pick *grounding* from the drop down menu:
 
 .. figure:: images/curation_select_error_circled.png
     :align: center
+    :figwidth: 85 %
 
 In the textbox, you can add a short optional description to clarify why you
 marked this piece of evidence. When you are done, you can submit your curation.
@@ -58,12 +60,14 @@ To **submit a curation**, there are three minimum requirements:
 
 .. figure:: images/apikey_curatorID.png
     :align: center
+    :figwidth: 85 %
 
 When you have entered the necessary information, click the **Submit button** by
 the statement that you curated:
 
 .. figure:: images/curation_submit_circled.png
     :align: center
+    :figwidth: 85 %
 
 A status message will appear once a the server has processed the submission,
 indicating if the submission was successful or which problem arose if not.
@@ -72,6 +76,7 @@ indicates a successful submission:
 
 .. figure:: images/curation_submitted_successfully.png
     :align: center
+    :figwidth: 85 %
 
     *A green icon indicates a successfully submitted curation*
 
@@ -79,7 +84,7 @@ while a **red** indicates something went wrong with the submission:
 
 .. figure:: images/bad_submission.png
     :align: center
-    :scale: 80 %
+    :figwidth: 85 %
 
     *A red icon indicates that something went wrong during the submission*
 
