@@ -52,9 +52,9 @@ Submitting a Curation
 ---------------------
 To **submit a curation**, there are three minimum requirements:
 
-1) A valid API key (at the top of the page)
-2) A curator identifier, such as name or email (at the top of the page)
-3) A selection in the dropdown menu (by the curated statement)
+1) A valid **API key** (at the top of the page)
+2) A **curator ID**, such as name or email (at the top of the page)
+3) A **selection in the dropdown menu** (by the curated statement)
 
 .. figure:: images/apikey_curatorID.png
     :align: center
