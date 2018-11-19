@@ -91,7 +91,8 @@ def test_agent_from_entity():
     # Test entity
     entity = MedscanEntity(name='kinesin-I',
                            urn='urn:agi-gocomplex:0016938',
-                           type=None, properties={})
+                           type=None, properties={},
+                           ch_start=0, ch_end=10)
 
     # Test relation
     tagged_sentence = '{ID{321=BRAF} is a protein, not a type of car.'
@@ -151,6 +152,11 @@ def test_evidence():
                                   ' circulating hypoxia-induced ' +
                                   'erythropoietin levels, number of ' +
                                   'red cells and hemoglobin concentration. ')
+    coords = s0.evidence[0].annotations['agents']['coords']
+    assert isinstance(coords, list), type(coords)
+    assert len(coords) == 2
+    assert coords[0] == [90, 97]
+    assert coords[1] == [106, 120]
 
 
 def test_molsynthesis_positive():
@@ -386,3 +392,4 @@ def test_site_text_parser():
     assert(sites[0].position == '10')
     assert(sites[1].residue == 'S')
     assert(sites[1].position == '20')
+

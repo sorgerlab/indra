@@ -15,7 +15,8 @@ logger = logging.getLogger('medscan')
 
 
 MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',
-                                                         'properties'])
+                                                         'properties',
+                                                         'ch_start', 'ch_end'])
 
 
 MedscanProperty = collections.namedtuple('MedscanProperty',
@@ -237,14 +238,16 @@ class MedscanProcessor(object):
                 self.last_site_info_in_sentence = None
             elif event == 'start' and elem.tag == 'match':
                 match_text = elem.attrib.get('chars')
+                match_start = int(elem.attrib.get('coff'))
+                match_end = int(elem.attrib.get('clen')) + match_start
             elif event == 'start' and elem.tag == 'entity':
                 if not in_prop:
                     ent_id = elem.attrib['msid']
                     ent_urn = elem.attrib.get('urn')
                     ent_type = elem.attrib['type']
                     entities[ent_id] = MedscanEntity(match_text, ent_urn,
-                                                     ent_type, {})
-
+                                                     ent_type, {},
+                                                     match_start, match_end)
                     tuple_key = (ent_type, elem.attrib.get('name'), ent_urn)
                     if ent_type == 'Complex' or ent_type == 'FunctionalClass':
                         self.log_entities[tuple_key] = \
@@ -254,7 +257,8 @@ class MedscanProcessor(object):
                     ent_urn = elem.attrib['urn']
                     ent_name = elem.attrib['name']
                     property_entities.append(MedscanEntity(ent_name, ent_urn,
-                                                           ent_type, None))
+                                                           ent_type, None,
+                                                           None, None))
             elif event == 'start' and elem.tag == 'svo':
                 subj = elem.attrib.get('subj')
                 verb = elem.attrib.get('verb')
@@ -334,7 +338,13 @@ class MedscanProcessor(object):
             last_verb = last_relation.verb
         else:
             last_verb = None
-        annotations = {'verb': relation.verb, 'last_verb': last_verb}
+        # Get the entity information with the character coordinates
+        subj_ent = relation.entities[_extract_id(relation.subj)]
+        obj_ent = relation.entities[_extract_id(relation.obj)]
+        annotations = {'verb': relation.verb, 'last_verb': last_verb,
+                       'agents': {'coords': [
+                                    [subj_ent.ch_start, subj_ent.ch_end],
+                                    [obj_ent.ch_start, obj_ent.ch_end]]}}
         epistemics = dict()
         epistemics['direct'] = False  # Overridden later if needed
         ev = [Evidence(source_api='medscan', source_id=source_id, pmid=pmid,
@@ -497,7 +507,7 @@ class MedscanProcessor(object):
                                     object_text=obj.db_refs['TEXT'])
 
     def agent_from_entity(self, relation, entity_id):
-        """Create a (potentially grounded) INDRA Agent object from a given a
+        """Create a (potentially grounded) INDRA Agent object from a given
         Medscan entity describing the subject or object.
 
         Uses helper functions to convert a Medscan URN to an INDRA db_refs
