@@ -37,8 +37,8 @@ dropdown menu, a text box and a submit button:
     :align: center
     :figwidth: 75 %
 
-The **dropdown menu** contains common errors and also the possibility to mark the
-statement as 'correct'. If none of the types fit, select the *other...*
+The **dropdown menu** contains common errors and also the possibility to mark
+the statement as 'correct'. If none of the types fit, select the *other...*
 option, and describe the error with one or a few words in the provided
 textbox. In our example, we see that *reactive oxygen species* is incorrectly
 grounded to *ROS*, so we pick *grounding* from the dropdown menu:
