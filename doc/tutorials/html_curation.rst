@@ -10,9 +10,9 @@ the rest API::
 
     http://api.host/statements/from_agents?subject=SUBJ&object=OBJ&api_key=12345&format=html
 
-where `api.host` should be replaced with the address to the REST API service.
+where *api.host* should be replaced with the address to the REST API service.
 Entering the whole address in your browser will query for statements where
-`SUBJ` is the subject and `OBJ` is the object of the statements.
+*SUBJ* is the subject and *OBJ* is the object of the statements.
 
 For more details about the REST API, please refer to its `documentation`__.
 
@@ -59,7 +59,7 @@ To **submit a curation**, there are three minimum requirements:
 .. figure:: images/apikey_curatorID.png
     :align: center
 
-When you have entered the necessary information, click the 'Submit' button by
+When you have entered the necessary information, click the **Submit button** by
 the statement that you curated:
 
 .. figure:: images/curation_submit_circled.png
@@ -67,13 +67,13 @@ the statement that you curated:
 
 A status message will appear once a the server has processed the submission,
 indicating if the submission was successful or which problem arose if not.
-The pen icon will also change color based in the returned status. Green
+The pen icon will also change color based in the returned status. **Green**
 indicates a successful submission:
 
 .. figure:: images/curation_submitted_successfully.png
     :align: center
 
-while a red inidicates something went wrong with the submission:
+while a **red** indicates something went wrong with the submission:
 
 .. figure:: images/bad_submission.png
     :align: center
