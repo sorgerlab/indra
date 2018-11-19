@@ -47,7 +47,7 @@ grounded to *ROS*, so we pick *grounding* from the dropdown menu:
 
 +------------------------------------------------------+
 | .. figure:: images/curation_select_error_circled.png |
-|   :align: center                                     |
+|    :align: center                                    |
 |    :figwidth: 75 %                                   |
 +------------------------------------------------------+
 
