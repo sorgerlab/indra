@@ -48,17 +48,35 @@ grounded to *ROS*, so we pick *grounding* from the drop down menu:
 In the textbox, you can add a short optional description to clarify why you
 marked this piece of evidence. When you are done, you can submit your curation.
 
-Submitting a curation
+Submitting a Curation
 ---------------------
-To submit a curation, there are three minimum requirements:
+To **submit a curation**, there are three minimum requirements:
 
 1) A valid API key (at the top of the page)
 2) A curator identifier, such as name or email (at the top of the page)
 3) A selection in the dropdown menu (by the curated statement)
 
-When you have entered the necessary information, click the 'Submit' button.
+.. figure:: images/apikey_curatorID.png
+    :align: center
+
+When you have entered the necessary information, click the 'Submit' button by
+the statement that you curated:
+
+.. figure:: images/curation_submit_circled.png
+    :align: center
+
 A status message will appear once a the server has processed the submission,
 indicating if the submission was successful or which problem arose if not.
+The pen icon will also change color based in the returned status. Green
+indicates a successful submission:
+
+.. figure:: images/curation_submitted_successfully.png
+    :align: center
+
+while a red inidicates something went wrong with the submission:
+
+.. figure:: images/bad_submission.png
+    :align: center
 
 Curation best practices
 -----------------------
