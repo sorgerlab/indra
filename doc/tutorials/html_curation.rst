@@ -20,7 +20,7 @@ For more details about the REST API, please refer to its `documentation`__.
 
 __ _restAPIdocsHTML
 
-Curating a statement
+Curating a Statement
 --------------------
 Let's assume you want to check any statements were ROS1 is an agent for
 errors. Let's also limit the number of statements to 100 and the number of
@@ -78,6 +78,6 @@ while a red inidicates something went wrong with the submission:
 .. figure:: images/bad_submission.png
     :align: center
 
-Curation best practices
+Curation Best Practices
 -----------------------
 Text here.
