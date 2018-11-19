@@ -10,9 +10,9 @@ the rest API::
 
     http://api.host/statements/from_agents?subject=SUBJ&object=OBJ&api_key=12345&format=html
 
-where `api.host` is the address to the REST API service. Entering this
-address in your browser will query for statements where `SUBJ` is the
-subject and `OBJ` is the object of the statements.
+where `api.host` should be replaced with the address to the REST API service.
+Entering the whole address in your browser will query for statements where
+`SUBJ` is the subject and `OBJ` is the object of the statements.
 
 For more details about the REST API, please refer to its `documentation`__.
 
