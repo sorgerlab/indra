@@ -22,12 +22,31 @@ __ _restAPIdocsHTML
 
 Curating a statement
 --------------------
-To start curating a statement, click the pen icon on the far left side of the
-statement. This will produce a row below the statement with a dropdown menu, a
-text box and a submit button. The dropdown menu contains common errors and also
-the possibility to mark the statement as 'correct'. If none of the types fit,
-select the `other...` option, and describe the error with one or a few words
-in the provided textbox.
+Let's assume you want to check any statements were ROS1 is an agent for
+errors. Let's also limit the number of statements to 100 and the number of
+evidences per statements to 10. This will speed up the query and page loading.
+The appropriate address to enter in your browser would then be::
+
+    http://api.host/statements/from_agents?agent=ROS1&format=html&ev_limit=10&max_stmts=100
+
+To start curating a statement, **click the pen icon (circled)** on the far left
+side of the statement. This will produce a row below the statement with a
+dropdown menu, a text box and a submit button:
+
+.. figure:: images/curation_row_created_circled.png
+    :align: center
+
+The **dropdown menu** contains common errors and also the possibility to mark the
+statement as 'correct'. If none of the types fit, select the *other...*
+option, and describe the error with one or a few words in the provided
+textbox. In our example, we see that *reactive oxygen species* is incorrectly
+grounded to *ROS*, so we pick *grounding* from the drop down menu:
+
+.. figure:: images/curation_select_error_circled.png
+    :align: center
+
+In the textbox, you can add a short optional description to clarify why you
+marked this piece of evidence. When you are done, you can submit your curation.
 
 Submitting a curation
 ---------------------
