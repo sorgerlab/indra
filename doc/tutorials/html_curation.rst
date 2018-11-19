@@ -1,5 +1,9 @@
-How To Use The HTML Curation Interface
+The HTML Curation Interface
 ======================================
+Accessing the Interface
+-----------------------
+*See more in readthedocs and the HTML assembler docs*
+
 Curating a statement
 --------------------
 To start curating a statement, click the pen icon on the far left side of the
@@ -17,8 +21,9 @@ To submit a curation, there are three minimum requirements:
 2) A curator identifier, such as name or email (at the top of the page)
 3) A selection in the dropdown menu (by the curated statement)
 
-When you have entered the necessary information, click the 'Submit' button. A status message will appear once a
-the server has processed the submission, indicating if the submission was successful or which problem arose if not.
+When you have entered the necessary information, click the 'Submit' button.
+A status message will appear once a the server has processed the submission,
+indicating if the submission was successful or which problem arose if not.
 
 Curation best practices
 -----------------------
