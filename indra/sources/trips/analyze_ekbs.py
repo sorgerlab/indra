@@ -2,6 +2,7 @@ import sys
 import glob
 import networkx
 import xml.etree.ElementTree as ET
+from indra.sources import trips
 
 
 def build_event_graph(graph, tree, node):
@@ -132,15 +133,39 @@ def build_patterns(fnames):
             G = networkx.DiGraph()
             build_event_graph(G, et, event)
             add_graph(patterns, G)
-    patterns = sorted(patterns, key=lambda x: len(x), reverse=True)
+    patterns = sorted(patterns, key=lambda x: len(x[0]), reverse=True)
     return patterns
+
+
+def get_extracted_events(fnames):
+    event_list = []
+    for fn in fnames:
+        tp = trips.process_xml_file(fn)
+        ed = tp.extracted_events
+        for k, v in ed.items():
+            event_list += v
+    return event_list
+
+
+def check_event_coverage(patterns, event_list):
+    proportions = []
+    for pattern_list in patterns:
+        proportion = 0
+        for pattern in pattern_list:
+            for node in pattern.nodes():
+                if node in event_list:
+                    proportion += 1.0 / len(pattern_list)
+                    break
+        proportions.append(proportion)
+    return proportions
 
 
 if __name__ == '__main__':
     search_folder = sys.argv[1]
     fnames = glob.glob('%s/*.ekb' % search_folder)
     patterns = build_patterns(fnames)
-
+    extracted_events = get_extracted_events(fnames)
+    proportions = check_event_coverage(patterns, extracted_events)
     """
     cc_types = {}
     event_types = {}
