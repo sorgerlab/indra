@@ -33,9 +33,11 @@ To start curating a statement, **click the pen icon (circled)** on the far left
 side of the statement. This will produce a row below the statement with a
 dropdown menu, a text box and a submit button:
 
-.. figure:: images/curation_row_created_circled.png
-    :align: center
-    :figwidth: 75 %
++-----------------------------------------------------+
+| .. figure:: images/curation_row_created_circled.png |
+|   :align: center                                    |
+|   :figwidth: 75 %                                   |
++-----------------------------------------------------+
 
 The **dropdown menu** contains common errors and also the possibility to mark
 the statement as 'correct'. If none of the types fit, select the *other...*
@@ -43,9 +45,11 @@ option, and describe the error with one or a few words in the provided
 textbox. In our example, we see that *reactive oxygen species* is incorrectly
 grounded to *ROS*, so we pick *grounding* from the dropdown menu:
 
-.. figure:: images/curation_select_error_circled.png
-    :align: center
-    :figwidth: 75 %
++------------------------------------------------------+
+| .. figure:: images/curation_select_error_circled.png |
+|   :align: center                                     |
+|    :figwidth: 75 %                                   |
++------------------------------------------------------+
 
 In the textbox, you can add a short optional description to clarify why you
 marked this piece of evidence. When you are done, you can submit your curation.
@@ -58,16 +62,20 @@ To **submit a curation**, there are three minimum requirements:
 2) A **curator ID**, such as name or email (at the top of the page)
 3) A **selection in the dropdown menu** (by the curated statement)
 
-.. figure:: images/apikey_curatorID.png
-    :align: center
-    :figwidth: 75 %
++-----------------------------------------+
+| .. figure:: images/apikey_curatorID.png |
+|   :align: center                        |
+|   :figwidth: 75 %                       |
++-----------------------------------------+
 
 When you have entered the necessary information, click the **Submit button** by
 the statement that you curated:
 
-.. figure:: images/curation_submit_circled.png
-    :align: center
-    :figwidth: 75 %
++------------------------------------------------+
+| .. figure:: images/curation_submit_circled.png |
+|   :align: center                               |
+|   :figwidth: 75 %                              |
++------------------------------------------------+
 
 A status message will appear once a the server has processed the submission,
 indicating if the submission was successful or which problem arose if not.
@@ -88,7 +96,6 @@ while a **red** indicates something went wrong with the submission:
 |   :figwidth: 75 %                                                        |
 |                                                                          |
 |   *A red icon indicates that something went wrong during the submission* |
-|                                                                          |
 +--------------------------------------------------------------------------+
 
 Curation Best Practices
