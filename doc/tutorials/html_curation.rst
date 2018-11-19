@@ -82,11 +82,13 @@ indicating if the submission was successful or which problem arose if not.
 The pen icon will also change color based in the returned status. **Green**
 indicates a successful submission:
 
-.. figure:: images/curation_submitted_successfully.png
-    :align: center
-    :figwidth: 75 %
-
-    *A green icon indicates a successfully submitted curation*
++--------------------------------------------------------------+
+| .. figure:: images/curation_submitted_successfully.png       |
+|   :align: center                                             |
+|   :figwidth: 75 %                                            |
+|                                                              |
+|   *A green icon indicates a successfully submitted curation* |
++--------------------------------------------------------------+
 
 while a **red** indicates something went wrong with the submission:
 
