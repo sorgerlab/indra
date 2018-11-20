@@ -131,8 +131,17 @@ class HtmlAssembler(object):
 
         ev_list = []
         for ix, ev in enumerate(stmt.evidence):
+            # Expand the source api to include the sub-database
+            if ev.source_api == 'biopax' and \
+               'source_sub_id' in ev.annotations and \
+               ev.annotations['source_sub_id']:
+               source_api = '%s:%s' % (ev.source_api,
+                                       ev.annotations['source_sub_id'])
+            else:
+                source_api = ev.source_api
+            # Prepare the evidence text
             if ev.text is None:
-                format_text = '(None available)'
+                format_text = None
             else:
                 indices = []
                 for ix, ag in enumerate(stmt.agent_list()):
@@ -155,7 +164,9 @@ class HtmlAssembler(object):
                                  for m in re.finditer(re.escape(ag_text),
                                                       ev.text)]
                 format_text = tag_text(ev.text, indices)
-            ev_list.append({'source_api': ev.source_api,
+
+            ev_list.append({'source_api': source_api,
+                            'pmid': ev.pmid,
                             'text_refs': ev.text_refs,
                             'text': format_text,
                             'source_hash': ev.source_hash })

@@ -624,9 +624,17 @@
                     <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle"
                         onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
                     <td>{{ ev['source_api'] }}</td>
-                    <td>"{{ ev['text'] }}"</td>
+                    {% if ev['text'] %}
+                        <td>"{{ ev['text'] }}"</td>
+                    {% else %}
+                        <td><i>None available</i></td>
+                    {% endif %}
                     <td style="white-space: nowrap">
-                        {% if 'pmid' in ev['text_refs'] %}
+                       {% if ev['pmid'] %}
+                        <a class="pmid_link"
+                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>
+                        {{ ev['pmid'] }}</a>
+                        {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
                         <a class="pmid_link"
                 href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['text_refs']['pmid'] }}'>
                         {{ ev['text_refs']['pmid'] }}</a>
