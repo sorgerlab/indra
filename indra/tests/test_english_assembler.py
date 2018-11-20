@@ -358,10 +358,19 @@ def test_activity_conditions():
         'GEF-inactive MEK activates ERK.'
 
 
-def test_conversion_subj():
+def test_conversion():
     st = Conversion(Agent('RAS'), [Agent('GTP')], [Agent('GDP')])
     s = _stmt_to_text(st)
-    assert s == 'RAS catalyzes the conversion of GTP into GDP'
+    assert s == 'RAS catalyzes the conversion of GTP into GDP.'
+
+    st = Conversion(Agent('RAS'), [Agent('GTP'), Agent('X')],
+                    [Agent('GDP'), Agent('Y')])
+    s = _stmt_to_text(st)
+    assert s == 'RAS catalyzes the conversion of GTP and X into GDP and Y.'
+
+    st = Conversion(None, [Agent('GTP'), Agent('X')], [Agent('GDP'), Agent('Y')])
+    s = _stmt_to_text(st)
+    assert s == 'GTP and X is converted into GDP and Y.'
 
 
 def _stmt_to_text(st):
