@@ -140,7 +140,7 @@ class HtmlAssembler(object):
         def get_role(ag_ix):
             if isinstance(stmt, Complex) or \
                isinstance(stmt, SelfModification) or \
-               isinstance(stmt, ActiveForm) or isinstance(stmt, Conversion) or \
+               isinstance(stmt, ActiveForm) or isinstance(stmt, Conversion) or\
                isinstance(stmt, Translocation):
                 return 'other'
             else:
@@ -164,6 +164,8 @@ class HtmlAssembler(object):
             else:
                 indices = []
                 for ix, ag in enumerate(stmt.agent_list()):
+                    if ag is None:
+                        continue
                     # If the statement has been preassembled, it will have
                     # this entry in annotations
                     try:
