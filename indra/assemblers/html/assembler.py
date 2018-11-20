@@ -8,6 +8,10 @@ import re
 import itertools
 from os.path import abspath, dirname, join
 from jinja2 import Template
+import logging
+
+logger = logging.getLogger('html_assembler')
+
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import get_identifiers_url
@@ -74,7 +78,10 @@ class HtmlAssembler(object):
             english = self._format_stmt_text(stmt)
             if self.rest_api_results:
                 total_evidence = self.rest_api_results['evidence_totals']\
-                                                      [int(stmt_hash)]
+                    .get(int(stmt_hash), '?')
+                if total_evidence == '?':
+                    logger.warning('The hash %s was not found in the '
+                                   'evidence totals dict.' % stmt_hash)
                 evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
             else:
                 evidence_count_str = str(len(ev_list))
