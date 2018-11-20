@@ -1,7 +1,7 @@
-"""This file contains the methods needed to load the ontologies for Eidos.
+"""This script loads the ontologies for Eidos and Hume and generates RDFs.
 
-It also loads Hume and can easly handle any other ontology which uses the same
-format (yaml ontology following the namespace defined at `eidos_ns`).
+The script can handle any ontology which uses the same format (yaml ontology
+following the namespace defined at `eidos_ns`).
 """
 
 import yaml
