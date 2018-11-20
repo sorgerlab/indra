@@ -318,8 +318,8 @@ def _assemble_gef(stmt):
 
 def _assemble_conversion(stmt):
     """Assemble a Conversion statement into text."""
-    reactants = _join_list([_assemble_agent_str(r) for r in stmt.subj_from])
-    products = _join_list([_assemble_agent_str(r) for r in stmt.subj_to])
+    reactants = _join_list([_assemble_agent_str(r) for r in stmt.obj_from])
+    products = _join_list([_assemble_agent_str(r) for r in stmt.obj_to])
 
     if stmt.subj is not None:
         subj_str = _assemble_agent_str(stmt.subj)
