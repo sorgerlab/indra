@@ -23,6 +23,17 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
     <script>
+        // "GLOBAL" VARIABLES
+        // Stores the latest submission parameters
+        var latestSubmission = {
+                                'curator': '',
+                                'api_key': '',
+                                'ddSelect': '',
+                                'ev_hash': '',
+                                'source_hash': '',
+                                'submit_status': 0
+                            };
+
         // Check the API key input
         function keySubmit (key_value) {
             var ensure_user = document.getElementById("ensure_user_on_api_key")
@@ -155,14 +166,14 @@
 
         function submitButtonClick(clickEvent) {
             // CURATOR
-            curator = document.getElementById("curator_input").value;
+            var curator = document.getElementById("curator_input").value;
             if (!curator) {
                 alert("Please enter a curator ID");
                 return;
             }
 
             // API KEY
-            api_key = document.getElementById("api_key_input").value;
+            var api_key = document.getElementById("api_key_input").value;
             if (!api_key) {
                 alert("Please enter an API key!");
                 return;
@@ -175,7 +186,7 @@
                 .getElementsByTagName("select")[0]
 
             // DROPDOWN SELECTION
-            err_select = s.options[s.selectedIndex].value;
+            var err_select = s.options[s.selectedIndex].value;
             if (!err_select) {
                 alert('Please select an error type or "correct" for the statement in the dropdown menu');
                 return;
@@ -183,7 +194,7 @@
 
             // TEXT BOX CONTENT
             // Get "form" node, then the value of "input"
-            user_text = pn
+            var user_text = pn
                         .getElementsByClassName("form")[0]
                         .getElementsByTagName("input")[0]
                         .value;
@@ -198,11 +209,11 @@
             var statusBox = pn.getElementsByClassName("submission_status")[0].children[0];
 
             // Step back to the preceding tr tag
-            pmid_row = btn_row_tag.previousElementSibling;
+            var pmid_row = btn_row_tag.previousElementSibling;
 
             // PMID
             // Get pmid_linktext content
-            pmid_text = pmid_row
+            var pmid_text = pmid_row
                         .getElementsByClassName("pmid_link")[0]
                         .textContent.trim()
 
@@ -233,6 +244,25 @@
             // console.log("cur_dict");
             // console.log(cur_dict);
 
+            // SPAM CONTROL: preventing multiple clicks of the same curation in a row
+            // If the new submission matches latest submission AND the latest submission was
+            // successfully submitted, ignore the new submission
+            if (latestSubmission['curator'] == curator &
+                latestSubmission['api_key'] == document.getElementById("api_key_input").value &
+                latestSubmission['ddSelect'] == err_select &
+                latestSubmission['source_hash'] == source_hash &
+                latestSubmission['stmt_hash'] == stmt_hash &
+                latestSubmission['submit_status'] == 200) {
+                alert('Already submitted curation successfully!');
+                return;
+            } else {
+                latestSubmission['curator'] = curator;
+                latestSubmission['api_key'] = document.getElementById("api_key_input").value;
+                latestSubmission['ddSelect'] = err_select;
+                latestSubmission['source_hash'] = source_hash;
+                latestSubmission['stmt_hash'] = stmt_hash;
+            };
+
             testing = false; // Set to true to test the curation endpoint of the API
             ajx_response = submitCuration(cur_dict, stmt_hash, statusBox, icon, testing);
             console.log("ajax response from submission: ");
@@ -262,6 +292,7 @@
                 contentType: "application/json",
                 data: JSON.stringify(curation_dict),
                 complete: function(xhr, statusText) {
+                    latestSubmission['submit_status'] = xhr.status;
                     switch (xhr.status) {
                         case 200:
                             statusBox.textContent = "Curation submitted successfully!";
