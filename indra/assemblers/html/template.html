@@ -599,6 +599,18 @@
         </div>
         </div>
 
+    {% if metadata %}
+    <div class="page-header">
+        <h4>Summary Metadata</h4>
+    <ul>
+        {% for name, value in metadata.items() %}
+        <li>{{ name }}: {{ value }}</li>
+        {% endfor %}
+    </ul>
+    </div>
+    {% endif %}
+
+
     {% for stmt_info in statements %}
     <a name='{{ stmt_info['hash'] }}'></a>
     <div class="statement">
@@ -654,20 +666,6 @@
           </table>
     </div> <!-- evidence -->
     {% endfor %}
-
-    {% if rest_api_results %}
-    <div class="page-header">
-        <h4>About this result</h4>
-    </div>
-    <ul>
-        <li>Statements returned: {{ rest_api_results['statements_returned'] }}</li>
-        <li>Statement limit: {{ rest_api_results['statement_limit'] }}</li>
-        <li>Total evidence: {{ rest_api_results['total_evidence'] }}</li>
-        <li>Evidence limit: {{ rest_api_results['evidence_limit'] }}</li>
-        <li>Evidence returned: {{ rest_api_results['evidence_returned'] }}</li>
-        <li>Offset: {{ rest_api_results['offset'] }}</li>
-    </ul>
-    {% endif %}
 
     </div> <!-- /container -->
   </body>

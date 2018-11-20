@@ -39,9 +39,14 @@ class HtmlAssembler(object):
     ----------
     stmts : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to be added to the assembler.
-    rest_api_results : dict
-        Dictionary of query metadata provided by the INDRA REST API. Default
-        is None.
+    summary_metadata : dict
+        Dictionary of statement corpus metadata such as that provided by the
+        INDRA REST API. Default is None. Each value should be a concise
+        summary of O(1), not of order the length of the list, such as the
+        evidence totals. The keys should be informative human-readable strings.
+    ev_totals : dict
+        Default is None. A dictionary of the total evidence available for each
+        statement indexed by hash.
 
     Attributes
     ----------
@@ -49,18 +54,23 @@ class HtmlAssembler(object):
         A list of INDRA Statements to assemble.
     model : str
         The HTML report formatted as a single string.
-    rest_api_results : dict
-        Dictionary of query metadata provided by the INDRA REST API.
+    metadata : dict
+        Dictionary of statement list metadata such as that provided by the
+        INDRA REST API.
+    ev_totals : dict
+        Default is None. A dictionary of the total evidence available for each
+        statement indexed by hash.
     """
-    def __init__(self, stmts=None, rest_api_results=None):
+    def __init__(self, stmts=None, summary_metadata=None, ev_totals=None):
         if stmts is None:
             self.statements = []
         else:
             self.statements = stmts
-        if rest_api_results is None:
-            self.rest_api_results = {}
+        if summary_metadata is None:
+            self.metadata = {}
         else:
-            self.rest_api_results = rest_api_results
+            self.metadata = summary_metadata
+        self.ev_totals = {} if ev_totals is None else ev_totals
         self.model = None
 
     def make_model(self):
@@ -76,9 +86,8 @@ class HtmlAssembler(object):
             stmt_hash = stmt.get_hash(shallow=True)
             ev_list = self._format_evidence_text(stmt)
             english = self._format_stmt_text(stmt)
-            if self.rest_api_results:
-                total_evidence = self.rest_api_results['evidence_totals']\
-                    .get(int(stmt_hash), '?')
+            if self.ev_totals:
+                total_evidence = self.ev_totals.get(int(stmt_hash), '?')
                 if total_evidence == '?':
                     logger.warning('The hash %s was not found in the '
                                    'evidence totals dict.' % stmt_hash)
@@ -90,8 +99,10 @@ class HtmlAssembler(object):
                 'english': english,
                 'evidence': ev_list,
                 'evidence_count': evidence_count_str})
+        metadata = {k.replace('_', ' ').title(): v
+                    for k, v in self.metadata.items()}
         self.model = template.render(statements=stmts_formatted,
-                                     rest_api_results=self.rest_api_results)
+                                     metadata=metadata)
         return self.model
 
     def save_model(self, fname):
@@ -133,7 +144,8 @@ class HtmlAssembler(object):
                isinstance(stmt, Translocation):
                 return 'other'
             else:
-                assert len(stmt.agent_list()) == 2
+                assert len(stmt.agent_list()) == 2, (len(stmt.agent_list()),
+                                                     type(stmt))
                 return 'subject' if ag_ix == 0 else 'object'
 
         ev_list = []
