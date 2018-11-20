@@ -68,12 +68,15 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_gef(stmt))
             elif isinstance(stmt, ist.Gap):
                 stmt_strs.append(_assemble_gap(stmt))
+            elif isinstance(stmt, ist.Conversion):
+                stmt_strs.append(_assemble_conversion(stmt))
             else:
                 logger.warning('Unhandled statement type: %s.' % type(stmt))
         if stmt_strs:
             return ' '.join(stmt_strs)
         else:
             return ''
+
 
 def _assemble_agent_str(agent):
     """Assemble an Agent object to text."""
@@ -173,6 +176,7 @@ def _assemble_agent_str(agent):
 
     return agent_str
 
+
 def _join_list(lst):
     """Join a list of words in a gramatically correct way."""
     if len(lst) > 2:
@@ -185,6 +189,7 @@ def _join_list(lst):
     else:
         s = ''
     return s
+
 
 def _assemble_activeform(stmt):
     """Assemble ActiveForm statements into text."""
@@ -206,6 +211,7 @@ def _assemble_activeform(stmt):
     elif stmt.activity == 'gtpbound':
         stmt_str = subj_str + ' is GTP-bound ' + is_active_str
     return _make_sentence(stmt_str)
+
 
 def _assemble_modification(stmt):
     """Assemble Modification statements into text."""
@@ -230,11 +236,13 @@ def _assemble_modification(stmt):
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
 
+
 def _assemble_complex(stmt):
     """Assemble Complex statements into text."""
     member_strs = [_assemble_agent_str(m) for m in stmt.members]
     stmt_str = member_strs[0] + ' binds ' + _join_list(member_strs[1:])
     return _make_sentence(stmt_str)
+
 
 def _assemble_autophosphorylation(stmt):
     """Assemble Autophosphorylation statements into text."""
@@ -250,6 +258,7 @@ def _assemble_autophosphorylation(stmt):
     stmt_str += ' ' + mod_str
     return _make_sentence(stmt_str)
 
+
 def _assemble_regulate_activity(stmt):
     """Assemble RegulateActivity statements into text."""
     subj_str = _assemble_agent_str(stmt.subj)
@@ -260,6 +269,7 @@ def _assemble_regulate_activity(stmt):
         rel_str = ' inhibits '
     stmt_str = subj_str + rel_str + obj_str
     return _make_sentence(stmt_str)
+
 
 def _assemble_regulate_amount(stmt):
     """Assemble RegulateAmount statements into text."""
@@ -278,6 +288,7 @@ def _assemble_regulate_amount(stmt):
             stmt_str = obj_str + ' is degraded'
     return _make_sentence(stmt_str)
 
+
 def _assemble_translocation(stmt):
     """Assemble Translocation statements into text."""
     agent_str = _assemble_agent_str(stmt.agent)
@@ -288,12 +299,14 @@ def _assemble_translocation(stmt):
         stmt_str += ' to the ' + stmt.to_location
     return _make_sentence(stmt_str)
 
+
 def _assemble_gap(stmt):
     """Assemble Gap statements into text."""
     subj_str = _assemble_agent_str(stmt.gap)
     obj_str = _assemble_agent_str(stmt.ras)
     stmt_str = subj_str + ' is a GAP for ' + obj_str
     return _make_sentence(stmt_str)
+
 
 def _assemble_gef(stmt):
     """Assemble Gef statements into text."""
@@ -302,12 +315,29 @@ def _assemble_gef(stmt):
     stmt_str = subj_str + ' is a GEF for ' + obj_str
     return _make_sentence(stmt_str)
 
+
+def _assemble_conversion(stmt):
+    """Assemble a Conversion statement into text."""
+    reactants = _join_list([_assemble_agent_str(r) for r in stmt.subj_from])
+    products = _join_list([_assemble_agent_str(r) for r in stmt.subj_to])
+
+    if stmt.subj is not None:
+        subj_str = _assemble_agent_str(stmt.subj)
+        stmt_str = '%s catalyzes the conversion of %s into %s' % \
+            (subj_str, reactants, products)
+    else:
+        stmt_str = '%s is converted into %s' % (reactants, products)
+    return _make_sentence(stmt_str)
+
+
+
 def _make_sentence(txt):
     """Make a sentence from a piece of text."""
     #Make sure first letter is capitalized
     txt = txt.strip(' ')
     txt = txt[0].upper() + txt[1:] + '.'
     return txt
+
 
 def _get_is_direct(stmt):
     '''Returns true if there is evidence that the statement is a direct
@@ -327,6 +357,7 @@ def _get_is_direct(stmt):
         return False
     return True
 
+
 def _get_is_hypothesis(stmt):
     '''Returns true if there is evidence that the statement is only
     hypothetical. If all of the evidences associated with the statement
@@ -337,6 +368,7 @@ def _get_is_hypothesis(stmt):
             return True
     return False
 
+
 def _get_is_hypothesis_adverb(stmt):
     '''Returns the string associated with a statement being hypothetical.'''
     if _get_is_hypothesis(stmt):
@@ -344,17 +376,21 @@ def _get_is_hypothesis_adverb(stmt):
     else:
         return ''
 
+
 def _mod_process_verb(stmt):
     mod_name = stmt.__class__.__name__.lower()
     return mod_process_prefix(mod_name)
+
 
 def _mod_process_noun(stmt):
     mod_name = stmt.__class__.__name__.lower()
     return mod_name
 
+
 def _mod_state_stmt(stmt):
     mod_name = stmt.__class__.__name__.lower()
     return mod_state_prefix(mod_name)
+
 
 def _mod_state_str(s):
     return mod_state_prefix(s)
