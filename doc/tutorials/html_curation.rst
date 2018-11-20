@@ -107,18 +107,29 @@ while a **red** indicates something went wrong with the submission:
 
 Curation Guidelines
 -------------------
+Basic principles
+~~~~~~~~~~~~~~~~
 The main question to ask when deciding whether a given Statement is correct
-with respect to a given piece of evidence is: "Is there support in the evidence
-sentence for the Statement?". If the answer is Yes, then the given sentence
+with respect to a given piece of evidence is::
+
+    Is there support in the evidence sentence for the Statement?
+
+If the answer is **Yes**, then the given sentence
 is a valid piece of evidence for the Statement. In fact, you can assert this
 correctness by choosing the "Correct" option from the curation drop-down list.
 Curations that assert correctness are just as valuable as curations of
 incorrectness so the use of this option is encouraged.
 
-Assuming the answer to the above question is No, one needs to determine what
-the error can be attributed to. There are currently the following options to
-choose from:
-- Entity Boundaries: this is applicable if the bounderies of one of the named
+Assuming the answer to the above question is **No**, one needs to determine
+what the error can be attributed to. The following section describes the
+specific error types that can be flagged.
+
+Types of errors to curate
+~~~~~~~~~~~~~~~~~~~~~~~~~
+There are currently the following options to choose from when curating
+incorrect Statement-sentence relationships:
+
+* **Entity Boundaries**: this is applicable if the bounderies of one of the named
   entities was incorrectly recognized. Example: "gap" is highlighted as an
   entity, when in fact, the entity mentioned in the sentence was
   "gap junction". These errors in entity boundaries almost always result in
@@ -127,70 +138,114 @@ choose from:
   Note: to help correct entity boundaries, add the following to the
   Optional description text box: [gap junction], i.e. the desired entity
   name inside square brackets.
-- Grounding: this is applicable if a named entity is assigned an incorrect
-  database identifier. Example: assume that in a sentence, "ER" is
-  mentioned referring to endoplasmic reticulum, but in a Statement extracted
-  from the sentence, it is grounded to the ESR1 (estrogen receptor alpha) gene.
+* **Grounding**: this is applicable if a named entity is assigned an incorrect
+  database identifier. Example::
+
+    Assume that in a sentence, "ER" is mentioned referring to endoplasmic
+    reticulum, but in a Statement extracted from the sentence, it is
+    grounded to the ESR1 (estrogen receptor alpha) gene.
+
   Note: to help correct grounding, add the following to the Optional
-  description text box: [ER] -> MESH:D004721, where [ER] is the entity string,
+  description text box::
+
+    [ER] -> MESH:D004721
+
+  where [ER] is the entity string,
   MESH is the namespace of a database/ontology, and D004721 is the unique ID
   corresponding to endoplasmic reticulum in MESH.
   A list of commonly used namespaces in INDRA are given in:
-  https://indra.readthedocs.io/en/latest/modules/statements.html
-  Note that you can also add multiple groundings separated by `|`, e.g.
+  https://indra.readthedocs.io/en/latest/modules/statements.html.
+  Note that you can also add multiple groundings separated by "|", e.g.
   HGNC:11998|UP:P04637.
-- Polarity: this is applicable if an essentially correct Statement was
+
+* **Polarity**: this is applicable if an essentially correct Statement was
   extracted but the Statement has the wrong polarity, e.g. Activation
   instead of Inhibition, of Phosphorylation instead of Dephosphorylation.
-  Example: "NDRG2 overexpression specifically inhibits SOCS1 phosphorylation"
-  with respect to the Statement Phosphorylation(NDRG2, SOCS1) has the wrong
-  polarity. It should be Dephosphorylation instead of Phosphorylation.
-- No Relation: this is applicable if the sentence does not imply a relationship
-  between the agents appearing in the Statement. Example:
-  "Furthermore, triptolide mediated inhibition of NF-kappaB activation, Stat3
-  phosphorylation and increase of SOCS1 expression in DC may be involved in
-  the inhibitory effect of triptolide." with respect to the Statement
-  Phosphorylation(STAT3(), SOCS1()) can be flagged as No Relation.
-- Wrong Relation Type: this is applicable if the sentence implies a
-  relationship between agents appearing in the Statement but the type of
-  Statement is inconsistent with the sentence. Example:
-  "We report the interaction between tacrolimus and chloramphenicol in a
-  renal transplant recipient." with respect to the Statement
-  Complex(tacrolimus(), chloramphenicol()) can be flagged as Wrong Relation
-  Type since the sentence implies a drug interaction that does not
-  involve complex formation.
-- Activity vs. Amount: this is applicable when the sentence implies a
-  regulation of amount (e.g. the sentence "NFAT upregulates IL2" implies
-  a regulation of the amount of IL2 but the corresponding Statement
-  is of type Activation rather than IncreaseAmount.
-- Negative Result: this is applicable if the sentence implies the lack of or
-  opposite of a relationship. Example: the sentence
-  "These results indicate that CRAF, but not BRAF phosphorylates MEK
-  in NRAS mutated cells." does not support Phosphorylation(BRAF(), MEK()),
-  and should be flagged as a Negative Result.
-- Hypothesis: this is applicable if the sentence describes a hypothesis or
-  an experiment rather than a result or mechanism. Example: the
-  sentence "We tested whether EGFR activates ERK." is a hypothesis with respect
-  to the Statement Activation(EGFR(), ERK()), and should therefore be flagged
-  as a Hypothesis upon curation (unless of course the Statement already has
-  a correct hypothesis flag).
-- Agent conditions: this is applicable if one of the Agents in the Statement
-  is missing relevant conditions that are mentioned in the sentence. Example:
-  "Mutant BRAF activates MEK" with respect to the Statement
-  Activation(BRAF(), MEK()) can be curated to be missing Agent conditions since
-  the mutation on BRAF is not captured.
-- Incorrect site: this is applicable if an incorrect amino-acid site is
-  given as an Agent condition (modification, mutation) or as an argument
-  of a modification Statement.
+  Example::
 
-Further notes:
-- Please be consistent in using your email address as your curator ID.
-  Keeping track of who curated what helps us to faster track down
-  issues with readers and the assembly processes that generate statements.
-- If you spot multiple levels of errors in a Statement-sentence pair,
+    Sentence: "NDRG2 overexpression specifically inhibits SOCS1 phosphorylation"
+    Statement: Phosphorylation(NDRG2(), SOCS1())
+
+  has incorrect polarity. It should be Dephosphorylation instead of
+  Phosphorylation.
+
+* **No Relation**: this is applicable if the sentence does not imply a
+  relationship between the agents appearing in the Statement. Example::
+
+    Sentence: "Furthermore, triptolide mediated inhibition of NF-kappaB
+        activation, Stat3 phosphorylation and increase of SOCS1 expression in
+        DC may be involved in the inhibitory effect of triptolide."
+    Statement: Phosphorylation(STAT3(), SOCS1())
+
+  can be flagged as No Relation.
+
+* **Wrong Relation Type**: this is applicable if the sentence implies a
+  relationship between agents appearing in the Statement but the type of
+  Statement is inconsistent with the sentence. Example::
+
+    Sentence: "We report the interaction between tacrolimus and chloramphenicol
+        in a renal transplant recipient."
+    Statement: Complex(tacrolimus(), chloramphenicol())
+
+  can be flagged as Wrong Relation Type since the sentence implies a drug
+  interaction that does not involve complex formation.
+
+* **Activity vs. Amount**: this is applicable when the sentence implies a
+  regulation of amount but the corresponding Statement implies regulation
+  of activity or vice versa. Example::
+
+    Sentence: "NFAT upregulates IL2"
+    Sentence: Activation(NFAT(), IL2())
+
+  Here the sentence implies upregulation of the amount of IL2 but the
+  corresponding Statement is of type Activation rather than IncreaseAmount.
+
+* **Negative Result**: this is applicable if the sentence implies the lack of
+  or opposite of a relationship. Example::
+
+    Sentence: "These results indicate that CRAF, but not BRAF phosphorylates
+        MEK in NRAS mutated cells."
+    Statement: Phosphorylation(BRAF(), MEK())
+
+  Here the sentence does not support the Statement due to a negation and
+  should therefore be flagged as a Negative Result.
+
+* **Hypothesis**: this is applicable if the sentence describes a hypothesis or
+  an experiment rather than a result or mechanism. Example::
+
+    Sentence: "We tested whether EGFR activates ERK."
+    Statement: Activation(EGFR(), ERK())
+
+  Here the sentence describes a hypothesis with respect to the Statement, and
+  should therefore be flagged as a Hypothesis upon curation (unless of course
+  the Statement already has a correct *hypothesis* flag).
+
+* **Agent conditions**: this is applicable if one of the Agents in the Statement
+  is missing relevant conditions that are mentioned in the sentence. Example::
+
+    Sentence: "Mutant BRAF activates MEK"
+    Statement: Activation(BRAF(), MEK())
+
+  can be curated to be missing Agent conditions since the mutation on BRAF is
+  not captured.
+
+* **Incorrect site**: this is applicable if an incorrect amino-acid site is
+  given as an Agent condition (modification, mutation) or as an argument
+  of a modification Statement. Example::
+
+    Sentence: xxx
+    Statement: xxx
+
+General notes on curation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* If you spot multiple levels of errors in a Statement-sentence pair,
   use the most relevant error type in the dropdown menu. E.g. if you see both
   a grounding error and a polarity error, you should pick the grounding
   error since a statement with a grounding error generally would not exist
   if the grounding was correct.
-- If you still feel like multiple errors are appropriate for the curation,
+* If you still feel like multiple errors are appropriate for the curation,
   select a new next error from the dropdown menu and make a new submission.
+* Please be consistent in using your email address as your curator ID.
+  Keeping track of who curated what helps us to faster track down
+  issues with readers and the assembly processes that generate statements.
