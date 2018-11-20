@@ -149,6 +149,8 @@ class HtmlAssembler(object):
                     # this entry in annotations
                     try:
                         ag_text = ev.annotations['agents']['raw_text'][ix]
+                        if ag_text is None:
+                            raise KeyError
                     # Otherwise we try to get the agent text from db_refs
                     except KeyError:
                         ag_text = ag.db_refs.get('TEXT')
