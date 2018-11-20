@@ -334,12 +334,17 @@
         //         <option value="" selected disabled hidden>
         //             Select error type...
         //         </option>
-        //         <option value="correct">No Error</option>
+        //         <option value="correct">Correct</option>
+        //         <option value="entity_boundaries">Entity Boundaries</option>
         //         <option value="grounding">Grounding</option>
+        //         <option value="no_relation">No Relation</option>
+        //         <option value="wrong_relation">Wrong Relation</option>
+        //         <option value="act_vs_amt">Activity vs. Amount</option>
         //         <option value="polarity">Polarity</option>
-        //         <option value="relation">Relation</option>
         //         <option value="negative_result">Negative Result</option>
         //         <option value="hypothesis">Hypothesis</option>
+        //         <option value="agent_conditions">Agent Conditions</option>
+        //         <option value="mod_site">Modification Site</option>
         //         <option value="other">Other...</option>
         //     </select>
         // </div>
@@ -364,37 +369,61 @@
             option1.value = "correct";
             option1.textContent = "Correct";
             ddSelect.appendChild(option1);
-            // 2 "grounding" Grounding;
+            // 2 "entity_boundaries" Entity Boundaries;
             option2 = document.createElement("option");
-            option2.value = "grounding";
-            option2.textContent = "Grounding";
+            option2.value = "entity_boundaries";
+            option2.textContent = "Entity Boundaries";
             ddSelect.appendChild(option2);
-            // 3 "polarity" Polarity;
+            // 3 "grounding" Grounding;
             option3 = document.createElement("option");
-            option3.value = "polarity";
-            option3.textContent = "Polarity";
+            option3.value = "grounding";
+            option3.textContent = "Grounding";
             ddSelect.appendChild(option3);
-            // 4 "relation" Relation;
+            // 4 "no_relation" No Relation;
             option4 = document.createElement("option");
-            option4.value = "relation";
-            option4.textContent = "Relation";
+            option4.value = "no_relation";
+            option4.textContent = "No Relation";
             ddSelect.appendChild(option4);
-            // 5 "negative_result" Negative Result;
+            // 5 "wrong_relation" Wrong Relation Type;
             option5 = document.createElement("option");
-            option5.value = "negative_result";
-            option5.textContent = "Negative Result";
+            option5.value = "wrong_relation";
+            option5.textContent = "Wrong Relation";
             ddSelect.appendChild(option5);
-            // 6 "hypothesis" Hypothesis;
+            // 6 "act_vs_amt" Activity vs. Amount
             option6 = document.createElement("option");
-            option6.value = "hypothesis";
-            option6.textContent = "Hypothesis";
+            option6.value = "act_vs_amt";
+            option6.textContent = "Activity vs. Amount";
             ddSelect.appendChild(option6);
-            // 7 "other" Other...
+            // 7 "polarity" Polarity;
             option7 = document.createElement("option");
-            option7.value = "other";
-            option7.textContent = "Other...";
+            option7.value = "polarity";
+            option7.textContent = "Polarity";
             ddSelect.appendChild(option7);
-
+            // 8 "negative_result" Negative Result;
+            option8 = document.createElement("option");
+            option8.value = "negative_result";
+            option8.textContent = "Negative Result";
+            ddSelect.appendChild(option8);
+            // 9 "hypothesis" Hypothesis;
+            option9 = document.createElement("option");
+            option9.value = "hypothesis";
+            option9.textContent = "Hypothesis";
+            ddSelect.appendChild(option9);
+            // 10 "agent_conditions" Agent Conditions;
+            option10 = document.createElement("option");
+            option10.value = "agent_conditions";
+            option10.textContent = "Agent Conditions";
+            ddSelect.appendChild(option10);
+            // 11 "mod_site" Modification Site;
+            option11 = document.createElement("option");
+            option11.value = "mod_site";
+            option11.textContent = "Modification Site";
+            ddSelect.appendChild(option11);
+            // 12 "other" Other...
+            option12 = document.createElement("option");
+            option12.value = "other";
+            option12.textContent = "Other...";
+            ddSelect.appendChild(option12);
             // Add more options by following the structure above
             ddContainer.appendChild(ddSelect);
             return ddContainer;
