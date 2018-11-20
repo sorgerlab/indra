@@ -1,5 +1,5 @@
 The HTML Curation Interface
-======================================
+===========================
 Accessing the Interface
 -----------------------
 You will usually access this interface from any INDRA application that
@@ -10,15 +10,16 @@ the rest API::
 
     http://api.host/statements/from_agents?subject=SUBJ&object=OBJ&api_key=12345&format=html
 
-where *api.host* should be replaced with the address to the REST API service.
+where *api.host* should be replaced with the address to the REST API service
+(see the `documentation
+<https://github.com/indralab/indra_db/blob/master/rest_api/README.md>`_).
 Entering the whole address in your browser will query for statements where
 *SUBJ* is the subject and *OBJ* is the object of the statements.
 
-For more details about the REST API, please refer to its `documentation`__.
-
-.. _restAPIdocsHTML: https://github.com/indralab/indra_db/tree/master/rest_api/README.md#example-2
-
-__ _restAPIdocsHTML
+For more details about what options are available when doing curation, please
+refer to the `curation section
+<https://github.com/indralab/indra_db/blob/master/rest_api/README.md#curation>`_
+of the documentation.
 
 Curating a Statement
 --------------------
@@ -42,8 +43,9 @@ dropdown menu, a text box and a submit button:
 The **dropdown menu** contains common errors and also the possibility to mark
 the statement as 'correct'. If none of the types fit, select the *other...*
 option, and describe the error with one or a few words in the provided
-textbox. In our example, we see that *reactive oxygen species* is incorrectly
-grounded to *ROS*, so we pick *grounding* from the dropdown menu:
+textbox. Note that if you pick *other...*, describing the error is mandatory.
+In our example, we see that *reactive oxygen species* is incorrectly grounded
+to *ROS*, so we pick *grounding* from the dropdown menu:
 
 +------------------------------------------------------+
 | .. figure:: images/curation_select_error_circled.png |
@@ -52,15 +54,19 @@ grounded to *ROS*, so we pick *grounding* from the dropdown menu:
 +------------------------------------------------------+
 
 In the textbox, you can add a short optional description to clarify why you
-marked this piece of evidence. When you are done, you can submit your curation.
+marked this piece of evidence with the error type you chose. When you are
+done, you are ready to submit your curation.
 
 Submitting a Curation
 ---------------------
 To **submit a curation**, there are three minimum requirements:
 
-1) A valid **API key** (at the top of the page)
-2) A **curator ID**, such as name or email (at the top of the page)
+1) A valid **API key** (at the top of the page, see image)
+2) A **curator ID**, such as name or email (at the top of the page, see image)
 3) A **selection in the dropdown menu** (by the curated statement)
+
+If you selected *other...* in the dropdown menu, you must *also* describe the
+error in the textbox.
 
 +-----------------------------------------+
 | .. figure:: images/apikey_curatorID.png |
@@ -102,11 +108,13 @@ while a **red** indicates something went wrong with the submission:
 
 Curation Best Practices
 -----------------------
-- If you spot multiple levels of errors in a statement-evidence text pair,
+- Please be consistent in which curator ID you are using. Keeping track of who
+  curated what really helps us to faster track down issues with readers and
+  the processes that generate statements.
+- If you spot multiple levels of errors in a statement - evidence text pair,
   use the most relevant error type in the dropdown menu. E.g. if you see both
   a grounding error and a polarity error, you should pick the grounding
   error since a statement with a grounding error generally would not exist
-  if you remove one of the agents.
-- Please be consistent in which curator ID you are using. Keeping track of who
-  curated what really helps us to faster track down issues with readers or
-  the pre-assembly process that generates statements.
+  if the grounding was correct.
+- If you still feel like multiple errors are appropriate for the curation,
+  select a new next error from the dropdown menu and make a new submission.
