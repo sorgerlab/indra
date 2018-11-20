@@ -111,7 +111,7 @@ The main question to ask when deciding whether a given Statement is correct
 with respect to a given piece of evidence is: "Is there support in the evidence
 sentence for the Statement?". If the answer is Yes, then the given sentence
 is a valid piece of evidence for the Statement. In fact, you can assert this
-correctness by choosing the "Correct" option from the curationdrop-down list.
+correctness by choosing the "Correct" option from the curation drop-down list.
 Curations that assert correctness are just as valuable as curations of
 incorrectness so the use of this option is encouraged.
 
@@ -160,15 +160,34 @@ choose from:
   Type since the sentence implies a drug interaction that does not
   involve complex formation.
 - Activity vs. Amount: this is applicable when the sentence implies a
-  regulation of amount (e.g. "JUN upregulates but a Statement
+  regulation of amount (e.g. the sentence "NFAT upregulates IL2" implies
+  a regulation of the amount of IL2 but the corresponding Statement
+  is of type Activation rather than IncreaseAmount.
+- Negative Result: this is applicable if the sentence implies the lack of or
+  opposite of a relationship. Example: the sentence
+  "These results indicate that CRAF, but not BRAF phosphorylates MEK
+  in NRAS mutated cells." does not support Phosphorylation(BRAF(), MEK()),
+  and should be flagged as a Negative Result.
+- Hypothesis: this is applicable if the sentence describes a hypothesis or
+  an experiment rather than a result or mechanism. Example: the
+  sentence "We tested whether EGFR activates ERK." is a hypothesis with respect
+  to the Statement Activation(EGFR(), ERK()), and should therefore be flagged
+  as a Hypothesis upon curation (unless of course the Statement already has
+  a correct hypothesis flag).
+- Agent conditions: this is applicable if one of the Agents in the Statement
+  is missing relevant conditions that are mentioned in the sentence. Example:
+  "Mutant BRAF activates MEK" with respect to the Statement
+  Activation(BRAF(), MEK()) can be curated to be missing Agent conditions since
+  the mutation on BRAF is not captured.
+- Incorrect site: this is applicable if an incorrect amino-acid site is
+  given as an Agent condition (modification, mutation) or as an argument
+  of a modification Statement.
 
-Error types
-- Correct: Asserting that
-
+Further notes:
 - Please be consistent in using your email address as your curator ID.
-  Keeping track of who curated what really helps us to faster track down
+  Keeping track of who curated what helps us to faster track down
   issues with readers and the assembly processes that generate statements.
-- If you spot multiple levels of errors in a statement - evidence text pair,
+- If you spot multiple levels of errors in a Statement-sentence pair,
   use the most relevant error type in the dropdown menu. E.g. if you see both
   a grounding error and a polarity error, you should pick the grounding
   error since a statement with a grounding error generally would not exist
