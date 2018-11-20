@@ -3,11 +3,12 @@
 The script can handle any ontology which uses the same format (yaml ontology
 following the namespace defined at `eidos_ns`).
 """
-
 import yaml
 import requests
 from os.path import join, dirname, abspath
 from rdflib import Graph, Namespace, Literal
+
+from indra.sources import eidos, hume
 
 
 eidos_ns = Namespace('https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#')
@@ -60,8 +61,10 @@ def build_relations(G, node, tree, prefix):
 
 def load_ontology(ont_url, rdf_path):
     """Load an ontology formatted like Eidos' from github."""
-    yml = requests.get(ont_url).content
-    root = yaml.load(yml)
+    res = requests.get(ont_url)
+    if res.status_code != 200:
+        raise Exception('Could not load ontology from %s' % ont_url)
+    root = yaml.load(res.content)
     G = Graph()
     for top_entry in root:
         assert len(top_entry) == 1
@@ -72,16 +75,14 @@ def load_ontology(ont_url, rdf_path):
 
 if __name__ == '__main__':
     # Eidos
-    from indra.sources import eidos
     eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
-                     'src/main/resources/org/clulab/wm/eidos/ontologies/'
-                     'un_ontology.yml')
+                     'src/main/resources/org/clulab/wm/eidos/english/'
+                     'ontologies/un_ontology.yml')
     eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
                           'eidos_ontology.rdf')
     load_ontology(eidos_ont_url, eidos_rdf_path)
 
     # Hume
-    from indra.sources import hume
     hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
                     'resource/ontologies/hume_ontology.yaml')
     hume_rdf_path = join(dirname(abspath(hume.__file__)), 'hume_ontology.rdf')
