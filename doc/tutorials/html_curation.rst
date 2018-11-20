@@ -1,12 +1,11 @@
-The HTML Curation Interface
-===========================
-Accessing the Interface
------------------------
-You will usually access this interface from any INDRA application that
+The Statement curation interface
+================================
+
+You will usually access this interface from an INDRA application that
 exposes statements to you. However if you just want to try out the interface
 or don't want to take the detour through any of the applications, you can
 follow the format below to access the interface directly in your browser from
-the rest API::
+the INDRA-DB REST API::
 
     http://api.host/statements/from_agents?subject=SUBJ&object=OBJ&api_key=12345&format=html
 
@@ -106,11 +105,69 @@ while a **red** indicates something went wrong with the submission:
 |   *A red icon indicates that something went wrong during the submission* |
 +--------------------------------------------------------------------------+
 
-Curation Best Practices
------------------------
-- Please be consistent in which curator ID you are using. Keeping track of who
-  curated what really helps us to faster track down issues with readers and
-  the processes that generate statements.
+Curation Guidelines
+-------------------
+The main question to ask when deciding whether a given Statement is correct
+with respect to a given piece of evidence is: "Is there support in the evidence
+sentence for the Statement?". If the answer is Yes, then the given sentence
+is a valid piece of evidence for the Statement. In fact, you can assert this
+correctness by choosing the "Correct" option from the curationdrop-down list.
+Curations that assert correctness are just as valuable as curations of
+incorrectness so the use of this option is encouraged.
+
+Assuming the answer to the above question is No, one needs to determine what
+the error can be attributed to. There are currently the following options to
+choose from:
+- Entity Boundaries: this is applicable if the bounderies of one of the named
+  entities was incorrectly recognized. Example: "gap" is highlighted as an
+  entity, when in fact, the entity mentioned in the sentence was
+  "gap junction". These errors in entity boundaries almost always result in
+  incorrect grounding, since the wrong string is attempted to be grounded.
+  Therefore this error "subsumes" grounding errors.
+  Note: to help correct entity boundaries, add the following to the
+  Optional description text box: [gap junction], i.e. the desired entity
+  name inside square brackets.
+- Grounding: this is applicable if a named entity is assigned an incorrect
+  database identifier. Example: assume that in a sentence, "ER" is
+  mentioned referring to endoplasmic reticulum, but in a Statement extracted
+  from the sentence, it is grounded to the ESR1 (estrogen receptor alpha) gene.
+  Note: to help correct grounding, add the following to the Optional
+  description text box: [ER] -> MESH:D004721, where [ER] is the entity string,
+  MESH is the namespace of a database/ontology, and D004721 is the unique ID
+  corresponding to endoplasmic reticulum in MESH.
+  A list of commonly used namespaces in INDRA are given in:
+  https://indra.readthedocs.io/en/latest/modules/statements.html
+  Note that you can also add multiple groundings separated by `|`, e.g.
+  HGNC:11998|UP:P04637.
+- Polarity: this is applicable if an essentially correct Statement was
+  extracted but the Statement has the wrong polarity, e.g. Activation
+  instead of Inhibition, of Phosphorylation instead of Dephosphorylation.
+  Example: "NDRG2 overexpression specifically inhibits SOCS1 phosphorylation"
+  with respect to the Statement Phosphorylation(NDRG2, SOCS1) has the wrong
+  polarity. It should be Dephosphorylation instead of Phosphorylation.
+- No Relation: this is applicable if the sentence does not imply a relationship
+  between the agents appearing in the Statement. Example:
+  "Furthermore, triptolide mediated inhibition of NF-kappaB activation, Stat3
+  phosphorylation and increase of SOCS1 expression in DC may be involved in
+  the inhibitory effect of triptolide." with respect to the Statement
+  Phosphorylation(STAT3(), SOCS1()) can be flagged as No Relation.
+- Wrong Relation Type: this is applicable if the sentence implies a
+  relationship between agents appearing in the Statement but the type of
+  Statement is inconsistent with the sentence. Example:
+  "We report the interaction between tacrolimus and chloramphenicol in a
+  renal transplant recipient." with respect to the Statement
+  Complex(tacrolimus(), chloramphenicol()) can be flagged as Wrong Relation
+  Type since the sentence implies a drug interaction that does not
+  involve complex formation.
+- Activity vs. Amount: this is applicable when the sentence implies a
+  regulation of amount (e.g. "JUN upregulates but a Statement
+
+Error types
+- Correct: Asserting that
+
+- Please be consistent in using your email address as your curator ID.
+  Keeping track of who curated what really helps us to faster track down
+  issues with readers and the assembly processes that generate statements.
 - If you spot multiple levels of errors in a statement - evidence text pair,
   use the most relevant error type in the dropdown menu. E.g. if you see both
   a grounding error and a polarity error, you should pick the grounding
