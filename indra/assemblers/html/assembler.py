@@ -201,6 +201,8 @@ class HtmlAssembler(object):
         # Get the English assembled statement
         ea = EnglishAssembler([stmt])
         english = ea.make_model()
+        if not english:
+            english = str(stmt)
         indices = []
         for ag in stmt.agent_list():
             if ag is None or not ag.name:
