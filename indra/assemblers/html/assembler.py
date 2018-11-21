@@ -222,6 +222,9 @@ class HtmlAssembler(object):
             # Build up a set of indices
             tag_start = "<a href='%s'>" % url
             tag_close = "</a>"
+            # FIXME: the EnglishAssembler capitalizes the first letter of
+            # each sentence. In some cases this causes no match here
+            # and not produce agent links.
             indices += [(m.start(), m.start() + len(ag.name), ag.name,
                          tag_start, tag_close)
                          for m in re.finditer(re.escape(ag.name), english)]
@@ -234,13 +237,17 @@ def id_url(ag):
                     'MIRBASEM', 'MIRBASE',
                     'MESH', 'GO',
                     'HMDB', 'PUBCHEM', 'CHEBI',
-                    'NCIT'):
+                    'NCIT',
+                    'UN', 'HUME', 'CWMS', 'SOFIA'):
         if db_name in ag.db_refs:
             # Handle a special case where a list of IDs is given
-            if db_name == 'CHEBI' and isinstance(ag.db_refs[db_name], list):
+            if isinstance(ag.db_refs[db_name], list):
                 db_id = ag.db_refs[db_name][0]
-                if not db_id.startswith('CHEBI'):
-                    db_id = 'CHEBI:%s' % db_id
+                if db_name == 'CHEBI':
+                    if not db_id.startswith('CHEBI'):
+                        db_id = 'CHEBI:%s' % db_id
+                elif db_name in ('UN', 'HUME'):
+                    db_id = db_id[0]
             else:
                 db_id = ag.db_refs[db_name]
             return get_identifiers_url(db_name, db_id)
