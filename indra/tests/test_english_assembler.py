@@ -373,6 +373,24 @@ def test_conversion():
     assert s == 'GTP and X is converted into GDP and Y.'
 
 
+def test_influence():
+    st = Influence(Concept('food'), Concept('hunger'),
+                   obj_delta={'polarity': -1})
+    s = _stmt_to_text(st)
+    assert s == 'Food causes a decrease in hunger.'
+
+    st = Influence(Concept('food'), Concept('hunger'),
+                   obj_delta={'polarity': -1},
+                   subj_delta={'polarity': 1})
+    s = _stmt_to_text(st)
+    assert s == 'An increase in food causes a decrease in hunger.'
+
+    st = Influence(Concept('food'), Concept('hunger'),
+                   obj_delta={'polarity': 1},
+                   subj_delta={'polarity': -1})
+    s = _stmt_to_text(st)
+    assert s == 'A decrease in food causes an increase in hunger.'
+
 def _stmt_to_text(st):
     e = ea.EnglishAssembler()
     e.add_statements([st])
