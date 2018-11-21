@@ -39,14 +39,21 @@ class HtmlAssembler(object):
     ----------
     stmts : Optional[list[indra.statements.Statement]]
         A list of INDRA Statements to be added to the assembler.
-    summary_metadata : dict
+    summary_metadata : Optional[dict]
         Dictionary of statement corpus metadata such as that provided by the
         INDRA REST API. Default is None. Each value should be a concise
         summary of O(1), not of order the length of the list, such as the
         evidence totals. The keys should be informative human-readable strings.
-    ev_totals : dict
-        Default is None. A dictionary of the total evidence available for each
-        statement indexed by hash.
+    ev_totals : Optional[dict]
+        A dictionary of the total evidence available for each
+        statement indexed by hash. Default: None
+    db_rest_url : Optional[str]
+        The URL to a DB REST API to use for links out to further evidence.
+        If given, this URL will be prepended to links that load additional
+        evidence for a given Statement. One way to obtain this value is from
+        the configuration entry indra.config.get_config('INDRA_DB_REST_URL').
+        If None, the URLs are constructed as relative links.
+        Default: None
 
     Attributes
     ----------
@@ -58,20 +65,17 @@ class HtmlAssembler(object):
         Dictionary of statement list metadata such as that provided by the
         INDRA REST API.
     ev_totals : dict
-        Default is None. A dictionary of the total evidence available for each
+        A dictionary of the total evidence available for each
         statement indexed by hash.
+    db_rest_url : str
+        The URL to a DB REST API.
     """
     def __init__(self, stmts=None, summary_metadata=None, ev_totals=None,
                  title='INDRA Results', db_rest_url=None):
         self.title = title
-        if stmts is None:
-            self.statements = []
-        else:
-            self.statements = stmts
-        if summary_metadata is None:
-            self.metadata = {}
-        else:
-            self.metadata = summary_metadata
+        self.statements = [] if stmts is None else stmts
+        self.summary_metadata = {} if summary_metadata is None \
+            else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.db_rest_url = db_rest_url
         self.model = None
@@ -111,6 +115,7 @@ class HtmlAssembler(object):
         return self.model
 
     def append_warning(self, msg):
+        """Append a warning message to the model to expose issues."""
         assert self.model is not None, "You must already have run make_model!"
         addendum = ('\t<span style="color:red;">(CAUTION: %s occurred when '
                     'creating this page.)</span>' % msg)
