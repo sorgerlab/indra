@@ -82,7 +82,7 @@ the statement that you curated:
 |   :figwidth: 75 %                              |
 +------------------------------------------------+
 
-A status message will appear once a the server has processed the submission,
+A status message will appear once the server has processed the submission,
 indicating if the submission was successful or which problem arose if not.
 The pen icon will also change color based in the returned status. **Green**
 indicates a successful submission:
