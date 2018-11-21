@@ -62,7 +62,7 @@ class HtmlAssembler(object):
         statement indexed by hash.
     """
     def __init__(self, stmts=None, summary_metadata=None, ev_totals=None,
-                 title='INDRA Results'):
+                 title='INDRA Results', db_rest_url=None):
         self.title = title
         if stmts is None:
             self.statements = []
@@ -73,6 +73,7 @@ class HtmlAssembler(object):
         else:
             self.metadata = summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
+        self.db_rest_url = db_rest_url
         self.model = None
 
     def make_model(self):
@@ -103,8 +104,10 @@ class HtmlAssembler(object):
                 'evidence_count': evidence_count_str})
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
+        db_rest_url = self.db_rest_url if self.db_rest_url is not None else '.'
         self.model = template.render(statements=stmts_formatted,
-                                     metadata=metadata, title=self.title)
+                                     metadata=metadata, title=self.title,
+                                     db_rest_url=db_rest_url)
         return self.model
 
     def append_warning(self, msg):

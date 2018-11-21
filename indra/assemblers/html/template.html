@@ -615,7 +615,7 @@
     <a name='{{ stmt_info['hash'] }}'></a>
     <div class="statement">
         <h4 class="align-middle">{{ stmt_info['english'] }}
-            <a href="./from_hash/{{ stmt_info['hash'] }}?format=html">
+            <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
                 <span class="badge">{{ stmt_info['evidence_count'] }}</span></a>
         </h4>
     </div>
