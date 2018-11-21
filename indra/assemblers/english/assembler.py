@@ -56,6 +56,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_autophosphorylation(stmt))
             elif isinstance(stmt, ist.Complex):
                 stmt_strs.append(_assemble_complex(stmt))
+            elif isinstance(stmt, ist.Influence):
+                stmt_strs.append(_assemble_influence(stmt))
             elif isinstance(stmt, ist.RegulateActivity):
                 stmt_strs.append(_assemble_regulate_activity(stmt))
             elif isinstance(stmt, ist.RegulateAmount):
@@ -329,6 +331,25 @@ def _assemble_conversion(stmt):
         stmt_str = '%s is converted into %s' % (reactants, products)
     return _make_sentence(stmt_str)
 
+
+def _assemble_influence(stmt):
+    """Assemble an Influence statement into text."""
+    subj_str = _assemble_agent_str(stmt.subj)
+    obj_str = _assemble_agent_str(stmt.obj)
+
+    # Note that n is prepended to increase to make it "an increase"
+    if stmt.subj_delta['polarity'] is not None:
+        subj_delta_str = 'decrease' if stmt.subj_delta['polarity'] == -1 \
+            else 'n increase'
+        subj_str = 'a %s in %s' % (subj_delta_str, subj_str)
+
+    if stmt.obj_delta['polarity'] is not None:
+        obj_delta_str = 'decrease' if stmt.obj_delta['polarity'] == -1 \
+            else 'n increase'
+        obj_str = 'a %s in %s' % (obj_delta_str, obj_str)
+
+    stmt_str = '%s causes %s' % (subj_str, obj_str)
+    return _make_sentence(stmt_str)
 
 
 def _make_sentence(txt):
