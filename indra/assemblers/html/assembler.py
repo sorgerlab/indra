@@ -121,7 +121,10 @@ class HtmlAssembler(object):
                 'evidence_count': evidence_count_str})
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
-        db_rest_url = self.db_rest_url if self.db_rest_url is not None else '.'
+        if self.db_rest_url and not self.db_rest_url.endswith('statements'):
+            db_rest_url = self.db_rest_url + '/statements'
+        else:
+            db_rest_url = '.'
         self.model = template.render(statements=stmts_formatted,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url)
