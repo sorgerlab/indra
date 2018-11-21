@@ -61,7 +61,9 @@ class HtmlAssembler(object):
         Default is None. A dictionary of the total evidence available for each
         statement indexed by hash.
     """
-    def __init__(self, stmts=None, summary_metadata=None, ev_totals=None):
+    def __init__(self, stmts=None, summary_metadata=None, ev_totals=None,
+                 title='INDRA Results'):
+        self.title = title
         if stmts is None:
             self.statements = []
         else:
@@ -102,7 +104,14 @@ class HtmlAssembler(object):
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
         self.model = template.render(statements=stmts_formatted,
-                                     metadata=metadata)
+                                     metadata=metadata, title=self.title)
+        return self.model
+
+    def append_warning(self, msg):
+        assert self.model is not None, "You must already have run make_model!"
+        addendum = ('\t<span style="color:red;">(CAUTION: %s occurred when '
+                    'creating this page.)</span>' % msg)
+        self.model = self.model.replace(self.title, self.title + addendum)
         return self.model
 
     def save_model(self, fname):
