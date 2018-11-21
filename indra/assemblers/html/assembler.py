@@ -76,7 +76,7 @@ class HtmlAssembler(object):
                  title='INDRA Results', db_rest_url=None):
         self.title = title
         self.statements = [] if statements is None else statements
-        self.summary_metadata = {} if summary_metadata is None \
+        self.metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.db_rest_url = db_rest_url

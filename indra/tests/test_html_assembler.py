@@ -23,7 +23,8 @@ def test_format_evidence_text():
     assert len(ev_list) == 1
     ev = ev_list[0]
     assert isinstance(ev, dict)
-    assert set(ev.keys()) == {'source_api', 'text_refs', 'text', 'source_hash'}
+    assert set(ev.keys()) == {'source_api', 'text_refs', 'text', 'source_hash',
+                              'pmid'}
     assert ev['source_api'] == 'test'
     assert ev['text_refs']['PMID'] == '1234567'
     assert ev['text'] == ('We noticed that the '
@@ -60,8 +61,3 @@ def test_tag_text():
     print(tagged_text)
     assert tagged_text == '<FooBarBaz>FooBarBaz</FooBarBaz> binds ' \
                           '<Foo>Foo</Foo>.'
-
-
-if __name__ == '__main__':
-    test_tag_text()
-
