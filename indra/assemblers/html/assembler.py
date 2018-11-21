@@ -236,7 +236,14 @@ def id_url(ag):
                     'HMDB', 'PUBCHEM', 'CHEBI',
                     'NCIT'):
         if db_name in ag.db_refs:
-            return get_identifiers_url(db_name, ag.db_refs[db_name])
+            # Handle a special case where a list of IDs is given
+            if db_name == 'CHEBI' and isinstance(ag.db_refs[db_name], list):
+                db_id = ag.db_refs[db_name][0]
+                if not db_id.startswith('CHEBI'):
+                    db_id = 'CHEBI:%s' % db_id
+            else:
+                db_id = ag.db_refs[db_name]
+            return get_identifiers_url(db_name, db_id)
 
 
 def tag_text(text, tag_info_list):
@@ -295,5 +302,3 @@ def tag_text(text, tag_info_list):
     # Add the last section of text
     format_text += text[start_pos:]
     return format_text
-
-
