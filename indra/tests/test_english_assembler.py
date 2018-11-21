@@ -391,6 +391,18 @@ def test_influence():
     s = _stmt_to_text(st)
     assert s == 'A decrease in food causes an increase in hunger.'
 
+
+def test_association():
+    st = Association([Concept('food'), Concept('hunger')])
+    s = _stmt_to_text(st)
+    assert s == 'Food is associated with hunger.'
+
+    st = Association([Concept('food'), Concept('hunger'), Concept('famine')])
+    s = _stmt_to_text(st)
+    assert s == 'Food is associated with hunger and famine.'
+
+
+
 def _stmt_to_text(st):
     e = ea.EnglishAssembler()
     e.add_statements([st])
