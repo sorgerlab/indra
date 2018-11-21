@@ -8,7 +8,7 @@ def main():
     # for Python 3)
     install_list = ['pysb>=1.3.0', 'objectpath', 'rdflib==4.2.1',
                     'requests>=2.11', 'lxml', 'ipython', 'future',
-                    'networkx>=2', 'pandas', 'ndex2==2.0.0.8']
+                    'networkx>=2', 'pandas', 'ndex2==2.0.0.8', 'jinja2']
     if sys.version_info[0] == 2:
         install_list.append('functools32')
 
@@ -50,7 +50,8 @@ def main():
           packages=['indra', 'indra.assemblers', 'indra.assemblers.cag',
                     'indra.assemblers.cx', 'indra.assemblers.cyjs',
                     'indra.assemblers.english', 'indra.assemblers.figaro',
-                    'indra.assemblers.graph', 'indra.assemblers.index_card',
+                    'indra.assemblers.graph', 'indra.assemblers.html',
+                    'indra.assemblers.index_card',
                     'indra.assemblers.kami', 'indra.assemblers.pybel',
                     'indra.assemblers.pysb', 'indra.assemblers.sbgn',
                     'indra.assemblers.sif', 'indra.assemblers.tsv',
