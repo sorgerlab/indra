@@ -54,6 +54,8 @@ class EnglishAssembler(object):
                 stmt_strs.append(_assemble_modification(stmt))
             elif isinstance(stmt, ist.Autophosphorylation):
                 stmt_strs.append(_assemble_autophosphorylation(stmt))
+            elif isinstance(stmt, ist.Association):
+                stmt_strs.append(_assemble_association(stmt))
             elif isinstance(stmt, ist.Complex):
                 stmt_strs.append(_assemble_complex(stmt))
             elif isinstance(stmt, ist.Influence):
@@ -236,6 +238,14 @@ def _assemble_modification(stmt):
     else:
         mod_str = ''
     stmt_str += ' ' + mod_str
+    return _make_sentence(stmt_str)
+
+
+def _assemble_association(stmt):
+    """Assemble Association statements into text."""
+    member_strs = [_assemble_agent_str(m) for m in stmt.members]
+    stmt_str = member_strs[0] + ' is associated with ' + \
+        _join_list(member_strs[1:])
     return _make_sentence(stmt_str)
 
 
