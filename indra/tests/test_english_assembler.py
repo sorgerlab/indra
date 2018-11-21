@@ -3,10 +3,12 @@ from builtins import dict, str
 import indra.assemblers.english.assembler as ea
 from indra.statements import *
 
+
 def test_agent_basic():
     s = ea._assemble_agent_str(Agent('EGFR'))
     print(s)
     assert (s == 'EGFR')
+
 
 def test_agent_mod():
     mc = ModCondition('phosphorylation')
@@ -15,6 +17,7 @@ def test_agent_mod():
     print(s)
     assert (s == 'phosphorylated EGFR')
 
+
 def test_agent_mod2():
     mc = ModCondition('phosphorylation', 'tyrosine')
     a = Agent('EGFR', mods=mc)
@@ -22,12 +25,14 @@ def test_agent_mod2():
     print(s)
     assert (s == 'tyrosine-phosphorylated EGFR')
 
+
 def test_agent_mod3():
     mc = ModCondition('phosphorylation', 'tyrosine', '1111')
     a = Agent('EGFR', mods=mc)
     s = ea._assemble_agent_str(a)
     print(s)
     assert (s == 'EGFR phosphorylated on Y1111')
+
 
 def test_agent_mods():
     mc1 = ModCondition('phosphorylation', 'tyrosine', '1111')
@@ -37,6 +42,7 @@ def test_agent_mods():
     print(s)
     assert (s == 'EGFR phosphorylated on Y1111 and Y1234')
 
+
 def test_agent_mods2():
     mc1 = ModCondition('phosphorylation', 'tyrosine', '1111')
     mc2 = ModCondition('phosphorylation', 'tyrosine')
@@ -44,6 +50,7 @@ def test_agent_mods2():
     s = ea._assemble_agent_str(a)
     print(s)
     assert (s == 'EGFR phosphorylated on Y1111 and tyrosine')
+
 
 def test_agent_mods3():
     mc1 = ModCondition('phosphorylation', 'tyrosine', '1111')
@@ -53,12 +60,14 @@ def test_agent_mods3():
     print(s)
     assert (s == 'EGFR phosphorylated on Y1111 and an unknown residue')
 
+
 def test_agent_bound():
     bc = BoundCondition(Agent('EGF'), True)
     a = Agent('EGFR', bound_conditions=[bc])
     s = ea._assemble_agent_str(a)
     print(s)
     assert (s == 'EGFR bound to EGF')
+
 
 def test_agent_not_bound():
     bc = BoundCondition(Agent('EGF'), False)
@@ -67,6 +76,7 @@ def test_agent_not_bound():
     print(s)
     assert (s == 'EGFR not bound to EGF')
 
+
 def test_agent_bound_two():
     bc = BoundCondition(Agent('EGF'), True)
     bc2 = BoundCondition(Agent('EGFR'), True)
@@ -74,6 +84,7 @@ def test_agent_bound_two():
     s = ea._assemble_agent_str(a)
     print(s)
     assert (s == 'EGFR bound to EGF and EGFR')
+
 
 def test_agent_bound_three():
     bc = BoundCondition(Agent('EGF'), True)
@@ -84,6 +95,7 @@ def test_agent_bound_three():
     print(s)
     assert (s == 'EGFR bound to EGF, EGFR and GRB2')
 
+
 def test_agent_bound_mixed():
     bc = BoundCondition(Agent('EGF'), True)
     bc2 = BoundCondition(Agent('EGFR'), False)
@@ -92,26 +104,30 @@ def test_agent_bound_mixed():
     print(s)
     assert (s == 'EGFR bound to EGF and not bound to EGFR')
 
+
 def test_phos_noenz():
     a = Agent('MAP2K1')
     st = Phosphorylation(None, a)
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'MAP2K1 is phosphorylated.')
+    assert s == 'MAP2K1 is phosphorylated.'
+
 
 def test_phos_noenz2():
     a = Agent('MAP2K1')
     st = Phosphorylation(None, a, 'serine')
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'MAP2K1 is phosphorylated on serine.')
+    assert s == 'MAP2K1 is phosphorylated on serine.'
+
 
 def test_phos_noenz3():
     a = Agent('MAP2K1')
     st = Phosphorylation(None, a, 'serine', '222')
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'MAP2K1 is phosphorylated on S222.')
+    assert s == 'MAP2K1 is phosphorylated on S222.'
+
 
 def test_phos_enz():
     a = Agent('MAP2K1')
@@ -119,7 +135,8 @@ def test_phos_enz():
     st = Phosphorylation(b, a, 'serine', '222')
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'BRAF phosphorylates MAP2K1 on S222.')
+    assert s == 'BRAF phosphorylates MAP2K1 on S222.'
+
 
 def test_phos_enz2():
     a = Agent('MAP2K1')
@@ -127,25 +144,29 @@ def test_phos_enz2():
     st = Dephosphorylation(b, a, 'serine', '222')
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'PP2A dephosphorylates MAP2K1 on S222.')
+    assert s == 'PP2A dephosphorylates MAP2K1 on S222.'
+
 
 def test_ubiq_stmt():
     st = Ubiquitination(Agent('X'), Agent('Y'))
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'X ubiquitinates Y.')
+    assert s == 'X ubiquitinates Y.'
+
 
 def test_deubiq_stmt():
     st = Deubiquitination(Agent('X'), Agent('Y'))
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'X deubiquitinates Y.')
+    assert s == 'X deubiquitinates Y.'
+
 
 def test_deubiq_noenz():
     st = Deubiquitination(None, Agent('Y'))
     s = ea._assemble_modification(st)
     print(s)
-    assert(s == 'Y is deubiquitinated.')
+    assert s == 'Y is deubiquitinated.'
+
 
 def test_complex_one():
     a = Agent('MAP2K1')
@@ -153,7 +174,8 @@ def test_complex_one():
     st = Complex([a, b])
     s = ea._assemble_complex(st)
     print(s)
-    assert(s == 'MAP2K1 binds BRAF.')
+    assert s == 'MAP2K1 binds BRAF.'
+
 
 def test_complex_more():
     a = Agent('MAP2K1')
@@ -162,17 +184,16 @@ def test_complex_more():
     st = Complex([a, b, c])
     s = ea._assemble_complex(st)
     print(s)
-    assert(s == 'MAP2K1 binds BRAF and RAF1.')
+    assert s == 'MAP2K1 binds BRAF and RAF1.'
+
 
 def test_assemble_one():
     a = Agent('MAP2K1')
     b = Agent('PP2A')
     st = Dephosphorylation(b, a, 'serine', 222)
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'PP2A dephosphorylates MAP2K1 on S222.')
+    s = _stmt_to_text(st)
+    assert s == 'PP2A dephosphorylates MAP2K1 on S222.'
+
 
 def test_assemble_more():
     a = Agent('MAP2K1')
@@ -188,78 +209,65 @@ def test_assemble_more():
     assert(s ==\
         'PP2A dephosphorylates MAP2K1 on S222. MAP2K1 binds BRAF and RAF1.')
 
+
 def test_autophos():
     a = Agent('EGFR')
     st = Autophosphorylation(a, 'Y')
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'EGFR phosphorylates itself on tyrosine.')
+    s = _stmt_to_text(st)
+    assert s == 'EGFR phosphorylates itself on tyrosine.'
+
 
 def test_activation():
     st = Activation(Agent('MEK'), Agent('ERK'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'MEK activates ERK.')
+    s = _stmt_to_text(st)
+    assert s == 'MEK activates ERK.'
+
 
 def test_inhibition():
     st = Inhibition(Agent('MEK'), Agent('ERK'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'MEK inhibits ERK.')
+    s = _stmt_to_text(st)
+    assert s == 'MEK inhibits ERK.'
+
 
 def test_regulateamount():
     st = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'TP53 increases the amount of MDM2.')
+    s = _stmt_to_text(st)
+    assert s == 'TP53 increases the amount of MDM2.'
     st = DecreaseAmount(Agent('TP53'), Agent('MDM2'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'TP53 decreases the amount of MDM2.')
+    s = _stmt_to_text(st)
+    assert s == 'TP53 decreases the amount of MDM2.'
     st = DecreaseAmount(None, Agent('MDM2'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'MDM2 is degraded.')
+    s = _stmt_to_text(st)
+    assert s == 'MDM2 is degraded.'
     st = IncreaseAmount(None, Agent('MDM2'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'MDM2 is produced.')
+    s = _stmt_to_text(st)
+    assert s == 'MDM2 is produced.'
 
 
 def test_agent_loc():
     a = Agent('BRAF', location='cytoplasm')
     print(ea._assemble_agent_str(a))
-    assert(ea._assemble_agent_str(a) == 'BRAF in the cytoplasm')
+    assert ea._assemble_agent_str(a) == 'BRAF in the cytoplasm'
+
 
 def test_agent_mut():
     a = Agent('BRAF', mutations=[MutCondition('600','V', 'E')])
     print(ea._assemble_agent_str(a))
-    assert(ea._assemble_agent_str(a) == 'BRAF-V600E')
+    assert ea._assemble_agent_str(a) == 'BRAF-V600E'
+
 
 def test_agent_mut_plus():
     a = Agent('BRAF', mutations=[MutCondition('600','V', 'E')],
               location='nucleus')
     print(ea._assemble_agent_str(a))
-    assert(ea._assemble_agent_str(a) == 'BRAF-V600E in the nucleus')
+    assert ea._assemble_agent_str(a) == 'BRAF-V600E in the nucleus'
+
 
 def test_agent_activity():
     a = Agent('BRAF', activity=ActivityCondition('activity', True))
     print(ea._assemble_agent_str(a))
-    assert(ea._assemble_agent_str(a) == 'active BRAF')
+    assert ea._assemble_agent_str(a) == 'active BRAF'
+
 
 def test_agent_activity_stmt():
     braf = Agent('BRAF', activity=ActivityCondition('activity', True))
@@ -269,7 +277,8 @@ def test_agent_activity_stmt():
     e.add_statements([st])
     s = e.make_model()
     print(s)
-    assert(s == 'Active BRAF activates MAP2K1.')
+    assert s == 'Active BRAF activates MAP2K1.'
+
 
 def test_translocation():
     st1 = Translocation(Agent('FOXO3A'))
@@ -279,63 +288,50 @@ def test_translocation():
     e = ea.EnglishAssembler()
     e.add_statements([st1])
     s = e.make_model()
-    assert(s == 'FOXO3A translocates.')
+    assert s == 'FOXO3A translocates.'
     e = ea.EnglishAssembler()
     e.add_statements([st2])
     s = e.make_model()
-    assert(s == 'FOXO3A translocates from the cytoplasm.')
+    assert s == 'FOXO3A translocates from the cytoplasm.'
     e = ea.EnglishAssembler()
     e.add_statements([st3])
     s = e.make_model()
-    assert(s == 'FOXO3A translocates to the nucleus.')
+    assert s == 'FOXO3A translocates to the nucleus.'
     e = ea.EnglishAssembler()
     e.add_statements([st4])
     s = e.make_model()
-    assert(s == 'FOXO3A translocates from the cytoplasm to the nucleus.')
+    assert s == 'FOXO3A translocates from the cytoplasm to the nucleus.'
+
 
 def test_gef():
     st = Gef(Agent('SOS1'), Agent('KRAS'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'SOS1 is a GEF for KRAS.')
+    s = _stmt_to_text(st)
+    assert s == 'SOS1 is a GEF for KRAS.'
+
 
 def test_gap():
     st = Gap(Agent('RASA1'), Agent('KRAS'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
-    assert(s == 'RASA1 is a GAP for KRAS.')
+    s = _stmt_to_text(st)
+    assert s == 'RASA1 is a GAP for KRAS.'
 
 
 def test_methylation():
     st = Methylation(None, Agent('SLF11'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
+    s = _stmt_to_text(st)
     assert s == 'SLF11 is methylated.'
 
 
 def test_generic_mod_state():
     mc = ModCondition('modification')
     st = Activation(Agent('MEK', mods=[mc]), Agent('ERK'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
+    s = _stmt_to_text(st)
     assert s == 'Modified MEK activates ERK.'
 
 
 def test_generic_mutation():
     mc = MutCondition(None, None, None)
     st = Activation(Agent('MEK', mutations=[mc]), Agent('ERK'))
-    e = ea.EnglishAssembler()
-    e.add_statements([st])
-    s = e.make_model()
-    print(s)
+    s = _stmt_to_text(st)
     assert s == 'Mutated MEK activates ERK.'
 
 
@@ -343,9 +339,7 @@ def test_activity_conditions():
     def to_english(act_type, is_act):
         ac = ActivityCondition(act_type, is_act)
         st = Activation(Agent('MEK', activity=ac), Agent('ERK'))
-        e = ea.EnglishAssembler()
-        e.add_statements([st])
-        s = e.make_model()
+        s = _stmt_to_text(st)
         return s
 
     assert to_english('activity', True) == 'Active MEK activates ERK.'
@@ -362,3 +356,56 @@ def test_activity_conditions():
         'GAP-active MEK activates ERK.'
     assert to_english('gef', False) == \
         'GEF-inactive MEK activates ERK.'
+
+
+def test_conversion():
+    st = Conversion(Agent('RAS'), [Agent('GTP')], [Agent('GDP')])
+    s = _stmt_to_text(st)
+    assert s == 'RAS catalyzes the conversion of GTP into GDP.'
+
+    st = Conversion(Agent('RAS'), [Agent('GTP'), Agent('X')],
+                    [Agent('GDP'), Agent('Y')])
+    s = _stmt_to_text(st)
+    assert s == 'RAS catalyzes the conversion of GTP and X into GDP and Y.'
+
+    st = Conversion(None, [Agent('GTP'), Agent('X')], [Agent('GDP'), Agent('Y')])
+    s = _stmt_to_text(st)
+    assert s == 'GTP and X is converted into GDP and Y.'
+
+
+def test_influence():
+    st = Influence(Concept('food'), Concept('hunger'),
+                   obj_delta={'polarity': -1})
+    s = _stmt_to_text(st)
+    assert s == 'Food causes a decrease in hunger.'
+
+    st = Influence(Concept('food'), Concept('hunger'),
+                   obj_delta={'polarity': -1},
+                   subj_delta={'polarity': 1})
+    s = _stmt_to_text(st)
+    assert s == 'An increase in food causes a decrease in hunger.'
+
+    st = Influence(Concept('food'), Concept('hunger'),
+                   obj_delta={'polarity': 1},
+                   subj_delta={'polarity': -1})
+    s = _stmt_to_text(st)
+    assert s == 'A decrease in food causes an increase in hunger.'
+
+
+def test_association():
+    st = Association([Concept('food'), Concept('hunger')])
+    s = _stmt_to_text(st)
+    assert s == 'Food is associated with hunger.'
+
+    st = Association([Concept('food'), Concept('hunger'), Concept('famine')])
+    s = _stmt_to_text(st)
+    assert s == 'Food is associated with hunger and famine.'
+
+
+
+def _stmt_to_text(st):
+    e = ea.EnglishAssembler()
+    e.add_statements([st])
+    s = e.make_model()
+    print(s)
+    return s
