@@ -220,8 +220,9 @@ incorrect Statement-sentence relationships:
   should therefore be flagged as a Hypothesis upon curation (unless of course
   the Statement already has a correct *hypothesis* flag).
 
-* **Agent conditions**: this is applicable if one of the Agents in the Statement
-  is missing relevant conditions that are mentioned in the sentence. Example::
+* **Agent Conditions**: this is applicable if one of the Agents in the Statement
+  is missing relevant conditions that are mentioned in the sentence, or has
+  incorrect conditions attached to it. Example::
 
     Sentence: "Mutant BRAF activates MEK"
     Statement: Activation(BRAF(), MEK())
@@ -229,12 +230,17 @@ incorrect Statement-sentence relationships:
   can be curated to be missing Agent conditions since the mutation on BRAF is
   not captured.
 
-* **Incorrect site**: this is applicable if an incorrect amino-acid site is
-  given as an Agent condition (modification, mutation) or as an argument
-  of a modification Statement. Example::
+* **Modification Site**: this is applicable if an amino-acid site is
+  missing or incorrect in a modification Statement. Example::
 
-    Sentence: xxx
-    Statement: xxx
+    Sentence: "MAP2K1 phosphorylates MAPK1 at T185."
+    Statement: Phosphorylation(MAP2K1(), MAPK1())
+
+  Here the obvious modification site is missing from MAPK1.
+
+* **Other**: this is an option you can choose whenever the problem isn't
+  well captured by any of the more specific options. In this case you need
+  to add a note to explain what the issue is.
 
 General notes on curation
 ~~~~~~~~~~~~~~~~~~~~~~~~~
