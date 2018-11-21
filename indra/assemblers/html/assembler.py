@@ -37,8 +37,10 @@ class HtmlAssembler(object):
 
     Parameters
     ----------
-    stmts : Optional[list[indra.statements.Statement]]
-        A list of INDRA Statements to be added to the assembler.
+    statements : Optional[list[indra.statements.Statement]]
+        A list of INDRA Statements to be added to the assembler. Statements
+        can also be added using the add_statements method after the assembler
+        has been instantiated.
     summary_metadata : Optional[dict]
         Dictionary of statement corpus metadata such as that provided by the
         INDRA REST API. Default is None. Each value should be a concise
@@ -70,15 +72,26 @@ class HtmlAssembler(object):
     db_rest_url : str
         The URL to a DB REST API.
     """
-    def __init__(self, stmts=None, summary_metadata=None, ev_totals=None,
+    def __init__(self, statements=None, summary_metadata=None, ev_totals=None,
                  title='INDRA Results', db_rest_url=None):
         self.title = title
-        self.statements = [] if stmts is None else stmts
+        self.statements = [] if statements is None else statements
         self.summary_metadata = {} if summary_metadata is None \
             else summary_metadata
         self.ev_totals = {} if ev_totals is None else ev_totals
         self.db_rest_url = db_rest_url
         self.model = None
+
+    def add_statements(self, statements):
+        """Add a list of Statements to the assembler.
+
+        Parameters
+        ----------
+        statements : list[indra.statements.Statement]
+            A list of INDRA Statements to be added to the assembler.
+        """
+        self.statements += statements
+
 
     def make_model(self):
         """Return the assembled HTML content as a string.
