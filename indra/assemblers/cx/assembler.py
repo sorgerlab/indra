@@ -274,10 +274,17 @@ class CxAssembler(object):
         self._add_edge(enz_id, enz_id, stmt_type, stmt)
 
     def _add_complex(self, stmt):
+        # Here we do some bookkeeping to handle the special case where
+        # a member appears twice in a complex e.g.
+        # Complex(CDK12(), RECQL4(), RECQL4(), Ku())
+        # and we don't want to have duplicate edges.
+        added_edges = set()
         for m1, m2 in itertools.combinations(stmt.members, 2):
             m1_id = self._add_node(m1)
             m2_id = self._add_node(m2)
-            self._add_edge(m1_id, m2_id, 'Complex', stmt)
+            if (m1_id, m2_id) not in added_edges:
+                self._add_edge(m1_id, m2_id, 'Complex', stmt)
+                added_edges.add((m1_id, m2_id))
 
     def _add_regulation(self, stmt):
         if stmt.subj is None:

@@ -9,6 +9,7 @@ dusp = Agent('DUSP4')
 st_phos = Phosphorylation(mek, erk)
 st_dephos = Dephosphorylation(dusp, erk)
 st_complex = Complex([mek, erk, dusp])
+st_complex2 = Complex([mek, mek, erk, erk, dusp])
 st_act = Activation(mek, erk)
 st_gef = Gef(Agent('SOS1'), Agent('HRAS'))
 st_gap = Gap(Agent('RASA1'), Agent('HRAS'))
@@ -19,12 +20,14 @@ st_cited = Phosphorylation(mek, erk, evidence=[Evidence(pmid='12345',
 st_invalid_cited = Phosphorylation(mek, erk, evidence=[Evidence(pmid='api35',
                                               text='MEK phosphorylates ERK')])
 
+
 def test_phos():
     cxa = CxAssembler()
     cxa.add_statements([st_phos])
     cxa.make_model()
     assert(len(cxa.cx['nodes']) == 2)
     assert(len(cxa.cx['edges']) == 1)
+
 
 def test_dephos():
     cxa = CxAssembler()
@@ -33,12 +36,22 @@ def test_dephos():
     assert(len(cxa.cx['nodes']) == 3)
     assert(len(cxa.cx['edges']) == 2)
 
+
 def test_complex():
     cxa = CxAssembler()
     cxa.add_statements([st_complex])
     cxa.make_model()
     assert(len(cxa.cx['nodes']) == 3)
     assert(len(cxa.cx['edges']) == 3)
+
+
+def test_complex2():
+    cxa = CxAssembler()
+    cxa.add_statements([st_complex2])
+    cxa.make_model()
+    assert(len(cxa.cx['nodes']) == 3)
+    assert(len(cxa.cx['edges']) == 5)
+
 
 def test_act():
     cxa = CxAssembler()
@@ -47,12 +60,14 @@ def test_act():
     assert(len(cxa.cx['nodes']) == 3)
     assert(len(cxa.cx['edges']) == 2)
 
+
 def test_gef():
     cxa = CxAssembler()
     cxa.add_statements([st_gef])
     cxa.make_model()
     assert(len(cxa.cx['nodes']) == 2)
     assert(len(cxa.cx['edges']) == 1)
+
 
 def test_gap():
     cxa = CxAssembler()
@@ -61,17 +76,20 @@ def test_gap():
     assert(len(cxa.cx['nodes']) == 2)
     assert(len(cxa.cx['edges']) == 1)
 
+
 def test_node_attributes():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
     assert(len(cxa.cx['nodeAttributes']) == 5)
 
+
 def test_edge_attributes():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
     assert(len(cxa.cx['edgeAttributes']) == 14)
+
 
 def test_cited():
     cxa = CxAssembler()
@@ -85,6 +103,7 @@ def test_cited():
     assert(cxa.cx['edgeCitations'][0]['citations'][0] == cid)
     print(cxa.print_cx())
 
+
 def test_invalid_cited():
     cxa = CxAssembler()
     cxa.add_statements([st_invalid_cited])
@@ -92,12 +111,14 @@ def test_invalid_cited():
     assert(not cxa.cx['citations'])
     assert(not cxa.cx['edgeCitations'])
 
+
 def test_supports():
     cxa = CxAssembler()
     cxa.add_statements([st_cited])
     cxa.make_model()
     assert(len(cxa.cx['supports']) == 1)
     assert(len(cxa.cx['edgeSupports']) == 1)
+
 
 def test_set_context():
     cxa = CxAssembler()
@@ -107,11 +128,13 @@ def test_set_context():
     print(cxa.cx['nodeAttributes'])
     assert(len(cxa.cx['nodeAttributes']) == 11)
 
+
 def test_make_print_model():
     cxa = CxAssembler()
     cxa.add_statements([st_phos])
     cx_str = cxa.make_model()
     assert(cx_str)
+
 
 def test_no_pmid():
     cxa = CxAssembler([st_not_cited])
