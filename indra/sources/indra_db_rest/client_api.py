@@ -216,7 +216,6 @@ class IndraDBRestResponse(object):
                            block_secs=None):
         """Slightly lower level function gets statements from the REST API."""
         # Handle the content if we were limited.
-        logger.info("Some results could not be returned directly.")
         args = [agent_strs, stmt_types, params, persist]
         logger.info("The remainder of the query will be performed in a "
                     "thread...")
