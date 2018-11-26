@@ -424,6 +424,9 @@ class HierarchyManager(object):
         elif ns in ['UN', 'WDI', 'FAO', 'HUME']:
             return \
                 'https://github.com/clulab/eidos/wiki/JSON-LD/Grounding#' + id
+        elif ns == 'SOFIA':
+            return \
+                'http://cs.cmu.edu/sofia/' + id
         elif ns == 'CWMS':
             if id.lower().startswith('ont::'):
                 id = id[5:]
@@ -505,9 +508,12 @@ def get_wm_hierarchies():
                             '../sources/hume/hume_ontology.rdf')
     trips_ont = os.path.join(os.path.dirname(__file__),
                              '../sources/cwms/trips_ontology.rdf')
+    sofia_ont = os.path.join(os.path.dirname(__file__),
+                             '../sources/sofia/sofia_ontology.rdf')
     hm = HierarchyManager(eidos_ont, build_closure=True, uri_as_name=True)
     hm.extend_with(hume_ont)
     hm.extend_with(trips_ont)
+    hm.extend_with(sofia_ont)
     wm_hierarchies = {'entity': hm}
     return wm_hierarchies
 
