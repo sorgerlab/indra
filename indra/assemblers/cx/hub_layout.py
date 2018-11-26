@@ -56,8 +56,12 @@ def classify_nodes(graph, hub):
     node_classes = {}
     for node_id, stats in node_stats.items():
         up = max(set(stats['up']), key=stats['up'].count)
-        edge_type = max(set(stats['interaction']),
-                        key=stats['interaction'].count)
+        # Special case: if up is not 0 then we should exclude complexes
+        # from the edge_type states so that we don't end up with
+        # (-1, complex, ...) or (1, complex, ...) as the node class
+        interactions = [i for i in stats['interaction'] if
+                        not (up != 0 and i == 'complex')]
+        edge_type = max(set(interactions), key=interactions.count)
         node_type = graph.nodes[node_id]['type']
         node_classes[node_id] = (up, edge_type, node_type)
     return node_classes
