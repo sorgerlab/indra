@@ -1,13 +1,17 @@
+import sys
 from indra.sources import eidos
-from indra.sources.hume.make_hume_tsv import make_file
+from indra.sources.hume.make_hume_tsv import make_file as mht
+from indra.sources.sofia.make_sofia_tsv import make_file as mst
 from indra.java_vm import autoclass
 
 eidos_package = 'org.clulab.wm.eidos'
 
 if __name__ == '__main__':
-    bbn_path = 'hume_examaples.tsv'
-    make_file(bbn_path)
-    sofia_path = 'sofia_examples.tsv'
+    sofia_ont_path = sys.argv[1]
+    hume_path = 'hume_ontology_examaples.tsv'
+    mht(hume_path)
+    sofia_path = 'sofia_ontology_examples.tsv'
+    mst(sofia_ont_path, sofia_path)
 
     om = autoclass(eidos_package + '.apps.OntologyMapper')
     eidos = autoclass(eidos_package + '.EidosSystem')
@@ -16,5 +20,5 @@ if __name__ == '__main__':
     example_weight = 0.8
     parent_weight = 0.1
     topn = 10
-    table_str = om.mapOntologies(es, bbn_path, sofia_path, example_weight,
+    table_str = om.mapOntologies(es, hume_path, sofia_path, example_weight,
                                  parent_weight, topn)
