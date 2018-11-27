@@ -72,7 +72,9 @@ error in the textbox.
 | .. figure:: images/apikey_curatorID.png  |
 |   :align: center                         |
 |   :figwidth: 75 %                        |
-|  *Provide a valid API key and a user ID* |
+|                                          |
+|   *Provide a valid API key and a user ID |
+|   in order to submit a curation*         |
 +------------------------------------------+
 
 When you have entered the necessary information, click the **Submit button** by
