@@ -60,18 +60,20 @@ Submitting a Curation
 ---------------------
 To **submit a curation**, there are three minimum requirements:
 
-1) A valid **API key** (at the top of the page, see image)
-2) A **curator ID**, such as name or email (at the top of the page, see image)
+1) A valid **API key** (at the top of the page, see image below)
+2) A **curator ID**, such as name or email (at the top of the page, see image
+   below)
 3) A **selection in the dropdown menu** (by the curated statement)
 
 If you selected *other...* in the dropdown menu, you must *also* describe the
 error in the textbox.
 
-+-----------------------------------------+
-| .. figure:: images/apikey_curatorID.png |
-|   :align: center                        |
-|   :figwidth: 75 %                       |
-+-----------------------------------------+
++------------------------------------------+
+| .. figure:: images/apikey_curatorID.png  |
+|   :align: center                         |
+|   :figwidth: 75 %                        |
+|  *Provide a valid API key and a user ID* |
++------------------------------------------+
 
 When you have entered the necessary information, click the **Submit button** by
 the statement that you curated:
@@ -251,7 +253,7 @@ General notes on curation
   error since a statement with a grounding error generally would not exist
   if the grounding was correct.
 * If you still feel like multiple errors are appropriate for the curation,
-  select a new next error from the dropdown menu and make a new submission.
+  select a new error from the dropdown menu and make a new submission.
 * Please be consistent in using your email address as your curator ID.
   Keeping track of who curated what helps us to faster track down
   issues with readers and the assembly processes that generate statements.
