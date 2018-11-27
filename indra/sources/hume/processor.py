@@ -33,6 +33,9 @@ class HumeJsonLdProcessor(object):
         self.concept_dict = {}
         self.relation_dict = {}
         self.eid_stmt_dict = {}
+        self.arg_pair_time_dict = {}
+        self.arg_pair_stmt_dict = {}
+        return
 
     def get_documents(self):
         """Populate the sentences attribute with a dict keyed by document id."""
@@ -48,35 +51,54 @@ class HumeJsonLdProcessor(object):
         extractions = \
             list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
 
-        # Get relations from extractions
-        relations = [e for e in extractions if 'DirectedRelation' in
-                     e.get('labels', [])]
-        if not relations:
-            return
-        self.relation_dict = {rel['@id']: rel for rel in relations}
-
         # List out relation types and their default (implied) polarities.
         relation_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                               'mitigation': -1, 'prevention': -1}
+                               'mitigation': -1, 'prevention': -1,
+                               'temporallyPrecedes': 0}
 
-        # Restrict to known relation types
-        relations = [r for r in relations if any([rt in r.get('subtype') for rt in
-                                                  relation_polarities.keys()])]
+        # Get relations from extractions
+        times = []
+        locations = []
+        relations = []
+        concepts = []
+        for e in extractions:
+            label_set = set(e.get('labels', []))
+            if 'DirectRelation' in label_set:
+                self.relation_dict[rel['@id']] = e
+                if any(t == e.get('subtype') for t in relation_polarities.keys()):
+                    relations.append(e)
+            if {'Event', 'Entity'} & label_set:
+                self.concept_dict[e['@id']] = e
+                concepts.append(e)
+            gnd = e.get('grounding')
+            if gnd and len(gnd) == 1:
+                ont = gnd[0].get('ontologyConcept', None)
+                if not ont:
+                    continue
+                if ont.startswith('/entity/location'):
+                    locations.append(e)
+                elif ont.startswith('/entity/temporal'):
+                    times.append(e)
+
+        if not relations:
+            return
+
         logger.info('%d relations of types %s found'
                     % (len(relations), ', '.join(relation_polarities.keys())))
-
-        # Build a dictionary of concepts and sentences by ID for convenient
-        # lookup
-        concepts = [e for e in extractions if
-                    set(e.get('labels', [])) & {'Event', 'Entity'}]
-        self.concept_dict = {concept['@id']: concept for concept in concepts}
 
         self.get_documents()
 
         for relation in relations:
             relation_type = relation.get('subtype')
-            subj_concept, subj_delta = self._get_concept(relation, 'source')
-            obj_concept, obj_delta = self._get_concept(relation, 'destination')
+            key = tuple([arg['value']['@id']
+                         for arg in relation['arguments']])
+            if relation_type == 'temporallyPrecedes':
+                key = tuple([arg['value']['@id']
+                             for arg in relation['arguments']])
+                self.arg_pair_time_dict[key] = relation
+                continue
+            subj_concept, subj_delta, subj_meta = self._get_concept(relation, 'source')
+            obj_concept, obj_delta, obj_meta = self._get_concept(relation, 'destination')
 
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
@@ -106,8 +128,10 @@ class HumeJsonLdProcessor(object):
             st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
             self.eid_stmt_dict[relation['@id']] = st
+            self.arg_pair_stmt_dict[key] = st
             self.statements.append(st)
 
+        # Add temporal context to statements.
         return
 
     def get_place_and_time(self, entity):
@@ -157,16 +181,18 @@ class HumeJsonLdProcessor(object):
         if hume_grounding:
             db_refs['HUME'] = hume_grounding
         concept = Concept(name, db_refs=db_refs)
-        return concept
+        metadata = {arg['type']: arg['value']['@id']
+                    for arg in entity['arguments']}
+        return concept, metadata
 
     def _get_concept(self, event, arg_type):
         eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
-        concept = self._make_concept(ev)
+        concept, metadata = self._make_concept(ev)
         ev_delta = {'adjectives': [],
                     'states': get_states(ev),
                     'polarity': get_polarity(ev)}
-        return concept, ev_delta
+        return concept, ev_delta, metadata
 
     def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
         """Return the Evidence object for the INDRA Statement."""
