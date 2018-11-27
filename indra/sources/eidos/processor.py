@@ -66,12 +66,16 @@ class EidosProcessor(object):
             sentences = document.get('sentences', [])
             for sent in sentences:
                 self.sentences[sent['@id']] = sent
-                for timex in sent.get('timexes', []):
-                    tc = self.time_context_from_timex(timex)
-                    self.timexes[timex['@id']] = tc
-                for geoloc in sent.get('geolocs', []):
-                    rc = self.ref_context_from_geoloc(geoloc)
-                    self.geolocs[geoloc['@id']] = rc
+                timexes = sent.get('timexes')
+                if timexes:
+                    for timex in timexes:
+                        tc = self.time_context_from_timex(timex)
+                        self.timexes[timex['@id']] = tc
+                geolocs = sent.get('geolocs')
+                if geolocs:
+                    for geoloc in geolocs:
+                        rc = self.ref_context_from_geoloc(geoloc)
+                        self.geolocs[geoloc['@id']] = rc
 
         # Build a dictionary of coreferences
         for extraction in self.extractions:
@@ -228,7 +232,10 @@ class EidosProcessor(object):
         Example: "states": [{"@type": "State", "type": "NEGATION",
                              "text": "n't"}]
         """
-        negs = [state for state in event.get('states', [])
+        states = event.get('states', [])
+        if not states:
+            return []
+        negs = [state for state in states
                 if state.get('type') == 'NEGATION']
         neg_texts = [neg['text'] for neg in negs]
         return neg_texts
@@ -240,12 +247,17 @@ class EidosProcessor(object):
         Example: "states": [{"@type": "State", "type": "HEDGE",
                              "text": "could"}
         """
-        hedgings = [state for state in event.get('states', [])
+        states = event.get('states', [])
+        if not states:
+            return []
+        hedgings = [state for state in states
                     if state.get('type') == 'HEDGE']
         hedging_texts = [hedging['text'] for hedging in hedgings]
         return hedging_texts
 
     def extract_entity_states(self, states):
+        if states is None:
+            return {'polarity': None, 'adjectives': []}
         polarity = None
         adjectives = []
         time_context = None
@@ -287,7 +299,10 @@ class EidosProcessor(object):
 
         # Save raw text and Eidos scored groundings as db_refs
         db_refs = {'TEXT': entity['text']}
-        for g in entity.get('groundings', []):
+        groundings = entity.get('groundings')
+        if not groundings:
+            return db_refs
+        for g in groundings:
             entries = get_grounding_entries(g)
             # Only add these groundings if there are actual values listed
             if entries:
