@@ -1960,34 +1960,34 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of cash transfer	BBN	access/shortage/food shortage	0.55494297
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	entity	0.56944036
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	indicator	0.5643161
-eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	indicator/Agriculture/Crop Production	0.5596509
-eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	indicator/Agriculture/Livestock Production	0.5540924
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	intervention	0.5504823
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	event	0.538983
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	economic activity/production/agriculture production	0.53380024
-eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	indicator/Agriculture	0.5323651
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	intervention/tax	0.5294652
 eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	access/shortage/water shortage	0.52734584
+eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	Agriculture/Crop Production	0.5250137
+eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	rule	0.52431357
+eidos	UN/interventions/provision of goods and services/food security/provision of crop protection	BBN	access/shortage/food shortage	0.5227921
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	intervention/education	0.6867725
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	event	0.5990855
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	intervention	0.5957663
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	agriculture	0.595679
+eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	Health/Global Acute Malnutrition (GAM) rate	0.59559506
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	intervention/assistance	0.5918032
+eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	Health	0.5811277
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	agriculture/food/fruit	0.57572484
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	entity	0.5756222
 eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	access/shortage/food shortage	0.5717137
-eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	access/shortage/water shortage	0.5621154
-eidos	UN/interventions/provision of goods and services/food security/provision of food for training	BBN	economic activity	0.5615013
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	agriculture	0.6453644
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	agriculture/food/fruit	0.6367385
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	agriculture/food	0.5816377
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	access/shortage/food shortage	0.568434
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	access/shortage/water shortage	0.5598142
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	intervention	0.5539742
+eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	Health/Global Acute Malnutrition (GAM) rate	0.5535344
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	entity	0.5447858
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	intervention/tax	0.5419112
 eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	event	0.54005736
-eidos	UN/interventions/provision of goods and services/food security/provision of food for work	BBN	economic activity	0.536987
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	event	0.66296446
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	entity	0.65599895
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	access/shortage/food shortage	0.6339479
@@ -1995,9 +1995,9 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	indicator	0.6289015
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	crisis	0.61326295
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	intervention	0.61087537
-eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.60840386
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	access/shortage	0.6059351
 eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	forecast/risk	0.6029162
+eidos	UN/interventions/provision of goods and services/food security/provision of food security or famine early warning system	BBN	access	0.592037
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	agriculture/food/fruit	0.5653717
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	intervention/tax	0.5618964
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	agriculture	0.55497116
@@ -2006,8 +2006,8 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	economics/financial	0.5230133
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	access/shortage/water shortage	0.5133804
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	agriculture/food	0.51257753
+eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	Health/Global Acute Malnutrition (GAM) rate	0.5110144
 eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	access	0.5078249
-eidos	UN/interventions/provision of goods and services/food security/provision of food vouchers	BBN	economic activity/market	0.50475454
 eidos	UN/interventions/provision of goods and services/food security/food distribution	BBN	agriculture/food/fruit	0.6605178
 eidos	UN/interventions/provision of goods and services/food security/food distribution	BBN	agriculture	0.6542542
 eidos	UN/interventions/provision of goods and services/food security/food distribution	BBN	agriculture/food	0.62014866
@@ -2028,26 +2028,26 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of free food distribution	BBN	access	0.56865674
 eidos	UN/interventions/provision of goods and services/food security/provision of free food distribution	BBN	economic activity/consumption/food consumption	0.56830174
 eidos	UN/interventions/provision of goods and services/food security/provision of free food distribution	BBN	event	0.5593567
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	indicator/Agriculture/Livestock Production	0.51608765
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	Agriculture/Livestock Production	0.5436254
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	Agriculture/Crop Production	0.52537733
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	Agriculture	0.5085021
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	economic activity/production/agriculture production/crop production	0.5002286
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	indicator/Agriculture/Crop Production	0.49783957
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	agriculture	0.48788053
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	indicator/Agriculture	0.48600098
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	organism/animal	0.48248005
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	indicator	0.46807534
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	nature/land	0.46743038
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	intervention/tax	0.466049
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock destocking	BBN	economic activity/demand	0.46174374
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	Agriculture/Livestock Production	0.5151676
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	intervention/tax	0.50480956
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	indicator/Agriculture/Livestock Production	0.5037673
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	agriculture	0.50070816
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	Agriculture/Crop Production	0.49804375
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	economic activity/production/agriculture production/crop production	0.49510893
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	economic activity/production/agriculture production/livestock production	0.48764372
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	indicator/Agriculture/Crop Production	0.48664343
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	Agriculture	0.4788254
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	nature/land	0.47841477
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	access/shortage/food shortage	0.4758337
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	intervention	0.47380996
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock restocking	BBN	access/shortage/water shortage	0.47345516
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	intervention	0.57959944
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	nature/land	0.5561816
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	intervention/tax	0.5482081
@@ -2056,18 +2056,18 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	economics/financial	0.5336733
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	person/group/community	0.5316063
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	nature	0.5312275
+eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	Agriculture/Livestock Production	0.53027046
 eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	entity	0.52741265
-eidos	UN/interventions/provision of goods and services/food security/provision of livestock shelter and settlement	BBN	intervention/assistance	0.5262832
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	intervention/command	0.578778
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	entity	0.5758407
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	event	0.5527785
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	intervention	0.54722273
-eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	indicator/Conflict/Population Displacement	0.5228691
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	indicator	0.52066576
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	rule	0.51990455
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	intervention/assistance	0.51023126
 eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	access/shortage/water shortage	0.5073401
-eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5070767
+eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	access/shortage/food shortage	0.5025902
+eidos	UN/interventions/provision of goods and services/food security/provision of locust control operation	BBN	economics	0.4977474
 eidos	UN/interventions/provision of goods and services/food security/provision of once-off cash transfer to facilitate return	BBN	economics/financial	0.6457898
 eidos	UN/interventions/provision of goods and services/food security/provision of once-off cash transfer to facilitate return	BBN	economic activity/market	0.63670105
 eidos	UN/interventions/provision of goods and services/food security/provision of once-off cash transfer to facilitate return	BBN	intervention	0.61759406
@@ -2093,11 +2093,11 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	intervention	0.54793584
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	indicator	0.5450073
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	agriculture	0.5387829
-eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	indicator/Agriculture/Livestock Production	0.53388566
+eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	Agriculture/Livestock Production	0.53188294
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	entity	0.5316654
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	intervention/tax	0.5310321
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	access/shortage	0.52633965
-eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	indicator/Agriculture/Crop Production	0.5224781
+eidos	UN/interventions/provision of goods and services/food security/provision of provision of livestock feed	BBN	Agriculture/Crop Production	0.5204754
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of seeds, fertilizers and tools	BBN	economic activity/production/agriculture production	0.6579144
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of seeds, fertilizers and tools	BBN	agriculture/food/crop	0.5751284
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of seeds, fertilizers and tools	BBN	agriculture/food/fruit	0.574207
@@ -2125,11 +2125,12 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	nature	0.55419874
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	intervention/tax	0.553163
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	entity	0.5507579
-eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	indicator/Agriculture/Livestock Production	0.5476532
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	nature/land	0.54283077
 eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	agriculture	0.538939
+eidos	UN/interventions/provision of goods and services/food security/provision of provision of water for livestock	BBN	access/shortage	0.5370852
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	intervention/assistance	0.6916299
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	intervention	0.6466722
+eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	Health/Global Acute Malnutrition (GAM) rate	0.6289159
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	entity	0.6233683
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	agriculture	0.62245524
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	event	0.62037235
@@ -2137,7 +2138,6 @@ eidos	UN/interventions/provision of goods and services/food security/provision o
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	economics/financial	0.6189336
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	access	0.6163207
 eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	economic activity	0.61319965
-eidos	UN/interventions/provision of goods and services/food security/provision of food for assets	BBN	access/shortage/food shortage	0.61257654
 eidos	UN/interventions/provision of goods and services/health/provision of anti-retroviral treatment	BBN	intervention	0.5928542
 eidos	UN/interventions/provision of goods and services/health/provision of anti-retroviral treatment	BBN	intervention/tax	0.5591237
 eidos	UN/interventions/provision of goods and services/health/provision of anti-retroviral treatment	BBN	rule	0.53982234
@@ -2148,9 +2148,9 @@ eidos	UN/interventions/provision of goods and services/health/provision of anti-
 eidos	UN/interventions/provision of goods and services/health/provision of anti-retroviral treatment	BBN	access/shortage/food shortage	0.481979
 eidos	UN/interventions/provision of goods and services/health/provision of anti-retroviral treatment	BBN	intervention/assistance	0.47398388
 eidos	UN/interventions/provision of goods and services/health/provision of anti-retroviral treatment	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.46337533
-eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.6682133
+eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	Health/Global Acute Malnutrition (GAM) rate	0.68952554
 eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	intervention/education	0.6604941
-eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	indicator/Health	0.6373894
+eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	Health	0.6563545
 eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	healthcare/plant disease	0.63712823
 eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	healthcare/animal disease	0.6365991
 eidos	UN/interventions/provision of goods and services/health/provision of assessment and triage of health facilities	BBN	artificial physical objects/facility	0.6284332
@@ -2184,13 +2184,12 @@ eidos	UN/interventions/provision of goods and services/health/provision of commu
 eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	healthcare	0.67109996
 eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	healthcare/treatment	0.66450006
 eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	disease/human disease	0.6364724
-eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.6341945
 eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	event	0.60831034
+eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	Health/Global Acute Malnutrition (GAM) rate	0.59674877
 eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	entity	0.5940216
-eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	indicator/Health	0.58309764
+eidos	UN/interventions/provision of goods and services/health/provision of communicable disease outbreak control	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.5780303
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	intervention	0.5866265
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	entity	0.5784711
-eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5661108
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	event	0.5620723
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	intervention/assistance	0.54078853
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	rule	0.5362049
@@ -2198,46 +2197,47 @@ eidos	UN/interventions/provision of goods and services/health/provision of epide
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	access/shortage/water shortage	0.53058124
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	access/shortage/food shortage	0.5293271
 eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	intervention/education	0.5267747
+eidos	UN/interventions/provision of goods and services/health/provision of epidemiological surveillance system	BBN	intervention/capacity building human rights	0.5262042
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	intervention/assistance	0.7218431
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	intervention	0.680641
+eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	Health/Global Acute Malnutrition (GAM) rate	0.67337465
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	intervention/education	0.6496967
+eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	Health	0.6402058
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	healthcare/animal disease	0.6381419
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	healthcare/plant disease	0.63590354
-eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.6089895
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	healthcare/treatment	0.6088527
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	event	0.6084636
 eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	healthcare/pest infestation	0.60625935
-eidos	UN/interventions/provision of goods and services/health/provision of first aid and and basic medical care	BBN	intervention/capacity building human rights	0.6061634
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	healthcare/treatment	0.6731933
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	healthcare/human disease	0.63985807
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	healthcare	0.5630805
+eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	Health/Global Acute Malnutrition (GAM) rate	0.55552924
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.54304236
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	intervention	0.54302186
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	event	0.54081464
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	healthcare/famine	0.5384012
-eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5298694
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	intervention/provide humanitarian resources/provide food	0.5290607
 eidos	UN/interventions/provision of goods and services/health/provision of mass measles vaccination campaign	BBN	intervention/anti-retroviral treatment	0.5228951
+eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	Health/Global Acute Malnutrition (GAM) rate	0.7566532
+eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	Health	0.729248
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	healthcare/animal disease	0.6997124
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	healthcare/plant disease	0.6953278
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	healthcare/pest infestation	0.6662597
-eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.66004974
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	intervention/assistance	0.6500193
-eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	indicator/Health	0.63499177
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	intervention/education	0.62847316
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	intervention	0.6237202
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	healthcare/treatment	0.61975884
 eidos	UN/interventions/provision of goods and services/health/provision of newborn and childhood essential health care services	BBN	event	0.61914337
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	healthcare/animal disease	0.639563
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	healthcare/plant disease	0.6335104
+eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	Health/Global Acute Malnutrition (GAM) rate	0.6329584
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	healthcare/pest infestation	0.6081668
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	healthcare/treatment	0.60567707
+eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	Health	0.5945144
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.5686851
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	intervention/education	0.5685033
-eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5673885
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	intervention/provide humanitarian resources/provide food	0.56580305
 eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	intervention/assistance	0.562853
-eidos	UN/interventions/provision of goods and services/health/provision of obstetric and newborn care	BBN	healthcare	0.56193763
 eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	artificial physical objects/facility	0.61701864
 eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	healthcare/treatment	0.5971872
 eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	intervention	0.5837115
@@ -2247,7 +2247,7 @@ eidos	UN/interventions/provision of goods and services/health/provision of opera
 eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	intervention/provide humanitarian resources/provide food	0.54357886
 eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	organization	0.5421004
 eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.5404129
-eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.53838384
+eidos	UN/interventions/provision of goods and services/health/provision of operation of mobile clinics	BBN	intervention/provide humanitarian resources/provide seed	0.53766805
 eidos	UN/interventions/provision of goods and services/health/provision of provision of insecticide treated bednets	BBN	healthcare/treatment	0.5326151
 eidos	UN/interventions/provision of goods and services/health/provision of provision of insecticide treated bednets	BBN	healthcare	0.5106647
 eidos	UN/interventions/provision of goods and services/health/provision of provision of insecticide treated bednets	BBN	intervention	0.5098926
@@ -2268,10 +2268,10 @@ eidos	UN/interventions/provision of goods and services/health/provision of psych
 eidos	UN/interventions/provision of goods and services/health/provision of psychological support	BBN	intervention/command	0.5432069
 eidos	UN/interventions/provision of goods and services/health/provision of psychological support	BBN	access	0.53550935
 eidos	UN/interventions/provision of goods and services/health/provision of psychological support	BBN	access/shortage/food shortage	0.53155607
+eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	Health/Global Acute Malnutrition (GAM) rate	0.72353745
+eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	Health	0.6997147
 eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	intervention/assistance	0.6577449
-eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.6575208
 eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	event	0.6573928
-eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	indicator/Health	0.6360452
 eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	intervention	0.6345294
 eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	entity	0.6331596
 eidos	UN/interventions/provision of goods and services/health/provision of public health information campaign	BBN	healthcare/animal disease	0.6291047
@@ -2283,56 +2283,56 @@ eidos	UN/interventions/provision of goods and services/health/provision of tetan
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	intervention/anti-retroviral treatment	0.5170922
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	healthcare	0.503391
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	disease/human disease	0.5002908
+eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	Health/Global Acute Malnutrition (GAM) rate	0.4839774
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	disease/animal disease	0.4766178
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.47656748
-eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.45763186
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	intervention/provide humanitarian resources/provide food	0.4551247
 eidos	UN/interventions/provision of goods and services/health/provision of tetanus vaccination	BBN	intervention	0.4548544
+eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	Health/Global Acute Malnutrition (GAM) rate	0.6633792
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	healthcare/treatment	0.6581597
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	healthcare	0.6402183
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	healthcare/animal disease	0.6362342
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	healthcare/plant disease	0.63122934
+eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	Health	0.6255544
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	intervention/education	0.62383085
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	intervention/assistance	0.6230726
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	event	0.6171272
 eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	intervention/capacity building human rights	0.6147813
-eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.6084328
-eidos	UN/interventions/provision of goods and services/health/provision of trauma and surgical care	BBN	intervention/provide humanitarian resources/provide food	0.604837
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	healthcare	0.65714437
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	healthcare/treatment	0.62043035
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/education	0.5976782
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.5890908
+eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	Health/Global Acute Malnutrition (GAM) rate	0.58191127
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/therapeutic feeding or treating	0.5784402
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/provide humanitarian resources/provide food	0.5781458
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/sexual violence management	0.5748831
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	event	0.57449365
 eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/provide humanitarian resources/provide seed	0.57352936
-eidos	UN/interventions/provision of goods and services/health/provision of trauma injury post-operative rehabilitation	BBN	intervention/provide humanitarian resources	0.5660606
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	entity	0.58166957
-eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5647876
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	intervention/command	0.553024
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	event	0.5453098
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	rule	0.5276214
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	intervention	0.5210706
-eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	indicator/Conflict/Population Displacement	0.5202059
-eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	indicator/Health	0.517527
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	measurement	0.5136268
 eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	indicator	0.5103729
+eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	intervention/assistance	0.5001667
+eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	economics	0.49744815
+eidos	UN/interventions/provision of goods and services/health/provision of vector control	BBN	right	0.48449925
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	agriculture	0.60382
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	agriculture/food/fruit	0.5975715
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	agriculture/food	0.55447894
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	intervention	0.53732926
+eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	Health/Global Acute Malnutrition (GAM) rate	0.5277585
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	indicator	0.5216465
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	intervention/tax	0.5149336
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	access/shortage/food shortage	0.5142583
-eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5096928
 eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	access/shortage/water shortage	0.5043541
-eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	entity	0.4962963
-eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.50610363
+eidos	UN/interventions/provision of goods and services/nutrition/provision of food fortification	BBN	Health	0.50278264
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	access/shortage/food shortage	0.5051262
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	access/shortage/water shortage	0.5036906
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	intervention	0.5009487
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	entity	0.49646598
+eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	Health/Global Acute Malnutrition (GAM) rate	0.49456772
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	access	0.49432674
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	intervention/assistance	0.4937578
 eidos	UN/interventions/provision of goods and services/nutrition/provision of infant and young child feeding	BBN	event	0.48798847
@@ -2344,7 +2344,7 @@ eidos	UN/interventions/provision of goods and services/nutrition/provision of ma
 eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	intervention/anti-retroviral treatment	0.56255096
 eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.56037736
 eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	intervention/provide humanitarian resources/provide food	0.5577187
-eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5572726
+eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	Health/Global Acute Malnutrition (GAM) rate	0.5540478
 eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	intervention	0.5516704
 eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	intervention/provide humanitarian resources/provide seed	0.5492877
 eidos	UN/interventions/provision of goods and services/nutrition/provision of malnutrition screening	BBN	intervention/therapeutic feeding or treating	0.5450723
@@ -2354,30 +2354,30 @@ eidos	UN/interventions/provision of goods and services/nutrition/provision of mi
 eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	intervention/provide humanitarian resources/provide food	0.52365154
 eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	intervention/provide humanitarian resources/provide seed	0.5214865
 eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	intervention/therapeutic feeding or treating	0.5125522
-eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.51154584
 eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	healthcare/treatment	0.5108823
 eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	intervention/capacity building human rights	0.5080178
 eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	intervention/sanction	0.5059514
+eidos	UN/interventions/provision of goods and services/nutrition/provision of micro-nutrient supplementation	BBN	intervention/provide humanitarian resources	0.5053882
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	intervention	0.52540725
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	intervention/tax	0.50142187
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	intervention/assistance	0.5010594
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	access/shortage/food shortage	0.49933314
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	access/shortage/water shortage	0.49925518
-eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.49453664
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	entity	0.49175918
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	access	0.48512635
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	intervention/capacity building human rights	0.48378083
 eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	event	0.47656548
+eidos	UN/interventions/provision of goods and services/nutrition/provision of supplementary feeding	BBN	intervention/education	0.47611144
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	intervention	0.53446794
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	access/shortage/water shortage	0.50091636
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	access/shortage/food shortage	0.4996763
-eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.4986543
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	intervention/assistance	0.49709564
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	intervention/tax	0.4944123
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	entity	0.49407762
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	intervention/capacity building human rights	0.48906672
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	access	0.48224694
 eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	event	0.47998664
+eidos	UN/interventions/provision of goods and services/nutrition/provision of therapeutic feeding	BBN	intervention/therapeutic feeding or treating	0.47931617
 eidos	UN/interventions/provision of goods and services/protection/provision of border patrols	BBN	artificial physical objects	0.58035845
 eidos	UN/interventions/provision of goods and services/protection/provision of border patrols	BBN	location/geopolitical entities	0.52054805
 eidos	UN/interventions/provision of goods and services/protection/provision of border patrols	BBN	intervention	0.50153774
@@ -2443,11 +2443,11 @@ eidos	UN/interventions/provision of goods and services/protection/provision of p
 eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	intervention	0.6066117
 eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	forecast/risk	0.60505503
 eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	intervention/assistance	0.59477866
-eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	indicator/Health	0.5815734
 eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	communication	0.5814685
-eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.58141845
 eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	indicator	0.5678504
 eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	organization	0.5595699
+eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	access	0.5558222
+eidos	UN/interventions/provision of goods and services/protection/provision of public information campaigns on explosive hazards	BBN	intervention/tax	0.5534059
 eidos	UN/interventions/provision of goods and services/protection/provision of rehabilitation of child soldiers	BBN	intervention	0.6065476
 eidos	UN/interventions/provision of goods and services/protection/provision of rehabilitation of child soldiers	BBN	intervention/capacity building human rights	0.6049862
 eidos	UN/interventions/provision of goods and services/protection/provision of rehabilitation of child soldiers	BBN	intervention/education	0.5892187
@@ -2478,16 +2478,16 @@ eidos	UN/interventions/provision of goods and services/protection/provision of t
 eidos	UN/interventions/provision of goods and services/protection/provision of temporary policing services	BBN	access/shortage/water shortage	0.5445961
 eidos	UN/interventions/provision of goods and services/protection/provision of temporary policing services	BBN	access/shortage/food shortage	0.5441531
 eidos	UN/interventions/provision of goods and services/protection/provision of temporary policing services	BBN	intervention/tax	0.53422076
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5355741
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	indicator/Health	0.52387637
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	access	0.5139787
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	economics/financial	0.51268464
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	intervention/tax	0.50744206
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	intervention	0.5037102
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	entity	0.4985505
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	Health/Global Acute Malnutrition (GAM) rate	0.4978125
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	person/individual	0.49691105
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	event	0.49645254
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	access/shortage/food shortage	0.49275923
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of basic minimum household hygiene item package	BBN	access/shortage/water shortage	0.48910087
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of borehole repair	BBN	intervention	0.4596735
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of borehole repair	BBN	access/shortage/water shortage	0.45849508
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of borehole repair	BBN	access/shortage/food shortage	0.4459337
@@ -2506,8 +2506,8 @@ eidos	UN/interventions/provision of goods and services/water sanitation hygiene/
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of communal washing and bathing facilities	BBN	access	0.46937034
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of communal washing and bathing facilities	BBN	event	0.46511063
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of communal washing and bathing facilities	BBN	healthcare/treatment	0.4560634
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of communal washing and bathing facilities	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.4547708
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of communal washing and bathing facilities	BBN	entity	0.44977975
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of communal washing and bathing facilities	BBN	Health/Global Acute Malnutrition (GAM) rate	0.4449272
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of desludging of toilets, septic tanks and excreta containers	BBN	measurement/volume	0.48692876
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of desludging of toilets, septic tanks and excreta containers	BBN	access/shortage/water shortage	0.45738205
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of desludging of toilets, septic tanks and excreta containers	BBN	economic activity/production/agriculture production/irrigation	0.4570837
@@ -2543,11 +2543,11 @@ eidos	UN/interventions/provision of goods and services/water sanitation hygiene/
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	event	0.56444997
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	politics/concept	0.56287515
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	entity	0.5597866
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	Health/Global Acute Malnutrition (GAM) rate	0.55202883
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	intervention/assistance	0.54047686
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	Health	0.5374161
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	organization	0.5351368
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	organization/educational/university	0.53331846
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	organization/educational	0.5311012
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of hygiene promotion campaigns	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5266616
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of latrine construction	BBN	artificial physical objects	0.50834864
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of latrine construction	BBN	economic activity/production	0.49224034
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of latrine construction	BBN	artificial physical objects/facility	0.49112612
@@ -2562,12 +2562,12 @@ eidos	UN/interventions/provision of goods and services/water sanitation hygiene/
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	event	0.61430985
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	measurement	0.59820616
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	nature	0.5794569
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.56745005
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	access/shortage/water shortage	0.56025904
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	indicator	0.5576227
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	access	0.55315256
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	access/shortage/food shortage	0.5513963
-eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	indicator/Health	0.5505803
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	measurement/time	0.54804516
+eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of point of use water treatment at household level	BBN	right	0.5431404
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of safe disposal of human excreta	BBN	nature/soil/soil contents	0.46780676
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of safe disposal of human excreta	BBN	access/shortage/water shortage	0.4525981
 eidos	UN/interventions/provision of goods and services/water sanitation hygiene/provision of safe disposal of human excreta	BBN	environment	0.45223996
@@ -2678,6 +2678,8 @@ eidos	UN/interventions/peacekeeping and security/protection/community awareness 
 eidos	UN/interventions/peacekeeping and security/protection/community awareness campaigns on peacekeeping mandate	BBN	intervention/education	0.6021364
 eidos	UN/interventions/peacekeeping and security/protection/community awareness campaigns on peacekeeping mandate	BBN	intervention	0.597438
 eidos	UN/interventions/peacekeeping and security/protection/community awareness campaigns on peacekeeping mandate	BBN	organization	0.5929119
+eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	Conflict	0.696298
+eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	Conflict/Population Displacement	0.68830055
 eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	person/group/community	0.6672803
 eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	politics/concept	0.64619577
 eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	event	0.63757795
@@ -2686,28 +2688,26 @@ eidos	UN/interventions/peacekeeping and security/protection/community level conf
 eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	conflict/attack/psychological attack	0.62835914
 eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	intervention/education	0.61600524
 eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	intervention/capacity building human rights	0.61227614
-eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	intervention/assistance	0.6094684
-eidos	UN/interventions/peacekeeping and security/protection/community level conflict resolution	BBN	conflict/strike	0.6041
+eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	Conflict	0.72033584
+eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	Conflict/Population Displacement	0.6884186
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict/terrorism	0.65254796
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict/attack/psychological attack	0.6378407
-eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	indicator/Conflict	0.61669624
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict/strike	0.6142169
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict/sabotage	0.6081865
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	intervention/capacity building human rights	0.60086024
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict/attack	0.59867257
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	event	0.5946729
 eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict	0.5912406
-eidos	UN/interventions/peacekeeping and security/protection/conflict mediation and political dialogue	BBN	conflict/war	0.5847758
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	intervention/military operation/counter terrorism operation	0.4741785
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	peace treaty	0.38445082
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	conflict/repression	0.38254225
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	conflict	0.3794503
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	conflict/terrorism	0.37880376
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	conflict/sabotage	0.3772899
+eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	Conflict	0.3578596
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	conflict/war	0.35782197
+eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	Conflict/Population Displacement	0.35554364
 eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	intervention/sanction	0.35086086
-eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.34400997
-eidos	UN/interventions/peacekeeping and security/protection/disarmament, demobilization and reintegration	BBN	intervention/provide humanitarian resources/provide food	0.34332657
 eidos	UN/interventions/peacekeeping and security/water sanitation hygiene/creation of temporary water points	BBN	entity	0.62825245
 eidos	UN/interventions/peacekeeping and security/water sanitation hygiene/creation of temporary water points	BBN	nature	0.61655456
 eidos	UN/interventions/peacekeeping and security/water sanitation hygiene/creation of temporary water points	BBN	measurement	0.60887873
@@ -2752,12 +2752,12 @@ eidos	UN/events/nature_impact/climate_change_mitigation	BBN	environment	0.589028
 eidos	UN/events/nature_impact/climate_change_mitigation	BBN	weather	0.5544787
 eidos	UN/events/nature_impact/climate_change_mitigation	BBN	indicator	0.5506891
 eidos	UN/events/nature_impact/climate_change_mitigation	BBN	weather/drought	0.5274194
-eidos	UN/events/nature_impact/climate_change_mitigation	BBN	indicator/Agriculture/Crop Production	0.5171824
-eidos	UN/events/nature_impact/climate_change_mitigation	BBN	indicator/Agriculture/Livestock Production	0.5153475
-eidos	UN/events/nature_impact/climate_change_mitigation	BBN	indicator/Agriculture	0.51282775
 eidos	UN/events/nature_impact/climate_change_mitigation	BBN	entity	0.5127773
 eidos	UN/events/nature_impact/climate_change_mitigation	BBN	nature/soil	0.50997126
 eidos	UN/events/nature_impact/climate_change_mitigation	BBN	forecast/risk	0.5075873
+eidos	UN/events/nature_impact/climate_change_mitigation	BBN	crisis/disaster	0.506518
+eidos	UN/events/nature_impact/climate_change_mitigation	BBN	crisis/disaster/earthquake	0.5009264
+eidos	UN/events/nature_impact/climate_change_mitigation	BBN	event	0.49614534
 eidos	UN/events/nature_impact/resource_management	BBN	nature	0.64106375
 eidos	UN/events/nature_impact/resource_management	BBN	nature/land	0.61481357
 eidos	UN/events/nature_impact/resource_management	BBN	environment	0.61114776
@@ -2765,29 +2765,29 @@ eidos	UN/events/nature_impact/resource_management	BBN	indicator	0.5825901
 eidos	UN/events/nature_impact/resource_management	BBN	economic activity/development	0.57788354
 eidos	UN/events/nature_impact/resource_management	BBN	entity	0.5774273
 eidos	UN/events/nature_impact/resource_management	BBN	nature/soil	0.5740352
+eidos	UN/events/nature_impact/resource_management	BBN	Agriculture/Livestock Production	0.5671347
+eidos	UN/events/nature_impact/resource_management	BBN	Agriculture/Crop Production	0.56216836
 eidos	UN/events/nature_impact/resource_management	BBN	economic activity/production/agriculture production/livestock production	0.5589933
-eidos	UN/events/nature_impact/resource_management	BBN	economics/branch	0.55171454
-eidos	UN/events/nature_impact/resource_management	BBN	indicator/Agriculture/Livestock Production	0.5464272
 eidos	UN/events/nature_impact/forestry	BBN	nature/land	0.5779103
+eidos	UN/events/nature_impact/forestry	BBN	Agriculture/Livestock Production	0.5544456
+eidos	UN/events/nature_impact/forestry	BBN	Agriculture	0.553164
+eidos	UN/events/nature_impact/forestry	BBN	Agriculture/Crop Production	0.5467778
 eidos	UN/events/nature_impact/forestry	BBN	nature	0.5010401
 eidos	UN/events/nature_impact/forestry	BBN	economic activity/production/agriculture production/crop production	0.49533907
 eidos	UN/events/nature_impact/forestry	BBN	economic activity/production/agriculture production	0.48860583
 eidos	UN/events/nature_impact/forestry	BBN	economic activity/production/agriculture production/irrigation	0.4777511
 eidos	UN/events/nature_impact/forestry	BBN	land type	0.4657713
 eidos	UN/events/nature_impact/forestry	BBN	nature/soil	0.46006584
-eidos	UN/events/nature_impact/forestry	BBN	indicator/Agriculture	0.46000537
-eidos	UN/events/nature_impact/forestry	BBN	agriculture	0.45536408
-eidos	UN/events/nature_impact/forestry	BBN	indicator/Agriculture/Livestock Production	0.4511968
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	environment	0.5834397
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	measurement/energy	0.54571235
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	economic activity/consumption/food consumption	0.50648326
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	economic activity/consumption	0.47651455
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	nature/soil/soil contents	0.4535147
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	measurement/mass	0.4416304
-eidos	UN/events/nature_impact/pollution/air_pollution	BBN	indicator/Agriculture/Livestock Production	0.43950444
-eidos	UN/events/nature_impact/pollution/air_pollution	BBN	indicator/Agriculture/Crop Production	0.4341216
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	economics/commodity	0.43353137
 eidos	UN/events/nature_impact/pollution/air_pollution	BBN	economic activity/production/agriculture production	0.42636687
+eidos	UN/events/nature_impact/pollution/air_pollution	BBN	economic activity/production/agriculture production/crop production	0.4252152
+eidos	UN/events/nature_impact/pollution/air_pollution	BBN	weather	0.4115454
 eidos	UN/events/nature_impact/pollution/land_pollution	BBN	nature/soil/soil contents	0.7278991
 eidos	UN/events/nature_impact/pollution/land_pollution	BBN	nature/soil	0.67100275
 eidos	UN/events/nature_impact/pollution/land_pollution	BBN	environment	0.62918466
@@ -2797,17 +2797,17 @@ eidos	UN/events/nature_impact/pollution/land_pollution	BBN	economic activity/pro
 eidos	UN/events/nature_impact/pollution/land_pollution	BBN	economic activity/production/agriculture production/irrigation	0.54835254
 eidos	UN/events/nature_impact/pollution/land_pollution	BBN	chemical substance/fertilizer	0.5472553
 eidos	UN/events/nature_impact/pollution/land_pollution	BBN	weather	0.53248125
-eidos	UN/events/nature_impact/pollution/land_pollution	BBN	indicator/Agriculture/Livestock Production	0.5243596
+eidos	UN/events/nature_impact/pollution/land_pollution	BBN	organism	0.517441
 eidos	UN/events/nature_impact/pollution/climate_change	BBN	weather	0.5211717
+eidos	UN/events/nature_impact/pollution/climate_change	BBN	Agriculture/Crop Production	0.4914628
+eidos	UN/events/nature_impact/pollution/climate_change	BBN	Agriculture/Livestock Production	0.48587766
 eidos	UN/events/nature_impact/pollution/climate_change	BBN	land type	0.4783662
+eidos	UN/events/nature_impact/pollution/climate_change	BBN	Agriculture	0.47088188
 eidos	UN/events/nature_impact/pollution/climate_change	BBN	healthcare/famine	0.45311016
 eidos	UN/events/nature_impact/pollution/climate_change	BBN	environment	0.45111197
 eidos	UN/events/nature_impact/pollution/climate_change	BBN	nature/land	0.44954342
+eidos	UN/events/nature_impact/pollution/climate_change	BBN	Rainfall	0.42902017
 eidos	UN/events/nature_impact/pollution/climate_change	BBN	weather/drought	0.41995594
-eidos	UN/events/nature_impact/pollution/climate_change	BBN	indicator/Agriculture/Crop Production	0.41653097
-eidos	UN/events/nature_impact/pollution/climate_change	BBN	indicator/Agriculture/Livestock Production	0.4109458
-eidos	UN/events/nature_impact/pollution/climate_change	BBN	indicator/Rainfall	0.40785372
-eidos	UN/events/nature_impact/pollution/climate_change	BBN	indicator	0.39982674
 eidos	UN/events/crisis	BBN	crisis	0.86154306
 eidos	UN/events/crisis	BBN	crisis/disaster	0.7918961
 eidos	UN/events/crisis	BBN	crisis/disaster/earthquake	0.77910614
@@ -2827,12 +2827,12 @@ eidos	UN/events/natural_disaster/flooding	BBN	crisis/fire	0.53859776
 eidos	UN/events/natural_disaster/flooding	BBN	crisis/disaster	0.53493035
 eidos	UN/events/natural_disaster/flooding	BBN	crisis	0.5213104
 eidos	UN/events/natural_disaster/flooding	BBN	weather/drought	0.50609106
-eidos	UN/events/natural_disaster/flooding	BBN	indicator/Rainfall	0.45922315
+eidos	UN/events/natural_disaster/flooding	BBN	forecast/risk	0.4423788
 eidos	UN/events/natural_disaster/drought	BBN	weather/drought	0.81460524
 eidos	UN/events/natural_disaster/drought	BBN	weather	0.67002046
+eidos	UN/events/natural_disaster/drought	BBN	Rainfall	0.5801883
 eidos	UN/events/natural_disaster/drought	BBN	weather/flooding	0.57022727
 eidos	UN/events/natural_disaster/drought	BBN	weather/precipitation	0.5645028
-eidos	UN/events/natural_disaster/drought	BBN	indicator/Rainfall	0.55846673
 eidos	UN/events/natural_disaster/drought	BBN	weather/storm	0.52199554
 eidos	UN/events/natural_disaster/drought	BBN	crisis/disaster/earthquake	0.5116945
 eidos	UN/events/natural_disaster/drought	BBN	healthcare/famine	0.5065586
@@ -2846,12 +2846,12 @@ eidos	UN/events/natural_disaster/storm	BBN	weather/drought	0.6141852
 eidos	UN/events/natural_disaster/storm	BBN	crisis/disaster/earthquake	0.58004594
 eidos	UN/events/natural_disaster/storm	BBN	crisis/disaster	0.5612079
 eidos	UN/events/natural_disaster/storm	BBN	crisis/fire	0.51969886
-eidos	UN/events/natural_disaster/storm	BBN	indicator/Rainfall	0.501511
+eidos	UN/events/natural_disaster/storm	BBN	Rainfall	0.51811755
 eidos	UN/events/natural_disaster/storm	BBN	crisis	0.49894878
 eidos	UN/events/weather/climate	BBN	weather/drought	0.5670982
 eidos	UN/events/weather/climate	BBN	weather	0.564753
 eidos	UN/events/weather/climate	BBN	weather/precipitation	0.5423064
-eidos	UN/events/weather/climate	BBN	indicator/Rainfall	0.5143159
+eidos	UN/events/weather/climate	BBN	Rainfall	0.5051968
 eidos	UN/events/weather/climate	BBN	environment	0.46700656
 eidos	UN/events/weather/climate	BBN	weather/storm	0.45728514
 eidos	UN/events/weather/climate	BBN	location/geopolitical entities/continent	0.45385796
@@ -2859,8 +2859,8 @@ eidos	UN/events/weather/climate	BBN	temperature	0.45117736
 eidos	UN/events/weather/climate	BBN	indicator	0.44584686
 eidos	UN/events/weather/climate	BBN	nature	0.4351766
 eidos	UN/events/weather/precipitation	BBN	weather/precipitation	0.92865705
+eidos	UN/events/weather/precipitation	BBN	Rainfall	0.77416146
 eidos	UN/events/weather/precipitation	BBN	weather	0.7440049
-eidos	UN/events/weather/precipitation	BBN	indicator/Rainfall	0.73948234
 eidos	UN/events/weather/precipitation	BBN	weather/drought	0.71197945
 eidos	UN/events/weather/precipitation	BBN	weather/storm	0.6519409
 eidos	UN/events/weather/precipitation	BBN	weather/flooding	0.6459116
@@ -2870,84 +2870,84 @@ eidos	UN/events/weather/precipitation	BBN	nature	0.4923864
 eidos	UN/events/weather/precipitation	BBN	nature/soil	0.47443286
 eidos	UN/events/weather/temperature	BBN	temperature	0.90000015
 eidos	UN/events/weather/temperature	BBN	weather/precipitation	0.54644626
-eidos	UN/events/weather/temperature	BBN	indicator/Rainfall	0.54393774
 eidos	UN/events/weather/temperature	BBN	measurement	0.50643426
 eidos	UN/events/weather/temperature	BBN	weather/drought	0.47625405
 eidos	UN/events/weather/temperature	BBN	measurement/volume	0.47466564
 eidos	UN/events/weather/temperature	BBN	weather	0.46128505
 eidos	UN/events/weather/temperature	BBN	measurement/time	0.45665678
 eidos	UN/events/weather/temperature	BBN	measurement/energy	0.454589
+eidos	UN/events/weather/temperature	BBN	Rainfall	0.4481098
 eidos	UN/events/weather/temperature	BBN	economic activity/consumption/food consumption	0.43933177
 eidos	UN/events/human/political/political_instability	BBN	conflict/repression	0.7163138
 eidos	UN/events/human/political/political_instability	BBN	conflict	0.6825064
 eidos	UN/events/human/political/political_instability	BBN	conflict/terrorism	0.677576
 eidos	UN/events/human/political/political_instability	BBN	conflict/hostility	0.658507
 eidos	UN/events/human/political/political_instability	BBN	conflict/attack/psychological attack	0.65340716
+eidos	UN/events/human/political/political_instability	BBN	Conflict/Population Displacement	0.6511399
 eidos	UN/events/human/political/political_instability	BBN	entity	0.6470743
+eidos	UN/events/human/political/political_instability	BBN	Conflict	0.6393176
 eidos	UN/events/human/political/political_instability	BBN	conflict/strike	0.63780844
 eidos	UN/events/human/political/political_instability	BBN	event	0.63758606
-eidos	UN/events/human/political/political_instability	BBN	conflict/sabotage	0.63734144
-eidos	UN/events/human/political/political_instability	BBN	conflict/war	0.6367687
 eidos	UN/events/human/political/independence	BBN	conflict/repression	0.52216655
 eidos	UN/events/human/political/independence	BBN	conflict/war	0.46209344
+eidos	UN/events/human/political/independence	BBN	Conflict/Population Displacement	0.46020737
 eidos	UN/events/human/political/independence	BBN	right	0.45874307
+eidos	UN/events/human/political/independence	BBN	Conflict	0.4484558
 eidos	UN/events/human/political/independence	BBN	conflict/terrorism	0.44010714
 eidos	UN/events/human/political/independence	BBN	politics/concept	0.4372629
 eidos	UN/events/human/political/independence	BBN	intervention/capacity building human rights	0.4359514
 eidos	UN/events/human/political/independence	BBN	conflict/sabotage	0.42081088
 eidos	UN/events/human/political/independence	BBN	conflict/hostility	0.415415
-eidos	UN/events/human/political/independence	BBN	conflict	0.41244102
-eidos	UN/events/human/political/independence	BBN	entity	0.41019428
 eidos	UN/events/human/agriculture/food_production	BBN	agriculture/food	0.82573146
 eidos	UN/events/human/agriculture/food_production	BBN	agriculture/food/crop	0.78478485
 eidos	UN/events/human/agriculture/food_production	BBN	agriculture/food/fruit	0.7224539
 eidos	UN/events/human/agriculture/food_production	BBN	economic activity/production/agriculture production/crop production	0.663881
 eidos	UN/events/human/agriculture/food_production	BBN	agriculture	0.6635563
 eidos	UN/events/human/agriculture/food_production	BBN	economic activity/production/agriculture production	0.66217536
-eidos	UN/events/human/agriculture/food_production	BBN	indicator/Agriculture/Livestock Production	0.598941
-eidos	UN/events/human/agriculture/food_production	BBN	indicator/Agriculture/Crop Production	0.5930125
+eidos	UN/events/human/agriculture/food_production	BBN	Agriculture/Livestock Production	0.63938576
+eidos	UN/events/human/agriculture/food_production	BBN	Agriculture/Crop Production	0.63345724
+eidos	UN/events/human/agriculture/food_production	BBN	Agriculture	0.5628449
 eidos	UN/events/human/agriculture/food_production	BBN	economic activity/production/agriculture production/irrigation	0.5543443
-eidos	UN/events/human/agriculture/food_production	BBN	economic activity/consumption/food consumption	0.5340739
 eidos	UN/events/human/agriculture/farming	BBN	economic activity/production/agriculture production	0.72527426
 eidos	UN/events/human/agriculture/farming	BBN	economic activity/production/agriculture production/crop production	0.66643375
+eidos	UN/events/human/agriculture/farming	BBN	Agriculture/Livestock Production	0.65530515
+eidos	UN/events/human/agriculture/farming	BBN	Agriculture/Crop Production	0.6454108
 eidos	UN/events/human/agriculture/farming	BBN	economic activity/production/agriculture production/irrigation	0.6376599
+eidos	UN/events/human/agriculture/farming	BBN	Agriculture	0.6203129
 eidos	UN/events/human/agriculture/farming	BBN	agriculture/food/crop	0.62021995
 eidos	UN/events/human/agriculture/farming	BBN	agriculture/food	0.61653894
 eidos	UN/events/human/agriculture/farming	BBN	nature/soil/soil contents	0.602888
 eidos	UN/events/human/agriculture/farming	BBN	nature/soil	0.6009743
-eidos	UN/events/human/agriculture/farming	BBN	agriculture/food/fruit	0.5961981
-eidos	UN/events/human/agriculture/farming	BBN	temporal/seasons/crop season	0.5930143
-eidos	UN/events/human/agriculture/farming	BBN	nature/land	0.59284335
+eidos	UN/events/human/agriculture/planting	BBN	Agriculture/Crop Production	0.64014393
+eidos	UN/events/human/agriculture/planting	BBN	Agriculture/Livestock Production	0.631194
 eidos	UN/events/human/agriculture/planting	BBN	economic activity/production/agriculture production/crop production	0.6261764
 eidos	UN/events/human/agriculture/planting	BBN	economic activity/production/agriculture production	0.6189878
 eidos	UN/events/human/agriculture/planting	BBN	economic activity/production/agriculture production/irrigation	0.6003911
+eidos	UN/events/human/agriculture/planting	BBN	Agriculture	0.58556247
 eidos	UN/events/human/agriculture/planting	BBN	agriculture/food/fruit	0.5759344
 eidos	UN/events/human/agriculture/planting	BBN	chemical substance/fertilizer	0.5517044
 eidos	UN/events/human/agriculture/planting	BBN	agriculture/food	0.5395738
 eidos	UN/events/human/agriculture/planting	BBN	agriculture	0.5372522
-eidos	UN/events/human/agriculture/planting	BBN	economics/branch	0.53355765
-eidos	UN/events/human/agriculture/planting	BBN	agriculture/food/crop	0.5328161
-eidos	UN/events/human/agriculture/planting	BBN	economic activity/production/agriculture production/fertilization	0.5287656
 eidos	UN/events/human/physical_insecurity	BBN	conflict/repression	0.6116702
 eidos	UN/events/human/physical_insecurity	BBN	conflict/hostility	0.586425
 eidos	UN/events/human/physical_insecurity	BBN	forecast/risk	0.5528334
 eidos	UN/events/human/physical_insecurity	BBN	conflict/terrorism	0.54647964
 eidos	UN/events/human/physical_insecurity	BBN	healthcare/famine	0.5454963
+eidos	UN/events/human/physical_insecurity	BBN	Conflict/Population Displacement	0.54269487
 eidos	UN/events/human/physical_insecurity	BBN	conflict/sabotage	0.54249585
+eidos	UN/events/human/physical_insecurity	BBN	Conflict	0.529851
 eidos	UN/events/human/physical_insecurity	BBN	condition/poverty	0.51519114
 eidos	UN/events/human/physical_insecurity	BBN	emotion	0.50956416
-eidos	UN/events/human/physical_insecurity	BBN	indicator/Conflict/Population Displacement	0.50755346
-eidos	UN/events/human/physical_insecurity	BBN	indicator/Conflict	0.4992529
 eidos	UN/events/human/conflict	BBN	conflict	0.81611085
 eidos	UN/events/human/conflict	BBN	conflict/war	0.77331513
 eidos	UN/events/human/conflict	BBN	conflict/attack/psychological attack	0.7515582
+eidos	UN/events/human/conflict	BBN	Conflict	0.74618244
 eidos	UN/events/human/conflict	BBN	conflict/attack	0.7307249
 eidos	UN/events/human/conflict	BBN	conflict/terrorism	0.73021734
 eidos	UN/events/human/conflict	BBN	conflict/strike	0.7133613
+eidos	UN/events/human/conflict	BBN	Conflict/Population Displacement	0.7100408
 eidos	UN/events/human/conflict	BBN	conflict/collision	0.7076419
 eidos	UN/events/human/conflict	BBN	conflict/hostility	0.70566845
-eidos	UN/events/human/conflict	BBN	conflict/sabotage	0.69480586
-eidos	UN/events/human/conflict	BBN	conflict/repression	0.6661364
 eidos	UN/events/human/economic_crisis	BBN	crisis/disaster	0.7476001
 eidos	UN/events/human/economic_crisis	BBN	crisis	0.74018353
 eidos	UN/events/human/economic_crisis	BBN	crisis/disaster/earthquake	0.73606294
@@ -2955,9 +2955,9 @@ eidos	UN/events/human/economic_crisis	BBN	crisis/fire	0.69010067
 eidos	UN/events/human/economic_crisis	BBN	economic activity/market/inflation	0.5936229
 eidos	UN/events/human/economic_crisis	BBN	conflict/terrorism	0.580654
 eidos	UN/events/human/economic_crisis	BBN	event	0.5593605
+eidos	UN/events/human/economic_crisis	BBN	Conflict/Population Displacement	0.55289817
 eidos	UN/events/human/economic_crisis	BBN	conflict/strike	0.5527174
 eidos	UN/events/human/economic_crisis	BBN	conflict/attack/psychological attack	0.5514865
-eidos	UN/events/human/economic_crisis	BBN	conflict/war	0.5443018
 eidos	UN/events/human/disarmament	BBN	conflict/terrorism	0.4605983
 eidos	UN/events/human/disarmament	BBN	peace treaty	0.44230756
 eidos	UN/events/human/disarmament	BBN	conflict	0.4312914
@@ -2965,19 +2965,19 @@ eidos	UN/events/human/disarmament	BBN	intervention/military operation/counter te
 eidos	UN/events/human/disarmament	BBN	conflict/sabotage	0.41729334
 eidos	UN/events/human/disarmament	BBN	conflict/war	0.41403392
 eidos	UN/events/human/disarmament	BBN	conflict/repression	0.40950254
+eidos	UN/events/human/disarmament	BBN	Conflict	0.39610016
+eidos	UN/events/human/disarmament	BBN	Conflict/Population Displacement	0.393106
 eidos	UN/events/human/disarmament	BBN	conflict/hostility	0.3656004
-eidos	UN/events/human/disarmament	BBN	intervention/sanction	0.3547439
-eidos	UN/events/human/disarmament	BBN	conflict/strike	0.34868753
 eidos	UN/events/human/human_migration	BBN	movement/human displacement	0.86038125
 eidos	UN/events/human/human_migration	BBN	conflict/repression	0.53602177
 eidos	UN/events/human/human_migration	BBN	conflict/war	0.515719
 eidos	UN/events/human/human_migration	BBN	conflict/terrorism	0.49551558
 eidos	UN/events/human/human_migration	BBN	movement/evacuate humanitarian workers	0.49073067
+eidos	UN/events/human/human_migration	BBN	Conflict/Population Displacement	0.49071205
 eidos	UN/events/human/human_migration	BBN	conflict	0.48198316
 eidos	UN/events/human/human_migration	BBN	healthcare/famine	0.48038393
 eidos	UN/events/human/human_migration	BBN	entity	0.4718166
 eidos	UN/events/human/human_migration	BBN	conflict/attack/psychological attack	0.46249375
-eidos	UN/events/human/human_migration	BBN	event	0.46218732
 eidos	UN/events/human/intervention/intervention	BBN	intervention/assistance	0.8069331
 eidos	UN/events/human/intervention/intervention	BBN	intervention	0.73650783
 eidos	UN/events/human/intervention/intervention	BBN	intervention/education	0.681875
@@ -2995,9 +2995,9 @@ eidos	UN/events/human/health_intervention	BBN	disease/animal disease	0.515682
 eidos	UN/events/human/health_intervention	BBN	intervention/anti-retroviral treatment	0.50259787
 eidos	UN/events/human/health_intervention	BBN	disease	0.4918559
 eidos	UN/events/human/health_intervention	BBN	healthcare	0.4805365
+eidos	UN/events/human/health_intervention	BBN	Health	0.43835217
+eidos	UN/events/human/health_intervention	BBN	Health/Global Acute Malnutrition (GAM) rate	0.43685573
 eidos	UN/events/human/health_intervention	BBN	intervention/provide humanitarian resources/provide veterinary drugs vaccines	0.42197707
-eidos	UN/events/human/health_intervention	BBN	intervention/provide humanitarian resources/provide food	0.41187268
-eidos	UN/events/human/health_intervention	BBN	healthcare/animal disease	0.41070646
 eidos	UN/events/human/famine	BBN	healthcare/famine	0.8694488
 eidos	UN/events/human/famine	BBN	condition/poverty	0.5404641
 eidos	UN/events/human/famine	BBN	conflict/repression	0.5401093
@@ -3017,7 +3017,7 @@ eidos	UN/events/human/death	BBN	event	0.54980385
 eidos	UN/events/human/death	BBN	healthcare/famine	0.5485284
 eidos	UN/events/human/death	BBN	forecast/risk	0.54504955
 eidos	UN/events/human/death	BBN	condition	0.5338895
-eidos	UN/events/human/death	BBN	entity	0.5172519
+eidos	UN/events/human/death	BBN	Health/Global Acute Malnutrition (GAM) rate	0.5228133
 eidos	UN/entities/food_availability	BBN	agriculture/food	0.79744387
 eidos	UN/entities/food_availability	BBN	agriculture/food/fruit	0.7215429
 eidos	UN/entities/food_availability	BBN	agriculture	0.7047863
@@ -3026,8 +3026,8 @@ eidos	UN/entities/food_availability	BBN	economic activity/consumption/food consu
 eidos	UN/entities/food_availability	BBN	economic activity/consumption	0.48607844
 eidos	UN/entities/food_availability	BBN	chemical substance	0.46117237
 eidos	UN/entities/food_availability	BBN	economic activity/production/agriculture production/crop production	0.45707762
-eidos	UN/entities/food_availability	BBN	organism/animal	0.43887126
-eidos	UN/entities/food_availability	BBN	economics/commodity	0.43269247
+eidos	UN/entities/food_availability	BBN	Agriculture/Livestock Production	0.4471864
+eidos	UN/entities/food_availability	BBN	Agriculture/Crop Production	0.4401638
 eidos	UN/entities/GPE	BBN	location/geopolitical entities	0.7527908
 eidos	UN/entities/GPE	BBN	location/geopolitical entities/nation	0.68018997
 eidos	UN/entities/GPE	BBN	location/geopolitical entities/continent	0.5769076
@@ -3092,12 +3092,12 @@ eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BB
 eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	nature/land	0.65229356
 eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	agriculture	0.6388426
 eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	nature/soil	0.6241781
+eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	Agriculture/Livestock Production	0.62149036
+eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	Agriculture/Crop Production	0.6170954
 eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	environment	0.6118736
+eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	Agriculture	0.6047734
 eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	indicator	0.5918638
 eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	economic activity/production/agriculture production/crop production	0.5861451
-eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	agriculture/food/fruit	0.58544713
-eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	organism	0.58407134
-eidos	UN/entities/natural/natural_resources/biotic_resources/biotic_resources	BBN	nature/soil/soil contents	0.57746553
 eidos	UN/entities/natural/natural_resources/abiotic_resources/land	BBN	nature/land	0.8169184
 eidos	UN/entities/natural/natural_resources/abiotic_resources/land	BBN	nature	0.7550054
 eidos	UN/entities/natural/natural_resources/abiotic_resources/land	BBN	location/water body	0.6162052
@@ -3173,11 +3173,11 @@ eidos	UN/entities/natural/crop_technology/crop_storage	BBN	agriculture/food	0.55
 eidos	UN/entities/natural/crop_technology/crop_storage	BBN	economic activity/production/agriculture production/crop production	0.517144
 eidos	UN/entities/natural/crop_technology/crop_storage	BBN	agriculture/food/fruit	0.50884265
 eidos	UN/entities/natural/crop_technology/crop_storage	BBN	economic activity/production/agriculture production	0.5008451
+eidos	UN/entities/natural/crop_technology/crop_storage	BBN	Agriculture/Crop Production	0.45423084
 eidos	UN/entities/natural/crop_technology/crop_storage	BBN	agriculture	0.4541464
+eidos	UN/entities/natural/crop_technology/crop_storage	BBN	Agriculture/Livestock Production	0.4400528
 eidos	UN/entities/natural/crop_technology/crop_storage	BBN	temporal/seasons/crop season	0.43935865
 eidos	UN/entities/natural/crop_technology/crop_storage	BBN	economic activity/production/agriculture production/irrigation	0.4393209
-eidos	UN/entities/natural/crop_technology/crop_storage	BBN	economic activity/production/agriculture production/livestock production	0.42460376
-eidos	UN/entities/natural/crop_technology/crop_storage	BBN	organism/animal	0.41229036
 eidos	UN/entities/natural/crop_technology/fertilizer	BBN	chemical substance/fertilizer	0.85767215
 eidos	UN/entities/natural/crop_technology/fertilizer	BBN	economic activity/production/agriculture production/fertilization	0.7934119
 eidos	UN/entities/natural/crop_technology/fertilizer	BBN	nature/soil/soil contents	0.6564007
@@ -3191,33 +3191,33 @@ eidos	UN/entities/natural/crop_technology/fertilizer	BBN	economic activity/produ
 eidos	UN/entities/natural/crop_technology/irrigation	BBN	economic activity/production/agriculture production/irrigation	0.855603
 eidos	UN/entities/natural/crop_technology/irrigation	BBN	economic activity/production/agriculture production	0.613422
 eidos	UN/entities/natural/crop_technology/irrigation	BBN	chemical substance/fertilizer	0.5519247
-eidos	UN/entities/natural/crop_technology/irrigation	BBN	indicator/Agriculture/Livestock Production	0.52189696
-eidos	UN/entities/natural/crop_technology/irrigation	BBN	indicator/Agriculture/Crop Production	0.51771915
-eidos	UN/entities/natural/crop_technology/irrigation	BBN	indicator/Agriculture	0.5097297
-eidos	UN/entities/natural/crop_technology/irrigation	BBN	indicator/Rainfall	0.50873953
+eidos	UN/entities/natural/crop_technology/irrigation	BBN	Agriculture/Livestock Production	0.5274086
+eidos	UN/entities/natural/crop_technology/irrigation	BBN	Agriculture/Crop Production	0.5232308
 eidos	UN/entities/natural/crop_technology/irrigation	BBN	nature/soil/soil contents	0.50773394
+eidos	UN/entities/natural/crop_technology/irrigation	BBN	Agriculture	0.506663
 eidos	UN/entities/natural/crop_technology/irrigation	BBN	nature	0.5060528
 eidos	UN/entities/natural/crop_technology/irrigation	BBN	economic activity/production/agriculture production/crop production	0.5020131
+eidos	UN/entities/natural/crop_technology/irrigation	BBN	economic activity/production/agriculture production/fertilization	0.4864405
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	chemical substance/fertilizer	0.582375
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	economic activity/production/agriculture production/fertilization	0.5113839
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	nature/soil/soil contents	0.47726625
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	organism/pest	0.4764254
+eidos	UN/entities/natural/crop_technology/pesticide	BBN	Agriculture/Livestock Production	0.46871036
+eidos	UN/entities/natural/crop_technology/pesticide	BBN	Agriculture/Crop Production	0.4643731
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	economic activity/production/agriculture production/irrigation	0.4635215
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	chemical substance	0.44939944
 eidos	UN/entities/natural/crop_technology/pesticide	BBN	agriculture	0.44357312
-eidos	UN/entities/natural/crop_technology/pesticide	BBN	organism	0.43976814
-eidos	UN/entities/natural/crop_technology/pesticide	BBN	indicator/Agriculture/Livestock Production	0.4318525
-eidos	UN/entities/natural/crop_technology/pesticide	BBN	indicator/Agriculture/Crop Production	0.4275152
+eidos	UN/entities/natural/crop_technology/pesticide	BBN	Agriculture	0.4423931
+eidos	UN/entities/natural/crop_technology/management	BBN	Agriculture/Livestock Production	0.7247177
+eidos	UN/entities/natural/crop_technology/management	BBN	Agriculture/Crop Production	0.7189758
 eidos	UN/entities/natural/crop_technology/management	BBN	agriculture	0.71358037
+eidos	UN/entities/natural/crop_technology/management	BBN	Agriculture	0.69082725
 eidos	UN/entities/natural/crop_technology/management	BBN	economics/branch	0.68909806
 eidos	UN/entities/natural/crop_technology/management	BBN	economic activity/production/agriculture production/crop production	0.6876457
 eidos	UN/entities/natural/crop_technology/management	BBN	indicator	0.6777438
 eidos	UN/entities/natural/crop_technology/management	BBN	economics/sector	0.67603207
 eidos	UN/entities/natural/crop_technology/management	BBN	entity	0.673632
 eidos	UN/entities/natural/crop_technology/management	BBN	economic activity	0.6695783
-eidos	UN/entities/natural/crop_technology/management	BBN	indicator/Agriculture/Livestock Production	0.6620273
-eidos	UN/entities/natural/crop_technology/management	BBN	economics	0.65920764
-eidos	UN/entities/natural/crop_technology/management	BBN	indicator/Agriculture/Crop Production	0.6562854
 eidos	UN/entities/natural/crop_technology/product	BBN	agriculture/food/fruit	0.6156589
 eidos	UN/entities/natural/crop_technology/product	BBN	agriculture	0.60852814
 eidos	UN/entities/natural/crop_technology/product	BBN	agriculture/food	0.6038037
@@ -3235,19 +3235,19 @@ eidos	UN/entities/natural/crop	BBN	economic activity/production/agriculture prod
 eidos	UN/entities/natural/crop	BBN	agriculture	0.53397506
 eidos	UN/entities/natural/crop	BBN	economic activity/production/agriculture production/crop production	0.5227227
 eidos	UN/entities/natural/crop	BBN	chemical substance/fertilizer	0.49600098
+eidos	UN/entities/natural/crop	BBN	Agriculture/Crop Production	0.47912446
 eidos	UN/entities/natural/crop	BBN	economic activity/production/agriculture production/irrigation	0.46337298
 eidos	UN/entities/natural/crop	BBN	economic activity/production/agriculture production/fertilization	0.46093285
-eidos	UN/entities/natural/crop	BBN	organism/pest	0.45441592
 eidos	UN/entities/natural/livestock	BBN	organism/animal	0.76218647
 eidos	UN/entities/natural/livestock	BBN	agriculture	0.617041
 eidos	UN/entities/natural/livestock	BBN	agriculture/food	0.59809256
+eidos	UN/entities/natural/livestock	BBN	Agriculture/Livestock Production	0.5949596
 eidos	UN/entities/natural/livestock	BBN	economic activity/production/agriculture production/crop production	0.57738817
+eidos	UN/entities/natural/livestock	BBN	Agriculture/Crop Production	0.5670931
 eidos	UN/entities/natural/livestock	BBN	organism	0.56279105
+eidos	UN/entities/natural/livestock	BBN	Agriculture	0.56154275
 eidos	UN/entities/natural/livestock	BBN	agriculture/food/fruit	0.5534338
 eidos	UN/entities/natural/livestock	BBN	agriculture/food/crop	0.5522858
-eidos	UN/entities/natural/livestock	BBN	economic activity/production/agriculture production	0.51248133
-eidos	UN/entities/natural/livestock	BBN	nature/land	0.51191896
-eidos	UN/entities/natural/livestock	BBN	indicator/Agriculture/Livestock Production	0.51133966
 eidos	UN/entities/natural/pest	BBN	organism/pest	0.85190564
 eidos	UN/entities/natural/pest	BBN	organism	0.65204936
 eidos	UN/entities/natural/pest	BBN	agriculture/food/crop	0.4942668
@@ -3259,12 +3259,12 @@ eidos	UN/entities/natural/pest	BBN	chemical substance/fertilizer	0.44752645
 eidos	UN/entities/natural/pest	BBN	healthcare	0.4464593
 eidos	UN/entities/natural/pest	BBN	economic activity/production/agriculture production/irrigation	0.4441536
 eidos	UN/entities/human/health/nutrient	BBN	chemical substance	0.6311436
+eidos	UN/entities/human/health/nutrient	BBN	Health/Global Acute Malnutrition (GAM) rate	0.61250424
+eidos	UN/entities/human/health/nutrient	BBN	Health	0.5624808
 eidos	UN/entities/human/health/nutrient	BBN	agriculture/food/fruit	0.55997497
-eidos	UN/entities/human/health/nutrient	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5442986
 eidos	UN/entities/human/health/nutrient	BBN	agriculture/food	0.53500545
 eidos	UN/entities/human/health/nutrient	BBN	healthcare/treatment	0.5186801
 eidos	UN/entities/human/health/nutrient	BBN	disease/animal disease	0.5043216
-eidos	UN/entities/human/health/nutrient	BBN	indicator/Health	0.497972
 eidos	UN/entities/human/health/nutrient	BBN	agriculture	0.48682618
 eidos	UN/entities/human/health/nutrient	BBN	agriculture/food/crop	0.481236
 eidos	UN/entities/human/health/nutrient	BBN	disease	0.47203174
@@ -3276,7 +3276,7 @@ eidos	UN/entities/human/health/disease	BBN	healthcare/treatment	0.67099506
 eidos	UN/entities/human/health/disease	BBN	healthcare	0.5825618
 eidos	UN/entities/human/health/disease	BBN	healthcare/famine	0.550719
 eidos	UN/entities/human/health/disease	BBN	intervention/anti-retroviral treatment	0.54842883
-eidos	UN/entities/human/health/disease	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5053354
+eidos	UN/entities/human/health/disease	BBN	Health/Global Acute Malnutrition (GAM) rate	0.50875294
 eidos	UN/entities/human/health/disease	BBN	chemical substance/drug	0.48246852
 eidos	UN/entities/human/infrastructure/transportation/transportation_methods	BBN	movement/transport	0.81321067
 eidos	UN/entities/human/infrastructure/transportation/transportation_methods	BBN	artificial physical objects	0.54428357
@@ -3363,28 +3363,28 @@ eidos	UN/entities/human/livelihood	BBN	economics/sector	0.6602318
 eidos	UN/entities/human/livelihood	BBN	indicator	0.6567923
 eidos	UN/entities/human/livelihood	BBN	entity	0.6559769
 eidos	UN/entities/human/livelihood	BBN	agriculture	0.6549957
+eidos	UN/entities/human/livelihood	BBN	Agriculture/Livestock Production	0.64250857
+eidos	UN/entities/human/livelihood	BBN	Agriculture	0.63519347
+eidos	UN/entities/human/livelihood	BBN	Agriculture/Crop Production	0.6322274
 eidos	UN/entities/human/livelihood	BBN	economics	0.6222675
 eidos	UN/entities/human/livelihood	BBN	industry	0.61623544
-eidos	UN/entities/human/livelihood	BBN	employment	0.5960281
-eidos	UN/entities/human/livelihood	BBN	organization/corporation	0.59483314
-eidos	UN/entities/human/livelihood	BBN	economic activity/production/agriculture production/crop production	0.59471977
 eidos	UN/entities/human/farming	BBN	economic activity/production/agriculture production/crop production	0.6258266
+eidos	UN/entities/human/farming	BBN	Agriculture/Livestock Production	0.5772087
+eidos	UN/entities/human/farming	BBN	Agriculture	0.5751861
+eidos	UN/entities/human/farming	BBN	Agriculture/Crop Production	0.5673144
 eidos	UN/entities/human/farming	BBN	agriculture	0.5629913
 eidos	UN/entities/human/farming	BBN	nature/land	0.54350615
 eidos	UN/entities/human/farming	BBN	organism/animal	0.53831005
 eidos	UN/entities/human/farming	BBN	nature	0.5207458
 eidos	UN/entities/human/farming	BBN	agriculture/food	0.5166099
 eidos	UN/entities/human/farming	BBN	agriculture/food/fruit	0.50084305
-eidos	UN/entities/human/farming	BBN	economic activity/production/agriculture production	0.49945435
-eidos	UN/entities/human/farming	BBN	economic activity/production/agriculture production/livestock production	0.47917098
-eidos	UN/entities/human/farming	BBN	agriculture/food/crop	0.47159576
 eidos	UN/entities/human/fishery	BBN	economic activity/production/agriculture production/livestock production	0.7332784
+eidos	UN/entities/human/fishery	BBN	Agriculture/Livestock Production	0.4075137
 eidos	UN/entities/human/fishery	BBN	economic activity/production/agriculture production/crop production	0.406087
 eidos	UN/entities/human/fishery	BBN	location/water body	0.40189666
-eidos	UN/entities/human/fishery	BBN	indicator/Agriculture/Livestock Production	0.39323342
+eidos	UN/entities/human/fishery	BBN	Agriculture/Crop Production	0.40003103
+eidos	UN/entities/human/fishery	BBN	Agriculture	0.3921566
 eidos	UN/entities/human/fishery	BBN	nature/land	0.38803354
-eidos	UN/entities/human/fishery	BBN	indicator/Agriculture/Crop Production	0.38575074
-eidos	UN/entities/human/fishery	BBN	indicator/Agriculture	0.3826957
 eidos	UN/entities/human/fishery	BBN	location/water body/river	0.3790857
 eidos	UN/entities/human/fishery	BBN	temporal/seasons/crop season	0.3781194
 eidos	UN/entities/human/fishery	BBN	agriculture	0.36511198
@@ -3465,9 +3465,9 @@ eidos	UN/entities/human/financial/economic/inflation	BBN	economics/indicator	0.5
 eidos	UN/entities/human/financial/economic/inflation	BBN	economic activity/market	0.5567396
 eidos	UN/entities/human/financial/economic/inflation	BBN	currency	0.54446024
 eidos	UN/entities/human/financial/economic/inflation	BBN	economic activity/demand	0.53508097
-eidos	UN/entities/human/financial/economic/inflation	BBN	indicator/Wealth/Inflation Rate	0.5173223
 eidos	UN/entities/human/financial/economic/inflation	BBN	economics/financial	0.5109784
 eidos	UN/entities/human/financial/economic/inflation	BBN	trend	0.5040271
+eidos	UN/entities/human/financial/economic/inflation	BBN	economics/commodity	0.49706447
 eidos	UN/entities/human/financial/economic/depreciation	BBN	economics/financial	0.5353493
 eidos	UN/entities/human/financial/economic/depreciation	BBN	economic activity/market	0.5319639
 eidos	UN/entities/human/financial/economic/depreciation	BBN	economic activity/market/currency devaluation	0.5132657
@@ -3477,7 +3477,7 @@ eidos	UN/entities/human/financial/economic/depreciation	BBN	currency	0.44057918
 eidos	UN/entities/human/financial/economic/depreciation	BBN	economic activity/market/transaction	0.43062514
 eidos	UN/entities/human/financial/economic/depreciation	BBN	economics/financial/price	0.42841977
 eidos	UN/entities/human/financial/economic/depreciation	BBN	economic activity/market/transaction/oil transaction	0.4243255
-eidos	UN/entities/human/financial/economic/depreciation	BBN	indicator/Wealth/Inflation Rate	0.37526515
+eidos	UN/entities/human/financial/economic/depreciation	BBN	economics/concept	0.3694634
 eidos	UN/entities/human/financial/economic/fuel	BBN	economics/commodity	0.6135551
 eidos	UN/entities/human/financial/economic/fuel	BBN	economic activity/consumption/food consumption	0.53509057
 eidos	UN/entities/human/financial/economic/fuel	BBN	economic activity/consumption	0.5340656
@@ -3496,8 +3496,8 @@ eidos	UN/entities/human/financial/economic/revenue	BBN	economic activity	0.63398
 eidos	UN/entities/human/financial/economic/revenue	BBN	economic activity/business	0.61724246
 eidos	UN/entities/human/financial/economic/revenue	BBN	economic activity/market/transaction	0.60695577
 eidos	UN/entities/human/financial/economic/revenue	BBN	economic activity/market/transaction/oil transaction	0.60344917
+eidos	UN/entities/human/financial/economic/revenue	BBN	Wealth/Inflation Rate	0.60327566
 eidos	UN/entities/human/financial/economic/revenue	BBN	economic activity/market/price	0.6024769
-eidos	UN/entities/human/financial/economic/revenue	BBN	economic activity/market/price/oil price	0.5988105
 eidos	UN/entities/human/financial/economic/assets	BBN	economics/financial	0.637251
 eidos	UN/entities/human/financial/economic/assets	BBN	economic activity/market/transaction	0.62849146
 eidos	UN/entities/human/financial/economic/assets	BBN	economic activity/market/transaction/oil transaction	0.6251279
@@ -3505,19 +3505,19 @@ eidos	UN/entities/human/financial/economic/assets	BBN	economic activity/market	0
 eidos	UN/entities/human/financial/economic/assets	BBN	nature/land	0.5878085
 eidos	UN/entities/human/financial/economic/assets	BBN	economics	0.5694335
 eidos	UN/entities/human/financial/economic/assets	BBN	entity	0.56858176
+eidos	UN/entities/human/financial/economic/assets	BBN	Wealth/Inflation Rate	0.561615
 eidos	UN/entities/human/financial/economic/assets	BBN	economics/financial/price	0.55983394
-eidos	UN/entities/human/financial/economic/assets	BBN	property	0.5442352
-eidos	UN/entities/human/financial/economic/assets	BBN	economic activity	0.54314274
+eidos	UN/entities/human/financial/economic/assets	BBN	Wealth	0.54847497
 eidos	UN/entities/human/financial/economic/poverty	BBN	condition/poverty	0.7453803
 eidos	UN/entities/human/financial/economic/poverty	BBN	condition	0.6719508
 eidos	UN/entities/human/financial/economic/poverty	BBN	healthcare/famine	0.6603088
 eidos	UN/entities/human/financial/economic/poverty	BBN	conflict/repression	0.55004406
 eidos	UN/entities/human/financial/economic/poverty	BBN	indicator	0.5056788
+eidos	UN/entities/human/financial/economic/poverty	BBN	Wealth/Inflation Rate	0.49154708
 eidos	UN/entities/human/financial/economic/poverty	BBN	conflict/terrorism	0.49070784
 eidos	UN/entities/human/financial/economic/poverty	BBN	entity	0.49017763
 eidos	UN/entities/human/financial/economic/poverty	BBN	crisis/disaster/earthquake	0.48978478
 eidos	UN/entities/human/financial/economic/poverty	BBN	crisis/disaster	0.48785034
-eidos	UN/entities/human/financial/economic/poverty	BBN	economics/financial	0.47487533
 eidos	UN/entities/human/government/government_entity	BBN	organization	0.7430227
 eidos	UN/entities/human/government/government_entity	BBN	organization/corporation	0.6949675
 eidos	UN/entities/human/government/government_entity	BBN	entity	0.6929126
@@ -3591,8 +3591,8 @@ eidos	UN/entities/human/food/food_price	BBN	economic activity	0.57599205
 eidos	UN/entities/human/food/food_security	BBN	agriculture/food/fruit	0.6955436
 eidos	UN/entities/human/food/food_security	BBN	agriculture	0.6924891
 eidos	UN/entities/human/food/food_security	BBN	agriculture/food	0.6699559
-eidos	UN/entities/human/food/food_security	BBN	indicator/Health/Global Acute Malnutrition (GAM) rate	0.5647099
-eidos	UN/entities/human/food/food_security	BBN	indicator/Health	0.55223846
+eidos	UN/entities/human/food/food_security	BBN	Health/Global Acute Malnutrition (GAM) rate	0.6235716
+eidos	UN/entities/human/food/food_security	BBN	Health	0.6091568
 eidos	UN/entities/human/food/food_security	BBN	entity	0.53530836
 eidos	UN/entities/human/food/food_security	BBN	indicator	0.52653325
 eidos	UN/entities/human/food/food_security	BBN	access/shortage/food shortage	0.5262397
@@ -3626,7 +3626,7 @@ eidos	UN/temporal/seasons/season	BBN	temporal	0.51295495
 eidos	UN/temporal/seasons/season	BBN	weather/precipitation	0.4776815
 eidos	UN/temporal/seasons/season	BBN	weather	0.4521715
 eidos	UN/temporal/seasons/season	BBN	weather/storm	0.4125635
-eidos	UN/temporal/seasons/season	BBN	indicator/Rainfall	0.3648124
+eidos	UN/temporal/seasons/season	BBN	Rainfall	0.37774557
 eidos	UN/temporal/seasons/season	BBN	economic activity/competition	0.3611395
 eidos	UN/temporal/month	BBN	temporal/months	0.1257131
 eidos	UN/temporal/month	BBN	temporal/seasons	0.08236126
@@ -3636,8 +3636,8 @@ eidos	UN/temporal/month	BBN	location/geopolitical entities/country	0.056500196
 eidos	UN/temporal/month	BBN	economic activity/demand	0.053328156
 eidos	UN/temporal/month	BBN	economic activity/market	0.053266197
 eidos	UN/temporal/month	BBN	intervention/tax	0.05321442
-eidos	UN/temporal/month	BBN	indicator/Wealth/Inflation Rate	0.052462786
 eidos	UN/temporal/month	BBN	location/geopolitical entities/city	0.05115488
+eidos	UN/temporal/month	BBN	location/geopolitical entities/nation	0.050918203
 sofia	entities/Industrial_Artifacts	BBN	artificial physical objects/vehicle	0.7201449
 sofia	entities/Industrial_Artifacts	BBN	artificial physical objects	0.5739163
 sofia	entities/Industrial_Artifacts	BBN	movement/transport	0.531218
@@ -3703,11 +3703,11 @@ sofia	entities/Sciences_Education	BBN	intervention/education	0.64445
 sofia	entities/Sciences_Education	BBN	organization/educational	0.6407972
 sofia	entities/Sciences_Education	BBN	organization/educational/university	0.62968624
 sofia	entities/Sciences_Education	BBN	mathematics	0.57015425
+sofia	entities/Sciences_Education	BBN	Health	0.5578449
 sofia	entities/Sciences_Education	BBN	organization	0.55616015
+sofia	entities/Sciences_Education	BBN	Health/Global Acute Malnutrition (GAM) rate	0.55354077
 sofia	entities/Sciences_Education	BBN	healthcare/treatment	0.5501199
 sofia	entities/Sciences_Education	BBN	healthcare/animal disease	0.5480666
-sofia	entities/Sciences_Education	BBN	sociology	0.54696953
-sofia	entities/Sciences_Education	BBN	healthcare/plant disease	0.5429916
 sofia	entities/Law_Policy	BBN	rule/law	0.74084806
 sofia	entities/Law_Policy	BBN	rule	0.7128289
 sofia	entities/Law_Policy	BBN	entity	0.6530455
@@ -3899,15 +3899,15 @@ sofia	events1/Economy/Commerce	BBN	economics	0.6601989
 sofia	events1/Economy/Commerce	BBN	organization/corporation	0.64211625
 sofia	events1/Economy/Commerce	BBN	economic activity/market/price	0.6290824
 sofia	events1/Produce/Agriculture	BBN	economic activity/production/agriculture production	0.75188994
+sofia	events1/Produce/Agriculture	BBN	Agriculture	0.6814187
 sofia	events1/Produce/Agriculture	BBN	economic activity/production/agriculture production/crop production	0.6700087
 sofia	events1/Produce/Agriculture	BBN	agriculture	0.66928464
+sofia	events1/Produce/Agriculture	BBN	Agriculture/Livestock Production	0.66612315
+sofia	events1/Produce/Agriculture	BBN	Agriculture/Crop Production	0.65868825
 sofia	events1/Produce/Agriculture	BBN	nature/land	0.63908297
 sofia	events1/Produce/Agriculture	BBN	economic activity/production/agriculture production/irrigation	0.6305908
 sofia	events1/Produce/Agriculture	BBN	agriculture/food/crop	0.6209299
 sofia	events1/Produce/Agriculture	BBN	organism/animal	0.6198102
-sofia	events1/Produce/Agriculture	BBN	agriculture/food	0.61574376
-sofia	events1/Produce/Agriculture	BBN	nature	0.61493146
-sofia	events1/Produce/Agriculture	BBN	agriculture/food/fruit	0.6106916
 sofia	events1/Conflict/Hostility	BBN	conflict/hostility	0.8447869
 sofia	events1/Conflict/Hostility	BBN	conflict/repression	0.7781294
 sofia	events1/Conflict/Hostility	BBN	conflict	0.7344518
@@ -3916,8 +3916,8 @@ sofia	events1/Conflict/Hostility	BBN	conflict/terrorism	0.7123568
 sofia	events1/Conflict/Hostility	BBN	conflict/war	0.65393066
 sofia	events1/Conflict/Hostility	BBN	conflict/attack	0.6536
 sofia	events1/Conflict/Hostility	BBN	conflict/attack/psychological attack	0.64643097
+sofia	events1/Conflict/Hostility	BBN	Conflict/Population Displacement	0.63085926
 sofia	events1/Conflict/Hostility	BBN	conflict/strike	0.6234598
-sofia	events1/Conflict/Hostility	BBN	conflict/demostrate	0.6123692
 sofia	events1/Produce/Manufacture	BBN	economic activity/production	0.8214844
 sofia	events1/Produce/Manufacture	BBN	economic activity/production/agriculture production	0.68821025
 sofia	events1/Produce/Manufacture	BBN	economic activity/production/oil production	0.6196014
@@ -3980,9 +3980,9 @@ sofia	events1/Health/Famine	BBN	conflict/repression	0.40515706
 sofia	events1/Health/Famine	BBN	death	0.4038327
 sofia	events1/Natural_Phenomena/Weather	BBN	weather	0.82112026
 sofia	events1/Natural_Phenomena/Weather	BBN	weather/precipitation	0.73365253
-sofia	events1/Natural_Phenomena/Weather	BBN	indicator/Rainfall	0.67920434
 sofia	events1/Natural_Phenomena/Weather	BBN	weather/drought	0.6736569
 sofia	events1/Natural_Phenomena/Weather	BBN	weather/flooding	0.66964436
+sofia	events1/Natural_Phenomena/Weather	BBN	Rainfall	0.66856754
 sofia	events1/Natural_Phenomena/Weather	BBN	weather/storm	0.6451974
 sofia	events1/Natural_Phenomena/Weather	BBN	temperature	0.56862295
 sofia	events1/Natural_Phenomena/Weather	BBN	nature/soil/soil contents	0.5300768
