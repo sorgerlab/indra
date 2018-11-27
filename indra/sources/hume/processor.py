@@ -63,9 +63,9 @@ class HumeJsonLdProcessor(object):
         concepts = []
         for e in extractions:
             label_set = set(e.get('labels', []))
-            if 'DirectRelation' in label_set:
-                self.relation_dict[rel['@id']] = e
-                if any(t == e.get('subtype') for t in relation_polarities.keys()):
+            if 'DirectedRelation' in label_set:
+                self.relation_dict[e['@id']] = e
+                if any(t in e.get('subtype') for t in relation_polarities.keys()):
                     relations.append(e)
             if {'Event', 'Entity'} & label_set:
                 self.concept_dict[e['@id']] = e
@@ -80,11 +80,13 @@ class HumeJsonLdProcessor(object):
                 elif ont.startswith('/entity/temporal'):
                     self.times_dict[e['@id']] = e
 
-        if not relations:
+        if not relations and not self.relation_dict:
+            logger.info("No relations found.")
             return
 
         logger.info('%d relations of types %s found'
                     % (len(relations), ', '.join(relation_polarities.keys())))
+        logger.info('%d relations in dict.' % len(self.relation_dict))
         logger.info("%d times found." % len(self.times_dict))
         logger.info("%d locations found." % len(self.locations_dict))
 
@@ -94,12 +96,16 @@ class HumeJsonLdProcessor(object):
             relation_type = relation.get('subtype')
             key = tuple([arg['value']['@id']
                          for arg in relation['arguments']])
+
+            # Handle temporallyPrecedes specially.
             if relation_type == 'temporallyPrecedes':
                 logger.debug("Found a temporally precedes.")
                 key = tuple([arg['value']['@id']
                              for arg in relation['arguments']])
                 self.arg_pair_time_dict[key] = relation
                 continue
+
+            # Extract concepts.
             subj_concept, subj_delta, subj_meta = self._get_concept(relation, 'source')
             obj_concept, obj_delta, obj_meta = self._get_concept(relation, 'destination')
 
