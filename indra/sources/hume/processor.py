@@ -5,7 +5,7 @@ import logging
 import objectpath
 import collections
 from os.path import basename
-from indra.statements import Concept, Influence, Evidence
+from indra.statements import Concept, Influence, Evidence, TimeContext, RefContext, WorldContext
 
 
 logger = logging.getLogger('hume')
@@ -105,11 +105,16 @@ class HumeJsonLdProcessor(object):
             
             # Consolidate times and locs
             time = obj_time if obj_time else subj_time
+            time_context = None
             if time:
-                print("Found relevant time: %s!" % time)
+                time_context = TimeContext(text=time['mentions'][0]['text'])
             loc = obj_loc if obj_loc else subj_loc
+            loc_context = None
             if loc:
-                print("Found relevant loc: %s!" % loc)
+                loc_context = RefContext(text=loc['canonicalName'])
+            cont = None
+            if time or loc:
+                cont = WorldContext(time=time_context, geo_location=loc_context)
 
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
@@ -134,7 +139,7 @@ class HumeJsonLdProcessor(object):
 
 
             evidence = self._get_evidence(relation, subj_concept, obj_concept,
-                                          get_states(relation))
+                                          get_states(relation), cont)
 
             st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
@@ -205,12 +210,17 @@ class HumeJsonLdProcessor(object):
                     'polarity': get_polarity(ev)}
         time = None
         if 'Time' in metadata.keys():
-            time = self.times_dict[metadata['Time']]
+            time = self.times_dict.get(metadata['Time'])
+            if time is None:
+                logger.warning("Time id not found: %s" % metadata['Time'])
+        loc = None
         if 'located_at' in metadata.keys():
-            loc = self.locations_dict[metadata['located_at']]
+            loc = self.locations_dict.get(metadata['located_at'])
+            if loc is None:
+                logger.warning("Location id not found: %s" % metadata['located_at'])
         return concept, ev_delta, time, loc
 
-    def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
+    def _get_evidence(self, event, subj_concept, obj_concept, adjectives, context):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
@@ -231,7 +241,7 @@ class HumeJsonLdProcessor(object):
             }
         location = self.document_dict[doc_id]['location']
         ev = Evidence(source_api='hume', text=text, annotations=annotations,
-                      pmid=location)
+                      pmid=location, context=context)
         return [ev]
 
     @staticmethod
