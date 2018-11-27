@@ -97,17 +97,19 @@ class HumeJsonLdProcessor(object):
             key = tuple([arg['value']['@id']
                          for arg in relation['arguments']])
 
-            # Handle temporallyPrecedes specially.
-            if relation_type == 'temporallyPrecedes':
-                logger.debug("Found a temporally precedes.")
-                key = tuple([arg['value']['@id']
-                             for arg in relation['arguments']])
-                self.arg_pair_time_dict[key] = relation
-                continue
-
             # Extract concepts.
-            subj_concept, subj_delta, subj_meta = self._get_concept(relation, 'source')
-            obj_concept, obj_delta, obj_meta = self._get_concept(relation, 'destination')
+            subj_concept, subj_delta, subj_time, subj_loc = \
+                self._get_concept(relation, 'source')
+            obj_concept, obj_delta, obj_time, obj_loc = \
+                self._get_concept(relation, 'destination')
+            
+            # Consolidate times and locs
+            time = obj_time if obj_time else subj_time
+            if time:
+                print("Found relevant time: %s!" % time)
+            loc = obj_loc if obj_loc else subj_loc
+            if loc:
+                print("Found relevant loc: %s!" % loc)
 
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
@@ -201,7 +203,12 @@ class HumeJsonLdProcessor(object):
         ev_delta = {'adjectives': [],
                     'states': get_states(ev),
                     'polarity': get_polarity(ev)}
-        return concept, ev_delta, metadata
+        time = None
+        if 'Time' in metadata.keys():
+            time = self.times_dict[metadata['Time']]
+        if 'located_at' in metadata.keys():
+            loc = self.locations_dict[metadata['located_at']]
+        return concept, ev_delta, time, loc
 
     def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
         """Return the Evidence object for the INDRA Statement."""
