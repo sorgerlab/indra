@@ -3988,3 +3988,12 @@ sofia	events1/Natural_Phenomena/Weather	BBN	temperature	0.56862295
 sofia	events1/Natural_Phenomena/Weather	BBN	nature/soil/soil contents	0.5300768
 sofia	events1/Natural_Phenomena/Weather	BBN	nature/soil	0.52948916
 sofia	events1/Natural_Phenomena/Weather	BBN	nature	0.5268625
+eidos	UN/events/natural/weather/precipitation	CWMS	ONT::PRECIPITATION	1.0
+eidos	UN/entities/human/food/food_security	CWMS	ONT::SECURITY-SCALE|ONT::FOOD	1.0
+eidos	UN/entities/human/food/food_insecurity	CWMS	ONT::UNSAFE-SCALE|ONT::FOOD	1.0
+eidos	UN/events/human/conflict	CWMS	ONT::TRANSGRESS	1.0
+eidos	UN/events/natural/natural_disaster/flooding	CWMS	ONT::FLOODING	1.0
+eidos	UN/events/human/intervention/intervention	CWMS	ONT::MANIPULATE	1.0
+eidos	UN/entities/human/infrastructure/transportation/road	CWMS	ONT::ROUTE	1.0
+eidos	UN/events/human/human_migration	CWMS	ONT::CAUSE-MOVE	1.0
+eidos	UN/events/natural/natural_disaster/drought	CWMS	ONT::DROUGHT	1.0
