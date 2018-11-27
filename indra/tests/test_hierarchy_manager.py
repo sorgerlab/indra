@@ -190,9 +190,20 @@ def test_load_trips_hierarchy():
     assert trips_isa('ONT::TABLE', 'ONT::MANUFACTURED-OBJECT')
 
 
+def test_load_sofia_hierarchy():
+    sofia_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             '../sources/sofia/sofia_ontology.rdf')
+    hm = HierarchyManager(sofia_ont, True, True)
+    assert hm.isa_closure
+    sofia_isa = lambda a, b: hm.isa('SOFIA', a, 'SOFIA', b)
+    assert sofia_isa('Accessibility/Accessibility', 'Accessibility')
+    assert not sofia_isa('Movement/Transportation', 'Movement/Human_Migration')
+    assert sofia_isa('Movement/Human_Migration', 'Movement')
+
+
 def test_load_hume_hierarchy():
     hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           '../sources/hume/hume_ontology.rdf')
+                            '../sources/hume/hume_ontology.rdf')
     hm = HierarchyManager(hume_ont, True, True)
     assert hm.isa_closure
     hume_isa = lambda a, b: hm.isa('HUME', a, 'HUME', b)
