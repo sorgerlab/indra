@@ -1,4 +1,7 @@
 import sys
+import os
+from os.path import join, dirname, abspath
+from indra import preassembler
 from indra.sources import eidos
 from indra.sources.hume.make_hume_tsv import make_file as mht
 from indra.sources.sofia.make_sofia_tsv import make_file as mst
@@ -8,7 +11,7 @@ eidos_package = 'org.clulab.wm.eidos'
 
 if __name__ == '__main__':
     sofia_ont_path = sys.argv[1]
-    hume_path = 'hume_ontology_examaples.tsv'
+    hume_path = 'hume_ontology_examples.tsv'
     mht(hume_path)
     sofia_path = 'sofia_ontology_examples.tsv'
     mst(sofia_ont_path, sofia_path)
@@ -22,3 +25,7 @@ if __name__ == '__main__':
     topn = 10
     table_str = om.mapOntologies(es, hume_path, sofia_path, example_weight,
                                  parent_weight, topn)
+    with open(join(dirname(abspath(__file__)), os.pardir, 'resources',
+                           'wm_ontomap.tsv'), 'w') as fh:
+        fh.write(table_str) 
+
