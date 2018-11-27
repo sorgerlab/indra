@@ -53,8 +53,8 @@ def test_negated_effect():
 
 @unittest.skip('Need updated JSON-LD file')
 def test_bbn_on_ben_paragraph():
-    bp = process_jsonld_file(os.join(path_this,
-                                     'hackathon_test_paragraph.json-ld'))
+    bp = process_jsonld_file(os.path.join(path_this,
+                                          'hackathon_test_paragraph.json-ld'))
     assert bp is not None
     print(bp.statements)
     stmt_dict = {s.get_hash(shallow=False): s for s in bp.statements}
