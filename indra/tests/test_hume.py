@@ -59,3 +59,11 @@ def test_bbn_on_ben_paragraph():
     print(bp.statements)
     stmt_dict = {s.get_hash(shallow=False): s for s in bp.statements}
     assert len(stmt_dict) == 3, len(stmt_dict)
+
+
+def test_large_bbn_corpus():
+    bp = process_jsonld_file(os.path.join(path_this,
+                             'wm_m12.v6.full.v2.json-ld'))
+    assert bp is not None
+    print(len(bp.statements))
+    
