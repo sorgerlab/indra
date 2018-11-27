@@ -7,7 +7,7 @@ from indra.sources import hume
 
 
 def build_examples(node, tree, prefix, all_examples):
-    if not prefix or prefix in ('entity', 'event'):
+    if not prefix or prefix in ('entity', 'event', 'indicator'):
         this_prefix = node
     else:
         this_prefix = prefix + ',' + node if prefix else node
