@@ -42,7 +42,6 @@ def make_file(fname):
         node = list(top_entry.keys())[0]
         build_examples(node, top_entry[node], None, all_examples)
 
-
     with open(fname, 'w') as fh:
         for k, v in sorted(all_examples.items(), key=lambda x: x[0]):
             fh.write('%s\t%s\n' % (k, ','.join(sorted(list(v)))))

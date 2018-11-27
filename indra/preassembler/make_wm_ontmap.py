@@ -26,6 +26,5 @@ if __name__ == '__main__':
     table_str = om.mapOntologies(es, hume_path, sofia_path, example_weight,
                                  parent_weight, topn)
     with open(join(dirname(abspath(__file__)), os.pardir, 'resources',
-                           'wm_ontomap.tsv'), 'w') as fh:
-        fh.write(table_str) 
-
+                   'wm_ontomap.tsv'), 'w') as fh:
+        fh.write(table_str)

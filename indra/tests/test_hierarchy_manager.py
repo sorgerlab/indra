@@ -203,7 +203,7 @@ def test_load_sofia_hierarchy():
 
 def test_load_hume_hierarchy():
     hume_ont = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           '../sources/hume/hume_ontology.rdf')
+                            '../sources/hume/hume_ontology.rdf')
     hm = HierarchyManager(hume_ont, True, True)
     assert hm.isa_closure
     hume_isa = lambda a, b: hm.isa('HUME', a, 'HUME', b)

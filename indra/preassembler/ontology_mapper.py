@@ -113,7 +113,7 @@ def _load_wm_map():
         return '%s/%s' % (prefix, hume_entry)
 
     def map_entry(reader, entry):
-        """Remap the reader and entry strings to match our internal standards."""
+        """Remap the readers and entries to match our internal standards."""
         if reader == 'eidos':
             namespace = 'UN'
             entry = entry.replace(' ', '_')
