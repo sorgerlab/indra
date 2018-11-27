@@ -166,4 +166,3 @@ try:
     wm_ontomap = _load_wm_map()
 except Exception as e:
     wm_ontomap = []
-    logger.exception(e)
