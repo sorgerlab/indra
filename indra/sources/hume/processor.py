@@ -32,6 +32,8 @@ class HumeJsonLdProcessor(object):
         self.document_dict = {}
         self.concept_dict = {}
         self.relation_dict = {}
+        self.times_dict = {}
+        self.locations_dict = {}
         self.eid_stmt_dict = {}
         self.arg_pair_time_dict = {}
         self.arg_pair_stmt_dict = {}
@@ -57,8 +59,6 @@ class HumeJsonLdProcessor(object):
                                'temporallyPrecedes': 0}
 
         # Get relations from extractions
-        times = []
-        locations = []
         relations = []
         concepts = []
         for e in extractions:
@@ -76,15 +76,17 @@ class HumeJsonLdProcessor(object):
                 if not ont:
                     continue
                 if ont.startswith('/entity/location'):
-                    locations.append(e)
+                    self.locations_dict[e['@id']] = e
                 elif ont.startswith('/entity/temporal'):
-                    times.append(e)
+                    self.times_dict[e['@id']] = e
 
         if not relations:
             return
 
         logger.info('%d relations of types %s found'
                     % (len(relations), ', '.join(relation_polarities.keys())))
+        logger.info("%d times found." % len(self.times_dict))
+        logger.info("%d locations found." % len(self.locations_dict))
 
         self.get_documents()
 
@@ -93,6 +95,7 @@ class HumeJsonLdProcessor(object):
             key = tuple([arg['value']['@id']
                          for arg in relation['arguments']])
             if relation_type == 'temporallyPrecedes':
+                logger.debug("Found a temporally precedes.")
                 key = tuple([arg['value']['@id']
                              for arg in relation['arguments']])
                 self.arg_pair_time_dict[key] = relation
