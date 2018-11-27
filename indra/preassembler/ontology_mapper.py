@@ -1,5 +1,9 @@
 import os
 import rdflib
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class OntologyMapper(object):
@@ -112,6 +116,7 @@ def _load_wm_map():
         """Remap the reader and entry strings to match our internal standards."""
         if reader == 'eidos':
             namespace = 'UN'
+            entry = entry.replace(' ', '_')
             entry_id = entry
         elif reader == 'BBN':
             namespace = 'HUME'
@@ -161,3 +166,4 @@ try:
     wm_ontomap = _load_wm_map()
 except Exception as e:
     wm_ontomap = []
+    logger.exception(e)
