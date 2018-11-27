@@ -161,7 +161,11 @@ def get_profile_data(study_id, gene_list,
         A dict keyed to cases containing a dict keyed to genes
         containing int
     """
-    genetic_profile = get_genetic_profiles(study_id, profile_filter)[0]
+    genetic_profiles = get_genetic_profiles(study_id, profile_filter)
+    if genetic_profiles:
+        genetic_profile = genetic_profiles[0]
+    else:
+        return {}
     gene_list_str = ','.join(gene_list)
     case_set_ids = get_case_lists(study_id)
     if case_set_filter:
