@@ -19,7 +19,7 @@ test_file_negatedEffect = os.path.join(path_this,
 def test_simple_extraction():
     """Verify that processor extracts a simple causal assertion correctly from
     a JSON-LD file."""
-    bp = process_json_file_old(test_file_simple)
+    bp = process_jsonld_file(test_file_simple)
     statements = bp.statements
 
     assert(len(statements) == 1)
