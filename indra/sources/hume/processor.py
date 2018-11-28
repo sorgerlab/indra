@@ -52,7 +52,7 @@ class HumeJsonLdProcessor(object):
         # List out relation types and their default (implied) polarities.
         polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
                       'mitigation': -1, 'prevention': -1,
-                      'temporallyPrecedes': 0}
+                      'temporallyPrecedes': None}
 
         # Get relations from extractions
         relations = []
