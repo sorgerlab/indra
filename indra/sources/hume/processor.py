@@ -3,7 +3,7 @@ import rdflib
 import logging
 import objectpath
 import collections
-from os.path import basename
+from datetime import datetime
 from indra.statements import Concept, Influence, Evidence, TimeContext, \
     RefContext, WorldContext
 
@@ -123,20 +123,17 @@ class HumeJsonLdProcessor(object):
                 loc_entity = self.concept_dict[entity_id]
                 place = loc_entity["canonicalName"]
                 loc_context = RefContext(name=place)
-                print("Found relevant location:", place)
             if argument["type"] == "time":
                 entity_id = argument["value"]["@id"]
                 temporal_entity = self.concept_dict[entity_id]
                 text = temporal_entity['mentions'][0]['text']
-                print("Found relevant time (text):", text)
                 if len(temporal_entity.get("timeInterval", [])) < 1:
                     time_context = TimeContext(text=text)
                     continue
                 time = temporal_entity["timeInterval"][0]
-                start = time['start']
-                end = time['end']
-                duration = time['duration']
-                print("Got time details: start=%s, end=%s, dur=%s" % (start, end, duration))
+                start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
+                end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
+                duration = int(time['duration'])
                 time_context = TimeContext(text=text, start=start, end=end,
                                            duration=duration)
 
@@ -201,7 +198,7 @@ class HumeJsonLdProcessor(object):
         annotations = {
             'found_by': event.get('rule'),
             'provenance': provenance,
-            'event_type': basename(event.get('type')),
+            'event_type': os.path.basename(event.get('type')),
             'adjectives': adjectives,
             'bounds': bounds
             }
