@@ -122,7 +122,7 @@ class HumeJsonLdProcessor(object):
                 loc_entity = self.concept_dict[entity_id]
                 place = loc_entity["canonicalName"]
                 geo_id = loc_entity.get('geoname_id')
-                loc_context = RefContext(name=place, db_refs={"GEO_ID": geo_id})
+                loc_context = RefContext(name=place, db_refs={"GEOID": geo_id})
             if argument["type"] == "time":
                 entity_id = argument["value"]["@id"]
                 temporal_entity = self.concept_dict[entity_id]
