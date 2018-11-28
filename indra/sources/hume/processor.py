@@ -1,11 +1,11 @@
-import re
 import os
 import rdflib
 import logging
 import objectpath
 import collections
-from os.path import basename
-from indra.statements import Concept, Influence, Evidence
+from datetime import datetime
+from indra.statements import Concept, Influence, Evidence, TimeContext, \
+    RefContext, WorldContext
 
 
 logger = logging.getLogger('hume')
@@ -33,6 +33,7 @@ class HumeJsonLdProcessor(object):
         self.concept_dict = {}
         self.relation_dict = {}
         self.eid_stmt_dict = {}
+        return
 
     def get_documents(self):
         """Populate the sentences attribute with a dict keyed by document id."""
@@ -48,56 +49,100 @@ class HumeJsonLdProcessor(object):
         extractions = \
             list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
 
-        # Get relations from extractions
-        relations = [e for e in extractions if 'DirectedRelation' in
-                     e.get('labels', [])]
-        if not relations:
-            return
-        self.relation_dict = {rel['@id']: rel for rel in relations}
-
         # List out relation types and their default (implied) polarities.
-        relation_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                               'mitigation': -1, 'prevention': -1}
+        polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+                      'mitigation': -1, 'prevention': -1,
+                      'temporallyPrecedes': None}
 
-        # Restrict to known relation types
-        relations = [r for r in relations if any([rt in r.get('type') for rt in
-                                                  relation_polarities.keys()])]
+        # Get relations from extractions
+        relations = []
+        concepts = []
+        for e in extractions:
+            label_set = set(e.get('labels', []))
+            if 'DirectedRelation' in label_set:
+                self.relation_dict[e['@id']] = e
+                subtype = e.get('subtype')
+                if any(t in subtype for t in polarities.keys()):
+                    relations.append((subtype, e))
+            if {'Event', 'Entity'} & label_set:
+                self.concept_dict[e['@id']] = e
+
+        if not relations and not self.relation_dict:
+            logger.info("No relations found.")
+            return
+
         logger.info('%d relations of types %s found'
-                    % (len(relations), ', '.join(relation_polarities.keys())))
-
-        # Build a dictionary of concepts and sentences by ID for convenient
-        # lookup
-        concepts = [e for e in extractions if
-                    set(e.get('labels', [])) & {'Event', 'Entity'}]
-        self.concept_dict = {concept['@id']: concept for concept in concepts}
+                    % (len(relations), ', '.join(polarities.keys())))
+        logger.info('%d relations in dict.' % len(self.relation_dict))
+        logger.info('%d concepts found.' % len(self.concept_dict))
 
         self.get_documents()
 
-        for relation in relations:
-            relation_type = relation.get('type')
-            subj_concept, subj_delta = self._get_concept(relation, 'source')
-            obj_concept, obj_delta = self._get_concept(relation, 'destination')
+        for relation_type, relation in relations:
+            # Extract concepts and contexts.
+            subj_concept, subj_delta, subj_context = \
+                self._get_concept_and_context(relation, 'source')
+            obj_concept, obj_delta, obj_context = \
+                self._get_concept_and_context(relation, 'destination')
+
+            # Choose a context
+            # TODO: It would be nice to not have to choose.
+            context = obj_context if obj_context else subj_context
 
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
             # None to begin with, we assume it is positive
             obj_delta['polarity'] = \
-                relation_polarities[relation_type] * \
+                polarities[relation_type] * \
                 (obj_delta['polarity'] if obj_delta['polarity'] is not None
                  else 1)
 
             if not subj_concept or not obj_concept:
                 continue
 
-            evidence = self._get_evidence(relation, subj_concept, obj_concept,
-                                          get_states(relation))
+            evidence = self._get_evidence(relation, get_states(relation),
+                                          context)
 
             st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
             self.eid_stmt_dict[relation['@id']] = st
             self.statements.append(st)
 
+        # Add temporal context to statements.
         return
+
+    def _make_context(self, entity):
+        """Get place and time info from the json for this entity."""
+        loc_context = None
+        time_context = None
+
+        # Look for time and place contexts.
+        for argument in entity["arguments"]:
+            if argument["type"] == "place":
+                entity_id = argument["value"]["@id"]
+                loc_entity = self.concept_dict[entity_id]
+                place = loc_entity["canonicalName"]
+                loc_context = RefContext(name=place)
+            if argument["type"] == "time":
+                entity_id = argument["value"]["@id"]
+                temporal_entity = self.concept_dict[entity_id]
+                text = temporal_entity['mentions'][0]['text']
+                if len(temporal_entity.get("timeInterval", [])) < 1:
+                    time_context = TimeContext(text=text)
+                    continue
+                time = temporal_entity["timeInterval"][0]
+                start = datetime.strptime(time['start'], '%Y-%m-%dT%H:%M')
+                end = datetime.strptime(time['end'], '%Y-%m-%dT%H:%M')
+                duration = int(time['duration'])
+                time_context = TimeContext(text=text, start=start, end=end,
+                                           duration=duration)
+
+        # Put context together
+        context = None
+        if loc_context or time_context:
+            context = WorldContext(time=time_context, geo_location=loc_context)
+
+        return context
 
     def _make_concept(self, entity):
         """Return Concept from a Hume entity."""
@@ -123,18 +168,22 @@ class HumeJsonLdProcessor(object):
         if hume_grounding:
             db_refs['HUME'] = hume_grounding
         concept = Concept(name, db_refs=db_refs)
-        return concept
+        metadata = {arg['type']: arg['value']['@id']
+                    for arg in entity['arguments']}
 
-    def _get_concept(self, event, arg_type):
+        return concept, metadata
+
+    def _get_concept_and_context(self, event, arg_type):
         eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
-        concept = self._make_concept(ev)
+        concept, metadata = self._make_concept(ev)
         ev_delta = {'adjectives': [],
                     'states': get_states(ev),
                     'polarity': get_polarity(ev)}
-        return concept, ev_delta
+        context = self._make_context(ev)
+        return concept, ev_delta, context
 
-    def _get_evidence(self, event, subj_concept, obj_concept, adjectives):
+    def _get_evidence(self, event, adjectives, context):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
@@ -149,13 +198,13 @@ class HumeJsonLdProcessor(object):
         annotations = {
             'found_by': event.get('rule'),
             'provenance': provenance,
-            'event_type': basename(event.get('type')),
+            'event_type': os.path.basename(event.get('type')),
             'adjectives': adjectives,
             'bounds': bounds
             }
         location = self.document_dict[doc_id]['location']
         ev = Evidence(source_api='hume', text=text, annotations=annotations,
-                      pmid=location)
+                      pmid=location, context=context)
         return [ev]
 
     @staticmethod
