@@ -578,6 +578,23 @@ def filter_grounded_only():
     return _return_stmts(stmts_out)
 
 
+@route('/preassembly/filter_belief', method=['POST', 'OPTIONS'])
+@allow_cors
+def filter_grounded_only():
+    """Filter to beliefs above a given threshold."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    belief_cutoff = body.get('belief_cutoff')
+    if belief_cutoff is not None:
+        belief_cutoff = float(belief_cutoff)
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.filter_belief(stmts, belief_cutoff)
+    return _return_stmts(stmts_out)
+
+
 @route('/indra_db_rest/get_evidence', method=['POST', 'OPTIONS'])
 @allow_cors
 def get_evidence_for_stmts():
