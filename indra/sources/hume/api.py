@@ -1,4 +1,5 @@
-__all__ = ['process_json_file_old', 'process_jsonld_file']
+__all__ = ['process_json_file_old', 'process_jsonld_file',
+           'process_jsonld']
 
 import json
 import rdflib
@@ -19,15 +20,32 @@ def process_jsonld_file(fname):
 
     Returns
     -------
-    bp : indra.sources.hume.HumeProcessor
+    indra.sources.hume.HumeProcessor
         A HumeProcessor instance, which contains a list of INDRA Statements
         as its statements attribute.
     """
     with open(fname, 'r') as fh:
         json_dict = json.load(fh)
-    bp = processor.HumeJsonLdProcessor(json_dict)
-    bp.get_events()
-    return bp
+    return process_jsonld(json_dict)
+
+
+def process_jsonld(jsonld):
+    """Process a JSON-LD string in the new format to extract Statements.
+
+    Parameters
+    ----------
+    jsonld : dict
+        The JSON-LD object to be processed.
+
+    Returns
+    -------
+    indra.sources.hume.HumeProcessor
+        A HumeProcessor instance, which contains a list of INDRA Statements
+        as its statements attribute.
+    """
+    hp = processor.HumeJsonLdProcessor(jsonld)
+    hp.get_events()
+    return hp
 
 
 def process_json_file_old(fname):
