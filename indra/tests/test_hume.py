@@ -63,7 +63,7 @@ def test_bbn_on_ben_paragraph():
 
 def test_large_bbn_corpus():
     bp = process_jsonld_file(os.path.join(path_this,
-                             'wm_m12.v6.full.v2.json-ld'))
+                             'wm_m12.v8.full.v4.json-ld'))
     assert bp is not None
     assert len(bp.statements) > 1000
     print(len(bp.statements))

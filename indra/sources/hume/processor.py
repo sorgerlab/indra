@@ -1,11 +1,11 @@
-import re
 import os
 import rdflib
 import logging
 import objectpath
 import collections
 from os.path import basename
-from indra.statements import Concept, Influence, Evidence, TimeContext, RefContext, WorldContext
+from indra.statements import Concept, Influence, Evidence, TimeContext, \
+    RefContext, WorldContext
 
 
 logger = logging.getLogger('hume')
@@ -32,11 +32,7 @@ class HumeJsonLdProcessor(object):
         self.document_dict = {}
         self.concept_dict = {}
         self.relation_dict = {}
-        self.times_dict = {}
-        self.locations_dict = {}
         self.eid_stmt_dict = {}
-        self.arg_pair_time_dict = {}
-        self.arg_pair_stmt_dict = {}
         return
 
     def get_documents(self):
@@ -65,20 +61,11 @@ class HumeJsonLdProcessor(object):
             label_set = set(e.get('labels', []))
             if 'DirectedRelation' in label_set:
                 self.relation_dict[e['@id']] = e
-                if any(t in e.get('subtype') for t in polarities.keys()):
-                    relations.append(e)
+                subtype = e.get('subtype')
+                if any(t in subtype for t in polarities.keys()):
+                    relations.append((subtype, e))
             if {'Event', 'Entity'} & label_set:
                 self.concept_dict[e['@id']] = e
-                concepts.append(e)
-            gnd = e.get('grounding')
-            if gnd and len(gnd) == 1:
-                ont = gnd[0].get('ontologyConcept', None)
-                if not ont:
-                    continue
-                if ont.startswith('/entity/location'):
-                    self.locations_dict[e['@id']] = e
-                elif ont.startswith('/entity/temporal'):
-                    self.times_dict[e['@id']] = e
 
         if not relations and not self.relation_dict:
             logger.info("No relations found.")
@@ -87,16 +74,11 @@ class HumeJsonLdProcessor(object):
         logger.info('%d relations of types %s found'
                     % (len(relations), ', '.join(polarities.keys())))
         logger.info('%d relations in dict.' % len(self.relation_dict))
-        logger.info("%d times found." % len(self.times_dict))
-        logger.info("%d locations found." % len(self.locations_dict))
+        logger.info('%d concepts found.' % len(self.concept_dict))
 
         self.get_documents()
 
-        for relation in relations:
-            relation_type = relation.get('subtype')
-            key = tuple([arg['value']['@id']
-                         for arg in relation['arguments']])
-
+        for relation_type, relation in relations:
             # Extract concepts and contexts.
             subj_concept, subj_delta, subj_context = \
                 self._get_concept_and_context(relation, 'source')
@@ -124,7 +106,6 @@ class HumeJsonLdProcessor(object):
             st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
             self.eid_stmt_dict[relation['@id']] = st
-            self.arg_pair_stmt_dict[key] = st
             self.statements.append(st)
 
         # Add temporal context to statements.
@@ -139,13 +120,15 @@ class HumeJsonLdProcessor(object):
         for argument in entity["arguments"]:
             if argument["type"] == "place":
                 entity_id = argument["value"]["@id"]
-                loc_entity = self.locations_dict[entity_id]
+                loc_entity = self.concept_dict[entity_id]
                 place = loc_entity["canonicalName"]
                 loc_context = RefContext(name=place)
+                print("Found relevant location:", place)
             if argument["type"] == "time":
                 entity_id = argument["value"]["@id"]
-                temporal_entity = self.times_dict[entity_id]
+                temporal_entity = self.concept_dict[entity_id]
                 text = temporal_entity['mentions'][0]['text']
+                print("Found relevant time (text):", text)
                 if len(temporal_entity.get("timeInterval", [])) < 1:
                     time_context = TimeContext(text=text)
                     continue
@@ -153,6 +136,7 @@ class HumeJsonLdProcessor(object):
                 start = time['start']
                 end = time['end']
                 duration = time['duration']
+                print("Got time details: start=%s, end=%s, dur=%s" % (start, end, duration))
                 time_context = TimeContext(text=text, start=start, end=end,
                                            duration=duration)
 
