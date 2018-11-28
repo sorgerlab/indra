@@ -21,6 +21,25 @@ logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
 
 
+def _return_stmts(stmts):
+    if stmts:
+        stmts_json = stmts_to_json(stmts)
+        res = {'statements': stmts_json}
+    else:
+        res = {'statements': []}
+    return res
+
+
+def _stmts_from_proc(proc):
+    if proc and proc.statements:
+        stmts = stmts_to_json(proc.statements)
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
 #   ALLOW CORS   #
 def allow_cors(func):
     """This is a decorator which enable CORS for the specified endpoint."""
@@ -239,16 +258,6 @@ def sofia_process_table():
     table = body.get('table')
     sp = sofia.process_table(table)
     return _stmts_from_proc(sp)
-
-
-def _stmts_from_proc(proc):
-    if proc and proc.statements:
-        stmts = stmts_to_json(proc.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
 
 
 #   OUTPUT ASSEMBLY   #
@@ -478,13 +487,7 @@ def map_grounding():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.map_grounding(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/map_sequence', method=['POST', 'OPTIONS'])
@@ -498,13 +501,7 @@ def map_sequence():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.map_sequence(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/run_preassembly', method=['POST', 'OPTIONS'])
@@ -518,13 +515,7 @@ def run_preassembly():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.run_preassembly(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/filter_by_type', method=['POST', 'OPTIONS'])
@@ -541,13 +532,7 @@ def filter_by_type():
     stmt_type = getattr(sys.modules[__name__], stmt_type_str)
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.filter_by_type(stmts, stmt_type)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/filter_grounded_only', method=['POST', 'OPTIONS'])
@@ -561,13 +546,7 @@ def filter_grounded_only():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.filter_grounded_only(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/indra_db_rest/get_evidence', method=['POST', 'OPTIONS'])
@@ -618,14 +597,7 @@ def get_evidence_for_stmts():
     stmts_out = _get_matching_stmts(stmt)
     agent_name_list = [ag.name for ag in stmt.agent_list()]
     stmts_out = stmts = ac.filter_concept_names(stmts_out, agent_name_list, 'all')
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
-
+    return _return_stmts(stmts_out)
 
 
 app = default_app()
