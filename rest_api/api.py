@@ -273,6 +273,45 @@ def eidos_process_json():
     return res
 
 
+@route('/cwms/process_text', method=['POST', 'OPTIONS'])
+@allow_cors
+def cwms_process_text():
+    """Process text with CWMS and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    text = body.get('text')
+    cp = cwms.process_text(text)
+    if cp and cp.statements:
+        stmts = stmts_to_json(cp.statements)
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
+@route('/hume/process_jsonld', method=['POST', 'OPTIONS'])
+@allow_cors
+def hume_process_jsonld():
+    """Process Hume JSON-LD and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    jsonld = body.get('jsonld')
+    hp = hume.process_jsonld(jsonld)
+    if hp and hp.statements:
+        stmts = stmts_to_json(hp.statements)
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
+
 #   OUTPUT ASSEMBLY   #
 
 #   PYSB   #
