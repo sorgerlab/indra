@@ -17,6 +17,7 @@ from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 
+
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
 
@@ -544,8 +545,11 @@ def filter_grounded_only():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
+    score_threshold = body.get('score_threshold')
+    if score_threshold is not None:
+        score_threshold = float(score_threshold)
     stmts = stmts_from_json(stmts_json)
-    stmts_out = ac.filter_grounded_only(stmts)
+    stmts_out = ac.filter_grounded_only(stmts, score_threshold=score_threshold)
     return _return_stmts(stmts_out)
 
 
