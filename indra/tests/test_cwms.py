@@ -188,6 +188,7 @@ def test_three_sentences():
     assert len(cp.statements) == 3, len(cp.statements)
 
 
+@attr('slow', 'webservice')
 def test_contextual_sentence():
     text = "Hunger causes displacement in 2018 in South Sudan."
     cp = process_text(text)
