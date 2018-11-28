@@ -17,6 +17,9 @@ from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
+
 
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
@@ -515,7 +518,14 @@ def run_preassembly():
     body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
-    stmts_out = ac.run_preassembly(stmts)
+    scorer = body.get('scorer')
+    return_toplevel = body.get('return_toplevel')
+    if scorer == 'wm':
+        belief_scorer = get_eidos_scorer()
+    else:
+        belief_scorer = None
+    stmts_out = ac.run_preassembly(stmts, belief_scorer=belief_scorer,
+                                   return_toplevel=return_toplevel)
     return _return_stmts(stmts_out)
 
 
