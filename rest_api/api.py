@@ -216,8 +216,7 @@ def eidos_process_json():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     eidos_json = body.get('json')
-    print(eidos_json)
-    ep = eidos.process_json(eidos_json)
+    ep = eidos.process_json_str(eidos_json)
     return _stmts_from_proc(ep)
 
 
@@ -242,7 +241,8 @@ def hume_process_jsonld():
         return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
-    jsonld = body.get('jsonld')
+    jsonld_str = body.get('jsonld')
+    jsonld = json.loads(jsonld_str)
     hp = hume.process_jsonld(jsonld)
     return _stmts_from_proc(hp)
 

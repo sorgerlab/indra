@@ -57,8 +57,8 @@ def test_cwms():
 
 
 def test_hume():
-    from indra.tests.test_hume import test_file_simple
-    with open(test_file_simple, 'r') as fh:
+    from indra.tests.test_hume import test_file_new_simple
+    with open(test_file_new_simple, 'r') as fh:
         test_jsonld = fh.read()
     url = base_url + '/hume/process_jsonld'
     res = requests.post(url, json={'jsonld': test_jsonld})
