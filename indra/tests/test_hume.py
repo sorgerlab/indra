@@ -3,6 +3,7 @@ from builtins import dict, str
 
 import os
 import unittest
+from datetime import datetime
 from indra.statements import *
 from indra.sources.hume.api import *
 
@@ -62,9 +63,32 @@ def test_bbn_on_ben_paragraph():
 
 
 def test_large_bbn_corpus():
+    file_path = os.path.join(path_this,
+                             'wm_m12.v8.full.v4.json-ld')
+    if not os.path.exists(file_path):
+        raise SkipTest("The test file is not available.")
     bp = process_jsonld_file(os.path.join(path_this,
                              'wm_m12.v8.full.v4.json-ld'))
     assert bp is not None
     assert len(bp.statements) > 1000
     print(len(bp.statements))
 
+
+def test_for_context():
+    bp = process_jsonld_file(os.path.join(path_this,
+                             'wm_m12.ben_sentence.json-ld'))
+    assert bp, "Processor is none."
+    assert len(bp.statements) == 1, len(bp.statements)
+    stmt = bp.statements[0]
+    assert len(stmt.evidence) == 1, len(stmt.evidence)
+    ev = stmt.evidence[0]
+    assert ev.context is not None
+    assert ev.context.time is not None
+    time = ev.context.time
+    assert time.text == '2018', ev.context.time.text
+    assert isinstance(time.start, datetime), type(time.start)
+    assert isinstance(time.end, datetime), type(time.end)
+    assert isinstance(time.duration, int), type(time.duration)
+    assert ev.context.geo_location is not None
+    loc = ev.context.geo_location
+    assert loc.name == 'South Sudan', loc.name
