@@ -2,6 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import logging
 import xml.etree.ElementTree as ET
+from datetime import datetime
+
 from indra.statements import *
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
@@ -86,26 +88,51 @@ class CWMSProcessor(object):
         `_positive_events`, and `_negative_events` class attributes).
         """
         ev_type = event.find('type').text
+        ev_time, ev_loc = self._extract_time_loc(event)
         if ev_type in POLARITY_DICT['CC'].keys():
             polarity = POLARITY_DICT['CC'][ev_type]
-            subj = self._get_concept(event, "arg/[@role=':FACTOR']")
-            obj = self._get_concept(event, "arg/[@role=':OUTCOME']")
+            subj, subj_time, subj_loc = \
+                self._get_concept(event, "arg/[@role=':FACTOR']")
+            obj, obj_time, obj_loc = \
+                self._get_concept(event, "arg/[@role=':OUTCOME']")
         elif ev_type in POLARITY_DICT['EVENT'].keys():
             polarity = POLARITY_DICT['EVENT'][ev_type]
-            subj = self._get_concept(event, "*[@role=':AGENT']")
-            obj = self._get_concept(event, "*[@role=':AFFECTED']")
+            subj, subj_time, subj_loc = \
+                self._get_concept(event, "*[@role=':AGENT']")
+            obj, obj_time, obj_loc = \
+                self._get_concept(event, "*[@role=':AFFECTED']")
         else:
             logger.debug("Unhandled event type: %s" % ev_type)
             return None, None, None
 
-        return subj, obj, polarity
+        # Choose a temporal context (if there's a choice to be made)
+        for time in [ev_time, obj_time, subj_time]:
+            if time is not None:
+                break
+        else:
+            time = None
+
+        # Choose a location context (if there's a choice to be made)
+        for loc in [ev_loc, obj_loc, subj_loc]:
+            if loc is not None:
+                break
+        else:
+            loc = None
+
+        # Construct WorldContext
+        context = None
+        if time or loc:
+            context = WorldContext(time=time, geo_location=loc)
+
+        return subj, obj, polarity, context
 
     def extract_noun_relations(self, key):
         """Extract relationships where a term/noun affects another term/noun"""
         events = self.tree.findall("%s/[type]" % key)
         for event in events:
-            subj, obj, pol = self._get_subj_obj(event)
-            self._make_statement_noun_cause_effect(event, subj, obj, pol)
+            subj, obj, pol, context = self._get_subj_obj(event)
+            self._make_statement_noun_cause_effect(event, subj, obj, pol,
+                                                   context)
 
     def _get_concept(self, event, find_str):
         """Get a concept referred from the event by the given string."""
@@ -115,6 +142,7 @@ class CWMSProcessor(object):
             return
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
+        time, location = self._extract_time_loc(element_term)
 
         if element_term is None:
             return
@@ -137,7 +165,31 @@ class CWMSProcessor(object):
             if assoc_with is not None:
                 element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
-        return Concept(element_text, db_refs=element_db_refs)
+        return Concept(element_text, db_refs=element_db_refs), time, location
+
+    def _extract_time_loc(self, term):
+        """Get the location from a term (CC or TERM)"""
+        loc = term.find('location')
+        if loc is None:
+            loc_context = None
+        else:
+            loc_id = loc.attrib.get('id')
+            loc_term = self.tree.find("*[@id='%s']" % loc_id)
+            text = loc_term.findtext('text')
+            name = loc_term.findtext('name')
+            loc_context = RefContext(name=name, db_refs={"TEXT": text})
+        time = term.find('time')
+        if time is None:
+            time_context = None
+        else:
+            time_id = time.attrib.get('id')
+            time_term = self.tree.find("*[@id='%s']" % time_id)
+            text = time_term.findtext('text')
+            timex = time_term.find('timex')
+            start = datetime(year=timex.get('year'), month=timex.get('month'),
+                             day=timex.get('day'))
+            time_context = TimeContext(start=start, text=text)
+        return time_context, loc_context
 
     def _get_assoc_with(self, element_term):
         # NOTE: there could be multiple assoc-withs here that we may
@@ -162,13 +214,13 @@ class CWMSProcessor(object):
 
     def _make_statement_noun_cause_effect(self, event_element,
                                           cause_concept, affected_concept,
-                                          polarity):
+                                          polarity, context):
         """Make the Influence statement from the component parts."""
         if cause_concept is None or affected_concept is None:
             return
 
         # Construct evidence
-        ev = self._get_evidence(event_element)
+        ev = self._get_evidence(event_element, context)
         ev.epistemics['direct'] = False
 
         # Make statement
@@ -178,14 +230,14 @@ class CWMSProcessor(object):
         self.statements.append(st)
         return st
 
-    def _get_evidence(self, event_tag):
+    def _get_evidence(self, event_tag, context):
         text = self._get_evidence_text(event_tag)
         sec = self._get_section(event_tag)
         epi = {}
         if sec:
             epi['section_type'] = sec
         ev = Evidence(source_api='cwms', text=text, pmid=self.doc_id,
-                      epistemics=epi)
+                      epistemics=epi, context=context)
         return ev
 
     def _get_evidence_text(self, event_tag):
