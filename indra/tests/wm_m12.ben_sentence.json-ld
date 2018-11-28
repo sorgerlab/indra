@@ -34,6 +34,7 @@
             "@id": "Entity-ENG_NW_20180101-0-1", 
             "@type": "Extraction", 
             "canonicalName": "South Sudan", 
+            "geoname_id": "7909807", 
             "grounding": [
                 {
                     "@type": "Grounding", 
