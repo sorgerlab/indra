@@ -47,13 +47,7 @@ def trips_process_text():
     body = json.loads(response)
     text = body.get('text')
     tp = trips.process_text(text)
-    if tp and tp.statements:
-        stmts = stmts_to_json(tp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(tp)
 
 
 @route('/trips/process_xml', method=['POST', 'OPTIONS'])
@@ -66,13 +60,7 @@ def trips_process_xml():
     body = json.loads(response)
     xml_str = body.get('xml_str')
     tp = trips.process_xml(xml_str)
-    if tp and tp.statements:
-        stmts = stmts_to_json(tp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(tp)
 ################
 
 
@@ -88,13 +76,7 @@ def reach_process_text():
     text = body.get('text')
     offline = True if body.get('offline') else False
     rp = reach.process_text(text, offline=offline)
-    if rp and rp.statements:
-        stmts = stmts_to_json(rp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(rp)
 
 
 @route('/reach/process_json', method=['POST', 'OPTIONS'])
@@ -107,13 +89,7 @@ def reach_process_json():
     body = json.loads(response)
     json_str = body.get('json')
     rp = reach.process_json_str(json_str)
-    if rp and rp.statements:
-        stmts = stmts_to_json(rp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(rp)
 
 
 @route('/reach/process_pmc', method=['POST', 'OPTIONS'])
@@ -126,13 +102,8 @@ def reach_process_pmc():
     body = json.loads(response)
     pmcid = body.get('pmcid')
     rp = reach.process_pmc(pmcid)
-    if rp and rp.statements:
-        stmts = stmts_to_json(rp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(rp)
+
 ##################
 
 
@@ -147,13 +118,7 @@ def bel_process_pybel_neighborhood():
     body = json.loads(response)
     genes = body.get('genes')
     bp = bel.process_pybel_neighborhood(genes)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/bel/process_belrdf', method=['POST', 'OPTIONS'])
@@ -166,13 +131,7 @@ def bel_process_belrdf():
     body = json.loads(response)
     belrdf = body.get('belrdf')
     bp = bel.process_belrdf(belrdf)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 #   BioPAX   #
@@ -186,13 +145,7 @@ def biopax_process_pc_pathsbetween():
     body = json.loads(response)
     genes = body.get('genes')
     bp = biopax.process_pc_pathsbetween(genes)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/biopax/process_pc_pathsfromto', method=['POST', 'OPTIONS'])
@@ -206,13 +159,7 @@ def biopax_process_pc_pathsfromto():
     source = body.get('source')
     target = body.get('target')
     bp = biopax.process_pc_pathsfromto(source, target)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/biopax/process_pc_neighborhood', method=['POST', 'OPTIONS'])
@@ -225,13 +172,7 @@ def biopax_process_pc_neighborhood():
     body = json.loads(response)
     genes = body.get('genes')
     bp = biopax.process_pc_neighborhood(genes)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/eidos/process_text', method=['POST', 'OPTIONS'])
@@ -245,13 +186,7 @@ def eidos_process_text():
     text = body.get('text')
     webservice = body.get('webservice')
     ep = eidos.process_text(text, webservice=webservice)
-    if ep and ep.statements:
-        stmts = stmts_to_json(ep.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(ep)
 
 
 @route('/eidos/process_json', method=['POST', 'OPTIONS'])
@@ -264,13 +199,7 @@ def eidos_process_json():
     body = json.loads(response)
     eidos_json = body.get('json')
     ep = eidos.process_json(eidos_json)
-    if ep and ep.statements:
-        stmts = stmts_to_json(ep.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(ep)
 
 
 @route('/cwms/process_text', method=['POST', 'OPTIONS'])
@@ -283,13 +212,7 @@ def cwms_process_text():
     body = json.loads(response)
     text = body.get('text')
     cp = cwms.process_text(text)
-    if cp and cp.statements:
-        stmts = stmts_to_json(cp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(cp)
 
 
 @route('/hume/process_jsonld', method=['POST', 'OPTIONS'])
@@ -302,14 +225,30 @@ def hume_process_jsonld():
     body = json.loads(response)
     jsonld = body.get('jsonld')
     hp = hume.process_jsonld(jsonld)
-    if hp and hp.statements:
-        stmts = stmts_to_json(hp.statements)
+    return _stmts_from_proc(hp)
+
+
+@route('/sofia/process_table', method=['POST', 'OPTIONS'])
+@allow_cors
+def sofia_process_table():
+    """Process Sofia table and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    table = body.get('table')
+    sp = sofia.process_table(table)
+    return _stmts_from_proc(sp)
+
+
+def _stmts_from_proc(proc):
+    if proc and proc.statements:
+        stmts = stmts_to_json(proc.statements)
         res = {'statements': stmts}
         return res
     else:
         res = {'statements': []}
     return res
-
 
 
 #   OUTPUT ASSEMBLY   #
