@@ -103,7 +103,7 @@ class CWMSProcessor(object):
                 self._get_concept(event, "*[@role=':AFFECTED']")
         else:
             logger.debug("Unhandled event type: %s" % ev_type)
-            return None, None, None
+            return None, None, None, None
 
         # Choose a temporal context (if there's a choice to be made)
         for time in [ev_time, obj_time, subj_time]:
@@ -186,9 +186,17 @@ class CWMSProcessor(object):
             time_term = self.tree.find("*[@id='%s']" % time_id)
             text = time_term.findtext('text')
             timex = time_term.find('timex')
-            start = datetime(year=timex.get('year'), month=timex.get('month'),
-                             day=timex.get('day'))
-            time_context = TimeContext(start=start, text=text)
+            year = timex.findtext('year')
+            month = timex.findtext('month')
+            day = timex.findtext('day')
+            if year or month or day:
+                year = int(year) if year else datetime.now().year
+                month = int(month) if month else 1
+                day = int(day) if day else 1
+                start = datetime(year, month, day)
+                time_context = TimeContext(text=text, start=start)
+            else:
+                time_context = TimeContext(text=text)
         return time_context, loc_context
 
     def _get_assoc_with(self, element_term):
