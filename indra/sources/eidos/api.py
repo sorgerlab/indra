@@ -38,6 +38,8 @@ def process_text(text, out_format='json_ld', save_json='eidos_output.json',
         The name of a file in which to dump the JSON output of Eidos.
     webservice : Optional[str]
         An Eidos reader web service URL to send the request to.
+        If None, the reading is assumed to be done with the Eidos JAR rather
+        than via a web service. Default: None
 
     Returns
     -------

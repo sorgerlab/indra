@@ -3,6 +3,7 @@ import json
 import logging
 from bottle import route, run, request, default_app, response
 from indra.sources import trips, reach, bel, biopax
+from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers.pysb import PysbAssembler
@@ -232,8 +233,47 @@ def biopax_process_pc_neighborhood():
         res = {'statements': []}
     return res
 
-#   OUTPUT ASSEMBLY   #
 
+@route('/eidos/process_text', method=['POST', 'OPTIONS'])
+@allow_cors
+def eidos_process_text():
+    """Process text with EIDOS and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    text = body.get('text')
+    webservice = body.get('webservice')
+    ep = eidos.process_text(text, webservice=webservice)
+    if ep and ep.statements:
+        stmts = stmts_to_json(ep.statements)
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
+@route('/eidos/process_json', method=['POST', 'OPTIONS'])
+@allow_cors
+def eidos_process_json():
+    """Process an EIDOS JSON-LD and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    eidos_json = body.get('json')
+    ep = eidos.process_json(eidos_json)
+    if ep and ep.statements:
+        stmts = stmts_to_json(ep.statements)
+        res = {'statements': stmts}
+        return res
+    else:
+        res = {'statements': []}
+    return res
+
+
+#   OUTPUT ASSEMBLY   #
 
 #   PYSB   #
 @route('/assemblers/pysb', method=['POST', 'OPTIONS'])
