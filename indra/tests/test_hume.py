@@ -67,4 +67,4 @@ def test_large_bbn_corpus():
     assert bp is not None
     assert len(bp.statements) > 1000
     print(len(bp.statements))
-    
+

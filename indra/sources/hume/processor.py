@@ -54,9 +54,9 @@ class HumeJsonLdProcessor(object):
             list(self.tree.execute("$.extractions[(@.@type is 'Extraction')]"))
 
         # List out relation types and their default (implied) polarities.
-        relation_polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
-                               'mitigation': -1, 'prevention': -1,
-                               'temporallyPrecedes': 0}
+        polarities = {'causation': 1, 'precondition': 1, 'catalyst': 1,
+                      'mitigation': -1, 'prevention': -1,
+                      'temporallyPrecedes': 0}
 
         # Get relations from extractions
         relations = []
@@ -65,7 +65,7 @@ class HumeJsonLdProcessor(object):
             label_set = set(e.get('labels', []))
             if 'DirectedRelation' in label_set:
                 self.relation_dict[e['@id']] = e
-                if any(t in e.get('subtype') for t in relation_polarities.keys()):
+                if any(t in e.get('subtype') for t in polarities.keys()):
                     relations.append(e)
             if {'Event', 'Entity'} & label_set:
                 self.concept_dict[e['@id']] = e
@@ -85,7 +85,7 @@ class HumeJsonLdProcessor(object):
             return
 
         logger.info('%d relations of types %s found'
-                    % (len(relations), ', '.join(relation_polarities.keys())))
+                    % (len(relations), ', '.join(polarities.keys())))
         logger.info('%d relations in dict.' % len(self.relation_dict))
         logger.info("%d times found." % len(self.times_dict))
         logger.info("%d locations found." % len(self.locations_dict))
@@ -97,49 +97,29 @@ class HumeJsonLdProcessor(object):
             key = tuple([arg['value']['@id']
                          for arg in relation['arguments']])
 
-            # Extract concepts.
-            subj_concept, subj_delta, subj_time, subj_loc = \
-                self._get_concept(relation, 'source')
-            obj_concept, obj_delta, obj_time, obj_loc = \
-                self._get_concept(relation, 'destination')
-            
-            # Consolidate times and locs
-            time = obj_time if obj_time else subj_time
-            time_context = None
-            if time:
-                time_context = TimeContext(text=time['mentions'][0]['text'])
-            loc = obj_loc if obj_loc else subj_loc
-            loc_context = None
-            if loc:
-                loc_context = RefContext(text=loc['canonicalName'])
-            cont = None
-            if time or loc:
-                cont = WorldContext(time=time_context, geo_location=loc_context)
+            # Extract concepts and contexts.
+            subj_concept, subj_delta, subj_context = \
+                self._get_concept_and_context(relation, 'source')
+            obj_concept, obj_delta, obj_context = \
+                self._get_concept_and_context(relation, 'destination')
+
+            # Choose a context
+            # TODO: It would be nice to not have to choose.
+            context = obj_context if obj_context else subj_context
 
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
             # None to begin with, we assume it is positive
             obj_delta['polarity'] = \
-                relation_polarities[relation_type] * \
+                polarities[relation_type] * \
                 (obj_delta['polarity'] if obj_delta['polarity'] is not None
                  else 1)
 
             if not subj_concept or not obj_concept:
                 continue
 
-            subj_ev_id = _choose_id(relation, 'source')
-            subj_ev = self.concept_dict[subj_ev_id]
-            obj_ev_id = _choose_id(relation, 'destination')
-            obj_ev = self.concept_dict[obj_ev_id]
-
-            subject_place, subject_time_start, subject_time_end, subject_time_duration = self.get_place_and_time(subj_ev)
-            object_place, object_time_start, object_time_end, object_time_duration = self.get_place_and_time(obj_ev)
-
-            ## TODO: convert places and times into WorldContext as evidence for INDRA statements, escape value is None
-
-
-            evidence = self._get_evidence(relation, subj_concept, obj_concept,
-                                          get_states(relation), cont)
+            evidence = self._get_evidence(relation, get_states(relation),
+                                          context)
 
             st = Influence(subj_concept, obj_concept, subj_delta, obj_delta,
                            evidence=evidence)
@@ -150,28 +130,38 @@ class HumeJsonLdProcessor(object):
         # Add temporal context to statements.
         return
 
-    def get_place_and_time(self, entity):
-        place = None
+    def _make_context(self, entity):
+        """Get place and time info from the json for this entity."""
+        loc_context = None
+        time_context = None
 
-        time_start = None
-        time_end = None
-        time_duration = None
-
+        # Look for time and place contexts.
         for argument in entity["arguments"]:
             if argument["type"] == "place":
                 entity_id = argument["value"]["@id"]
-                entity = self.concept_dict[entity_id]
-                place = entity["canonicalName"]
+                loc_entity = self.locations_dict[entity_id]
+                place = loc_entity["canonicalName"]
+                loc_context = RefContext(name=place)
             if argument["type"] == "time":
                 entity_id = argument["value"]["@id"]
-                temporal_entity = self.concept_dict[entity_id]
-                if len(temporal_entity.get("timeInterval",list()))<1:
+                temporal_entity = self.times_dict[entity_id]
+                text = temporal_entity['mentions'][0]['text']
+                if len(temporal_entity.get("timeInterval", [])) < 1:
+                    time_context = TimeContext(text=text)
                     continue
                 time = temporal_entity["timeInterval"][0]
-                time_start = time['start']
-                time_end = time['end']
-                time_duration = time['duration']
-        return place, time_start, time_end, time_duration
+                start = time['start']
+                end = time['end']
+                duration = time['duration']
+                time_context = TimeContext(text=text, start=start, end=end,
+                                           duration=duration)
+
+        # Put context together
+        context = None
+        if loc_context or time_context:
+            context = WorldContext(time=time_context, geo_location=loc_context)
+
+        return context
 
     def _make_concept(self, entity):
         """Return Concept from a Hume entity."""
@@ -199,28 +189,20 @@ class HumeJsonLdProcessor(object):
         concept = Concept(name, db_refs=db_refs)
         metadata = {arg['type']: arg['value']['@id']
                     for arg in entity['arguments']}
+
         return concept, metadata
 
-    def _get_concept(self, event, arg_type):
+    def _get_concept_and_context(self, event, arg_type):
         eid = _choose_id(event, arg_type)
         ev = self.concept_dict[eid]
         concept, metadata = self._make_concept(ev)
         ev_delta = {'adjectives': [],
                     'states': get_states(ev),
                     'polarity': get_polarity(ev)}
-        time = None
-        if 'Time' in metadata.keys():
-            time = self.times_dict.get(metadata['Time'])
-            if time is None:
-                logger.warning("Time id not found: %s" % metadata['Time'])
-        loc = None
-        if 'located_at' in metadata.keys():
-            loc = self.locations_dict.get(metadata['located_at'])
-            if loc is None:
-                logger.warning("Location id not found: %s" % metadata['located_at'])
-        return concept, ev_delta, time, loc
+        context = self._make_context(ev)
+        return concept, ev_delta, context
 
-    def _get_evidence(self, event, subj_concept, obj_concept, adjectives, context):
+    def _get_evidence(self, event, adjectives, context):
         """Return the Evidence object for the INDRA Statement."""
         provenance = event.get('provenance')
 
