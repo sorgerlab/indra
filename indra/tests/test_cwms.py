@@ -188,6 +188,12 @@ def test_three_sentences():
     assert len(cp.statements) == 3, len(cp.statements)
 
 
+def test_contextual_sentence():
+    text = "Hunger causes displacement in 2018 in South Sudan."
+    cp = process_text(text)
+    assert cp is not None
+
+
 def test_ekb_process():
     cp = process_ekb_file(ekb_processing_test_file)
     assert len(cp.statements) == 1
