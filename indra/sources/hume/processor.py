@@ -60,7 +60,7 @@ class HumeJsonLdProcessor(object):
                                'mitigation': -1, 'prevention': -1}
 
         # Restrict to known relation types
-        relations = [r for r in relations if any([rt in r.get('type') for rt in
+        relations = [r for r in relations if any([rt in r.get('subtype') for rt in
                                                   relation_polarities.keys()])]
         logger.info('%d relations of types %s found'
                     % (len(relations), ', '.join(relation_polarities.keys())))
@@ -74,7 +74,7 @@ class HumeJsonLdProcessor(object):
         self.get_documents()
 
         for relation in relations:
-            relation_type = relation.get('type')
+            relation_type = relation.get('subtype')
             subj_concept, subj_delta = self._get_concept(relation, 'source')
             obj_concept, obj_delta = self._get_concept(relation, 'destination')
 
@@ -89,6 +89,17 @@ class HumeJsonLdProcessor(object):
             if not subj_concept or not obj_concept:
                 continue
 
+            subj_ev_id = _choose_id(relation, 'source')
+            subj_ev = self.concept_dict[subj_ev_id]
+            obj_ev_id = _choose_id(relation, 'destination')
+            obj_ev = self.concept_dict[obj_ev_id]
+
+            subject_place, subject_time_start, subject_time_end, subject_time_duration = self.get_place_and_time(subj_ev)
+            object_place, object_time_start, object_time_end, object_time_duration = self.get_place_and_time(obj_ev)
+
+            ## TODO: convert places and times into WorldContext as evidence for INDRA statements, escape value is None
+
+
             evidence = self._get_evidence(relation, subj_concept, obj_concept,
                                           get_states(relation))
 
@@ -98,6 +109,29 @@ class HumeJsonLdProcessor(object):
             self.statements.append(st)
 
         return
+
+    def get_place_and_time(self, entity):
+        place = None
+
+        time_start = None
+        time_end = None
+        time_duration = None
+
+        for argument in entity["arguments"]:
+            if argument["type"] == "place":
+                entity_id = argument["value"]["@id"]
+                entity = self.concept_dict[entity_id]
+                place = entity["canonicalName"]
+            if argument["type"] == "time":
+                entity_id = argument["value"]["@id"]
+                temporal_entity = self.concept_dict[entity_id]
+                if len(temporal_entity.get("timeInterval",list()))<1:
+                    continue
+                time = temporal_entity["timeInterval"][0]
+                time_start = time['start']
+                time_end = time['end']
+                time_duration = time['duration']
+        return place, time_start, time_end, time_duration
 
     def _make_concept(self, entity):
         """Return Concept from a Hume entity."""
