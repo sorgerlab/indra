@@ -529,6 +529,21 @@ def run_preassembly():
     return _return_stmts(stmts_out)
 
 
+@route('/preassembly/map_ontologies', method=['POST', 'OPTIONS'])
+@allow_cors
+def map_ontologies():
+    """Run ontology mapping on a list of INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    om = OntologyMapper(stmts, wm_ontomap, scored=True, symmetric=False)
+    om.map_statements()
+    return _return_stmts(stmts)
+
+
 @route('/preassembly/filter_by_type', method=['POST', 'OPTIONS'])
 @allow_cors
 def filter_by_type():
