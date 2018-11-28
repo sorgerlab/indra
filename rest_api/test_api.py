@@ -35,7 +35,24 @@ def test_filter_grounded_only():
     res_json = res.json()
     stmts_json = res_json.get('statements')
     stmts = stmts_from_json(stmts_json)
-    assert len(stmts) == 1
+
+
+def test_filter_grounded_only_score():
+    db_refs1 = {'UN': [('x', 0.1)]}
+    db_refs2 = {'UN': [('x', 0.5)]}
+    st1 = Influence(Concept('a', db_refs=db_refs1),
+                    Concept('b', db_refs=db_refs1))
+    st2 = Influence(Concept('a', db_refs=db_refs1),
+                    Concept('b', db_refs=db_refs2))
+    st3 = Influence(Concept('a', db_refs=db_refs2),
+                    Concept('b', db_refs=db_refs2))
+    stmts_json = stmts_to_json([st1, st2, st3])
+    url = base_url + '/preassembly/filter_grounded_only'
+    res = requests.post(url, json={'statements': stmts_json,
+                                   'score_threshold': 0.3})
+    res_json = res.json()
+    stmts_json = res_json.get('statements')
+    assert len(stmts_json) == 1, len(stmts_json)
 
 
 def test_loopy():
@@ -80,3 +97,19 @@ def test_eidos_json():
     stmts_json = res_json.get('statements')
     stmts = stmts_from_json(stmts_json)
     assert len(stmts) == 1
+
+
+def test_belief_filter():
+    st1 = Influence(Concept('a'), Concept('b'))
+    st1.belief = 0.2
+    st2 = Influence(Concept('a'), Concept('b'))
+    st2.belief = 0.5
+    st3 = Influence(Concept('a'), Concept('b'))
+    st3.belief = 0.8
+    stmts_json = stmts_to_json([st1, st2, st3])
+    url = base_url + '/preassembly/filter_belief'
+    res = requests.post(url, json={'statements': stmts_json,
+                                   'belief_cutoff': 0.6})
+    res_json = res.json()
+    stmts_json = res_json.get('statements')
+    assert len(stmts_json) == 1, len(stmts_json)

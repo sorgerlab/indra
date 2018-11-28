@@ -580,7 +580,7 @@ def filter_grounded_only():
 
 @route('/preassembly/filter_belief', method=['POST', 'OPTIONS'])
 @allow_cors
-def filter_grounded_only():
+def filter_belief():
     """Filter to beliefs above a given threshold."""
     if request.method == 'OPTIONS':
         return {}
