@@ -7,7 +7,6 @@ from datetime import datetime
 from indra.statements import *
 from indra.sources.hume.api import *
 
-
 # Path to the HUME test files
 path_this = os.path.dirname(os.path.abspath(__file__))
 test_file_simple = os.path.join(path_this, 'bbn_test_simple.json-ld')
@@ -66,7 +65,7 @@ def test_large_bbn_corpus():
     file_path = os.path.join(path_this,
                              'wm_m12.v8.full.v4.json-ld')
     if not os.path.exists(file_path):
-        raise SkipTest("The test file is not available.")
+        raise unittest.SkipTest("The test file is not available.")
     bp = process_jsonld_file(os.path.join(path_this,
                              'wm_m12.v8.full.v4.json-ld'))
     assert bp is not None
