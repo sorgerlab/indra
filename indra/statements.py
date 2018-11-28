@@ -678,6 +678,12 @@ class Concept(object):
         if not name:
             logger.error('Concept missing name.')
             return None
+        # This fixes the fact that scored lists of groundings
+        # are deserialized as lists of lists instead of lists
+        # of tuples.
+        for key, val in db_refs.items():
+            if isinstance(val, list):
+                db_refs[key] = [tuple(v) for v in val]
         concept = Concept(name, db_refs=db_refs)
         return concept
 
