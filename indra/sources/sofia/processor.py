@@ -76,11 +76,13 @@ class SofiaProcessor(object):
                 effect_name = event_dict[effect_idx]['Relation']
                 effect_grounding = event_dict[effect_idx]['Event_Type']
                 cause_concept = Concept(cause_name,
-                                        db_refs={'TEXT': cause_name,
-                                                 'SOFIA': cause_grounding})
+                                        db_refs={'TEXT': cause_name})
+                if cause_grounding:
+                    cause_concept.db_refs['SOFIA'] = cause_grounding
                 effect_concept = Concept(effect_name,
-                                         db_refs={'TEXT': effect_name,
-                                                  'SOFIA': effect_grounding})
+                                         db_refs={'TEXT': effect_name})
+                if effect_grounding:
+                    effect_concept.db_refs['SOFIA'] = effect_grounding
 
                 # NOTE: Extract context. The basic issue is that time/location
                 # here is given at the event level, not at the relation
