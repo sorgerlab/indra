@@ -101,7 +101,8 @@ class SimpleScorer(BeliefScorer):
     def __init__(self, prior_probs=None, subtype_probs=None):
         self.prior_probs = load_default_probs()
         if prior_probs:
-            self.prior_probs.update(prior_probs)
+            for key in ('rand', 'syst'):
+                self.prior_probs[key].update(prior_probs.get(key, {}))
         for err_type, source_dict in self.prior_probs.items():
             logger.debug("Prior probabilities for %s errors: %s"
                          % (err_type, source_dict))
