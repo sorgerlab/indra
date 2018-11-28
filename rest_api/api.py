@@ -34,7 +34,6 @@ def _stmts_from_proc(proc):
     if proc and proc.statements:
         stmts = stmts_to_json(proc.statements)
         res = {'statements': stmts}
-        return res
     else:
         res = {'statements': []}
     return res
@@ -217,6 +216,7 @@ def eidos_process_json():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     eidos_json = body.get('json')
+    print(eidos_json)
     ep = eidos.process_json(eidos_json)
     return _stmts_from_proc(ep)
 
