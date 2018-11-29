@@ -211,15 +211,15 @@ def eidos_process_text():
     return _stmts_from_proc(ep)
 
 
-@route('/eidos/process_json', method=['POST', 'OPTIONS'])
+@route('/eidos/process_jsonld', method=['POST', 'OPTIONS'])
 @allow_cors
-def eidos_process_json():
+def eidos_process_jsonld():
     """Process an EIDOS JSON-LD and return INDRA Statements."""
     if request.method == 'OPTIONS':
         return {}
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
-    eidos_json = body.get('json')
+    eidos_json = body.get('jsonld')
     ep = eidos.process_json_str(eidos_json)
     return _stmts_from_proc(ep)
 

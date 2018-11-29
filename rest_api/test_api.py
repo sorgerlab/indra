@@ -90,8 +90,8 @@ def test_eidos_json():
     from indra.tests.test_eidos import test_jsonld
     with open(test_jsonld, 'r') as fh:
         test_json = fh.read()
-    url = base_url + '/eidos/process_json'
-    res = requests.post(url, json={'json': test_json})
+    url = base_url + '/eidos/process_jsonld'
+    res = requests.post(url, json={'jsonld': test_json})
     print(res.content)
     res_json = res.json()
     stmts_json = res_json.get('statements')
