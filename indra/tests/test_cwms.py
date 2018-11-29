@@ -157,6 +157,7 @@ def test_cwms_agriculture_increases():
 
 
 @attr('slow', 'webservice')
+@unittest.skip('Interpretation currently failing')
 def test_cwms_two_sentences():
     text = 'Floods decrease agriculture. Agriculture increases food security.'
     cp = process_text(text)
@@ -186,6 +187,21 @@ def test_three_sentences():
     assert cp is not None
     print(cp.statements)
     assert len(cp.statements) == 3, len(cp.statements)
+
+
+@attr('slow', 'webservice')
+@unittest.skip('EKB is currently incorrect in web service')
+def test_contextual_sentence():
+    text = "Hunger causes displacement in 2018 in South Sudan."
+    cp = process_text(text)
+    assert cp is not None
+    assert len(cp.statements) == 1, len(cp.statements)
+    stmt = cp.statements[0]
+    assert len(stmt.evidence) == 1, len(stmt.evidence)
+    ev = stmt.evidence[0]
+    cont = ev.context
+    assert cont is not None
+    assert cont.time and cont.geo_location
 
 
 def test_ekb_process():
