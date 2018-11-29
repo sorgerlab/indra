@@ -155,8 +155,8 @@ class Preassembler(object):
                                 raw_grounding
                         else:
                             ev.annotations['agents'] = {'raw_text': raw_text}
-                            ev.annotations['agents'] = {'raw_grounding':
-                                                        raw_grounding}
+                            ev.annotations['agents']['raw_grounding'] = \
+                                                        raw_grounding
                         if 'prior_uuids' not in ev.annotations.keys():
                             ev.annotations['prior_uuids'] = []
                         ev.annotations['prior_uuids'].append(stmt.uuid)
