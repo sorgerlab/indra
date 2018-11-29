@@ -92,7 +92,15 @@ def _load_default_mappings():
     return [(('UN', 'entities/x'), ('HUME', 'entities/y'))]
 
 
-def _load_wm_map():
+def _load_wm_map(exclude_auto=None):
+    """Load an ontology map for world models.
+
+    exclude_auto : None or list[tuple]
+        A list of ontology mappings for which automated mappings should be
+        excluded, e.g. [(HUME, UN)] would result in not using mappings
+        from HUME to UN.
+    """
+    exclude_auto = [] if not exclude_auto else exclude_auto
     path_here = os.path.dirname(os.path.abspath(__file__))
     ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
     mappings = {}
@@ -152,18 +160,21 @@ def _load_wm_map():
             # Map the entries to our internal naming standards
             s, se = map_entry(s, se)
             t, te = map_entry(t, te)
-            # We first do the forward mapping
-            if (s, se, t) in mappings:
-                if mappings[(s, se, t)][1] < score:
+            # Skip automated mappings when they should be excluded
+            if (s, t) not in exclude_auto:
+                # We first do the forward mapping
+                if (s, se, t) in mappings:
+                    if mappings[(s, se, t)][1] < score:
+                        mappings[(s, se, t)] = ((t, te), score)
+                else:
                     mappings[(s, se, t)] = ((t, te), score)
-            else:
-                mappings[(s, se, t)] = ((t, te), score)
             # Then we add the reverse mapping
-            if (t, te, s) in mappings:
-                if mappings[(t, te, s)][1] < score:
+            if (t, s) not in exclude_auto:
+                if (t, te, s) in mappings:
+                    if mappings[(t, te, s)][1] < score:
+                        mappings[(t, te, s)] = ((s, se), score)
+                else:
                     mappings[(t, te, s)] = ((s, se), score)
-            else:
-                mappings[(t, te, s)] = ((s, se), score)
     ontomap = []
     for s, ts in mappings.items():
         ontomap.append(((s[0], s[1]), ts[0], ts[1]))
