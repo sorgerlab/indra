@@ -48,12 +48,15 @@ class OntologyMapper(object):
                         db_id = db_id[0][0]
                     mappings = self._map_id(db_name, db_id)
                     all_mappings += mappings
-                for map_db_name, map_db_id, score in all_mappings:
+                for map_db_name, map_db_id, score, orig_db_name in all_mappings:
                     if map_db_name in agent.db_refs:
                         continue
                     if self.scored:
+                        # If the original one is a scored grounding,
+                        # we take that score and multiply it with the mapping
+                        # score. Otherwise we assume the original score is 1.
                         try:
-                            orig_score = agent.db_refs[map_db_name][0][1]
+                            orig_score = agent.db_refs[orig_db_name][0][1]
                         except Exception:
                             orig_score = 1.0
                         agent.db_refs[map_db_name] = \
@@ -81,7 +84,7 @@ class OntologyMapper(object):
             if m1 == (db_name, db_id) or \
                 ((not isinstance(m1, list)) and
                  (m1 == (db_name, db_id.lower()))):
-                mappings.append((m2[0], m2[1], score))
+                mappings.append((m2[0], m2[1], score, db_name))
         return mappings
 
 
