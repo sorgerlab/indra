@@ -177,7 +177,7 @@ class CWMSProcessor(object):
             loc_term = self.tree.find("*[@id='%s']" % loc_id)
             text = loc_term.findtext('text')
             name = loc_term.findtext('name')
-            loc_context = RefContext(name=name, db_refs={"TEXT": text})
+            loc_context = RefContext(name=text)
         time = term.find('time')
         if time is None:
             time_context = None
