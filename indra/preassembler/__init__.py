@@ -141,6 +141,8 @@ class Preassembler(object):
                     new_stmt.uuid = stmt.uuid
                 raw_text = [None if ag is None else ag.db_refs.get('TEXT')
                             for ag in stmt.agent_list(deep_sorted=True)]
+                raw_grounding = [None if ag is None else ag.db_refs
+                                 for ag in stmt.agent_list(deep_sorted=True)]
                 for ev in stmt.evidence:
                     ev_key = ev.matches_key()
                     if ev_key not in ev_keys:
@@ -149,8 +151,12 @@ class Preassembler(object):
                         # a new key
                         if 'agents' in ev.annotations:
                             ev.annotations['agents']['raw_text'] = raw_text
+                            ev.annotations['agents']['raw_grounding'] = \
+                                raw_grounding
                         else:
                             ev.annotations['agents'] = {'raw_text': raw_text}
+                            ev.annotations['agents'] = {'raw_grounding':
+                                                        raw_grounding}
                         if 'prior_uuids' not in ev.annotations.keys():
                             ev.annotations['prior_uuids'] = []
                         ev.annotations['prior_uuids'].append(stmt.uuid)
