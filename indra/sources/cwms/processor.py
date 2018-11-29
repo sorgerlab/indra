@@ -189,12 +189,21 @@ class CWMSProcessor(object):
                 timex = time_term.find('timex')
                 if timex is not None:
                     year = timex.findtext('year')
+                    try:
+                        year = int(year)
+                    except Exception:
+                        year = None
                     month = timex.findtext('month')
                     day = timex.findtext('day')
-                    if year or month or day:
-                        year = int(year) if year else datetime.now().year
-                        month = int(month) if month else 1
-                        day = int(day) if day else 1
+                    if year and (month or day):
+                        try:
+                            month = int(month)
+                        except Exception:
+                            month = 1
+                        try:
+                            day = int(day)
+                        except Exception:
+                            day = 1
                         start = datetime(year, month, day)
                         time_context = TimeContext(text=text, start=start)
                     else:
