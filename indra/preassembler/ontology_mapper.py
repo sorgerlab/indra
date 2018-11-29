@@ -159,6 +159,27 @@ def _load_wm_map():
     ontomap = []
     for s, ts in mappings.items():
         ontomap.append(((s[0], s[1]), ts[0], ts[1]))
+
+    # Now apply the Hume -> Eidos override
+    override_file = os.path.join(path_here, '../resources/wm_ontomap.bbn.tsv')
+    override_mappings = []
+    with open(override_file, 'r') as fh:
+        for row in fh.readlines():
+            # Order is target first, source second
+            _, te, _, se = row.strip().split('\t')
+            # Map the entries to our internal naming standards
+            s = 'HUME'
+            t = 'UN'
+            se = se.replace(' ', '_')
+            te = te.replace(' ', '_')
+            if se.startswith('/'):
+                se = se[1:]
+            override_mappings.append((s, se, t, te))
+    for s, se, t, te in override_mappings:
+        for idx, ((so, seo), (eo, teo), score) in enumerate(ontomap):
+            if s == so and se == seo:
+                # Override when a match is found
+                ontomap[idx] = ((s, se), (t, te), 1.0)
     return ontomap
 
 
