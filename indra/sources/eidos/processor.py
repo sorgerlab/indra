@@ -307,7 +307,11 @@ class EidosProcessor(object):
             # Only add these groundings if there are actual values listed
             if entries:
                 key = g['name'].upper()
-                db_refs[key] = entries
+                if key == 'UN':
+                    db_refs[key] = [(s[0].replace(' ', '_'), s[1])
+                                    for s in entries]
+                else:
+                    db_refs[key] = entries
         return db_refs
 
     @staticmethod
