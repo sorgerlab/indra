@@ -251,17 +251,20 @@ def hume_process_jsonld():
     return _stmts_from_proc(hp)
 
 
-@route('/sofia/process_table', method=['POST', 'OPTIONS'])
-@allow_cors
-def sofia_process_table():
-    """Process Sofia table and return INDRA Statements."""
-    if request.method == 'OPTIONS':
-        return {}
-    response = request.body.read().decode('utf-8')
-    body = json.loads(response)
-    table = body.get('table')
-    sp = sofia.process_table(table)
-    return _stmts_from_proc(sp)
+# TODO: the transfer of the binary file uploaded here will need to be
+# implemented
+#@route('/sofia/process_table', method=['POST', 'OPTIONS'])
+#@allow_cors
+#def sofia_process_table():
+#    """Process Sofia table and return INDRA Statements."""
+#    if request.method == 'OPTIONS':
+#        return {}
+#    response = request.body.read().decode('utf-8')
+#    body = json.loads(response)
+#    table = body.get('table')
+#    sp = sofia.process_table(table)
+#    return _stmts_from_proc(sp)
+#
 
 
 #   OUTPUT ASSEMBLY   #
