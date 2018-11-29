@@ -56,7 +56,6 @@ class HumeJsonLdProcessor(object):
 
         # Get relations from extractions
         relations = []
-        concepts = []
         for e in extractions:
             label_set = set(e.get('labels', []))
             if 'DirectedRelation' in label_set:
@@ -92,10 +91,10 @@ class HumeJsonLdProcessor(object):
             # Apply the naive polarity from the type of statement. For the
             # purpose of the multiplication here, if obj_delta['polarity'] is
             # None to begin with, we assume it is positive
-            obj_delta['polarity'] = \
-                polarities[relation_type] * \
-                (obj_delta['polarity'] if obj_delta['polarity'] is not None
-                 else 1)
+            obj_pol = obj_delta['polarity']
+            obj_pol = obj_pol if obj_pol is not None else 1
+            rel_pol = polarities[relation_type]
+            obj_delta['polarity'] = rel_pol * obj_pol if rel_pol else None
 
             if not subj_concept or not obj_concept:
                 continue
@@ -122,7 +121,8 @@ class HumeJsonLdProcessor(object):
                 entity_id = argument["value"]["@id"]
                 loc_entity = self.concept_dict[entity_id]
                 place = loc_entity["canonicalName"]
-                loc_context = RefContext(name=place)
+                geo_id = loc_entity.get('geoname_id')
+                loc_context = RefContext(name=place, db_refs={"GEOID": geo_id})
             if argument["type"] == "time":
                 entity_id = argument["value"]["@id"]
                 temporal_entity = self.concept_dict[entity_id]
