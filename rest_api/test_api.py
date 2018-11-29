@@ -113,3 +113,34 @@ def test_belief_filter():
     res_json = res.json()
     stmts_json = res_json.get('statements')
     assert len(stmts_json) == 1, len(stmts_json)
+
+
+def test_ontology_mapping():
+    c1 = Concept('x', db_refs={'UN': [('UN/events/human/famine', 1.0)]})
+    c2 = Concept('y', db_refs={'UN': [('UN/entities/human/education', 1.0)]})
+
+    st = Influence(c1, c2)
+    stmts_json = stmts_to_json([st])
+    url = base_url + '/preassembly/map_ontologies'
+    res = requests.post(url, json={'statements': stmts_json})
+    res_json = res.json()
+    stmts_json = res_json.get('statements')
+    stmt = stmts_from_json(stmts_json)[0]
+    assert 'HUME' in stmt.subj.db_refs
+    assert 'SOFIA' in stmt.subj.db_refs
+    assert 'HUME' in stmt.obj.db_refs
+    assert 'SOFIA' in stmt.obj.db_refs
+
+
+def test_preassembly_wm_scorer():
+    ev = Evidence(source_api='eidos',
+                  annotations={'found_by': 'dueToSyntax2-Causal'})
+    st = Influence(Concept('x'), Concept('y'), evidence=[ev])
+    stmts_json = stmts_to_json([st])
+    url = base_url + '/preassembly/run_preassembly'
+    res = requests.post(url, json={'statements': stmts_json,
+                        'scorer': 'wm'})
+    res_json = res.json()
+    stmts_json = res_json.get('statements')
+    stmt = stmts_from_json(stmts_json)[0]
+    assert stmt.belief == 0.8142, stmt.belief
