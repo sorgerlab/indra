@@ -139,13 +139,13 @@ class CWMSProcessor(object):
         # Get the term with the given element id
         element = event.find(find_str)
         if element is None:
-            return
+            return None, None, None
         element_id = element.attrib.get('id')
         element_term = self.tree.find("*[@id='%s']" % element_id)
+        if element_term is None:
+            return None, None, None
         time, location = self._extract_time_loc(element_term)
 
-        if element_term is None:
-            return
 
         # Now see if there is a modifier like assoc-with connected
         # to the main concept
@@ -154,7 +154,7 @@ class CWMSProcessor(object):
         # Get the element's text and use it to construct a Concept
         element_text_element = element_term.find('text')
         if element_text_element is None:
-            return
+            return None, None, None
         element_text = element_text_element.text
         element_db_refs = {'TEXT': element_text}
 
