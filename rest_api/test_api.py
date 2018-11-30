@@ -1,4 +1,4 @@
-import os
+import json
 import requests
 from indra.statements import *
 
@@ -61,7 +61,61 @@ def test_loopy():
     url = base_url + '/assemblers/sif/loopy'
     res = requests.post(url, json=res.json())
     res_json = res.json()
+    assert res_json.get('loopy_url')
     print(res_json.get('loopy_url'))
+
+
+def test_pysb_assembler():
+    stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
+    js = {'statements': [stmt.to_json()]}
+    url = base_url + '/assemblers/pysb'
+    res = requests.post(url, json=js)
+    res_json = res.json()
+    assert res_json.get('model')
+    for export_format in ('sbml', 'sbgn', 'bngl', 'kappa'):
+        js['export_format'] = export_format
+        res = requests.post(url, json=js)
+        res_json = res.json()
+        assert res_json.get('model')
+
+
+def test_cx_assembler():
+    stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
+    js = {'statements': [stmt.to_json()]}
+    url = base_url + '/assemblers/cx'
+    res = requests.post(url, json=js)
+    res_json = res.json()
+    assert res_json.get('model')
+
+
+def test_english_assembler():
+    stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
+    js = {'statements': [stmt.to_json()]}
+    url = base_url + '/assemblers/english'
+    res = requests.post(url, json=js)
+    res_json = res.json()
+    print(res_json)
+    model = res_json.get('sentences')
+    sentences = list(model.values())
+    assert sentences[0] == 'MEK phosphorylates ERK.'
+
+
+def test_reach():
+    url = base_url + '/reach/process_text'
+    res = requests.post(url, json={'text': 'MEK binds ERK.'})
+    res_json = res.json()
+    stmts_json = res_json.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    assert len(stmts) == 1
+
+
+def test_trips():
+    url = base_url + '/trips/process_text'
+    res = requests.post(url, json={'text': 'MEK binds ERK.'})
+    res_json = res.json()
+    stmts_json = res_json.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    assert len(stmts) == 1
 
 
 def test_cwms():
