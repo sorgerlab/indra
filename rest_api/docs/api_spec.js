@@ -771,6 +771,40 @@ var api_spec = {
         }
       }
     },
+    "/assemblers/english": {
+      "post": {
+        "tags": [
+          "assemblers"
+        ],
+        "summary": "Assemble INDRA Statements and return an English language string.",
+        "operationId": "assembleCyjs",
+        "description": "Takes in a list of INDRA statements and returns the corresponding mechanisms in English.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "statementsObj",
+            "description": "object with a key of \"statements\" referencing a list of INDRA statements.",
+            "schema": {
+              "$ref": "#/definitions/statementsObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "English language output",
+            "schema": {
+              "$ref": "#/definitions/textObj"
+            }
+          }
+        }
+      }
+    },
     "/assemblers/loopy": {
       "post": {
         "tags": [

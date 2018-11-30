@@ -197,6 +197,7 @@ def biopax_process_pc_neighborhood():
     return _stmts_from_proc(bp)
 
 
+# TODO: document this in Swagger once webservice is available
 @route('/eidos/process_text', method=['POST', 'OPTIONS'])
 @allow_cors
 def eidos_process_text():
