@@ -3562,6 +3562,37 @@ def stmts_from_json(json_in, on_missing_support='handle'):
     return stmts
 
 
+def stmts_from_json_file(fname):
+    """Return a list of statements loaded from a JSON file.
+
+    Parameters
+    ----------
+    fname : str
+        Path to the JSON file to load statements from.
+
+    Returns
+    -------
+    list[indra.statements.Statement]
+        The list of INDRA Statements loaded from the JSOn file.
+    """
+    with open(fname, 'r') as fh:
+        return stmts_from_json(json.load(fh))
+
+
+def stmts_to_json_file(stmts, fname):
+    """Serialize a list of INDRA Statements into a JSON file.
+
+    Parameters
+    ----------
+    stmts : list[indra.statement.Statements]
+        The list of INDRA Statements to serialize into the JSON file.
+    fname : str
+        Path to the JSON file to serialize Statements into.
+    """
+    with open(fname, 'w') as fh:
+        json.dump(stmts_to_json(stmts), fh, indent=1)
+
+
 def get_unresolved_support_uuids(stmts):
     """Get uuids unresolved in support from stmts from stmts_from_json."""
     return {s.uuid for stmt in stmts for s in stmt.supports + stmt.supported_by
