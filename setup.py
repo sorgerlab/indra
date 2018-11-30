@@ -20,7 +20,6 @@ def main():
                       'eidos_offline': ['pyyaml', 'cython', 'pyjnius'],
                       'geneways': ['stemming', 'nltk'],
                       'sofia': ['openpyxl'],
-                      'hume': ['rdflib-jsonld'],
                       'bel': ['pybel'],
                       'sbml': ['python-libsbml'],
                       # Tools and analysis

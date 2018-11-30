@@ -17,9 +17,8 @@ def test_map():
         om.statements[1].subj.db_refs
 
 
-@unittest.skip('Mapping file not in repo')
 def test_wm_map():
-    c1 = Concept('x', db_refs={'UN': [('UN/properties/price', 1.0)]})
+    c1 = Concept('x', db_refs={'UN': [('UN/events/human/famine', 1.0)]})
     c2 = Concept('y', db_refs={'UN': [('UN/entities/human/education', 1.0)]})
     stmts = [Influence(c1, c2)]
     om = OntologyMapper(stmts, wm_ontomap, symmetric=False)
@@ -52,8 +51,8 @@ def test_wm_map():
     om.map_statements()
     stmt = om.statements[0]
     assert stmt.obj.db_refs['UN'] == [('UN/events/human/famine',
-                                       1.036856450549298)], \
+                                       0.81851065)], \
         stmt.obj.db_refs['UN']
     assert stmt.subj.db_refs['UN'] == [('UN/events/human/famine',
-                                        0.9465582395117739)], \
+                                        1.0)], \
         stmt.subj.db_refs['UN']

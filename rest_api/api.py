@@ -3,6 +3,7 @@ import json
 import logging
 from bottle import route, run, request, default_app, response
 from indra.sources import trips, reach, bel, biopax
+from indra.sources import eidos, hume, cwms, sofia
 from indra.databases import hgnc_client
 from indra.statements import *
 from indra.assemblers.pysb import PysbAssembler
@@ -16,8 +17,30 @@ from indra.databases import cbio_client
 from indra.sources.indra_db_rest import get_statements
 from indra.sources.ndex_cx.api import process_ndex_network
 
+from indra.belief.wm_scorer import get_eidos_scorer
+from indra.preassembler.ontology_mapper import OntologyMapper, wm_ontomap
+
+
 logger = logging.getLogger('rest_api')
 logger.setLevel(logging.DEBUG)
+
+
+def _return_stmts(stmts):
+    if stmts:
+        stmts_json = stmts_to_json(stmts)
+        res = {'statements': stmts_json}
+    else:
+        res = {'statements': []}
+    return res
+
+
+def _stmts_from_proc(proc):
+    if proc and proc.statements:
+        stmts = stmts_to_json(proc.statements)
+        res = {'statements': stmts}
+    else:
+        res = {'statements': []}
+    return res
 
 
 #   ALLOW CORS   #
@@ -31,6 +54,15 @@ def allow_cors(func):
             'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token'
         return func(*args, **kwargs)
     return wrapper
+
+@route('/', method=['GET', 'OPTIONS'])
+@allow_cors
+def root():
+    """API root."""
+    if request.method == 'OPTIONS':
+        return {}
+    return {'This is the INDRA REST API. See documentation at '
+            'http://www.indra.bio/rest_api/docs.'}
 
 #     INPUT PROCESSING     #
 
@@ -46,13 +78,7 @@ def trips_process_text():
     body = json.loads(response)
     text = body.get('text')
     tp = trips.process_text(text)
-    if tp and tp.statements:
-        stmts = stmts_to_json(tp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(tp)
 
 
 @route('/trips/process_xml', method=['POST', 'OPTIONS'])
@@ -65,13 +91,7 @@ def trips_process_xml():
     body = json.loads(response)
     xml_str = body.get('xml_str')
     tp = trips.process_xml(xml_str)
-    if tp and tp.statements:
-        stmts = stmts_to_json(tp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(tp)
 ################
 
 
@@ -87,13 +107,7 @@ def reach_process_text():
     text = body.get('text')
     offline = True if body.get('offline') else False
     rp = reach.process_text(text, offline=offline)
-    if rp and rp.statements:
-        stmts = stmts_to_json(rp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(rp)
 
 
 @route('/reach/process_json', method=['POST', 'OPTIONS'])
@@ -106,13 +120,7 @@ def reach_process_json():
     body = json.loads(response)
     json_str = body.get('json')
     rp = reach.process_json_str(json_str)
-    if rp and rp.statements:
-        stmts = stmts_to_json(rp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(rp)
 
 
 @route('/reach/process_pmc', method=['POST', 'OPTIONS'])
@@ -125,13 +133,8 @@ def reach_process_pmc():
     body = json.loads(response)
     pmcid = body.get('pmcid')
     rp = reach.process_pmc(pmcid)
-    if rp and rp.statements:
-        stmts = stmts_to_json(rp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(rp)
+
 ##################
 
 
@@ -146,13 +149,7 @@ def bel_process_pybel_neighborhood():
     body = json.loads(response)
     genes = body.get('genes')
     bp = bel.process_pybel_neighborhood(genes)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/bel/process_belrdf', method=['POST', 'OPTIONS'])
@@ -165,13 +162,7 @@ def bel_process_belrdf():
     body = json.loads(response)
     belrdf = body.get('belrdf')
     bp = bel.process_belrdf(belrdf)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 #   BioPAX   #
@@ -185,13 +176,7 @@ def biopax_process_pc_pathsbetween():
     body = json.loads(response)
     genes = body.get('genes')
     bp = biopax.process_pc_pathsbetween(genes)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/biopax/process_pc_pathsfromto', method=['POST', 'OPTIONS'])
@@ -205,13 +190,7 @@ def biopax_process_pc_pathsfromto():
     source = body.get('source')
     target = body.get('target')
     bp = biopax.process_pc_pathsfromto(source, target)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
 
 
 @route('/biopax/process_pc_neighborhood', method=['POST', 'OPTIONS'])
@@ -224,16 +203,81 @@ def biopax_process_pc_neighborhood():
     body = json.loads(response)
     genes = body.get('genes')
     bp = biopax.process_pc_neighborhood(genes)
-    if bp and bp.statements:
-        stmts = stmts_to_json(bp.statements)
-        res = {'statements': stmts}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _stmts_from_proc(bp)
+
+
+# TODO: document this in Swagger once webservice is available
+@route('/eidos/process_text', method=['POST', 'OPTIONS'])
+@allow_cors
+def eidos_process_text():
+    """Process text with EIDOS and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    text = body.get('text')
+    webservice = body.get('webservice')
+    ep = eidos.process_text(text, webservice=webservice)
+    return _stmts_from_proc(ep)
+
+
+@route('/eidos/process_jsonld', method=['POST', 'OPTIONS'])
+@allow_cors
+def eidos_process_jsonld():
+    """Process an EIDOS JSON-LD and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    eidos_json = body.get('jsonld')
+    ep = eidos.process_json_str(eidos_json)
+    return _stmts_from_proc(ep)
+
+
+@route('/cwms/process_text', method=['POST', 'OPTIONS'])
+@allow_cors
+def cwms_process_text():
+    """Process text with CWMS and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    text = body.get('text')
+    cp = cwms.process_text(text)
+    return _stmts_from_proc(cp)
+
+
+@route('/hume/process_jsonld', method=['POST', 'OPTIONS'])
+@allow_cors
+def hume_process_jsonld():
+    """Process Hume JSON-LD and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    jsonld_str = body.get('jsonld')
+    jsonld = json.loads(jsonld_str)
+    hp = hume.process_jsonld(jsonld)
+    return _stmts_from_proc(hp)
+
+
+# TODO: the transfer of the binary file uploaded here will need to be
+# implemented
+#@route('/sofia/process_table', method=['POST', 'OPTIONS'])
+#@allow_cors
+#def sofia_process_table():
+#    """Process Sofia table and return INDRA Statements."""
+#    if request.method == 'OPTIONS':
+#        return {}
+#    response = request.body.read().decode('utf-8')
+#    body = json.loads(response)
+#    table = body.get('table')
+#    sp = sofia.process_table(table)
+#    return _stmts_from_proc(sp)
+#
+
 
 #   OUTPUT ASSEMBLY   #
-
 
 #   PYSB   #
 @route('/assemblers/pysb', method=['POST', 'OPTIONS'])
@@ -460,13 +504,7 @@ def map_grounding():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.map_grounding(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/map_sequence', method=['POST', 'OPTIONS'])
@@ -480,13 +518,7 @@ def map_sequence():
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.map_sequence(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/run_preassembly', method=['POST', 'OPTIONS'])
@@ -499,14 +531,30 @@ def run_preassembly():
     body = json.loads(response)
     stmts_json = body.get('statements')
     stmts = stmts_from_json(stmts_json)
-    stmts_out = ac.run_preassembly(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
+    scorer = body.get('scorer')
+    return_toplevel = body.get('return_toplevel')
+    if scorer == 'wm':
+        belief_scorer = get_eidos_scorer()
     else:
-        res = {'statements': []}
-    return res
+        belief_scorer = None
+    stmts_out = ac.run_preassembly(stmts, belief_scorer=belief_scorer,
+                                   return_toplevel=return_toplevel)
+    return _return_stmts(stmts_out)
+
+
+@route('/preassembly/map_ontologies', method=['POST', 'OPTIONS'])
+@allow_cors
+def map_ontologies():
+    """Run ontology mapping on a list of INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    stmts = stmts_from_json(stmts_json)
+    om = OntologyMapper(stmts, wm_ontomap, scored=True, symmetric=False)
+    om.map_statements()
+    return _return_stmts(stmts)
 
 
 @route('/preassembly/filter_by_type', method=['POST', 'OPTIONS'])
@@ -523,13 +571,7 @@ def filter_by_type():
     stmt_type = getattr(sys.modules[__name__], stmt_type_str)
     stmts = stmts_from_json(stmts_json)
     stmts_out = ac.filter_by_type(stmts, stmt_type)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    return _return_stmts(stmts_out)
 
 
 @route('/preassembly/filter_grounded_only', method=['POST', 'OPTIONS'])
@@ -541,15 +583,29 @@ def filter_grounded_only():
     response = request.body.read().decode('utf-8')
     body = json.loads(response)
     stmts_json = body.get('statements')
+    score_threshold = body.get('score_threshold')
+    if score_threshold is not None:
+        score_threshold = float(score_threshold)
     stmts = stmts_from_json(stmts_json)
-    stmts_out = ac.filter_grounded_only(stmts)
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
+    stmts_out = ac.filter_grounded_only(stmts, score_threshold=score_threshold)
+    return _return_stmts(stmts_out)
+
+
+@route('/preassembly/filter_belief', method=['POST', 'OPTIONS'])
+@allow_cors
+def filter_belief():
+    """Filter to beliefs above a given threshold."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    stmts_json = body.get('statements')
+    belief_cutoff = body.get('belief_cutoff')
+    if belief_cutoff is not None:
+        belief_cutoff = float(belief_cutoff)
+    stmts = stmts_from_json(stmts_json)
+    stmts_out = ac.filter_belief(stmts, belief_cutoff)
+    return _return_stmts(stmts_out)
 
 
 @route('/indra_db_rest/get_evidence', method=['POST', 'OPTIONS'])
@@ -600,14 +656,7 @@ def get_evidence_for_stmts():
     stmts_out = _get_matching_stmts(stmt)
     agent_name_list = [ag.name for ag in stmt.agent_list()]
     stmts_out = stmts = ac.filter_concept_names(stmts_out, agent_name_list, 'all')
-    if stmts_out:
-        stmts_json = stmts_to_json(stmts_out)
-        res = {'statements': stmts_json}
-        return res
-    else:
-        res = {'statements': []}
-    return res
-
+    return _return_stmts(stmts_out)
 
 
 app = default_app()

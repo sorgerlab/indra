@@ -55,7 +55,6 @@ def test_cwmsreader_cause():
 
 
 @attr('slow', 'webservice')
-@unittest.skip('Interpretation currently failing')
 def test_cwmsreader_inhibit():
     # Test extraction of inhibition relations from the cwms reader service
     text = 'Persistent insecurity and armed conflict have disrupted ' + \
@@ -157,7 +156,6 @@ def test_cwms_agriculture_increases():
 
 
 @attr('slow', 'webservice')
-@unittest.skip('Interpretation currently failing')
 def test_cwms_two_sentences():
     text = 'Floods decrease agriculture. Agriculture increases food security.'
     cp = process_text(text)
@@ -190,7 +188,6 @@ def test_three_sentences():
 
 
 @attr('slow', 'webservice')
-@unittest.skip('EKB is currently incorrect in web service')
 def test_contextual_sentence():
     text = "Hunger causes displacement in 2018 in South Sudan."
     cp = process_text(text)

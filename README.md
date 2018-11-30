@@ -191,3 +191,17 @@ biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'M
 ```
 At this point, `biopax_processor.statements` contains a list of INDRA 
 Statements extracted from the paths-from-to query.
+
+
+## INDRA REST API
+A REST API for INDRA is available at http://api.indra.bio:8000 with
+documentation at http://www.indra.bio/rest_api/docs. Note that the REST API
+is ideal for prototyping and for building light-weight web apps, but should
+not be used for large reading and assembly workflows.
+
+
+## INDRA Dockers
+There are currently two Dockerfiles that build INDRA and its dependencies.
+They are available in the following repositories:
+- https://github.com/indralab/indra_docker
+- https://github.com/indralab/indra_deps_docker
