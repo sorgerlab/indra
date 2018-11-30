@@ -550,10 +550,12 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "statementsObj",
-            "description": "object with a key of \"statements\" referencing a list of INDRA statements.",
+            "name": "preassemblyObj",
+            "description": "object with a key of \"statements\" referencing " +
+                "a list of INDRA statements, \"scorer\" specifying a scorer, and \"return_toplevel\" " +
+                "to determine whether only top level statements should be returned.",
             "schema": {
-              "$ref": "#/definitions/statementsObj"
+              "$ref": "#/definitions/preassemblyObj"
             }
           }
         ],
@@ -618,10 +620,12 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "statementsObj",
-            "description": "object with a key of \"statements\" referencing a list of INDRA statements.",
+            "name": "groundingFilterObj",
+            "description": "object with a key of \"statements\" referencing a list of INDRA statements, " +
+                "and an optional \"score_threshold\" for filtering scored grounding."
+            ,
             "schema": {
-              "$ref": "#/definitions/statementsObj"
+              "$ref": "#/definitions/groundingFilterObj"
             }
           }
         ],
@@ -934,6 +938,40 @@ var api_spec = {
         "type": {
           "type": "string",
           "example": "Phosphorylation"
+        }
+      },
+    },
+    "preassemblyObj": {
+      "type": "object",
+      "required": [
+        "statements",
+      ],
+      "properties": {
+        "statements": {
+          "$ref": "#/definitions/statements"
+        },
+        "scorer": {
+          "type": "string",
+          "example": "wm"
+        },
+        "return_toplevel": {
+          "type": "bool",
+          "example": true
+        }
+      }
+    },
+    "groundingFilterObj": {
+      "type": "object",
+      "required": [
+        "statements",
+      ],
+      "properties": {
+        "statements": {
+          "$ref": "#/definitions/statements"
+        },
+        "score_threshold": {
+          "type": "float",
+          "example": 0.7
         }
       }
     },
