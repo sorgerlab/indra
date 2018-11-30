@@ -55,6 +55,15 @@ def allow_cors(func):
         return func(*args, **kwargs)
     return wrapper
 
+@route('/', method=['GET', 'OPTIONS'])
+@allow_cors
+def root():
+    """API root."""
+    if request.method == 'OPTIONS':
+        return {}
+    return {'This is the INDRA REST API. See documentation at '
+            'http://www.indra.bio/rest_api/docs.'}
+
 #     INPUT PROCESSING     #
 
 
