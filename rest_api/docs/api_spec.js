@@ -639,6 +639,42 @@ var api_spec = {
         }
       }
     },
+    "/preassembly/filter_belief": {
+      "post": {
+        "tags": [
+          "preassembly"
+        ],
+        "summary": "Filter to Statements with belief above a given threshold.",
+        "operationId": "filterBelief",
+        "description": "Takes in a list of INDRA statements and returns a list of only those that have belief above the threshold.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "beliefFilterObj",
+            "description": "object with a key of \"statements\" referencing a list of INDRA statements, " +
+                "and a \"belief_cutoff\" for filtering based on belief."
+            ,
+            "schema": {
+              "$ref": "#/definitions/beliefFilterObj"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statements filtered to belief above the threshold.",
+            "schema": {
+              "$ref": "#/definitions/statementsObj"
+            }
+          }
+        }
+      }
+    },
     "/assemblers/pysb": {
       "post": {
         "tags": [
@@ -970,6 +1006,22 @@ var api_spec = {
           "$ref": "#/definitions/statements"
         },
         "score_threshold": {
+          "type": "float",
+          "example": 0.7
+        }
+      }
+    },
+    "beliefFilterObj": {
+      "type": "object",
+      "required": [
+        "statements",
+        "belief_cutoff"
+      ],
+      "properties": {
+        "statements": {
+          "$ref": "#/definitions/statements"
+        },
+        "belief_cutoff": {
           "type": "float",
           "example": 0.7
         }
