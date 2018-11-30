@@ -11,16 +11,16 @@
 
     <title>INDRA Results</title>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 
     <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
 
     <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
 
     <script>
         // "GLOBAL" VARIABLES
@@ -493,7 +493,7 @@
             let sbButton = document.createElement("button");
             sbButton.type = "button";
             sbButton.className = "btn btn-default btn-submit pull-right";
-            sbButton.style = "padding: 2px 6px";
+            sbButton.style = "padding: 2px 6px; border: solid 1px #878787;";
             sbButton.textContent = "Submit";
             sbButton.onclick = submitButtonClick; // ATTACHES SCRIPT TO BUTTON
 
@@ -569,14 +569,20 @@
     <!-- /KLAS USER SCRIPTS -->
 
   <style>
-.label-subject {
+a {
+    color: #256DC5;
+}
+.badge-subject {
   background-color: #4a36aa;
+  color: #FFFFFF;
 }
-.label-object {
+.badge-object {
   background-color: #2d8e4c;
+  color: #FFFFFF;
 }
-.label-other {
+.badge-other {
   background-color: #606060;
+  color: #FFFFFF;
 }
 .curation_toggle {
   cursor: pointer;
@@ -587,21 +593,12 @@
 
   <body>
 
-    <!-- Fixed navbar -->
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <!--
-          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>-->
-          <a class="navbar-brand" href="#">{{ title }}</a>
-        </div>
-      </div>
-    </nav>
+    <!-- Jumbotron -->
+    <div class="jumbotron">
+          <h3 class="display-4">{{ title }}</h3>
+          <hr class="my-4">
+          <p>This page allows you to curate the loaded statements.<br>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html">manual</a>.</p>
+    </div>
 
     <div class="container theme-showcase" role="main">
         <div>
@@ -611,21 +608,21 @@
             <a name='index'></a>
             <h4>Curator Information</h4>
             <div class="user_data">
-            <div class="api_key_form" id="api_key_form" style="display:inline-block; vertical-align: top; width: 330">
-                <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
-                    <b>API key</b><br>If no key is provided your curation will be rejected.<br>
-                    <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 200px;">
-                    <input type="submit" name="store_button" value="submit key">
-                    <div id="ensure_user_on_api_key">No key given.</div>
-                </form>
+                <div class="api_key_form" id="api_key_form" style="display:inline-block; vertical-align: top; width: 330">
+                    <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
+                        <b>API key</b><br>If no key is provided your curation will be rejected.<br>
+                        <input type="text" name="api_key" id="api_key_input" placeholder="Enter key here..." style="width: 200px;">
+                        <input type="submit" name="store_button" value="submit key">
+                        <div id="ensure_user_on_api_key">No key given.</div>
+                    </form>
+                </div>
+                <div class="curator_form" id="curator_form" style="display:inline-block; vertical-align: top; width: 330">
+                    <form name="curatorForm">
+                        <b>Curator ID</b><br>Your curation will get priority if you provide your email or name.<br>
+                        <input type="text" name="curator" id="curator_input" placeholder="Enter your name or email..." style="width: 200px;">
+                    </form>
+                </div>
             </div>
-            <div class="curator_form" id="curator_form" style="display:inline-block; vertical-align: top; width: 330">
-                <form name="curatorForm">
-                    <b>Curator ID</b><br>Your curation will get priority if you provide your email or name.<br>
-                    <input type="text" name="curator" id="curator_input" placeholder="Enter your name or email..." style="width: 200px;">
-                </form>
-            </div>
-        </div>
         </div>
 
     {% if metadata %}
@@ -643,13 +640,12 @@
     {% for stmt_info in statements %}
     <a name='{{ stmt_info['hash'] }}'></a>
     <div class="statement">
-        <h4 class="align-middle">{{ stmt_info['english'] }}
+        <h5 class="align-middle">{{ stmt_info['english'] }}
             <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
-                <span class="badge">{{ stmt_info['evidence_count'] }}</span></a>
-        </h4>
+                <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span></a>
+        </h5>
     </div>
     <div class="evidence">
-    <p><a href='#index'>Back to index</a>
     <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
             <thead>
               <tr>
