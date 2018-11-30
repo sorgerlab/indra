@@ -48,11 +48,19 @@ class OntologyMapper(object):
                         db_id = db_id[0][0]
                     mappings = self._map_id(db_name, db_id)
                     all_mappings += mappings
-                for map_db_name, map_db_id, score in all_mappings:
+                for map_db_name, map_db_id, score, orig_db_name in all_mappings:
                     if map_db_name in agent.db_refs:
                         continue
                     if self.scored:
-                        agent.db_refs[map_db_name] = [(map_db_id, score)]
+                        # If the original one is a scored grounding,
+                        # we take that score and multiply it with the mapping
+                        # score. Otherwise we assume the original score is 1.
+                        try:
+                            orig_score = agent.db_refs[orig_db_name][0][1]
+                        except Exception:
+                            orig_score = 1.0
+                        agent.db_refs[map_db_name] = \
+                            [(map_db_id, score * orig_score)]
                     else:
                         if map_db_name in ('UN', 'HUME'):
                             agent.db_refs[map_db_name] = [(map_db_id, 1.0)]
@@ -76,7 +84,7 @@ class OntologyMapper(object):
             if m1 == (db_name, db_id) or \
                 ((not isinstance(m1, list)) and
                  (m1 == (db_name, db_id.lower()))):
-                mappings.append((m2[0], m2[1], score))
+                mappings.append((m2[0], m2[1], score, db_name))
         return mappings
 
 
@@ -84,7 +92,15 @@ def _load_default_mappings():
     return [(('UN', 'entities/x'), ('HUME', 'entities/y'))]
 
 
-def _load_wm_map():
+def _load_wm_map(exclude_auto=None):
+    """Load an ontology map for world models.
+
+    exclude_auto : None or list[tuple]
+        A list of ontology mappings for which automated mappings should be
+        excluded, e.g. [(HUME, UN)] would result in not using mappings
+        from HUME to UN.
+    """
+    exclude_auto = [] if not exclude_auto else exclude_auto
     path_here = os.path.dirname(os.path.abspath(__file__))
     ontomap_file = os.path.join(path_here, '../resources/wm_ontomap.tsv')
     mappings = {}
@@ -144,18 +160,21 @@ def _load_wm_map():
             # Map the entries to our internal naming standards
             s, se = map_entry(s, se)
             t, te = map_entry(t, te)
-            # We first do the forward mapping
-            if (s, se, t) in mappings:
-                if mappings[(s, se, t)][1] < score:
+            # Skip automated mappings when they should be excluded
+            if (s, t) not in exclude_auto:
+                # We first do the forward mapping
+                if (s, se, t) in mappings:
+                    if mappings[(s, se, t)][1] < score:
+                        mappings[(s, se, t)] = ((t, te), score)
+                else:
                     mappings[(s, se, t)] = ((t, te), score)
-            else:
-                mappings[(s, se, t)] = ((t, te), score)
             # Then we add the reverse mapping
-            if (t, te, s) in mappings:
-                if mappings[(t, te, s)][1] < score:
+            if (t, s) not in exclude_auto:
+                if (t, te, s) in mappings:
+                    if mappings[(t, te, s)][1] < score:
+                        mappings[(t, te, s)] = ((s, se), score)
+                else:
                     mappings[(t, te, s)] = ((s, se), score)
-            else:
-                mappings[(t, te, s)] = ((s, se), score)
     ontomap = []
     for s, ts in mappings.items():
         ontomap.append(((s[0], s[1]), ts[0], ts[1]))

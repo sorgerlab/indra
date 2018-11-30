@@ -175,6 +175,7 @@ def map_sequence(stmts_in, **kwargs):
     del sm
     return stmts_out
 
+
 def run_preassembly(stmts_in, **kwargs):
     """Run preassembly on a list of statements.
 
@@ -200,6 +201,8 @@ def run_preassembly(stmts_in, **kwargs):
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
+    hierarchies : dict
+        Dict of hierarchy managers to use for preassembly
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -212,6 +215,8 @@ def run_preassembly(stmts_in, **kwargs):
     """
     dump_pkl_unique = kwargs.get('save_unique')
     belief_scorer = kwargs.get('belief_scorer')
+    use_hierarchies = kwargs['hierarchies'] if 'hierarchies' in kwargs else \
+        hierarchies
     be = BeliefEngine(scorer=belief_scorer)
     pa = Preassembler(hierarchies, stmts_in)
     run_preassembly_duplicate(pa, be, save=dump_pkl_unique)

@@ -189,6 +189,7 @@ __all__ = [
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
+    'stmts_from_json_file', 'stmts_to_json_file',
     'get_valid_residue', 'get_valid_location', 'get_valid_location',
     'draw_stmt_graph', 'get_all_descendants','make_statement_camel',
     'amino_acids', 'amino_acids_reverse', 'activity_types',
@@ -3560,6 +3561,37 @@ def stmts_from_json(json_in, on_missing_support='handle'):
         _promote_support(st.supports, uuid_dict, on_missing_support)
         _promote_support(st.supported_by, uuid_dict, on_missing_support)
     return stmts
+
+
+def stmts_from_json_file(fname):
+    """Return a list of statements loaded from a JSON file.
+
+    Parameters
+    ----------
+    fname : str
+        Path to the JSON file to load statements from.
+
+    Returns
+    -------
+    list[indra.statements.Statement]
+        The list of INDRA Statements loaded from the JSOn file.
+    """
+    with open(fname, 'r') as fh:
+        return stmts_from_json(json.load(fh))
+
+
+def stmts_to_json_file(stmts, fname):
+    """Serialize a list of INDRA Statements into a JSON file.
+
+    Parameters
+    ----------
+    stmts : list[indra.statement.Statements]
+        The list of INDRA Statements to serialize into the JSON file.
+    fname : str
+        Path to the JSON file to serialize Statements into.
+    """
+    with open(fname, 'w') as fh:
+        json.dump(stmts_to_json(stmts), fh, indent=1)
 
 
 def get_unresolved_support_uuids(stmts):
