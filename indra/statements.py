@@ -189,6 +189,7 @@ __all__ = [
 
     # Functions and values
     'stmts_from_json', 'get_unresolved_support_uuids', 'stmts_to_json',
+    'stmts_from_json_file', 'stmts_to_json_file',
     'get_valid_residue', 'get_valid_location', 'get_valid_location',
     'draw_stmt_graph', 'get_all_descendants','make_statement_camel',
     'amino_acids', 'amino_acids_reverse', 'activity_types',

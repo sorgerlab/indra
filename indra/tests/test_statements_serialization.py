@@ -288,3 +288,10 @@ def test_evidence_context():
     assert evj['pmid'] == '1'
     assert evj['annotations'] == {'a': '2'}
     assert ev.to_json() == Evidence._from_json(ev.to_json()).to_json()
+
+
+def test_file_serialization():
+    stmt = IncreaseAmount(Agent('a'), Agent('b'), evidence=[ev])
+    stmts_to_json_file([stmt], 'test_indra_stmts.json')
+    stmts = stmts_from_json_file('test_indra_stmts.json')
+    assert stmts[0].matches(stmt)
