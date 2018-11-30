@@ -54,5 +54,5 @@ def test_wm_map():
                                        0.81851065)], \
         stmt.obj.db_refs['UN']
     assert stmt.subj.db_refs['UN'] == [('UN/events/human/famine',
-                                        0.8694488)], \
+                                        1.0)], \
         stmt.subj.db_refs['UN']
