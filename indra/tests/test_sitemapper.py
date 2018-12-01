@@ -210,7 +210,7 @@ def test_site_map_within_bound_condition():
 
     # Extract the mapped statement
     mapped_statements = res[1]
-    assert(len(mapped_statements) == 1)
+    assert len(mapped_statements) == 1
     mapped_s = mapped_statements[0].mapped_stmt
 
     # Verify that the agent in the object's bound condition got site-mapped

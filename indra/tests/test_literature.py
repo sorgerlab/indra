@@ -8,16 +8,16 @@ from nose.plugins.attrib import attr
 @attr('webservice')
 def test_get_full_text_pmc():
     txt, txt_format = get_full_text('PMC4322985', 'pmcid')
-    assert(txt_format == 'pmc_oa_xml')
-    assert(len(txt) > 300000)
+    assert txt_format == 'pmc_oa_xml'
+    assert len(txt) > 300000
     assert unicode_strs((txt, txt_format))
 
 
 @attr('webservice')
 def test_get_full_text_doi():
     txt, txt_format = get_full_text('10.18632/oncotarget.2555', 'doi')
-    assert(txt_format == 'pmc_oa_xml')
-    assert(len(txt) > 300000)
+    assert txt_format == 'pmc_oa_xml'
+    assert len(txt) > 300000
     assert unicode_strs((txt, txt_format))
 
 
@@ -25,8 +25,8 @@ def test_get_full_text_doi():
 def test_get_full_text_pubmed_abstract():
     # DOI lookup in CrossRef fails for this one because of page mismatch
     txt, txt_format = get_full_text('27075779', 'pmid')
-    assert(txt_format == 'abstract')
-    assert(len(txt) > 800)
+    assert txt_format == 'abstract'
+    assert len(txt) > 800
     assert unicode_strs((txt, txt_format))
 
 

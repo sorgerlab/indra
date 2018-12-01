@@ -24,7 +24,7 @@ def test_duplicates():
     st2 = Phosphorylation(src, ras)
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
-    assert(len(pa.unique_stmts) == 1)
+    assert len(pa.unique_stmts) == 1
 
 
 def test_duplicates_copy():
@@ -35,10 +35,10 @@ def test_duplicates_copy():
     stmts = [st1, st2]
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
-    assert(len(pa.unique_stmts) == 1)
-    assert(len(stmts) == 2)
-    assert(len(stmts[0].evidence) == 1)
-    assert(len(stmts[1].evidence) == 1)
+    assert len(pa.unique_stmts) == 1
+    assert len(stmts) == 2
+    assert len(stmts[0].evidence) == 1
+    assert len(stmts[1].evidence) == 1
 
 
 def test_duplicates_sorting():
@@ -57,7 +57,7 @@ def test_duplicates_sorting():
     stmts = [st1, st2, st3]
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
-    assert(len(pa.unique_stmts) == 2)
+    assert len(pa.unique_stmts) == 2
 
 
 def test_combine_duplicates():
@@ -111,9 +111,9 @@ def test_combine_evidence_exact_duplicates():
     pa = Preassembler(hierarchies, stmts=stmts)
     pa.combine_duplicates()
     # The statements come out sorted by their matches_key
-    assert(len(pa.unique_stmts) == 1)
-    assert(len(pa.unique_stmts[0].evidence) == 2)
-    assert(set(ev.text for ev in pa.unique_stmts[0].evidence) ==
+    assert len(pa.unique_stmts) == 1
+    assert len(pa.unique_stmts[0].evidence) == 2
+    assert set(ev.text for ev in pa.unique_stmts[0].evidence ==
            set(['foo', 'bar']))
 
 
@@ -129,7 +129,7 @@ def test_superfamily_refinement():
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
-    assert(len(stmts) == 1)
+    assert len(stmts) == 1
     assert (stmts[0].equals(st2))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
@@ -145,7 +145,7 @@ def test_superfamily_refinement_isa_or_partof():
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
-    assert(len(stmts) == 1)
+    assert len(stmts) == 1
     assert (stmts[0].equals(st2))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
@@ -162,7 +162,7 @@ def test_modification_refinement():
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
-    assert(len(stmts) == 1)
+    assert len(stmts) == 1
     assert (stmts[0].equals(st1))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
@@ -174,7 +174,7 @@ def test_modification_refinement_residue_noenz():
     st2 = Phosphorylation(None, erbb3, 'Y')
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
-    assert(len(pa.related_stmts) == 1)
+    assert len(pa.related_stmts) == 1
 
 
 def test_modification_refinement_noenz():
@@ -188,7 +188,7 @@ def test_modification_refinement_noenz():
     stmts = pa.combine_related()
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
-    assert(len(stmts) == 1)
+    assert len(stmts) == 1
     assert (stmts[0].equals(st1))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st2))
@@ -232,8 +232,8 @@ def test_modification_norefinement_noenz():
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
-    assert(len(stmts) == 2)
-    assert(len(stmts[1].evidence)==1)
+    assert len(stmts) == 2
+    assert len(stmts[1].evidence)==1
 
 
 def test_modification_norefinement_subsfamily():
@@ -249,8 +249,8 @@ def test_modification_norefinement_subsfamily():
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
-    assert(len(stmts) == 2)
-    assert(len(stmts[1].evidence)==1)
+    assert len(stmts) == 2
+    assert len(stmts[1].evidence)==1
 
 
 def test_modification_norefinement_enzfamily():
@@ -266,8 +266,8 @@ def test_modification_norefinement_enzfamily():
     stmts = pa.combine_related()
     # Modification is less specific, enzyme more specific in st1, therefore
     # these statements shouldn't be combined. 
-    assert(len(stmts) == 2)
-    assert(len(stmts[1].evidence)==1)
+    assert len(stmts) == 2
+    assert len(stmts[1].evidence)==1
 
 
 def test_bound_condition_refinement():
@@ -284,7 +284,7 @@ def test_bound_condition_refinement():
     # modification, supported by the less-specific modification.
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
-    assert(len(stmts) == 1)
+    assert len(stmts) == 1
     assert (stmts[0].equals(st2))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
@@ -304,7 +304,7 @@ def test_bound_condition_norefinement():
     stmts = pa.combine_related()
     # The bound condition is more specific in st2 but the modification is less
     # specific. Therefore these statements should not be combined.
-    assert(len(stmts) == 2)
+    assert len(stmts) == 2
 
 
 def test_bound_condition_deep_refinement():
@@ -324,7 +324,7 @@ def test_bound_condition_deep_refinement():
     # modification, supported by the less-specific modification.
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
-    assert(len(stmts) == 1)
+    assert len(stmts) == 1
     assert (stmts[0].equals(st2))
     assert (len(stmts[0].supported_by) == 1)
     assert (stmts[0].supported_by[0].equals(st1))
@@ -338,8 +338,8 @@ def test_complex_refinement():
     st2 = Complex([mek, ras, raf])
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
-    assert(len(pa.unique_stmts) == 2)
-    assert(len(pa.related_stmts) == 2)
+    assert len(pa.unique_stmts) == 2
+    assert len(pa.related_stmts) == 2
 
 
 def test_complex_agent_refinement():
@@ -350,8 +350,8 @@ def test_complex_agent_refinement():
     st2 = Complex([ras, raf2])
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_related()
-    assert(len(pa.unique_stmts) == 2)
-    assert(len(pa.related_stmts) == 2)
+    assert len(pa.unique_stmts) == 2
+    assert len(pa.related_stmts) == 2
 
 
 def test_mod_sites_refinement():
@@ -387,30 +387,30 @@ def test_activating_substitution_refinement():
                      evidence=Evidence(text='bar'))
     st5 = ActiveForm(nras1, 'gtpbound', False,
                      evidence=Evidence(text='bar'))
-    assert(st2.refinement_of(st1, hierarchies))
-    assert(not st3.refinement_of(st1, hierarchies))
-    assert(not st4.refinement_of(st1, hierarchies))
-    assert(not st5.refinement_of(st1, hierarchies))
+    assert st2.refinement_of(st1, hierarchies)
+    assert not st3.refinement_of(st1, hierarchies)
+    assert not st4.refinement_of(st1, hierarchies)
+    assert not st5.refinement_of(st1, hierarchies)
 
-    assert(not st1.refinement_of(st2, hierarchies))
-    assert(not st3.refinement_of(st2, hierarchies))
-    assert(not st4.refinement_of(st2, hierarchies))
-    assert(not st5.refinement_of(st2, hierarchies))
+    assert not st1.refinement_of(st2, hierarchies)
+    assert not st3.refinement_of(st2, hierarchies)
+    assert not st4.refinement_of(st2, hierarchies)
+    assert not st5.refinement_of(st2, hierarchies)
 
-    assert(not st1.refinement_of(st3, hierarchies))
-    assert(not st2.refinement_of(st3, hierarchies))
-    assert(not st4.refinement_of(st3, hierarchies))
-    assert(not st5.refinement_of(st3, hierarchies))
+    assert not st1.refinement_of(st3, hierarchies)
+    assert not st2.refinement_of(st3, hierarchies)
+    assert not st4.refinement_of(st3, hierarchies)
+    assert not st5.refinement_of(st3, hierarchies)
 
-    assert(not st1.refinement_of(st4, hierarchies))
-    assert(not st2.refinement_of(st4, hierarchies))
-    assert(not st3.refinement_of(st4, hierarchies))
-    assert(not st5.refinement_of(st4, hierarchies))
+    assert not st1.refinement_of(st4, hierarchies)
+    assert not st2.refinement_of(st4, hierarchies)
+    assert not st3.refinement_of(st4, hierarchies)
+    assert not st5.refinement_of(st4, hierarchies)
 
-    assert(not st1.refinement_of(st5, hierarchies))
-    assert(not st2.refinement_of(st5, hierarchies))
-    assert(not st3.refinement_of(st5, hierarchies))
-    assert(not st4.refinement_of(st5, hierarchies))
+    assert not st1.refinement_of(st5, hierarchies)
+    assert not st2.refinement_of(st5, hierarchies)
+    assert not st3.refinement_of(st5, hierarchies)
+    assert not st4.refinement_of(st5, hierarchies)
 
 
 def test_translocation():
@@ -419,7 +419,7 @@ def test_translocation():
     st3 = Translocation(Agent('AKT'), None, 'nucleus')
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     pa.combine_related()
-    assert(len(pa.related_stmts) == 2)
+    assert len(pa.related_stmts) == 2
 
 
 def test_grounding_aggregation():
@@ -431,7 +431,7 @@ def test_grounding_aggregation():
     st3 = Phosphorylation(None, braf3)
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
-    assert(len(unique_stmts) == 3)
+    assert len(unique_stmts) == 3
 
 
 def test_grounding_aggregation_complex():
@@ -444,7 +444,7 @@ def test_grounding_aggregation_complex():
     st3 = Complex([mek, braf3])
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
     unique_stmts = pa.combine_duplicates()
-    assert(len(unique_stmts) == 3)
+    assert len(unique_stmts) == 3
 
 
 def test_render_stmt_graph():
@@ -526,9 +526,9 @@ def test_flatten_stmts():
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4, st5])
     pa.combine_duplicates()
     pa.combine_related()
-    assert(len(pa.related_stmts) == 2)
-    assert(len(flatten_stmts(pa.unique_stmts)) == 4)
-    assert(len(flatten_stmts(pa.related_stmts)) == 4)
+    assert len(pa.related_stmts) == 2
+    assert len(flatten_stmts(pa.unique_stmts)) == 4
+    assert len(flatten_stmts(pa.related_stmts)) == 4
 
 
 def test_complex_refinement_order():
@@ -538,7 +538,7 @@ def test_complex_refinement_order():
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
     pa.combine_related()
-    assert(len(pa.related_stmts) == 1)
+    assert len(pa.related_stmts) == 1
 
 
 def test_activation_refinement():
@@ -551,9 +551,9 @@ def test_activation_refinement():
     st2 = Activation(subj, obj)
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
-    assert(len(pa.unique_stmts) == 2)
+    assert len(pa.unique_stmts) == 2
     pa.combine_related()
-    assert(len(pa.related_stmts) == 2)
+    assert len(pa.related_stmts) == 2
 
 
 def test_homodimer_refinement():
@@ -563,9 +563,9 @@ def test_homodimer_refinement():
     st2 = Complex([erbb, egfr])
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     pa.combine_duplicates()
-    assert(len(pa.unique_stmts) == 2)
+    assert len(pa.unique_stmts) == 2
     pa.combine_related()
-    assert(len(pa.related_stmts) == 2)
+    assert len(pa.related_stmts) == 2
 
 
 def test_return_toplevel():
@@ -575,16 +575,16 @@ def test_return_toplevel():
     st2 = Phosphorylation(src, nras)
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related(return_toplevel=True)
-    assert(len(stmts) == 1)
-    assert(len(stmts[0].supported_by) == 1)
-    assert(len(stmts[0].supported_by[0].supports) == 1)
+    assert len(stmts) == 1
+    assert len(stmts[0].supported_by) == 1
+    assert len(stmts[0].supported_by[0].supports) == 1
     stmts = pa.combine_related(return_toplevel=False)
-    assert(len(stmts) == 2)
+    assert len(stmts) == 2
     ix = 1 if stmts[0].residue else 0
-    assert(len(stmts[1-ix].supported_by) == 1)
-    assert(len(stmts[1-ix].supported_by[0].supports) == 1)
-    assert(len(stmts[ix].supports) == 1)
-    assert(len(stmts[ix].supports[0].supported_by) == 1)
+    assert len(stmts[1-ix].supported_by) == 1
+    assert len(stmts[1-ix].supported_by[0].supports) == 1
+    assert len(stmts[ix].supports) == 1
+    assert len(stmts[ix].supports[0].supported_by) == 1
 
 
 def test_multiprocessing():
@@ -620,7 +620,7 @@ def test_conversion_refinement():
     st4 = Conversion(hras, [gdp, gtp], gdp)
     pa = Preassembler(hierarchies, stmts=[st1, st2, st3, st4])
     toplevel_stmts = pa.combine_related()
-    assert(len(toplevel_stmts) == 2)
+    assert len(toplevel_stmts) == 2
 
 
 def test_influence_duplicate():

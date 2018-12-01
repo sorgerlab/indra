@@ -10,9 +10,9 @@ ev = Evidence(source_api='bel', pmid='12345', epistemics={'direct': True},
 def test_mod_condition_from():
     jd = {'mod_type': 'phosphorylation', 'residue': 'S'}
     mc = ModCondition._from_json(jd)
-    assert(mc.residue == 'S')
-    assert(mc.mod_type == 'phosphorylation')
-    assert(mc.position is None)
+    assert mc.residue == 'S'
+    assert mc.mod_type == 'phosphorylation'
+    assert mc.position is None
 
 
 def test_agent_mod_condition():
@@ -20,7 +20,7 @@ def test_agent_mod_condition():
                               ModCondition('phosphorylation', 'serine', 222)])
     jd = a.to_json()
     jd2 = Agent._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_modification():
@@ -28,7 +28,7 @@ def test_modification():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_selfmodification():
@@ -36,7 +36,7 @@ def test_selfmodification():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_activation():
@@ -44,7 +44,7 @@ def test_activation():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_amount():
@@ -52,7 +52,7 @@ def test_amount():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_active_form():
@@ -61,7 +61,7 @@ def test_active_form():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_complex():
@@ -69,7 +69,7 @@ def test_complex():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_translocation():
@@ -77,7 +77,7 @@ def test_translocation():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_gap():
@@ -85,7 +85,7 @@ def test_gap():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_gef():
@@ -93,7 +93,7 @@ def test_gef():
     jd = stmt.to_json()
     stmt.to_graph()
     jd2 = Statement._from_json(jd).to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def test_influence():
@@ -112,7 +112,7 @@ def test_influence():
     assert st_deserialize.subj_delta['polarity'] == 1
     assert st_deserialize.obj_delta['adjectives'] == 'significant'
     jd2 = st_deserialize.to_json()
-    assert(jd == jd2)
+    assert jd == jd2
 
 
 def __make_support_link(supporting_stmt, supported_stmt):
@@ -129,16 +129,16 @@ def test_supports():
     jd2 = stmt2.to_json()
     jds = [jd1, jd2]
     stmts = stmts_from_json(jds)
-    assert(len(stmts[0].supports) == 1)
-    assert(len(stmts[1].supported_by) == 1)
-    assert(stmts[0].supports[0] == stmts[1])
-    assert(stmts[1].supported_by[0] == stmts[0])
+    assert len(stmts[0].supports) == 1
+    assert len(stmts[1].supported_by) == 1
+    assert stmts[0].supports[0] == stmts[1]
+    assert stmts[1].supported_by[0] == stmts[0]
     jds2 = stmts_to_json(stmts)
     stmts2 = stmts_from_json(jds2)
-    assert(len(stmts2[0].supports) == 1)
-    assert(len(stmts2[1].supported_by) == 1)
-    assert(stmts2[0].supports[0] == stmts2[1])
-    assert(stmts2[1].supported_by[0] == stmts2[0])
+    assert len(stmts2[0].supports) == 1
+    assert len(stmts2[1].supported_by) == 1
+    assert stmts2[0].supports[0] == stmts2[1]
+    assert stmts2[1].supported_by[0] == stmts2[0]
     stmt1.to_graph()
     stmt2.to_graph()
 

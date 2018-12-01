@@ -15,8 +15,8 @@ def test_pysb_assembler_complex1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==2
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_complex2():
     member1 = Agent('BRAF')
@@ -26,8 +26,8 @@ def test_pysb_assembler_complex2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==6)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==6
+    assert len(model.monomers)==3
 
 def test_pysb_assembler_complex3():
     hras = Agent('HRAS')
@@ -37,8 +37,8 @@ def test_pysb_assembler_complex3():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==2
+    assert len(model.monomers)==3
 
 def test_pysb_assembler_complex_twostep():
     member1 = Agent('BRAF')
@@ -47,8 +47,8 @@ def test_pysb_assembler_complex_twostep():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==2
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_complex_multiway():
     member1 = Agent('BRAF')
@@ -58,8 +58,8 @@ def test_pysb_assembler_complex_multiway():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model(policies='multi_way')
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==2
+    assert len(model.monomers)==3
 
 def test_pysb_assembler_actsub():
     stmt = ActiveForm(Agent('BRAF', mutations=[MutCondition('600', 'V', 'E')]),
@@ -67,8 +67,8 @@ def test_pysb_assembler_actsub():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
-    assert(len(model.rules)==0)
-    assert(len(model.monomers)==1)
+    assert len(model.rules)==0
+    assert len(model.monomers)==1
 
 def test_pysb_assembler_phos_noenz():
     enz = None
@@ -77,8 +77,8 @@ def test_pysb_assembler_phos_noenz():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==0)
-    assert(len(model.monomers)==0)
+    assert len(model.rules)==0
+    assert len(model.monomers)==0
 
 def test_pysb_assembler_dephos_noenz():
     enz = None
@@ -87,8 +87,8 @@ def test_pysb_assembler_dephos_noenz():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==0)
-    assert(len(model.monomers)==0)
+    assert len(model.rules)==0
+    assert len(model.monomers)==0
 
 def test_pysb_assembler_phos1():
     enz = Agent('BRAF')
@@ -97,8 +97,8 @@ def test_pysb_assembler_phos1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_phos2():
     hras = Agent('HRAS')
@@ -108,8 +108,8 @@ def test_pysb_assembler_phos2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==1
+    assert len(model.monomers)==3
 
 def test_pysb_assembler_phos3():
     hras = Agent('HRAS')
@@ -120,8 +120,8 @@ def test_pysb_assembler_phos3():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==4)
+    assert len(model.rules)==1
+    assert len(model.monomers)==4
 
 def test_pysb_assembler_phos4():
     hras = Agent('HRAS')
@@ -132,8 +132,8 @@ def test_pysb_assembler_phos4():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==4)
+    assert len(model.rules)==1
+    assert len(model.monomers)==4
 
 def test_pysb_assembler_autophos1():
     enz = Agent('MEK1')
@@ -141,8 +141,8 @@ def test_pysb_assembler_autophos1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==1)
+    assert len(model.rules)==1
+    assert len(model.monomers)==1
 
 def test_pysb_assembler_autophos2():
     raf1 = Agent('RAF1')
@@ -151,8 +151,8 @@ def test_pysb_assembler_autophos2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_autophos3():
     egfr = Agent('EGFR')
@@ -161,8 +161,8 @@ def test_pysb_assembler_autophos3():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==1)
+    assert len(model.rules)==1
+    assert len(model.monomers)==1
 
 def test_pysb_assembler_transphos1():
     egfr = Agent('EGFR')
@@ -171,8 +171,8 @@ def test_pysb_assembler_transphos1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==1)
+    assert len(model.rules)==1
+    assert len(model.monomers)==1
 
 def test_pysb_assembler_act1():
     egfr = Agent('EGFR')
@@ -182,8 +182,8 @@ def test_pysb_assembler_act1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==1
+    assert len(model.monomers)==3
 
 def test_pysb_assembler_dephos1():
     phos = Agent('PP2A')
@@ -192,8 +192,8 @@ def test_pysb_assembler_dephos1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_dephos2():
     phos = Agent('PP2A')
@@ -203,8 +203,8 @@ def test_pysb_assembler_dephos2():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==1
+    assert len(model.monomers)==3
 
 def test_pysb_assembler_gef1():
     gef = Agent('SOS1')
@@ -213,8 +213,8 @@ def test_pysb_assembler_gef1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_gap1():
     gap = Agent('NF1')
@@ -223,8 +223,8 @@ def test_pysb_assembler_gap1():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_actmod1():
     mek = Agent('MEK')
@@ -238,10 +238,10 @@ def test_pysb_assembler_actmod1():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==2
+    assert len(model.monomers)==2
     model = pa.make_model(policies='two_step')
-    assert(len(model.rules)==5)
+    assert len(model.rules)==5
 
 def test_pysb_assembler_actmod2():
     mek = Agent('MEK', activity=ActivityCondition('activity', True))
@@ -258,10 +258,10 @@ def test_pysb_assembler_actmod2():
     pa = PysbAssembler()
     pa.add_statements(stmts)
     model = pa.make_model()
-    assert(len(model.rules)==4)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==4
+    assert len(model.monomers)==2
     model = pa.make_model(policies='two_step')
-    assert(len(model.rules)==9)
+    assert len(model.rules)==9
 
 def test_pysb_assembler_phos_twostep1():
     enz = Agent('BRAF')
@@ -270,8 +270,8 @@ def test_pysb_assembler_phos_twostep1():
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==3)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==3
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_twostep_mixed():
     member1 = Agent('BRAF')
@@ -281,8 +281,8 @@ def test_pysb_assembler_twostep_mixed():
     pa = PysbAssembler()
     pa.add_statements([st1, st2])
     pa.make_model(policies='two_step')
-    assert(len(pa.model.rules)==5)
-    assert(len(pa.model.monomers)==4)
+    assert len(pa.model.rules)==5
+    assert len(pa.model.monomers)==4
 
 def test_pysb_assembler_phos_twostep_local():
     enz = Agent('BRAF')
@@ -291,8 +291,8 @@ def test_pysb_assembler_phos_twostep_local():
     pa = PysbAssembler()
     pa.add_statements([stmt])
     model = pa.make_model(policies='two_step')
-    assert(len(model.rules)==3)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==3
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_phos_twostep_local_to_global():
     enz = Agent('BRAF')
@@ -303,8 +303,8 @@ def test_pysb_assembler_phos_twostep_local_to_global():
     model = pa.make_model(policies='two_step')
     # This call should have reverted to default policy
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_pysb_assembler_dephos_twostep1():
     phos = Agent('PP2A')
@@ -313,8 +313,8 @@ def test_pysb_assembler_dephos_twostep1():
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==3)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==3
+    assert len(model.monomers)==2
 
 def test_statement_specific_policies():
     enz = Agent('BRAF')
@@ -327,8 +327,8 @@ def test_statement_specific_policies():
     pa = PysbAssembler(policies=policies)
     pa.add_statements([stmt1, stmt2])
     model = pa.make_model()
-    assert(len(model.rules)==4)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==4
+    assert len(model.monomers)==3
 
 def test_unspecified_statement_policies():
     enz = Agent('BRAF')
@@ -341,8 +341,8 @@ def test_unspecified_statement_policies():
     pa = PysbAssembler(policies=policies)
     pa.add_statements([stmt1, stmt2])
     model = pa.make_model()
-    assert(len(model.rules)==4)
-    assert(len(model.monomers)==3)
+    assert len(model.rules)==4
+    assert len(model.monomers)==3
 
 def test_activity_activity():
     subj = Agent('KRAS')
@@ -351,8 +351,8 @@ def test_activity_activity():
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_activity_activity2():
     subj = Agent('KRAS')
@@ -361,8 +361,8 @@ def test_activity_activity2():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_activity_activity2():
     subj = Agent('Vemurafenib')
@@ -371,8 +371,8 @@ def test_activity_activity2():
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_activity_activity3():
     subj = Agent('Vemurafenib')
@@ -381,34 +381,34 @@ def test_activity_activity3():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([stmt])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_rule_name_str_1():
     s = pa.get_agent_rule_str(Agent('BRAF'))
-    assert(s == 'BRAF')
+    assert s == 'BRAF'
 
 def test_rule_name_str_2():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), True)])
     s = pa.get_agent_rule_str(a)
-    assert(s == 'GRB2_EGFR')
+    assert s == 'GRB2_EGFR'
 
 def test_rule_name_str_3():
     a = Agent('GRB2',
               bound_conditions=[BoundCondition(Agent('EGFR'), False)])
     s = pa.get_agent_rule_str(a)
-    assert(s == 'GRB2_nEGFR')
+    assert s == 'GRB2_nEGFR'
 
 def test_rule_name_str_4():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine')])
     s = pa.get_agent_rule_str(a)
-    assert(s == 'BRAF_phosphoS')
+    assert s == 'BRAF_phosphoS'
 
 def test_rule_name_str_5():
     a = Agent('BRAF', mods=[ModCondition('phosphorylation', 'serine', '123')])
     s = pa.get_agent_rule_str(a)
-    assert(s == 'BRAF_phosphoS123')
+    assert s == 'BRAF_phosphoS123'
 
 def test_neg_act_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
@@ -418,11 +418,11 @@ def test_neg_act_mod():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': ('u', WILD)})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'S123': ('u', WILD)}
 
 def test_pos_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', True)
@@ -430,11 +430,11 @@ def test_pos_agent_mod():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': ('p', WILD)})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'S123': ('p', WILD)}
 
 def test_neg_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
@@ -442,11 +442,11 @@ def test_neg_agent_mod():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'S123': ('u', WILD)})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'S123': ('u', WILD)}
 
 def test_mut():
     mut = MutCondition('600', 'V', 'E')
@@ -454,11 +454,11 @@ def test_mut():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'V600': 'E'})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'V600': 'E'}
 
 def test_mut_missing1():
     mut = MutCondition('600', 'V', None)
@@ -466,11 +466,11 @@ def test_mut_missing1():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'V600': 'X'})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'V600': 'X'}
 
 def test_mut_missing2():
     mut = MutCondition('600', None, 'E')
@@ -478,11 +478,11 @@ def test_mut_missing2():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'mut600': 'E'})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'mut600': 'E'}
 
 def test_mut_missing3():
     mut = MutCondition(None, 'V', 'E')
@@ -490,11 +490,11 @@ def test_mut_missing3():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'V': 'E'})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'V': 'E'}
 
 def test_mut_missing4():
     mut = MutCondition(None, None, None)
@@ -502,79 +502,79 @@ def test_mut_missing4():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.monomer.name == 'BRAF')
-    assert(braf.site_conditions == {'mut': 'X'})
+    assert braf.monomer.name == 'BRAF'
+    assert braf.site_conditions == {'mut': 'X'}
 
 def test_agent_loc():
     st = Phosphorylation(Agent('BRAF', location='cytoplasm'), Agent('MEK'))
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(braf.site_conditions == {'loc': 'cytoplasm'})
+    assert braf.site_conditions == {'loc': 'cytoplasm'}
 
 def test_translocation():
     st = Translocation(Agent('FOXO3A'), 'nucleus', 'cytoplasm')
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f1.site_conditions == {'loc': 'nucleus'})
+    assert f1.site_conditions == {'loc': 'nucleus'}
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f2.site_conditions == {'loc': 'cytoplasm'})
-    assert(r.rate_forward.name == 'kf_foxo3a_nucleus_cytoplasm_1')
+    assert f2.site_conditions == {'loc': 'cytoplasm'}
+    assert r.rate_forward.name == 'kf_foxo3a_nucleus_cytoplasm_1'
 
 def test_translocation_to():
     st = Translocation(Agent('FOXO3A'), None, 'nucleus')
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f1.site_conditions == {'loc': 'cytoplasm'})
+    assert f1.site_conditions == {'loc': 'cytoplasm'}
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f2.site_conditions == {'loc': 'nucleus'})
-    assert(r.rate_forward.name == 'kf_foxo3a_cytoplasm_nucleus_1')
+    assert f2.site_conditions == {'loc': 'nucleus'}
+    assert r.rate_forward.name == 'kf_foxo3a_cytoplasm_nucleus_1'
 
 def test_phos_atpdep():
     st = Phosphorylation(Agent('BRAF'), Agent('MEK'), 'S', '222')
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model(policies='atp_dependent')
-    assert(len(pa.model.rules) == 5)
+    assert len(pa.model.rules) == 5
 
 def test_set_context():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(pa.model.parameters['MAP2K1_0'].value == pa.default_initial_amount)
-    assert(pa.model.parameters['MAPK3_0'].value == pa.default_initial_amount)
+    assert pa.model.parameters['MAP2K1_0'].value == pa.default_initial_amount
+    assert pa.model.parameters['MAPK3_0'].value == pa.default_initial_amount
     pa.set_context('A375_SKIN')
-    assert(pa.model.parameters['MAP2K1_0'].value > 10000)
-    assert(pa.model.parameters['MAPK3_0'].value > 10000)
+    assert pa.model.parameters['MAP2K1_0'].value > 10000
+    assert pa.model.parameters['MAPK3_0'].value > 10000
 
 def test_set_context_monomer_notfound():
     st = Phosphorylation(Agent('MAP2K1'), Agent('XYZ'))
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(pa.model.parameters['MAP2K1_0'].value == pa.default_initial_amount)
-    assert(pa.model.parameters['XYZ_0'].value == pa.default_initial_amount)
+    assert pa.model.parameters['MAP2K1_0'].value == pa.default_initial_amount
+    assert pa.model.parameters['XYZ_0'].value == pa.default_initial_amount
     pa.add_default_initial_conditions(100)
-    assert(pa.model.parameters['MAP2K1_0'].value == 100)
-    assert(pa.model.parameters['XYZ_0'].value == 100)
+    assert pa.model.parameters['MAP2K1_0'].value == 100
+    assert pa.model.parameters['XYZ_0'].value == 100
     pa.set_context('A375_SKIN')
-    assert(pa.model.parameters['MAP2K1_0'].value > 10000)
-    assert(pa.model.parameters['XYZ_0'].value == pa.default_initial_amount)
+    assert pa.model.parameters['MAP2K1_0'].value > 10000
+    assert pa.model.parameters['XYZ_0'].value == pa.default_initial_amount
 
 def test_set_context_celltype_notfound():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
@@ -589,7 +589,7 @@ def test_annotation():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.annotations) == 5)
+    assert len(pa.model.annotations) == 5
 
 def test_annotation_regamount():
     st1 = IncreaseAmount(Agent('BRAF', db_refs = {'UP': 'P15056'}),
@@ -599,7 +599,7 @@ def test_annotation_regamount():
     pa = PysbAssembler()
     pa.add_statements([st1, st2])
     pa.make_model()
-    assert(len(pa.model.annotations) == 8)
+    assert len(pa.model.annotations) == 8
 
 def test_print_model():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
@@ -621,11 +621,11 @@ def test_export_model():
     pa.add_statements([st])
     pa.make_model()
     exp_str = pa.export_model('kappa')
-    assert(exp_str)
+    assert exp_str
     exp_str = pa.export_model('bngl')
-    assert(exp_str)
+    assert exp_str
     exp_str = pa.export_model('sbml', file_name='/dev/null')
-    assert(exp_str)
+    assert exp_str
 
 def test_assemble_export_sbgn():
     # Add various statements to test their assembly
@@ -652,14 +652,14 @@ def test_assemble_export_sbgn():
 
 def test_name_standardize():
     n = pa._n('.*/- ^&#@$')
-    assert(isinstance(n, str))
-    assert(n == '__________')
+    assert isinstance(n, str)
+    assert n == '__________'
     n = pa._n('14-3-3')
-    assert(isinstance(n, str))
-    assert(n == 'p14_3_3')
+    assert isinstance(n, str)
+    assert n == 'p14_3_3'
     n = pa._n('\U0001F4A9bar')
-    assert(isinstance(n, str))
-    assert(n == 'bar')
+    assert isinstance(n, str)
+    assert n == 'bar'
 
 def test_generate_equations():
     st = Phosphorylation(Agent('MAP2K1'), Agent('MAPK3'))
@@ -674,8 +674,8 @@ def test_non_python_name_phos():
     pa.add_statements([st])
     pa.make_model()
     names = [m.name for m in pa.model.monomers]
-    assert('BRAF_kinase' in names)
-    assert('p14_3_3' in names)
+    assert 'BRAF_kinase' in names
+    assert 'p14_3_3' in names
     bng.generate_equations(pa.model)
 
 def test_non_python_name_bind():
@@ -693,8 +693,8 @@ def test_decreaseamount_one_step():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     model = pa.make_model()
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==2
+    assert len(model.monomers)==2
 
 def test_decreaseamount_interactions_only():
     subj = Agent('KRAS')
@@ -704,8 +704,8 @@ def test_decreaseamount_interactions_only():
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1, st2])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_increaseamount_one_step():
     subj = Agent('KRAS')
@@ -715,8 +715,8 @@ def test_increaseamount_one_step():
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1, st2])
     model = pa.make_model()
-    assert(len(model.rules)==2)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==2
+    assert len(model.monomers)==2
 
 def test_increaseamount_interactions_only():
     subj = Agent('KRAS')
@@ -726,8 +726,8 @@ def test_increaseamount_interactions_only():
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1, st2])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
 def test_missing_catalytic_default_site():
     c8 = Agent('CASP8', activity=ActivityCondition('catalytic', True))
@@ -768,13 +768,13 @@ def test_translocation_loc_special_char():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(len(pa.model.rules) == 1)
+    assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     f1 = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f1.site_conditions == {'loc': 'cytoplasm'})
+    assert f1.site_conditions == {'loc': 'cytoplasm'}
     f2 = r.product_pattern.complex_patterns[0].monomer_patterns[0]
-    assert(f2.site_conditions == {'loc': 'cell_surface'})
-    assert(r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1')
+    assert f2.site_conditions == {'loc': 'cell_surface'}
+    assert r.rate_forward.name == 'kf_ksr1_cytoplasm_cell_surface_1'
 
 def test_parse_identifiers_url():
     url1 = 'http://identifiers.org/foo/bar'
@@ -937,20 +937,20 @@ def _check_mod_assembly(mod_class):
     pa = PysbAssembler(policies='interactions_only')
     pa.add_statements([st1])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
     pa = PysbAssembler(policies='one_step')
     pa.add_statements([st1])
     model = pa.make_model()
-    assert(len(model.rules)==1)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==1
+    assert len(model.monomers)==2
 
     pa = PysbAssembler(policies='two_step')
     pa.add_statements([st1])
     model = pa.make_model()
-    assert(len(model.rules)==3)
-    assert(len(model.monomers)==2)
+    assert len(model.rules)==3
+    assert len(model.monomers)==2
 
 def test_modification_assembly():
     classes = AddModification.__subclasses__() + \
@@ -1013,13 +1013,13 @@ def test_activation_subj1():
     pa = PysbAssembler()
     pa.add_statements([st])
     pa.make_model()
-    assert(pa.model.monomers['a'].sites == [])
+    assert pa.model.monomers['a'].sites == []
     left = pa.model.rules[0].reactant_pattern
     subj_left = left.complex_patterns[0].monomer_patterns[0]
     right = pa.model.rules[0].product_pattern
     subj_right = right.complex_patterns[0].monomer_patterns[0]
-    assert(subj_left.site_conditions == {})
-    assert(subj_right.site_conditions == {})
+    assert subj_left.site_conditions == {}
+    assert subj_right.site_conditions == {}
 
 def test_activation_subj2():
     """Subject activity is defined explicitly."""
@@ -1030,13 +1030,13 @@ def test_activation_subj2():
     pa = PysbAssembler()
     pa.add_statements([st, st2])
     pa.make_model()
-    assert(pa.model.monomers['a'].sites == ['phospho'])
+    assert pa.model.monomers['a'].sites == ['phospho']
     left = pa.model.rules[0].reactant_pattern
     subj_left = left.complex_patterns[0].monomer_patterns[0]
     right = pa.model.rules[0].product_pattern
     subj_right = right.complex_patterns[0].monomer_patterns[0]
-    assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
-    assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
+    assert subj_left.site_conditions == {u'phospho': (u'p', WILD)}
+    assert subj_right.site_conditions == {u'phospho': (u'p', WILD)}
 
 def test_activation_subj3():
     """Subject activity is defined implicitly by another statement."""
@@ -1046,14 +1046,14 @@ def test_activation_subj3():
     pa = PysbAssembler()
     pa.add_statements([st, st2])
     pa.make_model()
-    assert(len(pa.model.rules) == 2)
-    assert(pa.model.monomers['a'].sites == ['activity'])
+    assert len(pa.model.rules) == 2
+    assert pa.model.monomers['a'].sites == ['activity']
     left = pa.model.rules[0].reactant_pattern
     subj_left = left.complex_patterns[0].monomer_patterns[0]
     right = pa.model.rules[0].product_pattern
     subj_right = right.complex_patterns[0].monomer_patterns[0]
-    assert(subj_left.site_conditions == {u'activity': (u'active')})
-    assert(subj_right.site_conditions == {u'activity': (u'active')})
+    assert subj_left.site_conditions == {u'activity': (u'active')}
+    assert subj_right.site_conditions == {u'activity': (u'active')}
 
 def test_activation_subj4():
     """Subject activity is defined both explicitly and implicitly."""
@@ -1065,13 +1065,13 @@ def test_activation_subj4():
     pa = PysbAssembler()
     pa.add_statements([st, st2, st3])
     pa.make_model()
-    assert(set(pa.model.monomers['a'].sites) == set(['activity', 'phospho']))
+    assert set(pa.model.monomers['a'].sites) == set(['activity', 'phospho'])
     left = pa.model.rules[0].reactant_pattern
     subj_left = left.complex_patterns[0].monomer_patterns[0]
     right = pa.model.rules[0].product_pattern
     subj_right = right.complex_patterns[0].monomer_patterns[0]
-    assert(subj_left.site_conditions == {u'phospho': (u'p', WILD)})
-    assert(subj_right.site_conditions == {u'phospho': (u'p', WILD)})
+    assert subj_left.site_conditions == {u'phospho': (u'p', WILD)}
+    assert subj_right.site_conditions == {u'phospho': (u'p', WILD)}
 
 def test_pysb_preassembler_replace_activities1():
     st1 = ActiveForm(Agent('a', location='nucleus'), 'activity', True)
@@ -1080,8 +1080,8 @@ def test_pysb_preassembler_replace_activities1():
                           Agent('b'))
     ppa = PysbPreassembler([st1, st2])
     ppa.replace_activities()
-    assert(len(ppa.statements) == 2)
-    assert(ppa.statements[1].enz.location == 'nucleus')
+    assert len(ppa.statements) == 2
+    assert ppa.statements[1].enz.location == 'nucleus'
 
 def test_pysb_preassembler_replace_activities2():
     a_act = Agent('a', activity=ActivityCondition('activity', True))
@@ -1089,7 +1089,7 @@ def test_pysb_preassembler_replace_activities2():
     st2 = Activation(Agent('c'), Agent('a'))
     ppa = PysbPreassembler([st, st2])
     ppa.replace_activities()
-    assert(len(ppa.statements) == 2)
+    assert len(ppa.statements) == 2
 
 def test_pysb_preassembler_replace_activities3():
     p = Agent('PPP2CA')
@@ -1103,23 +1103,23 @@ def test_pysb_preassembler_replace_activities3():
     st1 = Phosphorylation(mek2, erk)
     ppa = PysbPreassembler([st1, st2])
     ppa.replace_activities()
-    assert(len(ppa.statements) == 2)
-    assert(ppa.statements[0].enz.mods)
-    assert(ppa.statements[0].enz.bound_conditions)
+    assert len(ppa.statements) == 2
+    assert ppa.statements[0].enz.mods
+    assert ppa.statements[0].enz.bound_conditions
 
 def test_phos_michaelis_menten():
     stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model(policies='michaelis_menten')
-    assert(len(pa.model.parameters) == 4)
+    assert len(pa.model.parameters) == 4
 
 def test_deubiq_michaelis_menten():
     stmt = Deubiquitination(Agent('MEK'), Agent('ERK'))
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model(policies='michaelis_menten')
-    assert(len(pa.model.parameters) == 4)
+    assert len(pa.model.parameters) == 4
 
 def test_act_michaelis_menten():
     stmt = Activation(Agent('MEK'), Agent('ERK'))
@@ -1127,7 +1127,7 @@ def test_act_michaelis_menten():
     pa = PysbAssembler()
     pa.add_statements([stmt, stmt2])
     pa.make_model(policies='michaelis_menten')
-    assert(len(pa.model.parameters) == 7)
+    assert len(pa.model.parameters) == 7
 
 def test_increaseamount_hill():
     stmt = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
@@ -1135,25 +1135,25 @@ def test_increaseamount_hill():
     pa.add_statements([stmt])
     pa.make_model(policies='hill')
     pa.save_model()
-    assert(len(pa.model.parameters) == 5)
+    assert len(pa.model.parameters) == 5
 
 def test_convert_nosubj():
     stmt = Conversion(None, [Agent('PIP2')], [Agent('PIP3')])
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model()
-    assert(len(pa.model.parameters) == 3)
-    assert(len(pa.model.rules) == 1)
-    assert(len(pa.model.monomers) == 2)
+    assert len(pa.model.parameters) == 3
+    assert len(pa.model.rules) == 1
+    assert len(pa.model.monomers) == 2
 
 def test_convert_subj():
     stmt = Conversion(Agent('PIK3CA'), [Agent('PIP2')], [Agent('PIP3')])
     pa = PysbAssembler()
     pa.add_statements([stmt])
     pa.make_model()
-    assert(len(pa.model.parameters) == 4)
-    assert(len(pa.model.rules) == 1)
-    assert(len(pa.model.monomers) == 3)
+    assert len(pa.model.parameters) == 4
+    assert len(pa.model.rules) == 1
+    assert len(pa.model.monomers) == 3
 
 
 def test_activity_agent_rule_name():

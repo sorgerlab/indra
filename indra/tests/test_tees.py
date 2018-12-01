@@ -21,22 +21,22 @@ def test_process_phosphorylation():
     statements = tp.statements
 
     # Should only extract one statement
-    assert(len(statements) == 1)
+    assert len(statements) == 1
 
     # The statement should be a Phosphorylation statement
     statement = statements[0]
-    assert(isinstance(statement, Phosphorylation))
+    assert isinstance(statement, Phosphorylation)
 
     # Check that the enzyme and substrate of the statement match the text
     enz = statement.enz
-    assert(enz.db_refs['TEXT'] == 'Ras')
+    assert enz.db_refs['TEXT'] == 'Ras'
     #
     sub = statement.sub
-    assert(sub.db_refs['TEXT'] == 'Braf')
+    assert sub.db_refs['TEXT'] == 'Braf'
 
     # There should be an evidence object (properties of evidence tested in
     # other tests)
-    assert(len(statements[0].evidence) == 1)
+    assert len(statements[0].evidence) == 1
 
 
 @attr('slow')
@@ -71,13 +71,13 @@ def test_process_dephosphorylation():
 
         # There should be an evidence object (properties of evidence tested in
         # other tests)
-        assert(len(statements[0].evidence) == 1)
+        assert len(statements[0].evidence) == 1
 
         # If yes to both, the correct statement was among those extracted
         statement_correct = type_correct and entities_correct
         some_statement_correct = statement_correct or some_statement_correct
 
-    assert(some_statement_correct)
+    assert some_statement_correct
 
 
 @attr('slow')
@@ -91,23 +91,23 @@ def test_process_increase_amount():
     statements = tp.statements
 
     # Exactly one statement should have been extracted from the provided text
-    assert(len(statements) == 1)
+    assert len(statements) == 1
     statement0 = statements[0]
 
     # The statement should be of type IncreaseAmount
-    assert(isinstance(statement0, IncreaseAmount))
+    assert isinstance(statement0, IncreaseAmount)
 
     # The subject and object in the statement should correspond with what is
     # in the text
     subj0 = statement0.subj.db_refs['TEXT']
-    assert(subj0 == 'BRAF')
+    assert subj0 == 'BRAF'
     #
     obj0 = statement0.obj.db_refs['TEXT']
-    assert(obj0 == 'p53')
+    assert obj0 == 'p53'
 
     # There should be an evidence object (properties of evidence tested in
     # other tests)
-    assert(len(statements[0].evidence) == 1)
+    assert len(statements[0].evidence) == 1
 
 
 @attr('slow')
@@ -120,23 +120,23 @@ def test_process_decrease_amount():
     statements = tp.statements
 
     # Exactly one statement should have been etracted from the provided text
-    assert(len(statements) == 1)
+    assert len(statements) == 1
     statement0 = statements[0]
 
     # The statement should be of type DecreaseAmount
-    assert(isinstance(statement0, DecreaseAmount))
+    assert isinstance(statement0, DecreaseAmount)
 
     # The subject and object in the statement should correspond with what is
     # in the text
     subj0 = statement0.subj.db_refs['TEXT']
-    assert(subj0 == 'BRAF')
+    assert subj0 == 'BRAF'
     #
     obj0 = statement0.obj.db_refs['TEXT']
-    assert(obj0 == 'p53')
+    assert obj0 == 'p53'
 
     # There should be an evidence object (properties of evidence tested in
     # other tests)
-    assert(len(statements[0].evidence) == 1)
+    assert len(statements[0].evidence) == 1
 
 
 @attr('slow')
@@ -149,23 +149,23 @@ def test_process_bind():
     statements = tp.statements
 
     # There should be exactly one statement extracted
-    assert(len(statements) == 1)
+    assert len(statements) == 1
     statement0 = statements[0]
 
     # The statement should be of type Complex
-    assert(isinstance(statement0, Complex))
+    assert isinstance(statement0, Complex)
 
     # The members of the complex should correspond to the two substances
     # mentioned in the text
     members = statement0.members
     members = [m.db_refs['TEXT'] for m in members]
-    assert(len(members) == 2)
-    assert('BRAF' in members)
-    assert('p53' in members)
+    assert len(members) == 2
+    assert 'BRAF' in members
+    assert 'p53' in members
 
     # is_direct should be true in evidence for bind statement
-    assert(len(statement0.evidence) == 1)
-    assert(statement0.evidence[0].epistemics['direct'])
+    assert len(statement0.evidence) == 1
+    assert statement0.evidence[0].epistemics['direct']
 
 
 @attr('slow')
@@ -187,13 +187,13 @@ def test_evidence_text():
     statements = tp.statements
 
     # Only one of the sentences was related to a biological mechanism
-    assert(len(statements) == 1)
+    assert len(statements) == 1
     statement0 = statements[0]
 
     # Make sure it got the right sentence
     text = statement0.evidence[0].text
     print('Statement text:"', text + '"')
-    assert(text == 'Ras leads to the phosphorylation of Raf.')
+    assert text == 'Ras leads to the phosphorylation of Raf.'
 
 
 @attr('slow')
@@ -209,5 +209,5 @@ def test_evidence_pmid():
     statements = tp.statements
 
     # Verify that the pmid was put in the right place
-    assert(len(statements[0].evidence) == 1)
-    assert(statements[0].evidence[0].pmid == pmid)
+    assert len(statements[0].evidence) == 1
+    assert statements[0].evidence[0].pmid == pmid

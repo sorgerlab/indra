@@ -23,16 +23,16 @@ def test_biogrid_tsv():
 
     # There are 50 statements in that file
     statements = bp.statements
-    assert(len(statements) == 50)
+    assert len(statements) == 50
 
     # Any given statement should be a complex, with appropriate evidence
     s0 = statements[0]
-    assert(isinstance(s0, Complex))
+    assert isinstance(s0, Complex)
     ev = s0.evidence[0]
-    assert(ev.source_api == 'biogrid')
-    assert(ev.text is None)
-    assert(ev.pmid is not None)
+    assert ev.source_api == 'biogrid'
+    assert ev.text is None
+    assert ev.pmid is not None
 
     # The first statement in the file involves MAP2K4 and FLNC
-    assert(str(s0.members[0]) == 'MAP2K4()')
-    assert(str(s0.members[1]) == 'FLNC()')
+    assert str(s0.members[0]) == 'MAP2K4()'
+    assert str(s0.members[1]) == 'FLNC()'

@@ -8,21 +8,21 @@ from nose.plugins.attrib import attr
 @attr('webservice')
 def test_get_ids():
     ids = pubmed_client.get_ids('braf', retmax=10, db='pubmed')
-    assert(len(ids) == 10)
+    assert len(ids) == 10
     assert unicode_strs(ids)
 
 
 @attr('webservice')
 def test_get_no_ids():
     ids = pubmed_client.get_ids('UUuXNWMCusRpcVTX', retmax=10, db='pubmed')
-    assert(not ids)
+    assert not ids
 
 
 @attr('webservice')
 def test_get_ids():
     ids1 = pubmed_client.get_ids('JUN', use_text_word=False)
     ids2 = pubmed_client.get_ids('JUN', use_text_word=True)
-    assert(len(ids1) > len(ids2))
+    assert len(ids1) > len(ids2)
     assert unicode_strs(ids1)
     assert unicode_strs(ids2)
 
@@ -38,8 +38,8 @@ def test_get_id_count():
 @attr('webservice')
 def test_get_pmc_ids():
     ids = pubmed_client.get_ids('braf', retmax=10, db='pmc')
-    assert(len(ids) == 10)
-    assert(len([i for i in ids if i.startswith('6') or
+    assert len(ids) == 10
+    assert len([i for i in ids if i.startswith('6' or
                 i.startswith('5')]) == 10)
     assert unicode_strs(ids)
 
@@ -47,37 +47,37 @@ def test_get_pmc_ids():
 @attr('webservice')
 def test_get_title():
     title = pubmed_client.get_title('27754804')
-    assert(title)
-    assert(title.lower().startswith('targeting autophagy'))
+    assert title
+    assert title.lower().startswith('targeting autophagy')
 
 
 @attr('webservice')
 def test_get_title_prefix():
     title = pubmed_client.get_title('PMID27754804')
-    assert(title)
-    assert(title.lower().startswith('targeting autophagy'))
+    assert title
+    assert title.lower().startswith('targeting autophagy')
 
 
 @attr('webservice')
 def test_expand_pagination():
     pages = '456-7'
     new_pages = pubmed_client.expand_pagination(pages)
-    assert(new_pages == '456-457')
+    assert new_pages == '456-457'
 
 
 @attr('webservice')
 def test_get_abstract_notitle():
     abstract = pubmed_client.get_abstract('27754804', prepend_title=False)
-    assert(abstract.startswith('The RAF inhibitor'))
-    assert(abstract.endswith('vemurafenib.'))
+    assert abstract.startswith('The RAF inhibitor')
+    assert abstract.endswith('vemurafenib.')
     assert unicode_strs(abstract)
 
 
 @attr('webservice')
 def test_get_abstract_title():
     abstract = pubmed_client.get_abstract('27754804', prepend_title=True)
-    assert(abstract.lower().startswith('targeting autophagy'))
-    assert(abstract.endswith('vemurafenib.'))
+    assert abstract.lower().startswith('targeting autophagy')
+    assert abstract.endswith('vemurafenib.')
     assert unicode_strs(abstract)
 
 
@@ -91,7 +91,7 @@ def test_get_abstract2():
 @attr('webservice')
 def test_get_no_abstract():
     abstract = pubmed_client.get_abstract('xx')
-    assert(abstract is None)
+    assert abstract is None
 
 
 @attr('webservice')

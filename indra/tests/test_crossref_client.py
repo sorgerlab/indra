@@ -21,39 +21,39 @@ def test_doi_query():
 @attr('webservice')
 def test_get_metadata():
     metadata = crossref_client.get_metadata(test_doi)
-    assert(metadata['DOI'] == test_doi)
+    assert metadata['DOI'] == test_doi
     assert unicode_strs(metadata)
     metadata = crossref_client.get_metadata('xyz')
-    assert(metadata is None)
+    assert metadata is None
 
 
 @attr('webservice')
 def test_get_publisher():
     publisher = crossref_client.get_publisher(test_doi)
-    assert(publisher == 'Elsevier BV')
+    assert publisher == 'Elsevier BV'
     assert unicode_strs(publisher)
     publisher = crossref_client.get_publisher('xyz')
-    assert(publisher is None)
+    assert publisher is None
 
 
 @attr('webservice')
 def test_get_fulltext_links():
     links = crossref_client.get_fulltext_links(test_doi)
     content_types = [l.get('content-type') for l in links]
-    assert('text/plain' in content_types)
-    assert('text/xml' in content_types)
+    assert 'text/plain' in content_types
+    assert 'text/xml' in content_types
     assert unicode_strs(links)
     links = crossref_client.get_fulltext_links('xyz')
-    assert(links is None)
+    assert links is None
 
 
 @attr('webservice')
 def test_get_license_links():
     links = crossref_client.get_license_links(test_doi)
-    assert(links[0] == 'https://www.elsevier.com/tdm/userlicense/1.0/')
+    assert links[0] == 'https://www.elsevier.com/tdm/userlicense/1.0/'
     assert unicode_strs(links)
     links = crossref_client.get_license_links('xyz')
-    assert(links is None)
+    assert links is None
 
 
 @attr('webservice')

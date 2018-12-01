@@ -13,7 +13,7 @@ stats['new_final'] = 10
 def test_noabs_nopaper():
     s = stats.copy()
     status_msg = make_status_message(s)
-    assert(status_msg is None)
+    assert status_msg is None
 
 def test_absonly():
     s = stats.copy()

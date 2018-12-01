@@ -33,12 +33,12 @@ stmt_autophos = Autophosphorylation(brafmut, 'S', '564', evidence=ev)
 
 def test_get_pmc_id():
     pmc_id = get_pmc_id(stmt_phos)
-    assert(pmc_id == 'PMC4849135')
+    assert pmc_id == 'PMC4849135'
 
 def test_get_evidence_text():
     ev_txt = get_evidence_text(stmt_phos)
-    assert(len(ev_txt) == 1)
-    assert(ev_txt[0] == 'BRAF phosphorylates MAP2K1.')
+    assert len(ev_txt) == 1
+    assert ev_txt[0] == 'BRAF phosphorylates MAP2K1.'
 
 def test_assemble_phosphorylation():
     card = assemble_modification(stmt_phos)

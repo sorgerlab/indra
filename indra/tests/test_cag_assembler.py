@@ -38,8 +38,8 @@ statements = [st1]
 def test_assemble_influence():
     ca = CAGAssembler(statements)
     CAG = ca.make_model()
-    assert(len(CAG.nodes()) == 2)
-    assert(len(CAG.edges()) == 1)
+    assert len(CAG.nodes()) == 2
+    assert len(CAG.edges()) == 1
 
 
 def test_export_to_cyjs():
