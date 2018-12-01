@@ -112,10 +112,10 @@ def test_rdf_example1():
     assert len(cp.statements) == 1
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] ==
-           'These impacts on livestock and crops')
-    assert(statement0.obj.db_refs['TEXT'] ==
-           'in livelihoods being decimated')
+    assert statement0.subj.db_refs['TEXT'] == \
+           'These impacts on livestock and crops'
+    assert statement0.obj.db_refs['TEXT'] == \
+           'in livelihoods being decimated'
 
 
 def test_rdf_example2():
@@ -126,10 +126,10 @@ def test_rdf_example2():
     assert len(cp.statements) == 1
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] ==
-           'Conflict and economic decline')
-    assert(statement0.obj.db_refs['TEXT'] ==
-           'to violence and displacement')
+    assert statement0.subj.db_refs['TEXT'] == \
+           'Conflict and economic decline'
+    assert statement0.obj.db_refs['TEXT'] == \
+           'to violence and displacement'
 
 
 def test_rdf_example3():

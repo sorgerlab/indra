@@ -47,12 +47,12 @@ def test_partof_entity_not():
 
 
 def test_isa_mod():
-    assert(mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
-                             'INDRA_MODS', 'modification'))
+    assert mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                             'INDRA_MODS', 'modification')
 
 def test_isa_mod_not():
-    assert(not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
-                                 'INDRA_MODS', 'ubiquitination'))
+    assert not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                                 'INDRA_MODS', 'ubiquitination')
 
 def test_isa_activity():
     assert act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',

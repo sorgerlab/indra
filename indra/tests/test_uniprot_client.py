@@ -155,8 +155,8 @@ def test_get_primary_id_secondary_hashuman():
 
 
 def test_get_primary_id_secondary_nohuman():
-    assert uniprot_client.get_primary_id('P31848' in
-           ['P0A5M5', 'P9WIU6', 'P9WIU7'])
+    assert uniprot_client.get_primary_id('P31848') in \
+        ['P0A5M5', 'P9WIU6', 'P9WIU7'])
 
 
 def test_mouse_from_up():

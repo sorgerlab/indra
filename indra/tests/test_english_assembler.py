@@ -206,8 +206,8 @@ def test_assemble_more():
     e.add_statements([st1, st2])
     s = e.make_model()
     print(s)
-    assert(s ==\
-        'PP2A dephosphorylates MAP2K1 on S222. MAP2K1 binds BRAF and RAF1.')
+    assert s == \
+        'PP2A dephosphorylates MAP2K1 on S222. MAP2K1 binds BRAF and RAF1.'
 
 
 def test_autophos():

@@ -292,18 +292,18 @@ def test_evidence_random_noise_prior():
 
     # Random noise prior for geneways bind evidence is the subtype prior,
     # since we specified it
-    assert(evidence_random_noise_prior(ev_geneways_bind,
-           type_probs, subtype_probs) == 0.7)
+    assert evidence_random_noise_prior(ev_geneways_bind, \
+                                       type_probs, subtype_probs) == 0.7
 
     # Random noise prior for reactome biopax evidence is the subtype prior,
     # since we specified it
-    assert(evidence_random_noise_prior(ev_biopax_reactome,
-           type_probs, subtype_probs) == 0.4)
+    assert evidence_random_noise_prior(ev_biopax_reactome, \
+                                       type_probs, subtype_probs) == 0.4
 
     # Random noise prior for pid evidence is the subtype prior,
     # since we specified it
-    assert(evidence_random_noise_prior(ev_biopax_pid,
-           type_probs, subtype_probs) == 0.9)
+    assert evidence_random_noise_prior(ev_biopax_pid,
+                                       type_probs, subtype_probs) == 0.9
 
     # Make sure this all still works when we go through the belief engine
     statements = []

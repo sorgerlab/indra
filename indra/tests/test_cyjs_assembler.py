@@ -253,4 +253,4 @@ def assert_element_properties(cja):
         assert element['data']['uuid_list'] is not None, "uuid_list is None"
         assert len(element['data']['uuid_list']) >= 1, "uuid_list is empty!"
         for uuid in element['data']['uuid_list']:
-            assert type(uuid) == type('abc')), (str(uuid) + ' is not a string'
+            assert type(uuid) == type('abc'), str(uuid) + ' is not a string'

@@ -1289,15 +1289,15 @@ def test_eq_agent():
            Agent('one', mutations=[MutCondition('600', 'V', 'E')])))
     assert not Agent('one', mutations=[MutCondition('600', 'V', 'E')].equals(
            Agent('one', mutations=[MutCondition('600', 'V', 'D')])))
-    assert(Agent('one',
+    assert Agent('one',
                  bound_conditions=[BoundCondition(Agent('two'), True)]).equals(
            Agent('one',
-                 bound_conditions=[BoundCondition(Agent('two'), True)])))
-    assert(not Agent('one',
+                 bound_conditions=[BoundCondition(Agent('two'), True)]))
+    assert not Agent('one',
                      bound_conditions=[BoundCondition(Agent('two'),
                                                       True)]).equals(
            Agent('one', bound_conditions=[BoundCondition(Agent('two'),
-                                                         False)])))
+                                                         False)]))
     assert not Agent('one', bound_conditions=[BoundCondition(Agent('two',
                                                              True)]).equals(
            Agent('one', bound_conditions=[BoundCondition(Agent('three'),

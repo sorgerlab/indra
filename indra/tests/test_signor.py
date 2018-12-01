@@ -765,5 +765,5 @@ def test_recursively_expand_complex_constituents():
             'SIGNOR-C91': ['SIGNOR-C88', 'P23759']}
     sp = SignorProcessor([test_row], complex_map)
     constituents = sp._recursively_lookup_complex('SIGNOR-C91')
-    assert(constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
-                            'Q15291'])
+    assert constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                            'Q15291']

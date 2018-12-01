@@ -129,8 +129,8 @@ def test_expressioncontrol_positive():
     s0 = statements[0]
 
     assert s0.subj.db_refs == {'TEXT': 'hypoxia'}
-    assert(s0.obj.db_refs == {'HGNC': '3415', 'TEXT': 'erythropoietin',
-                              'UP': 'P01588'})
+    assert s0.obj.db_refs == {'HGNC': '3415', 'TEXT': 'erythropoietin',
+                              'UP': 'P01588'}
 
 
 def test_evidence():
@@ -169,8 +169,8 @@ def test_molsynthesis_positive():
     s0 = statements[0]
     assert isinstance(s0, IncreaseAmount)
 
-    assert(s0.subj.db_refs == {'HGNC': '19260', 'TEXT': 'BLT2',
-                               'UP': 'Q9NPC1'})
+    assert s0.subj.db_refs == {'HGNC': '19260', 'TEXT': 'BLT2',
+                               'UP': 'Q9NPC1'}
     assert s0.obj.db_refs == {'TEXT': 'reactive oxygen species'}
 
 
@@ -184,9 +184,9 @@ def test_expressioncontrol_negative():
     s0 = statements[0]
     assert isinstance(s0, DecreaseAmount)
     assert s0.subj.db_refs == {'CHEBI': 'CHEBI:6700', 'TEXT': 'matrine'}
-    assert(s0.obj.db_refs == {'HGNC': '6364',
+    assert s0.obj.db_refs == {'HGNC': '6364',
                               'TEXT': 'PSA and androgen receptor',
-                              'UP': 'P07288'})
+                              'UP': 'P07288'}
 
 
 def test_molsynthesis_negative():
@@ -199,8 +199,8 @@ def test_molsynthesis_negative():
     s0 = statements[0]
     assert isinstance(s0, DecreaseAmount)
 
-    assert(s0.subj.db_refs == {'HGNC': '9070', 'TEXT': 'pleckstrin',
-                               'UP': 'P08567'})
+    assert s0.subj.db_refs == {'HGNC': '9070', 'TEXT': 'pleckstrin',
+                               'UP': 'P08567'}
     assert s0.obj.db_refs == {'CHEBI': 'CHEBI:16595', 'TEXT': 'Ins(1,4,5)P3'}
 
 
@@ -218,8 +218,8 @@ def test_binding():
     m0 = members[0]
     m1 = members[1]
 
-    assert(m0.db_refs == {'HGNC': '7664', 'TEXT': 'Both Nck and Grb4',
-                          'UP': 'P16333'})
+    assert m0.db_refs == {'HGNC': '7664', 'TEXT': 'Both Nck and Grb4',
+                          'UP': 'P16333'}
     assert m1.db_refs == {'HGNC': '9406', 'TEXT': 'PRK2', 'UP': 'Q16513'}
 
 
@@ -233,8 +233,8 @@ def test_phosphorylate():
     s0 = statements[0]
     assert isinstance(s0, Phosphorylation)
 
-    assert(s0.enz.db_refs == {'GO': 'GO:0005610', 'FPLX': 'Laminin_332',
-                              'TEXT': 'IKK alpha'})
+    assert s0.enz.db_refs == {'GO': 'GO:0005610', 'FPLX': 'Laminin_332',
+                              'TEXT': 'IKK alpha'}
     assert s0.enz.name == 'Laminin_332'  # agent name is FPLX when available
     assert s0.sub.db_refs == {'HGNC': '6120', 'TEXT': 'IRF-5', 'UP': 'Q13568'}
 
@@ -275,10 +275,10 @@ def test_dephosphorylate():
     s0 = statements[0]
     assert isinstance(s0, Dephosphorylation)
 
-    assert(s0.enz.db_refs == {'HGNC': '30579', 'TEXT': 'Slingshot-1 (SSH1',
-                              'UP': 'Q8WYL5'})
-    assert(s0.sub.db_refs == {'HGNC': '1874', 'TEXT': 'cofilin',
-                              'UP': 'P23528'})
+    assert s0.enz.db_refs == {'HGNC': '30579', 'TEXT': 'Slingshot-1 (SSH1',
+                              'UP': 'Q8WYL5'}
+    assert s0.sub.db_refs == {'HGNC': '1874', 'TEXT': 'cofilin',
+                              'UP': 'P23528'}
 
 
 def test_protein_mutation():

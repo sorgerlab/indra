@@ -113,7 +113,7 @@ def test_combine_evidence_exact_duplicates():
     # The statements come out sorted by their matches_key
     assert len(pa.unique_stmts) == 1
     assert len(pa.unique_stmts[0].evidence) == 2
-    assert set(ev.text for ev in pa.unique_stmts[0].evidence ==
+    assert set(ev.text for ev in pa.unique_stmts[0].evidence == \
            set(['foo', 'bar']))
 
 

@@ -57,26 +57,26 @@ def test_graph_reductions():
                           ('activity', 'phosphatase'),
                           ('catalytic', 'phosphatase')])
     reductions = _get_graph_reductions(G)
-    assert(reductions == {'activity': 'catalytic',
+    assert reductions == {'activity': 'catalytic',
                           'kinase': 'kinase',
                           'phosphatase': 'phosphatase',
-                          'catalytic': 'catalytic'})
+                          'catalytic': 'catalytic'}
     G = networkx.DiGraph([('activity', 'kinase'),
                           ('catalytic', 'kinase'),
                           ('activity', 'catalytic')])
     reductions = _get_graph_reductions(G)
-    assert(reductions == {'activity': 'kinase',
+    assert reductions == {'activity': 'kinase',
                           'catalytic': 'kinase',
-                          'kinase': 'kinase'})
+                          'kinase': 'kinase'}
     G = networkx.DiGraph([('activity', 'kinase'),
                           ('catalytic', 'kinase'),
                           ('activity', 'catalytic'),
                           ('activity', 'transcription')])
     reductions = _get_graph_reductions(G)
-    assert(reductions == {'activity': 'activity',
+    assert reductions == {'activity': 'activity',
                           'transcription': 'transcription',
                           'catalytic': 'kinase',
-                          'kinase': 'kinase'})
+                          'kinase': 'kinase'}
 
 def test_base_agent():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
