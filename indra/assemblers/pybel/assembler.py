@@ -11,7 +11,7 @@ from pybel.language import pmod_namespace
 from indra.statements import *
 from indra.databases import hgnc_client
 
-logger = logging.getLogger('pybel_assembler')
+logger = logging.getLogger(__name__)
 
 
 _indra_pybel_act_map = {

@@ -20,7 +20,7 @@ from indra.statements import stmts_from_json, get_statement_by_name, \
     get_all_descendants
 
 
-logger = logging.getLogger('db_rest_client')
+logger = logging.getLogger(__name__)
 
 
 class IndraDBRestClientError(Exception):

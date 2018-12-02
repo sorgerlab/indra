@@ -35,7 +35,7 @@ except Exception:
 
 global_filters = ['grounding', 'prior_one', 'human_only']
 
-logger = logging.getLogger('rasmachine')
+logger = logging.getLogger(__name__)
 
 
 def build_prior(genes, out_file):

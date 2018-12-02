@@ -217,7 +217,7 @@ from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
 
-logger = logging.getLogger('indra_statements')
+logger = logging.getLogger(__name__)
 
 
 try:  # Python 2

@@ -27,7 +27,7 @@ except ImportError:
     get_ft_mention = False
 
 
-logger = logging.getLogger('geneways')
+logger = logging.getLogger(__name__)
 
 
 # This will take in an action and action mention and create a single statement

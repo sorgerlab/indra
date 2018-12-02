@@ -7,7 +7,7 @@ from datetime import datetime
 from indra.statements import *
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-logger = logging.getLogger('cwms')
+logger = logging.getLogger(__name__)
 
 
 class CWMSError(Exception):

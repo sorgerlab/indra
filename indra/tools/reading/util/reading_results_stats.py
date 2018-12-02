@@ -9,7 +9,7 @@ from collections import Counter
 from matplotlib import pyplot as plt
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
-logger = logging.getLogger('reading_results')
+logger = logging.getLogger('indra.tools.reading.util.reading_result_stats')
 
 
 if __name__ == '__main__':

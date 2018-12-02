@@ -13,7 +13,7 @@ import requests
 from indra import has_config, get_config
 
 
-logger = logging.getLogger('newsapi_client')
+logger = logging.getLogger(__name__)
 
 
 api_key = None

@@ -12,7 +12,7 @@ from indra import has_config, get_config
 
 biogrid_url = 'http://webservice.thebiogrid.org/interactions/'
 
-logger = logging.getLogger('biogrid')
+logger = logging.getLogger(__name__)
 
 # For more information see http://wiki.thebiogrid.org/doku.php/biogridrest
 # Try to read the API key from a file
@@ -21,6 +21,7 @@ if not has_config('BIOGRID_API_KEY'):
                  'environment variable.')
 else:
     api_key = get_config('BIOGRID_API_KEY')
+
 
 def get_interactors(gene_name):
     res_dict = _send_request([gene_name], include_interactors=True)

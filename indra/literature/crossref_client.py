@@ -14,7 +14,7 @@ except ImportError:
     from functools32 import lru_cache
 
 
-logger = logging.getLogger('crossref')
+logger = logging.getLogger(__name__)
 
 crossref_url = 'http://api.crossref.org/'
 crossref_search_url = 'http://search.crossref.org/dois'

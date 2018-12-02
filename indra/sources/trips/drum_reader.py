@@ -15,7 +15,8 @@ except ImportError:
     KQMLModule = object
     have_kqml = False
 
-logger = logging.getLogger('drum_reader')
+logger = logging.getLogger(__name__)
+
 
 class DrumReader(KQMLModule):
     """Agent which processes text through a local TRIPS/DRUM instance.

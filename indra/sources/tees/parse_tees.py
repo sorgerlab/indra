@@ -32,7 +32,7 @@ try:  # Python 2
 except NameError:  # Python 3
     basestring = str
 
-logger = logging.getLogger('tees_parser')
+logger = logging.getLogger(__name__)
 
 
 class TEESEntity:

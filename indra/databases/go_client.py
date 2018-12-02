@@ -6,7 +6,7 @@ import rdflib
 from indra.util import read_unicode_csv, write_unicode_csv
 
 
-logger = logging.getLogger('go_client')
+logger = logging.getLogger(__name__)
 
 
 go_mappings_file = join(dirname(abspath(__file__)), '..', 'resources',

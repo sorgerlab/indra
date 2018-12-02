@@ -5,7 +5,7 @@ from os.path import dirname, abspath, join
 from collections import namedtuple, defaultdict
 from indra.util import read_unicode_csv
 
-logger = logging.getLogger('phosphosite')
+logger = logging.getLogger(__name__)
 
 PhosphoSite = namedtuple('PhosphoSite',
                          ['GENE', 'PROTEIN', 'ACC_ID', 'HU_CHR_LOC', 'MOD_RSD',

@@ -5,7 +5,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from indra import get_config, has_config
 from indra.util.nested_dict import NestedDict
 
-logger = logging.getLogger('aws_utils')
+logger = logging.getLogger(__name__)
 
 
 def kill_all(job_queue, reason='None given', states=None):

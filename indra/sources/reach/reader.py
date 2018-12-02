@@ -31,7 +31,8 @@ _set_classpath()
 
 from indra.java_vm import autoclass, JavaException
 
-logger = logging.getLogger('reach_reader')
+logger = logging.getLogger(__name__)
+
 
 class ReachReader(object):
     """The ReachReader wraps a singleton instance of the REACH reader.

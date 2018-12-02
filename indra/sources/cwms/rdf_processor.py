@@ -4,7 +4,7 @@ import logging
 import rdflib
 from indra.statements import Influence, Agent, Evidence
 
-logger = logging.getLogger('cwms_rdf')
+logger = logging.getLogger(__name__)
 
 prefixes = """
 PREFIX role: <http://www.cs.rochester.edu/research/trips/role#>

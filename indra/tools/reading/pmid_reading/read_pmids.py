@@ -21,7 +21,7 @@ from platform import system
 import logging
 from indra import get_config
 
-logger = logging.getLogger('runreader')
+logger = logging.getLogger('indra.tools.reading.pmid_reading.read_pmids')
 
 
 parser = argparse.ArgumentParser(

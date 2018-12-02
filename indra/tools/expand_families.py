@@ -9,7 +9,8 @@ from indra.preassembler.hierarchy_manager import HierarchyManager, \
 from indra.databases import hgnc_client
 from indra.statements import Agent, Complex, Evidence
 
-logger = logging.getLogger('expand_families')
+logger = logging.getLogger(__name__)
+
 
 class Expander(object):
     def __init__(self, hierarchies=None):

@@ -8,13 +8,15 @@ import logging
 import jnius_config
 from indra import get_config
 
-logger = logging.getLogger('java_vm')
+logger = logging.getLogger(__name__)
+
 
 def _has_xmx(options):
     for option in options:
         if option.startswith('-Xmx'):
             return True
     return False
+
 
 default_mem_limit = get_config("INDRA_DEFAULT_JAVA_MEM_LIMIT")
 if default_mem_limit is None:

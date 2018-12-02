@@ -12,7 +12,7 @@ except ImportError:
           "cag graphs.")
     HAVE_PYDOT = False
 
-logger = logging.getLogger('cwms_util')
+logger = logging.getLogger(__name__)
 
 
 def make_cag_graphs(cag_rdf_dicts, skip_if_no_dot=True):

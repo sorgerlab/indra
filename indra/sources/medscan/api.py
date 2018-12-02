@@ -13,7 +13,7 @@ from .processor import *
 from .fix_csxml_character_encoding import fix_character_encoding
 
 
-logger = logging.getLogger('medscan')
+logger = logging.getLogger(__name__)
 
 
 def process_directory_statements_sorted_by_pmid(directory_name):

@@ -13,7 +13,7 @@ except ImportError:
     from functools32 import lru_cache
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-logger = logging.getLogger('literature')
+logger = logging.getLogger(__name__)
 
 
 def id_lookup(paper_id, idtype):

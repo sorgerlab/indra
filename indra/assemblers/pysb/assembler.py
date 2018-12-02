@@ -24,7 +24,7 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('pysb_assembler')
+logger = logging.getLogger(__name__)
 
 SelfExporter.do_export = False
 

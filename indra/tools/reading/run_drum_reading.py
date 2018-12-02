@@ -7,7 +7,7 @@ from indra.sources.trips import process_xml
 from indra.sources.trips.drum_reader import DrumReader
 
 
-logger = logging.getLogger('run_drum_reading')
+logger = logging.getLogger('indra.tools.reading.run_drum_reading')
 
 
 def read_pmid_sentences(pmid_sentences, **drum_args):

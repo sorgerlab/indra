@@ -1,7 +1,8 @@
 from jnius import autoclass
 import logging
 
-logger = logging.getLogger('eidos')
+logger = logging.getLogger(__name__)
+
 
 def get_python_list(scala_list):
     """Return list from elements of scala.collection.immutable.List"""

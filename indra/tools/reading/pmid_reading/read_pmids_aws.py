@@ -66,7 +66,8 @@ if __name__ == '__main__':
     import logging
     import sys
 
-    logger = logging.getLogger('read_pmids_aws')
+    logger = \
+        logging.getLogger('indra.tools.reading.pmid_reading.read_pmids_aws')
 
     # Setting default force read/fulltext parameters
     force_read = args.force_read

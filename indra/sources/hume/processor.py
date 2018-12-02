@@ -8,7 +8,7 @@ from indra.statements import Concept, Influence, Evidence, TimeContext, \
     RefContext, WorldContext
 
 
-logger = logging.getLogger('hume')
+logger = logging.getLogger(__name__)
 
 
 class HumeJsonLdProcessor(object):

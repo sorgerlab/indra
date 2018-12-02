@@ -15,7 +15,7 @@ except ImportError:
     from urllib2 import HTTPError
 from indra.util import read_unicode_csv
 
-logger = logging.getLogger('uniprot')
+logger = logging.getLogger(__name__)
 
 uniprot_url = 'http://www.uniprot.org/uniprot/'
 

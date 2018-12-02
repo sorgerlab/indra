@@ -8,7 +8,7 @@ import requests
 from .processor import SignorProcessor
 from indra.util import read_unicode_csv, read_unicode_csv_fileobj
 
-logger = logging.getLogger('signor')
+logger = logging.getLogger(__name__)
 
 _signor_fields = [
     'ENTITYA',

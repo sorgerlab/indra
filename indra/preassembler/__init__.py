@@ -16,7 +16,7 @@ except ImportError:
 from indra.util import fast_deepcopy
 from indra.statements import *
 
-logger = logging.getLogger('preassembler')
+logger = logging.getLogger(__name__)
 
 
 class Preassembler(object):

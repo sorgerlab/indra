@@ -20,7 +20,7 @@ try:  # Python 2
 except NameError:  # Python 3
     basestring = str
 
-logger = logging.getLogger('reach')
+logger = logging.getLogger(__name__)
 
 try:
     # For offline reading

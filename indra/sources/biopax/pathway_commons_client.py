@@ -10,7 +10,7 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('biopax')
+logger = logging.getLogger(__name__)
 
 pc2_url = 'http://www.pathwaycommons.org/pc2/'
 

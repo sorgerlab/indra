@@ -64,7 +64,7 @@ if __name__ == '__main__':
     import pickle
     import logging
 
-    logger = logging.getLogger('assemble_reach')
+    logger = logging.getLogger('indra.tools.reading.assemble_reach')
 
     client = boto3.client('s3')
     bucket_name = 'bigmech'

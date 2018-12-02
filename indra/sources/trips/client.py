@@ -7,7 +7,7 @@ import xml.dom.minidom
 import logging
 import requests
 
-logger = logging.getLogger('trips')
+logger = logging.getLogger(__name__)
 
 base_url = 'http://trips.ihmc.us/parser/cgi/'
 

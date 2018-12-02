@@ -15,7 +15,7 @@ try:
 except ImportError:
     use_reach_subtypes = False
 
-logger = logging.getLogger("belief")
+logger = logging.getLogger(__name__)
 
 
 THIS_DIR = path.dirname(path.abspath(__file__))

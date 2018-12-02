@@ -23,7 +23,8 @@ from indra.statements import *
 from indra.util import read_unicode_csv, read_unicode_csv_fileobj
 from indra.databases import hgnc_client, uniprot_client
 
-logger = logging.getLogger('signor')
+logger = logging.getLogger(__name__)
+
 
 def _read_famplex_map():
     fname = join(dirname(__file__), '../../resources/famplex_map.tsv')

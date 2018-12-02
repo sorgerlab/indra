@@ -9,7 +9,7 @@ from indra.util import fast_deepcopy
 from indra.statements import *
 from indra.preassembler.hierarchy_manager import hierarchies
 
-logger = logging.getLogger('mechlinker')
+logger = logging.getLogger(__name__)
 
 
 class MechLinker(object):

@@ -7,7 +7,7 @@ import lxml.builder
 from indra.statements import *
 from indra.assemblers.pysb.assembler import PysbPreassembler
 
-logger = logging.getLogger('sbgn_assembler')
+logger = logging.getLogger(__name__)
 
 sbgn_ns = 'http://sbgn.org/libsbgn/pd/0.1'
 emaker = lxml.builder.ElementMaker(nsmap={None: sbgn_ns})

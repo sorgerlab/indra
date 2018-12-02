@@ -11,7 +11,7 @@ from indra.databases.hgnc_client import get_hgnc_from_entrez, get_uniprot_id, \
 from indra.util import read_unicode_csv
 from indra.sources.reach.processor import ReachProcessor, Site
 
-logger = logging.getLogger('medscan')
+logger = logging.getLogger(__name__)
 
 
 MedscanEntity = collections.namedtuple('MedscanEntity', ['name', 'urn', 'type',

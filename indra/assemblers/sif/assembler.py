@@ -7,7 +7,8 @@ import itertools
 import networkx as nx
 from indra.statements import *
 
-logger = logging.getLogger('sif_assembler')
+logger = logging.getLogger(__name__)
+
 
 class SifAssembler(object):
     """The SIF assembler assembles INDRA Statements into a networkx graph.

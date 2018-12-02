@@ -6,9 +6,10 @@ from indra.statements import *
 from indra.literature import id_lookup
 from indra.databases import hgnc_client, uniprot_client, chebi_client
 
-logger = logging.getLogger('index_card_assembler')
+logger = logging.getLogger(__name__)
 
 global_submitter = 'indra'
+
 
 class IndexCardAssembler(object):
     """Assembler creating index cards from a set of INDRA Statements.

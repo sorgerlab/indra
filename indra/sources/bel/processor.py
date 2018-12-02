@@ -14,7 +14,7 @@ __all__ = [
     'get_agent',
 ]
 
-logger = logging.getLogger('pybel_processor')
+logger = logging.getLogger(__name__)
 
 
 _pybel_indra_pmod_map = {

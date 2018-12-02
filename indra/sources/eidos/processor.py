@@ -8,7 +8,7 @@ from indra.statements import Influence, Association, Concept, Evidence, \
     WorldContext, TimeContext, RefContext
 
 
-logger = logging.getLogger('eidos')
+logger = logging.getLogger(__name__)
 
 
 class EidosProcessor(object):

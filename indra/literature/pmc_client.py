@@ -7,7 +7,7 @@ import logging
 from indra.literature import pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-logger = logging.getLogger('pmc')
+logger = logging.getLogger(__name__)
 
 pmc_url = 'https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
 pmid_convert_url = 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'

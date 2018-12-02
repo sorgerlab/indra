@@ -14,7 +14,7 @@ from indra.util.aws import get_job_log, tag_instance, get_batch_command
 
 bucket_name = 'bigmech'
 
-logger = logging.getLogger('aws_reading')
+logger = logging.getLogger('indra.tools.reading.submit_reading_pipeline')
 
 
 class BatchReadingError(Exception):

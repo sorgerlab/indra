@@ -4,7 +4,7 @@ import logging
 from .processor import TripsProcessor
 from indra.sources.trips import client
 
-logger = logging.getLogger('trips')
+logger = logging.getLogger(__name__)
 
 try:
     from .drum_reader import DrumReader

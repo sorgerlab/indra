@@ -7,7 +7,7 @@ from indra.statements import *
 from indra.util import write_unicode_csv
 
 
-logger = logging.getLogger('tsv_assembler')
+logger = logging.getLogger(__name__)
 
 
 class TsvAssembler(object):

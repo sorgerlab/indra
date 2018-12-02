@@ -24,7 +24,7 @@ except ImportError:
 from indra.util import read_unicode_csv
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-logger = logging.getLogger('elsevier')
+logger = logging.getLogger(__name__)
 
 
 # THE ELSEVIER API URL: ***MUST BE HTTPS FOR SECURITY***
