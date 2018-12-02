@@ -478,6 +478,8 @@ class TripsProcessor(object):
                 location = self._get_event_location(event)
                 for subj, obj in \
                         _agent_list_product((agent_agent, affected_agent)):
+                    if obj is None:
+                        continue
                     st = cls(subj, obj, evidence=ev)
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
