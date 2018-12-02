@@ -113,8 +113,8 @@ def test_combine_evidence_exact_duplicates():
     # The statements come out sorted by their matches_key
     assert len(pa.unique_stmts) == 1
     assert len(pa.unique_stmts[0].evidence) == 2
-    assert set(ev.text for ev in pa.unique_stmts[0].evidence == \
-           set(['foo', 'bar']))
+    assert set(ev.text for ev in pa.unique_stmts[0].evidence) == \
+        set(['foo', 'bar'])
 
 
 def test_superfamily_refinement():
@@ -146,9 +146,9 @@ def test_superfamily_refinement_isa_or_partof():
     # The top-level list should contain only one statement, the gene-level
     # one, supported by the family one.
     assert len(stmts) == 1
-    assert (stmts[0].equals(st2))
-    assert (len(stmts[0].supported_by) == 1)
-    assert (stmts[0].supported_by[0].equals(st1))
+    assert stmts[0].equals(st2)
+    assert len(stmts[0].supported_by) == 1
+    assert stmts[0].supported_by[0].equals(st1)
 
 
 def test_modification_refinement():
@@ -163,9 +163,9 @@ def test_modification_refinement():
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert len(stmts) == 1
-    assert (stmts[0].equals(st1))
-    assert (len(stmts[0].supported_by) == 1)
-    assert (stmts[0].supported_by[0].equals(st2))
+    assert stmts[0].equals(st1)
+    assert len(stmts[0].supported_by) == 1
+    assert stmts[0].supported_by[0].equals(st2)
 
 
 def test_modification_refinement_residue_noenz():
@@ -189,10 +189,10 @@ def test_modification_refinement_noenz():
     # The top-level list should contain only one statement, the more specific
     # modification, supported by the less-specific modification.
     assert len(stmts) == 1
-    assert (stmts[0].equals(st1))
-    assert (len(stmts[0].supported_by) == 1)
-    assert (stmts[0].supported_by[0].equals(st2))
-    assert (stmts[0].supported_by[0].supports[0].equals(st1))
+    assert stmts[0].equals(st1)
+    assert len(stmts[0].supported_by) == 1
+    assert stmts[0].supported_by[0].equals(st2)
+    assert stmts[0].supported_by[0].supports[0].equals(st1)
 
 
 def test_modification_refinement_noenz2():
@@ -285,9 +285,9 @@ def test_bound_condition_refinement():
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     assert len(stmts) == 1
-    assert (stmts[0].equals(st2))
-    assert (len(stmts[0].supported_by) == 1)
-    assert (stmts[0].supported_by[0].equals(st1))
+    assert stmts[0].equals(st2)
+    assert len(stmts[0].supported_by) == 1
+    assert stmts[0].supported_by[0].equals(st1)
 
 
 def test_bound_condition_norefinement():
@@ -325,9 +325,9 @@ def test_bound_condition_deep_refinement():
     pa = Preassembler(hierarchies, stmts=[st1, st2])
     stmts = pa.combine_related()
     assert len(stmts) == 1
-    assert (stmts[0].equals(st2))
-    assert (len(stmts[0].supported_by) == 1)
-    assert (stmts[0].supported_by[0].equals(st1))
+    assert stmts[0].equals(st2)
+    assert len(stmts[0].supported_by) == 1
+    assert stmts[0].supported_by[0].equals(st1)
 
 
 def test_complex_refinement():

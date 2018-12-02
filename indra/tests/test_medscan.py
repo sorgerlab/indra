@@ -147,11 +147,12 @@ def test_evidence():
     assert s0.evidence[0].source_api == 'medscan'
     assert s0.evidence[0].source_id == 'info:pmid/23455322'
     assert s0.evidence[0].pmid == '23455322'
-    assert s0.evidence[0].text == 'Finally, we show that parp-1(-/- mice' +
-                                  ' display a significant reduction in the' +
-                                  ' circulating hypoxia-induced ' +
-                                  'erythropoietin levels, number of ' +
-                                  'red cells and hemoglobin concentration. ')
+    assert s0.evidence[0].text == 'Finally, we show that parp-1(-/-) mice' + \
+                                  ' display a significant reduction in the' + \
+                                  ' circulating hypoxia-induced ' + \
+                                  'erythropoietin levels, number of ' + \
+                                  'red cells and hemoglobin concentration. ', \
+        s0.evidence[0].text
     coords = s0.evidence[0].annotations['agents']['coords']
     assert isinstance(coords, list), type(coords)
     assert len(coords) == 2

@@ -1266,8 +1266,8 @@ def test_modcondition_order_agent():
 
 def test_eq_mut():
     assert MutCondition('600', 'V', 'E').equals(MutCondition('600', 'V', 'E'))
-    assert not MutCondition('600', 'V', 'E'.equals(
-                                             MutCondition('600', 'V', 'D')))
+    assert not MutCondition('600', 'V', 'E').equals(
+        MutCondition('600', 'V', 'D'))
     return
 
 
@@ -1279,16 +1279,16 @@ def test_mut_hgvs():
 def test_eq_agent():
     assert Agent('one').equals(Agent('one'))
     assert not Agent('one').equals(Agent('two'))
-    assert not Agent('one', db_refs={'UP': '123'}.equals(
-           Agent('one', db_refs={'UP': '999'})))
-    assert Agent('one', mods=[ModCondition('phosphorylation')].equals(
-           Agent('one', mods=[ModCondition('phosphorylation')])))
-    assert not Agent('one', mods=[ModCondition('phosphorylation')].equals(
-           Agent('one', mods=[ModCondition('ubiquitination')])))
-    assert Agent('one', mutations=[MutCondition('600', 'V', 'E')].equals(
-           Agent('one', mutations=[MutCondition('600', 'V', 'E')])))
-    assert not Agent('one', mutations=[MutCondition('600', 'V', 'E')].equals(
-           Agent('one', mutations=[MutCondition('600', 'V', 'D')])))
+    assert not Agent('one', db_refs={'UP': '123'}).equals(
+           Agent('one', db_refs={'UP': '999'}))
+    assert Agent('one', mods=[ModCondition('phosphorylation')]).equals(
+           Agent('one', mods=[ModCondition('phosphorylation')]))
+    assert not Agent('one', mods=[ModCondition('phosphorylation')]).equals(
+           Agent('one', mods=[ModCondition('ubiquitination')]))
+    assert Agent('one', mutations=[MutCondition('600', 'V', 'E')]).equals(
+           Agent('one', mutations=[MutCondition('600', 'V', 'E')]))
+    assert not Agent('one', mutations=[MutCondition('600', 'V', 'E')]).equals(
+           Agent('one', mutations=[MutCondition('600', 'V', 'D')]))
     assert Agent('one',
                  bound_conditions=[BoundCondition(Agent('two'), True)]).equals(
            Agent('one',
@@ -1298,36 +1298,36 @@ def test_eq_agent():
                                                       True)]).equals(
            Agent('one', bound_conditions=[BoundCondition(Agent('two'),
                                                          False)]))
-    assert not Agent('one', bound_conditions=[BoundCondition(Agent('two',
+    assert not Agent('one', bound_conditions=[BoundCondition(Agent('two'),
                                                              True)]).equals(
            Agent('one', bound_conditions=[BoundCondition(Agent('three'),
-                                                         True)])))
+                                                         True)]))
     return
 
 
 def test_eq_stmt():
     ev1 = Evidence(text='1')
     ev2 = Evidence(text='2')
-    assert Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1])))
-    assert not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev2])))
-    assert not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-            Phosphorylation(Agent('a'), Agent('c'), evidence=[ev2])))
-    assert not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-            Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev2])))
-    assert Complex([Agent('a'), Agent('b')], evidence=[ev1].equals(
-           Complex([Agent('a'), Agent('b')], evidence=[ev1])))
-    assert not Complex([Agent('a'), Agent('b')], evidence=[ev1].equals(
-           Complex([Agent('a'), Agent('b')], evidence=[ev2])))
-    assert Activation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-           Activation(Agent('a'), Agent('b'), evidence=[ev1])))
-    assert not Activation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-           Activation(Agent('a'), Agent('c'), evidence=[ev1])))
-    assert not Activation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-           Activation(Agent('a'), Agent('b'), 'kinase', evidence=[ev1])))
-    assert not Activation(Agent('a'), Agent('b'), evidence=[ev1].equals(
-           Activation(Agent('a'), Agent('b'), evidence=[ev2])))
+    assert Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]))
+    assert not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('b'), evidence=[ev2]))
+    assert not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('c'), evidence=[ev2]))
+    assert not Phosphorylation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+            Phosphorylation(Agent('a'), Agent('b'), 'S', evidence=[ev2]))
+    assert Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
+           Complex([Agent('a'), Agent('b')], evidence=[ev1]))
+    assert not Complex([Agent('a'), Agent('b')], evidence=[ev1]).equals(
+           Complex([Agent('a'), Agent('b')], evidence=[ev2]))
+    assert Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('b'), evidence=[ev1]))
+    assert not Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('c'), evidence=[ev1]))
+    assert not Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('b'), 'kinase', evidence=[ev1]))
+    assert not Activation(Agent('a'), Agent('b'), evidence=[ev1]).equals(
+           Activation(Agent('a'), Agent('b'), evidence=[ev2]))
 
 
 def test_serialize():
