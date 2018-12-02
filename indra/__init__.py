@@ -7,7 +7,8 @@ __version__ = '1.10.0'
 __all__ = ['assemblers', 'belief', 'databases', 'explanation', 'literature',
            'mechlinker', 'preassembler', 'sources', 'tools', 'util']
 
-logging.basicConfig(format='%(levelname)s: [%(asctime)s] indra/%(name)s - %(message)s',
+logging.basicConfig(format=('%(levelname)s: [%(asctime)s] %(name)s'
+                            ' - %(message)s'),
                     level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
 
 # Suppress INFO-level logging from some dependencies
