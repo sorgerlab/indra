@@ -9,9 +9,10 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('relevance')
+logger = logging.getLogger(__name__)
 
 ndex_relevance = 'http://general.bigmech.ndexbio.org:5602'
+
 
 def get_heat_kernel(network_id):
     """Return the identifier of a heat kernel calculated for a given network.
@@ -37,6 +38,7 @@ def get_heat_kernel(network_id):
         logger.error('Could not get heat kernel for network %s.' % network_id)
         return None
     return kernel_id
+
 
 def get_relevant_nodes(network_id, query_nodes):
     """Return a set of network nodes relevant to a given query set.

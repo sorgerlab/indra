@@ -16,7 +16,7 @@ except ImportError:
     from functools32 import lru_cache
 
 
-logger = logging.getLogger('bel')
+logger = logging.getLogger(__name__)
 
 ndex_bel2rdf = 'http://bel2rdf.bigmech.ndexbio.org'
 

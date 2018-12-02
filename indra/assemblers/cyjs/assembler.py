@@ -21,7 +21,7 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('cyjs_assembler')
+logger = logging.getLogger(__name__)
 
 
 class CyJSAssembler(object):

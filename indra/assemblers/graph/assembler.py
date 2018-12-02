@@ -4,7 +4,7 @@ import logging
 import itertools
 from indra.statements import *
 
-logger = logging.getLogger('graph_assembler')
+logger = logging.getLogger(__name__)
 try:
     import pygraphviz
 except ImportError:

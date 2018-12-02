@@ -6,7 +6,7 @@ import logging
 codec_options = ['utf-8', 'latin_1']
 
 
-logger = logging.getLogger('fix_csxml_character_encoding')
+logger = logging.getLogger(__name__)
 
 
 def try_decode(byte_string, codec):

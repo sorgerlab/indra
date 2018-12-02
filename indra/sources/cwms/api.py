@@ -5,7 +5,7 @@ from indra.sources.cwms.processor import CWMSProcessor
 from indra.sources.cwms.rdf_processor import CWMSRDFProcessor
 from indra.sources.trips import client
 
-logger = logging.getLogger('cwms')
+logger = logging.getLogger(__name__)
 
 
 def process_text(text, save_xml='cwms_output.xml'):

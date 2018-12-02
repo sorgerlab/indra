@@ -4,7 +4,7 @@ import json
 import logging
 from indra.sources.hume import processor
 
-logger = logging.getLogger('hume')
+logger = logging.getLogger(__name__)
 
 
 def process_jsonld_file(fname):

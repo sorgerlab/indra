@@ -14,7 +14,7 @@ from indra.statements import *
 import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 
-logger = logging.getLogger('biogrid')
+logger = logging.getLogger(__name__)
 
 
 biogrid_file_url = 'https://downloads.thebiogrid.org/Download/BioGRID/' + \

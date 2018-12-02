@@ -9,7 +9,8 @@ from indra.preassembler import Preassembler
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler.sitemapper import default_mapper as sm
 
-logger = logging.getLogger('gene_network')
+logger = logging.getLogger(__name__)
+
 
 class GeneNetwork(object):
     """Build a set of INDRA statements for a given gene list from databases.

@@ -10,7 +10,7 @@ from indra.statements import *
 from indra.databases import hgnc_client
 from indra.util import read_unicode_csv
 
-logger = logging.getLogger('bel')
+logger = logging.getLogger(__name__)
 
 prefixes = """
     PREFIX belvoc: <http://www.openbel.org/vocabulary/>

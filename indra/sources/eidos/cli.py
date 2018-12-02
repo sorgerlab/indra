@@ -14,7 +14,7 @@ from .api import process_json_file
 
 eip = get_config('EIDOSPATH')
 eidos_package = 'org.clulab.wm.eidos'
-logger = logging.getLogger('eidos_cli')
+logger = logging.getLogger(__name__)
 
 
 def run_eidos(endpoint, *args):

@@ -30,7 +30,7 @@ from indra.preassembler.hierarchy_manager import get_bio_hierarchies
 path = os.path.dirname(__file__)
 logging.basicConfig(format='%(levelname)s: indra/%(name)s - %(message)s',
                     level=logging.INFO)
-logger = logging.getLogger('update_resources')
+logger = logging.getLogger('indra.resources.update_resources')
 logging.getLogger('urllib3').setLevel(logging.ERROR)
 logging.getLogger('requests').setLevel(logging.ERROR)
 logger.setLevel(logging.INFO)

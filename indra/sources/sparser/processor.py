@@ -11,7 +11,7 @@ from indra.literature import id_lookup
 from indra.statements import *
 from indra.databases import uniprot_client, hgnc_client
 
-logger = logging.getLogger('sparser')
+logger = logging.getLogger(__name__)
 
 
 try:

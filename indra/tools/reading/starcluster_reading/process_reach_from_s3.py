@@ -13,7 +13,8 @@ if __name__ == '__main__':
         sys.exit()
 
     # Logger
-    logger = logging.getLogger('processreach')
+    logger = logging.getLogger('indra.tools.reading.starcluster_reading.'
+                               'process_reach_from_s3')
 
     pmid_list_file = sys.argv[1]
     start_ix = int(sys.argv[2])

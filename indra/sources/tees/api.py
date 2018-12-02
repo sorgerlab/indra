@@ -32,7 +32,7 @@ import networkx.algorithms.dag as dag
 
 __all__ = ['run_on_text', 'process_text', 'extract_output']
 
-logger = logging.getLogger('tees')
+logger = logging.getLogger(__name__)
 
 # If TEES isn't specified, we will check to see if any of these directories
 # contain all of the files in tees_installation_files; if so, we'll assume

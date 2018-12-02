@@ -10,7 +10,7 @@ except ImportError:
 
 from indra.preassembler.make_entity_hierarchy import ns_map
 
-logger = logging.getLogger('hierarchy_manager')
+logger = logging.getLogger(__name__)
 
 
 def isa_objects(node, g, rel):

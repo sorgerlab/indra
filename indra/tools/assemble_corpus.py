@@ -24,11 +24,12 @@ from indra.preassembler.grounding_mapper import default_agent_map as agent_map
 from indra.preassembler.sitemapper import SiteMapper, default_site_map
 from copy import deepcopy
 
-logger = logging.getLogger('assemble_corpus')
-indra_logger = logging.getLogger('indra').setLevel(logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 def _filter(kwargs, arg_list):
     return dict(filter(lambda x: x[0] in arg_list, kwargs.items()))
+
 
 def dump_statements(stmts, fname):
     """Dump a list of statements into a pickle file.
@@ -44,6 +45,7 @@ def dump_statements(stmts, fname):
     logger.info('Dumping %d statements into %s...' % (len(stmts), fname))
     with open(fname, 'wb') as fh:
         pickle.dump(stmts, fh, protocol=2)
+
 
 def load_statements(fname, as_dict=False):
     """Load statements from a pickle file.
@@ -82,6 +84,7 @@ def load_statements(fname, as_dict=False):
     logger.info('Loaded %d statements' % len(stmts))
     return stmts
 
+
 def map_grounding(stmts_in, **kwargs):
     """Map grounding using the GroundingMapper.
 
@@ -114,6 +117,7 @@ def map_grounding(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def map_sequence(stmts_in, **kwargs):
     """Map sequences using the SiteMapper.
@@ -230,6 +234,7 @@ def run_preassembly(stmts_in, **kwargs):
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
 
+
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     """Run deduplication stage of preassembly on a list of statements.
 
@@ -256,6 +261,7 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def run_preassembly_related(preassembler, beliefengine, **kwargs):
     """Run related stage of preassembly on a list of statements.
@@ -310,6 +316,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def filter_by_type(stmts_in, stmt_type, **kwargs):
     """Filter to a given statement type.
@@ -392,6 +399,7 @@ def _remove_bound_conditions(agent, keep_criterion):
             new_bc.append(agent.bound_conditions[ind])
     agent.bound_conditions = new_bc
 
+
 def _any_bound_condition_fails_criterion(agent, criterion):
     """Returns True if any bound condition fails to meet the specified
     criterion.
@@ -415,6 +423,7 @@ def _any_bound_condition_fails_criterion(agent, criterion):
         if not criterion(b):
             return True
     return False
+
 
 def filter_grounded_only(stmts_in, **kwargs):
     """Filter to statements that have grounded agents.
@@ -467,6 +476,7 @@ def filter_grounded_only(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def _agent_is_gene(agent, specific_only):
     """Returns whether an agent is for a gene.
 
@@ -493,6 +503,7 @@ def _agent_is_gene(agent, specific_only):
                agent.db_refs.get('UP')):
             return False
     return True
+
 
 def filter_genes_only(stmts_in, **kwargs):
     """Filter to statements containing genes only.
@@ -546,6 +557,7 @@ def filter_genes_only(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_belief(stmts_in, belief_cutoff, **kwargs):
     """Filter to statements with belief above a given cutoff.
 
@@ -588,6 +600,7 @@ def filter_belief(stmts_in, belief_cutoff, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def filter_gene_list(stmts_in, gene_list, policy, allow_families=False,
                      **kwargs):
@@ -903,6 +916,7 @@ def filter_human_only(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_direct(stmts_in, **kwargs):
     """Filter to statements that are direct interactions
 
@@ -1063,6 +1077,7 @@ def filter_evidence_source(stmts_in, source_apis, policy='one', **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_top_level(stmts_in, **kwargs):
     """Filter to statements that are at the top-level of the hierarchy.
 
@@ -1087,6 +1102,7 @@ def filter_top_level(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
     """Filter out Modifications that modify inconsequential sites
@@ -1151,6 +1167,7 @@ def filter_inconsequential_mods(stmts_in, whitelist=None, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
     """Filter out Activations that modify inconsequential activities
 
@@ -1207,6 +1224,7 @@ def filter_inconsequential_acts(stmts_in, whitelist=None, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def get_unreachable_mods(stmts_in):
     mods_set = {}
@@ -1304,6 +1322,7 @@ def filter_mutation_status(stmts_in, mutations, deletions, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def filter_enzyme_kinase(stmts_in, **kwargs):
     """Filter Phosphorylations to ones where the enzyme is a known kinase.
 
@@ -1338,6 +1357,7 @@ def filter_enzyme_kinase(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def filter_mod_nokinase(stmts_in, **kwargs):
     """Filter non-phospho Modifications to ones with a non-kinase enzyme.
@@ -1374,6 +1394,7 @@ def filter_mod_nokinase(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def filter_transcription_factor(stmts_in, **kwargs):
     """Filter out RegulateAmounts where subject is not a transcription factor.
@@ -1474,6 +1495,7 @@ def expand_families(stmts_in, **kwargs):
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
 
+
 def reduce_activities(stmts_in, **kwargs):
     """Reduce the activity types in a list of statements
 
@@ -1533,6 +1555,7 @@ def strip_agent_context(stmts_in, **kwargs):
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
     return stmts_out
+
 
 def dump_stmt_strings(stmts, fname):
     """Save printed statements in a file.

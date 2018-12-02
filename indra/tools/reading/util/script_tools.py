@@ -8,7 +8,7 @@ from argparse import ArgumentParser
 from indra.util.get_version import get_version as get_indra_version
 from multiprocessing import Pool
 
-logger = logging.getLogger('script_tools')
+logger = logging.getLogger(__name__)
 
 
 def get_parser(description, input_desc):

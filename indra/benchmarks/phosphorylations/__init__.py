@@ -15,7 +15,7 @@ from indra.preassembler.sitemapper import SiteMapper, default_site_map
 psite_fname = 'phosphosite_kin_sub_2016.csv'
 stmts_fname = 'model.pkl'
 
-logger = logging.getLogger('phosphorylations')
+logger = logging.getLogger('indra.benchmarks.phosphorylations')
 
 def phosphosite_to_indra():
     df = pandas.DataFrame.from_csv(psite_fname, index_col=None)

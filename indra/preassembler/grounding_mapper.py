@@ -13,7 +13,7 @@ from indra.statements import Agent
 from indra.databases import uniprot_client, hgnc_client
 from indra.util import read_unicode_csv, write_unicode_csv
 
-logger = logging.getLogger('grounding_mapper')
+logger = logging.getLogger(__name__)
 
 
 class GroundingMapper(object):

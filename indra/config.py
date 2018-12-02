@@ -7,7 +7,9 @@ if sys.version_info[0] == 3:
 else:
     from ConfigParser import RawConfigParser
 
-logger = logging.getLogger('indra_config')
+
+logger = logging.getLogger(__name__)
+
 
 # If the configuration file does not exist, try to create it from the default
 home_dir = os.path.expanduser('~')

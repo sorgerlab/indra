@@ -20,7 +20,7 @@ except:
     basestring = str
 
 # Logger
-logger = logging.getLogger('s3_client')
+logger = logging.getLogger(__name__)
 
 bucket_name ='bigmech'
 client = boto3.client('s3')

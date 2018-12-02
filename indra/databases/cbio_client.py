@@ -14,7 +14,8 @@ except ImportError:
     from functools32 import lru_cache
     from StringIO import StringIO
 
-logger = logging.getLogger('cbio')
+
+logger = logging.getLogger(__name__)
 
 cbio_url = 'http://www.cbioportal.org/webservice.do'
 ccle_study = 'cellline_ccle_broad'

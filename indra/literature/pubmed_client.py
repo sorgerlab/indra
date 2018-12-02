@@ -16,7 +16,7 @@ except ImportError:
 from indra.databases import hgnc_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-logger = logging.getLogger('pubmed')
+logger = logging.getLogger(__name__)
 
 pubmed_search = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi'
 pubmed_fetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi'

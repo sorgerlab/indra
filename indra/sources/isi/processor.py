@@ -6,7 +6,7 @@ import indra.statements as ist
 from indra.preassembler.grounding_mapper import load_grounding_map, \
         GroundingMapper
 
-logger = logging.getLogger('isi')
+logger = logging.getLogger(__name__)
 
 
 class IsiProcessor(object):

@@ -13,7 +13,7 @@ import indra.databases.hgnc_client as hgnc_client
 import indra.databases.uniprot_client as up_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
-logger = logging.getLogger('trips')
+logger = logging.getLogger(__name__)
 
 ont_to_mod_type = {
     'ONT::PHOSPHORYLATION': 'phosphorylation',

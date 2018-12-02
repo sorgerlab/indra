@@ -14,7 +14,7 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('cag_assembler')
+logger = logging.getLogger(__name__)
 
 
 class CAGAssembler(object):

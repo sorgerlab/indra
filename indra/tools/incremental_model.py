@@ -7,7 +7,7 @@ import indra.tools.assemble_corpus as ac
 from indra.databases import hgnc_client
 from indra.preassembler.hierarchy_manager import hierarchies
 
-logger = logging.getLogger('incremental_model')
+logger = logging.getLogger(__name__)
 
 
 class IncrementalModel(object):

@@ -17,7 +17,7 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('sitemapper')
+logger = logging.getLogger(__name__)
 
 
 if has_config('SITEMAPPER_CACHE_PATH'):

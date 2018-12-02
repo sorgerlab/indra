@@ -6,7 +6,7 @@ from indra.databases import uniprot_client, hgnc_client
 from indra.statements import *
 
 
-logger = logging.getLogger('ndex_cx_processor')
+logger = logging.getLogger(__name__)
 
 
 _stmt_map = {

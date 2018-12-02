@@ -16,7 +16,7 @@ from indra.statements import *
 from . import pathway_commons_client as pcc
 from indra.util import decode_obj
 
-logger = logging.getLogger('biopax')
+logger = logging.getLogger(__name__)
 
 # TODO:
 # - Extract cellularLocation from each PhysicalEntity

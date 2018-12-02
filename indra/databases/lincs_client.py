@@ -12,7 +12,7 @@ from io import StringIO, BytesIO
 from indra.util import read_unicode_csv_fileobj
 
 
-logger = logging.getLogger('lincs_client')
+logger = logging.getLogger(__name__)
 
 
 LINCS_URL = 'http://lincs.hms.harvard.edu/db'

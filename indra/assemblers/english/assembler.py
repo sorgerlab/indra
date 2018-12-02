@@ -3,7 +3,7 @@ from builtins import dict, str
 import logging
 import indra.statements as ist
 
-logger = logging.getLogger('english_assembler')
+logger = logging.getLogger(__name__)
 
 class EnglishAssembler(object):
     """This assembler generates English sentences from INDRA Statements.

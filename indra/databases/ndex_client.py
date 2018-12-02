@@ -13,7 +13,7 @@ except ImportError:
     from ndex2.niceCXNetwork import NiceCXNetwork
 from indra import get_config
 
-logger = logging.getLogger('ndex_client')
+logger = logging.getLogger(__name__)
 
 ndex_base_url = 'http://52.37.175.128'
 
@@ -31,6 +31,7 @@ def get_default_ndex_cred(ndex_cred):
     password = get_config('NDEX_PASSWORD')
 
     return username, password
+
 
 def send_request(ndex_service_url, params, is_json=True, use_get=False):
     """Send a request to the NDEx server.

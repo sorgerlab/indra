@@ -17,7 +17,8 @@ try:
 except:
     basestring = str
 
-logger = logging.getLogger('kami_assembler')
+logger = logging.getLogger(__name__)
+
 
 class KamiAssembler(PysbAssembler):
     def make_model(self, policies=None, initial_conditions=True,

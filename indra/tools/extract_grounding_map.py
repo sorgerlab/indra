@@ -13,7 +13,7 @@ from indra.util import read_unicode_csv, write_unicode_csv
 import indra.tools.assemble_corpus as ac
 
 
-logger = logging.getLogger('extract_grounding_map')
+logger = logging.getLogger('indra.tools.extract_grounding_map')
 
 
 def string_is_integer(s):

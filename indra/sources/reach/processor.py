@@ -12,7 +12,7 @@ from indra.databases import hgnc_client
 import indra.databases.uniprot_client as up_client
 from collections import namedtuple
 
-logger = logging.getLogger('reach')
+logger = logging.getLogger(__name__)
 
 Site = namedtuple('Site', ['residue', 'position'])
 

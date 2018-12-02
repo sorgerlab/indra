@@ -27,7 +27,7 @@ except ImportError:
     has_pg = False
 
 
-logger = logging.getLogger('model_checker')
+logger = logging.getLogger(__name__)
 
 
 class PathMetric(object):

@@ -14,7 +14,7 @@ from indra.util import plot_formatting as pf
 from indra.databases import hgnc_client
 
 
-logger = logging.getLogger('bioprocesses')
+logger = logging.getLogger('indra.benchmarks.bioprocesses')
 
 
 def load_file(stmts_file):

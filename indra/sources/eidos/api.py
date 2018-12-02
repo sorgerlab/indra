@@ -6,7 +6,7 @@ import logging
 import requests
 from .processor import EidosProcessor
 
-logger = logging.getLogger('eidos')
+logger = logging.getLogger(__name__)
 
 
 try:

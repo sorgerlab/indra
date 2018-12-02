@@ -6,7 +6,7 @@ import logging
 import pickle
 import random
 
-logger = logging.getLogger('file_reader')
+logger = logging.getLogger('indra.tools.reading.read_files')
 
 from indra.tools.reading.util.script_tools import get_parser, make_statements
 

@@ -1,6 +1,7 @@
 import logging
 
-logger = logging.getLogger('databases')
+logger = logging.getLogger(__name__)
+
 
 def get_identifiers_url(db_name, db_id):
     """Return an identifiers.org URL for a given database name and ID.

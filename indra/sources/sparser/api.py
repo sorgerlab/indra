@@ -22,7 +22,7 @@ from indra.util import UnicodeXMLTreeBuilder as UTB
 
 from .processor import SparserXMLProcessor, SparserJSONProcessor
 
-logger = logging.getLogger('sparser')
+logger = logging.getLogger(__name__)
 
 sparser_path_var = 'SPARSERPATH'
 sparser_path = get_config(sparser_path_var)

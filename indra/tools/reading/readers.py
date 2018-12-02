@@ -22,7 +22,7 @@ from indra.util import zip_string
 from indra.sources import sparser, reach
 
 
-logger = logging.getLogger('readers')
+logger = logging.getLogger(__name__)
 
 # Set a character limit for reach reading
 CONTENT_CHARACTER_LIMIT = 5e5

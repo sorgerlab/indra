@@ -11,7 +11,7 @@ import subprocess
 from indra.sources.isi.processor import IsiProcessor
 from indra.sources.isi.preprocessor import IsiPreprocessor
 
-logger = logging.getLogger('isi')
+logger = logging.getLogger(__name__)
 
 
 def process_text(text, pmid=None, cleanup=True, add_grounding=True):

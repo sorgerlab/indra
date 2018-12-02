@@ -7,7 +7,7 @@ from indra.databases import chebi_client, uniprot_client
 from indra.statements import Inhibition, Agent, Evidence
 from collections import defaultdict
 
-logger = logging.getLogger('chembl')
+logger = logging.getLogger(__name__)
 
 
 def get_inhibition(drug, target):

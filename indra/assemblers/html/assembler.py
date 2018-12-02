@@ -10,7 +10,7 @@ from os.path import abspath, dirname, join
 from jinja2 import Template
 import logging
 
-logger = logging.getLogger('html_assembler')
+logger = logging.getLogger(__name__)
 
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler

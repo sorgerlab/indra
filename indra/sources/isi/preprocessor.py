@@ -11,7 +11,7 @@ import tempfile
 import subprocess
 from indra import get_config
 
-logger = logging.getLogger('isi')
+logger = logging.getLogger(__name__)
 
 nxml2txt_path = get_config('NXML2TXT_PATH')
 python2_path = get_config('PYTHON2_PATH')
