@@ -460,6 +460,8 @@ class TripsProcessor(object):
 
                 # The affected, we already know is ONT::TRANSCRIPTION
                 affected_arg = event.find(".//*[@role=':AFFECTED']")
+                if affected_arg is None:
+                    continue
                 affected_id = affected_arg.attrib.get('id')
                 affected_event = self.tree.find("EVENT/[@id='%s']" %
                                                 affected_id)
