@@ -183,7 +183,7 @@ def test_rat_from_human():
     assert uniprot_client.get_rat_id('P04049') == 'P11345'
 
 def test_length():
-    assert(uniprot_client.get_length('P15056') == 766)
+    assert uniprot_client.get_length('P15056') == 766
 
 @attr('webservice')
 def test_get_function():
