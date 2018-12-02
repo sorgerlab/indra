@@ -613,6 +613,20 @@ def get_rat_id(human_protein_id):
     """
     return um.uniprot_human_rat.get(human_protein_id)
 
+def get_length(protein_id):
+    """Return the length (number of amino acids) of a protein.
+
+    Parameters
+    ----------
+    protein_id : str
+        UniProt ID of a protein.
+
+    Returns
+    -------
+    length : int
+        The length of the protein in amino acids.
+    """
+    return um.uniprot_length.get(protein_id)
 
 def get_function(protein_id):
     """Return the function description of a given protein.
@@ -647,7 +661,7 @@ class UniprotMapper(object):
         self._uniprot_gene_name, self._uniprot_mnemonic, \
         self._uniprot_mnemonic_reverse, \
         self._uniprot_mgi, self._uniprot_rgd, self._uniprot_mgi_reverse, \
-        self._uniprot_rgd_reverse = maps
+        self._uniprot_rgd_reverse, self._uniprot_length = maps
 
         self._uniprot_sec = _build_uniprot_sec()
 
@@ -701,6 +715,12 @@ class UniprotMapper(object):
         return self._uniprot_rgd_reverse
 
     @property
+    def uniprot_length(self):
+        if not self.initialized:
+            self.initialize()
+        return self._uniprot_length
+
+    @property
     def uniprot_sec(self):
         if not self.initialized:
             self.initialize()
@@ -717,6 +737,7 @@ class UniprotMapper(object):
         if not self.initialized_hmr:
             self.initialize_hmr()
         return self._uniprot_human_rat
+
 
 um = UniprotMapper()
 
@@ -740,15 +761,17 @@ def _build_uniprot_entries(from_pickle=True):
     uniprot_rgd = {}
     uniprot_mgi_reverse = {}
     uniprot_rgd_reverse = {}
+    uniprot_length = {}
     try:
         csv_rows = read_unicode_csv(up_entries_file, delimiter='\t')
         # Skip the header row
         next(csv_rows)
         for row in csv_rows:
-            up_id, gene_name, up_mnemonic, rgd, mgi = row
+            up_id, gene_name, up_mnemonic, rgd, mgi, length = row
             uniprot_gene_name[up_id] = gene_name
             uniprot_mnemonic[up_id] = up_mnemonic
             uniprot_mnemonic_reverse[up_mnemonic] = up_id
+            uniprot_length[up_id] = int(length)
             if mgi:
                 mgi_ids = mgi.split(';')
                 if mgi_ids:
@@ -761,8 +784,9 @@ def _build_uniprot_entries(from_pickle=True):
                     uniprot_rgd_reverse[rgd_ids[0]] = up_id
     except IOError:
         pass
-    return (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse, \
-            uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse)
+    return (uniprot_gene_name, uniprot_mnemonic, uniprot_mnemonic_reverse,
+            uniprot_mgi, uniprot_rgd, uniprot_mgi_reverse, uniprot_rgd_reverse,
+            uniprot_length)
 
 def _build_human_mouse_rat():
     hgnc_file = os.path.dirname(os.path.abspath(__file__)) +\
