@@ -1293,7 +1293,9 @@ class TripsProcessor(object):
                     arg1 = args[0]
                 elif len(args) > 1:
                     arg1, arg2 = args[:2]
-            if arg1 is None:
+            if arg1 is None and arg2 is None:
+                bound_to_term_id = None
+            elif arg1 is None:
                 bound_to_term_id = arg2.attrib.get('id')
             elif arg2 is None:
                 bound_to_term_id = arg1.attrib.get('id')
