@@ -9,8 +9,8 @@ def test_phosphorylation():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 2)
-    assert(len(ga.graph.edges()) == 1)
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_phosphorylation_noenz():
@@ -18,8 +18,8 @@ def test_phosphorylation_noenz():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 0)
-    assert(len(ga.graph.edges()) == 0)
+    assert len(ga.graph.nodes()) == 0
+    assert len(ga.graph.edges()) == 0
 
 
 def test_dephosphorylation():
@@ -27,8 +27,8 @@ def test_dephosphorylation():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 2)
-    assert(len(ga.graph.edges()) == 1)
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_dephosphorylation_noenz():
@@ -36,8 +36,8 @@ def test_dephosphorylation_noenz():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 0)
-    assert(len(ga.graph.edges()) == 0)
+    assert len(ga.graph.nodes()) == 0
+    assert len(ga.graph.edges()) == 0
 
 
 def test_activation():
@@ -45,8 +45,8 @@ def test_activation():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 2)
-    assert(len(ga.graph.edges()) == 1)
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_inactivation():
@@ -54,8 +54,8 @@ def test_inactivation():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 2)
-    assert(len(ga.graph.edges()) == 1)
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_complex():
@@ -63,8 +63,8 @@ def test_complex():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 3)
-    assert(len(ga.graph.edges()) == 3)
+    assert len(ga.graph.nodes()) == 3
+    assert len(ga.graph.edges()) == 3
 
 
 def test_inactivation():
@@ -72,8 +72,8 @@ def test_inactivation():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 2)
-    assert(len(ga.graph.edges()) == 1)
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_influence():
@@ -81,8 +81,8 @@ def test_influence():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 2)
-    assert(len(ga.graph.edges()) == 1)
+    assert len(ga.graph.nodes()) == 2
+    assert len(ga.graph.edges()) == 1
 
 
 def test_duplicates():
@@ -91,8 +91,8 @@ def test_duplicates():
     ga = GraphAssembler()
     ga.add_statements(st)
     ga.make_model()
-    assert(len(ga.graph.nodes()) == 3)
-    assert(len(ga.graph.edges()) == 3)
+    assert len(ga.graph.nodes()) == 3
+    assert len(ga.graph.edges()) == 3
 
 
 def test_get_string():
@@ -101,7 +101,7 @@ def test_get_string():
     ga.add_statements(st)
     ga.make_model()
     graph_str = ga.get_string()
-    assert(graph_str)
+    assert graph_str
 
 
 def test_save_dot():

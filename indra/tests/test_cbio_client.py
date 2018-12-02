@@ -7,27 +7,27 @@ from nose.plugins.attrib import attr
 @attr('webservice')
 def test_get_cancer_studies():
     study_ids = cbio_client.get_cancer_studies('paad')
-    assert(len(study_ids) > 0)
-    assert('paad_tcga' in study_ids)
+    assert len(study_ids) > 0
+    assert 'paad_tcga' in study_ids
 
 
 @attr('webservice')
 def test_get_cancer_types():
     type_ids = cbio_client.get_cancer_types('lung')
-    assert(len(type_ids) > 0)
+    assert len(type_ids) > 0
 
 
 @attr('webservice')
 def test_get_genetic_profiles():
     genetic_profiles = \
         cbio_client.get_genetic_profiles('paad_icgc', 'mutation')
-    assert(len(genetic_profiles) > 0)
+    assert len(genetic_profiles) > 0
 
 
 @attr('webservice')
 def test_get_num_sequenced():
     num_case = cbio_client.get_num_sequenced('paad_tcga')
-    assert(num_case > 0)
+    assert num_case > 0
 
 
 @attr('webservice')
@@ -39,7 +39,7 @@ def test_send_request_ccle():
     data = {'cmd': 'getCaseLists',
             'cancer_study_id': 'cellline_ccle_broad'}
     df = cbio_client.send_request(**data)
-    assert(len(df) > 0)
+    assert len(df) > 0
 
 
 @attr('webservice')
@@ -50,7 +50,7 @@ def test_get_ccle_lines_for_mutation():
     equal to 55 cell lines.
     """
     cl_BRAF_V600E = cbio_client.get_ccle_lines_for_mutation('BRAF', 'V600E')
-    assert(len(cl_BRAF_V600E) == 55)
+    assert len(cl_BRAF_V600E) == 55
 
 
 @attr('webservice')
@@ -93,13 +93,13 @@ def test_get_ccle_cna():
 @attr('webservice')
 def test_get_ccle_mrna():
     mrna = cbio_client.get_ccle_mrna(['XYZ', 'MAP2K1'], ['A375_SKIN'])
-    assert('A375_SKIN' in mrna)
-    assert(mrna['A375_SKIN'] is not None)
-    assert(mrna['A375_SKIN']['MAP2K1'] > 10)
-    assert(mrna['A375_SKIN']['XYZ'] is None)
+    assert 'A375_SKIN' in mrna
+    assert mrna['A375_SKIN'] is not None
+    assert mrna['A375_SKIN']['MAP2K1'] > 10
+    assert mrna['A375_SKIN']['XYZ'] is None
     mrna = cbio_client.get_ccle_mrna(['EGFR', 'BRAF'], ['XXX'])
-    assert('XXX' in mrna)
-    assert(mrna['XXX'] is None)
+    assert 'XXX' in mrna
+    assert mrna['XXX'] is None
 
 
 @attr('webservice')

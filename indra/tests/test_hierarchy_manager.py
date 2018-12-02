@@ -23,15 +23,15 @@ def test_hierarchy_unicode():
 
 
 def test_isa_entity():
-    assert(ent_hierarchy.isa('HGNC', 'BRAF', 'FPLX', 'RAF'))
+    assert ent_hierarchy.isa('HGNC', 'BRAF', 'FPLX', 'RAF')
 
 
 def test_isa_entity2():
-    assert(not ent_hierarchy.isa('HGNC', 'BRAF', 'HGNC', 'ARAF'))
+    assert not ent_hierarchy.isa('HGNC', 'BRAF', 'HGNC', 'ARAF')
 
 
 def test_isa_entity3():
-    assert(not ent_hierarchy.isa('FPLX', 'RAF', 'HGNC', 'BRAF'))
+    assert not ent_hierarchy.isa('FPLX', 'RAF', 'HGNC', 'BRAF')
 
 
 def test_partof_entity():
@@ -47,12 +47,12 @@ def test_partof_entity_not():
 
 
 def test_isa_mod():
-    assert(mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
-                             'INDRA_MODS', 'modification'))
+    assert mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                             'INDRA_MODS', 'modification')
 
 def test_isa_mod_not():
-    assert(not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
-                                 'INDRA_MODS', 'ubiquitination'))
+    assert not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
+                                 'INDRA_MODS', 'ubiquitination')
 
 def test_isa_activity():
     assert act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
@@ -116,46 +116,46 @@ def test_mtorc_children():
     mtorc2 = 'http://identifiers.org/fplx/mTORC2'
     ch1 = ent_hierarchy.get_children(mtorc1)
     ch2 = ent_hierarchy.get_children(mtorc2)
-    assert('http://identifiers.org/hgnc.symbol/RICTOR' not in ch1)
-    assert('http://identifiers.org/hgnc.symbol/RPTOR' not in ch2)
+    assert 'http://identifiers.org/hgnc.symbol/RICTOR' not in ch1
+    assert 'http://identifiers.org/hgnc.symbol/RPTOR' not in ch2
 
 def test_mtorc_get_parents():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.get_parents(rictor, 'all')
-    assert(len(p) == 1)
-    assert(list(p)[0] == 'http://identifiers.org/fplx/mTORC2')
+    assert len(p) == 1
+    assert list(p)[0] == 'http://identifiers.org/fplx/mTORC2'
 
 def test_mtorc_transitive_closure():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.partof_closure.get(rictor)
-    assert(len(p) == 1)
-    assert(p[0] == 'http://identifiers.org/fplx/mTORC2')
+    assert len(p) == 1
+    assert p[0] == 'http://identifiers.org/fplx/mTORC2'
 
 def test_mtorc_partof_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
-    assert(ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC1'))
-    assert(not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC2'))
+    assert ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC1')
+    assert not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC2')
 
 def test_erk_isa_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
-    assert(ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'MAPK'))
-    assert(not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'JNK'))
+    assert ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'MAPK')
+    assert not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'JNK')
 
 def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
     ampk = 'http://identifiers.org/fplx/AMPK'
     p1 = ent_hierarchy.get_parents(prkaa1, 'all')
-    assert(len(p1) == 8)
-    assert(ampk in p1)
+    assert len(p1) == 8
+    assert ampk in p1
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
-    assert(len(p2) == 7)
+    assert len(p2) == 7
     assert (ampk not in p2)
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
-    assert(len(p3) == 1)
+    assert len(p3) == 1
     assert (ampk in p3)
 
 
@@ -218,4 +218,4 @@ def test_same_components():
 
     c1 = ent_hierarchy.components[uri_prkag1]
     c2 = ent_hierarchy.components[uri_ampk]
-    assert(c1 == c2)
+    assert c1 == c2

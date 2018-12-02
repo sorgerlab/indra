@@ -629,11 +629,11 @@ def test_signor_family_famplex_mapping():
     complex_map = {}
     sp = SignorProcessor([test_row], complex_map)
     statements = sp.statements
-    assert(len(statements) == 1)
+    assert len(statements) == 1
     s0 = statements[0]
-    assert(s0.subj.db_refs['FPLX'] == 'TLR')
+    assert s0.subj.db_refs['FPLX'] == 'TLR'
     assert s0.subj.db_refs['SIGNOR'] == 'SIGNOR-PF20'
-    assert(s0.subj.name == 'TLR')
+    assert s0.subj.name == 'TLR'
 
 
 def test_signor_complexes():
@@ -652,19 +652,19 @@ def test_signor_complexes():
     assert len(sp.statements) == 2
 
     s0 = sp.statements[0]
-    assert(isinstance(s0, IncreaseAmount))
-    assert(s0.subj.db_refs['UP'] == 'P23511')
-    assert(s0.subj.db_refs['HGNC'] == '7804')
-    assert(s0.subj.name == 'NFYA')
-    assert(s0.subj.bound_conditions[0].agent.db_refs['UP'] == 'P25208')
-    assert(s0.subj.bound_conditions[0].agent.name == 'NFYB')
-    assert(s0.subj.bound_conditions[0].agent.db_refs['HGNC'] == '7805')
-    assert(s0.subj.bound_conditions[1].agent.db_refs['UP'] == 'Q13952')
-    assert(s0.subj.bound_conditions[1].agent.name == 'NFYC')
-    assert(s0.subj.bound_conditions[1].agent.db_refs['HGNC'] == '7806')
+    assert isinstance(s0, IncreaseAmount)
+    assert s0.subj.db_refs['UP'] == 'P23511'
+    assert s0.subj.db_refs['HGNC'] == '7804'
+    assert s0.subj.name == 'NFYA'
+    assert s0.subj.bound_conditions[0].agent.db_refs['UP'] == 'P25208'
+    assert s0.subj.bound_conditions[0].agent.name == 'NFYB'
+    assert s0.subj.bound_conditions[0].agent.db_refs['HGNC'] == '7805'
+    assert s0.subj.bound_conditions[1].agent.db_refs['UP'] == 'Q13952'
+    assert s0.subj.bound_conditions[1].agent.name == 'NFYC'
+    assert s0.subj.bound_conditions[1].agent.db_refs['HGNC'] == '7806'
 
     s1 = sp.statements[1]
-    assert(isinstance(s1, Complex))
+    assert isinstance(s1, Complex)
     assert len(s1.evidence) == 1
     assert s1.evidence[0].source_api == 'signor'
     assert s1.evidence[0].source_id == 'SIGNOR-C1'
@@ -675,9 +675,9 @@ def test_signor_complexes():
     actual_up_ids = set([m.db_refs['UP'] for m in s1.members])
     actual_hgnc_ids = set([m.db_refs['HGNC'] for m in s1.members])
     actual_names = set([m.name for m in s1.members])
-    assert(actual_up_ids == correct_up_ids)
-    assert(actual_hgnc_ids == correct_hgnc_ids)
-    assert(actual_names == correct_names)
+    assert actual_up_ids == correct_up_ids
+    assert actual_hgnc_ids == correct_hgnc_ids
+    assert actual_names == correct_names
 
 
 def test_recursive_complexes():
@@ -700,29 +700,29 @@ def test_recursive_complexes():
     assert len(sp.statements) == 4
 
     s0 = sp.statements[0]
-    assert(isinstance(s0, IncreaseAmount))
+    assert isinstance(s0, IncreaseAmount)
     bc = s0.subj.bound_conditions
-    assert(bc[0].agent.db_refs['UP'] == 'O14686')
-    assert(bc[1].agent.db_refs['UP'] == 'P61964')
-    assert(bc[2].agent.db_refs['UP'] == 'Q9UBL3')
-    assert(bc[3].agent.db_refs['UP'] == 'Q9C005')
-    assert(bc[4].agent.db_refs['UP'] == 'Q15291')
+    assert bc[0].agent.db_refs['UP'] == 'O14686'
+    assert bc[1].agent.db_refs['UP'] == 'P61964'
+    assert bc[2].agent.db_refs['UP'] == 'Q9UBL3'
+    assert bc[3].agent.db_refs['UP'] == 'Q9C005'
+    assert bc[4].agent.db_refs['UP'] == 'Q15291'
 
-    assert(isinstance(sp.statements[1], Complex))
+    assert isinstance(sp.statements[1], Complex)
     correct_complex_ups_1 = {'P61964', 'Q9UBL3', 'Q9C005', 'Q15291'}
     actual_complex_ups_1 = {m.db_refs['UP'] for m in sp.statements[1].members}
-    assert(correct_complex_ups_1 == actual_complex_ups_1)
+    assert correct_complex_ups_1 == actual_complex_ups_1
 
-    assert(isinstance(sp.statements[2], Complex))
+    assert isinstance(sp.statements[2], Complex)
     correct_complex_ups_2 = {'O14686', 'P61964', 'Q9UBL3', 'Q9C005', 'Q15291'}
     actual_complex_ups_2 = {m.db_refs['UP'] for m in sp.statements[2].members}
-    assert(correct_complex_ups_2 == actual_complex_ups_2)
+    assert correct_complex_ups_2 == actual_complex_ups_2
 
-    assert(isinstance(sp.statements[3], Complex))
+    assert isinstance(sp.statements[3], Complex)
     correct_complex_ups_3 = {'P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
                              'Q15291'}
     actual_complex_ups_3 = {m.db_refs['UP'] for m in sp.statements[3].members}
-    assert(correct_complex_ups_3 == actual_complex_ups_3)
+    assert correct_complex_ups_3 == actual_complex_ups_3
 
 
 def test_complexes_with_families():
@@ -741,21 +741,21 @@ def test_complexes_with_families():
     assert isinstance(sp.statements, list)
     assert len(sp.statements) == 2
 
-    assert(isinstance(sp.statements[0], IncreaseAmount))
+    assert isinstance(sp.statements[0], IncreaseAmount)
     obj = sp.statements[0].obj
-    assert(obj.db_refs['UP'] == 'O60271')
-    assert(len(obj.bound_conditions) == 2)
-    assert(obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0')
-    assert(obj.bound_conditions[1].agent.db_refs['SIGNOR'] == 'SIGNOR-PF14')
-    assert(obj.bound_conditions[1].agent.db_refs['FPLX'] == 'ROBO')
+    assert obj.db_refs['UP'] == 'O60271'
+    assert len(obj.bound_conditions) == 2
+    assert obj.bound_conditions[0].agent.db_refs['UP'] == 'Q4KMG0'
+    assert obj.bound_conditions[1].agent.db_refs['SIGNOR'] == 'SIGNOR-PF14'
+    assert obj.bound_conditions[1].agent.db_refs['FPLX'] == 'ROBO'
 
     s1 = sp.statements[1]
-    assert(isinstance(s1, Complex))
+    assert isinstance(s1, Complex)
     members = s1.members
-    assert(members[0].db_refs['UP'] == 'O60271')
-    assert(members[1].db_refs['UP'] == 'Q4KMG0')
-    assert(members[2].db_refs['SIGNOR'] == 'SIGNOR-PF14')
-    assert(members[2].db_refs['FPLX'] == 'ROBO')
+    assert members[0].db_refs['UP'] == 'O60271'
+    assert members[1].db_refs['UP'] == 'Q4KMG0'
+    assert members[2].db_refs['SIGNOR'] == 'SIGNOR-PF14'
+    assert members[2].db_refs['FPLX'] == 'ROBO'
 
 
 def test_recursively_expand_complex_constituents():
@@ -765,5 +765,5 @@ def test_recursively_expand_complex_constituents():
             'SIGNOR-C91': ['SIGNOR-C88', 'P23759']}
     sp = SignorProcessor([test_row], complex_map)
     constituents = sp._recursively_lookup_complex('SIGNOR-C91')
-    assert(constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
-                            'Q15291'])
+    assert constituents == ['P23759', 'O14686', 'P61964', 'Q9UBL3', 'Q9C005',
+                            'Q15291']

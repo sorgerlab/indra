@@ -56,14 +56,14 @@ def test_load_stmts():
     with open('_test.pkl', 'wb') as fh:
         pickle.dump([st1], fh, protocol=2)
     st_loaded = ac.load_statements('_test.pkl')
-    assert(len(st_loaded) == 1)
-    assert(st_loaded[0].equals(st1))
+    assert len(st_loaded) == 1
+    assert st_loaded[0].equals(st1)
 
 def test_dump_stmts():
     ac.dump_statements([st1], '_test.pkl')
     st_loaded = ac.load_statements('_test.pkl')
-    assert(len(st_loaded) == 1)
-    assert(st_loaded[0].equals(st1))
+    assert len(st_loaded) == 1
+    assert st_loaded[0].equals(st1)
 
 def test_filter_grounded_only():
     # st18 has and i, which has an ungrounded bound condition
@@ -78,16 +78,16 @@ def test_filter_grounded_only():
 
     # When we request to remove ungrounded bound conditions, do we?
     st18_copy = deepcopy(st18)
-    assert(len(st18_copy.sub.bound_conditions) == 1)
+    assert len(st18_copy.sub.bound_conditions) == 1
     st_out = ac.filter_grounded_only([st18_copy], remove_bound=True)
-    assert(len(st_out[0].sub.bound_conditions) == 0)
+    assert len(st_out[0].sub.bound_conditions) == 0
 
     # When we request to remove ungrounded bound conditions, do we leave
     # grounded bound conditions in place?
     st19_copy = deepcopy(st19)
-    assert(len(st19_copy.sub.bound_conditions) == 1)
+    assert len(st19_copy.sub.bound_conditions) == 1
     st_out = ac.filter_grounded_only([st19_copy], remove_bound=True)
-    assert(len(st_out[0].sub.bound_conditions) == 1)
+    assert len(st_out[0].sub.bound_conditions) == 1
 
     # Do we filter out a statement with an grounded bound condition?
     st_out = ac.filter_grounded_only([st19])
@@ -124,15 +124,15 @@ def test_filter_genes_only():
 
     # Can we remove statements with non-gene bound conditions?
     st_out = ac.filter_genes_only([st18])  # remove_bound defaults to False
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
     st_out = ac.filter_genes_only([st18], remove_bound=False)
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
     # Can we remove non-gene bound conditions?
     st18_copy = deepcopy(st18)
-    assert(len(st18_copy.sub.bound_conditions) == 1)
+    assert len(st18_copy.sub.bound_conditions) == 1
     st_out = ac.filter_genes_only([st18_copy], remove_bound=True)
-    assert(len(st_out[0].sub.bound_conditions) == 0)
+    assert len(st_out[0].sub.bound_conditions) == 0
 
 def test_filter_human_only():
     st_out = ac.filter_human_only([st1, st5])
@@ -143,56 +143,56 @@ def test_filter_human_only():
     # Can we filter out statements with bound conditions grounded to non-human
     # genes?
     st_out = ac.filter_human_only([st20], remove_bound=False)
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
     # When we do such filtering, do we keep statements bounded to human genes?
     st_out = ac.filter_human_only([st21], remove_bound=False)
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
 
     # Can we remove bound conditions grounded to non-human genes?
     st_out = ac.filter_human_only([st20], remove_bound=True)
-    assert(len(st_out) == 1)
-    assert(len(st_out[0].sub.bound_conditions) == 0)
+    assert len(st_out) == 1
+    assert len(st_out[0].sub.bound_conditions) == 0
 
     # When we do so, do we keep bound conditions not grounded to non-human
     # genes?
     st_out = ac.filter_human_only([st21], remove_bound=True)
-    assert(len(st_out) == 1)
-    assert(len(st_out[0].sub.bound_conditions) == 1)
+    assert len(st_out) == 1
+    assert len(st_out[0].sub.bound_conditions) == 1
 
 
 def test_filter_gene_list_one():
     st_out = ac.filter_gene_list([st1, st2], ['a'], 'one')
-    assert(len(st_out) == 2)
+    assert len(st_out) == 2
     st_out = ac.filter_gene_list([st1, st2], ['a'], 'all')
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
     st_out = ac.filter_gene_list([st1, st2], ['a', 'b'], 'all')
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     st_out = ac.filter_gene_list([st1, st2], ['a', 'b'], 'invalid')
-    assert(len(st_out) == 2)
+    assert len(st_out) == 2
 
     # Can we exclude a statement with a bound condition agent not on the filter
     # list?
     st_out = ac.filter_gene_list([st18], ['a', 'b', 'd'], 'all')
     # All genes in the list
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     st_out = ac.filter_gene_list([st18], ['a', 'b'], 'all')
     # Bound condition for sub not in list
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
     st_out = ac.filter_gene_list([st18], ['a', 'b'], 'one')
     # Bound condition for sub not in list but we only need to match one
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     st_out = ac.filter_gene_list([st18], ['d'], 'one')
     # Only the bound condition is in filter list
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
 
     # Can we remove bound conditions that are not in the filter list?
     st_out = ac.filter_gene_list([st18], ['a', 'b', 'd'], 'all',
                                  remove_bound=True)
-    assert(len(st_out[0].sub.bound_conditions) == 1)
+    assert len(st_out[0].sub.bound_conditions) == 1
     st_out = ac.filter_gene_list([st18], ['a', 'b'], 'all',
                                  remove_bound=True)
-    assert(len(st_out[0].sub.bound_conditions) == 0)
+    assert len(st_out[0].sub.bound_conditions) == 0
 
 
 def test_filter_gene_list_invert():
@@ -221,39 +221,39 @@ def test_filter_gene_list_families():
 
 def test_run_preassembly():
     st_out = ac.run_preassembly([st1, st3, st5, st6])
-    assert(len(st_out) == 2)
+    assert len(st_out) == 2
 
 def test_run_preassembly_all_stmts():
     st_out = ac.run_preassembly([st1, st3, st5, st6], return_toplevel=False)
-    assert(len(st_out) == 4)
+    assert len(st_out) == 4
 
 def test_expand_families():
     st_out = ac.expand_families([st10])
-    assert(len(st_out) == 2)
+    assert len(st_out) == 2
 
 def test_strip_agent_context():
     st_out = ac.strip_agent_context([st11])
-    assert(len(st_out) == 1)
-    assert(not st_out[0].sub.mods)
-    assert(not st_out[0].sub.mutations)
-    assert(not st_out[0].sub.bound_conditions)
-    assert(not st_out[0].sub.activity)
-    assert(not st_out[0].sub.location)
+    assert len(st_out) == 1
+    assert not st_out[0].sub.mods
+    assert not st_out[0].sub.mutations
+    assert not st_out[0].sub.bound_conditions
+    assert not st_out[0].sub.activity
+    assert not st_out[0].sub.location
 
 def test_filter_direct():
     st_out = ac.filter_direct([st12])
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     st_out = ac.filter_direct([st13])
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
 def test_filter_belief():
     st_out = ac.filter_belief([st1, st2, st3], 0.75)
-    assert(len(st_out) == 2)
+    assert len(st_out) == 2
 
 def test_reduce_activities():
     st_out = ac.reduce_activities([st14, st15])
-    assert(st_out[0].obj_activity == 'kinase')
-    assert(st_out[1].obj_activity == 'kinase')
+    assert st_out[0].obj_activity == 'kinase'
+    assert st_out[1].obj_activity == 'kinase'
 
 def test_filter_source():
     ev1 = Evidence(source_api='bel')
@@ -263,7 +263,7 @@ def test_filter_source():
     st2  = Activation(Agent('a'), Agent('b'), evidence=[ev1, ev2])
     st3 = Activation(Agent('a'), Agent('b'), evidence=[ev1, ev3])
     st_out = ac.filter_evidence_source([st1, st2], ['reach'], 'one')
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     st_out = ac.filter_evidence_source([st1, st2, st3], ['reach'], 'all')
     assert (len(st_out) == 2)
     st_out = ac.filter_evidence_source([st1, st2, st3], ['bel', 'biopax'],
@@ -281,15 +281,15 @@ def test_map_grounding():
     b = Agent('X', db_refs={'TEXT': 'ERK'})
     st = Activation(a, b)
     st_out = ac.map_grounding([st], do_rename=False)
-    assert(len(st_out) == 1)
-    assert(st_out[0].subj.db_refs.get('FPLX'))
-    assert(st_out[0].obj.db_refs.get('FPLX'))
-    assert(st_out[0].obj.name == 'X')
+    assert len(st_out) == 1
+    assert st_out[0].subj.db_refs.get('FPLX')
+    assert st_out[0].obj.db_refs.get('FPLX')
+    assert st_out[0].obj.name == 'X'
     st_out = ac.map_grounding([st], do_rename=True)
-    assert(len(st_out) == 1)
-    assert(st_out[0].subj.db_refs.get('FPLX'))
-    assert(st_out[0].obj.db_refs.get('FPLX'))
-    assert(st_out[0].obj.name == 'ERK')
+    assert len(st_out) == 1
+    assert st_out[0].subj.db_refs.get('FPLX')
+    assert st_out[0].obj.db_refs.get('FPLX')
+    assert st_out[0].obj.name == 'ERK'
 
 
 def test_map_grounding_user_map():
@@ -298,10 +298,10 @@ def test_map_grounding_user_map():
     b = Agent('X', db_refs={'TEXT': 'ERK'})
     st = Activation(a, b)
     st_out = ac.map_grounding([st], grounding_map=gm, do_rename=True)
-    assert(len(st_out) == 1)
-    assert(st_out[0].subj.db_refs.get('XXX') == 'YYY')
-    assert(st_out[0].obj.db_refs.get('FPLX') == 'ERK')
-    assert(st_out[0].obj.name == 'ERK')
+    assert len(st_out) == 1
+    assert st_out[0].subj.db_refs.get('XXX') == 'YYY'
+    assert st_out[0].obj.db_refs.get('FPLX') == 'ERK'
+    assert st_out[0].obj.name == 'ERK'
 
 
 def test_map_sequence():
@@ -310,13 +310,13 @@ def test_map_sequence():
     st2 = Phosphorylation(None, a, 'T', '185')
     st3 = Phosphorylation(None, a, 'Y', '999')
     st_out = ac.map_sequence([st1])
-    assert(len(st_out) == 1)
-    assert(st_out[0].position == '185')
+    assert len(st_out) == 1
+    assert st_out[0].position == '185'
     st_out = ac.map_sequence([st2])
-    assert(len(st_out) == 1)
-    assert(st_out[0].position == '185')
+    assert len(st_out) == 1
+    assert st_out[0].position == '185'
     st_out = ac.map_sequence([st3])
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
 def test_map_sequence_blank_entries():
     """Make sure sites curated as erroneous with no mappings don't
@@ -334,11 +334,11 @@ def test_map_sequence_blank_entries():
 
 def test_filter_by_type():
     st_out = ac.filter_by_type([st1, st14], Phosphorylation)
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
 
 def test_filter_top_level():
     st_out = ac.filter_top_level([st14, st15])
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
 
 def test_filter_no_hypothesis():
     a = Agent('MAPK1')
@@ -369,32 +369,32 @@ def test_belief_cut_plus_filter_top():
     st2.belief = 0.1
     st_high_belief = ac.filter_belief([st1, st2], 0.5)
     st_top_level = ac.filter_top_level(st_high_belief)
-    assert(len(st_top_level) == 1)
+    assert len(st_top_level) == 1
 
 def test_filter_inconsequential_mods():
     mc = ModCondition('phosphorylation', None, None, True)
     st1 = Phosphorylation(None, Agent('a'))
     st2 = Phosphorylation(Agent('a', mods=[mc]), Agent('b'))
     st_out = ac.filter_inconsequential_mods([st1, st2])
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     whitelist = {'b': [('phosphorylation', None, None)]}
     st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
-    assert(len(st_out) == 2)
+    assert len(st_out) == 2
 
 def test_filter_inconsequential_mods2():
     st1 = Phosphorylation(Agent('a'), Agent('b'), 'S', '315')
     whitelist = {'b': [('phosphorylation', 'S', '315')]}
     st_out = ac.filter_inconsequential_mods([st1, st2], whitelist=whitelist)
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
 
 def test_filter_inconsequential_activities():
     st1 = Activation(Agent('a', activity=ActivityCondition('kinase', True)),
                      Agent('b'), 'activity')
     st2 = Activation(Agent('c'), Agent('a'), 'kinase')
     st_out = ac.filter_inconsequential_acts([st1, st2])
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     st_out = ac.filter_inconsequential_acts(st_out)
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
 def test_filter_mutation_status():
     braf_mut = Agent('BRAF', mutations=MutCondition('600', 'V', 'E'))
@@ -404,11 +404,11 @@ def test_filter_mutation_status():
     mutations = {'BRAF': [('V', '600', 'E')]}
     deletions = []
     st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     mutations = {}
     deletions = ['a']
     st_out = ac.filter_mutation_status([st1, st2], mutations, deletions)
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
     # Can we filter statements out based on bound conditions?
     mutations = {'BRAF': [('V', '600', 'E')]}
@@ -423,19 +423,19 @@ def test_filter_mutation_status():
     st4 = Phosphorylation(braf_bad_bound, Agent('a'))
     #
     st_out = ac.filter_mutation_status([st3], mutations, deletions)
-    assert(len(st_out) == 1)
+    assert len(st_out) == 1
     #
     st_out = ac.filter_mutation_status([st4], mutations, deletions)
-    assert(len(st_out) == 0)
+    assert len(st_out) == 0
 
     # Can we remove bound conditions based on our filter?
     st_out = ac.filter_mutation_status([st3], mutations, deletions,
                                        remove_bound=True)
-    assert(len(st_out[0].enz.bound_conditions) == 1)
+    assert len(st_out[0].enz.bound_conditions) == 1
     #
     st_out = ac.filter_mutation_status([st4], mutations, deletions,
                                        remove_bound=True)
-    assert(len(st_out[0].enz.bound_conditions) == 0)
+    assert len(st_out[0].enz.bound_conditions) == 0
 
 
 def test_get_unreachable_mods():

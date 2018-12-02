@@ -20,9 +20,9 @@ def test_prior_prob_one():
     prob = 1 - (default_probs['rand']['reach'] +
                 default_probs['syst']['reach'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1])
-    assert(st.belief == 1)
+    assert st.belief == 1
     be.set_prior_probs([st])
-    assert(st.belief == prob)
+    assert st.belief == prob
 
 
 def test_prior_prob_two_same():
@@ -30,9 +30,9 @@ def test_prior_prob_two_same():
     prob = 1 - (default_probs['rand']['reach']**2 +
                 default_probs['syst']['reach'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1])
-    assert(st.belief == 1)
+    assert st.belief == 1
     be.set_prior_probs([st])
-    assert(st.belief == prob)
+    assert st.belief == prob
 
 
 def test_prior_prob_two_different():
@@ -42,9 +42,9 @@ def test_prior_prob_two_different():
                (default_probs['rand']['trips'] +
                 default_probs['syst']['trips'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev2])
-    assert(st.belief == 1)
+    assert st.belief == 1
     be.set_prior_probs([st])
-    assert(st.belief == prob)
+    assert st.belief == prob
 
 
 def test_prior_prob_one_two():
@@ -54,17 +54,17 @@ def test_prior_prob_one_two():
                (default_probs['rand']['trips'] +
                 default_probs['syst']['trips'])
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1, ev2])
-    assert(st.belief == 1)
+    assert st.belief == 1
     be.set_prior_probs([st])
-    assert(st.belief == prob)
+    assert st.belief == prob
 
 
 def test_prior_prob_assertion():
     be = BeliefEngine()
     st = Phosphorylation(None, Agent('a'), evidence=[ev1, ev1, ev2, ev3])
-    assert(st.belief == 1)
+    assert st.belief == 1
     be.set_prior_probs([st])
-    assert(st.belief == 1)
+    assert st.belief == 1
 
 
 def test_hierarchy_probs1():
@@ -240,24 +240,24 @@ def test_evidence_subtype_tagger():
             pmid=0, text=None, epistemics={},
             annotations={'found_by': 'Positive_early_activation'})
     (stype, subtype) = tag_evidence_subtype(evidence_reach)
-    assert(stype == 'reach')
-    assert(subtype == 'Positive_early_[^_]*')
+    assert stype == 'reach'
+    assert subtype == 'Positive_early_[^_]*'
 
     #Test for biopax evidence
     evidence_biopax = Evidence(source_api='biopax', source_id=0,
             pmid=0, text=None, epistemics={},
             annotations={'source_sub_id': 'reactome'})
     (stype, subtype) = tag_evidence_subtype(evidence_biopax)
-    assert(stype == 'biopax')
-    assert(subtype == 'reactome')
+    assert stype == 'biopax'
+    assert subtype == 'reactome'
 
     #Test for geneways evidence
     evidence_geneways = Evidence(source_api='geneways', source_id=0,
             pmid=0, text=None, epistemics={},
             annotations={'actiontype': 'bind'})
     (stype, subtype) = tag_evidence_subtype(evidence_geneways)
-    assert(stype == 'geneways')
-    assert(subtype == 'bind')
+    assert stype == 'geneways'
+    assert subtype == 'bind'
 
     #Test for unsupported evidence
     evidence_donald_duck = Evidence(source_api='donald_duck', source_id=0,
@@ -265,8 +265,8 @@ def test_evidence_subtype_tagger():
             annotations={'quack': 'quack',
                          'quack?' : 'QUAAAAAAAAACK!'})
     (stype, subtype) = tag_evidence_subtype(evidence_donald_duck)
-    assert(stype == 'donald_duck')
-    assert(subtype is None)
+    assert stype == 'donald_duck'
+    assert subtype is None
 
 
 def test_evidence_random_noise_prior():
@@ -292,18 +292,18 @@ def test_evidence_random_noise_prior():
 
     # Random noise prior for geneways bind evidence is the subtype prior,
     # since we specified it
-    assert(evidence_random_noise_prior(ev_geneways_bind,
-           type_probs, subtype_probs) == 0.7)
+    assert evidence_random_noise_prior(ev_geneways_bind, \
+                                       type_probs, subtype_probs) == 0.7
 
     # Random noise prior for reactome biopax evidence is the subtype prior,
     # since we specified it
-    assert(evidence_random_noise_prior(ev_biopax_reactome,
-           type_probs, subtype_probs) == 0.4)
+    assert evidence_random_noise_prior(ev_biopax_reactome, \
+                                       type_probs, subtype_probs) == 0.4
 
     # Random noise prior for pid evidence is the subtype prior,
     # since we specified it
-    assert(evidence_random_noise_prior(ev_biopax_pid,
-           type_probs, subtype_probs) == 0.9)
+    assert evidence_random_noise_prior(ev_biopax_pid,
+                                       type_probs, subtype_probs) == 0.9
 
     # Make sure this all still works when we go through the belief engine
     statements = []
@@ -316,9 +316,9 @@ def test_evidence_random_noise_prior():
     scorer = SimpleScorer(p, subtype_probs)
     engine = BeliefEngine(scorer)
     engine.set_prior_probs(statements)
-    assert(statements[0].belief == 1 - 0.7)
-    assert(statements[1].belief == 1 - 0.4)
-    assert(statements[2].belief == 1 - 0.9)
+    assert statements[0].belief == 1 - 0.7
+    assert statements[1].belief == 1 - 0.4
+    assert statements[2].belief == 1 - 0.9
 
 
 def test_negative_evidence():

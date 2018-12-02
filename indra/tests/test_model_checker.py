@@ -956,7 +956,7 @@ def test_stmt_from_rule():
     pa.make_model()
     rule_name = pa.model.rules[0].name
     stmt = stmt_from_rule(rule_name, pa.model, [st])
-    assert(stmt == st)
+    assert stmt == st
 
 
 def test_activate_via_mod():
@@ -973,7 +973,7 @@ def test_activate_via_mod():
     mc = ModelChecker(pa.model, [st3])
     checks = mc.check_model()
     # Make sure it checks out to True
-    assert(checks[0][1].path_found)
+    assert checks[0][1].path_found
 
 
 def test_observables():

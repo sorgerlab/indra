@@ -38,8 +38,8 @@ def test_process_text():
     assert stmt.subj.name == 'fuel', stmt.subj.name
     assert stmt.obj.name == 'water trucking', stmt.obj.name
     assert stmt.obj_delta.get('polarity') == -1
-    assert(stmt.evidence[0].annotations['found_by']
-           == 'ported_syntax_1_verb-Causal')
+    assert stmt.evidence[0].annotations['found_by'] == \
+        'ported_syntax_1_verb-Causal'
     assert 'TEXT' in stmt.subj.db_refs
     assert 'TEXT' in stmt.obj.db_refs
     # NOTE: groundings are turned off in Travis tests so these are commented

@@ -10,30 +10,30 @@ from nose.plugins.attrib import attr
 
 def test_invalid_xml():
     sp = sparser.process_xml('xyz')
-    assert(sp is None)
+    assert sp is None
 
 
 def test_phosphorylation():
     sp = sparser.process_xml(xml_str1)
-    assert(len(sp.statements) == 1)
-    assert(sp.statements[0].enz.name == 'MAP2K1')
-    assert(sp.statements[0].sub.name == 'MAPK3')
-    assert(len(sp.statements[0].evidence) == 1)
+    assert len(sp.statements) == 1
+    assert sp.statements[0].enz.name == 'MAP2K1'
+    assert sp.statements[0].sub.name == 'MAPK3'
+    assert len(sp.statements[0].evidence) == 1
     ev = sp.statements[0].evidence[0]
-    assert(ev.pmid == '54321')
-    assert(ev.text)
-    assert(ev.source_api == 'sparser')
+    assert ev.pmid == '54321'
+    assert ev.text
+    assert ev.source_api == 'sparser'
 
 
 # This test uses some slow UniPtot web queries to standardize agent names
 @attr('webservice', 'slow')
 def test_phosphorylation2():
     sp = sparser.process_xml(xml_str2)
-    assert(len(sp.statements) == 1)
-    assert(sp.statements[0].enz.name == 'MAPK1')
-    assert(sp.statements[0].sub.name == 'TP53BP2')
-    assert(sp.statements[0].residue == 'S')
-    assert(sp.statements[0].position == '827')
+    assert len(sp.statements) == 1
+    assert sp.statements[0].enz.name == 'MAPK1'
+    assert sp.statements[0].sub.name == 'TP53BP2'
+    assert sp.statements[0].residue == 'S'
+    assert sp.statements[0].position == '827'
     assert (len(sp.statements[0].evidence) == 1)
     ev = sp.statements[0].evidence[0]
     assert (ev.pmid == '12345')
@@ -44,38 +44,38 @@ def test_phosphorylation2():
 def test_fix_agent_be_name():
     a = Agent('XXX', db_refs={'FPLX': 'CDK'})
     _fix_agent(a)
-    assert(a.name == 'CDK')
+    assert a.name == 'CDK'
 
 
 def test_fix_agent_hgnc_only():
     a = Agent('XXX', db_refs={'HGNC': '7199'})
     _fix_agent(a)
-    assert(a.name == 'MOS')
-    assert(a.db_refs.get('UP') == 'P00540')
+    assert a.name == 'MOS'
+    assert a.db_refs.get('UP') == 'P00540'
 
 
 def test_fix_agent_fa_only():
     a = Agent('XXX', db_refs={'FA': '00815'})
     _fix_agent(a)
-    assert(a.name == 'Cyclin')
-    assert(a.db_refs.get('FPLX') == 'Cyclin')
-    assert(a.db_refs.get('NXPFA') == '00815')
-    assert('FA' not in a.db_refs)
+    assert a.name == 'Cyclin'
+    assert a.db_refs.get('FPLX') == 'Cyclin'
+    assert a.db_refs.get('NXPFA') == '00815'
+    assert 'FA' not in a.db_refs
 
 
 def test_fix_agent_ncit_only():
     a = Agent('XXX', db_refs={'NCIT': 'C25785'})
     _fix_agent(a)
-    assert(a.name == 'KRAS')
-    assert(a.db_refs.get('HGNC') == '6407')
-    assert(a.db_refs.get('UP') == 'P01116')
+    assert a.name == 'KRAS'
+    assert a.db_refs.get('HGNC') == '6407'
+    assert a.db_refs.get('UP') == 'P01116'
 
 
 def test_fix_agent_ncit_only():
     a = Agent('XXX', db_refs={'NCIT': 'C104166'})
     _fix_agent(a)
-    assert(a.name == 'TUBB')
-    assert(a.db_refs.get('FPLX') == 'TUBB')
+    assert a.name == 'TUBB'
+    assert a.db_refs.get('FPLX') == 'TUBB'
 
 
 # ############################

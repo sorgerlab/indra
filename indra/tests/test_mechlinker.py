@@ -13,10 +13,10 @@ def test_agent_state():
     a = Agent('a', mods=[mc], mutations=[mut], bound_conditions=[bc],
               location=location)
     agent_state = AgentState(a)
-    assert(agent_state.mods)
-    assert(agent_state.mutations)
-    assert(agent_state.bound_conditions)
-    assert(agent_state.location)
+    assert agent_state.mods
+    assert agent_state.mutations
+    assert agent_state.bound_conditions
+    assert agent_state.location
 
 
 def test_act_phos_to_af():
@@ -25,7 +25,7 @@ def test_act_phos_to_af():
     phos_st = Phosphorylation(Agent('A'), Agent('B'))
     ml = MechLinker([act_st, phos_st])
     linked_stmts = ml.infer_active_forms(ml.statements)
-    assert(len(linked_stmts) == 1)
+    assert len(linked_stmts) == 1
 
 def test_act_af_to_phos():
     act_st = Activation(Agent('A', activity=ActivityCondition('kinase', True)),
@@ -35,7 +35,7 @@ def test_act_af_to_phos():
                         'activity', True)
     ml = MechLinker([act_st, af_st])
     linked_stmts = ml.infer_modifications(ml.statements)
-    assert(len(linked_stmts) == 1)
+    assert len(linked_stmts) == 1
 
 def test_reduce_activity_types():
     a1 = Agent('a', location='cytoplasm')
@@ -46,9 +46,9 @@ def test_reduce_activity_types():
     ml = MechLinker([af1, af2, af3])
     ml.gather_explicit_activities()
     ml.reduce_activities()
-    assert(af1.activity == 'kinase')
-    assert(af2.activity == 'kinase')
-    assert(af3.activity == 'kinase')
+    assert af1.activity == 'kinase'
+    assert af2.activity == 'kinase'
+    assert af3.activity == 'kinase'
 
 def test_graph_reductions():
     G = networkx.DiGraph([('activity', 'kinase'),
@@ -57,26 +57,26 @@ def test_graph_reductions():
                           ('activity', 'phosphatase'),
                           ('catalytic', 'phosphatase')])
     reductions = _get_graph_reductions(G)
-    assert(reductions == {'activity': 'catalytic',
+    assert reductions == {'activity': 'catalytic',
                           'kinase': 'kinase',
                           'phosphatase': 'phosphatase',
-                          'catalytic': 'catalytic'})
+                          'catalytic': 'catalytic'}
     G = networkx.DiGraph([('activity', 'kinase'),
                           ('catalytic', 'kinase'),
                           ('activity', 'catalytic')])
     reductions = _get_graph_reductions(G)
-    assert(reductions == {'activity': 'kinase',
+    assert reductions == {'activity': 'kinase',
                           'catalytic': 'kinase',
-                          'kinase': 'kinase'})
+                          'kinase': 'kinase'}
     G = networkx.DiGraph([('activity', 'kinase'),
                           ('catalytic', 'kinase'),
                           ('activity', 'catalytic'),
                           ('activity', 'transcription')])
     reductions = _get_graph_reductions(G)
-    assert(reductions == {'activity': 'activity',
+    assert reductions == {'activity': 'activity',
                           'transcription': 'transcription',
                           'catalytic': 'kinase',
-                          'kinase': 'kinase'})
+                          'kinase': 'kinase'}
 
 def test_base_agent():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
@@ -91,8 +91,8 @@ def test_require_active_forms_mod1():
     ml = MechLinker([af, ph])
     ml.gather_explicit_activities()
     ml.require_active_forms()
-    assert(len(ml.statements) == 2)
-    assert(ml.statements[1].enz.mods)
+    assert len(ml.statements) == 2
+    assert ml.statements[1].enz.mods
 
 def test_require_active_forms_mod2():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
@@ -102,8 +102,8 @@ def test_require_active_forms_mod2():
     ml = MechLinker([af, af2, ph])
     ml.gather_explicit_activities()
     ml.require_active_forms()
-    assert(len(ml.statements) == 4)
-    assert(ml.statements[3].enz.location)
+    assert len(ml.statements) == 4
+    assert ml.statements[3].enz.location
 
 def test_require_active_forms_mod3():
     mc1 = ModCondition('phosphorylation', 'T', '185')
@@ -114,8 +114,8 @@ def test_require_active_forms_mod3():
     ml = MechLinker([af, ph])
     ml.gather_explicit_activities()
     ml.require_active_forms()
-    assert(len(ml.statements) == 2)
-    assert(len(ml.statements[1].enz.mods) == 2)
+    assert len(ml.statements) == 2
+    assert len(ml.statements[1].enz.mods) == 2
 
 def test_require_active_forms_mod4():
     mc1 = ModCondition('phosphorylation', 'T', '185')
@@ -126,8 +126,8 @@ def test_require_active_forms_mod4():
     ml = MechLinker([af, ph])
     ml.gather_explicit_activities()
     ml.require_active_forms()
-    assert(len(ml.statements) == 2)
-    assert(len(ml.statements[1].enz.mods) == 2)
+    assert len(ml.statements) == 2
+    assert len(ml.statements[1].enz.mods) == 2
 
 def test_require_active_forms_mod5():
     mc1 = ModCondition('phosphorylation', 'T', '185')
@@ -141,8 +141,8 @@ def test_require_active_forms_mod5():
     ml = MechLinker([af, af2, ph])
     ml.gather_explicit_activities()
     ml.require_active_forms()
-    assert(len(ml.statements) == 3)
-    assert(len(ml.statements[2].enz.mods) == 2)
+    assert len(ml.statements) == 3
+    assert len(ml.statements[2].enz.mods) == 2
 
 def test_require_active_forms_act1():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
@@ -151,15 +151,15 @@ def test_require_active_forms_act1():
     ml = MechLinker([af, act])
     ml.gather_explicit_activities()
     ml.require_active_forms()
-    assert(len(ml.statements) == 2)
-    assert(ml.statements[1].subj.mods)
+    assert len(ml.statements) == 2
+    assert ml.statements[1].subj.mods
 
 def test_infer_activations():
     af = ActiveForm(Agent('a', mods=[ModCondition('phosphorylation')]),
                     'activity', True)
     phos = Phosphorylation(Agent('b'), Agent('a'))
     linked_stmts = MechLinker.infer_activations([af, phos])
-    assert(len(linked_stmts) == 1)
+    assert len(linked_stmts) == 1
     print(linked_stmts)
 
 def test_replace_activations():
@@ -169,13 +169,13 @@ def test_replace_activations():
     act = Activation(Agent('b'), Agent('a'))
     ml = MechLinker([af, phos, act])
     ml.replace_activations()
-    assert(len(ml.statements) == 2)
+    assert len(ml.statements) == 2
     print(ml.statements)
 
 def test_infer_complexes():
     phos = Phosphorylation(Agent('b'), Agent('a'))
     linked_stmts = MechLinker.infer_complexes([phos])
-    assert(len(linked_stmts) == 1)
+    assert len(linked_stmts) == 1
     print(linked_stmts)
 
 def test_replace_complexes():
@@ -183,7 +183,7 @@ def test_replace_complexes():
     cplx = Complex([Agent('a'), Agent('b')])
     ml = MechLinker([phos, cplx])
     ml.replace_complexes()
-    assert(len(ml.statements) == 1)
+    assert len(ml.statements) == 1
     print(ml.statements)
 
 def test_reduce_mods1():
@@ -193,10 +193,10 @@ def test_reduce_mods1():
     ml = MechLinker([phos1, phos2, phos3])
     ml.gather_modifications()
     ml.reduce_modifications()
-    assert(len(ml.statements) == 3)
+    assert len(ml.statements) == 3
     for st in ml.statements:
-        assert(st.residue == 'T')
-        assert(st.position == '143')
+        assert st.residue == 'T'
+        assert st.position == '143'
 
 def test_reduce_mods2():
     mc1 = ModCondition('phosphorylation', 'S', '123', False)
@@ -216,7 +216,7 @@ def test_reduce_mods2():
     ml = MechLinker([st1, st2, st3, st4, st5, st6, st7])
     ml.gather_modifications()
     ml.reduce_modifications()
-    assert(len(ml.statements) == 7)
+    assert len(ml.statements) == 7
     mc_red1 = ml.statements[0].obj.mods[0]
     mc_red2 = ml.statements[1].obj.mods[0]
     mc_red3 = ml.statements[2].obj.mods[0]
@@ -225,18 +225,18 @@ def test_reduce_mods2():
     mc_red6 = ml.statements[5].obj.mods[0]
     mc_red7 = ml.statements[6].obj.mods[0]
     # These ones stay the same because they shouldn't be reduced
-    assert(mc_red1.__dict__ == mc1.__dict__)
-    assert(mc_red3.__dict__ == mc3.__dict__)
-    assert(mc_red4.__dict__ == mc4.__dict__)
-    assert(mc_red5.__dict__ == mc5.__dict__)
-    assert(mc_red6.__dict__ == mc6.__dict__)
+    assert mc_red1.__dict__ == mc1.__dict__
+    assert mc_red3.__dict__ == mc3.__dict__
+    assert mc_red4.__dict__ == mc4.__dict__
+    assert mc_red5.__dict__ == mc5.__dict__
+    assert mc_red6.__dict__ == mc6.__dict__
     # mc2 has to be reduced to have position '123'
-    assert(mc_red2.mod_type == 'phosphorylation')
-    assert(mc_red2.residue == 'S')
-    assert(mc_red2.position == '123')
-    assert(mc_red2.is_modified == True)
+    assert mc_red2.mod_type == 'phosphorylation'
+    assert mc_red2.residue == 'S'
+    assert mc_red2.position == '123'
+    assert mc_red2.is_modified == True
     # mc7 has to be reduced to have residue 'T'
-    assert(mc_red7.mod_type == 'phosphorylation')
-    assert(mc_red7.residue == 'T')
-    assert(mc_red7.position == '999')
-    assert(mc_red7.is_modified == True)
+    assert mc_red7.mod_type == 'phosphorylation'
+    assert mc_red7.residue == 'T'
+    assert mc_red7.position == '999'
+    assert mc_red7.is_modified == True

@@ -27,9 +27,9 @@ def _parse_sbgn(sbgn_xml):
 
 def _test_numelements(et, nglyphs, narcs):
     glyphs = et.findall('sbgn:map/sbgn:glyph', namespaces=ns)
-    assert(len(glyphs) == nglyphs)
+    assert len(glyphs) == nglyphs
     arcs = et.findall('sbgn:map/sbgn:arc', namespaces=ns)
-    assert(len(arcs) == narcs)
+    assert len(arcs) == narcs
 
 def test_modification():
     st = Phosphorylation(Agent('BRAF'), Agent('MAP2K1'))

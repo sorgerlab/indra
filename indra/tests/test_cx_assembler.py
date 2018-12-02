@@ -25,82 +25,82 @@ def test_phos():
     cxa = CxAssembler()
     cxa.add_statements([st_phos])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 2)
-    assert(len(cxa.cx['edges']) == 1)
+    assert len(cxa.cx['nodes']) == 2
+    assert len(cxa.cx['edges']) == 1
 
 
 def test_dephos():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 3)
-    assert(len(cxa.cx['edges']) == 2)
+    assert len(cxa.cx['nodes']) == 3
+    assert len(cxa.cx['edges']) == 2
 
 
 def test_complex():
     cxa = CxAssembler()
     cxa.add_statements([st_complex])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 3)
-    assert(len(cxa.cx['edges']) == 3)
+    assert len(cxa.cx['nodes']) == 3
+    assert len(cxa.cx['edges']) == 3
 
 
 def test_complex2():
     cxa = CxAssembler()
     cxa.add_statements([st_complex2])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 3)
-    assert(len(cxa.cx['edges']) == 5)
+    assert len(cxa.cx['nodes']) == 3
+    assert len(cxa.cx['edges']) == 5
 
 
 def test_act():
     cxa = CxAssembler()
     cxa.add_statements([st_act, st_act2])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 3)
-    assert(len(cxa.cx['edges']) == 2)
+    assert len(cxa.cx['nodes']) == 3
+    assert len(cxa.cx['edges']) == 2
 
 
 def test_gef():
     cxa = CxAssembler()
     cxa.add_statements([st_gef])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 2)
-    assert(len(cxa.cx['edges']) == 1)
+    assert len(cxa.cx['nodes']) == 2
+    assert len(cxa.cx['edges']) == 1
 
 
 def test_gap():
     cxa = CxAssembler()
     cxa.add_statements([st_gap])
     cxa.make_model()
-    assert(len(cxa.cx['nodes']) == 2)
-    assert(len(cxa.cx['edges']) == 1)
+    assert len(cxa.cx['nodes']) == 2
+    assert len(cxa.cx['edges']) == 1
 
 
 def test_node_attributes():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
-    assert(len(cxa.cx['nodeAttributes']) == 5)
+    assert len(cxa.cx['nodeAttributes']) == 5
 
 
 def test_edge_attributes():
     cxa = CxAssembler()
     cxa.add_statements([st_phos, st_dephos])
     cxa.make_model()
-    assert(len(cxa.cx['edgeAttributes']) == 14)
+    assert len(cxa.cx['edgeAttributes']) == 14
 
 
 def test_cited():
     cxa = CxAssembler()
     cxa.add_statements([st_cited])
     cxa.make_model()
-    assert(len(cxa.cx['citations']) == 1)
-    assert(len(cxa.cx['edgeCitations']) == 1)
+    assert len(cxa.cx['citations']) == 1
+    assert len(cxa.cx['edgeCitations']) == 1
     citation = cxa.cx['citations'][0]
-    assert(citation.get('dc:identifier') == 'pmid:12345')
+    assert citation.get('dc:identifier') == 'pmid:12345'
     cid = citation.get('@id')
-    assert(cxa.cx['edgeCitations'][0]['citations'][0] == cid)
+    assert cxa.cx['edgeCitations'][0]['citations'][0] == cid
     print(cxa.print_cx())
 
 
@@ -108,16 +108,16 @@ def test_invalid_cited():
     cxa = CxAssembler()
     cxa.add_statements([st_invalid_cited])
     cxa.make_model()
-    assert(not cxa.cx['citations'])
-    assert(not cxa.cx['edgeCitations'])
+    assert not cxa.cx['citations']
+    assert not cxa.cx['edgeCitations']
 
 
 def test_supports():
     cxa = CxAssembler()
     cxa.add_statements([st_cited])
     cxa.make_model()
-    assert(len(cxa.cx['supports']) == 1)
-    assert(len(cxa.cx['edgeSupports']) == 1)
+    assert len(cxa.cx['supports']) == 1
+    assert len(cxa.cx['edgeSupports']) == 1
 
 
 def test_set_context():
@@ -126,17 +126,17 @@ def test_set_context():
     cxa.make_model()
     cxa.set_context('BT20_BREAST')
     print(cxa.cx['nodeAttributes'])
-    assert(len(cxa.cx['nodeAttributes']) == 11)
+    assert len(cxa.cx['nodeAttributes']) == 11
 
 
 def test_make_print_model():
     cxa = CxAssembler()
     cxa.add_statements([st_phos])
     cx_str = cxa.make_model()
-    assert(cx_str)
+    assert cx_str
 
 
 def test_no_pmid():
     cxa = CxAssembler([st_not_cited])
     cxa.make_model()
-    assert(not cxa.cx['edgeCitations'])
+    assert not cxa.cx['edgeCitations']

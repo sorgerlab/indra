@@ -66,16 +66,16 @@ def test_cwmsreader_inhibit():
 
     s0 = statements[0]
     print('Statement:', s0)
-    assert(isinstance(s0, Influence))
+    assert isinstance(s0, Influence)
     subj = s0.subj
-    assert(subj.db_refs['TEXT'] == 'Persistent insecurity and armed conflict')
+    assert subj.db_refs['TEXT'] == 'Persistent insecurity and armed conflict'
 
     obj = s0.obj
-    assert(obj.db_refs['TEXT'] == 'livelihood activities')
+    assert obj.db_refs['TEXT'] == 'livelihood activities'
 
     ev = s0.evidence[0]
-    assert(ev.text == text)
-    assert(ev.source_api == 'cwms')
+    assert ev.text == text
+    assert ev.source_api == 'cwms'
 
 
 @attr('slow', 'webservice')
@@ -109,13 +109,13 @@ def test_rdf_example1():
 
     txt = load_text(example1_txt)
     cp = process_rdf_file(txt, example1_rdf)
-    assert(len(cp.statements) == 1)
+    assert len(cp.statements) == 1
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] ==
-           'These impacts on livestock and crops')
-    assert(statement0.obj.db_refs['TEXT'] ==
-           'in livelihoods being decimated')
+    assert statement0.subj.db_refs['TEXT'] == \
+           'These impacts on livestock and crops'
+    assert statement0.obj.db_refs['TEXT'] == \
+           'in livelihoods being decimated'
 
 
 def test_rdf_example2():
@@ -123,13 +123,13 @@ def test_rdf_example2():
 
     txt = load_text(example2_txt)
     cp = process_rdf_file(txt, example2_rdf)
-    assert(len(cp.statements) == 1)
+    assert len(cp.statements) == 1
 
     statement0 = cp.statements[0]
-    assert(statement0.subj.db_refs['TEXT'] ==
-           'Conflict and economic decline')
-    assert(statement0.obj.db_refs['TEXT'] ==
-           'to violence and displacement')
+    assert statement0.subj.db_refs['TEXT'] == \
+           'Conflict and economic decline'
+    assert statement0.obj.db_refs['TEXT'] == \
+           'to violence and displacement'
 
 
 def test_rdf_example3():
@@ -138,7 +138,7 @@ def test_rdf_example3():
 
     txt = load_text(example3_txt)
     cp = process_rdf_file(txt, example3_rdf)
-    assert(len(cp.statements) == 1)
+    assert len(cp.statements) == 1
 
     statement0 = cp.statements[0]
     assert statement0.subj.db_refs['TEXT'] == 'displacement',\
