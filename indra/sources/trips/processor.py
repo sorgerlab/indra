@@ -1372,6 +1372,8 @@ class TripsProcessor(object):
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
+        if site_id is None:
+            return None, None
         all_residues = []
         all_pos = []
         site_term = self.tree.find("TERM/[@id='%s']" % site_id)
@@ -1466,11 +1468,11 @@ class TripsProcessor(object):
 
         # Find the site of the modification
         site_tag = event.find("site")
-        # If there is not site specified
+        # If there is no site specified
         if site_tag is None:
             mc = ModCondition(mod_type_name, is_modified=is_modified)
             return [mc]
-        site_id = site_tag.attrib['id']
+        site_id = site_tag.attrib.get('id')
         # Find the site TERM and get the specific residues and
         # positions
         residues, mod_pos = self._get_site_by_id(site_id)
