@@ -441,6 +441,10 @@ class TripsProcessor(object):
         combs = zip([pos_events, neg_events], [IncreaseAmount, DecreaseAmount])
         for events, cls in combs:
             for event in events:
+                if event.attrib['id'] in self._static_events:
+                    continue
+                if event.attrib['id'] in self._subsumed_events:
+                    continue
                 # The agent has to exist and be a protein type
                 agent = event.find(".//*[@role=':AGENT']")
                 if agent is None:
