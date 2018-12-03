@@ -76,7 +76,7 @@ def process_directory(directory_name):
     start_time_s = time.time()
 
     for filename in files:
-        logger.info('Processing', filename)
+        logger.info('Processing %s' % filename)
         fix_character_encoding(filename, tmp_file)
         mp_file = process_file(tmp_file, None)
 

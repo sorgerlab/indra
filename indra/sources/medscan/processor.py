@@ -304,7 +304,6 @@ class MedscanProcessor(object):
                 if num_documents is not None and doc_counter >= num_documents:
                     break
 
-
     def process_relation(self, relation, last_relation):
         """Process a relation into an INDRA statement.
 
@@ -426,7 +425,6 @@ class MedscanProcessor(object):
                 return
 
             # Map the unnormalized verb to an INDRA statement type
-            statement_type = None
             if last_relation.verb == 'TK{phosphorylate}':
                 statement_type = Phosphorylation
             elif last_relation.verb == 'TK{dephosphorylate}':
