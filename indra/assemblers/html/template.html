@@ -128,10 +128,14 @@ a {
                     <td style="white-space: nowrap">
                        {% if ev['pmid'] %}
                         <a class="pmid_link"
+                title="Hover again to see info"
+                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;" 
                 href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>
                         {{ ev['pmid'] }}</a>
                         {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
                         <a class="pmid_link"
+                title="Hover again to see info"
+                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;" 
                 href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['text_refs']['pmid'] }}'>
                         {{ ev['text_refs']['pmid'] }}</a>
                        {% endif %}
