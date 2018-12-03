@@ -212,7 +212,7 @@ class HtmlAssembler(object):
                         continue
                     role = get_role(ix)
                     # Get the tag with the correct badge
-                    tag_start = '<span class="label label-%s">' % role
+                    tag_start = '<span class="badge badge-%s">' % role
                     tag_close = '</span>'
                     # Build up a set of indices
                     indices += [(m.start(), m.start() + len(ag_text),
