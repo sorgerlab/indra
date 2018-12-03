@@ -28,10 +28,10 @@ def test_format_evidence_text():
     assert ev['source_api'] == 'test'
     assert ev['text_refs']['PMID'] == '1234567'
     assert ev['text'] == ('We noticed that the '
-                          '<span class="label label-subject">Src kinase</span> '
+                          '<span class="badge badge-subject">Src kinase</span> '
                           'was able to phosphorylate '
-                          '<span class="label label-object">'
-                          'Ras proteins</span>.')
+                          '<span class="badge badge-object">'
+                          'Ras proteins</span>.'), ev['text']
 
 
 def test_assembler():
