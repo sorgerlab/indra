@@ -14,6 +14,7 @@ import json
 import pickle
 import functools
 import signal
+import time
 import multiprocessing as mp
 from datetime import datetime
 from collections import Counter
@@ -178,6 +179,8 @@ def download_from_s3(pmid, reader='all', input_dir=None, reader_version=None,
 
     # First define the text retrieval function
     def get_text():
+        # Add timeout here for PubMed
+        time.sleep(0.5)
         # full_pmid = s3_client.check_pmid(pmid)
         # Look for the full text
         content, content_type = s3_client.get_upload_content(
