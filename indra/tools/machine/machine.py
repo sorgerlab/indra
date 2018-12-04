@@ -56,6 +56,7 @@ def get_email_pmids(gmail_cred):
 
 
 def get_searchterm_pmids(search_terms, num_days):
+    import time
     pmids = {}
     for s in search_terms:
         # Special cases
@@ -64,6 +65,7 @@ def get_searchterm_pmids(search_terms, num_days):
         elif s.upper() == 'JUN':
             s = 'c-JUN'
         pmids[s] = pubmed_client.get_ids(s, reldate=num_days)
+        time.sleep(1)
     return pmids
 
 
