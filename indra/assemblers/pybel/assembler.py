@@ -450,7 +450,10 @@ def _get_agent_node_no_bcs(agent):
 
     if variants:
         node_data = node_data.with_variants(variants)
-
+    
+    if isinstance(node_data, (bioprocess, pathology)):
+        return node_data, None
+    
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
     return node_data, edge_data
