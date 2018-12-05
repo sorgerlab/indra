@@ -2,7 +2,7 @@ import networkx as nx
 import pybel.constants as pc
 from indra.statements import *
 from indra.databases import hgnc_client
-from pybel.dsl import activity, protein, pmod, hgvs, reaction, abundance, complex_abundance
+from pybel.dsl import activity, protein, pmod, hgvs, reaction, abundance, complex_abundance, bioprocess
 from indra.assemblers.pybel import assembler as pa
 
 
@@ -449,3 +449,23 @@ def test_complex_with_complex():
     assert egfr_grb2_complex_sos1_phos_complex in belgraph
     for member in egfr_grb2_complex_sos1_phos_complex.members:
         assert member in belgraph
+
+
+def test_no_activity_on_bioprocess():
+    yfg_agent = Agent('PPP1R13L', db_refs={'HGNC': id('PPP1R13L')})
+    apoptosis_agent = Agent('apoptotic process', db_refs={'GO': 'GO:0006915'})
+
+    stmt = Activation(yfg_agent, apoptosis_agent)
+    pba = pa.PybelAssembler([stmt])
+
+    belgraph = pba.make_model()
+    assert len(belgraph) == 2
+    assert belgraph.number_of_edges() == 1
+
+    yfg_pybel = protein('HGNC', 'PPP1R13L')
+    apoptosis_pybel = bioprocess('GO', 'GO:0006915')
+    assert yfg_pybel in belgraph
+    assert apoptosis_pybel in belgraph
+
+    _, _, e = list(belgraph.edges(data=True))[0]
+    assert pc.OBJECT not in e
