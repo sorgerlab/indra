@@ -3549,9 +3549,9 @@ def stmts_from_json(json_in, on_missing_support='handle'):
 
     stmts = []
     uuid_dict = {}
-    for json_stmt in json_in:
+    for stmt_hash in json_in['statements']:
         try:
-            st = Statement._from_json(json_stmt)
+            st = Statement._from_json(json_in['statements'][stmt_hash])
         except Exception as e:
             logger.warning("Error creating statement: %s" % e)
             continue
