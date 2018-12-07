@@ -1,0 +1,167 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00015_IO-77372" id="paragraph14">EGF and NGF lead to the phosphorylation of MAPK1</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="15" pid="paragraph14">EGF and NGF lead to the phosphorylation of MAPK1</sentence>
+		</sentences>
+	</input>
+	<CC end="48" id="V77417" lisp="(ONT::CC ONT::V77417 ONT::CAUSE :FACTOR ONT::V77384 :OUTCOME ONT::V77489 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph14" rule="-RULE5_3_AGENT_AFFECTED,-ADD-SPEC" start="0" uttnum="15">
+		<type>ONT::CAUSE</type>
+		<text normalization="">EGF and NGF lead to the phosphorylation of MAPK1</text>
+		<force>ONT::TRUE</force>
+		<arg end="12" id="V77384" role=":FACTOR" start="0"/>
+		<arg end="48" id="V77489" role=":OUTCOME" start="17"/>
+	</CC>
+	<TERM end="12" id="V77384" lisp="(ONT::TERM ONT::V77384 ONT::GENE-PROTEIN :LOGICALOP-SEQUENCE (ONT::V77375 ONT::V77403) :OPERATOR ONT::AND)" paragraph="paragraph14" rule="-LOGICALOP-REF,-ADD-SPEC" start="0" uttnum="15">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">EGF and NGF</text>
+		<aggregate operator="AND">
+			<member id="V77375"/>
+			<member id="V77403"/>
+		</aggregate>
+	</TERM>
+	<EVENT end="48" id="V77489" lisp="(ONT::EVENT ONT::V77489 ONT::PHOSPHORYLATION :AFFECTED ONT::V77514 :DRUM ((:DRUM (TERM :ID GO::|0006468| :NAME &quot;protein phosphorylation&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;protein phosphorylation&quot; :STATUS &quot;name&quot; :EXACT 2)) :ONT-TYPES (ONT::POST-TRANSLATIONAL-MODIFICATION)))))" paragraph="paragraph14" rule="-RULE60_4_AGENT_AFFECTED-AFFECTED,-ADD-SPEC" start="17" uttnum="15">
+		<type>ONT::PHOSPHORYLATION</type>
+		<text normalization="">to the phosphorylation of MAPK1</text>
+		<predicate end="48" start="17">
+			<type>ONT::PHOSPHORYLATION</type>
+			<text>to the phosphorylation of MAPK1</text>
+		</predicate>
+		<arg2 end="48" id="V77514" role=":AFFECTED" start="40">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">of MAPK1</text>
+		</arg2>
+		<drum-terms>
+			<drum-term dbid="GO:0006468" match-score="0.85542" matched-name="protein phosphorylation" name="protein phosphorylation">
+				<types>
+					<type>ONT::POST-TRANSLATIONAL-MODIFICATION</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</EVENT>
+	<TERM dbid="UP:P01133|UP:P01132|NCIT:C20425|XFAM:PF00058|XFAM:PF07645|NCIT:C24359|HGNC:3229|XFAM:PF00008" end="4" id="V77375" lisp="(ONT::TERM ONT::V77375 ONT::GENE-PROTEIN :NAME W::EGF :DRUM ((:DRUM (TERM :ID HGNC::|3229| :NAME &quot;epidermal growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;EGF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P01133) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::P01133 :NAME &quot;Pro-epidermal growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;EGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :SPECIES &quot;Homo sapiens (Human)&quot; :DBXREFS (HGNC::|3229| XFAM::PF00008 XFAM::PF07645 XFAM::PF00058) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P01132 :NAME &quot;Pro-epidermal growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;EGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :SPECIES &quot;Mus musculus (Mouse)&quot; :DBXREFS (XFAM::PF00008 XFAM::PF07645 XFAM::PF00058) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C20425 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C20425&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;EGF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C24359 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C24359&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;EGF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph14" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="15">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">EGF</text>
+		<name>EGF</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:3229" match-score="0.85542" matched-name="EGF" name="epidermal growth factor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01133"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P01133" match-score="0.85542" matched-name="EGF" name="Pro-epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="HGNC:3229"/>
+					<xref dbid="XFAM:PF00008"/>
+					<xref dbid="XFAM:PF07645"/>
+					<xref dbid="XFAM:PF00058"/>
+				</xrefs>
+				<species>Homo sapiens (Human)</species>
+			</drum-term>
+			<drum-term dbid="UP:P01132" match-score="0.85542" matched-name="EGF" name="Pro-epidermal growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00008"/>
+					<xref dbid="XFAM:PF07645"/>
+					<xref dbid="XFAM:PF00058"/>
+				</xrefs>
+				<species>Mus musculus (Mouse)</species>
+			</drum-term>
+			<drum-term dbid="NCIT:C20425" match-score="0.71084" matched-name="EGF" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C20425&gt;">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C24359" match-score="0.71084" matched-name="EGF" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C24359&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<TERM dbid="XFAM:PF00243|NCIT:C105374|HGNC:7808|UP:P21617|UP:P01138|UP:Q6YBR5|UP:P34129|NCIT:C20444" end="12" id="V77403" lisp="(ONT::TERM ONT::V77403 ONT::GENE-PROTEIN :NAME W::NGF :DRUM ((:DRUM (TERM :ID HGNC::|7808| :NAME &quot;nerve growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;NGF&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P01138) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q6YBR5 :NAME &quot;Nerve growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;NGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00243) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P21617 :NAME &quot;Nerve growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;NGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00243) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P34129 :NAME &quot;Nerve growth factor&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;NGF&quot; :STATUS &quot;RecName: Short&quot; :EXACT 1)) :DBXREFS (XFAM::PF00243) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C20444 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C20444&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;NGF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C105374 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C105374&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;NGF&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph14" rule="-SIMPLE-REF,-ADD-SPEC" start="8" uttnum="15">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">NGF</text>
+		<name>NGF</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:7808" match-score="0.85542" matched-name="NGF" name="nerve growth factor">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01138"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q6YBR5" match-score="0.85542" matched-name="NGF" name="Nerve growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00243"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P21617" match-score="0.85542" matched-name="NGF" name="Nerve growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00243"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P34129" match-score="0.85542" matched-name="NGF" name="Nerve growth factor">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00243"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C20444" match-score="0.71084" matched-name="NGF" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C20444&gt;">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C105374" match-score="0.71084" matched-name="NGF" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C105374&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<TERM dbid="NCIT:C17589|UP:P28482|HGNC:6871|NCIT:C21227" end="48" id="V77514" lisp="(ONT::TERM ONT::V77514 ONT::GENE-PROTEIN :NAME W::MAPK-1 :DRUM ((:DRUM (TERM :ID HGNC::|6871| :NAME &quot;mitogen-activated protein kinase 1&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;MAPK1&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P28482) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17589 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17589&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C21227 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C21227&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;MAPK1&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph14" rule="-SIMPLE-REF,-ADD-SPEC" start="40" uttnum="15">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">of MAPK1</text>
+		<name>MAPK-1</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6871" match-score="0.85542" matched-name="MAPK1" name="mitogen-activated protein kinase 1">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P28482"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C17589" match-score="0.71084" matched-name="MAPK1" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17589&gt;">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C21227" match-score="0.71084" matched-name="MAPK1" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C21227&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>
