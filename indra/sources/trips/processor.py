@@ -1192,12 +1192,17 @@ class TripsProcessor(object):
                     agents.append(agent)
             if not agents:
                 return None
+            # Sometimes some bound conditions are aggregate agents that we
+            # roll out here into a flat list
+            agents = _flatten_list(agents)
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
             if len(agents) > 1:
                 agent.bound_conditions = \
                     [BoundCondition(ag, True) for ag in agents[1:]]
+                for bc in agent.bound_conditions:
+                    assert isinstance(bc.agent, Agent)
         # If the entity is not a complex
         else:
             # Determine the agent name
@@ -1678,13 +1683,23 @@ def _stmt_location_to_agents(stmt, location):
 
 
 def _agent_list_product(lists):
-    def _listify(lst):
-        if not isinstance(lst, collections.Iterable):
-            return [lst]
-        else:
-            return lst
     ll = [_listify(l) for l in lists]
     return itertools.product(*ll)
+
+
+def _listify(lst):
+    if not isinstance(lst, collections.Iterable):
+        return [lst]
+    else:
+        return lst
+
+
+def _flatten_list(lst):
+    list_of_lists = [_listify(l) for l in lst]
+    flat_list = []
+    for element in list_of_lists:
+        flat_list += element
+    return flat_list
 
 
 def _is_base_agent_state(agent):
