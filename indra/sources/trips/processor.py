@@ -795,20 +795,29 @@ class TripsProcessor(object):
             if affected_event is None:
                 return
 
-            stmts = self._get_modification_event(affected_event)
-            stmts_to_make = []
-            if stmts:
-                for stmt in stmts:
-                    # The affected event should have no enzyme but should
-                    # have a substrate
-                    if stmt.enz is None and stmt.sub is not None:
-                        stmts_to_make.append(stmt)
+            # Iterate over all enzyme agents if there are multiple ones
+            for enz_t in _agent_list_product((enzyme_agent, )):
+                # enz_t comes out as a tuple so we need to take the first
+                # element here
+                enz = enz_t[0]
+                # Note that we re-run the extraction code here potentially
+                # multiple times. This is mainly to make sure each Statement
+                # object created here is independent (i.e. has different UUIDs)
+                # without having to manipulate it after creation.
+                stmts = self._get_modification_event(affected_event)
+                stmts_to_make = []
+                if stmts:
+                    for stmt in stmts:
+                        # The affected event should have no enzyme but should
+                        # have a substrate
+                        if stmt.enz is None and stmt.sub is not None:
+                            stmts_to_make.append(stmt)
 
-            for stmt in stmts_to_make:
-                stmt.enz = enzyme_agent
-                for ev in stmt.evidence:
-                    ev.epistemics['direct'] = False
-                self.statements.append(stmt)
+                for stmt in stmts_to_make:
+                    stmt.enz = enz
+                    for ev in stmt.evidence:
+                        ev.epistemics['direct'] = False
+                    self.statements.append(stmt)
 
             self._add_extracted(event_type, event.attrib['id'])
             self._add_extracted(affected_event.find('type').text, affected_id)

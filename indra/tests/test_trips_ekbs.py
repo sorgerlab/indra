@@ -735,8 +735,8 @@ def test_58():
     sentence = 'EGF and NGF lead to the phosphorylation of MAPK1.'
     tp = process_sentence_xml(sentence)
     assert len(tp.statements) == 2
-    assert isinstance(st[0], Phosphorylation)
-    assert isinstance(st[1], Phosphorylation)
+    assert isinstance(tp.statements[0], Phosphorylation)
+    assert isinstance(tp.statements[1], Phosphorylation)
     enzs = {st.enz.name for st in tp.statements} == {'EGF', 'NGF'}
 
 
