@@ -1295,6 +1295,8 @@ class TripsProcessor(object):
         mod_types = list(ont_to_mod_type.keys()) + ['ONT::PTM']
         if precond_event_type in mod_types:
             mods = self._get_modification(precond_event)
+            if mods is None:
+                return
             agent.mods = mods
             return
 
