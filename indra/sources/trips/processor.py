@@ -441,6 +441,10 @@ class TripsProcessor(object):
         combs = zip([pos_events, neg_events], [IncreaseAmount, DecreaseAmount])
         for events, cls in combs:
             for event in events:
+                if event.attrib['id'] in self._static_events:
+                    continue
+                if event.attrib['id'] in self._subsumed_events:
+                    continue
                 # The agent has to exist and be a protein type
                 agent = event.find(".//*[@role=':AGENT']")
                 if agent is None:
@@ -456,6 +460,8 @@ class TripsProcessor(object):
 
                 # The affected, we already know is ONT::TRANSCRIPTION
                 affected_arg = event.find(".//*[@role=':AFFECTED']")
+                if affected_arg is None:
+                    continue
                 affected_id = affected_arg.attrib.get('id')
                 affected_event = self.tree.find("EVENT/[@id='%s']" %
                                                 affected_id)
@@ -478,6 +484,8 @@ class TripsProcessor(object):
                 location = self._get_event_location(event)
                 for subj, obj in \
                         _agent_list_product((agent_agent, affected_agent)):
+                    if obj is None:
+                        continue
                     st = cls(subj, obj, evidence=ev)
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
@@ -540,6 +548,8 @@ class TripsProcessor(object):
                 location = self._get_event_location(event)
                 for subj, obj in \
                         _agent_list_product((agent_agent, affected_agent)):
+                    if obj is None:
+                        continue
                     st = stmt_type(subj, obj, evidence=ev)
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
@@ -785,20 +795,29 @@ class TripsProcessor(object):
             if affected_event is None:
                 return
 
-            stmts = self._get_modification_event(affected_event)
-            stmts_to_make = []
-            if stmts:
-                for stmt in stmts:
-                    # The affected event should have no enzyme but should
-                    # have a substrate
-                    if stmt.enz is None and stmt.sub is not None:
-                        stmts_to_make.append(stmt)
+            # Iterate over all enzyme agents if there are multiple ones
+            for enz_t in _agent_list_product((enzyme_agent, )):
+                # enz_t comes out as a tuple so we need to take the first
+                # element here
+                enz = enz_t[0]
+                # Note that we re-run the extraction code here potentially
+                # multiple times. This is mainly to make sure each Statement
+                # object created here is independent (i.e. has different UUIDs)
+                # without having to manipulate it after creation.
+                stmts = self._get_modification_event(affected_event)
+                stmts_to_make = []
+                if stmts:
+                    for stmt in stmts:
+                        # The affected event should have no enzyme but should
+                        # have a substrate
+                        if stmt.enz is None and stmt.sub is not None:
+                            stmts_to_make.append(stmt)
 
-            for stmt in stmts_to_make:
-                stmt.enz = enzyme_agent
-                for ev in stmt.evidence:
-                    ev.epistemics['direct'] = False
-                self.statements.append(stmt)
+                for stmt in stmts_to_make:
+                    stmt.enz = enz
+                    for ev in stmt.evidence:
+                        ev.epistemics['direct'] = False
+                    self.statements.append(stmt)
 
             self._add_extracted(event_type, event.attrib['id'])
             self._add_extracted(affected_event.find('type').text, affected_id)
@@ -1002,7 +1021,7 @@ class TripsProcessor(object):
             # Get the subject agent
             agent_tag = event.find(".//*[@role=':AGENT']")
             if agent_tag is None:
-                subj = None
+                subj_agent = None
                 # Try to look for CATALYZE parent event
                 pattern = \
                     "EVENT/[type='ONT::CATALYZE']/*[@id='%s']/.." % event_id
@@ -1012,17 +1031,22 @@ class TripsProcessor(object):
                     agent_tag = cat_event.find(".//*[@role=':AGENT']")
                     if agent_tag is not None:
                         agent_id = agent_tag.attrib.get('id')
-                        subj = self._get_agent_by_id(agent_id, cat_event_id)
+                        subj_agent = self._get_agent_by_id(agent_id,
+                                                           cat_event_id)
                         event = cat_event
             else:
                 agent_id = agent_tag.attrib.get('id')
-                subj = self._get_agent_by_id(agent_id, event_id)
-            # Get evidence
-            ev = self._get_evidence(event)
-            st = Conversion(subj, obj_from, obj_to, evidence=ev)
-            location = self._get_event_location(event)
-            _stmt_location_to_agents(st, location)
-            self.statements.append(st)
+                subj_agent = self._get_agent_by_id(agent_id, event_id)
+            # In case the subj_agent is a list, we iterate over each one
+            # and make one statement for each
+            for subj_t in _agent_list_product((subj_agent, )):
+                subj = subj_t[0]
+                # Get evidence
+                ev = self._get_evidence(event)
+                st = Conversion(subj, obj_from, obj_to, evidence=ev)
+                location = self._get_event_location(event)
+                _stmt_location_to_agents(st, location)
+                self.statements.append(st)
 
     def get_agents(self):
         """Return list of INDRA Agents corresponding to TERMs in the EKB.
@@ -1168,6 +1192,9 @@ class TripsProcessor(object):
                     agents.append(agent)
             if not agents:
                 return None
+            # Sometimes some bound conditions are aggregate agents that we
+            # roll out here into a flat list
+            agents = _flatten_list(agents)
             # We assume that the first agent mentioned in the description of
             # the complex is the one that mediates binding
             agent = agents[0]
@@ -1271,6 +1298,8 @@ class TripsProcessor(object):
         mod_types = list(ont_to_mod_type.keys()) + ['ONT::PTM']
         if precond_event_type in mod_types:
             mods = self._get_modification(precond_event)
+            if mods is None:
+                return
             agent.mods = mods
             return
 
@@ -1289,7 +1318,9 @@ class TripsProcessor(object):
                     arg1 = args[0]
                 elif len(args) > 1:
                     arg1, arg2 = args[:2]
-            if arg1 is None:
+            if arg1 is None and arg2 is None:
+                bound_to_term_id = None
+            elif arg1 is None:
                 bound_to_term_id = arg2.attrib.get('id')
             elif arg2 is None:
                 bound_to_term_id = arg1.attrib.get('id')
@@ -1366,6 +1397,8 @@ class TripsProcessor(object):
 
     # Get all the sites recursively based on a term id.
     def _get_site_by_id(self, site_id):
+        if site_id is None:
+            return None, None
         all_residues = []
         all_pos = []
         site_term = self.tree.find("TERM/[@id='%s']" % site_id)
@@ -1460,11 +1493,11 @@ class TripsProcessor(object):
 
         # Find the site of the modification
         site_tag = event.find("site")
-        # If there is not site specified
+        # If there is no site specified
         if site_tag is None:
             mc = ModCondition(mod_type_name, is_modified=is_modified)
             return [mc]
-        site_id = site_tag.attrib['id']
+        site_id = site_tag.attrib.get('id')
         # Find the site TERM and get the specific residues and
         # positions
         residues, mod_pos = self._get_site_by_id(site_id)
@@ -1648,13 +1681,23 @@ def _stmt_location_to_agents(stmt, location):
 
 
 def _agent_list_product(lists):
-    def _listify(lst):
-        if not isinstance(lst, collections.Iterable):
-            return [lst]
-        else:
-            return lst
     ll = [_listify(l) for l in lists]
     return itertools.product(*ll)
+
+
+def _listify(lst):
+    if not isinstance(lst, collections.Iterable):
+        return [lst]
+    else:
+        return lst
+
+
+def _flatten_list(lst):
+    list_of_lists = [_listify(l) for l in lst]
+    flat_list = []
+    for element in list_of_lists:
+        flat_list += element
+    return flat_list
 
 
 def _is_base_agent_state(agent):

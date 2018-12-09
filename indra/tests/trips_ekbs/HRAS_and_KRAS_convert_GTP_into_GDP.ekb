@@ -1,0 +1,183 @@
+<?xml version="1.0" ?>
+<ekb>
+	<input type="">
+		<paragraphs>
+			<paragraph file="/Users/wbeaumont/drum-dev/etc/Data/WP/TEXT00002_IO-35174" id="paragraph1">HRAS and KRAS convert GTP into GDP</paragraph>
+		</paragraphs>
+		<sentences>
+			<sentence id="2" pid="paragraph1">HRAS and KRAS convert GTP into GDP</sentence>
+		</sentences>
+	</input>
+	<EVENT end="34" id="V35214" lisp="(ONT::EVENT ONT::V35214 ONT::TRANSFORM :RES ONT::V35247 :AGENT ONT::V35190 :AFFECTED ONT::V35225 :FORCE ONT::TRUE :TENSE W::PRES)" paragraph="paragraph1" rule="-RESULT1,-RULE5_1_AGENT_AFFECTED,-ADD-SPEC" start="0" uttnum="2">
+		<type>ONT::TRANSFORM</type>
+		<text normalization="">HRAS and KRAS convert GTP into GDP</text>
+		<force>ONT::TRUE</force>
+		<predicate end="34" start="0">
+			<type>ONT::TRANSFORM</type>
+			<text>HRAS and KRAS convert GTP into GDP</text>
+		</predicate>
+		<arg1 end="14" id="V35190" role=":AGENT" start="0">
+			<type>ONT::GENE-PROTEIN</type>
+			<text normalization="">HRAS and KRAS</text>
+		</arg1>
+		<arg2 end="26" id="V35225" role=":AFFECTED" start="22">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">GTP</text>
+		</arg2>
+		<arg3 end="34" id="V35247" role=":RES" start="31">
+			<type>ONT::MOLECULE</type>
+			<text normalization="">GDP</text>
+		</arg3>
+	</EVENT>
+	<TERM end="14" id="V35190" lisp="(ONT::TERM ONT::V35190 ONT::GENE-PROTEIN :LOGICALOP-SEQUENCE (ONT::V35185 ONT::V35209) :OPERATOR ONT::AND)" paragraph="paragraph1" rule="-LOGICALOP-REF,-ADD-SPEC" start="0" uttnum="2">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">HRAS and KRAS</text>
+		<aggregate operator="AND">
+			<member id="V35185"/>
+			<member id="V35209"/>
+		</aggregate>
+	</TERM>
+	<TERM dbid="CHEBI:15996|CHEBI:37565" end="26" id="V35225" lisp="(ONT::TERM ONT::V35225 ONT::MOLECULE :NAME W::GTP :DRUM ((:DRUM (TERM :ID CHEBI::|15996| :NAME &quot;GTP&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;GTP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|37565| :NAME &quot;GTP(4-)&quot; :SCORE 0.55849 :MATCHES ((MATCH :SCORE 0.55849 :MATCHED &quot;gtp&quot; :STATUS &quot;RELATED synonym&quot; :ALL-CAPS-NO-CAPS 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1" rule="-SIMPLE-REF,-ADD-SPEC" start="22" uttnum="2">
+		<type>ONT::MOLECULE</type>
+		<text normalization="">GTP</text>
+		<name>GTP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:15996" match-score="0.85542" matched-name="GTP" name="GTP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:37565" match-score="0.55849" matched-name="gtp" name="GTP(4-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<TERM dbid="HGNC:5173|NCIT:C17382|NCIT:C16659|NCIT:C17060|NCIT:C52545|UP:P01112" end="5" id="V35185" lisp="(ONT::TERM ONT::V35185 ONT::GENE-PROTEIN :NAME W::HRAS :DRUM ((:DRUM (TERM :ID HGNC::|5173| :NAME &quot;HRas proto-oncogene, GTPase&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;HRAS&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P01112) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C16659 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C16659&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;HRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17060 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17060&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;HRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17382 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17382&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;HRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C52545 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C52545&gt;&quot; :SCORE 0.70901 :MATCHES ((MATCH :SCORE 0.70901 :MATCHED &quot;H-ras&quot; :STATUS &quot;synonym&quot; :NO-DASH-DASH 1 :ALL-CAPS-NO-CAPS 1 :SENTENCE-CAP-SINGLE-CAP 1)) :ONT-TYPES (ONT::GENE)))))" paragraph="paragraph1" rule="-SIMPLE-REF,-ADD-SPEC" start="0" uttnum="2">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">HRAS</text>
+		<name>HRAS</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:5173" match-score="0.85542" matched-name="HRAS" name="HRas proto-oncogene, GTPase">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01112"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C16659" match-score="0.71084" matched-name="HRAS" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C16659&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17060" match-score="0.71084" matched-name="HRAS" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17060&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17382" match-score="0.71084" matched-name="HRAS" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17382&gt;">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C52545" match-score="0.70901" matched-name="H-ras" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C52545&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<TERM dbid="UP:P79800|HGNC:6407|UP:Q5EFX7|UP:O42277|NCIT:C17383|UP:P01116|UP:Q05147|NCIT:C25785|XFAM:PF00071|NCIT:C16766|UP:Q9YH38" end="14" id="V35209" lisp="(ONT::TERM ONT::V35209 ONT::GENE-PROTEIN :NAME W::KRAS :DRUM ((:DRUM (TERM :ID HGNC::|6407| :NAME &quot;KRAS proto-oncogene, GTPase&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;KRAS&quot; :STATUS &quot;Approved Symbol&quot; :EXACT 1)) :DBXREFS (UP::P01116) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C16766 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C16766&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;KRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID NCIT::C17383 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17383&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;KRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID NCIT::C25785 :NAME &quot;&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C25785&gt;&quot; :SCORE 0.71084 :MATCHES ((MATCH :SCORE 0.71084 :MATCHED &quot;KRAS&quot; :STATUS &quot;synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::GENE)) (TERM :ID UP::Q9YH38 :NAME &quot;GTPase KRas&quot; :SCORE 0.56551 :MATCHES ((MATCH :SCORE 0.56551 :MATCHED &quot;K-ras&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00071) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q5EFX7 :NAME &quot;GTPase KRas&quot; :SCORE 0.56551 :MATCHES ((MATCH :SCORE 0.56551 :MATCHED &quot;K-ras&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00071) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::P79800 :NAME &quot;GTPase KRas&quot; :SCORE 0.56551 :MATCHES ((MATCH :SCORE 0.56551 :MATCHED &quot;K-ras&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00071) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::O42277 :NAME &quot;GTPase KRas&quot; :SCORE 0.56551 :MATCHES ((MATCH :SCORE 0.56551 :MATCHED &quot;K-ras&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00071) :ONT-TYPES (ONT::PROTEIN)) (TERM :ID UP::Q05147 :NAME &quot;GTPase KRas&quot; :SCORE 0.56551 :MATCHES ((MATCH :SCORE 0.56551 :MATCHED &quot;K-ras&quot; :STATUS &quot;AltName: Short&quot; :NO-DASH-DASH 1 :EXACT 1 :ALL-CAPS-NO-CAPS 1)) :DBXREFS (XFAM::PF00071) :ONT-TYPES (ONT::PROTEIN)))))" paragraph="paragraph1" rule="-SIMPLE-REF,-ADD-SPEC" start="9" uttnum="2">
+		<type>ONT::GENE-PROTEIN</type>
+		<text normalization="">KRAS</text>
+		<name>KRAS</name>
+		<drum-terms>
+			<drum-term dbid="HGNC:6407" match-score="0.85542" matched-name="KRAS" name="KRAS proto-oncogene, GTPase">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+				<xrefs>
+					<xref dbid="UP:P01116"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="NCIT:C16766" match-score="0.71084" matched-name="KRAS" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C16766&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C17383" match-score="0.71084" matched-name="KRAS" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C17383&gt;">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="NCIT:C25785" match-score="0.71084" matched-name="KRAS" name="&lt;http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C25785&gt;">
+				<types>
+					<type>ONT::GENE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="UP:Q9YH38" match-score="0.56551" matched-name="K-ras" name="GTPase KRas">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00071"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q5EFX7" match-score="0.56551" matched-name="K-ras" name="GTPase KRas">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00071"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:P79800" match-score="0.56551" matched-name="K-ras" name="GTPase KRas">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00071"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:O42277" match-score="0.56551" matched-name="K-ras" name="GTPase KRas">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00071"/>
+				</xrefs>
+			</drum-term>
+			<drum-term dbid="UP:Q05147" match-score="0.56551" matched-name="K-ras" name="GTPase KRas">
+				<types>
+					<type>ONT::PROTEIN</type>
+				</types>
+				<xrefs>
+					<xref dbid="XFAM:PF00071"/>
+				</xrefs>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+	<TERM dbid="CHEBI:17552|CHEBI:58189" end="34" id="V35247" lisp="(ONT::TERM ONT::V35247 ONT::MOLECULE :NAME W::GDP :DRUM ((:DRUM (TERM :ID CHEBI::|17552| :NAME &quot;GDP&quot; :SCORE 0.85542 :MATCHES ((MATCH :SCORE 0.85542 :MATCHED &quot;GDP&quot; :STATUS &quot;name&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)) (TERM :ID CHEBI::|58189| :NAME &quot;GDP(3-)&quot; :SCORE 0.56627 :MATCHES ((MATCH :SCORE 0.56627 :MATCHED &quot;GDP&quot; :STATUS &quot;RELATED synonym&quot; :EXACT 1)) :ONT-TYPES (ONT::CHEMICAL ONT::MOLECULE)))))" paragraph="paragraph1" rule="-SIMPLE-REF,-ADD-SPEC" start="31" uttnum="2">
+		<type>ONT::MOLECULE</type>
+		<text normalization="">GDP</text>
+		<name>GDP</name>
+		<drum-terms>
+			<drum-term dbid="CHEBI:17552" match-score="0.85542" matched-name="GDP" name="GDP">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+			<drum-term dbid="CHEBI:58189" match-score="0.56627" matched-name="GDP" name="GDP(3-)">
+				<types>
+					<type>ONT::CHEMICAL</type>
+					<type>ONT::MOLECULE</type>
+				</types>
+			</drum-term>
+		</drum-terms>
+	</TERM>
+</ekb>
