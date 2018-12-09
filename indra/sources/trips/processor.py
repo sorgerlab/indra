@@ -1021,7 +1021,7 @@ class TripsProcessor(object):
             # Get the subject agent
             agent_tag = event.find(".//*[@role=':AGENT']")
             if agent_tag is None:
-                subj = None
+                subj_agent = None
                 # Try to look for CATALYZE parent event
                 pattern = \
                     "EVENT/[type='ONT::CATALYZE']/*[@id='%s']/.." % event_id
@@ -1031,17 +1031,22 @@ class TripsProcessor(object):
                     agent_tag = cat_event.find(".//*[@role=':AGENT']")
                     if agent_tag is not None:
                         agent_id = agent_tag.attrib.get('id')
-                        subj = self._get_agent_by_id(agent_id, cat_event_id)
+                        subj_agent = self._get_agent_by_id(agent_id,
+                                                           cat_event_id)
                         event = cat_event
             else:
                 agent_id = agent_tag.attrib.get('id')
-                subj = self._get_agent_by_id(agent_id, event_id)
-            # Get evidence
-            ev = self._get_evidence(event)
-            st = Conversion(subj, obj_from, obj_to, evidence=ev)
-            location = self._get_event_location(event)
-            _stmt_location_to_agents(st, location)
-            self.statements.append(st)
+                subj_agent = self._get_agent_by_id(agent_id, event_id)
+            # In case the subj_agent is a list, we iterate over each one
+            # and make one statement for each
+            for subj_t in _agent_list_product((subj_agent, )):
+                subj = subj_t[0]
+                # Get evidence
+                ev = self._get_evidence(event)
+                st = Conversion(subj, obj_from, obj_to, evidence=ev)
+                location = self._get_event_location(event)
+                _stmt_location_to_agents(st, location)
+                self.statements.append(st)
 
     def get_agents(self):
         """Return list of INDRA Agents corresponding to TERMs in the EKB.
