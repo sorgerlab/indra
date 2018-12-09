@@ -1201,8 +1201,6 @@ class TripsProcessor(object):
             if len(agents) > 1:
                 agent.bound_conditions = \
                     [BoundCondition(ag, True) for ag in agents[1:]]
-                for bc in agent.bound_conditions:
-                    assert isinstance(bc.agent, Agent)
         # If the entity is not a complex
         else:
             # Determine the agent name
