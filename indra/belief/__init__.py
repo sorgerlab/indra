@@ -286,15 +286,17 @@ class BeliefEngine(object):
             stmts = [g.node[n]['stmt'] for n in node_ranks]
             return stmts
 
-        def has_cycle(g):
+        def assert_no_cycle(g):
+            """If the graph has cycles, throws AssertionError."""
             try:
-                networkx.algorithms.cycles.find_cycle(g)
+                cyc = networkx.algorithms.cycles.find_cycle(g)
             except networkx.exception.NetworkXNoCycle:
-                return False
-            return True
+                return
+            msg = 'Cycle found in hierarchy graph: %s' % cyc
+            assert False, msg
 
         g = build_hierarchy_graph(statements)
-        assert not has_cycle(g), 'Hierarchy graph has an unexpected cycle'
+        assert_no_cycle(g)
         ranked_stmts = get_ranked_stmts(g)
         for st in ranked_stmts:
             bps = _get_belief_package(st)

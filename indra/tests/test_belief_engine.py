@@ -352,5 +352,17 @@ def test_wm_scorer():
     engine.set_prior_probs([stmt])
 
 
+@raises(AssertionError)
+def test_cycle():
+    st1 = Phosphorylation(Agent('B'), Agent('A1'))
+    st2 = Phosphorylation(None, Agent('A1'))
+    st1.supports = [st2]
+    st1.supported_by = [st2]
+    st2.supports = [st1]
+    st2.supported_by = [st1]
+    engine = BeliefEngine()
+    engine.set_hierarchy_probs([st1, st2])
+
+
 def assert_close_enough(b1, b2):
     assert abs(b1 - b2) < 1e-6, 'Got %.6f, Expected: %.6f' % (b1, b2)
