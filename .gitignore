@@ -2,6 +2,10 @@
 elsevier_api_keys
 cr_clickthrough_key
 biogrid_api_key
+data
+
+.ipynb_checkpoints
+models
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
