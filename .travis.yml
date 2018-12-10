@@ -42,7 +42,7 @@ install:
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
   # Biopax/Paxtools dependencies
-  - pip install git+https://github.com/kivy/pyjnius.git@1cbfef
+  - pip install pyjnius==1.1.4
   # Download a number of useful resource files for testing purposes
   - pip install .[all]
   - cd indra/benchmarks/assembly_eval/batch4
