@@ -162,6 +162,8 @@ def test_pathsfromto():
     assert_pmids(bp.statements)
     assert_source_sub_id(bp.statements)
     assert unicode_strs(bp.statements)
+    num_unique = len({s.get_hash(shallow=False) for s in bp.statements})
+    assert len(bp.statements) == num_unique
 
 def test_all_uniprot_ids():
     for obj in bp.model.getObjects().toArray():
