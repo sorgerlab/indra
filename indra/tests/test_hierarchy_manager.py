@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from copy import deepcopy
-from indra.preassembler.hierarchy_manager import hierarchies, HierarchyManager
+from indra.preassembler.hierarchy_manager import hierarchies, \
+    HierarchyManager, get_bio_hierarchies
 from indra.statements import get_valid_location, InvalidLocationError, Agent
 from indra.util import unicode_strs
 
@@ -212,6 +213,7 @@ def test_load_hume_hierarchy():
     assert hume_isa('event/healthcare/human_disease',
                    'event/healthcare')
 
+
 def test_same_components():
     uri_prkag1 = ent_hierarchy.get_uri('HGNC', 'PRKAG1')
     uri_ampk = ent_hierarchy.get_uri('FPLX', 'AMPK')
@@ -219,3 +221,10 @@ def test_same_components():
     c1 = ent_hierarchy.components[uri_prkag1]
     c2 = ent_hierarchy.components[uri_ampk]
     assert c1 == c2
+
+
+def test_bio_hierarchy_pickles():
+    h1 = get_bio_hierarchies()
+    h2 = get_bio_hierarchies(from_pickle=False)
+    for key in h1.keys():
+        assert len(h1[key].graph) == len(h2[key].graph)
