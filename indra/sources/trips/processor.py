@@ -546,6 +546,7 @@ class TripsProcessor(object):
 
                 ev = self._get_evidence(event)
                 location = self._get_event_location(event)
+                self._add_extracted(_get_type(event), event.attrib['id'])
                 for subj, obj in \
                         _agent_list_product((agent_agent, affected_agent)):
                     if obj is None:
@@ -1046,6 +1047,7 @@ class TripsProcessor(object):
                 st = Conversion(subj, obj_from, obj_to, evidence=ev)
                 location = self._get_event_location(event)
                 _stmt_location_to_agents(st, location)
+                self._add_extracted(_get_type(event), event.attrib['id'])
                 self.statements.append(st)
 
     def get_agents(self):
@@ -1217,9 +1219,11 @@ class TripsProcessor(object):
             # If no HGNC name (for instance non-human protein) then
             # look at UP and try to get gene name
             elif up_id:
-                gene_name = up_client.get_gene_name(up_id)
-                if gene_name:
-                    agent_name = gene_name
+                # Handle some known special cases:
+                if not (up_id == 'etc' or up_id.startswith('SL-')):
+                    gene_name = up_client.get_gene_name(up_id)
+                    if gene_name:
+                        agent_name = gene_name
             # If it is mapped to FamPlex then we standardize its name
             # to the FamPlex entry name
             elif be_id:
