@@ -17,7 +17,7 @@ abbrevs = {
     'ribosylation': 'ribosyl',
     'geranylgeranylation': 'geranylgeranyl',
     'palmitoylation': 'palmitoyl',
-    'myrylation': 'myryl',
+    'myristoylation': 'myryl',
     'modification': 'mod',
 }
 
@@ -32,7 +32,7 @@ states = {
     'methylation': ['n', 'y'],
     'geranylgeranylation': ['n', 'y'],
     'palmitoylation': ['n', 'y'],
-    'myrylation': ['n', 'y'],
+    'myristoylation': ['n', 'y'],
     'ribosylation': ['n', 'y'],
     'modification': ['n', 'y'],
 }
@@ -75,7 +75,7 @@ def get_binding_site_name(agent):
         parents = hierarchies['entity'].get_parents(uri, 'top')
         if parents:
             # Choose the first parent if there are more than one
-            parent_uri = sorted(parents))[0]
+            parent_uri = sorted(parents)[0]
             parent_agent = _agent_from_uri(parent_uri)
             binding_site = _n(parent_agent.name).lower()
             return binding_site
