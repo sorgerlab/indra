@@ -3,7 +3,7 @@ from builtins import dict, str
 import xml.etree.ElementTree as ET
 from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
-from indra.assemblers.pysb.assembler import PysbPreassembler
+from indra.assemblers.pysb.preassembler import PysbPreassembler
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
