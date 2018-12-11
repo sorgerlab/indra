@@ -80,7 +80,7 @@ class BiopaxProcessor(object):
         # Here we use the deep hash of each Statement, and by making a dict,
         # we effectively keep only one Statement with a given deep hash
         self.statements = list({stmt.get_hash(shallow=False, refresh=True): stmt
-                               for stmt in self.statements}.values())
+                                for stmt in self.statements}.values())
 
 
     def get_complexes(self):
