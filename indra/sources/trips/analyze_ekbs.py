@@ -5,35 +5,20 @@ import xml.etree.ElementTree as ET
 from indra.sources import trips
 
 
-def build_event_graph(graph, tree, node):
-    # If we have already added this node then let's return
-    if node_key(node) in graph:
-        return
-    type = get_type(node)
-    text = get_text(node)
-    label = '%s (%s)' % (type, text)
-    graph.add_node(node_key(node), type=type, label=label, text=text)
-    args = get_args(node)
-    for arg_role, (arg_id, arg_tag) in args.items():
-        arg = get_node_by_id(tree, arg_id)
-        if arg is None:
-            arg = arg_tag
-        build_event_graph(graph, tree, arg)
-        graph.add_edge(node_key(node), node_key(arg), type=arg_role,
-                       label=arg_role)
-
-
 def node_key(term):
+    """Return a key to be used for an element in the event EKB."""
     return term.attrib.get('id')
 
 
 def get_text(tag):
+    """Return the text associated with an elementin the event EKB."""
     tt = tag.find('text')
     if tt is not None:
         return tt.text
 
 
 def get_args(node):
+    """Return the arguments of a node in the event graph."""
     arg_roles = {}
     args = node.findall('arg') + \
         [node.find('arg1'), node.find('arg2'), node.find('arg3')]
@@ -63,36 +48,15 @@ def get_args(node):
 
 
 def get_type(node):
+    """Return the type of an element in the event EKB."""
     type = node.find('type')
     if type is not None:
         return type.text
     return None
 
 
-def get_node_by_id(tree, node_id):
-    for node_type in ['EVENT', 'TERM', 'CC']:
-        node = tree.find("%s[@id='%s']" % (node_type, node_id))
-        if node is not None:
-            return node
-
-
-def print_subtree(node, level):
-    s = ''
-    pre = '--' * level
-    type = get_type(node)
-    text = get_text(node)
-    s += pre + type + ' | ' + text + '\n'
-    args = get_args(node)
-    for role, id in args.items():
-        sub_node = get_node_by_id(et, id)
-        if sub_node is not None:
-            text = get_text(sub_node)
-            s += pre + role + ' | ' + text + '\n'
-            s += print_subtree(sub_node, level+1)
-    return s
-
-
 def type_match(a, b):
+    """Return True of the types of a and b are compatible, False otherwise."""
     # If the types are the same, return True
     if a['type'] == b['type']:
         return True
@@ -108,6 +72,7 @@ def type_match(a, b):
 
 
 def add_graph(patterns, G):
+    """Add a graph to a set of unique patterns."""
     if not patterns:
         patterns.append([G])
         return
@@ -120,11 +85,13 @@ def add_graph(patterns, G):
 
 
 def draw(graph, fname):
+    """Draw a graph and save it into a file"""
     ag = networkx.nx_agraph.to_agraph(graph)
     ag.draw(fname, prog='dot')
 
 
 def build_patterns(fnames):
+    """Return a list of CC/EVENT graph patterns from a list of EKB files"""
     patterns = []
     for fn in fnames:
         et = ET.parse(fn)
@@ -137,7 +104,27 @@ def build_patterns(fnames):
     return patterns
 
 
+def build_event_graph(graph, tree, node):
+    """Return a DiGraph of a specific event structure, built recursively"""
+    # If we have already added this node then let's return
+    if node_key(node) in graph:
+        return
+    type = get_type(node)
+    text = get_text(node)
+    label = '%s (%s)' % (type, text)
+    graph.add_node(node_key(node), type=type, label=label, text=text)
+    args = get_args(node)
+    for arg_role, (arg_id, arg_tag) in args.items():
+        arg = get_node_by_id(tree, arg_id)
+        if arg is None:
+            arg = arg_tag
+        build_event_graph(graph, tree, arg)
+        graph.add_edge(node_key(node), node_key(arg), type=arg_role,
+                       label=arg_role)
+
+
 def get_extracted_events(fnames):
+    """Get a full list of all extracted event IDs from a list of EKB files"""
     event_list = []
     for fn in fnames:
         tp = trips.process_xml_file(fn)
@@ -148,6 +135,7 @@ def get_extracted_events(fnames):
 
 
 def check_event_coverage(patterns, event_list):
+    """Calculate the ratio of patterns that were extracted."""
     proportions = []
     for pattern_list in patterns:
         proportion = 0
@@ -166,78 +154,3 @@ if __name__ == '__main__':
     patterns = build_patterns(fnames)
     extracted_events = get_extracted_events(fnames)
     proportions = check_event_coverage(patterns, extracted_events)
-    """
-    cc_types = {}
-    event_types = {}
-    trees = {}
-    for fn in fnames:
-        et = ET.parse(fn)
-        res = et.findall('CC')
-        for event in res:
-            type = get_type(event)
-            if type is not None:
-                try:
-                    cc_types[type].append(event.attrib['id'])
-                except KeyError:
-                    cc_types[type] = [event.attrib['id']]
-            s = print_subtree(event, 0)
-            try:
-                trees[s].append(event.attrib['id'])
-            except KeyError:
-                trees[s] = [event.attrib['id']]
-
-        res = et.findall('EVENT')
-        for event in res:
-            type = get_type(event)
-            if type is not None:
-                try:
-                    event_types[type].append(event.attrib['id'])
-                except KeyError:
-                    event_types[type] = [event.attrib['id']]
-            s = print_subtree(event, 0)
-            try:
-                trees[s].append(event.attrib['id'])
-            except KeyError:
-                trees[s] = [event.attrib['id']]
-    """
-"""
-class Pattern(object):
-    def __init__(self, name, nodes, edges):
-        self.name = name
-        self.graph = networkx.DiGraph()
-        for node_id, node_attrs in nodes.items():
-            self.graph.add_node(node_id, **node_attrs)
-        for source_id, out_edges in edges.items():
-            for target_id, edge_attrs in out_edges.items():
-                self.graph.add_edge(source_id, target_id, **edge_attrs)
-
-    def draw(self, fname):
-        ag = networkx.nx_agraph.to_agraph(self.graph)
-        ag.draw(fname, prog='dot')
-
-    def matches(self, other):
-        if networkx.is_isomorphic(self.graph, other):
-            return True
-        return False
-
-patterns = []
-
-#####
-nodes = {'factor': {'type': 'ONT::PROTEIN'},
-         'cc': {'type': 'ONT::CAUSE'},
-         'outcome': {'type': 'ONT::BIOLOGICAL-PROCESS'}}
-edges = {'factor': {},
-         'cc': {'factor': {'type': ':FACTOR'}, 'outcome': {'type': ':OUTCOME'}},
-         'outcome': {}}
-reg_protein_process = Pattern('reg_protein_process', nodes, edges)
-patterns.append(reg_protein_process)
-#####
-
-def node_matches(n1, n2):
-    return n1['type'] == n2['type']
-
-def edge_matches(e1, e2):
-    return e1['type'] == e2['type']
-
-"""
-
