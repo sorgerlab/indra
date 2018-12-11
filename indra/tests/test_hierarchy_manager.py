@@ -91,7 +91,7 @@ def test_get_children():
     # Look up RAF
     rafs = ent_hierarchy.get_children(raf)
     # Should get three family members
-    assert isinstance(rafs, list)
+    assert isinstance(rafs, list), rafs
     assert len(rafs) == 3
     assert unicode_strs(rafs)
     # The lookup of a gene-level entity should not return any additional
@@ -111,6 +111,7 @@ def test_get_children():
     none_children = ent_hierarchy.get_children('')
     assert isinstance(none_children, list)
     assert len(none_children) == 0
+
 
 def test_mtorc_children():
     mtorc1 = 'http://identifiers.org/fplx/mTORC1'

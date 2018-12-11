@@ -13,7 +13,6 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 logger = logging.getLogger(__name__)
 
 
-
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
 
@@ -60,15 +59,21 @@ class HierarchyManager(object):
     def initialize(self):
         if self.build_closure:
             self.build_transitive_closures()
-        # Build reverse lookup dict from the entity hierarchy
-        all_children = set(self.isa_or_partof_closure.keys())
-        for child in all_children:
-            parents = self.get_parents(child)
-            for parent in parents:
-                try:
-                    self._children[parent].append(child)
-                except KeyError:
-                    self._children[parent] = [child]
+
+        # Build reverse lookup dict from the hierarchy
+        # First get all URIs that correspond to parents
+        all_parents = {parent for parents in self.isa_or_partof_closure.values()
+                       for parent in parents}
+        # We use the inverse relation here
+        rel_fun = lambda node, graph: self.isa_or_partof_objects(node,
+                                                                 inverse=True)
+        # Now for each parent we get the inverse transitive closure to
+        # get all its children nodes
+        self._children = {}
+        for parent in all_parents:
+            children = self.graph.transitiveClosure(rel_fun,
+                                                    rdflib.term.URIRef(parent))
+            self._children[parent] = list(set(c.toPython() for c in children))
 
     def extend_with(self, rdf_file):
         """Extend the RDF graph of this HierarchyManager with another RDF file.
