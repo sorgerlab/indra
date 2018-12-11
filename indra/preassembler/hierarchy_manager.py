@@ -13,32 +13,6 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 logger = logging.getLogger(__name__)
 
 
-def isa_objects(node, g, rel, inverse=False):
-    # Normally we look for objects of the relation, but if inverted,
-    # we look for the subject
-    predicate = rdflib.term.URIRef(rel + 'isa')
-    partner_list = g.subjects(predicate, node) if inverse else \
-        g.objects(node, predicate)
-    for o in partner_list:
-        yield o
-
-
-def partof_objects(node, g, rel, inverse=False):
-    # Normally we look for objects of the relation, but if inverted,
-    # we look for the subject
-    predicate = rdflib.term.URIRef(rel + 'partof')
-    partner_list = g.subjects(predicate, node) if inverse else \
-        g.objects(node, predicate)
-    for o in partner_list:
-        yield o
-
-
-def isa_or_partof_objects(node, g, rel, inverse=False):
-    for o in isa_objects(node, g, rel, inverse):
-        yield o
-    for o in partof_objects(node, g, rel, inverse):
-        yield o
-
 
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
@@ -116,16 +90,16 @@ class HierarchyManager(object):
         as values.
         """
         self.component_counter = 0
-        for rel, tc_dict in ((isa_objects, self.isa_closure),
-                             (partof_objects, self.partof_closure),
-                             (isa_or_partof_objects,
+        for rel, tc_dict in ((self.isa_objects, self.isa_closure),
+                             (self.partof_objects, self.partof_closure),
+                             (self.isa_or_partof_objects,
                                  self.isa_or_partof_closure)):
             self.build_transitive_closure(rel, tc_dict)
 
     def build_transitive_closure(self, rel, tc_dict):
         """Build a transitive closure for a given relation in a given dict."""
-        # Make a function with the right relation prefix
-        rel_fun = lambda a, b: rel(a, b, self.relations_prefix)
+        # Make a function with the righ argument structure
+        rel_fun = lambda node, graph: rel(node)
         for x in self.graph.all_nodes():
             rel_closure = self.graph.transitiveClosure(rel_fun, x)
             xs = x.toPython()
@@ -137,7 +111,7 @@ class HierarchyManager(object):
                     tc_dict[xs].append(ys)
                 except KeyError:
                     tc_dict[xs] = [ys]
-                if rel == isa_or_partof_objects:
+                if rel == self.isa_or_partof_objects:
                     self._add_component(xs, ys)
 
     def _add_component(self, xs, ys):
@@ -195,6 +169,30 @@ class HierarchyManager(object):
             return en
         else:
             return None
+
+    def isa_objects(self, node, inverse=False):
+        # Normally we look for objects of the relation, but if inverted,
+        # we look for the subject
+        predicate = rdflib.term.URIRef(self.relations_prefix + 'isa')
+        partner_list = self.graph.subjects(predicate, node) if inverse else \
+            self.graph.objects(node, predicate)
+        for o in partner_list:
+            yield o
+
+    def partof_objects(self, node, inverse=False):
+        # Normally we look for objects of the relation, but if inverted,
+        # we look for the subject
+        predicate = rdflib.term.URIRef(self.relations_prefix + 'partof')
+        partner_list = self.graph.subjects(predicate, node) if inverse else \
+            self.graph.objects(node, predicate)
+        for o in partner_list:
+            yield o
+
+    def isa_or_partof_objects(self, node, inverse=False):
+        for o in self.isa_objects(node, inverse):
+            yield o
+        for o in self.partof_objects(node, inverse):
+            yield o
 
     def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
                                        relation_func):
@@ -282,7 +280,7 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        rel_fun = lambda a, b: isa_objects(a, b, self.relations_prefix)
+        rel_fun = lambda node, graph: self.isa_objects(node)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_closure,
                                                    rel_fun)
@@ -307,7 +305,7 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        rel_fun = lambda a, b: partof_objects(a, b, self.relations_prefix)
+        rel_fun = lambda node, graph: self.partof_objects(node)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.partof_closure,
                                                    rel_fun)
@@ -332,7 +330,7 @@ class HierarchyManager(object):
             True if t1 has a "isa" or "partof" relationship with t2, either
             directly or through a series of intermediates; False otherwise.
         """
-        rel_fun = lambda a, b: isa_or_partof_objects(a, b, self.relations_prefix)
+        rel_fun = lambda node, graph: self.isa_or_partof_objects(node)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_or_partof_closure,
                                                    rel_fun)
