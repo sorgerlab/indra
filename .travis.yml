@@ -41,11 +41,9 @@ install:
   - tar xzf bionetgen.tar.gz
   - export BNGPATH=`pwd`/BioNetGen-2.2.6-stable
   - pip install git+https://github.com/pysb/pysb.git
-  # Biopax/Paxtools dependencies
-  - pip install git+https://github.com/kivy/pyjnius.git@1cbfef
-  # Download a number of useful resource files for testing purposes
   - pip install .[all]
   - cd indra/benchmarks/assembly_eval/batch4
+  # Download a number of useful resource files for testing purposes
   - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz -nv
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
