@@ -155,6 +155,8 @@ def test_get_parents():
     assert ampk in p1
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
     assert len(p2) == 7, p2
+    # This is to make sure we're getting an URI string
+    assert type(p2[0]) == str
     assert ampk not in p2
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
     assert len(p3) == 1

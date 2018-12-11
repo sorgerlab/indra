@@ -393,8 +393,8 @@ class HierarchyManager(object):
         # the uri is definitely in the graph since it has some parents
         if type == 'immediate':
             node = rdflib.term.URIRef(uri)
-            immediate_parents = set(self.isa_or_partof_objects(node))
-            return immediate_parents
+            immediate_parents = list(set(self.isa_or_partof_objects(node)))
+            return [p.toPython() for p in immediate_parents]
         elif type == 'top':
             top_parents = [p for p in all_parents if
                            not self.isa_or_partof_closure.get(p)]
