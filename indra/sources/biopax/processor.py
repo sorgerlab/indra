@@ -242,7 +242,6 @@ class BiopaxProcessor(object):
                     stmt = act_class(subj, obj, 'activity', evidence=ev)
                     self.statements.append(decode_obj(stmt, encoding='utf-8'))
 
-
     def get_regulate_amounts(self):
         """Extract INDRA RegulateAmount Statements from the BioPAX model.
 
@@ -400,10 +399,16 @@ class BiopaxProcessor(object):
             obj_right = []
             for participant in left:
                 agent = self._get_agents_from_entity(participant)
-                obj_left.append(agent)
+                if isinstance(agent, list):
+                    obj_left += agent
+                else:
+                    obj_left.append(agent)
             for participant in right:
                 agent = self._get_agents_from_entity(participant)
-                obj_right.append(agent)
+                if isinstance(agent, list):
+                    obj_right += agent
+                else:
+                    obj_right.append(agent)
             ev = self._get_evidence(control)
             for subj in _listify(subj_list):
                 st = Conversion(subj, obj_left, obj_right, evidence=ev)
