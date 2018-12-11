@@ -16,6 +16,7 @@ from indra import statements as ist
 from indra.databases import context_client, get_identifiers_url
 
 from .sites import *
+from .common import *
 from .export import export_sbgn
 from .base_agents import _BaseAgentSet
 from .preassembler import PysbPreassembler
@@ -41,12 +42,6 @@ statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.IncreaseAmount, ist.DecreaseAmount,
                        ist.Conversion]
 
-def _n(name):
-    """Return valid PySB name."""
-    n = name.encode('ascii', errors='ignore').decode('ascii')
-    n = re.sub('[^A-Za-z0-9_]', '_', n)
-    n = re.sub(r'(^[0-9].*)', r'p\1', n)
-    return n
 
 def _is_whitelisted(stmt):
     """Return True if the statement type is in the whitelist."""
