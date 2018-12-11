@@ -13,20 +13,30 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 logger = logging.getLogger(__name__)
 
 
-def isa_objects(node, g, rel):
-    for o in g.objects(node, rdflib.term.URIRef(rel + 'isa')):
+def isa_objects(node, g, rel, inverse=False):
+    # Normally we look for objects of the relation, but if inverted,
+    # we look for the subject
+    predicate = rdflib.term.URIRef(rel + 'isa')
+    partner_list = g.subjects(predicate, node) if inverse else \
+        g.objects(node, predicate)
+    for o in partner_list:
         yield o
 
 
-def partof_objects(node, g, rel):
-    for o in g.objects(node, rdflib.term.URIRef(rel + 'partof')):
+def partof_objects(node, g, rel, inverse=False):
+    # Normally we look for objects of the relation, but if inverted,
+    # we look for the subject
+    predicate = rdflib.term.URIRef(rel + 'partof')
+    partner_list = g.subjects(predicate, node) if inverse else \
+        g.objects(node, predicate)
+    for o in partner_list:
         yield o
 
 
-def isa_or_partof_objects(node, g, rel):
-    for o in isa_objects(node, g, rel):
+def isa_or_partof_objects(node, g, rel, inverse=False):
+    for o in isa_objects(node, g, rel, inverse):
         yield o
-    for o in partof_objects(node, g, rel):
+    for o in partof_objects(node, g, rel, inverse):
         yield o
 
 
@@ -81,9 +91,10 @@ class HierarchyManager(object):
         for child in all_children:
             parents = self.get_parents(child)
             for parent in parents:
-                children_list = self._children.get(parent, [])
-                children_list.append(child)
-                self._children[parent] = children_list
+                try:
+                    self._children[parent].append(child)
+                except KeyError:
+                    self._children[parent] = [child]
 
     def extend_with(self, rdf_file):
         """Extend the RDF graph of this HierarchyManager with another RDF file.
@@ -109,21 +120,25 @@ class HierarchyManager(object):
                              (partof_objects, self.partof_closure),
                              (isa_or_partof_objects,
                                  self.isa_or_partof_closure)):
-            # Make a function with the right relation prefix
-            rel_fun = lambda a, b: rel(a, b, self.relations_prefix)
-            for x in self.graph.all_nodes():
-                rel_closure = self.graph.transitiveClosure(rel_fun, x)
-                xs = x.toPython()
-                for y in rel_closure:
-                    ys = y.toPython()
-                    if xs == ys:
-                        continue
-                    try:
-                        tc_dict[xs].append(ys)
-                    except KeyError:
-                        tc_dict[xs] = [ys]
-                    if rel == isa_or_partof_objects:
-                        self._add_component(xs, ys)
+            self.build_transitive_closure(rel, tc_dict)
+
+    def build_transitive_closure(self, rel, tc_dict):
+        """Build a transitive closure for a given relation in a given dict."""
+        # Make a function with the right relation prefix
+        rel_fun = lambda a, b: rel(a, b, self.relations_prefix)
+        for x in self.graph.all_nodes():
+            rel_closure = self.graph.transitiveClosure(rel_fun, x)
+            xs = x.toPython()
+            for y in rel_closure:
+                ys = y.toPython()
+                if xs == ys:
+                    continue
+                try:
+                    tc_dict[xs].append(ys)
+                except KeyError:
+                    tc_dict[xs] = [ys]
+                if rel == isa_or_partof_objects:
+                    self._add_component(xs, ys)
 
     def _add_component(self, xs, ys):
         xcomp = self.components.get(xs)
