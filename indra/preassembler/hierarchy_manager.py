@@ -49,19 +49,19 @@ class HierarchyManager(object):
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
-        self.initialize()
-
-    def initialize(self):
         self.isa_closure = {}
         self.partof_closure = {}
         self.isa_or_partof_closure = {}
         self.components = {}
+        self._children = {}
+        self.component_counter = 0
+        self.initialize()
+
+    def initialize(self):
         if self.build_closure:
             self.build_transitive_closures()
         # Build reverse lookup dict from the entity hierarchy
-        self._children = {}
-        all_children = set(self.isa_closure.keys()).union(
-                            self.partof_closure.keys())
+        all_children = set(self.isa_or_partof_closure.keys())
         for child in all_children:
             parents = self.get_parents(child)
             for parent in parents:
@@ -379,8 +379,7 @@ class HierarchyManager(object):
             'immediate': return only the immediate parents;
             'top': return only the highest level parents
         """
-        immediate_parents = set(self.isa_closure.get(uri, [])).union(
-                                set(self.partof_closure.get(uri, [])))
+        immediate_parents = set(self.isa_or_partof_closure.get(uri, []))
         if type == 'immediate':
             return immediate_parents
         all_parents = set()
