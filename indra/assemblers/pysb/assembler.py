@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import math
+import json
 import logging
 import itertools
 from indra.util import fast_deepcopy
@@ -1047,6 +1048,22 @@ class PysbAssembler(object):
             if _is_whitelisted(stmt):
                 self._dispatch(stmt, 'assemble', self.model, self.agent_set)
 
+
+class Policy(object):
+    """Represent a policy that can be associated with a speficic Statement."""
+    def __init__(self, name, parameters=None, sites=None):
+        self.name = name
+        self.parameters = parameters if parameters else []
+        self.sites = sites if sites else []
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        param_str = json.dumps(self.parameters) if self.parameters else ''
+        sites_str = json.dumps(self.sites) if self.sites else ''
+        s = 'Policy(%s%s%s)' % (self.name, param_str, sites_str)
+        return s
 
 # COMPLEX ############################################################
 
