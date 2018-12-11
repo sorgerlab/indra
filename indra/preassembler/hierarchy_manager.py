@@ -365,7 +365,6 @@ class HierarchyManager(object):
             return True
         return False
 
-
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
 
@@ -379,23 +378,22 @@ class HierarchyManager(object):
             'immediate': return only the immediate parents;
             'top': return only the highest level parents
         """
-        immediate_parents = set(self.isa_or_partof_closure.get(uri, []))
-        if type == 'immediate':
-            return immediate_parents
-        all_parents = set()
-        for parent in immediate_parents:
-            grandparents = self.get_parents(parent, type='all')
-            all_parents = all_parents.union(grandparents)
-        all_parents = all_parents.union(immediate_parents)
-        if type == 'all':
+        # First do a quick dict lookup to see if there are any parents
+        all_parents = set(self.isa_or_partof_closure.get(uri, []))
+        # If there are no parents or we are looking for all, we can return here
+        if not all_parents or type == 'all':
             return all_parents
-        else:
-            top_parents = set()
-            for parent in all_parents:
-                if not self.get_parents(parent, type='immediate'):
-                    top_parents.add(parent)
+
+        # If we need immediate parents, we search again, this time knowing that
+        # the uri is definitely in the graph since it has some parents
+        if type == 'immediate':
+            node = rdflib.term.URIRef(uri)
+            immediate_parents = set(self.isa_or_partof_objects(node))
+            return immediate_parents
+        elif type == 'top':
+            top_parents = [p for p in all_parents if
+                           not self.isa_or_partof_closure.get(p)]
             return top_parents
-        return
 
     def get_children(self, uri):
         """Return all (not just immediate) children of a given entry.

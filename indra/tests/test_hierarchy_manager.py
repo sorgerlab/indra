@@ -153,11 +153,11 @@ def test_get_parents():
     assert len(p1) == 8
     assert ampk in p1
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
-    assert len(p2) == 7
-    assert (ampk not in p2)
+    assert len(p2) == 7, p2
+    assert ampk not in p2
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
     assert len(p3) == 1
-    assert (ampk in p3)
+    assert ampk in p3
 
 
 def test_load_eidos_hierarchy():
