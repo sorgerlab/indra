@@ -444,10 +444,9 @@ def update_famplex():
 
 def update_hierarchy_pickle():
     fname = os.path.join(path, 'bio_hierarchies.pkl')
-    hierarchies = get_bio_hierarchies()
+    hierarchies = get_bio_hierarchies(from_pickle=False)
     with open(fname, 'wb') as fh:
         pickle.dump(hierarchies, fh, protocol=2)
-
 
 
 def update_lincs_small_molecules():
