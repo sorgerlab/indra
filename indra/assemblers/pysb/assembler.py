@@ -15,10 +15,9 @@ import pysb.export
 
 from indra import statements as ist
 from indra.databases import context_client, get_identifiers_url
-from indra.preassembler.hierarchy_manager import hierarchies
-from indra.tools.expand_families import _agent_from_uri
 
-from .base_agents import _BaseAgent, _BaseAgentSet
+from .sites import *
+from .base_agents import _BaseAgentSet
 
 # Python 2
 try:
@@ -54,99 +53,6 @@ def _is_whitelisted(stmt):
         if isinstance(stmt, s):
             return True
     return False
-
-# Site/state information ###############################################
-
-abbrevs = {
-    'phosphorylation': 'phospho',
-    'ubiquitination': 'ub',
-    'farnesylation': 'farnesyl',
-    'hydroxylation': 'hydroxyl',
-    'acetylation': 'acetyl',
-    'sumoylation': 'sumo',
-    'glycosylation': 'glycosyl',
-    'methylation': 'methyl',
-    'ribosylation': 'ribosyl',
-    'geranylgeranylation': 'geranylgeranyl',
-    'palmitoylation': 'palmitoyl',
-    'myristoylation': 'myristoyl',
-    'modification': 'mod',
-}
-
-states = {
-    'phosphorylation': ['u', 'p'],
-    'ubiquitination': ['n', 'y'],
-    'farnesylation': ['n', 'y'],
-    'hydroxylation': ['n', 'y'],
-    'acetylation': ['n', 'y'],
-    'sumoylation': ['n', 'y'],
-    'glycosylation': ['n', 'y'],
-    'methylation': ['n', 'y'],
-    'geranylgeranylation': ['n', 'y'],
-    'palmitoylation': ['n', 'y'],
-    'myristoylation': ['n', 'y'],
-    'ribosylation': ['n', 'y'],
-    'modification': ['n', 'y'],
-}
-
-mod_acttype_map = {
-    ist.Phosphorylation: 'kinase',
-    ist.Dephosphorylation: 'phosphatase',
-    ist.Hydroxylation: 'catalytic',
-    ist.Dehydroxylation: 'catalytic',
-    ist.Sumoylation: 'catalytic',
-    ist.Desumoylation: 'catalytic',
-    ist.Acetylation: 'catalytic',
-    ist.Deacetylation: 'catalytic',
-    ist.Glycosylation: 'catalytic',
-    ist.Deglycosylation: 'catalytic',
-    ist.Ribosylation: 'catalytic',
-    ist.Deribosylation: 'catalytic',
-    ist.Ubiquitination: 'catalytic',
-    ist.Deubiquitination: 'catalytic',
-    ist.Farnesylation: 'catalytic',
-    ist.Defarnesylation: 'catalytic',
-    ist.Palmitoylation: 'catalytic',
-    ist.Depalmitoylation: 'catalytic',
-    ist.Myristoylation: 'catalytic',
-    ist.Demyristoylation: 'catalytic',
-    ist.Geranylgeranylation: 'catalytic',
-    ist.Degeranylgeranylation: 'catalytic',
-    ist.Methylation: 'catalytic',
-    ist.Demethylation: 'catalytic',
-}
-
-
-def get_binding_site_name(agent):
-    """Return a binding site name from a given agent."""
-    # Try to construct a binding site name based on parent
-    grounding = agent.get_grounding()
-    if grounding != (None, None):
-        uri = hierarchies['entity'].get_uri(grounding[0], grounding[1])
-        # Get highest level parents in hierarchy
-        parents = hierarchies['entity'].get_parents(uri, 'top')
-        if parents:
-            # Choose the first parent if there are more than one
-            parent_uri = sorted(list(parents))[0]
-            parent_agent = _agent_from_uri(parent_uri)
-            binding_site = _n(parent_agent.name).lower()
-            return binding_site
-    # Fall back to Agent's own name if one from parent can't be constructed
-    binding_site = _n(agent.name).lower()
-    return binding_site
-
-
-def get_mod_site_name(mod_type, residue, position):
-    """Return site names for a modification."""
-    names = []
-    if residue is None:
-        mod_str = abbrevs[mod_type]
-    else:
-        mod_str = residue
-    mod_pos = position if position is not None else ''
-    name = ('%s%s' % (mod_str, mod_pos))
-    return name
-
 
 # PySB model elements ##################################################
 
