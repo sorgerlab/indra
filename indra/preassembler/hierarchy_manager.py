@@ -13,23 +13,6 @@ from indra.preassembler.make_entity_hierarchy import ns_map
 logger = logging.getLogger(__name__)
 
 
-def isa_objects(node, g, rel):
-    for o in g.objects(node, rdflib.term.URIRef(rel + 'isa')):
-        yield o
-
-
-def partof_objects(node, g, rel):
-    for o in g.objects(node, rdflib.term.URIRef(rel + 'partof')):
-        yield o
-
-
-def isa_or_partof_objects(node, g, rel):
-    for o in isa_objects(node, g, rel):
-        yield o
-    for o in partof_objects(node, g, rel):
-        yield o
-
-
 class HierarchyManager(object):
     """Store hierarchical relationships between different types of entities.
 
@@ -65,25 +48,32 @@ class HierarchyManager(object):
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
-        self.initialize()
-
-    def initialize(self):
         self.isa_closure = {}
         self.partof_closure = {}
         self.isa_or_partof_closure = {}
         self.components = {}
+        self._children = {}
+        self.component_counter = 0
+        self.initialize()
+
+    def initialize(self):
         if self.build_closure:
             self.build_transitive_closures()
-        # Build reverse lookup dict from the entity hierarchy
+
+        # Build reverse lookup dict from the hierarchy
+        # First get all URIs that correspond to parents
+        all_parents = {parent for parents in self.isa_or_partof_closure.values()
+                       for parent in parents}
+        # We use the inverse relation here
+        rel_fun = lambda node, graph: self.isa_or_partof_objects(node,
+                                                                 inverse=True)
+        # Now for each parent we get the inverse transitive closure to
+        # get all its children nodes
         self._children = {}
-        all_children = set(self.isa_closure.keys()).union(
-                            self.partof_closure.keys())
-        for child in all_children:
-            parents = self.get_parents(child)
-            for parent in parents:
-                children_list = self._children.get(parent, [])
-                children_list.append(child)
-                self._children[parent] = children_list
+        for parent in all_parents:
+            children = self.graph.transitiveClosure(rel_fun,
+                                                    rdflib.term.URIRef(parent))
+            self._children[parent] = list(set(c.toPython() for c in children))
 
     def extend_with(self, rdf_file):
         """Extend the RDF graph of this HierarchyManager with another RDF file.
@@ -105,25 +95,29 @@ class HierarchyManager(object):
         as values.
         """
         self.component_counter = 0
-        for rel, tc_dict in ((isa_objects, self.isa_closure),
-                             (partof_objects, self.partof_closure),
-                             (isa_or_partof_objects,
+        for rel, tc_dict in ((self.isa_objects, self.isa_closure),
+                             (self.partof_objects, self.partof_closure),
+                             (self.isa_or_partof_objects,
                                  self.isa_or_partof_closure)):
-            # Make a function with the right relation prefix
-            rel_fun = lambda a, b: rel(a, b, self.relations_prefix)
-            for x in self.graph.all_nodes():
-                rel_closure = self.graph.transitiveClosure(rel_fun, x)
-                xs = x.toPython()
-                for y in rel_closure:
-                    ys = y.toPython()
-                    if xs == ys:
-                        continue
-                    try:
-                        tc_dict[xs].append(ys)
-                    except KeyError:
-                        tc_dict[xs] = [ys]
-                    if rel == isa_or_partof_objects:
-                        self._add_component(xs, ys)
+            self.build_transitive_closure(rel, tc_dict)
+
+    def build_transitive_closure(self, rel, tc_dict):
+        """Build a transitive closure for a given relation in a given dict."""
+        # Make a function with the righ argument structure
+        rel_fun = lambda node, graph: rel(node)
+        for x in self.graph.all_nodes():
+            rel_closure = self.graph.transitiveClosure(rel_fun, x)
+            xs = x.toPython()
+            for y in rel_closure:
+                ys = y.toPython()
+                if xs == ys:
+                    continue
+                try:
+                    tc_dict[xs].append(ys)
+                except KeyError:
+                    tc_dict[xs] = [ys]
+                if rel == self.isa_or_partof_objects:
+                    self._add_component(xs, ys)
 
     def _add_component(self, xs, ys):
         xcomp = self.components.get(xs)
@@ -180,6 +174,30 @@ class HierarchyManager(object):
             return en
         else:
             return None
+
+    def isa_objects(self, node, inverse=False):
+        # Normally we look for objects of the relation, but if inverted,
+        # we look for the subject
+        predicate = rdflib.term.URIRef(self.relations_prefix + 'isa')
+        partner_list = self.graph.subjects(predicate, node) if inverse else \
+            self.graph.objects(node, predicate)
+        for o in partner_list:
+            yield o
+
+    def partof_objects(self, node, inverse=False):
+        # Normally we look for objects of the relation, but if inverted,
+        # we look for the subject
+        predicate = rdflib.term.URIRef(self.relations_prefix + 'partof')
+        partner_list = self.graph.subjects(predicate, node) if inverse else \
+            self.graph.objects(node, predicate)
+        for o in partner_list:
+            yield o
+
+    def isa_or_partof_objects(self, node, inverse=False):
+        for o in self.isa_objects(node, inverse):
+            yield o
+        for o in self.partof_objects(node, inverse):
+            yield o
 
     def directly_or_indirectly_related(self, ns1, id1, ns2, id2, closure_dict,
                                        relation_func):
@@ -267,7 +285,7 @@ class HierarchyManager(object):
             True if t1 has an "isa" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        rel_fun = lambda a, b: isa_objects(a, b, self.relations_prefix)
+        rel_fun = lambda node, graph: self.isa_objects(node)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_closure,
                                                    rel_fun)
@@ -292,7 +310,7 @@ class HierarchyManager(object):
             True if t1 has a "partof" relationship with t2, either directly or
             through a series of intermediates; False otherwise.
         """
-        rel_fun = lambda a, b: partof_objects(a, b, self.relations_prefix)
+        rel_fun = lambda node, graph: self.partof_objects(node)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.partof_closure,
                                                    rel_fun)
@@ -317,7 +335,7 @@ class HierarchyManager(object):
             True if t1 has a "isa" or "partof" relationship with t2, either
             directly or through a series of intermediates; False otherwise.
         """
-        rel_fun = lambda a, b: isa_or_partof_objects(a, b, self.relations_prefix)
+        rel_fun = lambda node, graph: self.isa_or_partof_objects(node)
         return self.directly_or_indirectly_related(ns1, id1, ns2, id2,
                                                    self.isa_or_partof_closure,
                                                    rel_fun)
@@ -352,7 +370,6 @@ class HierarchyManager(object):
             return True
         return False
 
-
     def get_parents(self, uri, type='all'):
         """Return parents of a given entry.
 
@@ -366,24 +383,22 @@ class HierarchyManager(object):
             'immediate': return only the immediate parents;
             'top': return only the highest level parents
         """
-        immediate_parents = set(self.isa_closure.get(uri, [])).union(
-                                set(self.partof_closure.get(uri, [])))
-        if type == 'immediate':
-            return immediate_parents
-        all_parents = set()
-        for parent in immediate_parents:
-            grandparents = self.get_parents(parent, type='all')
-            all_parents = all_parents.union(grandparents)
-        all_parents = all_parents.union(immediate_parents)
-        if type == 'all':
+        # First do a quick dict lookup to see if there are any parents
+        all_parents = set(self.isa_or_partof_closure.get(uri, []))
+        # If there are no parents or we are looking for all, we can return here
+        if not all_parents or type == 'all':
             return all_parents
-        else:
-            top_parents = set()
-            for parent in all_parents:
-                if not self.get_parents(parent, type='immediate'):
-                    top_parents.add(parent)
+
+        # If we need immediate parents, we search again, this time knowing that
+        # the uri is definitely in the graph since it has some parents
+        if type == 'immediate':
+            node = rdflib.term.URIRef(uri)
+            immediate_parents = list(set(self.isa_or_partof_objects(node)))
+            return [p.toPython() for p in immediate_parents]
+        elif type == 'top':
+            top_parents = [p for p in all_parents if
+                           not self.isa_or_partof_closure.get(p)]
             return top_parents
-        return
 
     def get_children(self, uri):
         """Return all (not just immediate) children of a given entry.

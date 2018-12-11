@@ -2,7 +2,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from copy import deepcopy
-from indra.preassembler.hierarchy_manager import hierarchies, HierarchyManager
+from indra.preassembler.hierarchy_manager import hierarchies, \
+    HierarchyManager, get_bio_hierarchies
 from indra.statements import get_valid_location, InvalidLocationError, Agent
 from indra.util import unicode_strs
 
@@ -90,7 +91,7 @@ def test_get_children():
     # Look up RAF
     rafs = ent_hierarchy.get_children(raf)
     # Should get three family members
-    assert isinstance(rafs, list)
+    assert isinstance(rafs, list), rafs
     assert len(rafs) == 3
     assert unicode_strs(rafs)
     # The lookup of a gene-level entity should not return any additional
@@ -110,6 +111,7 @@ def test_get_children():
     none_children = ent_hierarchy.get_children('')
     assert isinstance(none_children, list)
     assert len(none_children) == 0
+
 
 def test_mtorc_children():
     mtorc1 = 'http://identifiers.org/fplx/mTORC1'
@@ -152,11 +154,13 @@ def test_get_parents():
     assert len(p1) == 8
     assert ampk in p1
     p2 = ent_hierarchy.get_parents(prkaa1, 'immediate')
-    assert len(p2) == 7
-    assert (ampk not in p2)
+    assert len(p2) == 7, p2
+    # This is to make sure we're getting an URI string
+    assert unicode_strs(p2)
+    assert ampk not in p2
     p3 = ent_hierarchy.get_parents(prkaa1, 'top')
     assert len(p3) == 1
-    assert (ampk in p3)
+    assert ampk in p3
 
 
 def test_load_eidos_hierarchy():
@@ -212,6 +216,7 @@ def test_load_hume_hierarchy():
     assert hume_isa('event/healthcare/human_disease',
                    'event/healthcare')
 
+
 def test_same_components():
     uri_prkag1 = ent_hierarchy.get_uri('HGNC', 'PRKAG1')
     uri_ampk = ent_hierarchy.get_uri('FPLX', 'AMPK')
@@ -219,3 +224,10 @@ def test_same_components():
     c1 = ent_hierarchy.components[uri_prkag1]
     c2 = ent_hierarchy.components[uri_ampk]
     assert c1 == c2
+
+
+def test_bio_hierarchy_pickles():
+    h1 = get_bio_hierarchies()
+    h2 = get_bio_hierarchies(from_pickle=False)
+    for key in h1.keys():
+        assert len(h1[key].graph) == len(h2[key].graph)
