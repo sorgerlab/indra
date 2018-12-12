@@ -449,20 +449,25 @@ class UnknownPolicyError(Exception):
 class PysbAssembler(object):
     """Assembler creating a PySB model from a set of INDRA Statements.
 
+    Parameters
+    ----------
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements to be assembled.
+
     Attributes
     ----------
     policies : dict
         A dictionary of policies that defines assembly policies for Statement
         types. It is assigned in the constructor.
-    statements : list
+    statements : list[indra.statements.Statement]
         A list of INDRA statements to be assembled.
     model : pysb.Model
         A PySB model object that is assembled by this class.
     agent_set : _BaseAgentSet
         A set of BaseAgents used during the assembly process.
     """
-    def __init__(self):
-        self.statements = []
+    def __init__(self, statements=None):
+        self.statements = statements if statements else []
         self.agent_set = None
         self.model = None
         self.default_initial_amount = 10000.0

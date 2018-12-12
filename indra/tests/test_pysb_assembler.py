@@ -3,11 +3,12 @@ from builtins import dict, str
 import xml.etree.ElementTree as ET
 from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
+from indra.assemblers.pysb.assembler import Policy
 from indra.assemblers.pysb.preassembler import PysbPreassembler
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
 from pysb.testing import with_model
-
+from nose.tools import raises
 
 def test_pysb_assembler_complex1():
     member1 = Agent('BRAF')
@@ -1196,16 +1197,14 @@ def test_pysb_preassembler_replace_activities3():
 
 def test_phos_michaelis_menten():
     stmt = Phosphorylation(Agent('MEK'), Agent('ERK'))
-    pa = PysbAssembler()
-    pa.add_statements([stmt])
+    pa = PysbAssembler([stmt])
     pa.make_model(policies='michaelis_menten')
     assert len(pa.model.parameters) == 4
 
 
 def test_deubiq_michaelis_menten():
     stmt = Deubiquitination(Agent('MEK'), Agent('ERK'))
-    pa = PysbAssembler()
-    pa.add_statements([stmt])
+    pa = PysbAssembler([stmt])
     pa.make_model(policies='michaelis_menten')
     assert len(pa.model.parameters) == 4
 
@@ -1213,16 +1212,14 @@ def test_deubiq_michaelis_menten():
 def test_act_michaelis_menten():
     stmt = Activation(Agent('MEK'), Agent('ERK'))
     stmt2 = Inhibition(Agent('DUSP'), Agent('ERK'))
-    pa = PysbAssembler()
-    pa.add_statements([stmt, stmt2])
+    pa = PysbAssembler([stmt, stmt2])
     pa.make_model(policies='michaelis_menten')
     assert len(pa.model.parameters) == 7
 
 
 def test_increaseamount_hill():
     stmt = IncreaseAmount(Agent('TP53'), Agent('MDM2'))
-    pa = PysbAssembler()
-    pa.add_statements([stmt])
+    pa = PysbAssembler([stmt])
     pa.make_model(policies='hill')
     pa.save_model()
     assert len(pa.model.parameters) == 5
@@ -1230,8 +1227,7 @@ def test_increaseamount_hill():
 
 def test_convert_nosubj():
     stmt = Conversion(None, [Agent('PIP2')], [Agent('PIP3')])
-    pa = PysbAssembler()
-    pa.add_statements([stmt])
+    pa = PysbAssembler([stmt])
     pa.make_model()
     assert len(pa.model.parameters) == 3
     assert len(pa.model.rules) == 1
@@ -1240,8 +1236,7 @@ def test_convert_nosubj():
 
 def test_convert_subj():
     stmt = Conversion(Agent('PIK3CA'), [Agent('PIP2')], [Agent('PIP3')])
-    pa = PysbAssembler()
-    pa.add_statements([stmt])
+    pa = PysbAssembler([stmt])
     pa.make_model()
     assert len(pa.model.parameters) == 4
     assert len(pa.model.rules) == 1
@@ -1261,3 +1256,18 @@ def test_activity_agent_rule_name():
     assert pa.model.rules[0].name == \
         'BRAF_kin_phosphorylation_MAP2K1_act_inact_phospho', \
         pa.model.rules[0].name
+
+
+def test_policy_object():
+    stmt = Phosphorylation(Agent('a'), Agent('b'))
+    pa = PysbAssembler([stmt])
+    model = pa.make_model(policies={stmt.uuid: Policy('two_step')})
+    assert len(model.rules) == 3
+
+
+@raises(pa.UnknownPolicyError)
+def test_policy_object_invalid():
+    stmt = Phosphorylation(Agent('a'), Agent('b'))
+    pa = PysbAssembler([stmt])
+    model = pa.make_model(policies={'xyz': Policy('two_step')})
+    assert len(model.rules) == 3
