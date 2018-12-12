@@ -1556,8 +1556,8 @@ for mc, rate_law in itertools.product(mod_classes, rate_laws):
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
     code = '{mc}_assemble_{rate_law} = ' \
-            'lambda a, b, c: modification_assemble_' \
-            'one_step(a, b, c, "{rate_law}")'.format(
+            'lambda a, b, c, d: modification_assemble_' \
+            'one_step(a, b, c, d, "{rate_law}")'.format(
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
 
@@ -1566,8 +1566,8 @@ for mc, rate_law in itertools.product(demod_classes, rate_laws):
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
     code = '{mc}_assemble_{rate_law} = ' \
-            'lambda a, b, c: demodification_assemble_' \
-            'one_step(a, b, c, "{rate_law}")'.format(
+            'lambda a, b, c, d: demodification_assemble_' \
+            'one_step(a, b, c, d, "{rate_law}")'.format(
                     mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
 
@@ -2179,8 +2179,8 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, parameters, rate_la
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
 increaseamount_monomers_hill = increaseamount_monomers_one_step
-increaseamount_assemble_hill = lambda a, b, c: \
-        increaseamount_assemble_one_step(a, b, c, 'hill')
+increaseamount_assemble_hill = lambda a, b, c, d: \
+        increaseamount_assemble_one_step(a, b, c, d, 'hill')
 
 
 # INFLUENCE ###################################################
