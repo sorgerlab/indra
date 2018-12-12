@@ -820,7 +820,20 @@ class PysbAssembler(object):
 
 
 class Policy(object):
-    """Represent a policy that can be associated with a speficic Statement."""
+    """Represent a policy that can be associated with a speficic Statement.
+
+    Attributes
+    ----------
+    name : str
+        The name of the policy, e.g. one_step
+    parameters : dict[str, Param]
+        A dict of parameters where each key identifies the role
+        of the parameter with respect to the policy, e.g. 'Km',
+        and the value is a Param object.
+    sites : dict
+        A dict of site names corresponding to the interactions
+        induced by the policy.
+    """
     def __init__(self, name, parameters=None, sites=None):
         self.name = name
         self.parameters = parameters if parameters else {}
@@ -834,6 +847,29 @@ class Policy(object):
         sites_str = json.dumps(self.sites) if self.sites else ''
         s = 'Policy(%s%s%s)' % (self.name, param_str, sites_str)
         return s
+
+
+class Param(object):
+    """Represent a parameter as an input to the assembly process.
+
+    Attributes
+    ----------
+    name : str
+        The name of the parameter
+    value : float
+        The value of the parameter
+    unique : Optional[bool]
+        If True, a suffix is added to the end of the
+        parameter name upon assembly to make sure the parameter
+        is unique in the model. If False, the name attribute
+        is used as is. Default: False
+    """
+    def __init__(self, name, value, unique=False):
+        self.name = name
+        self.value = value
+        self.unique = unique
+
+
 
 # COMPLEX ############################################################
 
@@ -1059,13 +1095,6 @@ def modification_monomers_two_step(stmt, agent_set):
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(stmt.sub))
     sub.create_site(get_binding_site_name(stmt.enz))
-
-
-class Param(object):
-    def __init__(self, name, value, unique=False):
-        self.name = name
-        self.value = value
-        self.unique = unique
 
 
 def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
