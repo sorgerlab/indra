@@ -1052,19 +1052,14 @@ def complex_assemble_multi_way(stmt, model, agent_set, parameters):
 complex_assemble_default = complex_assemble_one_step
 
 # MODIFICATION ###################################################
-
 def modification_monomers_interactions_only(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
-    act_type = mod_acttype_map[stmt.__class__]
-    active_site = act_type
-    enz.create_site(active_site)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    # See NOTE in monomers_one_step, below
-    mod_condition_name = stmt.__class__.__name__.lower()
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
+    act_type = mod_acttype_map[stmt.__class__]
+    enz.create_site(act_type)
+    sub.create_mod_site(stmt._get_mod_condition())
 
 
 def modification_monomers_one_step(stmt, agent_set):
@@ -1395,27 +1390,14 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
 
 
 # DEMODIFICATION #####################################################
-
-def demodification_monomers_interactions_only(stmt, agent_set):
-    if stmt.enz is None:
-        return
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    sub = agent_set.get_create_base_agent(stmt.sub)
-    active_site = mod_acttype_map[stmt.__class__]
-    enz.create_site(active_site)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
-
+demodification_monomers_interactions_only = modification_monomers_interactions_only()
 
 def demodification_monomers_one_step(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
+    sub.create_mod_site(stmt._get_mod_condition())
 
 
 def demodification_monomers_two_step(stmt, agent_set):
@@ -1423,9 +1405,7 @@ def demodification_monomers_two_step(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
+    sub.create_mod_site(stmt._get_mod_condition())
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(stmt.sub))
     sub.create_site(get_binding_site_name(stmt.enz))
@@ -1439,10 +1419,8 @@ def demodification_assemble_interactions_only(stmt, model, agent_set, parameters
     sub = model.monomers[stmt.sub.name]
     active_site = mod_acttype_map[stmt.__class__]
     # See NOTE in Phosphorylation.monomers_one_step
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-    demod_site = get_mod_site_name(mod_condition_name,
-                                   stmt.residue, stmt.position)
+    mc = stmt._get_mod_condition()
+    demod_site = get_mod_site_name(stmt._get_mod_condition())
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
