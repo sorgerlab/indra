@@ -1091,32 +1091,23 @@ def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
     kf_param = parameters.get('kf', Param('kf_bind', 1.0))
-    kr_param = parameters.get('kr', Param('kf_bind', 1.0))
     kf_bind = get_create_parameter(model, kf_param.name, kf_param.value,
                                    kf_param.unique)
-    kr_bind = get_create_parameter(model, kf_param.name, kf_param.value,
-                                   kf_param.unique)
-
     enz = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
-
-    # See NOTE in monomers_one_step
-    mod_condition_name = stmt.__class__.__name__.lower()
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    active_site = mod_acttype_map[stmt.__class__]
+    # See NOTE in Phosphorylation.monomers_one_step
+    mod_site = get_mod_site_name(stmt._get_mod_condition())
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-
-    rule_name = '%s_%s_%s_%s' % (rule_enz_str, mod_condition_name,
-                                 rule_sub_str, mod_site)
-    active_site = mod_acttype_map[stmt.__class__]
-    # Create a rule specifying that the substrate binds to the kinase at
-    # its active site
-    lhs = enz(**{active_site: None}) + sub(**{mod_site: None})
-    rhs = enz(**{active_site: 1}) % sub(**{mod_site: 1})
-    r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
-    add_rule_to_model(model, r_fwd)
+    stmt_type_str = stmt.__class__.__name__.lower()
+    r = Rule('%s_%s_%s_%s' %
+             (rule_enz_str, stmt_type_str, rule_sub_str, mod_site),
+             enz(**{active_site: None}) + sub(**{mod_site: None}) >>
+             enz(**{active_site: 1}) % sub(**{mod_site: 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
 
 
 def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
@@ -1388,27 +1379,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
 demodification_monomers_interactions_only = modification_monomers_interactions_only
 demodification_monomers_one_step = modification_monomers_one_step
 demodification_monomers_two_step = modification_monomers_two_step
-
-def demodification_assemble_interactions_only(stmt, model, agent_set, parameters):
-    if stmt.enz is None:
-        return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    enz = model.monomers[stmt.enz.name]
-    sub = model.monomers[stmt.sub.name]
-    active_site = mod_acttype_map[stmt.__class__]
-    # See NOTE in Phosphorylation.monomers_one_step
-    mc = stmt._get_mod_condition()
-    demod_site = get_mod_site_name(stmt._get_mod_condition())
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    r = Rule('%s_%s_%s_%s' %
-             (rule_enz_str, demod_condition_name, rule_sub_str, demod_site),
-             enz(**{active_site: None}) + sub(**{demod_site: None}) >>
-             enz(**{active_site: 1}) % sub(**{demod_site: 1}),
-             kf_bind)
-    add_rule_to_model(model, r)
-
+demodification_assemble_interactions_only = modification_assemble_interactions_only
 
 def demodification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     if stmt.enz is None:
