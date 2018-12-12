@@ -788,14 +788,16 @@ class PysbAssembler(object):
         of assembly. It then calls that function to perform the assembly
         task."""
         policy = self.processed_policies[stmt.uuid]
-        class_name = stmt.__class__.__name__
-        func_name = '%s_%s_%s' % (class_name.lower(), stage, policy.name)
+        class_name = stmt.__class__.__name__.lower()
+        if isinstance(stmt, ist.RemoveModification):
+            class_name = ist.modclass_to_modtype[stmt.__class__]
+        func_name = '%s_%s_%s' % (class_name, stage, policy.name)
         func = globals().get(func_name)
         if func is None:
             # The specific policy is not implemented for the
             # given statement type.
             # We try to apply a default policy next.
-            func_name = '%s_%s_default' % (class_name.lower(), stage)
+            func_name = '%s_%s_default' % (class_name, stage)
             func = globals().get(func_name)
             if func is None:
                 # The given statement type doesn't have a default
@@ -1380,22 +1382,11 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
     add_rule_to_model(model, r, anns)
 
 
-# DEMODIFICATION #####################################################
-demodification_monomers_interactions_only = modification_monomers_interactions_only
-demodification_monomers_one_step = modification_monomers_one_step
-demodification_monomers_two_step = modification_monomers_two_step
-demodification_monomers_default = demodification_monomers_one_step
-demodification_assemble_interactions_only = modification_assemble_interactions_only
-demodification_assemble_one_step = modification_assemble_one_step
-demodification_assemble_two_step = modification_assemble_two_step
-demodification_assemble_default = demodification_assemble_one_step
-
 # Map specific modification monomer/assembly functions to the generic
 # Modification assembly function
 policies = ['interactions_only', 'one_step', 'two_step', 'default']
 
-mod_classes = [cls for cls in ist.Modification.__subclasses__()]
-for mc, func_type, pol in itertools.product(mod_classes,
+for mc, func_type, pol in itertools.product(ist.modclass_to_modtype.keys(),
                                             ('monomers', 'assemble'),
                                             policies):
     code = '{mc}_{func_type}_{pol} = ' \
@@ -1405,7 +1396,8 @@ for mc, func_type, pol in itertools.product(mod_classes,
     exec(code)
 
 rate_laws = ['michaelis_menten']
-for mc, rate_law in itertools.product(mod_classes, rate_laws):
+for mc, rate_law in itertools.product(ist.modclass_to_modtype.keys(),
+                                      rate_laws):
     code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
