@@ -489,10 +489,18 @@ class PysbAssembler(object):
             for stmt in self.statements:
                 processed_policies[stmt.uuid] = policies
         else:
+            other_policy = policies.get('other', 'default')
+            for stmt in self.statements:
+                processed_policies[stmt.uuid] = other_policy
             for k, v in policies.items():
-                # Assume this is a policy like
-                # {'Phosphorylation': 'two-step'}
-                if isinstance(v, basestring):
+                if k == 'other':
+                    continue
+                # This means it's a UUID
+                if k in processed_policies:
+                    processed_policies[k] = v
+                else:
+                    # Assume this is a policy like
+                    # {'Phosphorylation': 'two-step'}
                     try:
                         stmt_type = ist.get_statement_by_name(k)
                         for stmt in self.statements:
@@ -501,13 +509,6 @@ class PysbAssembler(object):
                     except ist.NotAStatementName:
                         msg = 'Invalid policy entry for key %s' % k
                         raise UnknownPolicyError(msg)
-                    # Here we assume the key is a UUID
-                    else:
-                        if k not in processed_policies:
-                            msg = 'Policy key not a valid Statement UUID'
-                            raise UnknownPolicyError(msg)
-                        else:
-                            processed_policies[k] = v
         return processed_policies
 
     def make_model(self, policies=None, initial_conditions=True,
