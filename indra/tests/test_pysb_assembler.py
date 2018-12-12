@@ -267,9 +267,9 @@ def test_pysb_assembler_phos_twostep1():
     enz = Agent('BRAF')
     sub = Agent('MEK1')
     stmt = Phosphorylation(enz, sub, 'serine', '222')
-    pa = PysbAssembler(policies='two_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='two_step')
     assert len(model.rules)==3
     assert len(model.monomers)==2
 
@@ -310,9 +310,9 @@ def test_pysb_assembler_dephos_twostep1():
     phos = Agent('PP2A')
     sub = Agent('MEK1')
     stmt = Dephosphorylation(phos, sub, 'serine', '222')
-    pa = PysbAssembler(policies='two_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='two_step')
     assert len(model.rules)==3
     assert len(model.monomers)==2
 
@@ -324,9 +324,9 @@ def test_statement_specific_policies():
     stmt2 = Dephosphorylation(phos, sub, 'serine', '222')
     policies = {'Phosphorylation': 'two_step',
                 'Dephosphorylation': 'interactions_only'}
-    pa = PysbAssembler(policies=policies)
+    pa = PysbAssembler()
     pa.add_statements([stmt1, stmt2])
-    model = pa.make_model()
+    model = pa.make_model(policies=policies)
     assert len(model.rules)==4
     assert len(model.monomers)==3
 
@@ -338,9 +338,9 @@ def test_unspecified_statement_policies():
     stmt2 = Dephosphorylation(phos, sub, 'serine', '222')
     policies = {'Phosphorylation': 'two_step',
                 'other': 'interactions_only'}
-    pa = PysbAssembler(policies=policies)
+    pa = PysbAssembler()
     pa.add_statements([stmt1, stmt2])
-    model = pa.make_model()
+    model = pa.make_model(policies=policies)
     assert len(model.rules)==4
     assert len(model.monomers)==3
 
@@ -348,9 +348,9 @@ def test_activity_activity():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
     stmt = Activation(subj, obj)
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
@@ -358,9 +358,9 @@ def test_activity_activity2():
     subj = Agent('KRAS')
     obj = Agent('BRAF')
     stmt = Activation(subj, obj)
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
@@ -368,9 +368,9 @@ def test_activity_activity2():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
     stmt = Inhibition(subj, obj)
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
@@ -378,9 +378,9 @@ def test_activity_activity3():
     subj = Agent('Vemurafenib')
     obj = Agent('BRAF')
     stmt = Inhibition(subj, obj)
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
@@ -415,9 +415,9 @@ def test_neg_act_mod():
     st1 = ActiveForm(Agent('BRAF', mods=[mc]), 'activity', True)
     braf = Agent('BRAF', activity=ActivityCondition('active', True))
     st2 = Phosphorylation(braf, Agent('MAP2K2'))
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st1, st2])
-    pa.make_model()
+    pa.make_model(policies='one_step')
     assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
@@ -427,9 +427,9 @@ def test_neg_act_mod():
 def test_pos_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', True)
     st = Phosphorylation(Agent('BRAF', mods=[mc]), Agent('MAP2K2'))
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st])
-    pa.make_model()
+    pa.make_model(policies='one_step')
     assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
@@ -439,9 +439,9 @@ def test_pos_agent_mod():
 def test_neg_agent_mod():
     mc = ModCondition('phosphorylation', 'serine', '123', False)
     st = Phosphorylation(Agent('BRAF', mods=[mc]), Agent('MAP2K2'))
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st])
-    pa.make_model()
+    pa.make_model(policies='one_step')
     assert len(pa.model.rules) == 1
     r = pa.model.rules[0]
     braf = r.reactant_pattern.complex_patterns[0].monomer_patterns[0]
@@ -690,9 +690,9 @@ def test_decreaseamount_one_step():
     obj = Agent('BRAF')
     st1 = DecreaseAmount(subj, obj)
     st2 = DecreaseAmount(None, obj)
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st1, st2])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     assert len(model.rules)==2
     assert len(model.monomers)==2
 
@@ -701,9 +701,9 @@ def test_decreaseamount_interactions_only():
     obj = Agent('BRAF')
     st1 = DecreaseAmount(subj, obj)
     st2 = DecreaseAmount(None, obj)
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([st1, st2])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
@@ -712,9 +712,9 @@ def test_increaseamount_one_step():
     obj = Agent('BRAF')
     st1 = IncreaseAmount(subj, obj)
     st2 = IncreaseAmount(None, obj)
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st1, st2])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     assert len(model.rules)==2
     assert len(model.monomers)==2
 
@@ -723,9 +723,9 @@ def test_increaseamount_interactions_only():
     obj = Agent('BRAF')
     st1 = IncreaseAmount(subj, obj)
     st2 = IncreaseAmount(None, obj)
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([st1, st2])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
@@ -734,34 +734,34 @@ def test_missing_catalytic_default_site():
     c3 = Agent('CASP3')
     stmt = Activation(c8, c3, 'catalytic')
     # Interactions only
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     # One step
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     # Two step
-    pa = PysbAssembler(policies='two_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='two_step')
 
 def test_missing_transcription_default_site():
     p53 = Agent('TP53', activity=ActivityCondition('transcription', True))
     bax = Agent('BAX')
     stmt = Activation(p53, bax)
     # Interactions only
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     # One step
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     # Two step
-    pa = PysbAssembler(policies='two_step')
+    pa = PysbAssembler()
     pa.add_statements([stmt])
-    model = pa.make_model()
+    model = pa.make_model(policies='two_step')
 
 def test_translocation_loc_special_char():
     st = Translocation(Agent('KSR1'), 'cytoplasm', 'cell surface')
@@ -854,9 +854,9 @@ def test_phospho_assemble_grounding():
     st1 = Phosphorylation(a, b, 'T', '185')
     # One step
     def check_policy(policy):
-        pysb_asmb = pa.PysbAssembler(policies=policy)
+        pysb_asmb = pa.PysbAssembler()
         pysb_asmb.add_statements([st1])
-        model = pysb_asmb.make_model()
+        model = pysb_asmb.make_model(policies=policy)
         mps = list(pa.grounded_monomer_patterns(model, b_phos))
         assert len(mps) == 1
         assert mps[0].monomer.name == 'ERK2'
@@ -873,9 +873,9 @@ def test_phospho_mod_grounding():
     a_phos = Agent('Foo', mods=[ModCondition('phosphorylation', None, None)],
                     db_refs={'HGNC': '6840'})
     st1 = Phosphorylation(a, b, 'T', '185')
-    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb = pa.PysbAssembler()
     pysb_asmb.add_statements([st1])
-    model = pysb_asmb.make_model()
+    model = pysb_asmb.make_model(policies='one_step')
     mps = list(pa.grounded_monomer_patterns(model, a_phos))
     assert len(mps) == 2
     assert mps[0].monomer.name == 'MEK1'
@@ -903,9 +903,9 @@ def test_multiple_grounding_mods():
     st2 = Phosphorylation(mek, erk, 'Y', '187')
     st3 = Ubiquitination(cbl, erk, 'K', '40')
     st4 = Ubiquitination(cbl, erk, 'K', '50')
-    pysb_asmb = pa.PysbAssembler(policies='one_step')
+    pysb_asmb = pa.PysbAssembler()
     pysb_asmb.add_statements([st1, st2, st3, st4])
-    model = pysb_asmb.make_model()
+    model = pysb_asmb.make_model(policies='one_step')
     mps = list(pa.grounded_monomer_patterns(model, ub_phos_erk))
     assert len(mps) == 4
     assert mps[0].monomer.name == 'ERK2'
@@ -923,9 +923,9 @@ def test_grounded_active_pattern():
                    db_refs={'HGNC': '5678'})
     st1 = Phosphorylation(a, b, 'S', '100')
     st2 = ActiveForm(b_phos, 'activity', True)
-    pysba = PysbAssembler(policies='one_step')
+    pysba = PysbAssembler()
     pysba.add_statements([st1, st2])
-    model = pysba.make_model()
+    model = pysba.make_model(policies='one_step')
     mps = list(pa.grounded_monomer_patterns(model, b_act))
 
 
@@ -934,21 +934,21 @@ def _check_mod_assembly(mod_class):
     obj = Agent('BRAF')
     st1 = mod_class(subj, obj)
 
-    pa = PysbAssembler(policies='interactions_only')
+    pa = PysbAssembler()
     pa.add_statements([st1])
-    model = pa.make_model()
+    model = pa.make_model(policies='interactions_only')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st1])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
     assert len(model.rules)==1
     assert len(model.monomers)==2
 
-    pa = PysbAssembler(policies='two_step')
+    pa = PysbAssembler()
     pa.add_statements([st1])
-    model = pa.make_model()
+    model = pa.make_model(policies='two_step')
     assert len(model.rules)==3
     assert len(model.monomers)==2
 
@@ -963,9 +963,9 @@ def test_rule_annotation():
     b = Agent('B', db_refs={'HGNC': '5678'})
 
     def check_rule_annotation(stmt, policy):
-        pa = PysbAssembler(policies=policy)
+        pa = PysbAssembler()
         pa.add_statements([stmt])
-        model = pa.make_model()
+        model = pa.make_model(policies=policy)
         subj = [ann.object for ann in model.annotations
                 if ann.predicate == 'rule_has_subject']
         obj = [ann.object for ann in model.annotations
@@ -998,9 +998,9 @@ def test_activeform_site():
                    db_refs={'HGNC': '5678'})
     st1 = Phosphorylation(a, b, 'S', '100')
     st2 = ActiveForm(b_phos, 'kinase', True)
-    pa = PysbAssembler(policies='one_step')
+    pa = PysbAssembler()
     pa.add_statements([st1, st2])
-    model = pa.make_model()
+    model = pa.make_model(policies='one_step')
 
 # TODO Do the same for mutation condition
 # TODO Localization condition
