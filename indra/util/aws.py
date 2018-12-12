@@ -133,7 +133,7 @@ def get_job_log(job_info, log_group_name='/aws/batch/job',
     batch = boto3.client('batch')
     resp = batch.describe_jobs(jobs=[job_id])
     job_desc = resp['jobs'][0]
-    job_def_name = job_desc['jobDescription'].split('/')[-1].split(':')[0]
+    job_def_name = job_desc['jobDefinition'].split('/')[-1].split(':')[0]
     task_arn_id = job_desc['container']['taskArn'].split('/')[-1]
     log_stream_name = '%s/default/%s' % (job_def_name, task_arn_id)
     stream_resp = logs.describe_log_streams(
