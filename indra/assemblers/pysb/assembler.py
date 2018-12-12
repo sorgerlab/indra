@@ -1113,42 +1113,45 @@ def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
 def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     if stmt.enz is None:
         return
-    mod_condition_name = stmt.__class__.__name__.lower()
 
-    # See NOTE in monomers_one_step
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    mc = stmt._get_mod_condition()
+    mod_site = get_mod_site_name(mc)
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
+    stmt_type_str = stmt.__class__.__name__.lower()
     rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+        (rule_enz_str, stmt_type_str, rule_sub_str, mod_site)
 
     # Remove pre-set activity flag
     enz_pattern = get_monomer_pattern(model, stmt.enz)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
+    # This is where we decide which state to have on the left hand side
+    # or the right hand side based on whether it's adding or removing
+    # a modification.
+    if isinstance(stmt, ist.RemoveModification):
+        mod_site_state, unmod_site_state = states[mc.mod_type]
+    else:
+        unmod_site_state, mod_site_state = states[mc.mod_type]
     sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: unmod_site_state})
+                                    extra_fields={mod_site: unmod_site_state})
     sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: mod_site_state})
-
+                                  extra_fields={mod_site: mod_site_state})
 
     if not rate_law:
         param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                     stmt.sub.name[0].lower(), mod_condition_name)
+                                     stmt.sub.name[0].lower(), mc.mod_type)
         param = parameters.get('kf', Param(param_name, 1e-6, True))
         mod_rate = get_create_parameter(model, param.name, param.value,
                                         param.unique)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+                      stmt.sub.name[0].lower() + '_' + mc.mod_type)
         param = parameters.get('Km', Param(param_name, 1e8, True))
         Km = get_create_parameter(model, param.name, param.value,
                                   param.unique)
         param_name = ('kc_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
+                      stmt.sub.name[0].lower() + '_' + mc.mod_type)
         param = parameters.get('kc', Param(param_name, 100, True))
         kcat = get_create_parameter(model, param.name, param.value,
                                     param.unique)
@@ -1164,9 +1167,9 @@ def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=
         model.add_component(mod_rate)
 
     r = Rule(rule_name,
-            enz_pattern + sub_unmod >>
-            enz_pattern + sub_mod,
-            mod_rate)
+             enz_pattern + sub_unmod >>
+             enz_pattern + sub_mod,
+             mod_rate)
     anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
@@ -1380,56 +1383,7 @@ demodification_monomers_interactions_only = modification_monomers_interactions_o
 demodification_monomers_one_step = modification_monomers_one_step
 demodification_monomers_two_step = modification_monomers_two_step
 demodification_assemble_interactions_only = modification_assemble_interactions_only
-
-def demodification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
-    if stmt.enz is None:
-        return
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-
-    demod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
-
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-    sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={demod_site: unmod_site_state})
-    sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={demod_site: mod_site_state})
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
-                (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-
-    if not rate_law:
-        param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                     stmt.sub.name[0].lower(),
-                                     demod_condition_name)
-        mod_rate = get_create_parameter(model, param_name, 1e-6)
-    elif rate_law == 'michaelis_menten':
-        # Parameters
-        param_name = ('Km_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        Km = get_create_parameter(model, param_name, 1e8)
-        param_name = ('kc_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        kcat = get_create_parameter(model, param_name, 100)
-
-        # We need an observable for the substrate to use in the rate law
-        sub_obs = Observable(rule_name + '_sub_obs', sub_mod)
-        model.add_component(sub_obs)
-        mod_rate = Expression(rule_name + '_rate', kcat / (Km + sub_obs))
-        model.add_component(mod_rate)
-
-    r = Rule(rule_name,
-             enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
-             mod_rate)
-    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
+demodification_assemble_one_step = modification_assemble_one_step
 
 
 def demodification_assemble_two_step(stmt, model, parameters, agent_set):

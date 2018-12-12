@@ -84,13 +84,13 @@ def get_binding_site_name(agent):
     return binding_site
 
 
-def get_mod_site_name(mod_type, residue, position):
+def get_mod_site_name(mod_condition):
     """Return site names for a modification."""
-    names = []
-    if residue is None:
-        mod_str = abbrevs[mod_type]
+    if mod_condition.residue is None:
+        mod_str = abbrevs[mod_condition.mod_type]
     else:
-        mod_str = residue
-    mod_pos = position if position is not None else ''
+        mod_str = mod_condition.residue
+    mod_pos = mod_condition.position if \
+        mod_condition.position is not None else ''
     name = ('%s%s' % (mod_str, mod_pos))
     return name
