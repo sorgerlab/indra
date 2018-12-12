@@ -3,7 +3,7 @@ from builtins import dict, str
 import xml.etree.ElementTree as ET
 from indra.assemblers.pysb import PysbAssembler
 import indra.assemblers.pysb.assembler as pa
-from indra.assemblers.pysb.assembler import Policy
+from indra.assemblers.pysb.assembler import Policy, Param
 from indra.assemblers.pysb.preassembler import PysbPreassembler
 from indra.statements import *
 from pysb import bng, WILD, Monomer, Annotation
@@ -1188,3 +1188,11 @@ def test_policy_object_invalid():
     pa = PysbAssembler([stmt])
     model = pa.make_model(policies={'xyz': Policy('two_step')})
     assert len(model.rules) == 3
+
+
+def test_mod_parameter():
+    stmt = Phosphorylation(Agent('a'), Agent('b'))
+    pol = Policy('one_step', parameters={'kf': Param('my_kf_param', 0.99)})
+    pa = PysbAssembler([stmt])
+    model = pa.make_model(policies={stmt.uuid: pol})
+    assert model.parameters['my_kf_param'].value == 0.99

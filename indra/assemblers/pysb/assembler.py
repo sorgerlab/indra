@@ -823,7 +823,7 @@ class Policy(object):
     """Represent a policy that can be associated with a speficic Statement."""
     def __init__(self, name, parameters=None, sites=None):
         self.name = name
-        self.parameters = parameters if parameters else []
+        self.parameters = parameters if parameters else {}
         self.sites = sites if sites else []
 
     def __repr__(self):
@@ -1061,11 +1061,22 @@ def modification_monomers_two_step(stmt, agent_set):
     sub.create_site(get_binding_site_name(stmt.enz))
 
 
+class Param(object):
+    def __init__(self, name, value, unique=False):
+        self.name = name
+        self.value = value
+        self.unique = unique
+
+
 def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
+    kf_param = parameters.get('kf', Param('kf_bind', 1.0))
+    kr_param = parameters.get('kr', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kf_param.name, kf_param.value,
+                                   kf_param.unique)
+    kr_bind = get_create_parameter(model, kf_param.name, kf_param.value,
+                                   kf_param.unique)
 
     enz = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
@@ -1115,16 +1126,22 @@ def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=
 
     if not rate_law:
         param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                      stmt.sub.name[0].lower(), mod_condition_name)
-        mod_rate = get_create_parameter(model, param_name, 1e-6)
+                                     stmt.sub.name[0].lower(), mod_condition_name)
+        param = parameters.get('kf', Param(param_name, 1e-6, True))
+        mod_rate = get_create_parameter(model, param.name, param.value,
+                                        param.unique)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.enz.name[0].lower() +
                       stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        Km = get_create_parameter(model, param_name, 1e8)
+        param = parameters.get('Km', Param(param_name, 1e8, True))
+        Km = get_create_parameter(model, param.name, param.value,
+                                  param.unique)
         param_name = ('kc_' + stmt.enz.name[0].lower() +
                       stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        kcat = get_create_parameter(model, param_name, 100)
+        param = parameters.get('kc', Param(param_name, 100, True))
+        kcat = get_create_parameter(model, param.name, param.value,
+                                    param.unique)
 
         # We need an observable for the substrate to use in the rate law
         sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
