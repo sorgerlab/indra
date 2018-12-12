@@ -1262,8 +1262,7 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    sub.create_mod_site(ist.ModCondition('phosphorylation',
-                                         stmt.residue, stmt.position))
+    sub.create_mod_site(stmt._get_mod_condition())
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(stmt.sub))
     sub.create_site(get_binding_site_name(stmt.enz))
@@ -1340,8 +1339,7 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
                   stmt.sub.name[0].lower() + '_phos')
     kf_phospho = get_create_parameter(model, param_name, 100)
 
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
@@ -1412,28 +1410,14 @@ for mc, rate_law in itertools.product(ist.modclass_to_modtype.keys(),
 
 def autophosphorylation_monomers_interactions_only(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz.create_site(phos_site, ('u', 'p'))
 
 
 def autophosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
-    # NOTE: This assumes that a Phosphorylation statement will only ever
-    # involve a single phosphorylation site on the substrate (typically
-    # if there is more than one site, they will be parsed into separate
-    # Phosphorylation statements, i.e., phosphorylation is assumed to be
-    # distributive. If this is not the case, this assumption will need to
-    # be revisited.
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz.create_site(phos_site, ('u', 'p'))
-
-autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
-
-
-def autophosphorylation_assemble_interactions_only(stmt, model, agent_set, parameters):
-    return autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters)
 
 
 def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
@@ -1442,8 +1426,7 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     kf_autophospho = get_create_parameter(model, param_name, 1e-2)
 
     # See NOTE in monomers_one_step
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     pattern_unphos = get_monomer_pattern(model, stmt.enz,
                                          extra_fields={phos_site: 'u'})
     pattern_phos = get_monomer_pattern(model, stmt.enz,
@@ -1457,6 +1440,10 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
+
+autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
+autophosphorylation_assemble_interactions_only = \
+    autophosphorylation_assemble_one_step
 autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
 
 # TRANSPHOSPHORYLATION ###################################################
@@ -1465,29 +1452,15 @@ def transphosphorylation_monomers_interactions_only(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
     # Assume there is exactly one bound_to species
     sub = agent_set.get_create_base_agent(stmt.enz)
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     sub.create_site(phos_site, ('u', 'p'))
 
 
 def transphosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
-    # NOTE: This assumes that a Phosphorylation statement will only ever
-    # involve a single phosphorylation site on the substrate (typically
-    # if there is more than one site, they will be parsed into separate
-    # Phosphorylation statements, i.e., phosphorylation is assumed to be
-    # distributive. If this is not the case, this assumption will need to
-    # be revisited.
     sub = agent_set.get_create_base_agent(stmt.enz.bound_conditions[0].agent)
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     sub.create_site(phos_site, ('u', 'p'))
-
-transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
-
-
-def transphosphorylation_assemble_interactions_only(stmt, model, agent_set, parameters):
-    return transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters)
 
 
 def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
@@ -1496,8 +1469,7 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
                   '_transphos')
     kf = get_create_parameter(model, param_name, 1e-6)
 
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz_pattern = get_monomer_pattern(model, stmt.enz)
     bound_agent = stmt.enz.bound_conditions[0].agent
     sub_unphos = get_monomer_pattern(model, bound_agent,
@@ -1516,6 +1488,10 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
+
+transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
+transphosphorylation_assemble_interactions_only = \
+    transphosphorylation_assemble_one_step
 transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
 # ACTIVATION ######################################################
