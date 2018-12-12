@@ -1394,22 +1394,12 @@ demodification_assemble_default = demodification_assemble_one_step
 # Modification assembly function
 policies = ['interactions_only', 'one_step', 'two_step', 'default']
 
-mod_classes = [cls for cls in ist.AddModification.__subclasses__()]
+mod_classes = [cls for cls in ist.Modification.__subclasses__()]
 for mc, func_type, pol in itertools.product(mod_classes,
                                             ('monomers', 'assemble'),
                                             policies):
     code = '{mc}_{func_type}_{pol} = ' \
             'modification_{func_type}_{pol}'.format(
-                    mc=ist.modclass_to_modtype[mc], func_type=func_type,
-                    pol=pol)
-    exec(code)
-
-demod_classes = [cls for cls in ist.RemoveModification.__subclasses__()]
-for mc, func_type, pol in itertools.product(demod_classes,
-                                            ('monomers', 'assemble'),
-                                            policies):
-    code = '{mc}_{func_type}_{pol} = ' \
-            'demodification_{func_type}_{pol}'.format(
                     mc=ist.modclass_to_modtype[mc], func_type=func_type,
                     pol=pol)
     exec(code)
@@ -1423,16 +1413,6 @@ for mc, rate_law in itertools.product(mod_classes, rate_laws):
             'lambda a, b, c, d: modification_assemble_' \
             'one_step(a, b, c, d, "{rate_law}")'.format(
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
-    exec(code)
-
-for mc, rate_law in itertools.product(demod_classes, rate_laws):
-    code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
-                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
-    exec(code)
-    code = '{mc}_assemble_{rate_law} = ' \
-            'lambda a, b, c, d: demodification_assemble_' \
-            'one_step(a, b, c, d, "{rate_law}")'.format(
-                    mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
 
 
