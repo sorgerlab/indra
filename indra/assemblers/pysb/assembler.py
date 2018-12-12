@@ -449,21 +449,6 @@ class UnknownPolicyError(Exception):
 class PysbAssembler(object):
     """Assembler creating a PySB model from a set of INDRA Statements.
 
-    Parameters
-    ----------
-    policies : Optional[Union[str, dict]]
-        A string or dictionary that defines one or more assembly policies.
-
-        If policies is a string, it defines a global assembly policy
-        that applies to all Statement types.
-        Example: one_step, interactions_only
-
-        A dictionary of policies has keys corresponding to Statement types
-        and values to the policy to be applied to that type of Statement.
-        For Statement types whose policy is undefined, the 'default'
-        policy is applied.
-        Example: {'Phosphorylation': 'two_step'}
-
     Attributes
     ----------
     policies : dict
@@ -476,18 +461,12 @@ class PysbAssembler(object):
     agent_set : _BaseAgentSet
         A set of BaseAgents used during the assembly process.
     """
-    def __init__(self, policies=None):
+    def __init__(self):
         self.statements = []
         self.agent_set = None
         self.model = None
         self.default_initial_amount = 10000.0
-        if policies is None:
-            self.policies = {'other': 'default'}
-        elif isinstance(policies, basestring):
-            self.policies = {'other': policies}
-        else:
-            self.policies = {'other': 'default'}
-            self.policies.update(policies)
+        self.policies = None
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -500,6 +479,37 @@ class PysbAssembler(object):
         """
         self.statements += stmts
 
+    def process_policies(self, policies):
+        processed_policies = {stmt.uuid: 'default' for stmt in self.statements}
+        if not policies:
+            logger.info('Using default assembly policy.')
+            return processed_policies
+        elif isinstance(policies, basestring):
+            logger.info('Using %s assembly policy.' % policies)
+            for stmt in self.statements:
+                processed_policies[stmt.uuid] = policies
+        else:
+            for k, v in policies.items():
+                # Assume this is a policy like
+                # {'Phosphorylation': 'two-step'}
+                if isinstance(v, basestring):
+                    try:
+                        stmt_type = ist.get_statement_by_name(k)
+                        for stmt in self.statements:
+                            if isinstance(stmt, stmt_type):
+                                processed_policies[stmt.uuid] = v
+                    except ist.NotAStatementName:
+                        msg = 'Invalid policy entry for key %s' % k
+                        raise UnknownPolicyError(msg)
+                    # Here we assume the key is a UUID
+                    else:
+                        if k not in processed_policies:
+                            msg = 'Policy key not a valid Statement UUID'
+                            raise UnknownPolicyError(msg)
+                        else:
+                            processed_policies[k] = v
+        return processed_policies
+
     def make_model(self, policies=None, initial_conditions=True,
                    reverse_effects=False, model_name='indra_model'):
         """Assemble the PySB model from the collected INDRA Statements.
@@ -511,11 +521,17 @@ class PysbAssembler(object):
         Parameters
         ----------
         policies : Optional[Union[str, dict]]
-            A string or dictionary of policies, as defined in
-            :py:class:`indra.assemblers.PysbAssembler`. This set of policies
-            locally supersedes the default setting in the assembler. This
-            is useful when this function is called multiple times with
-            different policies.
+            A string or dictionary that defines one or more assembly policies.
+
+            If policies is a string, it defines a global assembly policy
+            that applies to all Statement types.
+            Example: one_step, interactions_only
+
+            A dictionary of policies has keys corresponding to Statement types
+            and values to the policy to be applied to that type of Statement.
+            For Statement types whose policy is undefined, the 'default'
+            policy is applied.
+            Example: {'Phosphorylation': 'two_step'}
         initial_conditions : Optional[bool]
             If True, default initial conditions are generated for the
             Monomers in the model. Default: True
@@ -533,20 +549,11 @@ class PysbAssembler(object):
             The assembled PySB model object.
         """
         ppa = PysbPreassembler(self.statements)
+        self.processed_policies = self.process_policies(policies)
         ppa.replace_activities()
         if reverse_effects:
             ppa.add_reverse_effects()
         self.statements = ppa.statements
-        # Set local policies for this make_model call that overwrite
-        # the global policies of the PySB assembler
-        if policies is not None:
-            global_policies = self.policies
-            if isinstance(policies, basestring):
-                local_policies = {'other': policies}
-            else:
-                local_policies = {'other': 'default'}
-                local_policies.update(policies)
-            self.policies = local_policies
         self.model = Model()
         self.model.name = model_name
         self.agent_set = _BaseAgentSet()
@@ -582,10 +589,6 @@ class PysbAssembler(object):
         # Add initial conditions
         if initial_conditions:
             self.add_default_initial_conditions()
-
-        # If local policies were applied, revert to the global one
-        if policies is not None:
-            self.policies = global_policies
 
         return self.model
 
@@ -776,11 +779,8 @@ class PysbAssembler(object):
         the type of statement, the corresponding policy and the stage
         of assembly. It then calls that function to perform the assembly
         task."""
+        policy = self.processed_policies[stmt.uuid]
         class_name = stmt.__class__.__name__
-        try:
-            policy = self.policies[class_name]
-        except KeyError:
-            policy = self.policies['other']
         func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
         func = globals().get(func_name)
         if func is None:
