@@ -101,8 +101,7 @@ class _BaseAgent(object):
 
     def create_mod_site(self, mc):
         """Create modification site for the BaseAgent from a ModCondition."""
-        site_name = get_mod_site_name(mc.mod_type,
-                                      mc.residue, mc.position)
+        site_name = get_mod_site_name(mc)
         (unmod_site_state, mod_site_state) = states[mc.mod_type]
         self.create_site(site_name, (unmod_site_state, mod_site_state))
         site_anns = [Annotation((site_name, mod_site_state), mc.mod_type,

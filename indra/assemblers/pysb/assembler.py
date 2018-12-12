@@ -1177,14 +1177,14 @@ def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=
 
 
 def modification_assemble_two_step(stmt, model, agent_set, parameters):
-    mod_condition_name = stmt.__class__.__name__.lower()
     if stmt.enz is None:
         return
+    mc = stmt._get_mod_condition()
     sub_bs = get_binding_site_name(stmt.sub)
     enz_bound = get_monomer_pattern(model, stmt.enz,
-        extra_fields={sub_bs: 1})
+                                    extra_fields={sub_bs: 1})
     enz_unbound = get_monomer_pattern(model, stmt.enz,
-        extra_fields={sub_bs: None})
+                                      extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
     param_name = ('kf_' + stmt.enz.name[0].lower() +
@@ -1194,37 +1194,39 @@ def modification_assemble_two_step(stmt, model, agent_set, parameters):
                   stmt.sub.name[0].lower() + '_bind')
     kr_bind = get_create_parameter(model, param_name, 1e-1)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_' + mod_condition_name)
+                  stmt.sub.name[0].lower() + '_' + mc.mod_type)
     kf_mod = get_create_parameter(model, param_name, 100)
 
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    mod_site = get_mod_site_name(mc)
 
     enz_bs = get_binding_site_name(stmt.enz)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
+    stmt_type_str = stmt.__class__.__name__.lower()
+    if isinstance(stmt, ist.RemoveModification):
+        mod_site_state, unmod_site_state = states[mc.mod_type]
+    else:
+        unmod_site_state, mod_site_state = states[mc.mod_type]
 
     rule_name = '%s_%s_bind_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+        (rule_enz_str, stmt_type_str, rule_sub_str, mod_site)
     r = Rule(rule_name,
-        enz_unbound() + \
-        sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
-        enz_bound() % \
-        sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
-        kf_bind)
+             enz_unbound() +
+             sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
+             enz_bound() %
+             sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
+             kf_bind)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
     rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+        (rule_enz_str, stmt_type_str, rule_sub_str, mod_site)
     r = Rule(rule_name,
-        enz_bound() % \
-            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
-        enz_unbound() + \
-            sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
-        kf_mod)
+             enz_bound() %
+             sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
+             enz_unbound() +
+             sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
+             kf_mod)
     anns = [Annotation(rule_name, enz_bound.monomer.name,
                        'rule_has_subject'),
             Annotation(rule_name, sub_pattern.monomer.name,
@@ -1240,9 +1242,9 @@ def modification_assemble_two_step(stmt, model, agent_set, parameters):
     sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
 
     rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
-    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
+    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) %
              sub_mon_uncond(**{enz_bs: 1}) >>
-             enz_mon_uncond(**{sub_bs: None}) + \
+             enz_mon_uncond(**{sub_bs: None}) +
              sub_mon_uncond(**{enz_bs: None}), kr_bind)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
@@ -1382,80 +1384,10 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
 demodification_monomers_interactions_only = modification_monomers_interactions_only
 demodification_monomers_one_step = modification_monomers_one_step
 demodification_monomers_two_step = modification_monomers_two_step
+demodification_monomers_default = demodification_monomers_one_step
 demodification_assemble_interactions_only = modification_assemble_interactions_only
 demodification_assemble_one_step = modification_assemble_one_step
-
-
-def demodification_assemble_two_step(stmt, model, parameters, agent_set):
-    if stmt.enz is None:
-        return
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-    sub_bs = get_binding_site_name(stmt.sub)
-    enz_bs = get_binding_site_name(stmt.enz)
-    enz_bound = get_monomer_pattern(model, stmt.enz,
-                                    extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, stmt.enz,
-                                      extra_fields={sub_bs: None})
-    sub_pattern = get_monomer_pattern(model, stmt.sub)
-
-    param_name = 'kf_' + stmt.enz.name[0].lower() + \
-        stmt.sub.name[0].lower() + '_bind'
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = 'kr_' + stmt.enz.name[0].lower() + \
-        stmt.sub.name[0].lower() + '_bind'
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
-    param_name = 'kc_' + stmt.enz.name[0].lower() + \
-        stmt.sub.name[0].lower() + '_' + demod_condition_name
-    kf_demod = get_create_parameter(model, param_name, 100)
-
-    demod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_bind_%s_%s' % \
-        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-    r = Rule(rule_name,
-             enz_unbound() + \
-             sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
-             enz_bound() % \
-             sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
-             kf_bind)
-    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-    r = Rule(rule_name,
-        enz_bound() % \
-            sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
-        enz_unbound() + \
-            sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
-        kf_demod)
-    anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
-            Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-    enz_uncond = get_uncond_agent(stmt.enz)
-    enz_rule_str = get_agent_rule_str(enz_uncond)
-    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
-    sub_uncond = get_uncond_agent(stmt.sub)
-    sub_rule_str = get_agent_rule_str(sub_uncond)
-    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
-
-    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
-    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
-             sub_mon_uncond(**{enz_bs: 1}) >>
-             enz_mon_uncond(**{sub_bs: None}) + \
-             sub_mon_uncond(**{enz_bs: None}), kr_bind)
-    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-demodification_monomers_default = demodification_monomers_one_step
+demodification_assemble_two_step = modification_assemble_two_step
 demodification_assemble_default = demodification_assemble_one_step
 
 # Map specific modification monomer/assembly functions to the generic
