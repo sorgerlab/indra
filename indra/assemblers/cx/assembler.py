@@ -1,13 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
-from builtins import dict, str
-import io
-import re
+
+import itertools
 import json
 import logging
-import itertools
+import re
+from builtins import str
 from collections import OrderedDict
-from indra.statements import *
+
 from indra.databases import context_client, ndex_client, get_identifiers_url
+from indra.statements import *
 
 # Python 2
 try:
@@ -193,7 +194,7 @@ class CxAssembler(object):
 
         Returns
         -------
-        network_id :  str
+        network_id : str
             The UUID of the NDEx network that was created by uploading
             the assembled CX model.
         """
@@ -480,6 +481,7 @@ def _get_support_type(stmt):
         return 'database and literature'
     elif not has_db and has_reading:
         return 'literature'
+
 
 def _get_stmt_type(stmt):
     if isinstance(stmt, AddModification):
