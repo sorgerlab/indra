@@ -848,7 +848,7 @@ def complex_monomers_one_step(stmt, agent_set):
 complex_monomers_default = complex_monomers_one_step
 
 
-def complex_assemble_one_step(stmt, model, agent_set):
+def complex_assemble_one_step(stmt, model, agent_set, parameters):
     pairs = itertools.combinations(stmt.members, 2)
     for pair in pairs:
         agent1 = pair[0]
@@ -910,7 +910,7 @@ def complex_assemble_one_step(stmt, model, agent_set):
         add_rule_to_model(model, r, anns)
 
 
-def complex_assemble_multi_way(stmt, model, agent_set):
+def complex_assemble_multi_way(stmt, model, agent_set, parameters):
     # Get the rate parameter
     abbr_name = ''.join([m.name[0].lower() for m in stmt.members])
     kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
@@ -1052,7 +1052,7 @@ def modification_monomers_two_step(stmt, agent_set):
     sub.create_site(get_binding_site_name(stmt.enz))
 
 
-def modification_assemble_interactions_only(stmt, model, agent_set):
+def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
@@ -1080,7 +1080,7 @@ def modification_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r_fwd)
 
 
-def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     if stmt.enz is None:
         return
     mod_condition_name = stmt.__class__.__name__.lower()
@@ -1137,7 +1137,7 @@ def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     add_rule_to_model(model, r, anns)
 
 
-def modification_assemble_two_step(stmt, model, agent_set):
+def modification_assemble_two_step(stmt, model, agent_set, parameters):
     mod_condition_name = stmt.__class__.__name__.lower()
     if stmt.enz is None:
         return
@@ -1231,7 +1231,7 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     enz.create_site('ATP')
 
 
-def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
+def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
     if stmt.enz is None:
         return
     # ATP
@@ -1376,7 +1376,7 @@ def demodification_monomers_two_step(stmt, agent_set):
     sub.create_site(get_binding_site_name(stmt.enz))
 
 
-def demodification_assemble_interactions_only(stmt, model, agent_set):
+def demodification_assemble_interactions_only(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
@@ -1399,7 +1399,7 @@ def demodification_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def demodification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     if stmt.enz is None:
         return
     demod_condition_name = stmt.__class__.__name__.lower()
@@ -1450,7 +1450,7 @@ def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
     add_rule_to_model(model, r, anns)
 
 
-def demodification_assemble_two_step(stmt, model, agent_set):
+def demodification_assemble_two_step(stmt, model, parameters, agent_set):
     if stmt.enz is None:
         return
     demod_condition_name = stmt.__class__.__name__.lower()
@@ -1592,11 +1592,11 @@ def autophosphorylation_monomers_one_step(stmt, agent_set):
 autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
 
 
-def autophosphorylation_assemble_interactions_only(stmt, model, agent_set):
-    stmt.assemble_one_step(model, agent_set)
+def autophosphorylation_assemble_interactions_only(stmt, model, agent_set, parameters):
+    return autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters)
 
 
-def autophosphorylation_assemble_one_step(stmt, model, agent_set):
+def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
     # http://www.jbc.org/content/286/4/2689.full
     kf_autophospho = get_create_parameter(model, param_name, 1e-2)
@@ -1646,11 +1646,11 @@ def transphosphorylation_monomers_one_step(stmt, agent_set):
 transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
 
 
-def transphosphorylation_assemble_interactions_only(stmt, model, agent_set):
-    stmt.assemble_one_step(model, agent_set)
+def transphosphorylation_assemble_interactions_only(stmt, model, agent_set, parameters):
+    return transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters)
 
 
-def transphosphorylation_assemble_one_step(stmt, model, agent_set):
+def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   _n(stmt.enz.bound_conditions[0].agent.name[0]).lower() +
                   '_transphos')
@@ -1704,7 +1704,7 @@ def regulateactivity_monomers_one_step(stmt, agent_set):
     obj.add_activity_type(stmt.obj_activity)
 
 
-def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
+def regulateactivity_assemble_interactions_only(stmt, model, agent_set, parameters):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
@@ -1732,7 +1732,7 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def regulateactivity_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -1794,8 +1794,8 @@ activation_monomers_default = regulateactivity_monomers_one_step
 activation_assemble_default = regulateactivity_assemble_one_step
 
 activation_monomers_michaelis_menten = regulateactivity_monomers_one_step
-activation_assemble_michaelis_menten = lambda a, b, c: \
-    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
+activation_assemble_michaelis_menten = lambda a, b, c, d: \
+    regulateactivity_assemble_one_step(a, b, c, d, 'michaelis_menten')
 
 inhibition_monomers_interactions_only = \
                     regulateactivity_monomers_interactions_only
@@ -1807,8 +1807,8 @@ inhibition_monomers_default = regulateactivity_monomers_one_step
 inhibition_assemble_default = regulateactivity_assemble_one_step
 
 inhibition_monomers_michaelis_menten = regulateactivity_monomers_one_step
-inhibition_assemble_michaelis_menten = lambda a, b, c: \
-    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
+inhibition_assemble_michaelis_menten = lambda a, b, c, d: \
+    regulateactivity_assemble_one_step(a, b, c, d, 'michaelis_menten')
 
 # GEF #####################################################
 
@@ -1831,7 +1831,7 @@ def gef_monomers_one_step(stmt, agent_set):
 gef_monomers_default = gef_monomers_one_step
 
 
-def gef_assemble_interactions_only(stmt, model, agent_set):
+def gef_assemble_interactions_only(stmt, model, agent_set, parameters):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     gef = model.monomers[stmt.gef.name]
     ras = model.monomers[stmt.ras.name]
@@ -1847,7 +1847,7 @@ def gef_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def gef_assemble_one_step(stmt, model, agent_set):
+def gef_assemble_one_step(stmt, model, agent_set, parameters):
     gef_pattern = get_monomer_pattern(model, stmt.gef)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
@@ -1894,7 +1894,7 @@ def gap_monomers_one_step(stmt, agent_set):
 gap_monomers_default = gap_monomers_one_step
 
 
-def gap_assemble_interactions_only(stmt, model, agent_set):
+def gap_assemble_interactions_only(stmt, model, agent_set, parameters):
     kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
     gap = model.monomers[stmt.gap.name]
     ras = model.monomers[stmt.ras.name]
@@ -1910,7 +1910,7 @@ def gap_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def gap_assemble_one_step(stmt, model, agent_set):
+def gap_assemble_one_step(stmt, model, agent_set, parameters):
     gap_pattern = get_monomer_pattern(model, stmt.gap)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
@@ -1952,11 +1952,11 @@ def activeform_monomers_one_step(stmt, agent_set):
 activeform_monomers_default = activeform_monomers_one_step
 
 
-def activeform_assemble_interactions_only(stmt, model, agent_set):
+def activeform_assemble_interactions_only(stmt, model, agent_set, parameters):
     pass
 
 
-def activeform_assemble_one_step(stmt, model, agent_set):
+def activeform_assemble_one_step(stmt, model, agent_set, parameters):
     pass
 
 activeform_assemble_default = activeform_assemble_one_step
@@ -1979,7 +1979,7 @@ def translocation_monomers_default(stmt, agent_set):
 
     agent.create_site('loc', states)
 
-def translocation_assemble_default(stmt, model, agent_set):
+def translocation_assemble_default(stmt, model, agent_set, parameters):
     if stmt.to_location is None:
         return
     from_loc = stmt.from_location if stmt.from_location else 'cytoplasm'
@@ -2015,7 +2015,7 @@ def decreaseamount_monomers_one_step(stmt, agent_set):
     if stmt.subj is not None:
         subj = agent_set.get_create_base_agent(stmt.subj)
 
-def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
+def decreaseamount_assemble_interactions_only(stmt, model, agent_set, parameters):
     # No interaction when subj is None
     if stmt.subj is None:
         return
@@ -2042,7 +2042,7 @@ def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
         anns += [Annotation(rule_name, subj.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
-def decreaseamount_assemble_one_step(stmt, model, agent_set):
+def decreaseamount_assemble_one_step(stmt, model, agent_set, parameters):
     obj_pattern = get_monomer_pattern(model, stmt.obj)
     rule_obj_str = get_agent_rule_str(stmt.obj)
 
@@ -2082,7 +2082,7 @@ increaseamount_monomers_interactions_only = \
 
 increaseamount_monomers_one_step = decreaseamount_monomers_one_step
 
-def increaseamount_assemble_interactions_only(stmt, model, agent_set):
+def increaseamount_assemble_interactions_only(stmt, model, agent_set, parameters):
     # No interaction when subj is None
     if stmt.subj is None:
         return
@@ -2108,7 +2108,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set):
         anns += [Annotation(rule_name, subj.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
-def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def increaseamount_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
         if not isinstance(stmt, ist.Influence):
             logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
@@ -2212,7 +2212,7 @@ def conversion_monomers_one_step(stmt, agent_set):
         agent_set.get_create_base_agent(obj)
 
 
-def conversion_assemble_one_step(stmt, model, agent_set):
+def conversion_assemble_one_step(stmt, model, agent_set, parameters):
     # Skip statements with more than one from object due to complications
     # with rate law
     if len(stmt.obj_from) != 1:
