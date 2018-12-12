@@ -789,8 +789,12 @@ class PysbAssembler(object):
         task."""
         policy = self.processed_policies[stmt.uuid]
         class_name = stmt.__class__.__name__.lower()
+        # We map remove modifications to their positive counterparts
         if isinstance(stmt, ist.RemoveModification):
             class_name = ist.modclass_to_modtype[stmt.__class__]
+        # We handle any kind of activity regulation in regulateactivity
+        if isinstance(stmt, ist.RegulateActivity):
+            class_name = 'regulateactivity'
         func_name = '%s_%s_%s' % (class_name, stage, policy.name)
         func = globals().get(func_name)
         if func is None:
@@ -1599,32 +1603,10 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, parameters, rate_
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
 regulateactivity_assemble_default = regulateactivity_assemble_one_step
-
-activation_monomers_interactions_only = \
-                    regulateactivity_monomers_interactions_only
-activation_assemble_interactions_only = \
-                    regulateactivity_assemble_interactions_only
-activation_monomers_one_step = regulateactivity_monomers_one_step
-activation_assemble_one_step = regulateactivity_assemble_one_step
-activation_monomers_default = regulateactivity_monomers_one_step
-activation_assemble_default = regulateactivity_assemble_one_step
-
-activation_monomers_michaelis_menten = regulateactivity_monomers_one_step
-activation_assemble_michaelis_menten = lambda a, b, c, d: \
+regulateactivity_monomers_michaelis_menten = regulateactivity_monomers_one_step
+regulateactivity_assemble_michaelis_menten = lambda a, b, c, d: \
     regulateactivity_assemble_one_step(a, b, c, d, 'michaelis_menten')
 
-inhibition_monomers_interactions_only = \
-                    regulateactivity_monomers_interactions_only
-inhibition_assemble_interactions_only = \
-                    regulateactivity_assemble_interactions_only
-inhibition_monomers_one_step = regulateactivity_monomers_one_step
-inhibition_assemble_one_step = regulateactivity_assemble_one_step
-inhibition_monomers_default = regulateactivity_monomers_one_step
-inhibition_assemble_default = regulateactivity_assemble_one_step
-
-inhibition_monomers_michaelis_menten = regulateactivity_monomers_one_step
-inhibition_assemble_michaelis_menten = lambda a, b, c, d: \
-    regulateactivity_assemble_one_step(a, b, c, d, 'michaelis_menten')
 
 # GEF #####################################################
 
@@ -1776,12 +1758,6 @@ def activeform_assemble_one_step(stmt, model, agent_set, parameters):
     pass
 
 activeform_assemble_default = activeform_assemble_one_step
-
-# GTPACTIVATION ######################################
-
-gtpactivation_monomers_default = activation_monomers_default
-
-gtpactivation_assemble_default = activation_assemble_default
 
 
 # TRANSLOCATION ###############################################
