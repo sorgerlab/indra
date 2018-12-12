@@ -480,24 +480,26 @@ class PysbAssembler(object):
         self.statements += stmts
 
     def process_policies(self, policies):
-        processed_policies = {stmt.uuid: 'default' for stmt in self.statements}
+        processed_policies = {stmt.uuid: Policy('default')
+                              for stmt in self.statements}
         if not policies:
             logger.info('Using default assembly policy.')
             return processed_policies
         elif isinstance(policies, basestring):
             logger.info('Using %s assembly policy.' % policies)
             for stmt in self.statements:
-                processed_policies[stmt.uuid] = policies
+                processed_policies[stmt.uuid] = Policy(policies)
         else:
             other_policy = policies.get('other', 'default')
             for stmt in self.statements:
-                processed_policies[stmt.uuid] = other_policy
+                processed_policies[stmt.uuid] = Policy(other_policy)
             for k, v in policies.items():
                 if k == 'other':
                     continue
                 # This means it's a UUID
                 if k in processed_policies:
-                    processed_policies[k] = v
+                    pol = v if isinstance(v, Policy) else Policy(v)
+                    processed_policies[k] = pol
                 else:
                     # Assume this is a policy like
                     # {'Phosphorylation': 'two-step'}
@@ -505,7 +507,7 @@ class PysbAssembler(object):
                         stmt_type = ist.get_statement_by_name(k)
                         for stmt in self.statements:
                             if isinstance(stmt, stmt_type):
-                                processed_policies[stmt.uuid] = v
+                                processed_policies[stmt.uuid] = Policy(v)
                     except ist.NotAStatementName:
                         msg = 'Invalid policy entry for key %s' % k
                         raise UnknownPolicyError(msg)
@@ -782,7 +784,7 @@ class PysbAssembler(object):
         task."""
         policy = self.processed_policies[stmt.uuid]
         class_name = stmt.__class__.__name__
-        func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
+        func_name = '%s_%s_%s' % (class_name.lower(), stage, policy.name)
         func = globals().get(func_name)
         if func is None:
             # The specific policy is not implemented for the
@@ -806,8 +808,10 @@ class PysbAssembler(object):
     def _assemble(self):
         """Calls the appropriate assemble method based on policies."""
         for stmt in self.statements:
+            pol = self.processed_policies[stmt.uuid]
             if _is_whitelisted(stmt):
-                self._dispatch(stmt, 'assemble', self.model, self.agent_set)
+                self._dispatch(stmt, 'assemble', self.model, self.agent_set,
+                               pol.parameters)
 
 
 class Policy(object):
