@@ -913,8 +913,10 @@ def complex_assemble_one_step(stmt, model, agent_set, parameters):
         agent2 = pair[1]
         param_name = agent1.name[0].lower() + \
                      agent2.name[0].lower() + '_bind'
-        kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
-        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-1)
+        kfp = parameters.get('kf', Param('kf_' + param_name, 1e-6, True))
+        kf_bind = get_create_parameter(model, kfp)
+        krp = parameters.get('kr', Param('kr_' + param_name, 1e-1, True))
+        kr_bind = get_create_parameter(model, krp)
 
         # Make a rule name
         rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
@@ -971,8 +973,10 @@ def complex_assemble_one_step(stmt, model, agent_set, parameters):
 def complex_assemble_multi_way(stmt, model, agent_set, parameters):
     # Get the rate parameter
     abbr_name = ''.join([m.name[0].lower() for m in stmt.members])
-    kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
-    kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-1)
+    kfp = parameters.get('kf', Param('kf_' + abbr_name + '_bind', 1e-6, True))
+    kf_bind = get_create_parameter(model, kfp)
+    krp = parameters.get('kr', Param('kr' + abbr_name + '_bind', 1e-1, True))
+    kr_bind = get_create_parameter(model, krp)
 
     # Make a rule name
     rule_name = '_'.join([get_agent_rule_str(m) for m in stmt.members])
@@ -1320,9 +1324,11 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
 
     # Enzyme binding ATP
     param_name = ('kf_' + stmt.enz.name[0].lower() + '_atp_bind')
-    kf_bind_atp = get_create_parameter(model, param_name, 1e-6)
+    kfap = parameters.get('kfa', Param(param_name, 1e-6, True))
+    kf_bind_atp = get_create_parameter(model, kfap)
     param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
-    kr_bind_atp = get_create_parameter(model, param_name, 1.)
+    krap = parameters.get('kra', Param(param_name, 1.0, True))
+    kr_bind_atp = get_create_parameter(model, krap)
     rule_name = '%s_phospho_bind_atp' % (enz_rule_str)
     r = Rule(rule_name,
         enz_atp_unbound() + atp(b=None) >>
@@ -1341,13 +1347,16 @@ def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
     # Enzyme binding substrate
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_bind = get_create_parameter(model, kfp)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
+    krp = parameters.get('kr', Param(param_name, 1e-1, True))
+    kr_bind = get_create_parameter(model, krp)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_phos')
-    kf_phospho = get_create_parameter(model, param_name, 100)
+    kcp = parameters.get('kc', Param(param_name, 100, True))
+    kf_phospho = get_create_parameter(model, kcp)
 
     phos_site = get_mod_site_name(stmt._get_mod_condition())
 
@@ -1786,8 +1795,8 @@ def translocation_assemble_default(stmt, model, agent_set, parameters):
     from_loc = stmt.from_location if stmt.from_location else 'cytoplasm'
     param_name = 'kf_%s_%s_%s' % (_n(stmt.agent.name).lower(),
                                   _n(from_loc), _n(stmt.to_location))
-    kf_trans = get_create_parameter(model, param_name, 1.0, unique=True)
-    monomer = model.monomers[_n(stmt.agent.name)]
+    kfp = parameters.get('kf', Param(param_name, 1.0, True))
+    kf_trans = get_create_parameter(model, kfp)
     rule_agent_str = get_agent_rule_str(stmt.agent)
     rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
                                               _n(from_loc),
