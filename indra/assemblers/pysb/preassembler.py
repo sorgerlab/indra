@@ -2,22 +2,31 @@ import logging
 import itertools
 from indra.statements import *
 from indra.util import fast_deepcopy
-from .base_agents import _BaseAgentSet
+from .base_agents import BaseAgentSet
 
 logger = logging.getLogger(__name__)
 
 
 class PysbPreassembler(object):
+    """Pre-assemble Statements in preparation for PySB assembly.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of Statements to assemble
+    """
     def __init__(self, stmts=None):
         if not stmts:
             stmts = []
         self.statements = stmts
-        self.agent_set = _BaseAgentSet()
+        self.agent_set = BaseAgentSet()
 
     def add_statements(self, stmts):
-        self.statements = stmts
+        """Add a list of Statements for assembly."""
+        self.statements += stmts
 
     def _gather_active_forms(self):
+        """Collect all the active forms of each Agent in the Statements."""
         for stmt in self.statements:
             if isinstance(stmt, ActiveForm):
                 base_agent = self.agent_set.get_create_base_agent(stmt.agent)
@@ -30,6 +39,7 @@ class PysbPreassembler(object):
                 base_agent.add_activity_form(agent_to_add, stmt.is_active)
 
     def replace_activities(self):
+        """Replace ative flags with Agent states when possible."""
         logger.debug('Running PySB Preassembler replace activities')
         # TODO: handle activity hierarchies
         new_stmts = []
@@ -95,6 +105,12 @@ class PysbPreassembler(object):
         self.statements = new_stmts
 
     def add_reverse_effects(self):
+        """Add Statements for the reverse effects of some Statements.
+
+        For instance, if a protein is phosphorylated but never dephosphorylated
+        in the model, we add a generic dephosphorylation here. This step is
+        usually optional in the assembly process.
+        """
         # TODO: generalize to other modification sites
         pos_mod_sites = {}
         neg_mod_sites = {}
