@@ -1287,7 +1287,7 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     enz.create_site('ATP')
 
 
-def phosphorylation_assemble_atp_dependent(stmt, model, parameters, agent_set):
+def phosphorylation_assemble_atp_dependent(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
     # ATP
@@ -1590,11 +1590,11 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, parameters, rate_
         param_name = ('Km_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
         Kmp = parameters.get('Km', Param(param_name, 1e8, True))
-        Km = get_create_parameter(model, Kmp.name)
+        Km = get_create_parameter(model, Kmp)
         param_name = ('kc_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
         kcp = parameters.get('kc', Param(param_name, 100, True))
-        kcat = get_create_parameter(model, kcp.name)
+        kcat = get_create_parameter(model, kcp)
 
         # We need an observable for the substrate to use in the rate law
         obj_to_observe = obj_active if stmt.is_activation else obj_inactive
