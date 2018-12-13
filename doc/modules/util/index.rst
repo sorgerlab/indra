@@ -25,7 +25,7 @@ A simple utility to get graphs from kappa (:py:mod:`indra.util.kappa_util`)
 Define NestedDict (:py:mod:`indra.util.nested_dict`)
 ----------------------------------------------------
 
-.. automodule::indra.util.nested_dict
+.. automodule:: indra.util.nested_dict
     :members:
 
 
@@ -39,5 +39,5 @@ Some shorthands for plot formatting (:py:mod:`indra.util.plot_formatting`)
 A script to repickle a pickle of Statements (:py:mod:`indra.util.repickle_stmts`)
 ---------------------------------------------------------------------------------
 
-.. automodule::indra.util.repickle_stmts
+.. automodule:: indra.util.repickle_stmts
     :members:
