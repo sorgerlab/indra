@@ -856,8 +856,9 @@ class Policy(object):
         return str(self)
 
     def __str__(self):
-        param_str = json.dumps(self.parameters) if self.parameters else ''
-        sites_str = json.dumps(self.sites) if self.sites else ''
+        param_dict = {k: str(v) for k, v in self.parameters.items()}
+        param_str = (', ' + json.dumps(param_dict)) if param_dict else ''
+        sites_str = (', ' + json.dumps(self.sites)) if self.sites else ''
         s = 'Policy(%s%s%s)' % (self.name, param_str, sites_str)
         return s
 
@@ -881,6 +882,9 @@ class Param(object):
         self.name = name
         self.value = value
         self.unique = unique
+
+    def __repr__(self):
+        return 'Param(%s,%f)' % (self.name, self.value)
 
 
 

@@ -1178,8 +1178,23 @@ def test_activity_agent_rule_name():
 def test_policy_object():
     stmt = Phosphorylation(Agent('a'), Agent('b'))
     pa = PysbAssembler([stmt])
-    model = pa.make_model(policies={stmt.uuid: Policy('two_step')})
+    pol = Policy('two_step')
+    model = pa.make_model(policies={stmt.uuid: pol})
     assert len(model.rules) == 3
+    assert str(pol) == 'Policy(two_step)'
+
+
+def test_policy_parameters():
+    pol = Policy('two_step', parameters={'kf': Param('a', 1.0),
+                                         'kr': Param('b', 2.0),
+                                         'kc': Param('c', 3.0)})
+    # Make sure we can correctly stringify here
+    assert str(pol)
+    stmt = Deubiquitination(Agent('a'), Agent('b'))
+    pa = PysbAssembler([stmt])
+    model = pa.make_model(policies={stmt.uuid: pol})
+    assert model.parameters['c'].value == 3.0
+
 
 
 @raises(pa.UnknownPolicyError)
@@ -1196,3 +1211,17 @@ def test_mod_parameter():
     pa = PysbAssembler([stmt])
     model = pa.make_model(policies={stmt.uuid: pol})
     assert model.parameters['my_kf_param'].value == 0.99
+
+
+def test_policy_multiple():
+    pol1 = Policy('michaelis_menten', parameters={'Km': Param('my_Km', 1.0),
+                                                  'kc': Param('my_kc', 1e-1)})
+    pol2 = Policy('one_step', parameters={'kf': Param('d', 10.0)})
+    stmt1 = Inhibition(Agent('a'), Agent('b'))
+    stmt2 = Translocation(Agent('a'), 'cytoplasm', 'nucleus')
+    pa = PysbAssembler([stmt1, stmt2])
+    model = pa.make_model(policies={stmt1.uuid: pol1,
+                                    stmt2.uuid: pol2})
+    assert model.parameters['d'].value == 10.0
+    print(model.expressions['a_deactivates_b_activity_rate'])
+    print(model.rules)
