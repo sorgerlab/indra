@@ -1195,13 +1195,16 @@ def modification_assemble_two_step(stmt, model, agent_set, parameters):
 
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
+    krp = parameters.get('kr', Param(param_name, 1e-1, True))
+    kr_bind = get_create_parameter(model, krp.name, krp.value, krp.unique)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mc.mod_type)
-    kf_mod = get_create_parameter(model, param_name, 100)
+    kcp = parameters.get('kc', Param(param_name, 100, True))
+    kf_mod = get_create_parameter(model, kcp.name, kcp.value, kcp.unique)
 
     mod_site = get_mod_site_name(mc)
 
@@ -1818,6 +1821,7 @@ def decreaseamount_assemble_interactions_only(stmt, model, agent_set, parameters
     obj = model.monomers[obj_base_agent.name]
     rule_subj_str = get_agent_rule_str(stmt.subj)
     rule_obj_str = get_agent_rule_str(stmt.obj)
+    st
     rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
 
     subj_site_name = get_binding_site_name(stmt.obj)
