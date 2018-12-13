@@ -1639,7 +1639,8 @@ gef_monomers_default = gef_monomers_one_step
 
 
 def gef_assemble_interactions_only(stmt, model, agent_set, parameters):
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
     gef = model.monomers[stmt.gef.name]
     ras = model.monomers[stmt.ras.name]
     rule_gef_str = get_agent_rule_str(stmt.gef)
@@ -1663,7 +1664,8 @@ def gef_assemble_one_step(stmt, model, agent_set, parameters):
 
     param_name = 'kf_' + stmt.gef.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gef'
-    kf_gef = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_gef = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
 
     rule_gef_str = get_agent_rule_str(stmt.gef)
     rule_ras_str = get_agent_rule_str(stmt.ras)
@@ -1702,7 +1704,8 @@ gap_monomers_default = gap_monomers_one_step
 
 
 def gap_assemble_interactions_only(stmt, model, agent_set, parameters):
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
     gap = model.monomers[stmt.gap.name]
     ras = model.monomers[stmt.ras.name]
     rule_gap_str = get_agent_rule_str(stmt.gap)
@@ -1726,7 +1729,8 @@ def gap_assemble_one_step(stmt, model, agent_set, parameters):
 
     param_name = 'kf_' + stmt.gap.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gap'
-    kf_gap = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_gap = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
 
     rule_gap_str = get_agent_rule_str(stmt.gap)
     rule_ras_str = get_agent_rule_str(stmt.ras)
