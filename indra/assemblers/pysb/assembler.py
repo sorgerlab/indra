@@ -1812,11 +1812,13 @@ def increaseamount_monomers_one_step(stmt, agent_set):
         agent_set.get_create_base_agent(stmt.subj)
 
 
-def increaseamount_assemble_interactions_only(stmt, model, agent_set, parameters):
+def increaseamount_assemble_interactions_only(stmt, model, agent_set,
+                                              parameters):
     # No interaction when subj is None
     if stmt.subj is None:
         return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
     subj_base_agent = agent_set.get_create_base_agent(stmt.subj)
     obj_base_agent = agent_set.get_create_base_agent(stmt.obj)
     subj = model.monomers[subj_base_agent.name]
@@ -1841,7 +1843,8 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set, parameters
     add_rule_to_model(model, r, anns)
 
 
-def increaseamount_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
+def increaseamount_assemble_one_step(stmt, model, agent_set, parameters,
+                                     rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
         if not isinstance(stmt, ist.Influence):
             logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
@@ -1878,18 +1881,23 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, parameters, rate_la
                                 stmt.obj.name[0].lower() + '_synth'
             # Scale the average apparent increaseamount rate by the default
             # protein initial condition
-            synth_rate = get_create_parameter(model, param_name, 2e-4)
+            sp = parameters.get('kf', Param(param_name, 2e-4, True))
+            synth_rate = get_create_parameter(model, sp.name, sp.value,
+                                              sp.unique)
         if rate_law == 'hill':
             # k * [subj]**n / (K_A**n + [subj]**n)
             param_name = 'kf_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
-            kf = get_create_parameter(model, param_name, 4)
+            kfp = parameters.get('kf', Param(param_name, 4, True))
+            kf = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
             param_name = 'Ka_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
-            Ka = get_create_parameter(model, param_name, 1e4)
+            Kap = parameters.get('Ka', Param(param_name, 1e4, True))
+            Ka = get_create_parameter(model, Kap.name, Kap.value, Kap.unique)
             param_name = 'n_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
-            n_hill = get_create_parameter(model, param_name, 1)
+            np = parameters.get('n', Param(param_name, 1, True))
+            n_hill = get_create_parameter(model, np.name, np.value, np.unique)
             obs_name = '%s_subj_obs' % rule_name
             subj_obs = Observable(obs_name, subj_pattern)
             model.add_component(subj_obs)
@@ -1904,6 +1912,7 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, parameters, rate_la
     if stmt.subj:
         anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
+
 
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
@@ -1921,8 +1930,9 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set, parameters):
     if stmt.subj is None:
         # See U. Alon paper on proteome dynamics at 10.1126/science.1199784
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_deg'
-        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-5,
-                                                   unique=True)
+        kfp = parameters.get('kf', Param(param_name, 2e-5, True))
+        kf_one_step_degrade = get_create_parameter(model, kfp.name, kfp.value,
+                                                   kfp.unique)
         rule_name = '%s_degraded' % rule_obj_str
         r = Rule(rule_name, obj_pattern >> None, kf_one_step_degrade)
     else:
@@ -1932,16 +1942,20 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set, parameters):
                      stmt.obj.name[0].lower() + '_deg'
         # Scale the average apparent decreaseamount rate by the default
         # protein initial condition
-        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-9)
+        kfp = parameters.get('kf', Param(param_name, 2e-9, True))
+        kf_one_step_degrade = get_create_parameter(model, kfp.name, kfp.value,
+                                                   kfp.unique)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name,
                  subj_pattern + obj_pattern >> subj_pattern + None,
                  kf_one_step_degrade)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
+    anns += [Annotation(rule_name, obj_pattern.monomer.name,
+                        'rule_has_object')]
     if stmt.subj:
-        anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
+        anns += [Annotation(rule_name, subj_pattern.monomer.name,
+                            'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
 
