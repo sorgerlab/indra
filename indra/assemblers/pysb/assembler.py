@@ -18,7 +18,7 @@ from indra.databases import context_client, get_identifiers_url
 from .sites import *
 from .common import *
 from .export import export_sbgn
-from .base_agents import _BaseAgentSet
+from .base_agents import BaseAgentSet
 from .preassembler import PysbPreassembler
 
 # Python 2
@@ -470,7 +470,7 @@ class PysbAssembler(object):
         A list of INDRA statements to be assembled.
     model : pysb.Model
         A PySB model object that is assembled by this class.
-    agent_set : _BaseAgentSet
+    agent_set : BaseAgentSet
         A set of BaseAgents used during the assembly process.
     """
     def __init__(self, statements=None):
@@ -571,7 +571,7 @@ class PysbAssembler(object):
         self.statements = ppa.statements
         self.model = Model()
         self.model.name = model_name
-        self.agent_set = _BaseAgentSet()
+        self.agent_set = BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
         self._monomers()

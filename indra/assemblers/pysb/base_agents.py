@@ -1,11 +1,11 @@
-__all__ = ['_BaseAgentSet', '_BaseAgent']
+__all__ = ['BaseAgentSet', 'BaseAgent']
 from pysb import Annotation
 from indra.statements import *
 from .common import _n
 from .sites import states, get_binding_site_name, get_mod_site_name
 
 
-class _BaseAgentSet(object):
+class BaseAgentSet(object):
     """Container for a dict of BaseAgents with their names as keys."""
     def __init__(self):
         self.agents = {}
@@ -15,7 +15,7 @@ class _BaseAgentSet(object):
         try:
             base_agent = self.agents[_n(agent.name)]
         except KeyError:
-            base_agent = _BaseAgent(_n(agent.name))
+            base_agent = BaseAgent(_n(agent.name))
             self.agents[_n(agent.name)] = base_agent
 
         # If it's a molecular agent
@@ -65,7 +65,7 @@ class _BaseAgentSet(object):
         return self.agents[name]
 
 
-class _BaseAgent(object):
+class BaseAgent(object):
     """A BaseAgent aggregates the global properties of an Agent.
 
     The BaseAgent class aggregates the name, sites, site states, active forms,
