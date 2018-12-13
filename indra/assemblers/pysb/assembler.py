@@ -1415,12 +1415,6 @@ for mc, rate_law in itertools.product(ist.modclass_to_modtype.keys(),
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
 
-def autophosphorylation_monomers_interactions_only(stmt, agent_set):
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    phos_site = get_mod_site_name(stmt._get_mod_condition())
-    enz.create_site(phos_site, ('u', 'p'))
-
-
 def autophosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
     phos_site = get_mod_site_name(stmt._get_mod_condition())
@@ -1430,7 +1424,9 @@ def autophosphorylation_monomers_one_step(stmt, agent_set):
 def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
     # http://www.jbc.org/content/286/4/2689.full
-    kf_autophospho = get_create_parameter(model, param_name, 1e-2)
+    kfp = parameters.get('kf', Param(param_name, 1e-2, True))
+    kf_autophospho = get_create_parameter(model, kfp.name, kfp.value,
+                                          kfp.unique)
 
     # See NOTE in monomers_one_step
     phos_site = get_mod_site_name(stmt._get_mod_condition())
@@ -1442,26 +1438,22 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str,
                                           phos_site)
     r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-    anns = [Annotation(rule_name, pattern_unphos.monomer.name, 'rule_has_subject'),
-            Annotation(rule_name, pattern_phos.monomer.name, 'rule_has_object')]
+    anns = [Annotation(rule_name, pattern_unphos.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, pattern_phos.monomer.name,
+                       'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
 
 autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
+autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
+autophosphorylation_monomers_interactions_only = \
+    autophosphorylation_monomers_one_step
 autophosphorylation_assemble_interactions_only = \
     autophosphorylation_assemble_one_step
-autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
 
 # TRANSPHOSPHORYLATION ###################################################
-
-def transphosphorylation_monomers_interactions_only(stmt, agent_set):
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    # Assume there is exactly one bound_to species
-    sub = agent_set.get_create_base_agent(stmt.enz)
-    phos_site = get_mod_site_name(stmt._get_mod_condition())
-    sub.create_site(phos_site, ('u', 'p'))
-
 
 def transphosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
@@ -1474,7 +1466,8 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   _n(stmt.enz.bound_conditions[0].agent.name[0]).lower() +
                   '_transphos')
-    kf = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
 
     phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz_pattern = get_monomer_pattern(model, stmt.enz)
@@ -1497,9 +1490,11 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
 
 
 transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
+transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
+transphosphorylation_monomers_interactions_only = \
+    transphosphorylation_monomers_one_step
 transphosphorylation_assemble_interactions_only = \
     transphosphorylation_assemble_one_step
-transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
 
 # ACTIVATION ######################################################
 
