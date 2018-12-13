@@ -1,12 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-
 import re
 import json
 import logging
 import itertools
 from collections import OrderedDict
-
 from indra.statements import *
 from indra.databases import context_client, ndex_client, get_identifiers_url
 
@@ -169,7 +167,7 @@ class CxAssembler(object):
             cx_str = self.print_cx()
             fh.write(cx_str)
 
-    def upload_model(self, ndex_cred, private=True, style='default'):
+    def upload_model(self, ndex_cred=None, private=True, style='default'):
         """Creates a new NDEx network of the assembled CX model.
 
         To upload the assembled CX model to NDEx, you need to have
