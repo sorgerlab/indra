@@ -103,20 +103,27 @@ def add_rule_to_model(model, rule, annotations=None):
         logger.debug(msg)
 
 
-def get_create_parameter(model, name, value, unique=True):
+def get_create_parameter(model, param):
     """Return parameter with given name, creating it if needed.
 
     If unique is false and the parameter exists, the value is not changed; if
     it does not exist, it will be created. If unique is true then upon conflict
     a number is added to the end of the parameter name.
+
+    Parameters
+    ----------
+    model : pysb.Model
+        The model to add the parameter to
+    param : Param
+        An assembly parameter object
     """
-    norm_name = _n(name)
+    norm_name = _n(param.name)
     parameter = model.parameters.get(norm_name)
 
-    if not unique and parameter is not None:
+    if not param.unique and parameter is not None:
         return parameter
 
-    if unique:
+    if param.unique:
         pnum = 1
         while True:
             pname = norm_name + '_%d' % pnum
@@ -126,7 +133,7 @@ def get_create_parameter(model, name, value, unique=True):
     else:
         pname = norm_name
 
-    parameter = Parameter(pname, value)
+    parameter = Parameter(pname, param.value)
     model.add_component(parameter)
     return parameter
 
@@ -1096,9 +1103,8 @@ def modification_monomers_two_step(stmt, agent_set):
 def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
-    kf_param = parameters.get('kf', Param('kf_bind', 1.0))
-    kf_bind = get_create_parameter(model, kf_param.name, kf_param.value,
-                                   kf_param.unique)
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp)
     enz = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
     active_site = mod_acttype_map[stmt.__class__]
@@ -1146,21 +1152,18 @@ def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=
     if not rate_law:
         param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
                                      stmt.sub.name[0].lower(), mc.mod_type)
-        param = parameters.get('kf', Param(param_name, 1e-6, True))
-        mod_rate = get_create_parameter(model, param.name, param.value,
-                                        param.unique)
+        kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+        mod_rate = get_create_parameter(model, kfp)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.enz.name[0].lower() +
                       stmt.sub.name[0].lower() + '_' + mc.mod_type)
-        param = parameters.get('Km', Param(param_name, 1e8, True))
-        Km = get_create_parameter(model, param.name, param.value,
-                                  param.unique)
+        Kmp = parameters.get('Km', Param(param_name, 1e8, True))
+        Km = get_create_parameter(model, Kmp)
         param_name = ('kc_' + stmt.enz.name[0].lower() +
                       stmt.sub.name[0].lower() + '_' + mc.mod_type)
-        param = parameters.get('kc', Param(param_name, 100, True))
-        kcat = get_create_parameter(model, param.name, param.value,
-                                    param.unique)
+        kcp = parameters.get('kc', Param(param_name, 100, True))
+        kcat = get_create_parameter(model, kcp)
 
         # We need an observable for the substrate to use in the rate law
         sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
@@ -1196,15 +1199,15 @@ def modification_assemble_two_step(stmt, model, agent_set, parameters):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     kfp = parameters.get('kf', Param(param_name, 1e-6, True))
-    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_bind = get_create_parameter(model, kfp)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
     krp = parameters.get('kr', Param(param_name, 1e-1, True))
-    kr_bind = get_create_parameter(model, krp.name, krp.value, krp.unique)
+    kr_bind = get_create_parameter(model, krp)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_' + mc.mod_type)
     kcp = parameters.get('kc', Param(param_name, 100, True))
-    kf_mod = get_create_parameter(model, kcp.name, kcp.value, kcp.unique)
+    kf_mod = get_create_parameter(model, kcp)
 
     mod_site = get_mod_site_name(mc)
 
@@ -1425,8 +1428,7 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
     # http://www.jbc.org/content/286/4/2689.full
     kfp = parameters.get('kf', Param(param_name, 1e-2, True))
-    kf_autophospho = get_create_parameter(model, kfp.name, kfp.value,
-                                          kfp.unique)
+    kf_autophospho = get_create_parameter(model, kfp)
 
     # See NOTE in monomers_one_step
     phos_site = get_mod_site_name(stmt._get_mod_condition())
@@ -1467,7 +1469,7 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
                   _n(stmt.enz.bound_conditions[0].agent.name[0]).lower() +
                   '_transphos')
     kfp = parameters.get('kf', Param(param_name, 1e-6, True))
-    kf = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf = get_create_parameter(model, kfp)
 
     phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz_pattern = get_monomer_pattern(model, stmt.enz)
@@ -1525,7 +1527,7 @@ def regulateactivity_monomers_one_step(stmt, agent_set):
 def regulateactivity_assemble_interactions_only(stmt, model, agent_set,
                                                 parameters):
     kfp = parameters.get('kf', Param('kf_bind', 1.0))
-    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_bind = get_create_parameter(model, kfp)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
 
@@ -1573,18 +1575,17 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, parameters, rate_
         param_name = 'kf_' + stmt.subj.name[0].lower() + \
             stmt.obj.name[0].lower() + '_act'
         kfp = parameters.get('kf', Param(param_name, 1e-6, True))
-        act_rate = get_create_parameter(model, kfp.name, kfp.value,
-                                        kfp.unique)
+        act_rate = get_create_parameter(model, kfp)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
         Kmp = parameters.get('Km', Param(param_name, 1e8, True))
-        Km = get_create_parameter(model, Kmp.name, Kmp.value, Kmp.unique)
+        Km = get_create_parameter(model, Kmp.name)
         param_name = ('kc_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
         kcp = parameters.get('kc', Param(param_name, 100, True))
-        kcat = get_create_parameter(model, kcp.name, kcp.value, kcp.unique)
+        kcat = get_create_parameter(model, kcp.name)
 
         # We need an observable for the substrate to use in the rate law
         obj_to_observe = obj_active if stmt.is_activation else obj_inactive
@@ -1635,7 +1636,7 @@ gef_monomers_default = gef_monomers_one_step
 
 def gef_assemble_interactions_only(stmt, model, agent_set, parameters):
     kfp = parameters.get('kf', Param('kf_bind', 1.0))
-    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_bind = get_create_parameter(model, kfp)
     gef = model.monomers[stmt.gef.name]
     ras = model.monomers[stmt.ras.name]
     rule_gef_str = get_agent_rule_str(stmt.gef)
@@ -1660,7 +1661,7 @@ def gef_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.gef.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gef'
     kfp = parameters.get('kf', Param(param_name, 1e-6, True))
-    kf_gef = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_gef = get_create_parameter(model, kfp)
 
     rule_gef_str = get_agent_rule_str(stmt.gef)
     rule_ras_str = get_agent_rule_str(stmt.ras)
@@ -1700,7 +1701,7 @@ gap_monomers_default = gap_monomers_one_step
 
 def gap_assemble_interactions_only(stmt, model, agent_set, parameters):
     kfp = parameters.get('kf', Param('kf_bind', 1.0))
-    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_bind = get_create_parameter(model, kfp)
     gap = model.monomers[stmt.gap.name]
     ras = model.monomers[stmt.ras.name]
     rule_gap_str = get_agent_rule_str(stmt.gap)
@@ -1725,7 +1726,7 @@ def gap_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.gap.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gap'
     kfp = parameters.get('kf', Param(param_name, 1e-6, True))
-    kf_gap = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_gap = get_create_parameter(model, kfp)
 
     rule_gap_str = get_agent_rule_str(stmt.gap)
     rule_ras_str = get_agent_rule_str(stmt.ras)
@@ -1823,7 +1824,7 @@ def increaseamount_assemble_interactions_only(stmt, model, agent_set,
     if stmt.subj is None:
         return
     kfp = parameters.get('kf', Param('kf_bind', 1.0))
-    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+    kf_bind = get_create_parameter(model, kfp)
     subj_base_agent = agent_set.get_create_base_agent(stmt.subj)
     obj_base_agent = agent_set.get_create_base_agent(stmt.obj)
     subj = model.monomers[subj_base_agent.name]
@@ -1872,8 +1873,8 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, parameters,
     if stmt.subj is None:
         rule_name = '%s_synthesized' % rule_obj_str
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_synth'
-        kf_one_step_synth = get_create_parameter(model, param_name, 2,
-                                                 unique=True)
+        kfp = parameters.get('kf', Param(param_name, 2, True))
+        kf_one_step_synth = get_create_parameter(model, kfp)
         r = Rule(rule_name, None >> obj_pattern, kf_one_step_synth)
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -1887,22 +1888,21 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, parameters,
             # Scale the average apparent increaseamount rate by the default
             # protein initial condition
             sp = parameters.get('kf', Param(param_name, 2e-4, True))
-            synth_rate = get_create_parameter(model, sp.name, sp.value,
-                                              sp.unique)
+            synth_rate = get_create_parameter(model, sp)
         if rate_law == 'hill':
             # k * [subj]**n / (K_A**n + [subj]**n)
             param_name = 'kf_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
             kfp = parameters.get('kf', Param(param_name, 4, True))
-            kf = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
+            kf = get_create_parameter(model, kfp)
             param_name = 'Ka_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
             Kap = parameters.get('Ka', Param(param_name, 1e4, True))
-            Ka = get_create_parameter(model, Kap.name, Kap.value, Kap.unique)
+            Ka = get_create_parameter(model, Kap)
             param_name = 'n_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
             np = parameters.get('n', Param(param_name, 1, True))
-            n_hill = get_create_parameter(model, np.name, np.value, np.unique)
+            n_hill = get_create_parameter(model, np)
             obs_name = '%s_subj_obs' % rule_name
             subj_obs = Observable(obs_name, subj_pattern)
             model.add_component(subj_obs)
@@ -1936,8 +1936,7 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set, parameters):
         # See U. Alon paper on proteome dynamics at 10.1126/science.1199784
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_deg'
         kfp = parameters.get('kf', Param(param_name, 2e-5, True))
-        kf_one_step_degrade = get_create_parameter(model, kfp.name, kfp.value,
-                                                   kfp.unique)
+        kf_one_step_degrade = get_create_parameter(model, kfp)
         rule_name = '%s_degraded' % rule_obj_str
         r = Rule(rule_name, obj_pattern >> None, kf_one_step_degrade)
     else:
@@ -1948,8 +1947,7 @@ def decreaseamount_assemble_one_step(stmt, model, agent_set, parameters):
         # Scale the average apparent decreaseamount rate by the default
         # protein initial condition
         kfp = parameters.get('kf', Param(param_name, 2e-9, True))
-        kf_one_step_degrade = get_create_parameter(model, kfp.name, kfp.value,
-                                                   kfp.unique)
+        kf_one_step_degrade = get_create_parameter(model, kfp)
         rule_subj_str = get_agent_rule_str(stmt.subj)
         rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
         r = Rule(rule_name,
@@ -2042,8 +2040,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
                                           obj_to_monomers[0].name[0].lower())
         kfp = parameters.get('kf', Param(param_name, 2, True))
-        kf_one_step_convert = get_create_parameter(model, kfp.name, kfp.value,
-                                                   kfp.unique)
+        kf_one_step_convert = get_create_parameter(model, kfp)
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
                  kf_one_step_convert)
     else:
@@ -2059,8 +2056,7 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         # Scale the average apparent increaseamount rate by the default
         # protein initial condition
         kfp = parameters.get('kf', Param(param_name, 2e-4, True))
-        kf_one_step_convert = get_create_parameter(model, kfp.name, kfp.value,
-                                                   kfp.unique)
+        kf_one_step_convert = get_create_parameter(model, kfp)
 
         r = Rule(rule_name, subj_pattern + obj_from_pattern >>
                             result_pattern,
