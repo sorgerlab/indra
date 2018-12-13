@@ -1,14 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
+from builtins import dict, str
 
-import itertools
+import re
 import json
 import logging
-import re
-from builtins import str
+import itertools
 from collections import OrderedDict
 
-from indra.databases import context_client, ndex_client, get_identifiers_url
 from indra.statements import *
+from indra.databases import context_client, ndex_client, get_identifiers_url
 
 # Python 2
 try:
