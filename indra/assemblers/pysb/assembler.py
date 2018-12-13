@@ -1527,8 +1527,10 @@ def regulateactivity_monomers_one_step(stmt, agent_set):
     obj.add_activity_type(stmt.obj_activity)
 
 
-def regulateactivity_assemble_interactions_only(stmt, model, agent_set, parameters):
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+def regulateactivity_assemble_interactions_only(stmt, model, agent_set,
+                                                parameters):
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp.name, kfp.value, kfp.unique)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
 
@@ -1575,15 +1577,19 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, parameters, rate_
     if not rate_law:
         param_name = 'kf_' + stmt.subj.name[0].lower() + \
             stmt.obj.name[0].lower() + '_act'
-        act_rate = get_create_parameter(model, param_name, 1e-6)
+        kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+        act_rate = get_create_parameter(model, kfp.name, kfp.value,
+                                        kfp.unique)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
-        Km = get_create_parameter(model, param_name, 1e8)
+        Kmp = parameters.get('Km', Param(param_name, 1e8, True))
+        Km = get_create_parameter(model, Kmp.name, Kmp.value, Kmp.unique)
         param_name = ('kc_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
-        kcat = get_create_parameter(model, param_name, 100)
+        kcp = parameters.get('kc', Param(param_name, 100, True))
+        kcat = get_create_parameter(model, kcp.name, kcp.value, kcp.unique)
 
         # We need an observable for the substrate to use in the rate law
         obj_to_observe = obj_active if stmt.is_activation else obj_inactive
@@ -2036,8 +2042,9 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
         rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
         param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
                                           obj_to_monomers[0].name[0].lower())
-        kf_one_step_convert = get_create_parameter(model, param_name, 2,
-                                                   unique=True)
+        kfp = parameters.get('kf', Param(param_name, 2, True))
+        kf_one_step_convert = get_create_parameter(model, kfp.name, kfp.value,
+                                                   kfp.unique)
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
                  kf_one_step_convert)
     else:
@@ -2052,7 +2059,9 @@ def conversion_assemble_one_step(stmt, model, agent_set, parameters):
              obj_to_monomers[0].name[0].lower())
         # Scale the average apparent increaseamount rate by the default
         # protein initial condition
-        kf_one_step_convert = get_create_parameter(model, param_name, 2e-4)
+        kfp = parameters.get('kf', Param(param_name, 2e-4, True))
+        kf_one_step_convert = get_create_parameter(model, kfp.name, kfp.value,
+                                                   kfp.unique)
 
         r = Rule(rule_name, subj_pattern + obj_from_pattern >>
                             result_pattern,
