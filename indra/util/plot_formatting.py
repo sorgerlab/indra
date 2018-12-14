@@ -5,6 +5,7 @@ import matplotlib
 fontsize=7
 
 def set_fig_params():
+    """Set standardized font properties for figure."""
     matplotlib.rcParams['font.sans-serif'] = 'Arial'
     matplotlib.rcParams['text.usetex'] = True
     matplotlib.rcParams['text.latex.preamble'] = [
@@ -14,6 +15,7 @@ def set_fig_params():
             '\\usepackage{underscore}',]
 
 def format_axis(ax, label_padding=2, tick_padding=0, yticks_position='left'):
+    """Set standardized axis formatting for figure."""
     ax.xaxis.set_ticks_position('bottom')
     ax.yaxis.set_ticks_position(yticks_position)
     ax.yaxis.set_tick_params(which='both', direction='out', labelsize=fontsize,

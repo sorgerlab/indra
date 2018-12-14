@@ -34,10 +34,3 @@ Some shorthands for plot formatting (:py:mod:`indra.util.plot_formatting`)
 
 .. automodule:: indra.util.plot_formatting
     :members:
-
-
-A script to repickle a pickle of Statements (:py:mod:`indra.util.repickle_stmts`)
----------------------------------------------------------------------------------
-
-.. automodule:: indra.util.repickle_stmts
-    :members:
