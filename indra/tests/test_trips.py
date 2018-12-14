@@ -223,3 +223,17 @@ def test_simple_decrease():
     assert_if_hgnc_then_up(st)
     assert_grounding_value_or_none(st)
     assert st.evidence
+
+
+@attr('webservice', 'slow')
+def test_no_shared_objects():
+    """Make sure shared objects are not being created between statements"""
+    texts = ('MEK binds ERK and RAF',
+             'HEDGEHOG activates GLI1 and BCL2',
+             'RAF phosphorylates MEK and ALG-2')
+    for text in texts:
+        tp = trips.process_text(text)
+        stmts = tp.statements
+        assert len(stmts) == 2
+        stmt1, stmt2 = stmts
+        assert stmt1.evidence[0] is not stmt2.evidence[0]
