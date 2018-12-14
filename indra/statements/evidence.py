@@ -8,7 +8,9 @@ __all__ = ['Evidence']
 
 import sys
 import textwrap
+from collections import OrderedDict as _o
 from .util import *
+from .context import Context
 
 
 @python_2_unicode_compatible
