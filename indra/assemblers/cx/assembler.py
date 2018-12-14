@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import io
 import re
 import json
 import logging
@@ -168,7 +167,7 @@ class CxAssembler(object):
             cx_str = self.print_cx()
             fh.write(cx_str)
 
-    def upload_model(self, ndex_cred=None, private=True):
+    def upload_model(self, ndex_cred=None, private=True, style='default'):
         """Creates a new NDEx network of the assembled CX model.
 
         To upload the assembled CX model to NDEx, you need to have
@@ -182,13 +181,18 @@ class CxAssembler(object):
             A dictionary with the following entries:
             'user': NDEx user name
             'password': NDEx password
-
         private : Optional[bool]
             Whether or not the created network will be private on NDEX.
+        style : Optional[str]
+            This optional parameter can either be (1)
+            The UUID of an existing NDEx network whose style should be applied
+            to the new network. (2) Unspecified or 'default' to use
+            the default INDRA-assembled network style. (3) None to
+            not set a network style.
 
         Returns
         -------
-        network_id :  str
+        network_id : str
             The UUID of the NDEx network that was created by uploading
             the assembled CX model.
         """
@@ -198,6 +202,9 @@ class CxAssembler(object):
             ndex_cred = {'user': username,
                          'password': password}
         network_id = ndex_client.create_network(cx_str, ndex_cred, private)
+        if network_id and style:
+            template_id = None if style == 'default' else style
+            ndex_client.set_style(network_id, ndex_cred, style)
         return network_id
 
     def set_context(self, cell_type):
@@ -380,7 +387,7 @@ class CxAssembler(object):
         if self.add_indra_json:
             indra_stmt_json = json.dumps(stmt.to_json())
             edge_attribute = {'po': edge_id,
-                              'n': 'INDRA json',
+                              'n': '__INDRA json',
                               'v': indra_stmt_json}
             self.cx['edgeAttributes'].append(edge_attribute)
 
@@ -416,10 +423,9 @@ class CxAssembler(object):
             self.cx['edgeCitations'].append(edge_citation)
 
         # Add the textual supports for the edge
-        texts = [e.text for e in stmt.evidence if e.text]
+        texts = [_fix_evidence_text(e.text) for e in stmt.evidence if e.text]
         edge_supports = []
         for text in texts:
-            text = text.replace('XREF_BIBR', '')
             support_id = self._get_new_id()
             support = {'@id': support_id,
                        'text': text}
@@ -432,7 +438,7 @@ class CxAssembler(object):
 
         belief_str = '%.2f' % stmt.belief
         edge_attribute = {'po': edge_id,
-                          'n': 'Belief score',
+                          'n': 'belief',
                           'v': belief_str}
         self.cx['edgeAttributes'].append(edge_attribute)
 
@@ -442,7 +448,7 @@ class CxAssembler(object):
         if texts:
             text = texts[0]
             edge_attribute = {'po': edge_id,
-                              'n': 'Text',
+                              'n': 'text',
                               'v': text}
             self.cx['edgeAttributes'].append(edge_attribute)
 
@@ -473,6 +479,7 @@ def _get_support_type(stmt):
         return 'database and literature'
     elif not has_db and has_reading:
         return 'literature'
+
 
 def _get_stmt_type(stmt):
     if isinstance(stmt, AddModification):
@@ -510,6 +517,7 @@ def _get_stmt_type(stmt):
         edge_polarity = 'none'
     return edge_type, edge_polarity
 
+
 def _get_agent_type(agent):
     hgnc_id = agent.db_refs.get('HGNC')
     uniprot_id = agent.db_refs.get('UP')
@@ -533,3 +541,17 @@ def _get_agent_type(agent):
     else:
         agent_type = 'other'
     return agent_type
+
+
+def _fix_evidence_text(txt):
+    """Eliminate some symbols to have cleaner supporting text."""
+    txt = re.sub('[ ]?\( xref \)', '', txt)
+    # This is to make [ xref ] become [] to match the two readers
+    txt = re.sub('\[ xref \]', '[]', txt)
+    txt = re.sub('[\(]?XREF_BIBR[\)]?[,]?', '', txt)
+    txt = re.sub('[\(]?XREF_FIG[\)]?[,]?', '', txt)
+    txt = re.sub('[\(]?XREF_SUPPLEMENT[\)]?[,]?', '', txt)
+    txt = txt.strip()
+    return txt
+
+
