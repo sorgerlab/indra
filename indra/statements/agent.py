@@ -12,8 +12,8 @@ from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
+from indra.statements.statements import modtype_conditions, modtype_to_modclass
 from .concept import Concept
-from .statements import modtype_conditions, modtype_to_modclass
 from .resources import get_valid_residue, get_valid_location, activity_types, \
     amino_acids
 

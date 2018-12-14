@@ -4,6 +4,7 @@ from builtins import dict, str
 
 __all__ = ['get_valid_residue', 'get_valid_location', 'activity_types',
            'cellular_components', 'cellular_components_reverse',
+           'amino_acids', 'amino_acids_reverse',
            'InvalidLocationError', 'InvalidResidueError']
 
 

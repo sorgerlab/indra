@@ -210,7 +210,6 @@ import itertools
 from hashlib import md5
 from copy import deepcopy
 from collections import OrderedDict as _o
-from .agent import *
 from .concept import *
 from .resources import *
 
@@ -223,8 +222,9 @@ try:  # Python 2
 except NameError:  # Python 3
     basestring = str
 
+
 def _make_hash(s, n_bytes):
-    """Make the has from a matches key."""
+    """Make the hash from a matches key."""
     raw_h = int(md5(s.encode('utf-8')).hexdigest()[:n_bytes], 16)
     # Make it a signed int.
     return 16**n_bytes//2 - raw_h
@@ -2861,6 +2861,9 @@ def _get_mod_inverse_maps():
 
 
 modtype_to_inverse, modclass_to_inverse = _get_mod_inverse_maps()
+
+
+from .agent import *
 
 
 stmt_sbo_map = {
