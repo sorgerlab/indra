@@ -1,15 +1,22 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
+
+
+__all__ = ['Agent', 'BoundCondition', 'MutCondition', 'ModCondition',
+           'ActivityCondition']
+
+
 import logging
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
 import indra.databases.hgnc_client as hgc
 import indra.databases.uniprot_client as upc
-from .statements import get_valid_residue, _aa_short_caps, \
-    modtype_conditions, modtype_to_modclass, activity_types,\
-    get_valid_location
 from .concept import Concept
+from .statements import modtype_conditions, modtype_to_modclass
+from .resources import get_valid_residue, get_valid_location, activity_types, \
+    amino_acids
+
 
 
 logger = logging.getLogger(__name__)
@@ -687,4 +694,12 @@ class ActivityCondition(object):
     def __repr__(self):
         return str(self)
 
+
+def _aa_short_caps(res):
+    if res is None:
+        return None
+    res_info = amino_acids.get(res)
+    if not res_info:
+        return None
+    return res_info['short_name'].capitalize()
 

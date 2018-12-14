@@ -198,12 +198,10 @@ __all__ = [
     'modclass_to_inverse', 'get_statement_by_name'
     ]
 
-import os
 import abc
 import sys
 import json
 import uuid
-import rdflib
 import logging
 import networkx
 import textwrap
@@ -212,8 +210,9 @@ import itertools
 from hashlib import md5
 from copy import deepcopy
 from collections import OrderedDict as _o
-from .agent import Agent, BoundCondition, ModCondition, MutCondition, \
-    ActivityCondition
+from .agent import *
+from .concept import *
+from .resources import *
 
 
 logger = logging.getLogger(__name__)
@@ -2826,113 +2825,6 @@ def stmts_to_json(stmts_in, use_sbo=False):
         json_dict = [st.to_json(use_sbo) for st in stmts_in]
     return json_dict
 
-
-def get_valid_residue(residue):
-    """Check if the given string represents a valid amino acid residue."""
-    if residue is not None and amino_acids.get(residue) is None:
-        res = amino_acids_reverse.get(residue.lower())
-        if res is None:
-            raise InvalidResidueError(residue)
-        else:
-            return res
-    return residue
-
-
-def get_valid_location(location):
-    """Check if the given location represents a valid cellular component."""
-    # If we're given None, return None
-    if location is not None and cellular_components.get(location) is None:
-        loc = cellular_components_reverse.get(location)
-        if loc is None:
-            raise InvalidLocationError(location)
-        else:
-            return loc
-    return location
-
-
-def _read_activity_types():
-    """Read types of valid activities from a resource file."""
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    ac_file = os.path.abspath(this_dir + '/resources/activity_hierarchy.rdf')
-    g = rdflib.Graph()
-    with open(ac_file, 'r'):
-        g.parse(ac_file, format='nt')
-    act_types = set()
-    for s, _, o in g:
-        subj = s.rpartition('/')[-1]
-        obj = o.rpartition('/')[-1]
-        act_types.add(subj)
-        act_types.add(obj)
-    return sorted(list(act_types))
-
-
-activity_types = _read_activity_types()
-
-
-def _read_cellular_components():
-    """Read cellular components from a resource file."""
-    # Here we load a patch file in addition to the current cellular components
-    # file to make sure we don't error with InvalidLocationError with some
-    # deprecated cellular location names
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    cc_file = this_dir + '/resources/cellular_components.tsv'
-    cc_patch_file = this_dir + '/resources/cellular_components_patch.tsv'
-    cellular_components = {}
-    cellular_components_reverse = {}
-    with open(cc_file, 'rt') as fh:
-        lines = list(fh.readlines())
-    # We add the patch to the end of the lines list
-    with open(cc_patch_file, 'rt') as fh:
-        lines += list(fh.readlines())
-    for lin in lines[1:]:
-        terms = lin.strip().split('\t')
-        cellular_components[terms[1]] = terms[0]
-        # If the GO -> name mapping doesn't exist yet, we add a mapping
-        # but if it already exists (i.e. the try doesn't error) then
-        # we don't add the GO -> name mapping. This ensures that names from
-        # the patch file aren't mapped to in the reverse list.
-        try:
-            cellular_components_reverse[terms[0]]
-        except KeyError:
-            cellular_components_reverse[terms[0]] = terms[1]
-    return cellular_components, cellular_components_reverse
-
-
-cellular_components, cellular_components_reverse = _read_cellular_components()
-
-
-def _read_amino_acids():
-    """Read the amino acid information from a resource file."""
-    this_dir = os.path.dirname(os.path.abspath(__file__))
-    aa_file = this_dir + '/resources/amino_acids.tsv'
-    amino_acids = {}
-    amino_acids_reverse = {}
-    with open(aa_file, 'rt') as fh:
-        lines = fh.readlines()
-    for lin in lines[1:]:
-        terms = lin.strip().split('\t')
-        key = terms[2]
-        val = {'full_name': terms[0],
-               'short_name': terms[1],
-               'indra_name': terms[3]}
-        amino_acids[key] = val
-        for v in val.values():
-            amino_acids_reverse[v] = key
-    return amino_acids, amino_acids_reverse
-
-
-amino_acids, amino_acids_reverse = _read_amino_acids()
-
-
-def _aa_short_caps(res):
-    if res is None:
-        return None
-    res_info = amino_acids.get(res)
-    if not res_info:
-        return None
-    return res_info['short_name'].capitalize()
-
-
 # Mapping between modification type strings and subclasses of Modification
 modtype_to_modclass = {str(cls.__name__.lower()): cls for cls in
                        AddModification.__subclasses__() +
@@ -2999,18 +2891,6 @@ stmt_sbo_map = {
     'rasgap': '0000172',  # catalysis
     'statement': '0000231'  # occuring entity representation
     }
-
-
-class InvalidResidueError(ValueError):
-    """Invalid residue (amino acid) name."""
-    def __init__(self, name):
-        ValueError.__init__(self, "Invalid residue name: '%s'" % name)
-
-
-class InvalidLocationError(ValueError):
-    """Invalid cellular component name."""
-    def __init__(self, name):
-        ValueError.__init__(self, "Invalid location name: '%s'" % name)
 
 
 def draw_stmt_graph(stmts):
