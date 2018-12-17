@@ -684,8 +684,8 @@ class ReadingData(object):
 
     This is primarily designed for use with the database.
 
-    Init Parameters
-    ---------------
+    Parameters
+    ----------
     tcid : int or str
         An identifier of the text content that produced the reading. Must
         be an int for use with the database.
