@@ -25,6 +25,8 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + 'hgnc/HGNC:%s' % db_id
     elif db_name == 'IP':
         url = identifiers_url + 'interpro/%s' % db_id
+    elif db_name == 'IPR':
+        url = identifiers_url + 'interpro/%s' % db_id
     elif db_name == 'CHEBI':
         url = identifiers_url + 'chebi/%s' % db_id
     elif db_name == 'NCIT':
