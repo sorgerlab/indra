@@ -85,6 +85,8 @@ def get_identifiers_url(db_name, db_id):
                'hume_ontology/%s' % db_id)
     elif db_name == 'CWMS':
         url = 'http://trips.ihmc.us/%s' % db_id
+    elif db_name == 'SIGNOR':  # Assuming db_id == Primary ID
+        url = 'https://signor.uniroma2.it/relation_result.php?id' % db_id
     elif db_name == 'SOFIA':
         url = 'http://cs.cmu.edu/sofia/%s' % db_id
     elif db_name == 'TEXT':
