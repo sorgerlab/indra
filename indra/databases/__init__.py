@@ -48,7 +48,7 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'MESH':
         url = identifiers_url + 'mesh/%s' % db_id
     elif db_name == 'EGID':
-        url = 'ncbigene:%s' % db_id
+        url = identifiers_url + 'ncbigene/%s' % db_id
     elif db_name == 'HMDB':
         url = identifiers_url + 'hmdb/%s' % db_id
     elif db_name == 'LINCS':
