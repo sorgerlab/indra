@@ -89,6 +89,10 @@ def get_identifiers_url(db_name, db_id):
         url = 'https://signor.uniroma2.it/relation_result.php?id' % db_id
     elif db_name == 'SOFIA':
         url = 'http://cs.cmu.edu/sofia/%s' % db_id
+    elif db_name == 'CHEMBL':
+        url = 'https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL%s' % db_id
+    elif db_name == 'NONCODE':
+        url = 'http://www.noncode.org/show_gene.php?id=NONHSAG%s' % db_id
     elif db_name == 'TEXT':
         return None
     else:
