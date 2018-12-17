@@ -6,6 +6,7 @@ import logging
 import operator
 import itertools
 import collections
+from copy import deepcopy
 import xml.etree.ElementTree as ET
 from indra.util import read_unicode_csv
 from indra.statements import *
@@ -162,16 +163,14 @@ class TripsProcessor(object):
             elif _is_type(event, 'ONT::DEACTIVATE'):
                 is_activation = False
                 self._add_extracted('ONT::DEACTIVATE', event.attrib['id'])
-
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
-
             for a1, a2 in _agent_list_product((activator_agent,
                                                affected_agent)):
                 if is_activation:
-                    st = Activation(a1, a2, evidence=[ev])
+                    st = Activation(a1, a2, evidence=[deepcopy(ev)])
                 else:
-                    st = Inhibition(a1, a2, evidence=[ev])
+                    st = Inhibition(a1, a2, evidence=[deepcopy(ev)])
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
 
@@ -230,9 +229,9 @@ class TripsProcessor(object):
                 for a1, a2 in _agent_list_product((factor_agent,
                                                    outcome_agent)):
                     if is_activation:
-                        st = Activation(a1, a2, evidence=[ev])
+                        st = Activation(a1, a2, evidence=[deepcopy(ev)])
                     else:
-                        st = Inhibition(a1, a2, evidence=[ev])
+                        st = Inhibition(a1, a2, evidence=[deepcopy(ev)])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
@@ -287,7 +286,7 @@ class TripsProcessor(object):
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
                                                    affected_agent)):
-                    st = Activation(a1, a2, evidence=[ev])
+                    st = Activation(a1, a2, evidence=[deepcopy(ev)])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
             elif affected_event_type.text == 'ONT::ACTIVITY':
@@ -300,7 +299,7 @@ class TripsProcessor(object):
                     continue
                 for a1, a2 in _agent_list_product((controller_agent,
                                                    affected_agent)):
-                    st = Activation(a1, a2, evidence=[ev])
+                    st = Activation(a1, a2, evidence=[deepcopy(ev)])
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
@@ -346,12 +345,11 @@ class TripsProcessor(object):
                 else:
                     agent_agent = self._get_agent_by_id(agent_id,
                                                         event.attrib['id'])
-
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
             for subj, obj in \
                     _agent_list_product((agent_agent, affected_agent)):
-                st = DecreaseAmount(subj, obj, evidence=ev)
+                st = DecreaseAmount(subj, obj, evidence=deepcopy(ev))
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
@@ -411,7 +409,7 @@ class TripsProcessor(object):
             location = self._get_event_location(event)
             for subj, obj in \
                     _agent_list_product((agent_agent, affected_agent)):
-                st = IncreaseAmount(subj, obj, evidence=ev)
+                st = IncreaseAmount(subj, obj, evidence=deepcopy(ev))
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
@@ -486,7 +484,7 @@ class TripsProcessor(object):
                         _agent_list_product((agent_agent, affected_agent)):
                     if obj is None:
                         continue
-                    st = cls(subj, obj, evidence=ev)
+                    st = cls(subj, obj, evidence=deepcopy(ev))
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
                 self._add_extracted(_get_type(event), event.attrib['id'])
@@ -543,7 +541,6 @@ class TripsProcessor(object):
                     continue
                 affected_agent = self._get_agent_by_id(affected_id,
                                                        event.attrib['id'])
-
                 ev = self._get_evidence(event)
                 location = self._get_event_location(event)
                 self._add_extracted(_get_type(event), event.attrib['id'])
@@ -551,7 +548,7 @@ class TripsProcessor(object):
                         _agent_list_product((agent_agent, affected_agent)):
                     if obj is None:
                         continue
-                    st = stmt_type(subj, obj, evidence=ev)
+                    st = stmt_type(subj, obj, evidence=deepcopy(ev))
                     _stmt_location_to_agents(st, location)
                     self.statements.append(st)
 
@@ -688,9 +685,8 @@ class TripsProcessor(object):
             '''
             ev = self._get_evidence(event)
             location = self._get_event_location(event)
-
             for a1, a2 in _agent_list_product((agent1, agent2)):
-                st = Complex([a1, a2], evidence=ev)
+                st = Complex([a1, a2], evidence=deepcopy(ev))
                 _stmt_location_to_agents(st, location)
                 self.statements.append(st)
             self._add_extracted(_get_type(event), event.attrib['id'])
@@ -885,8 +881,10 @@ class TripsProcessor(object):
                 enzyme_agent.bound_conditions = \
                     [BoundCondition(agent_bound, True)]
                 for m in mods:
-                    st = Transphosphorylation(enzyme_agent, m.residue,
-                                              m.position, evidence=[ev])
+                    st = Transphosphorylation(deepcopy(enzyme_agent),
+                                              m.residue,
+                                              m.position,
+                                              evidence=[deepcopy(ev)])
                     _stmt_location_to_agents(st, location)
                     stmts.append(st)
                 return stmts
@@ -895,15 +893,15 @@ class TripsProcessor(object):
                 for m in mods:
                     if isinstance(enzyme_agent, list):
                         for ea in enzyme_agent:
-                            st = Autophosphorylation(ea,
-                                                 m.residue, m.position,
-                                                 evidence=[ev])
+                            st = Autophosphorylation(deepcopy(ea),
+                                                     m.residue, m.position,
+                                                     evidence=[deepcopy(ev)])
                             _stmt_location_to_agents(st, location)
                             stmts.append(st)
                     else:
-                        st = Autophosphorylation(enzyme_agent,
+                        st = Autophosphorylation(deepcopy(enzyme_agent),
                                                  m.residue, m.position,
-                                                 evidence=[ev])
+                                                 evidence=[deepcopy(ev)])
                         _stmt_location_to_agents(st, location)
                         stmts.append(st)
                 return stmts
@@ -912,15 +910,15 @@ class TripsProcessor(object):
                 for m in mods:
                     if isinstance(affected_agent, list):
                         for aa in affected_agent:
-                            st = Autophosphorylation(aa,
+                            st = Autophosphorylation(deepcopy(aa),
                                                      m.residue, m.position,
-                                                     evidence=[ev])
+                                                     evidence=[deepcopy(ev)])
                             _stmt_location_to_agents(st, location)
                             stmts.append(st)
                     else:
-                        st = Autophosphorylation(affected_agent,
+                        st = Autophosphorylation(deepcopy(affected_agent),
                                                  m.residue, m.position,
-                                                 evidence=[ev])
+                                                 evidence=[deepcopy(ev)])
                         _stmt_location_to_agents(st, location)
                         stmts.append(st)
                 return stmts
@@ -933,7 +931,10 @@ class TripsProcessor(object):
             if aa is None:
                 continue
             for m in mods:
-                st = mod_stmt(ea, aa, m.residue, m.position, evidence=ev)
+                st = mod_stmt(deepcopy(ea),
+                              deepcopy(aa),
+                              m.residue, m.position,
+                              evidence=deepcopy(ev))
                 _stmt_location_to_agents(st, location)
                 stmts.append(st)
         self._add_extracted(event_type, event.attrib['id'])
@@ -970,14 +971,17 @@ class TripsProcessor(object):
                 to_location = self._get_cell_loc_by_id(to_loc_id)
             if from_location is None and to_location is None:
                 continue
-            # Get evidence
-            ev = self._get_evidence(event)
+
             if isinstance(agent, list):
                 for aa in agent:
+                    # Get evidence
+                    ev = self._get_evidence(event)
                     st = Translocation(aa, from_location,
-                                       to_location, evidence=ev)
+                                       to_location,
+                                       evidence=ev)
                     self.statements.append(st)
             else:
+                ev = self._get_evidence(event)
                 st = Translocation(agent, from_location,
                                    to_location, evidence=ev)
                 self.statements.append(st)
@@ -1044,7 +1048,8 @@ class TripsProcessor(object):
                 subj = subj_t[0]
                 # Get evidence
                 ev = self._get_evidence(event)
-                st = Conversion(subj, obj_from, obj_to, evidence=ev)
+                st = Conversion(subj, obj_from, obj_to,
+                                evidence=deepcopy(ev))
                 location = self._get_event_location(event)
                 _stmt_location_to_agents(st, location)
                 self._add_extracted(_get_type(event), event.attrib['id'])
@@ -1686,7 +1691,8 @@ def _stmt_location_to_agents(stmt, location):
 
 def _agent_list_product(lists):
     ll = [_listify(l) for l in lists]
-    return itertools.product(*ll)
+    prod = itertools.product(*ll)
+    return [tuple(deepcopy(agent) for agent in t) for t in prod]
 
 
 def _listify(lst):
