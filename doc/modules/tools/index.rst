@@ -1,6 +1,7 @@
 Tools (:py:mod:`indra.tools`)
 =============================
 
+
 Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 -----------------------------------------------------------------------------
 
@@ -25,20 +26,11 @@ Build a model incrementally over time (:py:mod:`indra.tools.incremental_model`)
 .. automodule:: indra.tools.incremental_model
     :members:
 
-The RAS Machine (:py:mod:`indra.tools.machine`)
------------------------------------------------
-
-.. automodule:: indra.tools.machine
-    :members:
-
-High-throughput reading tools (:py:mod:`indra.tools.reading`)
--------------------------------------------------------------
+Tool Sets
+---------
 
 .. toctree::
    :maxdepth: 2
 
    reading/index
-
-
-.. automodule:: indra.tools.reading
-    :members:
+   machine/index
