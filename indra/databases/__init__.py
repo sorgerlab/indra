@@ -70,6 +70,11 @@ def get_identifiers_url(db_name, db_id):
         url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-protein-families/selventa-protein-families-20150601.belns'
     elif db_name == 'FPLX':
         url = 'http://identifiers.org/fplx/%s' % db_id
+    elif db_name == 'LNCRNADB':
+        if db_id.startswith('ENSG'):
+            url = 'http://www.lncrnadb.org/search/?q=%s' % db_id
+        else:  # Assmuing HGNC symbol
+            url = 'http://www.lncrnadb.org/%s/' % db_id
     elif db_name == 'NXPFA':
         url = 'https://www.nextprot.org/term/FA-%s' % db_id
     elif db_name in ('UN', 'WDI', 'FAO'):
