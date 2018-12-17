@@ -228,12 +228,17 @@ def test_simple_decrease():
 @attr('webservice', 'slow')
 def test_no_shared_objects():
     """Make sure shared objects are not being created between statements"""
-    texts = ('MEK binds ERK and RAF',
-             'HEDGEHOG activates GLI1 and BCL2',
-             'RAF phosphorylates MEK and ALG-2')
-    for text in texts:
+    verbs = ('phosphorylates', 'binds', 'activates', 'increases',
+             'degrades', 'transcribes', 'ubiquitinates', 'autophosphorylates',
+             'transphosphorylates')
+    for verb in verbs:
+        text = 'HEDGEHOG %s SMURF1 and SMURF2' % verb
+        print(text)
         tp = trips.process_text(text)
         stmts = tp.statements
-        assert len(stmts) == 2
+        print(len(stmts) == 2)
         stmt1, stmt2 = stmts
-        assert stmt1.evidence[0] is not stmt2.evidence[0]
+        print(stmt1.evidence[0] is not stmt2.evidence[0])
+        hedgehog1 = stmt1.agent_list()[0]
+        hedgehog2 = stmt2.agent_list()[0]
+        print(hedgehog1 is not hedgehog2)
