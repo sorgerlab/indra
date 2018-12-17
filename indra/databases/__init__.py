@@ -62,6 +62,12 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + 'lincs.protein:%s' % db_id
 
     # Special cases with no identifiers entry
+    elif db_name == 'SCHEM':
+        url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-legacy-chemicals/selventa-legacy-chemicals-20150601.belns'
+    elif db_name == 'SCOMP':
+        url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-named-complexes/selventa-named-complexes-20150601.belns'
+    elif db_name == 'SFAM':
+        url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-protein-families/selventa-protein-families-20150601.belns'
     elif db_name == 'FPLX':
         url = 'http://identifiers.org/fplx/%s' % db_id
     elif db_name == 'NXPFA':
