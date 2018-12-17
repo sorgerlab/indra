@@ -42,14 +42,3 @@ High-throughput reading tools (:py:mod:`indra.tools.reading`)
 
 .. automodule:: indra.tools.reading
     :members:
-
-
-.. Scoring INDRA Statements manually (:py:mod:`indra.tools.stmt_scoring`)
-   ----------------------------------------------------------------------
-   .. automodule:: indra.tools.stmt_scoring
-       :members:
-
-.. Generate English language questions on linked mechanisms (:py:mod:`indra.tools.mechlinker_queries`)
-   ---------------------------------------------------------------------------------------------------
-   .. automodule:: indra.tools.mechlinker_queries
-       :members:
