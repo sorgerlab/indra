@@ -31,10 +31,18 @@ The RAS Machine (:py:mod:`indra.tools.machine`)
 .. automodule:: indra.tools.machine
     :members:
 
-.. High-throughput reading tools (:py:mod:`indra.tools.reading`)
-   -------------------------------------------------------------
-   .. automodule:: indra.tools.reading
-       :members:
+High-throughput reading tools (:py:mod:`indra.tools.reading`)
+-------------------------------------------------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   reading/index
+
+
+.. automodule:: indra.tools.reading
+    :members:
+
 
 .. Scoring INDRA Statements manually (:py:mod:`indra.tools.stmt_scoring`)
    ----------------------------------------------------------------------
