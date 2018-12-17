@@ -94,7 +94,9 @@ def get_identifiers_url(db_name, db_id):
     elif db_name == 'SOFIA':
         url = 'http://cs.cmu.edu/sofia/%s' % db_id
     elif db_name == 'CHEMBL':
-        url = 'https://www.ebi.ac.uk/chembl/compound/inspect/CHEMBL%s' % db_id
+        if not db_id.startswith('CHEMBL'):
+            db_id = 'CHEMBL%s' % db_id
+        url = identifiers_url + 'chembl.compound/%s' % db_id
     elif db_name == 'NONCODE':
         url = 'http://www.noncode.org/show_gene.php?id=NONHSAG%s' % db_id
     elif db_name == 'TEXT':
