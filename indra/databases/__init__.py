@@ -19,6 +19,7 @@ def get_identifiers_url(db_name, db_id):
         An identifiers.org URL corresponding to the given database name and ID.
     """
     identifiers_url = 'http://identifiers.org/'
+    bel_scai_url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/'
     if db_name == 'UP':
         url = identifiers_url + 'uniprot/%s' % db_id
     elif db_name == 'HGNC':
@@ -63,11 +64,14 @@ def get_identifiers_url(db_name, db_id):
 
     # Special cases with no identifiers entry
     elif db_name == 'SCHEM':
-        url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-legacy-chemicals/selventa-legacy-chemicals-20150601.belns'
+        url = bel_scai_url + 'selventa-legacy-chemicals/' + \
+            'selventa-legacy-chemicals-20150601.belns'
     elif db_name == 'SCOMP':
-        url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-named-complexes/selventa-named-complexes-20150601.belns'
+        url = bel_scai_url + 'selventa-named-complexes/' + \
+            'selventa-named-complexes-20150601.belns'
     elif db_name == 'SFAM':
-        url = 'https://arty.scai.fraunhofer.de/artifactory/bel/namespace/selventa-protein-families/selventa-protein-families-20150601.belns'
+        url = bel_scai_url + 'selventa-protein-families/' + \
+            'selventa-protein-families-20150601.belns'
     elif db_name == 'FPLX':
         url = 'http://identifiers.org/fplx/%s' % db_id
     elif db_name == 'LNCRNADB':
