@@ -971,7 +971,7 @@ class TripsProcessor(object):
                 to_location = self._get_cell_loc_by_id(to_loc_id)
             if from_location is None and to_location is None:
                 continue
-           
+
             if isinstance(agent, list):
                 for aa in agent:
                     # Get evidence
@@ -981,6 +981,7 @@ class TripsProcessor(object):
                                        evidence=ev)
                     self.statements.append(st)
             else:
+                ev = self._get_evidence(event)
                 st = Translocation(agent, from_location,
                                    to_location, evidence=ev)
                 self.statements.append(st)
