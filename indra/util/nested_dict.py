@@ -22,7 +22,9 @@ class NestedDict(dict):
     and the value at that key. Similarly:
 
     >>> nd.get_path('b')
-    (('a', 'b'), NestedDict('c': 'foo'))
+    ((u'a', u'b'), NestedDict(
+    u'c': u'foo'
+    ))
 
     `get`, `gets`, and `get_paths` operate on similar principles, and are
     documented below.
