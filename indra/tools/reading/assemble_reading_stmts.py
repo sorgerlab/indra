@@ -58,6 +58,23 @@ def assemble_batch_results(basename, result_type, reader):
         raise Exception("No results found for prefix %s." % prefix)
 
 
+def make_parser():
+    parser = ArgumentParser(
+        description='Function to put many pickles in one file on aws.'
+    )
+    parser.add_argument(
+        dest='basename',
+        help='The name of the job.'
+    )
+    parser.add_argument(
+        '-r', '--readers',
+        dest='readers',
+        nargs='+',
+        help='Choose which reader(s) to use.'
+    )
+    return parser
+
+
 if __name__ == '__main__':
     import boto3
     import botocore
@@ -69,19 +86,7 @@ if __name__ == '__main__':
     client = boto3.client('s3')
     bucket_name = 'bigmech'
 
-    parser = ArgumentParser(
-        description='Function to put many pickles in one file on aws.'
-        )
-    parser.add_argument(
-        dest='basename',
-        help='The name of the job.'
-        )
-    parser.add_argument(
-        '-r', '--readers',
-        dest='readers',
-        nargs='+',
-        help='Choose which reader(s) to use.'
-        )
+    parser = make_parser()
     args = parser.parse_args()
 
     result_types = ('content_types', 'stmts')
