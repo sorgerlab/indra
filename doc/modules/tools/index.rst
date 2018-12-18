@@ -39,5 +39,7 @@ High-throughput Reading Tools (:py:mod:`indra.tools.reading`)
 .. toctree::
    :maxdepth: 3
 
-   reading/index
-   reading/CLIs
+   reading/pipelines
+   reading/interfaces
+   reading/tools
+   reading/utils
