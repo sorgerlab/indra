@@ -21,7 +21,8 @@ class NestedDict(dict):
 
     and the value at that key. Similarly:
 
-    >>> nd.get_path('b')
+    >>> res = nd.get_path('b')
+    >>> print(res)
     (('a', 'b'), NestedDict(
     'c': 'foo'
     ))
