@@ -3,6 +3,7 @@ import json
 import time
 import pickle
 import logging
+import argparse
 from indra.sources.trips import process_xml
 from indra.sources.trips.drum_reader import DrumReader
 
@@ -109,16 +110,28 @@ def read_pmc(pmcid, **drum_args):
     # TODO: run DRUM in PMC reading mode here
     return
 
+
 def save_results(statements, out_fname):
     with open(out_fname, 'wb') as fh:
         pickle.dump(statements, fh)
 
 
+def make_parser():
+    parser = argparse.ArgumentParser(description="Run DRUM reading on a file.")
+
+    # TODO: We should probably handle defaults better, particularly host/port.
+    parser.add_argument('file_name', help="The name of the file to be read.")
+    parser.add_argument('host', help="The host on which DRUM is running.")
+    parser.add_argument('port', help="The port to which the DRUM process is "
+                                     "listening.")
+    return parser
+
+
 if __name__ == '__main__':
-    file_name = sys.argv[0]
-    host = sys.argv[1]
-    port = sys.argv[2]
-    with open(file_name, 'rt') as fh:
+    parser = make_parser()
+    args = parser.parse_args()
+
+    with open(args.file_name, 'rt') as fh:
         content = json.load(fh)
-    statements = read_pmid_sentences(content, host=host, port=port)
+    statements = read_pmid_sentences(content, host=args.host, port=args.port)
     save_results(statements, 'results.pkl')
