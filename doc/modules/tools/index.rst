@@ -26,12 +26,18 @@ Build a model incrementally over time (:py:mod:`indra.tools.incremental_model`)
 .. automodule:: indra.tools.incremental_model
     :members:
 
-Tool Sets
----------
+Update RAS Machine (:py:mod:`indra.tools.machine`)
+--------------------------------------------------
+
+.. automodule:: indra.tools.machine
+    :members:
+
+
+Reading Tools
+-------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    reading/index
    reading/CLIs
-   machine/index

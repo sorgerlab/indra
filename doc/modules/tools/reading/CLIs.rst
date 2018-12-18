@@ -32,3 +32,12 @@ Python CLI to monitor running batch jobs
     :module: indra.tools.reading.wait_for_complete
     :func: make_parser
     :prog: python -m indra.tools.reading.wait_for_complete
+
+
+Python CLI to generate stats on reading results
+-----------------------------------------------
+
+.. argparse::
+    :module: indra.tools.reading.util.reading_results_stats
+    :func: make_parser
+    :prog: python -m indra.tools.reading.util.reading_results_stats
