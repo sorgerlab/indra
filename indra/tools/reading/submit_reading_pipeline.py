@@ -1,10 +1,10 @@
 from __future__ import absolute_import, print_function, unicode_literals
-
 from builtins import dict, str
 
 import os
 import boto3
 import logging
+import argparse
 import botocore.session
 from time import sleep
 from datetime import datetime
@@ -623,9 +623,7 @@ def create_read_parser():
     return parent_read_parser
 
 
-if __name__ == '__main__':
-    import argparse
-
+def create_parser():
     parent_submit_parser = create_submit_parser()
     parent_read_parser = create_read_parser()
 
@@ -638,36 +636,41 @@ if __name__ == '__main__':
         epilog=('Note that `python wait_for_complete.py ...` should be run as '
                 'soon as this command completes successfully. For more '
                 'details use `python wait_for_complete.py -h`.')
-        )
+    )
     subparsers = parser.add_subparsers(
         title='Job Type',
         help='Type of jobs to submit.'
-        )
+    )
     subparsers.required = True
     subparsers.dest = 'job_type'
 
     # Create subparsers for the no-db option.
-    read_parser = subparsers.add_parser(
+    subparsers.add_parser(
         'read',
         parents=[parent_read_parser, parent_submit_parser],
         help='Run reading on AWS batch and cache INDRA Statements on S3.',
         description='Run reading on batch and cache INDRA Statements on S3.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
-        )
-    combine_parser = subparsers.add_parser(
+    )
+    subparsers.add_parser(
         'combine',
         parents=[parent_submit_parser],
         help='Combine INDRA Statement subsets into a single file.',
         description='Combine INDRA Statement subsets into a single file.'
-        )
-    full_parser = subparsers.add_parser(
+    )
+    subparsers.add_parser(
         'full',
         parents=[parent_read_parser, parent_submit_parser],
         help='Run reading and combine INDRA Statements when done.',
         description='Run reading and combine INDRA Statements when done.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
-        )
+    )
+    return parser
 
+
+if __name__ == '__main__':
+
+    parser = create_parser()
     args = parser.parse_args()
 
     job_ids = None

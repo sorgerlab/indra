@@ -38,14 +38,24 @@ Run the DRUM reading system (:py:mod:`indra.tools.reading.run_drum_reading`)
 .. automodule:: indra.tools.reading.run_drum_reading
     :members:
 
-Python command line tool to submit reading pipelines (:py:mod:`indra.tools.reading.submit_reading_pipeline`)
-------------------------------------------------------------------------------------------------------------
+Python tools for submitting reading pipelines (:py:mod:`indra.tools.reading.submit_reading_pipeline`)
+-----------------------------------------------------------------------------------------------------
 
 .. automodule:: indra.tools.reading.submit_reading_pipeline
     :members:
 
-Python commandline tool to monitor running batch jobs (:py:mod:`indra.tools.reading.wait_for_complete`)
-------------------------------------------------------------------------------------------------------
+Python cli for submitting reading pipelines (:py:mod:`indra.tools.reading.submit_reading_pipeline`)
+---------------------------------------------------------------------------------------------------
 
-.. automodule:: indra.tools.reading.wait_for_complete
-    :members:
+.. argparse::
+    :module: indra.tools.reading.submit_reading_pipeline
+    :func: create_parser
+    :prog: python submit_reading_pipeline.py
+
+Python cli to monitor running batch jobs (:py:mod:`indra.tools.reading.wait_for_complete`)
+------------------------------------------------------------------------------------------
+
+.. argparse::
+    :module: indra.tools.reading.wait_for_complete
+    :func: make_parser
+    :prog: python wait_for_complete.py
