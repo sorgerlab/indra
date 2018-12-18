@@ -1,32 +1,38 @@
-Command Line Interfaces for high-throughput reading
-===================================================
+High-throughput reading CLI's
+=============================
 
-Python CLI to run reading on local files
-----------------------------------------
+The reading tools include several Python CLI's to run reading or other related
+tasks.
+
+
+Run reading on local files
+--------------------------
 
 .. argparse::
     :module: indra.tools.reading.read_files
     :func: make_parser
     :prog: python -m indra.tools.reading.read_files
 
-Python CLI to run the DRUM reading system
------------------------------------------
+Run REACH and/or SPARSER locally on a list of PMIDs using S3 caching
+--------------------------------------------------------------------
 
 .. argparse::
-    :module: indra.tools.reading.run_drum_reading
+    :module: indra.tools.reading.pmid_reading.read_pmids
     :func: make_parser
-    :prog: python -m indra.tools.reading.run_drum_reading
+    :prog: python -m indra.tools.reading.pmid_reading.read_pmids
 
-Python CLI for submitting reading pipelines
--------------------------------------------
+
+Submit AWS Batch reading jobs
+-----------------------------
 
 .. argparse::
     :module: indra.tools.reading.submit_reading_pipeline
     :func: create_parser
     :prog: python -m indra.tools.reading.submit_reading_pipeline
 
-Python CLI to monitor running batch jobs
-----------------------------------------
+
+Monitor running AWS Batch jobs
+------------------------------
 
 .. argparse::
     :module: indra.tools.reading.wait_for_complete
@@ -34,8 +40,17 @@ Python CLI to monitor running batch jobs
     :prog: python -m indra.tools.reading.wait_for_complete
 
 
-Python CLI to generate stats on reading results
------------------------------------------------
+Run the DRUM reading system
+---------------------------
+
+.. argparse::
+    :module: indra.tools.reading.run_drum_reading
+    :func: make_parser
+    :prog: python -m indra.tools.reading.run_drum_reading
+
+
+Generate stats on AWS Batch reading results
+-------------------------------------------
 
 .. argparse::
     :module: indra.tools.reading.util.reading_results_stats

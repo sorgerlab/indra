@@ -33,8 +33,8 @@ Update RAS Machine (:py:mod:`indra.tools.machine`)
     :members:
 
 
-Reading Tools
--------------
+High-throughput Reading Tools (:py:mod:`indra.tools.reading`)
+-------------------------------------------------------------
 
 .. toctree::
    :maxdepth: 3
