@@ -54,13 +54,13 @@ def get_identifiers_url(db_name, db_id):
         url = identifiers_url + 'hmdb/%s' % db_id
     elif db_name == 'LINCS':
         if db_id.startswith('LSM-'):  # Lincs Small Molecule ID
-            url = identifiers_url + 'lincs.smallmolecule:%s' % db_id
+            url = identifiers_url + 'lincs.smallmolecule/%s' % db_id
         elif db_id.startswith('LCL-'):  # Lincs Cell Line ID
-            url = identifiers_url + 'lincs.cell:%s' % db_id
+            url = identifiers_url + 'lincs.cell/%s' % db_id
         else:  # Assume LINCS Protein
-            url = identifiers_url + 'lincs.protein:%s' % db_id
+            url = identifiers_url + 'lincs.protein/%s' % db_id
     elif db_name == 'HMS-LINCS':
-        url = identifiers_url + 'lincs.protein:%s' % db_id
+        url = 'http://lincs.hms.harvard.edu/db/sm/%s-101' % db_id
 
     # Special cases with no identifiers entry
     elif db_name == 'SCHEM':
