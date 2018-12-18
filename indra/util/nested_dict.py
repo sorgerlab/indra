@@ -24,7 +24,7 @@ class NestedDict(dict):
     >>> res = nd.get_path('b')
     >>> print(res)
     (('a', 'b'), NestedDict(
-    'c': 'foo'
+      'c': 'foo'
     ))
 
     `get`, `gets`, and `get_paths` operate on similar principles, and are
