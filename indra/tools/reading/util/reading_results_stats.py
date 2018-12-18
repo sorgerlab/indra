@@ -11,11 +11,19 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 
 logger = logging.getLogger('indra.tools.reading.util.reading_result_stats')
 
+from indra.util import plot_formatting as pf
+from indra.preassembler import Preassembler
+from indra.preassembler.hierarchy_manager import hierarchies
+from indra.preassembler import grounding_mapper as gm
 
-if __name__ == '__main__':
+
+# pf.set_fig_params()
+
+
+def make_parser():
     parser = ArgumentParser(
         description='Get statistics on a bunch of statements.'
-        )
+    )
 
     subparsers = parser.add_subparsers(title='Source')
     subparsers.required = True
@@ -27,44 +35,35 @@ if __name__ == '__main__':
         'file_path',
         help=('The path to the pickle file containing the statements to be '
               'analyzed.')
-        )
-    file_parser = subparsers.add_parser(
+    )
+    subparsers.add_parser(
         'from-pickle',
         parents=[file_subparser_parent],
-        description=('Get statistics of statements in a pickle file.'),
+        description='Get statistics of statements in a pickle file.',
         formatter_class=ArgumentDefaultsHelpFormatter
-        )
+    )
 
     # Make db subparser
     db_subparser_parent = ArgumentParser(add_help=False)
     db_subparser_parent.add_argument(
         '--indra_version',
         help='Specify the indra version for the batch of statements'
-        )
+    )
     db_subparser_parent.add_argument(
         '--date_range',
         help=('Specify the range of datetimes for statements. Must be in the '
               'format: \"YYYYMMDDHHMMSS:YYYMMDDHHMMSS\". If you do not want '
               'to impose the upper or lower bound, simply leave it blank, eg. '
               '\"YYYYMMDDHHMMSS:\" if you don\'t care about the upper bound.')
-        )
-    db_parser = subparsers.add_parser(
+    )
+    subparsers.add_parser(
         'from-db',
         parents=[db_subparser_parent],
-        description=('Get statistics from statements on the database.'),
+        description='Get statistics from statements on the database.',
         formatter_class=ArgumentDefaultsHelpFormatter
-        )
+    )
+    return parser
 
-    # Parse the arguments.
-    args = parser.parse_args()
-
-
-from indra.util import plot_formatting as pf
-from indra.preassembler import Preassembler
-from indra.preassembler.hierarchy_manager import hierarchies
-from indra.preassembler import grounding_mapper as gm
-
-#pf.set_fig_params()
 
 # TODO: This file will definitely need some fixing.
 
@@ -124,7 +123,7 @@ def report_stmt_counts(results, plot_prefix=None):
         fig = plt.figure(figsize=(2, 2), dpi=300)
         ax = fig.gca()
         ax.hist(counts, bins=20)
-        #ax.set_xticks([0, 100, 200, 300, 400])
+        # ax.set_xticks([0, 100, 200, 300, 400])
         pf.format_axis(ax)
         plt.subplots_adjust(left=0.23, bottom=0.16)
         ax.set_xlabel('No. of statements')
@@ -263,6 +262,10 @@ def report_evidence_distribution(stmts, list_length=10, plot_prefix=None):
 
 
 if __name__ == '__main__':
+    # Parse the arguments.
+    parser = make_parser()
+    args = parser.parse_args()
+
     # Load the statements.
     if args.source == 'from-pickle':
         logger.info("Getting statements from pickle file.")
