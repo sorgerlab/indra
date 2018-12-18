@@ -33,4 +33,5 @@ Tool Sets
    :maxdepth: 2
 
    reading/index
+   reading/CLIs
    machine/index
