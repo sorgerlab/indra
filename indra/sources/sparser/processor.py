@@ -195,6 +195,10 @@ def _fix_agent(agent):
                 db_refs_tmp['GO'] = db_id
             else:
                 db_refs_tmp['GO'] = 'GO:' + db_id
+        # Change PCID name space
+        elif db_ns == 'PCID':
+            db_refs_tmp.pop('PCID', None)
+            db_refs_tmp['PUBCHEM'] = db_id
     agent.db_refs = db_refs_tmp
     # Check if we have a FPLX entry and handle old BE mappings
     if 'BE' in agent.db_refs:
