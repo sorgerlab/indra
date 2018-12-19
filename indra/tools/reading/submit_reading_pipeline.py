@@ -71,7 +71,7 @@ def wait_for_complete(queue_name, job_list=None, job_name_prefix=None,
     else:
         job_id_list = [job['jobId'] for job in job_list]
 
-    if not result_record:
+    if result_record is None:
         result_record = {}
 
     def get_jobs_by_status(status, job_id_filter=None, job_name_prefix=None):
