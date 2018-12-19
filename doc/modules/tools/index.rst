@@ -26,8 +26,8 @@ Build a model incrementally over time (:py:mod:`indra.tools.incremental_model`)
 .. automodule:: indra.tools.incremental_model
     :members:
 
-Update RAS Machine (:py:mod:`indra.tools.machine`)
---------------------------------------------------
+The RAS Machine (:py:mod:`indra.tools.machine`)
+-----------------------------------------------
 
 .. automodule:: indra.tools.machine
     :members:
