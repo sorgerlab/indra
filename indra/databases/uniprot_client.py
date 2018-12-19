@@ -362,9 +362,7 @@ def get_sequence(protein_id):
         pass
     url = uniprot_url + '%s.fasta' % protein_id
     res = requests.get(url)
-    if not res.status_code == 200:
-        logger.warning('Could not find sequence for protein %s' % protein_id)
-        return None
+    res.raise_for_status()
     # res.text is Unicode
     lines = res.text.splitlines()
     seq = (''.join(lines[1:])).replace('\n','')
@@ -458,7 +456,6 @@ def verify_modification(protein_id, residue, location=None):
     """
     mods = get_modifications(protein_id)
     mod_locs = [m[1] for m in mods]
-    seq = get_sequence(protein_id)
     if location:
         if not verify_location(protein_id, residue, location):
             return False
@@ -468,6 +465,7 @@ def verify_modification(protein_id, residue, location=None):
             return False
         return True
     else:
+        seq = get_sequence(protein_id)
         for ml in mod_locs:
             if seq[ml - 1] == residue:
                 return True
