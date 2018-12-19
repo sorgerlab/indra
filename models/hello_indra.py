@@ -33,7 +33,7 @@ def export_hello(model, formats):
         extension = (f if f != 'pysb_flat' else 'py')
         fname = 'hello_indra_model.%s' % extension
         with open(fname, 'wb') as fh:
-            fh.write(model_export)
+            fh.write(model_export.encode('utf-8'))
 
 
 # User defines text

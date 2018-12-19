@@ -2,9 +2,9 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import re
 import math
+import json
 import logging
 import itertools
-from indra.util import fast_deepcopy
 
 from pysb import (Model, Monomer, Parameter, Expression, Observable, Rule,
         Annotation, ComponentDuplicateNameError, ComplexPattern,
@@ -14,8 +14,12 @@ import pysb.export
 
 from indra import statements as ist
 from indra.databases import context_client, get_identifiers_url
-from indra.preassembler.hierarchy_manager import hierarchies
-from indra.tools.expand_families import _agent_from_uri
+
+from .sites import *
+from .common import *
+from .export import export_sbgn
+from .base_agents import BaseAgentSet
+from .preassembler import PysbPreassembler
 
 # Python 2
 try:
@@ -38,12 +42,6 @@ statement_whitelist = [ist.Modification, ist.SelfModification, ist.Complex,
                        ist.IncreaseAmount, ist.DecreaseAmount,
                        ist.Conversion]
 
-def _n(name):
-    """Return valid PySB name."""
-    n = name.encode('ascii', errors='ignore').decode('ascii')
-    n = re.sub('[^A-Za-z0-9_]', '_', n)
-    n = re.sub(r'(^[0-9].*)', r'p\1', n)
-    return n
 
 def _is_whitelisted(stmt):
     """Return True if the statement type is in the whitelist."""
@@ -51,243 +49,6 @@ def _is_whitelisted(stmt):
         if isinstance(stmt, s):
             return True
     return False
-
-# BaseAgent classes ####################################################
-class _BaseAgentSet(object):
-    """Container for a dict of BaseAgents with their names as keys."""
-    def __init__(self):
-        self.agents = {}
-
-    def get_create_base_agent(self, agent):
-        """Return base agent with given name, creating it if needed."""
-        try:
-            base_agent = self.agents[_n(agent.name)]
-        except KeyError:
-            base_agent = _BaseAgent(_n(agent.name))
-            self.agents[_n(agent.name)] = base_agent
-
-        # If it's a molecular agent
-        if isinstance(agent, ist.Agent):
-            # Handle bound conditions
-            for bc in agent.bound_conditions:
-                bound_base_agent = self.get_create_base_agent(bc.agent)
-                bound_base_agent.create_site(get_binding_site_name(agent))
-                base_agent.create_site(get_binding_site_name(bc.agent))
-
-            # Handle modification conditions
-            for mc in agent.mods:
-                base_agent.create_mod_site(mc)
-
-            # Handle mutation conditions
-            for mc in agent.mutations:
-                res_from = mc.residue_from if mc.residue_from else 'mut'
-                res_to = mc.residue_to if mc.residue_to else 'X'
-                if mc.position is None:
-                    mut_site_name = res_from
-                else:
-                    mut_site_name = res_from + mc.position
-
-                base_agent.create_site(mut_site_name, states=['WT', res_to])
-
-            # Handle location condition
-            if agent.location is not None:
-                base_agent.create_site('loc', [_n(agent.location)])
-
-            # Handle activity
-            if agent.activity is not None:
-                site_name = agent.activity.activity_type
-                base_agent.create_site(site_name, ['inactive', 'active'])
-
-        # There might be overwrites here
-        for db_name, db_ref in agent.db_refs.items():
-            base_agent.db_refs[db_name] = db_ref
-
-        return base_agent
-
-    def items(self):
-        """Return items for the set of BaseAgents that this class wraps.
-        """
-        return self.agents.items()
-
-    def __getitem__(self, name):
-        return self.agents[name]
-
-
-class _BaseAgent(object):
-    """A BaseAgent aggregates the global properties of an Agent.
-
-    The BaseAgent class aggregates the name, sites, site states, active forms,
-    inactive forms and database references of Agents from individual INDRA
-    Statements. This allows the PySB Assembler to correctly assemble the
-    Monomer signatures in the model.
-    """
-
-    def __init__(self, name):
-        self.name = name
-        self.sites = []
-        self.site_states = {}
-        self.site_annotations = []
-        # The list of site/state configurations that lead to this agent
-        # being active (where the agent is currently assumed to have only
-        # one type of activity)
-        self.active_forms = []
-        self.activity_types = []
-        self.inactive_forms = []
-        self.db_refs = {}
-
-    def create_site(self, site, states=None):
-        """Create a new site on an agent if it doesn't already exist."""
-        if site not in self.sites:
-            self.sites.append(site)
-        if states is not None:
-            self.site_states.setdefault(site, [])
-            try:
-                states = list(states)
-            except TypeError:
-                return
-            self.add_site_states(site, states)
-
-    def create_mod_site(self, mc):
-        """Create modification site for the BaseAgent from a ModCondition."""
-        site_name = get_mod_site_name(mc.mod_type,
-                                      mc.residue, mc.position)
-        (unmod_site_state, mod_site_state) = states[mc.mod_type]
-        self.create_site(site_name, (unmod_site_state, mod_site_state))
-        site_anns = [Annotation((site_name, mod_site_state), mc.mod_type,
-                                'is_modification')]
-        if mc.residue:
-            site_anns.append(Annotation(site_name, mc.residue, 'is_residue'))
-        if mc.position:
-            site_anns.append(Annotation(site_name, mc.position, 'is_position'))
-        self.site_annotations += site_anns
-
-    def add_site_states(self, site, states):
-        """Create new states on an agent site if the state doesn't exist."""
-        for state in states:
-            if state not in self.site_states[site]:
-                self.site_states[site].append(state)
-
-    def add_activity_form(self, activity_pattern, is_active):
-        """Adds the pattern as an active or inactive form to an Agent.
-
-        Parameters
-        ----------
-        activity_pattern : dict
-            A dictionary of site names and their states.
-        is_active : bool
-            Is True if the given pattern corresponds to an active state.
-        """
-        if is_active:
-            if activity_pattern not in self.active_forms:
-                self.active_forms.append(activity_pattern)
-        else:
-            if activity_pattern not in self.inactive_forms:
-                self.inactive_forms.append(activity_pattern)
-
-    def add_activity_type(self, activity_type):
-        """Adds an activity type to an Agent.
-
-        Parameters
-        ----------
-        activity_type : str
-            The type of activity to add such as 'activity', 'kinase',
-            'gtpbound'
-        """
-        if activity_type not in self.activity_types:
-            self.activity_types.append(activity_type)
-
-# Site/state information ###############################################
-
-abbrevs = {
-    'phosphorylation': 'phospho',
-    'ubiquitination': 'ub',
-    'farnesylation': 'farnesyl',
-    'hydroxylation': 'hydroxyl',
-    'acetylation': 'acetyl',
-    'sumoylation': 'sumo',
-    'glycosylation': 'glycosyl',
-    'methylation': 'methyl',
-    'ribosylation': 'ribosyl',
-    'geranylgeranylation': 'geranylgeranyl',
-    'palmitoylation': 'palmitoyl',
-    'myristoylation': 'myristoyl',
-    'modification': 'mod',
-}
-
-states = {
-    'phosphorylation': ['u', 'p'],
-    'ubiquitination': ['n', 'y'],
-    'farnesylation': ['n', 'y'],
-    'hydroxylation': ['n', 'y'],
-    'acetylation': ['n', 'y'],
-    'sumoylation': ['n', 'y'],
-    'glycosylation': ['n', 'y'],
-    'methylation': ['n', 'y'],
-    'geranylgeranylation': ['n', 'y'],
-    'palmitoylation': ['n', 'y'],
-    'myristoylation': ['n', 'y'],
-    'ribosylation': ['n', 'y'],
-    'modification': ['n', 'y'],
-}
-
-mod_acttype_map = {
-    ist.Phosphorylation: 'kinase',
-    ist.Dephosphorylation: 'phosphatase',
-    ist.Hydroxylation: 'catalytic',
-    ist.Dehydroxylation: 'catalytic',
-    ist.Sumoylation: 'catalytic',
-    ist.Desumoylation: 'catalytic',
-    ist.Acetylation: 'catalytic',
-    ist.Deacetylation: 'catalytic',
-    ist.Glycosylation: 'catalytic',
-    ist.Deglycosylation: 'catalytic',
-    ist.Ribosylation: 'catalytic',
-    ist.Deribosylation: 'catalytic',
-    ist.Ubiquitination: 'catalytic',
-    ist.Deubiquitination: 'catalytic',
-    ist.Farnesylation: 'catalytic',
-    ist.Defarnesylation: 'catalytic',
-    ist.Palmitoylation: 'catalytic',
-    ist.Depalmitoylation: 'catalytic',
-    ist.Myristoylation: 'catalytic',
-    ist.Demyristoylation: 'catalytic',
-    ist.Geranylgeranylation: 'catalytic',
-    ist.Degeranylgeranylation: 'catalytic',
-    ist.Methylation: 'catalytic',
-    ist.Demethylation: 'catalytic',
-}
-
-
-def get_binding_site_name(agent):
-    """Return a binding site name from a given agent."""
-    # Try to construct a binding site name based on parent
-    grounding = agent.get_grounding()
-    if grounding != (None, None):
-        uri = hierarchies['entity'].get_uri(grounding[0], grounding[1])
-        # Get highest level parents in hierarchy
-        parents = hierarchies['entity'].get_parents(uri, 'top')
-        if parents:
-            # Choose the first parent if there are more than one
-            parent_uri = sorted(list(parents))[0]
-            parent_agent = _agent_from_uri(parent_uri)
-            binding_site = _n(parent_agent.name).lower()
-            return binding_site
-    # Fall back to Agent's own name if one from parent can't be constructed
-    binding_site = _n(agent.name).lower()
-    return binding_site
-
-
-def get_mod_site_name(mod_type, residue, position):
-    """Return site names for a modification."""
-    names = []
-    if residue is None:
-        mod_str = abbrevs[mod_type]
-    else:
-        mod_str = residue
-    mod_pos = position if position is not None else ''
-    name = ('%s%s' % (mod_str, mod_pos))
-    return name
-
 
 # PySB model elements ##################################################
 
@@ -342,20 +103,27 @@ def add_rule_to_model(model, rule, annotations=None):
         logger.debug(msg)
 
 
-def get_create_parameter(model, name, value, unique=True):
+def get_create_parameter(model, param):
     """Return parameter with given name, creating it if needed.
 
     If unique is false and the parameter exists, the value is not changed; if
     it does not exist, it will be created. If unique is true then upon conflict
     a number is added to the end of the parameter name.
+
+    Parameters
+    ----------
+    model : pysb.Model
+        The model to add the parameter to
+    param : Param
+        An assembly parameter object
     """
-    norm_name = _n(name)
+    norm_name = _n(param.name)
     parameter = model.parameters.get(norm_name)
 
-    if not unique and parameter is not None:
+    if not param.unique and parameter is not None:
         return parameter
 
-    if unique:
+    if param.unique:
         pnum = 1
         while True:
             pname = norm_name + '_%d' % pnum
@@ -365,7 +133,7 @@ def get_create_parameter(model, name, value, unique=True):
     else:
         pname = norm_name
 
-    parameter = Parameter(pname, value)
+    parameter = Parameter(pname, param.value)
     model.add_component(parameter)
     return parameter
 
@@ -690,43 +458,27 @@ class PysbAssembler(object):
 
     Parameters
     ----------
-    policies : Optional[Union[str, dict]]
-        A string or dictionary that defines one or more assembly policies.
-
-        If policies is a string, it defines a global assembly policy
-        that applies to all Statement types.
-        Example: one_step, interactions_only
-
-        A dictionary of policies has keys corresponding to Statement types
-        and values to the policy to be applied to that type of Statement.
-        For Statement types whose policy is undefined, the 'default'
-        policy is applied.
-        Example: {'Phosphorylation': 'two_step'}
+    statements : list[indra.statements.Statement]
+        A list of INDRA Statements to be assembled.
 
     Attributes
     ----------
     policies : dict
         A dictionary of policies that defines assembly policies for Statement
         types. It is assigned in the constructor.
-    statements : list
+    statements : list[indra.statements.Statement]
         A list of INDRA statements to be assembled.
     model : pysb.Model
         A PySB model object that is assembled by this class.
-    agent_set : _BaseAgentSet
+    agent_set : BaseAgentSet
         A set of BaseAgents used during the assembly process.
     """
-    def __init__(self, policies=None):
-        self.statements = []
+    def __init__(self, statements=None):
+        self.statements = statements if statements else []
         self.agent_set = None
         self.model = None
         self.default_initial_amount = 10000.0
-        if policies is None:
-            self.policies = {'other': 'default'}
-        elif isinstance(policies, basestring):
-            self.policies = {'other': policies}
-        else:
-            self.policies = {'other': 'default'}
-            self.policies.update(policies)
+        self.policies = None
 
     def add_statements(self, stmts):
         """Add INDRA Statements to the assembler's list of statements.
@@ -739,6 +491,40 @@ class PysbAssembler(object):
         """
         self.statements += stmts
 
+    def process_policies(self, policies):
+        processed_policies = {stmt.uuid: Policy('default')
+                              for stmt in self.statements}
+        if not policies:
+            logger.info('Using default assembly policy.')
+            return processed_policies
+        elif isinstance(policies, basestring):
+            logger.info('Using %s assembly policy.' % policies)
+            for stmt in self.statements:
+                processed_policies[stmt.uuid] = Policy(policies)
+        else:
+            other_policy = policies.get('other', 'default')
+            for stmt in self.statements:
+                processed_policies[stmt.uuid] = Policy(other_policy)
+            for k, v in policies.items():
+                if k == 'other':
+                    continue
+                # This means it's a UUID
+                if k in processed_policies:
+                    pol = v if isinstance(v, Policy) else Policy(v)
+                    processed_policies[k] = pol
+                else:
+                    # Assume this is a policy like
+                    # {'Phosphorylation': 'two-step'}
+                    try:
+                        stmt_type = ist.get_statement_by_name(k)
+                        for stmt in self.statements:
+                            if isinstance(stmt, stmt_type):
+                                processed_policies[stmt.uuid] = Policy(v)
+                    except ist.NotAStatementName:
+                        msg = 'Invalid policy entry for key %s' % k
+                        raise UnknownPolicyError(msg)
+        return processed_policies
+
     def make_model(self, policies=None, initial_conditions=True,
                    reverse_effects=False, model_name='indra_model'):
         """Assemble the PySB model from the collected INDRA Statements.
@@ -750,11 +536,17 @@ class PysbAssembler(object):
         Parameters
         ----------
         policies : Optional[Union[str, dict]]
-            A string or dictionary of policies, as defined in
-            :py:class:`indra.assemblers.PysbAssembler`. This set of policies
-            locally supersedes the default setting in the assembler. This
-            is useful when this function is called multiple times with
-            different policies.
+            A string or dictionary that defines one or more assembly policies.
+
+            If policies is a string, it defines a global assembly policy
+            that applies to all Statement types.
+            Example: one_step, interactions_only
+
+            A dictionary of policies has keys corresponding to Statement types
+            and values to the policy to be applied to that type of Statement.
+            For Statement types whose policy is undefined, the 'default'
+            policy is applied.
+            Example: {'Phosphorylation': 'two_step'}
         initial_conditions : Optional[bool]
             If True, default initial conditions are generated for the
             Monomers in the model. Default: True
@@ -772,23 +564,14 @@ class PysbAssembler(object):
             The assembled PySB model object.
         """
         ppa = PysbPreassembler(self.statements)
+        self.processed_policies = self.process_policies(policies)
         ppa.replace_activities()
         if reverse_effects:
             ppa.add_reverse_effects()
         self.statements = ppa.statements
-        # Set local policies for this make_model call that overwrite
-        # the global policies of the PySB assembler
-        if policies is not None:
-            global_policies = self.policies
-            if isinstance(policies, basestring):
-                local_policies = {'other': policies}
-            else:
-                local_policies = {'other': 'default'}
-                local_policies.update(policies)
-            self.policies = local_policies
         self.model = Model()
         self.model.name = model_name
-        self.agent_set = _BaseAgentSet()
+        self.agent_set = BaseAgentSet()
         # Collect information about the monomers/self.agent_set from the
         # statements
         self._monomers()
@@ -821,10 +604,6 @@ class PysbAssembler(object):
         # Add initial conditions
         if initial_conditions:
             self.add_default_initial_conditions()
-
-        # If local policies were applied, revert to the global one
-        if policies is not None:
-            self.policies = global_policies
 
         return self.model
 
@@ -1015,18 +794,21 @@ class PysbAssembler(object):
         the type of statement, the corresponding policy and the stage
         of assembly. It then calls that function to perform the assembly
         task."""
-        class_name = stmt.__class__.__name__
-        try:
-            policy = self.policies[class_name]
-        except KeyError:
-            policy = self.policies['other']
-        func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
+        policy = self.processed_policies[stmt.uuid]
+        class_name = stmt.__class__.__name__.lower()
+        # We map remove modifications to their positive counterparts
+        if isinstance(stmt, ist.RemoveModification):
+            class_name = ist.modclass_to_modtype[stmt.__class__]
+        # We handle any kind of activity regulation in regulateactivity
+        if isinstance(stmt, ist.RegulateActivity):
+            class_name = 'regulateactivity'
+        func_name = '%s_%s_%s' % (class_name, stage, policy.name)
         func = globals().get(func_name)
         if func is None:
             # The specific policy is not implemented for the
             # given statement type.
             # We try to apply a default policy next.
-            func_name = '%s_%s_default' % (class_name.lower(), stage)
+            func_name = '%s_%s_default' % (class_name, stage)
             func = globals().get(func_name)
             if func is None:
                 # The given statement type doesn't have a default
@@ -1044,8 +826,66 @@ class PysbAssembler(object):
     def _assemble(self):
         """Calls the appropriate assemble method based on policies."""
         for stmt in self.statements:
+            pol = self.processed_policies[stmt.uuid]
             if _is_whitelisted(stmt):
-                self._dispatch(stmt, 'assemble', self.model, self.agent_set)
+                self._dispatch(stmt, 'assemble', self.model, self.agent_set,
+                               pol.parameters)
+
+
+class Policy(object):
+    """Represent a policy that can be associated with a speficic Statement.
+
+    Attributes
+    ----------
+    name : str
+        The name of the policy, e.g. one_step
+    parameters : dict[str, Param]
+        A dict of parameters where each key identifies the role
+        of the parameter with respect to the policy, e.g. 'Km',
+        and the value is a Param object.
+    sites : dict
+        A dict of site names corresponding to the interactions
+        induced by the policy.
+    """
+    def __init__(self, name, parameters=None, sites=None):
+        self.name = name
+        self.parameters = parameters if parameters else {}
+        self.sites = sites if sites else []
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        param_dict = {k: str(v) for k, v in self.parameters.items()}
+        param_str = (', ' + json.dumps(param_dict)) if param_dict else ''
+        sites_str = (', ' + json.dumps(self.sites)) if self.sites else ''
+        s = 'Policy(%s%s%s)' % (self.name, param_str, sites_str)
+        return s
+
+
+class Param(object):
+    """Represent a parameter as an input to the assembly process.
+
+    Attributes
+    ----------
+    name : str
+        The name of the parameter
+    value : float
+        The value of the parameter
+    unique : Optional[bool]
+        If True, a suffix is added to the end of the
+        parameter name upon assembly to make sure the parameter
+        is unique in the model. If False, the name attribute
+        is used as is. Default: False
+    """
+    def __init__(self, name, value, unique=False):
+        self.name = name
+        self.value = value
+        self.unique = unique
+
+    def __repr__(self):
+        return 'Param(%s,%f)' % (self.name, self.value)
+
 
 
 # COMPLEX ############################################################
@@ -1070,15 +910,17 @@ def complex_monomers_one_step(stmt, agent_set):
 complex_monomers_default = complex_monomers_one_step
 
 
-def complex_assemble_one_step(stmt, model, agent_set):
+def complex_assemble_one_step(stmt, model, agent_set, parameters):
     pairs = itertools.combinations(stmt.members, 2)
     for pair in pairs:
         agent1 = pair[0]
         agent2 = pair[1]
         param_name = agent1.name[0].lower() + \
                      agent2.name[0].lower() + '_bind'
-        kf_bind = get_create_parameter(model, 'kf_' + param_name, 1e-6)
-        kr_bind = get_create_parameter(model, 'kr_' + param_name, 1e-1)
+        kfp = parameters.get('kf', Param('kf_' + param_name, 1e-6, True))
+        kf_bind = get_create_parameter(model, kfp)
+        krp = parameters.get('kr', Param('kr_' + param_name, 1e-1, True))
+        kr_bind = get_create_parameter(model, krp)
 
         # Make a rule name
         rule_name = '_'.join([get_agent_rule_str(m) for m in pair])
@@ -1132,11 +974,13 @@ def complex_assemble_one_step(stmt, model, agent_set):
         add_rule_to_model(model, r, anns)
 
 
-def complex_assemble_multi_way(stmt, model, agent_set):
+def complex_assemble_multi_way(stmt, model, agent_set, parameters):
     # Get the rate parameter
     abbr_name = ''.join([m.name[0].lower() for m in stmt.members])
-    kf_bind = get_create_parameter(model, 'kf_' + abbr_name + '_bind', 1e-6)
-    kr_bind = get_create_parameter(model, 'kr_' + abbr_name + '_bind', 1e-1)
+    kfp = parameters.get('kf', Param('kf_' + abbr_name + '_bind', 1e-6, True))
+    kf_bind = get_create_parameter(model, kfp)
+    krp = parameters.get('kr', Param('kr' + abbr_name + '_bind', 1e-1, True))
+    kr_bind = get_create_parameter(model, krp)
 
     # Make a rule name
     rule_name = '_'.join([get_agent_rule_str(m) for m in stmt.members])
@@ -1229,19 +1073,14 @@ def complex_assemble_multi_way(stmt, model, agent_set):
 complex_assemble_default = complex_assemble_one_step
 
 # MODIFICATION ###################################################
-
 def modification_monomers_interactions_only(stmt, agent_set):
     if stmt.enz is None:
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
-    act_type = mod_acttype_map[stmt.__class__]
-    active_site = act_type
-    enz.create_site(active_site)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    # See NOTE in monomers_one_step, below
-    mod_condition_name = stmt.__class__.__name__.lower()
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
+    act_type = mod_acttype_map[stmt.__class__]
+    enz.create_site(act_type)
+    sub.create_mod_site(stmt._get_mod_condition())
 
 
 def modification_monomers_one_step(stmt, agent_set):
@@ -1255,9 +1094,7 @@ def modification_monomers_one_step(stmt, agent_set):
     # Phosphorylation statements, i.e., phosphorylation is assumed to be
     # distributive. If this is not the case, this assumption will need to
     # be revisited.
-    mod_condition_name = stmt.__class__.__name__.lower()
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
+    sub.create_mod_site(stmt._get_mod_condition())
 
 
 def modification_monomers_two_step(stmt, agent_set):
@@ -1265,79 +1102,76 @@ def modification_monomers_two_step(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
-
+    sub.create_mod_site(stmt._get_mod_condition())
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(stmt.sub))
     sub.create_site(get_binding_site_name(stmt.enz))
 
 
-def modification_assemble_interactions_only(stmt, model, agent_set):
+def modification_assemble_interactions_only(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    kr_bind = get_create_parameter(model, 'kr_bind', 1.0, unique=False)
-
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp)
     enz = model.monomers[stmt.enz.name]
     sub = model.monomers[stmt.sub.name]
-
-    # See NOTE in monomers_one_step
-    mod_condition_name = stmt.__class__.__name__.lower()
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    active_site = mod_acttype_map[stmt.__class__]
+    # See NOTE in Phosphorylation.monomers_one_step
+    mod_site = get_mod_site_name(stmt._get_mod_condition())
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-
-    rule_name = '%s_%s_%s_%s' % (rule_enz_str, mod_condition_name,
-                                 rule_sub_str, mod_site)
-    active_site = mod_acttype_map[stmt.__class__]
-    # Create a rule specifying that the substrate binds to the kinase at
-    # its active site
-    lhs = enz(**{active_site: None}) + sub(**{mod_site: None})
-    rhs = enz(**{active_site: 1}) % sub(**{mod_site: 1})
-    r_fwd = Rule(rule_name + '_fwd', lhs >> rhs, kf_bind)
-    add_rule_to_model(model, r_fwd)
+    stmt_type_str = stmt.__class__.__name__.lower()
+    r = Rule('%s_%s_%s_%s' %
+             (rule_enz_str, stmt_type_str, rule_sub_str, mod_site),
+             enz(**{active_site: None}) + sub(**{mod_site: None}) >>
+             enz(**{active_site: 1}) % sub(**{mod_site: 1}),
+             kf_bind)
+    add_rule_to_model(model, r)
 
 
-def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def modification_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     if stmt.enz is None:
         return
-    mod_condition_name = stmt.__class__.__name__.lower()
 
-    # See NOTE in monomers_one_step
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    mc = stmt._get_mod_condition()
+    mod_site = get_mod_site_name(mc)
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
+    stmt_type_str = stmt.__class__.__name__.lower()
     rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+        (rule_enz_str, stmt_type_str, rule_sub_str, mod_site)
 
     # Remove pre-set activity flag
     enz_pattern = get_monomer_pattern(model, stmt.enz)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
+    # This is where we decide which state to have on the left hand side
+    # or the right hand side based on whether it's adding or removing
+    # a modification.
+    if isinstance(stmt, ist.RemoveModification):
+        mod_site_state, unmod_site_state = states[mc.mod_type]
+    else:
+        unmod_site_state, mod_site_state = states[mc.mod_type]
     sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: unmod_site_state})
+                                    extra_fields={mod_site: unmod_site_state})
     sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={mod_site: mod_site_state})
-
+                                  extra_fields={mod_site: mod_site_state})
 
     if not rate_law:
         param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                      stmt.sub.name[0].lower(), mod_condition_name)
-        mod_rate = get_create_parameter(model, param_name, 1e-6)
+                                     stmt.sub.name[0].lower(), mc.mod_type)
+        kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+        mod_rate = get_create_parameter(model, kfp)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        Km = get_create_parameter(model, param_name, 1e8)
+                      stmt.sub.name[0].lower() + '_' + mc.mod_type)
+        Kmp = parameters.get('Km', Param(param_name, 1e8, True))
+        Km = get_create_parameter(model, Kmp)
         param_name = ('kc_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        kcat = get_create_parameter(model, param_name, 100)
+                      stmt.sub.name[0].lower() + '_' + mc.mod_type)
+        kcp = parameters.get('kc', Param(param_name, 100, True))
+        kcat = get_create_parameter(model, kcp)
 
         # We need an observable for the substrate to use in the rate law
         sub_obs = Observable(rule_name + '_sub_obs', sub_unmod)
@@ -1350,64 +1184,69 @@ def modification_assemble_one_step(stmt, model, agent_set, rate_law=None):
         model.add_component(mod_rate)
 
     r = Rule(rule_name,
-            enz_pattern + sub_unmod >>
-            enz_pattern + sub_mod,
-            mod_rate)
+             enz_pattern + sub_unmod >>
+             enz_pattern + sub_mod,
+             mod_rate)
     anns = [Annotation(rule_name, enz_pattern.monomer.name, 'rule_has_subject'),
             Annotation(rule_name, sub_unmod.monomer.name, 'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
 
-def modification_assemble_two_step(stmt, model, agent_set):
-    mod_condition_name = stmt.__class__.__name__.lower()
+def modification_assemble_two_step(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
+    mc = stmt._get_mod_condition()
     sub_bs = get_binding_site_name(stmt.sub)
     enz_bound = get_monomer_pattern(model, stmt.enz,
-        extra_fields={sub_bs: 1})
+                                    extra_fields={sub_bs: 1})
     enz_unbound = get_monomer_pattern(model, stmt.enz,
-        extra_fields={sub_bs: None})
+                                      extra_fields={sub_bs: None})
     sub_pattern = get_monomer_pattern(model, stmt.sub)
 
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_bind = get_create_parameter(model, kfp)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
+    krp = parameters.get('kr', Param(param_name, 1e-1, True))
+    kr_bind = get_create_parameter(model, krp)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
-                  stmt.sub.name[0].lower() + '_' + mod_condition_name)
-    kf_mod = get_create_parameter(model, param_name, 100)
+                  stmt.sub.name[0].lower() + '_' + mc.mod_type)
+    kcp = parameters.get('kc', Param(param_name, 100, True))
+    kf_mod = get_create_parameter(model, kcp)
 
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    mod_site = get_mod_site_name(mc)
 
     enz_bs = get_binding_site_name(stmt.enz)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
+    stmt_type_str = stmt.__class__.__name__.lower()
+    if isinstance(stmt, ist.RemoveModification):
+        mod_site_state, unmod_site_state = states[mc.mod_type]
+    else:
+        unmod_site_state, mod_site_state = states[mc.mod_type]
 
     rule_name = '%s_%s_bind_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+        (rule_enz_str, stmt_type_str, rule_sub_str, mod_site)
     r = Rule(rule_name,
-        enz_unbound() + \
-        sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
-        enz_bound() % \
-        sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
-        kf_bind)
+             enz_unbound() +
+             sub_pattern(**{mod_site: unmod_site_state, enz_bs: None}) >>
+             enz_bound() %
+             sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}),
+             kf_bind)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
     rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, mod_condition_name, rule_sub_str, mod_site)
+        (rule_enz_str, stmt_type_str, rule_sub_str, mod_site)
     r = Rule(rule_name,
-        enz_bound() % \
-            sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
-        enz_unbound() + \
-            sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
-        kf_mod)
+             enz_bound() %
+             sub_pattern(**{mod_site: unmod_site_state, enz_bs: 1}) >>
+             enz_unbound() +
+             sub_pattern(**{mod_site: mod_site_state, enz_bs: None}),
+             kf_mod)
     anns = [Annotation(rule_name, enz_bound.monomer.name,
                        'rule_has_subject'),
             Annotation(rule_name, sub_pattern.monomer.name,
@@ -1423,9 +1262,9 @@ def modification_assemble_two_step(stmt, model, agent_set):
     sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
 
     rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
-    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
+    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) %
              sub_mon_uncond(**{enz_bs: 1}) >>
-             enz_mon_uncond(**{sub_bs: None}) + \
+             enz_mon_uncond(**{sub_bs: None}) +
              sub_mon_uncond(**{enz_bs: None}), kr_bind)
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
@@ -1441,8 +1280,7 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
         return
     enz = agent_set.get_create_base_agent(stmt.enz)
     sub = agent_set.get_create_base_agent(stmt.sub)
-    sub.create_mod_site(ist.ModCondition('phosphorylation',
-                                         stmt.residue, stmt.position))
+    sub.create_mod_site(stmt._get_mod_condition())
     # Create site for binding the substrate
     enz.create_site(get_binding_site_name(stmt.sub))
     sub.create_site(get_binding_site_name(stmt.enz))
@@ -1453,7 +1291,7 @@ def phosphorylation_monomers_atp_dependent(stmt, agent_set):
     enz.create_site('ATP')
 
 
-def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
+def phosphorylation_assemble_atp_dependent(stmt, model, agent_set, parameters):
     if stmt.enz is None:
         return
     # ATP
@@ -1490,9 +1328,11 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
 
     # Enzyme binding ATP
     param_name = ('kf_' + stmt.enz.name[0].lower() + '_atp_bind')
-    kf_bind_atp = get_create_parameter(model, param_name, 1e-6)
+    kfap = parameters.get('kfa', Param(param_name, 1e-6, True))
+    kf_bind_atp = get_create_parameter(model, kfap)
     param_name = ('kr_' + stmt.enz.name[0].lower() + '_atp_bind')
-    kr_bind_atp = get_create_parameter(model, param_name, 1.)
+    krap = parameters.get('kra', Param(param_name, 1.0, True))
+    kr_bind_atp = get_create_parameter(model, krap)
     rule_name = '%s_phospho_bind_atp' % (enz_rule_str)
     r = Rule(rule_name,
         enz_atp_unbound() + atp(b=None) >>
@@ -1511,16 +1351,18 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     # Enzyme binding substrate
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_bind = get_create_parameter(model, kfp)
     param_name = ('kr_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_bind')
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
+    krp = parameters.get('kr', Param(param_name, 1e-1, True))
+    kr_bind = get_create_parameter(model, krp)
     param_name = ('kc_' + stmt.enz.name[0].lower() +
                   stmt.sub.name[0].lower() + '_phos')
-    kf_phospho = get_create_parameter(model, param_name, 100)
+    kcp = parameters.get('kc', Param(param_name, 100, True))
+    kf_phospho = get_create_parameter(model, kcp)
 
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
 
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
@@ -1561,195 +1403,11 @@ def phosphorylation_assemble_atp_dependent(stmt, model, agent_set):
     add_rule_to_model(model, r, anns)
 
 
-# DEMODIFICATION #####################################################
-
-def demodification_monomers_interactions_only(stmt, agent_set):
-    if stmt.enz is None:
-        return
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    sub = agent_set.get_create_base_agent(stmt.sub)
-    active_site = mod_acttype_map[stmt.__class__]
-    enz.create_site(active_site)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
-
-
-def demodification_monomers_one_step(stmt, agent_set):
-    if stmt.enz is None:
-        return
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
-
-
-def demodification_monomers_two_step(stmt, agent_set):
-    if stmt.enz is None:
-        return
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    sub = agent_set.get_create_base_agent(stmt.sub)
-    mod_condition_name = stmt.__class__.__name__.lower()[2:]
-    sub.create_mod_site(ist.ModCondition(mod_condition_name,
-                                         stmt.residue, stmt.position))
-    # Create site for binding the substrate
-    enz.create_site(get_binding_site_name(stmt.sub))
-    sub.create_site(get_binding_site_name(stmt.enz))
-
-
-def demodification_assemble_interactions_only(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    enz = model.monomers[stmt.enz.name]
-    sub = model.monomers[stmt.sub.name]
-    active_site = mod_acttype_map[stmt.__class__]
-    # See NOTE in Phosphorylation.monomers_one_step
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-    demod_site = get_mod_site_name(mod_condition_name,
-                                   stmt.residue, stmt.position)
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    r = Rule('%s_%s_%s_%s' %
-             (rule_enz_str, demod_condition_name, rule_sub_str, demod_site),
-             enz(**{active_site: None}) + sub(**{demod_site: None}) >>
-             enz(**{active_site: 1}) % sub(**{demod_site: 1}),
-             kf_bind)
-    add_rule_to_model(model, r)
-
-
-def demodification_assemble_one_step(stmt, model, agent_set, rate_law=None):
-    if stmt.enz is None:
-        return
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-
-    demod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    enz_pattern = get_monomer_pattern(model, stmt.enz)
-
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-    sub_unmod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={demod_site: unmod_site_state})
-    sub_mod = get_monomer_pattern(model, stmt.sub,
-        extra_fields={demod_site: mod_site_state})
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_%s_%s' % \
-                (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-
-    if not rate_law:
-        param_name = 'kf_%s%s_%s' % (stmt.enz.name[0].lower(),
-                                     stmt.sub.name[0].lower(),
-                                     demod_condition_name)
-        mod_rate = get_create_parameter(model, param_name, 1e-6)
-    elif rate_law == 'michaelis_menten':
-        # Parameters
-        param_name = ('Km_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        Km = get_create_parameter(model, param_name, 1e8)
-        param_name = ('kc_' + stmt.enz.name[0].lower() +
-                      stmt.sub.name[0].lower() + '_' + mod_condition_name)
-        kcat = get_create_parameter(model, param_name, 100)
-
-        # We need an observable for the substrate to use in the rate law
-        sub_obs = Observable(rule_name + '_sub_obs', sub_mod)
-        model.add_component(sub_obs)
-        mod_rate = Expression(rule_name + '_rate', kcat / (Km + sub_obs))
-        model.add_component(mod_rate)
-
-    r = Rule(rule_name,
-             enz_pattern() + sub_mod >> enz_pattern() + sub_unmod,
-             mod_rate)
-    anns = [Annotation(r.name, enz_pattern.monomer.name, 'rule_has_subject'),
-            Annotation(r.name, sub_mod.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-
-def demodification_assemble_two_step(stmt, model, agent_set):
-    if stmt.enz is None:
-        return
-    demod_condition_name = stmt.__class__.__name__.lower()
-    mod_condition_name = demod_condition_name[2:]
-    sub_bs = get_binding_site_name(stmt.sub)
-    enz_bs = get_binding_site_name(stmt.enz)
-    enz_bound = get_monomer_pattern(model, stmt.enz,
-                                    extra_fields={sub_bs: 1})
-    enz_unbound = get_monomer_pattern(model, stmt.enz,
-                                      extra_fields={sub_bs: None})
-    sub_pattern = get_monomer_pattern(model, stmt.sub)
-
-    param_name = 'kf_' + stmt.enz.name[0].lower() + \
-        stmt.sub.name[0].lower() + '_bind'
-    kf_bind = get_create_parameter(model, param_name, 1e-6)
-    param_name = 'kr_' + stmt.enz.name[0].lower() + \
-        stmt.sub.name[0].lower() + '_bind'
-    kr_bind = get_create_parameter(model, param_name, 1e-1)
-    param_name = 'kc_' + stmt.enz.name[0].lower() + \
-        stmt.sub.name[0].lower() + '_' + demod_condition_name
-    kf_demod = get_create_parameter(model, param_name, 100)
-
-    demod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
-    unmod_site_state = states[mod_condition_name][0]
-    mod_site_state = states[mod_condition_name][1]
-
-    rule_enz_str = get_agent_rule_str(stmt.enz)
-    rule_sub_str = get_agent_rule_str(stmt.sub)
-    rule_name = '%s_%s_bind_%s_%s' % \
-        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-    r = Rule(rule_name,
-             enz_unbound() + \
-             sub_pattern(**{demod_site: mod_site_state, enz_bs: None}) >>
-             enz_bound() % \
-             sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}),
-             kf_bind)
-    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-    rule_name = '%s_%s_%s_%s' % \
-        (rule_enz_str, demod_condition_name, rule_sub_str, demod_site)
-    r = Rule(rule_name,
-        enz_bound() % \
-            sub_pattern(**{demod_site: mod_site_state, enz_bs: 1}) >>
-        enz_unbound() + \
-            sub_pattern(**{demod_site: unmod_site_state, enz_bs: None}),
-        kf_demod)
-    anns = [Annotation(r.name, enz_bound.monomer.name, 'rule_has_subject'),
-            Annotation(r.name, sub_pattern.monomer.name, 'rule_has_object')]
-    anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-    enz_uncond = get_uncond_agent(stmt.enz)
-    enz_rule_str = get_agent_rule_str(enz_uncond)
-    enz_mon_uncond = get_monomer_pattern(model, enz_uncond)
-    sub_uncond = get_uncond_agent(stmt.sub)
-    sub_rule_str = get_agent_rule_str(sub_uncond)
-    sub_mon_uncond = get_monomer_pattern(model, sub_uncond)
-
-    rule_name = '%s_dissoc_%s' % (enz_rule_str, sub_rule_str)
-    r = Rule(rule_name, enz_mon_uncond(**{sub_bs: 1}) % \
-             sub_mon_uncond(**{enz_bs: 1}) >>
-             enz_mon_uncond(**{sub_bs: None}) + \
-             sub_mon_uncond(**{enz_bs: None}), kr_bind)
-    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    add_rule_to_model(model, r, anns)
-
-demodification_monomers_default = demodification_monomers_one_step
-demodification_assemble_default = demodification_assemble_one_step
-
 # Map specific modification monomer/assembly functions to the generic
 # Modification assembly function
 policies = ['interactions_only', 'one_step', 'two_step', 'default']
 
-mod_classes = [cls for cls in ist.AddModification.__subclasses__()]
-for mc, func_type, pol in itertools.product(mod_classes,
+for mc, func_type, pol in itertools.product(ist.modclass_to_modtype.keys(),
                                             ('monomers', 'assemble'),
                                             policies):
     code = '{mc}_{func_type}_{pol} = ' \
@@ -1758,74 +1416,35 @@ for mc, func_type, pol in itertools.product(mod_classes,
                     pol=pol)
     exec(code)
 
-demod_classes = [cls for cls in ist.RemoveModification.__subclasses__()]
-for mc, func_type, pol in itertools.product(demod_classes,
-                                            ('monomers', 'assemble'),
-                                            policies):
-    code = '{mc}_{func_type}_{pol} = ' \
-            'demodification_{func_type}_{pol}'.format(
-                    mc=ist.modclass_to_modtype[mc], func_type=func_type,
-                    pol=pol)
-    exec(code)
-
 rate_laws = ['michaelis_menten']
-for mc, rate_law in itertools.product(mod_classes, rate_laws):
+for mc, rate_law in itertools.product(ist.modclass_to_modtype.keys(),
+                                      rate_laws):
     code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
     code = '{mc}_assemble_{rate_law} = ' \
-            'lambda a, b, c: modification_assemble_' \
-            'one_step(a, b, c, "{rate_law}")'.format(
+            'lambda a, b, c, d: modification_assemble_' \
+            'one_step(a, b, c, d, "{rate_law}")'.format(
                 mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
-    exec(code)
-
-for mc, rate_law in itertools.product(demod_classes, rate_laws):
-    code = '{mc}_monomers_{rate_law} = {mc}_monomers_one_step'.format(
-                mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
-    exec(code)
-    code = '{mc}_assemble_{rate_law} = ' \
-            'lambda a, b, c: demodification_assemble_' \
-            'one_step(a, b, c, "{rate_law}")'.format(
-                    mc=ist.modclass_to_modtype[mc], rate_law=rate_law)
     exec(code)
 
 
 # CIS-AUTOPHOSPHORYLATION ###################################################
 
-def autophosphorylation_monomers_interactions_only(stmt, agent_set):
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    enz.create_site(phos_site, ('u', 'p'))
-
-
 def autophosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
-    # NOTE: This assumes that a Phosphorylation statement will only ever
-    # involve a single phosphorylation site on the substrate (typically
-    # if there is more than one site, they will be parsed into separate
-    # Phosphorylation statements, i.e., phosphorylation is assumed to be
-    # distributive. If this is not the case, this assumption will need to
-    # be revisited.
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz.create_site(phos_site, ('u', 'p'))
 
-autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
 
-
-def autophosphorylation_assemble_interactions_only(stmt, model, agent_set):
-    stmt.assemble_one_step(model, agent_set)
-
-
-def autophosphorylation_assemble_one_step(stmt, model, agent_set):
+def autophosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = 'kf_' + stmt.enz.name[0].lower() + '_autophos'
     # http://www.jbc.org/content/286/4/2689.full
-    kf_autophospho = get_create_parameter(model, param_name, 1e-2)
+    kfp = parameters.get('kf', Param(param_name, 1e-2, True))
+    kf_autophospho = get_create_parameter(model, kfp)
 
     # See NOTE in monomers_one_step
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     pattern_unphos = get_monomer_pattern(model, stmt.enz,
                                          extra_fields={phos_site: 'u'})
     pattern_phos = get_monomer_pattern(model, stmt.enz,
@@ -1834,52 +1453,38 @@ def autophosphorylation_assemble_one_step(stmt, model, agent_set):
     rule_name = '%s_autophospho_%s_%s' % (rule_enz_str, rule_enz_str,
                                           phos_site)
     r = Rule(rule_name, pattern_unphos >> pattern_phos, kf_autophospho)
-    anns = [Annotation(rule_name, pattern_unphos.monomer.name, 'rule_has_subject'),
-            Annotation(rule_name, pattern_phos.monomer.name, 'rule_has_object')]
+    anns = [Annotation(rule_name, pattern_unphos.monomer.name,
+                       'rule_has_subject'),
+            Annotation(rule_name, pattern_phos.monomer.name,
+                       'rule_has_object')]
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
+
+autophosphorylation_monomers_default = autophosphorylation_monomers_one_step
 autophosphorylation_assemble_default = autophosphorylation_assemble_one_step
+autophosphorylation_monomers_interactions_only = \
+    autophosphorylation_monomers_one_step
+autophosphorylation_assemble_interactions_only = \
+    autophosphorylation_assemble_one_step
 
 # TRANSPHOSPHORYLATION ###################################################
 
-def transphosphorylation_monomers_interactions_only(stmt, agent_set):
-    enz = agent_set.get_create_base_agent(stmt.enz)
-    # Assume there is exactly one bound_to species
-    sub = agent_set.get_create_base_agent(stmt.enz)
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
-    sub.create_site(phos_site, ('u', 'p'))
-
-
 def transphosphorylation_monomers_one_step(stmt, agent_set):
     enz = agent_set.get_create_base_agent(stmt.enz)
-    # NOTE: This assumes that a Phosphorylation statement will only ever
-    # involve a single phosphorylation site on the substrate (typically
-    # if there is more than one site, they will be parsed into separate
-    # Phosphorylation statements, i.e., phosphorylation is assumed to be
-    # distributive. If this is not the case, this assumption will need to
-    # be revisited.
     sub = agent_set.get_create_base_agent(stmt.enz.bound_conditions[0].agent)
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     sub.create_site(phos_site, ('u', 'p'))
 
-transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
 
-
-def transphosphorylation_assemble_interactions_only(stmt, model, agent_set):
-    stmt.assemble_one_step(model, agent_set)
-
-
-def transphosphorylation_assemble_one_step(stmt, model, agent_set):
+def transphosphorylation_assemble_one_step(stmt, model, agent_set, parameters):
     param_name = ('kf_' + stmt.enz.name[0].lower() +
                   _n(stmt.enz.bound_conditions[0].agent.name[0]).lower() +
                   '_transphos')
-    kf = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf = get_create_parameter(model, kfp)
 
-    phos_site = get_mod_site_name('phosphorylation',
-                                  stmt.residue, stmt.position)
+    phos_site = get_mod_site_name(stmt._get_mod_condition())
     enz_pattern = get_monomer_pattern(model, stmt.enz)
     bound_agent = stmt.enz.bound_conditions[0].agent
     sub_unphos = get_monomer_pattern(model, bound_agent,
@@ -1898,7 +1503,13 @@ def transphosphorylation_assemble_one_step(stmt, model, agent_set):
     anns += [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
+
+transphosphorylation_monomers_default = transphosphorylation_monomers_one_step
 transphosphorylation_assemble_default = transphosphorylation_assemble_one_step
+transphosphorylation_monomers_interactions_only = \
+    transphosphorylation_monomers_one_step
+transphosphorylation_assemble_interactions_only = \
+    transphosphorylation_assemble_one_step
 
 # ACTIVATION ######################################################
 
@@ -1926,8 +1537,10 @@ def regulateactivity_monomers_one_step(stmt, agent_set):
     obj.add_activity_type(stmt.obj_activity)
 
 
-def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+def regulateactivity_assemble_interactions_only(stmt, model, agent_set,
+                                                parameters):
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp)
     subj = model.monomers[stmt.subj.name]
     obj = model.monomers[stmt.obj.name]
 
@@ -1954,7 +1567,7 @@ def regulateactivity_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def regulateactivity_assemble_one_step(stmt, model, agent_set, parameters, rate_law=None):
     # This is the pattern coming directly from the subject Agent state
     # TODO: handle context here in conjunction with active forms
     subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -1974,15 +1587,18 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if not rate_law:
         param_name = 'kf_' + stmt.subj.name[0].lower() + \
             stmt.obj.name[0].lower() + '_act'
-        act_rate = get_create_parameter(model, param_name, 1e-6)
+        kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+        act_rate = get_create_parameter(model, kfp)
     elif rate_law == 'michaelis_menten':
         # Parameters
         param_name = ('Km_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
-        Km = get_create_parameter(model, param_name, 1e8)
+        Kmp = parameters.get('Km', Param(param_name, 1e8, True))
+        Km = get_create_parameter(model, Kmp)
         param_name = ('kc_' + stmt.subj.name[0].lower() +
                       stmt.obj.name[0].lower() + '_act')
-        kcat = get_create_parameter(model, param_name, 100)
+        kcp = parameters.get('kc', Param(param_name, 100, True))
+        kcat = get_create_parameter(model, kcp)
 
         # We need an observable for the substrate to use in the rate law
         obj_to_observe = obj_active if stmt.is_activation else obj_inactive
@@ -2005,32 +1621,10 @@ def regulateactivity_assemble_one_step(stmt, model, agent_set, rate_law=None):
 
 regulateactivity_monomers_default = regulateactivity_monomers_one_step
 regulateactivity_assemble_default = regulateactivity_assemble_one_step
+regulateactivity_monomers_michaelis_menten = regulateactivity_monomers_one_step
+regulateactivity_assemble_michaelis_menten = lambda a, b, c, d: \
+    regulateactivity_assemble_one_step(a, b, c, d, 'michaelis_menten')
 
-activation_monomers_interactions_only = \
-                    regulateactivity_monomers_interactions_only
-activation_assemble_interactions_only = \
-                    regulateactivity_assemble_interactions_only
-activation_monomers_one_step = regulateactivity_monomers_one_step
-activation_assemble_one_step = regulateactivity_assemble_one_step
-activation_monomers_default = regulateactivity_monomers_one_step
-activation_assemble_default = regulateactivity_assemble_one_step
-
-activation_monomers_michaelis_menten = regulateactivity_monomers_one_step
-activation_assemble_michaelis_menten = lambda a, b, c: \
-    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
-
-inhibition_monomers_interactions_only = \
-                    regulateactivity_monomers_interactions_only
-inhibition_assemble_interactions_only = \
-                    regulateactivity_assemble_interactions_only
-inhibition_monomers_one_step = regulateactivity_monomers_one_step
-inhibition_assemble_one_step = regulateactivity_assemble_one_step
-inhibition_monomers_default = regulateactivity_monomers_one_step
-inhibition_assemble_default = regulateactivity_assemble_one_step
-
-inhibition_monomers_michaelis_menten = regulateactivity_monomers_one_step
-inhibition_assemble_michaelis_menten = lambda a, b, c: \
-    regulateactivity_assemble_one_step(a, b, c, 'michaelis_menten')
 
 # GEF #####################################################
 
@@ -2053,8 +1647,9 @@ def gef_monomers_one_step(stmt, agent_set):
 gef_monomers_default = gef_monomers_one_step
 
 
-def gef_assemble_interactions_only(stmt, model, agent_set):
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+def gef_assemble_interactions_only(stmt, model, agent_set, parameters):
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp)
     gef = model.monomers[stmt.gef.name]
     ras = model.monomers[stmt.ras.name]
     rule_gef_str = get_agent_rule_str(stmt.gef)
@@ -2069,7 +1664,7 @@ def gef_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def gef_assemble_one_step(stmt, model, agent_set):
+def gef_assemble_one_step(stmt, model, agent_set, parameters):
     gef_pattern = get_monomer_pattern(model, stmt.gef)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
@@ -2078,7 +1673,8 @@ def gef_assemble_one_step(stmt, model, agent_set):
 
     param_name = 'kf_' + stmt.gef.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gef'
-    kf_gef = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_gef = get_create_parameter(model, kfp)
 
     rule_gef_str = get_agent_rule_str(stmt.gef)
     rule_ras_str = get_agent_rule_str(stmt.ras)
@@ -2116,8 +1712,9 @@ def gap_monomers_one_step(stmt, agent_set):
 gap_monomers_default = gap_monomers_one_step
 
 
-def gap_assemble_interactions_only(stmt, model, agent_set):
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+def gap_assemble_interactions_only(stmt, model, agent_set, parameters):
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp)
     gap = model.monomers[stmt.gap.name]
     ras = model.monomers[stmt.ras.name]
     rule_gap_str = get_agent_rule_str(stmt.gap)
@@ -2132,7 +1729,7 @@ def gap_assemble_interactions_only(stmt, model, agent_set):
     add_rule_to_model(model, r)
 
 
-def gap_assemble_one_step(stmt, model, agent_set):
+def gap_assemble_one_step(stmt, model, agent_set, parameters):
     gap_pattern = get_monomer_pattern(model, stmt.gap)
     ras_inactive = get_monomer_pattern(model, stmt.ras,
         extra_fields={'gtpbound': 'inactive'})
@@ -2141,7 +1738,8 @@ def gap_assemble_one_step(stmt, model, agent_set):
 
     param_name = 'kf_' + stmt.gap.name[0].lower() + \
                     stmt.ras.name[0].lower() + '_gap'
-    kf_gap = get_create_parameter(model, param_name, 1e-6)
+    kfp = parameters.get('kf', Param(param_name, 1e-6, True))
+    kf_gap = get_create_parameter(model, kfp)
 
     rule_gap_str = get_agent_rule_str(stmt.gap)
     rule_ras_str = get_agent_rule_str(stmt.ras)
@@ -2174,20 +1772,14 @@ def activeform_monomers_one_step(stmt, agent_set):
 activeform_monomers_default = activeform_monomers_one_step
 
 
-def activeform_assemble_interactions_only(stmt, model, agent_set):
+def activeform_assemble_interactions_only(stmt, model, agent_set, parameters):
     pass
 
 
-def activeform_assemble_one_step(stmt, model, agent_set):
+def activeform_assemble_one_step(stmt, model, agent_set, parameters):
     pass
 
 activeform_assemble_default = activeform_assemble_one_step
-
-# GTPACTIVATION ######################################
-
-gtpactivation_monomers_default = activation_monomers_default
-
-gtpactivation_assemble_default = activation_assemble_default
 
 
 # TRANSLOCATION ###############################################
@@ -2201,14 +1793,14 @@ def translocation_monomers_default(stmt, agent_set):
 
     agent.create_site('loc', states)
 
-def translocation_assemble_default(stmt, model, agent_set):
+def translocation_assemble_default(stmt, model, agent_set, parameters):
     if stmt.to_location is None:
         return
     from_loc = stmt.from_location if stmt.from_location else 'cytoplasm'
     param_name = 'kf_%s_%s_%s' % (_n(stmt.agent.name).lower(),
                                   _n(from_loc), _n(stmt.to_location))
-    kf_trans = get_create_parameter(model, param_name, 1.0, unique=True)
-    monomer = model.monomers[_n(stmt.agent.name)]
+    kfp = parameters.get('kf', Param(param_name, 1.0, True))
+    kf_trans = get_create_parameter(model, kfp)
     rule_agent_str = get_agent_rule_str(stmt.agent)
     rule_name = '%s_translocates_%s_to_%s' % (rule_agent_str,
                                               _n(from_loc),
@@ -2222,9 +1814,9 @@ def translocation_assemble_default(stmt, model, agent_set):
     anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
     add_rule_to_model(model, r, anns)
 
-# DEGRADATION ###############################################
+# SYNTHESIS ###############################################
 
-def decreaseamount_monomers_interactions_only(stmt, agent_set):
+def increaseamount_monomers_interactions_only(stmt, agent_set):
     if stmt.subj is None:
         return
     subj = agent_set.get_create_base_agent(stmt.subj)
@@ -2232,23 +1824,28 @@ def decreaseamount_monomers_interactions_only(stmt, agent_set):
     subj.create_site(get_binding_site_name(stmt.obj))
     obj.create_site(get_binding_site_name(stmt.subj))
 
-def decreaseamount_monomers_one_step(stmt, agent_set):
-    obj = agent_set.get_create_base_agent(stmt.obj)
-    if stmt.subj is not None:
-        subj = agent_set.get_create_base_agent(stmt.subj)
 
-def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
+def increaseamount_monomers_one_step(stmt, agent_set):
+    agent_set.get_create_base_agent(stmt.obj)
+    if stmt.subj is not None:
+        agent_set.get_create_base_agent(stmt.subj)
+
+
+def increaseamount_assemble_interactions_only(stmt, model, agent_set,
+                                              parameters):
     # No interaction when subj is None
     if stmt.subj is None:
         return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
+    kfp = parameters.get('kf', Param('kf_bind', 1.0))
+    kf_bind = get_create_parameter(model, kfp)
     subj_base_agent = agent_set.get_create_base_agent(stmt.subj)
     obj_base_agent = agent_set.get_create_base_agent(stmt.obj)
     subj = model.monomers[subj_base_agent.name]
     obj = model.monomers[obj_base_agent.name]
     rule_subj_str = get_agent_rule_str(stmt.subj)
     rule_obj_str = get_agent_rule_str(stmt.obj)
-    rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
+    stmt_type_str = stmt.__class__.__name__.lower()
+    rule_name = '%s_%s_%s' % (rule_subj_str, stmt_type_str, rule_obj_str)
 
     subj_site_name = get_binding_site_name(stmt.obj)
     obj_site_name = get_binding_site_name(stmt.subj)
@@ -2264,73 +1861,9 @@ def decreaseamount_assemble_interactions_only(stmt, model, agent_set):
         anns += [Annotation(rule_name, subj.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
-def decreaseamount_assemble_one_step(stmt, model, agent_set):
-    obj_pattern = get_monomer_pattern(model, stmt.obj)
-    rule_obj_str = get_agent_rule_str(stmt.obj)
 
-    if stmt.subj is None:
-        # See U. Alon paper on proteome dynamics at 10.1126/science.1199784 
-        param_name = 'kf_' + stmt.obj.name[0].lower() + '_deg'
-        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-5,
-                                                   unique=True)
-        rule_name = '%s_degraded' % rule_obj_str
-        r = Rule(rule_name, obj_pattern >> None, kf_one_step_degrade)
-    else:
-        subj_pattern = get_monomer_pattern(model, stmt.subj)
-        # See U. Alon paper on proteome dynamics at 10.1126/science.1199784 
-        param_name = 'kf_' + stmt.subj.name[0].lower() + \
-                            stmt.obj.name[0].lower() + '_deg'
-        # Scale the average apparent decreaseamount rate by the default
-        # protein initial condition
-        kf_one_step_degrade = get_create_parameter(model, param_name, 2e-9)
-        rule_subj_str = get_agent_rule_str(stmt.subj)
-        rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
-        r = Rule(rule_name,
-            subj_pattern + obj_pattern >> subj_pattern + None,
-            kf_one_step_degrade)
-    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    anns += [Annotation(rule_name, obj_pattern.monomer.name, 'rule_has_object')]
-    if stmt.subj:
-        anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
-    add_rule_to_model(model, r, anns)
-
-decreaseamount_assemble_default = decreaseamount_assemble_one_step
-decreaseamount_monomers_default = decreaseamount_monomers_one_step
-
-# SYNTHESIS ###############################################
-
-increaseamount_monomers_interactions_only = \
-                            decreaseamount_monomers_interactions_only
-
-increaseamount_monomers_one_step = decreaseamount_monomers_one_step
-
-def increaseamount_assemble_interactions_only(stmt, model, agent_set):
-    # No interaction when subj is None
-    if stmt.subj is None:
-        return
-    kf_bind = get_create_parameter(model, 'kf_bind', 1.0, unique=False)
-    subj_base_agent = agent_set.get_create_base_agent(stmt.subj)
-    obj_base_agent = agent_set.get_create_base_agent(stmt.obj)
-    subj = model.monomers[subj_base_agent.name]
-    obj = model.monomers[obj_base_agent.name]
-    rule_subj_str = get_agent_rule_str(stmt.subj)
-    rule_obj_str = get_agent_rule_str(stmt.obj)
-    rule_name = '%s_produces_%s' % (rule_subj_str, rule_obj_str)
-
-    subj_site_name = get_binding_site_name(stmt.obj)
-    obj_site_name = get_binding_site_name(stmt.subj)
-
-    r = Rule(rule_name,
-            subj(**{subj_site_name: None}) + obj(**{obj_site_name: None}) >>
-            subj(**{subj_site_name: 1}) % obj(**{obj_site_name: 1}),
-            kf_bind)
-    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
-    anns += [Annotation(rule_name, obj.name, 'rule_has_object')]
-    if stmt.subj:
-        anns += [Annotation(rule_name, subj.name, 'rule_has_subject')]
-    add_rule_to_model(model, r, anns)
-
-def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
+def increaseamount_assemble_one_step(stmt, model, agent_set, parameters,
+                                     rate_law=None):
     if stmt.subj is not None and (stmt.subj.name == stmt.obj.name):
         if not isinstance(stmt, ist.Influence):
             logger.warning('%s transcribes itself, skipping' % stmt.obj.name)
@@ -2353,8 +1886,8 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
     if stmt.subj is None:
         rule_name = '%s_synthesized' % rule_obj_str
         param_name = 'kf_' + stmt.obj.name[0].lower() + '_synth'
-        kf_one_step_synth = get_create_parameter(model, param_name, 2,
-                                                 unique=True)
+        kfp = parameters.get('kf', Param(param_name, 2, True))
+        kf_one_step_synth = get_create_parameter(model, kfp)
         r = Rule(rule_name, None >> obj_pattern, kf_one_step_synth)
     else:
         subj_pattern = get_monomer_pattern(model, stmt.subj)
@@ -2367,18 +1900,22 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
                                 stmt.obj.name[0].lower() + '_synth'
             # Scale the average apparent increaseamount rate by the default
             # protein initial condition
-            synth_rate = get_create_parameter(model, param_name, 2e-4)
+            sp = parameters.get('kf', Param(param_name, 2e-4, True))
+            synth_rate = get_create_parameter(model, sp)
         if rate_law == 'hill':
             # k * [subj]**n / (K_A**n + [subj]**n)
             param_name = 'kf_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
-            kf = get_create_parameter(model, param_name, 4)
+            kfp = parameters.get('kf', Param(param_name, 4, True))
+            kf = get_create_parameter(model, kfp)
             param_name = 'Ka_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
-            Ka = get_create_parameter(model, param_name, 1e4)
+            Kap = parameters.get('Ka', Param(param_name, 1e4, True))
+            Ka = get_create_parameter(model, Kap)
             param_name = 'n_' + stmt.subj.name[0].lower() + \
                                 stmt.obj.name[0].lower() + '_synth'
-            n_hill = get_create_parameter(model, param_name, 1)
+            np = parameters.get('n', Param(param_name, 1, True))
+            n_hill = get_create_parameter(model, np)
             obs_name = '%s_subj_obs' % rule_name
             subj_obs = Observable(obs_name, subj_pattern)
             model.add_component(subj_obs)
@@ -2394,12 +1931,57 @@ def increaseamount_assemble_one_step(stmt, model, agent_set, rate_law=None):
         anns += [Annotation(rule_name, subj_pattern.monomer.name, 'rule_has_subject')]
     add_rule_to_model(model, r, anns)
 
+
 increaseamount_monomers_default = increaseamount_monomers_one_step
 increaseamount_assemble_default = increaseamount_assemble_one_step
 increaseamount_monomers_hill = increaseamount_monomers_one_step
-increaseamount_assemble_hill = lambda a, b, c: \
-        increaseamount_assemble_one_step(a, b, c, 'hill')
+increaseamount_assemble_hill = lambda a, b, c, d: \
+        increaseamount_assemble_one_step(a, b, c, d, 'hill')
 
+
+# DEGRADATION ###############################################
+
+def decreaseamount_assemble_one_step(stmt, model, agent_set, parameters):
+    obj_pattern = get_monomer_pattern(model, stmt.obj)
+    rule_obj_str = get_agent_rule_str(stmt.obj)
+
+    if stmt.subj is None:
+        # See U. Alon paper on proteome dynamics at 10.1126/science.1199784
+        param_name = 'kf_' + stmt.obj.name[0].lower() + '_deg'
+        kfp = parameters.get('kf', Param(param_name, 2e-5, True))
+        kf_one_step_degrade = get_create_parameter(model, kfp)
+        rule_name = '%s_degraded' % rule_obj_str
+        r = Rule(rule_name, obj_pattern >> None, kf_one_step_degrade)
+    else:
+        subj_pattern = get_monomer_pattern(model, stmt.subj)
+        # See U. Alon paper on proteome dynamics at 10.1126/science.1199784
+        param_name = 'kf_' + stmt.subj.name[0].lower() + \
+                     stmt.obj.name[0].lower() + '_deg'
+        # Scale the average apparent decreaseamount rate by the default
+        # protein initial condition
+        kfp = parameters.get('kf', Param(param_name, 2e-9, True))
+        kf_one_step_degrade = get_create_parameter(model, kfp)
+        rule_subj_str = get_agent_rule_str(stmt.subj)
+        rule_name = '%s_degrades_%s' % (rule_subj_str, rule_obj_str)
+        r = Rule(rule_name,
+                 subj_pattern + obj_pattern >> subj_pattern + None,
+                 kf_one_step_degrade)
+    anns = [Annotation(rule_name, stmt.uuid, 'from_indra_statement')]
+    anns += [Annotation(rule_name, obj_pattern.monomer.name,
+                        'rule_has_object')]
+    if stmt.subj:
+        anns += [Annotation(rule_name, subj_pattern.monomer.name,
+                            'rule_has_subject')]
+    add_rule_to_model(model, r, anns)
+
+
+decreaseamount_monomers_default = increaseamount_monomers_one_step
+decreaseamount_assemble_default = decreaseamount_assemble_one_step
+decreaseamount_monomers_interactions_only = \
+    increaseamount_monomers_interactions_only
+decreaseamount_assemble_interactions_only = \
+    increaseamount_assemble_interactions_only
+decreaseamount_monomers_one_step = increaseamount_monomers_one_step
 
 # INFLUENCE ###################################################
 
@@ -2434,7 +2016,7 @@ def conversion_monomers_one_step(stmt, agent_set):
         agent_set.get_create_base_agent(obj)
 
 
-def conversion_assemble_one_step(stmt, model, agent_set):
+def conversion_assemble_one_step(stmt, model, agent_set, parameters):
     # Skip statements with more than one from object due to complications
     # with rate law
     if len(stmt.obj_from) != 1:
@@ -2470,8 +2052,8 @@ def conversion_assemble_one_step(stmt, model, agent_set):
         rule_name = '%s_converted_to_%s' % (rule_obj_from_str, rule_obj_to_str)
         param_name = 'kf_%s%s_convert' % (obj_from.name[0].lower(),
                                           obj_to_monomers[0].name[0].lower())
-        kf_one_step_convert = get_create_parameter(model, param_name, 2,
-                                                   unique=True)
+        kfp = parameters.get('kf', Param(param_name, 2, True))
+        kf_one_step_convert = get_create_parameter(model, kfp)
         r = Rule(rule_name, obj_from_pattern >> obj_to_pattern,
                  kf_one_step_convert)
     else:
@@ -2486,7 +2068,8 @@ def conversion_assemble_one_step(stmt, model, agent_set):
              obj_to_monomers[0].name[0].lower())
         # Scale the average apparent increaseamount rate by the default
         # protein initial condition
-        kf_one_step_convert = get_create_parameter(model, param_name, 2e-4)
+        kfp = parameters.get('kf', Param(param_name, 2e-4, True))
+        kf_one_step_convert = get_create_parameter(model, kfp)
 
         r = Rule(rule_name, subj_pattern + obj_from_pattern >>
                             result_pattern,
@@ -2496,236 +2079,3 @@ def conversion_assemble_one_step(stmt, model, agent_set):
 
 conversion_monomers_default = conversion_monomers_one_step
 conversion_assemble_default = conversion_assemble_one_step
-
-class PysbPreassembler(object):
-    def __init__(self, stmts=None):
-        if not stmts:
-            stmts = []
-        self.statements = stmts
-        self.agent_set = _BaseAgentSet()
-
-    def add_statements(self, stmts):
-        self.statements = stmts
-
-    def _gather_active_forms(self):
-        for stmt in self.statements:
-            if isinstance(stmt, ist.ActiveForm):
-                base_agent = self.agent_set.get_create_base_agent(stmt.agent)
-                # Handle the case where an activity flag is set
-                agent_to_add = stmt.agent
-                if stmt.agent.activity:
-                    new_agent = fast_deepcopy(stmt.agent)
-                    new_agent.activity = None
-                    agent_to_add = new_agent
-                base_agent.add_activity_form(agent_to_add, stmt.is_active)
-
-    def replace_activities(self):
-        logger.debug('Running PySB Preassembler replace activities')
-        # TODO: handle activity hierarchies
-        new_stmts = []
-        def has_agent_activity(stmt):
-            """Return True if any agents in the Statement have activity."""
-            for agent in stmt.agent_list():
-                if isinstance(agent, ist.Agent) and agent.activity is not None:
-                    return True
-            return False
-        # First collect all explicit active forms
-        self._gather_active_forms()
-        # Iterate over all statements
-        for j, stmt in enumerate(self.statements):
-            logger.debug('%d/%d %s' % (j + 1, len(self.statements), stmt))
-            # If the Statement doesn't have any activities, we can just
-            # keep it and move on
-            if not has_agent_activity(stmt):
-                new_stmts.append(stmt)
-                continue
-            stmt_agents = stmt.agent_list()
-            num_agents = len(stmt_agents)
-            # Make a list with an empty list for each Agent so that later
-            # we can build combinations of Agent forms
-            agent_forms = [[] for a in stmt_agents]
-            for i, agent in enumerate(stmt_agents):
-                # This is the case where there is an activity flag on an
-                # Agent which we will attempt to replace with an explicit
-                # active form
-                if agent is not None and isinstance(agent, ist.Agent) and \
-                        agent.activity is not None:
-                    base_agent = self.agent_set.get_create_base_agent(agent)
-                    # If it is an "active" state
-                    if agent.activity.is_active:
-                        active_forms = base_agent.active_forms
-                        # If no explicit active forms are known then we use
-                        # the generic one
-                        if not active_forms:
-                            active_forms = [agent]
-                    # If it is an "inactive" state
-                    else:
-                        active_forms = base_agent.inactive_forms
-                        # If no explicit inactive forms are known then we use
-                        # the generic one
-                        if not active_forms:
-                            active_forms = [agent]
-                    # We now iterate over the active agent forms and create
-                    # new agents
-                    for af in active_forms:
-                        new_agent = fast_deepcopy(agent)
-                        self._set_agent_context(af, new_agent)
-                        agent_forms[i].append(new_agent)
-                # Otherwise we just copy over the agent as is
-                else:
-                    agent_forms[i].append(agent)
-            # Now create all possible combinations of the agents and create new
-            # statements as needed
-            agent_combs = itertools.product(*agent_forms)
-            for agent_comb in agent_combs:
-                new_stmt = fast_deepcopy(stmt)
-                new_stmt.set_agent_list(agent_comb)
-                new_stmts.append(new_stmt)
-        self.statements = new_stmts
-
-    def add_reverse_effects(self):
-        # TODO: generalize to other modification sites
-        pos_mod_sites = {}
-        neg_mod_sites = {}
-        syntheses = []
-        degradations = []
-        for stmt in self.statements:
-            if isinstance(stmt, ist.Phosphorylation):
-                agent = stmt.sub.name
-                try:
-                    pos_mod_sites[agent].append((stmt.residue, stmt.position))
-                except KeyError:
-                    pos_mod_sites[agent] = [(stmt.residue, stmt.position)]
-            elif isinstance(stmt, ist.Dephosphorylation):
-                agent = stmt.sub.name
-                try:
-                    neg_mod_sites[agent].append((stmt.residue, stmt.position))
-                except KeyError:
-                    neg_mod_sites[agent] = [(stmt.residue, stmt.position)]
-            elif isinstance(stmt, ist.Influence):
-                if stmt.overall_polarity() == 1:
-                    syntheses.append(stmt.obj.name)
-                elif stmt.overall_polarity() == -1:
-                    degradations.append(stmt.obj.name)
-            elif isinstance(stmt, ist.IncreaseAmount):
-                syntheses.append(stmt.obj.name)
-            elif isinstance(stmt, ist.DecreaseAmount):
-                degradations.append(stmt.obj.name)
-
-        new_stmts = []
-        for agent_name, pos_sites in pos_mod_sites.items():
-            neg_sites = neg_mod_sites.get(agent_name, [])
-            no_neg_site = set(pos_sites).difference(set(neg_sites))
-            for residue, position in no_neg_site:
-                st = ist.Dephosphorylation(ist.Agent('phosphatase'),
-                                           ist.Agent(agent_name),
-                                           residue, position)
-                new_stmts.append(st)
-        for agent_name in syntheses:
-            if agent_name not in degradations:
-                st = ist.DecreaseAmount(None, ist.Agent(agent_name))
-                new_stmts.append(st)
-
-        self.statements += new_stmts
-
-    @staticmethod
-    def _set_agent_context(from_agent, to_agent):
-        if not isinstance(from_agent, ist.Agent) or \
-            not isinstance(to_agent, ist.Agent):
-            return
-        def add_no_duplicate(from_lst, to_lst):
-            for fm in from_lst:
-                found = False
-                for tm in to_lst:
-                    if fm.matches(tm):
-                        found = True
-                        break
-                if not found:
-                    to_lst.append(fm)
-            return to_lst
-        # TODO: what can we do about semantic conflicts here like the same
-        # bound condition with True/False is_bound appearing in the
-        # two contexts?
-        to_agent.bound_conditions = \
-            add_no_duplicate(to_agent.bound_conditions,
-                             from_agent.bound_conditions)
-        to_agent.mods = add_no_duplicate(to_agent.mods, from_agent.mods)
-        to_agent.mutations = add_no_duplicate(to_agent.mutations,
-                                              from_agent.mutations)
-        to_agent.location = from_agent.location
-        to_agent.activity = from_agent.activity
-
-def export_sbgn(model):
-    """Return an SBGN model string corresponding to the PySB model.
-
-    This function first calls generate_equations on the PySB model to obtain
-    a reaction network (i.e. individual species, reactions). It then iterates
-    over each reaction and and instantiates its reactants, products, and the
-    process itself as SBGN glyphs and arcs.
-
-    Parameters
-    ----------
-    model : pysb.core.Model
-        A PySB model to be exported into SBGN
-
-    Returns
-    -------
-    sbgn_str : str
-        An SBGN model as string
-    """
-    import lxml.etree
-    import lxml.builder
-    from pysb.bng import generate_equations
-    from indra.assemblers.sbgn import SBGNAssembler
-
-    logger.info('Generating reaction network with BNG for SBGN export. ' +
-                'This could take a long time.')
-    generate_equations(model)
-
-    sa = SBGNAssembler()
-
-    glyphs = {}
-    for idx, species in enumerate(model.species):
-        glyph = sa._glyph_for_complex_pattern(species)
-        if glyph is None:
-            continue
-        sa._map.append(glyph)
-        glyphs[idx] = glyph
-    for reaction in model.reactions:
-        # Get all the reactions / products / controllers of the reaction
-        reactants = set(reaction['reactants']) - set(reaction['products'])
-        products = set(reaction['products']) - set(reaction['reactants'])
-        controllers = set(reaction['reactants']) & set(reaction['products'])
-        # Add glyph for reaction
-        process_glyph = sa._process_glyph('process')
-        # Connect reactants with arcs
-        if not reactants:
-            glyph_id = sa._none_glyph()
-            sa._arc('consumption', glyph_id, process_glyph)
-        else:
-            for r in reactants:
-                glyph = glyphs.get(r)
-                if glyph is None:
-                    glyph_id = sa._none_glyph()
-                else:
-                    glyph_id = glyph.attrib['id']
-                sa._arc('consumption', glyph_id, process_glyph)
-        # Connect products with arcs
-        if not products:
-            glyph_id = sa._none_glyph()
-            sa._arc('production', process_glyph, glyph_id)
-        else:
-            for p in products:
-                glyph = glyphs.get(p)
-                if glyph is None:
-                    glyph_id = sa._none_glyph()
-                else:
-                    glyph_id = glyph.attrib['id']
-                sa._arc('production', process_glyph, glyph_id)
-        # Connect controllers with arcs
-        for c in controllers:
-            glyph = glyphs[c]
-            sa._arc('catalysis', glyph.attrib['id'], process_glyph)
-
-    sbgn_str = sa.print_model().decode('utf-8')
-    return sbgn_str

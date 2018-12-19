@@ -46,6 +46,7 @@ class KamiAssembler(PysbAssembler):
         model : dict
             The assembled Kami model.
         """
+        self.processed_policies = self.process_policies(policies)
         ppa = PysbPreassembler(self.statements)
         ppa.replace_activities()
         if reverse_effects:
@@ -99,10 +100,7 @@ class KamiAssembler(PysbAssembler):
         of assembly. It then calls that function to perform the assembly
         task."""
         class_name = stmt.__class__.__name__
-        try:
-            policy = self.policies[class_name]
-        except KeyError:
-            policy = self.policies['other']
+        policy = self.processed_policies[stmt.uuid]
         func_name = '%s_%s_%s' % (class_name.lower(), stage, policy)
         func = globals().get(func_name)
         if func is None:
@@ -281,12 +279,10 @@ complex_assemble_default = complex_assemble_one_step
 
 def _mod_demod_assemble_one_step(stmt, model, is_mod):
     # Define some basic parameters for the modification
-    mod_condition_name = stmt.__class__.__name__.lower()
-    if not is_mod:
-        mod_condition_name = ist.modtype_to_inverse[mod_condition_name]
+    mc = stmt._get_mod_condition()
+    mod_condition_name = mc.mod_type
 
-    mod_site = get_mod_site_name(mod_condition_name,
-                                  stmt.residue, stmt.position)
+    mod_site = get_mod_site_name(mc)
     rule_enz_str = get_agent_rule_str(stmt.enz)
     rule_sub_str = get_agent_rule_str(stmt.sub)
     nugget_name = '%s_%s_%s_%s' % \

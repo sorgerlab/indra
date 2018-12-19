@@ -22,6 +22,7 @@ mek_phos3 = Agent('MAP2K1', mods=[ModCondition('phosphorylation', 'S',
                                                '222', False)],
                  db_refs={'HGNC': '6840'})
 
+
 def test_complex_no_conditions():
     stmt = Complex([mek, erk])
     ka = KamiAssembler()
@@ -35,6 +36,7 @@ def test_complex_no_conditions():
     assert len(graph_list[1]['graph']['edges']) == 4
     assert len(graph_list[1]['graph']['nodes']) == 5
     print(json.dumps(model, indent=1))
+
 
 def test_complex_bound_condition():
     stmt = Complex([mek_braf, erk])
@@ -50,6 +52,7 @@ def test_complex_bound_condition():
     assert len(graph_list[1]['graph']['nodes']) == 7
     print(json.dumps(model, indent=1))
 
+
 def test_complex_not_bound_condition():
     stmt = Complex([mek_no_braf, erk])
     ka = KamiAssembler()
@@ -63,6 +66,7 @@ def test_complex_not_bound_condition():
     assert len(graph_list[1]['graph']['edges']) == 6
     assert len(graph_list[1]['graph']['nodes']) == 7
     print(json.dumps(model, indent=1))
+
 
 def test_complex_mod_condition():
     meks = [mek_phos, mek_phos2, mek_phos3]
@@ -80,6 +84,7 @@ def test_complex_mod_condition():
         assert len(graph_list[1]['graph']['nodes']) == 6
         print(json.dumps(model, indent=1))
 
+
 def test_mod_one_step():
     stmt = Phosphorylation(mek, erk)
     ka = KamiAssembler()
@@ -93,6 +98,7 @@ def test_mod_one_step():
     assert len(graph_list) == 2
     assert len(graph_list[1]['graph']['edges']) == 3
     assert len(graph_list[1]['graph']['nodes']) == 4
+
 
 def test_demod_one_step():
     stmt = Deubiquitination(mek, erk, 'K', '123')
@@ -108,6 +114,7 @@ def test_demod_one_step():
     assert len(graph_list[1]['graph']['edges']) == 3
     assert len(graph_list[1]['graph']['nodes']) == 4
 
+
 def test_unique_id():
     egf = Agent('EGF')
     egfr = Agent('EGFR', bound_conditions=BoundCondition(egf, True))
@@ -116,4 +123,3 @@ def test_unique_id():
     ka.add_statements([stmt])
     model = ka.make_model()
     print(json.dumps(model, indent=1))
-
