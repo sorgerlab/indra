@@ -348,20 +348,8 @@ def get_elsevier_api_keys():
 
 
 def get_environment():
-    # Get AWS credentials
-    # http://stackoverflow.com/questions/36287720/boto3-get-credentials-dynamically
-    session = botocore.session.get_session()
-    access_key = session.get_credentials().access_key
-    secret_key = session.get_credentials().secret_key
-
     # Get the Elsevier keys from the Elsevier client
-    environment_vars = [
-        {'name': 'AWS_ACCESS_KEY_ID',
-         'value': access_key},
-        {'name': 'AWS_SECRET_ACCESS_KEY',
-         'value': secret_key}
-        ]
-    environment_vars += get_elsevier_api_keys()
+    environment_vars = get_elsevier_api_keys()
 
     # Only include values that are not empty.
     return [var_dict for var_dict in environment_vars
