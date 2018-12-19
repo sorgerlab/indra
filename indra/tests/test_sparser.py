@@ -78,6 +78,12 @@ def test_fix_agent_ncit_only():
     assert a.db_refs.get('FPLX') == 'TUBB'
 
 
+def test_fix_agent_pcid():
+    a = Agent('XXX', db_refs={'PCID': '123'})
+    _fix_agent(a)
+    assert 'PCID' not in a.db_refs
+    assert a.db_refs['PUBCHEM'] == '123'
+
 # ############################
 # JSON processing tests
 # ############################
