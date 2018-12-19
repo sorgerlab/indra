@@ -1,8 +1,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import json
+import logging
 import ndex2.client
 from .processor import NdexCxProcessor
+
+
+logger = logging.getLogger(__name__)
 
 
 def process_cx_file(file_name, require_grounding=True):
@@ -56,16 +60,22 @@ def process_ndex_network(network_id, username=None, password=None,
         logger.error('Response: %s' % res.text)
         return None
     json_list = res.json()
-    return process_cx(json_list, require_grounding=require_grounding)
+    summary = nd.get_network_summary(network_id)
+    return process_cx(json_list, summary=summary,
+                      require_grounding=require_grounding)
 
 
-def process_cx(cx_json, require_grounding=True):
+def process_cx(cx_json, summary=None, require_grounding=True):
     """Process a CX JSON object into Statements.
 
     Parameters
     ----------
     cx_json : list
         CX JSON object.
+    summary : Optional[dict]
+        The network summary object which can be obtained via
+        get_network_summary through the web service. THis contains metadata
+        such as the owner and the creation time of the network.
     require_grounding: bool
         Whether network nodes lacking grounding information should be included
         among the extracted Statements (default is True).
@@ -75,6 +85,7 @@ def process_cx(cx_json, require_grounding=True):
     NdexCxProcessor
         Processor containing Statements.
     """
-    ncp = NdexCxProcessor(cx_json, require_grounding=require_grounding)
+    ncp = NdexCxProcessor(cx_json, summary=summary,
+                          require_grounding=require_grounding)
     ncp.get_statements()
     return ncp

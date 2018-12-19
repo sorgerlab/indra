@@ -49,6 +49,10 @@ class NdexCxProcessor(object):
     ----------
     cx : list of dicts
         JSON content containing the Cytoscape network in CX format.
+    summary : Optional[dict]
+        The network summary object which can be obtained via
+        get_network_summary through the web service. THis contains metadata
+        such as the owner and the creation time of the network.
 
     Attributes
     ----------
@@ -56,7 +60,7 @@ class NdexCxProcessor(object):
         A list of extracted INDRA Statements. Not all edges in the network
         may be converted into Statements.
     """
-    def __init__(self, cx, require_grounding=True):
+    def __init__(self, cx, summary=None, require_grounding=True):
         self.cx = cx
         self.statements = []
         self.require_grounding = require_grounding
@@ -65,9 +69,10 @@ class NdexCxProcessor(object):
         self._node_agents = {}
         self._network_info = {}
         self._edge_attributes = {}
+        summary = summary if summary else {}
         self._initialize_node_attributes()
         self._initialize_node_agents()
-        self._initialize_network_info()
+        self._initialize_network_info(summary)
         self._initialize_edge_attributes()
 
     def _initialize_node_agents(self):
@@ -110,10 +115,9 @@ class NdexCxProcessor(object):
             logger.info('%s invalid gene symbols: %s' %
                         (verb, ', '.join(invalid_genes)))
 
-    def _initialize_network_info(self):
-        ndex_info = _get_dict_from_list('ndexStatus', self.cx)[0]
-        self._network_info['externalId'] = ndex_info.get('externalId')
-        self._network_info['owner'] = ndex_info.get('owner')
+    def _initialize_network_info(self, summary):
+        self._network_info['externalId'] = summary.get('externalId')
+        self._network_info['owner'] = summary.get('owner')
 
     def _initialize_edge_attributes(self):
         edge_attr = _get_dict_from_list('edgeAttributes', self.cx)
