@@ -1,6 +1,7 @@
 Tools (:py:mod:`indra.tools`)
 =============================
 
+
 Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 -----------------------------------------------------------------------------
 
@@ -31,17 +32,14 @@ The RAS Machine (:py:mod:`indra.tools.machine`)
 .. automodule:: indra.tools.machine
     :members:
 
-.. High-throughput reading tools (:py:mod:`indra.tools.reading`)
-   -------------------------------------------------------------
-   .. automodule:: indra.tools.reading
-       :members:
 
-.. Scoring INDRA Statements manually (:py:mod:`indra.tools.stmt_scoring`)
-   ----------------------------------------------------------------------
-   .. automodule:: indra.tools.stmt_scoring
-       :members:
+High-throughput Reading Tools (:py:mod:`indra.tools.reading`)
+-------------------------------------------------------------
 
-.. Generate English language questions on linked mechanisms (:py:mod:`indra.tools.mechlinker_queries`)
-   ---------------------------------------------------------------------------------------------------
-   .. automodule:: indra.tools.mechlinker_queries
-       :members:
+.. toctree::
+   :maxdepth: 3
+
+   reading/pipelines
+   reading/interfaces
+   reading/tools
+   reading/utils

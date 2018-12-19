@@ -1,5 +1,6 @@
 sphinx_rtd_theme
 sphinx
+sphinx-argparse
 mock
 ipython
 matplotlib

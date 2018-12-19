@@ -9,23 +9,22 @@ import random
 logger = logging.getLogger('indra.tools.reading.read_files')
 
 from indra.tools.reading.util.script_tools import get_parser, make_statements
+from indra.tools.reading.readers import _get_dir, get_readers, Content
 
-if __name__ == '__main__':
+
+def make_parser():
+    """Create the argument parser, derived from the general scripts parser."""
     parser = get_parser(
         __doc__,
         ('A file containing a list of files/file paths to be read. These '
          'should be nxml or txt files.')
-        )
+    )
     parser.add_argument(
         dest='output_name',
         help=('Results will be pickled in files '
               '<output_name>_stmts.pkl and <output_name>_readings.pkl.')
-        )
-    args = parser.parse_args()
-    if args.debug and not args.quiet:
-        logger.setLevel(logging.DEBUG)
-
-from indra.tools.reading.readers import _get_dir, get_readers, Content
+    )
+    return parser
 
 
 def read_files(files, readers, **kwargs):
@@ -60,14 +59,21 @@ def read_files(files, readers, **kwargs):
     return output_list
 
 
-if __name__ == '__main__':
+def main():
+    # Load arguments.
+    parser = make_parser()
+    args = parser.parse_args()
+    if args.debug and not args.quiet:
+        logger.setLevel(logging.DEBUG)
+
+    # Load the input file.
     with open(args.input_file, 'r') as f:
         input_lines = f.readlines()
     logger.info("Found %d files." % len(input_lines))
     for ftype in ['nxml', 'txt']:
         logger.debug('%d are %s' % (
             len([f for f in input_lines if f.endswith(ftype)]), ftype
-            ))
+        ))
 
     # Select only a sample of the lines, if sample is chosen.
     if args.n_samp is not None:
@@ -101,3 +107,7 @@ if __name__ == '__main__':
     with open(stmts_pkl_path, 'wb') as f:
         pickle.dump([sd.statement for sd in stmt_data_list], f)
         print("Statements pickled in %s." % stmts_pkl_path)
+
+
+if __name__ == '__main__':
+    main()

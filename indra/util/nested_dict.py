@@ -8,21 +8,23 @@ class NestedDict(dict):
     More specifically, this acts like a recursive defaultdict, allowing, for
     example:
 
-    >>> nd = NestedDict()
-    >>> nd['a']['b']['c'] = 'foo'
+    >> nd = NestedDict()
+    >> nd['a']['b']['c'] = 'foo'
 
     In addition, useful methods have been defined that allow the user to search
     the data structure. Note that the are not particularly optimized methods at
     this time. However, for convenience, you can for example simply call
     `get_path` to get the path to a particular key:
 
-    >>> nd.get_path('c')
+    >> nd.get_path('c')
     (('a', 'b', 'c'), 'foo')
 
     and the value at that key. Similarly:
 
-    >>> nd.get_path('b')
-    (('a', 'b'), NestedDict('c': 'foo'))
+    >> nd.get_path('b')
+    (('a', 'b'), NestedDict(
+      'c': 'foo'
+    ))
 
     `get`, `gets`, and `get_paths` operate on similar principles, and are
     documented below.

@@ -33,10 +33,10 @@ sys.path.insert(0, os.path.abspath('..'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-#    'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinxarg.ext',
     'sphinx.ext.autosummary',
     'IPython.sphinxext.ipython_directive',
     'IPython.sphinxext.ipython_console_highlighting',
@@ -315,7 +315,7 @@ MOCK_MODULES = [
     'functools32', 'ndex2', 'ndex2.client', 'ndex2.nice_cx_network',
     'nltk', 'kappy', 'openpyxl', 'reportlab', 'reportlab.lib', 'reportlab.lib.enums',
     'reportlab.lib.pagesizes', 'reportlab.platypus', 'reportlab.lib.styles',
-    'reportlab.lib.units'
+    'reportlab.lib.units', 'boto3', 'botocore', 'botocore.session'
     ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.MagicMock()

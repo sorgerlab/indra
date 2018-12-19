@@ -25,102 +25,103 @@ from indra import get_config
 logger = logging.getLogger('indra.tools.reading.pmid_reading.read_pmids')
 
 
-parser = argparse.ArgumentParser(
-    description=('Apply NLP readers to the content available for a list of '
-                 'pmids.')
-    )
-parser.add_argument(
-    '-r', '--reader',
-    choices=['reach', 'sparser', 'all'],
-    default=['all'],
-    dest='readers',
-    nargs='+',
-    help='Choose which reader(s) to use.'
-    )
-parser.add_argument(
-    '-u', '--upload_json',
-    dest='upload_json',
-    action='store_true',
-    help=('Option to simply upload previously read json files. Overrides -r '
-          'option, so no reading will be done.')
-    )
-parser.add_argument(
-    '--force_fulltext',
-    dest='force_fulltext',
-    action='store_true',
-    help='Option to force reading of the full text.'
-    )
-parser.add_argument(
-    '--force_read',
-    dest='force_read',
-    action='store_true',
-    help='Option to force the reader to reread everything.'
-    )
-parser.add_argument(
-    '-n', '--num_cores',
-    dest='num_cores',
-    default=1,
-    type=int,
-    help='Select the number of cores you want to use.'
-    )
-parser.add_argument(
-    '-v', '--verbose',
-    dest='verbose',
-    action='store_true',
-    help='Show more output to screen.'
-    )
-parser.add_argument(
-    '-m', '--messy',
-    dest='cleanup',
-    action='store_false',
-    help='Choose to not clean up after run.'
-    )
-parser.add_argument(
-    '-s', '--start_index',
-    dest='start_index',
-    type=int,
-    help='Select the first pmid in the list to start reading.',
-    default=0
-    )
-parser.add_argument(
-    '-e', '--end_index',
-    dest='end_index',
-    type=int,
-    help='Select the last pmid in the list to read.',
-    default=None
-    )
-parser.add_argument(
-    '--shuffle',
-    dest='shuffle',
-    action='store_true',
-    help=('Select a random sample of the pmids provided. -s/--start_index '
-          'will be ingored, and -e/--end_index will set the number of '
-          'samples to take.')
-    )
-parser.add_argument(
-    '-o', '--outdir',
-    dest='out_dir',
-    default=None,
-    help=('The output directory where stuff is written. This is only a '
-          'temporary directory when reading. By default this will be the'
-          '"<basename>_out".')
-    )
-parser.add_argument(
-    dest='basename',
-    help='The name of this job.'
-    )
-parser.add_argument(
-    dest='pmid_list_file',
-    help=('Path to a file containing a list of line separated pmids for the '
-          'articles to be read.')
-    )
-if __name__ == '__main__':
-    args = parser.parse_args()
-
 from indra.sources import reach
 from indra.literature import pmc_client, s3_client, get_full_text, \
-                             elsevier_client
+    elsevier_client
 from indra.sources.sparser import api as sparser
+
+
+def make_parser():
+    parser = argparse.ArgumentParser(
+        description=('Apply NLP readers to the content available for a list of '
+                     'pmids.')
+        )
+    parser.add_argument(
+        '-r', '--reader',
+        choices=['reach', 'sparser', 'all'],
+        default=['all'],
+        dest='readers',
+        nargs='+',
+        help='Choose which reader(s) to use.'
+        )
+    parser.add_argument(
+        '-u', '--upload_json',
+        dest='upload_json',
+        action='store_true',
+        help=('Option to simply upload previously read json files. Overrides -r '
+              'option, so no reading will be done.')
+        )
+    parser.add_argument(
+        '--force_fulltext',
+        dest='force_fulltext',
+        action='store_true',
+        help='Option to force reading of the full text.'
+        )
+    parser.add_argument(
+        '--force_read',
+        dest='force_read',
+        action='store_true',
+        help='Option to force the reader to reread everything.'
+        )
+    parser.add_argument(
+        '-n', '--num_cores',
+        dest='num_cores',
+        default=1,
+        type=int,
+        help='Select the number of cores you want to use.'
+        )
+    parser.add_argument(
+        '-v', '--verbose',
+        dest='verbose',
+        action='store_true',
+        help='Show more output to screen.'
+        )
+    parser.add_argument(
+        '-m', '--messy',
+        dest='cleanup',
+        action='store_false',
+        help='Choose to not clean up after run.'
+        )
+    parser.add_argument(
+        '-s', '--start_index',
+        dest='start_index',
+        type=int,
+        help='Select the first pmid in the list to start reading.',
+        default=0
+        )
+    parser.add_argument(
+        '-e', '--end_index',
+        dest='end_index',
+        type=int,
+        help='Select the last pmid in the list to read.',
+        default=None
+        )
+    parser.add_argument(
+        '--shuffle',
+        dest='shuffle',
+        action='store_true',
+        help=('Select a random sample of the pmids provided. -s/--start_index '
+              'will be ingored, and -e/--end_index will set the number of '
+              'samples to take.')
+        )
+    parser.add_argument(
+        '-o', '--outdir',
+        dest='out_dir',
+        default=None,
+        help=('The output directory where stuff is written. This is only a '
+              'temporary directory when reading. By default this will be the'
+              '"<basename>_out".')
+        )
+    parser.add_argument(
+        dest='basename',
+        help='The name of this job.'
+        )
+    parser.add_argument(
+        dest='pmid_list_file',
+        help=('Path to a file containing a list of line separated pmids for the '
+              'articles to be read.')
+        )
+    return parser
 
 
 # Version 1: If JSON is not available, get content and store;
@@ -748,7 +749,10 @@ def get_proc_num():
     return ret
 
 
-def main(args):
+def main():
+    parser = make_parser()
+    args = parser.parse_args()
+
     now = datetime.now()    # Set some variables
     if args.upload_json:
         args.readers = 'none'
@@ -801,7 +805,6 @@ def main(args):
             pmid_list = random.sample(pmid_list, args.end_index)
 
         # Do the reading
-        readers = []
         if 'all' in args.readers:
             readers = list(READER_DICT.keys())
         else:
@@ -858,4 +861,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(args)
+    main()
