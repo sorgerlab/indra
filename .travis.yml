@@ -120,7 +120,9 @@ script:
      fi
   # Run assembly benchmarks
   - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
-  - python run_combined.py
+  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+        python run_combined.py
+    fi
   - cd $TRAVIS_BUILD_DIR
   # Run code style report on diff
   - git remote set-branches --add origin master
