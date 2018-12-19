@@ -70,7 +70,7 @@ def test_get_statements():
 @attr('webservice')
 def test_get_cx_from_ndex():
     # Ras Machine network
-    ncp = process_ndex_network('50e3dff7-133e-11e6-a039-06603eb7f303')
+    ncp = process_ndex_network('fc56fe8d-1b60-11e8-b939-0ac135e8bacf')
 
 
 @raises(HTTPError)
