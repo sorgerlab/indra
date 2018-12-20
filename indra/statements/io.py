@@ -7,7 +7,7 @@ __all__ = ['stmts_from_json', 'stmts_from_json_file', 'stmts_to_json',
 
 import json
 import logging
-from indra.statements.statements import Statement, Unresolved
+from indra.statements import Statement, Unresolved
 
 
 logger = logging.getLogger(__name__)
