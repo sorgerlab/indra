@@ -100,3 +100,14 @@ def test_get_xml_invalid():
     xml_str = pmc_client.get_xml(pmc_id)
     assert xml_str is None
 
+
+@attr('webservice')
+def test_extract_text():
+    pmc_id = '4322985'
+    xml_str = pmc_client.get_xml(pmc_id)
+    raw_text = pmc_client.extract_text(xml_str)
+    assert raw_text
+
+    raw_text_nr = pmc_client.extract_text(xml_str, strip_references=True)
+    assert raw_text_nr
+    assert len(raw_text_nr) < len(raw_text)

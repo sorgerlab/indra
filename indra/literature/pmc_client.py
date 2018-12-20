@@ -1,9 +1,13 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
-import xml.etree.ElementTree as ET
+import re
+import logging
 import os.path
 import requests
-import logging
+from lxml import etree
+from lxml.etre import QName
+import xml.etree.ElementTree as ET
+
 from indra.literature import pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
@@ -16,14 +20,15 @@ pmid_convert_url = 'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/'
 pmids_fulltext_path = os.path.join(os.path.dirname(__file__),
                                    'pmids_fulltext.txt')
 pmids_oa_xml_path = os.path.join(os.path.dirname(__file__),
-                                   'pmids_oa_xml.txt')
+                                 'pmids_oa_xml.txt')
 pmids_oa_txt_path = os.path.join(os.path.dirname(__file__),
-                                   'pmids_oa_txt.txt')
+                                 'pmids_oa_txt.txt')
 pmids_auth_xml_path = os.path.join(os.path.dirname(__file__),
                                    'pmids_auth_xml.txt')
 # Define global dict containing lists of PMIDs among mineable PMCs
 # to be lazily initialized
 pmids_fulltext_dict = {}
+
 
 def id_lookup(paper_id, idtype=None):
     """This function takes a Pubmed ID, Pubmed Central ID, or DOI
@@ -67,6 +72,7 @@ def get_ids(search_term, retmax=1000):
 
 
 def get_xml(pmc_id):
+    """Returns xml for article corresponding to a PMC ID"""
     if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
     # Request params
@@ -88,11 +94,42 @@ def get_xml(pmc_id):
     if err_tag is not None:
         err_code = err_tag.attrib['code']
         err_text = err_tag.text
-        logger.warning('PMC client returned with error %s: %s' % (err_code, err_text))
+        logger.warning('PMC client returned with error %s: %s'
+                       % (err_code, err_text))
         return None
     # If no error, return the XML as a unicode string
     else:
         return xml_bytes.decode('utf-8')
+
+
+def extract_text(xml_string, strip_references=False):
+    """Get text from the body of the given NLM xml
+
+    Parameters
+    ----------
+    xml_string: str
+        Valid NLM xml file
+
+    strip_references: Optional[bool]
+        True if references should be removed. Default[False]
+
+    return
+    """
+    tree = etree.fromstring(xml_string.encode('utf-8'))
+    needed_tags = set(QName(element.tag) for element in tree.iter()
+                      if re.search('}(p|xref)$', element.tag))
+    if strip_references:
+        for xref in tree.xpath('//xref'):
+            xref.getparent().remove(xref)
+    # get paragraphs
+    paragraphs = [p.text for p in tree.xpath('//p') if p.text]
+    raw_text = ' '.join(paragraphs)
+    # replace all whitespace characters with a space
+    raw_text = ' '.join(raw_text.split())
+    if raw_text:
+        return raw_text
+    else:
+        return None
 
 
 def filter_pmids(pmid_list, source_type):
@@ -100,14 +137,15 @@ def filter_pmids(pmid_list, source_type):
 
     Parameters
     ----------
-    pmid_list : list
+    pmid_list: list of str
         List of PMIDs to filter.
-    source_type : string
+    source_type: string
         One of 'fulltext', 'oa_xml', 'oa_txt', or 'auth_xml'.
 
     Returns
     -------
-    list of PMIDs available in the specified source/format type.
+    list of str:
+        PMIDs available in the specified source/format type.
     """
     global pmids_fulltext_dict
     # Check args
@@ -117,7 +155,7 @@ def filter_pmids(pmid_list, source_type):
     # Check if we've loaded this type, and lazily initialize
     if pmids_fulltext_dict.get(source_type) is None:
         fulltext_list_path = os.path.join(os.path.dirname(__file__),
-                                     'pmids_%s.txt' % source_type)
+                                          'pmids_%s.txt' % source_type)
         with open(fulltext_list_path, 'rb') as f:
             fulltext_list = set([line.strip().decode('utf-8')
                                  for line in f.readlines()])
