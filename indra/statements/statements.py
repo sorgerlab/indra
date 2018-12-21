@@ -577,7 +577,7 @@ class Modification(Statement):
             enz_key = None
         else:
             enz_key = self.enz.matches_key()
-        key = (stmt_type(self), enz_key, self.sub.matches_key(),
+        key = (stmt_type(self, True), enz_key, self.sub.matches_key(),
                str(self.residue), str(self.position))
         return mk_str(key)
 
@@ -741,7 +741,7 @@ class SelfModification(Statement):
         return s
 
     def matches_key(self):
-        key = (stmt_type(self), self.enz.matches_key(),
+        key = (stmt_type(self, True), self.enz.matches_key(),
                str(self.residue), str(self.position))
         return mk_str(key)
 
@@ -996,7 +996,7 @@ class RegulateActivity(Statement):
         self.__dict__.update(state)
 
     def matches_key(self):
-        key = (stmt_type(self), self.subj.matches_key(),
+        key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(), str(self.obj_activity),
                str(self.is_activation))
         return mk_str(key)
@@ -1220,7 +1220,7 @@ class ActiveForm(Statement):
         self.is_active = is_active
 
     def matches_key(self):
-        key = (stmt_type(self), self.agent.matches_key(),
+        key = (stmt_type(self, True), self.agent.matches_key(),
                str(self.activity), str(self.is_active))
         return mk_str(key)
 
@@ -1354,7 +1354,7 @@ class HasActivity(Statement):
         self.has_activity = has_activity
 
     def matches_key(self):
-        key = (stmt_type(self), self.agent.matches_key(),
+        key = (stmt_type(self, True), self.agent.matches_key(),
                str(self.activity), str(self.has_activity))
         return mk_str(key)
 
@@ -1422,7 +1422,7 @@ class Gef(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = (stmt_type(self), self.gef.matches_key(),
+        key = (stmt_type(self, True), self.gef.matches_key(),
                self.ras.matches_key())
         return mk_str(key)
 
@@ -1509,7 +1509,7 @@ class Gap(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = (stmt_type(self), self.gap.matches_key(),
+        key = (stmt_type(self, True), self.gap.matches_key(),
                self.ras.matches_key())
         return mk_str(key)
 
@@ -1591,7 +1591,7 @@ class Complex(Statement):
 
     def matches_key(self):
         members = sorted(self.members, key=lambda x: x.matches_key())
-        key = (stmt_type(self), tuple(m.matches_key() for m in members))
+        key = (stmt_type(self, True), tuple(m.matches_key() for m in members))
         return mk_str(key)
 
     def entities_match_key(self):
@@ -1712,7 +1712,7 @@ class Translocation(Statement):
         return matches
 
     def matches_key(self):
-        key = (stmt_type(self), self.agent.matches_key(),
+        key = (stmt_type(self, True), self.agent.matches_key(),
                str(self.from_location), str(self.to_location))
         return mk_str(key)
 
@@ -1759,7 +1759,7 @@ class RegulateAmount(Statement):
             subj_key = None
         else:
             subj_key = self.subj.matches_key()
-        key = (stmt_type(self), subj_key, self.obj.matches_key())
+        key = (stmt_type(self, True), subj_key, self.obj.matches_key())
         return mk_str(key)
 
     def set_agent_list(self, agent_list):
@@ -1955,7 +1955,7 @@ class Influence(IncreaseAmount):
         return matches
 
     def matches_key(self):
-        key = (stmt_type(self), self.subj.matches_key(),
+        key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(),
                self.subj_delta['polarity'],
                sorted(list(set(self.subj_delta['adjectives']))),
@@ -2079,7 +2079,7 @@ class Conversion(Statement):
             self.obj_to = [obj_to]
 
     def matches_key(self):
-        keys = [stmt_type(self)]
+        keys = [stmt_type(self, True)]
         keys += [self.subj.matches_key() if self.subj else None]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_to)]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_from)]
@@ -2347,18 +2347,17 @@ def get_unresolved_support_uuids(stmts):
             if isinstance(s, Unresolved)}
 
 
-def stmt_type(obj):
+def stmt_type(obj, mk=True):
     """Return standardized, backwards compatible object type String.
 
     This is a temporary solution to make sure type comparisons and
     matches keys of Statements and related classes are backwards
     compatible.
     """
-    if isinstance(obj, Statement):
+    if isinstance(obj, Statement) and mk:
         return type(obj)
     else:
-        type_str = type(obj).__name__
-    return type_str
+        return type(obj).__name__
 
 
 def mk_str(mk):
