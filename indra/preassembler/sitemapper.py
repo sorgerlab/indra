@@ -411,9 +411,13 @@ class SiteMapper(object):
                 continue
             # If not cached, continue
             # Look up the residue/position in uniprot
-            site_valid = uniprot_client.verify_location(up_id,
-                                                        old_mod.residue,
-                                                        old_mod.position)
+            try:
+                site_valid = uniprot_client.verify_location(up_id,
+                                                            old_mod.residue,
+                                                            old_mod.position)
+            except requests.exceptions.HTTPError:
+                logger.warning('Failed to get sequence for %s' % up_id)
+                continue
             # If it's not found in Uniprot, then look it up in the site map
             if site_valid:
                 self._cache[site_key] = 'VALID'
