@@ -1908,3 +1908,12 @@ def test_deprecated_cellular_location():
     stmt = Statement._from_json(stmt.to_json())
     assert stmt.from_location == 'HCN4 channel complex'
     assert stmt.to_location == 'pre-autophagosomal structure'
+
+
+def test_stmt_type():
+    stmt = Phosphorylation(None, Agent('x'))
+    t = stmt_type(stmt)
+    assert t == "<class 'indra.statements.Phosphorylation'>", t
+    mc = ModCondition('phosphorylation', 'S', '123')
+    t = stmt_type(mc)
+    assert t == 'ModCondition', t

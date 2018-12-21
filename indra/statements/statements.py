@@ -195,7 +195,7 @@ __all__ = [
     'amino_acids', 'amino_acids_reverse', 'activity_types',
     'cellular_components', 'cellular_components_reverse', 'modtype_to_modclass',
     'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
-    'modclass_to_inverse', 'get_statement_by_name', 'make_hash'
+    'modclass_to_inverse', 'get_statement_by_name', 'make_hash', 'stmt_type'
     ]
 
 import abc
@@ -2348,4 +2348,9 @@ def get_unresolved_support_uuids(stmts):
 
 
 def stmt_type(obj):
-    return type(obj).__name__
+    if isinstance(obj, Statement):
+        class_name = type(obj).__name__
+        type_str = "<class 'indra.statements.%s'>" % class_name
+    else:
+        type_str = type(obj).__name__
+    return type_str
