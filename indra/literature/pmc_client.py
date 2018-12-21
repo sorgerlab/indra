@@ -72,7 +72,7 @@ def get_ids(search_term, retmax=1000):
 
 
 def get_xml(pmc_id):
-    """Returns xml for article corresponding to a PMC ID"""
+    """Returns XML for the article corresponding to a PMC ID."""
     if pmc_id.upper().startswith('PMC'):
         pmc_id = pmc_id[3:]
     # Request params
@@ -103,17 +103,17 @@ def get_xml(pmc_id):
 
 
 def extract_text(xml_string):
-    """Get text from the body of the given NLM xml
+    """Get text from the body of the given NLM XML string.
 
     Parameters
     ----------
-    xml_string: str
-        Valid NLM xml file
+    xml_string : str
+        String containing valid NLM XML.
 
     Returns
     -------
-    str:
-        Extracted plaintext
+    str
+        Extracted plaintext.
     """
     tree = etree.fromstring(xml_string.encode('utf-8'))
 
@@ -136,14 +136,14 @@ def filter_pmids(pmid_list, source_type):
 
     Parameters
     ----------
-    pmid_list: list of str
+    pmid_list : list of str
         List of PMIDs to filter.
-    source_type: string
+    source_type : string
         One of 'fulltext', 'oa_xml', 'oa_txt', or 'auth_xml'.
 
     Returns
     -------
-    list of str:
+    list of str
         PMIDs available in the specified source/format type.
     """
     global pmids_fulltext_dict
