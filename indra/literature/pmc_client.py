@@ -118,6 +118,9 @@ def extract_text(xml_string):
     tree = etree.fromstring(xml_string.encode('utf-8'))
 
     paragraphs = []
+    # In NLM xml, all plaintext is within <p> tags, and is the only thing
+    # that can be contained in <p> tags. To handle to possibility of namespaces
+    # uses regex to search for tags either of the form 'p' or '{<namespace>}p'
     for element in tree.iter():
         if isinstance(element.tag, str) and \
            re.search('(^|})p$', element.tag) and element.text:
