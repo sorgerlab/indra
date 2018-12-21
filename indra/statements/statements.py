@@ -2348,6 +2348,12 @@ def get_unresolved_support_uuids(stmts):
 
 
 def stmt_type(obj):
+    """Return standardized, backwards compatible object type String.
+
+    This is a temporary solution to make sure type comparisons and
+    matches keys of Statements and related classes are backwards
+    compatible.
+    """
     if isinstance(obj, Statement):
         class_name = type(obj).__name__
         type_str = "<class 'indra.statements.%s'>" % class_name
