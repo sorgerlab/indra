@@ -106,5 +106,5 @@ def test_extract_text():
     pmc_id = '4322985'
     xml_str = pmc_client.get_xml(pmc_id)
     text = pmc_client.extract_text(xml_str)
-    assert text
+    assert text is not None
     assert unicode_strs(text)
