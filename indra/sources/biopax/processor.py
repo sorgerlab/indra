@@ -964,8 +964,10 @@ class BiopaxProcessor(object):
             if hgnc_id and not uniprot_id:
                 uniprot_id = hgnc_client.get_uniprot_id(hgnc_id)
             elif uniprot_id and not hgnc_id:
-                if uniprot_client.is_human(uniprot_id):
-                    hgnc_name = uniprot_client.get_gene_name(uniprot_id, False)
+                uniprot_id_lookup = uniprot_id.split('-')[0]
+                if uniprot_client.is_human(uniprot_id_lookup):
+                    hgnc_name = uniprot_client.get_gene_name(uniprot_id_lookup,
+                                                             False)
                     if hgnc_name:
                         hgnc_id = hgnc_client.get_hgnc_id(hgnc_name)
             # If we have both an HGNC ID and a Uniprot ID, override the 
@@ -1093,7 +1095,8 @@ class BiopaxProcessor(object):
         uniprot_refs = [x for x in xrefs if
                         (x.getDb() is not None and
                          x.getDb().lower() in ('uniprot knowledgebase',
-                                               'uniprotkb'))]
+                                               'uniprotkb',
+                                               'uniprot isoform'))]
         if not uniprot_refs:
             return None
         uniprot_ids = [r.getId() for r in uniprot_refs]
