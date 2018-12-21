@@ -579,7 +579,7 @@ class Modification(Statement):
             enz_key = self.enz.matches_key()
         key = (stmt_type(self), enz_key, self.sub.matches_key(),
                str(self.residue), str(self.position))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -743,7 +743,7 @@ class SelfModification(Statement):
     def matches_key(self):
         key = (stmt_type(self), self.enz.matches_key(),
                str(self.residue), str(self.position))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -999,7 +999,7 @@ class RegulateActivity(Statement):
         key = (stmt_type(self), self.subj.matches_key(),
                self.obj.matches_key(), str(self.obj_activity),
                str(self.is_activation))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1222,7 +1222,7 @@ class ActiveForm(Statement):
     def matches_key(self):
         key = (stmt_type(self), self.agent.matches_key(),
                str(self.activity), str(self.is_active))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -1356,7 +1356,7 @@ class HasActivity(Statement):
     def matches_key(self):
         key = (stmt_type(self), self.agent.matches_key(),
                str(self.activity), str(self.has_activity))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -1424,7 +1424,7 @@ class Gef(Statement):
     def matches_key(self):
         key = (stmt_type(self), self.gef.matches_key(),
                self.ras.matches_key())
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1511,7 +1511,7 @@ class Gap(Statement):
     def matches_key(self):
         key = (stmt_type(self), self.gap.matches_key(),
                self.ras.matches_key())
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1592,7 +1592,7 @@ class Complex(Statement):
     def matches_key(self):
         members = sorted(self.members, key=lambda x: x.matches_key())
         key = (stmt_type(self), tuple(m.matches_key() for m in members))
-        return str(key)
+        return mk_str(key)
 
     def entities_match_key(self):
         key = tuple(a.entity_matches_key() if a is not None
@@ -1714,7 +1714,7 @@ class Translocation(Statement):
     def matches_key(self):
         key = (stmt_type(self), self.agent.matches_key(),
                str(self.from_location), str(self.to_location))
-        return str(key)
+        return mk_str(key)
 
     def to_json(self, use_sbo=False):
         generic = super(Translocation, self).to_json(use_sbo)
@@ -1760,7 +1760,7 @@ class RegulateAmount(Statement):
         else:
             subj_key = self.subj.matches_key()
         key = (stmt_type(self), subj_key, self.obj.matches_key())
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1961,7 +1961,7 @@ class Influence(IncreaseAmount):
                sorted(list(set(self.subj_delta['adjectives']))),
                self.obj_delta['polarity'],
                sorted(list(set(self.obj_delta['adjectives']))))
-        return str(key)
+        return mk_str(key)
 
     def contradicts(self, other, hierarchies):
         # First case is if they are "consistent" and related
@@ -2083,7 +2083,7 @@ class Conversion(Statement):
         keys += [self.subj.matches_key() if self.subj else None]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_to)]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_from)]
-        return str(keys)
+        return mk_str(keys)
 
     def set_agent_list(self, agent_list):
         num_obj_from = len(self.obj_from)
@@ -2355,8 +2355,12 @@ def stmt_type(obj):
     compatible.
     """
     if isinstance(obj, Statement):
-        class_name = type(obj).__name__
-        type_str = "<class 'indra.statements.%s'>" % class_name
+        return type(obj)
     else:
         type_str = type(obj).__name__
     return type_str
+
+
+def mk_str(mk):
+    """Replace class path for backwards compatibility of matches keys."""
+    return str(mk).replace('indra.statements.statements', 'indra.statements')
