@@ -6,11 +6,6 @@ cache:
 python:
   - "2.7"
   - "3.5"
-script:
-  # Credit: https://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
-  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
-  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
-  - echo "$TRAVIS_EVENT_TYPE"
 before_install:
   - sudo add-apt-repository --yes ppa:webupd8team/java
   - sudo apt-get update
@@ -59,7 +54,8 @@ install:
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - pip install pycodestyle
   # TEES
-  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+  - |
+    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
         export RUN_SLOW=true;
     fi
   - |
@@ -77,6 +73,10 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3
 script:
+  # Credit: https://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
+  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
+  - echo "$TRAVIS_EVENT_TYPE"
   - export TEES_SETTINGS=~/TEES/tees_local_settings.py
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
@@ -113,7 +113,7 @@ script:
   # successful. Rather, the log needs to be inspected and compared
   # to desired behavior.
   - |
-    if [ $RUN_NL_MODELS == "true" ]; then
+    if [[ $RUN_NL_MODELS == "true" ]]; then
         cd $TRAVIS_BUILD_DIR/models
         python hello_indra.py
         cd $TRAVIS_BUILD_DIR/models/p53_model
@@ -125,7 +125,8 @@ script:
      fi
   # Run assembly benchmarks
   - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
-  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+  - |
+    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
         python run_combined.py
     fi
   - cd $TRAVIS_BUILD_DIR
