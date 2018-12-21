@@ -5,7 +5,7 @@ import logging
 import os.path
 import requests
 from lxml import etree
-from lxml.etre import QName
+from lxml.etree import QName
 import xml.etree.ElementTree as ET
 
 from indra.literature import pubmed_client
@@ -102,7 +102,7 @@ def get_xml(pmc_id):
         return xml_bytes.decode('utf-8')
 
 
-def extract_text(xml_string, strip_references=False):
+def extract_text(xml_string):
     """Get text from the body of the given NLM xml
 
     Parameters
@@ -110,24 +110,20 @@ def extract_text(xml_string, strip_references=False):
     xml_string: str
         Valid NLM xml file
 
-    strip_references: Optional[bool]
-        True if references should be removed. Default[False]
-
-    return
+    Returns
+    -------
+    str:
+        Extracted plaintext
     """
     tree = etree.fromstring(xml_string.encode('utf-8'))
-    needed_tags = set(QName(element.tag) for element in tree.iter()
-                      if re.search('}(p|xref)$', element.tag))
-    if strip_references:
-        for xref in tree.xpath('//xref'):
-            xref.getparent().remove(xref)
-    # get paragraphs
-    paragraphs = [p.text for p in tree.xpath('//p') if p.text]
-    raw_text = ' '.join(paragraphs)
-    # replace all whitespace characters with a space
-    raw_text = ' '.join(raw_text.split())
-    if raw_text:
-        return raw_text
+
+    paragraphs = []
+    for element in tree.iter():
+        if isinstance(element.tag, str) and \
+           re.search('(^|})p$', element.tag) and element.text:
+            paragraphs.append(element.text.strip())
+    if paragraphs:
+        return ' '.join(paragraphs)
     else:
         return None
 
