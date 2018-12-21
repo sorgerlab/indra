@@ -195,7 +195,7 @@ __all__ = [
     'amino_acids', 'amino_acids_reverse', 'activity_types',
     'cellular_components', 'cellular_components_reverse', 'modtype_to_modclass',
     'modclass_to_modtype', 'modtype_conditions', 'modtype_to_inverse',
-    'modclass_to_inverse', 'get_statement_by_name', 'make_hash'
+    'modclass_to_inverse', 'get_statement_by_name', 'make_hash', 'stmt_type'
     ]
 
 import abc
@@ -383,7 +383,7 @@ class Statement(object):
             return str(self).encode('utf-8')
 
     def equals(self, other):
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         if len(self.agent_list()) == len(other.agent_list()):
             for s, o in zip(self.agent_list(), other.agent_list()):
@@ -577,9 +577,9 @@ class Modification(Statement):
             enz_key = None
         else:
             enz_key = self.enz.matches_key()
-        key = (type(self), enz_key, self.sub.matches_key(),
+        key = (stmt_type(self, True), enz_key, self.sub.matches_key(),
                str(self.residue), str(self.position))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -589,7 +589,7 @@ class Modification(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
@@ -741,9 +741,9 @@ class SelfModification(Statement):
         return s
 
     def matches_key(self):
-        key = (type(self), self.enz.matches_key(),
+        key = (stmt_type(self, True), self.enz.matches_key(),
                str(self.residue), str(self.position))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -752,7 +752,7 @@ class SelfModification(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
@@ -996,10 +996,10 @@ class RegulateActivity(Statement):
         self.__dict__.update(state)
 
     def matches_key(self):
-        key = (type(self), self.subj.matches_key(),
+        key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(), str(self.obj_activity),
                str(self.is_activation))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1009,7 +1009,7 @@ class RegulateActivity(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         if self.is_activation != other.is_activation:
             return False
@@ -1220,9 +1220,9 @@ class ActiveForm(Statement):
         self.is_active = is_active
 
     def matches_key(self):
-        key = (type(self), self.agent.matches_key(),
+        key = (stmt_type(self, True), self.agent.matches_key(),
                str(self.activity), str(self.is_active))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -1231,7 +1231,7 @@ class ActiveForm(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
@@ -1249,7 +1249,7 @@ class ActiveForm(Statement):
 
     def contradicts(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         # Check that the polarity is constradicting up front
         # TODO: we could also check for cases where the polarities are
@@ -1354,9 +1354,9 @@ class HasActivity(Statement):
         self.has_activity = has_activity
 
     def matches_key(self):
-        key = (type(self), self.agent.matches_key(),
+        key = (stmt_type(self, True), self.agent.matches_key(),
                str(self.activity), str(self.has_activity))
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 1:
@@ -1365,7 +1365,7 @@ class HasActivity(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
@@ -1422,9 +1422,9 @@ class Gef(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gef.matches_key(),
+        key = (stmt_type(self, True), self.gef.matches_key(),
                self.ras.matches_key())
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1438,7 +1438,7 @@ class Gef(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         # Check the GEF
         if self.gef.refinement_of(other.gef, hierarchies) and \
@@ -1509,9 +1509,9 @@ class Gap(Statement):
         self.ras = ras
 
     def matches_key(self):
-        key = (type(self), self.gap.matches_key(),
+        key = (stmt_type(self, True), self.gap.matches_key(),
                self.ras.matches_key())
-        return str(key)
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1521,7 +1521,7 @@ class Gap(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         # Check the GAP
         if self.gap.refinement_of(other.gap, hierarchies) and \
@@ -1591,8 +1591,8 @@ class Complex(Statement):
 
     def matches_key(self):
         members = sorted(self.members, key=lambda x: x.matches_key())
-        key = (type(self), tuple(m.matches_key() for m in members))
-        return str(key)
+        key = (stmt_type(self, True), tuple(m.matches_key() for m in members))
+        return mk_str(key)
 
     def entities_match_key(self):
         key = tuple(a.entity_matches_key() if a is not None
@@ -1610,7 +1610,7 @@ class Complex(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         # Make sure the length of the members list is the same. Note that this
         # treats Complex([A, B, C]) as distinct from Complex([A, B]), rather
@@ -1690,7 +1690,7 @@ class Translocation(Statement):
 
     def refinement_of(self, other, hierarchies=None):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
         # Check several conditions for refinement
         ch = hierarchies['cellular_component']
@@ -1712,9 +1712,9 @@ class Translocation(Statement):
         return matches
 
     def matches_key(self):
-        key = (type(self), self.agent.matches_key(), str(self.from_location),
-               str(self.to_location))
-        return str(key)
+        key = (stmt_type(self, True), self.agent.matches_key(),
+               str(self.from_location), str(self.to_location))
+        return mk_str(key)
 
     def to_json(self, use_sbo=False):
         generic = super(Translocation, self).to_json(use_sbo)
@@ -1759,8 +1759,8 @@ class RegulateAmount(Statement):
             subj_key = None
         else:
             subj_key = self.subj.matches_key()
-        key = (type(self), subj_key, self.obj.matches_key())
-        return str(key)
+        key = (stmt_type(self, True), subj_key, self.obj.matches_key())
+        return mk_str(key)
 
     def set_agent_list(self, agent_list):
         if len(agent_list) != 2:
@@ -1806,7 +1806,7 @@ class RegulateAmount(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
@@ -1931,7 +1931,7 @@ class Influence(IncreaseAmount):
             return pol_refinement and adj_refinement
 
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         # Check agent arguments
@@ -1955,13 +1955,13 @@ class Influence(IncreaseAmount):
         return matches
 
     def matches_key(self):
-        key = (type(self), self.subj.matches_key(),
+        key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(),
                self.subj_delta['polarity'],
                sorted(list(set(self.subj_delta['adjectives']))),
                self.obj_delta['polarity'],
                sorted(list(set(self.obj_delta['adjectives']))))
-        return str(key)
+        return mk_str(key)
 
     def contradicts(self, other, hierarchies):
         # First case is if they are "consistent" and related
@@ -2079,11 +2079,11 @@ class Conversion(Statement):
             self.obj_to = [obj_to]
 
     def matches_key(self):
-        keys = [type(self)]
+        keys = [stmt_type(self, True)]
         keys += [self.subj.matches_key() if self.subj else None]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_to)]
         keys += [agent.matches_key() for agent in sorted_agents(self.obj_from)]
-        return str(keys)
+        return mk_str(keys)
 
     def set_agent_list(self, agent_list):
         num_obj_from = len(self.obj_from)
@@ -2132,7 +2132,7 @@ class Conversion(Statement):
 
     def refinement_of(self, other, hierarchies):
         # Make sure the statement types match
-        if type(self) != type(other):
+        if stmt_type(self) != stmt_type(other):
             return False
 
         if self.subj is None and other.subj is None:
@@ -2345,3 +2345,21 @@ def get_unresolved_support_uuids(stmts):
     """Get uuids unresolved in support from stmts from stmts_from_json."""
     return {s.uuid for stmt in stmts for s in stmt.supports + stmt.supported_by
             if isinstance(s, Unresolved)}
+
+
+def stmt_type(obj, mk=True):
+    """Return standardized, backwards compatible object type String.
+
+    This is a temporary solution to make sure type comparisons and
+    matches keys of Statements and related classes are backwards
+    compatible.
+    """
+    if isinstance(obj, Statement) and mk:
+        return type(obj)
+    else:
+        return type(obj).__name__
+
+
+def mk_str(mk):
+    """Replace class path for backwards compatibility of matches keys."""
+    return str(mk).replace('indra.statements.statements', 'indra.statements')

@@ -15,6 +15,7 @@ except ImportError:
     pass
 from indra.util import fast_deepcopy
 from indra.statements import *
+from indra.statements import stmt_type as indra_stmt_type
 
 logger = logging.getLogger(__name__)
 
@@ -328,7 +329,7 @@ class Preassembler(object):
         # Make a list of Statement types
         stmts_by_type = collections.defaultdict(lambda: [])
         for idx, stmt in enumerate(unique_stmts):
-            stmts_by_type[type(stmt)].append((idx, stmt))
+            stmts_by_type[indra_stmt_type(stmt)].append((idx, stmt))
 
         child_proc_groups = []
         parent_proc_groups = []
@@ -557,7 +558,7 @@ class Preassembler(object):
         # Make a dict of Statement by type
         stmts_by_type = collections.defaultdict(lambda: [])
         for idx, stmt in enumerate(self.stmts):
-            stmts_by_type[type(stmt)].append((idx, stmt))
+            stmts_by_type[indra_stmt_type(stmt)].append((idx, stmt))
 
         # Handle Statements with polarity first
         pos_stmts = AddModification.__subclasses__()
