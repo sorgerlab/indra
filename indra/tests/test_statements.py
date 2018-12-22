@@ -1923,3 +1923,9 @@ def test_mk_str():
     stmt = Phosphorylation(None, Agent('x'))
     mk = stmt.matches_key()
     assert mk.startswith("(<class \'indra.statements.Phosphorylation\'>")
+
+
+def test_ev_str():
+    ev = Evidence(annotations={'a': 'b'}, text='test', source_api='test')
+    str(ev)
+    ev.__repr__()

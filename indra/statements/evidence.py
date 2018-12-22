@@ -7,6 +7,7 @@ __all__ = ['Evidence']
 
 
 import sys
+import json
 import textwrap
 from collections import OrderedDict as _o
 from .util import *
