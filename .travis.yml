@@ -33,8 +33,9 @@ install:
   - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
   - pip install pybel
+  - pip install awscli
   - mkdir -p $HOME/.pybel/data
-  - wget -nv http://sorger.med.harvard.edu/data/bgyori/pybel_cache.db --directory-prefix=$HOME/.pybel/data
+  - aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/
   - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
   # PySB and dependencies
   - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz -nv
