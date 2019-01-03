@@ -153,7 +153,7 @@ and add `JNI` to `JVMCapabilities` as
 .. code-block:: bash
 
     pip install cython
-    pip install pjnius==1.1.4
+    pip install pyjnius==1.1.4
 
 Graphviz
 ````````
