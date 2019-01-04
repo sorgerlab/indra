@@ -37,6 +37,10 @@ a {
 p {
   margin-bottom: 0px;
 }
+h5 {
+  display: inline-block;
+  margin: 0px;
+}
 nav {
   overflow-y: auto;
   height: 100vh;
@@ -125,10 +129,10 @@ nav {
     {% for stmt_info in statements %}
     <a name='{{ stmt_info['hash'] }}'></a>
     <div class="statement">
-        <h5 class="align-middle">{{ stmt_info['english'] }}
-            <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
-                <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span></a>
-        </h5>
+      <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
+      <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
+        <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
+      </a>
     </div>
     <div class="evidence">
     <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
