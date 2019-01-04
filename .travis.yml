@@ -3,6 +3,7 @@ cache:
   directories:
     - $HOME/.cache/pip
     - $HOME/.pybel
+    - $HOME/.nose_notify
 python:
   - "2.7"
   - "3.5"
@@ -50,6 +51,8 @@ install:
   - cd $TRAVIS_BUILD_DIR
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
+  - git clone git@github.com:pagreene/nose-notify.git $HOME/.nose_notify
+  - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify
   # Get a daily updated Eidos jar for testing
   - wget http://sorger.med.harvard.edu/data/bgyori/eidos.jar -nv
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
@@ -98,14 +101,16 @@ script:
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
-  - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
-  - nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
+  - python -m nose_notify -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
+        --slack_hook $SLACK_NOTIFY_HOOK
+  - python -m nose_notify -v -a $NOSEATTR indra/tests/test_eidos.py
+        --slack_hook $SLACK_NOTIFY_HOOK
   # Now run all INDRA tests
-  - nosetests indra -v -a $NOSEATTR
+  - python -m nose_notify indra -v -a $NOSEATTR
         --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode
-        --with-timer --timer-top-n 10
+        --with-timer --timer-top-n 10 --slack_hook $SLACK_NOTIFY_HOOK
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
