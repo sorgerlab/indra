@@ -32,7 +32,10 @@
 
   <style>
 a {
-    color: #256DC5;
+  color: #256DC5;
+}
+p {
+  margin-bottom: 0px;
 }
 nav {
   overflow-y: auto;
@@ -68,11 +71,14 @@ nav {
         </div> <!-- /sidebar -->
         <div class="col-sm-9"> <!-- main content -->
 
-    <!-- Jumbotron -->
-    <div class="jumbotron container">
-          <h3 class="display-4">{{ title }}</h3>
-          <hr class="my-4">
-          <p>This page allows you to curate the loaded statements.<br>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html">manual</a>.</p>
+    <!-- Page Header -->
+    <div class="container">
+      <div class="page-header">
+        <h1>{{ title }}</h1>
+      </div>
+        <p>This page allows you to curate the loaded statements.</p>
+        <p>For more information please see the <a href="https://indra.readthedocs.io/en/latest/tutorials/html_curation.html">manual</a>.</p>
+        <hr>
     </div>
 
     <div class="container theme-showcase" role="main">
