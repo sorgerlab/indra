@@ -108,13 +108,13 @@ nav {
         <hr>
 
     {% if metadata %}
-    <div class="page-header">
-        <h4>Summary Metadata</h4>
-    <ul>
+    <div class="page-header container" style="padding: 0px;">
+      <h4 class="nav-header" data-toggle="collapse" data-target="#meta_list"><a href="#" title="Click to see metadata" style="color: #000000;">Summary Metadata</a></h4>
+      <ul class="collapse" id="meta_list">
         {% for name, value in metadata.items() %}
         <li>{{ name }}: {{ value }}</li>
         {% endfor %}
-    </ul>
+      </ul>
     </div>
     <p>&nbsp;</p>
     {% endif %}
