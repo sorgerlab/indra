@@ -563,7 +563,9 @@ class AnnotationManager(object):
             self.resources[key] = res
 
     def get_mapping(self, key, value):
-        return self.resources[key]['Values'][value]
+        resource = self.resources.get(key)
+        if resource is not None:
+            return resource['Values'][value]
 
 
 def _get_all_pmods(node_data):
