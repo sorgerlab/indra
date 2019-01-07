@@ -609,7 +609,8 @@ def _get_all_pmods(node_data):
 def _get_activity_condition(node_modifier_data):
     if node_modifier_data is None or node_modifier_data == {}:
         return None
-    if node_modifier_data[pc.MODIFIER] != pc.ACTIVITY:
+    modifier = node_modifier_data.get(pc.MODIFIER)
+    if modifier is None or modifier != pc.ACTIVITY:
         return None
     effect = node_modifier_data.get(pc.EFFECT)
     # No specific effect, just return generic activity
@@ -633,7 +634,8 @@ def _get_translocation_target(node_modifier_data):
     # First check if there is a translocation modifier
     if node_modifier_data is None or node_modifier_data == {}:
         return None
-    if node_modifier_data[pc.MODIFIER] != pc.TRANSLOCATION:
+    modifier = node_modifier_data.get(pc.MODIFIER)
+    if modifier is None or modifier != pc.TRANSLOCATION:
         return None
     # Next, make sure there is information on the translocation target
     transloc_data = node_modifier_data[pc.EFFECT]
