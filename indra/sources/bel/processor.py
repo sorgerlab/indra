@@ -642,7 +642,9 @@ def _get_translocation_target(node_modifier_data):
     if modifier is None or modifier != pc.TRANSLOCATION:
         return None
     # Next, make sure there is information on the translocation target
-    transloc_data = node_modifier_data[pc.EFFECT]
+    transloc_data = node_modifier_data.get(pc.EFFECT)
+    if transloc_data is None:
+        return None
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
