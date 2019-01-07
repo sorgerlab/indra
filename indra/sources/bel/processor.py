@@ -3,7 +3,7 @@ import logging
 import pybel.constants as pc
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
-from pybel.resources.definitions.definitions import get_bel_resource
+from pybel.resources import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client
