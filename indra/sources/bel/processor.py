@@ -183,8 +183,11 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_mod = edge_data.get(pc.OBJECT)
-        deg_polarity = (-1 if obj_mod and obj_mod[pc.MODIFIER] == pc.DEGRADATION
-                        else 1)
+        deg_polarity = (
+            -1
+            if obj_mod and obj_mod.get(pc.MODIFIER) == pc.DEGRADATION else
+            1
+        )
         rel_polarity = (1 if edge_data[pc.RELATION] in
                         pc.CAUSAL_INCREASE_RELATIONS else -1)
         # Set polarity accordingly based on the relation type and whether
