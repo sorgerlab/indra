@@ -344,8 +344,7 @@ def get_agent(node_data, node_modifier_data=None):
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
-        mod_data = ('No node data' if not node_modifier_data
-                    else node_modifier_data.get(pc.CNAME))
+        mod_data = node_modifier_data or 'No node data'
         logger.info("Nodes of type %s not handled: %s",
                     node_func, mod_data)
         return None
