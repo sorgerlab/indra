@@ -51,7 +51,7 @@ install:
   - cd $TRAVIS_BUILD_DIR
   - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
-  - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify
+  - [ "$(ls -A $HOME/.nose_notify)" ] && git clone https://github.come/pagreene/nose-notify.git $HOME/.nose_notify || echo "nose-notify already installed."
   - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify
   # Get a daily updated Eidos jar for testing
   - wget http://sorger.med.harvard.edu/data/bgyori/eidos.jar -nv
