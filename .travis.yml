@@ -103,15 +103,16 @@ script:
     fi
   # First run TEES and Eidos tests separately for technical reasons
   - python -m nose_notify -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
-        --slack_hook $SLACK_NOTIFY_HOOK
+        --slack_hook $SLACK_NOTIFY_HOOK --label "INDRA TEES $TRAVIS_BRANCH"
   - python -m nose_notify -v -a $NOSEATTR indra/tests/test_eidos.py
-        --slack_hook $SLACK_NOTIFY_HOOK
+        --slack_hook $SLACK_NOTIFY_HOOK --label "INDRA EIDOS $TRAVIS_BRANCH"
   # Now run all INDRA tests
   - python -m nose_notify indra -v -a $NOSEATTR
         --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode
         --with-timer --timer-top-n 10 --slack_hook $SLACK_NOTIFY_HOOK
+        --label "INDRA $TRAVIS_BRANCH"
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
