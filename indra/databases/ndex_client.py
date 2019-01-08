@@ -7,10 +7,6 @@ import time
 import requests
 import logging
 import ndex2.client
-try:
-    from ndex2.nice_cx_network import NiceCXNetwork
-except ImportError:
-    from ndex2.niceCXNetwork import NiceCXNetwork
 from indra import get_config
 
 logger = logging.getLogger(__name__)
