@@ -11,6 +11,13 @@ import xml.etree.ElementTree as ET
 from indra.literature import pubmed_client
 from indra.util import UnicodeXMLTreeBuilder as UTB
 
+# Python 2
+try:
+    basestring
+# Python 3
+except:
+    basestring = str
+
 logger = logging.getLogger(__name__)
 
 pmc_url = 'https://www.ncbi.nlm.nih.gov/pmc/oai/oai.cgi'
@@ -122,7 +129,7 @@ def extract_text(xml_string):
     # that can be contained in <p> tags. To handle to possibility of namespaces
     # uses regex to search for tags either of the form 'p' or '{<namespace>}p'
     for element in tree.iter():
-        if isinstance(element.tag, str) and \
+        if isinstance(element.tag, basestring) and \
            re.search('(^|})p$', element.tag) and element.text:
             paragraphs.append(element.text.strip())
     if paragraphs:
