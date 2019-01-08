@@ -1,6 +1,8 @@
 import time
+
 import openpyxl
 import requests
+
 from .processor import SofiaProcessor, SofiaJsonProcessor
 
 
@@ -53,16 +55,13 @@ def _text_processing(text_json, user, password):
         time.sleep(2.0)
         status = _sofia_api_post(api=sofia_api, option='/status',
                                  json=res_json, auth=auth)
-        if status.json()['Status'] == 'Done':
-            # Get results when processing is done
-            results = _sofia_api_post(api=sofia_api, option='/results',
-                                      json=res_json, auth=auth)
-            return results.json()
 
     # The while loop exited without 'Done' status; return the api response
     results = _sofia_api_post(api=sofia_api, option='/results',
                               json=res_json, auth=auth)
-    return results.json()
+    status_code = status.status_code
+    process_status = status.json()['Status']
+    return results.json(), status_code, process_status
 
 
 def process_text(text_json, user, password):
@@ -82,11 +81,15 @@ def process_text(text_json, user, password):
     -------
     sjp : indra.sources.sofia.processor.SofiaJsonProcessor
         A SofiaJsonProcessor object which has a list of extracted INDRA
-        Statements as its statements attribute.
+        Statements as its statements attribute. If the API did not process
+        the text, None is returned.
     """
-    json_response = _text_processing(text_json=text_json, user=user,
-                                     password=password)
-    # Todo handle error responses that are not 'Done' from the api
+    json_response, status_code, process_status = _text_processing(
+        text_json=text_json, user=user, password=password)
+
+    # Check response status
+    if process_status != 'Done' or status_code != 200:
+        return None
 
     relations = json_response['Causal']
     events = json_response['Events']
