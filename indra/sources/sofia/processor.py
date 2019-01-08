@@ -9,6 +9,21 @@ neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
 neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
 
 
+class SofiaJsonProcessor(object):
+    def __init__(self, json_events, json_relations, json_entities):
+        self.statements = []
+        self._events = self._process_events(json_events)
+        self.statements = self._process_relations(json_relations, self._events)
+
+    @staticmethod
+    def _process_events(json_events):
+        pass
+
+    @staticmethod
+    def _process_relations(json_relations, event_dict):
+        pass
+
+
 class SofiaProcessor(object):
     def __init__(self, relation_rows, event_rows, entity_rows):
         self.statements = []

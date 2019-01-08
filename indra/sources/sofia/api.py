@@ -1,9 +1,7 @@
 import time
-
 import openpyxl
 import requests
-
-from .processor import SofiaProcessor
+from .processor import SofiaProcessor, SofiaJsonProcessor
 
 
 def process_table(fname):
@@ -65,3 +63,35 @@ def _text_processing(text_json, user, password):
     results = _sofia_api_post(api=sofia_api, option='/results',
                               json=res_json, auth=auth)
     return results.json()
+
+
+def process_text(text_json, user, password):
+    """
+
+    Parameters
+    ----------
+    text_json : dict
+        A dictionary with a key-value pair of 'text': sentence,
+        where sentence is the sentence to be processed.
+    user : str
+        Username to access the sofia API
+    password : str
+        Password to access the sofia API
+
+    Returns
+    -------
+    sjp : indra.sources.sofia.processor.SofiaJsonProcessor
+        A SofiaJsonProcessor object which has a list of extracted INDRA
+        Statements as its statements attribute.
+    """
+    json_response = _text_processing(text_json=text_json, user=user,
+                                     password=password)
+    # Todo handle error responses that are not 'Done' from the api
+
+    relations = json_response['Causal']
+    events = json_response['Events']
+    entities = json_response['Entities']
+    sjp = SofiaJsonProcessor(json_events=events, json_relations=relations,
+                             json_entities=entities)
+
+    return sjp
