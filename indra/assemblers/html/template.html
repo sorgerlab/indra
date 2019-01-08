@@ -34,6 +34,13 @@
 a {
   color: #256DC5;
 }
+nav[data-toggle=toc] .nav>li>a {
+  font-size: 0.72em;
+  padding-right: 10px;
+}
+nav[data-toggle=toc] .nav .nav>li>a {
+  font-size: 0.68em;
+}
 p {
   margin-bottom: 0px;
 }
@@ -68,12 +75,12 @@ nav {
   <body data-spy="scroll" data-target="#toc">
 
     <!-- Needed for sidebar -->
-    <div class="container">
+    <div class="container" style="max-width: 90%;">
       <div class="row">
-        <div class="col-4"> <!-- sidebar -->
+        <div class="col-2" style="padding-right: 0px;"> <!-- sidebar -->
           <nav id="toc" data-toggle="toc" class="sticky-top"></nav>
         </div> <!-- /sidebar -->
-        <div class="col"> <!-- main content -->
+        <div class="col" style="padding-left: 0px;"> <!-- main content -->
 
     <!-- Page Header -->
     <div class="container">
