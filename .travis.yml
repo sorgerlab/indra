@@ -53,8 +53,10 @@ install:
   # Get nose notify.
   - |
     if [[ -z "${SLACK_NOTIFY_HOOK}" ]]; then
+      echo "test is nosetests.";
       alias test='nosetests';
     else
+      echo "test is nose_notify.";
       mkdir $HOME/.nose_notify;
       git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
       export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
