@@ -72,7 +72,7 @@ install:
   - |
     if [[ $RUN_SLOW == "true" ]]; then
         sudo apt-get --yes install ruby;
-        aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request;
+        aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request --no-sign-request;
         tar xjf TEES.tar.bz2;
         mv TEES ~/TEES;
     fi
