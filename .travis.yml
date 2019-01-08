@@ -35,8 +35,8 @@ install:
   - pip install pybel
   - pip install awscli
   - mkdir -p $HOME/.pybel/data
-  - aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/
-  - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/
+  - aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request
+  - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request
   # PySB and dependencies
   - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz -nv
   - tar xzf bionetgen.tar.gz
@@ -48,14 +48,14 @@ install:
   - aws s3 cp s3://bigmech/travis/trips_reach_batch4.gz .
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
-  - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar .
+  - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
   # Get nose notify.
   - mkdir $HOME/.nose_notify
   - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify
   - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify
   # Get a daily updated Eidos jar for testing
-  - aws s3 cp s3://bigmech/travis/eidos.jar .
+  - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - pip install pycodestyle
   # TEES
@@ -66,7 +66,7 @@ install:
   - |
     if [[ $RUN_SLOW == "true" ]]; then
         sudo apt-get --yes install ruby;
-        aws s3 cp s3://bigmech/travis/TEES.tar.bz2 .;
+        aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request;
         tar xjf TEES.tar.bz2;
         mv TEES ~/TEES;
     fi
