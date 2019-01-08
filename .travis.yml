@@ -45,7 +45,7 @@ install:
   - pip install .[all]
   - cd indra/benchmarks/assembly_eval/batch4
   # Download a number of useful resource files for testing purposes
-  - aws s3 cp s3://bigmech/travis/trips_reach_batch4.gz .  --source-region us-east-1
+  - aws s3 cp s3://bigmech/travis/trips_reach_batch4.gz .  --no-sign-request  --source-region us-east-1
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
   - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
