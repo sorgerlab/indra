@@ -1,7 +1,7 @@
 import itertools
+
 from indra.statements import Influence, Concept, Evidence, WorldContext, \
     TimeContext, RefContext
-
 
 pos_rels = ['provide', 'led', 'lead', 'driv', 'support', 'enabl', 'develop']
 neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
@@ -17,11 +17,25 @@ class SofiaJsonProcessor(object):
 
     @staticmethod
     def _process_events(json_events):
-        pass
+        event_dict = {}
+        for event in json_events:
+            subj_entries = event.get('Agent')
+            object_entries = event.get('Patient')
+            event_index = event.get('Event Index')
+            event_type = event.get('Event_Type')
+            relation = event.get('Relation')
+            location = event.get('Location')
+            time = event.get('Time')
+            event_dict[event_index] = {'Event_Type': event_type,
+                                       'Relation': relation,
+                                       'Location': location,
+                                       'Time': time}
+        return event_dict
 
     @staticmethod
     def _process_relations(json_relations, event_dict):
-        pass
+        stmts = []
+        return stmts
 
 
 class SofiaProcessor(object):
