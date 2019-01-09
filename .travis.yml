@@ -53,14 +53,14 @@ install:
   # Get nose notify.
   - |
     if [[ -z "${SLACK_NOTIFY_HOOK}" ]]; then
-      echo "test is nosetests.";
-      alias test='nosetests';
+      echo "run_tests is nosetests.";
+      alias run_tests='nosetests';
     else
-      echo "test is nose_notify.";
+      echo "run_tests is nose_notify.";
       mkdir $HOME/.nose_notify;
       git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
       export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
-      alias test='python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"';
+      alias run_tests='python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"';
     fi
   # Get a daily updated Eidos jar for testing
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
@@ -110,10 +110,10 @@ script:
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
-  - test indra/tests/test_tees.py -v -a $NOSEATTR --process-restartworker
-  - test indra/tests/test_eidos.py -v -a $NOSEATTR
+  - run_tests indra/tests/test_tees.py -v -a $NOSEATTR --process-restartworker
+  - run_tests indra/tests/test_eidos.py -v -a $NOSEATTR
   # Now run all INDRA tests
-  - test indra -v -a $NOSEATTR
+  - run_tests indra -v -a $NOSEATTR
         --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode
