@@ -418,6 +418,6 @@ def _get_time_stamp(entry):
     try:
         dt = datetime.datetime.strptime(entry, '%Y-%m-%dT%H:%M')
     except Exception as e:
-        logger.warning('Could not parse %s format' % entry)
+        logger.debug('Could not parse %s format' % entry)
         return None
     return dt
