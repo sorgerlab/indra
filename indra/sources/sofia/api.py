@@ -90,10 +90,6 @@ def process_text(text_json, user, password):
     if process_status != 'Done' or status_code != 200:
         return None
 
-    relations = json_response['Causal']
-    events = json_response['Events']
-    entities = json_response['Entities']
-    sjp = SofiaJsonProcessor(json_events=events, json_relations=relations,
-                             json_entities=entities)
+    sjp = SofiaJsonProcessor(results_json=json_response)
 
     return sjp
