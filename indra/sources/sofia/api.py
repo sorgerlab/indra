@@ -56,22 +56,21 @@ def _text_processing(text_json, user, password):
         status = _sofia_api_post(api=sofia_api, option='/status',
                                  json=res_json, auth=auth)
 
-    # The while loop exited without 'Done' status; return the api response
     results = _sofia_api_post(api=sofia_api, option='/results',
                               json=res_json, auth=auth)
-    status_code = status.status_code
+    status_code = results.status_code
     process_status = status.json()['Status']
     return results.json(), status_code, process_status
 
 
 def process_text(text_json, user, password):
-    """
+    """Return processor by processing text given as a string.
 
     Parameters
     ----------
     text_json : dict
-        A dictionary with a key-value pair of 'text': sentence,
-        where sentence is the sentence to be processed.
+        A dictionary with a key-value pair of {'text': sentence},
+        where sentence is a string containing the text to be processed.
     user : str
         Username to access the sofia API
     password : str
