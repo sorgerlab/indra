@@ -1,8 +1,6 @@
 import time
-
 import openpyxl
 import requests
-
 from .processor import SofiaProcessor, SofiaJsonProcessor
 
 
