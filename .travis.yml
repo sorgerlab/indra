@@ -50,17 +50,15 @@ install:
   - cd $TRAVIS_BUILD_DIR
   - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
-  # Get nose notify.
+  # Get nose notify, if needed.
   - |
     if [[ -z "${SLACK_NOTIFY_HOOK}" ]]; then
-      echo "run_tests is nosetests.";
-      alias run_tests='nosetests';
+      echo "NOT installing nose-notify.";
     else
-      echo "run_tests is nose_notify.";
+      echo "Installing nose-notify.";
       mkdir $HOME/.nose_notify;
       git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
       export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
-      alias run_tests='python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"';
     fi
   # Get a daily updated Eidos jar for testing
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
@@ -86,6 +84,15 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3
 script:
+  # Choose which test code to use.
+  - |
+    if [[ -z "${SLACK_NOTIFY_HOOK}" ]]; then
+      echo "run_tests is nosetests.";
+      alias run_tests='nosetests';
+    else
+      echo "run_tests is nose_notify.";
+      alias run_tests='python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"';
+    fi
   # Credit: https://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
