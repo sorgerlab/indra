@@ -3,7 +3,7 @@ import time
 import openpyxl
 import requests
 from indra.config import get_config
-from .processor import SofiaProcessor, SofiaJsonProcessor
+from .processor import SofiaProcessor
 
 
 def process_table(fname):
@@ -18,7 +18,8 @@ def process_table(fname):
     -------
     sp : indra.sources.sofia.processor.SofiaProcessor
         A SofiaProcessor object which has a list of extracted INDRA
-        Statements as its statements attribute
+        Statements as its statements attribute. If no statements were
+        extracted, None is returned.
     """
     book = openpyxl.load_workbook(fname, read_only=True)
     try:
@@ -27,7 +28,10 @@ def process_table(fname):
         rel_sheet = book['Causal']
     event_sheet = book['Events']
     entities_sheet = book['Entities']
-    sp = SofiaProcessor(rel_sheet.rows, event_sheet.rows, entities_sheet.rows)
+    sp = SofiaProcessor(input_object=(rel_sheet.rows, event_sheet.rows,
+                                      entities_sheet.rows))
+    if not sp.statements:
+        return None
     return sp
 
 
@@ -44,8 +48,8 @@ def process_text(text, out_file='sofia_output.json'):
 
     Returns
     -------
-    sjp : indra.sources.sofia.processor.SofiaJsonProcessor
-        A SofiaJsonProcessor object which has a list of extracted INDRA
+    sp : indra.sources.sofia.processor.SofiaProcessor
+        A SofiaProcessor object which has a list of extracted INDRA
         Statements as its statements attribute. If the API did not process
         the text, None is returned.
     """
@@ -82,13 +86,13 @@ def process_json(json_obj):
 
     Returns
     -------
-    sjp : indra.sources.sofia.processor.SofiaJsonProcessor
-        A SofiaJsonProcessor object which has a list of extracted INDRA
+    sp : indra.sources.sofia.processor.SofiaProcessor
+        A SofiaProcessor object which has a list of extracted INDRA
         Statements as its statements attribute. If the API did not process
         the text, None is returned.
     """
-    sjp = SofiaJsonProcessor(results_json=json_obj)
-    return sjp
+    sp = SofiaProcessor(input_object=json_obj)
+    return sp
 
 
 def _get_sofia_auth():
