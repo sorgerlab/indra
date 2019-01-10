@@ -73,9 +73,22 @@ def process_text(text, out_file='sofia_output.json'):
 
 
 def process_json(json_obj):
+    """Return processor by processing a JSON object returned by Sofia.
+
+    Parameters
+    ----------
+    json_obj : json
+        A JSON object containing extractions from Sofia.
+
+    Returns
+    -------
+    sjp : indra.sources.sofia.processor.SofiaJsonProcessor
+        A SofiaJsonProcessor object which has a list of extracted INDRA
+        Statements as its statements attribute. If the API did not process
+        the text, None is returned.
+    """
     sjp = SofiaJsonProcessor(results_json=json_obj)
     return sjp
-
 
 
 def _get_sofia_auth():
