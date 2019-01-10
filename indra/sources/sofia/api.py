@@ -61,14 +61,13 @@ def _text_processing(text_json, user, password):
     return results.json(), status_code, process_status
 
 
-def process_text(text_json, user, password):
+def process_text(text, user, password):
     """Return processor by processing text given as a string.
 
     Parameters
     ----------
-    text_json : dict
-        A dictionary with a key-value pair of {'text': sentence},
-        where sentence is a string containing the text to be processed.
+    text : str
+        A string containing the text to be processed with Sofia.
     user : str
         Username to access the sofia API
     password : str
@@ -81,8 +80,9 @@ def process_text(text_json, user, password):
         Statements as its statements attribute. If the API did not process
         the text, None is returned.
     """
-    json_response, status_code, process_status = _text_processing(
-        text_json=text_json, user=user, password=password)
+    text_json = {'text': text}
+    json_response, status_code, process_status = \
+        _text_processing(text_json=text_json, user=user, password=password)
 
     # Check response status
     if process_status != 'Done' or status_code != 200:
