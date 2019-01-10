@@ -1,6 +1,7 @@
 import time
 import openpyxl
 import requests
+from indra.config import get_config
 from .processor import SofiaProcessor, SofiaJsonProcessor
 
 
@@ -61,17 +62,13 @@ def _text_processing(text_json, user, password):
     return results.json(), status_code, process_status
 
 
-def process_text(text, user, password):
+def process_text(text):
     """Return processor by processing text given as a string.
 
     Parameters
     ----------
     text : str
         A string containing the text to be processed with Sofia.
-    user : str
-        Username to access the sofia API
-    password : str
-        Password to access the sofia API
 
     Returns
     -------
@@ -81,6 +78,13 @@ def process_text(text, user, password):
         the text, None is returned.
     """
     text_json = {'text': text}
+    user, password = _get_sofia_auth()
+    if not user or not password:
+        raise ValueError('Could not use SOFIA web service since'
+                         ' authentication information is missing. Please'
+                         ' set SOFIA_USERNAME and SOFIA_PASSWORD in the'
+                         ' INDRA configuration file or as environmental'
+                         ' variables.')
     json_response, status_code, process_status = \
         _text_processing(text_json=text_json, user=user, password=password)
 
@@ -91,3 +95,9 @@ def process_text(text, user, password):
     sjp = SofiaJsonProcessor(results_json=json_response)
 
     return sjp
+
+
+def _get_sofia_auth():
+    sofia_username = get_config('SOFIA_USERNAME')
+    sofia_password = get_config('SOFIA_PASSWORD')
+    return sofia_username, sofia_password
