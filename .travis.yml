@@ -50,16 +50,10 @@ install:
   - cd $TRAVIS_BUILD_DIR
   - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
-  # Get nose notify, if needed.
-  - |
-    if [[ -z "${SLACK_NOTIFY_HOOK}" ]]; then
-      echo "NOT installing nose-notify.";
-    else
-      echo "Installing nose-notify.";
-      mkdir $HOME/.nose_notify;
-      git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
-      export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
-    fi
+  # Get nose notify.
+  - mkdir $HOME/.nose_notify;
+  - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
+  - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
   # Get a daily updated Eidos jar for testing
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
@@ -84,15 +78,6 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3
 script:
-  # Choose which test code to use.
-  - |
-    if [[ -z "${SLACK_NOTIFY_HOOK}" ]]; then
-      echo "run_tests is nosetests.";
-      alias run_tests='nosetests';
-    else
-      echo "run_tests is nose_notify.";
-      alias run_tests='python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"';
-    fi
   # Credit: https://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
@@ -117,14 +102,15 @@ script:
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
-  - run_tests indra/tests/test_tees.py -v -a $NOSEATTR --process-restartworker
-  - run_tests indra/tests/test_eidos.py -v -a $NOSEATTR
+  - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
+  - python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
   # Now run all INDRA tests
-  - run_tests indra -v -a $NOSEATTR
-        --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
+  - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
+    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --with-coverage --cover-inclusive --cover-package=indra
-        --with-doctest --with-doctest-ignore-unicode
-        --with-timer --timer-top-n 10
+        --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
