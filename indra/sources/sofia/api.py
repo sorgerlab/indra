@@ -30,38 +30,6 @@ def process_table(fname):
     return sp
 
 
-def _sofia_api_post(api, option, json, auth):
-    return requests.post(url=api + option, json=json, auth=auth)
-
-
-def _text_processing(text_json, user, password):
-    assert len(text_json) > 0
-
-    sofia_api = 'https://sofia.worldmodelers.com'
-    auth = (user, password)
-
-    # Initialize process
-    resp = _sofia_api_post(api=sofia_api, option='/process_text',
-                           json=text_json, auth=auth)
-    res_json = resp.json()
-
-    # Get status
-    status = _sofia_api_post(api=sofia_api, option='/status',
-                             json=res_json, auth=auth)
-
-    # Check status every two seconds
-    while status.json()['Status'] == 'Processing':
-        time.sleep(2.0)
-        status = _sofia_api_post(api=sofia_api, option='/status',
-                                 json=res_json, auth=auth)
-
-    results = _sofia_api_post(api=sofia_api, option='/results',
-                              json=res_json, auth=auth)
-    status_code = results.status_code
-    process_status = status.json()['Status']
-    return results.json(), status_code, process_status
-
-
 def process_text(text):
     """Return processor by processing text given as a string.
 
@@ -101,3 +69,35 @@ def _get_sofia_auth():
     sofia_username = get_config('SOFIA_USERNAME')
     sofia_password = get_config('SOFIA_PASSWORD')
     return sofia_username, sofia_password
+
+
+def _sofia_api_post(api, option, json, auth):
+    return requests.post(url=api + option, json=json, auth=auth)
+
+
+def _text_processing(text_json, user, password):
+    assert len(text_json) > 0
+
+    sofia_api = 'https://sofia.worldmodelers.com'
+    auth = (user, password)
+
+    # Initialize process
+    resp = _sofia_api_post(api=sofia_api, option='/process_text',
+                           json=text_json, auth=auth)
+    res_json = resp.json()
+
+    # Get status
+    status = _sofia_api_post(api=sofia_api, option='/status',
+                             json=res_json, auth=auth)
+
+    # Check status every two seconds
+    while status.json()['Status'] == 'Processing':
+        time.sleep(2.0)
+        status = _sofia_api_post(api=sofia_api, option='/status',
+                                 json=res_json, auth=auth)
+
+    results = _sofia_api_post(api=sofia_api, option='/results',
+                              json=res_json, auth=auth)
+    status_code = results.status_code
+    process_status = status.json()['Status']
+    return results.json(), status_code, process_status
