@@ -52,7 +52,8 @@ class SofiaJsonProcessor(object):
                     pol = -1
                 elif _in_rels(rel, neu_rels):
                     pol = None
-                # If we don't recognize this relation, we don't get any statements
+                # If we don't recognize this relation, we don't get any
+                # statements
                 else:
                     continue
 
@@ -62,7 +63,8 @@ class SofiaJsonProcessor(object):
                 ref = rel_dict.get('Source_File')
 
                 all_contexts = []
-                for cause_idx, effect_idx in itertools.product(causes, effects):
+                for cause_idx, effect_idx in itertools.product(causes,
+                                                               effects):
                     cause_name = event_dict[cause_idx]['Relation']
                     cause_grounding = event_dict[cause_idx]['Event_Type']
                     effect_name = event_dict[effect_idx]['Relation']
@@ -76,7 +78,8 @@ class SofiaJsonProcessor(object):
                     if effect_grounding:
                         effect_concept.db_refs['SOFIA'] = effect_grounding
 
-                    # NOTE: Extract context. The basic issue is that time/location
+                    # NOTE: Extract context. The basic issue is that
+                    # time/location
                     # here is given at the event level, not at the relation
                     # level, and so we need to choose which event's context
                     # we will associate with the relation
@@ -100,9 +103,11 @@ class SofiaJsonProcessor(object):
                     if not context:
                         context = None
 
-                    ev = Evidence(source_api='sofia', pmid=ref, annotations=annots,
-                                  text=text, context=context)
-                    stmt = Influence(cause_concept, effect_concept, evidence=[ev])
+                    ev = Evidence(source_api='sofia', pmid=ref,
+                                  annotations=annots, text=text,
+                                  context=context)
+                    stmt = Influence(cause_concept, effect_concept,
+                                     evidence=[ev])
                     # Assume unknown polarity on the subject, put the overall
                     # polarity in the sign of the object
                     stmt.subj_delta['polarity'] = None
