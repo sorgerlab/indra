@@ -1,0 +1,64 @@
+[
+ {
+  "Variables": {
+   "Source_File": "userinput",
+   "Sentence": "rainfall causes floods ",
+   "Indicator": "None",
+   "Scoring": "",
+   "Index": "V1"
+  },
+  "Entities": [],
+  "Events": [
+   {
+    "Source_File": "userinput",
+    "Query": "None",
+    "Score": "0.0",
+    "Event Index": "E1",
+    "Relation": "rainfall",
+    "Event_Type": "event1/Natural_Phenomena/Weather",
+    "FrameNet_Frame": "['Precipitation']",
+    "Indicator": "",
+    "Location": "",
+    "Time": "",
+    "Agent Index": "",
+    "Agent": "",
+    "Patient Index": "",
+    "Patient": "",
+    "Sentence": "rainfall causes floods "
+   },
+   {
+    "Source_File": "userinput",
+    "Query": "None",
+    "Score": "0.0",
+    "Event Index": "E2",
+    "Relation": "floods",
+    "Event_Type": "event1/Natural_Phenomena/Weather",
+    "FrameNet_Frame": "",
+    "Indicator": "",
+    "Location": "",
+    "Time": "",
+    "Agent Index": "",
+    "Agent": "",
+    "Patient Index": "",
+    "Patient": "",
+    "Sentence": "rainfall causes floods "
+   }
+  ],
+  "Causal": [
+   {
+    "Source_File": "userinput",
+    "Query": "None",
+    "Score": "0.0",
+    "Relation Index": "R1",
+    "Relation": "causes",
+    "Relation_Type": "CausalRelation",
+    "Indicator": "",
+    "Cause Index": "E1",
+    "Cause": "rainfall",
+    "Effect Index": "E2",
+    "Effect": "floods",
+    "Sentence": "rainfall causes floods "
+   }
+  ]
+ }
+]

@@ -1,3 +1,4 @@
+import json
 import time
 import openpyxl
 import requests
@@ -30,13 +31,16 @@ def process_table(fname):
     return sp
 
 
-def process_text(text):
+def process_text(text, out_file='sofia_output.json'):
     """Return processor by processing text given as a string.
 
     Parameters
     ----------
     text : str
         A string containing the text to be processed with Sofia.
+    out_file : Optional[str]
+        The path to a file to save the reader's output into.
+        Default: sofia_output.json
 
     Returns
     -------
@@ -60,9 +64,18 @@ def process_text(text):
     if process_status != 'Done' or status_code != 200:
         return None
 
-    sjp = SofiaJsonProcessor(results_json=json_response)
+    # Cache reading output
+    if out_file:
+        with open(out_file, 'w') as fh:
+            json.dump(json_response, fh, indent=1)
 
+    return process_json(json_response)
+
+
+def process_json(json_obj):
+    sjp = SofiaJsonProcessor(results_json=json_obj)
     return sjp
+
 
 
 def _get_sofia_auth():
