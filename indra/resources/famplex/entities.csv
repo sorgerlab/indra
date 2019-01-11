@@ -11,6 +11,7 @@ Activin_A
 Activin_AB
 Activin_B
 ACTN
+Adaptor_protein_II
 Adaptor_protein_III
 ADCY
 ADH
@@ -39,6 +40,7 @@ AMPK_beta
 AMPK_gamma
 Annexin_II_heterotetramer
 AP1
+AP2A
 APC_C
 APOA
 Apolipoprotein
@@ -260,6 +262,9 @@ MAPK
 MCM
 MEF2
 MEK
+Mitochondrial_Ribosome
+MRPS
+MRPL
 MMP
 mTORC1
 mTORC2
