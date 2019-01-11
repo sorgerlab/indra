@@ -18,8 +18,7 @@ def process_table(fname):
     -------
     sp : indra.sources.sofia.processor.SofiaProcessor
         A SofiaProcessor object which has a list of extracted INDRA
-        Statements as its statements attribute. If no statements were
-        extracted, None is returned.
+        Statements as its statements attribute.
     """
     book = openpyxl.load_workbook(fname, read_only=True)
     try:
@@ -30,8 +29,6 @@ def process_table(fname):
     entities_sheet = book['Entities']
     sp = SofiaProcessor(input_object=(rel_sheet.rows, event_sheet.rows,
                                       entities_sheet.rows))
-    if not sp.statements:
-        return None
     return sp
 
 
@@ -88,8 +85,7 @@ def process_json(json_obj):
     -------
     sp : indra.sources.sofia.processor.SofiaProcessor
         A SofiaProcessor object which has a list of extracted INDRA
-        Statements as its statements attribute. If the API did not process
-        the text, None is returned.
+        Statements as its statements attribute.
     """
     sp = SofiaProcessor(input_object=json_obj)
     return sp
