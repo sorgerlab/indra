@@ -37,7 +37,7 @@ class SofiaProcessor(object):
         for _dict in json_list:
             json_relations = _dict['Causal']
             for rel_dict in json_relations:
-                stmt_list = self._build_stmt(rel_dict)
+                stmt_list = self._build_stmts(rel_dict)
                 if not stmt_list:
                     continue
                 stmts = stmts + stmt_list
@@ -61,7 +61,7 @@ class SofiaProcessor(object):
         for row in relation_rows:
             row_values = [r.value for r in row]
             row_dict = {h: v for h, v in zip(header, row_values)}
-            stmt_list = self._build_stmt(row_dict)
+            stmt_list = self._build_stmts(row_dict)
             if not stmt_list:
                 continue
             stmts = stmts + stmt_list
@@ -74,7 +74,7 @@ class SofiaProcessor(object):
                 'Location': _dict.get('Location'),
                 'Time': _dict.get('Time')}
 
-    def _build_stmt(self, rel_dict):
+    def _build_stmts(self, rel_dict):
         stmt_list = []
         cause_entries = rel_dict.get('Cause Index')
         effect_entries = rel_dict.get('Effect Index')
