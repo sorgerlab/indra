@@ -131,9 +131,9 @@ def extract_text(xml_string):
     for element in tree.iter():
         if isinstance(element.tag, basestring) and \
            re.search('(^|})p$', element.tag) and element.text:
-            paragraphs.append(element.text.strip())
+            paragraphs.append(' '.join(element.text.split()))
     if paragraphs:
-        return ' '.join(paragraphs)
+        return ' '.join(paragraphs.strip())
     else:
         return None
 
