@@ -133,7 +133,7 @@ def extract_text(xml_string):
            re.search('(^|})p$', element.tag) and element.text:
             paragraphs.append(' '.join(element.text.split()))
     if paragraphs:
-        return ' '.join(paragraphs.strip())
+        return ' '.join(paragraphs).strip()
     else:
         return None
 
