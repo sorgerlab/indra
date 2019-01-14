@@ -133,7 +133,7 @@ function submitButtonClick(clickEvent) {
 function submitCuration(curation_dict, hash, statusBox, icon, test) {
     // API KEY FOR ACCESSING DATABASE
     var api_key = document.getElementById("api_key_input").value;
-    curation_addr = "https://lsm6zea7gg.execute-api.us-east-1.amazonaws.com/production/curation/submit/";
+    curation_addr = "https://db.indra.bio/curation/submit/";
 
     _url = curation_addr + hash + "?api_key=" + api_key;
 
