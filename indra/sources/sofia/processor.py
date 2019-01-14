@@ -8,19 +8,12 @@ neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
 neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
 
 
-class SofiaProcessor(object):
+class SofiaJsonProcessor(object):
     def __init__(self, input_object):
-        self.statements = []
-        self._events = {}
-        if isinstance(input_object, list):  # Sofia API
-            self._events = self._process_events_json(input_object)
-            self.statements = self._process_relations_json(input_object)
-        elif isinstance(input_object, tuple):  # excel
-            relation_rows, event_rows, entity_rows = input_object
-            self._events = self._process_events_excel(event_rows)
-            self.statements = self._process_relations_excel(relation_rows)
+        self._events = self.process_events(input_object)
+        self.statements = self.process_relations(input_object)
 
-    def _process_events_json(self, json_list):
+    def process_events(self, json_list):
         event_dict = {}
         for _dict in json_list:
             events = _dict['Events']
@@ -28,11 +21,11 @@ class SofiaProcessor(object):
                 # subj_entries = event.get('Agent')
                 # object_entries = event.get('Patient')
                 event_index = event.get('Event Index')
-                event_dict[event_index] = self._process_event(event)
+                event_dict[event_index] = self.process_event(event)
 
         return event_dict
 
-    def _process_relations_json(self, json_list):
+    def process_relations(self, json_list):
         stmts = []
         for _dict in json_list:
             json_relations = _dict['Causal']
@@ -43,7 +36,14 @@ class SofiaProcessor(object):
                 stmts = stmts + stmt_list
         return stmts
 
-    def _process_events_excel(self, event_rows):
+
+class SofiaExcelProcessor(SofiaProcessor):
+    def __init__(self, input_object):
+        relation_rows, event_rows, entity_rows = input_object
+        self._events = self.process_events_excel(event_rows)
+        self.statements = self.process_relations(relation_rows)
+
+    def process_events(self, event_rows):
         header = [cell.value for cell in next(event_rows)]
         event_dict = {}
         for row in event_rows:
@@ -52,10 +52,10 @@ class SofiaProcessor(object):
             # subj_entries = row_dict.get('Agent')
             # obj_entries = row_dict.get('Patient')
             event_index = row_dict.get('Event Index')
-            event_dict[event_index] = self._process_event(row_dict)
+            event_dict[event_index] = self.process_event(row_dict)
         return event_dict
 
-    def _process_relations_excel(self, relation_rows):
+    def process_relations(self, relation_rows):
         header = [cell.value for cell in next(relation_rows)]
         stmts = []
         for row in relation_rows:
@@ -67,12 +67,14 @@ class SofiaProcessor(object):
             stmts = stmts + stmt_list
         return stmts
 
+
+class SofiaProcessor(object):
     @staticmethod
-    def _process_event(_dict):
-        return {'Event_Type': _dict.get('Event_Type'),
-                'Relation': _dict.get('Relation'),
-                'Location': _dict.get('Location'),
-                'Time': _dict.get('Time')}
+    def process_event(event_dict):
+        return {'Event_Type': event_dict.get('Event_Type'),
+                'Relation': event_dict.get('Relation'),
+                'Location': event_dict.get('Location'),
+                'Time': event_dict.get('Time')}
 
     def _build_stmts(self, rel_dict):
         stmt_list = []
