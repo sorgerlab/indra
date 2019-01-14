@@ -1,6 +1,6 @@
 import sys
 import pickle
-from flask import Flask, request, abort, Response
+from flask import Flask, request, jsonify
 from indra.belief import wm_scorer, BeliefEngine
 
 scorer = wm_scorer.get_eidos_counts()
@@ -22,7 +22,7 @@ def update_beliefs():
     prior_counts = {}
     subtype_counts = {}
     corpus = corpora.get(corpus_id)
-    for uuid, correct in curations:
+    for uuid, correct in curations.items():
         stmt = corpus.get(uuid)
         for ev in stmt.evidence:
             extraction_rule = ev.epistemics.get('found_by')
@@ -41,12 +41,14 @@ def update_beliefs():
 
     scorer.update_counts(prior_counts, subtype_counts)
     if not return_beliefs:
-        return Response({})
+        return jsonify({})
     else:
         be = BeliefEngine(scorer)
-        stmts = list(corpus.items())
+        stmts = list(corpus.values())
         be.set_prior_probs(stmts)
-        return Response(_get_belief_dict(stmts))
+        belief_dict = _get_belief_dict(stmts)
+        print(belief_dict)
+        return jsonify(belief_dict)
 
 
 def _get_belief_dict(stmts):
@@ -56,5 +58,7 @@ def _get_belief_dict(stmts):
 if __name__ == '__main__':
     corpus_path = sys.argv[1]
     with open(corpus_path, 'rb') as fh:
-        corpora['1'] = pickle.load(fh)
+        stmts = pickle.load(fh)
+        corpora['1'] = {st.uuid: st for st in stmts}
+    print(corpora)
     app.run()

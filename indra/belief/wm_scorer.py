@@ -36,8 +36,6 @@ def get_eidos_counts():
                      {k: 1.0-min(v, 0.95)-syst_error for k, v
                       in zip(table['RULE'], table['% correct'])}}
     scorer = BayesianScorer(prior_counts={}, subtype_counts=prior_counts)
-    print(scorer.prior_probs)
-    print(scorer.subtype_probs)
     return scorer
 
 

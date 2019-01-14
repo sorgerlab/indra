@@ -104,6 +104,9 @@ class SimpleScorer(BeliefScorer):
         self.update_probs(prior_probs, subtype_probs)
 
     def update_probs(self, prior_probs=None, subtype_probs=None):
+        print(self.prior_probs)
+        print(self.subtype_probs)
+        print('--------------')
         if prior_probs:
             for key in ('rand', 'syst'):
                 self.prior_probs[key].update(prior_probs.get(key, {}))
@@ -111,6 +114,8 @@ class SimpleScorer(BeliefScorer):
             logger.debug("Prior probabilities for %s errors: %s"
                          % (err_type, source_dict))
         self.subtype_probs = subtype_probs
+        print(self.prior_probs)
+        print(self.subtype_probs)
 
     def score_evidence_list(self, evidences):
         def _score(evidences):
@@ -198,6 +203,7 @@ class SimpleScorer(BeliefScorer):
             List of statements to check
         """
         sources = set()
+        print(statements)
         for stmt in statements:
             sources |= set([ev.source_api for ev in stmt.evidence])
         for err_type in ('rand', 'syst'):
