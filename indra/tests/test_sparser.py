@@ -72,7 +72,7 @@ def test_fix_agent_ncit_only():
 
 
 def test_fix_agent_ncit_only():
-    a = Agent('XXX', db_refs={'NCIT': 'C104166'})
+    a = Agent('XXX', db_refs={'NCIT': 'C129655'})
     _fix_agent(a)
     assert a.name == 'TUBB'
     assert a.db_refs.get('FPLX') == 'TUBB'
