@@ -1,29 +1,7 @@
 from io import StringIO
 import pandas
 import requests
-from . import SimpleScorer
-
-
-class BayesianScorer(SimpleScorer):
-    def __init__(self, prior_counts, subtype_counts):
-        self.prior_counts = prior_counts
-        self.subtype_counts = subtype_counts
-        self._update_probs()
-
-    def update_probs(self):
-        prior_probs = {source: (p / (n + p)) for source, (p, n) in
-                       self.prior_counts.items()}
-        # FIXME: this will need to be fixed
-        subtype_probs = {source: {rule: (p / (n + p)} for rule, (p, n)
-                         in st.items() for st, rule in
-                         self.subtype_counts.items()}
-        super()._update_probs(prior_probs, subtype_probs)
-
-    def update_counts(self, counts):
-        for source, (pos, neg) in counts.items():
-            # FIXME: handle subtypes
-            self.prior_counts[source][0] += pos
-            self.prior_counts[source][1] += neg
+from . import SimpleScorer, BayesianScorer
 
 
 def get_eidos_counts():

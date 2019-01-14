@@ -101,9 +101,9 @@ class SimpleScorer(BeliefScorer):
     def __init__(self, prior_probs=None, subtype_probs=None):
         self.prior_probs = load_default_probs()
         self.subtype_probs = {}
-        self._update_probs(prior_probs, subtype_probs)
+        self.update_probs(prior_probs, subtype_probs)
 
-    def update_probs(prior_probs=None, subtype_probs=None):
+    def update_probs(self, prior_probs=None, subtype_probs=None):
         if prior_probs:
             for key in ('rand', 'syst'):
                 self.prior_probs[key].update(prior_probs.get(key, {}))
@@ -206,6 +206,30 @@ class SimpleScorer(BeliefScorer):
                     msg = 'BeliefEngine missing probability parameter' + \
                         ' for source: %s' % source
                     raise Exception(msg)
+
+
+class BayesianScorer(SimpleScorer):
+    def __init__(self, prior_counts, subtype_counts):
+        self.prior_counts = prior_counts
+        self.subtype_counts = subtype_counts
+        self.update_probs()
+
+    def update_probs(self):
+        prior_probs = {}
+        for source, (p, n) in self.prior_counts.items():
+            # Skip if there are no actual counts
+            if n + p == 0:
+                continue
+            prior_probs[source] = (p / (n + p))
+        super().update_probs(prior_probs, subtype_probs)
+
+    def update_counts(self, counts):
+        for source, (pos, neg) in counts.items():
+            # FIXME: handle subtypes
+            self.prior_counts[source][0] += pos
+            self.prior_counts[source][1] += neg
+
+
 
 
 default_scorer = SimpleScorer()
