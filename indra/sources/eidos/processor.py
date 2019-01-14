@@ -289,12 +289,15 @@ class EidosProcessor(object):
                 return None
 
             entries = []
-            for entry in grounding.get('values', []):
-                ont_concept = entry.get('ontologyConcept')
-                value = entry.get('value')
-                if ont_concept is None or value is None:
-                    continue
-                entries.append((ont_concept, value))
+            values = grounding.get('values', [])
+            # Values could still have been a None entry here
+            if values:
+                for entry in values:
+                    ont_concept = entry.get('ontologyConcept')
+                    value = entry.get('value')
+                    if ont_concept is None or value is None:
+                        continue
+                    entries.append((ont_concept, value))
             return entries
 
         # Save raw text and Eidos scored groundings as db_refs
