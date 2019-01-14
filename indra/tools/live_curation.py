@@ -1,4 +1,5 @@
 import sys
+import pickle
 from flask import Flask, request, abort, Response
 from indra.belief import wm_scorer, BeliefEngine
 
@@ -55,5 +56,5 @@ def _get_belief_dict(stmts):
 if __name__ == '__main__':
     corpus_path = sys.argv[1]
     with open(corpus_path, 'rb') as fh:
-        corpus['1'] = pickle.load(fh)
+        corpora['1'] = pickle.load(fh)
     app.run()

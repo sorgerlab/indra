@@ -217,12 +217,16 @@ class BayesianScorer(SimpleScorer):
         self.update_probs()
 
     def update_probs(self):
-        prior_probs = {}
+        # This is a fixed assumed value for systematic error
+        syst_error = 0.05
+        prior_probs = {'syst': [], 'rand': []}
         for source, (p, n) in self.prior_counts.items():
             # Skip if there are no actual counts
             if n + p == 0:
                 continue
-            prior_probs[source] = (p / (n + p))
+            prior_probs['syst'][source] = syst_error
+            prior_probs['rand'][source] = \
+                1 - min((p / (n + p), 1-syst_error)) - syst_error
         subtype_probs = {}
         for source, entry in self.subtype_counts.items():
             for rule, (p, n) in entry.items():
@@ -231,7 +235,8 @@ class BayesianScorer(SimpleScorer):
                     continue
                 if source not in subtype_probs:
                     subtype_probs[source] = {}
-                subtype_probs[source][rule] = (p / (n + p))
+                subtype_probs[source][rule] = \
+                    1 - min((p / (n + p), 1-syst_error)) - syst_error
         super().update_probs(prior_probs, subtype_probs)
 
     def update_counts(self, prior_counts, subtype_counts):
