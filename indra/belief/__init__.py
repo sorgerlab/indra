@@ -103,7 +103,7 @@ class SimpleScorer(BeliefScorer):
         self.subtype_probs = {}
         self._update_probs(prior_probs, subtype_probs)
 
-    def update_probs(prior_probs=None, subtype_probs=None)
+    def update_probs(prior_probs=None, subtype_probs=None):
         if prior_probs:
             for key in ('rand', 'syst'):
                 self.prior_probs[key].update(prior_probs.get(key, {}))
