@@ -18,12 +18,6 @@ def get_eidos_counts():
     total_corr = table['Num correct'].sum()
     total_incorr = table['Num incorrect'].sum()
     precision = total_corr / (total_corr + total_incorr)
-    prior_probs = {'rand': {'eidos': rand_error},
-                   'syst': {'eidos': syst_error}}
-
-    prior_counts = {'eidos': {r: [c, i] for r, c, i
-                              zip(table['RULE'], table['Num correct'],
-                              table['Num incorrect'])}}
 
     # We have to divide this into a random and systematic component, for now
     # in an ad-hoc manner
@@ -31,10 +25,19 @@ def get_eidos_counts():
     rand_error = 1 - precision - syst_error
     prior_probs = {'rand': {'eidos': rand_error}, 'syst': {'eidos': syst_error}}
 
+    prior_probs = {'rand': {'eidos': rand_error},
+                   'syst': {'eidos': syst_error}}
+
+    prior_counts = {'eidos': {r: [c, i] for r, c, i in
+                              zip(table['RULE'], table['Num correct'],
+                                  table['Num incorrect'])}}
+
     # Get a dict of rule-specific errors.
     subtype_probs = {'eidos':
                      {k: 1.0-min(v, 0.95)-syst_error for k, v
                       in zip(table['RULE'], table['% correct'])}}
+    scorer = BayesianScorer(prior_counts={}, subtype_counts=prior_counts)
+    return scorer
 
 def get_eidos_scorer():
     url = 'https://raw.githubusercontent.com/clulab/eidos/master/' + \

@@ -210,6 +210,8 @@ class SimpleScorer(BeliefScorer):
 
 class BayesianScorer(SimpleScorer):
     def __init__(self, prior_counts, subtype_counts):
+        self.prior_probs = load_default_probs()
+        self.subtype_probs = {}
         self.prior_counts = prior_counts
         self.subtype_counts = subtype_counts
         self.update_probs()
@@ -221,10 +223,19 @@ class BayesianScorer(SimpleScorer):
             if n + p == 0:
                 continue
             prior_probs[source] = (p / (n + p))
+        subtype_probs = {}
+        for source, entry in self.subtype_counts.items():
+            for rule, (p, n) in entry.items():
+                # Skip if there are no actual counts
+                if n + p == 0:
+                    continue
+                if source not in subtype_probs:
+                    subtype_probs[source] = {}
+                subtype_probs[source][rule] = (p / (n + p))
         super().update_probs(prior_probs, subtype_probs)
 
-    def update_counts(self, counts):
-        for source, (pos, neg) in counts.items():
+    def update_counts(self, prior_counts, subtype_counts):
+        for source, (pos, neg) in prior_counts.items():
             # FIXME: handle subtypes
             self.prior_counts[source][0] += pos
             self.prior_counts[source][1] += neg

@@ -1,3 +1,4 @@
+import sys
 from flask import Flask, request, abort, Response
 from indra.belief import wm_scorer, BeliefEngine
 
@@ -5,8 +6,6 @@ scorer = wm_scorer.get_eidos_counts()
 
 
 app = Flask(__name__)
-Compress(app)
-CORS(app)
 
 
 corpora = {
@@ -16,9 +15,9 @@ corpora = {
 
 @app.route('/update_beliefs', methods=['POST'])
 def update_beliefs():
-    corpus_id = request.get('corpus_id')
-    curations = request.get('curations')
-    return_beliefs = request.get('return_beliefs', False)
+    corpus_id = request.json.get('corpus_id')
+    curations = request.json.get('curations')
+    return_beliefs = request.json.get('return_beliefs', False)
     prior_counts = {}
     subtype_counts = {}
     corpus = corpora.get(corpus_id)
@@ -41,11 +40,12 @@ def update_beliefs():
 
     scorer.update_counts(prior_counts, subtype_counts)
     if not return_beliefs:
-        return {}
+        return Response({})
     else:
         be = BeliefEngine(scorer)
-        be.set_prior_probs(list(corpus.items()))
-        return _get_belief_dict(stmts)
+        stmts = list(corpus.items())
+        be.set_prior_probs(stmts)
+        return Response(_get_belief_dict(stmts))
 
 
 def _get_belief_dict(stmts):
@@ -53,4 +53,7 @@ def _get_belief_dict(stmts):
 
 
 if __name__ == '__main__':
+    corpus_path = sys.argv[1]
+    with open(corpus_path, 'rb') as fh:
+        corpus['1'] = pickle.load(fh)
     app.run()
