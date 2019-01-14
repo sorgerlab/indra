@@ -32,7 +32,7 @@ def process_table(fname):
     return sp
 
 
-def process_text(text, out_file='sofia_output.json'):
+def process_text(text, out_file='sofia_output.json', auth=None):
     """Return processor by processing text given as a string.
 
     Parameters
@@ -42,6 +42,10 @@ def process_text(text, out_file='sofia_output.json'):
     out_file : Optional[str]
         The path to a file to save the reader's output into.
         Default: sofia_output.json
+    auth : Optional[list]
+        A username/password pair for the Sofia web service. If not given,
+        the SOFIA_USERNAME and SOFIA_PASSWORD values are loaded from either
+        the INDRA config or the environment.
 
     Returns
     -------
@@ -51,7 +55,10 @@ def process_text(text, out_file='sofia_output.json'):
         the text, None is returned.
     """
     text_json = {'text': text}
-    user, password = _get_sofia_auth()
+    if not auth:
+        user, password = _get_sofia_auth()
+    else:
+        user, password = auth
     if not user or not password:
         raise ValueError('Could not use SOFIA web service since'
                          ' authentication information is missing. Please'
