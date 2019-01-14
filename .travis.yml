@@ -33,9 +33,10 @@ install:
   - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
   - pip install pybel
+  - pip install awscli
   - mkdir -p $HOME/.pybel/data
-  - wget -nv http://sorger.med.harvard.edu/data/bgyori/pybel_cache.db --directory-prefix=$HOME/.pybel/data
-  - wget http://sorger.med.harvard.edu/data/bachman/Phosphorylation_site_dataset.tsv --directory-prefix=indra/resources/ -nv
+  - aws s3 cp s3://bigmech/travis/pybel_cache.db $HOME/.pybel/data/ --no-sign-request  --source-region us-east-1
+  - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
   # PySB and dependencies
   - wget "http://www.csb.pitt.edu/Faculty/Faeder/wp-content/uploads/2017/04/BioNetGen-2.2.6-stable_Linux.tar.gz" -O bionetgen.tar.gz -nv
   - tar xzf bionetgen.tar.gz
@@ -44,23 +45,28 @@ install:
   - pip install .[all]
   - cd indra/benchmarks/assembly_eval/batch4
   # Download a number of useful resource files for testing purposes
-  - wget http://sorger.med.harvard.edu/data/bachman/trips_reach_batch4.gz -nv
+  - aws s3 cp s3://bigmech/travis/trips_reach_batch4.gz .  --no-sign-request  --source-region us-east-1
   - tar -xf trips_reach_batch4.gz
   - cd $TRAVIS_BUILD_DIR
-  - wget http://sorger.med.harvard.edu/data/bachman/reach-82631d-biores-e9ee36.jar -nv
+  - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
+  # Get nose notify.
+  - mkdir $HOME/.nose_notify;
+  - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
+  - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
   # Get a daily updated Eidos jar for testing
-  - wget http://sorger.med.harvard.edu/data/bgyori/eidos.jar -nv
+  - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - pip install pycodestyle
   # TEES
-  - if [[ "$TRAVIS_EVENT_TYPE" == "cron" ]]; then
+  - |
+    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
         export RUN_SLOW=true;
     fi
   - |
     if [[ $RUN_SLOW == "true" ]]; then
         sudo apt-get --yes install ruby;
-        wget -nv http://sorger.med.harvard.edu/data/bgyori/TEES.tar.bz2;
+        aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request --no-sign-request;
         tar xjf TEES.tar.bz2;
         mv TEES ~/TEES;
     fi
@@ -72,6 +78,10 @@ before_script:
   - "sh -e /etc/init.d/xvfb start"
   - sleep 3
 script:
+  # Credit: https://graysonkoonce.com/getting-the-current-branch-name-during-a-pull-request-in-travis-ci/
+  - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+  - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
+  - echo "$TRAVIS_EVENT_TYPE"
   - export TEES_SETTINGS=~/TEES/tees_local_settings.py
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
@@ -92,14 +102,15 @@ script:
       export NOSEATTR="!slow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
-  - nosetests -v -a $NOSEATTR --process-restartworker indra/tests/test_tees.py
-  - nosetests -v -a $NOSEATTR indra/tests/test_eidos.py
+  - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
+  - python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
   # Now run all INDRA tests
-  - nosetests indra -v -a $NOSEATTR
-        --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
+  - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
+    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
         --with-coverage --cover-inclusive --cover-package=indra
-        --with-doctest --with-doctest-ignore-unicode
-        --with-timer --timer-top-n 10
+        --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
@@ -108,7 +119,7 @@ script:
   # successful. Rather, the log needs to be inspected and compared
   # to desired behavior.
   - |
-    if [ $RUN_NL_MODELS == "true" ]; then
+    if [[ $RUN_NL_MODELS == "true" ]]; then
         cd $TRAVIS_BUILD_DIR/models
         python hello_indra.py
         cd $TRAVIS_BUILD_DIR/models/p53_model
@@ -120,7 +131,10 @@ script:
      fi
   # Run assembly benchmarks
   - cd $TRAVIS_BUILD_DIR/indra/benchmarks/assembly_eval/batch4
-  - python run_combined.py
+  - |
+    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
+        python run_combined.py
+    fi
   - cd $TRAVIS_BUILD_DIR
   # Run code style report on diff
   - git remote set-branches --add origin master
