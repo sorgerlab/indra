@@ -69,19 +69,18 @@ def get_text_content_for_pmids(pmids):
             for text_content in source if text_content is not None]
 
 
-def build_corpus(*sources):
+def get_plaintexts(text_content):
     """Returns a corpus of plaintexts given text content from different sources
 
     Converts xml files into plaintext, leaves abstracts as they are.
 
     Parameters
     ----------
-    *sources : list of str
+    sources : list of str
         lists of text content. each item should either be a plaintext, an
         an NLM xml or an Elsevier xml
     """
-    return [_universal_extract_text(content) for source in sources
-            for content in source]
+    return [_universal_extract_text(article) for article in text_content]
 
 
 def _universal_extract_text(xml):
