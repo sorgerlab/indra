@@ -40,10 +40,44 @@ var api_spec = {
         "parameters": [
           {
             "in": "body",
-            "name": "textObj",
+            "name": "textObjWM",
             "description": "An object with a key of \"text\" referencing a string of text to be processed by CWMS.",
             "schema": {
-              "$ref": "#/definitions/textObj"
+              "$ref": "#/definitions/textObjWM"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "text processed. JSON INDRA statements returned.",
+            "schema": {
+              "$ref": "#/definitions/statementsObj"
+            }
+          }
+        }
+      }
+    },
+    "/sofia/process_text": {
+      "post": {
+        "tags": [
+          "Sofia"
+        ],
+        "summary": "Read text using Sofia and get INDRA statements.",
+        "operationId": "readSofia",
+        "description": "Read text using Sofia and return an object with a key of \"statements\" referencing a list of INDRA statements.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "textAuthObj",
+            "description": "An object with a key of \"text\" referencing a string of text to be processed by Sofia, and \"auth\" a list with the user name and password needed to access the service.",
+            "schema": {
+              "$ref": "#/definitions/textAuthObj"
             }
           }
         ],
@@ -902,6 +936,35 @@ var api_spec = {
         "text": {
           "type": "string",
           "example": "GRB2 binds SHC."
+        }
+      }
+    },
+    "textObjWM": {
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "example": "Rainfall causes floods."
+        }
+      }
+    },
+    "textAuthObj": {
+      "type": "object",
+      "required": [
+        "text",
+        "auth"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "example": "Rainfall causes floods."
+        },
+        "auth": {
+          "type": "list",
+          "example": ['USER', 'PASS']
         }
       }
     },
