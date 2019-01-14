@@ -8,66 +8,6 @@ neg_rels = ['restrict', 'worsen', 'declin', 'limit', 'constrain',
 neu_rels = ['affect', 'impact', 'due', 'caus', 'because']
 
 
-class SofiaJsonProcessor(object):
-    def __init__(self, input_object):
-        self._events = self.process_events(input_object)
-        self.statements = self.process_relations(input_object)
-
-    def process_events(self, json_list):
-        event_dict = {}
-        for _dict in json_list:
-            events = _dict['Events']
-            for event in events:
-                # subj_entries = event.get('Agent')
-                # object_entries = event.get('Patient')
-                event_index = event.get('Event Index')
-                event_dict[event_index] = self.process_event(event)
-
-        return event_dict
-
-    def process_relations(self, json_list):
-        stmts = []
-        for _dict in json_list:
-            json_relations = _dict['Causal']
-            for rel_dict in json_relations:
-                stmt_list = self._build_stmts(rel_dict)
-                if not stmt_list:
-                    continue
-                stmts = stmts + stmt_list
-        return stmts
-
-
-class SofiaExcelProcessor(SofiaProcessor):
-    def __init__(self, input_object):
-        relation_rows, event_rows, entity_rows = input_object
-        self._events = self.process_events_excel(event_rows)
-        self.statements = self.process_relations(relation_rows)
-
-    def process_events(self, event_rows):
-        header = [cell.value for cell in next(event_rows)]
-        event_dict = {}
-        for row in event_rows:
-            row_values = [r.value for r in row]
-            row_dict = {h: v for h, v in zip(header, row_values)}
-            # subj_entries = row_dict.get('Agent')
-            # obj_entries = row_dict.get('Patient')
-            event_index = row_dict.get('Event Index')
-            event_dict[event_index] = self.process_event(row_dict)
-        return event_dict
-
-    def process_relations(self, relation_rows):
-        header = [cell.value for cell in next(relation_rows)]
-        stmts = []
-        for row in relation_rows:
-            row_values = [r.value for r in row]
-            row_dict = {h: v for h, v in zip(header, row_values)}
-            stmt_list = self._build_stmts(row_dict)
-            if not stmt_list:
-                continue
-            stmts = stmts + stmt_list
-        return stmts
-
-
 class SofiaProcessor(object):
     @staticmethod
     def process_event(event_dict):
@@ -156,6 +96,61 @@ class SofiaProcessor(object):
 
             stmt_list.append(stmt)
         return stmt_list
+
+
+class SofiaJsonProcessor(SofiaProcessor):
+    def __init__(self, json_list):
+        self._events = self.process_events(json_list)
+        self.statements = self.process_relations(json_list)
+
+    def process_events(self, json_list):
+        event_dict = {}
+        for _dict in json_list:
+            events = _dict['Events']
+            for event in events:
+                event_index = event.get('Event Index')
+                event_dict[event_index] = self.process_event(event)
+
+        return event_dict
+
+    def process_relations(self, json_list):
+        stmts = []
+        for _dict in json_list:
+            json_relations = _dict['Causal']
+            for rel_dict in json_relations:
+                stmt_list = self._build_stmts(rel_dict)
+                if not stmt_list:
+                    continue
+                stmts = stmts + stmt_list
+        return stmts
+
+
+class SofiaExcelProcessor(SofiaProcessor):
+    def __init__(self, relation_rows, event_rows, entity_rows):
+        self._events = self.process_events(event_rows)
+        self.statements = self.process_relations(relation_rows)
+
+    def process_events(self, event_rows):
+        header = [cell.value for cell in next(event_rows)]
+        event_dict = {}
+        for row in event_rows:
+            row_values = [r.value for r in row]
+            row_dict = {h: v for h, v in zip(header, row_values)}
+            event_index = row_dict.get('Event Index')
+            event_dict[event_index] = self.process_event(row_dict)
+        return event_dict
+
+    def process_relations(self, relation_rows):
+        header = [cell.value for cell in next(relation_rows)]
+        stmts = []
+        for row in relation_rows:
+            row_values = [r.value for r in row]
+            row_dict = {h: v for h, v in zip(header, row_values)}
+            stmt_list = self._build_stmts(row_dict)
+            if not stmt_list:
+                continue
+            stmts = stmts + stmt_list
+        return stmts
 
 
 def _in_rels(value, rels):

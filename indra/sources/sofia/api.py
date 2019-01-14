@@ -3,7 +3,7 @@ import time
 import openpyxl
 import requests
 from indra.config import get_config
-from .processor import SofiaProcessor
+from .processor import SofiaJsonProcessor, SofiaExcelProcessor
 
 
 def process_table(fname):
@@ -27,8 +27,8 @@ def process_table(fname):
         rel_sheet = book['Causal']
     event_sheet = book['Events']
     entities_sheet = book['Entities']
-    sp = SofiaProcessor(input_object=(rel_sheet.rows, event_sheet.rows,
-                                      entities_sheet.rows))
+    sp = SofiaExcelProcessor(rel_sheet.rows, event_sheet.rows,
+                             entities_sheet.rows)
     return sp
 
 
@@ -87,7 +87,7 @@ def process_json(json_obj):
         A SofiaProcessor object which has a list of extracted INDRA
         Statements as its statements attribute.
     """
-    sp = SofiaProcessor(input_object=json_obj)
+    sp = SofiaJsonProcessor(json_obj)
     return sp
 
 
