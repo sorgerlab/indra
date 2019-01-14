@@ -326,7 +326,7 @@ def test_process_mod_condition1():
         ]
     for offline in offline_modes:
         for sentence, mod_type, residue, position, is_modified in test_cases:
-            rp = reach.process_text(sentence)
+            rp = reach.process_text(sentence, offline=offline)
             assert rp is not None
             assert len(rp.statements) == 1
             mcs = rp.statements[0].obj.mods
@@ -365,7 +365,7 @@ def test_get_agent_coordinates_phosphorylation():
                  'Two filler sentences will work. '
                  'MEK that is phosphorylated phosphorylates ERK.')
     for offline in offline_modes:
-        rp = reach.process_text(test_case)
+        rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
 
@@ -376,7 +376,7 @@ def test_get_agent_coordinates_phosphorylation():
 def test_get_agent_coordinates_activation():
     test_case = 'MEK1 activates ERK2'
     for offline in offline_modes:
-        rp = reach.process_text(test_case)
+        rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
         coords = [(0, 4), (15, 19)]
@@ -386,7 +386,7 @@ def test_get_agent_coordinates_activation():
 def test_get_agent_coordinates_regulate_amount():
     test_case = 'ERK increases the transcription of DUSP'
     for offline in offline_modes:
-        rp = reach.process_text(test_case)
+        rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
         coords = [(0, 3), (35, 39)]
@@ -396,7 +396,7 @@ def test_get_agent_coordinates_regulate_amount():
 def test_get_agent_coordinates_binding():
     test_case = 'Everyone has observed that MEK1 binds ERK2'
     for offline in offline_modes:
-        rp = reach.process_text(test_case)
+        rp = reach.process_text(test_case, offline=offline)
         stmt = rp.statements[0]
         annotations = stmt.evidence[0].annotations
         coords = [(27, 31), (38, 42)]
@@ -408,7 +408,7 @@ def test_get_agent_coordinates_translocation():
                  'is sustained may determine whether active ERK '
                  'translocates to the nucleus promotes cell growth.')
     for offline in offline_modes:
-        rp = reach.process_text(test_case)
+        rp = reach.process_text(test_case, offline=offline)
         stmt = [stmt for stmt in rp.statements if
                 isinstance(stmt, Translocation)][0]
         annotations = stmt.evidence[0].annotations
@@ -422,7 +422,7 @@ def test_get_agent_coordinates_phosphorylation_missing_controller():
                  'requires the recruitment of uPAR and VLDLr, which '
                  'function cooperatively')
     for offline in offline_modes:
-        rp = reach.process_text(test_case)
+        rp = reach.process_text(test_case, offline=offline)
         stmt = [stmt for stmt in rp.statements if
                 isinstance(stmt, Phosphorylation)][0]
         annotations = stmt.evidence[0].annotations
