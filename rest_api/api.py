@@ -276,6 +276,21 @@ def hume_process_jsonld():
 #    return _stmts_from_proc(sp)
 #
 
+@route('/sofia/process_text', method=['POST', 'OPTIONS'])
+@allow_cors
+def sofia_process_text():
+    """Process text with Sofia and return INDRA Statements."""
+    if request.method == 'OPTIONS':
+        return {}
+    response = request.body.read().decode('utf-8')
+    body = json.loads(response)
+    text = body.get('text')
+    auth = body.get('auth')
+    sp = sofia.process_text(text, auth=auth)
+    return _stmts_from_proc(sp)
+
+
+
 
 #   OUTPUT ASSEMBLY   #
 
