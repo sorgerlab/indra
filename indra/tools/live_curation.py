@@ -5,7 +5,7 @@ import pickle
 from flask import Flask, request, jsonify, abort, Response
 from indra.belief import wm_scorer, BeliefEngine
 
-scorer = wm_scorer.get_eidos_counts()
+scorer = wm_scorer.get_eidos_bayesian_scorer()
 
 
 app = Flask(__name__)
