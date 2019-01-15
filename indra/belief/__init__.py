@@ -251,10 +251,10 @@ class BayesianScorer(SimpleScorer):
                 self.prior_counts[source] = [0, 0]
             self.prior_counts[source][0] += pos
             self.prior_counts[source][1] += neg
-        for source, subtype in subtype_counts.items():
+        for source, subtype_dict in subtype_counts.items():
             if source not in self.subtype_counts:
                 self.subtype_counts[source] = {}
-            for subtype, (pos, neg) in subtype_counts.items():
+            for subtype, (pos, neg) in subtype_dict.items():
                 if subtype not in self.subtype_counts[source]:
                     self.subtype_counts[source][subtype] = [0, 0]
                 self.subtype_counts[source][subtype][0] += pos

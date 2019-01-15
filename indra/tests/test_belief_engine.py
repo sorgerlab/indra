@@ -5,7 +5,7 @@ from indra.statements import *
 from indra.belief import BeliefEngine, load_default_probs, _get_belief_package,\
     sample_statements, evidence_random_noise_prior, tag_evidence_subtype, \
     SimpleScorer
-from indra.belief import wm_scorer
+from indra.belief import wm_scorer, BayesianScorer
 
 default_probs = load_default_probs()
 
@@ -350,6 +350,22 @@ def test_wm_scorer():
     assert 'biopax' in scorer.prior_probs['syst']
     engine = BeliefEngine(scorer)
     engine.set_prior_probs([stmt])
+
+
+def test_bayesian_scorer():
+    prior_counts = {'hume': [3, 1]}
+    subtype_counts = {'eidos': {'rule1': [2, 2], 'rule2': [1, 4]}}
+    scorer = BayesianScorer(prior_counts, subtype_counts)
+    # Check initial probability assignment
+    assert scorer.prior_probs['rand']['hume'] == 0.2
+    assert scorer.prior_probs['syst']['hume'] == 0.05
+    assert scorer.subtype_probs['eidos']['rule1'] == 0.45
+    assert scorer.subtype_probs['eidos']['rule2'] == 0.75
+    # Now try to do some updates
+    scorer.update_counts({'hume': [0, 2]}, {})
+    assert scorer.prior_counts['hume'] == [3, 3]
+    scorer.update_counts({}, {'eidos': {'rule1': [6, 0]}})
+    assert scorer.subtype_counts['eidos']['rule1'] == [8, 2]
 
 
 @raises(AssertionError)
