@@ -193,8 +193,8 @@ def process_belscript(file_name, **kwargs):
     for further information, see
     pybel.readthedocs.io/en/latest/io.html#pybel.from_path
     Some keyword arguments we use here differ from the defaults
-    of PyBel, namely we set `citation_clearing` to False
-    and `identifier_validation` to False.
+    of PyBEL, namely we set `citation_clearing` to False
+    and `no_identifier_validation` to True.
 
     Parameters
     ----------
@@ -207,10 +207,10 @@ def process_belscript(file_name, **kwargs):
         A PybelProcessor object which contains INDRA Statements in
         bp.statements.
     """
-    citation_clearing = kwargs.get('citation_clearing', False)
-    kwargs['citation_clearing'] = citation_clearing
-    identifier_validation = kwargs.get('identifier_validation', False)
-    kwargs['identifier_validation'] = identifier_validation
+    if 'citation_clearing' not in kwargs:
+        kwargs['citation_clearing'] = False
+    if 'no_identifier_validation' not in kwargs:
+        kwargs['no_identifier_validation'] = True
     pybel_graph = pybel.from_path(file_name, **kwargs)
     return process_pybel_graph(pybel_graph)
 
