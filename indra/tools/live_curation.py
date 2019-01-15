@@ -1,6 +1,8 @@
+"""This REST service allows real-time curation and belief updates for
+a corpus of INDRA Statements."""
 import sys
 import pickle
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort, Response
 from indra.belief import wm_scorer, BeliefEngine
 
 scorer = wm_scorer.get_eidos_counts()
@@ -13,6 +15,7 @@ corpora = {}
 
 
 class Corpus(object):
+    """Represent a corpus of statements with curation."""
     def __init__(self, statements):
         self.statements = {st.uuid: st for st in statements}
         self.curations = {}
@@ -26,26 +29,43 @@ class Corpus(object):
 
 @app.route('/update_beliefs', methods=['POST'])
 def update_beliefs():
+    # Get input parameters
     corpus_id = request.json.get('corpus_id')
     curations = request.json.get('curations')
     return_beliefs = request.json.get('return_beliefs', False)
+
+    # Get the right corpus
+    try:
+        corpus = corpora[corpus_id]
+    except KeyError:
+        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+        return
+
+    # Start tabulating the curation counts
     prior_counts = {}
     subtype_counts = {}
-    corpus = corpora.get(corpus_id)
+    # Take each curation from the input
     for uuid, correct in curations.items():
+        # Save the curation in the corpus
+        # TODO: handle UUID not in the corpus
+        # TODO: handle already existing curation
         corpus.curations[uuid] = correct
         stmt = corpus.statements.get(uuid)
+        # Now take all the evidences of the statement and assume that
+        # they follow the correctness of the curation and contribute to
+        # counts for their sources
         for ev in stmt.evidence:
-            print(ev)
-            extraction_rule = ev.annotations.get('found_by')
-            print(extraction_rule)
+            # Make the index in the curation count list
             idx = 0 if correct else 1
+            extraction_rule = ev.annotations.get('found_by')
+            # If there is no extraction rule then we just score the source
             if not extraction_rule:
                 try:
                     prior_counts[ev.source_api][idx] += 1
                 except KeyError:
                     prior_counts[ev.source_api] = [0, 0]
                     prior_counts[ev.source_api][idx] += 1
+            # Otherwise we score the specific extraction rule
             else:
                 try:
                     subtype_counts[ev.source_api][extraction_rule][idx] += 1
@@ -54,11 +74,13 @@ def update_beliefs():
                         subtype_counts[ev.source_api] = {}
                     subtype_counts[ev.source_api][extraction_rule] = [0, 0]
                     subtype_counts[ev.source_api][extraction_rule][idx] += 1
-    print(scorer.subtype_counts)
+    # Finally, we update the scorer with the new curation counts
     scorer.update_counts(prior_counts, subtype_counts)
-    print(scorer.subtype_counts)
+    # If not belief return is needed, we just stop here
     if not return_beliefs:
         return jsonify({})
+    # Otherwise we rerun the belief calculation on the corpus with
+    # the updated scorer and return a dict of beliefs
     else:
         be = BeliefEngine(scorer)
         stmts = list(corpus.statements.values())
@@ -77,9 +99,10 @@ def _get_belief_dict(stmts):
 
 
 if __name__ == '__main__':
+    # Read a corpus from the given path as a pickle
     corpus_path = sys.argv[1]
     with open(corpus_path, 'rb') as fh:
         stmts = pickle.load(fh)
         corpora['1'] = Corpus(stmts)
-    print(corpora)
-    app.run()
+    # Run the app
+    app.run(host='0.0.0.0', port='8001')
