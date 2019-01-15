@@ -259,6 +259,8 @@ class BayesianScorer(SimpleScorer):
                     self.subtype_counts[source][subtype] = [0, 0]
                 self.subtype_counts[source][subtype][0] += pos
                 self.subtype_counts[source][subtype][1] += neg
+            print(self.prior_probs)
+            print(self.prior_counts)
         self.update_probs()
 
 

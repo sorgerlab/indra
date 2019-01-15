@@ -25,7 +25,9 @@ def update_beliefs():
     for uuid, correct in curations.items():
         stmt = corpus.get(uuid)
         for ev in stmt.evidence:
-            extraction_rule = ev.epistemics.get('found_by')
+            print(ev)
+            extraction_rule = ev.annotations.get('found_by')
+            print(extraction_rule)
             if not extraction_rule:
                 try:
                     prior_counts[ev.source_api][correct] += 1
@@ -34,12 +36,15 @@ def update_beliefs():
                     prior_counts[ev.source_api][correct] += 1
             else:
                 try:
-                    prior_counts[ev.source_api][extraction_rule][correct] += 1
+                    subtype_counts[ev.source_api][extraction_rule][correct] += 1
                 except KeyError:
-                    prior_counts[ev.source_api][extraction_rule] = [0, 0]
-                    prior_counts[ev.source_api][extraction_rule][correct] += 1
-
+                    if ev.source_api not in subtype_counts:
+                        subtype_counts[ev.source_api] = {}
+                    subtype_counts[ev.source_api][extraction_rule] = [0, 0]
+                    subtype_counts[ev.source_api][extraction_rule][correct] += 1
+    print(scorer.subtype_counts)
     scorer.update_counts(prior_counts, subtype_counts)
+    print(scorer.subtype_counts)
     if not return_beliefs:
         return jsonify({})
     else:
