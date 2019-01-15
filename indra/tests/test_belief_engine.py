@@ -366,6 +366,12 @@ def test_bayesian_scorer():
     assert scorer.prior_counts['hume'] == [3, 3]
     scorer.update_counts({}, {'eidos': {'rule1': [6, 0]}})
     assert scorer.subtype_counts['eidos']['rule1'] == [8, 2]
+    # Now check that the probabilities are up to date
+    assert scorer.prior_probs['rand']['hume'] == 0.45
+    assert scorer.prior_probs['syst']['hume'] == 0.05
+    assert_close_enough(scorer.subtype_probs['eidos']['rule1'],
+                        0.15)
+    assert scorer.subtype_probs['eidos']['rule2'] == 0.75
 
 
 @raises(AssertionError)
