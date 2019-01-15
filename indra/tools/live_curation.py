@@ -39,20 +39,21 @@ def update_beliefs():
             print(ev)
             extraction_rule = ev.annotations.get('found_by')
             print(extraction_rule)
+            idx = 0 if correct else 1
             if not extraction_rule:
                 try:
-                    prior_counts[ev.source_api][correct] += 1
+                    prior_counts[ev.source_api][idx] += 1
                 except KeyError:
                     prior_counts[ev.source_api] = [0, 0]
-                    prior_counts[ev.source_api][correct] += 1
+                    prior_counts[ev.source_api][idx] += 1
             else:
                 try:
-                    subtype_counts[ev.source_api][extraction_rule][correct] += 1
+                    subtype_counts[ev.source_api][extraction_rule][idx] += 1
                 except KeyError:
                     if ev.source_api not in subtype_counts:
                         subtype_counts[ev.source_api] = {}
                     subtype_counts[ev.source_api][extraction_rule] = [0, 0]
-                    subtype_counts[ev.source_api][extraction_rule][correct] += 1
+                    subtype_counts[ev.source_api][extraction_rule][idx] += 1
     print(scorer.subtype_counts)
     scorer.update_counts(prior_counts, subtype_counts)
     print(scorer.subtype_counts)
