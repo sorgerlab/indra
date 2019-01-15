@@ -104,9 +104,6 @@ class SimpleScorer(BeliefScorer):
         self.update_probs(prior_probs, subtype_probs)
 
     def update_probs(self, prior_probs=None, subtype_probs=None):
-        print(self.prior_probs)
-        print(self.subtype_probs)
-        print('--------------')
         if prior_probs:
             for key in ('rand', 'syst'):
                 self.prior_probs[key].update(prior_probs.get(key, {}))
@@ -114,10 +111,9 @@ class SimpleScorer(BeliefScorer):
             logger.debug("Prior probabilities for %s errors: %s"
                          % (err_type, source_dict))
         self.subtype_probs = subtype_probs
-        print(self.prior_probs)
-        print(self.subtype_probs)
 
     def score_evidence_list(self, evidences):
+        """Return belief score given a list of supporting evidences."""
         def _score(evidences):
             if not evidences:
                 return 0
@@ -203,7 +199,6 @@ class SimpleScorer(BeliefScorer):
             List of statements to check
         """
         sources = set()
-        print(statements)
         for stmt in statements:
             sources |= set([ev.source_api for ev in stmt.evidence])
         for err_type in ('rand', 'syst'):
@@ -215,14 +210,32 @@ class SimpleScorer(BeliefScorer):
 
 
 class BayesianScorer(SimpleScorer):
+    """This is a belief scorer which assumes a Beta prior and a set of prior
+    counts of correct and incorrect instances for a given source. It exposes
+    and interface to take additional counts and update its probability
+    parameters which can then be used to calculate beliefs on a set of
+    Statements.
+
+    Parameters
+    ----------
+    prior_counts : dict
+        A dictionary of counts of the form [pos, neg] for
+        each source.
+    subtype_counts : dict
+        A dictionary of counts of the form [pos, neg] for
+        each subtype within a source.
+    """
     def __init__(self, prior_counts, subtype_counts):
         self.prior_probs = load_default_probs()
         self.subtype_probs = {}
         self.prior_counts = prior_counts
         self.subtype_counts = subtype_counts
+        # Set the probability estimates based on the counts
         self.update_probs()
 
     def update_probs(self):
+        """Update the internal probability values given the counts."""
+        # We deal with the prior probsfirst
         # This is a fixed assumed value for systematic error
         syst_error = 0.05
         prior_probs = {'syst': {}, 'rand': {}}
@@ -233,6 +246,7 @@ class BayesianScorer(SimpleScorer):
             prior_probs['syst'][source] = syst_error
             prior_probs['rand'][source] = \
                 1 - min((p / (n + p), 1-syst_error)) - syst_error
+        # Next we deal with subtype probs based on counts
         subtype_probs = {}
         for source, entry in self.subtype_counts.items():
             for rule, (p, n) in entry.items():
@@ -243,9 +257,22 @@ class BayesianScorer(SimpleScorer):
                     subtype_probs[source] = {}
                 subtype_probs[source][rule] = \
                     1 - min((p / (n + p), 1-syst_error)) - syst_error
+        # Finally we propagate this into the full probability
+        # data structures of the parent class
         super().update_probs(prior_probs, subtype_probs)
 
     def update_counts(self, prior_counts, subtype_counts):
+        """Update the internal counts based on given new counts.
+
+        Parameters
+        ----------
+        prior_counts : dict
+            A dictionary of counts of the form [pos, neg] for
+            each source.
+        subtype_counts : dict
+            A dictionary of counts of the form [pos, neg] for
+            each subtype within a source.
+        """
         for source, (pos, neg) in prior_counts.items():
             if source not in self.prior_counts:
                 self.prior_counts[source] = [0, 0]
@@ -259,8 +286,6 @@ class BayesianScorer(SimpleScorer):
                     self.subtype_counts[source][subtype] = [0, 0]
                 self.subtype_counts[source][subtype][0] += pos
                 self.subtype_counts[source][subtype][1] += neg
-            print(self.prior_probs)
-            print(self.prior_counts)
         self.update_probs()
 
 
