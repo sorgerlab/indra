@@ -3,7 +3,7 @@ import logging
 import pybel.constants as pc
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
-from pybel.resources.definitions.definitions import get_bel_resource
+from pybel.resources import get_bel_resource
 from indra.statements import *
 from indra.sources.bel.rdf_processor import bel_to_indra, chebi_name_id
 from indra.databases import hgnc_client, uniprot_client
@@ -183,8 +183,11 @@ class PybelProcessor(object):
             self.unhandled.append((u_data, v_data, edge_data))
             return
         obj_mod = edge_data.get(pc.OBJECT)
-        deg_polarity = (-1 if obj_mod and obj_mod[pc.MODIFIER] == pc.DEGRADATION
-                        else 1)
+        deg_polarity = (
+            -1
+            if obj_mod and obj_mod.get(pc.MODIFIER) == pc.DEGRADATION else
+            1
+        )
         rel_polarity = (1 if edge_data[pc.RELATION] in
                         pc.CAUSAL_INCREASE_RELATIONS else -1)
         # Set polarity accordingly based on the relation type and whether
@@ -341,8 +344,7 @@ def get_agent(node_data, node_modifier_data=None):
     node_func = node_data[pc.FUNCTION]
     if node_func not in (pc.PROTEIN, pc.RNA, pc.BIOPROCESS, pc.COMPLEX,
                          pc.PATHOLOGY, pc.ABUNDANCE, pc.MIRNA):
-        mod_data = ('No node data' if not node_modifier_data
-                    else node_modifier_data.get(pc.CNAME))
+        mod_data = node_modifier_data or 'No node data'
         logger.info("Nodes of type %s not handled: %s",
                     node_func, mod_data)
         return None
@@ -563,7 +565,9 @@ class AnnotationManager(object):
             self.resources[key] = res
 
     def get_mapping(self, key, value):
-        return self.resources[key]['Values'][value]
+        resource = self.resources.get(key)
+        if resource is not None:
+            return resource['Values'][value]
 
 
 def _get_all_pmods(node_data):
@@ -609,7 +613,8 @@ def _get_all_pmods(node_data):
 def _get_activity_condition(node_modifier_data):
     if node_modifier_data is None or node_modifier_data == {}:
         return None
-    if node_modifier_data[pc.MODIFIER] != pc.ACTIVITY:
+    modifier = node_modifier_data.get(pc.MODIFIER)
+    if modifier is None or modifier != pc.ACTIVITY:
         return None
     effect = node_modifier_data.get(pc.EFFECT)
     # No specific effect, just return generic activity
@@ -633,10 +638,13 @@ def _get_translocation_target(node_modifier_data):
     # First check if there is a translocation modifier
     if node_modifier_data is None or node_modifier_data == {}:
         return None
-    if node_modifier_data[pc.MODIFIER] != pc.TRANSLOCATION:
+    modifier = node_modifier_data.get(pc.MODIFIER)
+    if modifier is None or modifier != pc.TRANSLOCATION:
         return None
     # Next, make sure there is information on the translocation target
-    transloc_data = node_modifier_data[pc.EFFECT]
+    transloc_data = node_modifier_data.get(pc.EFFECT)
+    if transloc_data is None:
+        return None
     to_loc_info = transloc_data.get(pc.TO_LOC)
     if not to_loc_info:
         return None
