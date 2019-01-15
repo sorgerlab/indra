@@ -29,9 +29,12 @@ class Corpus(object):
 
 @app.route('/update_beliefs', methods=['POST'])
 def update_beliefs():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
-    curations = request.json.get('curations')
+    curations = request.json.get('curations', {})
     return_beliefs = request.json.get('return_beliefs', False)
 
     # Get the right corpus
