@@ -513,3 +513,26 @@ def test_filter_namespace_concepts_list():
                                         ['fishery', 'government'], 'all',
                                         match_suffix=True)
     assert [stmts[1]] == fs, fs
+
+
+def test_merge_groundings():
+    refs1 = {'UN': [('x', 0.8), ('y', 0.7)],
+             'B': 'x',
+             'C': 'y'}
+    refs2 = {'UN': [('x', 0.9), ('y', 0.6), ('z', 0.5)],
+             'B': 'x',
+             'D': 'z'}
+    stmts = [Influence(Concept('a', db_refs=refs1),
+                       Concept('b', db_refs=refs2),
+                       evidence=[Evidence(source_api='eidos', text='1')]),
+             Influence(Concept('a', db_refs=refs2),
+                       Concept('b', db_refs=refs1),
+                       evidence=[Evidence(source_api='eidos', text='2')])]
+    stmts = ac.run_preassembly(stmts)
+    assert len(stmts) == 1
+    stmts = ac.merge_groundings(stmts)
+    assert stmts[0].subj.db_refs == \
+           {'UN': [('x', 0.9), ('y', 0.6), ('z', 0.5)],
+            'B': 'x', 'C': 'y', 'D': 'z'}, \
+        stmts[0].subj.db_refs
+    assert stmts[0].obj.db_refs == stmts[0].subj.db_refs
