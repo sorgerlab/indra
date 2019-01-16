@@ -28,11 +28,11 @@ install:
   # - sudo apt-get update
   # - sudo apt-get install -y oracle-java11-installer
   - cd $TRAVIS_BUILD_DIR
+  - export JAVA_HOME="/usr/lib/jvm/java-11-oracle/"
   - readlink -f `which javac`
   - readlink -f `which java`
   # - sudo update-java-alternatives -s java-11-oracle
   - sudo apt-get install oracle-java11-set-default
-  - export JAVA_HOME="/usr/lib/jvm/java-11-oracle/"
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 nose-timer flask nltk reportlab
   - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
