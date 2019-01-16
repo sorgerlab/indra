@@ -119,6 +119,43 @@ def map_grounding(stmts_in, **kwargs):
     return stmts_out
 
 
+def merge_groundings(stmts):
+    def surface_grounding(stmt):
+        # Find the "best" grounding for a given concept and its evidences
+        # and surface that
+        for idx, concept in enumerate(stmt.agent_list()):
+            aggregate_groundings = {}
+            for ev in stmt.evidence:
+                if 'agents' in ev.annotations:
+                    groundings = ev.annotations['agents']['raw_grounding'][idx]
+                    for ns, value in groundings.items():
+                        if ns not in aggregate_groundings:
+                            aggregate_groundings[ns] = []
+                        if isinstance(value, list):
+                            aggregate_groundings[ns] += value
+                        else:
+                            aggregate_groundings[ns].append(value)
+            best_groundings = get_best_groundings(aggregate_groundings)
+            concept.db_refs = best_groundings
+
+    def get_best_groundings(aggregate_groundings):
+        best_groundings = {}
+        for ns, values in aggregate_groundings.items():
+            if isinstance(values[0], (tuple, list)):
+                best_groundings[ns] = \
+                    sorted(values, key=lambda x: x[1], reverse=True)
+                # TODO: keep    only the best score of each entry to
+                # eliminate duplicates
+            else:
+                best_groundings[ns] = max(set(values), key=values.count)
+        return best_groundings
+
+    for stmt in stmts:
+        print(stmt)
+        surface_grounding(stmt)
+    return stmts
+
+
 def map_sequence(stmts_in, **kwargs):
     """Map sequences using the SiteMapper.
 
