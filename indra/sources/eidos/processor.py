@@ -119,17 +119,21 @@ class EidosProcessor(object):
             subj_geo = subj_delta.pop('geo_context', None)
             obj_geo = obj_delta.pop('geo_context', None)
             if subj_timex or subj_geo:
-                wc = WorldContext(time=subj_timex, geo_location=subj_geo).to_json()
+                wc = WorldContext(time=subj_timex,
+                                  geo_location=subj_geo).to_json()
                 evidence.annotations['subj_context'] = wc
             if obj_timex or obj_geo:
-                wc = WorldContext(time=obj_timex, geo_location=obj_geo).to_json()
+                wc = WorldContext(time=obj_timex,
+                                  geo_location=obj_geo).to_json()
                 evidence.annotations['obj_context'] = wc
 
-            # In addition, for the time being we also put the adjectives into
-            # annotations since they could otherwise get squashed upon
-            # preassembly
+            # In addition, for the time being we also put the adjectives and
+            # polarities into annotations since they could otherwise get
+            # squashed upon preassembly
             evidence.annotations['subj_adjectives'] = subj_delta['adjectives']
             evidence.annotations['obj_adjectives'] = obj_delta['adjectives']
+            evidence.annotations['subj_polarity'] = subj_delta['polarity']
+            evidence.annotations['obj_polarity'] = obj_delta['polarity']
 
             st = Influence(self.get_concept(subj), self.get_concept(obj),
                            subj_delta, obj_delta, evidence=[evidence])
