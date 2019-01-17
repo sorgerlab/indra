@@ -46,6 +46,5 @@ def get_eidos_scorer():
     subtype_probs = {'eidos':
                      {k: 1.0-min(v, 0.95)-syst_error for k, v
                       in zip(table['RULE'], table['% correct'])}}
-    print(subtype_probs)
     scorer = SimpleScorer(prior_probs, subtype_probs)
     return scorer

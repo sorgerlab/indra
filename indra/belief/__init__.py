@@ -259,7 +259,7 @@ class BayesianScorer(SimpleScorer):
                     1 - min((p / (n + p), 1-syst_error)) - syst_error
         # Finally we propagate this into the full probability
         # data structures of the parent class
-        super().update_probs(prior_probs, subtype_probs)
+        super(BayesianScorer, self).update_probs(prior_probs, subtype_probs)
 
     def update_counts(self, prior_counts, subtype_counts):
         """Update the internal counts based on given new counts.
