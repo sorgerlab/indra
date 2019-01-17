@@ -141,7 +141,10 @@ def merge_groundings(stmts):
     def get_best_groundings(aggregate_groundings):
         best_groundings = {}
         for ns, values in aggregate_groundings.items():
-            if isinstance(values[0], (tuple, list)):
+            # There are 3 possibilities here
+            # 1. All the entries in the list are scored in which case we
+            # get unique entries and sort them by score
+            if all([isinstance(v, (tuple, list)) for v in values]):
                 best_groundings[ns] = []
                 for unique_value in {v[0] for v in values}:
                     scores = [v[1] for v in values if v[0] == unique_value]
@@ -150,8 +153,19 @@ def merge_groundings(stmts):
                 best_groundings[ns] = \
                     sorted(best_groundings[ns], key=lambda x: x[1],
                            reverse=True)
-            else:
+            # 2. All the entries in the list are unscored in which case we
+            # get the highest frequency entry
+            elif all([not isinstance(v, (tuple, list)) for v in values]):
                 best_groundings[ns] = max(set(values), key=values.count)
+            # 3. There is a mixture, which can happen when some entries were
+            # mapped with scores and others had no scores to begin with.
+            # In this case, we again pick the highest frequency non-scored
+            # entry assuming that the unmapped version is more reliable.
+            else:
+                unscored_vals = [v for v in values
+                                 if not isinstance(v, (tuple, list))]
+                best_groundings[ns] = max(set(unscored_vals),
+                                          key=unscored_vals.count)
         return best_groundings
 
     for stmt in stmts:
