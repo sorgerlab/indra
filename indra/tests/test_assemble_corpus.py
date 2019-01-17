@@ -536,3 +536,20 @@ def test_merge_groundings():
             'B': 'x', 'C': 'y', 'D': 'z'}, \
         stmts[0].subj.db_refs
     assert stmts[0].obj.db_refs == stmts[0].subj.db_refs
+
+
+def test_merge_deltas():
+    d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
+    d2 = {'adjectives': [], 'polarity': -1}
+    d3 = {'adjectives': [], 'polarity': None}
+    d4 = {'adjectives': [], 'polarity': 1}
+    d5 = {'adjectives': ['d'], 'polarity': None}
+    d6 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
+    d7 = {'adjectives': ['g'], 'polarity': 1}
+    d8 = {'adjectives': [], 'polarity': None}
+    d9 = {'adjectives': [], 'polarity': None}
+    d10 = {'adjectives': ['d'], 'polarity': None}
+    stmts = [Influence(Concept('a'), Concept('b'), subj_delta=sd, obj_delta=od)
+             for sd, od in zip([d1, d2], [d7, d6])]
+    stmts = ac.run_preassembly(stmts, return_toplevel=True)
+    print(stmts)
