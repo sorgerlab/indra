@@ -1,5 +1,10 @@
 // CURATION FUNCTIONS
 
+// Force activate the sub items of the table of contents after page load
+$(document).ready(function(){
+    $('a[href="#statements"]').addClass('active')
+})
+
 // Variables
 var pubmed_fetch = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
 var latestSubmission = {
