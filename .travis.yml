@@ -9,8 +9,8 @@ python:
 before_install:
   - sudo add-apt-repository --yes ppa:linuxuprising/java
   - sudo apt-get update
-  - echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
-  - echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
+  - echo debconf shared/accepted-oracle-license-v1-2 select true | sudo debconf-set-selections
+  - echo debconf shared/accepted-oracle-license-v1-2 seen true | sudo debconf-set-selections
   - pip install numpy scipy sympy cython nose lxml matplotlib==1.5.0 pandas
   - sudo pip2 install numpy
 install:
@@ -28,6 +28,8 @@ install:
   # - sudo apt-get update
   # - sudo apt-get install -y oracle-java11-installer
   - cd $TRAVIS_BUILD_DIR
+  - readlink -f `which javac`
+  - readlink -f `which java`
   - sudo apt-get install oracle-java11-set-default
   - readlink -f `which javac`
   - readlink -f `which java`
