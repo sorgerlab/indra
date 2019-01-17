@@ -1920,16 +1920,20 @@ class Influence(IncreaseAmount):
         # Check agent arguments
         subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
         obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
+        op = other.overall_polarity()
+        sp = self.overall_polarity()
         # If we have "less" polarity here than in other then it's
         # not a refinement.
         if self.polarity_count() < other.polarity_count():
             delta_refinement = False
+        # If we have some polarity and the other doesn't then it's
+        # always a refinement
+        elif sp is not None and op is None:
+            delta_refinement = True
         # Otherwise we need to check if the overall polarity matches, if it
         # does then this is a refinement. Otherwise it isn't.
-        elif self.overall_polarity() == other.overall_polarity():
-            delta_refinement = True
         else:
-            delta_refinement = False
+            delta_refinement = (op == sp)
         return (subj_refinement and obj_refinement and
                 delta_refinement)
 

@@ -1790,13 +1790,13 @@ def test_influence_refinement_of():
     # Opposite polarity
     assert not I(neg_noadj, nopol_noadj).refinement_of(
                I(pos_noadj, nopol_noadj), hierarchies)
-    # Adjective subsets
+    # Adjectives can be in any relation
     assert I(pos_adj2, nopol_noadj).refinement_of(
            I(pos_adj, nopol_noadj), hierarchies)
-    assert not I(pos_adj3, nopol_noadj).refinement_of(
-               I(pos_adj, nopol_noadj), hierarchies)
-    assert not I(pos_adj2, nopol_noadj).refinement_of(
-               I(pos_adj3, nopol_noadj), hierarchies)
+    assert I(pos_adj3, nopol_noadj).refinement_of(
+           I(pos_adj, nopol_noadj), hierarchies)
+    assert I(pos_adj2, nopol_noadj).refinement_of(
+           I(pos_adj3, nopol_noadj), hierarchies)
 
     # Equivalences
     assert not I(nopol_adj, neg_noadj).equals(
@@ -1810,11 +1810,15 @@ def test_influence_refinement_of():
     # Matches keys
     assert I(nopol_adj, neg_noadj).matches_key() != \
            I(nopol_adj, nopol_noadj).matches_key()
-    assert I(nopol_adj, neg_noadj).matches_key() != \
+    assert I(nopol_adj, neg_noadj).matches_key() == \
            I(nopol_noadj, neg_noadj).matches_key()
     pos_adj4 = {'polarity': 1, 'adjectives': ['large', 'significant']}
     assert I(pos_adj3, nopol_noadj).matches_key() == \
            I(pos_adj4, nopol_noadj).matches_key()
+    assert I(pos_adj, neg_adj).matches_key() == \
+           I(neg_adj, pos_adj).matches_key()
+    assert I(pos_adj, pos_adj).matches_key() == \
+           I(neg_adj, neg_adj).matches_key()
 
     # Contradicts
     assert I(pos_adj, neg_noadj).contradicts(
