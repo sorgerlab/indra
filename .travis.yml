@@ -29,8 +29,10 @@ install:
   # - sudo apt-get install -y oracle-java11-installer
   # - readlink -f `which javac`
   # - readlink -f `which java`
+  # - export JAVA_HOME="/usr/lib/jvm/java-11-oracle/"
   - cd $TRAVIS_BUILD_DIR
-  - export JAVA_HOME="/usr/lib/jvm/java-11-oracle/"
+  - echo `locate '*java-11*libjvm.so'`
+  - echo `dirname $(locate '*java-11*libjvm.so')`
   - export LD_LIBRARY_PATH="`dirname $(locate '*java-11*libjvm.so')`:$LD_LIBRARY_PATH"
   - sudo update-java-alternatives -s java-11-oracle
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 nose-timer flask nltk reportlab
