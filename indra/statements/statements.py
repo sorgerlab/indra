@@ -1958,23 +1958,32 @@ class Influence(IncreaseAmount):
         return mk_str(key)
 
     def contradicts(self, other, hierarchies):
-        # First case is if they are "consistent" and related
-        if self.entities_match(other) or \
-            self.refinement_of(other, hierarchies) or \
-            other.refinement_of(self, hierarchies):
-            sp = self.overall_polarity()
-            op = other.overall_polarity()
-            if sp and op and sp * op == -1:
+        # Make sure the statement types match
+        if stmt_type(self) != stmt_type(other):
+            return False
+
+        # Determine some refinements and opposites up front
+        subj_ref = self.subj.refinement_of(other.subj, hierarchies) or \
+            other.subj.refinement_of(self.subj, hierarchies)
+        obj_ref = self.obj.refinement_of(other.obj, hierarchies) or \
+            other.obj.refinement_of(self.obj, hierarchies)
+        subj_opp = self.subj.is_opposite(other.subj, hierarchies)
+        obj_opp = self.obj.is_opposite(other.obj, hierarchies)
+        sp = self.overall_polarity()
+        op = other.overall_polarity()
+
+        # If all entities are "compatible" or mutually opposites
+        # but the polarities are explicitly different then this is
+        # a contradiction
+        if (subj_ref and obj_ref) or (subj_opp and obj_opp):
+            if sp is not None and op is not None and sp != op:
                 return True
-        # Second case is if they are "opposites" and related
-        if (self.subj.entity_matches(other.subj) and \
-            self.obj.is_opposite(other.obj, hierarchies)) or \
-           (self.obj.entity_matches(other.obj) and \
-            self.subj.is_opposite(other.subj, hierarchies)):
-            sp = self.overall_polarity()
-            op = other.overall_polarity()
-            if sp and op and sp * op == 1:
+        # If one entity is the oppositve and the other compatible and the
+        # polarities are the same then this is a contradiction
+        if (subj_ref and obj_opp) or (subj_opp and obj_ref):
+            if sp is not None and op is not None and sp == op:
                 return True
+
         return False
 
     def overall_polarity(self):
