@@ -266,12 +266,15 @@ class EidosProcessor(object):
             if polarity is None:
                 if state['type'] == 'DEC':
                     polarity = -1
-                    adjectives += [mod['text'] for mod in
-                                   state.get('modifiers', [])]
+                    # Handle None entry here
+                    mods = state.get('modifiers') if \
+                        state.get('modifiers') else []
+                    adjectives += [mod['text'] for mod in mods]
                 elif state['type'] == 'INC':
                     polarity = 1
-                    adjectives += [mod['text'] for mod in
-                                   state.get('modifiers', [])]
+                    mods = state.get('modifiers') if \
+                        state.get('modifiers') else []
+                    adjectives += [mod['text'] for mod in mods]
                 elif state['type'] == 'QUANT':
                     adjectives.append(state['text'])
             if state['type'] == 'TIMEX':
