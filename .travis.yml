@@ -18,23 +18,10 @@ install:
   - sudo apt-get install libstdc++6
   - sudo apt-get install graphviz
   - sudo apt-get install -y oracle-java11-installer || true
-  # - cd /var/lib/dpkg/info
-  # - sudo sed -i 's|JAVA_VERSION=8u171|JAVA_VERSION=XXXXX|' oracle-java11-installer.*
-  # - sudo sed -i 's|JAVA_VERSION_2nd_PART=0.2|JAVA_VERSION_2nd_PART=X.X|' oracle-java11-installer.*
-  # - sudo sed -i 's|JAVA_VERSION_MINOR=0.2|JAVA_VERSION_2nd_PART=X.X|' oracle-java11-installer.*
-  # - sudo sed -i 's|PARTNER_URL=http://download.oracle.com/otn-pub/java/jdk/8u171-b11/512cd62ec5174c3487ac17c61aaa89e8/|PARTNER_URL=http://download.oracle.com/otn-pub/java/jdk/8u201-b09/e900624294a745ca9bb638528f13cb16/|' oracle-java8-installer.*
-  # - sudo sed -i 's|SHA256SUM_TGZ="b6dd2837efaaec4109b36cfbb94a774db100029f98b0d78be68c27bec0275982"|SHA256SUM_TGZ="4ce13fa548631f288a232332f94db2f6f7ad155ee44236bb82ecbd59ff4836b9"|' oracle-java8-installer.*
-  # - sudo sed -i 's|J_DIR=jdk1.8.0_171|J_DIR=jdk1.8.0_201|' oracle-java11-installer.*
-  # - sudo apt-get update
-  # - sudo apt-get install -y oracle-java11-installer
-  # - readlink -f `which javac`
-  # - readlink -f `which java`
-  # - export JAVA_HOME="/usr/lib/jvm/java-11-oracle/"
   - cd $TRAVIS_BUILD_DIR
-  - echo `locate '*java-11*libjvm.so'`
-  - echo `dirname $(locate '*java-11*libjvm.so')`
-  - export LD_LIBRARY_PATH="`dirname $(locate '*java-11*libjvm.so')`:$LD_LIBRARY_PATH"
   - sudo update-java-alternatives -s java-11-oracle
+  - readlink -f `which javac`
+  - readlink -f `which java`
   - pip install pygraphviz pydot jsonschema coverage python-coveralls boto3 nose-timer flask nltk reportlab
   - pip install git+https://github.com/bgyori/paths_graph.git@networkx2
   - pip install doctest-ignore-unicode
