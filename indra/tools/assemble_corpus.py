@@ -142,16 +142,19 @@ def merge_groundings(stmts):
         best_groundings = {}
         for ns, values in aggregate_groundings.items():
             if isinstance(values[0], (tuple, list)):
+                best_groundings[ns] = []
+                for unique_value in {v[0] for v in values}:
+                    scores = [v[1] for v in values if v[0] == unique_value]
+                    best_groundings[ns].append((unique_value, max(scores)))
+
                 best_groundings[ns] = \
-                    sorted(values, key=lambda x: x[1], reverse=True)
-                # TODO: keep    only the best score of each entry to
-                # eliminate duplicates
+                    sorted(best_groundings[ns], key=lambda x: x[1],
+                           reverse=True)
             else:
                 best_groundings[ns] = max(set(values), key=values.count)
         return best_groundings
 
     for stmt in stmts:
-        print(stmt)
         surface_grounding(stmt)
     return stmts
 

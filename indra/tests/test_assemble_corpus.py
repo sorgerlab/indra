@@ -532,7 +532,7 @@ def test_merge_groundings():
     assert len(stmts) == 1
     stmts = ac.merge_groundings(stmts)
     assert stmts[0].subj.db_refs == \
-           {'UN': [('x', 0.9), ('y', 0.6), ('z', 0.5)],
+           {'UN': [('x', 0.9), ('y', 0.7), ('z', 0.5)],
             'B': 'x', 'C': 'y', 'D': 'z'}, \
         stmts[0].subj.db_refs
     assert stmts[0].obj.db_refs == stmts[0].subj.db_refs
