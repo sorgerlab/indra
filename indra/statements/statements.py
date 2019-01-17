@@ -1913,23 +1913,6 @@ class Influence(IncreaseAmount):
         self.obj_delta = obj_delta
 
     def refinement_of(self, other, hierarchies):
-        def delta_refinement(dself, dother):
-            # Polarities are either equal
-            if dself['polarity'] == dother['polarity']:
-                pol_refinement = True
-            # Or this one has a polarity and the other doesn't
-            elif dself['polarity'] is not None and dother['polarity'] is None:
-                pol_refinement = True
-            else:
-                pol_refinement = False
-
-            # If other's adjectives are a subset of this
-            if set(dother['adjectives']).issubset(set(dself['adjectives'])):
-                adj_refinement = True
-            else:
-                adj_refinement = False
-            return pol_refinement and adj_refinement
-
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -1937,10 +1920,18 @@ class Influence(IncreaseAmount):
         # Check agent arguments
         subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
         obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
-        subjd_refinement = delta_refinement(self.subj_delta, other.subj_delta)
-        objd_refinement = delta_refinement(self.obj_delta, other.obj_delta)
+        # If we have "less" polarity here than in other then it's
+        # not a refinement.
+        if self.polarity_count() < other.polarity_count():
+            delta_refinement = False
+        # Otherwise we need to check if the overall polarity matches, if it
+        # does then this is a refinement. Otherwise it isn't.
+        elif self.overall_polarity() == other.overall_polarity():
+            delta_refinement = True
+        else:
+            delta_refinement = False
         return (subj_refinement and obj_refinement and
-                subjd_refinement and objd_refinement)
+                delta_refinement)
 
     def equals(self, other):
         def delta_equals(dself, dother):
@@ -1959,20 +1950,10 @@ class Influence(IncreaseAmount):
         # if both polarities are given, i.e. +/+ matches -/-. Also, if only
         # one polarity is given, we match the overall polarity e.g.
         # None/+, +/None will match.
-        sp = self.subj_delta['polarity']
-        op = self.obj_delta['polarity']
-        if sp is not None and op is not None:
-            pol_count = 2
-        elif sp is not None or op is not None:
-            pol_count = 1
-        else:
-            pol_count = 0
-        overall_polarity = self.overall_polarity()
-
         key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(),
-               overall_polarity,
-               pol_count
+               self.polarity_count(),
+               self.overall_polarity()
                )
         return mk_str(key)
 
@@ -2009,6 +1990,10 @@ class Influence(IncreaseAmount):
         else:
             pol = p1 * p2
         return pol
+
+    def polarity_count(self):
+        return ((1 if self.subj_delta['polarity'] is not None else 0) +
+                (1 if self.obj_delta['polarity'] is not None else 0))
 
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
