@@ -130,8 +130,8 @@ def extract_text(xml_string):
     # uses regex to search for tags either of the form 'p' or '{<namespace>}p'
     for element in tree.iter():
         if isinstance(element.tag, basestring) and \
-           re.search('(^|})p$', element.tag) and element.text:
-            paragraphs.append(' '.join(element.text.split()))
+           re.search('(^|})[p|title]$', element.tag) and element.text:
+            paragraphs.append(' '.join(element.itertext()).strip())
     if paragraphs:
         return ' '.join(paragraphs).strip()
     else:
