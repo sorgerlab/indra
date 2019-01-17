@@ -173,6 +173,50 @@ def merge_groundings(stmts):
     return stmts
 
 
+def merge_deltas(stmt):
+    # Note: adjectives have to be aligned per evidence so they
+    # would have to be padded with Nones in some cases
+    # Note: there can only be a single polarity per subj/obj but
+    # those have to be consistent with the overall polarity and
+    # so need to align them
+    deltas = defaultdict(list)
+    for ev in stmt.evidence:
+        for role in ('subj', 'obj'):
+            for info in ('polarity', 'adjectives'):
+                key = (role, info)
+                entry = ev.annotations.get('%s_%s' % key)
+                deltas[key].append(entry if entry else None)
+    # POLARITY
+    # For polarity we need to work in pairs
+    polarity_pairs = list(zip(deltas[('subj', 'polarity'),
+                              deltas[('obj', 'polarity')]))
+    # If we have some fully defined pairs, we take the most common one
+    both_pols = [pair for pair in polarity_pairs if pair[0] is not None and
+                 pair[1] is not None]
+    if both_pols:
+        subj_pol, obj_pol = max(set(both_pols), key=both_pols.count)
+        stmt.subj_delta['polarity'] = subj_pol
+        stmt.obj_delta['polarity'] = obj_pol
+    # Otherwise we prefer the case when at least one entry of the pair is given
+    else:
+        one_pol = [pair for pair in polarity_pairs if pair[0] is not None or
+                   pair[1] is not None]
+        subj_pol, obj_pol = max(set(one_pol), key=one_pol.count)
+        stmt.subj_delta['polarity'] = subj_pol
+        stmt.obj_delta['polarity'] = obj_pol
+
+    # ADJECTIVES
+    for attr, role in ((stmt.subj_delta, 'subj'), (stmt.obj_delta, 'obj')):
+        all_adjectives = []
+        for adj in deltas[(role, 'adjectives')]:
+            if isinstance(adj, list):
+                all_adjectives += adj
+            elif adj is not None:
+                all_adjectives.append(adj)
+        attr['adjectives'] = all_adjectives
+
+
+
 def map_sequence(stmts_in, **kwargs):
     """Map sequences using the SiteMapper.
 
