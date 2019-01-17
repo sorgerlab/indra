@@ -1955,12 +1955,25 @@ class Influence(IncreaseAmount):
         return matches
 
     def matches_key(self):
+        # With polarities, here, the goal is to match overall polarity
+        # if both polarities are given, i.e. +/+ matches -/-. Also, if only
+        # one polarity is given, we match the overall polarity e.g.
+        # None/+, +/None will match.
+        sp = self.subj_delta['polarity']
+        op = self.obj_delta['polarity']
+        if sp is not None and op is not None:
+            pol_count = 2
+        elif sp is not None or op is not None:
+            pol_count = 1
+        else:
+            pol_count = 0
+        overall_polarity = self.overall_polarity()
+
         key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(),
-               self.subj_delta['polarity'],
-               sorted(list(set(self.subj_delta['adjectives']))),
-               self.obj_delta['polarity'],
-               sorted(list(set(self.obj_delta['adjectives']))))
+               overall_polarity,
+               pol_count
+               )
         return mk_str(key)
 
     def contradicts(self, other, hierarchies):
