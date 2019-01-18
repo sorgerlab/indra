@@ -74,7 +74,11 @@ class IndraDBRestResponse(object):
 
     def get_ev_count(self, stmt):
         """Get the total evidence count for a statement."""
-        return self.__evidence_counts.get(str(stmt.get_hash(shallow=True)))
+        return self.get_ev_count_by_hash(stmt.get_hash(shallow=True))
+
+    def get_ev_count_by_hash(self, stmt_hash):
+        """Get the total evidence count for a statement hash."""
+        return self.__evidence_counts.get(str(stmt_hash))
 
     def get_hash_statements_dict(self):
         """Return a dict of Statements keyed by hashes."""
