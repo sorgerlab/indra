@@ -245,7 +245,7 @@ class BayesianScorer(SimpleScorer):
                 continue
             prior_probs['syst'][source] = syst_error
             prior_probs['rand'][source] = \
-                1 - min((p / (n + p), 1-syst_error)) - syst_error
+                1 - min((float(p) / (n + p), 1-syst_error)) - syst_error
         # Next we deal with subtype probs based on counts
         subtype_probs = {}
         for source, entry in self.subtype_counts.items():
@@ -256,7 +256,7 @@ class BayesianScorer(SimpleScorer):
                 if source not in subtype_probs:
                     subtype_probs[source] = {}
                 subtype_probs[source][rule] = \
-                    1 - min((p / (n + p), 1-syst_error)) - syst_error
+                    1 - min((float(p) / (n + p), 1-syst_error)) - syst_error
         # Finally we propagate this into the full probability
         # data structures of the parent class
         super(BayesianScorer, self).update_probs(prior_probs, subtype_probs)
