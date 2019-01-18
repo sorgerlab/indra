@@ -120,7 +120,7 @@ def map_grounding(stmts_in, **kwargs):
     return stmts_out
 
 
-def merge_groundings(stmts):
+def merge_groundings(stmts_in):
     """Gather and merge original grounding information from evidences.
 
     Each Statement's evidences are traversed to find original grounding
@@ -133,14 +133,14 @@ def merge_groundings(stmts):
 
     Parameters
     ----------
-    stmts : list[indra.statements.Statement]
+    stmts_in : list[indra.statements.Statement]
         A list of INDRA Statements whose groundings should be merged. These
         Statements are meant to have been preassembled and potentially have
         multiple pieces of evidence.
 
     Returns
     -------
-    stmts : list[indra.statements.Statement]
+    stmts_out : list[indra.statements.Statement]
         The list of Statements now with groundings merged at the Statement
         level.
     """
@@ -148,6 +148,8 @@ def merge_groundings(stmts):
         # Find the "best" grounding for a given concept and its evidences
         # and surface that
         for idx, concept in enumerate(stmt.agent_list()):
+            if concept is None:
+                continue
             aggregate_groundings = {}
             for ev in stmt.evidence:
                 if 'agents' in ev.annotations:
@@ -192,9 +194,12 @@ def merge_groundings(stmts):
                                           key=unscored_vals.count)
         return best_groundings
 
-    for stmt in stmts:
-        surface_grounding(stmt)
-    return stmts
+    stmts_out = []
+    for stmt in stmts_in:
+        if not isinstance(stmt, (Complex, Conversion)):
+            surface_grounding(stmt)
+        stmts_out.append(stmt)
+    return stmts_out
 
 
 def merge_deltas(stmts_in):
