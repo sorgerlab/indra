@@ -121,6 +121,29 @@ def map_grounding(stmts_in, **kwargs):
 
 
 def merge_groundings(stmts):
+    """Gather and merge original grounding information from evidences.
+
+    Each Statement's evidences are traversed to find original grounding
+    information. These groundings are then merged into an overall consensus
+    grounding dict with as much detail as possible.
+
+    The current implementation is only applicable to Statements whose
+    concept/agent roles are fixed. Complexes, Associations and Conversions
+    cannot be handled correctly.
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of INDRA Statements whose groundings should be merged. These
+        Statements are meant to have been preassembled and potentially have
+        multiple pieces of evidence.
+
+    Returns
+    -------
+    stmts : list[indra.statements.Statement]
+        The list of Statements now with groundings merged at the Statement
+        level.
+    """
     def surface_grounding(stmt):
         # Find the "best" grounding for a given concept and its evidences
         # and surface that
