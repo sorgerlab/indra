@@ -548,19 +548,16 @@ def test_merge_deltas():
         return stmt
     d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
     d2 = {'adjectives': [], 'polarity': -1}
-    d3 = {'adjectives': [], 'polarity': None}
-    d4 = {'adjectives': [], 'polarity': 1}
+    d3 = {'adjectives': ['g'], 'polarity': 1}
+    d4 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
     d5 = {'adjectives': ['d'], 'polarity': None}
-    d6 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
-    d7 = {'adjectives': ['g'], 'polarity': 1}
-    d8 = {'adjectives': [], 'polarity': None}
-    d9 = {'adjectives': [], 'polarity': None}
-    d10 = {'adjectives': ['d'], 'polarity': None}
+    d6 = {'adjectives': [], 'polarity': None}
+    d7 = {'adjectives': [], 'polarity': 1}
     stmts = [add_annots(Influence(Concept('a'), Concept('b'),
                                   subj_delta=sd, obj_delta=od,
                                   evidence=[Evidence(source_api='eidos',
                                                      text='%d' % idx)]))
-             for idx, (sd, od) in enumerate([(d1, d2), (d7, d6)])]
+             for idx, (sd, od) in enumerate([(d1, d2), (d3, d4)])]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
     stmts = ac.merge_deltas(stmts)
     assert stmts[0].subj_delta['polarity'] == 1, stmts[0].subj_delta
@@ -570,3 +567,16 @@ def test_merge_deltas():
     assert set(stmts[0].obj_delta['adjectives']) == {'d', 'e', 'f'}, \
         stmts[0].obj_delta
 
+    stmts = [add_annots(Influence(Concept('a'), Concept('b'),
+                                  subj_delta=sd, obj_delta=od,
+                                  evidence=[Evidence(source_api='eidos',
+                                                     text='%d' % idx)]))
+             for idx, (sd, od) in enumerate([(d1, d5), (d6, d7), (d6, d7)])]
+    stmts = ac.run_preassembly(stmts, return_toplevel=True)
+    stmts = ac.merge_deltas(stmts)
+    assert stmts[0].subj_delta['polarity'] is None, stmts[0].subj_delta
+    assert stmts[0].obj_delta['polarity'] == 1, stmts[0].obj_delta
+    assert set(stmts[0].subj_delta['adjectives']) == {'a', 'b', 'c'}, \
+        stmts[0].subj_delta
+    assert set(stmts[0].obj_delta['adjectives']) == {'d'}, \
+        stmts[0].obj_delta
