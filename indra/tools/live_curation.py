@@ -2,15 +2,16 @@
 a corpus of INDRA Statements."""
 import sys
 import pickle
+import logging
 from flask import Flask, request, jsonify, abort, Response
 from indra.belief import wm_scorer, BeliefEngine
 
-scorer = wm_scorer.get_eidos_bayesian_scorer()
 
-
+logger = logging.getLogger('live_curation')
 app = Flask(__name__)
 
 
+scorer = wm_scorer.get_eidos_bayesian_scorer()
 corpora = {}
 
 
@@ -50,10 +51,12 @@ def update_beliefs():
     # Take each curation from the input
     for uuid, correct in curations.items():
         # Save the curation in the corpus
-        # TODO: handle UUID not in the corpus
         # TODO: handle already existing curation
-        corpus.curations[uuid] = correct
         stmt = corpus.statements.get(uuid)
+        if stmt is None:
+            logger.warning('%s is not in the corpus.' % uuid)
+            continue
+        corpus.curations[uuid] = correct
         # Now take all the evidences of the statement and assume that
         # they follow the correctness of the curation and contribute to
         # counts for their sources
@@ -91,14 +94,12 @@ def update_beliefs():
         # Here we set beliefs based on actual curation
         for uuid, correct in corpus.curations.items():
             stmt = corpus.statements.get(uuid)
+            if stmt is None:
+                logger.warning('%s is not in the corpus.' % uuid)
+                continue
             stmt.belief = correct
-        belief_dict = _get_belief_dict(stmts)
-        print(belief_dict)
+        belief_dict = {st.uuid: st.belief for st in stmts}
         return jsonify(belief_dict)
-
-
-def _get_belief_dict(stmts):
-    return {st.uuid: st.belief for st in stmts}
 
 
 if __name__ == '__main__':
@@ -106,6 +107,8 @@ if __name__ == '__main__':
     corpus_path = sys.argv[1]
     with open(corpus_path, 'rb') as fh:
         stmts = pickle.load(fh)
+        logger.info('Loaded %s with %d statements.' %
+                    (corpus_path, len(stmts)))
         corpora['1'] = Corpus(stmts)
     # Run the app
     app.run(host='0.0.0.0', port='8001')
