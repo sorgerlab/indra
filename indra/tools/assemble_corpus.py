@@ -233,9 +233,10 @@ def merge_deltas(stmts_in):
         else:
             one_pol = [pair for pair in polarity_pairs if pair[0] is not None or
                        pair[1] is not None]
-            subj_pol, obj_pol = max(set(one_pol), key=one_pol.count)
-            stmt.subj_delta['polarity'] = subj_pol
-            stmt.obj_delta['polarity'] = obj_pol
+            if one_pol:
+                subj_pol, obj_pol = max(set(one_pol), key=one_pol.count)
+                stmt.subj_delta['polarity'] = subj_pol
+                stmt.obj_delta['polarity'] = obj_pol
 
         # ADJECTIVES
         for attr, role in ((stmt.subj_delta, 'subj'), (stmt.obj_delta, 'obj')):

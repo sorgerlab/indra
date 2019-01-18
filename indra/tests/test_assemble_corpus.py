@@ -550,6 +550,13 @@ def test_merge_deltas():
     d9 = {'adjectives': [], 'polarity': None}
     d10 = {'adjectives': ['d'], 'polarity': None}
     stmts = [Influence(Concept('a'), Concept('b'), subj_delta=sd, obj_delta=od)
-             for sd, od in zip([d1, d2], [d7, d6])]
+             for sd, od in ((d1, d2), (d7, d6))]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
-    print(stmts)
+    stmts = ac.merge_deltas(stmts)
+    assert stmts[0].subj_delta['polarity'] == 1, stmts[0].subj_delta
+    assert stmts[0].obj_delta['polarity'] == -1, stmts[0].obj_delta
+    assert set(stmts[0].subj_delta['adjectives']) == {'a', 'b', 'c', 'g'}, \
+        stmts[0].subj_delta
+    assert set(stmts[0].obj_delta['adjectives']) == {'d', 'e', 'f'}, \
+        stmts[0].obj_delta
+
