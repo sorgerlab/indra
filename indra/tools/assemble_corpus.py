@@ -15,9 +15,9 @@ from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
 from indra.databases import uniprot_client
 from indra.mechlinker import MechLinker
-from indra.preassembler import Preassembler
 from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
+from indra.preassembler import Preassembler, flatten_evidence
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper import gm as grounding_map
 from indra.preassembler.grounding_mapper import default_agent_map as agent_map
@@ -354,12 +354,20 @@ def run_preassembly(stmts_in, **kwargs):
         processes, while smaller groups are compared in the parent process.
         Default value is 100. Not relevant when parallelization is not
         used.
-    belief_scorer : instance of indra.belief.BeliefScorer
+    belief_scorer : Optional[indra.belief.BeliefScorer]
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
-    hierarchies : dict
+    hierarchies : Optional[dict]
         Dict of hierarchy managers to use for preassembly
+    flatten_evidence : Optional[bool]
+        If True, evidences are collected and flattened via supports/supported_by
+        links. Default: False
+    flatten_evidence_collect_from : Optional[str]
+        String indicating whether to collect and flatten evidence from the
+        `supports` attribute of each statement or the `supported_by` attribute.
+        If not set, defaults to 'supported_by'.
+        Only relevant when flatten_evidence is True.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -383,7 +391,11 @@ def run_preassembly(stmts_in, **kwargs):
     poolsize = kwargs.get('poolsize', None)
     size_cutoff = kwargs.get('size_cutoff', 100)
     options = {'save': dump_pkl, 'return_toplevel': return_toplevel,
-               'poolsize': poolsize, 'size_cutoff': size_cutoff}
+               'poolsize': poolsize, 'size_cutoff': size_cutoff,
+               'flatten_evidence': kwargs.get('flatten_evidence', False),
+               'flatten_evidence_collect_from':
+                   kwargs.get('flatten_evidence_collect_from', 'supported_by')
+               }
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
 
@@ -440,6 +452,14 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         processes, while smaller groups are compared in the parent process.
         Default value is 100. Not relevant when parallelization is not
         used.
+    flatten_evidence : Optional[bool]
+        If True, evidences are collected and flattened via supports/supported_by
+        links. Default: False
+    flatten_evidence_collect_from : Optional[str]
+        String indicating whether to collect and flatten evidence from the
+        `supports` attribute of each statement or the `supported_by` attribute.
+        If not set, defaults to 'supported_by'.
+        Only relevant when flatten_evidence is True.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -456,7 +476,19 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     stmts_out = preassembler.combine_related(return_toplevel=False,
                                              poolsize=poolsize,
                                              size_cutoff=size_cutoff)
+    # Calculate beliefs
     beliefengine.set_hierarchy_probs(stmts_out)
+
+    # Flatten evidence if needed
+    do_flatten_evidence = kwargs.get('flatten_evidence', False)
+    if do_flatten_evidence:
+        flatten_evidences_collect_from = \
+            kwargs.get('flatten_evidence_collect_from', 'supported_by')
+        logger.info('Flattending evidences by %s' %
+                    flatten_evidences_collect_from)
+        flatten_evidence(stmts_out)
+
+    # Filter to top if needed
     stmts_top = filter_top_level(stmts_out)
     if return_toplevel:
         stmts_out = stmts_top
