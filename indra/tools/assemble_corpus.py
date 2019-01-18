@@ -202,6 +202,27 @@ def merge_groundings(stmts_in):
 
 
 def merge_deltas(stmts_in):
+    """Gather and merge original Influence delta information from evidence.
+
+
+    This function is only applicable to Influence Statements that have
+    subj and obj deltas. All other statement types are passed through unchanged.
+    Polarities and adjectives for subjects and objects respectivey are
+    collected and merged by travesrsing all evidences of a Statement.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of INDRA Statements whose influence deltas should be merged.
+        These Statements are meant to have been preassembled and potentially
+        have multiple pieces of evidence.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        The list of Statements now with deltas merged at the Statement
+        level.
+    """
     stmts_out = []
     for stmt in stmts_in:
         # This operation is only applicable to Influences
