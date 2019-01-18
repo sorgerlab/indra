@@ -539,6 +539,13 @@ def test_merge_groundings():
 
 
 def test_merge_deltas():
+    def add_annots(stmt):
+        for ev in stmt.evidence:
+            ev.annotations['subj_adjectives'] = stmt.subj_delta['adjectives']
+            ev.annotations['obj_adjectives'] = stmt.obj_delta['adjectives']
+            ev.annotations['subj_polarity'] = stmt.subj_delta['polarity']
+            ev.annotations['obj_polarity'] = stmt.obj_delta['polarity']
+        return stmt
     d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
     d2 = {'adjectives': [], 'polarity': -1}
     d3 = {'adjectives': [], 'polarity': None}
@@ -549,8 +556,11 @@ def test_merge_deltas():
     d8 = {'adjectives': [], 'polarity': None}
     d9 = {'adjectives': [], 'polarity': None}
     d10 = {'adjectives': ['d'], 'polarity': None}
-    stmts = [Influence(Concept('a'), Concept('b'), subj_delta=sd, obj_delta=od)
-             for sd, od in ((d1, d2), (d7, d6))]
+    stmts = [add_annots(Influence(Concept('a'), Concept('b'),
+                                  subj_delta=sd, obj_delta=od,
+                                  evidence=[Evidence(source_api='eidos',
+                                                     text='%d' % idx)]))
+             for idx, (sd, od) in enumerate([(d1, d2), (d7, d6)])]
     stmts = ac.run_preassembly(stmts, return_toplevel=True)
     stmts = ac.merge_deltas(stmts)
     assert stmts[0].subj_delta['polarity'] == 1, stmts[0].subj_delta

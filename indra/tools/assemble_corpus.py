@@ -10,7 +10,6 @@ except ImportError:
     import pickle
 import logging
 from copy import deepcopy, copy
-from collections import defaultdict
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
@@ -210,11 +209,12 @@ def merge_deltas(stmts_in):
             stmts_out.append(stmt)
             continue
         # At this point this is guaranteed to be an Influence
-        deltas = defaultdict(list)
-        for ev in stmt.evidence:
-            for role in ('subj', 'obj'):
-                for info in ('polarity', 'adjectives'):
-                    key = (role, info)
+        deltas = {}
+        for role in ('subj', 'obj'):
+            for info in ('polarity', 'adjectives'):
+                key = (role, info)
+                deltas[key] = []
+                for ev in stmt.evidence:
                     entry = ev.annotations.get('%s_%s' % key)
                     deltas[key].append(entry if entry else None)
         # POLARITY
