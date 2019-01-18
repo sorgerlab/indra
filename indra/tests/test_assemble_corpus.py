@@ -513,3 +513,70 @@ def test_filter_namespace_concepts_list():
                                         ['fishery', 'government'], 'all',
                                         match_suffix=True)
     assert [stmts[1]] == fs, fs
+
+
+def test_merge_groundings():
+    refs1 = {'UN': [('x', 0.8), ('y', 0.7)],
+             'B': 'x',
+             'C': 'y'}
+    refs2 = {'UN': [('x', 0.9), ('y', 0.6), ('z', 0.5)],
+             'B': 'x',
+             'D': 'z'}
+    stmts = [Influence(Concept('a', db_refs=refs1),
+                       Concept('b', db_refs=refs2),
+                       evidence=[Evidence(source_api='eidos', text='1')]),
+             Influence(Concept('a', db_refs=refs2),
+                       Concept('b', db_refs=refs1),
+                       evidence=[Evidence(source_api='eidos', text='2')])]
+    stmts = ac.run_preassembly(stmts)
+    assert len(stmts) == 1
+    stmts = ac.merge_groundings(stmts)
+    assert stmts[0].subj.db_refs == \
+           {'UN': [('x', 0.9), ('y', 0.7), ('z', 0.5)],
+            'B': 'x', 'C': 'y', 'D': 'z'}, \
+        stmts[0].subj.db_refs
+    assert stmts[0].obj.db_refs == stmts[0].subj.db_refs
+
+
+def test_merge_deltas():
+    def add_annots(stmt):
+        for ev in stmt.evidence:
+            ev.annotations['subj_adjectives'] = stmt.subj_delta['adjectives']
+            ev.annotations['obj_adjectives'] = stmt.obj_delta['adjectives']
+            ev.annotations['subj_polarity'] = stmt.subj_delta['polarity']
+            ev.annotations['obj_polarity'] = stmt.obj_delta['polarity']
+        return stmt
+    d1 = {'adjectives': ['a', 'b', 'c'], 'polarity': 1}
+    d2 = {'adjectives': [], 'polarity': -1}
+    d3 = {'adjectives': ['g'], 'polarity': 1}
+    d4 = {'adjectives': ['d', 'e', 'f'], 'polarity': -1}
+    d5 = {'adjectives': ['d'], 'polarity': None}
+    d6 = {'adjectives': [], 'polarity': None}
+    d7 = {'adjectives': [], 'polarity': 1}
+    stmts = [add_annots(Influence(Concept('a'), Concept('b'),
+                                  subj_delta=sd, obj_delta=od,
+                                  evidence=[Evidence(source_api='eidos',
+                                                     text='%d' % idx)]))
+             for idx, (sd, od) in enumerate([(d1, d2), (d3, d4)])]
+    stmts = ac.run_preassembly(stmts, return_toplevel=True)
+    stmts = ac.merge_deltas(stmts)
+    assert stmts[0].subj_delta['polarity'] == 1, stmts[0].subj_delta
+    assert stmts[0].obj_delta['polarity'] == -1, stmts[0].obj_delta
+    assert set(stmts[0].subj_delta['adjectives']) == {'a', 'b', 'c', 'g'}, \
+        stmts[0].subj_delta
+    assert set(stmts[0].obj_delta['adjectives']) == {'d', 'e', 'f'}, \
+        stmts[0].obj_delta
+
+    stmts = [add_annots(Influence(Concept('a'), Concept('b'),
+                                  subj_delta=sd, obj_delta=od,
+                                  evidence=[Evidence(source_api='eidos',
+                                                     text='%d' % idx)]))
+             for idx, (sd, od) in enumerate([(d1, d5), (d6, d7), (d6, d7)])]
+    stmts = ac.run_preassembly(stmts, return_toplevel=True)
+    stmts = ac.merge_deltas(stmts)
+    assert stmts[0].subj_delta['polarity'] is None, stmts[0].subj_delta
+    assert stmts[0].obj_delta['polarity'] == 1, stmts[0].obj_delta
+    assert set(stmts[0].subj_delta['adjectives']) == {'a', 'b', 'c'}, \
+        stmts[0].subj_delta
+    assert set(stmts[0].obj_delta['adjectives']) == {'d'}, \
+        stmts[0].obj_delta

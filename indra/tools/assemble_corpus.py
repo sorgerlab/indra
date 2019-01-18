@@ -15,9 +15,9 @@ from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
 from indra.databases import uniprot_client
 from indra.mechlinker import MechLinker
-from indra.preassembler import Preassembler
 from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
+from indra.preassembler import Preassembler, flatten_evidence
 from indra.preassembler.grounding_mapper import GroundingMapper
 from indra.preassembler.grounding_mapper import gm as grounding_map
 from indra.preassembler.grounding_mapper import default_agent_map as agent_map
@@ -119,6 +119,159 @@ def map_grounding(stmts_in, **kwargs):
     return stmts_out
 
 
+def merge_groundings(stmts_in):
+    """Gather and merge original grounding information from evidences.
+
+    Each Statement's evidences are traversed to find original grounding
+    information. These groundings are then merged into an overall consensus
+    grounding dict with as much detail as possible.
+
+    The current implementation is only applicable to Statements whose
+    concept/agent roles are fixed. Complexes, Associations and Conversions
+    cannot be handled correctly.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of INDRA Statements whose groundings should be merged. These
+        Statements are meant to have been preassembled and potentially have
+        multiple pieces of evidence.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        The list of Statements now with groundings merged at the Statement
+        level.
+    """
+    def surface_grounding(stmt):
+        # Find the "best" grounding for a given concept and its evidences
+        # and surface that
+        for idx, concept in enumerate(stmt.agent_list()):
+            if concept is None:
+                continue
+            aggregate_groundings = {}
+            for ev in stmt.evidence:
+                if 'agents' in ev.annotations:
+                    groundings = ev.annotations['agents']['raw_grounding'][idx]
+                    for ns, value in groundings.items():
+                        if ns not in aggregate_groundings:
+                            aggregate_groundings[ns] = []
+                        if isinstance(value, list):
+                            aggregate_groundings[ns] += value
+                        else:
+                            aggregate_groundings[ns].append(value)
+            best_groundings = get_best_groundings(aggregate_groundings)
+            concept.db_refs = best_groundings
+
+    def get_best_groundings(aggregate_groundings):
+        best_groundings = {}
+        for ns, values in aggregate_groundings.items():
+            # There are 3 possibilities here
+            # 1. All the entries in the list are scored in which case we
+            # get unique entries and sort them by score
+            if all([isinstance(v, (tuple, list)) for v in values]):
+                best_groundings[ns] = []
+                for unique_value in {v[0] for v in values}:
+                    scores = [v[1] for v in values if v[0] == unique_value]
+                    best_groundings[ns].append((unique_value, max(scores)))
+
+                best_groundings[ns] = \
+                    sorted(best_groundings[ns], key=lambda x: x[1],
+                           reverse=True)
+            # 2. All the entries in the list are unscored in which case we
+            # get the highest frequency entry
+            elif all([not isinstance(v, (tuple, list)) for v in values]):
+                best_groundings[ns] = max(set(values), key=values.count)
+            # 3. There is a mixture, which can happen when some entries were
+            # mapped with scores and others had no scores to begin with.
+            # In this case, we again pick the highest frequency non-scored
+            # entry assuming that the unmapped version is more reliable.
+            else:
+                unscored_vals = [v for v in values
+                                 if not isinstance(v, (tuple, list))]
+                best_groundings[ns] = max(set(unscored_vals),
+                                          key=unscored_vals.count)
+        return best_groundings
+
+    stmts_out = []
+    for stmt in stmts_in:
+        if not isinstance(stmt, (Complex, Conversion)):
+            surface_grounding(stmt)
+        stmts_out.append(stmt)
+    return stmts_out
+
+
+def merge_deltas(stmts_in):
+    """Gather and merge original Influence delta information from evidence.
+
+
+    This function is only applicable to Influence Statements that have
+    subj and obj deltas. All other statement types are passed through unchanged.
+    Polarities and adjectives for subjects and objects respectivey are
+    collected and merged by travesrsing all evidences of a Statement.
+
+    Parameters
+    ----------
+    stmts_in : list[indra.statements.Statement]
+        A list of INDRA Statements whose influence deltas should be merged.
+        These Statements are meant to have been preassembled and potentially
+        have multiple pieces of evidence.
+
+    Returns
+    -------
+    stmts_out : list[indra.statements.Statement]
+        The list of Statements now with deltas merged at the Statement
+        level.
+    """
+    stmts_out = []
+    for stmt in stmts_in:
+        # This operation is only applicable to Influences
+        if not isinstance(stmt, Influence):
+            stmts_out.append(stmt)
+            continue
+        # At this point this is guaranteed to be an Influence
+        deltas = {}
+        for role in ('subj', 'obj'):
+            for info in ('polarity', 'adjectives'):
+                key = (role, info)
+                deltas[key] = []
+                for ev in stmt.evidence:
+                    entry = ev.annotations.get('%s_%s' % key)
+                    deltas[key].append(entry if entry else None)
+        # POLARITY
+        # For polarity we need to work in pairs
+        polarity_pairs = list(zip(deltas[('subj', 'polarity')],
+                                  deltas[('obj', 'polarity')]))
+        # If we have some fully defined pairs, we take the most common one
+        both_pols = [pair for pair in polarity_pairs if pair[0] is not None and
+                     pair[1] is not None]
+        if both_pols:
+            subj_pol, obj_pol = max(set(both_pols), key=both_pols.count)
+            stmt.subj_delta['polarity'] = subj_pol
+            stmt.obj_delta['polarity'] = obj_pol
+        # Otherwise we prefer the case when at least one entry of the
+        # pair is given
+        else:
+            one_pol = [pair for pair in polarity_pairs if pair[0] is not None or
+                       pair[1] is not None]
+            if one_pol:
+                subj_pol, obj_pol = max(set(one_pol), key=one_pol.count)
+                stmt.subj_delta['polarity'] = subj_pol
+                stmt.obj_delta['polarity'] = obj_pol
+
+        # ADJECTIVES
+        for attr, role in ((stmt.subj_delta, 'subj'), (stmt.obj_delta, 'obj')):
+            all_adjectives = []
+            for adj in deltas[(role, 'adjectives')]:
+                if isinstance(adj, list):
+                    all_adjectives += adj
+                elif adj is not None:
+                    all_adjectives.append(adj)
+            attr['adjectives'] = all_adjectives
+        stmts_out.append(stmt)
+    return stmts_out
+
+
 def map_sequence(stmts_in, **kwargs):
     """Map sequences using the SiteMapper.
 
@@ -201,12 +354,20 @@ def run_preassembly(stmts_in, **kwargs):
         processes, while smaller groups are compared in the parent process.
         Default value is 100. Not relevant when parallelization is not
         used.
-    belief_scorer : instance of indra.belief.BeliefScorer
+    belief_scorer : Optional[indra.belief.BeliefScorer]
         Instance of BeliefScorer class to use in calculating Statement
         probabilities. If None is provided (default), then the default
         scorer is used.
-    hierarchies : dict
+    hierarchies : Optional[dict]
         Dict of hierarchy managers to use for preassembly
+    flatten_evidence : Optional[bool]
+        If True, evidences are collected and flattened via supports/supported_by
+        links. Default: False
+    flatten_evidence_collect_from : Optional[str]
+        String indicating whether to collect and flatten evidence from the
+        `supports` attribute of each statement or the `supported_by` attribute.
+        If not set, defaults to 'supported_by'.
+        Only relevant when flatten_evidence is True.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
     save_unique : Optional[str]
@@ -230,7 +391,11 @@ def run_preassembly(stmts_in, **kwargs):
     poolsize = kwargs.get('poolsize', None)
     size_cutoff = kwargs.get('size_cutoff', 100)
     options = {'save': dump_pkl, 'return_toplevel': return_toplevel,
-               'poolsize': poolsize, 'size_cutoff': size_cutoff}
+               'poolsize': poolsize, 'size_cutoff': size_cutoff,
+               'flatten_evidence': kwargs.get('flatten_evidence', False),
+               'flatten_evidence_collect_from':
+                   kwargs.get('flatten_evidence_collect_from', 'supported_by')
+               }
     stmts_out = run_preassembly_related(pa, be, **options)
     return stmts_out
 
@@ -287,6 +452,14 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         processes, while smaller groups are compared in the parent process.
         Default value is 100. Not relevant when parallelization is not
         used.
+    flatten_evidence : Optional[bool]
+        If True, evidences are collected and flattened via supports/supported_by
+        links. Default: False
+    flatten_evidence_collect_from : Optional[str]
+        String indicating whether to collect and flatten evidence from the
+        `supports` attribute of each statement or the `supported_by` attribute.
+        If not set, defaults to 'supported_by'.
+        Only relevant when flatten_evidence is True.
     save : Optional[str]
         The name of a pickle file to save the results (stmts_out) into.
 
@@ -303,7 +476,19 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     stmts_out = preassembler.combine_related(return_toplevel=False,
                                              poolsize=poolsize,
                                              size_cutoff=size_cutoff)
+    # Calculate beliefs
     beliefengine.set_hierarchy_probs(stmts_out)
+
+    # Flatten evidence if needed
+    do_flatten_evidence = kwargs.get('flatten_evidence', False)
+    if do_flatten_evidence:
+        flatten_evidences_collect_from = \
+            kwargs.get('flatten_evidence_collect_from', 'supported_by')
+        logger.info('Flattending evidences by %s' %
+                    flatten_evidences_collect_from)
+        flatten_evidence(stmts_out)
+
+    # Filter to top if needed
     stmts_top = filter_top_level(stmts_out)
     if return_toplevel:
         stmts_out = stmts_top

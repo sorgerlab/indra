@@ -1913,23 +1913,6 @@ class Influence(IncreaseAmount):
         self.obj_delta = obj_delta
 
     def refinement_of(self, other, hierarchies):
-        def delta_refinement(dself, dother):
-            # Polarities are either equal
-            if dself['polarity'] == dother['polarity']:
-                pol_refinement = True
-            # Or this one has a polarity and the other doesn't
-            elif dself['polarity'] is not None and dother['polarity'] is None:
-                pol_refinement = True
-            else:
-                pol_refinement = False
-
-            # If other's adjectives are a subset of this
-            if set(dother['adjectives']).issubset(set(dself['adjectives'])):
-                adj_refinement = True
-            else:
-                adj_refinement = False
-            return pol_refinement and adj_refinement
-
         # Make sure the statement types match
         if stmt_type(self) != stmt_type(other):
             return False
@@ -1937,10 +1920,22 @@ class Influence(IncreaseAmount):
         # Check agent arguments
         subj_refinement = self.subj.refinement_of(other.subj, hierarchies)
         obj_refinement = self.obj.refinement_of(other.obj, hierarchies)
-        subjd_refinement = delta_refinement(self.subj_delta, other.subj_delta)
-        objd_refinement = delta_refinement(self.obj_delta, other.obj_delta)
+        op = other.overall_polarity()
+        sp = self.overall_polarity()
+        # If we have "less" polarity here than in other then it's
+        # not a refinement.
+        if self.polarity_count() < other.polarity_count():
+            delta_refinement = False
+        # If we have some polarity and the other doesn't then it's
+        # always a refinement
+        elif sp is not None and op is None:
+            delta_refinement = True
+        # Otherwise we need to check if the overall polarity matches, if it
+        # does then this is a refinement. Otherwise it isn't.
+        else:
+            delta_refinement = (op == sp)
         return (subj_refinement and obj_refinement and
-                subjd_refinement and objd_refinement)
+                delta_refinement)
 
     def equals(self, other):
         def delta_equals(dself, dother):
@@ -1955,32 +1950,44 @@ class Influence(IncreaseAmount):
         return matches
 
     def matches_key(self):
+        # With polarities, here, the goal is to match overall polarity
+        # if both polarities are given, i.e. +/+ matches -/-. Also, if only
+        # one polarity is given, we match the overall polarity e.g.
+        # None/+, +/None will match.
         key = (stmt_type(self, True), self.subj.matches_key(),
                self.obj.matches_key(),
-               self.subj_delta['polarity'],
-               sorted(list(set(self.subj_delta['adjectives']))),
-               self.obj_delta['polarity'],
-               sorted(list(set(self.obj_delta['adjectives']))))
+               self.polarity_count(),
+               self.overall_polarity()
+               )
         return mk_str(key)
 
     def contradicts(self, other, hierarchies):
-        # First case is if they are "consistent" and related
-        if self.entities_match(other) or \
-            self.refinement_of(other, hierarchies) or \
-            other.refinement_of(self, hierarchies):
-            sp = self.overall_polarity()
-            op = other.overall_polarity()
-            if sp and op and sp * op == -1:
+        # Make sure the statement types match
+        if stmt_type(self) != stmt_type(other):
+            return False
+
+        # Determine some refinements and opposites up front
+        subj_ref = self.subj.refinement_of(other.subj, hierarchies) or \
+            other.subj.refinement_of(self.subj, hierarchies)
+        obj_ref = self.obj.refinement_of(other.obj, hierarchies) or \
+            other.obj.refinement_of(self.obj, hierarchies)
+        subj_opp = self.subj.is_opposite(other.subj, hierarchies)
+        obj_opp = self.obj.is_opposite(other.obj, hierarchies)
+        sp = self.overall_polarity()
+        op = other.overall_polarity()
+
+        # If all entities are "compatible" or mutually opposites
+        # but the polarities are explicitly different then this is
+        # a contradiction
+        if (subj_ref and obj_ref) or (subj_opp and obj_opp):
+            if sp is not None and op is not None and sp != op:
                 return True
-        # Second case is if they are "opposites" and related
-        if (self.subj.entity_matches(other.subj) and \
-            self.obj.is_opposite(other.obj, hierarchies)) or \
-           (self.obj.entity_matches(other.obj) and \
-            self.subj.is_opposite(other.subj, hierarchies)):
-            sp = self.overall_polarity()
-            op = other.overall_polarity()
-            if sp and op and sp * op == 1:
+        # If one entity is the oppositve and the other compatible and the
+        # polarities are the same then this is a contradiction
+        if (subj_ref and obj_opp) or (subj_opp and obj_ref):
+            if sp is not None and op is not None and sp == op:
                 return True
+
         return False
 
     def overall_polarity(self):
@@ -1996,6 +2003,10 @@ class Influence(IncreaseAmount):
         else:
             pol = p1 * p2
         return pol
+
+    def polarity_count(self):
+        return ((1 if self.subj_delta['polarity'] is not None else 0) +
+                (1 if self.obj_delta['polarity'] is not None else 0))
 
     def to_json(self, use_sbo=False):
         generic = super(Influence, self).to_json(use_sbo)
