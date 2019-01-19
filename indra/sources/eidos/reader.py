@@ -89,9 +89,14 @@ class EidosReader(object):
         elif format == 'json_ld':
             # We need to get a Scala Seq of annot docs here
             ml = autoclass('scala.collection.mutable.MutableList')()
+            # We add the document to the mutable list
             ml.appendElem(annot_doc)
+            # We instantiate the adjective grounder
+            ag = self.eidos_reader.loadableAttributes().adjectiveGrounder()
+            # We now create a JSON-LD corpus
             jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
-            corpus = jc(ml, self.eidos_reader)
+            corpus = jc(ml, ag)
+            # Finally, serialize the corpus into JSON string
             mentions_json = corpus.toJsonStr()
         json_dict = json.loads(mentions_json)
         return json_dict
