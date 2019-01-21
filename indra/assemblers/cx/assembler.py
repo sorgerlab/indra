@@ -204,7 +204,7 @@ class CxAssembler(object):
         network_id = ndex_client.create_network(cx_str, ndex_cred, private)
         if network_id and style:
             template_id = None if style == 'default' else style
-            ndex_client.set_style(network_id, ndex_cred, style)
+            ndex_client.set_style(network_id, ndex_cred, template_id)
         return network_id
 
     def set_context(self, cell_type):
