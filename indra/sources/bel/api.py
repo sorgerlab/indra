@@ -183,6 +183,10 @@ def process_pybel_graph(graph):
     """
     bp = PybelProcessor(graph)
     bp.get_statements()
+    if bp.annot_manager.failures:
+        logger.warning('missing %d annotation pairs',
+                       sum(len(v)
+                           for v in bp.annot_manager.failures.values()))
     return bp
 
 
