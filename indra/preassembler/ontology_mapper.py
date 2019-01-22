@@ -1,6 +1,7 @@
 import os
 import rdflib
 import logging
+from functools import lru_cache
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ class OntologyMapper(object):
             if (m2, m1) not in self.mappings:
                 self.mappings.append((m2, m1))
 
+    @lru_cache(maxsize=100000)
     def _map_id(self, db_name, db_id):
         mappings = []
         # TODO: This lookup should be optimized using a dict
