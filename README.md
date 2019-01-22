@@ -200,8 +200,19 @@ is ideal for prototyping and for building light-weight web apps, but should
 not be used for large reading and assembly workflows.
 
 
-## INDRA Dockers
-There are currently two Dockerfiles that build INDRA and its dependencies.
-They are available in the following repositories:
+## INDRA Docker
+INDRA is available as a Docker image on Dockerhub and can be pulled as
+
+```
+docker pull labsyspharm/indra
+```
+
+You can run the INDRA REST API using the container as
+```
+docker run -id -p 8080:8080 --entrypoint python labsyspharm/indra /sw/indra/rest_api/api.py
+```
+
+To build the image locally, there are currently two Dockerfiles for
+INDRA and its dependencies. They are available in the following repositories:
 - https://github.com/indralab/indra_docker
 - https://github.com/indralab/indra_deps_docker
