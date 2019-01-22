@@ -665,7 +665,7 @@ def get_evidence_for_stmts():
                 return []
             print(agent_list)
         stmts = get_statements(agents=agent_list, stmt_type=stmt_type,
-                               **kwargs)
+                               simple_response=True, **kwargs)
         return stmts
 
     stmts_out = _get_matching_stmts(stmt)
