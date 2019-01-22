@@ -15,13 +15,17 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
                    use_exact_type=False, persist=True, timeout=None,
                    simple_response=False, ev_limit=10, best_first=True, tries=2,
                    max_stmts=None):
-    """Get Statements from the INDRA DB web API matching given agents and type.
+    """Get a processor for the INDRA DB web API matching given agents and type.
 
-    There are two types of response available. You can just get a list of
-    INDRA Statements, or you can get an IndraRestResponse object, which allows
+    There are two types of responses available. You can just get a list of
+    INDRA Statements, or you can get an IndraDBRestProcessor object, which allow
     Statements to be loaded in a background thread, providing a sample of the
     best* content available promptly in the sample_statements attribute, and
     populates the statements attribute when the paged load is complete.
+
+    The latter should be used in all new code, and where convenient the prior
+    should be converted to use the processor, as this option may be removed in
+    the future.
 
     *In the sense of having the most supporting evidence.
 
@@ -68,7 +72,10 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         be True). If block is False, only the original sample will be returned
         (as though persist was False), until the statements are done loading, in
         which case the rest should appear in the list. This behavior is not
-        encouraged. Default is True (for the sake of backwards compatibility).
+        encouraged. Default is False (which breaks backwards compatibility with
+        usage of INDRA versions from before 1/22/2019). WE ENCOURAGE ALL NEW
+        USE-CASES TO USE THE PROCESSOR, AS THIS FEATURE MAY BE REMOVED AT A
+        LATER DATE.
     ev_limit : int or None
         Limit the amount of evidence returned per Statement. Default is 10.
     best_first : bool
@@ -89,10 +96,12 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
 
     Returns
     -------
-    stmts : list[:py:class:`indra.statements.Statement`]
-        A list of INDRA Statement instances. Note that if a supporting or
-        supported Statement was not included in your query, it will simply be
-        instantiated as an `Unresolved` statement, with `uuid` of the statement.
+    processor : :py:class:`IndraDBRestProcessor`
+        An instance of the IndraDBRestProcessor, which has an attribute
+        `statements` which will be populated when the query/queries are done.
+        This is the default behavior, and is encouraged in all future cases,
+        however a simple list of statements may be returned using the
+        `simple_response` option described above.
     """
     # Make sure we got at least SOME agents (the remote API will error if we
     # we proceed with no arguments.
