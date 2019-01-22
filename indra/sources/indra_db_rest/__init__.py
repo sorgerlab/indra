@@ -8,4 +8,6 @@ your config file or as environment variables. If you do not have these
 but would like to access the database REST API, you may contact the developers
 to request a URL and API key.
 """
-from .client_api import *
+from .processor import *
+from .api import *
+from .exceptions import *
