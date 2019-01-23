@@ -103,38 +103,15 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
         however a simple list of statements may be returned using the
         `simple_response` option described above.
     """
-    # Make sure we got at least SOME agents (the remote API will error if we
-    # we proceed with no arguments.
-    if subject is None and object is None and agents is None:
-        raise ValueError("At least one agent must be specified, or else "
-                         "the scope will be too large.")
-
-    # Formulate inputs for the agents..
-    agent_strs = [] if agents is None else ['agent%d=%s' % (i, ag)
-                                            for i, ag in enumerate(agents)]
-    key_val_list = [('subject', subject), ('object', object)]
-    params = {param_key: param_val for param_key, param_val in key_val_list
-              if param_val is not None}
-    params['best_first'] = best_first
-    params['ev_limit'] = ev_limit
-    params['tries'] = tries
-
-    # Handle the type(s).
-    stmt_types = [stmt_type] if stmt_type else []
-    if stmt_type is not None and not use_exact_type:
-        stmt_class = get_statement_by_name(stmt_type)
-        descendant_classes = get_all_descendants(stmt_class)
-        stmt_types += [cls.__name__ for cls in descendant_classes]
-
-    # Get the response object
-    resp = IndraDBRestProcessor(max_stmts=max_stmts)
-    resp.make_stmts_queries(agent_strs, stmt_types, params, persist, timeout)
+    processor = IndraDBRestProcessor(subject, object, agents, stmt_type,
+                                     use_exact_type, persist, timeout,
+                                     ev_limit, best_first, tries, max_stmts)
 
     # Format the result appropriately.
     if simple_response:
-        ret = resp.statements
+        ret = processor.statements
     else:
-        ret = resp
+        ret = processor
     return ret
 
 
