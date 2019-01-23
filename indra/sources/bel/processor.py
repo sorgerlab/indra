@@ -1,6 +1,7 @@
 import re
 import logging
 import pybel.constants as pc
+from collections import defaultdict
 from pybel.struct import has_protein_modification
 from pybel.canonicalize import edge_to_bel
 from pybel.resources import get_bel_resource
@@ -534,6 +535,8 @@ def extract_context(annotations, annot_manager):
         ann = get_annot(annotations, bel_name)
         if ann:
             ref = annot_manager.get_mapping(bel_name, ann)
+            if ref is None:
+                continue
             if not ns:
                 db_ns, db_id = ref.split('_', 1)
             else:
@@ -564,11 +567,20 @@ class AnnotationManager(object):
             res = get_bel_resource(url)
             self.resources[key] = res
 
+        self.failures = defaultdict(set)
+
     def get_mapping(self, key, value):
         resource = self.resources.get(key)
-        if resource is not None:
-            return resource['Values'][value]
+        if resource is None:
+            return None
 
+        term = resource['Values'].get(value)
+        if term is not None:
+            return term
+
+        logger.warning('unhandled annotation: %s:%s',
+                       key, value)
+        self.failures[key].add(value)
 
 def _get_all_pmods(node_data):
     mods = []

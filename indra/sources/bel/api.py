@@ -75,7 +75,7 @@ def process_ndex_neighborhood(gene_names, network_id=None,
 
 
 def process_pybel_neighborhood(gene_names, network_file=None,
-                               network_type='belscript'):
+                               network_type='belscript', **kwargs):
     """Return PybelProcessor around neighborhood of given genes in a network.
 
     This function processes the given network file and filters the returned
@@ -103,7 +103,7 @@ def process_pybel_neighborhood(gene_names, network_file=None,
                                     os.path.pardir, os.path.pardir,
                                     os.path.pardir, 'data', 'large_corpus.bel')
     if network_type == 'belscript':
-        bp = process_belscript(network_file)
+        bp = process_belscript(network_file, **kwargs)
     elif network_type == 'json':
         bp = process_json_file(network_file)
 
@@ -183,6 +183,10 @@ def process_pybel_graph(graph):
     """
     bp = PybelProcessor(graph)
     bp.get_statements()
+    if bp.annot_manager.failures:
+        logger.warning('missing %d annotation pairs',
+                       sum(len(v)
+                           for v in bp.annot_manager.failures.values()))
     return bp
 
 
