@@ -12,6 +12,8 @@ from indra.sources.indra_db_rest import IndraDBRestAPIError
 
 def __check_request(seconds, *args, **kwargs):
     check_stmts = kwargs.pop('check_stmts', True)
+    simple_response = kwargs.pop('simple_response', True)
+    kwargs['simple_response'] = simple_response
     now = datetime.now()
     resp = dbr.get_statements(*args, **kwargs)
     time_taken = datetime.now() - now
@@ -61,8 +63,7 @@ def test_timeout_no_persist_agent():
     candidates = ['TP53', 'NFkappaB@FPLX', 'AKT@FPLX']
     agent = random.choice(candidates)
     print(agent)
-    resp = dbr.get_statements(agents=[agent], persist=False, timeout=0,
-                              simple_response=False)
+    resp = dbr.get_statements(agents=[agent], persist=False, timeout=0)
     assert resp.is_working(), "Lookup resolved too fast."
     resp.wait_until_done(70)
     assert len(resp.statements) == 1000, len(resp.statements)
@@ -74,7 +75,7 @@ def test_timeout_no_persist_type_object():
     agent = random.choice(candidates)
     print(agent)
     resp = dbr.get_statements(stmt_type='phosphorylation', object=agent,
-                              persist=False, timeout=0, simple_response=False)
+                              persist=False, timeout=0)
     assert resp.is_working(), "Lookup resolved too fast."
     resp.wait_until_done(70)
     assert len(resp.statements) == 1000, len(resp.statements)
@@ -132,7 +133,8 @@ def test_too_big_request_persist_no_block():
 
 @attr('nonpublic')
 def test_famplex_namespace():
-    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount')
+    stmts = dbr.get_statements('PDGF@FPLX', 'FOS', stmt_type='IncreaseAmount',
+                               simple_response=True)
     print(len(stmts))
     assert all([s.agent_list()[0].db_refs.get('FPLX') == 'PDGF' for s in stmts]),\
         'Not all subjects match.'
@@ -149,7 +151,8 @@ def test_paper_query():
 
 @attr('nonpublic')
 def test_regulate_amount():
-    stmts = dbr.get_statements('FOS', stmt_type='RegulateAmount')
+    stmts = dbr.get_statements('FOS', stmt_type='RegulateAmount',
+                               simple_response=True)
     print(len(stmts))
     stmt_types = {type(s).__name__ for s in stmts}
     print(stmt_types)
