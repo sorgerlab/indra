@@ -78,7 +78,30 @@ class CWMSProcessor(object):
         # Extract statements
         self.extract_noun_relations('CC')
         self.extract_noun_relations('EVENT')
+
+        # In some EKBs we get two redundant relations over the same arguments,
+        # we eliminate these
+        self._remove_multi_extraction_artifacts()
         return
+
+    def _remove_multi_extraction_artifacts(self):
+        # Build up a dict of evidence matches keys with statement UUIDs
+        evmks = {}
+        for stmt in self.statements:
+            evmk = stmt.evidence[0].matches_key()
+            if evmk not in evmks:
+                evmks[evmk] = [stmt.uuid]
+            else:
+                evmks[evmk].append(stmt.uuid)
+        # This is a list of groups of statement UUIDs that are redundant
+        multi_evmks = [k for k, v in evmks.items() if len(v) > 1]
+        for uuids in multi_evmks:
+            stmts = [s for s in self.statements if s.uuid in uuids]
+            if isinstance(stmts, Influence):
+                pass
+        print('---------')
+        print(multi_evmks)
+        print('---------')
 
     def _get_subj_obj(self, event):
         """Get the concepts for a relation given and element.
