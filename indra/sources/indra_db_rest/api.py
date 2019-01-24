@@ -1,6 +1,5 @@
 from indra.util import clockit
-from indra.statements import get_statement_by_name, get_all_descendants, \
-    stmts_from_json
+from indra.statements import stmts_from_json
 
 from indra.sources.indra_db_rest.processor import IndraDBRestProcessor
 from indra.sources.indra_db_rest.util import submit_statement_request, \
