@@ -186,6 +186,8 @@ def _load_wm_map(exclude_auto=None):
     override_mappings = []
     with open(override_file, 'r') as fh:
         for row in fh.readlines():
+            if 'BBN' not in row:
+                continue
             # Order is target first, source second
             _, te, _, se = row.strip().split('\t')
             # Map the entries to our internal naming standards
