@@ -101,7 +101,7 @@ class IndraDBRestProcessor(object):
 
         # Make sure we got at least SOME agents (the remote API will error if
         # we proceed with no arguments).
-        if subject is None and object is None and agents is None:
+        if subject is None and object is None and not agents:
             raise ValueError("At least one agent must be specified, or else "
                              "the scope will be too large.")
 
