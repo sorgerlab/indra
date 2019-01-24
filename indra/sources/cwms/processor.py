@@ -95,13 +95,18 @@ class CWMSProcessor(object):
                 evmks[evmk].append(stmt.uuid)
         # This is a list of groups of statement UUIDs that are redundant
         multi_evmks = [k for k, v in evmks.items() if len(v) > 1]
-        for uuids in multi_evmks:
-            stmts = [s for s in self.statements if s.uuid in uuids]
-            if isinstance(stmts, Influence):
-                pass
-        print('---------')
         print(multi_evmks)
-        print('---------')
+        # We now figure out if anything needs to be removed
+        to_remove = []
+        for uuids in multi_evmks:
+            stmts = [s for s in self.statements if (s.uuid in uuids
+                     and isinstance(s, Influence))]
+            stmts = sorted(stmts, key=lambda x: x.polarity_count(),
+                           reverse=True)
+            to_remove += [s.uuid for s in stmts[1:]]
+        logger.info('Found %d Statements to remove' % len(to_remove))
+        self.statements = [s for s in self.statements
+                           if s.uuid not in to_remove]
 
     def _get_subj_obj(self, event):
         """Get the concepts for a relation given and element.
