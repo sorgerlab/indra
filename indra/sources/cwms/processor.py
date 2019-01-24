@@ -88,14 +88,14 @@ class CWMSProcessor(object):
         # Build up a dict of evidence matches keys with statement UUIDs
         evmks = {}
         for stmt in self.statements:
-            evmk = stmt.evidence[0].matches_key()
+            evmk = stmt.evidence[0].matches_key() + \
+                stmt.subj.matches_key() + stmt.obj.matches_key()
             if evmk not in evmks:
                 evmks[evmk] = [stmt.uuid]
             else:
                 evmks[evmk].append(stmt.uuid)
         # This is a list of groups of statement UUIDs that are redundant
-        multi_evmks = [k for k, v in evmks.items() if len(v) > 1]
-        print(multi_evmks)
+        multi_evmks = [v for k, v in evmks.items() if len(v) > 1]
         # We now figure out if anything needs to be removed
         to_remove = []
         for uuids in multi_evmks:
@@ -104,7 +104,8 @@ class CWMSProcessor(object):
             stmts = sorted(stmts, key=lambda x: x.polarity_count(),
                            reverse=True)
             to_remove += [s.uuid for s in stmts[1:]]
-        logger.info('Found %d Statements to remove' % len(to_remove))
+        if to_remove:
+            logger.info('Found %d Statements to remove' % len(to_remove))
         self.statements = [s for s in self.statements
                            if s.uuid not in to_remove]
 
@@ -130,7 +131,7 @@ class CWMSProcessor(object):
             obj, obj_time, obj_loc = \
                 self._get_concept(event, "*[@role=':AFFECTED']")
         else:
-            logger.debug("Unhandled event type: %s" % ev_type)
+            #logger.debug("Unhandled event type: %s" % ev_type)
             return None, None, None, None
 
         # Choose a temporal context (if there's a choice to be made)
@@ -185,6 +186,7 @@ class CWMSProcessor(object):
             return None, None, None
         element_text = element_text_element.text
         element_db_refs = {'TEXT': element_text}
+        element_name = sanitize_name(element_text)
 
         element_type_element = element_term.find('type')
         if element_type_element is not None:
@@ -193,7 +195,7 @@ class CWMSProcessor(object):
             if assoc_with is not None:
                 element_db_refs['CWMS'] += ('|%s' % assoc_with)
 
-        return Concept(element_text, db_refs=element_db_refs), time, location
+        return Concept(element_name, db_refs=element_db_refs), time, location
 
     def _extract_time_loc(self, term):
         """Get the location from a term (CC or TERM)"""
@@ -314,3 +316,8 @@ class CWMSProcessor(object):
         par_id = event_tag.attrib.get('paragraph')
         sec = self.par_to_sec.get(par_id)
         return sec
+
+
+def sanitize_name(txt):
+    name = txt.replace('\n', '')
+    return name
