@@ -1933,3 +1933,8 @@ def test_ev_str():
     ev = Evidence(annotations={'a': 'b'}, text='test', source_api='test')
     str(ev)
     ev.__repr__()
+
+
+def test_draw_statements():
+    stmt = Phosphorylation(None, Agent('x'))
+    draw_stmt_graph([stmt])

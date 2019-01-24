@@ -140,6 +140,17 @@ def _promote_support(sup_list, uuid_dict, on_missing='handle'):
 
 
 def draw_stmt_graph(stmts):
+    """Render the attributes of a list of Statements as directed graphs.
+
+    The layout works well for a single Statement or a few Statements at a time.
+    This function displays the plot of the graph using plt.show().
+
+    Parameters
+    ----------
+    stmts : list[indra.statements.Statement]
+        A list of one or more INDRA Statements whose attribute graph should
+        be drawn.
+    """
     import networkx
     try:
         import matplotlib.pyplot as plt
