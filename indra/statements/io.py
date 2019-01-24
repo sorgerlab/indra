@@ -152,8 +152,7 @@ def draw_stmt_graph(stmts):
         logger.error('Could not import pygraphviz, not drawing graph.')
         return
     import numpy
-    g = networkx.compose_all([stmt.to_graph() for stmt in stmts],
-                             'composed_stmts')
+    g = networkx.compose_all([stmt.to_graph() for stmt in stmts])
     plt.figure()
     plt.ion()
     g.graph['graph'] = {'rankdir': 'LR'}
