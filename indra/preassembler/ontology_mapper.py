@@ -199,10 +199,14 @@ def _load_wm_map(exclude_auto=None):
                 se = se[1:]
             override_mappings.append((s, se, t, te))
     for s, se, t, te in override_mappings:
+        found = False
         for idx, ((so, seo), (eo, teo), score) in enumerate(ontomap):
-            if s == so and se == seo:
+            if (s, se, t) == (so, seo, eo):
                 # Override when a match is found
                 ontomap[idx] = ((s, se), (t, te), 1.0)
+                found = True
+        if not found:
+            ontomap.append(((s, se), (t, te), 1.0))
     return ontomap
 
 
