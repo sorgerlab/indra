@@ -105,22 +105,24 @@ def update_beliefs():
 
 
 if __name__ == '__main__':
+    # Process arguments
     parser = argparse.ArgumentParser(description='Choose a corpus for live curation.')
     parser.add_argument('--json')
     parser.add_argument('--pickle')
+    parser.add_argument('--corpus_id', default='1')
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', default=8001, type=int)
-
     args = parser.parse_args()
+
+    # Load the corpus
     if args.json:
         stmts = stmts_from_json_file(args.json)
-        corpora['1'] = Corpus(stmts)
     elif args.pickle:
-        # Read a corpus from the given path as a pickle
         with open(args.pickle, 'rb') as fh:
             stmts = pickle.load(fh)
-            logger.info('Loaded %s with %d statements.' %
-                        (args.pickle, len(stmts)))
-            corpora['1'] = Corpus(stmts)
+    logger.info('Loaded corpus %s with %d statements.' %
+                (args.corpus_id, len(stmts)))
+    corpora[args.corpus_id] = Corpus(stmts)
+
     # Run the app
     app.run(host=args.host, port=args.port)
