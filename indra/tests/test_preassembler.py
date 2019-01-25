@@ -515,6 +515,12 @@ def test_flatten_evidence_hierarchy():
     supporting_stmt = top_stmt.supported_by[0]
     assert len(supporting_stmt.evidence) == 1
     assert supporting_stmt.evidence[0].text == 'foo'
+    supporting_stmt.evidence[0].text = 'changed_foo'
+    assert supporting_stmt.evidence[0].text == 'changed_foo'
+    assert 'changed_foo' not in [e.text for e in top_stmt.evidence]
+    assert 'foo' in [e.text for e in top_stmt.evidence]
+    assert {ev.annotations.get('support_type') for ev in top_stmt.evidence} \
+        == {'direct', 'supported_by'}
 
 
 def test_flatten_evidence_hierarchy_supports():

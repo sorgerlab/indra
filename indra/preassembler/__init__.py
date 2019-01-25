@@ -177,7 +177,6 @@ class Preassembler(object):
             end_ev_keys = _ev_keys([new_stmt])
             if len(end_ev_keys) != len(start_ev_keys):
                 logger.debug('Redundant evidence eliminated')
-                #import ipdb; ipdb.set_trace()
             # This should never be None or anything else
             assert isinstance(new_stmt, Statement)
             unique_stmts.append(new_stmt)
@@ -847,6 +846,8 @@ def flatten_evidence(stmts, collect_from=None):
     # the evidence lists
     stmts = fast_deepcopy(stmts)
     for stmt in stmts:
+        for ev in stmt.evidence:
+            ev.annotations['support_type'] = 'direct'
         total_evidence = _flatten_evidence_for_stmt(stmt, collect_from)
         stmt.evidence = total_evidence
     return stmts
@@ -857,7 +858,10 @@ def _flatten_evidence_for_stmt(stmt, collect_from):
                                 else stmt.supported_by)
     total_evidence = set(stmt.evidence)
     for supp_stmt in supp_stmts:
-        child_evidence = _flatten_evidence_for_stmt(supp_stmt, collect_from)
+        child_evidence = fast_deepcopy(
+            _flatten_evidence_for_stmt(supp_stmt, collect_from))
+        for ev in child_evidence:
+            ev.annotations['support_type'] = collect_from
         total_evidence = total_evidence.union(child_evidence)
     return list(total_evidence)
 
