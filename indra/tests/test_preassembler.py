@@ -523,6 +523,26 @@ def test_flatten_evidence_hierarchy():
         == {'direct', 'supported_by'}
 
 
+def test_flatten_evidence_multilevel():
+    braf = Agent('BRAF')
+    mek = Agent('MAP2K1')
+    st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
+    st2 = Phosphorylation(braf, mek, 'S',
+                          evidence=[Evidence(text='bar')])
+    st3 = Phosphorylation(braf, mek, 'S', '218',
+                          evidence=[Evidence(text='baz')])
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    pa.combine_related()
+    assert len(pa.related_stmts) == 1
+    flattened = flatten_evidence(pa.related_stmts)
+    assert len(flattened) == 1
+    top_stmt = flattened[0]
+    assert len(top_stmt.evidence) == 3, len(top_stmt.evidence)
+    anns = [ev.annotations['support_type'] for ev in top_stmt.evidence]
+    assert anns.count('direct') == 1
+    assert anns.count('supported_by') == 2
+
+
 def test_flatten_evidence_hierarchy_supports():
     braf = Agent('BRAF')
     mek = Agent('MAP2K1')
