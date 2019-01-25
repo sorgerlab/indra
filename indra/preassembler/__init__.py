@@ -846,10 +846,19 @@ def flatten_evidence(stmts, collect_from=None):
     # the evidence lists
     stmts = fast_deepcopy(stmts)
     for stmt in stmts:
-        for ev in stmt.evidence:
-            ev.annotations['support_type'] = 'direct'
+        orig_ev_keys = [ev.matches_key() for ev in stmt.evidence]
         total_evidence = _flatten_evidence_for_stmt(stmt, collect_from)
-        stmt.evidence = total_evidence
+        new_evidence = []
+        for ev in total_evidence:
+            ev_key = ev.matches_key()
+            if ev_key in orig_ev_keys:
+                ev.annotations['support_type'] = 'direct'
+                new_evidence.append(ev)
+            else:
+                ev_copy = fast_deepcopy(ev)
+                ev_copy.annotations['support_type'] = collect_from
+                new_evidence.append(ev_copy)
+        stmt.evidence = new_evidence
     return stmts
 
 
@@ -858,10 +867,7 @@ def _flatten_evidence_for_stmt(stmt, collect_from):
                                 else stmt.supported_by)
     total_evidence = set(stmt.evidence)
     for supp_stmt in supp_stmts:
-        child_evidence = fast_deepcopy(
-            _flatten_evidence_for_stmt(supp_stmt, collect_from))
-        for ev in child_evidence:
-            ev.annotations['support_type'] = collect_from
+        child_evidence = _flatten_evidence_for_stmt(supp_stmt, collect_from)
         total_evidence = total_evidence.union(child_evidence)
     return list(total_evidence)
 
