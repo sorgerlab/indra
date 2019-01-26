@@ -384,7 +384,6 @@ def run_preassembly(stmts_in, **kwargs):
         hierarchies
     be = BeliefEngine(scorer=belief_scorer)
     pa = Preassembler(hierarchies, stmts_in)
-    _get_evidence_count(stmts_in)
     run_preassembly_duplicate(pa, be, save=dump_pkl_unique)
 
     dump_pkl = kwargs.get('save')
@@ -398,18 +397,8 @@ def run_preassembly(stmts_in, **kwargs):
                    kwargs.get('flatten_evidence_collect_from', 'supported_by')
                }
     stmts_out = run_preassembly_related(pa, be, **options)
-    _get_evidence_count(stmts_out)
     return stmts_out
 
-
-def _get_evidence_count(stmts):
-    ev_keys = []
-    for stmt in stmts:
-        for ev in stmt.evidence:
-            ev_keys.append(ev.matches_key())
-
-    logger.debug('Total evidence count: %d' % len(ev_keys))
-    logger.debug('Unique evidence count: %d' % len(ev_keys))
 
 def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     """Run deduplication stage of preassembly on a list of statements.
@@ -433,7 +422,6 @@ def run_preassembly_duplicate(preassembler, beliefengine, **kwargs):
     dump_pkl = kwargs.get('save')
     stmts_out = preassembler.combine_duplicates()
     beliefengine.set_prior_probs(stmts_out)
-    _get_evidence_count(stmts_out)
     logger.info('%d unique statements' % len(stmts_out))
     if dump_pkl:
         dump_statements(stmts_out, dump_pkl)
@@ -488,10 +476,8 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     stmts_out = preassembler.combine_related(return_toplevel=False,
                                              poolsize=poolsize,
                                              size_cutoff=size_cutoff)
-    _get_evidence_count(stmts_out)
     # Calculate beliefs
     beliefengine.set_hierarchy_probs(stmts_out)
-    _get_evidence_count(stmts_out)
 
     # Flatten evidence if needed
     do_flatten_evidence = kwargs.get('flatten_evidence', False)
@@ -499,7 +485,6 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
         flatten_evidences_collect_from = \
             kwargs.get('flatten_evidence_collect_from', 'supported_by')
         stmts_out = flatten_evidence(stmts_out, flatten_evidences_collect_from)
-    _get_evidence_count(stmts_out)
 
     # Filter to top if needed
     stmts_top = filter_top_level(stmts_out)

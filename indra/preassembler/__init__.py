@@ -132,12 +132,14 @@ class Preassembler(object):
         >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
         ['evidence 1', 'evidence 2']
         """
+        # Helper function to get a list of evidence matches keys
         def _ev_keys(sts):
             ev_keys = []
             for stmt in sts:
                 for ev in stmt.evidence:
                     ev_keys.append(ev.matches_key())
             return ev_keys
+        # Iterate over groups of duplicate statements
         unique_stmts = []
         for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
             ev_keys = set()
@@ -176,7 +178,8 @@ class Preassembler(object):
                         ev_keys.add(ev_key)
             end_ev_keys = _ev_keys([new_stmt])
             if len(end_ev_keys) != len(start_ev_keys):
-                logger.debug('Redundant evidence eliminated')
+                logger.debug('%d redundant evidences eliminated.' %
+                             (len(start_ev_keys) - len(end_ev_keys)))
             # This should never be None or anything else
             assert isinstance(new_stmt, Statement)
             unique_stmts.append(new_stmt)
@@ -846,8 +849,14 @@ def flatten_evidence(stmts, collect_from=None):
     # the evidence lists
     stmts = fast_deepcopy(stmts)
     for stmt in stmts:
+        # We get the original evidence keys here so we can differentiate them
+        # from ones added during flattening.
         orig_ev_keys = [ev.matches_key() for ev in stmt.evidence]
+        # We now do the flattening
         total_evidence = _flatten_evidence_for_stmt(stmt, collect_from)
+        # Here we add annotations for each evidence in the list,
+        # depending on whether it's an original direct evidence or one that
+        # was added during flattening
         new_evidence = []
         for ev in total_evidence:
             ev_key = ev.matches_key()
@@ -858,6 +867,7 @@ def flatten_evidence(stmts, collect_from=None):
                 ev_copy = fast_deepcopy(ev)
                 ev_copy.annotations['support_type'] = collect_from
                 new_evidence.append(ev_copy)
+        # Now set the new evidence list as the copied statement's evidence
         stmt.evidence = new_evidence
     return stmts
 
