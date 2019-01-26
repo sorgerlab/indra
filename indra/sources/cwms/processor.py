@@ -75,6 +75,9 @@ class CWMSProcessor(object):
         self.par_to_sec = {p.attrib['id']: p.attrib.get('sec-type')
                            for p in paragraph_tags}
 
+        # Keep a list of unhandled events for development purposes
+        self._unhandled_events = []
+
         # Extract statements
         self.extract_noun_relations('CC')
         self.extract_noun_relations('EVENT')
@@ -82,7 +85,10 @@ class CWMSProcessor(object):
         # In some EKBs we get two redundant relations over the same arguments,
         # we eliminate these
         self._remove_multi_extraction_artifacts()
-        return
+
+        # Print unhandled event types
+        logger.debug('Unhandled event types: %s' %
+                     (', '.join(sorted(list(set(self._unhandled_events))))))
 
     def _remove_multi_extraction_artifacts(self):
         # Build up a dict of evidence matches keys with statement UUIDs
@@ -131,7 +137,7 @@ class CWMSProcessor(object):
             obj, obj_time, obj_loc = \
                 self._get_concept(event, "*[@role=':AFFECTED']")
         else:
-            #logger.debug("Unhandled event type: %s" % ev_type)
+            self._unhandled_events.append(ev_type)
             return None, None, None, None
 
         # Choose a temporal context (if there's a choice to be made)
