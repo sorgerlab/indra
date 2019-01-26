@@ -1,7 +1,12 @@
 import os
 import rdflib
 import logging
-from functools import lru_cache
+# Python 3
+try:
+    from functools import lru_cache
+# Python 2
+except ImportError:
+    from functools32 import lru_cache
 
 
 logger = logging.getLogger(__name__)
