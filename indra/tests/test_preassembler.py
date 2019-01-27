@@ -117,6 +117,26 @@ def test_combine_evidence_exact_duplicates():
         set(['foo', 'bar'])
 
 
+def test_combine_evidence_exact_duplicates_different_raw_text():
+    raf1 = Agent('RAF1', db_refs={'TEXT': 'Raf'})
+    raf2 = Agent('RAF1', db_refs={'TEXT': 'RAF'})
+    mek = Agent('MEK1')
+    p1 = Phosphorylation(raf1, mek,
+            evidence=Evidence(text='foo'))
+    p2 = Phosphorylation(raf1, mek,
+            evidence=Evidence(text='bar'))
+    p3 = Phosphorylation(raf2, mek,
+            evidence=Evidence(text='bar'))
+    stmts = [p1, p2, p3]
+    pa = Preassembler(hierarchies, stmts=stmts)
+    pa.combine_duplicates()
+    # The statements come out sorted by their matches_key
+    assert len(pa.unique_stmts) == 1
+    assert len(pa.unique_stmts[0].evidence) == 3
+    assert set(ev.text for ev in pa.unique_stmts[0].evidence) == \
+        set(['foo', 'bar', 'bar'])
+
+
 def test_superfamily_refinement():
     """A gene-level statement should be supported by a family-level
     statement."""
@@ -495,6 +515,32 @@ def test_flatten_evidence_hierarchy():
     supporting_stmt = top_stmt.supported_by[0]
     assert len(supporting_stmt.evidence) == 1
     assert supporting_stmt.evidence[0].text == 'foo'
+    supporting_stmt.evidence[0].text = 'changed_foo'
+    assert supporting_stmt.evidence[0].text == 'changed_foo'
+    assert 'changed_foo' not in [e.text for e in top_stmt.evidence]
+    assert 'foo' in [e.text for e in top_stmt.evidence]
+    assert {ev.annotations.get('support_type') for ev in top_stmt.evidence} \
+        == {'direct', 'supported_by'}
+
+
+def test_flatten_evidence_multilevel():
+    braf = Agent('BRAF')
+    mek = Agent('MAP2K1')
+    st1 = Phosphorylation(braf, mek, evidence=[Evidence(text='foo')])
+    st2 = Phosphorylation(braf, mek, 'S',
+                          evidence=[Evidence(text='bar')])
+    st3 = Phosphorylation(braf, mek, 'S', '218',
+                          evidence=[Evidence(text='baz')])
+    pa = Preassembler(hierarchies, stmts=[st1, st2, st3])
+    pa.combine_related()
+    assert len(pa.related_stmts) == 1
+    flattened = flatten_evidence(pa.related_stmts)
+    assert len(flattened) == 1
+    top_stmt = flattened[0]
+    assert len(top_stmt.evidence) == 3, len(top_stmt.evidence)
+    anns = [ev.annotations['support_type'] for ev in top_stmt.evidence]
+    assert anns.count('direct') == 1
+    assert anns.count('supported_by') == 2
 
 
 def test_flatten_evidence_hierarchy_supports():

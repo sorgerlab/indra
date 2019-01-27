@@ -268,11 +268,12 @@ def _get_hume_grounding(entity):
     # Then we sort the list in reverse order according to score
     # Sometimes the exact same score appears multiple times, in this
     # case we prioritize by the "depth" of the grounding which is
-    # obtained by looking at the number of /-s in the entry
+    # obtained by looking at the number of /-s in the entry.
+    # However, there are still cases where the grounding depth and the score
+    # are the same. In these cases we just sort alphabetically.
     grounding_entries = sorted(list(set(grounding_dict.items())),
-                               key=lambda x: (x[1], x[0].count('/')),
+                               key=lambda x: (x[1], x[0].count('/'), x[0]),
                                reverse=True)
-
     return grounding_entries
 
 

@@ -1,6 +1,12 @@
 import os
 import rdflib
 import logging
+# Python 3
+try:
+    from functools import lru_cache
+# Python 2
+except ImportError:
+    from functools32 import lru_cache
 
 
 logger = logging.getLogger(__name__)
@@ -72,6 +78,7 @@ class OntologyMapper(object):
             if (m2, m1) not in self.mappings:
                 self.mappings.append((m2, m1))
 
+    @lru_cache(maxsize=100000)
     def _map_id(self, db_name, db_id):
         mappings = []
         # TODO: This lookup should be optimized using a dict
@@ -184,6 +191,8 @@ def _load_wm_map(exclude_auto=None):
     override_mappings = []
     with open(override_file, 'r') as fh:
         for row in fh.readlines():
+            if 'BBN' not in row:
+                continue
             # Order is target first, source second
             _, te, _, se = row.strip().split('\t')
             # Map the entries to our internal naming standards
@@ -195,10 +204,14 @@ def _load_wm_map(exclude_auto=None):
                 se = se[1:]
             override_mappings.append((s, se, t, te))
     for s, se, t, te in override_mappings:
+        found = False
         for idx, ((so, seo), (eo, teo), score) in enumerate(ontomap):
-            if s == so and se == seo:
+            if (s, se, t) == (so, seo, eo):
                 # Override when a match is found
                 ontomap[idx] = ((s, se), (t, te), 1.0)
+                found = True
+        if not found:
+            ontomap.append(((s, se), (t, te), 1.0))
     return ontomap
 
 

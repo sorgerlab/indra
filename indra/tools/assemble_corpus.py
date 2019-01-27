@@ -484,9 +484,7 @@ def run_preassembly_related(preassembler, beliefengine, **kwargs):
     if do_flatten_evidence:
         flatten_evidences_collect_from = \
             kwargs.get('flatten_evidence_collect_from', 'supported_by')
-        logger.info('Flattending evidences by %s' %
-                    flatten_evidences_collect_from)
-        flatten_evidence(stmts_out)
+        stmts_out = flatten_evidence(stmts_out, flatten_evidences_collect_from)
 
     # Filter to top if needed
     stmts_top = filter_top_level(stmts_out)

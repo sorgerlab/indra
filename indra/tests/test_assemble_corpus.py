@@ -25,17 +25,17 @@ l = Agent('a', db_refs={'HGNC': '1234', 'TEXT': 'a'},
 
 mapk1 = Agent('MAPK1', db_refs={'HGNC':'6871', 'UP':'P28482'})
 erk = Agent('ERK', db_refs={'FPLX': 'ERK'})
-st1 = Phosphorylation(a, b)
-st2 = Phosphorylation(a, d)
-st3 = Phosphorylation(c, d)
-st4 = Phosphorylation(b, e)
-st5 = Phosphorylation(None, b)
-st6 = Phosphorylation(None, d)
-st7 = Phosphorylation(None, e)
-st8 = Phosphorylation(b, f)
-st9 = Phosphorylation(None, f)
-st10 = Phosphorylation(None, g)
-st11 = Phosphorylation(None, h)
+st1 = Phosphorylation(a, b, evidence=[Evidence(text='a->b', source_api='assertion')])
+st2 = Phosphorylation(a, d, evidence=[Evidence(text='a->d', source_api='assertion')])
+st3 = Phosphorylation(c, d, evidence=[Evidence(text='c->d', source_api='assertion')])
+st4 = Phosphorylation(b, e, evidence=[Evidence(text='b->e', source_api='assertion')])
+st5 = Phosphorylation(None, b, evidence=[Evidence(text='->b', source_api='assertion')])
+st6 = Phosphorylation(None, d, evidence=[Evidence(text='->d', source_api='assertion')])
+st7 = Phosphorylation(None, e, evidence=[Evidence(text='->e', source_api='assertion')])
+st8 = Phosphorylation(b, f, evidence=[Evidence(text='b->f', source_api='assertion')])
+st9 = Phosphorylation(None, f, evidence=[Evidence(text='->f', source_api='assertion')])
+st10 = Phosphorylation(None, g, evidence=[Evidence(text='->g', source_api='assertion')])
+st11 = Phosphorylation(None, h, evidence=[Evidence(text='->h', source_api='assertion')])
 st12 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': True})])
 st13 = Phosphorylation(a, b, evidence=[Evidence(epistemics={'direct': False})])
 st14 = Activation(a, b, 'activity')
@@ -580,3 +580,17 @@ def test_merge_deltas():
         stmts[0].subj_delta
     assert set(stmts[0].obj_delta['adjectives']) == {'d'}, \
         stmts[0].obj_delta
+
+
+def test_preassemble_flatten():
+    st_out = ac.run_preassembly([st1, st3, st5, st6], flatten_evidence=False)
+    assert len(st_out[0].evidence) == 1
+    assert len(st_out[1].evidence) == 1
+    st_out = ac.run_preassembly([st1, st3, st5, st6], flatten_evidence=True,
+                                flatten_evidence_collect_from='supported_by')
+    assert len(st_out[0].evidence) == 2
+    assert len(st_out[1].evidence) == 2
+    st_out = ac.run_preassembly([st1, st3, st5, st6], flatten_evidence=True,
+                                flatten_evidence_collect_from='supports')
+    assert len(st_out[0].evidence) == 1
+    assert len(st_out[1].evidence) == 1

@@ -3,8 +3,10 @@ a corpus of INDRA Statements."""
 import sys
 import pickle
 import logging
+import argparse
 from flask import Flask, request, jsonify, abort, Response
 from indra.belief import wm_scorer, BeliefEngine
+from indra.statements import stmts_from_json_file
 
 
 logger = logging.getLogger('live_curation')
@@ -103,12 +105,24 @@ def update_beliefs():
 
 
 if __name__ == '__main__':
-    # Read a corpus from the given path as a pickle
-    corpus_path = sys.argv[1]
-    with open(corpus_path, 'rb') as fh:
-        stmts = pickle.load(fh)
-        logger.info('Loaded %s with %d statements.' %
-                    (corpus_path, len(stmts)))
-        corpora['1'] = Corpus(stmts)
+    # Process arguments
+    parser = argparse.ArgumentParser(description='Choose a corpus for live curation.')
+    parser.add_argument('--json')
+    parser.add_argument('--pickle')
+    parser.add_argument('--corpus_id', default='1')
+    parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--port', default=8001, type=int)
+    args = parser.parse_args()
+
+    # Load the corpus
+    if args.json:
+        stmts = stmts_from_json_file(args.json)
+    elif args.pickle:
+        with open(args.pickle, 'rb') as fh:
+            stmts = pickle.load(fh)
+    logger.info('Loaded corpus %s with %d statements.' %
+                (args.corpus_id, len(stmts)))
+    corpora[args.corpus_id] = Corpus(stmts)
+
     # Run the app
-    app.run(host='0.0.0.0', port='8001')
+    app.run(host=args.host, port=args.port)

@@ -77,11 +77,14 @@ class Preassembler(object):
     @staticmethod
     def _get_stmt_matching_groups(stmts):
         """Use the matches_key method to get sets of matching statements."""
-
         def match_func(x): return x.matches_key()
 
         # Remove exact duplicates using a set() call, then make copies:
+        logger.debug('%d statements before removing object duplicates.' %
+                     len(stmts))
         st = list(set(stmts))
+        logger.debug('%d statements after removing object duplicates.' %
+                     len(stmts))
         # Group statements according to whether they are matches (differing
         # only in their evidence).
         # Sort the statements in place by matches_key()
@@ -129,12 +132,21 @@ class Preassembler(object):
         >>> sorted([e.text for e in uniq_stmts[0].evidence]) # doctest:+IGNORE_UNICODE
         ['evidence 1', 'evidence 2']
         """
+        # Helper function to get a list of evidence matches keys
+        def _ev_keys(sts):
+            ev_keys = []
+            for stmt in sts:
+                for ev in stmt.evidence:
+                    ev_keys.append(ev.matches_key())
+            return ev_keys
+        # Iterate over groups of duplicate statements
         unique_stmts = []
         for _, duplicates in Preassembler._get_stmt_matching_groups(stmts):
             ev_keys = set()
             # Get the first statement and add the evidence of all subsequent
             # Statements to it
             duplicates = list(duplicates)
+            start_ev_keys = _ev_keys(duplicates)
             for stmt_ix, stmt in enumerate(duplicates):
                 if stmt_ix is 0:
                     new_stmt = stmt.make_generic_copy()
@@ -145,7 +157,8 @@ class Preassembler(object):
                 raw_grounding = [None if ag is None else ag.db_refs
                                  for ag in stmt.agent_list(deep_sorted=True)]
                 for ev in stmt.evidence:
-                    ev_key = ev.matches_key()
+                    ev_key = ev.matches_key() + str(raw_text) + \
+                        str(raw_grounding)
                     if ev_key not in ev_keys:
                         # In case there are already agents annotations, we
                         # just add a new key for raw_text, otherwise create
@@ -158,11 +171,15 @@ class Preassembler(object):
                             ev.annotations['agents'] = \
                                 {'raw_text': raw_text,
                                  'raw_grounding': raw_grounding}
-                        if 'prior_uuids' not in ev.annotations.keys():
+                        if 'prior_uuids' not in ev.annotations:
                             ev.annotations['prior_uuids'] = []
                         ev.annotations['prior_uuids'].append(stmt.uuid)
                         new_stmt.evidence.append(ev)
                         ev_keys.add(ev_key)
+            end_ev_keys = _ev_keys([new_stmt])
+            if len(end_ev_keys) != len(start_ev_keys):
+                logger.debug('%d redundant evidences eliminated.' %
+                             (len(start_ev_keys) - len(end_ev_keys)))
             # This should never be None or anything else
             assert isinstance(new_stmt, Statement)
             unique_stmts.append(new_stmt)
@@ -827,12 +844,31 @@ def flatten_evidence(stmts, collect_from=None):
     if collect_from not in ('supports', 'supported_by'):
         raise ValueError('collect_from must be one of "supports", '
                          '"supported_by"')
+    logger.info('Flattening evidence based on %s' % collect_from)
     # Copy all of the statements--these will be the ones where we update
     # the evidence lists
     stmts = fast_deepcopy(stmts)
     for stmt in stmts:
+        # We get the original evidence keys here so we can differentiate them
+        # from ones added during flattening.
+        orig_ev_keys = [ev.matches_key() for ev in stmt.evidence]
+        # We now do the flattening
         total_evidence = _flatten_evidence_for_stmt(stmt, collect_from)
-        stmt.evidence = total_evidence
+        # Here we add annotations for each evidence in the list,
+        # depending on whether it's an original direct evidence or one that
+        # was added during flattening
+        new_evidence = []
+        for ev in total_evidence:
+            ev_key = ev.matches_key()
+            if ev_key in orig_ev_keys:
+                ev.annotations['support_type'] = 'direct'
+                new_evidence.append(ev)
+            else:
+                ev_copy = fast_deepcopy(ev)
+                ev_copy.annotations['support_type'] = collect_from
+                new_evidence.append(ev_copy)
+        # Now set the new evidence list as the copied statement's evidence
+        stmt.evidence = new_evidence
     return stmts
 
 

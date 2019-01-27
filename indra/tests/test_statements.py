@@ -2,6 +2,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 import json
+import unittest
 from nose.tools import raises
 from indra.preassembler.hierarchy_manager import HierarchyManager
 from indra.preassembler.hierarchy_manager import hierarchies
@@ -1933,3 +1934,9 @@ def test_ev_str():
     ev = Evidence(annotations={'a': 'b'}, text='test', source_api='test')
     str(ev)
     ev.__repr__()
+
+
+@unittest.skip('Travis cannot draw the graph with pygraphviz.')
+def test_draw_statements():
+    stmt = Phosphorylation(None, Agent('x'))
+    draw_stmt_graph([stmt])
