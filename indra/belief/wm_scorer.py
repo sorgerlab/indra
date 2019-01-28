@@ -17,14 +17,16 @@ def load_eidos_curation_table():
     return table
 
 
-def get_eidos_bayesian_scorer():
+def get_eidos_bayesian_scorer(prior_counts=None):
     """Return a BayesianScorer based on Eidos curation counts."""
     table = load_eidos_curation_table()
     subtype_counts = {'eidos': {r: [c, i] for r, c, i in
                               zip(table['RULE'], table['Num correct'],
                                   table['Num incorrect'])}}
+    prior_counts = prior_counts if prior_counts else {}
 
-    scorer = BayesianScorer(prior_counts={}, subtype_counts=subtype_counts)
+    scorer = BayesianScorer(prior_counts=prior_counts,
+                            subtype_counts=subtype_counts)
     return scorer
 
 

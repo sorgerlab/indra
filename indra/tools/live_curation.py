@@ -12,8 +12,8 @@ from indra.statements import stmts_from_json_file
 logger = logging.getLogger('live_curation')
 app = Flask(__name__)
 
-
-scorer = wm_scorer.get_eidos_bayesian_scorer()
+default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
+scorer = wm_scorer.get_eidos_bayesian_scorer(default_priors)
 corpora = {}
 
 
