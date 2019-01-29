@@ -5,6 +5,8 @@ import requests
 
 from indra import get_config
 
+from indra.sources.indra_db_rest.exceptions import IndraDBRestAPIError
+
 logger = logging.getLogger('indra_db_rest_util')
 
 
