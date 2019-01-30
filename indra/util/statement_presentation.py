@@ -36,13 +36,15 @@ def get_row_data(stmt_list, ev_totals=None):
     # Sort the rows by count and agent names.
     def process(tpl):
         key, stmts = tpl
+        verb = key[0]
+        inps = key[1:]
         if ev_totals is None:
             count = sum(len(s.evidence) for s in stmts)
         else:
             count = sum(ev_totals[s.get_hash()] for s in stmts)
         new_key = (count,)
-        new_key += tuple(key[1:])
-        return new_key, key[0], stmts
+        new_key += tuple(inps)
+        return new_key, verb, stmts
 
     row_data = sorted((process(t) for t in stmt_rows.items()),
                       key=lambda tpl: tpl[0], reverse=True)
