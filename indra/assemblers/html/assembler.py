@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import get_identifiers_url
+from indra.util.statement_presentation import get_row_data,\
+    make_statement_string
 
 
 # Create a template object from the template file, load once
@@ -92,7 +94,6 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-
     def make_model(self):
         """Return the assembled HTML content as a string.
 
@@ -102,23 +103,27 @@ class HtmlAssembler(object):
             The assembled HTML as a string.
         """
         stmts_formatted = []
-        for stmt in self.statements:
-            stmt_hash = stmt.get_hash(shallow=True)
-            ev_list = self._format_evidence_text(stmt)
-            english = self._format_stmt_text(stmt)
-            if self.ev_totals:
-                total_evidence = self.ev_totals.get(int(stmt_hash), '?')
-                if total_evidence == '?':
-                    logger.warning('The hash %s was not found in the '
-                                   'evidence totals dict.' % stmt_hash)
-                evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
-            else:
-                evidence_count_str = str(len(ev_list))
-            stmts_formatted.append({
-                'hash': stmt_hash,
-                'english': english,
-                'evidence': ev_list,
-                'evidence_count': evidence_count_str})
+        stmt_rows = get_row_data(self.statements,
+                                 self.ev_totals if self.ev_totals else None)
+        for key, verb, stmts in stmt_rows:
+            # This will now be ordered by prevalence and entity pairs.
+            for stmt in stmts:
+                stmt_hash = stmt.get_hash(shallow=True)
+                ev_list = self._format_evidence_text(stmt)
+                english = self._format_stmt_text(stmt)
+                if self.ev_totals:
+                    total_evidence = self.ev_totals.get(int(stmt_hash), '?')
+                    if total_evidence == '?':
+                        logger.warning('The hash %s was not found in the '
+                                       'evidence totals dict.' % stmt_hash)
+                    evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
+                else:
+                    evidence_count_str = str(len(ev_list))
+                stmts_formatted.append({
+                    'hash': stmt_hash,
+                    'english': english,
+                    'evidence': ev_list,
+                    'evidence_count': evidence_count_str})
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
