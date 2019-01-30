@@ -181,10 +181,12 @@ def _assemble_agent_str(agent):
     return agent_str
 
 
-def _join_list(lst):
+def _join_list(lst, oxford=False):
     """Join a list of words in a gramatically correct way."""
     if len(lst) > 2:
         s = ', '.join(lst[:-1])
+        if oxford:
+            s += ','
         s += ' and ' + lst[-1]
     elif len(lst) == 2:
         s = lst[0] + ' and ' + lst[1]
