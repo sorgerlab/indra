@@ -113,16 +113,35 @@ via the REACH and Eidos APIs, an additional package called
 classes from Python. This is only strictly required in these input sources and
 the rest of INDRA will work without pyjnius.
 
-1. Install `JRE and JDK 8 from Oracle <http://www.oracle.com/technetwork/java/javase/downloads/index.html>`_. Pyjnius is currently incompatible with Java 9, so
-make sure to get Java 8.
 
-2. On Mac, `install Legacy Java for OSX <http://support.apple.com/kb/DL1572>`_.
+
+1. Install JDK from Oracle: `https://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
+INDRA is currently tested against Java 11 but is expected to be compatible with
+versions of Java 8 or higher.
+
+4. Set JAVA\_HOME to your JDK home directory, for instance
+
+.. code-block:: bash
+
+    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.0.2.jdk/Contents/Home
+
+3. Then first install cython followed by pyjnius (tested with version 1.1.4).
+   These need to be broken up into two sequential calls to pip
+   install.
+
+.. code-block:: bash
+
+    pip install cython
+    pip install pyjnius==1.1.4
+
+On Mac, you may need to 
+`install Legacy Java for OSX <http://support.apple.com/kb/DL1572>`_.
 If you have trouble installing it, you can try the following as an alternative.
 Edit
 
 .. code-block:: bash
 
-    /Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Info.plist
+    /Library/Java/JavaVirtualMachines/jdk-11.0.2.jdk/Contents/Info.plist
 
 (the JDK folder name will need to correspond to your local version),
 and add `JNI` to `JVMCapabilities` as
@@ -138,21 +157,6 @@ and add `JNI` to `JVMCapabilities` as
         </array>
     ...
 
-3. Set JAVA\_HOME to your JDK home directory, for instance
-
-.. code-block:: bash
-
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_74.jdk/Contents/Home
-
-4. Then first install Cython (tested with version 0.28.1) followed by
-   pyjnius (tested with version 1.1.4).
-   These need to be broken up into two sequential calls to pip
-   install.
-
-.. code-block:: bash
-
-    pip install cython
-    pip install pyjnius==1.1.4
 
 Graphviz
 ````````
