@@ -213,10 +213,14 @@ def eidos_process_text():
     """Process text with EIDOS and return INDRA Statements."""
     if request.method == 'OPTIONS':
         return {}
-    response = request.body.read().decode('utf-8')
-    body = json.loads(response)
+    req = request.body.read().decode('utf-8')
+    body = json.loads(req)
     text = body.get('text')
     webservice = body.get('webservice')
+    if not webservice:
+        response.status = 400
+        response.content_type = 'application/json'
+        return json.dumps({'error': 'No web service address provided.'})
     ep = eidos.process_text(text, webservice=webservice)
     return _stmts_from_proc(ep)
 
