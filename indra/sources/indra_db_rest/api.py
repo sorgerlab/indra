@@ -26,7 +26,7 @@ def get_statements(subject=None, object=None, agents=None, stmt_type=None,
     should be converted to use the processor, as this option may be removed in
     the future.
 
-    *In the sense of having the most supporting evidence.
+    * In the sense of having the most supporting evidence.
 
     Parameters
     ----------
