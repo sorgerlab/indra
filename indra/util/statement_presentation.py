@@ -63,16 +63,22 @@ def get_row_data(stmt_list, ev_totals=None):
 
 def make_statement_string(key, verb):
     """Make a Statement string via EnglishAssembler from `get_row_data` key."""
-    inp = key[1:]
+    def make_agent(name):
+        if name == 'None' or name is None:
+            return None
+        return Agent(name)
+
+    inp = key[1]
     StmtClass = get_statement_by_name(verb)
     if verb == 'Complex':
-        stmt = StmtClass([Agent(name) for name in inp])
+        stmt = StmtClass([make_agent(name) for name in inp])
     elif verb == 'Conversion':
-        stmt = StmtClass(Agent(inp[0]), [Agent(name) for name in inp[1]],
-                         [Agent(name) for name in inp[2]])
+        stmt = StmtClass(make_agent(inp[0]),
+                         [make_agent(name) for name in inp[1]],
+                         [make_agent(name) for name in inp[2]])
     elif verb == 'ActiveForm' or verb == 'HasActivity':
-        stmt = StmtClass(Agent(inp[0]), inp[1], inp[2])
+        stmt = StmtClass(make_agent(inp[0]), inp[1], inp[2])
     else:
-        stmt = StmtClass(*[Agent(name) for name in inp])
+        stmt = StmtClass(*[make_agent(name) for name in inp])
     ea = EnglishAssembler([stmt])
     return ea.make_model()[:-1]
