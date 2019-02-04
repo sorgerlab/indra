@@ -107,6 +107,7 @@ class HtmlAssembler(object):
                                  self.ev_totals if self.ev_totals else None)
         for key, verb, stmts in stmt_rows:
             # This will now be ordered by prevalence and entity pairs.
+            stmt_info_list = []
             for stmt in stmts:
                 stmt_hash = stmt.get_hash(shallow=True)
                 ev_list = self._format_evidence_text(stmt)
@@ -119,18 +120,20 @@ class HtmlAssembler(object):
                     evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
                 else:
                     evidence_count_str = str(len(ev_list))
-                stmts_formatted.append({
+                stmt_info_list.append({
                     'hash': stmt_hash,
                     'english': english,
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str})
+            stmts_formatted.append((make_statement_string(key, verb),
+                                    stmt_info_list))
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
             db_rest_url = self.db_rest_url + '/statements'
         else:
             db_rest_url = '.'
-        self.model = template.render(statements=stmts_formatted,
+        self.model = template.render(stmt_data=stmts_formatted,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url)
         return self.model

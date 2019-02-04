@@ -131,63 +131,66 @@ nav {
 
     <h4>Statements</h4>
     <p>&nbsp;</p>
-    {% for stmt_info in statements %}
-    <a name='{{ stmt_info['hash'] }}'></a>
-    <div class="statement">
-      <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
-      <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
-        <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
-      </a>
-    </div>
-    <div class="evidence">
-    <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Source</th>
-                <th>Evidence</th>
-                <th>Source Refs</th>
-              </tr>
-            </thead>
-            <tbody id="table_{{loop.index0}}">
-                {% for ev in stmt_info['evidence'] %}
-                <tr class="parent" id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle"
-                        onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
-                    <td>{{ ev['source_api'] }}</td>
-                    {% if ev['text'] %}
-                        <td>"{{ ev['text'] }}"</td>
-                    {% else %}
-                        <td><i>None available</i></td>
-                    {% endif %}
-                    <td style="white-space: nowrap">
-                       {% if ev['pmid'] %}
-                        <a class="pmid_link"
-                title="Hover again to see info"
-                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;" 
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>
-                        {{ ev['pmid'] }}</a>
-                        {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
-                        <a class="pmid_link"
-                title="Hover again to see info"
-                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;" 
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['text_refs']['pmid'] }}'>
-                        {{ ev['text_refs']['pmid'] }}</a>
-                       {% endif %}
-                       {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
-                       | <a class="pmcid_link"
-                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev['text_refs']['pmcid'] }}'>PMC</a>
+    {% for short_name, stmt_info_list in stmt_data %}
+        <h4 class="align-middle">{{ short_name }}</h4>
+        {% for stmt_info in stmt_info_list %}
+        <a name='{{ stmt_info['hash'] }}'></a>
+        <div class="statement">
+          <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
+          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
+            <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
+          </a>
+        </div>
+        <div class="evidence">
+        <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Source</th>
+                    <th>Evidence</th>
+                    <th>Source Refs</th>
+                  </tr>
+                </thead>
+                <tbody id="table_{{loop.index0}}">
+                    {% for ev in stmt_info['evidence'] %}
+                    <tr class="parent" id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
+                        <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle"
+                            onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
+                        <td>{{ ev['source_api'] }}</td>
+                        {% if ev['text'] %}
+                            <td>"{{ ev['text'] }}"</td>
+                        {% else %}
+                            <td><i>None available</i></td>
                         {% endif %}
-                       {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
-                       | <a class="doi_link"
-                href='https://dx.doi.org/{{ ev['text_refs']['doi'] }}'>DOI</a>
-                       {% endif %}
-                    </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-    </div> <!-- evidence -->
+                        <td style="white-space: nowrap">
+                           {% if ev['pmid'] %}
+                            <a class="pmid_link"
+                    title="Hover again to see info"
+                    onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                    href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>
+                            {{ ev['pmid'] }}</a>
+                            {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
+                            <a class="pmid_link"
+                    title="Hover again to see info"
+                    onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                    href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['text_refs']['pmid'] }}'>
+                            {{ ev['text_refs']['pmid'] }}</a>
+                           {% endif %}
+                           {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
+                           | <a class="pmcid_link"
+                    href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev['text_refs']['pmcid'] }}'>PMC</a>
+                            {% endif %}
+                           {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
+                           | <a class="doi_link"
+                    href='https://dx.doi.org/{{ ev['text_refs']['doi'] }}'>DOI</a>
+                           {% endif %}
+                        </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+        </div> <!-- evidence -->
+        {% endfor %}
     {% endfor %}
 
         </div> <!-- /main content -->
