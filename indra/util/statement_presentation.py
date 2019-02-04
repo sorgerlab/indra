@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import permutations
 
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, get_statement_by_name
@@ -10,7 +11,7 @@ def get_row_data(stmt_list, ev_totals=None):
 
     stmt_rows = {}
     stmt_counts = defaultdict(lambda: 0)
-    argument_counts = defaultdict(lambda: 0)
+    arg_counts = defaultdict(lambda: 0)
     for s in stmt_list:
         # Create a key.
         verb = s.__class__.__name__
@@ -35,24 +36,49 @@ def get_row_data(stmt_list, ev_totals=None):
         # Update the counts, and add key if needed.
         if key not in stmt_rows.keys():
             stmt_rows[key] = []
-
         stmt_rows[key].append(s)
+
+        # Keep track of the total evidence counts for this statement and the
+        # arguments.
         if ev_totals is None:
             stmt_counts[key] += len(s.evidence)
-            argument_counts[key[1:]] += len(s.evidence)
+            arg_count = len(s.evidence)
         else:
             stmt_counts[key] += ev_totals[s.get_hash()]
-            argument_counts[key[1:]] += ev_totals[s.get_hash()]
+            arg_count = ev_totals[s.get_hash()]
+
+        # Add up the counts for the arguments, pairwise for Complexes and
+        # Conversions. This allows, for example, a complex between MEK, ERK,
+        # and something else to lend weight to the interactions between MEK
+        # and ERK.
+        if verb == 'Complex' and len(key[1:]) > 1:
+            for pair in permutations(key[1:], 2):
+                arg_counts[pair] += arg_count
+        elif verb == 'Conversion':
+            subj = key[1]
+            for obj in key[2] + key[3]:
+                arg_counts[(subj, obj)] += arg_count
+        else:
+            arg_counts[key[1:]] += arg_count
 
     # Sort the rows by count and agent names.
     def process(tpl):
         key, stmts = tpl
         verb = key[0]
         inps = key[1:]
-        arg_count = argument_counts[inps]
         sub_count = stmt_counts[key]
-        new_key = (arg_count, inps)
-        new_key += (sub_count, verb)
+        if verb == 'Complex' and len(inps) > 1:
+            arg_count, key_inps = max((arg_counts[p], p)
+                                      for p in permutations(inps, 2))
+            new_key = (arg_count, key_inps, sub_count, verb, inps)
+        elif verb == 'Conversion':
+            subj = inps[0]
+            arg_count, key_inps = max((arg_counts[(subj, obj)], (subj, obj))
+                                      for obj in inps[1] + inps[2])
+            new_key = (arg_count, key_inps, sub_count, verb, inps)
+        else:
+            arg_count = arg_counts[inps]
+            new_key = (arg_count, inps, sub_count, verb)
         return new_key, verb, stmts
 
     row_data = sorted((process(t) for t in stmt_rows.items()),
@@ -68,17 +94,20 @@ def make_statement_string(key, verb):
             return None
         return Agent(name)
 
-    inp = key[1]
     StmtClass = get_statement_by_name(verb)
     if verb == 'Complex':
-        stmt = StmtClass([make_agent(name) for name in inp])
+        inps = key[-1]
+        stmt = StmtClass([make_agent(name) for name in inps])
     elif verb == 'Conversion':
-        stmt = StmtClass(make_agent(inp[0]),
-                         [make_agent(name) for name in inp[1]],
-                         [make_agent(name) for name in inp[2]])
+        inps = key[-1]
+        stmt = StmtClass(make_agent(inps[0]),
+                         [make_agent(name) for name in inps[1]],
+                         [make_agent(name) for name in inps[2]])
     elif verb == 'ActiveForm' or verb == 'HasActivity':
-        stmt = StmtClass(make_agent(inp[0]), inp[1], inp[2])
+        inps = key[1]
+        stmt = StmtClass(make_agent(inps[0]), inps[1], inps[2])
     else:
-        stmt = StmtClass(*[make_agent(name) for name in inp])
+        inps = key[1]
+        stmt = StmtClass(*[make_agent(name) for name in inps])
     ea = EnglishAssembler([stmt])
     return ea.make_model()[:-1]
