@@ -96,7 +96,9 @@ def make_statement_string(key, verb):
 
     StmtClass = get_statement_by_name(verb)
     if verb == 'Complex':
-        inps = key[-1]
+        key_inps = list(key[1])
+        other_inps = [n for n in key[-1] if n not in key_inps]
+        inps = key_inps + other_inps
         stmt = StmtClass([make_agent(name) for name in inps])
     elif verb == 'Conversion':
         inps = key[-1]
