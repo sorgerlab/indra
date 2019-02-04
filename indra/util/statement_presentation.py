@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, get_statement_by_name
 
@@ -7,6 +9,8 @@ def get_row_data(stmt_list, ev_totals=None):
         return 'None' if agent is None else agent.name
 
     stmt_rows = {}
+    stmt_counts = defaultdict(lambda: 0)
+    argument_counts = defaultdict(lambda: 0)
     for s in stmt_list:
         # Create a key.
         verb = s.__class__.__name__
@@ -31,19 +35,24 @@ def get_row_data(stmt_list, ev_totals=None):
         # Update the counts, and add key if needed.
         if key not in stmt_rows.keys():
             stmt_rows[key] = []
+
         stmt_rows[key].append(s)
+        if ev_totals is None:
+            stmt_counts[key] += len(s.evidence)
+            argument_counts[key[1:]] += len(s.evidence)
+        else:
+            stmt_counts[key] += ev_totals[s.get_hash()]
+            argument_counts[key[1:]] += ev_totals[s.get_hash()]
 
     # Sort the rows by count and agent names.
     def process(tpl):
         key, stmts = tpl
         verb = key[0]
         inps = key[1:]
-        if ev_totals is None:
-            count = sum(len(s.evidence) for s in stmts)
-        else:
-            count = sum(ev_totals[s.get_hash()] for s in stmts)
-        new_key = (count,)
-        new_key += tuple(inps)
+        arg_count = argument_counts[inps]
+        sub_count = stmt_counts[key]
+        new_key = (arg_count, inps)
+        new_key += (sub_count, verb)
         return new_key, verb, stmts
 
     row_data = sorted((process(t) for t in stmt_rows.items()),
