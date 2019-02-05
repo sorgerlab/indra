@@ -5,21 +5,22 @@ from indra.assemblers.english import EnglishAssembler
 from indra.statements import Agent, get_statement_by_name
 
 
-def get_row_data(stmt_list, ev_totals=None):
+def _get_keyed_stmts(stmt_list):
     def name(agent):
         return 'None' if agent is None else agent.name
 
-    stmt_rows = {}
-    stmt_counts = defaultdict(lambda: 0)
-    arg_counts = defaultdict(lambda: 0)
     for s in stmt_list:
         # Create a key.
         verb = s.__class__.__name__
         key = (verb,)
-
         ags = s.agent_list()
         if verb == 'Complex':
             ag_ns = {name(ag) for ag in ags}
+            if 1 < len(ag_ns) < 6:
+                for pair in permutations(ag_ns, 2):
+                    yield key + tuple(pair),  s
+            if len(ag_ns) <= 2:
+                continue
             key += tuple(sorted(ag_ns))
         elif verb == 'Conversion':
             subj = name(ags[0])
@@ -33,55 +34,51 @@ def get_row_data(stmt_list, ev_totals=None):
         else:
             key += tuple([name(ag) for ag in ags])
 
+        yield key, s
+
+
+def get_row_data(stmt_list, ev_totals=None):
+    def _count(stmt):
+        if ev_totals is None:
+            return len(stmt.evidence)
+        else:
+            return ev_totals[stmt.get_hash()]
+
+    stmt_rows = defaultdict(list)
+    stmt_counts = defaultdict(lambda: 0)
+    arg_counts = defaultdict(lambda: 0)
+    for key, s in _get_keyed_stmts(stmt_list):
         # Update the counts, and add key if needed.
-        if key not in stmt_rows.keys():
-            stmt_rows[key] = []
         stmt_rows[key].append(s)
 
         # Keep track of the total evidence counts for this statement and the
         # arguments.
-        if ev_totals is None:
-            stmt_counts[key] += len(s.evidence)
-            arg_count = len(s.evidence)
-        else:
-            stmt_counts[key] += ev_totals[s.get_hash()]
-            arg_count = ev_totals[s.get_hash()]
+        stmt_counts[key] += _count(s)
 
         # Add up the counts for the arguments, pairwise for Complexes and
         # Conversions. This allows, for example, a complex between MEK, ERK,
         # and something else to lend weight to the interactions between MEK
         # and ERK.
-        if verb == 'Complex' and len(key[1:]) > 1:
-            for pair in permutations(key[1:], 2):
-                arg_counts[pair] += arg_count
-        elif verb == 'Conversion':
+        if key[0] == 'Conversion':
             subj = key[1]
             for obj in key[2] + key[3]:
-                arg_counts[(subj, obj)] += arg_count
+                arg_counts[(subj, obj)] += _count(s)
         else:
-            arg_counts[key[1:]] += arg_count
+            arg_counts[key[1:]] += _count(s)
 
     # Sort the rows by count and agent names.
-    def process(tpl):
-        key, stmts = tpl
-        verb = key[0]
-        inps = key[1:]
-        sub_count = stmt_counts[key]
-        if verb == 'Complex' and len(inps) > 1:
-            arg_count, key_inps = max((arg_counts[p], p)
-                                      for p in permutations(inps, 2))
-            new_key = (arg_count, key_inps, sub_count, verb, inps)
-        elif verb == 'Conversion':
-            subj = inps[0]
-            arg_count, key_inps = max((arg_counts[(subj, obj)], (subj, obj))
-                                      for obj in inps[1] + inps[2])
-            new_key = (arg_count, key_inps, sub_count, verb, inps)
-        else:
+    def process_rows(stmt_rows):
+        for key, stmts in stmt_rows.items():
+            verb = key[0]
+            inps = key[1:]
+            sub_count = stmt_counts[key]
             arg_count = arg_counts[inps]
+            if verb == 'Complex' and sub_count == arg_count and len(inps) == 2:
+                continue
             new_key = (arg_count, inps, sub_count, verb)
-        return new_key, verb, stmts
+            yield new_key, verb, sorted(stmts, key=_count, reverse=True)
 
-    row_data = sorted((process(t) for t in stmt_rows.items()),
+    row_data = sorted(process_rows(stmt_rows),
                       key=lambda tpl: tpl[0], reverse=True)
 
     return row_data
@@ -95,21 +92,16 @@ def make_statement_string(key, verb):
         return Agent(name)
 
     StmtClass = get_statement_by_name(verb)
+    inps = list(key[1])
     if verb == 'Complex':
-        key_inps = list(key[1])
-        other_inps = [n for n in key[-1] if n not in key_inps]
-        inps = key_inps + other_inps
         stmt = StmtClass([make_agent(name) for name in inps])
     elif verb == 'Conversion':
-        inps = key[-1]
         stmt = StmtClass(make_agent(inps[0]),
                          [make_agent(name) for name in inps[1]],
                          [make_agent(name) for name in inps[2]])
     elif verb == 'ActiveForm' or verb == 'HasActivity':
-        inps = key[1]
         stmt = StmtClass(make_agent(inps[0]), inps[1], inps[2])
     else:
-        inps = key[1]
         stmt = StmtClass(*[make_agent(name) for name in inps])
     ea = EnglishAssembler([stmt])
     return ea.make_model()[:-1]
