@@ -73,8 +73,10 @@ def get_row_data(stmt_list, ev_totals=None):
             inps = key[1:]
             sub_count = stmt_counts[key]
             arg_count = arg_counts[inps]
-            if verb == 'Complex' and sub_count == arg_count and len(inps) == 2:
-                continue
+            if verb == 'Complex' and sub_count == arg_count and len(inps) <= 2:
+                if all([len(set(ag.name for ag in s.agent_list())) > 2
+                        for s in stmts]):
+                    continue
             new_key = (arg_count, inps, sub_count, verb)
             yield new_key, verb, sorted(stmts, key=_count, reverse=True)
 
