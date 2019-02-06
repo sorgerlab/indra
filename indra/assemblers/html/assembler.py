@@ -4,7 +4,9 @@ supports curation.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
 import re
+import uuid
 import itertools
 from os.path import abspath, dirname, join
 from jinja2 import Template
@@ -126,9 +128,7 @@ class HtmlAssembler(object):
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str})
             short_name = make_statement_string(key, verb)
-            short_name_key = (short_name.replace(' ', '_')
-                              .replace(',', 'cma').replace('-', 'dash')
-                              .replace('/', 'slh').replace('.', 'dot'))
+            short_name_key = str(uuid.uuid4())
             stmts_formatted.append((short_name, short_name_key, stmt_info_list))
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
