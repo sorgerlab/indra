@@ -78,7 +78,10 @@ def get_row_data(stmt_list, ev_totals=None):
                         for s in stmts]):
                     continue
             new_key = (arg_count, inps, sub_count, verb)
-            yield new_key, verb, sorted(stmts, key=lambda s: _count(s) + 1/(1 + len(s.agent_list())), reverse=True)
+            stmts = sorted(stmts,
+                           key=lambda s: _count(s) + 1/(1+len(s.agent_list())),
+                           reverse=True)
+            yield new_key, verb, stmts
 
     row_data = sorted(process_rows(stmt_rows),
                       key=lambda tpl: tpl[0], reverse=True)
