@@ -125,8 +125,11 @@ class HtmlAssembler(object):
                     'english': english,
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str})
-            stmts_formatted.append((make_statement_string(key, verb),
-                                    stmt_info_list))
+            short_name = make_statement_string(key, verb)
+            short_name_key = (short_name.replace(' ', '_')
+                              .replace(',', 'cma').replace('-', 'dash')
+                              .replace('/', 'slh').replace('.', 'dot'))
+            stmts_formatted.append((short_name, short_name_key, stmt_info_list))
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
