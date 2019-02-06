@@ -37,7 +37,27 @@ def _get_keyed_stmts(stmt_list):
         yield key, s
 
 
-def get_row_data(stmt_list, ev_totals=None):
+def group_and_sort_statements(stmt_list, ev_totals=None):
+    """Group statements by type and arguments, and sort by prevalence.
+
+    Parameters
+    ----------
+    stmt_list : list[Statement]
+        A list of INDRA statements.
+    ev_totals : dict{int: int}
+        A dictionary, keyed by statement hash (shallow) with counts of total
+        evidence as the values. Including this will allow statements to be
+        better sorted.
+
+    Returns
+    -------
+    sorted_groups : list[tuple]
+        A list of tuples containing a sort key, the statement type, and a list
+        of statements, also sorted by evidence count, for that key and type.
+        The sort key contains a count of statements with those argument, the
+        arguments (normalized strings), the count of statements with those
+        arguements and type, and then the statement type.
+    """
     def _count(stmt):
         if ev_totals is None:
             return len(stmt.evidence)
@@ -83,14 +103,17 @@ def get_row_data(stmt_list, ev_totals=None):
                            reverse=True)
             yield new_key, verb, stmts
 
-    row_data = sorted(process_rows(stmt_rows),
-                      key=lambda tpl: tpl[0], reverse=True)
+    sorted_groups = sorted(process_rows(stmt_rows),
+                           key=lambda tpl: tpl[0], reverse=True)
 
-    return row_data
+    return sorted_groups
 
 
-def make_statement_string(key, verb):
-    """Make a Statement string via EnglishAssembler from `get_row_data` key."""
+def make_string_from_sort_key(key, verb):
+    """Make a Statement string via EnglishAssembler from the sort key.
+
+    Specifically, the sort key used by `group_and_sort_statements`.
+    """
     def make_agent(name):
         if name == 'None' or name is None:
             return None

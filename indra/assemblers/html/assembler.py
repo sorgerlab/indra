@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import get_identifiers_url
-from indra.util.statement_presentation import get_row_data,\
-    make_statement_string
+from indra.util.statement_presentation import group_and_sort_statements,\
+    make_string_from_sort_key
 
 
 # Create a template object from the template file, load once
@@ -105,8 +105,8 @@ class HtmlAssembler(object):
             The assembled HTML as a string.
         """
         stmts_formatted = []
-        stmt_rows = get_row_data(self.statements,
-                                 self.ev_totals if self.ev_totals else None)
+        stmt_rows = group_and_sort_statements(self.statements,
+                                              self.ev_totals if self.ev_totals else None)
         for key, verb, stmts in stmt_rows:
             # This will now be ordered by prevalence and entity pairs.
             stmt_info_list = []
@@ -127,7 +127,7 @@ class HtmlAssembler(object):
                     'english': english,
                     'evidence': ev_list,
                     'evidence_count': evidence_count_str})
-            short_name = make_statement_string(key, verb)
+            short_name = make_string_from_sort_key(key, verb)
             short_name_key = str(uuid.uuid4())
             stmts_formatted.append((short_name, short_name_key, stmt_info_list))
         metadata = {k.replace('_', ' ').title(): v
