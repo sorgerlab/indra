@@ -152,6 +152,10 @@ class IndraDBRestProcessor(object):
         """Get the total evidence count for a statement hash."""
         return self.__evidence_counts.get(str(stmt_hash))
 
+    def get_ev_counts(self):
+        """Get a dictionary of evidence counts."""
+        return self.__evidence_counts.copy()
+
     def get_hash_statements_dict(self):
         """Return a dict of Statements keyed by hashes."""
         res = {stmt_hash: stmts_from_json([stmt])[0]

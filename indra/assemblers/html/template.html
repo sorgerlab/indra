@@ -29,6 +29,26 @@
     <!-- Load curationFunctions.js -->
     <script src="https://www.indra.bio/indra/assemblers/html/curationFunctions.js"></script>
 
+    <!-- Toggle a hidden element -->
+    <script>
+        function toggle_corner(div, side) {
+            var prop = "border-bottom-" + side + "-radius";
+            var bl_radius = $(div).css(prop);
+            if (bl_radius == "8px") {
+               $(div).css(prop, "1px");
+            } else {
+               $(div).css(prop, "8px");
+            }
+        }
+        function toggler(short_name_key) {
+            $("#" + short_name_key + "_group").toggle();
+            var header = "#" + short_name_key + "_heading"
+            toggle_corner(header, "left");
+            toggle_corner(header, "right");
+            $(header).show();
+         }
+    </script>
+
   <style>
 a {
   color: #256DC5;
@@ -51,6 +71,28 @@ nav {
   overflow-y: auto;
   height: 100vh;
   display: block;
+}
+.group {
+  display: none;
+  border-top-left-radius: 1px;
+  border-top-right-radius: 1px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  padding: 5px;
+  margin: 5px;
+}
+.group_heading {
+  cursor: pointer;
+  color: #2F4F4F;
+  padding: 5px;
+  padding-left: 10px;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border: 1px solid #C0C0C0;
+  margin: 5px;
+  position: sticky;
 }
 .badge-subject {
   background-color: #4a36aa;
@@ -97,7 +139,7 @@ nav {
         </div>
         <div class="page-header">
             <a name='index'></a>
-            <h4>Curator Information</h4>
+            <h3>Curator Information</h3>
             <div class="user_data">
                 <div class="api_key_form" id="api_key_form" style="display:inline-block; vertical-align: top; width: 330">
                     <form name="apiKeyForm" action="javascript:keySubmit(api_key_input.value)">
@@ -129,66 +171,77 @@ nav {
     <p>&nbsp;</p>
     {% endif %}
 
-    <h4>Statements</h4>
+    <h3>Statements</h3>
     <p>&nbsp;</p>
-    {% for stmt_info in statements %}
-    <a name='{{ stmt_info['hash'] }}'></a>
-    <div class="statement">
-      <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
-      <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
-        <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
-      </a>
-    </div>
-    <div class="evidence">
-    <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Source</th>
-                <th>Evidence</th>
-                <th>Source Refs</th>
-              </tr>
-            </thead>
+    <table class="table" id="heading" style="border-collapse: collapse; position: sticky;">
+        <thead>
+        <tr>
+            <th width="6em"> </th>
+            <th width="25em">Source</th>
+            <th>Evidence</th>
+            <th width="25em" align="left" style="white-space: nowrap">Source Refs</th>
+        </tr>
+        </thead>
+    </table>
+    {% for short_name, short_name_key, stmt_info_list in stmt_data %}
+        <div class="group_heading" onclick="toggler('{{ short_name_key }}');"
+             id="{{ short_name_key }}_heading">
+            <h4 class="align-middle">{{ short_name }}</h4>
+        </div>
+        <div class="group" id="{{ short_name_key }}_group">
+        {% for stmt_info in stmt_info_list %}
+        <a name="{{ stmt_info['hash'] }}"></a>
+        <div class="statement" style="padding-bottom: 10px;">
+          <h5 class="align-middle">{{ stmt_info['english'] }}</h5>
+          <a href="{{ db_rest_url }}/from_hash/{{ stmt_info['hash'] }}?format=html">
+            <span class="badge badge-secondary badge-pill">{{ stmt_info['evidence_count'] }}</span>
+          </a>
+        </div>
+        <div class="evidence">
+        <table class="table" id="{{ stmt_info['hash'] }}" style="border-collapse: collapse;">
             <tbody id="table_{{loop.index0}}">
                 {% for ev in stmt_info['evidence'] %}
-                <tr class="parent" id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
-                    <td id="row{{loop.index0}}_click" data-clicked="false" class="curation_toggle"
+                <tr id="{{ ev['source_hash'] }}" style="border-bottom: 1px solid #FFFFFF;">
+                    <td width="6em" id="row{{loop.index0}}_click"
+                        data-clicked="false" class="curation_toggle"
                         onclick="addCurationRow(this.closest('tr')); this.onclick=null;">&#9998;</td>
-                    <td>{{ ev['source_api'] }}</td>
+                    <td width="25em">{{ ev['source_api'] }}</td>
                     {% if ev['text'] %}
                         <td>"{{ ev['text'] }}"</td>
                     {% else %}
                         <td><i>None available</i></td>
                     {% endif %}
-                    <td style="white-space: nowrap">
+                    <td width="25em" align="left" style="white-space: nowrap">
                        {% if ev['pmid'] %}
                         <a class="pmid_link"
                 title="Hover again to see info"
-                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;" 
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['pmid'] }}'>
+                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["pmid"] }}'>
                         {{ ev['pmid'] }}</a>
                         {% elif 'pmid' in ev['text_refs'] and ev['text_refs']['pmid'] %}
                         <a class="pmid_link"
                 title="Hover again to see info"
-                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;" 
-                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev['text_refs']['pmid'] }}'>
+                onmouseover="setPMIDlinkTitle(this.textContent, this); this.onmouseover=null;"
+                href='https://www.ncbi.nlm.nih.gov/pubmed/{{ ev["text_refs"]["pmid"] }}'>
                         {{ ev['text_refs']['pmid'] }}</a>
                        {% endif %}
                        {% if 'pmcid' in ev['text_refs'] and ev['text_refs']['pmcid'] %}
                        | <a class="pmcid_link"
-                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev['text_refs']['pmcid'] }}'>PMC</a>
+                href='https://www.ncbi.nlm.nih.gov/pmc/articles/{{ ev["text_refs"]["pmcid"] }}'>PMC</a>
                         {% endif %}
                        {% if 'doi' in ev['text_refs'] and ev['text_refs']['doi'] %}
                        | <a class="doi_link"
-                href='https://dx.doi.org/{{ ev['text_refs']['doi'] }}'>DOI</a>
+                href='https://dx.doi.org/{{ ev["text_refs"]["doi"] }}'>DOI</a>
                        {% endif %}
                     </td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
-    </div> <!-- evidence -->
-    {% endfor %}
+        </div> <!-- evidence -->
+        {% endfor %}
+        </div> <!-- statement group presentation -->
+        {% endfor %}
 
         </div> <!-- /main content -->
       </div> <!-- /row for sidebar -->

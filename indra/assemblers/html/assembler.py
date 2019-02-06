@@ -4,7 +4,9 @@ supports curation.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
+
 import re
+import uuid
 import itertools
 from os.path import abspath, dirname, join
 from jinja2 import Template
@@ -15,6 +17,8 @@ logger = logging.getLogger(__name__)
 from indra.statements import *
 from indra.assemblers.english import EnglishAssembler
 from indra.databases import get_identifiers_url
+from indra.util.statement_presentation import group_and_sort_statements,\
+    make_string_from_sort_key
 
 
 # Create a template object from the template file, load once
@@ -92,7 +96,6 @@ class HtmlAssembler(object):
         """
         self.statements += statements
 
-
     def make_model(self):
         """Return the assembled HTML content as a string.
 
@@ -102,30 +105,38 @@ class HtmlAssembler(object):
             The assembled HTML as a string.
         """
         stmts_formatted = []
-        for stmt in self.statements:
-            stmt_hash = stmt.get_hash(shallow=True)
-            ev_list = self._format_evidence_text(stmt)
-            english = self._format_stmt_text(stmt)
-            if self.ev_totals:
-                total_evidence = self.ev_totals.get(int(stmt_hash), '?')
-                if total_evidence == '?':
-                    logger.warning('The hash %s was not found in the '
-                                   'evidence totals dict.' % stmt_hash)
-                evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
-            else:
-                evidence_count_str = str(len(ev_list))
-            stmts_formatted.append({
-                'hash': stmt_hash,
-                'english': english,
-                'evidence': ev_list,
-                'evidence_count': evidence_count_str})
+        stmt_rows = group_and_sort_statements(self.statements,
+                                              self.ev_totals if self.ev_totals else None)
+        for key, verb, stmts in stmt_rows:
+            # This will now be ordered by prevalence and entity pairs.
+            stmt_info_list = []
+            for stmt in stmts:
+                stmt_hash = stmt.get_hash(shallow=True)
+                ev_list = self._format_evidence_text(stmt)
+                english = self._format_stmt_text(stmt)
+                if self.ev_totals:
+                    total_evidence = self.ev_totals.get(int(stmt_hash), '?')
+                    if total_evidence == '?':
+                        logger.warning('The hash %s was not found in the '
+                                       'evidence totals dict.' % stmt_hash)
+                    evidence_count_str = '%s / %s' % (len(ev_list), total_evidence)
+                else:
+                    evidence_count_str = str(len(ev_list))
+                stmt_info_list.append({
+                    'hash': stmt_hash,
+                    'english': english,
+                    'evidence': ev_list,
+                    'evidence_count': evidence_count_str})
+            short_name = make_string_from_sort_key(key, verb)
+            short_name_key = str(uuid.uuid4())
+            stmts_formatted.append((short_name, short_name_key, stmt_info_list))
         metadata = {k.replace('_', ' ').title(): v
                     for k, v in self.metadata.items()}
         if self.db_rest_url and not self.db_rest_url.endswith('statements'):
             db_rest_url = self.db_rest_url + '/statements'
         else:
             db_rest_url = '.'
-        self.model = template.render(statements=stmts_formatted,
+        self.model = template.render(stmt_data=stmts_formatted,
                                      metadata=metadata, title=self.title,
                                      db_rest_url=db_rest_url)
         return self.model
