@@ -1,13 +1,11 @@
 import json
 import logging
-
 import requests
 
 from indra import get_config
-
 from indra.sources.indra_db_rest.exceptions import IndraDBRestAPIError
 
-logger = logging.getLogger('indra_db_rest_util')
+logger = logging.getLogger(__name__)
 
 
 def submit_query_request(end_point, *args, **kwargs):
