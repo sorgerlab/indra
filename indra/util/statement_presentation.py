@@ -19,7 +19,7 @@ def _get_keyed_stmts(stmt_list):
             if 1 < len(ag_ns) < 6:
                 for pair in permutations(ag_ns, 2):
                     yield key + tuple(pair),  s
-            if len(ag_ns) <= 2:
+            if len(ag_ns) == 2:
                 continue
             key += tuple(sorted(ag_ns))
         elif verb == 'Conversion':
