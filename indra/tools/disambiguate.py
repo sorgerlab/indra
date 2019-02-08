@@ -69,7 +69,7 @@ def get_text_content_for_pmids(pmids):
             for text_content in source if text_content is not None]
 
 
-def get_plaintexts(text_content):
+def get_plaintexts(text_content, contains=None):
     """Returns a corpus of plaintexts given text content from different sources
 
     Converts xml files into plaintext, leaves abstracts as they are.
@@ -80,10 +80,11 @@ def get_plaintexts(text_content):
         lists of text content. each item should either be a plaintext, an
         an NLM xml or an Elsevier xml
     """
-    return [_universal_extract_text(article) for article in text_content]
+    return [_universal_extract_text(article, contains)
+            for article in text_content]
 
 
-def _universal_extract_text(xml):
+def _universal_extract_text(xml, contains=None):
     """Extract plaintext from xml
 
     First try to parse the xml as if it came from elsevier. if we do not
@@ -103,12 +104,12 @@ def _universal_extract_text(xml):
         otherwise the input is returned unchanged
     """
     try:
-        plaintext = elsevier_client.extract_text(xml)
+        plaintext = elsevier_client.extract_text(xml, contains)
     except Exception:
         plaintext = None
     if plaintext is None:
         try:
-            plaintext = pmc_client.extract_text(xml)
+            plaintext = pmc_client.extract_text(xml, contains)
         except Exception:
             plaintext = xml
     return plaintext
