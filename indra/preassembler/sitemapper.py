@@ -7,11 +7,12 @@ import logging
 import textwrap
 import requests
 from copy import deepcopy
+from protmapper import phosphosite_client
 from protmapper.api import ProtMapper, default_site_map
 from indra.statements import *
 from indra.util import read_unicode_csv
 from indra.config import has_config, get_config
-from indra.databases import uniprot_client, hgnc_client, phosphosite_client
+from indra.databases import uniprot_client, hgnc_client
 # Python 2
 try:
     basestring
