@@ -109,7 +109,7 @@ def get_xml(pmc_id):
         return xml_bytes.decode('utf-8')
 
 
-def extract_text(xml_string):
+def extract_text(xml_string, contains=None):
     """Get text from the body of the given NLM XML string.
 
     Parameters
@@ -131,7 +131,10 @@ def extract_text(xml_string):
     for element in tree.iter():
         if isinstance(element.tag, basestring) and \
            re.search('(^|})[p|title]$', element.tag) and element.text:
-            paragraphs.append(' '.join(element.itertext()).strip())
+            paragraph = ' '.join(element.itertext())
+            if contains is None or re.search(r'[^\w]%s[^\w]' % contains,
+                                             paragraph):
+                paragraphs.append(paragraph)
     if paragraphs:
         return ' '.join(paragraphs).strip()
     else:
