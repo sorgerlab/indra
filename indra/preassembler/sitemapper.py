@@ -1,19 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
-import os
-import pickle
 import logging
 import textwrap
 import requests
 from copy import deepcopy
 from functools import lru_cache
-from protmapper import phosphosite_client
 from protmapper.api import ProtMapper, default_site_map
 from indra.statements import *
-from indra.util import read_unicode_csv
-from indra.config import has_config, get_config
-from indra.databases import uniprot_client, hgnc_client
+from indra.databases import hgnc_client
 # Python 2
 try:
     basestring
@@ -64,7 +59,10 @@ class MappedStatement(object):
 
 class SiteMapper(ProtMapper):
     """
-    Use curated site information to standardize modification sites in stmts.
+    Use site information to fix modification sites in Statements.
+
+    This is a wrapper around the protmapper package's ProtMapper class and adds
+    all the additional functionality to handle INDRA Statements and Agents.
 
     Parameters
     ----------
@@ -174,11 +172,18 @@ class SiteMapper(ProtMapper):
                     do_orthology_mapping=do_orthology_mapping,
                     do_isoform_mapping=do_isoform_mapping
                     )
+            # If we got a mapping for the site, we apply that mapping to the
+            # copy of the statement
             if stmt_mapped_site.has_mapping():
                 stmt_copy.residue = stmt_mapped_site.mapped_res
                 stmt_copy.position = stmt_mapped_site.mapped_pos
+            # Additionally, if there is a mapped site object at all (whether
+            # or not there is an actual successful mapping), we add that to the
+            # list of mapped sites
             if stmt_mapped_site is not None:
                 mapped_sites.append(stmt_mapped_site)
+        # We only return a MappedStatement if there were any mappings done,
+        # otherwise we return None
         if any([ms is not None for ms in mapped_sites]):
             mapped_stmt = MappedStatement(stmt, mapped_sites, stmt_copy)
         else:
@@ -226,7 +231,7 @@ class SiteMapper(ProtMapper):
         -------
         tuple
             2-tuple containing (valid_statements, mapped_statements). The first
-            element of the tuple is a list valid statements
+            element of the tuple is a list of valid statements
             (:py:class:`indra.statement.Statement`) that were not found to
             contain any site errors. The second element of the tuple is a list
             of mapped statements (:py:class:`MappedStatement`) with information
@@ -240,10 +245,9 @@ class SiteMapper(ProtMapper):
             mapped_stmt = self.map_stmt_sites(stmt, do_methionine_offset,
                                               do_orthology_mapping,
                                               do_isoform_mapping)
-
-            # If the invalid_sites list isn't empty, that means that there were
-            # incorrect residues for this statement; add the statement to
-            # the mapped_statements list
+            # If we got a MappedStatement as a return value, we add that to the
+            # list of mapped statements, otherwise, the original Statement is
+            # not invalid so we add it to the other list directly.
             if mapped_stmt is not None:
                 mapped_statements.append(mapped_stmt)
             else:
@@ -284,14 +288,13 @@ class SiteMapper(ProtMapper):
             element is either the original Agent, if unchanged, or a copy
             of it.
         """
-        if agent is None:
-            return [], agent
-        new_agent = deepcopy(agent)
         # If there are no modifications on this agent, then we can return the
         # copy of the agent
-        if not agent.mods:
-            return [], new_agent
+        if agent is None or not agent.mods:
+            return [], agent
+        new_agent = deepcopy(agent)
         mapped_sites = []
+        # Now iterate over all the modifications and map each one
         for idx, mod_condition in enumerate(agent.mods):
             mapped_site = \
                 self._map_agent_mod(agent, mod_condition,
@@ -318,7 +321,7 @@ class SiteMapper(ProtMapper):
 
     def _map_agent_mod(self, agent, mod_condition, do_methionine_offset=True,
                        do_orthology_mapping=True, do_isoform_mapping=True):
-        """Check a single modification site on an agent and look for a mapping.
+        """Map a single modification condition on an agent.
 
         Parameters
         ----------
@@ -347,7 +350,9 @@ class SiteMapper(ProtMapper):
         Returns
         -------
         protmapper.MappedSite or None
-            A MappedSite object.
+            A MappedSite object is returned if a UniProt ID was found for the
+            agent, and if both the position and residue for the modification
+            condition were available. Otherwise None is returned.
         """
         # Get the UniProt ID of the agent, if not found, return
         up_id = _get_uniprot_id(agent)
@@ -371,11 +376,13 @@ class SiteMapper(ProtMapper):
 default_mapper = SiteMapper(default_site_map)
 
 
+# TODO: determine if this should be done in the protmapper or if this is the
+# preferred place
 @lru_cache(maxsize=10000)
 def _get_uniprot_id(agent):
-    """Get the Uniprot ID for an agent, looking up in HGNC if necessary.
+    """Return the UniProt ID for an agent, looking up in HGNC if necessary.
 
-    If the Uniprot ID is a list then return the first ID by default.
+    If the UniProt ID is a list then return the first ID by default.
     """
     up_id = agent.db_refs.get('UP')
     hgnc_id = agent.db_refs.get('HGNC')
