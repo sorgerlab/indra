@@ -267,22 +267,22 @@ class PybelAssembler(object):
         # We set is_active to True here since the polarity is encoded
         # in the edge (decreases/increases)
         act_obj.activity.is_active = True
-        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, Activation) \
-                                         else pc.DIRECTLY_DECREASES
+        activates = isinstance(stmt, Activation)
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.subj, act_obj, relation, stmt.evidence)
 
     def _assemble_modification(self, stmt):
         """Example: p(HGNC:MAP2K1) => p(HGNC:MAPK1, pmod(Ph, Thr, 185))"""
         sub_agent = deepcopy(stmt.sub)
         sub_agent.mods.append(stmt._get_mod_condition())
-        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, AddModification) \
-                                         else pc.DIRECTLY_DECREASES
+        activates = isinstance(stmt, AddModification)
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.enz, sub_agent, relation, stmt.evidence)
 
     def _assemble_regulate_amount(self, stmt):
         """Example: p(HGNC:ELK1) => p(HGNC:FOS)"""
-        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, IncreaseAmount) \
-                                         else pc.DIRECTLY_DECREASES
+        activates = isinstance(stmt, IncreaseAmount)
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.subj, stmt.obj, relation, stmt.evidence)
 
     def _assemble_gef(self, stmt):
@@ -305,8 +305,8 @@ class PybelAssembler(object):
         """Example: p(HGNC:ELK1, pmod(Ph)) => act(p(HGNC:ELK1), ma(tscript))"""
         act_agent = Agent(stmt.agent.name, db_refs=stmt.agent.db_refs)
         act_agent.activity = ActivityCondition(stmt.activity, True)
-        relation = pc.DIRECTLY_INCREASES if stmt.is_active \
-                                         else pc.DIRECTLY_DECREASES
+        activates = stmt.is_active
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.agent, act_agent, relation, stmt.evidence)
 
     def _assemble_complex(self, stmt):
@@ -451,10 +451,10 @@ def _get_agent_node_no_bcs(agent):
 
     if variants:
         node_data = node_data.with_variants(variants)
-    
+
     if isinstance(node_data, (bioprocess, pathology)):
         return node_data, None
-    
+
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
     return node_data, edge_data
@@ -532,7 +532,6 @@ def _get_agent_activity(agent):
     return activity(pybel_activity)
 
 
-
 def _get_evidence(evidence):
     text = evidence.text if evidence.text else 'No evidence text.'
     pybel_ev = {pc.EVIDENCE: text}
@@ -564,3 +563,21 @@ def _get_evidence(evidence):
         pybel_ev[pc.ANNOTATIONS] = annotations
 
     return pybel_ev
+
+
+def get_causal_edge(stmt, activates):
+    all_missing_information = all('direct' not in evidence.epistemics for evidence in stmt.evidence)
+    if all_missing_information:
+        return pc.DIRECTLY_INCREASES if activates else pc.DIRECTLY_DECREASES
+
+    any_contact = any(
+        evidence.epistemics.get('direct', True)
+        for evidence in stmt.evidence
+    )
+    if any_contact:
+        return pc.DIRECTLY_INCREASES if activates else pc.DIRECTLY_DECREASES
+
+    return pc.INCREASES if activates else pc.DECREASES
+
+
+
