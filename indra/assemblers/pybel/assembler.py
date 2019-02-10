@@ -239,9 +239,11 @@ class PybelAssembler(object):
             else:
                 continue
         # Turn the tuples into dicts
-        edge_data = [(u, v, dict([('sign', sign)])) for u, v, sign in edge_set]
         graph = nx.MultiDiGraph()
-        graph.add_edges_from(edge_data)
+        graph.add_edges_from(
+            (u, v, dict(sign=sign))
+            for u, v, sign in edge_set
+        )
         return graph
 
 
