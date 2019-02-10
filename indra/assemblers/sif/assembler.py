@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class SifAssembler(object):
     """The SIF assembler assembles INDRA Statements into a networkx graph.
 
-    This graph can then be exported into SIF (simple ineraction format) or
+    This graph can then be exported into SIF (simple interaction format) or
     a Boolean network.
 
     Parameters
