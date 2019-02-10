@@ -167,7 +167,7 @@ class SiteMapper(ProtMapper):
             # Check the modification on the appropriate agent
             old_mod = stmt._get_mod_condition()
             # Figure out if this site is invalid
-            stmt_mapped_site = self._check_agent_mod(
+            stmt_mapped_site = self._map_agent_mod(
                     agent_to_check,
                     old_mod,
                     do_methionine_offset=do_methionine_offset,
@@ -178,7 +178,7 @@ class SiteMapper(ProtMapper):
                 stmt_copy.residue = stmt_mapped_site.mapped_res
                 stmt_copy.position = stmt_mapped_site.mapped_pos
                 mapped_sites.append(stmt_mapped_site)
-        if any([ms.has_mapping() for ms in mapped_sites]):
+        if any([ms is not None for ms in mapped_sites]):
             mapped_stmt = MappedStatement(stmt, mapped_sites, stmt_copy)
         else:
             mapped_stmt = None
@@ -251,8 +251,7 @@ class SiteMapper(ProtMapper):
         return valid_statements, mapped_statements
 
     def _map_agent_sites(self, agent, do_methionine_offset=True,
-                         do_orthology_mapping=True,
-                         do_isoform_mapping=True):
+                         do_orthology_mapping=True, do_isoform_mapping=True):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
@@ -316,9 +315,8 @@ class SiteMapper(ProtMapper):
             mapped_sites.append(mapped_site)
         return mapped_sites, agent
 
-    def _check_agent_mod(self, agent, mod_condition, do_methionine_offset=True,
-                         do_orthology_mapping=True,
-                         do_isoform_mapping=True):
+    def _map_agent_mod(self, agent, mod_condition, do_methionine_offset=True,
+                       do_orthology_mapping=True, do_isoform_mapping=True):
         """Check a single modification site on an agent and look for a mapping.
 
         Parameters
@@ -370,57 +368,6 @@ class SiteMapper(ProtMapper):
 
 
 default_mapper = SiteMapper(default_site_map)
-
-
-def _update_mod_list(agent_name, mods, mapped_sites):
-    """Get an updated list of ModConditions based on the site map.
-
-    Parameters
-    ----------
-    agent_name : string
-        HGNC gene name; must match the entry in the site map file.
-    mods : list of :py:class:`indra.statement.ModCondition`
-        Original modifications (possibly with incorrect sites).
-    invalid_sites : list
-        List of invalid sites as returned by :py:func:`_check_agent_mod`.
-
-    Returns
-    -------
-    list of :py:class:`indra.statement.ModCondition`
-        List of ModConditions containing the original site information (if
-        valid, or if no information found in the site map) or updated site
-        information (if invalid and found in the site map).
-    """
-    new_mod_list = []
-    # Get the list of invalid/mapped sites for the agent
-    invalid_site_keys = [site[0] for site in invalid_sites]
-    for old_mod in mods:
-        old_mod_key = (agent_name, old_mod.residue, old_mod.position)
-        # If the original modification was found to be invalid, create a newly
-        # updated modification
-        if old_mod_key in invalid_site_keys:
-            mapped_site = \
-                    invalid_sites[invalid_site_keys.index(old_mod_key)][1]
-            # No entry in the map: pass the incorrect site through
-            if mapped_site is None:
-                new_mod_list.append(old_mod)
-            # Entry in the map
-            else:
-                # Do we have actual site information?
-                new_res = mapped_site[0]
-                new_pos = mapped_site[1]
-                if new_res is not None and new_pos is not None:
-                    new_mod_list.append(
-                            ModCondition(old_mod.mod_type, new_res, new_pos,
-                                         old_mod.is_modified))
-                # Mapped, but no site info--pass through unchanged
-                else:
-                    new_mod_list.append(old_mod)
-        # The modification is not in the invalid site list, so it's considered
-        # valid
-        else:
-            new_mod_list.append(old_mod)
-    return new_mod_list
 
 
 @lru_cache(maxsize=10000)
