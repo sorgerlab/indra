@@ -293,10 +293,10 @@ class SiteMapper(ProtMapper):
         mapped_sites = []
         for idx, mod_condition in enumerate(agent.mods):
             mapped_site = \
-                self._check_agent_mod(agent, mod_condition,
-                                      do_methionine_offset=do_methionine_offset,
-                                      do_orthology_mapping=do_orthology_mapping,
-                                      do_isoform_mapping=do_isoform_mapping)
+                self._map_agent_mod(agent, mod_condition,
+                                    do_methionine_offset=do_methionine_offset,
+                                    do_orthology_mapping=do_orthology_mapping,
+                                    do_isoform_mapping=do_isoform_mapping)
             # If we couldn't do the mapping or the mapped site isn't invalid
             # then we don't need to change the existing ModCondition
             if not mapped_site or mapped_site.not_invalid():
@@ -313,7 +313,7 @@ class SiteMapper(ProtMapper):
             # Finally, whether or not we have a mapping, we keep track of mapped
             # sites and make them available to the caller
             mapped_sites.append(mapped_site)
-        return mapped_sites, agent
+        return mapped_sites, new_agent
 
     def _map_agent_mod(self, agent, mod_condition, do_methionine_offset=True,
                        do_orthology_mapping=True, do_isoform_mapping=True):
