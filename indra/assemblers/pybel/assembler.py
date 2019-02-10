@@ -566,18 +566,12 @@ def _get_evidence(evidence):
 
 
 def get_causal_edge(stmt, activates):
-    all_missing_information = all('direct' not in evidence.epistemics for evidence in stmt.evidence)
-    if all_missing_information:
-        return pc.DIRECTLY_INCREASES if activates else pc.DIRECTLY_DECREASES
-
+    """Returns the causal, polar edge with the correct "contact"."""
     any_contact = any(
-        evidence.epistemics.get('direct', True)
+        evidence.epistemics.get('direct', False)
         for evidence in stmt.evidence
     )
     if any_contact:
         return pc.DIRECTLY_INCREASES if activates else pc.DIRECTLY_DECREASES
 
     return pc.INCREASES if activates else pc.DECREASES
-
-
-

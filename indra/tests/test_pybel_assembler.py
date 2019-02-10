@@ -82,7 +82,7 @@ def test_simple_modification_no_evidence():
         assert belgraph.number_of_edges() == 2
         edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
         assert edge_data.get(pc.SUBJECT) == subj_edge
-        assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+        assert edge_data[pc.RELATION] == pc.INCREASES
 
 
 def test_modification_with_evidences():
@@ -100,7 +100,7 @@ def test_modification_with_evidences():
     assert belgraph.number_of_edges() == 2
     edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
     assert edge_data.get(pc.SUBJECT) == activity('kin')
-    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.RELATION] == pc.INCREASES
     assert edge_data[pc.EVIDENCE] == 'evidence text'
     assert edge_data[pc.CITATION] == {
         pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
@@ -132,11 +132,11 @@ def test_activation():
     stmt1 = Activation(braf_no_act, mek)
     stmt2 = Activation(braf_kin, mek, 'kinase')
     edge1 = {
-        pc.RELATION: pc.DIRECTLY_INCREASES,
+        pc.RELATION: pc.INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY}
     }
     edge2 = {
-        pc.RELATION: pc.DIRECTLY_INCREASES,
+        pc.RELATION: pc.INCREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin')
     }
@@ -151,19 +151,19 @@ def test_activation():
         assert edge_data == edge
 
 
-def test_indirect_activation():
+def test_direct_activation():
     braf_no_act = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
     braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt1_ev = Evidence(
         pmid='1234',
-        epistemics={'direct': False},
+        epistemics={'direct': True},
     )
     stmt1 = Activation(braf_no_act, mek, evidence=stmt1_ev)
     stmt2 = Activation(braf_kin, mek, 'kinase', evidence=stmt1_ev)
     edge1 = {
-        pc.RELATION: pc.INCREASES,
+        pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
         pc.EVIDENCE: 'No evidence text.',
         pc.CITATION: {
@@ -172,7 +172,7 @@ def test_indirect_activation():
         },
     }
     edge2 = {
-        pc.RELATION: pc.INCREASES,
+        pc.RELATION: pc.DIRECTLY_INCREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin'),
         pc.EVIDENCE: 'No evidence text.',
@@ -198,7 +198,7 @@ def test_inhibition():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt = Inhibition(braf_kin, mek, 'kinase')
     edge = {
-        pc.RELATION: pc.DIRECTLY_DECREASES,
+        pc.RELATION: pc.DECREASES,
         pc.SUBJECT: activity('kin'),
         pc.OBJECT: activity('kin')
     }
@@ -224,7 +224,7 @@ def test_increase_amount():
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     edge_data = get_first_edge_data(belgraph)
-    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.RELATION] == pc.INCREASES
 
 
 def test_increase_amount_tscript():
@@ -240,7 +240,7 @@ def test_increase_amount_tscript():
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     edge_data = get_first_edge_data(belgraph)
-    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.RELATION] == pc.INCREASES
     assert edge_data[pc.SUBJECT] == activity('tscript')
 
 
