@@ -56,8 +56,7 @@ def test_site_map_modification():
     res = sm.map_sites([st1, st2])
 
     assert len(res) == 2
-    valid_stmts = res[0]
-    mapped_stmts = res[1]
+    valid_stmts, mapped_stmts = res
     assert isinstance(valid_stmts, list)
     assert isinstance(mapped_stmts, list)
     assert len(valid_stmts) == 0
@@ -67,8 +66,7 @@ def test_site_map_modification():
     assert isinstance(mapped_stmt1, MappedStatement)
     assert mapped_stmt1.original_stmt == st1
     assert isinstance(mapped_stmt1.mapped_mods, list)
-    assert len(mapped_stmt1.mapped_mods) == 4, \
-        "Got %d mapped mods." % mapped_stmt1.mapped_mods  # FIXME
+    assert len(mapped_stmt1.mapped_mods) == 4, mapped_stmt1.mapped_mods
     ms = mapped_stmt1.mapped_stmt
     assert isinstance(ms, Statement)
     agent1 = ms.enz
@@ -86,8 +84,7 @@ def test_site_map_modification():
     assert isinstance(mapped_stmt2, MappedStatement)
     assert mapped_stmt2.original_stmt == st2
     assert isinstance(mapped_stmt2.mapped_mods, list)
-    assert len(mapped_stmt2.mapped_mods) == 5, \
-        "Got %d mapped mods." % mapped_stmt1.mapped_mods  # FIXME
+    assert len(mapped_stmt2.mapped_mods) == 5, mapped_stmt2.mapped_mods
     ms = mapped_stmt2.mapped_stmt
     assert isinstance(ms, Statement)
     agent1 = ms.enz
@@ -118,12 +115,11 @@ def test_site_map_activity_modification():
     assert len(valid) == 0
     assert len(mapped) == 1
     ms = mapped[0]
-    assert ms.mapped_mods[0][0] == ('MAPK1', 'T', '183')
-    assert ms.mapped_mods[0][1][0] == 'T'
-    assert ms.mapped_mods[0][1][1] == '185'
-    assert ms.mapped_mods[1][0] == ('MAPK1', 'Y', '185')
-    assert ms.mapped_mods[1][1][0] == 'Y'
-    assert ms.mapped_mods[1][1][1] == '187'
+    mm = ms.mapped_mods
+    assert (mm[0].gene_name, mm[0].orig_res, mm[0].orig_pos, mm[0].mapped_res,
+            mm[0].mapped_pos) == ('MAPK1', 'T', '183', 'T', '185')
+    assert (mm[1].gene_name, mm[1].orig_res, mm[1].orig_pos, mm[1].mapped_res,
+            mm[1].mapped_pos) == ('MAPK1', 'Y', '185', 'Y', '187')
     assert ms.original_stmt == st1
     assert ms.mapped_stmt.agent.mods[0].matches(ModCondition('phosphorylation',
                                                              'T', '185'))
@@ -136,18 +132,16 @@ def test_site_map_selfmodification():
     mapk1_invalid = Agent('MAPK1',
                           mods=[ModCondition('phosphorylation', 'T', '183')],
                           db_refs={'UP': 'P28482'})
-    st1 = SelfModification(mapk1_invalid, 'Y', '185')
+    st1 = Autophosphorylation(mapk1_invalid, 'Y', '185')
     (valid, mapped) = sm.map_sites([st1])
     assert len(valid) == 0
     assert len(mapped) == 1
     mapped_stmt = mapped[0]
-    assert mapped_stmt.mapped_mods[0][0] == ('MAPK1', 'T', '183')
-    assert mapped_stmt.mapped_mods[0][1][0] == 'T'
-    assert mapped_stmt.mapped_mods[0][1][1] == '185'
-    assert mapped_stmt.mapped_mods[1][0] == ('MAPK1', 'Y', '185')
-    assert mapped_stmt.mapped_mods[1][1][0] == 'Y'
-    assert mapped_stmt.mapped_mods[1][1][1] == '187'
-    assert mapped_stmt.original_stmt == st1
+    mm = mapped_stmt.mapped_mods
+    assert (mm[0].gene_name, mm[0].orig_res, mm[0].orig_pos, mm[0].mapped_res,
+            mm[0].mapped_pos) == ('MAPK1', 'T', '183', 'T', '185')
+    assert (mm[1].gene_name, mm[1].orig_res, mm[1].orig_pos, mm[1].mapped_res,
+            mm[1].mapped_pos) == ('MAPK1', 'Y', '185', 'Y', '187')
     ms = mapped_stmt.mapped_stmt
     agent1 = ms.enz
     assert agent1.mods[0].matches(ModCondition('phosphorylation', 'T', '185'))

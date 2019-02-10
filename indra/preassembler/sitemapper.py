@@ -177,6 +177,7 @@ class SiteMapper(ProtMapper):
             if stmt_mapped_site.has_mapping():
                 stmt_copy.residue = stmt_mapped_site.mapped_res
                 stmt_copy.position = stmt_mapped_site.mapped_pos
+            if stmt_mapped_site is not None:
                 mapped_sites.append(stmt_mapped_site)
         if any([ms is not None for ms in mapped_sites]):
             mapped_stmt = MappedStatement(stmt, mapped_sites, stmt_copy)
