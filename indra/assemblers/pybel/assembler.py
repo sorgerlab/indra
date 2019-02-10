@@ -550,11 +550,17 @@ def _get_evidence(evidence):
                     pc.CITATION_REFERENCE: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
 
-    pybel_ev[pc.ANNOTATIONS] = {}
+    annotations = {}
     if evidence.source_api:
-        pybel_ev[pc.ANNOTATIONS]['source_api'] = evidence.source_api
+        annotations['source_api'] = evidence.source_api
     if evidence.source_id:
-        pybel_ev[pc.ANNOTATIONS]['source_id'] = evidence.source_id
-    pybel_ev[pc.ANNOTATIONS].update(evidence.epistemics)
+        annotations['source_id'] = evidence.source_id
+    for key, value in evidence.epistemics.items():
+        if key == 'direct':
+            continue
+        annotations[key] = value
+
+    if annotations:
+        pybel_ev[pc.ANNOTATIONS] = annotations
 
     return pybel_ev
