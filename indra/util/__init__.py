@@ -4,6 +4,7 @@ import sys
 import csv
 import gzip
 import zlib
+import logging
 from io import BytesIO
 from functools import wraps
 from datetime import datetime
@@ -21,6 +22,8 @@ else:
     non_unicode = str
     import cPickle as pickle
 
+logger = logging.getLogger(__name__)
+
 
 def clockit(func):
     @wraps(func)
@@ -28,7 +31,7 @@ def clockit(func):
         start = datetime.now()
         ret = func(*args, **kwargs)
         end = datetime.now()
-        print('%s %-30s %s %s' % ('~'*5, func.__name__, end-start, '~'*5))
+        logger.debug('%s %-30s %s %s', '~' * 5, func.__name__, end-start, '~' * 5)
         return ret
     return timed_func
 
