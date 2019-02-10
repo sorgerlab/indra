@@ -246,8 +246,7 @@ class PybelAssembler(object):
         )
         return graph
 
-
-    def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
+    def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidences):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
         obj_data, obj_edge = _get_agent_node(obj_agent)
@@ -257,7 +256,7 @@ class PybelAssembler(object):
         subj_node = self.model.add_node_from_data(subj_data)
         obj_node = self.model.add_node_from_data(obj_data)
         edge_data_list = \
-            _combine_edge_data(relation, subj_edge, obj_edge, evidence)
+            _combine_edge_data(relation, subj_edge, obj_edge, evidences)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, **edge_data)
 
@@ -379,16 +378,16 @@ class PybelAssembler(object):
         pass
 
 
-def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
+def _combine_edge_data(relation, subj_edge, obj_edge, evidences):
     edge_data = {pc.RELATION: relation}
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
         edge_data[pc.OBJECT] = obj_edge
-    if not evidence:
+    if not evidences:
         return [edge_data]
     edge_data_list = []
-    for ev in evidence:
+    for ev in evidences:
         pybel_ev = _get_evidence(ev)
         edge_data_one = copy(edge_data)
         edge_data_one.update(pybel_ev)
