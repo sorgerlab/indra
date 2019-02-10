@@ -7,6 +7,7 @@ import logging
 import textwrap
 import requests
 from copy import deepcopy
+from functools import lru_cache
 from protmapper import phosphosite_client
 from protmapper.api import ProtMapper, default_site_map
 from indra.statements import *
@@ -144,7 +145,10 @@ class SiteMapper(ProtMapper):
                 new_agent.bound_conditions[ind].agent = new_b
 
             new_agent_list.append(new_agent)
-        if any([ms.valid is False for ms in mapped_sites]):
+
+        # If we made any actual mappings, we set the new agent list which
+        # includes any mapped agents
+        if any([ms.has_mapping() for ms in mapped_sites]):
             stmt_copy.set_agent_list(new_agent_list)
 
         # --- Special handling for these statements ---
@@ -161,34 +165,23 @@ class SiteMapper(ProtMapper):
                               if isinstance(stmt, Modification)
                               else stmt_copy.enz)
             # Check the modification on the appropriate agent
-            old_mod_list = [ModCondition('modification', stmt.residue,
-                                         stmt.position)]
+            old_mod = stmt._get_mod_condition()
             # Figure out if this site is invalid
-            stmt_mapped_sites = self._check_agent_mod(
+            stmt_mapped_site = self._check_agent_mod(
                     agent_to_check,
-                    old_mod_list,
+                    old_mod,
                     do_methionine_offset=do_methionine_offset,
                     do_orthology_mapping=do_orthology_mapping,
                     do_isoform_mapping=do_isoform_mapping
                     )
-            # Add to our list of invalid sites
-            mapped_sites += stmt_mapped_sites
-            # Get the updated list of ModCondition objects
-            new_mod_list = _update_mod_list(agent_to_check.name, old_mod_list,
-                                 mapped_sitesmt_mapped_sites)
-            # Update the statement with the correct site
-            stmt_copy.residue = new_mod_list[0].residue
-            stmt_copy.position = new_mod_list[0].position
-
-        # If any of the sites was invalid, that means that there were
-        # incorrect residues for this statement; add the statement to
-        # the mapped_statements list
-        mapped_stmt = None
-        # Note to self: we want to explicitly ignore ms.valid is None here,
-        # hence the explicit False comparison
-        if any([ms.valid is False for ms in mapped_sites]):
+            if stmt_mapped_site.has_mapping():
+                stmt_copy.residue = stmt_mapped_site.mapped_res
+                stmt_copy.position = stmt_mapped_site.mapped_pos
+                mapped_sites.append(stmt_mapped_site)
+        if any([ms.has_mapping() for ms in mapped_sites]):
             mapped_stmt = MappedStatement(stmt, mapped_sites, stmt_copy)
-
+        else:
+            mapped_stmt = None
         return mapped_stmt
 
     def map_sites(self, stmts, do_methionine_offset=True,
@@ -287,50 +280,53 @@ class SiteMapper(ProtMapper):
         Returns
         -------
         tuple
-            The first element is a list of invalid sites, where each entry in
-            the list has two elements: ((gene_name, residue, position),
-            mapped_site).  If the invalid position was not found in the site
-            map, mapped_site is None; otherwise it is a tuple consisting of
-            (residue, position, comment). The second element is the agent after
-            the sites have been correct (if mappings were found in the site
-            map). If mappings were not found in the site map, the original
-            (incorrect) agent is returned.
-
+            The first element is a list of MappedSite objects, the second
+            element is either the original Agent, if unchanged, or a copy
+            of it.
         """
         if agent is None:
-            return ([], agent)
+            return [], agent
         new_agent = deepcopy(agent)
         # If there are no modifications on this agent, then we can return the
         # copy of the agent
         if not agent.mods:
-            return ([], new_agent)
-        mapped_sites = self._check_agent_mod(agent, agent.mods,
-                                    do_methionine_offset=do_methionine_offset,
-                                    do_orthology_mapping=do_orthology_mapping,
-                                    do_isoform_mapping=do_isoform_mapping)
-        # The agent is valid, so return the agent unchanged
-        if all([ms.valid is not False for ms in mapped_sites]):
-            return ([], new_agent)
-        # Look up updated (corrected) list of modifications
-        new_mod_list = _update_mod_list(agent.name, agent.mods, mapped_sites)
-        # Finally, update the agent, and return along with invalid site info
-        new_agent.mods = new_mod_list
-        return (mapped_sites, new_agent)
+            return [], new_agent
+        mapped_sites = []
+        for idx, mod_condition in enumerate(agent.mods):
+            mapped_site = \
+                self._check_agent_mod(agent, mod_condition,
+                                      do_methionine_offset=do_methionine_offset,
+                                      do_orthology_mapping=do_orthology_mapping,
+                                      do_isoform_mapping=do_isoform_mapping)
+            # If we couldn't do the mapping or the mapped site isn't invalid
+            # then we don't need to change the existing ModCondition
+            if not mapped_site or mapped_site.not_invalid():
+                continue
+            # Otherwise, if there is a mapping, we replace the old ModCondition
+            # with the new one where only the residue and position are updated,
+            # the mod type and the is modified flag are kept.
+            if mapped_site.has_mapping():
+                mc = ModCondition(mod_condition.mod_type,
+                                  mapped_site.mapped_res,
+                                  mapped_site.mapped_pos,
+                                  mod_condition.is_modified)
+                new_agent.mods[idx] = mc
+            # Finally, whether or not we have a mapping, we keep track of mapped
+            # sites and make them available to the caller
+            mapped_sites.append(mapped_site)
+        return mapped_sites, agent
 
-    def _check_agent_mod(self, agent, mods, do_methionine_offset=True,
+    def _check_agent_mod(self, agent, mod_condition, do_methionine_offset=True,
                          do_orthology_mapping=True,
                          do_isoform_mapping=True):
-        """Check an agent for invalid sites and look for mappings.
-
-        Look up each modification site on the agent in Uniprot and then the
-        site map.
+        """Check a single modification site on an agent and look for a mapping.
 
         Parameters
         ----------
         agent : :py:class:`indra.statements.Agent`
             Agent to check for invalid modification sites.
-        mods : list of :py:class:`indra.statements.ModCondition`
-            Modifications to check for validity and map.
+        mod_condition : :py:class:`indra.statements.ModCondition`
+            Modification to check for validity and map.
         do_methionine_offset : boolean
             Whether to check for off-by-one errors in site position (possibly)
             attributable to site numbering from mature proteins after
@@ -351,29 +347,26 @@ class SiteMapper(ProtMapper):
 
         Returns
         -------
-        list[protmapper.MappedSite]
-            A list of MappedSite objects.
+        protmapper.MappedSite or None
+            A MappedSite object.
         """
-        invalid_sites = []
+        # Get the UniProt ID of the agent, if not found, return
         up_id = _get_uniprot_id(agent)
-        # If the uniprot entry is not found, let it pass
         if not up_id:
             logger.debug("No uniprot ID for %s" % agent.name)
-            return [] # Same effect as valid sites
-        mapped_sites = []
-        for old_mod in mods:
-            # If no site information for this residue, skip
-            if old_mod.position is None or old_mod.residue is None:
-                continue
-            mapped_site = \
-                self.map_to_human_ref(up_id, 'uniprot',
-                                      old_mod.residue,
-                                      old_mod.position,
-                                      do_methionine_offset=do_methionine_offset,
-                                      do_orthology_mapping=do_orthology_mapping,
-                                      do_isoform_mapping=do_isoform_mapping)
-            mapped_sites.append(mapped_site)
-        return mapped_sites
+            return None
+        # If no site information for this residue, skip
+        if mod_condition.position is None or mod_condition.residue is None:
+            return None
+        # Otherwise, try to map it and return the mapped site
+        mapped_site = \
+            self.map_to_human_ref(up_id, 'uniprot',
+                                  mod_condition.residue,
+                                  mod_condition.position,
+                                  do_methionine_offset=do_methionine_offset,
+                                  do_orthology_mapping=do_orthology_mapping,
+                                  do_isoform_mapping=do_isoform_mapping)
+        return mapped_site
 
 
 default_mapper = SiteMapper(default_site_map)
@@ -430,6 +423,7 @@ def _update_mod_list(agent_name, mods, mapped_sites):
     return new_mod_list
 
 
+@lru_cache(maxsize=10000)
 def _get_uniprot_id(agent):
     """Get the Uniprot ID for an agent, looking up in HGNC if necessary.
 
