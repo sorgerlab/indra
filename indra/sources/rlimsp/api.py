@@ -1,3 +1,5 @@
+__all__ = ['process_pmc']
+
 import json
 import logging
 import requests
