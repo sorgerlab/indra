@@ -727,7 +727,7 @@ class ReadingData(object):
     def get_cols():
         """Get the columns for the tuple returned by `make_tuple`."""
         return ('text_content_id', 'reader', 'reader_version', 'format',
-                'bytes')
+                'bytes', 'batch_id')
 
     def get_statements(self, reprocess=False):
         """General method to create statements."""
@@ -775,10 +775,10 @@ class ReadingData(object):
             raise Exception('Do not know how to zip format %s.' % self.format)
         return ret
 
-    def make_tuple(self):
+    def make_tuple(self, batch_id):
         """Make the tuple expected by the database."""
         return (self.tcid, self.reader, self.reader_version, self.format,
-                self.zip_content())
+                self.zip_content(), batch_id)
 
     def matches(self, r_entry):
         """Determine if reading data matches the a reading entry from the db.
