@@ -50,7 +50,7 @@ class SBGNAssembler(object):
         else:
             self.statements = statements
         self.sbgn = emaker.sbgn()
-        self._map = emaker.map()
+        self._map = emaker.map(language='process description')
         self.sbgn.append(self._map)
         self._id_counter = 0
         self._agent_ids = {}
