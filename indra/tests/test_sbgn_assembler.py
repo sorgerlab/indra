@@ -35,6 +35,7 @@ def test_modification():
     st = Phosphorylation(Agent('BRAF'), Agent('MAP2K1'))
     sa = SBGNAssembler([st])
     sbgn_xml = sa.make_model()
+    assert sbgn_xml.startswith(b'<?xml version='), sbgn_xml[:20]
     et = _parse_sbgn(sbgn_xml)
     _test_numelements(et, 4, 3)
 

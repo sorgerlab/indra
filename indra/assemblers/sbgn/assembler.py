@@ -120,7 +120,7 @@ class SBGNAssembler(object):
             An XML string representation of the SBGN model.
         """
         return lxml.etree.tostring(self.sbgn, pretty_print=pretty,
-                                   encoding=encoding)
+                                   encoding=encoding, xml_declaration=True)
 
     def save_model(self, file_name='model.sbgn'):
         """Save the assembled SBGN model in a file.
