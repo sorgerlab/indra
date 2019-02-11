@@ -3,10 +3,11 @@ from builtins import dict, str
 import requests
 from lxml import etree
 from indra.statements import *
-from indra.assemblers.sbgn import SBGNAssembler
+from indra.assemblers.sbgn.assembler import SBGNAssembler, sbgn_ns
 
-ns = {'sbgn': 'http://sbgn.org/libsbgn/pd/0.1'}
-schema_url = 'https://raw.githubusercontent.com/sbgn/libsbgn/master/resources/SBGN.xsd'
+ns = {'sbgn': sbgn_ns}
+schema_url = 'https://raw.githubusercontent.com/sbgn/libsbgn/' + \
+    'master/resources/SBGN.xsd'
 
 def _get_parser():
     res = requests.get(schema_url)
