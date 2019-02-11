@@ -103,13 +103,13 @@ class StatementData(object):
     @classmethod
     def get_cols(self):
         """Get the columns for the tuple returned by `make_tuple`."""
-        return 'reading_id', 'db_info_id', 'uuid', 'mk_hash', \
+        return 'batch_id', 'reading_id', 'db_info_id', 'uuid', 'mk_hash', \
                'source_hash', 'type', 'json', 'indra_version'
 
-    def make_tuple(self):
+    def make_tuple(self, batch_id):
         """Make a tuple for copying into the database."""
-        return (self.reading_id, self.db_info_id, self.statement.uuid,
-                self.statement.get_hash(shallow=False),
+        return (batch_id, self.reading_id, self.db_info_id,
+                self.statement.uuid, self.statement.get_hash(shallow=False),
                 self.statement.evidence[0].get_source_hash(),
                 self.statement.__class__.__name__,
                 json.dumps(self.statement.to_json()), self.indra_version)

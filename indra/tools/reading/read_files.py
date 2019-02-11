@@ -99,7 +99,7 @@ def main():
     outputs = read_files(input_lines, readers, verboes=verbose)
     reading_out_path = args.name + '_readings.pkl'
     with open(reading_out_path, 'wb') as f:
-        pickle.dump([output.make_tuple() for output in outputs], f)
+        pickle.dump([output.make_tuple(None) for output in outputs], f)
     print("Reading outputs stored in %s." % reading_out_path)
 
     stmt_data_list = make_statements(outputs)
