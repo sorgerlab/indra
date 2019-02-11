@@ -182,9 +182,11 @@ class SiteMapper(ProtMapper):
             # list of mapped sites
             if stmt_mapped_site is not None:
                 mapped_sites.append(stmt_mapped_site)
-        # We only return a MappedStatement if there were any mappings done,
-        # otherwise we return None
-        if any([ms is not None for ms in mapped_sites]):
+        # We only return a MappedStatement if it has at least one MappedSite
+        # that is known to be invalid (whether of not it as successfully
+        # mapped). Otherwise we return None.
+        if any([(ms is not None and not ms.not_invalid())
+                for ms in mapped_sites]):
             mapped_stmt = MappedStatement(stmt, mapped_sites, stmt_copy)
         else:
             mapped_stmt = None

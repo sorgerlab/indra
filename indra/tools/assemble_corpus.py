@@ -319,12 +319,7 @@ def map_sequence(stmts_in, **kwargs):
     valid, mapped = sm.map_sites(stmts_in, **_filter(kwargs, kwarg_list))
     correctly_mapped_stmts = []
     for ms in mapped:
-        correctly_mapped = True
-        for mm in ms.mapped_mods:
-            # Handle both the cases where there is no mapping found, and
-            # the one where there is a known error
-            if mm[1] is None or mm[1][0] is None or mm[1][1] is None:
-                correctly_mapped = False
+        correctly_mapped = all([mm.has_mapping() for mm in ms.mapped_mods])
         if correctly_mapped:
             correctly_mapped_stmts.append(ms.mapped_stmt)
     stmts_out = valid + correctly_mapped_stmts
