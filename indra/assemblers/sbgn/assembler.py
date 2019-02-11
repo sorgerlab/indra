@@ -9,7 +9,7 @@ from indra.assemblers.pysb.assembler import PysbPreassembler
 
 logger = logging.getLogger(__name__)
 
-sbgn_ns = 'http://sbgn.org/libsbgn/pd/0.1'
+sbgn_ns = 'http://sbgn.org/libsbgn/0.2'
 emaker = lxml.builder.ElementMaker(nsmap={None: sbgn_ns})
 
 
@@ -50,7 +50,7 @@ class SBGNAssembler(object):
         else:
             self.statements = statements
         self.sbgn = emaker.sbgn()
-        self._map = emaker.map()
+        self._map = emaker.map(language='process description')
         self.sbgn.append(self._map)
         self._id_counter = 0
         self._agent_ids = {}
@@ -120,7 +120,7 @@ class SBGNAssembler(object):
             An XML string representation of the SBGN model.
         """
         return lxml.etree.tostring(self.sbgn, pretty_print=pretty,
-                                   encoding=encoding)
+                                   encoding=encoding, xml_declaration=True)
 
     def save_model(self, file_name='model.sbgn'):
         """Save the assembled SBGN model in a file.

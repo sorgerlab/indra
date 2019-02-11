@@ -648,8 +648,9 @@ def test_assemble_export_sbgn():
     assert model is not None
     # Test that the right elements are there in the result
     et = ET.fromstring(model)
-    sbgn_ns = {'s': 'http://sbgn.org/libsbgn/pd/0.1'}
-    glyphs = et.findall('s:map/s:glyph', namespaces=sbgn_ns)
+    from indra.assemblers.sbgn.assembler import sbgn_ns
+    sbgn_nss = {'s': sbgn_ns}
+    glyphs = et.findall('s:map/s:glyph', namespaces=sbgn_nss)
     glyph_classes = [g.attrib.get('class') for g in glyphs]
     assert glyph_classes.count('macromolecule') == 6
     assert glyph_classes.count('complex') == 2
