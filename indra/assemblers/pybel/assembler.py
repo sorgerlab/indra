@@ -228,24 +228,25 @@ class PybelAssembler(object):
         edge_set = set()
         for u, v, edge_data in self.model.edges(data=True):
             rel = edge_data.get('relation')
-            if rel in (pc.INCREASES, pc.DIRECTLY_INCREASES):
+            if rel in pc.CAUSAL_INCREASE_RELATIONS:
                 edge_set.add((u, v, 0))
             elif rel in (pc.HAS_VARIANT, pc.HAS_COMPONENT):
                 edge_set.add((u, v, 0))
                 if symmetric_variant_links:
                     edge_set.add((v, u, 0))
-            elif rel in (pc.DECREASES, pc.DIRECTLY_DECREASES):
+            elif rel in pc.CAUSAL_DECREASE_RELATIONS:
                 edge_set.add((u, v, 1))
             else:
                 continue
         # Turn the tuples into dicts
-        edge_data = [(u, v, dict([('sign', sign)])) for u, v, sign in edge_set]
         graph = nx.MultiDiGraph()
-        graph.add_edges_from(edge_data)
+        graph.add_edges_from(
+            (u, v, dict(sign=sign))
+            for u, v, sign in edge_set
+        )
         return graph
 
-
-    def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidence):
+    def _add_nodes_edges(self, subj_agent, obj_agent, relation, evidences):
         """Given subj/obj agents, relation, and evidence, add nodes/edges."""
         subj_data, subj_edge = _get_agent_node(subj_agent)
         obj_data, obj_edge = _get_agent_node(obj_agent)
@@ -255,7 +256,7 @@ class PybelAssembler(object):
         subj_node = self.model.add_node_from_data(subj_data)
         obj_node = self.model.add_node_from_data(obj_data)
         edge_data_list = \
-            _combine_edge_data(relation, subj_edge, obj_edge, evidence)
+            _combine_edge_data(relation, subj_edge, obj_edge, evidences)
         for edge_data in edge_data_list:
             self.model.add_edge(subj_node, obj_node, **edge_data)
 
@@ -266,22 +267,22 @@ class PybelAssembler(object):
         # We set is_active to True here since the polarity is encoded
         # in the edge (decreases/increases)
         act_obj.activity.is_active = True
-        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, Activation) \
-                                         else pc.DIRECTLY_DECREASES
+        activates = isinstance(stmt, Activation)
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.subj, act_obj, relation, stmt.evidence)
 
     def _assemble_modification(self, stmt):
         """Example: p(HGNC:MAP2K1) => p(HGNC:MAPK1, pmod(Ph, Thr, 185))"""
         sub_agent = deepcopy(stmt.sub)
         sub_agent.mods.append(stmt._get_mod_condition())
-        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, AddModification) \
-                                         else pc.DIRECTLY_DECREASES
+        activates = isinstance(stmt, AddModification)
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.enz, sub_agent, relation, stmt.evidence)
 
     def _assemble_regulate_amount(self, stmt):
         """Example: p(HGNC:ELK1) => p(HGNC:FOS)"""
-        relation = pc.DIRECTLY_INCREASES if isinstance(stmt, IncreaseAmount) \
-                                         else pc.DIRECTLY_DECREASES
+        activates = isinstance(stmt, IncreaseAmount)
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.subj, stmt.obj, relation, stmt.evidence)
 
     def _assemble_gef(self, stmt):
@@ -304,8 +305,8 @@ class PybelAssembler(object):
         """Example: p(HGNC:ELK1, pmod(Ph)) => act(p(HGNC:ELK1), ma(tscript))"""
         act_agent = Agent(stmt.agent.name, db_refs=stmt.agent.db_refs)
         act_agent.activity = ActivityCondition(stmt.activity, True)
-        relation = pc.DIRECTLY_INCREASES if stmt.is_active \
-                                         else pc.DIRECTLY_DECREASES
+        activates = stmt.is_active
+        relation = get_causal_edge(stmt, activates)
         self._add_nodes_edges(stmt.agent, act_agent, relation, stmt.evidence)
 
     def _assemble_complex(self, stmt):
@@ -377,16 +378,16 @@ class PybelAssembler(object):
         pass
 
 
-def _combine_edge_data(relation, subj_edge, obj_edge, evidence):
+def _combine_edge_data(relation, subj_edge, obj_edge, evidences):
     edge_data = {pc.RELATION: relation}
     if subj_edge:
         edge_data[pc.SUBJECT] = subj_edge
     if obj_edge:
         edge_data[pc.OBJECT] = obj_edge
-    if not evidence:
+    if not evidences:
         return [edge_data]
     edge_data_list = []
-    for ev in evidence:
+    for ev in evidences:
         pybel_ev = _get_evidence(ev)
         edge_data_one = copy(edge_data)
         edge_data_one.update(pybel_ev)
@@ -450,10 +451,10 @@ def _get_agent_node_no_bcs(agent):
 
     if variants:
         node_data = node_data.with_variants(variants)
-    
+
     if isinstance(node_data, (bioprocess, pathology)):
         return node_data, None
-    
+
     # Also get edge data for the agent
     edge_data = _get_agent_activity(agent)
     return node_data, edge_data
@@ -531,7 +532,6 @@ def _get_agent_activity(agent):
     return activity(pybel_activity)
 
 
-
 def _get_evidence(evidence):
     text = evidence.text if evidence.text else 'No evidence text.'
     pybel_ev = {pc.EVIDENCE: text}
@@ -549,11 +549,29 @@ def _get_evidence(evidence):
                     pc.CITATION_REFERENCE: cit_ref_str}
     pybel_ev[pc.CITATION] = citation
 
-    pybel_ev[pc.ANNOTATIONS] = {}
+    annotations = {}
     if evidence.source_api:
-        pybel_ev[pc.ANNOTATIONS]['source_api'] = evidence.source_api
+        annotations['source_api'] = evidence.source_api
     if evidence.source_id:
-        pybel_ev[pc.ANNOTATIONS]['source_id'] = evidence.source_id
-    pybel_ev[pc.ANNOTATIONS].update(evidence.epistemics)
+        annotations['source_id'] = evidence.source_id
+    for key, value in evidence.epistemics.items():
+        if key == 'direct':
+            continue
+        annotations[key] = value
+
+    if annotations:
+        pybel_ev[pc.ANNOTATIONS] = annotations
 
     return pybel_ev
+
+
+def get_causal_edge(stmt, activates):
+    """Returns the causal, polar edge with the correct "contact"."""
+    any_contact = any(
+        evidence.epistemics.get('direct', False)
+        for evidence in stmt.evidence
+    )
+    if any_contact:
+        return pc.DIRECTLY_INCREASES if activates else pc.DIRECTLY_DECREASES
+
+    return pc.INCREASES if activates else pc.DECREASES

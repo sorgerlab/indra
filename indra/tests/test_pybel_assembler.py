@@ -1,9 +1,10 @@
 import networkx as nx
+
 import pybel.constants as pc
-from indra.statements import *
-from indra.databases import hgnc_client
-from pybel.dsl import activity, protein, pmod, hgvs, reaction, abundance, complex_abundance, bioprocess
 from indra.assemblers.pybel import assembler as pa
+from indra.databases import hgnc_client
+from indra.statements import *
+from pybel.dsl import abundance, activity, bioprocess, complex_abundance, hgvs, pmod, protein, reaction
 
 
 def id(gene_name):
@@ -81,7 +82,7 @@ def test_simple_modification_no_evidence():
         assert belgraph.number_of_edges() == 2
         edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
         assert edge_data.get(pc.SUBJECT) == subj_edge
-        assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+        assert edge_data[pc.RELATION] == pc.INCREASES
 
 
 def test_modification_with_evidences():
@@ -99,7 +100,7 @@ def test_modification_with_evidences():
     assert belgraph.number_of_edges() == 2
     edge_data = get_edge_data(belgraph, braf_dsl, map2k1_mod_dsl)
     assert edge_data.get(pc.SUBJECT) == activity('kin')
-    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.RELATION] == pc.INCREASES
     assert edge_data[pc.EVIDENCE] == 'evidence text'
     assert edge_data[pc.CITATION] == {
         pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
@@ -130,11 +131,15 @@ def test_activation():
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt1 = Activation(braf_no_act, mek)
     stmt2 = Activation(braf_kin, mek, 'kinase')
-    edge1 = {pc.RELATION: pc.DIRECTLY_INCREASES,
-             pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY}}
-    edge2 = {pc.RELATION: pc.DIRECTLY_INCREASES,
-             pc.SUBJECT: activity('kin'),
-             pc.OBJECT: activity('kin')}
+    edge1 = {
+        pc.RELATION: pc.INCREASES,
+        pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY}
+    }
+    edge2 = {
+        pc.RELATION: pc.INCREASES,
+        pc.SUBJECT: activity('kin'),
+        pc.OBJECT: activity('kin')
+    }
     for stmt, edge in ((stmt1, edge1), (stmt2, edge2)):
         pba = pa.PybelAssembler([stmt])
         belgraph = pba.make_model()
@@ -146,14 +151,57 @@ def test_activation():
         assert edge_data == edge
 
 
+def test_direct_activation():
+    braf_no_act = Agent('BRAF', db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
+                     db_refs={'HGNC': '1097', 'UP': 'P15056'})
+    mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
+    stmt1_ev = Evidence(
+        pmid='1234',
+        epistemics={'direct': True},
+    )
+    stmt1 = Activation(braf_no_act, mek, evidence=stmt1_ev)
+    stmt2 = Activation(braf_kin, mek, 'kinase', evidence=stmt1_ev)
+    edge1 = {
+        pc.RELATION: pc.DIRECTLY_INCREASES,
+        pc.OBJECT: {pc.MODIFIER: pc.ACTIVITY},
+        pc.EVIDENCE: 'No evidence text.',
+        pc.CITATION: {
+            pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
+            pc.CITATION_REFERENCE: '1234',
+        },
+    }
+    edge2 = {
+        pc.RELATION: pc.DIRECTLY_INCREASES,
+        pc.SUBJECT: activity('kin'),
+        pc.OBJECT: activity('kin'),
+        pc.EVIDENCE: 'No evidence text.',
+        pc.CITATION: {
+            pc.CITATION_TYPE: pc.CITATION_TYPE_PUBMED,
+            pc.CITATION_REFERENCE: '1234',
+        },
+    }
+    for stmt, expected_edge in ((stmt1, edge1), (stmt2, edge2)):
+        pba = pa.PybelAssembler([stmt])
+        belgraph = pba.make_model()
+        assert len(belgraph.nodes()) == 2
+        assert braf_dsl in belgraph
+        assert map2k1_dsl in belgraph
+        assert belgraph.number_of_edges() == 1
+        edge_data = get_first_edge_data(belgraph)
+        assert expected_edge == edge_data
+
+
 def test_inhibition():
     braf_kin = Agent('BRAF', activity=ActivityCondition('kinase', True),
                      db_refs={'HGNC': '1097', 'UP': 'P15056'})
     mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'UP': 'Q02750'})
     stmt = Inhibition(braf_kin, mek, 'kinase')
-    edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
-            pc.SUBJECT: activity('kin'),
-            pc.OBJECT: activity('kin')}
+    edge = {
+        pc.RELATION: pc.DECREASES,
+        pc.SUBJECT: activity('kin'),
+        pc.OBJECT: activity('kin')
+    }
     pba = pa.PybelAssembler([stmt])
     belgraph = pba.make_model()
     assert len(belgraph.nodes()) == 2
@@ -176,7 +224,7 @@ def test_increase_amount():
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     edge_data = get_first_edge_data(belgraph)
-    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.RELATION] == pc.INCREASES
 
 
 def test_increase_amount_tscript():
@@ -192,7 +240,7 @@ def test_increase_amount_tscript():
     assert tp53_dsl in belgraph
     assert belgraph.number_of_edges() == 1
     edge_data = get_first_edge_data(belgraph)
-    assert edge_data[pc.RELATION] == pc.DIRECTLY_INCREASES
+    assert edge_data[pc.RELATION] == pc.INCREASES
     assert edge_data[pc.SUBJECT] == activity('tscript')
 
 
@@ -213,9 +261,11 @@ def test_gef():
     assert kras_node in belgraph
 
     edge_data = get_edge_data(belgraph, gef_node, kras_node)
-    edge = {pc.RELATION: pc.DIRECTLY_INCREASES,
-            pc.SUBJECT: activity('gef'),
-            pc.OBJECT: activity('gtp')}
+    edge = {
+        pc.RELATION: pc.DIRECTLY_INCREASES,
+        pc.SUBJECT: activity('gef'),
+        pc.OBJECT: activity('gtp')
+    }
     assert edge_data == edge
 
 
@@ -237,9 +287,11 @@ def test_gap():
     assert gap_node in belgraph
     assert ras_node in belgraph
     edge_data = get_edge_data(belgraph, gap_node, ras_node)
-    edge = {pc.RELATION: pc.DIRECTLY_DECREASES,
-            pc.SUBJECT: activity('gap'),
-            pc.OBJECT: activity('gtp')}
+    edge = {
+        pc.RELATION: pc.DIRECTLY_DECREASES,
+        pc.SUBJECT: activity('gap'),
+        pc.OBJECT: activity('gtp')
+    }
     assert edge_data == edge
 
 
@@ -366,8 +418,10 @@ def test_bound_condition():
     assert (egfr_grb2_sos1_phos_complex_dsl, kras_node) in belgraph.edges()
 
     edge_data = (egfr_grb2_sos1_phos_complex_dsl, kras_node,
-                 {pc.RELATION: pc.DIRECTLY_INCREASES,
-                  pc.OBJECT: activity('gtp')})
+                 {
+                     pc.RELATION: pc.DIRECTLY_INCREASES,
+                     pc.OBJECT: activity('gtp')
+                 })
     assert edge_data in belgraph.edges(data=True)
 
 

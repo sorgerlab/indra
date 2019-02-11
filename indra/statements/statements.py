@@ -237,6 +237,7 @@ class Statement(object):
     supported_by : list of :py:class:`Statement`
         Statements supported by this statement.
     """
+
     _agent_order = NotImplemented
 
     def __init__(self, evidence=None, supports=None, supported_by=None):
@@ -560,6 +561,7 @@ class Modification(Statement):
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
+
     _agent_order = ['enz', 'sub']
 
     def __init__(self, enz, sub, residue=None, position=None, evidence=None):
@@ -722,6 +724,7 @@ class SelfModification(Statement):
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
+
     _agent_order = ['enz']
 
     def __init__(self, enz, residue=None, position=None, evidence=None):
@@ -818,7 +821,6 @@ class Phosphorylation(AddModification):
     >>> erk = Agent('MAPK1')
     >>> phos = Phosphorylation(mek, erk, 'T', '185')
     """
-    pass
 
 
 class Autophosphorylation(SelfModification):
@@ -832,7 +834,6 @@ class Autophosphorylation(SelfModification):
     >>> p38_tab1 = Agent('P38', bound_conditions=[BoundCondition(tab1)])
     >>> autophos = Autophosphorylation(p38_tab1)
     """
-    pass
 
 
 class Transphosphorylation(SelfModification):
@@ -844,7 +845,6 @@ class Transphosphorylation(SelfModification):
     exactly one bound_conditions entry, and we assume that enz phosphorylates
     this molecule. The bound_neg property is ignored here.
     """
-    pass
 
 
 class Dephosphorylation(RemoveModification):
@@ -858,117 +858,94 @@ class Dephosphorylation(RemoveModification):
     >>> erk = Agent('MAPK1')
     >>> dephos = Dephosphorylation(dusp6, erk, 'T', '185')
     """
-    pass
 
 
 class Hydroxylation(AddModification):
     """Hydroxylation modification."""
-    pass
 
 
 class Dehydroxylation(RemoveModification):
     """Dehydroxylation modification."""
-    pass
 
 
 class Sumoylation(AddModification):
     """Sumoylation modification."""
-    pass
 
 
 class Desumoylation(RemoveModification):
     """Desumoylation modification."""
-    pass
 
 
 class Acetylation(AddModification):
     """Acetylation modification."""
-    pass
 
 
 class Deacetylation(RemoveModification):
     """Deacetylation modification."""
-    pass
 
 
 class Glycosylation(AddModification):
     """Glycosylation modification."""
-    pass
 
 
 class Deglycosylation(RemoveModification):
     """Deglycosylation modification."""
-    pass
 
 
 class Ribosylation(AddModification):
     """Ribosylation modification."""
-    pass
 
 
 class Deribosylation(RemoveModification):
     """Deribosylation modification."""
-    pass
 
 
 class Ubiquitination(AddModification):
     """Ubiquitination modification."""
-    pass
 
 
 class Deubiquitination(RemoveModification):
     """Deubiquitination modification."""
-    pass
 
 
 class Farnesylation(AddModification):
     """Farnesylation modification."""
-    pass
 
 
 class Defarnesylation(RemoveModification):
     """Defarnesylation modification."""
-    pass
 
 
 class Geranylgeranylation(AddModification):
     """Geranylgeranylation modification."""
-    pass
 
 
 class Degeranylgeranylation(RemoveModification):
     """Degeranylgeranylation modification."""
-    pass
 
 
 class Palmitoylation(AddModification):
     """Palmitoylation modification."""
-    pass
 
 
 class Depalmitoylation(RemoveModification):
     """Depalmitoylation modification."""
-    pass
 
 
 class Myristoylation(AddModification):
     """Myristoylation modification."""
-    pass
 
 
 class Demyristoylation(RemoveModification):
     """Demyristoylation modification."""
-    pass
 
 
 class Methylation(AddModification):
     """Methylation modification."""
-    pass
 
 
 class Demethylation(RemoveModification):
     """Demethylation modification."""
-    pass
 
 
 @python_2_unicode_compatible
@@ -1129,7 +1106,7 @@ class Inhibition(RegulateActivity):
     obj_activity : Optional[str]
         The activity of the obj Agent that is affected, e.g., its "kinase"
         activity.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
     """
     def __init__(self, subj, obj, obj_activity='activity', evidence=None):
@@ -1160,7 +1137,7 @@ class Activation(RegulateActivity):
     obj_activity : Optional[str]
         The activity of the obj Agent that is affected, e.g., its "kinase"
         activity.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the modification.
 
     Examples
@@ -1172,6 +1149,7 @@ class Activation(RegulateActivity):
     >>> erk = Agent('MAPK1')
     >>> act = Activation(mek, erk, 'kinase')
     """
+
     def __init__(self, subj, obj, obj_activity='activity', evidence=None):
         super(RegulateActivity, self).__init__(evidence)
         self.subj = subj
@@ -1205,6 +1183,7 @@ class ActiveForm(Statement):
     is_active : bool
         Whether the conditions are activating (True) or inactivating (False).
     """
+
     _agent_order = ['agent']
 
     def __init__(self, agent, activity, is_active, evidence=None):
@@ -1339,6 +1318,7 @@ class HasActivity(Statement):
         Whether the given Agent has the given activity (True) or
         not (False).
     """
+
     _agent_order = ['agent']
 
     def __init__(self, agent, activity, has_activity, evidence=None):
@@ -1414,6 +1394,7 @@ class Gef(Statement):
     >>> kras = Agent('KRAS')
     >>> gef = Gef(sos, kras)
     """
+
     _agent_order = ['gef', 'ras']
 
     def __init__(self, gef, ras, evidence=None):
@@ -1501,6 +1482,7 @@ class Gap(Statement):
     >>> kras = Agent('KRAS')
     >>> gap = Gap(rasa1, kras)
     """
+
     _agent_order = ['gap', 'ras']
 
     def __init__(self, gap, ras, evidence=None):
@@ -1583,6 +1565,7 @@ class Complex(Statement):
     >>> raf1 = Agent('RAF1')
     >>> cplx = Complex([braf, raf1])
     """
+
     _agent_order = ['members']
 
     def __init__(self, members, evidence=None):
@@ -1863,10 +1846,9 @@ class DecreaseAmount(RegulateAmount):
         The protein mediating the degradation.
     obj : :py:class:`indra.statement.Agent`
         The protein that is degraded.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the degradation statement.
     """
-    pass
 
 
 class IncreaseAmount(RegulateAmount):
@@ -1878,10 +1860,9 @@ class IncreaseAmount(RegulateAmount):
         The protein mediating the synthesis.
     obj : :py:class:`indra.statement.Agent`
         The protein that is synthesized.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the synthesis statement.
     """
-    pass
 
 
 class Influence(IncreaseAmount):
@@ -1899,9 +1880,10 @@ class Influence(IncreaseAmount):
     obj_delta : Optional[dict]
         A dictionary specifying the polarity and magnitude of
         change in the object.
-    evidence : list of :py:class:`Evidence`
+    evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the statement.
     """
+
     def __init__(self, subj, obj, subj_delta=None, obj_delta=None,
                  evidence=None):
         super(Influence, self).__init__(subj, obj, evidence)
@@ -2077,6 +2059,7 @@ class Conversion(Statement):
     evidence : None or :py:class:`Evidence` or list of :py:class:`Evidence`
         Evidence objects in support of the synthesis statement.
     """
+
     _agent_order = ['subj', 'obj_from', 'obj_to']
 
     def __init__(self, subj, obj_from=None, obj_to=None, evidence=None):
@@ -2195,6 +2178,7 @@ class Unresolved(Statement):
     representation of an indra statement. When this happens, this class is used
     as a place-holder, carrying only the uuid of the statement.
     """
+
     def __init__(self, uuid_str=None, shallow_hash=None, full_hash=None):
         super(Unresolved, self).__init__()
         self.uuid = uuid_str
