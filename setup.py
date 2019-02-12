@@ -1,7 +1,6 @@
-from ez_setup import use_setuptools
-use_setuptools()
-from setuptools import setup
 import sys
+from setuptools import setup
+
 
 def main():
     # Only install functools32 if we're in Python 2 (it's not available
