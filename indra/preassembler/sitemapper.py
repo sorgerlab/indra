@@ -96,16 +96,16 @@ class SiteMapper(ProtMapper):
     [
     MappedStatement:
         original_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
-        mapped_mods: (('MAP2K1', 'S', '217'), ('S', '218', 'off by one'))
-                     (('MAP2K1', 'S', '221'), ('S', '222', 'off by one'))
-                     (('MAPK1', 'T', '183'), ('T', '185', 'off by two; mouse sequence'))
+        mapped_mods: MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='217', mapped_res='S', mapped_pos='218', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1')
+                     MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='221', mapped_res='S', mapped_pos='222', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1')
+                     MappedSite(up_id='P28482', error_code=None, valid=False, orig_res='T', orig_pos='183', mapped_res='T', mapped_pos='185', description='INFERRED_MOUSE_SITE', gene_name='MAPK1')
         mapped_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     ]
     >>> ms = mapped[0]
     >>> ms.original_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
     >>> ms.mapped_mods # doctest:+IGNORE_UNICODE
-    [(('MAP2K1', 'S', '217'), ('S', '218', 'off by one')), (('MAP2K1', 'S', '221'), ('S', '222', 'off by one')), (('MAPK1', 'T', '183'), ('T', '185', 'off by two; mouse sequence'))]
+    [MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='217', mapped_res='S', mapped_pos='218', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1'), MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='221', mapped_res='S', mapped_pos='222', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1'), MappedSite(up_id='P28482', error_code=None, valid=False, orig_res='T', orig_pos='183', mapped_res='T', mapped_pos='185', description='INFERRED_MOUSE_SITE', gene_name='MAPK1')]
     >>> ms.mapped_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     """
