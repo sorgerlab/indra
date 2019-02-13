@@ -108,7 +108,7 @@ class RlimspParagraph(object):
             # unique, but that may not always be true.
             if len(entities) != len(rel_info['argument']):
                 logger.warning("Lost some arguments: %s vs. %s"
-                               % (entities, rel_info['arguments']))
+                               % (entities, rel_info['argument']))
 
             rel_type = rel_info['relationType']
             if rel_type == 'PHOSPHORYLATION':
@@ -130,4 +130,6 @@ class RlimspParagraph(object):
 
 def _fix_coords(coords, offset):
     """Adjust the entity coordinates to the beginning of the sentence."""
+    if coords is None:
+        return None
     return tuple([n - offset for n in coords])

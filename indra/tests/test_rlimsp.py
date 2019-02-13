@@ -9,4 +9,4 @@ def test_simple_usage():
 
 def test_ungrounded_usage():
     rp = rlimsp.process_pmc('PMC3717945', with_grounding=False)
-    assert len(rp.statements)
+    assert len(rp.statements) == 33, len(rp.statements)
