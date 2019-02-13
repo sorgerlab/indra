@@ -101,8 +101,13 @@ class RlimspParagraph(object):
             return None, None, None
         site_info = self._entity_dict[site_id]
         site_text = site_info['attribute'][0]['value']
+        residue = site_text[0]
+        site_parts = site_text.split('-')
+        position = None
+        if len(site_parts) == 2:
+            position = site_parts[1]
         coords = (site_info['charStart'], site_info['charEnd'])
-        return site_text[0], site_text.split('-')[1], coords
+        return residue, position, coords
 
     def _get_evidence(self, trigger_id, args, agent_coords, site_coords):
         """Get the evidence using the info in the trigger entity."""
