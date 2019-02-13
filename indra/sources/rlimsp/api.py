@@ -1,8 +1,9 @@
 __all__ = ['process_pmc']
 
-import json
 import logging
 import requests
+
+from .processor import RlimspProcessor
 
 
 logger = logging.getLogger(__name__)
@@ -27,4 +28,6 @@ def process_pmc(pmc_id, output_fname=default_output_fname, with_grounding=True):
         raise RLIMSP_Error("Bad status code: %d - %s"
                            % (resp.status_code, resp.reason))
 
-    return
+    rp = RlimspProcessor(resp.json())
+
+    return rp
