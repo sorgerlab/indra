@@ -94,7 +94,15 @@ class RlimspParagraph(object):
         raw_coords = (entity_info['charStart'], entity_info['charEnd'])
         return Agent(name, db_refs=refs), raw_coords
 
-    def _get_evidence(self, args, agent_coords):
+    def _get_site(self, site_id):
+        if site_id is None:
+            return None, None, None
+        site_info = self._entity_dict[site_id]
+        site_text = site_info['attribute'][0]['value']
+        coords = (site_info['charStart'], site_info['charEnd'])
+        return site_text[0], site_text.split('-')[1], coords
+
+    def _get_evidence(self, trigger_id, args, agent_coords, site_coords):
         """Get the evidence using the info in the trigger entity."""
         trigger_info = self._entity_dict[args['TRIGGER']]
 
@@ -117,9 +125,10 @@ class RlimspParagraph(object):
                                                trigger_info['charEnd']],
                                               s_start)}
             }
+        if site_coords:
+            annotations['site'] = {'coords': _fix_coords(site_coords, s_start)}
 
-        return Evidence(text_refs=self._text_refs.copy(),
-                        text=self._sentences[sent_idx],
+        return Evidence(text_refs=self._text_refs.copy(), text=text,
                         source_api='RLIMS-P', pmid=self._text_refs['pmid'],
                         annotations=annotations)
 
@@ -128,10 +137,15 @@ class RlimspParagraph(object):
         for rel_key, rel_info in self._relations.items():
             # Turn the arguments into a dict.
             args = {e['role']: e['entity_duid'] for e in rel_info['argument']}
+            entity_args = args.copy()
+
+            # Remove some special cases.
+            trigger_id = entity_args.pop('TRIGGER')
+            site_id = entity_args.pop('SITE', None)
 
             # Get the entity ids.
             entities = {role: self._get_agent(eid)
-                        for role, eid in args.items() if role != 'TRIGGER'}
+                        for role, eid in entity_args.items()}
 
             # Check to make sure we didn't loose any. Roles are presumed
             # unique, but that may not always be true.
@@ -146,10 +160,17 @@ class RlimspParagraph(object):
                 enz, enz_coords = entities.get('KINASE', (None, None))
                 sub, sub_coords = entities.get('SUBSTRATE', (None, None))
 
-                # Get the evidence
-                ev = self._get_evidence(args, [enz_coords, sub_coords])
+                # Get the site
+                residue, position, site_coords = self._get_site(site_id)
 
-                stmts.append(Phosphorylation(enz, sub, evidence=[ev]))
+                # Get the evidence
+                ev = self._get_evidence(trigger_id, args,
+                                        [enz_coords, sub_coords],
+                                        site_coords)
+
+                stmts.append(Phosphorylation(enz, sub, evidence=[ev],
+                                             residue=residue,
+                                             position=position))
             else:
                 logger.warning("Unhandled statement type: %s" % rel_type)
 
