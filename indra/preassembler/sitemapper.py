@@ -5,6 +5,7 @@ import os
 import pickle
 import logging
 import textwrap
+import requests
 from copy import deepcopy
 from indra.statements import *
 from indra.util import read_unicode_csv
