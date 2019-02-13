@@ -16,12 +16,22 @@ class RLIMSP_Error(Exception):
     pass
 
 
-def process_pmc(pmc_id, with_grounding=True):
-    """Get an output from RLIMS-p for the given pmic id."""
+def process_pmc(pmcid, with_grounding=True):
+    """Get an output from RLIMS-p for the given pmic id.
+
+    Parameters
+    ----------
+    pmcid : str
+        A PMCID, with the prefix PMC, of the paper to be "read".
+    with_grounding : bool
+        The RLIMS-P web service provides two endpoints, one pre-grounded, the
+        other not so much. The grounded endpoint returns far less content, and
+        may perform some grounding that can be handled by the grounding mapper.
+    """
     if with_grounding:
-        resp = requests.get(RLIMSP_URL + '.normed/pmcid/%s' % pmc_id)
+        resp = requests.get(RLIMSP_URL + '.normed/pmcid/%s' % pmcid)
     else:
-        resp = requests.get(RLIMSP_URL + '/pmcid/%s' % pmc_id)
+        resp = requests.get(RLIMSP_URL + '/pmcid/%s' % pmcid)
 
     if resp.status_code != 200:
         raise RLIMSP_Error("Bad status code: %d - %s"
