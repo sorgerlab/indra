@@ -87,6 +87,8 @@ class RlimspParagraph(object):
                                         "match id inferred from UniProt id "
                                         "{UP}.".format(**refs))
                         refs['HGNC'] = hgnc_id
+            elif id_dict['source'] == 'Tax':
+                refs['TAX'] = id_dict['idString']
             else:
                 logger.warning("Unhandled id type: {source}={idString}"
                                .format(**id_dict))
@@ -104,20 +106,17 @@ class RlimspParagraph(object):
 
     def _get_evidence(self, trigger_id, args, agent_coords, site_coords):
         """Get the evidence using the info in the trigger entity."""
-        trigger_info = self._entity_dict[args['TRIGGER']]
+        trigger_info = self._entity_dict[trigger_id]
 
         # Get the sentence index from the trigger word.
-        sent_idx = trigger_info['sentenceIndex']
+        s_idx_set = {self._entity_dict[eid]['sentenceIndex']
+                     for eid in args.values()}
+        i_min = min(s_idx_set)
+        i_max = max(s_idx_set)
 
-        # Check for other sentence indices.
-        other_sent_idx = {self._entity_dict[eid]['sentenceIndex']
-                          for eid in args.values()}
-        other_sent_idx -= {sent_idx}
-        if other_sent_idx:
-            logger.warning("Found another sentence index among the "
-                           "entities: %s." % other_sent_idx)
+        text = '. '.join(self._sentences[i_min:(i_max+1)]) + '.'
 
-        s_start = self._sentence_starts[sent_idx]
+        s_start = self._sentence_starts[i_min]
         annotations = {
             'agents': {'coords': [_fix_coords(coords, s_start)
                                   for coords in agent_coords]},
