@@ -20,7 +20,11 @@ def test_ungrounded_usage():
 
 def test_grounded_endpoint_with_pmids():
     pmid_list = ['16403219', '22258404', '16961925', '22096607']
+    stmts = []
     for pmid in pmid_list:
         rp = rlimsp.process_from_webservice(pmid, id_type='pmid',
                                             with_grounding=False)
         assert len(rp.statements) > 10, len(rp.statements)
+        stmts.extend(rp.statements)
+    assert len(stmts) == 397, len(stmts)
+    return
