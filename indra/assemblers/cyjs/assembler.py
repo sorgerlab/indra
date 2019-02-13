@@ -464,15 +464,16 @@ class CyJSAssembler(object):
 def _get_db_refs(agent):
     cyjs_db_refs = {}
     for db_name, db_ids in agent.db_refs.items():
-        if db_name == 'TEXT':
-            continue
         if isinstance(db_ids, int):
             db_id = str(db_ids)
         elif isinstance(db_ids, basestring):
             db_id = db_ids
         else:
             db_id = db_ids[0]
-        url = get_identifiers_url(db_name, db_id)
+        if db_name == 'TEXT':
+            url = db_id
+        else:
+            url = get_identifiers_url(db_name, db_id)
         if not url:
             continue
         db_name_map = {

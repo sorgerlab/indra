@@ -3,7 +3,7 @@ from builtins import dict, str
 from indra.statements import *
 from indra.assemblers.cyjs import CyJSAssembler
 
-mek = Agent('MAP2K1', db_refs={'HGNC': '6840'})
+mek = Agent('MAP2K1', db_refs={'HGNC': '6840', 'TEXT': 'mek1'})
 erk = Agent('MAPK1', db_refs={'UP': 'P28482'})
 dusp = Agent('DUSP4')
 st_phos = Phosphorylation(mek, erk)
@@ -34,13 +34,15 @@ def test_act():
     assert 'positive' in polarities
     assert 'negative' in polarities
     db_refs = [node['data']['db_refs'] for node in cja._nodes]
-    for node in cja._nodes:
+    for node, refs in zip(cja._nodes, db_refs):
         if node['data']['name'] == 'MAP2K1':
-            assert node['data']['db_refs'].get('HGNC')
+            assert refs.get('HGNC') == \
+                'http://identifiers.org/hgnc/HGNC:6840', refs
+            assert refs.get('TEXT') == 'mek1', refs
         if node['data']['name'] == 'MAPK1':
-            assert node['data']['db_refs'].get('UniProt')
+            assert refs.get('UniProt')
         if node['data']['name'] == 'DUSP4':
-            assert not node['data']['db_refs']
+            assert not refs
 
 def test_regamount():
     cja = CyJSAssembler()
