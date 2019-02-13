@@ -66,7 +66,7 @@ class RlimspParagraph(object):
         raw_coords = (entity_info['charStart'], entity_info['charEnd'])
         return Agent(name, db_refs=refs), raw_coords
 
-    def get_evidence(self, args, agent_coords):
+    def _get_evidence(self, args, agent_coords):
         """Get the evidence using the info in the trigger entity."""
         trigger_info = self._entity_dict[args['TRIGGER']]
 
@@ -102,7 +102,8 @@ class RlimspParagraph(object):
             args = {e['role']: e['entity_duid'] for e in rel_info['argument']}
 
             # Get the entity ids.
-            entities = {role: self._get_agent(eid) for role, eid in args.items() if role != 'TRIGGER'}
+            entities = {role: self._get_agent(eid)
+                        for role, eid in args.items() if role != 'TRIGGER'}
 
             # Check to make sure we didn't loose any. Roles are presumed
             # unique, but that may not always be true.
@@ -118,7 +119,7 @@ class RlimspParagraph(object):
                 sub, sub_coords = entities.get('SUBSTRATE', (None, None))
 
                 # Get the evidence
-                ev = self.get_evidence(args, [enz_coords, sub_coords])
+                ev = self._get_evidence(args, [enz_coords, sub_coords])
 
                 stmts.append(Phosphorylation(enz, sub, evidence=[ev]))
             else:
