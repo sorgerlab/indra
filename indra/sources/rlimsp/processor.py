@@ -53,7 +53,7 @@ class RlimspParagraph(object):
         # This will be the default name. If we get a gene name, it will
         # override this rawtext name.
         raw_text = entity_info['entityText']
-        name = raw_text.upper()
+        name = raw_text
 
         # Get the db refs.
         refs = {'TEXT': raw_text}
@@ -151,8 +151,7 @@ class RlimspParagraph(object):
 
                 stmts.append(Phosphorylation(enz, sub, evidence=[ev]))
             else:
-                # FIXME: For dev purposes only
-                print("Unhandled statement type: %s" % rel_type)
+                logger.warning("Unhandled statement type: %s" % rel_type)
 
         return stmts
 
