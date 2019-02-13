@@ -1,5 +1,7 @@
 import logging
 
+from indra.databases import hgnc_client, uniprot_client
+
 from indra.statements import Agent, Phosphorylation, Evidence
 
 logger = logging.getLogger("rlimsp_processor")
@@ -48,20 +50,46 @@ class RlimspParagraph(object):
             logger.warning("Entity key did not resolve to entity.")
             return None
 
-        # Keep it simple for now.
-        name = entity_info['entityText']
+        # This will be the default name. If we get a gene name, it will
+        # override this rawtext name.
+        raw_text = entity_info['entityText']
+        name = raw_text.upper()
 
         # Get the db refs.
-        refs = {'TEXT': name}
+        refs = {'TEXT': raw_text}
         for id_dict in entity_info['entityId']:
             if id_dict['source'] == 'Entrez':
                 refs['EGID'] = id_dict['idString']
+                hgnc_id = hgnc_client.get_hgnc_from_entrez(id_dict['idString'])
+                if hgnc_id is not None:
+                    # Check against what we may have already inferred from
+                    # UniProt. If it disagrees with this, let it be. Inference
+                    # from Entrez isn't as reliable.
+                    if 'HGNC' in refs.keys():
+                        if refs['HGNC'] != hgnc_id:
+                            logger.info("HGNC id for Entrez id {EGID} did not "
+                                        "match id inferred from UniProt id "
+                                        "{UP}.".format(**refs))
+                    else:
+                        refs['HGNC'] = hgnc_id
             elif id_dict['source'] == 'UniProt':
                 refs['UP'] = id_dict['idString']
+                gene_name = uniprot_client.get_gene_name(id_dict['idString'])
+                if gene_name is not None:
+                    name = gene_name
+                    hgnc_id = hgnc_client.get_hgnc_id(gene_name)
+                    if hgnc_id is not None:
+                        # Check to see if we have a conflict with an HGNC id
+                        # found from the Entrez id. If so, overwrite with this
+                        # one, in which we have greater faith.
+                        if 'HGNC' in refs.keys() and refs['HGNC'] != hgnc_id:
+                            logger.info("HGNC id for Entrez id {EGID} did not "
+                                        "match id inferred from UniProt id "
+                                        "{UP}.".format(**refs))
+                        refs['HGNC'] = hgnc_id
             else:
-                # FIXME: for development purposes only.
-                print("Unhandled id type: {source}={idString}"
-                      .format(**id_dict))
+                logger.warning("Unhandled id type: {source}={idString}"
+                               .format(**id_dict))
 
         raw_coords = (entity_info['charStart'], entity_info['charEnd'])
         return Agent(name, db_refs=refs), raw_coords
