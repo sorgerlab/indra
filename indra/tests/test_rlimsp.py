@@ -1,5 +1,5 @@
 from indra.sources import rlimsp
-
+ 
 
 def test_simple_usage():
     rp = rlimsp.process_from_webservice('PMC3717945')
@@ -18,7 +18,7 @@ def test_ungrounded_usage():
     assert len(rp.statements) == 33, len(rp.statements)
 
 
-def test_grounded_endpoint_with_pmids():
+def test_ungrounded_endpoint_with_pmids():
     pmid_list = ['16403219', '22258404', '16961925', '22096607']
     stmts = []
     for pmid in pmid_list:
@@ -28,3 +28,27 @@ def test_grounded_endpoint_with_pmids():
         stmts.extend(rp.statements)
     assert len(stmts) == 397, len(stmts)
     return
+
+
+def test_grounded_endpoint_with_pmids():
+    pmid_list = ['16403219', '22258404', '16961925', '22096607']
+    stmts = []
+    for pmid in pmid_list:
+        rp = rlimsp.process_from_webservice(pmid, id_type='pmid')
+        assert len(rp.statements), len(rp.statements)
+    assert len(stmts) > 10, len(stmts)
+
+
+def test_ungrounded_endpoint_with_pmids_on_medline():
+    pmid_list = ['16403219', '22258404', '16961925', '22096607']
+    for pmid in pmid_list:
+        rp = rlimsp.process_from_webservice(pmid, id_type='pmid',
+                                            source='medline')
+
+
+def test_grounded_endpoint_with_pmids_on_medline():
+    pmid_list = ['16403219', '22258404', '16961925', '22096607']
+    for pmid in pmid_list:
+        rp = rlimsp.process_from_webservice(pmid, id_type='pmid',
+                                            source='medline',
+                                            with_grounding=False)
