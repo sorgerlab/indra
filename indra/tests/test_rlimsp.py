@@ -36,6 +36,7 @@ def test_grounded_endpoint_with_pmids():
     for pmid in pmid_list:
         rp = rlimsp.process_from_webservice(pmid, id_type='pmid')
         assert len(rp.statements), len(rp.statements)
+        stmts.extend(rp.statements)
     assert len(stmts) > 10, len(stmts)
 
 
