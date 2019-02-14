@@ -28,7 +28,6 @@ install:
   - pip install .[all]
   # Temporary override for protmapper testing
   - pip install git+https://github.com/indralab/protmapper.git
-  - python -m protmapper.resources
   - aws s3 cp s3://bigmech/travis/reach-82631d-biores-e9ee36.jar . --no-sign-request  --source-region us-east-1
   - export REACHPATH=$TRAVIS_BUILD_DIR/reach-82631d-biores-e9ee36.jar
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
