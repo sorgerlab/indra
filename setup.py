@@ -68,7 +68,7 @@ def main():
                     'indra.sources.ndex_cx', 'indra.sources.reach',
                     'indra.sources.sofia',
                     'indra.sources.sparser', 'indra.sources.tas',
-                    'indra.sources.tees',
+                    'indra.sources.tees', 'indra.sources.rlimsp',
                     'indra.sources.trips', 'indra.resources',
                     'indra.resources.famplex', 'indra.statements',
                     'indra.tests',
