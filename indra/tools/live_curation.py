@@ -30,6 +30,14 @@ class Corpus(object):
         return str(self)
 
 
+@app.route('/reset_curation', methods=['POST'])
+def reset_curation():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+    scorer = wm_scorer.get_eidos_bayesian_scorer(default_priors)
+    return jsonify({})
+
+
 @app.route('/submit_curation', methods=['POST'])
 def submit_curation():
     if request.json is None:
