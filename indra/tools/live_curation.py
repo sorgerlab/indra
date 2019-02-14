@@ -30,15 +30,13 @@ class Corpus(object):
         return str(self)
 
 
-@app.route('/update_beliefs', methods=['POST'])
-def update_beliefs():
+@app.route('/submit_curation', methods=['POST'])
+def submit_curation():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
-
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
     curations = request.json.get('curations', {})
-    return_beliefs = request.json.get('return_beliefs', False)
 
     # Get the right corpus
     try:
@@ -84,24 +82,35 @@ def update_beliefs():
                     subtype_counts[ev.source_api][extraction_rule][idx] += 1
     # Finally, we update the scorer with the new curation counts
     scorer.update_counts(prior_counts, subtype_counts)
-    # If not belief return is needed, we just stop here
-    if not return_beliefs:
-        return jsonify({})
-    # Otherwise we rerun the belief calculation on the corpus with
-    # the updated scorer and return a dict of beliefs
-    else:
-        be = BeliefEngine(scorer)
-        stmts = list(corpus.statements.values())
-        be.set_prior_probs(stmts)
-        # Here we set beliefs based on actual curation
-        for uuid, correct in corpus.curations.items():
-            stmt = corpus.statements.get(uuid)
-            if stmt is None:
-                logger.warning('%s is not in the corpus.' % uuid)
-                continue
-            stmt.belief = correct
-        belief_dict = {st.uuid: st.belief for st in stmts}
-        return jsonify(belief_dict)
+    return jsonify({})
+
+
+@app.route('/update_beliefs', methods=['POST'])
+def update_beliefs():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    # Get input parameters
+    corpus_id = request.json.get('corpus_id')
+
+    # Get the right corpus
+    try:
+        corpus = corpora[corpus_id]
+    except KeyError:
+        abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
+        return
+    be = BeliefEngine(scorer)
+    stmts = list(corpus.statements.values())
+    be.set_prior_probs(stmts)
+    # Here we set beliefs based on actual curation
+    for uuid, correct in corpus.curations.items():
+        stmt = corpus.statements.get(uuid)
+        if stmt is None:
+            logger.warning('%s is not in the corpus.' % uuid)
+            continue
+        stmt.belief = correct
+    belief_dict = {st.uuid: st.belief for st in stmts}
+    return jsonify(belief_dict)
 
 
 if __name__ == '__main__':
