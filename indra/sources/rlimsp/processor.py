@@ -151,12 +151,6 @@ class RlimspParagraph(object):
             entities = {role: self._get_agent(eid)
                         for role, eid in entity_args.items()}
 
-            # Check to make sure we didn't loose any. Roles are presumed
-            # unique, but that may not always be true.
-            if len(entities) != len(rel_info['argument']):
-                logger.warning("Lost some arguments: %s vs. %s"
-                               % (entities, rel_info['argument']))
-
             rel_type = rel_info['relationType']
             if rel_type == 'PHOSPHORYLATION':
 
