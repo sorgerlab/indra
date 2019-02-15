@@ -67,6 +67,7 @@ def update_ontology(ont_url, rdf_path):
 
 
 def rdf_graph_from_yaml(yaml_root):
+    """Convert the YAML object into an RDF Graph object."""
     G = Graph()
     for top_entry in yaml_root:
         assert len(top_entry) == 1
@@ -76,6 +77,7 @@ def rdf_graph_from_yaml(yaml_root):
 
 
 def load_yaml_from_url(ont_url):
+    """Return a YAML object loaded from a YAML file URL."""
     res = requests.get(ont_url)
     if res.status_code != 200:
         raise Exception('Could not load ontology from %s' % ont_url)
