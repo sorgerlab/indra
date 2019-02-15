@@ -25,7 +25,7 @@ def _load_data():
         the csv file, described above.
     """
     # Get the cwv reader object.
-    csv_path = path.join(HERE, path.pardir, path.pardir, path.pardir, 'data',
+    csv_path = path.join(HERE, path.pardir, path.pardir, 'resources',
                          DATAFILE_NAME)
     data_iter = list(read_unicode_csv(csv_path))
 
