@@ -121,8 +121,8 @@ def update_beliefs():
     return jsonify(belief_dict)
 
 
-@app.route('/add_onto_entry', methods=['POST'])
-def add_onto_entry():
+@app.route('/add_ontlogy_entry', methods=['POST'])
+def add_ontology_entry():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
 
@@ -132,6 +132,16 @@ def add_onto_entry():
 
     # Add the entry and examples to the in-memory representation
     # of the onotology
+    return jsonify({})
+
+
+@app.route('/reset_ontology', methods=['POST'])
+def reset_ontology():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    # Reload the original ontology
+
     return jsonify({})
 
 
