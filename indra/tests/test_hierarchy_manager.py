@@ -204,6 +204,14 @@ def test_load_eidos_hierarchy():
         hm.load_from_rdf_string(fh.read())
     assert eidos_isa('UN/events/natural_disaster/storm',
                      'UN/events')
+    # Test loading from Graph
+    import rdflib
+    g = rdflib.Graph()
+    g.parse(eidos_ont, format='nt')
+    hm = HierarchyManager(None, True, True)
+    hm.load_from_rdf_graph(g)
+    assert eidos_isa('UN/events/natural_disaster/storm',
+                     'UN/events')
 
 
 def test_load_trips_hierarchy():

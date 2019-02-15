@@ -60,13 +60,38 @@ class HierarchyManager(object):
             self.graph = None
 
     def load_from_rdf_file(self, rdf_file):
+        """Initialize given an RDF input file representing the hierarchy."
+
+        Parameters
+        ----------
+        rdf_file : str
+            Path to an RDF file.
+        """
         self.graph = rdflib.Graph()
         self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.initialize()
 
-    def load_from_rdf_string(self, rdf_string):
+    def load_from_rdf_string(self, rdf_str):
+        """Initialize given an RDF string representing the hierarchy."
+
+        Parameters
+        ----------
+        rdf_str : str
+            An RDF string.
+        """
         self.graph = rdflib.Graph()
-        self.graph.parse(data=rdf_string, format='nt')
+        self.graph.parse(data=rdf_str, format='nt')
+        self.initialize()
+
+    def load_from_rdf_graph(self, rdf_graph):
+        """Initialize given an RDF Graph representing the hierarchy."
+
+        Parameters
+        ----------
+        rdf_graph : rdflib.Graph
+            An rdflib Graph representing the hierarchy.
+        """
+        self.graph = rdf_graph
         self.initialize()
 
     def initialize(self):
