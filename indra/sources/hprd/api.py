@@ -33,15 +33,3 @@ def process_from_flat_files(id_mappings_file, complexes_file=None,
     hprd_processor = HprdProcessor(id_df, cplx_df, ptm_df)
     return hprd_processor
 
-
-if __name__ == '__main__':
-    hprd_path = '/Users/johnbachman/Dropbox/1johndata/Knowledge File/Biology/Research/Big Mechanism/protmapper_paper/data/hprd'
-
-    from os.path import join
-    pd.set_option('display.max_columns', 15)
-    pd.set_option('expand_frame_repr', False)
-    hp = process_from_flat_files(
-                    join(hprd_path, 'HPRD_ID_MAPPINGS.txt'),
-                    #complexes_file=join(hprd_path, 'PROTEIN_COMPLEXES.txt'),
-        ptm_file=join(hprd_path, 'POST_TRANSLATIONAL_MODIFICATIONS.txt'))
-

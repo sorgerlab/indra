@@ -33,5 +33,11 @@ def test_process_complexes():
                                      '&isoform_name=')
     assert s0.evidence[1].pmid == '8948587'
 
-if __name__ == '__main__':
-    test_process_complexes()
+
+def test_process_ptms():
+    ptm_file = join(test_dir, 'POST_TRANSLATIONAL_MODIFICATIONS.txt')
+    hp = hprd.process_from_flat_files(id_file, ptm_file=ptm_file)
+    assert isinstance(hp, hprd.HprdProcessor)
+    assert isinstance(hp.statements, list)
+    assert len(hp.statements) == 13
+    # TODO: Add further tests here
