@@ -12,7 +12,6 @@ from indra.statements import stmts_from_json_file
 logger = logging.getLogger('live_curation')
 app = Flask(__name__)
 
-default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
 scorer = wm_scorer.get_eidos_bayesian_scorer(default_priors)
 corpora = {}
 
@@ -30,6 +29,70 @@ class Corpus(object):
         return str(self)
 
 
+class InvalidCorpusError(Exception):
+    pass
+
+
+class LiveCurator(object):
+    """Class coordinating the real-time curation of a corpus of Statements."""
+
+    default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
+
+    def __init__(self, corpora, scorer):
+        self.corpora = corpora
+        self.scorer = scorer
+
+    def reset_scorer(self):
+        self.scorer = wm_scorer.get_eidos_bayesian_scorer(self.default_priors)
+
+    def get_corpus(self, corpus_id):
+        try:
+            corpus = self.corpora[corpus_id]
+            return corpus
+        except KeyError:
+            raise InvalidCorpusError
+
+    def submit_curation(self, corpus_id, curations):
+        corpus = self.get_corpus(corpus_id)
+        # Start tabulating the curation counts
+        prior_counts = {}
+        subtype_counts = {}
+        # Take each curation from the input
+        for uuid, correct in curations.items():
+            # Save the curation in the corpus
+            # TODO: handle already existing curation
+            stmt = corpus.statements.get(uuid)
+            if stmt is None:
+                logger.warning('%s is not in the corpus.' % uuid)
+                continue
+            corpus.curations[uuid] = correct
+            # Now take all the evidences of the statement and assume that
+            # they follow the correctness of the curation and contribute to
+            # counts for their sources
+            for ev in stmt.evidence:
+                # Make the index in the curation count list
+                idx = 0 if correct else 1
+                extraction_rule = ev.annotations.get('found_by')
+                # If there is no extraction rule then we just score the source
+                if not extraction_rule:
+                    try:
+                        prior_counts[ev.source_api][idx] += 1
+                    except KeyError:
+                        prior_counts[ev.source_api] = [0, 0]
+                        prior_counts[ev.source_api][idx] += 1
+                # Otherwise we score the specific extraction rule
+                else:
+                    try:
+                        subtype_counts[ev.source_api][extraction_rule][idx] += 1
+                    except KeyError:
+                        if ev.source_api not in subtype_counts:
+                            subtype_counts[ev.source_api] = {}
+                        subtype_counts[ev.source_api][extraction_rule] = [0, 0]
+                        subtype_counts[ev.source_api][extraction_rule][idx] += 1
+        # Finally, we update the scorer with the new curation counts
+        self.scorer.update_counts(prior_counts, subtype_counts)
+
+
 @app.route('/reset_curation', methods=['POST'])
 def reset_curation():
     if request.json is None:
@@ -45,51 +108,11 @@ def submit_curation():
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
     curations = request.json.get('curations', {})
-
-    # Get the right corpus
     try:
-        corpus = corpora[corpus_id]
-    except KeyError:
+        curator.submit_curation(corpus_id, curations)
+    except InvalidCorpusError:
         abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
         return
-
-    # Start tabulating the curation counts
-    prior_counts = {}
-    subtype_counts = {}
-    # Take each curation from the input
-    for uuid, correct in curations.items():
-        # Save the curation in the corpus
-        # TODO: handle already existing curation
-        stmt = corpus.statements.get(uuid)
-        if stmt is None:
-            logger.warning('%s is not in the corpus.' % uuid)
-            continue
-        corpus.curations[uuid] = correct
-        # Now take all the evidences of the statement and assume that
-        # they follow the correctness of the curation and contribute to
-        # counts for their sources
-        for ev in stmt.evidence:
-            # Make the index in the curation count list
-            idx = 0 if correct else 1
-            extraction_rule = ev.annotations.get('found_by')
-            # If there is no extraction rule then we just score the source
-            if not extraction_rule:
-                try:
-                    prior_counts[ev.source_api][idx] += 1
-                except KeyError:
-                    prior_counts[ev.source_api] = [0, 0]
-                    prior_counts[ev.source_api][idx] += 1
-            # Otherwise we score the specific extraction rule
-            else:
-                try:
-                    subtype_counts[ev.source_api][extraction_rule][idx] += 1
-                except KeyError:
-                    if ev.source_api not in subtype_counts:
-                        subtype_counts[ev.source_api] = {}
-                    subtype_counts[ev.source_api][extraction_rule] = [0, 0]
-                    subtype_counts[ev.source_api][extraction_rule][idx] += 1
-    # Finally, we update the scorer with the new curation counts
-    scorer.update_counts(prior_counts, subtype_counts)
     return jsonify({})
 
 
