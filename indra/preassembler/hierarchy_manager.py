@@ -40,12 +40,10 @@ class HierarchyManager(object):
         PREFIX rn: <http://sorger.med.harvard.edu/indra/relations/>
         """
 
-    def __init__(self, rdf_file, build_closure=True, uri_as_name=True):
+    def __init__(self, rdf_file=None, build_closure=True, uri_as_name=True):
         """Initialize with the path to an RDF file"""
         self.build_closure = build_closure
         self.uri_as_name = uri_as_name
-        self.graph = rdflib.Graph()
-        self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
         self.isa_closure = {}
@@ -54,7 +52,21 @@ class HierarchyManager(object):
         self.components = {}
         self._children = {}
         self.component_counter = 0
+        # If an RDF file was given, we build up the internal data structures.
+        # Otherwise we defer initialization until later.
+        if rdf_file:
+            self.load_from_rdf_file(rdf_file)
+        else:
+            self.graph = None
+
+    def load_from_rdf_file(self, rdf_file):
+        self.graph = rdflib.Graph()
+        self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.initialize()
+
+    def load_from_rdf_string(self, rdf_string):
+        self.graph = rdflib.Graph()
+        self.graph.parse(data=rdf_string, format='nt')
 
     def initialize(self):
         if self.build_closure:
