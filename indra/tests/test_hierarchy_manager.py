@@ -193,6 +193,17 @@ def test_load_eidos_hierarchy():
                      'UN/events')
     assert not eidos_isa('UN/events',
                          'UN/events/natural/weather/storm')
+    # Test case where graph is not given
+    hm = HierarchyManager(None, True, True)
+    hm.load_from_rdf_file(eidos_ont)
+    assert eidos_isa('UN/events/natural_disaster/storm',
+                     'UN/events')
+    # Test loading from string
+    with open(eidos_ont, 'r') as fh:
+        hm = HierarchyManager(None, True, True)
+        hm.load_from_rdf_string(fh.read())
+    assert eidos_isa('UN/events/natural_disaster/storm',
+                     'UN/events')
 
 
 def test_load_trips_hierarchy():
