@@ -67,6 +67,7 @@ class HierarchyManager(object):
     def load_from_rdf_string(self, rdf_string):
         self.graph = rdflib.Graph()
         self.graph.parse(data=rdf_string, format='nt')
+        self.initialize()
 
     def initialize(self):
         if self.build_closure:
