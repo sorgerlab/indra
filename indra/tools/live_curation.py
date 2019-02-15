@@ -5,14 +5,14 @@ import pickle
 import logging
 import argparse
 from flask import Flask, request, jsonify, abort, Response
-from indra.belief import wm_scorer, BeliefEngine
+from indra.belief import BeliefEngine
+from indra.belief.wm_scorer import get_eidos_bayesian_scorer
 from indra.statements import stmts_from_json_file
 
 
 logger = logging.getLogger('live_curation')
 app = Flask(__name__)
-
-scorer = wm_scorer.get_eidos_bayesian_scorer(default_priors)
+curator = LiveCurator(scorer=get_eidos_bayesian_scorer(default_priors))
 corpora = {}
 
 
@@ -38,9 +38,9 @@ class LiveCurator(object):
 
     default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
 
-    def __init__(self, corpora, scorer):
-        self.corpora = corpora
+    def __init__(self, scorer, corpora=None):
         self.scorer = scorer
+        self.corpora = corpora if corpora else {}
 
     def reset_scorer(self):
         self.scorer = wm_scorer.get_eidos_bayesian_scorer(self.default_priors)
