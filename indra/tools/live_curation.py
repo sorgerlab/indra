@@ -12,7 +12,6 @@ from indra.statements import stmts_from_json_file
 
 logger = logging.getLogger('live_curation')
 app = Flask(__name__)
-curator = LiveCurator(scorer=get_eidos_bayesian_scorer(default_priors))
 corpora = {}
 
 
@@ -108,6 +107,11 @@ class LiveCurator(object):
         return belief_dict
 
 
+curator = LiveCurator(
+    scorer=get_eidos_bayesian_scorer(LiveCurator.default_priors),
+    corpora=corpora)
+
+
 @app.route('/reset_curation', methods=['POST'])
 def reset_curation():
     if request.json is None:
@@ -138,7 +142,7 @@ def update_beliefs():
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
     try:
-        belief_dict = curator.update_belief(corpus_id)
+        belief_dict = curator.update_beliefs(corpus_id)
     except InvalidCorpusError:
         abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
         return
@@ -220,7 +224,7 @@ if __name__ == '__main__':
             stmts = pickle.load(fh)
     logger.info('Loaded corpus %s with %d statements.' %
                 (args.corpus_id, len(stmts)))
-    corpora[args.corpus_id] = Corpus(stmts)
+    curator.corpora[args.corpus_id] = Corpus(stmts)
 
     # Run the app
     app.run(host=args.host, port=args.port)
