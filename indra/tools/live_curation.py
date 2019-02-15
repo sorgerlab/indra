@@ -121,6 +121,53 @@ def update_beliefs():
     return jsonify(belief_dict)
 
 
+@app.route('/add_onto_entry', methods=['POST'])
+def add_onto_entry():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    # Get input parameters
+    entry = request.json.get('entry')
+    examples = request.json.get('examples', [])
+
+    # Add the entry and examples to the in-memory representation
+    # of the onotology
+    return jsonify({})
+
+
+@app.route('/update_groundings', methods=['POST'])
+def update_groundings():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    # Get input parameters
+    corpus_id = request.json.get('corpus_id')
+
+    # Send the latest ontology and list of concept texts to Eidos
+    concepts = []
+    for uuid, stmt in corpora.get(corpus_id).items():
+        for concept in stmt.agent_list():
+            concept_txt = concept.db_refs['TEXT']
+            concepts.append(concept_txt)
+    # Update the corpus with new groundings
+
+    return jsonify({})
+
+
+@app.route('/run_assembly', methods=['POST'])
+def run_assembly():
+    if request.json is None:
+        abort(Response('Missing application/json header.', 415))
+
+    # Get input parameters
+    corpus_id = request.json.get('corpus_id')
+
+    # Run preassembly
+
+    # Return assembled statement corpus
+    return jsonify({})
+
+
 if __name__ == '__main__':
     # Process arguments
     parser = argparse.ArgumentParser(description='Choose a corpus for live curation.')
