@@ -92,12 +92,27 @@ class LiveCurator(object):
         # Finally, we update the scorer with the new curation counts
         self.scorer.update_counts(prior_counts, subtype_counts)
 
+    def update_beliefs(self, corpus_id):
+        corpus = self.get_corpus(corpus_id)
+        be = BeliefEngine(self.scorer)
+        stmts = list(corpus.statements.values())
+        be.set_prior_probs(stmts)
+        # Here we set beliefs based on actual curation
+        for uuid, correct in corpus.curations.items():
+            stmt = corpus.statements.get(uuid)
+            if stmt is None:
+                logger.warning('%s is not in the corpus.' % uuid)
+                continue
+            stmt.belief = correct
+        belief_dict = {st.uuid: st.belief for st in stmts}
+        return belief_dict
+
 
 @app.route('/reset_curation', methods=['POST'])
 def reset_curation():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
-    scorer = wm_scorer.get_eidos_bayesian_scorer(default_priors)
+    curator.reset_scorer()
     return jsonify({})
 
 
@@ -120,27 +135,13 @@ def submit_curation():
 def update_beliefs():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
-
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
-
-    # Get the right corpus
     try:
-        corpus = corpora[corpus_id]
-    except KeyError:
+        belief_dict = curator.update_belief(corpus_id)
+    except InvalidCorpusError:
         abort(Response('The corpus_id "%s" is unknown.' % corpus_id, 400))
         return
-    be = BeliefEngine(scorer)
-    stmts = list(corpus.statements.values())
-    be.set_prior_probs(stmts)
-    # Here we set beliefs based on actual curation
-    for uuid, correct in corpus.curations.items():
-        stmt = corpus.statements.get(uuid)
-        if stmt is None:
-            logger.warning('%s is not in the corpus.' % uuid)
-            continue
-        stmt.belief = correct
-    belief_dict = {st.uuid: st.belief for st in stmts}
     return jsonify(belief_dict)
 
 
