@@ -20,11 +20,14 @@ def test_process_complexes():
     assert set([ag.name for ag in s0.members]) == \
             set(['ASCL1', 'TCF3', 'MEF2C'])
     assert s0.members[0].db_refs == \
-            {'HGNC': '738', 'UP': 'P50553', 'EGID': '429'}
+            {'HGNC': '738', 'UP': 'P50553', 'EGID': '429',
+             'REFSEQ_PROT': 'NP_004307.2'}
     assert s0.members[1].db_refs == \
-            {'HGNC': '11633', 'UP': 'P15923', 'EGID': '6929'}
+            {'HGNC': '11633', 'UP': 'P15923', 'EGID': '6929',
+             'REFSEQ_PROT': 'NP_003191.1'}
     assert s0.members[2].db_refs == \
-            {'HGNC': '6996', 'UP': 'Q06413', 'EGID': '4208'}
+            {'HGNC': '6996', 'UP': 'Q06413', 'EGID': '4208',
+             'REFSEQ_PROT': 'NP_002388.2'}
     assert len(s0.evidence) == 2
     assert s0.evidence[0].pmid == '8900141'
     assert s0.evidence[0].source_api == 'hprd'
@@ -44,9 +47,11 @@ def test_process_ptms():
     s0 = hp.statements[0]
     assert isinstance(s0, Phosphorylation)
     assert s0.enz.name == 'MAPK1'
-    assert s0.enz.db_refs == {'UP': 'P28482', 'HGNC': '6871', 'EGID': '5594'}
+    assert s0.enz.db_refs == {'UP': 'P28482', 'HGNC': '6871', 'EGID': '5594',
+                              'REFSEQ_PROT': 'NP_002736.3'}
     assert s0.sub.name == 'TCF3'
-    assert s0.sub.db_refs == {'UP': 'P15923', 'HGNC': '11633', 'EGID': '6929'}
+    assert s0.sub.db_refs == {'UP': 'P15923', 'HGNC': '11633', 'EGID': '6929',
+                              'REFSEQ_PROT': 'NP_003191.1'}
     assert s0.residue == 'T'
     assert s0.position == '355'
     assert len(s0.evidence) == 1

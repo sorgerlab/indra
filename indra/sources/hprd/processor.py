@@ -71,7 +71,7 @@ class HprdProcessor(object):
         for cplx_id, this_cplx in cplx_df.groupby('CPLX_ID'):
             agents = []
             for hprd_id in this_cplx.HPRD_ID:
-                ag = self._make_agent_from_id(hprd_id)
+                ag = self._make_agent_from_hprd_id(hprd_id)
                 if ag is not None:
                     agents.append(ag)
             # Get evidence info from first member of complex
@@ -90,9 +90,9 @@ class HprdProcessor(object):
             ptm_class = _ptm_map[row['MOD_TYPE']]
             if ptm_class is None:
                 continue
-            sub_ag = self._make_agent_from_id(row['HPRD_ID'])
+            sub_ag = self._make_agent_from_hprd_id(row['HPRD_ID'])
             enz_id = _nan_to_none(row['ENZ_HPRD_ID'])
-            enz_ag = self._make_agent_from_id(enz_id)
+            enz_ag = self._make_agent_from_hprd_id(enz_id)
             res = _nan_to_none(row['RESIDUE'])
             pos = _nan_to_none(row['POSITION'])
             if pos is not None and ';' in pos:
@@ -105,11 +105,12 @@ class HprdProcessor(object):
             stmt = ptm_class(enz_ag, sub_ag, res, pos, evidence=ev_list)
             self.statements.append(stmt)
 
-    def _make_agent_from_id(self, hprd_id):
+    def _make_agent_from_hprd_id(self, hprd_id):
         if hprd_id is None:
             return None
         # Get the Entrez ID from the ID mappings dataframe
         egid = self.id_df.loc[hprd_id].EGID
+        refseq_id = self.id_df.loc[hprd_id].REFSEQ_PROTEIN
         # Get the HGNC ID
         hgnc_id = hgnc_client.get_hgnc_from_entrez(egid)
         if not hgnc_id:
@@ -123,8 +124,21 @@ class HprdProcessor(object):
             logger.info("Skipping entry for Entrez ID %s->HGNC %s "
                         "with no Uniprot ID" % (egid, hgnc_name))
         # Make db_refs, return Agent
-        db_refs = {'HGNC': hgnc_id, 'UP': up_id, 'EGID': egid}
+        db_refs = {'HGNC': hgnc_id, 'UP': up_id, 'EGID': egid,
+                   'REFSEQ_PROT': refseq_id}
         return Agent(hgnc_name, db_refs=db_refs)
+
+    def _make_agent_from_refseq_id(self, refseq_id):
+        if refseq_id is None:
+            return None
+        # Get the Uniprot IDs from the uniprot client
+        up_ids = uniprot_client.get_ids_from_refseq(refseq_id,
+                                                    reviewed_only=True)
+        if len(up_ids) == 0:
+            print("No reviewed UP IDs for refseq_id %s" % refseq_id)
+        if len(up_ids) > 1:
+            print("More than 1 UP ID for refseq_id %s" % refseq_id)
+        return None
 
     def _get_evidence(self, hprd_id, isoform_id, pmid_str, evidence_type,
                       info_type):
