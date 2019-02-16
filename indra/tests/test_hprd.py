@@ -1,5 +1,5 @@
 from os.path import join, abspath, dirname
-from indra.statements import Complex
+from indra.statements import Complex, Phosphorylation
 from indra.sources import hprd
 
 
@@ -28,6 +28,7 @@ def test_process_complexes():
     assert len(s0.evidence) == 2
     assert s0.evidence[0].pmid == '8900141'
     assert s0.evidence[0].source_api == 'hprd'
+    assert s0.evidence[0].annotations['evidence'] == ['in vivo']
     assert s0.evidence[0].source_id == ('http://hprd.org/interactions?'
                                      'hprd_id=00011&isoform_id=00011_1'
                                      '&isoform_name=')
@@ -40,4 +41,15 @@ def test_process_ptms():
     assert isinstance(hp, hprd.HprdProcessor)
     assert isinstance(hp.statements, list)
     assert len(hp.statements) == 13
-    # TODO: Add further tests here
+    s0 = hp.statements[0]
+    assert isinstance(s0, Phosphorylation)
+    assert s0.enz.name == 'MAPK1'
+    assert s0.enz.db_refs == {'UP': 'P28482', 'HGNC': '6871', 'EGID': '5594'}
+    assert s0.sub.name == 'TCF3'
+    assert s0.sub.db_refs == {'UP': 'P15923', 'HGNC': '11633', 'EGID': '6929'}
+    assert s0.residue == 'T'
+    assert s0.position == '355'
+    assert len(s0.evidence) == 1
+    assert s0.evidence[0].pmid == '14592976'
+    assert s0.evidence[0].source_api == 'hprd'
+    assert s0.evidence[0].annotations['evidence'] == ['in vivo']

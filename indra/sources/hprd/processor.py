@@ -131,9 +131,10 @@ class HprdProcessor(object):
         pmids = pmid_str.split(',')
         ev_list = []
         for pmid in pmids:
+            ev_type_list = evidence_type.split(';')
             ev = Evidence(source_api='hprd',
                           source_id=_hprd_url(hprd_id, isoform_id, info_type),
-                          annotations={'evidence': evidence_type},
+                          annotations={'evidence': ev_type_list},
                           pmid=pmid)
             ev_list.append(ev)
         return ev_list
