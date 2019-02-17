@@ -15,7 +15,21 @@ corpora = {}
 
 
 class Corpus(object):
-    """Represent a corpus of statements with curation."""
+    """Represent a corpus of statements with curation.
+
+    Parameters
+    ----------
+    statements : list[indra.statement.Statement]
+        A list of INDRA Statements to embed in the corpus.
+
+    Attributes
+    ----------
+    statements : dict
+        A dict of INDRA Statements keyed by UUID.
+    curations : dict
+        A dict keeping track of the curations submitted so far for Statement
+        UUIDs in the corpus.
+    """
     def __init__(self, statements):
         self.statements = {st.uuid: st for st in statements}
         self.curations = {}
@@ -32,16 +46,40 @@ class InvalidCorpusError(Exception):
 
 
 class LiveCurator(object):
-    """Class coordinating the real-time curation of a corpus of Statements."""
+    """Class coordinating the real-time curation of a corpus of Statements.
+
+    Parameters
+    ----------
+    scorer : indra.belief.BeliefScorer
+        A scorer object to use for the curation
+    corpora : dict[str, Corpus]
+        A dictionary mapping corpus IDs to Corpus objects.
+    """
 
     def __init__(self, scorer=None, corpora=None):
         self.scorer = scorer if scorer else get_eidos_bayesian_scorer()
         self.corpora = corpora if corpora else {}
 
+    # TODO: generalize this to other kinds of scorers
     def reset_scorer(self):
+        """Reset the scorer used for couration."""
         self.scorer = get_eidos_bayesian_scorer()
 
     def get_corpus(self, corpus_id):
+        """Return a corpus given an ID.
+
+        If the corpus ID cannot be found, an InvalidCorpusError is raised.
+
+        Parameters
+        ----------
+        corpus_id : str
+            The ID of the corpus to return.
+
+        Returns
+        -------
+        Corpus
+            The corpus with the given ID.
+        """
         try:
             corpus = self.corpora[corpus_id]
             return corpus
@@ -49,6 +87,16 @@ class LiveCurator(object):
             raise InvalidCorpusError
 
     def submit_curation(self, corpus_id, curations):
+        """Submit correct/incorrect curations fo a given corpus.
+
+        Parameters
+        ----------
+        corpus_id : str
+            The ID of the corpus to which the curations apply.
+        curations : dict
+            A dict of curations with keys corresponding to Statement UUIDs and
+            values corresponding to correct/incorrect feedback.
+        """
         corpus = self.get_corpus(corpus_id)
         # Start tabulating the curation counts
         prior_counts = {}
@@ -91,6 +139,19 @@ class LiveCurator(object):
         self.scorer.update_counts(prior_counts, subtype_counts)
 
     def update_beliefs(self, corpus_id):
+        """Return updated belief scores for a given corpus.
+
+        Parameters
+        ----------
+        corpus_id : str
+            The ID of the corpus for which beliefs are to be updated.
+
+        Returns
+        -------
+        dict
+            A dictionary of belief scores with keys corresponding to Statement
+            UUIDs and values to new belief scores.
+        """
         corpus = self.get_corpus(corpus_id)
         be = BeliefEngine(self.scorer)
         stmts = list(corpus.statements.values())
@@ -104,6 +165,9 @@ class LiveCurator(object):
             stmt.belief = correct
         belief_dict = {st.uuid: st.belief for st in stmts}
         return belief_dict
+
+
+# From here on, a Flask app built around a LiveCurator is implemented
 
 
 curator = LiveCurator(corpora=corpora)
