@@ -37,12 +37,13 @@ class LiveCurator(object):
 
     default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
 
-    def __init__(self, scorer, corpora=None):
-        self.scorer = scorer
+    def __init__(self, scorer=None, corpora=None):
+        self.scorer = scorer if scorer else \
+            get_eidos_bayesian_scorer(self.default_priors)
         self.corpora = corpora if corpora else {}
 
     def reset_scorer(self):
-        self.scorer = wm_scorer.get_eidos_bayesian_scorer(self.default_priors)
+        self.scorer = get_eidos_bayesian_scorer(self.default_priors)
 
     def get_corpus(self, corpus_id):
         try:
