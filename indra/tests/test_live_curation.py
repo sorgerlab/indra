@@ -1,7 +1,5 @@
-import json
-import unittest
 from indra.statements import *
-from indra.tools.live_curation import app, corpora, Corpus, LiveCurator
+from indra.tools.live_curation import Corpus, LiveCurator
 
 
 def _make_corpus():
@@ -26,11 +24,20 @@ def _make_corpus():
     return Corpus([stmt1, stmt2, stmt3, stmt4, stmt5])
 
 
-corpora['1'] = _make_corpus()
+def test_no_curation():
+    curator = LiveCurator(corpora={'1': _make_corpus()})
+    curator.submit_curation(corpus_id='1', curations={})
+    beliefs = curator.update_beliefs(corpus_id='1')
+    expected = {'1': 0.91675,
+                '2': 0.8968,
+                '3': 0.957125,
+                '4': 0.65,
+                '5': 0.65}
+    assert close_enough(beliefs, expected), (beliefs, expected)
 
 
 def test_eid_rule1_incorrect():
-    curator = LiveCurator(corpora=corpora)
+    curator = LiveCurator(corpora={'1': _make_corpus()})
     curator.submit_curation(corpus_id='1', curations={'1': 0})
     expected = {'1': 0,
                 '2': 0.8942,
@@ -40,10 +47,7 @@ def test_eid_rule1_incorrect():
     beliefs = curator.update_beliefs(corpus_id='1')
     assert close_enough(beliefs, expected), (beliefs, expected)
 
-
-def test_eid_rule1_incorrect_again():
-    curator = LiveCurator(corpora=corpora)
-    curator.submit_curation(corpus_id='1', curations={'1': 0})
+    # Submit another curation
     curator.submit_curation(corpus_id='1', curations={'1': 0})
     expected = {'1': 0,
                 '2': 0.8917,
@@ -55,13 +59,58 @@ def test_eid_rule1_incorrect_again():
 
 
 def test_eid_rule1_correct():
-    curator = LiveCurator(corpora=corpora)
+    curator = LiveCurator(corpora={'1': _make_corpus()})
     curator.submit_curation(corpus_id='1', curations={'1': 1})
     expected = {'1': 1,
                 '2': 0.8979,
                 '3': 0.957125,
                 '4': 0.65,
                 '5': 0.65}
+    beliefs = curator.update_beliefs(corpus_id='1')
+    assert close_enough(beliefs, expected), (beliefs, expected)
+
+
+def test_eid_rule2_correct():
+    curator = LiveCurator(corpora={'1': _make_corpus()})
+    curator.submit_curation(corpus_id='1', curations={'2': 1})
+    expected = {'1': 0.91717,
+                '2': 1,
+                '3': 0.95916,
+                '4': 0.65,
+                '5': 0.65}
+    beliefs = curator.update_beliefs(corpus_id='1')
+    assert close_enough(beliefs, expected), (beliefs, expected)
+
+
+def test_hume_incorrect():
+    curator = LiveCurator(corpora={'1': _make_corpus()})
+    curator.submit_curation(corpus_id='1', curations={'3': 0})
+    expected = {'1': 0.91675,
+                '2': 0.88772,
+                '3': 0,
+                '4': 0.61904,
+                '5': 0.61904}
+    beliefs = curator.update_beliefs(corpus_id='1')
+    assert close_enough(beliefs, expected), (beliefs, expected)
+
+
+def test_sofia_incorrect():
+    curator = LiveCurator(corpora={'1': _make_corpus()})
+    curator.submit_curation(corpus_id='1', curations={'4': 0})
+    expected = {'1': 0.91675,
+                '2': 0.89684,
+                '3': 0.95333,
+                '4': 0.0,
+                '5': 0.61904}
+    beliefs = curator.update_beliefs(corpus_id='1')
+    assert close_enough(beliefs, expected), (beliefs, expected)
+
+    curator.submit_curation(corpus_id='1', curations={'5': 0})
+    expected = {'1': 0.91675,
+                '2': 0.89684,
+                '3': 0.94988,
+                '4': 0,
+                '5': 0}
     beliefs = curator.update_beliefs(corpus_id='1')
     assert close_enough(beliefs, expected), (beliefs, expected)
 

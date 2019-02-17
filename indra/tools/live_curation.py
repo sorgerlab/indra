@@ -1,6 +1,5 @@
 """This REST service allows real-time curation and belief updates for
 a corpus of INDRA Statements."""
-import sys
 import pickle
 import logging
 import argparse
@@ -35,15 +34,12 @@ class InvalidCorpusError(Exception):
 class LiveCurator(object):
     """Class coordinating the real-time curation of a corpus of Statements."""
 
-    default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
-
     def __init__(self, scorer=None, corpora=None):
-        self.scorer = scorer if scorer else \
-            get_eidos_bayesian_scorer(self.default_priors)
+        self.scorer = scorer if scorer else get_eidos_bayesian_scorer()
         self.corpora = corpora if corpora else {}
 
     def reset_scorer(self):
-        self.scorer = get_eidos_bayesian_scorer(self.default_priors)
+        self.scorer = get_eidos_bayesian_scorer()
 
     def get_corpus(self, corpus_id):
         try:
@@ -83,12 +79,14 @@ class LiveCurator(object):
                 # Otherwise we score the specific extraction rule
                 else:
                     try:
-                        subtype_counts[ev.source_api][extraction_rule][idx] += 1
+                        subtype_counts[ev.source_api][extraction_rule][idx] \
+                            += 1
                     except KeyError:
                         if ev.source_api not in subtype_counts:
                             subtype_counts[ev.source_api] = {}
                         subtype_counts[ev.source_api][extraction_rule] = [0, 0]
-                        subtype_counts[ev.source_api][extraction_rule][idx] += 1
+                        subtype_counts[ev.source_api][extraction_rule][idx] \
+                            += 1
         # Finally, we update the scorer with the new curation counts
         self.scorer.update_counts(prior_counts, subtype_counts)
 
@@ -108,9 +106,7 @@ class LiveCurator(object):
         return belief_dict
 
 
-curator = LiveCurator(
-    scorer=get_eidos_bayesian_scorer(LiveCurator.default_priors),
-    corpora=corpora)
+curator = LiveCurator(corpora=corpora)
 
 
 @app.route('/reset_curation', methods=['POST'])
@@ -209,7 +205,8 @@ def run_assembly():
 
 if __name__ == '__main__':
     # Process arguments
-    parser = argparse.ArgumentParser(description='Choose a corpus for live curation.')
+    parser = argparse.ArgumentParser(
+        description='Choose a corpus for live curation.')
     parser.add_argument('--json')
     parser.add_argument('--pickle')
     parser.add_argument('--corpus_id', default='1')
