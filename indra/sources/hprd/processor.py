@@ -69,7 +69,6 @@ class HprdProcessor(object):
 
         # Keep track of the ID mapping issues encountered
         self.no_hgnc_for_egid = []
-        self.no_hgnc_for_egid_or_name = []
         self.no_up_for_hgnc = []
         self.no_up_for_refseq = []
         self.many_ups_for_refseq = []
@@ -84,9 +83,9 @@ class HprdProcessor(object):
 
         # Tabulate IDs causing issues
         self.no_hgnc_for_egid = Counter(self.no_hgnc_for_egid)
-        self.no_hgnc_for_egid_or_name = Counter(self.no_hgnc_for_egid_or_name)
         self.no_up_for_hgnc = Counter(self.no_up_for_hgnc)
         self.no_up_for_refseq = Counter(self.no_up_for_refseq)
+        self.many_ups_for_refseq = Counter(self.many_ups_for_refseq)
 
     def get_complexes(self, cplx_df):
         # Bring the ID information from the ID table into the dataframe of
@@ -156,19 +155,10 @@ class HprdProcessor(object):
         # Get the HGNC ID
         hgnc_id = hgnc_client.get_hgnc_from_entrez(egid)
         # If we couldn't get an HGNC ID for the Entrez ID, this means that
-        # the Entrez ID has been discontinued or replaced. As a hail mary
-        # we try to get the HGNC ID from the gene symbol
+        # the Entrez ID has been discontinued or replaced.
         if not hgnc_id:
             self.no_hgnc_for_egid.append(egid)
-            logger.info('No HGNC ID for HPRD ID %s, EGID %s' % (hprd_id, egid))
-            hgnc_symbol = self.id_df.loc[hprd_id].HGNC_SYMBOL
-            hgnc_id = hgnc_client.get_hgnc_id(hgnc_symbol)
-            # If we still couldn't get an HGNC ID, then bail out
-            if not hgnc_id:
-                logger.info('No HGNC ID from EGID %s or from gene symbol %s'
-                            % (egid, hgnc_symbol))
-                self.no_hgnc_for_egid_or_name.append((egid, hgnc_symbol))
-                return None
+            return None
         # Get the (possibly updated) HGNC Symbol
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         assert hgnc_name is not None
@@ -178,9 +168,7 @@ class HprdProcessor(object):
         # get one here, then we skip the Statement
         up_id_from_hgnc = hgnc_client.get_uniprot_id(hgnc_id)
         if not up_id_from_hgnc:
-            self.no_up_for_hgnc.append((hgnc_name, hgnc_id))
-            logger.info("Skipping entry for Entrez ID %s->HGNC %s "
-                        "with no Uniprot ID" % (egid, hgnc_name))
+            self.no_up_for_hgnc.append((egid, hgnc_name, hgnc_id))
             return None
         # If we have provided the RefSeq ID, it's because we need to make
         # sure that we are getting the right isoform-specific ID (for sequence
