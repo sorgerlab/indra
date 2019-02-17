@@ -56,10 +56,11 @@ class HprdProcessor(object):
     statements : list of INDRA Statements
     """
 
-    def __init__(self, id_df, cplx_df=None, ptm_df=None, seq_dict=None):
-        if cplx_df is None and ptm_df is None:
-            raise ValueError('At least one of cplx_df or phospho_df must be '
-                             'specified.')
+    def __init__(self, id_df, cplx_df=None, ptm_df=None, seq_dict=None,
+                 ppi_df=None):
+        if cplx_df is None and ptm_df is None and ppi_df is None:
+            raise ValueError('At least one of cplx_df, ptm_df, or ppi_df must '
+                             'be specified.')
         if ptm_df is not None and not seq_dict:
             raise ValueError('If ptm_df is given, seq_dict must also be given.')
 
@@ -80,6 +81,8 @@ class HprdProcessor(object):
             self.get_complexes(cplx_df)
         if ptm_df is not None:
             self.get_ptms(ptm_df)
+        if ppi_df is not None:
+            self.get_ppis(ppi_df)
 
         # Tabulate IDs causing issues
         self.no_hgnc_for_egid = Counter(self.no_hgnc_for_egid)
@@ -88,8 +91,7 @@ class HprdProcessor(object):
         self.many_ups_for_refseq = Counter(self.many_ups_for_refseq)
 
     def get_complexes(self, cplx_df):
-        # Bring the ID information from the ID table into the dataframe of
-        # complexes
+        # Group the agents for the complex
         for cplx_id, this_cplx in cplx_df.groupby('CPLX_ID'):
             agents = []
             for hprd_id in this_cplx.HPRD_ID:
@@ -141,6 +143,20 @@ class HprdProcessor(object):
                     row['HPRD_ID'], row['HPRD_ISOFORM'], row['PMIDS'],
                     row['EVIDENCE'], 'ptms', motif_dict)
             stmt = ptm_class(enz_ag, sub_ag, res, pos, evidence=ev_list)
+            self.statements.append(stmt)
+
+    def get_ppis(self, ppi_df):
+        for ix, row in ppi_df.iterrows():
+            agA = self._make_agent(row['HPRD_ID_A'])
+            agB = self._make_agent(row['HPRD_ID_B'])
+            # If don't get valid agents for both, skip this PPI
+            if agA is None or agB is None:
+                continue
+            isoform_id = '%s_1' % row['HPRD_ID_A']
+            ev_list = self._get_evidence(
+                    row['HPRD_ID_A'], isoform_id, row['PMIDS'],
+                    row['EVIDENCE'], 'interactions')
+            stmt = Complex([agA, agB], evidence=ev_list)
             self.statements.append(stmt)
 
     def _make_agent(self, hprd_id, refseq_id=None):
