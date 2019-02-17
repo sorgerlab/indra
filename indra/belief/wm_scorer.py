@@ -1,7 +1,11 @@
 from io import StringIO
+import copy
 import pandas
 import requests
 from . import SimpleScorer, BayesianScorer
+
+
+default_priors = {'hume': [13, 7], 'cwms': [13, 7], 'sofia': [13, 7]}
 
 
 def load_eidos_curation_table():
@@ -23,7 +27,8 @@ def get_eidos_bayesian_scorer(prior_counts=None):
     subtype_counts = {'eidos': {r: [c, i] for r, c, i in
                               zip(table['RULE'], table['Num correct'],
                                   table['Num incorrect'])}}
-    prior_counts = prior_counts if prior_counts else {}
+    prior_counts = prior_counts if prior_counts else copy.deepcopy(
+        default_priors)
 
     scorer = BayesianScorer(prior_counts=prior_counts,
                             subtype_counts=subtype_counts)
