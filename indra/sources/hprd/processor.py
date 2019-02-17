@@ -90,8 +90,15 @@ class HprdProcessor(object):
         self.no_up_for_refseq = Counter(self.no_up_for_refseq)
         self.many_ups_for_refseq = Counter(self.many_ups_for_refseq)
 
+        logger.info('For information on problematic entries encountered while '
+                    'processing, see HprdProcessor attributes: '
+                    'no_hgnc_for_egid, no_up_for_hgnc, no_up_for_refseq, '
+                    'many_ups_for_refseq, invalid_site_pos, and off_by_one.')
+
+
     def get_complexes(self, cplx_df):
         # Group the agents for the complex
+        logger.info('Processing complexes...')
         for cplx_id, this_cplx in cplx_df.groupby('CPLX_ID'):
             agents = []
             for hprd_id in this_cplx.HPRD_ID:
@@ -110,6 +117,7 @@ class HprdProcessor(object):
             self.statements.append(stmt)
 
     def get_ptms(self, ptm_df):
+        logger.info('Processing PTMs...')
         # Iterate over the rows of the dataframe
         for ix, row in ptm_df.iterrows():
             # Check the modification type; if we can't make an INDRA statement
@@ -146,6 +154,7 @@ class HprdProcessor(object):
             self.statements.append(stmt)
 
     def get_ppis(self, ppi_df):
+        logger.info('Processing PPIs...')
         for ix, row in ppi_df.iterrows():
             agA = self._make_agent(row['HPRD_ID_A'])
             agB = self._make_agent(row['HPRD_ID_B'])
@@ -160,11 +169,15 @@ class HprdProcessor(object):
             self.statements.append(stmt)
 
     def _make_agent(self, hprd_id, refseq_id=None):
-        if hprd_id is None:
+        if hprd_id is None or hprd_id is nan:
             return None
         # Get the basic info (HGNC name/symbol, Entrez ID) from the
         # ID mappings dataframe
-        egid = self.id_df.loc[hprd_id].EGID
+        try:
+            egid = self.id_df.loc[hprd_id].EGID
+        except KeyError:
+            logger.info('HPRD ID %s not found in mappings table.' % hprd_id)
+            return None
         if not egid:
             logger.info('No Entrez ID for HPRD ID %s' % hprd_id)
             return None

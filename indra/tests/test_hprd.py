@@ -3,7 +3,9 @@ from nose.tools import raises
 from indra.statements import Complex, Phosphorylation
 from indra.sources import hprd
 
+
 test_dir = join(abspath(dirname(__file__)), 'hprd_tests_data')
+
 
 id_file = join(test_dir, 'HPRD_ID_MAPPINGS.txt')
 
@@ -86,7 +88,6 @@ def test_process_ppis():
     assert s0.evidence[0].source_id == ('http://hprd.org/interactions?'
                                      'hprd_id=02761&isoform_id=02761_1'
                                      '&isoform_name=')
-
 
 
 @raises(ValueError)

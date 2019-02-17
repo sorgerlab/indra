@@ -33,7 +33,7 @@ def process_flat_files(id_mappings_file, complexes_file=None, ptm_file=None,
     cplx_df = None
     if complexes_file:
         cplx_df = pd.read_csv(complexes_file, delimiter='\t', names=_cplx_cols,
-                              dtype='str')
+                              dtype='str', na_values=['-', 'None'])
     # Load ptm data into dataframe
     ptm_df = None
     seq_dict = None
