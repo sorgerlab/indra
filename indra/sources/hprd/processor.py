@@ -1,7 +1,7 @@
 import logging
 from numpy import nan
 from collections import Counter
-from protmapper import uniprot_client
+from protmapper import uniprot_client, ProtMapper
 from indra.statements import *
 from indra.databases import hgnc_client
 
@@ -56,31 +56,37 @@ class HprdProcessor(object):
     statements : list of INDRA Statements
     """
 
-    def __init__(self, id_df, cplx_df=None, ptm_df=None):
+    def __init__(self, id_df, cplx_df=None, ptm_df=None, seq_dict=None):
         if cplx_df is None and ptm_df is None:
             raise ValueError('At least one of cplx_df or phospho_df must be '
                              'specified.')
+        if ptm_df is not None and not seq_dict:
+            raise ValueError('If ptm_df is given, seq_dict must also be given.')
+
         self.statements = []
         self.id_df = id_df
+        self.seq_dict = seq_dict
+
         # Keep track of the ID mapping issues encountered
         self.no_hgnc_for_egid = []
         self.no_hgnc_for_egid_or_name = []
         self.no_up_for_hgnc = []
         self.no_up_for_refseq = []
         self.many_ups_for_refseq = []
+        self.invalid_site_pos = []
+        self.off_by_one = []
 
+        # Do the actual processing
         if cplx_df is not None:
             self.get_complexes(cplx_df)
         if ptm_df is not None:
             self.get_ptms(ptm_df)
 
+        # Tabulate IDs causing issues
         self.no_hgnc_for_egid = Counter(self.no_hgnc_for_egid)
         self.no_hgnc_for_egid_or_name = Counter(self.no_hgnc_for_egid_or_name)
         self.no_up_for_hgnc = Counter(self.no_up_for_hgnc)
         self.no_up_for_refseq = Counter(self.no_up_for_refseq)
-        self.many_ups_for_refseq = Counter(self.many_ups_for_refseq)
-
-
 
     def get_complexes(self, cplx_df):
         # Bring the ID information from the ID table into the dataframe of
@@ -114,6 +120,7 @@ class HprdProcessor(object):
             # we get the right Uniprot ID for the isoform
             sub_ag = self._make_agent(row['HPRD_ID'],
                                       refseq_id=row['REFSEQ_PROTEIN'])
+
             # If we couldn't get the substrate, skip the statement
             if sub_ag is None:
                 continue
@@ -124,10 +131,16 @@ class HprdProcessor(object):
             if pos is not None and ';' in pos:
                 pos, dash = pos.split(';')
                 assert dash == '-'
-            # Sites are semicolon delimited
+            # As a fallback for later site mapping, we also get the protein
+            # sequence information in case there was a problem with the
+            # RefSeq->Uniprot mapping
+            assert res
+            assert pos
+            motif_dict = self._get_seq_motif(row['REFSEQ_PROTEIN'], res, pos)
+            # Get evidence
             ev_list = self._get_evidence(
                     row['HPRD_ID'], row['HPRD_ISOFORM'], row['PMIDS'],
-                    row['EVIDENCE'], 'ptms')
+                    row['EVIDENCE'], 'ptms', motif_dict)
             stmt = ptm_class(enz_ag, sub_ag, res, pos, evidence=ev_list)
             self.statements.append(stmt)
 
@@ -159,38 +172,44 @@ class HprdProcessor(object):
         # Get the (possibly updated) HGNC Symbol
         hgnc_name = hgnc_client.get_hgnc_name(hgnc_id)
         assert hgnc_name is not None
+        # See if we can get a Uniprot ID from the HGNC symbol--if there is
+        # a RefSeq ID we wil also try to use it to get an isoform specific
+        # UP ID, but we will have this one to fall back on. But if we can't
+        # get one here, then we skip the Statement
+        up_id_from_hgnc = hgnc_client.get_uniprot_id(hgnc_id)
+        if not up_id_from_hgnc:
+            self.no_up_for_hgnc.append((hgnc_name, hgnc_id))
+            logger.info("Skipping entry for Entrez ID %s->HGNC %s "
+                        "with no Uniprot ID" % (egid, hgnc_name))
+            return None
         # If we have provided the RefSeq ID, it's because we need to make
         # sure that we are getting the right isoform-specific ID (for sequence
-        # positions of PTMs). In this case we get the Uniprot ID from the
+        # positions of PTMs). Here we try to get the Uniprot ID from the
         # Refseq->UP mappings in the protmapper.uniprot_client.
         if refseq_id is not None:
             # Get the Uniprot IDs from the uniprot client
             up_ids = uniprot_client.get_ids_from_refseq(refseq_id,
                                                         reviewed_only=True)
+            # Nothing for this RefSeq ID (quite likely because the RefSeq ID
+            # is obsolete; take the UP ID from HGNC
             if len(up_ids) == 0:
-                #logger.info("No reviewed UP IDs for refseq_id %s" % refseq_id)
-                up_id = None
                 self.no_up_for_refseq.append(refseq_id)
+                up_id = up_id_from_hgnc
+            # More than one reviewed entry--no thanks, we'll take the one from
+            # HGNC instead
+            elif len(up_ids) > 1:
+                self.many_ups_for_refseq.append(refseq_id)
+                up_id = up_id_from_hgnc
+            # We got a unique, reviewed UP entry for the RefSeq ID
             else:
-                if len(up_ids) > 1:
-                    #logger.info("More than 1 UP ID for refseq_id %s" %
-                    #            refseq_id)
-                    self.many_ups_for_refseq.append(refseq_id)
                 up_id = up_ids[0]
-
-        # On the other hand, if we haven't passed in the Refseq ID, it is
-        # because we can obtain it from the HPRD ID table; and we can obtain
-        # the Uniprot ID from HGNC.
+                # If it's the canonical isoform, strip off the '-1'
+                if up_id.endswith('-1'):
+                    up_id = up_id.split('-')[0]
+        # For completeness, get the Refseq ID from the HPRD ID table
         else:
-            # Get Refseq ID from the HPRD ID table
             refseq_id = self.id_df.loc[hprd_id].REFSEQ_PROTEIN
-            # Get Uniprot ID from HGNC, if possible (e.g. there is no UP id
-            # for genes TRA or TRB)
-            up_id = hgnc_client.get_uniprot_id(hgnc_id)
-            if not up_id:
-                self.no_up_for_hgnc.append((hgnc_name, hgnc_id))
-                logger.info("Skipping entry for Entrez ID %s->HGNC %s "
-                            "with no Uniprot ID" % (egid, hgnc_name))
+            up_id = up_id_from_hgnc
         # Make db_refs, return Agent
         db_refs = {'HGNC': hgnc_id, 'UP': up_id, 'EGID': egid,
                    'REFSEQ_PROT': refseq_id}
@@ -198,18 +217,37 @@ class HprdProcessor(object):
 
 
     def _get_evidence(self, hprd_id, isoform_id, pmid_str, evidence_type,
-                      info_type):
+                      info_type, motif_dict=None):
         pmids = pmid_str.split(',')
         ev_list = []
+        if motif_dict is None:
+            motif_dict = {}
         for pmid in pmids:
             ev_type_list = [] if evidence_type is nan \
                                else evidence_type.split(';')
+            # Add the annotations with the site motif info if relevant
+            annotations = {'evidence': ev_type_list}
+            annotations.update(motif_dict)
             ev = Evidence(source_api='hprd',
                           source_id=_hprd_url(hprd_id, isoform_id, info_type),
-                          annotations={'evidence': ev_type_list},
-                          pmid=pmid)
+                          pmid=pmid, annotations=annotations)
             ev_list.append(ev)
         return ev_list
+
+
+    def _get_seq_motif(self, refseq_id, residue, position, window=7):
+        seq = self.seq_dict[refseq_id]
+        pos_ix = int(position) - 1
+        if seq[pos_ix] != residue:
+            self.invalid_site_pos.append((refseq_id, residue, position))
+            if seq[pos_ix + 1] == residue:
+                self.off_by_one.append((refseq_id, residue, position))
+            return {}
+        else:
+            # The index of the residue at the start of the window
+            start_ix = pos_ix - window
+            motif, respos = ProtMapper.motif_from_position_seq(seq, position)
+            return {'site_motif': {'motif': motif, 'respos': respos}}
 
 
 def _hprd_url(hprd_id, isoform_id, info_type):

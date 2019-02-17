@@ -1,7 +1,7 @@
 from os.path import join, abspath, dirname
+from nose.tools import raises
 from indra.statements import Complex, Phosphorylation
 from indra.sources import hprd
-
 
 test_dir = join(abspath(dirname(__file__)), 'hprd_tests_data')
 
@@ -10,7 +10,7 @@ id_file = join(test_dir, 'HPRD_ID_MAPPINGS.txt')
 
 def test_process_complexes():
     cplx_file = join(test_dir, 'PROTEIN_COMPLEXES.txt')
-    hp = hprd.process_from_flat_files(id_file, complexes_file=cplx_file)
+    hp = hprd.process_flat_files(id_file, complexes_file=cplx_file)
     assert isinstance(hp, hprd.HprdProcessor)
     assert isinstance(hp.statements, list)
     assert len(hp.statements) == 3
@@ -40,7 +40,8 @@ def test_process_complexes():
 
 def test_process_ptms():
     ptm_file = join(test_dir, 'POST_TRANSLATIONAL_MODIFICATIONS.txt')
-    hp = hprd.process_from_flat_files(id_file, ptm_file=ptm_file)
+    seq_file = join(test_dir, 'PROTEIN_SEQUENCES.txt')
+    hp = hprd.process_flat_files(id_file, ptm_file=ptm_file, seq_file=seq_file)
     assert isinstance(hp, hprd.HprdProcessor)
     assert isinstance(hp.statements, list)
     assert len(hp.statements) == 13
@@ -58,3 +59,12 @@ def test_process_ptms():
     assert s0.evidence[0].pmid == '14592976'
     assert s0.evidence[0].source_api == 'hprd'
     assert s0.evidence[0].annotations['evidence'] == ['in vivo']
+    assert s0.evidence[0].annotations['site_motif'] == \
+                    {'motif': 'NFSSSPSTPVGSPQG', 'respos': 8}
+
+@raises(ValueError)
+def test_process_ptms_no_seq():
+    ptm_file = join(test_dir, 'POST_TRANSLATIONAL_MODIFICATIONS.txt')
+    hp = hprd.process_flat_files(id_file, ptm_file=ptm_file)
+
+
