@@ -2,15 +2,18 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
 from copy import deepcopy
-from indra.preassembler.hierarchy_manager import hierarchies, \
-    HierarchyManager, get_bio_hierarchies
-from indra.statements import get_valid_location, InvalidLocationError, Agent
 from indra.util import unicode_strs
+from indra.preassembler.hierarchy_manager import hierarchies, \
+    HierarchyManager, get_bio_hierarchies, YamlHierarchyManager
+from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
+    rdf_graph_from_yaml, load_yaml_from_url
+
 
 ent_hierarchy = hierarchies['entity']
 mod_hierarchy = hierarchies['modification']
 act_hierarchy = hierarchies['activity']
 comp_hierarchy = hierarchies['cellular_component']
+
 
 def test_hierarchy_unicode():
     # Test all the hierarchies except the comp_hierarchy, which is an
@@ -50,6 +53,7 @@ def test_partof_entity_not():
 def test_isa_mod():
     assert mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
                              'INDRA_MODS', 'modification')
+
 
 def test_isa_mod_not():
     assert not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
@@ -263,3 +267,11 @@ def test_bio_hierarchy_pickles():
     h2 = get_bio_hierarchies(from_pickle=False)
     for key in h1.keys():
         assert len(h1[key].graph) == len(h2[key].graph)
+
+
+def test_yaml_hm():
+    yml = load_yaml_from_url(eidos_ont_url)
+    hm = YamlHierarchyManager(yml, rdf_graph_from_yaml)
+    entry = 'UN/events/natural_disaster/snowpocalypse'
+    hm.add_entry(entry)
+    assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-1]))

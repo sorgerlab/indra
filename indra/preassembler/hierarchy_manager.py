@@ -512,15 +512,39 @@ class YamlHierarchyManager(HierarchyManager):
         G = self.yaml_to_rdf(self.yaml_root)
         self.load_from_rdf_graph(G)
 
-    def add_entry(self, entry):
+    def add_entry(self, entry, examples=None):
         # TODO: Add the entry by finding the right place in the YAML object
+        examples = examples if examples else []
+        parts = entry.split('/')
+        root = self.yaml_root
+        for idx, part in enumerate(parts):
+            print('part: %s' % part)
+            print('root: %s' % root)
+            new_root = None
+            for element in root:
+                # If this is an OntologyNode
+                if 'OntologyNode' in element:
+                    if element['name'] == part:
+                        new_root = element
+                        break
+                else:
+                    assert len(element) == 1
+                    key = list(element.keys())[0]
+                    if key == part:
+                        new_root = element[key]
+                        break
+            if new_root is None:
+                if idx == len(parts) - 1:
+                    root.append({'OntologyNode': None, 'name': part,
+                                 'examples': examples})
+                    break
+                else:
+                    root.append({part: []})
+                    new_root = root[-1][part]
+            root = new_root
+
         G = self.yaml_to_rdf(self.yaml_root)
         self.load_from_rdf_graph(G)
-
-
-
-
-
 
 
 def get_bio_hierarchies(from_pickle=True):

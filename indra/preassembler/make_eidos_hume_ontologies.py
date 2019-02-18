@@ -17,6 +17,13 @@ indra_rel_ns = Namespace(indra_ns + 'relations/')
 isa = indra_rel_ns.term('isa')
 
 
+eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
+                 'src/main/resources/org/clulab/wm/eidos/english/'
+                 'ontologies/un_ontology.yml')
+hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
+                'resource/ontologies/hume_ontology.yaml')
+
+
 def save_hierarchy(g, path):
     with open(path, 'wb') as out_file:
         g_bytes = g.serialize(format='nt')
@@ -87,15 +94,10 @@ def load_yaml_from_url(ont_url):
 
 if __name__ == '__main__':
     # Eidos
-    eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
-                     'src/main/resources/org/clulab/wm/eidos/english/'
-                     'ontologies/un_ontology.yml')
     eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
                           'eidos_ontology.rdf')
     update_ontology(eidos_ont_url, eidos_rdf_path)
 
     # Hume
-    hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
-                    'resource/ontologies/hume_ontology.yaml')
     hume_rdf_path = join(dirname(abspath(hume.__file__)), 'hume_ontology.rdf')
     update_ontology(hume_ont_url, hume_rdf_path)

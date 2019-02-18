@@ -5,8 +5,11 @@ import logging
 import argparse
 from flask import Flask, request, jsonify, abort, Response
 from indra.belief import BeliefEngine
-from indra.belief.wm_scorer import get_eidos_bayesian_scorer
 from indra.statements import stmts_from_json_file
+from indra.belief.wm_scorer import get_eidos_bayesian_scorer
+from indra.preassembler.hierarchy_manager import YamlHierarchyManager
+from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
+    load_yaml_from_url, rdf_graph_from_yaml
 
 
 logger = logging.getLogger('live_curation')
@@ -171,8 +174,12 @@ class LiveCurator(object):
 
 # From here on, a Flask app built around a LiveCurator is implemented
 
+def _make_un_ontology():
+    return YamlHierarchyManager(load_yaml_from_url(eidos_ont_url),
+                                rdf_graph_from_yaml)
 
 curator = LiveCurator(corpora=corpora)
+ont_manager = _make_un_ontology()
 
 
 @app.route('/reset_curation', methods=['POST'])
@@ -220,6 +227,7 @@ def add_ontology_entry():
     # Get input parameters
     entry = request.json.get('entry')
     examples = request.json.get('examples', [])
+    ont_manager.add_entry(entry, examples)
 
     # Add the entry and examples to the in-memory representation
     # of the onotology
@@ -232,6 +240,8 @@ def reset_ontology():
         abort(Response('Missing application/json header.', 415))
 
     # Reload the original ontology
+    global ont_manager
+    ont_manager = _make_un_ontology()
 
     return jsonify({})
 
