@@ -504,6 +504,25 @@ class HierarchyManager(object):
         return (ag_ns_name, ag_id)
 
 
+class YamlHierarchyManager(HierarchyManager):
+    def __init__(self, root, yaml_to_rdf):
+        self.yaml_root = root
+        self.yaml_to_rdf = yaml_to_rdf
+        super(YamlHierarchyManager, self).__init__(None, True, True)
+        G = self.yaml_to_rdf(self.yaml_root)
+        self.load_from_rdf_graph(G)
+
+    def add_entry(self, entry):
+        # TODO: Add the entry by finding the right place in the YAML object
+        G = self.yaml_to_rdf(self.yaml_root)
+        self.load_from_rdf_graph(G)
+
+
+
+
+
+
+
 def get_bio_hierarchies(from_pickle=True):
     if from_pickle:
         import pickle
