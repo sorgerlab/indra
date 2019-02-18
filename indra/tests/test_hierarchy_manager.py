@@ -55,33 +55,41 @@ def test_isa_mod_not():
     assert not mod_hierarchy.isa('INDRA_MODS', 'phosphorylation',
                                  'INDRA_MODS', 'ubiquitination')
 
+
 def test_isa_activity():
     assert act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
                              'INDRA_ACTIVITIES', 'activity')
+
 
 def test_isa_activity_not():
     assert not act_hierarchy.isa('INDRA_ACTIVITIES', 'kinase',
                                  'INDRA_ACTIVITIES', 'phosphatase')
 
+
 def test_partof_comp():
     assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
                                  'INDRA_LOCATIONS', 'cell')
+
 
 def test_partof_comp_not():
     assert not comp_hierarchy.partof('INDRA_LOCATIONS', 'cell',
                                      'INDRA_LOCATIONS', 'cytoplasm')
 
+
 def test_partof_comp_none():
     assert comp_hierarchy.partof('INDRA_LOCATIONS', 'cytoplasm',
                                  'INDRA_LOCATIONS', None)
+
 
 def test_partof_comp_none_none():
     assert comp_hierarchy.partof('INDRA_LOCATIONS', None,
                                  'INDRA_LOCATIONS', None)
 
+
 def test_partof_comp_none_not():
     assert not comp_hierarchy.partof('INDRA_LOCATIONS', None,
                                      'INDRA_LOCATIONS', 'cytoplasm')
+
 
 def test_get_children():
     raf = 'http://identifiers.org/fplx/RAF'
@@ -121,17 +129,20 @@ def test_mtorc_children():
     assert 'http://identifiers.org/hgnc.symbol/RICTOR' not in ch1
     assert 'http://identifiers.org/hgnc.symbol/RPTOR' not in ch2
 
+
 def test_mtorc_get_parents():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.get_parents(rictor, 'all')
     assert len(p) == 1
     assert list(p)[0] == 'http://identifiers.org/fplx/mTORC2'
 
+
 def test_mtorc_transitive_closure():
     rictor = 'http://identifiers.org/hgnc.symbol/RICTOR'
     p = ent_hierarchy.partof_closure.get(rictor)
     assert len(p) == 1
     assert p[0] == 'http://identifiers.org/fplx/mTORC2'
+
 
 def test_mtorc_partof_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
@@ -140,12 +151,14 @@ def test_mtorc_partof_no_tc():
     assert ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC1')
     assert not ent_hierarchy_no_tc.partof('HGNC', 'RPTOR', 'FPLX', 'mTORC2')
 
+
 def test_erk_isa_no_tc():
     ent_hierarchy_no_tc = deepcopy(ent_hierarchy)
     ent_hierarchy_no_tc.isa_closure = {}
     ent_hierarchy_no_tc.partof_closure = {}
     assert ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'MAPK')
     assert not ent_hierarchy_no_tc.isa('HGNC', 'MAPK1', 'FPLX', 'JNK')
+
 
 def test_get_parents():
     prkaa1 = 'http://identifiers.org/hgnc.symbol/PRKAA1'
@@ -214,7 +227,7 @@ def test_load_hume_hierarchy():
     assert hume_isa('entity/academic_discipline', 'entity')
     assert not hume_isa('entity', 'entity/academic_discipline')
     assert hume_isa('event/healthcare/human_disease',
-                   'event/healthcare')
+                    'event/healthcare')
 
 
 def test_same_components():
