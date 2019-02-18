@@ -64,6 +64,8 @@ class LiveCurator(object):
     def reset_scorer(self):
         """Reset the scorer used for couration."""
         self.scorer = get_eidos_bayesian_scorer()
+        for corpus_id, corpus in self.corpora.items():
+            corpus.curations = {}
 
     def get_corpus(self, corpus_id):
         """Return a corpus given an ID.
@@ -210,7 +212,7 @@ def update_beliefs():
     return jsonify(belief_dict)
 
 
-@app.route('/add_ontlogy_entry', methods=['POST'])
+@app.route('/add_ontology_entry', methods=['POST'])
 def add_ontology_entry():
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
