@@ -518,8 +518,6 @@ class YamlHierarchyManager(HierarchyManager):
         parts = entry.split('/')
         root = self.yaml_root
         for idx, part in enumerate(parts):
-            print('part: %s' % part)
-            print('root: %s' % root)
             new_root = None
             for element in root:
                 # If this is an OntologyNode

@@ -1,5 +1,6 @@
 """This REST service allows real-time curation and belief updates for
 a corpus of INDRA Statements."""
+import yaml
 import pickle
 import logging
 import argparse
@@ -244,10 +245,9 @@ def add_ontology_entry():
     # Get input parameters
     entry = request.json.get('entry')
     examples = request.json.get('examples', [])
-    ont_manager.add_entry(entry, examples)
-
     # Add the entry and examples to the in-memory representation
     # of the onotology
+    ont_manager.add_entry(entry, examples)
     return jsonify({})
 
 
@@ -272,12 +272,17 @@ def update_groundings():
     corpus_id = request.json.get('corpus_id')
 
     # Send the latest ontology and list of concept texts to Eidos
+    yaml_str = yaml.dump(ont_manager.yaml_root)
     concepts = []
     for uuid, stmt in corpora.get(corpus_id).items():
         for concept in stmt.agent_list():
             concept_txt = concept.db_refs['TEXT']
             concepts.append(concept_txt)
+    # TODO: call Eidos here with yaml_str and concepts to get
+    # actual groundings
+    groundings = []
     # Update the corpus with new groundings
+    
 
 
     return jsonify({})

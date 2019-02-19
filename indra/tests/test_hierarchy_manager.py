@@ -272,6 +272,12 @@ def test_bio_hierarchy_pickles():
 def test_yaml_hm():
     yml = load_yaml_from_url(eidos_ont_url)
     hm = YamlHierarchyManager(yml, rdf_graph_from_yaml)
+
     entry = 'UN/events/natural_disaster/snowpocalypse'
     hm.add_entry(entry)
     assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-1]))
+
+    entry = 'UN/events/galactic/alien_invasion'
+    hm.add_entry(entry)
+    assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-1]))
+    assert hm.isa('UN', entry, 'UN', '/'.join(entry.split('/')[:-2]))
