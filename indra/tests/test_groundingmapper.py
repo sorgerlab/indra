@@ -277,6 +277,19 @@ def test_map_agent():
     assert mapped_ag.name == 'ERK'
     assert mapped_ag.db_refs.get('FPLX') == 'ERK'
 
+
+def test_deft_mapping():
+    er = Agent('ER', db_refs={'TEXT': 'ER'})
+    pmid = '30775882'
+    stmt = Phosphorylation(None, er, evidence=[Evidence(pmid=pmid,
+                                                        text_refs={'PMID':
+                                                                       pmid})])
+    gm = GroundingMapper(default_grounding_map, default_agent_map)
+    mapped_stmts = gm.map_agents([stmt])
+    assert mapped_stmts[0].sub.name == 'ESR1'
+
+
+
 if __name__ == '__main__':
     test_map_entry_hgnc_and_up()
 

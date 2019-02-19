@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 
 try:
-    from deft import available_models as available_deft_models
+    from deft import available_shortforms as available_deft_models
     from deft.disambiguate import load_disambiguator
     deft_disambiguators = {}
     for shortform in available_deft_models:
         deft_disambiguators[shortform] = load_disambiguator(shortform)
 except Exception as e:
+    logger.exception(e)
     logger.debug('Cannot use DEFT for disambiguation')
     def_disambiguators = {}
 
@@ -161,18 +162,28 @@ class GroundingMapper(object):
 
         # Update agents directly participating in the statement
         agent_list = mapped_stmt.agent_list()
-        for idx in range(len(agent_list)):
-            agent = agent_list[idx]
+        for idx, agent in enumerate(agent_list):
+            if agent is None:
+                continue
             agent_txt = agent.db_refs.get('TEXT')
-            if agent is None or agent_txt is None:
+            if agent_txt is None:
                 continue
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
             if agent_txt in deft_disambiguators:
-                refs = mapped_stmt.evidence[0].text_refs
-                grounding_text = _get_text_for_grounding(refs)
-                res = deft_da[agent_txt].disambiguate(grounding_text)
+                grounding_text = _get_text_for_grounding(mapped_stmt)
+                if grounding_text:
+                    res = deft_disambiguators[agent_txt].disambiguate(
+                                                            [grounding_text])
+                    ns_and_id, standard_name, disamb_scores = res[0]
+                    db_ns, db_id = ns_and_id.split(':')
+                    # FIXME: assuming we get HGNC here, we need to make sure
+                    # that the UP grounding of the new_agent is also changed
+                    # accordingly. Further, if it happens to be, say, a GO ID,
+                    # then we would need to get rid of the protein ID entries.
+                    new_agent.db_refs[db_ns] = db_id
+                    new_agent.name = standard_name
 
 
             if maps_to_none:
@@ -690,6 +701,19 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
     # Write sentences to CSV file
     write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
+
+
+def _get_text_for_grounding(stmt):
+    refs = stmt.evidence[0].text_refs
+    from indra.literature import pubmed_client
+    pmid = refs.get('PMID')
+    abstract = None
+    if pmid:
+        abstract = pubmed_client.get_abstract(pmid)
+    if not abstract:
+        return stmt.evidence[0].text
+    else:
+        return abstract
 
 
 default_grounding_map_path = \
