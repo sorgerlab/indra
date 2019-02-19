@@ -55,11 +55,17 @@ class EidosReader(object):
         eidos = autoclass(eidos_package + '.EidosSystem')
         self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
-    def reground_texts(yaml_str, texts):
-        groundings = self.eidos_reader.ontologyHandler.reground(
+    def reground_texts(self, texts, yaml_str=None):
+        if yaml_str is None:
+            import yaml
+            from indra.preassembler.make_eidos_hume_ontologies import \
+                eidos_ont_url, load_yaml_from_url
+            yaml_str = yaml.dump(load_yaml_from_url(eidos_ont_url))
+        text_seq = _list_to_seq(texts)
+        groundings = self.eidos_reader.ontologyHandler().reground(
             'Custom',  # name
-            yaml_string,  # ontologyYaml
-            texts,  # texts
+            yaml_str,  # ontologyYaml
+            text_seq,  # texts
             True, # filter
             10  # topk
             )
@@ -101,9 +107,7 @@ class EidosReader(object):
             mentions_json = ser.toJsonStr(mentions)
         elif format == 'json_ld':
             # We need to get a Scala Seq of annot docs here
-            ml = autoclass('scala.collection.mutable.MutableList')()
-            # We add the document to the mutable list
-            ml.appendElem(annot_doc)
+            ml = _list_to_seq([annot_doc])
             # We instantiate the adjective grounder
             ag = self.eidos_reader.loadableAttributes().adjectiveGrounder()
             # We now create a JSON-LD corpus
@@ -114,3 +118,10 @@ class EidosReader(object):
         json_dict = json.loads(mentions_json)
         return json_dict
 
+
+def _list_to_seq(lst):
+    """Return a scala.collection.Seq from a Python list."""
+    ml = autoclass('scala.collection.mutable.MutableList')()
+    for element in lst:
+        ml.appendElem(element)
+    return ml
