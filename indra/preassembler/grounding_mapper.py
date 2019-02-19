@@ -16,6 +16,18 @@ from indra.util import read_unicode_csv, write_unicode_csv
 logger = logging.getLogger(__name__)
 
 
+try:
+    from deft import available_models as available_deft_models
+    from deft.disambiguate import load_disambiguator
+    deft_disambiguators = {}
+    for shortform in available_deft_models:
+        deft_disambiguators[shortform] = load_disambiguator(shortform)
+except Exception as e:
+    logger.debug('Cannot use DEFT for disambiguation')
+    def_disambiguators = {}
+
+
+
 class GroundingMapper(object):
     """Maps grounding of INDRA Agents based on a given grounding map.
 
@@ -151,10 +163,17 @@ class GroundingMapper(object):
         agent_list = mapped_stmt.agent_list()
         for idx in range(len(agent_list)):
             agent = agent_list[idx]
-            if agent is None or agent.db_refs.get('TEXT') is None:
+            agent_txt = agent.db_refs.get('TEXT')
+            if agent is None or agent_txt is None:
                 continue
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
+
+            if agent_txt in deft_disambiguators:
+                refs = mapped_stmt.evidence[0].text_refs
+                grounding_text = _get_text_for_grounding(refs)
+                res = deft_da[agent_txt].disambiguate(grounding_text)
+
 
             if maps_to_none:
                 # Skip the entire statement if the agent maps to None in the
@@ -219,6 +238,7 @@ class GroundingMapper(object):
             map_db_refs = self.gm[agent_text]
         else:
             return agent, False
+
         # If it's in the map but it maps to None, then filter out
         # this statement by skipping it
         if map_db_refs is None:
