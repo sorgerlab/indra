@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import datetime
 from indra import get_config
@@ -56,19 +57,24 @@ class EidosReader(object):
         self.eidos_reader = eidos(autoclass('java.lang.Object')())
 
     def reground_texts(self, texts, yaml_str=None):
+        if self.eidos_reader is None:
+            self.initialize_reader()
         if yaml_str is None:
             import yaml
             from indra.preassembler.make_eidos_hume_ontologies import \
                 eidos_ont_url, load_yaml_from_url
             yaml_str = yaml.dump(load_yaml_from_url(eidos_ont_url))
         text_seq = _list_to_seq(texts)
-        groundings = self.eidos_reader.ontologyHandler().reground(
+        raw_groundings = self.eidos_reader.ontologyHandler().reground(
             'Custom',  # name
             yaml_str,  # ontologyYaml
             text_seq,  # texts
-            True, # filter
+            True,  # filter
             10  # topk
             )
+        # Process the return values into a proper Python representation
+        groundings = [[_get_scored_grounding(entry) for entry in text_grounding]
+                      for text_grounding in raw_groundings]
         return groundings
 
     def process_text(self, text, format='json'):
@@ -125,3 +131,9 @@ def _list_to_seq(lst):
     for element in lst:
         ml.appendElem(element)
     return ml
+
+
+def _get_scored_grounding(tpl):
+    ts = tpl.toString()
+    parts = ts[1:-1].split(',')
+    return parts[0], float(parts[1])

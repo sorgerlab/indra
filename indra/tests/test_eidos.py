@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import datetime
+import unittest
 from indra.sources import eidos
 from indra.statements import Influence, Association
 from indra.assemblers.cag import CAGAssembler
@@ -166,3 +167,12 @@ def test_eidos_to_pysb():
         exp_str = pa.export_model(fmt)
         assert exp_str, "Got no exported model from eidos->psyb to %s." % fmt
     return
+
+
+#@unittest.skip('Grounding not available on Travis.')
+def test_reground_texts():
+    er = eidos.reader.EidosReader()
+    er.initialize_reader()
+    groundings = er.reground_texts(['rainfall', 'hunger'])
+    assert groundings[0][0][0] == 'UN/events/weather/precipitation'
+    assert groundings[1][0][0] == 'UN/events/human/famine'
