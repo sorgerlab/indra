@@ -50,6 +50,21 @@ class EidosReader(object):
     def __init__(self):
         self.eidos_reader = None
 
+    def initialize_reader(self):
+        """Instantiate the Eidos reader attribute of this reader."""
+        eidos = autoclass(eidos_package + '.EidosSystem')
+        self.eidos_reader = eidos(autoclass('java.lang.Object')())
+
+    def reground_texts(yaml_str, texts):
+        groundings = self.eidos_reader.ontologyHandler.reground(
+            'Custom',  # name
+            yaml_string,  # ontologyYaml
+            texts,  # texts
+            True, # filter
+            10  # topk
+            )
+        return groundings
+
     def process_text(self, text, format='json'):
         """Return a mentions JSON object given text.
 
@@ -67,9 +82,7 @@ class EidosReader(object):
             A JSON object of mentions extracted from text.
         """
         if self.eidos_reader is None:
-            eidos = autoclass(eidos_package + '.EidosSystem')
-            self.eidos_reader = eidos(autoclass('java.lang.Object')())
-
+            self.initialize_reader()
         default_arg = lambda x: autoclass('scala.Some')(x)
         today = datetime.date.today().strftime("%Y-%m-%d")
         fname = 'default_file_name'

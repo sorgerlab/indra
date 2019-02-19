@@ -280,10 +280,11 @@ def update_groundings():
             concepts.append(concept_txt)
     # TODO: call Eidos here with yaml_str and concepts to get
     # actual groundings
-    groundings = []
     # Update the corpus with new groundings
-    
-
+    from indra.sources.eidos.eidos_reader import EidosReader
+    er = EidosReader()
+    er.initialize_reader()
+    groundings = er.reground_texts(yaml_str, concepts)
 
     return jsonify({})
 
