@@ -172,7 +172,8 @@ class GroundingMapper(object):
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
             if agent_txt in deft_disambiguators:
-                grounding_text = _get_text_for_grounding(mapped_stmt)
+                grounding_text = _get_text_for_grounding(mapped_stmt,
+                                                         agent_txt)
                 if grounding_text:
                     res = deft_disambiguators[agent_txt].disambiguate(
                                                             [grounding_text])
@@ -703,18 +704,25 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 
-def _get_text_for_grounding(stmt):
+def _get_text_for_grounding(stmt, shortform):
     refs = stmt.evidence[0].text_refs
-    from indra.literature import pubmed_client
-    pmid = refs.get('PMID')
-    abstract = None
-    if pmid:
-        abstract = pubmed_client.get_abstract(pmid)
-    if not abstract:
-        return stmt.evidence[0].text
-    else:
-        return abstract
-
+    try:
+        from indra_db.util.content_scripts \
+            import get_text_content_from_text_refs
+        from indra.tools.disambiguate import _universal_extract_text
+        content = get_text_content_from_text_refs(refs)
+        text = _universal_extract_text(content, contains=shortform)
+    except ModuleNotFoundError:
+        from indra.literature import pubmed_client
+        pmid = refs.get('PMID')
+        abstract = None
+        if pmid:
+            abstract = pubmed_client.get_abstract(pmid)
+            if not abstract:
+                text =  stmt.evidence[0].text
+            else:
+                text = abstract
+    return text
 
 default_grounding_map_path = \
     os.path.join(os.path.dirname(__file__),
