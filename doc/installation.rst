@@ -101,7 +101,7 @@ the rest of INDRA will work without pyjnius.
 
 
 
-1. Install JDK from Oracle: `https://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
+1. Install JDK from Oracle: `<https://www.oracle.com/technetwork/java/javase/downloads/index.html>`_.
 INDRA is currently tested against Java 11 but is expected to be compatible with
 versions of Java 8 or higher.
 

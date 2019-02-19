@@ -184,6 +184,7 @@ ont_manager = _make_un_ontology()
 
 @app.route('/reset_curation', methods=['POST'])
 def reset_curation():
+    """Reset the curations submitted until now."""
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
     curator.reset_scorer()
@@ -192,6 +193,21 @@ def reset_curation():
 
 @app.route('/submit_curation', methods=['POST'])
 def submit_curation():
+    """Submit curations for a given corpus.
+
+    The submitted curations are handled to update the probability model but
+    there is no return value here. The update_belief function can be called
+    separately to calculate update belief scores.
+
+    Parameters
+    ----------
+    corpus_id : str
+        The ID of the corpus for which the curation is submitted.
+    curations : dict
+        A set of curations where each key is a Statement UUID in the given
+        corpus and each key is 0 or 1 with 0 corresponding to incorrect and
+        1 corresponding to correct.
+    """
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
     # Get input parameters
@@ -207,6 +223,7 @@ def submit_curation():
 
 @app.route('/update_beliefs', methods=['POST'])
 def update_beliefs():
+    """Return updated beliefs based on current probability model."""
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
     # Get input parameters
@@ -261,6 +278,7 @@ def update_groundings():
             concept_txt = concept.db_refs['TEXT']
             concepts.append(concept_txt)
     # Update the corpus with new groundings
+
 
     return jsonify({})
 
