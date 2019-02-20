@@ -196,6 +196,8 @@ class GroundingMapper(object):
                     new_agent.name = standard_name
                     if db_ns == 'HGNC':
                         self.update_agent_db_refs(new_agent, agent_txt, False)
+                    annotations = mapped_stmt.evidence[0].annotations
+                    annotations['agents']['deft'][idx] = disamb_scores
 
             if maps_to_none:
                 # Skip the entire statement if the agent maps to None in the
