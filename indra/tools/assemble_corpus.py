@@ -1743,6 +1743,30 @@ def strip_agent_context(stmts_in, **kwargs):
     return stmts_out
 
 
+def standardize_names_groundings(stmts):
+    """Standardize the names of Concepts with respect to an ontology.
+
+    NOTE: this function is currently optimized for Influence Statements
+    obtained from Eidos, Hume, Sofia and CWMS. It will possibly yield
+    unexpected results for biology-specific Statements.
+    """
+    print('Standardize names to groundings')
+    for stmt in stmts:
+        for concept in stmt.agent_list():
+            db_ns, db_id = concept.get_grounding()
+            if db_id is not None:
+                if isinstance(db_id, list):
+                    db_id = db_id[0][0].split('/')[-1]
+                else:
+                    db_id = db_id.split('/')[-1]
+                db_id = db_id.replace('|', ' ')
+                db_id = db_id.replace('_', ' ')
+                db_id = db_id.replace('ONT::', '')
+                db_id = db_id.capitalize()
+                concept.name = db_id
+    return stmts
+
+
 def dump_stmt_strings(stmts, fname):
     """Save printed statements in a file.
 
