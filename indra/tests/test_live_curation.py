@@ -1,4 +1,5 @@
 import json
+import copy
 import logging
 import unittest
 from indra.statements import *
@@ -27,7 +28,9 @@ def _make_corpus():
     stmt3.uuid = '3'
     stmt4.uuid = '4'
     stmt5.uuid = '5'
-    return Corpus([stmt1, stmt2, stmt3, stmt4, stmt5])
+    stmts = [stmt1, stmt2, stmt3, stmt4]
+    raw_stmts = copy.deepcopy(stmts)
+    return Corpus(statements=stmts, raw_statements=raw_stmts)
 
 
 def test_no_curation():
@@ -257,6 +260,12 @@ class LiveCurationTestCase(unittest.TestCase):
                     '4': 0,
                     '5': 0}
         assert close_enough(res, expected), (res, expected)
+
+    def test_add_ontology_node(self):
+        self._send_request('add_ontology_entry',
+                           {'entry': 'UN/animal/dog',
+                            'examples': ['canine', 'dog', 'puppy']})
+        self._send_request('update_groundings', {'corpus_id': '1'})
 
 
 def close_enough(probs, ref):

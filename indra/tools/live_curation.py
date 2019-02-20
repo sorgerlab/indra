@@ -5,9 +5,10 @@ import pickle
 import logging
 import argparse
 from flask import Flask, request, jsonify, abort, Response
+# Note: preserve EidosReader install as first one from indra
+from indra.sources.eidos.reader import EidosReader
 from indra.belief import BeliefEngine
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
-from indra.sources.eidos.eidos_reader import EidosReader
 from indra.statements import stmts_from_json_file, stmts_to_json
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
 from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
@@ -177,14 +178,14 @@ class LiveCurator(object):
         return belief_dict
 
     def update_groundings(self, corpus_id):
-        corpus = corpora.get(corpus_id)
+        corpus = self.get_corpus(corpus_id)
 
         # Send the latest ontology and list of concept texts to Eidos
         yaml_str = yaml.dump(self.ont_manager.yaml_root)
         concepts = []
         for stmt in corpus.raw_statements:
             for concept in stmt.agent_list():
-                concept_txt = concept.db_refs['TEXT']
+                concept_txt = concept.db_refs.get('TEXT')
                 concepts.append(concept_txt)
         groundings = self.eidos_reader.reground_texts(yaml_str, concepts)
         # Update the corpus with new groundings
@@ -271,7 +272,7 @@ def add_ontology_entry():
     examples = request.json.get('examples', [])
     # Add the entry and examples to the in-memory representation
     # of the onotology
-    ont_manager.add_entry(entry, examples)
+    curator.ont_manager.add_entry(entry, examples)
     return jsonify({})
 
 
@@ -281,8 +282,7 @@ def reset_ontology():
         abort(Response('Missing application/json header.', 415))
 
     # Reload the original ontology
-    global ont_manager
-    ont_manager = _make_un_ontology()
+    curator.ont_manager = _make_un_ontology()
 
     return jsonify({})
 
@@ -314,19 +314,6 @@ def default_assembly(stmts):
     stmts = ac.merge_deltas(stmts)
     stmts = standardize_names_groundings(stmts)
     return stmts
-
-@app.route('/run_assembly', methods=['POST'])
-def run_assembly():
-    if request.json is None:
-        abort(Response('Missing application/json header.', 415))
-
-    # Get input parameters
-    corpus_id = request.json.get('corpus_id')
-
-    # Run preassembly
-
-    # Return assembled statement corpus
-    return jsonify({})
 
 
 if __name__ == '__main__':
