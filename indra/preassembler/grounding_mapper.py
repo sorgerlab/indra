@@ -754,7 +754,7 @@ def _get_text_for_grounding(stmt, agent_text):
         if pmid:
             abstract = pubmed_client.get_abstract(pmid)
             if not abstract:
-                text =  stmt.evidence[0].text
+                text = stmt.evidence[0].text
             else:
                 text = abstract
     return text
