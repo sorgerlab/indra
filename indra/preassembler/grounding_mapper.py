@@ -192,13 +192,10 @@ class GroundingMapper(object):
                                                             [grounding_text])
                     ns_and_id, standard_name, disamb_scores = res[0]
                     db_ns, db_id = ns_and_id.split(':')
-                    # FIXME: assuming we get HGNC here, we need to make sure
-                    # that the UP grounding of the new_agent is also changed
-                    # accordingly. Further, if it happens to be, say, a GO ID,
-                    # then we would need to get rid of the protein ID entries.
-                    new_agent.db_refs[db_ns] = db_id
+                    new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
                     new_agent.name = standard_name
-
+                    if db_ns == 'HGNC':
+                        self.update_agent_db_refs(new_agent, agent_txt, False)
 
             if maps_to_none:
                 # Skip the entire statement if the agent maps to None in the
