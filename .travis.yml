@@ -48,6 +48,9 @@ install:
     if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
         export RUN_SLOW=true;
     fi
+  # Install deft and download deft models
+  - pip install git+https://github.com/indralab/deft.git
+  - python -m deft.download
 before_script:
   # Enable plotting on fake display
   - "export DISPLAY=:99.0"
