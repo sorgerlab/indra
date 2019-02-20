@@ -18,11 +18,13 @@ def _make_corpus():
     ev4 = Evidence(source_api='cwms', text='D')
     ev5 = Evidence(source_api='sofia', text='E')
     ev6 = Evidence(source_api='sofia', text='F')
-    stmt1 = Influence(Concept('x'), Concept('y'), evidence=[ev1, ev2])
-    stmt2 = Influence(Concept('x'), Concept('y'), evidence=[ev1, ev3])
-    stmt3 = Influence(Concept('x'), Concept('y'), evidence=[ev3, ev4, ev5])
-    stmt4 = Influence(Concept('x'), Concept('y'), evidence=[ev5])
-    stmt5 = Influence(Concept('x'), Concept('y'), evidence=[ev6])
+    x = Concept('x', db_refs={'TEXT': 'dog'})
+    y = Concept('y', db_refs={'TEXT': 'cat'})
+    stmt1 = Influence(x, y, evidence=[ev1, ev2])
+    stmt2 = Influence(x, y, evidence=[ev1, ev3])
+    stmt3 = Influence(x, y, evidence=[ev3, ev4, ev5])
+    stmt4 = Influence(x, y, evidence=[ev5])
+    stmt5 = Influence(x, y, evidence=[ev6])
     stmt1.uuid = '1'
     stmt2.uuid = '2'
     stmt3.uuid = '3'

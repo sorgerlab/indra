@@ -8,6 +8,7 @@ from flask import Flask, request, jsonify, abort, Response
 # Note: preserve EidosReader install as first one from indra
 from indra.sources.eidos.reader import EidosReader
 from indra.belief import BeliefEngine
+from indra.tools import assemble_corpus as ac
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
 from indra.statements import stmts_from_json_file, stmts_to_json
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
@@ -50,6 +51,27 @@ class Corpus(object):
 
 class InvalidCorpusError(Exception):
     pass
+
+
+def default_assembly(stmts):
+    from indra.belief.wm_scorer import get_eidos_scorer
+    from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+    hm = get_wm_hierarchies()
+    scorer = get_eidos_scorer()
+    stmts = ac.run_preassembly(stmts, belief_scorer=scorer,
+                               return_toplevel=True,
+                               flatten_evidence=True,
+                               flatten_evidence_collect_from='supported_by',
+                               poolsize=4)
+    stmts = ac.merge_groundings(stmts)
+    stmts = ac.merge_deltas(stmts)
+    stmts = ac.standardize_names_groundings(stmts)
+    return stmts
+
+
+def _make_un_ontology():
+    return YamlHierarchyManager(load_yaml_from_url(eidos_ont_url),
+                                rdf_graph_from_yaml)
 
 
 class LiveCurator(object):
@@ -187,7 +209,7 @@ class LiveCurator(object):
             for concept in stmt.agent_list():
                 concept_txt = concept.db_refs.get('TEXT')
                 concepts.append(concept_txt)
-        groundings = self.eidos_reader.reground_texts(yaml_str, concepts)
+        groundings = self.eidos_reader.reground_texts(concepts, yaml_str)
         # Update the corpus with new groundings
         idx = 0
         for stmt in corpus.raw_statements:
@@ -200,10 +222,6 @@ class LiveCurator(object):
 
 
 # From here on, a Flask app built around a LiveCurator is implemented
-
-def _make_un_ontology():
-    return YamlHierarchyManager(load_yaml_from_url(eidos_ont_url),
-                                rdf_graph_from_yaml)
 
 curator = LiveCurator(corpora=corpora)
 
@@ -298,22 +316,6 @@ def update_groundings():
     stmts = curator.update_groundings(corpus_id)
     stmts_json = stmts_to_json(stmts)
     return jsonify(stmts_json)
-
-
-def default_assembly(stmts):
-    from indra.belief.wm_scorer import get_eidos_scorer
-    from indra.preassembler.hierarchy_manager import get_wm_hierarchies
-    hm = get_wm_hierarchies()
-    scorer = get_eidos_scorer()
-    stmts = ac.run_preassembly(stmts, belief_scorer=scorer,
-                               return_toplevel=True,
-                               flatten_evidence=True,
-                               flatten_evidence_collect_from='supported_by',
-                               poolsize=4)
-    stmts = ac.merge_groundings(stmts)
-    stmts = ac.merge_deltas(stmts)
-    stmts = standardize_names_groundings(stmts)
-    return stmts
 
 
 if __name__ == '__main__':
