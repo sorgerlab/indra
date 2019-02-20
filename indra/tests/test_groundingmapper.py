@@ -1,8 +1,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from indra.preassembler.grounding_mapper import *
-from indra.statements import Agent, Phosphorylation, Complex, Evidence, \
-                             BoundCondition
+from indra.statements import Agent, Phosphorylation, Complex, Inhibition, \
+    Evidence, BoundCondition
 from indra.util import unicode_strs
 from nose.tools import raises
 
@@ -279,17 +279,31 @@ def test_map_agent():
 
 
 def test_deft_mapping():
-    er = Agent('ER', db_refs={'TEXT': 'ER'})
-    pmid = '30775882'
-    stmt = Phosphorylation(None, er, evidence=[Evidence(pmid=pmid,
-                                                        text_refs={'PMID':
-                                                                       pmid})])
+    er1 = Agent('ER', db_refs={'TEXT': 'ER'})
+    pmid1 = '30775882'
+    stmt1 = Phosphorylation(None, er1, evidence=[Evidence(pmid=pmid1,
+                                                          text_refs={'PMID':
+                                                                     pmid1})])
+
+    er2 = Agent('ER', db_refs={'TEXT': 'ER'})
+    pmid2 = '28369137'
+    stmt2 = Inhibition(None, er2, evidence=[Evidence(pmid=pmid2,
+                                                     text_refs={'PMID':
+                                                                pmid2})])
+
     gm = GroundingMapper(default_grounding_map, default_agent_map)
-    mapped_stmts = gm.map_agents([stmt])
-    assert mapped_stmts[0].sub.name == 'ESR1'
+    mapped_stmts1 = gm.map_agents([stmt1])
+    assert mapped_stmts1[0].sub.name == 'ESR1'
+    assert mapped_stmts1[0].sub.db_refs['HGNC'] == '3467'
+    assert mapped_stmts1[0].sub.db_refs['UP'] == 'P03372'
 
+    mapped_stmts2 = gm.map_agents([stmt2])
+    assert mapped_stmts2[0].obj.name == 'Endoplasmic Reticulum'
+    assert mapped_stmts2[0].obj.db_refs['GO'] == '0005783'
 
+    annotations = mapped_stmts2[0].evidence[0].annotations
+    assert 'GO:0005783' in annotations['agents']['deft'][1]
 
+    
 if __name__ == '__main__':
     test_map_entry_hgnc_and_up()
-
