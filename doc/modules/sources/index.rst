@@ -18,6 +18,7 @@ Biology-oriented Reading Systems
    tees/index
    isi/index
    geneways/index
+   rlimsp/index
 
 General Purpose Reading Systems
 -------------------------------

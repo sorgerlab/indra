@@ -66,7 +66,7 @@ def main():
                     'indra.sources.index_cards',
                     'indra.sources.indra_db_rest', 'indra.sources.lincs_drug',
                     'indra.sources.ndex_cx', 'indra.sources.reach',
-                    'indra.sources.sofia',
+                    'indra.sources.rlimsp', 'indra.sources.sofia',
                     'indra.sources.sparser', 'indra.sources.tas',
                     'indra.sources.tees',
                     'indra.sources.trips', 'indra.resources',

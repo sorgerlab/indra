@@ -24,6 +24,7 @@ systems:
 - [Sparser](https://github.com/ddmcdonald/sparser) - for biology
 - [TEES](https://github.com/jbjorne/TEES) - for biology
 - [MedScan](https://doi.org/10.1093/bioinformatics/btg207) - for biology
+- [RLIMS-P](https://research.bioinformatics.udel.edu/rlimsp/) - for biology
 - [Eidos](https://github.com/clulab/eidos) - general purpose
 - [TRIPS/CWMS](http://trips.ihmc.us/parser/cgi/cwmsreader) - general purpose
 
