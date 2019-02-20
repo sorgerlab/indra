@@ -267,7 +267,10 @@ class LiveCurationTestCase(unittest.TestCase):
         self._send_request('add_ontology_entry',
                            {'entry': 'UN/animal/dog',
                             'examples': ['canine', 'dog', 'puppy']})
-        self._send_request('update_groundings', {'corpus_id': '1'})
+        resp = self._send_request('update_groundings', {'corpus_id': '1'})
+        res = json.loads(resp.data.decode('utf-8'))
+        stmts = stmts_from_json(res)
+        assert stmts[0].subj.db_refs['UN'][0][0] == 'UN/animal/dog'
 
 
 def close_enough(probs, ref):
