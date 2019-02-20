@@ -11,9 +11,8 @@ Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 Real-time feedback for assembly (:py:mod:`indra.tools.live_curation`)
 ---------------------------------------------------------------------
 
-.. autoflask:: indra.tools.live_curation:app
-   :endpoints:
-
+.. automodule:: indra.tools.live_curation
+    :members:
 
 Build a network from a gene list (:py:mod:`indra.tools.gene_network`)
 ---------------------------------------------------------------------

@@ -40,9 +40,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'IPython.sphinxext.ipython_directive',
     'IPython.sphinxext.ipython_console_highlighting',
-    'citations',
-    'sphinxcontrib.autohttp.flask',
-    'sphinxcontrib.autohttp.flaskqref'
+    'citations'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
