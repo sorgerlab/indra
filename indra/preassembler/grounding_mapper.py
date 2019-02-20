@@ -26,7 +26,7 @@ try:
         deft_disambiguators[shortform] = load_disambiguator(shortform)
 except Exception:
     logger.debug('Cannot use DEFT for disambiguation')
-    def_disambiguators = {}
+    deft_disambiguators = {}
 
 
 class GroundingMapper(object):
