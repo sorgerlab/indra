@@ -44,18 +44,6 @@ INDRA from there locally:
     cd indra
     pip install .
 
-Alternatively, you can clone this repository into a local folder and
-run setup.py from the terminal as
-
-.. code-block:: bash
-
-    git clone https://github.com/sorgerlab/indra.git
-    cd indra
-    python setup.py install
-
-however, this latter way of installing INDRA is typically slower and
-less reliable than the former ones.
-
 Cloning the source code from Github
 ```````````````````````````````````
 You may want to simply clone the source code without installing INDRA
@@ -85,9 +73,7 @@ INDRA dependencies
 ------------------
 
 INDRA depends on a few standard Python packages (e.g. rdflib, requests,
-objectpath).
-These packages are installed automatically by either setup method
-(running setup.py install or using pip). 
+objectpath). These packages are installed automatically by pip.
 
 Below we provide a detailed description of some extra dependencies that may
 require special steps to install.

@@ -18,25 +18,49 @@ assess belief.
 ### Knowledge sources
 
 INDRA is currently integrated with the following natural language processing
-systems:
-- [TRIPS/DRUM](http://trips.ihmc.us/parser/cgi/drum) - for biology
-- [REACH](https://github.com/clulab/reach) - for biology
-- [Sparser](https://github.com/ddmcdonald/sparser) - for biology
-- [TEES](https://github.com/jbjorne/TEES) - for biology
-- [MedScan](https://doi.org/10.1093/bioinformatics/btg207) - for biology
-- [RLIMS-P](https://research.bioinformatics.udel.edu/rlimsp/) - for biology
-- [Eidos](https://github.com/clulab/eidos) - general purpose
-- [TRIPS/CWMS](http://trips.ihmc.us/parser/cgi/cwmsreader) - general purpose
+systems and structured databases. These input modules (available in
+`indra.sources`) all produce INDRA Statements.
 
-and can collect information from these databases:
-- [Pathway Commons database](http://pathwaycommons.org/) or any source
-    using the [BioPAX](http://www.biopax.org/) format
-- [BEL Large Corpus](https://github.com/OpenBEL/) or any source using the
-    [BEL](https://github.com/OpenBEL/) format
-- [SIGNOR](https://signor.uniroma2.it/)
+General purpose causal relation reading systems:
 
-These input modules (available in `indra.sources`) all produce INDRA
-Statements.
+| Reader     | Reference                                       |
+|------------|-------------------------------------------------|
+| Eidos      | https://github.com/clulab/eidos                 |
+| TRIPS/CWMS | http://trips.ihmc.us/parser/cgi/cwmsreader      |
+| Hume       | https://github.com/BBN-E/Hume                   |
+| Sofia      | https://sofia.worldmodelers.com/ui/             |
+
+Biology-oriented reading systems:
+
+| Reader     | Reference                                       |
+|------------|-------------------------------------------------|
+| TRIPS/DRUM | http://trips.ihmc.us/parser/cgi/drum            |
+| REACH      | https://github.com/clulab/reach                 |
+| Sparser    | https://github.com/ddmcdonald/sparser           |
+| TEES       | https://github.com/jbjorne/TEES                 |
+| MedScan    | https://doi.org/10.1093/bioinformatics/btg207   |
+| RLIMS-P    | https://research.bioinformatics.udel.edu/rlimsp |
+| ISI/AMR    | https://github.com/sgarg87/big_mech_isi_gg      |
+| Geneways   | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
+
+Biological pathway databases:
+
+| Database / Exchange format | Reference                           |
+|----------------------------|-------------------------------------|
+| PathwayCommons / BioPax    | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
+| Large Corpus / BEL         | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
+| Signor                     | https://signor.uniroma2.it/         |
+| BioGRID                    | https://thebiogrid.org/             |
+| Target Affinity Spectrum   | https://doi.org/10.1101/358978      |
+| LINCS small molecules      | http://lincs.hms.harvard.edu/db/sm/ |
+
+Custom knowledge bases:
+
+| Database / Exchange format | Reference                            |
+|----------------------------|--------------------------------------|
+| NDEx / CX                  | http://ndexbio.org                   |
+| INDRA DB / INDRA Statements| https://github.com/indralab/indra_db |
+
 
 ### Output model assemblers
 
@@ -81,25 +105,13 @@ Documentation is available at
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5).
+INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5). Note: release
+1.11 will drop Python 2 compatibility.
 
 The preferred way to install INDRA is by pointing pip to the source repository
 as
 
     $ pip install git+https://github.com/sorgerlab/indra.git
-
-or by cloning the repository and then using pip to install the package as
-
-    $ git clone https://github.com/sorgerlab/indra.git
-    $ cd indra
-    $ pip install .
-
-You can also install INDRA by cloning this repository and running setup.py
-as
-
-    $ git clone https://github.com/sorgerlab/indra.git
-    $ cd indra
-    $ python setup.py install
 
 Releases of INDRA are also available on
 [PyPI](https://pip.pypa.io/en/latest/installing/), you can install the latest
@@ -110,9 +122,9 @@ release as
 However, releases will usually be behind the latest code available in this
 repository.
 
-INDRA depends on a few standard Python packages. These packages are installed by
-either setup method (using pip or running setup.py install).
-For certain modules and use cases, other dependencies may be needed,
+INDRA depends on a few standard Python packages. These packages are installed
+by pip during setup.
+For certain modules and use cases, other "extra" dependencies may be needed,
 which are described in detail in the
 [documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
