@@ -6,8 +6,8 @@ import logging
 import argparse
 from flask import Flask, request, jsonify, abort, Response
 from indra.belief import BeliefEngine
-from indra.statements import stmts_from_json_file
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
+from indra.statements import stmts_from_json_file, stmts_to_json
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
 from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
     load_yaml_from_url, rdf_graph_from_yaml
@@ -34,8 +34,9 @@ class Corpus(object):
         A dict keeping track of the curations submitted so far for Statement
         UUIDs in the corpus.
     """
-    def __init__(self, statements):
+    def __init__(self, statements, raw_statements=None):
         self.statements = {st.uuid: st for st in statements}
+        self.raw_statements = [] if not raw_statements else raw_statements
         self.curations = {}
 
     def __str__(self):
@@ -270,11 +271,12 @@ def update_groundings():
 
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
+    corpus = corpora.get(corpus_id)
 
     # Send the latest ontology and list of concept texts to Eidos
     yaml_str = yaml.dump(ont_manager.yaml_root)
     concepts = []
-    for uuid, stmt in corpora.get(corpus_id).items():
+    for stmt in corpus.raw_statements:
         for concept in stmt.agent_list():
             concept_txt = concept.db_refs['TEXT']
             concepts.append(concept_txt)
@@ -282,8 +284,14 @@ def update_groundings():
     er = EidosReader()
     groundings = er.reground_texts(yaml_str, concepts)
     # Update the corpus with new groundings
-
-    return jsonify({})
+    idx = 0
+    for stmt in corpus.raw_statements:
+        for concept in stmt.agent_list():
+            concept.db_refs['UN'] = groundings[idx]
+            idx += 1
+    # TODO: Re-run the assembly here before returning
+    stmts_json = stmts_to_json(corpus.raw_statements)
+    return jsonify(stmts_json)
 
 
 @app.route('/run_assembly', methods=['POST'])
@@ -305,6 +313,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Choose a corpus for live curation.')
     parser.add_argument('--json')
+    parser.add_argument('--raw_json')
     parser.add_argument('--pickle')
     parser.add_argument('--corpus_id', default='1')
     parser.add_argument('--host', default='0.0.0.0')
@@ -317,9 +326,14 @@ if __name__ == '__main__':
     elif args.pickle:
         with open(args.pickle, 'rb') as fh:
             stmts = pickle.load(fh)
+    if args.raw_json:
+        raw_stmts = stmts_from_json_file(args.raw_json)
+    else:
+        raw_stmts = None
+
     logger.info('Loaded corpus %s with %d statements.' %
                 (args.corpus_id, len(stmts)))
-    curator.corpora[args.corpus_id] = Corpus(stmts)
+    curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts)
 
     # Run the app
     app.run(host=args.host, port=args.port)
