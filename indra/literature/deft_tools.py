@@ -94,6 +94,9 @@ def get_plaintexts(text_content, contains=None):
     sources : list of str
         lists of text content. each item should either be a plaintext, an
         an NLM xml or an Elsevier xml
+
+    Returns : list of str
+        list of plaintexts for input list of xml strings
     """
     return [universal_extract_text(article, contains)
             for article in text_content]
