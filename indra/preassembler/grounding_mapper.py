@@ -172,6 +172,19 @@ class GroundingMapper(object):
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
             if agent_txt in deft_disambiguators:
+                # initialize annotations if needed so deft predicted
+                # probabilities can be added to agent annotations
+                try:
+                    mapped_stmt.evidence[0].annotations['agents']
+                except KeyError:
+                    mapped_stmt.evidence[0].annotations['agents'] = \
+                        {'deft': [None, None]}
+                else:
+                    try:
+                        mapped_stmt.evidence.annotations['agents']['deft']
+                    except KeyError:
+                        mapped_stmt.evidence.annotations['agents']['deft'] = \
+                            {'deft': [None, None]}
                 grounding_text = _get_text_for_grounding(mapped_stmt,
                                                          agent_txt)
                 if grounding_text:
