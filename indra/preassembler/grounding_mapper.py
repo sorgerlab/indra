@@ -16,6 +16,8 @@ from indra.util import read_unicode_csv, write_unicode_csv
 logger = logging.getLogger(__name__)
 
 
+# If the deft disambiguator is installed, load deft models to
+# disambiguate acronyms and shortforms
 try:
     from deft import available_shortforms as available_deft_models
     from deft.disambiguate import load_disambiguator
@@ -26,7 +28,6 @@ except Exception as e:
     logger.exception(e)
     logger.debug('Cannot use DEFT for disambiguation')
     def_disambiguators = {}
-
 
 
 class GroundingMapper(object):
@@ -171,6 +172,7 @@ class GroundingMapper(object):
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
+            # Check if a deft model exists for agent text
             if agent_txt in deft_disambiguators:
                 # initialize annotations if needed so deft predicted
                 # probabilities can be added to agent annotations
@@ -716,14 +718,35 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 
-def _get_text_for_grounding(stmt, shortform):
+def _get_text_for_grounding(stmt, agent_text):
+    """ Get text context for deft disambiguation
+
+    If the indra database is available, attempts to get the fulltext from
+    which the statement was extracted. If the fulltext is not available, the
+    abstract is returned. If the indra database is not available, uses the
+    pubmed client to get the abstract. If no abstract can be found, falls back
+    on returning the evidence text for the statement.
+
+    Parameters
+    ----------
+    stmt : py:class:`indra.statements.Statement`
+        statement with agent we seek to disambiguate
+
+    agent_text : str
+       agent text that needs to be disambiguated
+
+    Returns
+    -------
+    text : str
+        text for deft disambiguation
+    """
     refs = stmt.evidence[0].text_refs
     try:
         from indra_db.util.content_scripts \
             import get_text_content_from_text_refs
         from indra.tools.disambiguate import _universal_extract_text
         content = get_text_content_from_text_refs(refs)
-        text = _universal_extract_text(content, contains=shortform)
+        text = _universal_extract_text(content, contains=agent_text)
     except ModuleNotFoundError:
         from indra.literature import pubmed_client
         pmid = refs.get('PMID')
