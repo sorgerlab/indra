@@ -7,6 +7,7 @@ import argparse
 from flask import Flask, request, jsonify, abort, Response
 from indra.belief import BeliefEngine
 from indra.belief.wm_scorer import get_eidos_bayesian_scorer
+from indra.sources.eidos.eidos_reader import EidosReader
 from indra.statements import stmts_from_json_file, stmts_to_json
 from indra.preassembler.hierarchy_manager import YamlHierarchyManager
 from indra.preassembler.make_eidos_hume_ontologies import eidos_ont_url, \
@@ -62,8 +63,10 @@ class LiveCurator(object):
     """
 
     def __init__(self, scorer=None, corpora=None):
-        self.scorer = scorer if scorer else get_eidos_bayesian_scorer()
         self.corpora = corpora if corpora else {}
+        self.scorer = scorer if scorer else get_eidos_bayesian_scorer()
+        self.ont_manager = _make_un_ontology()
+        self.eidos_reader = EidosReader()
 
     # TODO: generalize this to other kinds of scorers
     def reset_scorer(self):
@@ -173,6 +176,27 @@ class LiveCurator(object):
         belief_dict = {st.uuid: st.belief for st in stmts}
         return belief_dict
 
+    def update_groundings(self, corpus_id):
+        corpus = corpora.get(corpus_id)
+
+        # Send the latest ontology and list of concept texts to Eidos
+        yaml_str = yaml.dump(self.ont_manager.yaml_root)
+        concepts = []
+        for stmt in corpus.raw_statements:
+            for concept in stmt.agent_list():
+                concept_txt = concept.db_refs['TEXT']
+                concepts.append(concept_txt)
+        groundings = self.eidos_reader.reground_texts(yaml_str, concepts)
+        # Update the corpus with new groundings
+        idx = 0
+        for stmt in corpus.raw_statements:
+            for concept in stmt.agent_list():
+                concept.db_refs['UN'] = groundings[idx]
+                idx += 1
+        # TODO: Re-run the assembly here before returning
+        corpus.statements = default_assembly(corpus.raw_statements)
+        return corpus.statements
+
 
 # From here on, a Flask app built around a LiveCurator is implemented
 
@@ -181,7 +205,6 @@ def _make_un_ontology():
                                 rdf_graph_from_yaml)
 
 curator = LiveCurator(corpora=corpora)
-ont_manager = _make_un_ontology()
 
 
 @app.route('/reset_curation', methods=['POST'])
@@ -271,28 +294,26 @@ def update_groundings():
 
     # Get input parameters
     corpus_id = request.json.get('corpus_id')
-    corpus = corpora.get(corpus_id)
-
-    # Send the latest ontology and list of concept texts to Eidos
-    yaml_str = yaml.dump(ont_manager.yaml_root)
-    concepts = []
-    for stmt in corpus.raw_statements:
-        for concept in stmt.agent_list():
-            concept_txt = concept.db_refs['TEXT']
-            concepts.append(concept_txt)
-    from indra.sources.eidos.eidos_reader import EidosReader
-    er = EidosReader()
-    groundings = er.reground_texts(yaml_str, concepts)
-    # Update the corpus with new groundings
-    idx = 0
-    for stmt in corpus.raw_statements:
-        for concept in stmt.agent_list():
-            concept.db_refs['UN'] = groundings[idx]
-            idx += 1
-    # TODO: Re-run the assembly here before returning
-    stmts_json = stmts_to_json(corpus.raw_statements)
+    # Run the actual regrounding
+    stmts = curator.update_groundings(corpus_id)
+    stmts_json = stmts_to_json(stmts)
     return jsonify(stmts_json)
 
+
+def default_assembly(stmts):
+    from indra.belief.wm_scorer import get_eidos_scorer
+    from indra.preassembler.hierarchy_manager import get_wm_hierarchies
+    hm = get_wm_hierarchies()
+    scorer = get_eidos_scorer()
+    stmts = ac.run_preassembly(stmts, belief_scorer=scorer,
+                               return_toplevel=True,
+                               flatten_evidence=True,
+                               flatten_evidence_collect_from='supported_by',
+                               poolsize=4)
+    stmts = ac.merge_groundings(stmts)
+    stmts = ac.merge_deltas(stmts)
+    stmts = standardize_names_groundings(stmts)
+    return stmts
 
 @app.route('/run_assembly', methods=['POST'])
 def run_assembly():
