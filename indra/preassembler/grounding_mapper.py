@@ -24,8 +24,7 @@ try:
     deft_disambiguators = {}
     for shortform in available_deft_models:
         deft_disambiguators[shortform] = load_disambiguator(shortform)
-except Exception as e:
-    logger.exception(e)
+except Exception:
     logger.debug('Cannot use DEFT for disambiguation')
     def_disambiguators = {}
 
