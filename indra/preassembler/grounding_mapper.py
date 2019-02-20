@@ -743,7 +743,7 @@ def _get_text_for_grounding(stmt, agent_text):
     try:
         from indra_db.util.content_scripts \
             import get_text_content_from_text_refs
-        from indra.tools.disambiguate import _universal_extract_text
+        from indra.literature.deft_tools import _universal_extract_text
         content = get_text_content_from_text_refs(refs)
         text = _universal_extract_text(content, contains=agent_text)
     except ModuleNotFoundError:
