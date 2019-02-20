@@ -18,22 +18,47 @@ assess belief.
 ### Knowledge sources
 
 INDRA is currently integrated with the following natural language processing
-systems:
-- [TRIPS/DRUM](http://trips.ihmc.us/parser/cgi/drum) - for biology
-- [REACH](https://github.com/clulab/reach) - for biology
-- [Sparser](https://github.com/ddmcdonald/sparser) - for biology
-- [TEES](https://github.com/jbjorne/TEES) - for biology
-- [MedScan](https://doi.org/10.1093/bioinformatics/btg207) - for biology
-- [RLIMS-P](https://research.bioinformatics.udel.edu/rlimsp/) - for biology
-- [Eidos](https://github.com/clulab/eidos) - general purpose
-- [TRIPS/CWMS](http://trips.ihmc.us/parser/cgi/cwmsreader) - general purpose
+systems.
 
-and can collect information from these databases:
-- [Pathway Commons database](http://pathwaycommons.org/) or any source
-    using the [BioPAX](http://www.biopax.org/) format
-- [BEL Large Corpus](https://github.com/OpenBEL/) or any source using the
-    [BEL](https://github.com/OpenBEL/) format
-- [SIGNOR](https://signor.uniroma2.it/)
+General purpose causal relation reading systems:
+
+| Reader     | Reference                                       |
+|------------|-------------------------------------------------|
+| Eidos      | https://github.com/clulab/eidos                 |
+| TRIPS/CWMS | http://trips.ihmc.us/parser/cgi/cwmsreader      |
+| Hume       | https://github.com/BBN-E/Hume                   |
+| Sofia      | https://sofia.worldmodelers.com/ui/             |
+
+Biology-oriented reading systems:
+
+| Reader     | Reference                                       |
+|------------|-------------------------------------------------|
+| TRIPS/DRUM | http://trips.ihmc.us/parser/cgi/drum            |
+| REACH      | https://github.com/clulab/reach                 |
+| Sparser    | https://github.com/ddmcdonald/sparser           |
+| TEES       | https://github.com/jbjorne/TEES                 |
+| MedScan    | https://doi.org/10.1093/bioinformatics/btg207   |
+| RLIMS-P    | https://research.bioinformatics.udel.edu/rlimsp |
+| ISI/AMR    | https://github.com/sgarg87/big_mech_isi_gg      |
+| Geneways   | https://www.ncbi.nlm.nih.gov/pubmed/15016385    |
+
+Biological pathway databases:
+
+| Database / Exchange format | Reference                           |
+|----------------------------|-------------------------------------|
+| PathwayCommons / BioPax    | http://pathwaycommons.org/          |
+| Large Corpus / BEL         | https://github.com/OpenBEL/         |
+| Signor                     | https://signor.uniroma2.it/         |
+| BioGRID                    | https://thebiogrid.org/             |
+| Target Affinity Spectrum   | https://doi.org/10.1101/358978      |
+| LINCS small molecules      | http://lincs.hms.harvard.edu/db/sm/ |
+
+Custom knowledge bases:
+
+| Database / Exchange format | Reference                            |
+|----------------------------|--------------------------------------|
+| NDEx / CX                  | http://ndexbio.org                   |
+| INDRA DB / INDRA Statements| https://github.com/indralab/indra_db |
 
 These input modules (available in `indra.sources`) all produce INDRA
 Statements.
