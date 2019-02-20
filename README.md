@@ -105,25 +105,13 @@ Documentation is available at
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5).
+INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5). Note: release
+1.11 will drop Python 2 compatibility.
 
 The preferred way to install INDRA is by pointing pip to the source repository
 as
 
     $ pip install git+https://github.com/sorgerlab/indra.git
-
-or by cloning the repository and then using pip to install the package as
-
-    $ git clone https://github.com/sorgerlab/indra.git
-    $ cd indra
-    $ pip install .
-
-You can also install INDRA by cloning this repository and running setup.py
-as
-
-    $ git clone https://github.com/sorgerlab/indra.git
-    $ cd indra
-    $ python setup.py install
 
 Releases of INDRA are also available on
 [PyPI](https://pip.pypa.io/en/latest/installing/), you can install the latest
@@ -134,9 +122,9 @@ release as
 However, releases will usually be behind the latest code available in this
 repository.
 
-INDRA depends on a few standard Python packages. These packages are installed by
-either setup method (using pip or running setup.py install).
-For certain modules and use cases, other dependencies may be needed,
+INDRA depends on a few standard Python packages. These packages are installed
+by pip during setup.
+For certain modules and use cases, other "extra" dependencies may be needed,
 which are described in detail in the
 [documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
