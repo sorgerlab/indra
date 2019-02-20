@@ -1,6 +1,9 @@
 RLIMS-P (:py:mod:`indra.sources.rlimsp`)
 ========================================
 
+.. automodule:: indra.sources.rlimsp
+    :members:
+
 RLIMS-P API (:py:mod:`indra.sources.rlimsp.api`)
 ------------------------------------------------
 

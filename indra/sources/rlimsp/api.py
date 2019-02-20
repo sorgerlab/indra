@@ -18,7 +18,7 @@ class RLIMSP_Error(Exception):
 
 def process_from_webservice(id_val, id_type='pmcid', source='pmc',
                             with_grounding=True):
-    """Get an output from RLIMS-p for the given pmic id.
+    """Return an output from RLIMS-p for the given PubMed ID or PMC ID.
 
     Parameters
     ----------
@@ -37,7 +37,7 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc',
 
     Returns
     -------
-    :py:class:`indra.sources.rlimsp.processor.RlimspProcessor
+    :py:class:`indra.sources.rlimsp.processor.RlimspProcessor`
         An RlimspProcessor which contains a list of extracted INDRA Statements
         in its statements attribute.
     """
