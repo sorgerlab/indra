@@ -38,5 +38,5 @@ Deft Tools (:py:mod:`indra.literature.deft_tools`)
 --------------------------------------------------
 
 .. automodule:: indra.literature.deft_tools
-    :members
+    :members:
 
