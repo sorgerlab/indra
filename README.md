@@ -18,7 +18,8 @@ assess belief.
 ### Knowledge sources
 
 INDRA is currently integrated with the following natural language processing
-systems.
+systems and structured databases. These input modules (available in
+`indra.sources`) all produce INDRA Statements.
 
 General purpose causal relation reading systems:
 
@@ -60,8 +61,6 @@ Custom knowledge bases:
 | NDEx / CX                  | http://ndexbio.org                   |
 | INDRA DB / INDRA Statements| https://github.com/indralab/indra_db |
 
-These input modules (available in `indra.sources`) all produce INDRA
-Statements.
 
 ### Output model assemblers
 
