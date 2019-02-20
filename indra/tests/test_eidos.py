@@ -169,7 +169,7 @@ def test_eidos_to_pysb():
     return
 
 
-#@unittest.skip('Grounding not available on Travis.')
+@unittest.skip('Grounding not available on Travis.')
 def test_reground_texts():
     er = eidos.reader.EidosReader()
     er.initialize_reader()
