@@ -46,8 +46,8 @@ Biological pathway databases:
 
 | Database / Exchange format | Reference                           |
 |----------------------------|-------------------------------------|
-| PathwayCommons / BioPax    | http://pathwaycommons.org/          |
-| Large Corpus / BEL         | https://github.com/OpenBEL/         |
+| PathwayCommons / BioPax    | http://pathwaycommons.org/ <br/> http://www.biopax.org/         |
+| Large Corpus / BEL         | https://github.com/pybel/pybel <br/> https://github.com/OpenBEL |
 | Signor                     | https://signor.uniroma2.it/         |
 | BioGRID                    | https://thebiogrid.org/             |
 | Target Affinity Spectrum   | https://doi.org/10.1101/358978      |
