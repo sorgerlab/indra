@@ -34,6 +34,12 @@ def process_from_webservice(id_val, id_type='pmcid', source='pmc',
         The RLIMS-P web service provides two endpoints, one pre-grounded, the
         other not so much. The grounded endpoint returns far less content, and
         may perform some grounding that can be handled by the grounding mapper.
+
+    Returns
+    -------
+    :py:class:`indra.sources.rlimsp.processor.RlimspProcessor
+        An RlimspProcessor which contains a list of extracted INDRA Statements
+        in its statements attribute.
     """
     if with_grounding:
         fmt = '%s.normed/%s/%s'
