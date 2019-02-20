@@ -307,6 +307,10 @@ def reset_ontology():
 
 @app.route('/update_groundings', methods=['POST'])
 def update_groundings():
+    """
+    ..http:post:: /update_groundings
+        :return: A list of assembled INDRA Statements serialized as JSON.
+    """
     if request.json is None:
         abort(Response('Missing application/json header.', 415))
 

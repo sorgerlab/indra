@@ -8,8 +8,8 @@ Run assembly components in a pipeline (:py:mod:`indra.tools.assemble_corpus`)
 .. automodule:: indra.tools.assemble_corpus
     :members:
 
-Real-time feedback for assembly
--------------------------------
+Real-time feedback for assembly (:py:mod:`indra.tools.live_curation`)
+---------------------------------------------------------------------
 
 .. autoflask:: indra.tools.live_curation:app
    :endpoints:
