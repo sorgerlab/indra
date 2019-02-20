@@ -1,10 +1,9 @@
 import logging
-
 from indra.databases import hgnc_client, uniprot_client
+from indra.statements import Agent, Phosphorylation, Evidence, BioContext, \
+    RefContext
 
-from indra.statements import Agent, Phosphorylation, Evidence
-
-logger = logging.getLogger("rlimsp_processor")
+logger = logging.getLogger(__name__)
 
 
 class RlimspProcessor(object):
@@ -133,7 +132,7 @@ class RlimspParagraph(object):
             annotations['site'] = {'coords': _fix_coords(site_coords, s_start)}
 
         return Evidence(text_refs=self._text_refs.copy(), text=text,
-                        source_api='RLIMS-P', pmid=self._text_refs['pmid'],
+                        source_api='rlimsp', pmid=self._text_refs['pmid'],
                         annotations=annotations)
 
     def get_statements(self):
@@ -166,9 +165,21 @@ class RlimspParagraph(object):
                                         [enz_coords, sub_coords],
                                         site_coords)
 
-                stmts.append(Phosphorylation(enz, sub, evidence=[ev],
-                                             residue=residue,
-                                             position=position))
+                # Turn taxonomy into context, sub TAX takes precedence
+                tax = None
+                if enz and 'TAX' in enz.db_refs:
+                    tax = enz.db_refs.pop('TAX')
+                if sub and 'TAX' in sub.db_refs:
+                    tax = sub.db_refs.pop('TAX')
+                if tax is not None:
+                    context = \
+                        BioContext(species=RefContext(tax,
+                                                      {'TAXONOMY': tax}))
+                    ev.context = context
+
+                stmts.append(Phosphorylation(enz, sub, residue=residue,
+                                             position=position,
+                                             evidence=[ev]))
             else:
                 logger.warning("Unhandled statement type: %s" % rel_type)
 
