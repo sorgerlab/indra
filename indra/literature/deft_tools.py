@@ -95,11 +95,11 @@ def get_plaintexts(text_content, contains=None):
         lists of text content. each item should either be a plaintext, an
         an NLM xml or an Elsevier xml
     """
-    return [_universal_extract_text(article, contains)
+    return [universal_extract_text(article, contains)
             for article in text_content]
 
 
-def _universal_extract_text(xml, contains=None):
+def universal_extract_text(xml, contains=None):
     """Extract plaintext from xml
 
     First try to parse the xml as if it came from elsevier. if we do not
