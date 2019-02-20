@@ -1,3 +1,18 @@
+"""
+This file provides several functions helpful for acquiring texts for deft
+disambiguation.
+
+ It offers the ability to get text content for articles containing a
+particular gene. This is useful for aquiring training texts for genes
+genes that do not appear in a defining pattern with a problematic shortform.
+
+ General XML processing is also provided that allows for extracting
+text from a source that may be either of Elsevier XML, NLM XML or raw text.
+This is helpful because it avoids having to know in advance the source of
+text content from the database.
+"""
+
+
 import time
 import logging
 
