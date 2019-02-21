@@ -59,6 +59,7 @@ script:
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
   - echo "$TRAVIS_EVENT_TYPE"
   - export TEES_SETTINGS=~/TEES/tees_local_settings.py
+  - export TEES_PATH=~/TEES
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
   # These are files that are ignored so that doctests don't fail
