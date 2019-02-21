@@ -346,4 +346,4 @@ if __name__ == '__main__':
     curator.corpora[args.corpus_id] = Corpus(stmts, raw_stmts)
 
     # Run the app
-    app.run(host=args.host, port=args.port)
+    app.run(host=args.host, port=args.port, threaded=False)
