@@ -14,7 +14,7 @@ s3 = boto3.client('s3')
 HERE = path.dirname(path.abspath(__file__))
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_normal_pmid_reading_call():
     chdir(path.expanduser('~'))
     # Put an id file on s3
@@ -36,7 +36,7 @@ def test_normal_pmid_reading_call():
     return
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_bad_sparser():
     txt = ('Disruption of the AP-1 binding site reversed the transcriptional '
            'responses seen with Fos and Jun.')
