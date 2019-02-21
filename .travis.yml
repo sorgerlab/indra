@@ -66,6 +66,7 @@ script:
   - export NOSE_IGNORE_FILES="find_full_text_sentence.py";
   # Set nose attributes based on the context in which we are running
   - export NOSEATTR="";
+  - echo $TRAVIS_PULL_REQUEST
   - if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
       export NOSEATTR="!nonpublic";
     fi
