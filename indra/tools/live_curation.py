@@ -216,8 +216,8 @@ class LiveCurator(object):
             for concept in stmt.agent_list():
                 concept.db_refs['UN'] = groundings[idx]
                 idx += 1
-        # TODO: Re-run the assembly here before returning
-        corpus.statements = default_assembly(corpus.raw_statements)
+        assembled_statements = default_assembly(corpus.raw_statements)
+        corpus.statements = {s.uuid: s for s in assembled_statements}
         return corpus.statements
 
 
