@@ -70,7 +70,7 @@ script:
       export NOSEATTR="!nonpublic";
     fi
   - if [[ $RUN_SLOW != "true" ]]; then
-      export NOSEATTR="!slow,$NOSEATTR";
+      export NOSEATTR="!snow,$NOSEATTR";
     fi
   # First run TEES and Eidos tests separately for technical reasons
   - cd $TRAVIS_BUILD_DIR
