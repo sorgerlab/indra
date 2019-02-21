@@ -746,7 +746,7 @@ def _get_text_for_grounding(stmt, agent_text):
         from indra.literature.deft_tools import universal_extract_text
         content = get_text_content_from_text_refs(refs)
         text = universal_extract_text(content, contains=agent_text)
-    except ModuleNotFoundError:
+    except ImportError:
         from indra.literature import pubmed_client
         pmid = refs.get('PMID')
         abstract = None
