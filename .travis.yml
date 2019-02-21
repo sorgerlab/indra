@@ -31,6 +31,7 @@ install:
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
+  - export RUN_SLOW="true"
   # Install TEES only if slow tests are being run
   - |
     if [[ $RUN_SLOW == "true" ]]; then
