@@ -65,14 +65,14 @@ script:
   # These are files that are ignored so that doctests don't fail
   - export NOSE_IGNORE_FILES="find_full_text_sentence.py";
   # Set nose attributes based on the context in which we are running
-  - export NOSEATTR="";
-  - echo $TRAVIS_PULL_REQUEST
+  - export NOSEATTR="!notravis";
   - if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
-      export NOSEATTR="!nonpublic";
+      export NOSEATTR="!nonpublic,$NOSEATTR";
     fi
   - if [[ $RUN_SLOW != "true" ]]; then
       export NOSEATTR="!slow,$NOSEATTR";
     fi
+  - echo $NOSEATTR
   # First run TEES and Eidos tests separately for technical reasons
   - cd $TRAVIS_BUILD_DIR
   - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
