@@ -242,16 +242,19 @@ def _get_grounding(entity):
 
     def get_ont_concept(concept):
         """Strip slash, replace spaces and remove example leafs."""
+        # In the WM context, groundings have no URL prefix and start with /
+        # The following block does some special handling of these groundings.
         if concept.startswith('/'):
             concept = concept[1:]
-        concept = concept.replace(' ', '_')
-        # We eliminate any entries that aren't ontology categories
-        # these are typically "examples" corresponding to the category
-        while concept not in hume_onto_entries:
-            parts = concept.split('/')
-            if len(parts) == 1:
-                break
-            concept = '/'.join(parts[:-1])
+            concept = concept.replace(' ', '_')
+            # We eliminate any entries that aren't ontology categories
+            # these are typically "examples" corresponding to the category
+            while concept not in hume_onto_entries:
+                parts = concept.split('/')
+                if len(parts) == 1:
+                    break
+                concept = '/'.join(parts[:-1])
+        # Otherwise we just return the concept as is
         return concept
 
     # Basic collection of grounding entries
@@ -299,9 +302,3 @@ def _get_ontology_entries():
 
 
 hume_onto_entries = _get_ontology_entries()
-
-
-onto_prefixes = {
-        'http://ontology.causeex.com/ontology/odps/Event#' : 'CAUSEX',
-        'http://graph.causeex.com/bbn#': 'CAUSEX-BBN'
-        }
