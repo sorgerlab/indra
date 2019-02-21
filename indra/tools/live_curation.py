@@ -218,7 +218,7 @@ class LiveCurator(object):
                 idx += 1
         assembled_statements = default_assembly(corpus.raw_statements)
         corpus.statements = {s.uuid: s for s in assembled_statements}
-        return corpus.statements
+        return assembled_statements
 
 
 # From here on, a Flask app built around a LiveCurator is implemented
