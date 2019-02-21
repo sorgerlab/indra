@@ -120,7 +120,9 @@ class HumeJsonLdProcessor(object):
             if argument["type"] == "place":
                 entity_id = argument["value"]["@id"]
                 loc_entity = self.concept_dict[entity_id]
-                place = loc_entity["canonicalName"]
+                place = loc_entity.get("canonicalName")
+                if not place:
+                    place = loc_entity['text']
                 geo_id = loc_entity.get('geoname_id')
                 loc_context = RefContext(name=place, db_refs={"GEOID": geo_id})
             if argument["type"] == "time":
@@ -161,12 +163,7 @@ class HumeJsonLdProcessor(object):
                 name = head_text
         """
         # Save raw text and Hume scored groundings as db_refs
-        db_refs = {'TEXT': entity['text']}
-        hume_grounding = _get_hume_grounding(entity)
-        # We could get an empty list here in which case we don't add the
-        # grounding
-        if hume_grounding:
-            db_refs['HUME'] = hume_grounding
+        db_refs = _get_grounding(entity)
         concept = Concept(name, db_refs=db_refs)
         metadata = {arg['type']: arg['value']['@id']
                     for arg in entity['arguments']}
@@ -236,23 +233,28 @@ def get_states(event):
     return ret_list
 
 
-def _get_hume_grounding(entity):
+def _get_grounding(entity):
     """Return Hume grounding."""
+    db_refs = {'TEXT': entity['text']}
     groundings = entity.get('grounding')
     if not groundings:
-        return None
+        return db_refs
+
     def get_ont_concept(concept):
-        """Strip slah, replace spaces and remove example leafs."""
+        """Strip slash, replace spaces and remove example leafs."""
+        # In the WM context, groundings have no URL prefix and start with /
+        # The following block does some special handling of these groundings.
         if concept.startswith('/'):
             concept = concept[1:]
-        concept = concept.replace(' ', '_')
-        # We eliminate any entries that aren't ontology categories
-        # these are typically "examples" corresponding to the category
-        while concept not in hume_onto_entries:
-            parts = concept.split('/')
-            if len(parts) == 1:
-                break
-            concept = '/'.join(parts[:-1])
+            concept = concept.replace(' ', '_')
+            # We eliminate any entries that aren't ontology categories
+            # these are typically "examples" corresponding to the category
+            while concept not in hume_onto_entries:
+                parts = concept.split('/')
+                if len(parts) == 1:
+                    break
+                concept = '/'.join(parts[:-1])
+        # Otherwise we just return the concept as is
         return concept
 
     # Basic collection of grounding entries
@@ -274,7 +276,11 @@ def _get_hume_grounding(entity):
     grounding_entries = sorted(list(set(grounding_dict.items())),
                                key=lambda x: (x[1], x[0].count('/'), x[0]),
                                reverse=True)
-    return grounding_entries
+    # We could get an empty list here in which case we don't add the
+    # grounding
+    if grounding_entries:
+        db_refs['HUME'] = grounding_entries
+    return db_refs
 
 
 def get_polarity(event):
