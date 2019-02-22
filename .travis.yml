@@ -72,6 +72,9 @@ script:
   - if [[ $RUN_SLOW != "true" ]]; then
       export NOSEATTR="!slow,$NOSEATTR";
     fi
+  - if [[ $TRAVIS_EVENT_TYPE != "cron" ]]; then
+      export NOSEATTR="!cron,$NOSEATTR";
+    fi
   - echo $NOSEATTR
   # First run TEES and Eidos tests separately for technical reasons
   - cd $TRAVIS_BUILD_DIR
