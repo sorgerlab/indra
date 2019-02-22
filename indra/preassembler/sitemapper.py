@@ -179,18 +179,16 @@ class SiteMapper(ProtMapper):
             # Check the modification on the appropriate agent
             old_mod = stmt._get_mod_condition()
             # Figure out if this site is invalid
-            stmt_mapped_site = self._map_agent_mod(
-                    agent_to_check,
-                    old_mod)
-            # If we got a mapping for the site, we apply that mapping to the
-            # copy of the statement
-            if stmt_mapped_site.has_mapping():
-                stmt_copy.residue = stmt_mapped_site.mapped_res
-                stmt_copy.position = stmt_mapped_site.mapped_pos
-            # Additionally, if there is a mapped site object at all (whether
-            # or not there is an actual successful mapping), we add that to the
-            # list of mapped sites
+            stmt_mapped_site = self._map_agent_mod(agent_to_check, old_mod)
             if stmt_mapped_site is not None:
+                # If we got a mapping for the site, we apply that mapping to the
+                # copy of the statement
+                if stmt_mapped_site.has_mapping():
+                    stmt_copy.residue = stmt_mapped_site.mapped_res
+                    stmt_copy.position = stmt_mapped_site.mapped_pos
+                # Additionally, if there is a mapped site object at all
+                # (whether or not there is an actual successful mapping), we
+                # add that to the list of mapped sites
                 mapped_sites.append(stmt_mapped_site)
         # We only return a MappedStatement if it has at least one MappedSite
         # that is known to be invalid (whether of not it as successfully
