@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import datetime
 from indra import get_config
@@ -50,6 +51,32 @@ class EidosReader(object):
     def __init__(self):
         self.eidos_reader = None
 
+    def initialize_reader(self):
+        """Instantiate the Eidos reader attribute of this reader."""
+        eidos = autoclass(eidos_package + '.EidosSystem')
+        self.eidos_reader = eidos(autoclass('java.lang.Object')())
+
+    def reground_texts(self, texts, yaml_str=None):
+        if self.eidos_reader is None:
+            self.initialize_reader()
+        if yaml_str is None:
+            import yaml
+            from indra.preassembler.make_eidos_hume_ontologies import \
+                eidos_ont_url, load_yaml_from_url
+            yaml_str = yaml.dump(load_yaml_from_url(eidos_ont_url))
+        text_seq = _list_to_seq(texts)
+        raw_groundings = self.eidos_reader.ontologyHandler().reground(
+            'Custom',  # name
+            yaml_str,  # ontologyYaml
+            text_seq,  # texts
+            True,  # filter
+            10  # topk
+            )
+        # Process the return values into a proper Python representation
+        groundings = [[_get_scored_grounding(entry) for entry in text_grounding]
+                      for text_grounding in raw_groundings]
+        return groundings
+
     def process_text(self, text, format='json'):
         """Return a mentions JSON object given text.
 
@@ -67,9 +94,7 @@ class EidosReader(object):
             A JSON object of mentions extracted from text.
         """
         if self.eidos_reader is None:
-            eidos = autoclass(eidos_package + '.EidosSystem')
-            self.eidos_reader = eidos(autoclass('java.lang.Object')())
-
+            self.initialize_reader()
         default_arg = lambda x: autoclass('scala.Some')(x)
         today = datetime.date.today().strftime("%Y-%m-%d")
         fname = 'default_file_name'
@@ -88,9 +113,7 @@ class EidosReader(object):
             mentions_json = ser.toJsonStr(mentions)
         elif format == 'json_ld':
             # We need to get a Scala Seq of annot docs here
-            ml = autoclass('scala.collection.mutable.MutableList')()
-            # We add the document to the mutable list
-            ml.appendElem(annot_doc)
+            ml = _list_to_seq([annot_doc])
             # We instantiate the adjective grounder
             ag = self.eidos_reader.loadableAttributes().adjectiveGrounder()
             # We now create a JSON-LD corpus
@@ -101,3 +124,16 @@ class EidosReader(object):
         json_dict = json.loads(mentions_json)
         return json_dict
 
+
+def _list_to_seq(lst):
+    """Return a scala.collection.Seq from a Python list."""
+    ml = autoclass('scala.collection.mutable.MutableList')()
+    for element in lst:
+        ml.appendElem(element)
+    return ml
+
+
+def _get_scored_grounding(tpl):
+    ts = tpl.toString()
+    parts = ts[1:-1].split(',')
+    return parts[0], float(parts[1])

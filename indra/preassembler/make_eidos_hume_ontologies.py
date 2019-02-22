@@ -17,6 +17,13 @@ indra_rel_ns = Namespace(indra_ns + 'relations/')
 isa = indra_rel_ns.term('isa')
 
 
+eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
+                 'src/main/resources/org/clulab/wm/eidos/english/'
+                 'ontologies/un_ontology.yml')
+hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
+                'resource/ontologies/hume_ontology.yaml')
+
+
 def save_hierarchy(g, path):
     with open(path, 'wb') as out_file:
         g_bytes = g.serialize(format='nt')
@@ -59,31 +66,38 @@ def build_relations(G, node, tree, prefix):
             G.add(rel)
 
 
-def load_ontology(ont_url, rdf_path):
+def update_ontology(ont_url, rdf_path):
     """Load an ontology formatted like Eidos' from github."""
+    yaml_root = load_yaml_from_url(ont_url)
+    G = rdf_graph_from_yaml(yaml_root)
+    save_hierarchy(G, rdf_path)
+
+
+def rdf_graph_from_yaml(yaml_root):
+    """Convert the YAML object into an RDF Graph object."""
+    G = Graph()
+    for top_entry in yaml_root:
+        assert len(top_entry) == 1
+        node = list(top_entry.keys())[0]
+        build_relations(G, node, top_entry[node], None)
+    return G
+
+
+def load_yaml_from_url(ont_url):
+    """Return a YAML object loaded from a YAML file URL."""
     res = requests.get(ont_url)
     if res.status_code != 200:
         raise Exception('Could not load ontology from %s' % ont_url)
     root = yaml.load(res.content)
-    G = Graph()
-    for top_entry in root:
-        assert len(top_entry) == 1
-        node = list(top_entry.keys())[0]
-        build_relations(G, node, top_entry[node], None)
-    save_hierarchy(G, rdf_path)
+    return root
 
 
 if __name__ == '__main__':
     # Eidos
-    eidos_ont_url = ('https://raw.githubusercontent.com/clulab/eidos/master/'
-                     'src/main/resources/org/clulab/wm/eidos/english/'
-                     'ontologies/un_ontology.yml')
     eidos_rdf_path = join(dirname(abspath(eidos.__file__)),
                           'eidos_ontology.rdf')
-    load_ontology(eidos_ont_url, eidos_rdf_path)
+    update_ontology(eidos_ont_url, eidos_rdf_path)
 
     # Hume
-    hume_ont_url = ('https://raw.githubusercontent.com/BBN-E/Hume/master/'
-                    'resource/ontologies/hume_ontology.yaml')
     hume_rdf_path = join(dirname(abspath(hume.__file__)), 'hume_ontology.rdf')
-    load_ontology(hume_ont_url, hume_rdf_path)
+    update_ontology(hume_ont_url, hume_rdf_path)

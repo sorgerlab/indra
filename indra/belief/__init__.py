@@ -1,6 +1,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
+import copy
 import json
 import numpy
 import logging
@@ -228,8 +229,9 @@ class BayesianScorer(SimpleScorer):
     def __init__(self, prior_counts, subtype_counts):
         self.prior_probs = load_default_probs()
         self.subtype_probs = {}
-        self.prior_counts = prior_counts
-        self.subtype_counts = subtype_counts
+        self.prior_counts = copy.deepcopy(prior_counts) if prior_counts else {}
+        self.subtype_counts = copy.deepcopy(subtype_counts) if subtype_counts \
+            else {}
         # Set the probability estimates based on the counts
         self.update_probs()
 

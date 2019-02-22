@@ -40,12 +40,10 @@ class HierarchyManager(object):
         PREFIX rn: <http://sorger.med.harvard.edu/indra/relations/>
         """
 
-    def __init__(self, rdf_file, build_closure=True, uri_as_name=True):
+    def __init__(self, rdf_file=None, build_closure=True, uri_as_name=True):
         """Initialize with the path to an RDF file"""
         self.build_closure = build_closure
         self.uri_as_name = uri_as_name
-        self.graph = rdflib.Graph()
-        self.graph.parse(os.path.abspath(rdf_file), format='nt')
         self.relations_prefix = \
             'http://sorger.med.harvard.edu/indra/relations/'
         self.isa_closure = {}
@@ -54,6 +52,46 @@ class HierarchyManager(object):
         self.components = {}
         self._children = {}
         self.component_counter = 0
+        # If an RDF file was given, we build up the internal data structures.
+        # Otherwise we defer initialization until later.
+        if rdf_file:
+            self.load_from_rdf_file(rdf_file)
+        else:
+            self.graph = None
+
+    def load_from_rdf_file(self, rdf_file):
+        """Initialize given an RDF input file representing the hierarchy."
+
+        Parameters
+        ----------
+        rdf_file : str
+            Path to an RDF file.
+        """
+        self.graph = rdflib.Graph()
+        self.graph.parse(os.path.abspath(rdf_file), format='nt')
+        self.initialize()
+
+    def load_from_rdf_string(self, rdf_str):
+        """Initialize given an RDF string representing the hierarchy."
+
+        Parameters
+        ----------
+        rdf_str : str
+            An RDF string.
+        """
+        self.graph = rdflib.Graph()
+        self.graph.parse(data=rdf_str, format='nt')
+        self.initialize()
+
+    def load_from_rdf_graph(self, rdf_graph):
+        """Initialize given an RDF Graph representing the hierarchy."
+
+        Parameters
+        ----------
+        rdf_graph : rdflib.Graph
+            An rdflib Graph representing the hierarchy.
+        """
+        self.graph = rdf_graph
         self.initialize()
 
     def initialize(self):
@@ -464,6 +502,47 @@ class HierarchyManager(object):
         if ag_ns_name is None:
             raise UnknownNamespaceException('Unknown namespace %s' % ag_ns)
         return (ag_ns_name, ag_id)
+
+
+class YamlHierarchyManager(HierarchyManager):
+    def __init__(self, root, yaml_to_rdf):
+        self.yaml_root = root
+        self.yaml_to_rdf = yaml_to_rdf
+        super(YamlHierarchyManager, self).__init__(None, True, True)
+        G = self.yaml_to_rdf(self.yaml_root)
+        self.load_from_rdf_graph(G)
+
+    def add_entry(self, entry, examples=None):
+        # TODO: Add the entry by finding the right place in the YAML object
+        examples = examples if examples else []
+        parts = entry.split('/')
+        root = self.yaml_root
+        for idx, part in enumerate(parts):
+            new_root = None
+            for element in root:
+                # If this is an OntologyNode
+                if 'OntologyNode' in element:
+                    if element['name'] == part:
+                        new_root = element
+                        break
+                else:
+                    assert len(element) == 1
+                    key = list(element.keys())[0]
+                    if key == part:
+                        new_root = element[key]
+                        break
+            if new_root is None:
+                if idx == len(parts) - 1:
+                    root.append({'OntologyNode': None, 'name': part,
+                                 'examples': examples})
+                    break
+                else:
+                    root.append({part: []})
+                    new_root = root[-1][part]
+            root = new_root
+
+        G = self.yaml_to_rdf(self.yaml_root)
+        self.load_from_rdf_graph(G)
 
 
 def get_bio_hierarchies(from_pickle=True):
