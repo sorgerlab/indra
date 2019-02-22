@@ -207,7 +207,8 @@ class GroundingMapper(object):
         for agent in agent_list:
             if agent is not None:
                 for bc in agent.bound_conditions:
-                    bc.agent, maps_to_none = self.map_agent(bc.agent, do_rename)
+                    bc.agent, maps_to_none = self.map_agent(bc.agent,
+                                                            do_rename)
                     if maps_to_none:
                         # Skip the entire statement if the agent maps to None
                         # in the grounding map
@@ -782,7 +783,7 @@ def _get_text_for_grounding(stmt, agent_text):
     # If that doesn't work, we try PubMed next
     if text is None:
         from indra.literature import pubmed_client
-        pmid = stmt.evidence[0].pmid 
+        pmid = stmt.evidence[0].pmid
         if pmid:
             logger.info('Obtaining abstract for disambiguation for PMID%s' %
                         pmid)

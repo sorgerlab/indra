@@ -18,7 +18,7 @@ gm = [['Akt1', 'P31749', None, 'uniprot', 'Gene_or_gene_product']]
 
 
 def test_simple_mapping():
-    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'XXXXXX'})
+    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'XXXXXX'})
     stmt = Phosphorylation(None, akt)
     gm = GroundingMapper(default_grounding_map)
     mapped_stmts = gm.map_agents([stmt])
@@ -32,7 +32,7 @@ def test_simple_mapping():
 def test_bound_condition_mapping():
     # Verify that the grounding mapper grounds the agents within a bound
     # condition
-    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'XXXXXX'})
+    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'XXXXXX'})
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     akt.bound_conditions = [BoundCondition(erk)]
 
@@ -55,7 +55,7 @@ def test_bound_condition_mapping():
 
 def test_bound_condition_mapping_multi():
     # Test with multiple agents
-    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'XXXXXX'})
+    akt = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'XXXXXX'})
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     akt.bound_conditions = [BoundCondition(erk)]
     stmt = Phosphorylation(akt, erk)
@@ -77,7 +77,7 @@ def test_bound_condition_mapping_multi():
 
 def test_bound_condition_mapping_agent_json():
     # Test with agent/json mapping
-    akt = Agent('pkbA', db_refs={'TEXT': 'p-Akt', 'UP':'XXXXXX'})
+    akt = Agent('pkbA', db_refs={'TEXT': 'p-Akt', 'UP': 'XXXXXX'})
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     akt.bound_conditions = [BoundCondition(erk)]
     stmt = Phosphorylation(None, akt)
@@ -104,12 +104,13 @@ def test_ignore():
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 0
 
+
 def test_renaming():
-    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX':'AKT family',
-                                        'UP': 'P31749'})
-    akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP':'P31749'})
+    akt_indra = Agent('pkbA', db_refs={'TEXT': 'Akt', 'FPLX': 'AKT family',
+                                       'UP': 'P31749'})
+    akt_hgnc_from_up = Agent('pkbA', db_refs={'TEXT': 'Akt', 'UP': 'P31749'})
     akt_other = Agent('pkbA', db_refs={'TEXT': 'Akt'})
-    tat_up_no_hgnc = Agent('foo', db_refs={'TEXT': 'bar', 'UP':'P04608'})
+    tat_up_no_hgnc = Agent('foo', db_refs={'TEXT': 'bar', 'UP': 'P04608'})
     stmts = [Phosphorylation(None, akt_indra),
              Phosphorylation(None, akt_hgnc_from_up),
              Phosphorylation(None, akt_other),
@@ -127,8 +128,9 @@ def test_renaming():
     assert unicode_strs((akt_indra, akt_hgnc_from_up, akt_other,
                          tat_up_no_hgnc, stmts, gm, renamed_stmts))
 
+
 def test_save_sentences_unicode():
-    mek = Agent('MEK', db_refs={'TEXT':'MAP2K1'})
+    mek = Agent('MEK', db_refs={'TEXT': 'MAP2K1'})
     ev = Evidence(source_api='reach', pmid='PMID000asdf',
                   text='foo\U0001F4A9bar')
     st = Phosphorylation(None, mek, evidence=[ev])
@@ -136,6 +138,7 @@ def test_save_sentences_unicode():
     assert unicode_strs(sent)
     twg = agent_texts_with_grounding([st])
     save_sentences(twg, [st], 'test_save_sentences.csv')
+
 
 def test_hgnc_sym_but_not_up():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
@@ -151,6 +154,7 @@ def test_hgnc_sym_but_not_up():
     assert mapped_erk.db_refs['UP'] == 'P28482'
     assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
+
 def test_up_but_not_hgnc():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
@@ -164,6 +168,7 @@ def test_up_but_not_hgnc():
     assert mapped_erk.db_refs['HGNC'] == '6871'
     assert mapped_erk.db_refs['UP'] == 'P28482'
     assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+
 
 def test_hgnc_but_not_up():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
@@ -179,6 +184,7 @@ def test_hgnc_but_not_up():
     assert mapped_erk.db_refs['UP'] == 'P28482'
     assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
 
+
 @raises(ValueError)
 def test_hgnc_sym_with_no_id():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
@@ -187,31 +193,35 @@ def test_hgnc_sym_with_no_id():
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
 
+
 @raises(ValueError)
 def test_up_and_invalid_hgnc_sym():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC':'foobar'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': 'foobar'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
+
 
 @raises(ValueError)
 def test_up_with_no_gene_name_with_hgnc_sym():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'A0K5Q6', 'HGNC':'MAPK1'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'A0K5Q6', 'HGNC': 'MAPK1'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
+
 
 @raises(ValueError)
 def test_up_and_mismatched_hgnc():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(None, erk)
-    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC':'MAPK3'}}
+    g_map = {'ERK1': {'TEXT': 'ERK1', 'UP': 'P28482', 'HGNC': 'MAPK3'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
 
-def up_id_with_no_hgnc_id():
+
+def test_up_id_with_no_hgnc_id():
     """Non human protein"""
     gag = Agent('Gag', db_refs={'TEXT': 'Gag'})
     stmt = Phosphorylation(None, gag)
@@ -222,11 +232,12 @@ def up_id_with_no_hgnc_id():
     mapped_gag = mapped_stmts[0].sub
     assert mapped_gag.name == 'gag-pol'
     assert mapped_gag.db_refs['TEXT'] == 'Gag'
-    assert mapped_gag.db_refs.get('HGNC') == None
+    assert mapped_gag.db_refs.get('HGNC') is None
     assert mapped_gag.db_refs['UP'] == 'P04585'
     assert unicode_strs((gag, stmt, gm, mapped_stmts, mapped_gag))
 
-def up_id_with_no_gene_name():
+
+def test_up_id_with_no_gene_name():
     """Expect no HGNC entry; no error raised."""
     no_gn = Agent('NoGNname', db_refs={'TEXT': 'NoGN'})
     stmt = Phosphorylation(None, no_gn)
@@ -237,9 +248,10 @@ def up_id_with_no_gene_name():
     mapped_ag = mapped_stmts[0].sub
     assert mapped_ag.name == 'NoGNname'
     assert mapped_ag.db_refs['TEXT'] == 'NoGN'
-    assert mapped_ag.db_refs.get('HGNC') == None
+    assert mapped_ag.db_refs.get('HGNC') is None
     assert mapped_ag.db_refs['UP'] == 'A0K5Q6'
-    assert unicode_strs((erk, stmt, gm, mapped_stmts, mapped_erk))
+    assert unicode_strs((no_gn, stmt, gm, mapped_stmts, mapped_ag))
+
 
 def test_in_place_overwrite_of_gm():
     """Make sure HGNC lookups don't modify the original grounding map by adding
@@ -252,20 +264,22 @@ def test_in_place_overwrite_of_gm():
     gmap_after_mapping = gm.gm
     assert set(gmap_after_mapping['ERK1'].keys()) == set(['TEXT', 'UP'])
 
+
 def test_map_entry_hgnc_and_up():
     """Make sure that HGNC symbol is replaced with HGNC ID when grounding map
     includes both UP ID and HGNC symbol."""
     rela = Agent('NF-kappaB p65', db_refs={'TEXT': 'NF-kappaB p65'})
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
     stmt = Phosphorylation(erk, rela)
-    g_map = {'NF-kappaB p65': {'TEXT': 'NF-kappaB p65', 'UP':'Q04206',
+    g_map = {'NF-kappaB p65': {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
                                'HGNC': 'RELA'}}
     gm = GroundingMapper(g_map)
     mapped_stmts = gm.map_agents([stmt])
     assert len(mapped_stmts) == 1
     ms = mapped_stmts[0]
     assert ms.sub.db_refs == {'TEXT': 'NF-kappaB p65', 'UP': 'Q04206',
-                             'HGNC': '9955'}
+                              'HGNC': '9955'}
+
 
 def test_map_agent():
     erk = Agent('ERK1', db_refs={'TEXT': 'ERK1'})
@@ -303,7 +317,3 @@ def test_deft_mapping():
 
     annotations = mapped_stmts2[0].evidence[0].annotations
     assert 'GO:0005783' in annotations['agents']['deft'][1]
-
-    
-if __name__ == '__main__':
-    test_map_entry_hgnc_and_up()
