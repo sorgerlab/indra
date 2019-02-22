@@ -181,8 +181,13 @@ class GroundingMapper(object):
 
             # Check if a deft model exists for agent text
             if self.use_deft and agent_txt in deft_disambiguators:
-                run_deft_disambiguation(mapped_stmt, agent_list, idx,
-                                        new_agent, agent_txt)
+                try:
+                    run_deft_disambiguation(mapped_stmt, agent_list, idx,
+                                            new_agent, agent_txt)
+                except Exception as e:
+                    logger.error('There was an error during Deft'
+                                 ' disambiguation.')
+                    logger.error(e)
 
             if maps_to_none:
                 # Skip the entire statement if the agent maps to None in the
@@ -765,7 +770,7 @@ def _get_text_for_grounding(stmt, agent_text):
         refs = stmt.evidence[0].text_refs
         # Prioritize the pmid attribute if given
         if stmt.evidence[0].pmid:
-            refs['PMID'] = pmid
+            refs['PMID'] = stmt.evidence[0].pmid
         logger.info('Obtaining text for disambiguation with refs: %s' %
                     refs)
         content = get_text_content_from_text_refs(refs)
