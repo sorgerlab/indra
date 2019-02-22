@@ -722,8 +722,9 @@ def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
         logger.info('Disambiguated %s to: %s, %s:%s' %
                     (agent_txt, standard_name, db_ns, db_id))
         if db_ns == 'HGNC':
+            hgnc_sym = hgnc_client.get_hgnc_name(db_id)
             GroundingMapper.standardize_agent_db_refs(new_agent,
-                                                      {db_ns: db_id},
+                                                      {'HGNC': hgnc_sym},
                                                       do_rename=False)
         annots['agents']['deft'][idx] = disamb_scores
 
