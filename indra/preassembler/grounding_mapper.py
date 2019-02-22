@@ -786,39 +786,3 @@ default_grounding_map = \
 gm = default_grounding_map
 with open(default_agent_grounding_path, 'r') as fh:
     default_agent_map = json.load(fh)
-
-
-if __name__ == '__main__':
-
-    if len(sys.argv) != 2:
-        print("Usage: %s stmt_file" % sys.argv[0])
-        sys.exit()
-    statement_file = sys.argv[1]
-
-    logger.info("Opening statement file %s" % statement_file)
-    with open(statement_file, 'rb') as f:
-        st = pickle.load(f)
-
-    stmts = []
-    for stmt_list in st.values():
-        stmts += stmt_list
-
-    twg = agent_texts_with_grounding(stmts)
-
-    save_base_map('%s_twg.csv' % statement_file, twg)
-
-    # Filter out those entries that are NOT already in the grounding map
-    filtered_twg = [entry for entry in twg
-                    if entry[0] not in default_grounding_map.keys()]
-
-    # For proteins that aren't explicitly grounded in the grounding map,
-    # check for trivial corrections by building the protein map
-    prot_map = protein_map_from_twg(twg)
-    filtered_twg = [entry for entry in filtered_twg
-                    if entry[0] not in prot_map.keys()]
-
-    save_base_map('%s_unmapped_twg.csv' % statement_file, filtered_twg)
-
-    # For each unmapped string, get sentences and write to file
-    save_sentences(filtered_twg, stmts,
-                   '%s_unmapped_sentences.csv' % statement_file)
