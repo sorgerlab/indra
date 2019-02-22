@@ -716,6 +716,11 @@ def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
         res = deft_disambiguators[agent_txt].disambiguate(
                                                 [grounding_text])
         ns_and_id, standard_name, disamb_scores = res[0]
+        # If the highest score is ungrounded we don't do anything
+        # TODO: should we explicitly remove grounding if we conclude it
+        # doesn't match any of the choices?
+        if ns_and_id == 'ungrounded':
+            return
         db_ns, db_id = ns_and_id.split(':')
         new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
         new_agent.name = standard_name
@@ -758,6 +763,9 @@ def _get_text_for_grounding(stmt, agent_text):
             import get_text_content_from_text_refs
         from indra.literature.deft_tools import universal_extract_text
         refs = stmt.evidence[0].text_refs
+        # Prioritize the pmid attribute if given
+        if stmt.evidence[0].pmid:
+            refs['PMID'] = pmid
         logger.info('Obtaining text for disambiguation with refs: %s' %
                     refs)
         content = get_text_content_from_text_refs(refs)
