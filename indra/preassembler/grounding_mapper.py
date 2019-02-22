@@ -79,8 +79,12 @@ class GroundingMapper(object):
             the gene in Uniprot do not match or if there is no associated gene
             name in Uniprot.
         """
-        gene_name = None
         map_db_refs = deepcopy(self.gm.get(agent_text))
+        self.standardize_agent_db_refs(agent, map_db_refs, do_rename)
+
+    @staticmethod
+    def standardize_agent_db_refs(agent, map_db_refs, do_rename=True):
+        gene_name = None
         up_id = map_db_refs.get('UP')
         hgnc_sym = map_db_refs.get('HGNC')
         if up_id and not hgnc_sym:
@@ -177,30 +181,8 @@ class GroundingMapper(object):
 
             # Check if a deft model exists for agent text
             if self.use_deft and agent_txt in deft_disambiguators:
-                # initialize annotations if needed so deft predicted
-                # probabilities can be added to agent annotations
-                annots = mapped_stmt.evidence[0].annotations
-                if 'agents' in annots:
-                    if 'deft' not in annots['agents']:
-                        annots['agents']['deft'] = \
-                            {'deft': [None for _ in agent_list]}
-                else:
-                    annots['agents'] = {'deft': [None for _ in agent_list]}
-                grounding_text = _get_text_for_grounding(mapped_stmt,
-                                                         agent_txt)
-                if grounding_text:
-                    res = deft_disambiguators[agent_txt].disambiguate(
-                                                            [grounding_text])
-                    ns_and_id, standard_name, disamb_scores = res[0]
-                    db_ns, db_id = ns_and_id.split(':')
-                    new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
-                    new_agent.name = standard_name
-                    logger.info('Disambiguated %s to: %s, %s:%s' %
-                                (agent_txt, standard_name, db_ns, db_id))
-                    if db_ns == 'HGNC':
-                        self.update_agent_db_refs(new_agent, agent_txt, False)
-                    annotations = mapped_stmt.evidence[0].annotations
-                    annotations['agents']['deft'][idx] = disamb_scores
+                run_deft_disambiguation(mapped_stmt, agent_list, idx,
+                                        new_agent, agent_txt)
 
             if maps_to_none:
                 # Skip the entire statement if the agent maps to None in the
@@ -717,6 +699,33 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
     # Write sentences to CSV file
     write_unicode_csv(filename, sentences, delimiter=',', quotechar='"',
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
+
+
+def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
+    # Initialize annotations if needed so Deft predicted
+    # probabilities can be added to Agent annotations
+    annots = stmt.evidence[0].annotations if stmt.evidence else {}
+    if 'agents' in annots:
+        if 'deft' not in annots['agents']:
+            annots['agents']['deft'] = \
+                {'deft': [None for _ in agent_list]}
+    else:
+        annots['agents'] = {'deft': [None for _ in agent_list]}
+    grounding_text = _get_text_for_grounding(stmt, agent_txt)
+    if grounding_text:
+        res = deft_disambiguators[agent_txt].disambiguate(
+                                                [grounding_text])
+        ns_and_id, standard_name, disamb_scores = res[0]
+        db_ns, db_id = ns_and_id.split(':')
+        new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+        new_agent.name = standard_name
+        logger.info('Disambiguated %s to: %s, %s:%s' %
+                    (agent_txt, standard_name, db_ns, db_id))
+        if db_ns == 'HGNC':
+            GroundingMapper.standardize_agent_db_refs(new_agent,
+                                                      {db_ns: db_id},
+                                                      do_rename=False)
+        annots['agents']['deft'][idx] = disamb_scores
 
 
 def _get_text_for_grounding(stmt, agent_text):
