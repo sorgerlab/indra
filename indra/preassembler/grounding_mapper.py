@@ -191,6 +191,8 @@ class GroundingMapper(object):
                     db_ns, db_id = ns_and_id.split(':')
                     new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
                     new_agent.name = standard_name
+                    logger.info('Disambiguated %s to: %s, %s:%s' %
+                                (agent_txt, standard_name, db_ns, db_id))
                     if db_ns == 'HGNC':
                         self.update_agent_db_refs(new_agent, agent_txt, False)
                     annotations = mapped_stmt.evidence[0].annotations
@@ -714,9 +716,9 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
 
 
 def _get_text_for_grounding(stmt, agent_text):
-    """ Get text context for deft disambiguation
+    """Get text context for Deft disambiguation
 
-    If the indra database is available, attempts to get the fulltext from
+    If the INDRA database is available, attempts to get the fulltext from
     which the statement was extracted. If the fulltext is not available, the
     abstract is returned. If the indra database is not available, uses the
     pubmed client to get the abstract. If no abstract can be found, falls back
@@ -725,34 +727,48 @@ def _get_text_for_grounding(stmt, agent_text):
     Parameters
     ----------
     stmt : py:class:`indra.statements.Statement`
-        statement with agent we seek to disambiguate
+        Statement with agent we seek to disambiguate.
 
     agent_text : str
-       agent text that needs to be disambiguated
+       Agent text that needs to be disambiguated
 
     Returns
     -------
     text : str
-        text for deft disambiguation
+        Text for Feft disambiguation
     """
-    refs = stmt.evidence[0].text_refs
+    text = None
+    # First we will try to get content from the DB
     try:
         from indra_db.util.content_scripts \
             import get_text_content_from_text_refs
         from indra.literature.deft_tools import universal_extract_text
+        refs = stmt.evidence[0].text_refs
+        logger.info('Obtaining text for disambiguation with refs: %s' %
+                    refs)
         content = get_text_content_from_text_refs(refs)
         text = universal_extract_text(content, contains=agent_text)
+        if text:
+            return text
     except ImportError:
+        pass
+    # If that doesn't work, we try PubMed next
+    if text is None:
         from indra.literature import pubmed_client
-        pmid = refs.get('PMID')
-        abstract = None
+        pmid = stmt.evidence[0].pmid 
         if pmid:
-            abstract = pubmed_client.get_abstract(pmid)
-            if not abstract:
-                text = stmt.evidence[0].text
-            else:
-                text = abstract
-    return text
+            logger.info('Obtaining abstract for disambiguation for PMID%s' %
+                        pmid)
+            text = pubmed_client.get_abstract(pmid)
+            if text:
+                return text
+    # Finally, falling back on the evidence sentence
+    if text is None:
+        logger.info('Falling back on sentence-based disambiguation')
+        text = stmt.evidence[0].text
+        return text
+    return None
+
 
 default_grounding_map_path = \
     os.path.join(os.path.dirname(__file__),
