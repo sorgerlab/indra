@@ -103,7 +103,7 @@ def test_reach_two_core():
     assert not len(pmids_unread2), "Didn't use cache."
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_sparser_one_core():
     stmts, pmids_unread = _call_reader('sparser', 1, True)
     _check_result(stmts)
@@ -113,7 +113,7 @@ def test_sparser_one_core():
     assert not len(pmids_unread2), "Didn't use cache."
 
 
-@attr('nonpublic')
+@attr('nonpublic', 'notravis')
 def test_sparser_two_core():
     if get_proc_num() <= 2:
         raise SkipTest("Not enough processes.")

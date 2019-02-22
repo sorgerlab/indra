@@ -213,6 +213,8 @@ def get_num_sequenced(study_id):
     data = {'cmd': 'getCaseLists',
             'cancer_study_id': study_id}
     df = send_request(**data)
+    if df.empty:
+        return 0
     row_filter = df['case_list_id'].str.contains('sequenced', case=False)
     num_case = len(df[row_filter]['case_ids'].tolist()[0].split(' '))
     return num_case
