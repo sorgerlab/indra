@@ -78,6 +78,23 @@ class SiteMapper(ProtMapper):
         If True, the SITEMAPPER_CACHE_PATH from the config (or environment)
         is loaded and cached mappings are read and written to the given path.
         Otherwise, no cache is used. Default: False
+    do_methionine_offset : boolean
+        Whether to check for off-by-one errors in site position (possibly)
+        attributable to site numbering from mature proteins after
+        cleavage of the initial methionine. If True, checks the reference
+        sequence for a known modification at 1 site position greater
+        than the given one; if there exists such a site, creates the
+        mapping. Default is True.
+    do_orthology_mapping : boolean
+        Whether to check sequence positions for known modification sites
+        in mouse or rat sequences (based on PhosphoSitePlus data). If a
+        mouse/rat site is found that is linked to a site in the human
+        reference sequence, a mapping is created. Default is True.
+    do_isoform_mapping : boolean
+        Whether to check sequence positions for known modifications
+        in other human isoforms of the protein (based on PhosphoSitePlus
+        data). If a site is found that is linked to a site in the human
+        reference sequence, a mapping is created. Default is True.
 
     Examples
     --------
@@ -109,8 +126,15 @@ class SiteMapper(ProtMapper):
     >>> ms.mapped_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     """
-    def map_stmt_sites(self, stmt, do_methionine_offset=True,
-                       do_orthology_mapping=True, do_isoform_mapping=True):
+    def __init__(self, site_map=None, use_cache=False, cache_path=None,
+                 do_methionine_offset=True, do_orthology_mapping=True,
+                 do_isoform_mapping=True):
+        super(SiteMapper, self).__init__(site_map, use_cache, cache_path)
+        self.do_methionine_offset = do_methionine_offset
+        self.do_orthology_mapping = do_orthology_mapping
+        self.do_isoform_mapping = do_isoform_mapping
+
+    def map_stmt_sites(self, stmt, ):
         stmt_copy = deepcopy(stmt)
         # For all statements, replace agents with invalid modifications
         mapped_sites = []
@@ -122,23 +146,13 @@ class SiteMapper(ProtMapper):
                 new_agent_list.append(agent)
                 continue
             # Otherwise do mapping
-            agent_mapped_sites, new_agent = self._map_agent_sites(
-                agent,
-                do_methionine_offset=do_methionine_offset,
-                do_orthology_mapping=do_orthology_mapping,
-                do_isoform_mapping=do_isoform_mapping
-                )
+            agent_mapped_sites, new_agent = self._map_agent_sites(agent)
             mapped_sites += agent_mapped_sites
 
             # Site map agents in the bound conditions
             for ind in range(len(new_agent.bound_conditions)):
                 b = new_agent.bound_conditions[ind].agent
-                agent_mapped_sites, new_b = self._map_agent_sites(
-                    b,
-                    do_methionine_offset=do_methionine_offset,
-                    do_orthology_mapping=do_orthology_mapping,
-                    do_isoform_mapping=do_isoform_mapping
-                    )
+                agent_mapped_sites, new_b = self._map_agent_sites(b)
                 mapped_sites += agent_mapped_sites
                 new_agent.bound_conditions[ind].agent = new_b
 
@@ -167,11 +181,7 @@ class SiteMapper(ProtMapper):
             # Figure out if this site is invalid
             stmt_mapped_site = self._map_agent_mod(
                     agent_to_check,
-                    old_mod,
-                    do_methionine_offset=do_methionine_offset,
-                    do_orthology_mapping=do_orthology_mapping,
-                    do_isoform_mapping=do_isoform_mapping
-                    )
+                    old_mod)
             # If we got a mapping for the site, we apply that mapping to the
             # copy of the statement
             if stmt_mapped_site.has_mapping():
@@ -192,8 +202,7 @@ class SiteMapper(ProtMapper):
             mapped_stmt = None
         return mapped_stmt
 
-    def map_sites(self, stmts, do_methionine_offset=True,
-                  do_orthology_mapping=True, do_isoform_mapping=True):
+    def map_sites(self, stmts):
         """Check a set of statements for invalid modification sites.
 
         Statements are checked against Uniprot reference sequences to determine
@@ -211,23 +220,6 @@ class SiteMapper(ProtMapper):
         ----------
         stmts : list of :py:class:`indra.statement.Statement`
             The statements to check for site errors.
-        do_methionine_offset : boolean
-            Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering from mature proteins after
-            cleavage of the initial methionine. If True, checks the reference
-            sequence for a known modification at 1 site position greater
-            than the given one; if there exists such a site, creates the
-            mapping. Default is True.
-        do_orthology_mapping : boolean
-            Whether to check sequence positions for known modification sites
-            in mouse or rat sequences (based on PhosphoSitePlus data). If a
-            mouse/rat site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
-        do_isoform_mapping : boolean
-            Whether to check sequence positions for known modifications
-            in other human isoforms of the protein (based on PhosphoSitePlus
-            data). If a site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
@@ -244,9 +236,7 @@ class SiteMapper(ProtMapper):
         mapped_statements = []
 
         for stmt in stmts:
-            mapped_stmt = self.map_stmt_sites(stmt, do_methionine_offset,
-                                              do_orthology_mapping,
-                                              do_isoform_mapping)
+            mapped_stmt = self.map_stmt_sites(stmt)
             # If we got a MappedStatement as a return value, we add that to the
             # list of mapped statements, otherwise, the original Statement is
             # not invalid so we add it to the other list directly.
@@ -257,31 +247,13 @@ class SiteMapper(ProtMapper):
 
         return valid_statements, mapped_statements
 
-    def _map_agent_sites(self, agent, do_methionine_offset=True,
-                         do_orthology_mapping=True, do_isoform_mapping=True):
+    def _map_agent_sites(self, agent):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
         ----------
         agent : :py:class:`indra.statements.Agent`
             Agent to check for invalid modification sites.
-        do_methionine_offset : boolean
-            Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering from mature proteins after
-            cleavage of the initial methionine. If True, checks the reference
-            sequence for a known modification at 1 site position greater
-            than the given one; if there exists such a site, creates the
-            mapping. Default is True.
-        do_orthology_mapping : boolean
-            Whether to check sequence positions for known modification sites
-            in mouse or rat sequences (based on PhosphoSitePlus data). If a
-            mouse/rat site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
-        do_isoform_mapping : boolean
-            Whether to check sequence positions for known modifications
-            in other human isoforms of the protein (based on PhosphoSitePlus
-            data). If a site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
@@ -299,10 +271,7 @@ class SiteMapper(ProtMapper):
         # Now iterate over all the modifications and map each one
         for idx, mod_condition in enumerate(agent.mods):
             mapped_site = \
-                self._map_agent_mod(agent, mod_condition,
-                                    do_methionine_offset=do_methionine_offset,
-                                    do_orthology_mapping=do_orthology_mapping,
-                                    do_isoform_mapping=do_isoform_mapping)
+                self._map_agent_mod(agent, mod_condition)
             # If we couldn't do the mapping or the mapped site isn't invalid
             # then we don't need to change the existing ModCondition
             if not mapped_site or mapped_site.not_invalid():
@@ -321,8 +290,7 @@ class SiteMapper(ProtMapper):
             mapped_sites.append(mapped_site)
         return mapped_sites, new_agent
 
-    def _map_agent_mod(self, agent, mod_condition, do_methionine_offset=True,
-                       do_orthology_mapping=True, do_isoform_mapping=True):
+    def _map_agent_mod(self, agent, mod_condition):
         """Map a single modification condition on an agent.
 
         Parameters
@@ -331,23 +299,6 @@ class SiteMapper(ProtMapper):
             Agent to check for invalid modification sites.
         mod_condition : :py:class:`indra.statements.ModCondition`
             Modification to check for validity and map.
-        do_methionine_offset : boolean
-            Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering from mature proteins after
-            cleavage of the initial methionine. If True, checks the reference
-            sequence for a known modification at 1 site position greater
-            than the given one; if there exists such a site, creates the
-            mapping. Default is True.
-        do_orthology_mapping : boolean
-            Whether to check sequence positions for known modification sites
-            in mouse or rat sequences (based on PhosphoSitePlus data). If a
-            mouse/rat site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
-        do_isoform_mapping : boolean
-            Whether to check sequence positions for known modifications
-            in other human isoforms of the protein (based on PhosphoSitePlus
-            data). If a site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
@@ -367,11 +318,11 @@ class SiteMapper(ProtMapper):
         # Otherwise, try to map it and return the mapped site
         mapped_site = \
             self.map_to_human_ref(up_id, 'uniprot',
-                                  mod_condition.residue,
-                                  mod_condition.position,
-                                  do_methionine_offset=do_methionine_offset,
-                                  do_orthology_mapping=do_orthology_mapping,
-                                  do_isoform_mapping=do_isoform_mapping)
+                mod_condition.residue,
+                mod_condition.position,
+                do_methionine_offset=self.do_methionine_offset,
+                do_orthology_mapping=self.do_orthology_mapping,
+                do_isoform_mapping=self.do_isoform_mapping)
         return mapped_site
 
 

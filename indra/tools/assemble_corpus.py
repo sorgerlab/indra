@@ -315,8 +315,10 @@ def map_sequence(stmts_in, **kwargs):
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
     kwarg_list = ['do_methionine_offset', 'do_orthology_mapping',
                   'do_isoform_mapping']
-    sm = SiteMapper(default_site_map, use_cache=kwargs.pop('use_cache', False))
-    valid, mapped = sm.map_sites(stmts_in, **_filter(kwargs, kwarg_list))
+    sm = SiteMapper(default_site_map,
+                    use_cache=kwargs.pop('use_cache', False),
+                    **_filter(kwargs, kwarg_list))
+    valid, mapped = sm.map_sites(stmts_in)
     correctly_mapped_stmts = []
     for ms in mapped:
         correctly_mapped = all([mm.has_mapping() for mm in ms.mapped_mods])
