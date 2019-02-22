@@ -32,17 +32,21 @@ except Exception:
 class GroundingMapper(object):
     """Maps grounding of INDRA Agents based on a given grounding map.
 
-    Attributes
+    Parameters
     ----------
     gm : dict
         The grounding map, a dictionary mapping strings (entity names) to
         a dictionary of database identifiers.
     agent_map : Optional[dict]
         A dictionary mapping strings to grounded INDRA Agents with given state.
+    use_deft : Optional[bool]
+        If True, Deft will be attempted to be used for disambiguation of
+        acronyms. Default: True
     """
-    def __init__(self, gm, agent_map=None):
+    def __init__(self, gm, agent_map=None, use_deft=True):
         self.gm = gm
         self.agent_map = agent_map if agent_map is not None else {}
+        self.use_deft = use_deft
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
         """Update db_refs of agent using the grounding map
@@ -172,7 +176,7 @@ class GroundingMapper(object):
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
 
             # Check if a deft model exists for agent text
-            if agent_txt in deft_disambiguators:
+            if self.use_deft and agent_txt in deft_disambiguators:
                 # initialize annotations if needed so deft predicted
                 # probabilities can be added to agent annotations
                 annots = mapped_stmt.evidence[0].annotations
