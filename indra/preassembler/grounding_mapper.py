@@ -750,8 +750,8 @@ def _get_text_for_grounding(stmt, agent_text):
         text = universal_extract_text(content, contains=agent_text)
         if text:
             return text
-    except ImportError:
-        pass
+    except Exception as e:
+        logger.info('Could not get text for disambiguation from DB.')
     # If that doesn't work, we try PubMed next
     if text is None:
         from indra.literature import pubmed_client
