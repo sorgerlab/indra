@@ -25,7 +25,7 @@ try:
     for shortform in available_deft_models:
         deft_disambiguators[shortform] = load_disambiguator(shortform)
 except Exception:
-    logger.debug('Cannot use DEFT for disambiguation')
+    logger.info('DEFT will not be available for grounding disambiguation.')
     deft_disambiguators = {}
 
 
@@ -175,17 +175,13 @@ class GroundingMapper(object):
             if agent_txt in deft_disambiguators:
                 # initialize annotations if needed so deft predicted
                 # probabilities can be added to agent annotations
-                try:
-                    mapped_stmt.evidence[0].annotations['agents']
-                except KeyError:
-                    mapped_stmt.evidence[0].annotations['agents'] = \
-                        {'deft': [None, None]}
+                annots = mapped_stmt.evidence[0].annotations
+                if 'agents' in annots:
+                    if 'deft' not in annots['agents']:
+                        annots['agents']['deft'] = \
+                            {'deft': [None for _ in agent_list]}
                 else:
-                    try:
-                        mapped_stmt.evidence.annotations['agents']['deft']
-                    except KeyError:
-                        mapped_stmt.evidence.annotations['agents']['deft'] = \
-                            {'deft': [None, None]}
+                    annots['agents'] = {'deft': [None for _ in agent_list]}
                 grounding_text = _get_text_for_grounding(mapped_stmt,
                                                          agent_txt)
                 if grounding_text:
