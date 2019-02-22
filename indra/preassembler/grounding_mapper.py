@@ -16,20 +16,37 @@ from indra.util import read_unicode_csv, write_unicode_csv
 logger = logging.getLogger(__name__)
 
 
+# If the deft disambiguator is installed, load deft models to
+# disambiguate acronyms and shortforms
+try:
+    from deft import available_shortforms as available_deft_models
+    from deft.disambiguate import load_disambiguator
+    deft_disambiguators = {}
+    for shortform in available_deft_models:
+        deft_disambiguators[shortform] = load_disambiguator(shortform)
+except Exception:
+    logger.info('DEFT will not be available for grounding disambiguation.')
+    deft_disambiguators = {}
+
+
 class GroundingMapper(object):
     """Maps grounding of INDRA Agents based on a given grounding map.
 
-    Attributes
+    Parameters
     ----------
     gm : dict
         The grounding map, a dictionary mapping strings (entity names) to
         a dictionary of database identifiers.
     agent_map : Optional[dict]
         A dictionary mapping strings to grounded INDRA Agents with given state.
+    use_deft : Optional[bool]
+        If True, Deft will be attempted to be used for disambiguation of
+        acronyms. Default: True
     """
-    def __init__(self, gm, agent_map=None):
+    def __init__(self, gm, agent_map=None, use_deft=True):
         self.gm = gm
         self.agent_map = agent_map if agent_map is not None else {}
+        self.use_deft = use_deft
 
     def update_agent_db_refs(self, agent, agent_text, do_rename=True):
         """Update db_refs of agent using the grounding map
@@ -62,8 +79,12 @@ class GroundingMapper(object):
             the gene in Uniprot do not match or if there is no associated gene
             name in Uniprot.
         """
-        gene_name = None
         map_db_refs = deepcopy(self.gm.get(agent_text))
+        self.standardize_agent_db_refs(agent, map_db_refs, do_rename)
+
+    @staticmethod
+    def standardize_agent_db_refs(agent, map_db_refs, do_rename=True):
+        gene_name = None
         up_id = map_db_refs.get('UP')
         hgnc_sym = map_db_refs.get('HGNC')
         if up_id and not hgnc_sym:
@@ -149,12 +170,24 @@ class GroundingMapper(object):
 
         # Update agents directly participating in the statement
         agent_list = mapped_stmt.agent_list()
-        for idx in range(len(agent_list)):
-            agent = agent_list[idx]
-            if agent is None or agent.db_refs.get('TEXT') is None:
+        for idx, agent in enumerate(agent_list):
+            if agent is None:
+                continue
+            agent_txt = agent.db_refs.get('TEXT')
+            if agent_txt is None:
                 continue
 
             new_agent, maps_to_none = self.map_agent(agent, do_rename)
+
+            # Check if a deft model exists for agent text
+            if self.use_deft and agent_txt in deft_disambiguators:
+                try:
+                    run_deft_disambiguation(mapped_stmt, agent_list, idx,
+                                            new_agent, agent_txt)
+                except Exception as e:
+                    logger.error('There was an error during Deft'
+                                 ' disambiguation.')
+                    logger.error(e)
 
             if maps_to_none:
                 # Skip the entire statement if the agent maps to None in the
@@ -174,7 +207,8 @@ class GroundingMapper(object):
         for agent in agent_list:
             if agent is not None:
                 for bc in agent.bound_conditions:
-                    bc.agent, maps_to_none = self.map_agent(bc.agent, do_rename)
+                    bc.agent, maps_to_none = self.map_agent(bc.agent,
+                                                            do_rename)
                     if maps_to_none:
                         # Skip the entire statement if the agent maps to None
                         # in the grounding map
@@ -219,6 +253,7 @@ class GroundingMapper(object):
             map_db_refs = self.gm[agent_text]
         else:
             return agent, False
+
         # If it's in the map but it maps to None, then filter out
         # this statement by skipping it
         if map_db_refs is None:
@@ -672,6 +707,97 @@ def save_sentences(twg, stmts, filename, agent_limit=300):
                       quoting=csv.QUOTE_MINIMAL, lineterminator='\r\n')
 
 
+def run_deft_disambiguation(stmt, agent_list, idx, new_agent, agent_txt):
+    # Initialize annotations if needed so Deft predicted
+    # probabilities can be added to Agent annotations
+    annots = stmt.evidence[0].annotations if stmt.evidence else {}
+    if 'agents' in annots:
+        if 'deft' not in annots['agents']:
+            annots['agents']['deft'] = \
+                {'deft': [None for _ in agent_list]}
+    else:
+        annots['agents'] = {'deft': [None for _ in agent_list]}
+    grounding_text = _get_text_for_grounding(stmt, agent_txt)
+    if grounding_text:
+        res = deft_disambiguators[agent_txt].disambiguate(
+                                                [grounding_text])
+        ns_and_id, standard_name, disamb_scores = res[0]
+        # If the highest score is ungrounded we don't do anything
+        # TODO: should we explicitly remove grounding if we conclude it
+        # doesn't match any of the choices?
+        if ns_and_id == 'ungrounded':
+            return
+        db_ns, db_id = ns_and_id.split(':')
+        new_agent.db_refs = {'TEXT': agent_txt, db_ns: db_id}
+        new_agent.name = standard_name
+        logger.info('Disambiguated %s to: %s, %s:%s' %
+                    (agent_txt, standard_name, db_ns, db_id))
+        if db_ns == 'HGNC':
+            hgnc_sym = hgnc_client.get_hgnc_name(db_id)
+            GroundingMapper.standardize_agent_db_refs(new_agent,
+                                                      {'HGNC': hgnc_sym},
+                                                      do_rename=False)
+        annots['agents']['deft'][idx] = disamb_scores
+
+
+def _get_text_for_grounding(stmt, agent_text):
+    """Get text context for Deft disambiguation
+
+    If the INDRA database is available, attempts to get the fulltext from
+    which the statement was extracted. If the fulltext is not available, the
+    abstract is returned. If the indra database is not available, uses the
+    pubmed client to get the abstract. If no abstract can be found, falls back
+    on returning the evidence text for the statement.
+
+    Parameters
+    ----------
+    stmt : py:class:`indra.statements.Statement`
+        Statement with agent we seek to disambiguate.
+
+    agent_text : str
+       Agent text that needs to be disambiguated
+
+    Returns
+    -------
+    text : str
+        Text for Feft disambiguation
+    """
+    text = None
+    # First we will try to get content from the DB
+    try:
+        from indra_db.util.content_scripts \
+            import get_text_content_from_text_refs
+        from indra.literature.deft_tools import universal_extract_text
+        refs = stmt.evidence[0].text_refs
+        # Prioritize the pmid attribute if given
+        if stmt.evidence[0].pmid:
+            refs['PMID'] = stmt.evidence[0].pmid
+        logger.info('Obtaining text for disambiguation with refs: %s' %
+                    refs)
+        content = get_text_content_from_text_refs(refs)
+        text = universal_extract_text(content, contains=agent_text)
+        if text:
+            return text
+    except Exception as e:
+        logger.info('Could not get text for disambiguation from DB.')
+    # If that doesn't work, we try PubMed next
+    if text is None:
+        from indra.literature import pubmed_client
+        pmid = stmt.evidence[0].pmid
+        if pmid:
+            logger.info('Obtaining abstract for disambiguation for PMID%s' %
+                        pmid)
+            text = pubmed_client.get_abstract(pmid)
+            if text:
+                return text
+    # Finally, falling back on the evidence sentence
+    if text is None:
+        logger.info('Falling back on sentence-based disambiguation')
+        text = stmt.evidence[0].text
+        return text
+    return None
+
+
 default_grounding_map_path = \
     os.path.join(os.path.dirname(__file__),
                  '../resources/famplex/grounding_map.csv')
@@ -688,39 +814,3 @@ default_grounding_map = \
 gm = default_grounding_map
 with open(default_agent_grounding_path, 'r') as fh:
     default_agent_map = json.load(fh)
-
-
-if __name__ == '__main__':
-
-    if len(sys.argv) != 2:
-        print("Usage: %s stmt_file" % sys.argv[0])
-        sys.exit()
-    statement_file = sys.argv[1]
-
-    logger.info("Opening statement file %s" % statement_file)
-    with open(statement_file, 'rb') as f:
-        st = pickle.load(f)
-
-    stmts = []
-    for stmt_list in st.values():
-        stmts += stmt_list
-
-    twg = agent_texts_with_grounding(stmts)
-
-    save_base_map('%s_twg.csv' % statement_file, twg)
-
-    # Filter out those entries that are NOT already in the grounding map
-    filtered_twg = [entry for entry in twg
-                    if entry[0] not in default_grounding_map.keys()]
-
-    # For proteins that aren't explicitly grounded in the grounding map,
-    # check for trivial corrections by building the protein map
-    prot_map = protein_map_from_twg(twg)
-    filtered_twg = [entry for entry in filtered_twg
-                    if entry[0] not in prot_map.keys()]
-
-    save_base_map('%s_unmapped_twg.csv' % statement_file, filtered_twg)
-
-    # For each unmapped string, get sentences and write to file
-    save_sentences(filtered_twg, stmts,
-                   '%s_unmapped_sentences.csv' % statement_file)

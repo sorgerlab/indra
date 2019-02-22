@@ -7,6 +7,7 @@ For information on the Elsevier API, see:
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 import os
+import re
 import logging
 import textwrap
 import datetime
@@ -232,7 +233,7 @@ def get_article(doi, output_format='txt'):
     return xml_string
 
 
-def extract_text(xml_string):
+def extract_text(xml_string, contains=None):
     """Get text from the body of the given Elsevier xml."""
     assert isinstance(xml_string, str)
     xml_tree = ET.XML(xml_string.encode('utf-8'), parser=UTB())
@@ -240,7 +241,7 @@ def extract_text(xml_string):
     if full_text is None:
         logger.info('Could not find full text element article:originalText')
         return None
-    article_body = _get_article_body(full_text)
+    article_body = _get_article_body(full_text, contains)
     if article_body:
         return article_body
     raw_text = _get_raw_text(full_text)
@@ -390,7 +391,7 @@ def download_from_search(query_str, folder, do_extract_text=True,
     return
 
 
-def _get_article_body(full_text_elem):
+def _get_article_body(full_text_elem, contains=None):
     possible_paths = [
         'xocs:doc/xocs:serial-item/ja:article/ja:body',
         'xocs:doc/xocs:serial-item/ja:simple-article/ja:body',
@@ -402,12 +403,12 @@ def _get_article_body(full_text_elem):
         main_body = full_text_elem.find(pth, elsevier_ns)
         if main_body is not None:
             logger.info("Found main body element: \"%s\"" % pth)
-            return _get_sections(main_body)
+            return _get_sections(main_body, contains)
         logger.info("Could not find main body element: \"%s\"." % pth)
     return None
 
 
-def _get_sections(main_body_elem):
+def _get_sections(main_body_elem, contains=None):
     # Get content sections
     possible_paths = ['common:sections/common:section', 'common:section',
                       'common:sections']
@@ -428,15 +429,9 @@ def _get_sections(main_body_elem):
         # Paragraphs that are under a section within the section
         pars += s.findall('common:section/common:para', elsevier_ns)
         for p in pars:
-            # Get the initial string inside the paragraph
-            if p.text is not None:
-                full_txt += p.text
-            # When there are tags inside the paragraph (for instance
-            # references), we need to take those child elements one by one
-            # and get the corresponding tail strings and join these. 
-            full_txt += ''.join([c.tail if c.tail is not None 
-                                 else '' for c in p.getchildren()])
-            full_txt += '\n'
+            content = ' '.join(p.itertext())
+            if contains is None or re.search(r'[^\w]%s[^\w]' % contains):
+                full_txt += content + '\n'
     return full_txt
 
 

@@ -34,3 +34,9 @@ NewsAPI client (:py:mod:`indra.literature.newsapi_client`)
 .. automodule:: indra.literature.newsapi_client
     :members:
 
+Deft Tools (:py:mod:`indra.literature.deft_tools`)
+--------------------------------------------------
+
+.. automodule:: indra.literature.deft_tools
+    :members:
+
