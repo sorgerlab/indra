@@ -2,6 +2,7 @@ import json
 import copy
 import logging
 import unittest
+from nose.plugins.attrib import attr
 from indra.statements import *
 from indra.tools.live_curation import app, curator, Corpus, LiveCurator
 
@@ -110,7 +111,7 @@ def test_sofia_incorrect():
     curator.submit_curation(corpus_id='1', curations={'4': 0})
     expected = {'1': 0.91675,
                 '2': 0.89684,
-                '3': 0.95333,
+                '3': 0.9533,
                 '4': 0.0,
                 '5': 0.61904}
     beliefs = curator.update_beliefs(corpus_id='1')
@@ -119,7 +120,7 @@ def test_sofia_incorrect():
     curator.submit_curation(corpus_id='1', curations={'5': 0})
     expected = {'1': 0.91675,
                 '2': 0.89684,
-                '3': 0.94988,
+                '3': 0.9533,
                 '4': 0,
                 '5': 0}
     beliefs = curator.update_beliefs(corpus_id='1')
@@ -247,7 +248,7 @@ class LiveCurationTestCase(unittest.TestCase):
         res = json.loads(resp.data.decode('utf-8'))
         expected = {'1': 0.91675,
                     '2': 0.89684,
-                    '3': 0.95333,
+                    '3': 0.9533,
                     '4': 0.0,
                     '5': 0.61904}
         assert close_enough(res, expected), (res, expected)
@@ -258,10 +259,25 @@ class LiveCurationTestCase(unittest.TestCase):
         res = json.loads(resp.data.decode('utf-8'))
         expected = {'1': 0.91675,
                     '2': 0.89684,
-                    '3': 0.94988,
+                    '3': 0.9533,
                     '4': 0,
                     '5': 0}
         assert close_enough(res, expected), (res, expected)
+
+
+@attr('notravis')
+class LiveGroundingTestCase(unittest.TestCase):
+    def _send_request(self, endpoint, req_dict):
+        resp = self.app.post(endpoint,
+                             data=json.dumps(req_dict),
+                             headers={'Content-Type': 'application/json'})
+        return resp
+
+    def setUp(self):
+        _make_corpus()
+        app.testing = True
+        self.app = app.test_client()
+        curator.corpora = {'1': _make_corpus()}
 
     def test_add_ontology_node(self):
         self._send_request('add_ontology_entry',
