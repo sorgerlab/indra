@@ -3,10 +3,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 
 import logging
-import json
 from argparse import ArgumentParser
-from indra.util.get_version import get_version as get_indra_version
-from multiprocessing import Pool
 
 logger = logging.getLogger(__name__)
 
@@ -79,79 +76,3 @@ def get_parser(description, input_desc):
     return parser
 
 
-class StatementData(object):
-    """Contains metadata for statements, as well as the statement itself.
-
-    This, like ReadingData, is primarily designed for use with the database,
-    carrying valuable information and methods for such.
-
-    Parameters
-    ----------
-    statement : an indra Statement instance
-        The statement whose extra meta data this object encapsulates.
-    reading_id : int or None
-        The id number of the entry in the `readings` table of the database.
-        None if no such id is available.
-    """
-    def __init__(self, statement, reading_id=None, db_info_id=None):
-        self.reading_id = reading_id
-        self.db_info_id = db_info_id
-        self.statement = statement
-        self.indra_version = get_indra_version()
-        return
-
-    @classmethod
-    def get_cols(self):
-        """Get the columns for the tuple returned by `make_tuple`."""
-        return 'batch_id', 'reading_id', 'db_info_id', 'uuid', 'mk_hash', \
-               'source_hash', 'type', 'json', 'indra_version'
-
-    def make_tuple(self, batch_id):
-        """Make a tuple for copying into the database."""
-        return (batch_id, self.reading_id, self.db_info_id,
-                self.statement.uuid, self.statement.get_hash(shallow=False),
-                self.statement.evidence[0].get_source_hash(),
-                self.statement.__class__.__name__,
-                json.dumps(self.statement.to_json()), self.indra_version)
-
-
-def get_stmts_safely(reading_data):
-    stmt_data_list = []
-    try:
-        stmts = reading_data.get_statements()
-    except Exception as e:
-        logger.error("Got exception creating statements for %d."
-                     % reading_data.reading_id)
-        logger.exception(e)
-        return
-    if stmts is not None:
-        if not len(stmts):
-            logger.info("Got no statements for %s." % reading_data.reading_id)
-        for stmt in stmts:
-            stmt_data_list.append(StatementData(stmt, reading_data.reading_id))
-    else:
-        logger.warning("Got None statements for %s." % reading_data.reading_id)
-    return stmt_data_list
-
-
-def make_statements(reading_data_list, num_proc=1):
-    """Convert a list of ReadingData instances into StatementData instances."""
-    stmt_data_list = []
-
-    if num_proc is 1:  # Don't use pool if not needed.
-        for reading_data in reading_data_list:
-            stmt_data_list += get_stmts_safely(reading_data)
-    else:
-        try:
-            pool = Pool(num_proc)
-            stmt_data_list_list = pool.map(get_stmts_safely, reading_data_list)
-            for stmt_data_sublist in stmt_data_list_list:
-                if stmt_data_sublist is not None:
-                    stmt_data_list += stmt_data_sublist
-        finally:
-            pool.close()
-            pool.join()
-
-    logger.info("Found %d statements from %d readings." %
-                (len(stmt_data_list), len(reading_data_list)))
-    return stmt_data_list
