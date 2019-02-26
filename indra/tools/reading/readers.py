@@ -18,7 +18,6 @@ from multiprocessing import Pool
 from platform import system
 
 from indra import get_config
-from indra.util import zip_string
 from indra.sources import sparser, reach
 
 
@@ -231,7 +230,7 @@ class Reader(object):
         self.do_content_check = check_content
         self.input_character_limit = input_character_limit
         self.max_space_ratio = max_space_ratio
-       self.results = []
+        self.results = []
         return
 
     def add_result(self, content_id, content, **kwargs):
@@ -681,13 +680,11 @@ def get_reader(reader_name, *args, **kwargs):
 class ReadingData(object):
     """Object to contain the data produced by a reading.
 
-    This is primarily designed for use with the database.
-
     Parameters
     ----------
-    tcid : int or str
-        An identifier of the text content that produced the reading. Must
-        be an int for use with the database.
+    content_id : int or str
+        A unique identifier of the text content that produced the reading,
+        which can be mapped back to that content.
     reader : str
         The name of the reader, consistent with it's `name` attribute, for
         example: 'REACH'
@@ -700,10 +697,9 @@ class ReadingData(object):
         `content_format`.
     """
 
-    def __init__(self, tcid, reader, reader_version, content_format, content,
-                 reading_id=None):
-        self.reading_id = reading_id
-        self.tcid = tcid
+    def __init__(self, content_id, reader, reader_version, content_format,
+                 content):
+        self.content_id = content_id
         self.reader = reader
         self.reader_version = reader_version
         self.format = content_format
@@ -711,25 +707,9 @@ class ReadingData(object):
         self._statements = None
         return
 
-    @classmethod
-    def from_db_reading(cls, db_reading):
-        return cls(db_reading.text_content_id, db_reading.reader,
-                   db_reading.reader_version, db_reading.format,
-                   json.loads(zlib.decompress(db_reading.bytes,
-                                              16+zlib.MAX_WBITS)
-                              .decode('utf8')),
-                   db_reading.id)
-
-    @staticmethod
-    def get_cols():
-        """Get the columns for the tuple returned by `make_tuple`."""
-        return ('text_content_id', 'reader', 'reader_version', 'format',
-                'bytes', 'batch_id')
-
     def get_statements(self, reprocess=False):
         """General method to create statements."""
         if self._statements is None or reprocess:
-            logger.debug("Making statements from %s." % self.reading_id)
             if self.reader == ReachReader.name:
                 if self.format == formats.JSON:
                     # Process the reach json into statements.
@@ -751,40 +731,11 @@ class ReadingData(object):
                 raise ReadingError("Unknown reader: %s." % self.reader)
             if processor is None:
                 logger.error("Production of statements from %s failed for %s."
-                             % (self.reader, self.tcid))
+                             % (self.reader, self.content_id))
                 stmts = []
             else:
                 stmts = processor.statements
             self._statements = stmts[:]
         else:
-            logger.debug("Returning %d statements that were already produced "
-                         "from %s." % (len(self._statements), self.reading_id))
             stmts = self._statements[:]
         return stmts
-
-    def zip_content(self):
-        """Compress the content, returning bytes."""
-        if self.format == formats.JSON:
-            ret = zip_string(json.dumps(self.content))
-        elif self.format == formats.TEXT:
-            ret = zip_string(self.content)
-        else:
-            raise Exception('Do not know how to zip format %s.' % self.format)
-        return ret
-
-    def make_tuple(self, batch_id):
-        """Make the tuple expected by the database."""
-        return (self.tcid, self.reader, self.reader_version, self.format,
-                self.zip_content(), batch_id)
-
-    def matches(self, r_entry):
-        """Determine if reading data matches the a reading entry from the db.
-
-        Returns True if tcid, reader, reader_version match the corresponding
-        elements of a db.Reading instance, else False.
-        """
-        # Note the temporary fix in clipping the reader version length. This is
-        # because the version is for some reason clipped in the database.
-        return (r_entry.text_content_id == self.tcid
-                and r_entry.reader == self.reader
-                and r_entry.reader_version == self.reader_version[:20])
