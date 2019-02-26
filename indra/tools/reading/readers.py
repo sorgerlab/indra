@@ -209,13 +209,78 @@ class Content(object):
         return fpath
 
 
+class ReadingData(object):
+    """Object to contain the data produced by a reading.
+
+    Parameters
+    ----------
+    content_id : int or str
+        A unique identifier of the text content that produced the reading,
+        which can be mapped back to that content.
+    reader : str
+        The name of the reader, consistent with it's `name` attribute, for
+        example: 'REACH'
+    reader_version : str
+        A string identifying the version of the underlying nlp reader.
+    content_format : str
+        The format of the content. Options are in indra.db.formats.
+    content : str or dict
+        The content of the reading result. A string in the format given by
+        `content_format`.
+    """
+
+    def __init__(self, content_id, reader, reader_version, content_format,
+                 content):
+        self.content_id = content_id
+        self.reader = reader
+        self.reader_version = reader_version
+        self.format = content_format
+        self.content = content
+        self._statements = None
+        return
+
+    def get_statements(self, reprocess=False):
+        """General method to create statements."""
+        if self._statements is None or reprocess:
+            if self.reader == ReachReader.name:
+                if self.format == formats.JSON:
+                    # Process the reach json into statements.
+                    json_str = json.dumps(self.content)
+                    processor = reach.process_json_str(json_str)
+                else:
+                    raise ReadingError("Incorrect format for Reach output: %s."
+                                       % self.format)
+            elif self.reader == SparserReader.name:
+                if self.format == formats.JSON:
+                    # Process the sparser content into statements
+                    processor = sparser.process_json_dict(self.content)
+                    if processor is not None:
+                        processor.set_statements_pmid(None)
+                else:
+                    raise ReadingError("Sparser should only ever be JSON, not "
+                                       "%s." % self.format)
+            else:
+                raise ReadingError("Unknown reader: %s." % self.reader)
+            if processor is None:
+                logger.error("Production of statements from %s failed for %s."
+                             % (self.reader, self.content_id))
+                stmts = []
+            else:
+                stmts = processor.statements
+            self._statements = stmts[:]
+        else:
+            stmts = self._statements[:]
+        return stmts
+
+
 class Reader(object):
     """This abstract object defines and some general methods for readers."""
     name = NotImplemented
 
     def __init__(self, base_dir=None, n_proc=1, check_content=True,
                  input_character_limit=CONTENT_CHARACTER_LIMIT,
-                 max_space_ratio=CONTENT_MAX_SPACE_RATIO):
+                 max_space_ratio=CONTENT_MAX_SPACE_RATIO,
+                 ResultClass=ReadingData):
         if base_dir is None:
             base_dir = 'run_' + self.name.lower()
         self.n_proc = n_proc
@@ -231,17 +296,14 @@ class Reader(object):
         self.input_character_limit = input_character_limit
         self.max_space_ratio = max_space_ratio
         self.results = []
+        self.ResultClass = ResultClass
         return
 
     def add_result(self, content_id, content, **kwargs):
         """"Add a result to the list of results."""
-        self.results.append(ReadingData(
-            content_id,
-            self.name,
-            self.version,
-            formats.JSON,
-            content
-            ))
+        result_object = self.ResultClass(content_id, self.name, self.version,
+                                         formats.JSON, content, **kwargs)
+        self.results.append(result_object)
         return
 
     def _check_content(self, content_str):
@@ -675,67 +737,3 @@ def get_reader_class(reader_name):
 def get_reader(reader_name, *args, **kwargs):
     """Get an instantiated reader by name."""
     return get_reader_class(reader_name)(*args, **kwargs)
-
-
-class ReadingData(object):
-    """Object to contain the data produced by a reading.
-
-    Parameters
-    ----------
-    content_id : int or str
-        A unique identifier of the text content that produced the reading,
-        which can be mapped back to that content.
-    reader : str
-        The name of the reader, consistent with it's `name` attribute, for
-        example: 'REACH'
-    reader_version : str
-        A string identifying the version of the underlying nlp reader.
-    content_format : str
-        The format of the content. Options are in indra.db.formats.
-    content : str or dict
-        The content of the reading result. A string in the format given by
-        `content_format`.
-    """
-
-    def __init__(self, content_id, reader, reader_version, content_format,
-                 content):
-        self.content_id = content_id
-        self.reader = reader
-        self.reader_version = reader_version
-        self.format = content_format
-        self.content = content
-        self._statements = None
-        return
-
-    def get_statements(self, reprocess=False):
-        """General method to create statements."""
-        if self._statements is None or reprocess:
-            if self.reader == ReachReader.name:
-                if self.format == formats.JSON:
-                    # Process the reach json into statements.
-                    json_str = json.dumps(self.content)
-                    processor = reach.process_json_str(json_str)
-                else:
-                    raise ReadingError("Incorrect format for Reach output: %s."
-                                       % self.format)
-            elif self.reader == SparserReader.name:
-                if self.format == formats.JSON:
-                    # Process the sparser content into statements
-                    processor = sparser.process_json_dict(self.content)
-                    if processor is not None:
-                        processor.set_statements_pmid(None)
-                else:
-                    raise ReadingError("Sparser should only ever be JSON, not "
-                                       "%s." % self.format)
-            else:
-                raise ReadingError("Unknown reader: %s." % self.reader)
-            if processor is None:
-                logger.error("Production of statements from %s failed for %s."
-                             % (self.reader, self.content_id))
-                stmts = []
-            else:
-                stmts = processor.statements
-            self._statements = stmts[:]
-        else:
-            stmts = self._statements[:]
-        return stmts
