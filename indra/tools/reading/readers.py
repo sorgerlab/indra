@@ -696,7 +696,7 @@ class ReadingData(object):
         A string identifying the version of the underlying nlp reader.
     content_format : str
         The format of the content. Options are in indra.db.formats.
-    content : str
+    content : str or dict
         The content of the reading result. A string in the format given by
         `content_format`.
     reading_id : int or None
@@ -758,11 +758,11 @@ class ReadingData(object):
                 stmts = []
             else:
                 stmts = processor.statements
-            self._statements = stmts
+            self._statements = stmts[:]
         else:
             logger.debug("Returning %d statements that were already produced "
                          "from %s." % (len(self._statements), self.reading_id))
-            stmts = self._statements
+            stmts = self._statements[:]
         return stmts
 
     def zip_content(self):

@@ -157,7 +157,7 @@ class SparserJSONProcessor(object):
 
         Parameters
         ----------
-        pmid : str
+        pmid : str or None
             The PMID to be used in the Evidence objects of the Statements
             that were extracted by the processor.
         """
