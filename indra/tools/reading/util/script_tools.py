@@ -31,7 +31,7 @@ def get_parser(description, input_desc):
         )
     parser.add_argument(
         '-r', '--readers',
-        choices=['reach', 'sparser'],
+        choices=['reach', 'sparser', 'trips'],
         help='List of readers to be used.',
         nargs='+'
         )
