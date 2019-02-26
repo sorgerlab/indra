@@ -18,8 +18,7 @@ from multiprocessing import Pool
 from platform import system
 
 from indra import get_config
-from indra.sources import sparser, reach
-
+from indra.sources import sparser, reach, trips
 
 logger = logging.getLogger(__name__)
 
@@ -259,6 +258,8 @@ class ReadingData(object):
                 else:
                     raise ReadingError("Sparser should only ever be JSON, not "
                                        "%s." % self.format)
+            elif self.reader == TripsReader.name:
+                processor = trips.process_xml(self.content)
             else:
                 raise ReadingError("Unknown reader: %s." % self.reader)
             if processor is None:
@@ -712,8 +713,30 @@ class SparserReader(Reader):
         return ret
 
 
+class EmptyReader(Reader):
+    """A class name to use for Readers that are not implemented yet."""
+
+
+class TripsReader(EmptyReader):
+    """A stand-in for TRIPS reading.
+
+    Currently, we do not run TRIPS (more specifically DRUM) regularly at large
+    scales, however on occasion we have outputs from TRIPS that were generated
+    a while ago.
+    """
+    name = 'TRIPS'
+
+    def __init__(self, *args, **kwargs):
+        self.version = self.get_version()
+        return
+
+    @classmethod
+    def get_version(cls):
+        return 'STATIC'
+
+
 def get_readers():
-    """Get all children of the Reader objcet."""
+    """Get all children of the Reader object."""
     try:
         children = Reader.__subclasses__()
     except AttributeError:
