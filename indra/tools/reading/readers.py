@@ -231,6 +231,18 @@ class Reader(object):
         self.do_content_check = check_content
         self.input_character_limit = input_character_limit
         self.max_space_ratio = max_space_ratio
+       self.results = []
+        return
+
+    def add_result(self, content_id, content, **kwargs):
+        """"Add a result to the list of results."""
+        self.results.append(ReadingData(
+            content_id,
+            self.name,
+            self.version,
+            formats.JSON,
+            content
+            ))
         return
 
     def _check_content(self, content_str):
@@ -388,7 +400,6 @@ class ReachReader(Reader):
             json_prefixes.add(path.join(self.output_dir, prefix))
 
         # Join each set of json files and store the json dict.
-        reading_data_list = []
         for prefix in json_prefixes:
             base_prefix = path.basename(prefix)
             if base_prefix.isdecimal():
@@ -401,15 +412,9 @@ class ReachReader(Reader):
                 logger.exception(e)
                 logger.error("Could not load result for prefix %s." % prefix)
                 continue
-            reading_data_list.append(ReadingData(
-                base_prefix,
-                self.name,
-                self.version,
-                formats.JSON,
-                content
-                ))
+            self.add_result(base_prefix, content)
             logger.debug('Joined files for prefix %s.' % base_prefix)
-        return reading_data_list
+        return self.results
 
     def clear_input(self):
         """Remove all the input files (at the end of a reading)."""
@@ -514,7 +519,6 @@ class SparserReader(Reader):
 
     def get_output(self, output_files, clear=True):
         "Get the output files as an id indexed dict."
-        reading_data_list = []
         patt = re.compile(r'(.*?)-semantics.*?')
         for outpath in output_files:
             if outpath is None:
@@ -541,13 +545,8 @@ class SparserReader(Reader):
                              % outpath)
                 continue
 
-            reading_data_list.append(ReadingData(
-                prefix,
-                self.name,
-                self.version,
-                formats.JSON,
-                content
-                ))
+            self.add_result(prefix, content)
+
             if clear:
                 input_path = outpath.replace('-semantics.json', '.nxml')
                 try:
@@ -557,7 +556,7 @@ class SparserReader(Reader):
                     logger.exception(e)
                     logger.error("Could not remove sparser files %s and %s."
                                  % (outpath, input_path))
-        return reading_data_list
+        return self.results
 
     def read_one(self, fpath, outbuf=None, verbose=False):
         fpath = path.abspath(fpath)
@@ -699,8 +698,6 @@ class ReadingData(object):
     content : str or dict
         The content of the reading result. A string in the format given by
         `content_format`.
-    reading_id : int or None
-        Optional. The id corresponding to the Readings entry in the db.
     """
 
     def __init__(self, tcid, reader, reader_version, content_format, content,
