@@ -9,7 +9,7 @@ import random
 logger = logging.getLogger('indra.tools.reading.read_files')
 
 from indra.tools.reading.util.script_tools import get_parser
-from indra.tools.reading.readers import _get_dir, get_readers, Content
+from indra.tools.reading.readers import _get_dir, get_reader_classes, Content
 
 
 def make_parser():
@@ -92,7 +92,7 @@ def main():
 
     # Get the readers objects.
     readers = [reader_class(base_dir=base_dir, n_proc=args.n_proc)
-               for reader_class in get_readers()
+               for reader_class in get_reader_classes()
                if reader_class.name.lower() in args.readers]
 
     # Read the files.
