@@ -39,6 +39,7 @@ install:
         aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request --no-sign-request;
         tar xjf TEES.tar.bz2;
         mv TEES ~/TEES;
+        export TEES_SETTINGS=~/TEES/tees_local_settings.py
     fi
   # Install nose notify
   - mkdir $HOME/.nose_notify;
@@ -61,7 +62,6 @@ script:
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
   - echo "$TRAVIS_EVENT_TYPE"
-  - export TEES_SETTINGS=~/TEES/tees_local_settings.py
   - export TEES_PATH=~/TEES
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
