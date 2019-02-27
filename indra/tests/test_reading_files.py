@@ -1,10 +1,12 @@
 from os import path
-from indra.tools.reading.read_files import read_files, get_readers
+from indra.tools.reading.read_files import read_files, get_reader_classes
 
 from nose.plugins.attrib import attr
 
+from indra.tools.reading.readers import EmptyReader
 
-@attr('slow', 'nonpublic')
+
+@attr('slow', 'nonpublic', 'notravis')
 def test_read_files():
     "Test that the system can read files."
     # Create the test files.
@@ -26,8 +28,12 @@ def test_read_files():
     assert len(example_files), "No content available to test."
 
     # Now read them.
-    readers = get_readers()
+    reader_classes = get_reader_classes()
+    readers = []
+    for rc in reader_classes:
+        readers.append(rc())
     outputs = read_files(example_files, readers)
     N_out = len(outputs)
-    N_exp = 2*len(example_files)
+    proper_readers = [r for r in readers if not isinstance(r, EmptyReader)]
+    N_exp = len(proper_readers)*len(example_files)
     assert N_out == N_exp, "Expected %d outputs, got %d." % (N_exp, N_out)
