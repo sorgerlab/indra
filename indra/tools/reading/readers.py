@@ -300,6 +300,11 @@ class Reader(object):
         self.ResultClass = ResultClass
         return
 
+    def reset(self):
+        self.results = []
+        self.id_maps = {}
+        return
+
     def add_result(self, content_id, content, **kwargs):
         """"Add a result to the list of results."""
         result_object = self.ResultClass(content_id, self.name, self.version,
@@ -655,61 +660,63 @@ class SparserReader(Reader):
         ret = []
         self.prep_input(read_list)
         L = len(self.file_list)
-        if L > 0:
-            logger.info("Beginning to run sparser.")
-            output_file_list = []
-            if log:
-                log_name = 'sparser_run_%s.log' % _time_stamp()
-                outbuf = open(log_name, 'wb')
+        if L == 0:
+            return ret
+
+        logger.info("Beginning to run sparser.")
+        output_file_list = []
+        if log:
+            log_name = 'sparser_run_%s.log' % _time_stamp()
+            outbuf = open(log_name, 'wb')
+        else:
+            outbuf = None
+        try:
+            if self.n_proc == 1:
+                for fpath in self.file_list:
+                    outpath, _ = self.read_one(fpath, outbuf, verbose)
+                    if outpath is not None:
+                        output_file_list.append(outpath)
             else:
-                outbuf = None
-            try:
-                if self.n_proc == 1:
-                    for fpath in self.file_list:
-                        outpath, _ = self.read_one(fpath, outbuf, verbose)
-                        if outpath is not None:
-                            output_file_list.append(outpath)
-                else:
-                    if n_per_proc is None:
-                        n_per_proc = max(1, min(1000, L//self.n_proc//2))
-                    pool = None
-                    try:
-                        pool = Pool(self.n_proc)
-                        if n_per_proc is not 1:
-                            batches = [self.file_list[n*n_per_proc:(n+1)*n_per_proc]
-                                       for n in range(L//n_per_proc + 1)]
-                            out_lists_and_buffs = pool.map(self.read_some,
-                                                           batches)
+                if n_per_proc is None:
+                    n_per_proc = max(1, min(1000, L//self.n_proc//2))
+                pool = None
+                try:
+                    pool = Pool(self.n_proc)
+                    if n_per_proc is not 1:
+                        batches = [self.file_list[n*n_per_proc:(n+1)*n_per_proc]
+                                   for n in range(L//n_per_proc + 1)]
+                        out_lists_and_buffs = pool.map(self.read_some,
+                                                       batches)
+                    else:
+                        out_files_and_buffs = pool.map(self.read_one,
+                                                       self.file_list)
+                        out_lists_and_buffs = [([out_files], buffs)
+                                               for out_files, buffs
+                                               in out_files_and_buffs]
+                finally:
+                    if pool is not None:
+                        pool.close()
+                        pool.join()
+                for i, (out_list, buff) in enumerate(out_lists_and_buffs):
+                    if out_list is not None:
+                        output_file_list += out_list
+                    if log:
+                        outbuf.write(b'Log for producing output %d/%d.\n'
+                                     % (i, len(out_lists_and_buffs)))
+                        if buff is not None:
+                            buff.seek(0)
+                            outbuf.write(buff.read() + b'\n')
                         else:
-                            out_files_and_buffs = pool.map(self.read_one,
-                                                           self.file_list)
-                            out_lists_and_buffs = [([out_files], buffs)
-                                                   for out_files, buffs
-                                                   in out_files_and_buffs]
-                    finally:
-                        if pool is not None:
-                            pool.close()
-                            pool.join()
-                    for i, (out_list, buff) in enumerate(out_lists_and_buffs):
-                        if out_list is not None:
-                            output_file_list += out_list
-                        if log:
-                            outbuf.write(b'Log for producing output %d/%d.\n'
-                                         % (i, len(out_lists_and_buffs)))
-                            if buff is not None:
-                                buff.seek(0)
-                                outbuf.write(buff.read() + b'\n')
-                            else:
-                                outbuf.write(b'ERROR: no buffer was None. '
-                                             b'No logs available.\n')
-                            outbuf.flush()
-            finally:
-                if log:
-                    outbuf.close()
-                    if verbose:
-                        logger.info("Sparser logs may be found at %s." %
-                                    log_name)
-            ret = self.get_output(output_file_list)
+                            outbuf.write(b'ERROR: no buffer was None. '
+                                         b'No logs available.\n')
+                        outbuf.flush()
+        finally:
+            if log:
+                outbuf.close()
+                if verbose:
+                    logger.info("Sparser logs may be found at %s." %
+                                log_name)
+        ret = self.get_output(output_file_list)
         return ret
 
 
