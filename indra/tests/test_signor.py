@@ -60,7 +60,7 @@ def test_parse_csv_from_web():
     assert isinstance(sp.complex_map, dict)
     assert 'SIGNOR-C1' in sp.complex_map
     assert isinstance(sp.complex_map['SIGNOR-C1'], list)
-    assert set(sp.complex_map['SIGNOR-C1']) == set('P23511', 'P25208', 'Q13952')
+    assert set(sp.complex_map['SIGNOR-C1']) == {'P23511', 'P25208', 'Q13952'}
     # Make sure we don't error if Complexes data is not provided
 
 
