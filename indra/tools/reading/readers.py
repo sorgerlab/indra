@@ -730,26 +730,29 @@ class TripsReader(EmptyReader):
         self.version = self.get_version()
         return
 
+    def read(self, *args, **kwargs):
+        return []
+
     @classmethod
     def get_version(cls):
         return 'STATIC'
 
 
-def get_readers():
-    """Get all children of the Reader object."""
-    try:
-        children = Reader.__subclasses__()
-    except AttributeError:
-        module = sys.modules[__name__]
-        children = [cls for cls_name, cls in module.__dict__.items()
-                    if isinstance(cls, type) and issubclass(cls, Reader)
-                    and cls_name != 'Reader']
-    return children
+def get_reader_classes(parent=Reader):
+    """Get all childless the descendants of a parent class, recursively."""
+    children = parent.__subclasses__()
+    descendants = children[:]
+    for child in children:
+        grandchildren = get_reader_classes(child)
+        if grandchildren:
+            descendants.remove(child)
+            descendants.extend(grandchildren)
+    return descendants
 
 
 def get_reader_class(reader_name):
     """Get a particular reader class by name."""
-    for reader_class in get_readers():
+    for reader_class in get_reader_classes():
         if reader_class.name.lower() == reader_name.lower():
             return reader_class
     else:
