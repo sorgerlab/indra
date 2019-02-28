@@ -18,9 +18,7 @@ from multiprocessing import Pool
 from platform import system
 
 from indra import get_config
-from indra.util import zip_string
-from indra.sources import sparser, reach
-
+from indra.sources import sparser, reach, trips
 
 logger = logging.getLogger(__name__)
 
@@ -210,13 +208,80 @@ class Content(object):
         return fpath
 
 
+class ReadingData(object):
+    """Object to contain the data produced by a reading.
+
+    Parameters
+    ----------
+    content_id : int or str
+        A unique identifier of the text content that produced the reading,
+        which can be mapped back to that content.
+    reader : str
+        The name of the reader, consistent with it's `name` attribute, for
+        example: 'REACH'
+    reader_version : str
+        A string identifying the version of the underlying nlp reader.
+    content_format : str
+        The format of the content. Options are in indra.db.formats.
+    content : str or dict
+        The content of the reading result. A string in the format given by
+        `content_format`.
+    """
+
+    def __init__(self, content_id, reader, reader_version, content_format,
+                 content):
+        self.content_id = content_id
+        self.reader = reader
+        self.reader_version = reader_version
+        self.format = content_format
+        self.content = content
+        self._statements = None
+        return
+
+    def get_statements(self, reprocess=False):
+        """General method to create statements."""
+        if self._statements is None or reprocess:
+            if self.reader == ReachReader.name:
+                if self.format == formats.JSON:
+                    # Process the reach json into statements.
+                    json_str = json.dumps(self.content)
+                    processor = reach.process_json_str(json_str)
+                else:
+                    raise ReadingError("Incorrect format for Reach output: %s."
+                                       % self.format)
+            elif self.reader == SparserReader.name:
+                if self.format == formats.JSON:
+                    # Process the sparser content into statements
+                    processor = sparser.process_json_dict(self.content)
+                    if processor is not None:
+                        processor.set_statements_pmid(None)
+                else:
+                    raise ReadingError("Sparser should only ever be JSON, not "
+                                       "%s." % self.format)
+            elif self.reader == TripsReader.name:
+                processor = trips.process_xml(self.content)
+            else:
+                raise ReadingError("Unknown reader: %s." % self.reader)
+            if processor is None:
+                logger.error("Production of statements from %s failed for %s."
+                             % (self.reader, self.content_id))
+                stmts = []
+            else:
+                stmts = processor.statements
+            self._statements = stmts[:]
+        else:
+            stmts = self._statements[:]
+        return stmts
+
+
 class Reader(object):
     """This abstract object defines and some general methods for readers."""
     name = NotImplemented
 
     def __init__(self, base_dir=None, n_proc=1, check_content=True,
                  input_character_limit=CONTENT_CHARACTER_LIMIT,
-                 max_space_ratio=CONTENT_MAX_SPACE_RATIO):
+                 max_space_ratio=CONTENT_MAX_SPACE_RATIO,
+                 ResultClass=ReadingData):
         if base_dir is None:
             base_dir = 'run_' + self.name.lower()
         self.n_proc = n_proc
@@ -231,6 +296,20 @@ class Reader(object):
         self.do_content_check = check_content
         self.input_character_limit = input_character_limit
         self.max_space_ratio = max_space_ratio
+        self.results = []
+        self.ResultClass = ResultClass
+        return
+
+    def reset(self):
+        self.results = []
+        self.id_maps = {}
+        return
+
+    def add_result(self, content_id, content, **kwargs):
+        """"Add a result to the list of results."""
+        result_object = self.ResultClass(content_id, self.name, self.version,
+                                         formats.JSON, content, **kwargs)
+        self.results.append(result_object)
         return
 
     def _check_content(self, content_str):
@@ -388,7 +467,6 @@ class ReachReader(Reader):
             json_prefixes.add(path.join(self.output_dir, prefix))
 
         # Join each set of json files and store the json dict.
-        reading_data_list = []
         for prefix in json_prefixes:
             base_prefix = path.basename(prefix)
             if base_prefix.isdecimal():
@@ -401,15 +479,9 @@ class ReachReader(Reader):
                 logger.exception(e)
                 logger.error("Could not load result for prefix %s." % prefix)
                 continue
-            reading_data_list.append(ReadingData(
-                base_prefix,
-                self.name,
-                self.version,
-                formats.JSON,
-                content
-                ))
+            self.add_result(base_prefix, content)
             logger.debug('Joined files for prefix %s.' % base_prefix)
-        return reading_data_list
+        return self.results
 
     def clear_input(self):
         """Remove all the input files (at the end of a reading)."""
@@ -514,7 +586,6 @@ class SparserReader(Reader):
 
     def get_output(self, output_files, clear=True):
         "Get the output files as an id indexed dict."
-        reading_data_list = []
         patt = re.compile(r'(.*?)-semantics.*?')
         for outpath in output_files:
             if outpath is None:
@@ -541,13 +612,8 @@ class SparserReader(Reader):
                              % outpath)
                 continue
 
-            reading_data_list.append(ReadingData(
-                prefix,
-                self.name,
-                self.version,
-                formats.JSON,
-                content
-                ))
+            self.add_result(prefix, content)
+
             if clear:
                 input_path = outpath.replace('-semantics.json', '.nxml')
                 try:
@@ -557,7 +623,7 @@ class SparserReader(Reader):
                     logger.exception(e)
                     logger.error("Could not remove sparser files %s and %s."
                                  % (outpath, input_path))
-        return reading_data_list
+        return self.results
 
     def read_one(self, fpath, outbuf=None, verbose=False):
         fpath = path.abspath(fpath)
@@ -594,79 +660,106 @@ class SparserReader(Reader):
         ret = []
         self.prep_input(read_list)
         L = len(self.file_list)
-        if L > 0:
-            logger.info("Beginning to run sparser.")
-            output_file_list = []
-            if log:
-                log_name = 'sparser_run_%s.log' % _time_stamp()
-                outbuf = open(log_name, 'wb')
+        if L == 0:
+            return ret
+
+        logger.info("Beginning to run sparser.")
+        output_file_list = []
+        if log:
+            log_name = 'sparser_run_%s.log' % _time_stamp()
+            outbuf = open(log_name, 'wb')
+        else:
+            outbuf = None
+        try:
+            if self.n_proc == 1:
+                for fpath in self.file_list:
+                    outpath, _ = self.read_one(fpath, outbuf, verbose)
+                    if outpath is not None:
+                        output_file_list.append(outpath)
             else:
-                outbuf = None
-            try:
-                if self.n_proc == 1:
-                    for fpath in self.file_list:
-                        outpath, _ = self.read_one(fpath, outbuf, verbose)
-                        if outpath is not None:
-                            output_file_list.append(outpath)
-                else:
-                    if n_per_proc is None:
-                        n_per_proc = max(1, min(1000, L//self.n_proc//2))
-                    pool = None
-                    try:
-                        pool = Pool(self.n_proc)
-                        if n_per_proc is not 1:
-                            batches = [self.file_list[n*n_per_proc:(n+1)*n_per_proc]
-                                       for n in range(L//n_per_proc + 1)]
-                            out_lists_and_buffs = pool.map(self.read_some,
-                                                           batches)
+                if n_per_proc is None:
+                    n_per_proc = max(1, min(1000, L//self.n_proc//2))
+                pool = None
+                try:
+                    pool = Pool(self.n_proc)
+                    if n_per_proc is not 1:
+                        batches = [self.file_list[n*n_per_proc:(n+1)*n_per_proc]
+                                   for n in range(L//n_per_proc + 1)]
+                        out_lists_and_buffs = pool.map(self.read_some,
+                                                       batches)
+                    else:
+                        out_files_and_buffs = pool.map(self.read_one,
+                                                       self.file_list)
+                        out_lists_and_buffs = [([out_files], buffs)
+                                               for out_files, buffs
+                                               in out_files_and_buffs]
+                finally:
+                    if pool is not None:
+                        pool.close()
+                        pool.join()
+                for i, (out_list, buff) in enumerate(out_lists_and_buffs):
+                    if out_list is not None:
+                        output_file_list += out_list
+                    if log:
+                        outbuf.write(b'Log for producing output %d/%d.\n'
+                                     % (i, len(out_lists_and_buffs)))
+                        if buff is not None:
+                            buff.seek(0)
+                            outbuf.write(buff.read() + b'\n')
                         else:
-                            out_files_and_buffs = pool.map(self.read_one,
-                                                           self.file_list)
-                            out_lists_and_buffs = [([out_files], buffs)
-                                                   for out_files, buffs
-                                                   in out_files_and_buffs]
-                    finally:
-                        if pool is not None:
-                            pool.close()
-                            pool.join()
-                    for i, (out_list, buff) in enumerate(out_lists_and_buffs):
-                        if out_list is not None:
-                            output_file_list += out_list
-                        if log:
-                            outbuf.write(b'Log for producing output %d/%d.\n'
-                                         % (i, len(out_lists_and_buffs)))
-                            if buff is not None:
-                                buff.seek(0)
-                                outbuf.write(buff.read() + b'\n')
-                            else:
-                                outbuf.write(b'ERROR: no buffer was None. '
-                                             b'No logs available.\n')
-                            outbuf.flush()
-            finally:
-                if log:
-                    outbuf.close()
-                    if verbose:
-                        logger.info("Sparser logs may be found at %s." %
-                                    log_name)
-            ret = self.get_output(output_file_list)
+                            outbuf.write(b'ERROR: no buffer was None. '
+                                         b'No logs available.\n')
+                        outbuf.flush()
+        finally:
+            if log:
+                outbuf.close()
+                if verbose:
+                    logger.info("Sparser logs may be found at %s." %
+                                log_name)
+        ret = self.get_output(output_file_list)
         return ret
 
 
-def get_readers():
-    """Get all children of the Reader objcet."""
-    try:
-        children = Reader.__subclasses__()
-    except AttributeError:
-        module = sys.modules[__name__]
-        children = [cls for cls_name, cls in module.__dict__.items()
-                    if isinstance(cls, type) and issubclass(cls, Reader)
-                    and cls_name != 'Reader']
-    return children
+class EmptyReader(Reader):
+    """A class name to use for Readers that are not implemented yet."""
+
+
+class TripsReader(EmptyReader):
+    """A stand-in for TRIPS reading.
+
+    Currently, we do not run TRIPS (more specifically DRUM) regularly at large
+    scales, however on occasion we have outputs from TRIPS that were generated
+    a while ago.
+    """
+    name = 'TRIPS'
+
+    def __init__(self, *args, **kwargs):
+        self.version = self.get_version()
+        return
+
+    def read(self, *args, **kwargs):
+        return []
+
+    @classmethod
+    def get_version(cls):
+        return 'STATIC'
+
+
+def get_reader_classes(parent=Reader):
+    """Get all childless the descendants of a parent class, recursively."""
+    children = parent.__subclasses__()
+    descendants = children[:]
+    for child in children:
+        grandchildren = get_reader_classes(child)
+        if grandchildren:
+            descendants.remove(child)
+            descendants.extend(grandchildren)
+    return descendants
 
 
 def get_reader_class(reader_name):
     """Get a particular reader class by name."""
-    for reader_class in get_readers():
+    for reader_class in get_reader_classes():
         if reader_class.name.lower() == reader_name.lower():
             return reader_class
     else:
@@ -677,117 +770,3 @@ def get_reader_class(reader_name):
 def get_reader(reader_name, *args, **kwargs):
     """Get an instantiated reader by name."""
     return get_reader_class(reader_name)(*args, **kwargs)
-
-
-class ReadingData(object):
-    """Object to contain the data produced by a reading.
-
-    This is primarily designed for use with the database.
-
-    Parameters
-    ----------
-    tcid : int or str
-        An identifier of the text content that produced the reading. Must
-        be an int for use with the database.
-    reader : str
-        The name of the reader, consistent with it's `name` attribute, for
-        example: 'REACH'
-    reader_version : str
-        A string identifying the version of the underlying nlp reader.
-    content_format : str
-        The format of the content. Options are in indra.db.formats.
-    content : str
-        The content of the reading result. A string in the format given by
-        `content_format`.
-    reading_id : int or None
-        Optional. The id corresponding to the Readings entry in the db.
-    """
-
-    def __init__(self, tcid, reader, reader_version, content_format, content,
-                 reading_id=None):
-        self.reading_id = reading_id
-        self.tcid = tcid
-        self.reader = reader
-        self.reader_version = reader_version
-        self.format = content_format
-        self.content = content
-        self._statements = None
-        return
-
-    @classmethod
-    def from_db_reading(cls, db_reading):
-        return cls(db_reading.text_content_id, db_reading.reader,
-                   db_reading.reader_version, db_reading.format,
-                   json.loads(zlib.decompress(db_reading.bytes,
-                                              16+zlib.MAX_WBITS)
-                              .decode('utf8')),
-                   db_reading.id)
-
-    @staticmethod
-    def get_cols():
-        """Get the columns for the tuple returned by `make_tuple`."""
-        return ('text_content_id', 'reader', 'reader_version', 'format',
-                'bytes')
-
-    def get_statements(self, reprocess=False):
-        """General method to create statements."""
-        if self._statements is None or reprocess:
-            logger.debug("Making statements from %s." % self.reading_id)
-            if self.reader == ReachReader.name:
-                if self.format == formats.JSON:
-                    # Process the reach json into statements.
-                    json_str = json.dumps(self.content)
-                    processor = reach.process_json_str(json_str)
-                else:
-                    raise ReadingError("Incorrect format for Reach output: %s."
-                                       % self.format)
-            elif self.reader == SparserReader.name:
-                if self.format == formats.JSON:
-                    # Process the sparser content into statements
-                    processor = sparser.process_json_dict(self.content)
-                    if processor is not None:
-                        processor.set_statements_pmid(None)
-                else:
-                    raise ReadingError("Sparser should only ever be JSON, not "
-                                       "%s." % self.format)
-            else:
-                raise ReadingError("Unknown reader: %s." % self.reader)
-            if processor is None:
-                logger.error("Production of statements from %s failed for %s."
-                             % (self.reader, self.tcid))
-                stmts = []
-            else:
-                stmts = processor.statements
-            self._statements = stmts
-        else:
-            logger.debug("Returning %d statements that were already produced "
-                         "from %s." % (len(self._statements), self.reading_id))
-            stmts = self._statements
-        return stmts
-
-    def zip_content(self):
-        """Compress the content, returning bytes."""
-        if self.format == formats.JSON:
-            ret = zip_string(json.dumps(self.content))
-        elif self.format == formats.TEXT:
-            ret = zip_string(self.content)
-        else:
-            raise Exception('Do not know how to zip format %s.' % self.format)
-        return ret
-
-    def make_tuple(self):
-        """Make the tuple expected by the database."""
-        return (self.tcid, self.reader, self.reader_version, self.format,
-                self.zip_content())
-
-    def matches(self, r_entry):
-        """Determine if reading data matches the a reading entry from the db.
-
-        Returns True if tcid, reader, reader_version match the corresponding
-        elements of a db.Reading instance, else False.
-        """
-        # Note the temporary fix in clipping the reader version length. This is
-        # because the version is for some reason clipped in the database.
-        return (r_entry.text_content_id == self.tcid
-                and r_entry.reader == self.reader
-                and r_entry.reader_version == self.reader_version[:20])
