@@ -114,11 +114,13 @@ class EidosReader(object):
         elif format == 'json_ld':
             # We need to get a Scala Seq of annot docs here
             ml = _list_to_seq([annot_doc])
-            # We instantiate the adjective grounder
-            ag = self.eidos_reader.loadableAttributes().adjectiveGrounder()
+            # We currently do not need toinstantiate the adjective grounder
+            # if we want to reinstate it, we would need to do the following
+            # ag = EidosAdjectiveGrounder.fromConfig(
+            #   EidosSystem.defaultConfig.getConfig("adjectiveGrounder"))
             # We now create a JSON-LD corpus
             jc = autoclass(eidos_package + '.serialization.json.JLDCorpus')
-            corpus = jc(ml, ag)
+            corpus = jc(ml)
             # Finally, serialize the corpus into JSON string
             mentions_json = corpus.toJsonStr()
         json_dict = json.loads(mentions_json)
