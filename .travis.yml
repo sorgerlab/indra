@@ -31,6 +31,11 @@ install:
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
+  # Run slow tests only if we're in the cron setting
+  - |
+    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
+        export RUN_SLOW=true;
+    fi
   # Install TEES only if slow tests are being run
   - |
     if [[ $RUN_SLOW == "true" ]]; then
@@ -39,15 +44,12 @@ install:
         aws s3 cp s3://bigmech/travis/TEES.tar.bz2 . --no-sign-request --no-sign-request;
         tar xjf TEES.tar.bz2;
         mv TEES ~/TEES;
+        export TEES_SETTINGS=~/TEES/tees_local_settings.py
     fi
   # Install nose notify
   - mkdir $HOME/.nose_notify;
   - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
   - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
-  - |
-    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
-        export RUN_SLOW=true;
-    fi
   # Install deft and download deft models
   - pip install git+https://github.com/indralab/deft.git
   - python -m deft.download
@@ -61,7 +63,6 @@ script:
   - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
   - echo "TRAVIS_BRANCH=$TRAVIS_BRANCH, PR=$PR, BRANCH=$BRANCH"
   - echo "$TRAVIS_EVENT_TYPE"
-  - export TEES_SETTINGS=~/TEES/tees_local_settings.py
   - export TEES_PATH=~/TEES
   - export PYTHONPATH=$PYTHONPATH:$TRAVIS_BUILD_DIR
   - export _JAVA_OPTIONS="-Xmx4g -Xms1g"
