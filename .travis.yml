@@ -31,6 +31,11 @@ install:
   - aws s3 cp s3://bigmech/travis/eidos.jar . --no-sign-request --source-region us-east-1
   - export EIDOSPATH=$TRAVIS_BUILD_DIR/eidos.jar
   - aws s3 cp s3://bigmech/travis/Phosphorylation_site_dataset.tsv indra/resources/ --no-sign-request  --source-region us-east-1
+  # Run slow tests only if we're in the cron setting
+  - |
+    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
+        export RUN_SLOW=true;
+    fi
   # Install TEES only if slow tests are being run
   - |
     if [[ $RUN_SLOW == "true" ]]; then
@@ -45,10 +50,6 @@ install:
   - mkdir $HOME/.nose_notify;
   - git clone https://github.com/pagreene/nose-notify.git $HOME/.nose_notify;
   - export PYTHONPATH=$PYTHONPATH:$HOME/.nose_notify;
-  - |
-    if [[ $TRAVIS_EVENT_TYPE == "cron" ]]; then
-        export RUN_SLOW=true;
-    fi
   # Install deft and download deft models
   - pip install git+https://github.com/indralab/deft.git
   - python -m deft.download
