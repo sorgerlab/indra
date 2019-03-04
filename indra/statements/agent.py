@@ -10,8 +10,6 @@ __all__ = ['Agent', 'BoundCondition', 'MutCondition', 'ModCondition',
 import logging
 from collections import OrderedDict as _o
 from indra.util import unicode_strs
-import indra.databases.hgnc_client as hgc
-import indra.databases.uniprot_client as upc
 from indra.statements.statements import modtype_conditions, modtype_to_modclass
 from .concept import Concept
 from .resources import get_valid_residue, get_valid_location, activity_types, \
@@ -106,6 +104,8 @@ class Agent(Concept):
 
     # Function to get the namespace to look in
     def get_grounding(self):
+        import indra.databases.hgnc_client as hgc
+        import indra.databases.uniprot_client as upc
         be = self.db_refs.get('FPLX')
         if be:
             return ('FPLX', be)
@@ -118,8 +118,7 @@ class Agent(Concept):
         if up:
             if isinstance(up, list):
                 up = up[0]
-            up_mnemonic = upc.get_mnemonic(up)
-            if up_mnemonic and up_mnemonic.endswith('HUMAN'):
+            if upc.is_human(up):
                 gene_name = upc.get_gene_name(up, web_fallback=False)
                 if gene_name:
                     return ('HGNC', gene_name)
