@@ -27,9 +27,10 @@ try:
     from .reader import ReachReader
     reach_reader = ReachReader()
     try_offline = True
-except Exception:
+except Exception as e:
     logger.warning('Could not import jnius, offline reading option will not '
                    'be available.')
+    logger.debug(e)
     try_offline = False
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
