@@ -150,9 +150,9 @@ def process_text(text, citation=None, offline=False,
         try:
             api_ruler = reach_reader.get_api_ruler()
         except ReachOfflineReadingError as e:
+            logger.error(e)
             logger.error('Cannot read offline because the REACH ApiRuler '
                          'could not be instantiated.')
-            logger.debug(e)
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
@@ -221,9 +221,9 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
         try:
             api_ruler = reach_reader.get_api_ruler()
         except ReachOfflineReadingError as e:
+            logger.error(e)
             logger.error('Cannot read offline because the REACH ApiRuler '
                          'could not be instantiated.')
-            logger.debug(e)
             return None
         try:
             result_map = api_ruler.annotateNxml(nxml_str, 'fries')

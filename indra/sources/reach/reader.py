@@ -64,19 +64,6 @@ class ReachReader(object):
             try:
                 self.api_ruler = \
                     autoclass('org.clulab.reach.export.apis.ApiRuler')
-            except JavaException:
-                # This second autoclass is needed because of a jnius
-                # issue in which the first JavaException is not raised.
-                try:
-                    autoclass('java.lang.String')
-                except JavaException as e:
-                    logger.error(e)
-                    raise ReachOfflineReadingError(e)
-            except Exception as e:
-                logger.error(e)
+            except JavaException as e:
                 raise ReachOfflineReadingError(e)
-        if self.api_ruler is None:
-            raise ReachOfflineReadingError('Failed to instantiate ApiRuler'
-                                           'for an unknown reason.')
-
         return self.api_ruler
