@@ -324,9 +324,6 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        if not use_reach_subtypes:
-            logger.info('Belief engine could not import REACH subtypes, they '
-                        'will be ignored.')
         self.scorer.check_prior_probs(statements)
         for st in statements:
             st.belief = self.scorer.score_statement(st)
@@ -513,7 +510,7 @@ def tag_evidence_subtype(evidence):
     elif source_api in ('reach', 'eidos'):
         if 'found_by' in annotations:
             from indra.sources.reach.processor import determine_reach_subtype
-            if source_api == 'reach' and use_reach_subtypes:
+            if source_api == 'reach':
                 subtype = determine_reach_subtype(annotations['found_by'])
             elif source_api == 'eidos':
                 subtype = annotations['found_by']
