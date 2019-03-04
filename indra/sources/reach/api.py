@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 try:
     # For offline reading
-    from .reader import ReachReader
+    from .reader import ReachReader, ReachOfflineReadingError
     reach_reader = ReachReader()
     try_offline = True
 except Exception as e:
@@ -147,10 +147,12 @@ def process_text(text, citation=None, offline=False,
         if not try_offline:
             logger.error('Offline reading is not available.')
             return None
-        api_ruler = reach_reader.get_api_ruler()
-        if api_ruler is None:
+        try:
+            api_ruler = reach_reader.get_api_ruler()
+        except ReachOfflineReadingError as e:
             logger.error('Cannot read offline because the REACH ApiRuler '
-                         + 'could not be instantiated.')
+                         'could not be instantiated.')
+            logger.debug(e)
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
@@ -216,10 +218,12 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
         if not try_offline:
             logger.error('Offline reading is not available.')
             return None
-        api_ruler = reach_reader.get_api_ruler()
-        if api_ruler is None:
-            logger.error('Cannot read offline because the REACH ApiRuler'
-                         + 'could not be instantiated.')
+        try:
+            api_ruler = reach_reader.get_api_ruler()
+        except ReachOfflineReadingError as e:
+            logger.error('Cannot read offline because the REACH ApiRuler '
+                         'could not be instantiated.')
+            logger.debug(e)
             return None
         try:
             result_map = api_ruler.annotateNxml(nxml_str, 'fries')

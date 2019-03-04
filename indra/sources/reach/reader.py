@@ -34,6 +34,10 @@ from indra.java_vm import autoclass, JavaException
 logger = logging.getLogger(__name__)
 
 
+class ReachOfflineReadingError(Exception):
+    pass
+
+
 class ReachReader(object):
     """The ReachReader wraps a singleton instance of the REACH reader.
 
@@ -67,6 +71,5 @@ class ReachReader(object):
                     autoclass('java.lang.String')
                 except JavaException as e:
                     logger.error(e)
-                    pass
-                return None
+                    raise ReachOfflineReadingError(e)
         return self.api_ruler
