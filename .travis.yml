@@ -86,9 +86,13 @@ script:
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
   - python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
+  - python -m nose_notify indra/tests/test_live_curation.py
+    --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
   # Now run all INDRA tests
   - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
-    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
+    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*'
+        --exclude='.*isi.*' --exclude='.*live_curation.*'
         --with-coverage --cover-inclusive --cover-package=indra
         --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
   # Run NL model examples only when the environmental variable
