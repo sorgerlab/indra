@@ -14,10 +14,8 @@ from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
 from indra.mechlinker import MechLinker
-from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, flatten_evidence
-from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -1668,6 +1666,7 @@ def expand_families(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of expanded statements.
     """
+    from indra.tools.expand_families import Expander
     logger.info('Expanding families on %d statements...' % len(stmts_in))
     expander = Expander(hierarchies)
     stmts_out = expander.expand_families(stmts_in)

@@ -10,12 +10,6 @@ from os import path, pardir
 from collections import namedtuple
 
 
-try:
-    from indra.sources.reach.processor import determine_reach_subtype
-    use_reach_subtypes = True
-except ImportError:
-    use_reach_subtypes = False
-
 logger = logging.getLogger(__name__)
 
 
@@ -511,7 +505,6 @@ def tag_evidence_subtype(evidence):
         Returns (type, None) if the type of statement is not yet handled in
         this function.
     """
-
     source_api = evidence.source_api
     annotations = evidence.annotations
 
@@ -519,6 +512,7 @@ def tag_evidence_subtype(evidence):
         subtype = annotations.get('source_sub_id')
     elif source_api in ('reach', 'eidos'):
         if 'found_by' in annotations:
+            from indra.sources.reach.processor import determine_reach_subtype
             if source_api == 'reach' and use_reach_subtypes:
                 subtype = determine_reach_subtype(annotations['found_by'])
             elif source_api == 'eidos':
