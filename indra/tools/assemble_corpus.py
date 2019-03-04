@@ -13,15 +13,10 @@ from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
-from indra.databases import uniprot_client
 from indra.mechlinker import MechLinker
 from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, flatten_evidence
-from indra.preassembler.grounding_mapper import GroundingMapper
-from indra.preassembler.grounding_mapper import gm as grounding_map
-from indra.preassembler.grounding_mapper import default_agent_map as agent_map
-from indra.preassembler.sitemapper import SiteMapper, default_site_map
 from copy import deepcopy
 
 logger = logging.getLogger(__name__)
@@ -109,6 +104,10 @@ def map_grounding(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
+    from indra.preassembler.grounding_mapper import GroundingMapper
+    from indra.preassembler.grounding_mapper import gm as grounding_map
+    from indra.preassembler.grounding_mapper import \
+        default_agent_map as agent_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename')
     gm = kwargs.get('grounding_map', grounding_map)
@@ -312,6 +311,7 @@ def map_sequence(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
+    from indra.preassembler.sitemapper import SiteMapper, default_site_map
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
     kwarg_list = ['do_methionine_offset', 'do_orthology_mapping',
                   'do_isoform_mapping']
@@ -1059,9 +1059,8 @@ def filter_human_only(stmts_in, **kwargs):
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
-
     """
-
+    from indra.databases import uniprot_client
     if 'remove_bound' in kwargs and kwargs['remove_bound']:
         remove_bound = True
     else:
