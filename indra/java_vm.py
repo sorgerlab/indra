@@ -39,5 +39,6 @@ if cp_existing is not None:
 else:
     os.environ['CLASSPATH'] = cp
 
-from jnius import autoclass, JavaException, cast
+logger.debug('Classpath when starting Java VM: %s' % os.environ['CLASSPATH'])
 
+from jnius import autoclass, JavaException, cast
