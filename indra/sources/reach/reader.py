@@ -72,4 +72,11 @@ class ReachReader(object):
                 except JavaException as e:
                     logger.error(e)
                     raise ReachOfflineReadingError(e)
+            except Exception as e:
+                logger.error(e)
+                raise ReachOfflineReadingError(e)
+        if self.api_ruler is None:
+            raise ReachOfflineReadingError('Failed to instantiate ApiRuler'
+                                           'for an unknown reason.')
+
         return self.api_ruler

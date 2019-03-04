@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 try:
     # For offline reading
-    from .reader import ReachReader, ReachOfflineReadingError
+    from .reader import ReachReader, ReachOfflineReadingError, JavaException
     reach_reader = ReachReader()
     try_offline = True
 except Exception as e:
