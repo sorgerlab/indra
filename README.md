@@ -12,9 +12,10 @@ assertions, represents them in a standardized form (INDRA Statements), and
 assembles them into various modeling formalisms including causal graphs and
 dynamical models.
 
-Importantly, INDRA isn\'t merely an import/export hub. Its key added value in
+Importantly, INDRA isn't merely an import/export hub or a multi-reader
+integrator. Its core added value in
 assembling knowledge sources into coherent models comes from
-providing "knowledge-level" assembly procedures that
+providing knowledge-level assembly procedures that
 operate on INDRA Statements and correct certain errors, find and resolve
 redundancies, infer missing information, filter to a scope of interest and
 assess belief.
@@ -116,12 +117,26 @@ Assemblers primarily aimed at expert curation and browsing:
 | English language                               | Human-readable descriptions, reports, dialogue         | `indra.assemblers.english` |                  |
 | HTML                                           | Web-based browsing, linking out to provenance, curation| `indra.assemblers.html` | [Curation tutorial](https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html) |
 | TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | `indra.assemblers.tsv`  |                     |
-| Index Cards                                    | Custom JSON format for curating biological mechanisms  | `indra.assemblers index_card` |               |
-
+| Index Cards                                    | Custom JSON format for curating biological mechanisms  | `indra.assemblers.index_card` |               |
 
 ### Internal knowledge assembly
 
-The internal assembly steps of INDRA are exposed in the
+A key feature of INDRA is providing internal knowledge-assembly modules
+that operate on INDRA Statements and perform the following tasks:
+- Redundancy/subsumption/generalization/contradiction finding and resolution
+with respect to an ontology with the Preassembler
+(`indra.preassembler.Preassembler`)
+- Belief calculation based on evidence using the BeliefEngine
+(`indra.belief`)
+- Mapping grounding between multiple ontologies
+(`indra.preassembler.ont_mapper.OntMapper`)
+- Grounding override and disambiguation
+(`indra.preassembler.grounding_mapper.GroundingMapper`)
+- Protein sequence mapping (`indra.preassembler.site_mapper.SiteMapper`)
+
+The internal assembly steps of INDRA including the ones listed above, and also
+a large collection of filters (filter by source, belief, etc.) are exposed
+in the
 [indra.tools.assemble_corpus](http://indra.readthedocs.io/en/latest/modules/tools/index.html#module-indra.tools.assemble_corpus) 
 submodule. This submodule contains functions that
 take Statements as input and produce processed Statements as output. They can
