@@ -12,13 +12,11 @@ assertions, represents them in a standardized form (INDRA Statements), and
 assembles them into various modeling formalisms including causal graphs and
 dynamical models.
 
-Importantly, INDRA isn't merely an import/export hub or a multi-reader
-integrator. Its core added value in
-assembling knowledge sources into coherent models comes from
-providing knowledge-level assembly procedures that
-operate on INDRA Statements and correct certain errors, find and resolve
-redundancies, infer missing information, filter to a scope of interest and
-assess belief.
+At the core of INDRA are its knowledge-level assembly procedures, allowing
+sources to be assembled into coherent models, a process that involves
+correcting systematic input errors, finding and resolving redundancies,
+inferring missing information, filtering to a relevant scope and assessing the
+reliability of causal information.
 
 The detailed INDRA documentation is available at
 [http://indra.readthedocs.io](http://indra.readthedocs.io).
