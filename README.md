@@ -94,7 +94,7 @@ Assemblers aimed at model-driven discovery and analysis:
 |------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
 | PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | `indra.assemblers.pysb` | http://pysb.org     |
 | PyBEL                                          | Causal analysis, visualization                       | `indra.assemblers.pybel`| https://github.com/pybel/pybel <br/> https://bel-commons.scai.fraunhofer.de/ |
-| SIF                                            | Network analysis, logic modeling, visualization      | `indra.assemblers.sif`  | http://manual.cytoscape.org/en/stable/<br/>Supported_Network_File_Formats.html#sif-format |
+| SIF                                            | Network analysis, logic modeling, visualization      | `indra.assemblers.sif`  | [SIF format](http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format) |
 | Figaro                                         | Bayesian network inference                           | `indra.assemblers.figaro` | https://github.com/p2t2/figaro/ |
 | KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | `indra.assemblers.kami` | https://github.com/Kappa-Dev/KAMI |
 
@@ -114,7 +114,7 @@ Assemblers primarily aimed at expert curation and browsing:
 | Output format                                  | Purpose                                                | Module                  | Reference           |
 |------------------------------------------------|------------------------------------------------------  |-------------------------|---------------------|
 | English language                               | Human-readable descriptions, reports, dialogue         | `indra.assemblers.english` |                  |
-| HTML                                           | Web-based browsing, linking out to provenance, curation| `indra.assemblers.html` | https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html |
+| HTML                                           | Web-based browsing, linking out to provenance, curation| `indra.assemblers.html` | [Curation tutorial](https://indra.readthedocs.io/<br/>en/latest/tutorials/html_curation.html) |
 | TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | `indra.assemblers.tsv`  |                     |
 | Index Cards                                    | Custom JSON format for curating biological mechanisms  | `indra.assemblers index_card` |               |
 
