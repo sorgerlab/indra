@@ -267,3 +267,15 @@ biopax_processor = biopax.process_pc_pathsfromto(['BRAF', 'RAF1'], ['MAP2K1', 'M
 ```
 At this point, `biopax_processor.statements` contains a list of INDRA 
 Statements extracted from the paths-from-to query.
+
+## Funding
+
+The development of INDRA has been funded from the following sources:
+
+| Program                                          | Grant number         |
+|--------------------------------------------------|----------------------|
+| DARPA Big Mechanism                              | W911NF-14-1-0397     |
+| DARPA World Modelers                             | W911NF-18-1-0014     |
+| DARPA Communicating with Computers               | W911NF-15-1-0544     |
+| DARPA Automated Scientific Discovery Fraemwork   | W911NF018-1-0124     |
+| DARPA Automating Scientific Knowledge Extraction | HR00111990009        |
