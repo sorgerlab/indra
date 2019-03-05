@@ -69,19 +69,18 @@ of the given module (for instance helper functions that a user wouldn't
 directly call) should be prefixed with an underscore. These then won't show
 up and clutter the auto-generated API documentation.
 
-Python 2/3 compatibility and unicode
-------------------------------------
-The core modules of INDRA (i.e. anything inside the `indra` module)
-are Python 2/3 cross-compatible, and should be maintained as such, unless
-special circumstances apply. A good description of techniques to maintain
-compatibility can be found [here](http://johnbachman.net/building-a-python-23-compatible-unicode-sandwich.html).
-Some of the code outside the `indra` module is Python 3-only,
-and typically if such code is added, and is not cross-compatible, it should
-work with Python 3 instead of 2.
+Python version compatibility and unicode
+----------------------------------------
+Up to release 1.10, the core modules of INDRA used to be Python 2/3
+cross-compatible. However, as of release 1.11, Python 2.x is not supported
+anymore. Compatibility with Python 3.5, however, is still maintained.
+This means that features only available in later versions of Python
+such as f-strings should not be used in code contributed to INDRA.
 
-A related requirement is that all strings within INDRA be represented,
-manipulated and passed around as `unicode` in Python 2 or simply `str`
-in Python 3. Whenever a string is read from a source or written to some
+A requirement that is mostly automatically satisfied in a Python 3-only context
+but is still important to keep in mind is that all strings within INDRA
+should be represented, manipulated and passed around as unicode (simply `str`
+in Python 3). Whenever a string is read from a source or written to some
 output, it should be decoded and encoded, respectively. This concept is also
 called the ["unicode sandwich"](https://nedbatchelder.com/text/unipain/unipain.html#1).
 
@@ -130,11 +129,15 @@ Logging
 -------
 Instead of using `print` for printing information to stdout, use the `logging`
 module to first create an approproately named logger,
-as for instance `logger = logging.getLogger('my_submodule')` and then use the
+as for instance `logger = logging.getLogger(__name__)` and then use the
 appropriate level of logging (typically debug, info, warning or error) with
 the logger object to print messages. The configuration of the logging format
 is uniform across INDRA without further configuration needed for each
-individual logger instance.
+individual logger instance. In addition, by using `__name__` to instantiate
+the logger, the hierarchy of logger objects across the module is maintained
+making it easier to control logging at various levels. Loggers not using
+`__name__` should only be used under special circumstances, for instance, if
+the file is likely to be run as a standalone script rather than imported.
 
 New dependencies
 ----------------
