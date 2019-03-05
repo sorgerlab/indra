@@ -133,17 +133,18 @@ ontological information (e.g. UniProt, HGNC), and other resources.
 
 ## Citation
 
+Gyori B.M., Bachman J.A., Subramanian K., Muhlich J.L., Galescu L., Sorger P.K.
 [From word models to executable models of signaling networks using automated
-assembly](http://msb.embopress.org/content/13/11/954),
-Molecular Systems Biology (2017)
+assembly](http://msb.embopress.org/content/13/11/954) (2017),
+Molecular Systems Biology, 13, 954.
 
 ## Installation
 
 For detailed installation instructions,
 [see the documentation](http://indra.readthedocs.io/en/latest/installation.html).
 
-INDRA works with both Python 2 and 3 (tested with 2.7 and 3.5). Note: release
-1.11 will drop Python 2 compatibility.
+INDRA currently supports Python 3.5+. The last release of INDRA compatible
+with Python 2.7 was 1.10.
 
 The preferred way to install INDRA is by pointing pip to the source repository
 as
