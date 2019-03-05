@@ -129,11 +129,15 @@ Logging
 -------
 Instead of using `print` for printing information to stdout, use the `logging`
 module to first create an approproately named logger,
-as for instance `logger = logging.getLogger('my_submodule')` and then use the
+as for instance `logger = logging.getLogger(__name__)` and then use the
 appropriate level of logging (typically debug, info, warning or error) with
 the logger object to print messages. The configuration of the logging format
 is uniform across INDRA without further configuration needed for each
-individual logger instance.
+individual logger instance. In addition, by using `__name__` to instantiate
+the logger, the hierarchy of logger objects across the module is maintained
+making it easier to control logging at various levels. Loggers not using
+`__name__` should only be used under special circumstances, for instance, if
+the file is likely to be run as a standalone script rather than imported.
 
 New dependencies
 ----------------
