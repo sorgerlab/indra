@@ -310,13 +310,14 @@ def test_map_sequence():
     st2 = Phosphorylation(None, a, 'T', '185')
     st3 = Phosphorylation(None, a, 'Y', '999')
     st_out = ac.map_sequence([st1])
-    assert len(st_out) == 1
+    assert len(st_out) == 1, st_out
     assert st_out[0].position == '185'
     st_out = ac.map_sequence([st2])
-    assert len(st_out) == 1
+    assert len(st_out) == 1, st_out
     assert st_out[0].position == '185'
     st_out = ac.map_sequence([st3])
-    assert len(st_out) == 0
+    assert len(st_out) == 0, st_out
+
 
 def test_map_sequence_blank_entries():
     """Make sure sites curated as erroneous with no mappings don't

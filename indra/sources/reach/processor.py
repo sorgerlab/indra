@@ -841,12 +841,12 @@ def determine_reach_subtype(event_name):
 
     Parameters
     ----------
-    evidence: indra.statements.Evidence
+    evidence : indra.statements.Evidence
         A reach evidence object to subtype
 
     Returns
     -------
-    best_match: str
+    best_match : str
         A regular expression corresponding to the reach rule that was used to
         extract this evidence
     """

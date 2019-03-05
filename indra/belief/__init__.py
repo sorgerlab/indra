@@ -10,12 +10,6 @@ from os import path, pardir
 from collections import namedtuple
 
 
-try:
-    from indra.sources.reach.processor import determine_reach_subtype
-    use_reach_subtypes = True
-except ImportError:
-    use_reach_subtypes = False
-
 logger = logging.getLogger(__name__)
 
 
@@ -330,9 +324,6 @@ class BeliefEngine(object):
             be calculated. Each Statement object's belief attribute is updated
             by this function.
         """
-        if not use_reach_subtypes:
-            logger.info('Belief engine could not import REACH subtypes, they '
-                        'will be ignored.')
         self.scorer.check_prior_probs(statements)
         for st in statements:
             st.belief = self.scorer.score_statement(st)
@@ -511,7 +502,6 @@ def tag_evidence_subtype(evidence):
         Returns (type, None) if the type of statement is not yet handled in
         this function.
     """
-
     source_api = evidence.source_api
     annotations = evidence.annotations
 
@@ -519,7 +509,8 @@ def tag_evidence_subtype(evidence):
         subtype = annotations.get('source_sub_id')
     elif source_api in ('reach', 'eidos'):
         if 'found_by' in annotations:
-            if source_api == 'reach' and use_reach_subtypes:
+            from indra.sources.reach.processor import determine_reach_subtype
+            if source_api == 'reach':
                 subtype = determine_reach_subtype(annotations['found_by'])
             elif source_api == 'eidos':
                 subtype = annotations['found_by']

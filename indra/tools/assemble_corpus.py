@@ -13,16 +13,9 @@ from copy import deepcopy, copy
 from indra.statements import *
 from indra.belief import BeliefEngine
 from indra.util import read_unicode_csv
-from indra.databases import uniprot_client
 from indra.mechlinker import MechLinker
-from indra.tools.expand_families import Expander
 from indra.preassembler.hierarchy_manager import hierarchies
 from indra.preassembler import Preassembler, flatten_evidence
-from indra.preassembler.grounding_mapper import GroundingMapper
-from indra.preassembler.grounding_mapper import gm as grounding_map
-from indra.preassembler.grounding_mapper import default_agent_map as agent_map
-from indra.preassembler.sitemapper import SiteMapper, default_site_map
-from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +102,10 @@ def map_grounding(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
+    from indra.preassembler.grounding_mapper import GroundingMapper
+    from indra.preassembler.grounding_mapper import gm as grounding_map
+    from indra.preassembler.grounding_mapper import \
+        default_agent_map as agent_map
     logger.info('Mapping grounding on %d statements...' % len(stmts_in))
     do_rename = kwargs.get('do_rename')
     gm = kwargs.get('grounding_map', grounding_map)
@@ -312,19 +309,17 @@ def map_sequence(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of mapped statements.
     """
+    from indra.preassembler.sitemapper import SiteMapper, default_site_map
     logger.info('Mapping sites on %d statements...' % len(stmts_in))
     kwarg_list = ['do_methionine_offset', 'do_orthology_mapping',
                   'do_isoform_mapping']
-    sm = SiteMapper(default_site_map, use_cache=kwargs.pop('use_cache', False))
-    valid, mapped = sm.map_sites(stmts_in, **_filter(kwargs, kwarg_list))
+    sm = SiteMapper(default_site_map,
+                    use_cache=kwargs.pop('use_cache', False),
+                    **_filter(kwargs, kwarg_list))
+    valid, mapped = sm.map_sites(stmts_in)
     correctly_mapped_stmts = []
     for ms in mapped:
-        correctly_mapped = True
-        for mm in ms.mapped_mods:
-            # Handle both the cases where there is no mapping found, and
-            # the one where there is a known error
-            if mm[1] is None or mm[1][0] is None or mm[1][1] is None:
-                correctly_mapped = False
+        correctly_mapped = all([mm.has_mapping() for mm in ms.mapped_mods])
         if correctly_mapped:
             correctly_mapped_stmts.append(ms.mapped_stmt)
     stmts_out = valid + correctly_mapped_stmts
@@ -1062,9 +1057,8 @@ def filter_human_only(stmts_in, **kwargs):
     -------
     stmts_out : list[indra.statements.Statement]
         A list of filtered statements.
-
     """
-
+    from indra.databases import uniprot_client
     if 'remove_bound' in kwargs and kwargs['remove_bound']:
         remove_bound = True
     else:
@@ -1672,6 +1666,7 @@ def expand_families(stmts_in, **kwargs):
     stmts_out : list[indra.statements.Statement]
         A list of expanded statements.
     """
+    from indra.tools.expand_families import Expander
     logger.info('Expanding families on %d statements...' % len(stmts_in))
     expander = Expander(hierarchies)
     stmts_out = expander.expand_families(stmts_in)

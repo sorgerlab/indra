@@ -34,6 +34,10 @@ from indra.java_vm import autoclass, JavaException
 logger = logging.getLogger(__name__)
 
 
+class ReachOfflineReadingError(Exception):
+    pass
+
+
 class ReachReader(object):
     """The ReachReader wraps a singleton instance of the REACH reader.
 
@@ -60,13 +64,6 @@ class ReachReader(object):
             try:
                 self.api_ruler = \
                     autoclass('org.clulab.reach.export.apis.ApiRuler')
-            except JavaException:
-                # This second autoclass is needed because of a jnius
-                # issue in which the first JavaException is not raised.
-                try:
-                    autoclass('java.lang.String')
-                except JavaException as e:
-                    logger.error(e)
-                    pass
-                return None
+            except JavaException as e:
+                raise ReachOfflineReadingError(e)
         return self.api_ruler

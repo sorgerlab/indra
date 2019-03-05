@@ -24,12 +24,13 @@ logger = logging.getLogger(__name__)
 
 try:
     # For offline reading
-    from .reader import ReachReader
+    from .reader import ReachReader, ReachOfflineReadingError, JavaException
     reach_reader = ReachReader()
     try_offline = True
-except Exception:
+except Exception as e:
     logger.warning('Could not import jnius, offline reading option will not '
                    'be available.')
+    logger.debug(e)
     try_offline = False
 
 reach_text_url = 'http://agathon.sista.arizona.edu:8080/odinweb/api/text'
@@ -146,10 +147,12 @@ def process_text(text, citation=None, offline=False,
         if not try_offline:
             logger.error('Offline reading is not available.')
             return None
-        api_ruler = reach_reader.get_api_ruler()
-        if api_ruler is None:
+        try:
+            api_ruler = reach_reader.get_api_ruler()
+        except ReachOfflineReadingError as e:
+            logger.error(e)
             logger.error('Cannot read offline because the REACH ApiRuler '
-                         + 'could not be instantiated.')
+                         'could not be instantiated.')
             return None
         try:
             result_map = api_ruler.annotateText(text, 'fries')
@@ -215,10 +218,12 @@ def process_nxml_str(nxml_str, citation=None, offline=False,
         if not try_offline:
             logger.error('Offline reading is not available.')
             return None
-        api_ruler = reach_reader.get_api_ruler()
-        if api_ruler is None:
-            logger.error('Cannot read offline because the REACH ApiRuler'
-                         + 'could not be instantiated.')
+        try:
+            api_ruler = reach_reader.get_api_ruler()
+        except ReachOfflineReadingError as e:
+            logger.error(e)
+            logger.error('Cannot read offline because the REACH ApiRuler '
+                         'could not be instantiated.')
             return None
         try:
             result_map = api_ruler.annotateNxml(nxml_str, 'fries')

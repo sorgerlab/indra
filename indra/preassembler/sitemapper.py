@@ -1,16 +1,14 @@
 from __future__ import absolute_import, print_function, unicode_literals
 from builtins import dict, str
 from future.utils import python_2_unicode_compatible
-import os
-import pickle
 import logging
 import textwrap
 import requests
 from copy import deepcopy
+from functools import lru_cache
+from protmapper.api import ProtMapper, default_site_map
 from indra.statements import *
-from indra.util import read_unicode_csv
-from indra.config import has_config, get_config
-from indra.databases import uniprot_client, hgnc_client, phosphosite_client
+from indra.databases import hgnc_client
 # Python 2
 try:
     basestring
@@ -21,12 +19,6 @@ except:
 logger = logging.getLogger(__name__)
 
 
-if has_config('SITEMAPPER_CACHE_PATH'):
-    sitemapper_cache = get_config('SITEMAPPER_CACHE_PATH')
-else:
-    sitemapper_cache = None
-
-
 class MappedStatement(object):
     """Information about a Statement found to have invalid sites.
 
@@ -34,15 +26,8 @@ class MappedStatement(object):
     ----------
     original_stmt : :py:class:`indra.statements.Statement`
         The statement prior to mapping.
-    mapped_mods : list of tuples
-        A list of invalid sites, where each entry in the list has two
-        elements: ((gene_name, residue, position), mapped_site).  If the
-        invalid position was not found in the site map, mapped_site is
-        None; otherwise it is a tuple consisting of (residue, position,
-        comment). Note that some entries in the site map are curated *errors*,
-        that is, sites that are known to be frequent misattributions
-        to certain proteins. Such sites are mapped to tuples
-        (None, None, comment).
+    mapped_mods : list of MappedSite
+        A list of MappedSite objects.
     mapped_stmt : :py:class:`indra.statements.Statement`
         The statement after mapping. Note that if no information was found
         in the site map, it will be identical to the original statement.
@@ -72,9 +57,12 @@ class MappedStatement(object):
         return str(self)
 
 
-class SiteMapper(object):
+class SiteMapper(ProtMapper):
     """
-    Use curated site information to standardize modification sites in stmts.
+    Use site information to fix modification sites in Statements.
+
+    This is a wrapper around the protmapper package's ProtMapper class and adds
+    all the additional functionality to handle INDRA Statements and Agents.
 
     Parameters
     ----------
@@ -90,6 +78,23 @@ class SiteMapper(object):
         If True, the SITEMAPPER_CACHE_PATH from the config (or environment)
         is loaded and cached mappings are read and written to the given path.
         Otherwise, no cache is used. Default: False
+    do_methionine_offset : boolean
+        Whether to check for off-by-one errors in site position (possibly)
+        attributable to site numbering from mature proteins after
+        cleavage of the initial methionine. If True, checks the reference
+        sequence for a known modification at 1 site position greater
+        than the given one; if there exists such a site, creates the
+        mapping. Default is True.
+    do_orthology_mapping : boolean
+        Whether to check sequence positions for known modification sites
+        in mouse or rat sequences (based on PhosphoSitePlus data). If a
+        mouse/rat site is found that is linked to a site in the human
+        reference sequence, a mapping is created. Default is True.
+    do_isoform_mapping : boolean
+        Whether to check sequence positions for known modifications
+        in other human isoforms of the protein (based on PhosphoSitePlus
+        data). If a site is found that is linked to a site in the human
+        reference sequence, a mapping is created. Default is True.
 
     Examples
     --------
@@ -108,73 +113,54 @@ class SiteMapper(object):
     [
     MappedStatement:
         original_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
-        mapped_mods: (('MAP2K1', 'S', '217'), ('S', '218', 'off by one'))
-                     (('MAP2K1', 'S', '221'), ('S', '222', 'off by one'))
-                     (('MAPK1', 'T', '183'), ('T', '185', 'off by two; mouse sequence'))
+        mapped_mods: MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='217', mapped_res='S', mapped_pos='218', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1')
+                     MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='221', mapped_res='S', mapped_pos='222', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1')
+                     MappedSite(up_id='P28482', error_code=None, valid=False, orig_res='T', orig_pos='183', mapped_res='T', mapped_pos='185', description='INFERRED_MOUSE_SITE', gene_name='MAPK1')
         mapped_stmt: Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     ]
     >>> ms = mapped[0]
     >>> ms.original_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 217), (phosphorylation, S, 221)), MAPK1(), T, 183)
     >>> ms.mapped_mods # doctest:+IGNORE_UNICODE
-    [(('MAP2K1', 'S', '217'), ('S', '218', 'off by one')), (('MAP2K1', 'S', '221'), ('S', '222', 'off by one')), (('MAPK1', 'T', '183'), ('T', '185', 'off by two; mouse sequence'))]
+    [MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='217', mapped_res='S', mapped_pos='218', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1'), MappedSite(up_id='Q02750', error_code=None, valid=False, orig_res='S', orig_pos='221', mapped_res='S', mapped_pos='222', description='INFERRED_METHIONINE_CLEAVAGE', gene_name='MAP2K1'), MappedSite(up_id='P28482', error_code=None, valid=False, orig_res='T', orig_pos='183', mapped_res='T', mapped_pos='185', description='INFERRED_MOUSE_SITE', gene_name='MAPK1')]
     >>> ms.mapped_stmt
     Phosphorylation(MAP2K1(mods: (phosphorylation, S, 218), (phosphorylation, S, 222)), MAPK1(), T, 185)
     """
-    def __init__(self, site_map, use_cache=False):
-        self.site_map = site_map
-        self.use_cache = use_cache
-        self._cache = {}
-        if self.use_cache:
-            self._cache_path = sitemapper_cache
-            if os.path.exists(self._cache_path):
-                with open(self._cache_path, 'rb') as f:
-                    self._cache = pickle.load(f)
-                print("Loaded cache of length %d." % len(self._cache))
-        self._sitecount = {}
+    def __init__(self, site_map=None, use_cache=False, cache_path=None,
+                 do_methionine_offset=True, do_orthology_mapping=True,
+                 do_isoform_mapping=True):
+        super(SiteMapper, self).__init__(site_map, use_cache, cache_path)
+        self.do_methionine_offset = do_methionine_offset
+        self.do_orthology_mapping = do_orthology_mapping
+        self.do_isoform_mapping = do_isoform_mapping
 
-    def __del__(self):
-        try:
-            if self.use_cache:
-                import pickle
-                with open(self._cache_path, 'wb') as f:
-                    pickle.dump(self._cache, f, protocol=2)
-        except:
-            pass
-
-    def map_stmt_sites(self, stmt, do_methionine_offset=True,
-                       do_orthology_mapping=True, do_isoform_mapping=True):
+    def map_stmt_sites(self, stmt, ):
         stmt_copy = deepcopy(stmt)
         # For all statements, replace agents with invalid modifications
-        invalid_sites = []
+        mapped_sites = []
         new_agent_list = []
 
         for agent in stmt.agent_list():
-            if agent is not None:
-                agent_invalid_sites, new_agent = self._map_agent_sites(
-                    agent,
-                    do_methionine_offset=do_methionine_offset,
-                    do_orthology_mapping=do_orthology_mapping,
-                    do_isoform_mapping=do_isoform_mapping
-                    )
-                invalid_sites += agent_invalid_sites
-
-                # Site map agents in the bound conditions
-                for ind in range(len(new_agent.bound_conditions)):
-                    b = new_agent.bound_conditions[ind].agent
-                    agent_invalid_sites, new_b = self._map_agent_sites(
-                        b,
-                        do_methionine_offset=do_methionine_offset,
-                        do_orthology_mapping=do_orthology_mapping,
-                        do_isoform_mapping=do_isoform_mapping
-                        )
-                    invalid_sites += agent_invalid_sites
-                    new_agent.bound_conditions[ind].agent = new_b
-
-                new_agent_list.append(new_agent)
-            else:
+            # If None agent, add to list and continue
+            if agent is None:
                 new_agent_list.append(agent)
-        if invalid_sites:
+                continue
+            # Otherwise do mapping
+            agent_mapped_sites, new_agent = self._map_agent_sites(agent)
+            mapped_sites += agent_mapped_sites
+
+            # Site map agents in the bound conditions
+            for ind in range(len(new_agent.bound_conditions)):
+                b = new_agent.bound_conditions[ind].agent
+                agent_mapped_sites, new_b = self._map_agent_sites(b)
+                mapped_sites += agent_mapped_sites
+                new_agent.bound_conditions[ind].agent = new_b
+
+            new_agent_list.append(new_agent)
+
+        # If we made any actual mappings, we set the new agent list which
+        # includes any mapped agents
+        if any([ms.has_mapping() for ms in mapped_sites]):
             stmt_copy.set_agent_list(new_agent_list)
 
         # --- Special handling for these statements ---
@@ -191,36 +177,30 @@ class SiteMapper(object):
                               if isinstance(stmt, Modification)
                               else stmt_copy.enz)
             # Check the modification on the appropriate agent
-            old_mod_list = [ModCondition('modification', stmt.residue,
-                                         stmt.position)]
+            old_mod = stmt._get_mod_condition()
             # Figure out if this site is invalid
-            stmt_invalid_sites = self._check_agent_mod(
-                    agent_to_check,
-                    old_mod_list,
-                    do_methionine_offset=do_methionine_offset,
-                    do_orthology_mapping=do_orthology_mapping,
-                    do_isoform_mapping=do_isoform_mapping
-                    )
-            # Add to our list of invalid sites
-            invalid_sites += stmt_invalid_sites
-            # Get the updated list of ModCondition objects
-            new_mod_list = _update_mod_list(agent_to_check.name, old_mod_list,
-                                            stmt_invalid_sites)
-            # Update the statement with the correct site
-            stmt_copy.residue = new_mod_list[0].residue
-            stmt_copy.position = new_mod_list[0].position
-
-        # If the invalid_sites list isn't empty, that means that there were
-        # incorrect residues for this statement; add the statement to
-        # the mapped_statements list
-        mapped_stmt = None
-        if invalid_sites:
-            mapped_stmt = MappedStatement(stmt, invalid_sites, stmt_copy)
-
+            stmt_mapped_site = self._map_agent_mod(agent_to_check, old_mod)
+            if stmt_mapped_site is not None:
+                # If we got a mapping for the site, we apply that mapping to the
+                # copy of the statement
+                if stmt_mapped_site.has_mapping():
+                    stmt_copy.residue = stmt_mapped_site.mapped_res
+                    stmt_copy.position = stmt_mapped_site.mapped_pos
+                # Additionally, if there is a mapped site object at all
+                # (whether or not there is an actual successful mapping), we
+                # add that to the list of mapped sites
+                mapped_sites.append(stmt_mapped_site)
+        # We only return a MappedStatement if it has at least one MappedSite
+        # that is known to be invalid (whether of not it as successfully
+        # mapped). Otherwise we return None.
+        if any([(ms is not None and not ms.not_invalid())
+                for ms in mapped_sites]):
+            mapped_stmt = MappedStatement(stmt, mapped_sites, stmt_copy)
+        else:
+            mapped_stmt = None
         return mapped_stmt
 
-    def map_sites(self, stmts, do_methionine_offset=True,
-                  do_orthology_mapping=True, do_isoform_mapping=True):
+    def map_sites(self, stmts):
         """Check a set of statements for invalid modification sites.
 
         Statements are checked against Uniprot reference sequences to determine
@@ -238,29 +218,12 @@ class SiteMapper(object):
         ----------
         stmts : list of :py:class:`indra.statement.Statement`
             The statements to check for site errors.
-        do_methionine_offset : boolean
-            Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering from mature proteins after
-            cleavage of the initial methionine. If True, checks the reference
-            sequence for a known modification at 1 site position greater
-            than the given one; if there exists such a site, creates the
-            mapping. Default is True.
-        do_orthology_mapping : boolean
-            Whether to check sequence positions for known modification sites
-            in mouse or rat sequences (based on PhosphoSitePlus data). If a
-            mouse/rat site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
-        do_isoform_mapping : boolean
-            Whether to check sequence positions for known modifications
-            in other human isoforms of the protein (based on PhosphoSitePlus
-            data). If a site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
         tuple
             2-tuple containing (valid_statements, mapped_statements). The first
-            element of the tuple is a list valid statements
+            element of the tuple is a list of valid statements
             (:py:class:`indra.statement.Statement`) that were not found to
             contain any site errors. The second element of the tuple is a list
             of mapped statements (:py:class:`MappedStatement`) with information
@@ -271,287 +234,106 @@ class SiteMapper(object):
         mapped_statements = []
 
         for stmt in stmts:
-            mapped_stmt = self.map_stmt_sites(stmt, do_methionine_offset,
-                                              do_orthology_mapping,
-                                              do_isoform_mapping)
-
-            # If the invalid_sites list isn't empty, that means that there were
-            # incorrect residues for this statement; add the statement to
-            # the mapped_statements list
+            mapped_stmt = self.map_stmt_sites(stmt)
+            # If we got a MappedStatement as a return value, we add that to the
+            # list of mapped statements, otherwise, the original Statement is
+            # not invalid so we add it to the other list directly.
             if mapped_stmt is not None:
                 mapped_statements.append(mapped_stmt)
             else:
                 valid_statements.append(stmt)
 
-        return (valid_statements, mapped_statements)
+        return valid_statements, mapped_statements
 
-    def _map_agent_sites(self, agent, do_methionine_offset=True,
-                         do_orthology_mapping=True,
-                         do_isoform_mapping=True):
+    def _map_agent_sites(self, agent):
         """Check an agent for invalid sites and update if necessary.
 
         Parameters
         ----------
         agent : :py:class:`indra.statements.Agent`
             Agent to check for invalid modification sites.
-        do_methionine_offset : boolean
-            Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering from mature proteins after
-            cleavage of the initial methionine. If True, checks the reference
-            sequence for a known modification at 1 site position greater
-            than the given one; if there exists such a site, creates the
-            mapping. Default is True.
-        do_orthology_mapping : boolean
-            Whether to check sequence positions for known modification sites
-            in mouse or rat sequences (based on PhosphoSitePlus data). If a
-            mouse/rat site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
-        do_isoform_mapping : boolean
-            Whether to check sequence positions for known modifications
-            in other human isoforms of the protein (based on PhosphoSitePlus
-            data). If a site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
 
         Returns
         -------
         tuple
-            The first element is a list of invalid sites, where each entry in
-            the list has two elements: ((gene_name, residue, position),
-            mapped_site).  If the invalid position was not found in the site
-            map, mapped_site is None; otherwise it is a tuple consisting of
-            (residue, position, comment). The second element is the agent after
-            the sites have been correct (if mappings were found in the site
-            map). If mappings were not found in the site map, the original
-            (incorrect) agent is returned.
-
+            The first element is a list of MappedSite objects, the second
+            element is either the original Agent, if unchanged, or a copy
+            of it.
         """
-        if agent is None:
-            return ([], agent)
-        new_agent = deepcopy(agent)
         # If there are no modifications on this agent, then we can return the
         # copy of the agent
-        if not agent.mods:
-            return ([], new_agent)
-        invalid_sites = self._check_agent_mod(agent, agent.mods,
-                                    do_methionine_offset=do_methionine_offset,
-                                    do_orthology_mapping=do_orthology_mapping,
-                                    do_isoform_mapping=do_isoform_mapping)
-        # The agent is valid, so return the agent unchanged
-        if not invalid_sites:
-            return ([], new_agent)
-        # Look up updated (corrected) list of modifications
-        new_mod_list = _update_mod_list(agent.name, agent.mods, invalid_sites)
-        # Finally, update the agent, and return along with invalid site info
-        new_agent.mods = new_mod_list
-        return (invalid_sites, new_agent)
+        if agent is None or not agent.mods:
+            return [], agent
+        new_agent = deepcopy(agent)
+        mapped_sites = []
+        # Now iterate over all the modifications and map each one
+        for idx, mod_condition in enumerate(agent.mods):
+            mapped_site = \
+                self._map_agent_mod(agent, mod_condition)
+            # If we couldn't do the mapping or the mapped site isn't invalid
+            # then we don't need to change the existing ModCondition
+            if not mapped_site or mapped_site.not_invalid():
+                continue
+            # Otherwise, if there is a mapping, we replace the old ModCondition
+            # with the new one where only the residue and position are updated,
+            # the mod type and the is modified flag are kept.
+            if mapped_site.has_mapping():
+                mc = ModCondition(mod_condition.mod_type,
+                                  mapped_site.mapped_res,
+                                  mapped_site.mapped_pos,
+                                  mod_condition.is_modified)
+                new_agent.mods[idx] = mc
+            # Finally, whether or not we have a mapping, we keep track of mapped
+            # sites and make them available to the caller
+            mapped_sites.append(mapped_site)
+        return mapped_sites, new_agent
 
-    def _check_agent_mod(self, agent, mods, do_methionine_offset=True,
-                         do_orthology_mapping=True,
-                         do_isoform_mapping=True):
-        """Check an agent for invalid sites and look for mappings.
-
-        Look up each modification site on the agent in Uniprot and then the
-        site map.
+    def _map_agent_mod(self, agent, mod_condition):
+        """Map a single modification condition on an agent.
 
         Parameters
         ----------
         agent : :py:class:`indra.statements.Agent`
             Agent to check for invalid modification sites.
-        mods : list of :py:class:`indra.statements.ModCondition`
-            Modifications to check for validity and map.
-        do_methionine_offset : boolean
-            Whether to check for off-by-one errors in site position (possibly)
-            attributable to site numbering from mature proteins after
-            cleavage of the initial methionine. If True, checks the reference
-            sequence for a known modification at 1 site position greater
-            than the given one; if there exists such a site, creates the
-            mapping. Default is True.
-        do_orthology_mapping : boolean
-            Whether to check sequence positions for known modification sites
-            in mouse or rat sequences (based on PhosphoSitePlus data). If a
-            mouse/rat site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
-        do_isoform_mapping : boolean
-            Whether to check sequence positions for known modifications
-            in other human isoforms of the protein (based on PhosphoSitePlus
-            data). If a site is found that is linked to a site in the human
-            reference sequence, a mapping is created. Default is True.
+        mod_condition : :py:class:`indra.statements.ModCondition`
+            Modification to check for validity and map.
 
         Returns
         -------
-        list
-            A list of invalid sites, where each entry in the list has two
-            elements: ((gene_name, residue, position), mapped_site).  If the
-            invalid position was not found in the site map, mapped_site is
-            None; otherwise it is a tuple consisting of (residue, position,
-            comment).
+        protmapper.MappedSite or None
+            A MappedSite object is returned if a UniProt ID was found for the
+            agent, and if both the position and residue for the modification
+            condition were available. Otherwise None is returned.
         """
-        invalid_sites = []
+        # Get the UniProt ID of the agent, if not found, return
         up_id = _get_uniprot_id(agent)
-        # If the uniprot entry is not found, let it pass
         if not up_id:
             logger.debug("No uniprot ID for %s" % agent.name)
-            return [] # Same effect as valid sites
-        # Look up all of the modifications in uniprot, and add them to the list
-        # of invalid sites if they are missing
-        for old_mod in mods:
-            # If no site information for this residue, skip
-            if old_mod.position is None or old_mod.residue is None:
-                continue
-            site_key = (agent.name, old_mod.residue, old_mod.position)
-            # Increase our count for this site
-            self._sitecount[site_key] = self._sitecount.get(site_key, 0) + 1
-            # First, check the cache to potentially avoid a costly sequence
-            # lookup
-            cached_site = self._cache.get(site_key)
-            if cached_site is not None:
-                if cached_site == 'VALID':
-                    pass
-                else:
-                    invalid_sites.append((site_key, cached_site))
-                continue
-            # If not cached, continue
-            # Look up the residue/position in uniprot
-            try:
-                site_valid = uniprot_client.verify_location(up_id,
-                                                            old_mod.residue,
-                                                            old_mod.position)
-            except requests.exceptions.HTTPError:
-                logger.warning('Failed to get sequence for %s' % up_id)
-                continue
-            # If it's not found in Uniprot, then look it up in the site map
-            if site_valid:
-                self._cache[site_key] = 'VALID'
-                continue
-            # Check the agent for a Uniprot ID
-            up_id = agent.db_refs.get('UP')
-            hgnc_id = agent.db_refs.get('HGNC')
-            if not hgnc_id:
-                logger.debug("No HGNC ID for %s, only curated sites will be "
-                            "mapped" % agent.name)
-            # NOTE: The following lookups can only be performed if the
-            # Phosphosite Data is available.
-            if phosphosite_client.has_data():
-                # First, look for other entries in phosphosite for this protein
-                # where this sequence position is legit (i.e., other isoforms)
-                if do_isoform_mapping and up_id and hgnc_id:
-                    human_pos = phosphosite_client.map_to_human_site(
-                                  up_id, old_mod.residue, old_mod.position)
-                    if human_pos:
-                        mapped_site = (old_mod.residue, human_pos,
-                                       'INFERRED_ALTERNATIVE_ISOFORM')
-                        self._cache[site_key] = mapped_site
-                        invalid_sites.append((site_key, mapped_site))
-                        continue
-                # Try looking for rat or mouse sites
-                if do_orthology_mapping and up_id and hgnc_id:
-                    # Get the mouse ID for this protein
-                    up_mouse = uniprot_client.get_mouse_id(up_id)
-                    # Get mouse sequence
-                    human_pos = phosphosite_client.map_to_human_site(
-                                  up_mouse, old_mod.residue, old_mod.position)
-                    if human_pos:
-                        mapped_site = (old_mod.residue, human_pos,
-                                       'INFERRED_MOUSE_SITE')
-                        self._cache[site_key] = mapped_site
-                        invalid_sites.append((site_key, mapped_site))
-                        continue
-                    # Try the rat sequence
-                    up_rat = uniprot_client.get_rat_id(up_id)
-                    human_pos = phosphosite_client.map_to_human_site(
-                                  up_rat, old_mod.residue, old_mod.position)
-                    if human_pos:
-                        mapped_site = (old_mod.residue, human_pos,
-                                       'INFERRED_RAT_SITE')
-                        self._cache[site_key] = mapped_site
-                        invalid_sites.append((site_key, mapped_site))
-                        continue
-                # Check for methionine offset (off by one)
-                if do_methionine_offset and up_id and hgnc_id:
-                    try:
-                        offset_pos = str(int(old_mod.position) + 1)
-                    except ValueError:
-                        logger.warning("Invalid position: %s" %
-                                       old_mod.position)
-                        continue
-                    human_pos = phosphosite_client.map_to_human_site(
-                                  up_id, old_mod.residue, offset_pos)
-                    # If it's valid at the offset position, create the mapping
-                    # and continue
-                    if human_pos:
-                        mapped_site = (old_mod.residue, human_pos,
-                                       'INFERRED_METHIONINE_CLEAVAGE')
-                        self._cache[site_key] = mapped_site
-                        invalid_sites.append((site_key, mapped_site))
-                        continue
-            # Now check the site map
-            mapped_site = self.site_map.get(site_key, None)
-            # No entry in the site map; set site info to None
-            if mapped_site is None:
-                self._cache[site_key] = None
-                invalid_sites.append((site_key, None))
-            # Manually mapped in the site map
-            else:
-                self._cache[site_key] = mapped_site
-                invalid_sites.append((site_key, mapped_site))
-        return invalid_sites
+            return None
+        # If no site information for this residue, skip
+        if mod_condition.position is None or mod_condition.residue is None:
+            return None
+        # Otherwise, try to map it and return the mapped site
+        mapped_site = \
+            self.map_to_human_ref(up_id, 'uniprot',
+                mod_condition.residue,
+                mod_condition.position,
+                do_methionine_offset=self.do_methionine_offset,
+                do_orthology_mapping=self.do_orthology_mapping,
+                do_isoform_mapping=self.do_isoform_mapping)
+        return mapped_site
 
 
-def _update_mod_list(agent_name, mods, invalid_sites):
-    """Get an updated list of ModConditions based on the site map.
-
-    Parameters
-    ----------
-    agent_name : string
-        HGNC gene name; must match the entry in the site map file.
-    mods : list of :py:class:`indra.statement.ModCondition`
-        Original modifications (possibly with incorrect sites).
-    invalid_sites : list
-        List of invalid sites as returned by :py:func:`_check_agent_mod`.
-
-    Returns
-    -------
-    list of :py:class:`indra.statement.ModCondition`
-        List of ModConditions containing the original site information (if
-        valid, or if no information found in the site map) or updated site
-        information (if invalid and found in the site map).
-    """
-    new_mod_list = []
-    # Get the list of invalid/mapped sites for the agent
-    invalid_site_keys = [site[0] for site in invalid_sites]
-    for old_mod in mods:
-        old_mod_key = (agent_name, old_mod.residue, old_mod.position)
-        # If the original modification was found to be invalid, create a newly
-        # updated modification
-        if old_mod_key in invalid_site_keys:
-            mapped_site = \
-                    invalid_sites[invalid_site_keys.index(old_mod_key)][1]
-            # No entry in the map: pass the incorrect site through
-            if mapped_site is None:
-                new_mod_list.append(old_mod)
-            # Entry in the map
-            else:
-                # Do we have actual site information?
-                new_res = mapped_site[0]
-                new_pos = mapped_site[1]
-                if new_res is not None and new_pos is not None:
-                    new_mod_list.append(
-                            ModCondition(old_mod.mod_type, new_res, new_pos,
-                                         old_mod.is_modified))
-                # Mapped, but no site info--pass through unchanged
-                else:
-                    new_mod_list.append(old_mod)
-        # The modification is not in the invalid site list, so it's considered
-        # valid
-        else:
-            new_mod_list.append(old_mod)
-    return new_mod_list
+default_mapper = SiteMapper(default_site_map)
 
 
+# TODO: determine if this should be done in the protmapper or if this is the
+# preferred place
+@lru_cache(maxsize=10000)
 def _get_uniprot_id(agent):
-    """Get the Uniprot ID for an agent, looking up in HGNC if necessary.
+    """Return the UniProt ID for an agent, looking up in HGNC if necessary.
 
-    If the Uniprot ID is a list then return the first ID by default.
+    If the UniProt ID is a list then return the first ID by default.
     """
     up_id = agent.db_refs.get('UP')
     hgnc_id = agent.db_refs.get('HGNC')
@@ -570,59 +352,3 @@ def _get_uniprot_id(agent):
        isinstance(up_id[0], basestring):
         up_id = up_id[0]
     return up_id
-
-
-def load_site_map(path):
-    """Load the modification site map from a file.
-
-    The site map file should be a comma-separated file with six columns::
-
-        Gene: HGNC gene name
-        OrigRes: Original (incorrect) residue
-        OrigPos: Original (incorrect) residue position
-        CorrectRes: The correct residue for the modification
-        CorrectPos: The correct residue position
-        Comment: Description of the reason for the error.
-
-    Parameters
-    ----------
-    path : string
-        Path to the tab-separated site map file.
-
-    Returns
-    -------
-    dict
-        A dict mapping tuples of the form `(gene, orig_res, orig_pos)` to a
-        tuple of the form `(correct_res, correct_pos, comment)`, where `gene`
-        is the string name of the gene (canonicalized to HGNC); `orig_res` and
-        `orig_pos` are the residue and position to be mapped; `correct_res` and
-        `correct_pos` are the corrected residue and position, and `comment` is
-        a string describing the reason for the mapping (species error, isoform
-        error, wrong residue name, etc.).
-    """
-    site_map = {}
-    maprows = read_unicode_csv(path)
-    # Skip the header line
-    next(maprows)
-    for row in maprows:
-        # Don't allow empty entries in the key section
-        if not (row[0] and row[1] and row[2]):
-            raise Exception("Entries in the key (gene, residue, position) "
-                            "may not be empty.")
-        correct_res = row[3].strip() if row[3] else None
-        correct_pos = row[4].strip() if row[4] else None
-        comment = row[5].strip() if row[5] else None
-        site_map[(row[0].strip(), row[1].strip(), row[2].strip())] = \
-                                (correct_res, correct_pos, comment)
-    return site_map
-
-
-default_site_map_path = os.path.join(os.path.dirname(__file__),
-                             '../resources/curated_site_map.csv')
-
-default_site_map = load_site_map(default_site_map_path)
-
-default_mapper = SiteMapper(default_site_map)
-"""A default instance of :py:class:`SiteMapper` that contains the site
-information found in resources/curated_site_map.csv'."""
-

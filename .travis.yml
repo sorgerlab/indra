@@ -80,17 +80,24 @@ script:
       export NOSEATTR="!cron,$NOSEATTR";
     fi
   - echo $NOSEATTR
-  # First run TEES and Eidos tests separately for technical reasons
+  # Now run all INDRA tests
   - cd $TRAVIS_BUILD_DIR
+  - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
+    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
+        --ignore-files='.*test_reach.py' --ignore-files='.*test_live_curation.py'
+        --with-coverage --cover-inclusive --cover-package=indra
+        --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
+  # First run TEES and Eidos tests separately for technical reasons
   - python -m nose_notify indra/tests/test_tees.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR --process-restartworker;
   - python -m nose_notify indra/tests/test_eidos.py --slack_hook $SLACK_NOTIFY_HOOK
     --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
-  # Now run all INDRA tests
-  - python -m nose_notify --slack_hook $SLACK_NOTIFY_HOOK --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH"
-    indra -v -a $NOSEATTR --exclude='.*tees.*' --exclude='.*eidos.*' --exclude='.*isi.*'
-        --with-coverage --cover-inclusive --cover-package=indra
-        --with-doctest --with-doctest-ignore-unicode --with-timer --timer-top-n 10
+  - python -m nose_notify indra/tests/test_live_curation.py
+    --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
+  - python -m nose_notify indra/tests/test_reach.py
+    --slack_hook $SLACK_NOTIFY_HOOK
+    --label "$TRAVIS_REPO_SLUG - $TRAVIS_BRANCH" -v -a $NOSEATTR;
   # Run NL model examples only when the environmental variable
   # RUN_NL_MODELS is set to true in the Travis build
   # NOTE: if blocks in Travis DO NOT FAIL even if there is
