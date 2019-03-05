@@ -73,14 +73,15 @@ Custom knowledge bases:
 ### Output model assemblers
 
 INDRA also provides several model output assemblers that take INDRA Statements
-as input. The most sophisticated model assembler is the PySB assembler, which
+as input. The most sophisticated model assembler is the PySB Assembler, which
 implements a policy-guided automated assembly procedure of a rule-based
 executable model (that can then be further compiled into other formats such as
-SBML, Kappa, BNGL and SBGN to connect to a vast ecosystem of downstream tools)
-from INDRA Statements. Several other model assembly
-modules target various network formats for browsing, display, and
-graph/structural analysis (CyJS, Graphviz, SBGN, CX, SIF). Finally, the English
-assembler produces.
+SBML, Kappa, BNGL and SBGN to connect to a vast ecosystem of downstream tools).
+Several other model assembly modules target various network formats for
+visualization, and graph/structural analysis (PyBEL, CyJS, Graphviz, SBGN,
+CX, SIF, etc.) and curation (HTML, TSV, IndexCards).
+Finally, the English Assembler produces English language descriptions of a set
+of INDRA Statements.
 
 INDRA also supports extension by outside model assembly tools which take
 INDRA Statements as input and produce models. One such example is Delphi
