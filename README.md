@@ -135,7 +135,8 @@ with respect to an ontology with the Preassembler
 - Protein sequence mapping (`indra.preassembler.site_mapper.SiteMapper`)
 
 The internal assembly steps of INDRA including the ones listed above, and also
-a large collection of filters (filter by source, belief, etc.) are exposed
+a large collection of filters (filter by source, belief, the presence of
+grounding information, semantic filters by entity role, etc.) are exposed
 in the
 [indra.tools.assemble_corpus](http://indra.readthedocs.io/en/latest/modules/tools/index.html#module-indra.tools.assemble_corpus) 
 submodule. This submodule contains functions that
