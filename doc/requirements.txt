@@ -10,3 +10,4 @@ pysb
 pandas
 rdflib==4.2.1
 jinja2
+protmapper
