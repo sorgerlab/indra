@@ -10,7 +10,11 @@ currently being generalized to other domains. INDRA draws on natural language
 processing systems and structured databases to collect mechanistic and causal
 assertions, represents them in a standardized form (INDRA Statements), and
 assembles them into various modeling formalisms including causal graphs and
-dynamical models. INDRA also provides knowledge assembly procedures that
+dynamical models.
+
+Importantly, INDRA isn\'t merely an import/export hub. Its key added value in
+assembling knowledge sources into coherent models comes from
+providing "knowledge-level" assembly procedures that
 operate on INDRA Statements and correct certain errors, find and resolve
 redundancies, infer missing information, filter to a scope of interest and
 assess belief.
@@ -65,16 +69,50 @@ Custom knowledge bases:
 ### Output model assemblers
 
 INDRA also provides several model output assemblers that take INDRA Statements
-as input. INDRA can assemble into the following modeling formalisms
-- Detailed mechanistic, executable models in [PySB](http://pysb.org/)
-    which can further be exported into SBML, SBGN, Kappa, and BNGL.
-- Directed causal networks in
-    [SIF](http://wiki.cytoscape.org/Cytoscape_User_Manual/Network_Formats), 
-    [NDEx/CX](http://www.home.ndexbio.org/data-model/), 
-    [Cytoscape.js](http://js.cytoscape.org/), and
-    [Graphviz](https://www.graphviz.org/) formats.
-- English language (a human-readable summary of the information
-    collected and assembled by INDRA)
+as input. The most sophisticated model assembler is the PySB assembler, which
+implements a policy-guided automated assembly procedure of a rule-based
+executable model (that can then be further compiled into other formats such as
+SBML, Kappa, BNGL and SBGN to connect to a vast ecosystem of downstream tools)
+from INDRA Statements. Several other model assembly
+modules target various network formats for browsing, display, and
+graph/structural analysis (CyJS, Graphviz, SBGN, CX, SIF). Finally, the English
+assembler produces.
+
+INDRA also supports extension by outside model assembly tools which take
+INDRA Statements as input and produce models. One such example is Delphi
+(https://github.com/ml4ai/delphi), which is a Dynamic Bayesian Network
+model assembler.
+
+Assemblers aimed at model-driven discovery and analysis:
+
+| Modeling formalism / Exchange format           | Purpose                                              | Module                  | Reference           |
+|------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
+| PySB (-> SBML, SBGN, BNGL, Kappa, etc.)        | Detailed, mechanistic modeling, simulation, analysis | `indra.assemblers.pysb` | http://pysb.org     |
+| PyBEL                                          | Causal analysis, visualization                       | `indra.assemblers.pybel`| https://github.com/pybel/pybel <br/ > https://bel-commons.scai.fraunhofer.de/ |
+| SIF                                            | Network analysis, logic modeling, visualization      | `indra.assemblers.sif`  | http://manual.cytoscape.org/en/stable/Supported_Network_File_Formats.html#sif-format |
+| Figaro                                         | Bayesian network inference                           | `indra.assemblers.figaro` | https://github.com/p2t2/figaro/ |
+| KAMI                                           | Knowledge aggregation of protein sites/states and Kappa modeling | `indra.assemblers.kami` | https://github.com/Kappa-Dev/KAMI |
+
+
+Assemblers primarily aimed at visualization:
+
+| Network / Exchange format                      | Purpose                                              | Module                  | Reference           |
+|------------------------------------------------|------------------------------------------------------|-------------------------|---------------------|
+| Causal Analysis Graph                          | General causal graph visualization                   | `indra.assemblers.cag`  |                     |
+| CX                                             | Network browsing, versioning on NDEx                 | `indra.assemblers.cx`   | http://ndexbio.org  |
+| Cytoscape JS                                   | Interactive Cytoscape JS network to embed in websites| `indra.assemblers.cyjs` | http://js.cytoscape.org/ |
+| Graphviz                                       | Static PDF/PNG visualization with powerful automated layout using Graphviz | `indra.assemblers.graph` | https://www.graphviz.org/ |
+| SBGN                                           | Visualization with Systems Biology Graphical Notation| `indra.assemblers.sbgn` | http://sbgn.org     |
+
+Assemblers primarily aimed at expert curation and browsing:
+
+| Output format                                  | Purpose                                                | Module                  | Reference           |
+|------------------------------------------------|------------------------------------------------------  |-------------------------|---------------------|
+| English language                               | Human-readable descriptions, reports, dialogue         | `indra.assemblers.english` |                  |
+| HTML                                           | Web-based browsing, linking out to provenance, curation| `indra.assemblers.html` | https://indra.readthedocs.io/en/latest/tutorials/html_curation.html |
+| TSV (Tab/Comma Separated Values)               | Spreadsheet-based browsing and curation                | `indra.assemblers.tsv`  |                     |
+| Index Cards                                    | Custom JSON format for curating biological mechanisms  | `indra.assemblers index_card` |               |
+
 
 ### Internal knowledge assembly
 
